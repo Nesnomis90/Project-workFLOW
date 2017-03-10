@@ -1,8 +1,5 @@
 <?php
-$servername = "localhost";
-$username = "username";
-$password = "password";
-$dbname = "myDBPDO";
+require 'phpDBvars.php';
 
 // Syntax rules:
 //	The SQL query must be quoted inPHP
