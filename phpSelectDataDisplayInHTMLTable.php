@@ -29,11 +29,17 @@ class TableRows extends RecursiveIteratorIterator {
 }
 
 //	SELECT Syntax:
-//	SELECT <command/column> FROM table_name
+//	SELECT <command/column> 
+//	FROM table_name
 //
 //	* command selects all data
 //	column name retrieves only data from that column
 //	multiple columns can be selected at once (SELECT column1, column2)
+//
+//	To limit the number of records to retrieve use the LIMIT command
+// 	To change what records to start from use the OFFSET command
+//
+//	SELECT a,b,c... FROM x LIMIT int_a OFFSET int_b
 
 
 // Try to connect and retrieve data from DB
