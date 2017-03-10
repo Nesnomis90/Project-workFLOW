@@ -1,12 +1,11 @@
 <?php
 require 'phpDBvars.php';
 
-// Syntax rules:
-//	The SQL query must be quoted inPHP
-//	String values inside the SQL query must be quoted
-//	Numeric values must not be quoted
-//	The word NULL must not be quoted
-//	Auto-Increment and TIMESTAMP is handled automatically by MySQL
+//DELETE Syntax:
+//	DELETE FROM table_name
+//	WHERE some_column = some_value
+//
+//	IMPORTANT -> Everything in the table will be deleted if the WHERE clause is not included
 
 try {
 	//	Create connection
@@ -14,12 +13,12 @@ try {
 	//	set the PDO error mode to exception
 	$conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 	
-	// Create the SQL query
-	$sql = "INSERT INTO MyGuests (firstname, lastname, email)
-	VALUES ('John', 'Doe', 'john@example.com')";
+	//	Create the SQL query
+	$sql = "DELETE FROM MyGuests WHERE id=3";
+	
 	// use exec() because no results are returned
 	$conn->exec($sql);
-	echo "New record created successfully";
+	echo "Record deleted successfully";
 	} 
 catch(PDOException $e)
 	{
