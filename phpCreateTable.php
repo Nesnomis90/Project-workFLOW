@@ -1,8 +1,5 @@
 <?php
-$servername = "localhost";
-$username = "username";
-$password = "password";
-$dbname = "myDBPDO";
+require 'phpDBvars.php';
 
 // 	Data Types for each column in table:
 //	Text:

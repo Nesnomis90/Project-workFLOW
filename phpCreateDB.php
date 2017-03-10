@@ -1,8 +1,5 @@
 <?php
-$servername = "localhost";
-$username = "username";
-$password = "password";
-$dbname = "myDB";
+require 'phpDBvars.php';
 
 try {
 	//	Create connection
