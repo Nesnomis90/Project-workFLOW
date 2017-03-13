@@ -22,7 +22,7 @@
 	<body>
 		<p>This is test to see if our Apache 2.4 and PHP script is communicating.</p>
 		<p>Today&rsquo;s date (according to this web server) is <?php echo $date ?></p>
-		<p>The time is currently <?php echo $time ?>.</p>
-		<p>The database name is <?php echo $dbname ?></p>
+		<p>The time is currently <?php echo $time; ?>.</p>
+		<p>The database name is <?php echo $dbname; ?></p>
 	</body>
 </html>
