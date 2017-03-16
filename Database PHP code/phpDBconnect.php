@@ -1,21 +1,52 @@
 <?php
-$pdo = null;
-
 //$dbengine 	= 'mysql';
-$dbhost 	= 'localhost';
-$dbuser		= 'root';
-$dbpassword = '5Bdp32LAHYQ8AemvQM9P';
-$dbname		= 'meetingflow';
+define('dbhost', 'localhost');
+define('dbuser', 'root');
+define('dbpassword', '5Bdp32LAHYQ8AemvQM9P');
+define('dbname', 'meetingflow');
+
+// Connect to server and create our wanted database
+function create_db()
+{
+	$pdo = null;
+
+	try {
+	//	Create connection without an existing database
+	$pdo = new PDO("mysql:host=".dbhost, dbuser, dbpassword);
+	//	set the PDO error mode to exception
+	$pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+	
+	// Creating the SQL query to make the database
+	$sql = "CREATE DATABASE IF NOT EXISTS " . dbname;
+
+	//Executing the SQL query
+	$pdo->exec($sql) or die (print_r($pdo->errorInfo(), true));
+	echo "created database<br>";
+	//Closing the connection
+	$pdo = null;
+	
+	} 
+catch(PDOException $e)
+	{
+	die("DB ERROR: " . $e->getMessage());
+	}	
+}
 
 //	Connect to an existing database
 function connect_to_db()
 {
+	$pdo = null;
 	try {
 	//	Create connection with an existing database
-	$pdo = new PDO("mysql:host=$dbhost; dbname=$dbname", $dbuser, $dbpassword);
+	$pdo = new PDO("mysql:host=".dbhost."; dbname=" .dbname, dbuser, dbpassword);
 	//	set the PDO error mode to exception
 	$pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-		
+	
+	// use the correct database
+	$sql = "USE " . dbname;
+	$pdo->exec($sql) or die (print_r($pdo->errorInfo(),true));
+	echo "Succesfully connected to database: " . dbname . "<br>";
+	
 	return $pdo;
 
 	} 
@@ -25,33 +56,13 @@ catch(PDOException $e)
 	}
 }
 
-// Connect to server and create our wanted database
-function create_db()
+function create_tables()
 {
-	try {
-	//	Create connection without an existing database
-	$pdo = new PDO("mysql:host=$dbhost", $dbuser, $dbpassword);
-	//	set the PDO error mode to exception
-	$pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+	$conn = connect_to_db();
 	
-	// Creating the SQL query to make the database
-	$sql = "CREATE DATABASE " . $dbname;
-
-	//Executing the SQL query
-	$pdo->exec($sql) or die (print_r($conn->errorInfo(), true));
-	//Closing the connection
-	$pdo = null;
-	
-
-	} 
-catch(PDOException $e)
-	{
-	die("DB ERROR: " . $e->getMessage());
-	}	
+	$sql = "CREATE "
 }
-
 
 // ATTEMPT TO CREATE THE DATABASE!!!
 create_db();
-
 ?>
