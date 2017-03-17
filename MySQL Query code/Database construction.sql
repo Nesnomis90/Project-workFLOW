@@ -1,7 +1,7 @@
 CREATE TABLE `user` (
   `userID` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `email` varchar(50) NOT NULL,
-  `password` varchar(50) NOT NULL,
+  `password` char(64) NOT NULL,
   `create_time` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `firstName` varchar(45) DEFAULT NULL,
   `lastName` varchar(45) DEFAULT NULL,
@@ -20,7 +20,7 @@ CREATE TABLE `user` (
 CREATE TABLE `meetingroom` (
   `meetingRoomID` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `name` varchar(45) NOT NULL,
-  `capacity` int(10) unsigned DEFAULT NULL,
+  `capacity` tinyint(2) unsigned DEFAULT NULL,
   `description` text,
   PRIMARY KEY (`meetingRoomID`)
 ) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8;
@@ -50,7 +50,6 @@ CREATE TABLE `company` (
   `CompanyID` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `name` varchar(45) NOT NULL,
   `dateTimeCreated` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-  `bookingTimeUsedThisMonth` int(10) unsigned DEFAULT NULL,
   `removeAtDate` datetime DEFAULT NULL,
   PRIMARY KEY (`CompanyID`)
 ) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8;
