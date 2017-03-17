@@ -21,7 +21,7 @@ function create_db()
 
 	//Executing the SQL query
 	$pdo->exec($sql);
-	$output = 'Created database: ' . dbname . "<br>";
+	$output = 'Created database ' . dbname . "<br>";
 	include 'output.html.php';
 	
 	//Closing the connection
