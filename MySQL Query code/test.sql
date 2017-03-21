@@ -12,6 +12,8 @@ SELECT * FROM `user`;
 
 SELECT * FROM `company`;
 
+SELECT * FROM `companyposition`;
+
 SELECT * FROM `booking`;
 
 SELECT * FROM `meetingroom`;
@@ -87,3 +89,33 @@ SELECT re.`amount`, e.`name`, e.`description` FROM `roomequipment` re JOIN `equi
 SELECT SEC_TO_TIME(SUM(TIME_TO_SEC(b.`endDateTime`) - TIME_TO_SEC(b.`startDateTime`)))  AS BookingTimeUsed FROM `booking` b INNER JOIN `user` u ON b.`UserID` = u.`UserID` WHERE u.`firstName` = 'testy' AND u.`lastName` = 'mctester';
 
 SELECT SEC_TO_TIME(SUM(TIME_TO_SEC(b.`endDateTime`) - TIME_TO_SEC(b.`startDateTime`)))  AS BookingTimeUsed FROM `booking` b INNER JOIN `user` u ON b.`UserID` = u.`UserID` WHERE u.`email` = 'test@test.com';
+
+SELECT u.firstName, u.lastName, cp.`name` FROM `company` c JOIN `companyposition` cp JOIN `employee` e JOIN `user` u WHERE u.userID = e.UserID AND e.CompanyID = c.CompanyID AND cp.PositionID = e.PositionID AND c.`name` = 'test5';
+
+SELECT * FROM `company` c JOIN `companyposition` cp JOIN `employee` e JOIN `user` u WHERE u.userID = e.UserID AND e.CompanyID = c.CompanyID AND cp.PositionID = e.PositionID;
+
+SELECT c.`name` FROM `company` c JOIN `employee` e WHERE c.CompanyID = e.CompanyID;
+
+SELECT c.`name`, COUNT(c.`name`) AS NumberOfEmployees FROM `company` c JOIN `employee` e WHERE c.CompanyID = e.CompanyID GROUP BY c.`name`;
+
+INSERT INTO `employee`(`CompanyID`, `UserID`, `PositionID`) VALUES ((SELECT `CompanyID` FROM `company` WHERE `name` = 'test1'),(SELECT `userID` FROM `user` WHERE `email` = 'test10@test.com'), (SELECT `PositionID` FROM `companyposition` WHERE `name` = 'Employee'));
+
+INSERT INTO `company`(`name`) VALUES ('test6');
+
+INSERT INTO `user`(`email`, `password`, `firstname`, `lastname`,`accessID`, `activationcode`) VALUES ('test15@test.com', '123test', 'testy15', 'mctester15', 4, 'ecd71870d1963316a97e3ac3408c9835ad8cf0f3c1bc703527c30265534f75ae');
+
+SELECT u.`firstname`, u.`lastname`, u.`email`, c.`name` AS CompanyName, cp.`name` AS CompanyRole FROM `user` u JOIN `company` c JOIN `employee` e JOIN `companyposition` cp WHERE e.CompanyID = c.CompanyID AND e.UserID = u.userID AND cp.PositionID = e.PositionID ORDER BY c.`name` ;
+
+SELECT `firstname`, `lastname`, `email`, (SELECT c.`name` FROM `company` c JOIN `employee` e JOIN `companyposition`cp JOIN `user` u WHERE c.CompanyID = e.CompanyID AND u.userID = e.UserID) AS CompanyName, (SELECT cp.`name` FROM `companyposition` cp JOIN `company` c JOIN `employee` e JOIN `user` u WHERE c.companyID = e.companyID AND u.userid = e.userid AND cp.positionID = e.positionID) AS CompanyRole FROM `user`;
+
+SELECT DISTINCT u.userID FROM `user` u JOIN `company` c JOIN `employee` e JOIN `companyposition` cp WHERE e.CompanyID = c.CompanyID AND e.UserID = u.userID AND cp.PositionID = e.PositionID ORDER BY u.userid ASC;
+
+SELECT c.`name` FROM `company` c JOIN `employee` e JOIN `companyposition`cp JOIN `user` u WHERE c.CompanyID = e.CompanyID AND u.userID = e.UserID;
+
+SELECT cp.`name` FROM `companyposition` cp JOIN `company` c JOIN `employee` e JOIN `user` u WHERE c.companyID = e.companyID AND u.userid = e.userid AND cp.positionID = e.positionID;
+
+SELECT re.amount, e.`name`, e.`description` FROM `equipment` e JOIN `roomequipment` re JOIN `meetingroom` m WHERE m.meetingroomid = re.meetingroomid AND re.EquipmentID = e.EquipmentID AND m.`name` = 'Blåmann';
+
+SELECT * FROM `equipment` e JOIN `roomequipment` re JOIN `meetingroom` m WHERE m.meetingroomid = re.meetingroomid AND re.EquipmentID = e.EquipmentID;
+
+INSERT INTO `user`(`email`, `password`, `firstname`, `lastname`, `accessID`, `activationcode`) VALUES ('test15@test.com', '123test', 'testy15', 'mctester15', 4, 'ecd71870d1963316a97e3ac3408c9835ad8cf0f3c1bc703527c30265534f75ae');
