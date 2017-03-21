@@ -36,8 +36,7 @@ INSERT INTO `logaction`(`name`,`description`) VALUES ('An action name','A descri
 INSERT INTO `logaction`(`name`,`description`) VALUES ('Booking Created','The referenced user created a new meeting room booking.');
 INSERT INTO `logaction`(`name`,`description`) VALUES ('Booking Cancelled','The referenced user cancelled a meeting room booking.');
 INSERT INTO `logaction`(`name`,`description`) VALUES ('Account Created','The referenced user just registered an account.');
-INSERT INTO `logaction`(`name`,`description`) VALUES ('Account Removed','');
-INSERT INTO `logaction`(`name`,`description`) VALUES ('An action name','A description of what that action should apply to');
+INSERT INTO `logaction`(`name`,`description`) VALUES ('Account Removed','A user account has been removed. See log description for more information.');
 INSERT INTO `logaction`(`name`,`description`) VALUES ('An action name','A description of what that action should apply to');
 #
 #END OF INSERT QUERIES
