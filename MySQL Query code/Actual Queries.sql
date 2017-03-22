@@ -7,74 +7,117 @@
 #
 #START OF INSERT QUERIES
 #
-#INSERT DATA INTO USER (firstname, lastname, email, hashed password, accessID and activationcode)
+#INSERT DATA INTO USER (firstname, lastname, email, hashed password, accessID and activationcode) - TEMPLATE
 INSERT INTO `user`(`email`, `password`, `firstname`, `lastname`, `accessID`, `activationcode`) VALUES ('User Email', 'SHA 256 hashed password', 'First Name', 'Last Name', <accessID should be 4>, 'SHA 256 hash length activation code');
-#INSERT A NEW COMPANY
+#INSERT A NEW COMPANY - TEMPLATE
 INSERT INTO `company`(`name`) VALUES ('Company Name');
-#INSERT A NEW BOOKING OF A MEETING ROOM BASED ON THE SELECTED MEETING ROOM AND THE USER WHO CREATED IT
+#INSERT A NEW BOOKING OF A MEETING ROOM BASED ON THE SELECTED MEETING ROOM AND THE USER WHO CREATED IT - TEMPLATE
 INSERT INTO `booking`(`meetingRoomID`, `userID`, `displayName`, `startDateTime`, `endDateTime`, `description`, `cancellationCode`) VALUES ((SELECT `meetingRoomID` FROM `meetingroom` WHERE `name` = 'Meeting Room Name'), (SELECT `userID` FROM `user` WHERE `email` = 'Email'), 'Display Name', '2017-03-15 16:00:00', '2017-03-15 17:30:00', 'Booking Description', 'ecd71870d1963316a97e3ac3408c9835ad8cf0f3c1bc703527c30265534f75ae');
 INSERT INTO `booking`(`meetingRoomID`, `userID`, `displayName`, `startDateTime`, `endDateTime`, `description`, `cancellationCode`) VALUES (<meetingroomID>, <userID>, 'Display Name', '2017-03-15 16:00:00', '2017-03-15 17:30:00', 'Booking Description', '64 char SHA256 code');
-#INSERT A NEW EMPLOYEE IN A COMPANY, IF THE COMPANY ALREADY EXISTS, BASED ON AN EXISTING USER AND SETTING THEIR COMPANY ROLE
-INSERT INTO `employee`(`CompanyID`, `UserID`, `PositionID`) VALUES ((SELECT `CompanyID` FROM `company` WHERE `name` = 'test1'),(SELECT `userID` FROM `user` WHERE `email` = 'test10@test.com'), (SELECT `PositionID` FROM `companyposition` WHERE `name` = 'Employee'));
+#INSERT A NEW EMPLOYEE IN A COMPANY, IF THE COMPANY ALREADY EXISTS, BASED ON AN EXISTING USER AND SETTING THEIR COMPANY ROLE - TEMPLATE
+INSERT INTO `employee`(`CompanyID`, `UserID`, `PositionID`) VALUES ((SELECT `CompanyID` FROM `company` WHERE `name` = 'Company Name'),(SELECT `userID` FROM `user` WHERE `email` = 'user Email'), (SELECT `PositionID` FROM `companyposition` WHERE `name` = 'Company role name'));
 INSERT INTO `employee`(`CompanyID`, `UserID`, `PositionID`) VALUES (<companyID>, <userID>, (SELECT `PositionID` FROM `companyposition` WHERE `name` = 'Company Position'));
-#INSERT A NEW MEETING ROOM INTO THE SYSTEM
+#INSERT A NEW MEETING ROOM INTO THE SYSTEM - TEMPLATE
 INSERT INTO `meetingroom`(`name`, `capacity`, `description`, `location`) VALUES ('MeetingRoom Name', <capacityNumber>, 'MeetingRoom Description', 'Image url of location');
-#INSERT NEW EQUIPMENT INTO A MEETING ROOM WITH THE AMOUNT OF THAT EQUIPMENT
+#INSERT NEW EQUIPMENT INTO A MEETING ROOM WITH THE AMOUNT OF THAT EQUIPMENT - TEMPLATE
 INSERT INTO `roomequipment`(`EquipmentID`, `MeetingRoomID`, `amount`) VALUES((SELECT `EquipmentID` FROM `equipment` WHERE `name` = 'Equipment Name'), (SELECT `MeetingRoomID` FROM `meetingroom` WHERE `name`= 'Meeting Room Name'), 1);
 INSERT INTO `roomequipment`(`EquipmentID`, `MeetingRoomID`, `amount`) VALUES(<equipmentID>, <meetingroomID>, <amountNumber>);
-#INSERT NEW EQUIPMENT TO CHOOSE FROM
+#INSERT NEW EQUIPMENT THAT THE MEETING ROOMS WILL HAVE ACCESS TO - TEMPLATE
 INSERT INTO `equipment`(`name`, `description`) VALUES('Equipment Name','Equipment Description');
-#INSERT ACCESSLEVEL BACKEND ONLY
-INSERT INTO `accesslevel`(`AccessName`, `Description`) VALUES ('Admin', 'Full website access.');
+#INSERT ACCESSLEVEL BACKEND ONLY - TEMPLATE
+INSERT INTO `accesslevel`(`AccessName`, `Description`) VALUES ('Access Name', 'Access description.');
+INSERT INTO `accesslevel`(`AccessName`, `Description`) VALUES ('', '');
+#INSERT ACCESSLEVEL BACKEND ONLY - QUERIES
 INSERT INTO `accesslevel`(`AccessName`, `Description`) VALUES ('Company Owner', 'Full company information and management.');
 INSERT INTO `accesslevel`(`AccessName`, `Description`) VALUES ('In-House User', 'Can book meeting rooms with a booking code.');
 INSERT INTO `accesslevel`(`AccessName`, `Description`) VALUES ('Normal User', 'Can browse meeting room schedules, with limited information, and request a booking.');
 INSERT INTO `accesslevel`(`AccessName`, `Description`) VALUES ('Meeting Room', 'These are special accounts used to handle booking code login.');
 INSERT INTO `accesslevel`(`AccessName`, `Description`) VALUES ('AccessName', 'Access Description.');
-#INSERT LOGACTION BACKEND ONLY
+#INSERT LOGEVENT - TEMPLATE
+INSERT INTO `logevent`(`actionID`, `sessionID`, `description`, `userID`, `companyID`, `bookingID`, `meetingRoomID`, `equipmentID`) VALUES ((SELECT `actionID` FROM `logaction` WHERE `name` = 'the action name'), <sessionID>, 'This is a more in-depth description over the details connected to this log event', <userID>, <companyID>, <bookingID>, <meetingRoomID>, <equipmentID>);
+#INSERT LOGACTION BACKEND ONLY - TEMPLATE
 INSERT INTO `logaction`(`name`,`description`) VALUES ('An action name','A description of what that action should apply to');
-INSERT INTO `logaction`(`name`,`description`) VALUES ('Booking Created','The referenced user created a new meeting room booking.');
-INSERT INTO `logaction`(`name`,`description`) VALUES ('Booking Cancelled','The referenced user cancelled a meeting room booking.');
+INSERT INTO `logaction`(`name`,`description`) VALUES ('test','test');
+#INSERT LOGACTION BACKEND ONLY - QUERIES
 INSERT INTO `logaction`(`name`,`description`) VALUES ('Account Created','The referenced user just registered an account.');
 INSERT INTO `logaction`(`name`,`description`) VALUES ('Account Removed','A user account has been removed. See log description for more information.');
-INSERT INTO `logaction`(`name`,`description`) VALUES ('An action name','A description of what that action should apply to');
+INSERT INTO `logaction`(`name`,`description`) VALUES ('Booking Created','The referenced user created a new meeting room booking.');
+INSERT INTO `logaction`(`name`,`description`) VALUES ('Booking Cancelled','The referenced user cancelled a meeting room booking.');
+INSERT INTO `logaction`(`name`,`description`) VALUES ('Company Created','The referenced user just created the referenced company.');
+INSERT INTO `logaction`(`name`,`description`) VALUES ('Company Removed','A company has been removed. See log description for more information.');
+#INSERT COMPANYPOSITION BACKEND ONLY - TEMPLATE
+INSERT INTO `companyposition`(`name`, `description`) VALUES ('A position name', 'A description of what that role is within the company.');
+#INSERT COMPANYPOSITION BACKEND ONLY - QUERIES
+INSERT INTO `companyposition`(`name`, `description`) VALUES ('Owner', 'User can manage company information and add/remove users connected to the company.');
+INSERT INTO `companyposition`(`name`, `description`) VALUES ('Employee', 'User can view company information and connected users.');
+
 #
 #END OF INSERT QUERIES
 #
 #START OF UPDATE DATA
 #
-#UPDATE EMAIL OF SELECTED USER
+#UPDATE EMAIL OF SELECTED USER - TEMPLATE
 UPDATE `user` SET `email` = <newEmail> WHERE `userID` = <UserID>;
-#UPDATE PASSWORD OF SELECTED USER
+#UPDATE PASSWORD OF SELECTED USER - TEMPLATE
 UPDATE `user` SET `password` = <newPassword> WHERE `userID` = <userID>;
-#UPDATE ACCESSID OF SELECTED USER
+#UPDATE ACCESSID OF SELECTED USER - TEMPLATE
 UPDATE `user` SET `AccessID` = <newAccessID> WHERE `userID` = <userID>;
-#UPDATE FIRST AND LASTNAME OF SELECTED USER
+#UPDATE FIRST AND LASTNAME OF SELECTED USER - TEMPLATE
 UPDATE `user` SET `firstname` = 'NewFirstName', `lastname` = 'NewLastName' WHERE `userID` = <userID>;
-#UPDATE DISPLAYNAME OF SELECTED USER
+#UPDATE DISPLAYNAME OF SELECTED USER - TEMPLATE
 UPDATE `user` SET `displayName` = 'NewDisplayName' WHERE `userID` = <userID>;
-#UPDATE DEFAULT BOOKING DESCRIPTION OF SELECTED USER
+#UPDATE DEFAULT BOOKING DESCRIPTION OF SELECTED USER - TEMPLATE
 UPDATE `user` SET `bookingDescription` = 'NewBookingDescription' WHERE `userID` = <userID>;
-#UPDATE BOKING CODE OF SELECTED USER
+#UPDATE BOKING CODE OF SELECTED USER - TEMPLATE
 UPDATE `user` SET `bookingCode` = <newCodeNumber> WHERE `userID` = <userID>;
-#UPDATE THE DATETIME OF THE LAST ACTIVITY OF THE SELECTED USER
+#UPDATE THE DATETIME OF THE LAST ACTIVITY OF THE SELECTED USER - TEMPLATE
 UPDATE `user` SET `lastActivity` = CURRENT_TIMESTAMP WHERE `userID` = <userID>;
-#UPDATE THE TEMPORARY PASSWORD AND THE DATETIME IT WAS ACTIVATED FOR THE SELECTED USER
+#UPDATE THE TEMPORARY PASSWORD AND THE DATETIME IT WAS ACTIVATED FOR THE SELECTED USER - TEMPLATE
 UPDATE `user` SET `tempPassword` = 'newTempPassword', `dateRequested` = CURRENT_TIMESTAMP WHERE `userID` = <userID>;
-#UPDATE THE USER ACCOUNT TO BE ACTIVE (ALLOWED TO LOG IN TO THE WEBSITE)
+#UPDATE THE USER ACCOUNT TO BE ACTIVE (ALLOWED TO LOG IN TO THE WEBSITE) - TEMPLATE
 UPDATE `user` SET `isActive` = 1 WHERE `userID` = <userID>;
-#UPDATE THE COMPANY NAME FOR THE SELECTED COMPANY
+#UPDATE THE COMPANY NAME FOR THE SELECTED COMPANY - TEMPLATE
 UPDATE `company` SET `name` = 'New Company Name' WHERE `CompanyID` = <CompanyID>;
-#UPDATE THE COMPANY INFORMATION WITH A DATE WHEN THE SELECTED COMPANY SHOULD BE AUTOMATICALLY REMOVED
+#UPDATE THE COMPANY INFORMATION WITH A DATE WHEN THE SELECTED COMPANY SHOULD BE AUTOMATICALLY REMOVED - TEMPLATE
 UPDATE `company` SET `removeAtDate` = 'some new date in the format year-month-day' WHERE `companyID` = <CompanyID>;
 #UPDATE THE ACTIVE BOOKINGS TO BE SET AS COMPLETED WHEN THE TIME HAS GONE PAST THEIR SCHEDULED ENDING TIME
-UPDATE `booking` SET actualEndDateTime = endDateTime WHERE actualEndDateTime IS NULL AND dateTimeCancelled IS NULL AND endDateTime < CURRENT_TIMESTAMP AND bookingID <> 0;
-#UPDATE THE BOOKING TO ACKNOWLEDGE THAT IT HAS BEEN CANCELLED BY THE SELECTED USER
-UPDATE `booking` SET dateTimeCancelled = CURRENT_TIMESTAMP WHERE bookingID = <bookingID>;
-#UPDATE THE DISPLAY NAME OF THE SELECTED BOOKING
-UPDATE `booking` SET `displayName` = 'new Display Name' WHERE bookingID = <bookingID>;
-#UPDATE THE BOOKING DESCRIPTION OF THE SELECTED BOOKING
-UPDATE `booking` SET `description` = 'new Booking Description' WHERE bookingID = <bookingID>;
+UPDATE `booking` SET `actualEndDateTime` = `endDateTime` WHERE `actualEndDateTime` IS NULL AND `dateTimeCancelled` IS NULL AND `endDateTime` < CURRENT_TIMESTAMP AND `bookingID` <> 0;
+#UPDATE THE BOOKING TO ACKNOWLEDGE THAT IT HAS BEEN CANCELLED - TEMPLATE
+UPDATE `booking` SET `dateTimeCancelled` = CURRENT_TIMESTAMP WHERE `bookingID` = <bookingID>;
+#UPDATE THE DISPLAY NAME OF THE SELECTED BOOKING - TEMPLATE
+UPDATE `booking` SET `displayName` = 'new Display Name' WHERE `bookingID` = <bookingID>;
+#UPDATE THE BOOKING DESCRIPTION OF THE SELECTED BOOKING - TEMPLATE
+UPDATE `booking` SET `description` = 'new Booking Description' WHERE `bookingID` = <bookingID>;
+#UPDATE THE SELECTED USERS EMPLOYEE STATUS WITHIN THE SELECTED COMPANY - TEMPLATE
+UPDATE `employee` e JOIN `user` u ON u.userID = e.UserID JOIN `company` c ON c.CompanyID = e.CompanyID SET e.`PositionID` = <positionID> WHERE c.CompanyID = <CompanyID> AND u.userID = <userID>;
+#UPDATE THE ROOM NAME OF THE SELECTED MEETING ROOM - TEMPLATE
+UPDATE `meetingroom` SET `name` = 'New Name' WHERE `meetingRoomID` = <meetingRoomID>;
+#UPDATE THE ROOM CAPACITY OF THE SELECTED MEETING ROOM - TEMPLATE
+UPDATE `meetingroom` SET `capacity` = <NewCapacityNumber> WHERE `meetingRoomID` = <meetingRoomID>;
+#UPDATE THE ROOM DESCRIPTION OF THE SELECTED MEETING ROOM - TEMPLATE
+UPDATE `meetingroom` SET `description` = 'New Description of the meeting room' WHERE `meetingRoomID` = <meetingRoomID>;
+#UPDATE THE ROOM LOCATION IMAGE/DESCRIPTION FOR THE SELECTED MEETING ROOM - TEMPLATE
+UPDATE `meetingroom` SET `location` = 'New location URL/location description' WHERE `meetingRoomID` = <meetingRoomID>;
+#UPDATE THE ROOM TO NOT HAVE A LOCATION IMAGE/DESCRIPTION FOR THE SELECTED MEETING ROOM - TEMPLATE
+UPDATE `meetingroom` SET `location` = NULL WHERE `meetingRoomID` = <meetingroomID>;
+#UPDATE THE AMOUNT OF THE SELECTED EQUIPMENT IN THE SELECTED MEETING ROOM - TEMPLATE
+UPDATE `roomequipment` re JOIN `equipment` e ON e.EquipmentID = re.EquipmentID JOIN `meetingroom` m ON m.meetingRoomID = re.MeetingRoomID SET re.`amount` = <someNewAmountNumber> WHERE re.EquipmentID = <equipmentID> AND re.meetingRoomID = <meetingRoomID>;
+#UPDATE THE EQUIPMENT NAME OF THE SELECTED EQUIPMENT - TEMPLATE
+UPDATE `equipment` SET `name` = 'New name for equipment' WHERE `EquipmentID` = <EquipmentID>;
+#UPDATE THE EQUIPMENT DESCRIPTION OF THE SELECTED EQUIPMENT - TEMPLATE
+UPDATE `equipment` SET `description` = 'New description for equipment' WHERE `EquipmentID` = <EquipmentID>;
+#UPDATE THE NAME OF THE SELECTED LOG ACTION
+UPDATE `logaction` SET `name` = 'New log action name' WHERE `actionID` = <actionID>;
+#UPDATE THE DESCRIPTION OF THE SELECTED LOG ACTION
+UPDATE `logaction` SET `description` = 'New log action description' WHERE `actionID` = <actionID>;
+#UPDATE THE NAME OF THE SELECTED COMPANY POSITION - TEMPLATE
+UPDATE `companyposition` SET `name` = 'New position name' WHERE `PositionID` = <positionID>;
+#UPDATE THE PERMISSION DESSCRIPTION OF THE SELECTED COMPANY POSITION - TEMPLATE
+UPDATE `companyposition` SET `description` = 'New description of the permission this company position gives' WHERE `PositionID` = <positionID>;
+#UPDATE THE NAME OF THE SELECTED ACCESS LEVEL
+UPDATE `accesslevel` SET `AccessName` = 'New name for the access level' WHERE `AccessID` = <AccessID>;
+#UPDATE THE PERMISSION DESCRIPTION OF THE SELECTED ACCESS LEVEL
+UPDATE `accesslevel` SET `Description` = 'New description of the permission for the access level' WHERE `AccessID` = <AccessID>;
 #
 #END OF UPDATE DATA
 #
@@ -147,7 +190,7 @@ SELECT u.`firstname`, u.`lastname`, u.`email`, a.`AccessName`, u.`displayname`, 
 #SELECT THE OVERVIEW OVER ALL USERS WHO HAVE CREATED A BOOKING AND LIST HOW MANY THEY HAVE MADE, HOW MANY HAVE BEEN CANCELLED, HOW MANY HAVE BEEN COMPLETED AND HOW MANY ARE STILL ACTIVE
 SELECT u.firstName, u.lastName, u.email, count(b.userID) AS BookingsCreated, count(b.dateTimeCancelled) AS BookingsCancelled, count(b.actualEndDateTime) AS BookingsCompleted, count(b.userID) - count(b.dateTimeCancelled) - count(b.actualEndDateTime) AS ActiveBookings FROM `booking` b JOIN `user` u ON b.userID = u.userID GROUP BY b.userID;
 #SELECT THE ADMIN OVERVIEW OVER ALL BOOKINGS, WHICH SHOWS ROOM NAME, TIME PERIOD IT WAS/IS BOOKED FOR, DISPLAYNAME, CONNECTED COMPANY, BOOKING DESCRIPION, TIME IT WAS CREATED, CANCELLATION DATE IF CANCELLED AND TIME THE MEETING ENDED IF IT HAS ENDED
-SELECT m.`name` AS BookedRoomName, b.startDateTime AS StartTime, b.endDateTime AS EndTime, b.displayName AS BookedBy, u.firstName, u.lastName, u.email, c.`name` AS WorksForCompany, b.description AS BookingDescription, b.dateTimeCreated AS BookingWasCreatedOn, b.actualEndDateTime AS BookingWasCompletedOn, b.dateTimeCancelled AS BookingWasCancelledOn FROM `booking` b LEFT JOIN `meetingroom` m ON b.meetingRoomID = m.meetingRoomID LEFT JOIN `user` u ON u.userID = b.userID LEFT JOIN `employee` e ON e.UserID = u.userID LEFT JOIN `company` c ON c.CompanyID = e.CompanyID;
+SELECT m.`name` AS BookedRoomName, b.startDateTime AS StartTime, b.endDateTime AS EndTime, b.displayName AS BookedBy, u.firstName, u.lastName, u.email, GROUP_CONCAT(c.`name` separator ', ') AS WorksForCompany, b.description AS BookingDescription, b.dateTimeCreated AS BookingWasCreatedOn, b.actualEndDateTime AS BookingWasCompletedOn, b.dateTimeCancelled AS BookingWasCancelledOn FROM `booking` b LEFT JOIN `meetingroom` m ON b.meetingRoomID = m.meetingRoomID LEFT JOIN `user` u ON u.userID = b.userID LEFT JOIN `employee` e ON e.UserID = u.userID LEFT JOIN `company` c ON c.CompanyID = e.CompanyID GROUP BY b.bookingID;
 #SELECT THE ADMIN OVERVIEW OVER ACTIVE BOOKINGS, WHICH SHOWS ROOM NAME, TIME PERIOD IT IS BOOKED FOR, DISPLAYNAME, CONNECTED COMPANY, BOOKING DESCRIPION AND TIME IT WAS CREATED
 SELECT m.`name` AS BookedRoomName, b.startDateTime AS StartTime, b.endDateTime AS EndTime, b.displayName AS BookedBy, u.firstName, u.lastName, u.email, c.`name` AS WorksForCompany, b.description AS BookingDescription, b.dateTimeCreated AS BookingWasCreatedOn FROM `booking` b LEFT JOIN `meetingroom` m ON b.meetingRoomID = m.meetingRoomID LEFT JOIN `user` u ON u.userID = b.userID LEFT JOIN `employee` e ON e.UserID = u.userID LEFT JOIN `company` c ON c.CompanyID = e.CompanyID WHERE b.dateTimeCancelled IS NULL AND b.actualEndDateTime IS NULL AND CURRENT_TIMESTAMP < b.endDateTime;
 #SELECT THE OVERVIEW OVER ALL CREATED BOOKINGS FOR THE SELECTED USER (FOR SEEING THEIR OWN INFORMATION!)
@@ -179,3 +222,33 @@ SELECT m.`name` AS BookedRoomName, b.startDateTime AS StartTime, b.endDateTime A
 #
 #END OF SELECT QUERIES
 #
+#START OF DELETE QUERIES
+#
+#DELETE THE SELECTED USER - TEMPLATE
+DELETE FROM `user` WHERE userID = <userID>;
+#DELETE THE SELECTED COMPANY - TEMPLATE
+DELETE FROM `company` WHERE `CompanyID` = <companyID>;
+#DELETE THE SELECTED COMPANY IF THEY HAVE BEEN SET TO BE DELETED AT A SPECIFIC DATE, AND THAT DATE HAS BEEN REACHED - TEMPLATE
+DELETE FROM `company` WHERE `removeAtDate` IS NOT NULL AND `removeAtDate` < CURRENT_TIMESTAMP AND `CompanyID` <> 0;
+#DELETE THE SELECTED BOOKING INFORMATION - TEMPLATE
+DELETE FROM `booking` WHERE `bookingID` = <bookingID>;
+#DELETE ALL BOOKINGS THAT WERE CANCELLED OR ENDED x DAYS AGO - TEMPLATE
+DELETE FROM `booking` WHERE `bookingID` <> 0 AND ((`actualEndDateTime` < CURDATE() - INTERVAL x DAY) OR  (`dateTimeCancelled` < CURDATE() - INTERVAL x DAY));
+#DELETE THE EMPLOYEE STATUS OF THE SELECTED USER IN THE SELECTED COMPANY - TEMPLATE
+DELETE FROM `employee` WHERE `UserID` = <userID> AND `companyID` = <companyID>;
+#DELETE THE SELECTED MEETING ROOM - TEMPLATE
+DELETE FROM `meetingroom` WHERE `meetingRoomID` = <meetingRoomID>;
+#DELETE THE SELECTED EQUIPMENT FROM THE SELECTED ROOM - TEMPLATE
+DELETE FROM `roomequipment` WHERE `MeetingRoomID` = <meetingRoomID> AND `equipmentID` = <equipmentID>;
+#DELETE THE SELECTED EQUIPMENT FROM BEING AVAILABLE FOR MEETING ROOMS - TEMPLATE
+DELETE FROM `equipment` WHERE `EquipmentID` = <equipmentID>;
+#DELETE ALL LOG EVENTS THAT ARE OLDER THAN x DAYS - TEMPLATE
+DELETE FROM `logevent` WHERE (`logDateTime` < CURDATE() - INTERVAL x DAY) AND `logID` <> 0;
+#DELETE THE SELECTED LOGACTION (SETS EXISTING LOGEVENT ACTONS AS NULL) - TEMPLATE
+DELETE FROM `logaction` WHERE `actionID` = <actionID>;
+#DELETE THE SELECTED COMPANY POSITION - TEMPLATE
+DELETE FROM `companyposition` WHERE `PositionID` = <positionID>;
+#DELETE THE SELECTED ACCESS LEVEL - TEMPLATE
+DELETE FROM `accesslevel` WHERE `AccessID` = <accessID>;
+#
+#END OF DELETE QUERIES
