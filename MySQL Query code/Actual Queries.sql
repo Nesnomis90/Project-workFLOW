@@ -7,37 +7,49 @@
 #
 #START OF INSERT QUERIES
 #
-#INSERT DATA INTO USER (firstname, lastname, email, hashed password, accessID and activationcode)
+#INSERT DATA INTO USER (firstname, lastname, email, hashed password, accessID and activationcode) - TEMPLATE
 INSERT INTO `user`(`email`, `password`, `firstname`, `lastname`, `accessID`, `activationcode`) VALUES ('User Email', 'SHA 256 hashed password', 'First Name', 'Last Name', <accessID should be 4>, 'SHA 256 hash length activation code');
-#INSERT A NEW COMPANY
+#INSERT A NEW COMPANY - TEMPLATE
 INSERT INTO `company`(`name`) VALUES ('Company Name');
-#INSERT A NEW BOOKING OF A MEETING ROOM BASED ON THE SELECTED MEETING ROOM AND THE USER WHO CREATED IT
+#INSERT A NEW BOOKING OF A MEETING ROOM BASED ON THE SELECTED MEETING ROOM AND THE USER WHO CREATED IT - TEMPLATE
 INSERT INTO `booking`(`meetingRoomID`, `userID`, `displayName`, `startDateTime`, `endDateTime`, `description`, `cancellationCode`) VALUES ((SELECT `meetingRoomID` FROM `meetingroom` WHERE `name` = 'Meeting Room Name'), (SELECT `userID` FROM `user` WHERE `email` = 'Email'), 'Display Name', '2017-03-15 16:00:00', '2017-03-15 17:30:00', 'Booking Description', 'ecd71870d1963316a97e3ac3408c9835ad8cf0f3c1bc703527c30265534f75ae');
 INSERT INTO `booking`(`meetingRoomID`, `userID`, `displayName`, `startDateTime`, `endDateTime`, `description`, `cancellationCode`) VALUES (<meetingroomID>, <userID>, 'Display Name', '2017-03-15 16:00:00', '2017-03-15 17:30:00', 'Booking Description', '64 char SHA256 code');
-#INSERT A NEW EMPLOYEE IN A COMPANY, IF THE COMPANY ALREADY EXISTS, BASED ON AN EXISTING USER AND SETTING THEIR COMPANY ROLE
-INSERT INTO `employee`(`CompanyID`, `UserID`, `PositionID`) VALUES ((SELECT `CompanyID` FROM `company` WHERE `name` = 'test1'),(SELECT `userID` FROM `user` WHERE `email` = 'test10@test.com'), (SELECT `PositionID` FROM `companyposition` WHERE `name` = 'Employee'));
+#INSERT A NEW EMPLOYEE IN A COMPANY, IF THE COMPANY ALREADY EXISTS, BASED ON AN EXISTING USER AND SETTING THEIR COMPANY ROLE - TEMPLATE
+INSERT INTO `employee`(`CompanyID`, `UserID`, `PositionID`) VALUES ((SELECT `CompanyID` FROM `company` WHERE `name` = 'Company Name'),(SELECT `userID` FROM `user` WHERE `email` = 'user Email'), (SELECT `PositionID` FROM `companyposition` WHERE `name` = 'Company role name'));
 INSERT INTO `employee`(`CompanyID`, `UserID`, `PositionID`) VALUES (<companyID>, <userID>, (SELECT `PositionID` FROM `companyposition` WHERE `name` = 'Company Position'));
-#INSERT A NEW MEETING ROOM INTO THE SYSTEM
+#INSERT A NEW MEETING ROOM INTO THE SYSTEM - TEMPLATE
 INSERT INTO `meetingroom`(`name`, `capacity`, `description`, `location`) VALUES ('MeetingRoom Name', <capacityNumber>, 'MeetingRoom Description', 'Image url of location');
-#INSERT NEW EQUIPMENT INTO A MEETING ROOM WITH THE AMOUNT OF THAT EQUIPMENT
+#INSERT NEW EQUIPMENT INTO A MEETING ROOM WITH THE AMOUNT OF THAT EQUIPMENT - TEMPLATE
 INSERT INTO `roomequipment`(`EquipmentID`, `MeetingRoomID`, `amount`) VALUES((SELECT `EquipmentID` FROM `equipment` WHERE `name` = 'Equipment Name'), (SELECT `MeetingRoomID` FROM `meetingroom` WHERE `name`= 'Meeting Room Name'), 1);
 INSERT INTO `roomequipment`(`EquipmentID`, `MeetingRoomID`, `amount`) VALUES(<equipmentID>, <meetingroomID>, <amountNumber>);
-#INSERT NEW EQUIPMENT TO CHOOSE FROM
+#INSERT NEW EQUIPMENT THAT THE MEETING ROOMS WILL HAVE ACCESS TO - TEMPLATE
 INSERT INTO `equipment`(`name`, `description`) VALUES('Equipment Name','Equipment Description');
-#INSERT ACCESSLEVEL BACKEND ONLY
+#INSERT ACCESSLEVEL BACKEND ONLY - TEMPLATE
 INSERT INTO `accesslevel`(`AccessName`, `Description`) VALUES ('Admin', 'Full website access.');
+#INSERT ACCESSLEVEL BACKEND ONLY - QUERIES
 INSERT INTO `accesslevel`(`AccessName`, `Description`) VALUES ('Company Owner', 'Full company information and management.');
 INSERT INTO `accesslevel`(`AccessName`, `Description`) VALUES ('In-House User', 'Can book meeting rooms with a booking code.');
 INSERT INTO `accesslevel`(`AccessName`, `Description`) VALUES ('Normal User', 'Can browse meeting room schedules, with limited information, and request a booking.');
 INSERT INTO `accesslevel`(`AccessName`, `Description`) VALUES ('Meeting Room', 'These are special accounts used to handle booking code login.');
 INSERT INTO `accesslevel`(`AccessName`, `Description`) VALUES ('AccessName', 'Access Description.');
-#INSERT LOGACTION BACKEND ONLY
+#INSERT LOGEVENT - TEMPLATE
+INSERT INTO `logevent`(`actionID`, `sessionID`, `description`, `userID`, `companyID`, `bookingID`, `meetingRoomID`, `equipmentID`) VALUES ((SELECT `actionID` FROM `logaction` WHERE `name` = 'the action name'), <sessionID>, 'This is a more in-depth description over the details connected to this log event', <userID>, <companyID>, <bookingID>, <meetingRoomID>, <equipmentID>);
+#INSERT LOGACTION BACKEND ONLY - TEMPLATE
 INSERT INTO `logaction`(`name`,`description`) VALUES ('An action name','A description of what that action should apply to');
-INSERT INTO `logaction`(`name`,`description`) VALUES ('Booking Created','The referenced user created a new meeting room booking.');
-INSERT INTO `logaction`(`name`,`description`) VALUES ('Booking Cancelled','The referenced user cancelled a meeting room booking.');
+INSERT INTO `logaction`(`name`,`description`) VALUES ('','');
+#INSERT LOGACTION BACKEND ONLY - QUERIES
 INSERT INTO `logaction`(`name`,`description`) VALUES ('Account Created','The referenced user just registered an account.');
 INSERT INTO `logaction`(`name`,`description`) VALUES ('Account Removed','A user account has been removed. See log description for more information.');
-INSERT INTO `logaction`(`name`,`description`) VALUES ('An action name','A description of what that action should apply to');
+INSERT INTO `logaction`(`name`,`description`) VALUES ('Booking Created','The referenced user created a new meeting room booking.');
+INSERT INTO `logaction`(`name`,`description`) VALUES ('Booking Cancelled','The referenced user cancelled a meeting room booking.');
+INSERT INTO `logaction`(`name`,`description`) VALUES ('Company Created','The referenced user just created the referenced company.');
+INSERT INTO `logaction`(`name`,`description`) VALUES ('Company Removed','A company has been removed. See log description for more information.');
+#INSERT COMPANYPOSITION BACKEND ONLY - TEMPLATE
+INSERT INTO `companyposition`(`name`, `description`) VALUES ('A position name', 'A description of what that role is within the company.');
+#INSERT COMPANYPOSITION BACKEND ONLY - QUERIES
+INSERT INTO `companyposition`(`name`, `description`) VALUES ('Owner', 'User can manage company information and add/remove users connected to the company.');
+INSERT INTO `companyposition`(`name`, `description`) VALUES ('Employee', 'User can view company information and connected users.');
+
 #
 #END OF INSERT QUERIES
 #
@@ -63,7 +75,7 @@ UPDATE `user` SET `lastActivity` = CURRENT_TIMESTAMP WHERE `userID` = <userID>;
 UPDATE `user` SET `tempPassword` = 'newTempPassword', `dateRequested` = CURRENT_TIMESTAMP WHERE `userID` = <userID>;
 #UPDATE THE USER ACCOUNT TO BE ACTIVE (ALLOWED TO LOG IN TO THE WEBSITE)
 UPDATE `user` SET `isActive` = 1 WHERE `userID` = <userID>;
-#UPDATE THE COMPANY NAME FOR THE SELECTED COMPANY
+#UPDATE THE COMPANY NAME FOR THE SELECTED COMPANY - TEMPLATE
 UPDATE `company` SET `name` = 'New Company Name' WHERE `CompanyID` = <CompanyID>;
 #UPDATE THE COMPANY INFORMATION WITH A DATE WHEN THE SELECTED COMPANY SHOULD BE AUTOMATICALLY REMOVED
 UPDATE `company` SET `removeAtDate` = 'some new date in the format year-month-day' WHERE `companyID` = <CompanyID>;
