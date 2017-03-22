@@ -6,15 +6,13 @@ SELECT `userID` FROM `user` WHERE `email` = 'test@test.com';
 
 SELECT `CompanyID` FROM `company` WHERE `name` = 'test5';
 
-SELECT * FROM `employee`;
-
 SELECT * FROM `user`;
 
 SELECT * FROM `company`;
 
-SELECT * FROM `companyposition`;
-
 SELECT * FROM `booking`;
+
+SELECT * FROM `employee`;
 
 SELECT * FROM `meetingroom`;
 
@@ -22,7 +20,93 @@ SELECT * FROM `roomequipment`;
 
 SELECT * FROM `equipment`;
 
+SELECT * FROM `logevent`;
+
+SELECT * FROM `logaction`;
+
+SELECT * FROM `companyposition`;
+
 SELECT * FROM `accesslevel`;
+
+INSERT INTO `accesslevel`(`accessname`, `description`) VALUES ('test','test');
+
+DELETE FROM `accesslevel` WHERE `AccessID` = 7;
+
+INSERT INTO `companyposition`(`name`, `description`) VALUES ('test','test');
+
+DELETE FROM `companyposition` WHERE `PositionID` = 3;
+
+DELETE FROM `logaction` WHERE `actionID` = 1;
+
+INSERT INTO `logevent`(`actionID`) VALUES (1);
+
+UPDATE `logevent` SET `logDateTime` = `logDateTime` - INTERVAL 40 DAY WHERE `logID` < 6;
+
+DELETE FROM `logevent` WHERE (`logDateTime` < CURDATE() - INTERVAL 30 DAY) AND `logID` <> 0;
+
+DELETE FROM `equipment` WHERE `EquipmentID` = 3;
+
+SELECT re.amount, e.`name`, e.`description` FROM `equipment` e JOIN `roomequipment` re JOIN `meetingroom` m WHERE m.meetingroomid = re.meetingroomid AND re.EquipmentID = e.EquipmentID AND m.`name` = 'Blåmann';
+
+DELETE FROM `roomequipment` WHERE `MeetingRoomID` = 1 AND `equipmentID` = 3;
+
+INSERT INTO `roomequipment`(`equipmentID`, `meetingRoomID`, `amount`) VALUES (3,1,3);
+
+UPDATE `meetingroom` SET `location` = NULL WHERE `meetingRoomID` = 2;
+
+UPDATE `meetingroom` SET `location` = 'New location URL/location description' WHERE `meetingRoomID` = 2;
+
+DELETE FROM `meetingroom` WHERE `meetingRoomID` = 3;
+
+SELECT m.`name` AS BookedRoomName, b.startDateTime AS StartTime, b.endDateTime AS EndTime, b.displayName AS BookedBy, u.firstName, u.lastName, u.email, c.`name` AS WorksForCompany, b.description AS BookingDescription, b.dateTimeCreated AS BookingWasCreatedOn, b.actualEndDateTime AS BookingWasCompletedOn, b.dateTimeCancelled AS BookingWasCancelledOn FROM `booking` b LEFT JOIN `meetingroom` m ON b.meetingRoomID = m.meetingRoomID LEFT JOIN `user` u ON u.userID = b.userID LEFT JOIN `employee` e ON e.UserID = u.userID LEFT JOIN `company` c ON c.CompanyID = e.CompanyID;
+
+SELECT m.`name` AS BookedRoomName, b.startDateTime AS StartTime, b.endDateTime AS EndTime, b.displayName AS BookedBy, u.firstName, u.lastName, u.email, GROUP_CONCAT(c.`name` separator ', ') AS WorksForCompany, b.description AS BookingDescription, b.dateTimeCreated AS BookingWasCreatedOn, b.actualEndDateTime AS BookingWasCompletedOn, b.dateTimeCancelled AS BookingWasCancelledOn FROM `booking` b LEFT JOIN `meetingroom` m ON b.meetingRoomID = m.meetingRoomID LEFT JOIN `user` u ON u.userID = b.userID LEFT JOIN `employee` e ON e.UserID = u.userID LEFT JOIN `company` c ON c.CompanyID = e.CompanyID GROUP BY b.bookingID;
+
+DELETE FROM `company` WHERE `companyID` = 3;
+
+DELETE FROM `user` WHERE `userID` = 9;
+
+INSERT INTO `employee`(`companyID`, `userID`, `positionID`) VALUES (1,1,2);
+
+DELETE FROM `employee` WHERE `UserID` = 10 AND `companyID` = 1;
+
+SELECT * FROM `booking` ORDER BY `startDateTime` ASC;
+
+DELETE FROM `booking` WHERE `bookingID` <> 0 AND ((`actualEndDateTime` < CURDATE() - INTERVAL 30 DAY) OR  (`dateTimeCancelled` < CURDATE() - INTERVAL 30 DAY));
+
+DELETE FROM `booking` WHERE `bookingID` = 8;
+
+UPDATE `company` SET `removeAtDate` = DATE(CURRENT_TIMESTAMP) WHERE `CompanyID` = 9;
+
+DELETE FROM `company` WHERE `removeAtDate` IS NOT NULL AND `removeAtDate` < CURRENT_TIMESTAMP AND `CompanyID` <> 0;
+
+DELETE FROM `company` WHERE `CompanyID` = 8;
+
+DELETE FROM `user` WHERE userID = 15;
+
+UPDATE `accesslevel` SET `Description` = 'New description of the permission for the access level' WHERE `AccessID` = 6;
+
+UPDATE `accesslevel` SET `AccessName` = 'New name for the access level' WHERE `AccessID` = 6;
+
+UPDATE `logaction` SET `name` = 'New log action name' WHERE `actionID` = 1;
+
+UPDATE `companyposition` SET `name` = 'Employee' WHERE `PositionID` = 2;
+
+UPDATE `equipment` SET `description` = 'New description for equipment' WHERE `EquipmentID` = 3;
+
+UPDATE `equipment` SET `name` = 'New name for equipment' WHERE `EquipmentID` = 3;
+
+UPDATE `roomequipment` re JOIN `equipment` e ON e.EquipmentID = re.EquipmentID JOIN `meetingroom` m ON m.meetingRoomID = re.MeetingRoomID SET re.`amount` = 2 WHERE re.EquipmentID = 2 AND re.meetingRoomID = 1;
+
+UPDATE `meetingroom` SET `location` = 'New location URL/location description' WHERE `meetingRoomID` = 3;
+
+INSERT INTO `meetingroom`(`name`, `capacity`, `description`, `location`) VALUES ('A fake meeting room', 0, 'Cannot fit anyone.', 'Random image url');
+
+UPDATE `meetingroom` SET `description` = 'New Description of the meeting room' WHERE `meetingRoomID` = 3;
+
+UPDATE `meetingroom` SET `capacity` = 4 WHERE `meetingRoomID` = 2;
+
+UPDATE `employee` e JOIN `user` u ON u.userID = e.UserID JOIN `company` c ON c.CompanyID = e.CompanyID SET e.`PositionID` = 1 WHERE c.CompanyID = 4 AND u.userID = 5;
 
 SELECT m.`name` AS BookedRoomName, b.startDateTime AS StartTime, b.endDateTime AS EndTime FROM `booking` b LEFT JOIN `meetingroom` m ON b.meetingRoomID = m.meetingRoomID LEFT JOIN `user` u ON u.userID = b.userID LEFT JOIN `employee` e ON e.UserID = u.userID LEFT JOIN `company` c ON c.CompanyID = e.CompanyID WHERE b.dateTimeCancelled IS NULL AND b.actualEndDateTime IS NULL AND b.endDateTime BETWEEN '2017-03-22 14:20:00' AND '2017-03-30 14:30:00';
 
@@ -42,7 +126,7 @@ INSERT INTO booking(`meetingRoomID`, `userID`, `displayName`, `startDateTime`, `
 
 INSERT INTO booking(`meetingRoomID`, `userID`, `displayName`, `startDateTime`, `endDateTime`, `description`, `cancellationCode`) VALUES ((SELECT `meetingRoomID` FROM `meetingroom` WHERE `name` = 'Toillpeis'), (SELECT `userID` FROM `user` WHERE `email` = 'test2@test.com'), 'A real toillpeis', '2017-03-21 12:00:00', '2017-03-21 13:30:00', 'I could not find a better room', 'ecd71870d1963316a97e3ac3408c9835ad8cf0f3c1bc703527c30265534f75ae');
 
-INSERT INTO booking(`meetingRoomID`, `userID`, `displayName`, `startDateTime`, `endDateTime`, `description`, `cancellationCode`) VALUES ((SELECT `meetingRoomID` FROM `meetingroom` WHERE `name` = 'Toillpeis'), (SELECT `userID` FROM `user` WHERE `email` = 'test11@test.com'), 'NEED IT!', '2017-03-22 14:30:00', '2017-03-22 15:30:00', '...?', 'ecd71870d1963316a97e3ac3408c9835ad8cf0f3c1bc703527c30265534f75ae');
+INSERT INTO booking(`meetingRoomID`, `userID`, `displayName`, `startDateTime`, `endDateTime`, `description`, `cancellationCode`) VALUES ((SELECT `meetingRoomID` FROM `meetingroom` WHERE `name` = 'Toillpeis'), (SELECT `userID` FROM `user` WHERE `email` = 'test11@test.com'), 'NEED IT!', '2017-01-22 14:30:00', '2017-01-22 15:30:00', '...?', 'ecd71870d1963316a97e3ac3408c9835ad8cf0f3c1bc703527c30265534f75ae');
 
 UPDATE `booking` SET actualEndDateTime = endDateTime WHERE actualEndDateTime IS NULL AND dateTimeCancelled IS NULL AND endDateTime < CURRENT_TIMESTAMP AND bookingID <> 0;
 
@@ -96,8 +180,6 @@ INSERT INTO `equipment`(`name`, `description`) VALUES('WiFi','This room has a Wi
 
 INSERT INTO `equipment`(`name`, `description`) VALUES('ETHERNET','This room supports wired Ethernet connections.');
 
-UPDATE `meetingroom` SET `EquipmentID` = ((SELECT `EquipmentID` FROM `equipment` WHERE `name` = 'HDTV')) WHERE `EquipmentID` = 0;
-
 UPDATE `equipment` SET `description` = '2.4 and 5 Ghz.' WHERE `equipmentID` = 2;
 
 UPDATE `equipment` SET `description` = 'CAT-6 10Gb/s.' WHERE `equipmentID` = 3;
@@ -139,8 +221,6 @@ SELECT DISTINCT u.userID FROM `user` u JOIN `company` c JOIN `employee` e JOIN `
 SELECT c.`name` FROM `company` c JOIN `employee` e JOIN `companyposition`cp JOIN `user` u WHERE c.CompanyID = e.CompanyID AND u.userID = e.UserID;
 
 SELECT cp.`name` FROM `companyposition` cp JOIN `company` c JOIN `employee` e JOIN `user` u WHERE c.companyID = e.companyID AND u.userid = e.userid AND cp.positionID = e.positionID;
-
-SELECT re.amount, e.`name`, e.`description` FROM `equipment` e JOIN `roomequipment` re JOIN `meetingroom` m WHERE m.meetingroomid = re.meetingroomid AND re.EquipmentID = e.EquipmentID AND m.`name` = 'Blåmann';
 
 SELECT * FROM `equipment` e JOIN `roomequipment` re JOIN `meetingroom` m WHERE m.meetingroomid = re.meetingroomid AND re.EquipmentID = e.EquipmentID;
 
