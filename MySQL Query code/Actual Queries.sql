@@ -1,6 +1,147 @@
 #START OF CREATE TABLE QUERIES
 #
-#
+#ACCESS LEVEL
+CREATE TABLE `accesslevel` (
+  `AccessID` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `AccessName` varchar(45) DEFAULT NULL,
+  `Description` text,
+  PRIMARY KEY (`AccessID`)
+) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8;
+#BOOKING
+CREATE TABLE `booking` (
+  `bookingID` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `meetingRoomID` int(10) unsigned NOT NULL,
+  `userID` int(10) unsigned NOT NULL,
+  `displayName` varchar(45) DEFAULT NULL,
+  `dateTimeCreated` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `dateTimeCancelled` timestamp NULL DEFAULT NULL,
+  `startDateTime` datetime NOT NULL,
+  `endDateTime` datetime NOT NULL,
+  `actualEndDateTime` datetime DEFAULT NULL,
+  `description` text,
+  `cancellationCode` char(64) NOT NULL,
+  PRIMARY KEY (`bookingID`),
+  KEY `FK_MeetingRoomID_idx` (`meetingRoomID`),
+  KEY `FK_UserID_idx` (`userID`),
+  KEY `FK_UserID2_idx` (`userID`),
+  CONSTRAINT `FK_MeetingRoomID` FOREIGN KEY (`meetingRoomID`) REFERENCES `meetingroom` (`meetingRoomID`) ON DELETE NO ACTION ON UPDATE CASCADE,
+  CONSTRAINT `FK_UserID2` FOREIGN KEY (`userID`) REFERENCES `user` (`userID`) ON DELETE NO ACTION ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+#COMPANY
+CREATE TABLE `company` (
+  `CompanyID` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `name` varchar(255) NOT NULL,
+  `dateTimeCreated` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `removeAtDate` date DEFAULT NULL,
+  `bookingTimeUsedThisMonth` smallint(5) unsigned NOT NULL DEFAULT '0',
+  PRIMARY KEY (`CompanyID`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+#COMPANYPOSITION
+CREATE TABLE `companyposition` (
+  `PositionID` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `name` varchar(255) NOT NULL,
+  `description` text NOT NULL,
+  PRIMARY KEY (`PositionID`),
+  UNIQUE KEY `name_UNIQUE` (`name`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+#EMPLOYEE
+CREATE TABLE `employee` (
+  `CompanyID` int(10) unsigned NOT NULL,
+  `UserID` int(10) unsigned NOT NULL,
+  `startDateTime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `PositionID` int(10) unsigned NOT NULL,
+  PRIMARY KEY (`UserID`,`CompanyID`),
+  KEY `FK_CompanyID_idx` (`CompanyID`),
+  KEY `FK_PositionID_idx` (`PositionID`),
+  CONSTRAINT `FK_CompanyID` FOREIGN KEY (`CompanyID`) REFERENCES `company` (`CompanyID`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `FK_UserID` FOREIGN KEY (`UserID`) REFERENCES `user` (`userID`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+#EQUIPMENT
+CREATE TABLE `equipment` (
+  `EquipmentID` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `name` varchar(255) NOT NULL,
+  `description` text NOT NULL,
+  PRIMARY KEY (`EquipmentID`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+#LOGACTION
+CREATE TABLE `logaction` (
+  `actionID` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `name` varchar(255) NOT NULL,
+  `description` varchar(255) NOT NULL,
+  PRIMARY KEY (`actionID`),
+  UNIQUE KEY `name_UNIQUE` (`name`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+#LOGEVENT
+CREATE TABLE `logevent` (
+  `logID` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `actionID` int(10) unsigned DEFAULT NULL,
+  `userID` int(10) unsigned DEFAULT NULL,
+  `companyID` int(10) unsigned DEFAULT NULL,
+  `bookingID` int(10) unsigned DEFAULT NULL,
+  `meetingRoomID` int(10) unsigned DEFAULT NULL,
+  `equipmentID` int(10) unsigned DEFAULT NULL,
+  `sessionID` int(10) unsigned DEFAULT NULL,
+  `description` text,
+  `logDateTime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`logID`),
+  KEY `FK_UserID3_idx` (`userID`),
+  KEY `FK_ActionID_idx` (`actionID`),
+  KEY `FK_CompanyID2_idx` (`companyID`),
+  KEY `FK_BookingID_idx` (`bookingID`),
+  KEY `FK_MeetingRoomID3_idx` (`meetingRoomID`),
+  KEY `FK_EquipmentID2_idx` (`equipmentID`),
+  KEY `FK_SessionID_idx` (`sessionID`),
+  CONSTRAINT `FK_ActionID` FOREIGN KEY (`actionID`) REFERENCES `logaction` (`actionID`) ON DELETE SET NULL ON UPDATE CASCADE,
+  CONSTRAINT `FK_BookingID` FOREIGN KEY (`bookingID`) REFERENCES `booking` (`bookingID`) ON DELETE SET NULL ON UPDATE CASCADE,
+  CONSTRAINT `FK_CompanyID2` FOREIGN KEY (`companyID`) REFERENCES `company` (`CompanyID`) ON DELETE SET NULL ON UPDATE CASCADE,
+  CONSTRAINT `FK_EquipmentID2` FOREIGN KEY (`equipmentID`) REFERENCES `equipment` (`EquipmentID`) ON DELETE SET NULL ON UPDATE CASCADE,
+  CONSTRAINT `FK_MeetingRoomID3` FOREIGN KEY (`meetingRoomID`) REFERENCES `meetingroom` (`meetingRoomID`) ON DELETE SET NULL ON UPDATE CASCADE,
+  CONSTRAINT `FK_SessionID` FOREIGN KEY (`sessionID`) REFERENCES `websession` (`sessionID`) ON DELETE SET NULL ON UPDATE CASCADE,
+  CONSTRAINT `FK_UserID3` FOREIGN KEY (`userID`) REFERENCES `user` (`userID`) ON DELETE SET NULL ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+#MEETINGROOM
+CREATE TABLE `meetingroom` (
+  `meetingRoomID` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `name` varchar(255) NOT NULL DEFAULT 'No name set',
+  `capacity` tinyint(3) unsigned NOT NULL DEFAULT '1',
+  `description` text,
+  `location` varchar(255) DEFAULT NULL,
+  PRIMARY KEY (`meetingRoomID`)
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8;
+#ROOMEQUIPMENT
+CREATE TABLE `roomequipment` (
+  `EquipmentID` int(10) unsigned NOT NULL,
+  `MeetingRoomID` int(10) unsigned NOT NULL,
+  `amount` tinyint(3) unsigned NOT NULL DEFAULT '1',
+  PRIMARY KEY (`EquipmentID`,`MeetingRoomID`),
+  KEY `FK_MeetingRoomID_idx` (`MeetingRoomID`),
+  CONSTRAINT `FK_EquipmentID` FOREIGN KEY (`EquipmentID`) REFERENCES `equipment` (`EquipmentID`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `FK_MeetingRoomID2` FOREIGN KEY (`MeetingRoomID`) REFERENCES `meetingroom` (`meetingRoomID`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+#USER
+CREATE TABLE `user` (
+  `userID` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `email` varchar(255) NOT NULL,
+  `password` char(64) NOT NULL,
+  `create_time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `firstName` varchar(255) DEFAULT NULL,
+  `lastName` varchar(255) DEFAULT NULL,
+  `displayName` varchar(255) DEFAULT NULL,
+  `bookingDescription` text,
+  `bookingCode` varchar(10) DEFAULT NULL,
+  `tempPassword` char(64) DEFAULT NULL,
+  `dateRequested` timestamp NULL DEFAULT NULL,
+  `AccessID` int(10) unsigned NOT NULL,
+  `lastActivity` timestamp NULL DEFAULT NULL,
+  `isActive` tinyint(1) NOT NULL DEFAULT '0',
+  `activationCode` char(64) NOT NULL,
+  PRIMARY KEY (`userID`),
+  UNIQUE KEY `email_UNIQUE` (`email`),
+  UNIQUE KEY `bookingCode_UNIQUE` (`bookingCode`),
+  KEY `FK_AccessID_idx` (`AccessID`),
+  CONSTRAINT `FK_AccessID` FOREIGN KEY (`AccessID`) REFERENCES `accesslevel` (`AccessID`) ON DELETE NO ACTION ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+#WEBSESSION
 
 #
 #END OF CREATE TABLE QUERIES
