@@ -60,8 +60,8 @@ try {
 catch(PDOException $e){
 	echo "Error: " . $e->getMessage();
 }
-$conn = null;
-echo "</table>";
+$conn = null;		//Close connection
+echo "</table>";	//End syntax for the created table
 
 ?>
 

@@ -3,6 +3,8 @@
 require_once 'phpDBconnect.php';
 
 create_db();
-$conn = connect_to_db();
+create_tables();
+//$conn = connect_to_db();
+//$conn = null;
 
 ?>
