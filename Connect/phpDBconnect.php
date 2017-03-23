@@ -1,9 +1,9 @@
 <?php
 //$dbengine 	= 'mysql';
-define('dbhost', 'localhost');
-define('dbuser', 'root');
-define('dbpassword', '5Bdp32LAHYQ8AemvQM9P');
-define('dbname', 'meetingflow');
+define('DB_HOST', 'localhost');
+define('DB_USER', 'root');
+define('DB_PASSWORD', '5Bdp32LAHYQ8AemvQM9P');
+define('DB_NAME', 'meetingflow');
 
 // Connect to server and create our wanted database
 function create_db()
@@ -12,16 +12,22 @@ function create_db()
 
 	try {
 	//	Create connection without an existing database
-	$pdo = new PDO("mysql:host=".dbhost, dbuser, dbpassword);
+	$pdo = new PDO("mysql:host=".DB_HOST, DB_USER, DB_PASSWORD);
 	//	set the PDO error mode to exception
 	$pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 	
-	// Creating the SQL query to make the database
-	$sql = "CREATE DATABASE IF NOT EXISTS " . dbname;
+	if(!dbExists($pdo,DB_NAME)){
+		// Creating the SQL query to make the database
+		$sql = "CREATE DATABASE IF NOT EXISTS " . DB_NAME;
 
-	//Executing the SQL query
-	$pdo->exec($sql);
-	$output = 'Created database: ' . dbname . "<br />";
+		//Executing the SQL query
+		$pdo->exec($sql);
+		$output = 'Created database: ' . DB_NAME . '<br />';
+
+	} else {
+		$output = 'Database: ' . DB_NAME . ' already exists.<br />';
+	}
+	
 	include 'output.html.php';
 	
 	//Closing the connection
@@ -41,20 +47,17 @@ catch(PDOException $e)
 function connect_to_db()
 {
 	$pdo = null;
+	
 	try {
 	//	Create connection with an existing database
-	$pdo = new PDO("mysql:host=".dbhost."; dbname=" .dbname, dbuser, dbpassword);
+	$pdo = new PDO("mysql:host=".DB_HOST.";dbname=" . DB_NAME, DB_USER, DB_PASSWORD);
 	//	set the PDO error mode to exception
 	$pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 	
-	// use the correct database
-	//$sql = "USE " . dbname;
-	//$pdo->exec($sql);
-	
-	$output = "Succesfully connected to database: " . dbname . "<br />";
+	$output = "Succesfully connected to database: " . DB_NAME . "<br />";
 	include 'output.html.php';
 	
-	return $pdo;
+	return $pdo; //Return the active connection
 
 	} 
 catch(PDOException $e)
@@ -66,6 +69,26 @@ catch(PDOException $e)
 
 	}
 }
+
+//Function to see if database exists
+function dbExists($pdo, $databaseName){
+	try{
+		// Run a SHOW DATABASES query on the selected database
+		$result = $pdo->query("SHOW DATABASES LIKE '$databaseName'");
+		// The result will either be an empty set, if it doesn't exist. Or a single row, if it does exist.
+		$row = $result->rowCount();
+		if ($row > 0){
+			return TRUE;
+		} else {
+			return FALSE;
+		}
+	} 
+	catch (Exception $e)
+	{
+		return FALSE;
+	}
+}
+
 
 //Function to see if database table exists
 function tableExists($pdo, $table) {
@@ -115,7 +138,6 @@ function create_tables()
 		echo '<b>Execution time for table ' . $table. ':</b> ' . $time . 's<br />';	
 		}
 
-			
 			//User accounts
 		$table = 'user';
 		//Check if table already exists
@@ -201,7 +223,8 @@ function create_tables()
 			echo '<b>Execution time for table ' . $table. ':</b> ' . $time . 's<br />';	
 		} else { 
 			echo '<b>Table ' . $table. ' already exists</b>.<br />';
-		}		
+		}	
+		
 			//Company
 		$table = 'company';
 		//Check if table already exists
@@ -221,7 +244,8 @@ function create_tables()
 			echo '<b>Execution time for table ' . $table. ':</b> ' . $time . 's<br />';	
 		} else { 
 			echo '<b>Table ' . $table. ' already exists</b>.<br />';
-		}		
+		}	
+		
 			//Company Position
 		$table = 'companyposition';
 		//Check if table already exists
@@ -240,7 +264,8 @@ function create_tables()
 			echo '<b>Execution time for table ' . $table. ':</b> ' . $time . 's<br />';	
 		} else { 
 			echo '<b>Table ' . $table. ' already exists</b>.<br />';
-		}		
+		}	
+		
 			//Employee
 		$table = 'employee';
 		//Check if table already exists
@@ -263,7 +288,8 @@ function create_tables()
 			echo '<b>Execution time for table ' . $table. ':</b> ' . $time . 's<br />';			
 		} else { 
 			echo '<b>Table ' . $table. ' already exists</b>.<br />';
-		}		
+		}	
+		
 			//Equipment for meeting rooms
 		$table = 'equipment';
 		//Check if table already exists
@@ -281,7 +307,8 @@ function create_tables()
 			echo '<b>Execution time for table ' . $table. ':</b> ' . $time . 's<br />';		
 		} else { 
 			echo '<b>Table ' . $table. ' already exists</b>.<br />';
-		}		
+		}	
+		
 			//Log Action
 		$table = 'logaction';
 		//Check if table already exists
@@ -301,6 +328,7 @@ function create_tables()
 		} else { 
 			echo '<b>Table ' . $table. ' already exists</b>.<br />';
 		}
+		
 			//Equipment in meeting rooms
 		$table = 'roomequipment';
 		//Check if table already exists
@@ -322,6 +350,7 @@ function create_tables()
 		} else { 
 			echo '<b>Table ' . $table. ' already exists</b>.<br />';
 		}
+		
 			//Web Session information
 		$table = 'websession';
 		//Check if table already exists
@@ -382,7 +411,8 @@ function create_tables()
 			echo '<b>Execution time for table ' . $table. ':</b> ' . $time . 's<br />';	
 		} else { 
 			echo '<b>Table ' . $table. ' already exists</b>.<br />';
-		}		
+		}	
+		
 		//Calculating total time spent checking if tables exist and/or creating them.
 		echo '<b>Total Execution Time for creating all tables:</b> ' . $totaltime . 's.<br />';
 		
@@ -391,7 +421,7 @@ function create_tables()
 	}
 	catch(PDOException $e)
 	{
-		$output = 'Failed to create tables for ' . dbname . "<br />";
+		$output = 'Failed to create tables for ' . DB_NAME . "<br />";
 		include 'output.html.php';
 		
 		$conn = null;

@@ -1,5 +1,11 @@
 USE test;
 
+CREATE DATABASE IF NOT EXISTS test;
+
+SHOW DATABASES LIKE 'test';
+
+SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = 'sys';
+
 INSERT INTO employee(`CompanyID`, `UserID`) VALUES ((SELECT `CompanyID` FROM `company` WHERE `name` = 'test5'),(SELECT `userID` FROM `user` WHERE `email` = 'test@test.com'));
 
 SELECT `userID` FROM `user` WHERE `email` = 'test@test.com';
