@@ -112,6 +112,52 @@ function fillAccessLevel($pdo){
 	}
 }
 
+//Function to fill in default values for the Company Position table
+function fillCompanyPosition($pdo){
+	try
+	{
+		// Insert the needed values.
+		$pdo->beginTransaction();
+		$pdo->exec("INSERT INTO `companyposition`(`name`, `description`) VALUES ('Owner', 'User can manage company information and add/remove users connected to the company.')");
+		$pdo->exec("INSERT INTO `companyposition`(`name`, `description`) VALUES ('Employee', 'User can view company information and connected users.')");
+		
+		// Commit the transaction
+		$pdo->commit();
+		
+	}
+	catch (PDOException $e)
+	{
+		//	Cancels the transaction from going through if something went wrong.
+		$pdo->rollback();
+		echo "Error: " . $e->getMessage() . "<br />";
+	}
+}
+
+//Function to fill in default values for the Log Action table
+function fillLogAction($pdo){
+	try
+	{
+		// Insert the needed values.
+		$pdo->beginTransaction();
+		$pdo->exec("INSERT INTO `logaction`(`name`,`description`) VALUES ('Account Created','The referenced user just registered an account.')");
+		$pdo->exec("INSERT INTO `logaction`(`name`,`description`) VALUES ('Account Removed','A user account has been removed. See log description for more information.')");
+		$pdo->exec("INSERT INTO `logaction`(`name`,`description`) VALUES ('Booking Created','The referenced user created a new meeting room booking.')");
+		$pdo->exec("INSERT INTO `logaction`(`name`,`description`) VALUES ('Booking Cancelled','The referenced user cancelled a meeting room booking.')");
+		$pdo->exec("INSERT INTO `logaction`(`name`,`description`) VALUES ('Company Created','The referenced user just created the referenced company.')");
+		$pdo->exec("INSERT INTO `logaction`(`name`,`description`) VALUES ('Company Removed','A company has been removed. See log description for more information.')");
+		
+		// Commit the transaction
+		$pdo->commit();
+		
+	}
+	catch (PDOException $e)
+	{
+		//	Cancels the transaction from going through if something went wrong.
+		$pdo->rollback();
+		echo "Error: " . $e->getMessage() . "<br />";
+	}
+}
+
 //Function to see if database table exists
 function tableExists($pdo, $table) {
 	try {
@@ -304,11 +350,33 @@ function create_tables()
 						  PRIMARY KEY (`PositionID`),
 						  UNIQUE KEY `name_UNIQUE` (`name`)
 						) ENGINE=InnoDB DEFAULT CHARSET=utf8");
+			
+			//Insert default values for the Company Position table
+			fillCompanyPosition($conn);
+			
 			$totaltime = microtime(true) - $_SERVER["REQUEST_TIME_FLOAT"];
 			$time = $totaltime - $prevtime;
 			$prevtime = $totaltime;
-			echo '<b>Execution time for creating table ' . $table. ':</b> ' . $time . 's<br />';	
+			echo '<b>Execution time for creating and filling table ' . $table. ':</b> ' . $time . 's<br />';	
 		} else { 
+			//If the table exists, but for some reason has no values in it, then fill it
+			$result = $conn->query("SELECT `name` FROM `companyposition`");
+			$row = $result->rowCount();
+			if($row == 0){
+				
+				fillCompanyPosition($conn);
+				
+				echo "<b>Inserted default values into $table.</b> <br />";
+		
+				$totaltime = microtime(true) - $_SERVER["REQUEST_TIME_FLOAT"];
+				$time = $totaltime - $prevtime;
+				$prevtime = $totaltime;
+				echo '<b>Execution time for filling table ' . $table. ':</b> ' . $time . 's<br />';	
+			} else {
+				// Table already has (some) values in it
+				echo "<b>Table $table already had values in it.</b> <br />";
+			}
+		
 			echo '<b>Table ' . $table. ' already exists</b>.<br />';
 		}	
 		
@@ -367,11 +435,33 @@ function create_tables()
 						  PRIMARY KEY (`actionID`),
 						  UNIQUE KEY `name_UNIQUE` (`name`)
 						) ENGINE=InnoDB DEFAULT CHARSET=utf8");
+			
+			//Fill in default values for table Log Action
+			fillLogAction($conn);
+						
 			$totaltime = microtime(true) - $_SERVER["REQUEST_TIME_FLOAT"];
 			$time = $totaltime - $prevtime;
 			$prevtime = $totaltime;
 			echo '<b>Execution time for creating table ' . $table. ':</b> ' . $time . 's<br />';		
 		} else { 
+			//If the table exists, but for some reason has no values in it, then fill it
+			$result = $conn->query("SELECT `name` FROM `logaction`");
+			$row = $result->rowCount();
+			if($row==0){
+				// No values in the table. Insert the needed values.
+				fillLogAction($conn);
+				
+				echo "<b>Inserted default values into $table.</b> <br />";
+		
+				$totaltime = microtime(true) - $_SERVER["REQUEST_TIME_FLOAT"];
+				$time = $totaltime - $prevtime;
+				$prevtime = $totaltime;
+				echo '<b>Execution time for filling table ' . $table. ':</b> ' . $time . 's<br />';	
+			} else {
+				// Table already has (some) values in it
+				echo "<b>Table $table already had values in it.</b> <br />";
+			}		
+		
 			echo '<b>Table ' . $table. ' already exists</b>.<br />';
 		}
 		
