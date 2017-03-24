@@ -36,8 +36,8 @@ function create_db()
 	} 
 catch(PDOException $e)
 	{
-	$output = 'Unable to create the database.<br />';
-	include 'output.html.php';
+	$error = 'Unable to create the database.<br />';
+	include 'error.html.php';
 	$pdo = null;
 	die("DB ERROR: " . $e->getMessage());
 	}	
@@ -62,8 +62,8 @@ function connect_to_db()
 	} 
 catch(PDOException $e)
 	{
-	$output = 'Unable to connect to the database.<br />';
-	include 'output.html.php';
+	$error = 'Unable to connect to the database.<br />';
+	include 'error.html.php';
 	$pdo = null;	// Close connection
 	die("DB ERROR: " . $e->getMessage());
 
@@ -88,7 +88,29 @@ function dbExists($pdo, $databaseName){
 		return FALSE;
 	}
 }
-
+//Function to fill in default values for the Access Level table
+function fillAccessLevel($pdo){
+	try
+	{
+		//Insert the needed values.
+		$pdo->beginTransaction();
+		$pdo->exec("INSERT INTO `accesslevel`(`AccessName`, `Description`) VALUES ('Admin', 'Has full access to all website pages, company information and user information.')");
+		$pdo->exec("INSERT INTO `accesslevel`(`AccessName`, `Description`) VALUES ('Company Owner', 'Full company information and management.')");
+		$pdo->exec("INSERT INTO `accesslevel`(`AccessName`, `Description`) VALUES ('In-House User', 'Can book meeting rooms with a booking code.')");
+		$pdo->exec("INSERT INTO `accesslevel`(`AccessName`, `Description`) VALUES ('Normal User', 'Can browse meeting room schedules, with limited information, and request a booking.')");
+		$pdo->exec("INSERT INTO `accesslevel`(`AccessName`, `Description`) VALUES ('Meeting Room', 'These are special accounts used to handle booking code login.')");
+		$pdo->exec("INSERT INTO `accesslevel`(`AccessName`, `Description`) VALUES ('test', 'test')");
+		
+		// Commit the transaction
+		$pdo->commit();
+	} 
+	catch (PDOException $e)
+	{
+		//	Cancels the transaction from going through if something went wrong.
+		$pdo->rollback();
+		echo "Error: " . $e->getMessage() . "<br />";
+	}
+}
 
 //Function to see if database table exists
 function tableExists($pdo, $table) {
@@ -132,10 +154,34 @@ function create_tables()
 			  PRIMARY KEY (`AccessID`),
 			  UNIQUE KEY `AccessName_UNIQUE` (`AccessName`)
 			) ENGINE=InnoDB DEFAULT CHARSET=utf8");
+			
+			// Fill default values
+			fillAccessLevel($conn);
+			
 			$totaltime = microtime(true) - $_SERVER["REQUEST_TIME_FLOAT"];
 			$time = $totaltime - $prevtime;
 			$prevtime = $totaltime;
-		echo '<b>Execution time for table ' . $table. ':</b> ' . $time . 's<br />';	
+			echo '<b>Execution time for creating and filling table ' . $table. ':</b> ' . $time . 's<br />';	
+		} else {
+			//If the table exists, but for some reason has no values in it, then fill it
+			$result = $conn->query("SELECT `AccessName` FROM `accesslevel`");
+			$row = $result->rowCount();
+			if($row==0){
+				// No values in the table. Insert the needed values.
+				fillAccessLevel($conn);
+				
+				echo "<b>Inserted default values into $table.</b> <br />";
+		
+				$totaltime = microtime(true) - $_SERVER["REQUEST_TIME_FLOAT"];
+				$time = $totaltime - $prevtime;
+				$prevtime = $totaltime;
+				echo '<b>Execution time for filling table ' . $table. ':</b> ' . $time . 's<br />';	
+			} else {
+				// Table already has (some) values in it
+				echo "<b>Table $table already had values in it.</b> <br />";
+			}
+			
+			echo '<b>Table ' . $table. ' already exists</b>.<br />';
 		}
 
 			//User accounts
@@ -220,7 +266,7 @@ function create_tables()
 			$totaltime = microtime(true) - $_SERVER["REQUEST_TIME_FLOAT"];
 			$time = $totaltime - $prevtime;
 			$prevtime = $totaltime;
-			echo '<b>Execution time for table ' . $table. ':</b> ' . $time . 's<br />';	
+			echo '<b>Execution time for creating table ' . $table. ':</b> ' . $time . 's<br />';	
 		} else { 
 			echo '<b>Table ' . $table. ' already exists</b>.<br />';
 		}	
@@ -241,7 +287,7 @@ function create_tables()
 			$totaltime = microtime(true) - $_SERVER["REQUEST_TIME_FLOAT"];
 			$time = $totaltime - $prevtime;
 			$prevtime = $totaltime;
-			echo '<b>Execution time for table ' . $table. ':</b> ' . $time . 's<br />';	
+			echo '<b>Execution time for creating table ' . $table. ':</b> ' . $time . 's<br />';	
 		} else { 
 			echo '<b>Table ' . $table. ' already exists</b>.<br />';
 		}	
@@ -261,7 +307,7 @@ function create_tables()
 			$totaltime = microtime(true) - $_SERVER["REQUEST_TIME_FLOAT"];
 			$time = $totaltime - $prevtime;
 			$prevtime = $totaltime;
-			echo '<b>Execution time for table ' . $table. ':</b> ' . $time . 's<br />';	
+			echo '<b>Execution time for creating table ' . $table. ':</b> ' . $time . 's<br />';	
 		} else { 
 			echo '<b>Table ' . $table. ' already exists</b>.<br />';
 		}	
@@ -285,7 +331,7 @@ function create_tables()
 			$totaltime = microtime(true) - $_SERVER["REQUEST_TIME_FLOAT"];
 			$time = $totaltime - $prevtime;
 			$prevtime = $totaltime;
-			echo '<b>Execution time for table ' . $table. ':</b> ' . $time . 's<br />';			
+			echo '<b>Execution time for creating table ' . $table. ':</b> ' . $time . 's<br />';			
 		} else { 
 			echo '<b>Table ' . $table. ' already exists</b>.<br />';
 		}	
@@ -304,7 +350,7 @@ function create_tables()
 			$totaltime = microtime(true) - $_SERVER["REQUEST_TIME_FLOAT"];
 			$time = $totaltime - $prevtime;
 			$prevtime = $totaltime;
-			echo '<b>Execution time for table ' . $table. ':</b> ' . $time . 's<br />';		
+			echo '<b>Execution time for creating table ' . $table. ':</b> ' . $time . 's<br />';		
 		} else { 
 			echo '<b>Table ' . $table. ' already exists</b>.<br />';
 		}	
@@ -324,7 +370,7 @@ function create_tables()
 			$totaltime = microtime(true) - $_SERVER["REQUEST_TIME_FLOAT"];
 			$time = $totaltime - $prevtime;
 			$prevtime = $totaltime;
-			echo '<b>Execution time for table ' . $table. ':</b> ' . $time . 's<br />';		
+			echo '<b>Execution time for creating table ' . $table. ':</b> ' . $time . 's<br />';		
 		} else { 
 			echo '<b>Table ' . $table. ' already exists</b>.<br />';
 		}
@@ -346,7 +392,7 @@ function create_tables()
 			$totaltime = microtime(true) - $_SERVER["REQUEST_TIME_FLOAT"];
 			$time = $totaltime - $prevtime;
 			$prevtime = $totaltime;
-			echo '<b>Execution time for table ' . $table. ':</b> ' . $time . 's<br />';		
+			echo '<b>Execution time for creating table ' . $table. ':</b> ' . $time . 's<br />';		
 		} else { 
 			echo '<b>Table ' . $table. ' already exists</b>.<br />';
 		}
@@ -368,7 +414,7 @@ function create_tables()
 			$totaltime = microtime(true) - $_SERVER["REQUEST_TIME_FLOAT"];
 			$time = $totaltime - $prevtime;
 			$prevtime = $totaltime;
-			echo '<b>Execution time for table ' . $table. ':</b> ' . $time . 's<br />';	
+			echo '<b>Execution time for creating table ' . $table. ':</b> ' . $time . 's<br />';	
 		} else { 
 			echo '<b>Table ' . $table. ' already exists</b>.<br />';
 		}		
@@ -408,7 +454,7 @@ function create_tables()
 			$totaltime = microtime(true) - $_SERVER["REQUEST_TIME_FLOAT"];
 			$time = $totaltime - $prevtime;
 			$prevtime = $totaltime;
-			echo '<b>Execution time for table ' . $table. ':</b> ' . $time . 's<br />';	
+			echo '<b>Execution time for creating table ' . $table. ':</b> ' . $time . 's<br />';	
 		} else { 
 			echo '<b>Table ' . $table. ' already exists</b>.<br />';
 		}	
@@ -421,8 +467,8 @@ function create_tables()
 	}
 	catch(PDOException $e)
 	{
-		$output = 'Failed to create tables for ' . DB_NAME . "<br />";
-		include 'output.html.php';
+		$error = 'Failed to create tables for ' . DB_NAME . "<br />";
+		include 'error.html.php';
 		
 		$conn = null;
 		die("DB ERROR: " . $e->getMessage());

@@ -1,6 +1,5 @@
 #START OF CREATE TABLE QUERIES
 #
-USE test;
 #ACCESS LEVEL
 CREATE TABLE IF NOT EXISTS `accesslevel` (
   `AccessID` int(10) unsigned NOT NULL AUTO_INCREMENT,
@@ -178,6 +177,7 @@ INSERT INTO `equipment`(`name`, `description`) VALUES('Equipment Name','Equipmen
 INSERT INTO `accesslevel`(`AccessName`, `Description`) VALUES ('Access Name', 'Access description.');
 INSERT INTO `accesslevel`(`AccessName`, `Description`) VALUES ('', '');
 #INSERT ACCESSLEVEL BACKEND ONLY - QUERIES
+INSERT INTO `accesslevel`(`AccessName`, `Description`) VALUES ('Admin', 'Has full access to all website pages, company information and user information.');
 INSERT INTO `accesslevel`(`AccessName`, `Description`) VALUES ('Company Owner', 'Full company information and management.');
 INSERT INTO `accesslevel`(`AccessName`, `Description`) VALUES ('In-House User', 'Can book meeting rooms with a booking code.');
 INSERT INTO `accesslevel`(`AccessName`, `Description`) VALUES ('Normal User', 'Can browse meeting room schedules, with limited information, and request a booking.');
