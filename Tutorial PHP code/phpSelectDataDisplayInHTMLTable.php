@@ -3,7 +3,7 @@
 <body>
 
 <?php
-require 'phpDBvars.php';
+require 'phpDBconnect.php';
 
 //	HTML code to create the table to hold the retrieved data
 echo "<table style ='border: solid 1px black;'>";
@@ -44,7 +44,7 @@ class TableRows extends RecursiveIteratorIterator {
 
 // Try to connect and retrieve data from DB
 try {
-	$conn = new PDO("mysql:host=$servername;dbname=$dbname", $username, $password);
+	$conn = new PDO("mysql:host=".DB_HOST.";dbname=" . DB_NAME, DB_USER, DB_PASSWORD);
 	$conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_Exception);
 	
 	// prepare SQL request query
@@ -58,7 +58,8 @@ try {
 	}
 }
 catch(PDOException $e){
-	echo "Error: " . $e->getMessage();
+	$error = "Error: " . $e->getMessage();
+	include 'error.html.php';
 }
 $conn = null;		//Close connection
 echo "</table>";	//End syntax for the created table
