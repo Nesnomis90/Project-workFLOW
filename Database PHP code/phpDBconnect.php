@@ -285,38 +285,7 @@ function create_tables()
 		} else { 
 			echo '<b>Table ' . $table. ' already exists</b>.<br />';
 		}
-		
-			//Booking
-		$table = 'booking';
-		//Check if table already exists
-		if (!tableExists($conn, $table))
-		{
-			$conn->exec("CREATE TABLE IF NOT EXISTS `$table` (
-						  `bookingID` int(10) unsigned NOT NULL AUTO_INCREMENT,
-						  `meetingRoomID` int(10) unsigned NOT NULL,
-						  `userID` int(10) unsigned NOT NULL,
-						  `displayName` varchar(255) DEFAULT NULL,
-						  `dateTimeCreated` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-						  `dateTimeCancelled` timestamp NULL DEFAULT NULL,
-						  `startDateTime` datetime NOT NULL,
-						  `endDateTime` datetime NOT NULL,
-						  `actualEndDateTime` datetime DEFAULT NULL,
-						  `description` text,
-						  `cancellationCode` char(64) NOT NULL,
-						  PRIMARY KEY (`bookingID`),
-						  KEY `FK_MeetingRoomID_idx` (`meetingRoomID`),
-						  KEY `FK_UserID2_idx` (`userID`),
-						  CONSTRAINT `FK_MeetingRoomID` FOREIGN KEY (`meetingRoomID`) REFERENCES `meetingroom` (`meetingRoomID`) ON DELETE NO ACTION ON UPDATE CASCADE,
-						  CONSTRAINT `FK_UserID2` FOREIGN KEY (`userID`) REFERENCES `user` (`userID`) ON DELETE NO ACTION ON UPDATE CASCADE
-						) ENGINE=InnoDB DEFAULT CHARSET=utf8");
-			$totaltime = microtime(true) - $_SERVER["REQUEST_TIME_FLOAT"];
-			$time = $totaltime - $prevtime;
-			$prevtime = $totaltime;
-			echo '<b>Execution time for creating table ' . $table. ':</b> ' . $time . 's<br />';	
-		} else { 
-			echo '<b>Table ' . $table. ' already exists</b>.<br />';
-		}	
-		
+
 			//Company
 		$table = 'company';
 		//Check if table already exists
@@ -338,6 +307,41 @@ function create_tables()
 			echo '<b>Table ' . $table. ' already exists</b>.<br />';
 		}	
 		
+			//Booking
+		$table = 'booking';
+		//Check if table already exists
+		if (!tableExists($conn, $table))
+		{
+			$conn->exec("CREATE TABLE IF NOT EXISTS `booking` (
+						  `bookingID` int(10) unsigned NOT NULL AUTO_INCREMENT,
+						  `meetingRoomID` int(10) unsigned NOT NULL,
+						  `userID` int(10) unsigned NOT NULL,
+						  `companyID` int(10) unsigned DEFAULT NULL,
+						  `displayName` varchar(255) DEFAULT NULL,
+						  `dateTimeCreated` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+						  `dateTimeCancelled` timestamp NULL DEFAULT NULL,
+						  `startDateTime` datetime NOT NULL,
+						  `endDateTime` datetime NOT NULL,
+						  `actualEndDateTime` datetime DEFAULT NULL,
+						  `description` text,
+						  `cancellationCode` char(64) NOT NULL,
+						  PRIMARY KEY (`bookingID`),
+						  KEY `FK_MeetingRoomID_idx` (`meetingRoomID`),
+						  KEY `FK_UserID_idx` (`userID`),
+						  KEY `FK_UserID2_idx` (`userID`),
+						  KEY `FK_CompanyID3_idx` (`companyID`),
+						  CONSTRAINT `FK_CompanyID3` FOREIGN KEY (`companyID`) REFERENCES `company` (`CompanyID`) ON DELETE SET NULL ON UPDATE CASCADE,
+						  CONSTRAINT `FK_MeetingRoomID` FOREIGN KEY (`meetingRoomID`) REFERENCES `meetingroom` (`meetingRoomID`) ON DELETE NO ACTION ON UPDATE CASCADE,
+						  CONSTRAINT `FK_UserID2` FOREIGN KEY (`userID`) REFERENCES `user` (`userID`) ON DELETE NO ACTION ON UPDATE CASCADE
+						) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=utf8");
+			$totaltime = microtime(true) - $_SERVER["REQUEST_TIME_FLOAT"];
+			$time = $totaltime - $prevtime;
+			$prevtime = $totaltime;
+			echo '<b>Execution time for creating table ' . $table. ':</b> ' . $time . 's<br />';	
+		} else { 
+			echo '<b>Table ' . $table. ' already exists</b>.<br />';
+		}	
+				
 			//Company Position
 		$table = 'companyposition';
 		//Check if table already exists

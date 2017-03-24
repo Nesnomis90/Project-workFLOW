@@ -34,6 +34,32 @@ SELECT * FROM `companyposition`;
 
 SELECT * FROM `accesslevel`;
 
+SELECT m.`name` AS BookedRoomName, b.startDateTime AS StartTime, b.endDateTime AS EndTime FROM `booking` b LEFT JOIN `meetingroom` m ON b.meetingRoomID = m.meetingRoomID LEFT JOIN `user` u ON u.userID = b.userID LEFT JOIN `employee` e ON e.UserID = u.userID LEFT JOIN `company` c ON c.CompanyID = e.CompanyID LEFT JOIN `roomequipment` re ON  re.MeetingRoomID = m.meetingRoomID LEFT JOIN `equipment` eq ON eq.EquipmentID = re.EquipmentID WHERE b.dateTimeCancelled IS NULL AND b.actualEndDateTime IS NULL AND eq.`name` = 'wifi';
+
+SELECT m.`name` AS BookedRoomName, b.startDateTime AS StartTime, b.endDateTime AS EndTime, b.displayName AS BookedBy, c.`name` AS Company, b.description AS BookingDescription FROM `booking` b LEFT JOIN `meetingroom` m ON b.meetingRoomID = m.meetingRoomID LEFT JOIN `user` u ON u.userID = b.userID LEFT JOIN `employee` e ON e.UserID = u.userID LEFT JOIN `company` c ON c.CompanyID = e.CompanyID LEFT JOIN `roomequipment` re ON  re.MeetingRoomID = m.meetingRoomID LEFT JOIN `equipment` eq ON eq.EquipmentID = re.EquipmentID WHERE b.dateTimeCancelled IS NULL AND b.actualEndDateTime IS NULL AND eq.`name` = 'Wifi';
+
+SELECT m.`name` AS BookedRoomName, b.startDateTime AS StartTime, b.endDateTime AS EndTime, b.displayName AS BookedBy, c.`name` AS Company, b.description AS BookingDescription FROM `booking` b LEFT JOIN `meetingroom` m ON b.meetingRoomID = m.meetingRoomID LEFT JOIN `user` u ON u.userID = b.userID LEFT JOIN `employee` e ON e.UserID = u.userID LEFT JOIN `company` c ON c.CompanyID = e.CompanyID WHERE b.dateTimeCancelled IS NULL AND b.actualEndDateTime IS NULL AND m.`name` = 'Blåmann';
+
+SELECT m.`name` AS BookedRoomName, b.startDateTime AS StartTime, b.endDateTime AS EndTime FROM `booking` b LEFT JOIN `meetingroom` m ON b.meetingRoomID = m.meetingRoomID LEFT JOIN `user` u ON u.userID = b.userID LEFT JOIN `employee` e ON e.UserID = u.userID LEFT JOIN `company` c ON c.CompanyID = e.CompanyID WHERE b.dateTimeCancelled IS NULL AND b.actualEndDateTime IS NULL AND m.`name` = 'Blåmann';
+
+SELECT SEC_TO_TIME(SUM(TIME_TO_SEC(b.`actualEndDateTime`) - TIME_TO_SEC(b.`startDateTime`)))  AS CompanyWideBookingTimeUsed FROM `booking` b INNER JOIN `employee` e ON b.`UserID` = e.`UserID` INNER JOIN `company` c ON e.`CompanyID` = c.`CompanyID` WHERE b.`CompanyID` = 5;
+SELECT SEC_TO_TIME(SUM(TIME_TO_SEC(b.`actualEndDateTime`) - TIME_TO_SEC(b.`startDateTime`)))  AS CompanyWideBookingTimeUsed FROM `booking` b INNER JOIN `employee` e ON b.`UserID` = e.`UserID` INNER JOIN `company` c ON e.`CompanyID` = c.`CompanyID` WHERE b.`CompanyID` = 1;
+SELECT SEC_TO_TIME(SUM(TIME_TO_SEC(b.`actualEndDateTime`) - TIME_TO_SEC(b.`startDateTime`)))  AS BookingTimeUsed FROM `booking` b INNER JOIN `user` u ON b.`UserID` = u.`UserID` WHERE u.`userID` = 1;
+
+INSERT INTO `booking`(`meetingRoomID`, `userID`, `CompanyID`, `displayName`, `startDateTime`, `endDateTime`, `description`, `cancellationCode`) VALUES ((SELECT `meetingRoomID` FROM `meetingroom` WHERE `name` = 'Blåmann'), (SELECT `userID` FROM `user` WHERE `email` = 'test@test.com'), (SELECT e.`companyID` FROM `company` c JOIN `employee` e ON e.`CompanyID` = c.`CompanyID` JOIN `user` u ON u.`userID` = e.`userID` WHERE u.`email` = 'test@test.com' AND c.`name` = 'test1'), 'Display Name', '2017-03-15 16:00:00', '2017-03-15 17:30:00', 'Booking Description', 'ecd71870d1963316a97e3ac3408c9835ad8cf0f3c1bc703527c30265534f75ae');
+
+INSERT INTO `booking`(`meetingRoomID`, `userID`, `CompanyID`, `displayName`, `startDateTime`, `endDateTime`, `description`, `cancellationCode`) VALUES ((SELECT `meetingRoomID` FROM `meetingroom` WHERE `name` = 'Blåmann'), 2, (SELECT e.`companyID` FROM `company` c JOIN `employee` e ON e.`CompanyID` = c.`CompanyID` JOIN `user` u ON u.`userID` = e.`userID` WHERE u.`userID` = 2), 'Display Name', '2017-03-25 16:00:00', '2017-03-25 17:30:00', 'Booking Description', 'ecd71870d1963316a97e3ac3408c9835ad8cf0f3c1bc703527c30265534f75ae');
+INSERT INTO `booking`(`meetingRoomID`, `userID`, `CompanyID`, `displayName`, `startDateTime`, `endDateTime`, `description`, `cancellationCode`) VALUES ((SELECT `meetingRoomID` FROM `meetingroom` WHERE `name` = 'Blåmann'), 3, (SELECT e.`companyID` FROM `company` c JOIN `employee` e ON e.`CompanyID` = c.`CompanyID` JOIN `user` u ON u.`userID` = e.`userID` WHERE u.`userID` = 3), 'Display Name', '2017-03-26 16:00:00', '2017-03-26 17:30:00', 'Booking Description', 'ecd71870d1963316a97e3ac3408c9835ad8cf0f3c1bc703527c30265534f75ae');
+
+SELECT * FROM `booking` JOIN `user` ON `user`.`userID` = `booking`.`userID`;
+
+UPDATE `booking` SET `companyID` = (SELECT e.`companyID` FROM `company` c JOIN `employee` e ON c.CompanyID = e.CompanyID JOIN `user` u ON u.userID = e.UserID WHERE e.UserID = 1) WHERE `userID`= 8 AND `bookingID` <> 0;
+UPDATE `booking` SET `companyID` = 1 WHERE `bookingID` = 4;
+
+SELECT SEC_TO_TIME(SUM(TIME_TO_SEC(b.`actualEndDateTime`) - TIME_TO_SEC(b.`startDateTime`)))  AS BookingTimeUsed FROM `booking` b INNER JOIN `user` u ON b.`UserID` = u.`UserID` JOIN `employee` e ON u.`userID` = e.`UserID` JOIN `company` c ON c.`CompanyID` = e.`CompanyID` WHERE b.actualEndDateTime BETWEEN '2017-01-01' AND '2017-06-06' AND b.`userID` = 1 AND b.`companyID` = 5;
+SELECT SEC_TO_TIME(SUM(TIME_TO_SEC(b.`actualEndDateTime`) - TIME_TO_SEC(b.`startDateTime`)))  AS BookingTimeUsed FROM `booking` b INNER JOIN `user` u ON b.`UserID` = u.`UserID` JOIN `employee` e ON u.`userID` = e.`UserID` JOIN `company` c ON c.`CompanyID` = e.`CompanyID` WHERE b.actualEndDateTime BETWEEN '2017-01-01' AND '2017-06-06' AND b.`userID` = 1 AND b.`companyID` = 1;
+SELECT SEC_TO_TIME(SUM(TIME_TO_SEC(b.`actualEndDateTime`) - TIME_TO_SEC(b.`startDateTime`)))  AS BookingTimeUsed FROM `booking` b INNER JOIN `user` u ON b.`UserID` = u.`UserID` JOIN `employee` e ON u.`userID` = e.`UserID` JOIN `company` c ON c.`CompanyID` = e.`CompanyID` WHERE b.actualEndDateTime BETWEEN '2017-01-01' AND '2017-06-06' AND b.`userID` = 1; #AND b.`companyID` = 5;
+
 INSERT INTO `accesslevel`(`accessname`, `description`) VALUES ('test','test');
 
 DELETE FROM `accesslevel` WHERE `AccessID` = 7;
