@@ -193,16 +193,20 @@ INSERT INTO `accesslevel`(`AccessName`, `Description`) VALUES ('Meeting Room', '
 INSERT INTO `accesslevel`(`AccessName`, `Description`) VALUES ('AccessName', 'Access Description.');
 #INSERT LOGEVENT - TEMPLATE
 INSERT INTO `logevent`(`actionID`, `sessionID`, `description`, `userID`, `companyID`, `bookingID`, `meetingRoomID`, `equipmentID`) VALUES ((SELECT `actionID` FROM `logaction` WHERE `name` = 'the action name'), <sessionID>, 'This is a more in-depth description over the details connected to this log event', <userID>, <companyID>, <bookingID>, <meetingRoomID>, <equipmentID>);
+INSERT INTO `logevent`(`actionID`, `sessionID`, `description`, `userID`, `companyID`, `bookingID`, `meetingRoomID`, `equipmentID`) VALUES (<actionID>, <sessionID>, 'This is a more in-depth description over the details connected to this log event', <userID>, <companyID>, <bookingID>, <meetingRoomID>, <equipmentID>);
 #INSERT LOGACTION BACKEND ONLY - TEMPLATE
 INSERT INTO `logaction`(`name`,`description`) VALUES ('An action name','A description of what that action should apply to');
-INSERT INTO `logaction`(`name`,`description`) VALUES ('test','test');
+INSERT INTO `logaction`(`name`,`description`) VALUES ('','');
 #INSERT LOGACTION BACKEND ONLY - QUERIES
 INSERT INTO `logaction`(`name`,`description`) VALUES ('Account Created','The referenced user just registered an account.');
 INSERT INTO `logaction`(`name`,`description`) VALUES ('Account Removed','A user account has been removed. See log description for more information.');
 INSERT INTO `logaction`(`name`,`description`) VALUES ('Booking Created','The referenced user created a new meeting room booking.');
 INSERT INTO `logaction`(`name`,`description`) VALUES ('Booking Cancelled','The referenced user cancelled a meeting room booking.');
+INSERT INTO `logaction`(`name`,`description`) VALUES ('Booking Completed','The referenced booking has been completed.');
 INSERT INTO `logaction`(`name`,`description`) VALUES ('Company Created','The referenced user just created the referenced company.');
 INSERT INTO `logaction`(`name`,`description`) VALUES ('Company Removed','A company has been removed. See log description for more information.');
+INSERT INTO `logaction`(`name`,`description`) VALUES ('Database Created','The database we are using right now just got created.');
+INSERT INTO `logaction`(`name`,`description`) VALUES ('Table Created','A table in the database was created.');
 #INSERT COMPANYPOSITION BACKEND ONLY - TEMPLATE
 INSERT INTO `companyposition`(`name`, `description`) VALUES ('A position name', 'A description of what that role is within the company.');
 #INSERT COMPANYPOSITION BACKEND ONLY - QUERIES
@@ -402,7 +406,37 @@ SELECT m.`name` AS BookedRoomName, b.startDateTime AS StartTime, b.endDateTime A
 #SELECT ACTIVE BOOKINGS FOR THE SELECTED EQUIPMENT (FOR NORMAL USERS) - TEMPLATE
 SELECT m.`name` AS BookedRoomName, b.startDateTime AS StartTime, b.endDateTime AS EndTime FROM `booking` b LEFT JOIN `meetingroom` m ON b.meetingRoomID = m.meetingRoomID LEFT JOIN `user` u ON u.userID = b.userID LEFT JOIN `employee` e ON e.UserID = u.userID LEFT JOIN `company` c ON c.CompanyID = e.CompanyID LEFT JOIN `roomequipment` re ON  re.MeetingRoomID = m.meetingRoomID LEFT JOIN `equipment` eq ON eq.EquipmentID = re.EquipmentID WHERE b.dateTimeCancelled IS NULL AND b.actualEndDateTime IS NULL AND eq.`name` = 'Equipment Name';
 SELECT m.`name` AS BookedRoomName, b.startDateTime AS StartTime, b.endDateTime AS EndTime FROM `booking` b LEFT JOIN `meetingroom` m ON b.meetingRoomID = m.meetingRoomID LEFT JOIN `user` u ON u.userID = b.userID LEFT JOIN `employee` e ON e.UserID = u.userID LEFT JOIN `company` c ON c.CompanyID = e.CompanyID LEFT JOIN `roomequipment` re ON  re.MeetingRoomID = m.meetingRoomID LEFT JOIN `equipment` eq ON eq.EquipmentID = re.EquipmentID WHERE b.dateTimeCancelled IS NULL AND b.actualEndDateTime IS NULL AND re.EquipmentID = <equipmentID>;
-#
+#SELECT ALL LOG EVENTS, WHICH DISPLAYS TIME, ACTION AND DESCRIPTIONS OF ACTION AND THE LOG EVENT
+SELECT l.logDateTime AS LogDate, la.`name` AS ActionName, la.description AS ActionDescription, l.description AS LogDescription FROM `logevent` l JOIN `logaction` la ON la.actionID = l.actionID;
+#SELECT ALL LOG EVENTS ABOUT USER ACCOUNTS
+SELECT l.logDateTime AS LogDate, la.`name` AS ActionName, la.description AS ActionDescription, l.description AS LogDescription, u.firstName, u.lastName, u.email, w.ip AS ConnectedIP, u.create_time AS DateCreated FROM `logevent` l LEFT JOIN `user` u ON u.userID = l.userID LEFT JOIN `websession` w ON w.sessionID = l.sessionID LEFT JOIN `logaction` la ON la.actionID = l.actionID WHERE la.`name` LIKE 'Account%';
+#SELECT ALL LOG EVENTS ABOUT USER ACOUNTS CREATED
+SELECT l.logDateTime AS LogDate, la.`name` AS ActionName, la.description AS ActionDescription, l.description AS LogDescription, u.firstName, u.lastName, u.email, w.ip AS ConnectedIP, u.create_time AS DateCreated FROM `logevent` l LEFT JOIN `user` u ON u.userID = l.userID LEFT JOIN `websession` w ON w.sessionID = l.sessionID LEFT JOIN `logaction` la ON la.actionID = l.actionID WHERE la.`name` = 'Account Created';
+#SELECT ALL LOG EVENTS ABOUT USER ACOUNTS REMOVED
+SELECT l.logDateTime AS LogDate, la.`name` AS ActionName, la.description AS ActionDescription, l.description AS LogDescription, u.firstName, u.lastName, u.email, w.ip AS ConnectedIP FROM `logevent` l LEFT JOIN `user` u ON u.userID = l.userID LEFT JOIN `websession` w ON w.sessionID = l.sessionID LEFT JOIN `logaction` la ON la.actionID = l.actionID WHERE la.`name` = 'Account Removed';
+#SELECT ALL LOG EVENTS ABOUT BOOKINGS
+SELECT l.logDateTime AS LogDate, la.`name` AS ActionName, la.description AS ActionDescription, l.description AS LogDescription, u.firstName, u.lastName, u.email, c.`name` AS BookedForCompanyName, b.startDateTime AS BookingStartTime, b.endDateTime AS BookingEndTime, m.`name` AS MeetingRoom, b.dateTimeCancelled AS DateIfCancelled, b.actualEndDateTime AS DateIfCompleted, w.ip AS BookedFromIPAddress FROM `logevent` l LEFT JOIN `user` u ON u.userID = l.userID LEFT JOIN `company` c ON c.CompanyID = l.companyID LEFT JOIN `booking` b ON b.bookingID = l.bookingID LEFT JOIN `meetingroom` m ON m.meetingRoomID = l.meetingRoomID LEFT JOIN `websession` w ON w.sessionID = l.sessionID LEFT JOIN `logaction` la ON la.actionID = l.actionID WHERE la.`name` LIKE 'Booking%';
+#SELECT ALL LOG EVENTS ABOUT BOOKINGS CREATED
+SELECT l.logDateTime AS LogDate, la.`name` AS ActionName, la.description AS ActionDescription, l.description AS LogDescription, u.firstName, u.lastName, u.email, c.`name` AS BookedForCompanyName, b.startDateTime AS BookingStartTime, b.endDateTime AS BookingEndTime, m.`name` AS MeetingRoom, w.ip AS BookedFromIPAddress FROM `logevent` l LEFT JOIN `user` u ON u.userID = l.userID LEFT JOIN `company` c ON c.CompanyID = l.companyID LEFT JOIN `booking` b ON b.bookingID = l.bookingID LEFT JOIN `meetingroom` m ON m.meetingRoomID = l.meetingRoomID LEFT JOIN `websession` w ON w.sessionID = l.sessionID LEFT JOIN `logaction` la ON la.actionID = l.actionID WHERE b.bookingID = l.bookingID AND la.`name` = 'Booking Created';
+#SELECT ALL LOG EVENTS ABOUT BOOKINGS CANCELLED
+SELECT l.logDateTime AS LogDate, la.`name` AS ActionName, la.description AS ActionDescription, l.description AS LogDescription, u.firstName, u.lastName, u.email, c.`name` AS BookedForCompanyName, b.startDateTime AS BookingStartTime, b.endDateTime AS BookingEndTime, m.`name` AS MeetingRoom, b.dateTimeCancelled AS DateCancelled, w.ip AS CancelledFromIPAddress FROM `logevent` l LEFT JOIN `user` u ON u.userID = l.userID LEFT JOIN `company` c ON c.CompanyID = l.companyID LEFT JOIN `booking` b ON b.bookingID = l.bookingID LEFT JOIN `meetingroom` m ON m.meetingRoomID = l.meetingRoomID LEFT JOIN `websession` w ON w.sessionID = l.sessionID LEFT JOIN `logaction` la ON la.actionID = l.actionID WHERE b.bookingID = l.bookingID AND la.`name` = 'Booking Cancelled';
+#SELECT ALL LOG EVENTS ABOUT BOOKINGS COMPLETED
+SELECT l.logDateTime AS LogDate, la.`name` AS ActionName, la.description AS ActionDescription, l.description AS LogDescription, u.firstName, u.lastName, u.email, c.`name` AS BookedForCompanyName, b.startDateTime AS BookingStartTime, b.endDateTime AS BookingEndTime, m.`name` AS MeetingRoom, b.actualEndDateTime AS CompletionDate FROM `logevent` l LEFT JOIN `user` u ON u.userID = l.userID LEFT JOIN `company` c ON c.CompanyID = l.companyID LEFT JOIN `booking` b ON b.bookingID = l.bookingID LEFT JOIN `meetingroom` m ON m.meetingRoomID = l.meetingRoomID LEFT JOIN `websession` w ON w.sessionID = l.sessionID LEFT JOIN `logaction` la ON la.actionID = l.actionID WHERE b.bookingID = l.bookingID AND la.`name` = 'Booking Completed';
+#SELECT ALL LOG EVENTS ABOUT COMPANIES
+SELECT l.logDateTime AS LogDate, la.`name` AS ActionName, la.description AS ActionDescription, l.description AS LogDescription, c.`name` AS CompanyName, c.dateTimeCreated AS CreationDate, u.firstName, u.lastName, u.email, w.ip AS ConnectedIPAddress FROM `logevent` l LEFT JOIN `company` c ON c.CompanyID = l.companyID LEFT JOIN `employee` e ON e.CompanyID = l.CompanyID LEFT JOIN `user` u ON l.userID = e.UserID LEFT JOIN `websession` w ON w.sessionID = l.sessionID LEFT JOIN `logaction` la ON la.actionID = l.actionID WHERE la.`name` LIKE 'Company%' GROUP BY l.logID;
+#SELECT ALL LOG EVENTS ABOUT COMPANIES CREATED
+SELECT l.logDateTime AS LogDate, la.`name` AS ActionName, la.description AS ActionDescription, l.description AS LogDescription, c.`name` AS CompanyName, c.dateTimeCreated AS CreationDate, u.firstName, u.lastName, u.email, w.ip AS ConnectedIPAddress FROM `logevent` l LEFT JOIN `company` c ON c.CompanyID = l.companyID LEFT JOIN `employee` e ON e.CompanyID = l.CompanyID LEFT JOIN `user` u ON l.userID = e.UserID LEFT JOIN `websession` w ON w.sessionID = l.sessionID LEFT JOIN `logaction` la ON la.actionID = l.actionID WHERE la.`name` = 'Company Created' GROUP BY l.logID;
+#SELECT ALL LOG EVENTS ABOUT COMPANIES CREATED
+SELECT l.logDateTime AS LogDate, la.`name` AS ActionName, la.description AS ActionDescription, l.description AS LogDescription, c.`name` AS CompanyName, c.dateTimeCreated AS CreationDate, u.firstName, u.lastName, u.email, w.ip AS ConnectedIPAddress FROM `logevent` l LEFT JOIN `company` c ON c.CompanyID = l.companyID LEFT JOIN `employee` e ON e.CompanyID = l.CompanyID LEFT JOIN `user` u ON l.userID = e.UserID LEFT JOIN `websession` w ON w.sessionID = l.sessionID LEFT JOIN `logaction` la ON la.actionID = l.actionID WHERE la.`name` = 'Company Removed' GROUP BY l.logID;
+#SELECT ADD-ONS AFTER (WHERE) FOR SEARCHING
+#FOR THE SELECTED USER
+WHERE l.userID = <userID>;
+#BETWEEN TWO SELECTED DATES
+WHERE l.logDateTime BETWEEN 'year-month-day hour:minute:second' AND 'year-month-day hour:minute:second';
+#AFTER THE SELECTED TIME
+WHERE l.logDateTime > 'year-month-day hour:minute:second';
+#BEFORE THE SELECTED TIME
+WHERE l.logDateTime < 'year-month-day hour:minute:second';
 #END OF SELECT QUERIES
 #
 #START OF DELETE QUERIES
