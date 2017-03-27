@@ -1,4 +1,5 @@
 USE test;
+SET NAMES utf8;
 USE meetingflow;
 
 CREATE DATABASE IF NOT EXISTS test;

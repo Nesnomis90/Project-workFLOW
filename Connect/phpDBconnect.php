@@ -1,14 +1,17 @@
 <?php
+// Database information we use in the code to connect to it
 //$dbengine 	= 'mysql';
 define('DB_HOST', 'localhost');
 define('DB_USER', 'root');
 define('DB_PASSWORD', '5Bdp32LAHYQ8AemvQM9P');
 define('DB_NAME', 'meetingflow');
 
+// A global array to keep track of log events that occur before
+// the log event table has been created.
 global $logEventArray;
 $logEventArray = array();
 
-// Connect to server and create our wanted database
+// Function to connect to server and create our wanted database
 function create_db()
 {
 	$pdo = null;
@@ -19,6 +22,7 @@ function create_db()
 	$pdo = new PDO("mysql:host=".DB_HOST, DB_USER, DB_PASSWORD);
 	//	set the PDO error mode to exception
 	$pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+	$pdo->exec('SET NAMES "utf8"');
 	
 	if(!dbExists($pdo,DB_NAME)){
 		// Creating the SQL query to make the database
@@ -29,7 +33,7 @@ function create_db()
 		$output = 'Created database: ' . DB_NAME . '<br />';
 		
 		//	Add the creation to log event
-		$sqlLog = "INSERT INTO `logevent`(`actionID`, `description`) VALUES ((SELECT `actionID` FROM `logaction` WHERE `name` = 'Database Created'), 'Database was created automatically by the PHP script. This should only occur once, at the very start of the log event.')";
+		$sqlLog = "INSERT INTO `logevent`(`actionID`, `description`) VALUES ((SELECT `actionID` FROM `logaction` WHERE `name` = 'Database Created'), 'Database " . DB_NAME . " was created automatically by the PHP script. This should only occur once, at the very start of the log event.')";
 		$logEventArray[] = $sqlLog;
 
 	} else {
@@ -40,18 +44,17 @@ function create_db()
 	
 	//Closing the connection
 	$pdo = null;
-	
 	} 
 catch(PDOException $e)
 	{
-	$error = 'Unable to create the database.<br />';
+	$error = 'Unable to create the database: ' . $e->getMessage() . '<br />';
 	include 'error.html.php';
 	$pdo = null;
-	die("DB ERROR: " . $e->getMessage());
+	exit();
 	}	
 }
 
-//	Connect to an existing database
+// Function to connect to an existing database
 function connect_to_db()
 {
 	$pdo = null;
@@ -61,6 +64,7 @@ function connect_to_db()
 	$pdo = new PDO("mysql:host=".DB_HOST.";dbname=" . DB_NAME, DB_USER, DB_PASSWORD);
 	//	set the PDO error mode to exception
 	$pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+	$pdo->exec('SET NAMES "utf8"');
 	
 	$output = "Succesfully connected to database: " . DB_NAME . "<br />";
 	include 'output.html.php';
@@ -70,15 +74,14 @@ function connect_to_db()
 	} 
 catch(PDOException $e)
 	{
-	$error = 'Unable to connect to the database.<br />';
+	$error = 'Unable to connect to the database' . $e->getMessage() . '<br />';
 	include 'error.html.php';
 	$pdo = null;	// Close connection
-	die("DB ERROR: " . $e->getMessage());
-
+	exit();
 	}
 }
 
-//Function to see if database exists
+// Function to see if database exists
 function dbExists($pdo, $databaseName){
 	try{
 		// Run a SHOW DATABASES query on the selected database
@@ -96,7 +99,7 @@ function dbExists($pdo, $databaseName){
 		return FALSE;
 	}
 }
-//Function to fill in default values for the Access Level table
+// Function to fill in default values for the Access Level table
 function fillAccessLevel($pdo){
 	try
 	{
@@ -120,7 +123,7 @@ function fillAccessLevel($pdo){
 	}
 }
 
-//Function to fill in default values for the Company Position table
+// Function to fill in default values for the Company Position table
 function fillCompanyPosition($pdo){
 	try
 	{
@@ -141,7 +144,7 @@ function fillCompanyPosition($pdo){
 	}
 }
 
-//Function to fill in default values for the Log Action table
+// Function to fill in default values for the Log Action table
 function fillLogAction($pdo){
 	try
 	{
@@ -169,7 +172,7 @@ function fillLogAction($pdo){
 	}
 }
 
-//Function to see if database table exists
+// Function to see if database table exists
 function tableExists($pdo, $table) {
 	try {
 		// Run a SELECT query on the selected table
@@ -185,7 +188,7 @@ function tableExists($pdo, $table) {
 	}
 }
 
-// Create the tables for our database if they don't already exist
+// Function to create the tables for our database if they don't already exist
 function create_tables()
 {
 	try
@@ -633,6 +636,7 @@ function create_tables()
 					//echo $sqlStatement . " <br />";
 				}
 				$logEventArray = array(); //reinitialize it i.e. make it empty	
+				
 				$totaltime = microtime(true) - $_SERVER["REQUEST_TIME_FLOAT"];
 				$time = $totaltime - $prevtime;
 				$prevtime = $totaltime;
@@ -652,11 +656,10 @@ function create_tables()
 	}
 	catch(PDOException $e)
 	{
-		$error = 'Failed to create tables for ' . DB_NAME . "<br />";
+		$error = 'Failed to create tables for ' . DB_NAME . ": " . $e->getMessage() . "<br />";
 		include 'error.html.php';
-		
 		$conn = null;
-		die("DB ERROR: " . $e->getMessage());
+		exit();
 	}
 }
 ?>
