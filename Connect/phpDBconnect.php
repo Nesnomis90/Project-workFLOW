@@ -11,6 +11,10 @@ define('DB_NAME', 'meetingflow');
 global $logEventArray;
 $logEventArray = array();
 
+// Make sure our database and tables exist
+create_db();
+create_tables();
+
 // Function to connect to server and create our wanted database
 function create_db()
 {
@@ -159,6 +163,7 @@ function fillLogAction($pdo){
 		$pdo->exec("INSERT INTO `logaction`(`name`,`description`) VALUES ('Company Removed','A company has been removed. See log description for more information.')");
 		$pdo->exec("INSERT INTO `logaction`(`name`,`description`) VALUES ('Database Created','The database we are using right now just got created.')");
 		$pdo->exec("INSERT INTO `logaction`(`name`,`description`) VALUES ('Table Created','A table in the database was created.')");
+		$pdo->exec("INSERT INTO `logaction`(`name`,`description`) VALUES ('Test','This is for testing.')");
 		
 		// Commit the transaction
 		$pdo->commit();

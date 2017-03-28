@@ -2,6 +2,8 @@ USE test;
 SET NAMES utf8;
 USE meetingflow;
 
+SELECT l.logID, l.logDateTime, la.`name`, la.description, l.description FROM `logevent` l JOIN `logaction` la ON la.actionID = l.actionID;
+
 CREATE DATABASE IF NOT EXISTS test;
 
 SHOW DATABASES LIKE 'test';
@@ -39,6 +41,8 @@ SELECT * FROM `logevent`;
 INSERT INTO `logevent`(`actionID`, `description`) VALUES ((SELECT `actionID` FROM `logaction` WHERE `name` = 'Database Created'), 'Database was created automatically by the PHP script.');
 
 INSERT INTO `logevent`(`actionID`, `sessionID`, `description`, `userID`, `companyID`, `bookingID`, `meetingRoomID`, `equipmentID`) VALUES (7, NULL, 'This is a more in-depth description over the details connected to this log event', 1, NULL, NULL, NULL, NULL);
+
+INSERT INTO `logevent`(`actionID`,`description`) VALUES (10, 'test');
 
 SELECT l.logDateTime AS LogDate, la.`name` AS ActionName, la.description AS ActionDescription, l.description AS LogDescription, c.`name` AS CompanyName, c.dateTimeCreated AS CreationDate, w.ip AS BookedFromIPAddress FROM `logevent` l LEFT JOIN `company` c ON c.CompanyID = l.companyID LEFT JOIN `websession` w ON w.sessionID = l.sessionID LEFT JOIN `logaction` la ON la.actionID = l.actionID WHERE la.`name` LIKE 'Company%';
 
