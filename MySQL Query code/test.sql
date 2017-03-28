@@ -1,4 +1,6 @@
 USE test;
+SET NAMES utf8;
+USE meetingflow;
 
 CREATE DATABASE IF NOT EXISTS test;
 
@@ -26,13 +28,25 @@ SELECT * FROM `roomequipment`;
 
 SELECT * FROM `equipment`;
 
-SELECT * FROM `logevent`;
-
 SELECT * FROM `logaction`;
 
 SELECT * FROM `companyposition`;
 
 SELECT * FROM `accesslevel`;
+
+SELECT * FROM `logevent`;
+
+INSERT INTO `logevent`(`actionID`, `description`) VALUES ((SELECT `actionID` FROM `logaction` WHERE `name` = 'Database Created'), 'Database was created automatically by the PHP script.');
+
+INSERT INTO `logevent`(`actionID`, `sessionID`, `description`, `userID`, `companyID`, `bookingID`, `meetingRoomID`, `equipmentID`) VALUES (7, NULL, 'This is a more in-depth description over the details connected to this log event', 1, NULL, NULL, NULL, NULL);
+
+SELECT l.logDateTime AS LogDate, la.`name` AS ActionName, la.description AS ActionDescription, l.description AS LogDescription, c.`name` AS CompanyName, c.dateTimeCreated AS CreationDate, w.ip AS BookedFromIPAddress FROM `logevent` l LEFT JOIN `company` c ON c.CompanyID = l.companyID LEFT JOIN `websession` w ON w.sessionID = l.sessionID LEFT JOIN `logaction` la ON la.actionID = l.actionID WHERE la.`name` LIKE 'Company%';
+
+UPDATE `logevent` SET `meetingRoomID` = 2 WHERE `logID` = 18;
+
+SELECT * FROM `logevent` l LEFT JOIN `user` u ON u.userID = l.userID LEFT JOIN `company` c ON c.CompanyID = l.companyID LEFT JOIN `booking` b ON b.bookingID = l.bookingID LEFT JOIN `equipment` eq ON eq.EquipmentID = l.equipmentID LEFT JOIN `meetingroom` m ON m.meetingRoomID = l.meetingRoomID LEFT JOIN `websession` w ON w.sessionID = l.sessionID;
+
+INSERT INTO `logevent`(`actionID`, `description`, `userID`) VALUES (3, 'This is a more in-depth description over the details connected to this log event', NULL);
 
 SELECT m.`name` AS BookedRoomName, b.startDateTime AS StartTime, b.endDateTime AS EndTime FROM `booking` b LEFT JOIN `meetingroom` m ON b.meetingRoomID = m.meetingRoomID LEFT JOIN `user` u ON u.userID = b.userID LEFT JOIN `employee` e ON e.UserID = u.userID LEFT JOIN `company` c ON c.CompanyID = e.CompanyID LEFT JOIN `roomequipment` re ON  re.MeetingRoomID = m.meetingRoomID LEFT JOIN `equipment` eq ON eq.EquipmentID = re.EquipmentID WHERE b.dateTimeCancelled IS NULL AND b.actualEndDateTime IS NULL AND eq.`name` = 'wifi';
 
