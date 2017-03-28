@@ -2,6 +2,32 @@ USE test;
 SET NAMES utf8;
 USE meetingflow;
 
+SELECT 	u.`userID`, 
+					u.`firstname`, 
+					u.`lastname`, 
+					u.`email`,
+					a.`AccessName`,
+					u.`displayname`,
+					u.`bookingdescription`,
+                    GROUP_CONCAT(CONCAT_WS(' for ', cp.`name`, c.`name`) separator ', ') AS WorksFor,
+					DATE_FORMAT(u.`create_time`, "%d %b %Y %T") AS DateCreated,
+					u.`isActive`,
+					DATE_FORMAT(u.`lastActivity`, "%d %b %Y %T") AS LastActive
+					FROM `user` u 
+					LEFT JOIN `employee` e 
+					ON e.UserID = u.userID 
+					LEFT JOIN `company` c 
+					ON e.CompanyID = c.CompanyID 
+					LEFT JOIN `companyposition` cp 
+					ON cp.PositionID = e.PositionID
+					LEFT JOIN `accesslevel` a
+					ON u.AccessID = a.AccessID
+					GROUP BY u.`userID`
+                    ORDER BY u.`AccessID`
+                    ASC;
+
+SELECT u.`firstname`, u.`lastname`, u.`email`, a.`AccessName`, u.`displayname`, u.`bookingdescription`, u.`create_time` FROM `user` u JOIN `accesslevel` a ON u.AccessID = a.AccessID WHERE `isActive` = 1;
+
 SELECT l.logID, DATE_FORMAT(l.logDateTime, "%d %b %Y %T") AS LogDate, la.`name` AS ActionName, la.description AS ActionDescription, l.description AS LogDescription FROM `logevent` l JOIN `logaction` la ON la.actionID = l.actionID ORDER BY UNIX_TIMESTAMP(l.logDateTime) DESC;
 
 SELECT l.logID, l.logDateTime, la.`name`, la.description, l.description FROM `logevent` l JOIN `logaction` la ON la.actionID = l.actionID;

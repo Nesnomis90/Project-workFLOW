@@ -6,22 +6,34 @@ include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 try
 {
 	$pdo = connect_to_db();
-	$sql = 'SELECT 	u.`userID`, 
+	$sql = "SELECT 	u.`userID`, 
 					u.`firstname`, 
 					u.`lastname`, 
-					u.`email`, 
-					c.`name` AS CompanyName, 
-					cp.`name` AS CompanyPosition 
+					u.`email`,
+					a.`AccessName`,
+					u.`displayname`,
+					u.`bookingdescription`,
+                    GROUP_CONCAT(CONCAT_WS(' for ', cp.`name`, c.`name`) separator ', ') AS WorksFor,
+					DATE_FORMAT(u.`create_time`, '%d %b %Y %T') AS DateCreated,
+					u.`isActive`,
+					DATE_FORMAT(u.`lastActivity`, '%d %b %Y %T') AS LastActive
 					FROM `user` u 
 					LEFT JOIN `employee` e 
 					ON e.UserID = u.userID 
 					LEFT JOIN `company` c 
 					ON e.CompanyID = c.CompanyID 
 					LEFT JOIN `companyposition` cp 
-					ON cp.PositionID = e.PositionID 
-					ORDER BY c.`name`'
+					ON cp.PositionID = e.PositionID
+					LEFT JOIN `accesslevel` a
+					ON u.AccessID = a.AccessID
+					GROUP BY u.`userID`
+                    ORDER BY u.`AccessID`
+                    ASC"
 					;
 	$result = $pdo->query($sql);
+
+	//Close connection
+	$pdo = null;
 }
 catch (PDOException $e)
 {
@@ -36,10 +48,16 @@ foreach ($result as $row)
 					'firstname' => $row['firstname'],
 					'lastname' => $row['lastname'],
 					'email' => $row['email'],
-					'companyname' => $row['CompanyName'],
-					'companyposition' => $row['CompanyPosition'],
+					'accessname' => $row['AccessName'],
+					'displayname' => $row['displayname'],
+					'bookingdescription' => $row['bookingdescription'],
+					'worksfor' => $row['WorksFor'],
+					'datecreated' => $row['DateCreated'],
+					'isActive' => $row['isActive'],					
+					'lastactive' => $row['LastActive'],
 					);
 }
-include 'users.html.php';
 
+// Create the registered users list in HTML
+include_once 'users.html.php';
 ?>
