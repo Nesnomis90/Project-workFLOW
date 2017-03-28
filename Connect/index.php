@@ -1,36 +1,14 @@
 <?php
-// Code to deal with MAGICQUOTES, a feature added to protect against dangerous characters.
-// But it's not wise to use with SQL statement
-if (get_magic_quotes_gpc())
-{
-	$process = array(&$_GET, &$_POST, &$_COOKIE, &$_REQUEST);
-	while (list($key, $val) = each($process))
-	{
-		foreach ($val as $k => $v)
-		{
-			unset($process[$key][$k]);
-			if (is_array($v))
-			{
-				$process[$key][stripslashes($k)] = $v;
-				$process[] = &$process[$key][stripslashes($k)];
-			}
-			else
-			{
-				$process[$key][stripslashes($k)] = stripslashes($v);
-			}
-		}
-	}
-	unset($process);
-}
+// This is the Index file for the Connect folder
 
-// Index file for Connect folder
-require_once 'phpDBconnect.php';
+// Get database connection functions
+include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 
 // Check if user wants to submit something (this time it's a test for submitting a log description)
 // This is done through isset which checks if the query string contains a variable named addlog
 if (isset($_GET['addlog']))
 {
-	include 'insertLog.html.php';
+	include_once 'insertLog.html.php';
 	exit();
 }
 
@@ -38,7 +16,7 @@ if (isset($_GET['addlog']))
 if (isset($_POST['LogDescription'])){
 	
 	try{
-		// Use connect to Database function from phpDBconnect.php
+		// Use connect to Database function from db.inc.php
 		$pdo = connect_to_db();
 		
 		// The SQL command we're going to use
@@ -50,11 +28,15 @@ if (isset($_POST['LogDescription'])){
 		$s = $pdo->prepare($sql);
 		$s->bindValue(':logDescription', $logDescription);
 		$s->execute();
+		
+		//Close connection
+		$pdo = null;
 	}
 	catch(PDOException $e)
 	{
 		$error = 'Error adding log event: ' . $e->getMessage() . '<br />';
-		include 'error.html.php';
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+		$pdo = null;
 		exit();
 	}
 
@@ -67,7 +49,7 @@ if (isset($_POST['LogDescription'])){
 if (isset($_GET['deletelog'])){
 	try
 	{
-		// Use connect to Database function from phpDBconnect.php
+		// Use connect to Database function from db.inc.php
 		$pdo = connect_to_db();
 		
 		$logEventIDToDelete = $_POST['id'];
@@ -75,11 +57,15 @@ if (isset($_GET['deletelog'])){
 		$s = $pdo->prepare($sql);
 		$s->bindValue(':id', $logEventIDToDelete);
 		$s->execute();
+		
+		//Close connection
+		$pdo = null;
 	}
 	catch (PDOException $e)
 	{
 		$error = 'Error deleting log: ' . $e->getMessage() . '<br />';
-		include 'error.html.php';
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+		$pdo = null;
 		exit();
 	}
 	
@@ -88,27 +74,42 @@ if (isset($_GET['deletelog'])){
 	exit();
 }
 
-
-
 // Get log data we need to display it in our html template
 try
 {	
-	// Use connect to Database function from phpDBconnect.php
+	// Get the wanted amount of Log Events the user wants displayed
+	$logLimit = 100;
+
+	// Use connect to Database function from db.inc.php
 	$pdo = connect_to_db();
 	
 	//Retrieve log data from database
 	//$sql = 'SELECT `logID`,`logDateTime` FROM `logevent`';
-	$sql = 'SELECT l.logID, l.logDateTime AS LogDate, la.`name` AS ActionName, la.description AS ActionDescription, l.description AS LogDescription FROM `logevent` l JOIN `logaction` la ON la.actionID = l.actionID';
+	$sql = 'SELECT 	l.logID, 
+					DATE_FORMAT(l.logDateTime, "%d %b %Y %T") AS LogDate, 
+					la.`name` AS ActionName, la.description AS ActionDescription, 
+					l.description AS LogDescription 
+					FROM `logevent` l 
+					JOIN `logaction` la 
+					ON la.actionID = l.actionID
+					ORDER BY UNIX_TIMESTAMP(l.logDateTime) 
+					DESC
+					LIMIT ' . $logLimit;
 	$result = $pdo->query($sql);
+	
+	//Close connection
+	$pdo = null;
 }
 catch (PDOException $e)
 {
-	 $error = 'Error fetching logevent: ' . $e->getMessage();
-	 include 'error.html.php';
+	$error = 'Error fetching logevent: ' . $e->getMessage();
+	include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
 	 
-	 $pdo = null;
-	 exit();
+	$pdo = null;
+	exit();
 }
+
+// Create the array we will go through to display information in HTML
 foreach ($result as $row)
 {
 	//$log[] = $row['logDateTime'];
@@ -120,5 +121,6 @@ foreach ($result as $row)
 		'logDescription' => $row['LogDescription']
 		);
 }
-include 'log.html.php';
+// Create the Log Event table in HTML
+include_once 'log.html.php';
 ?>

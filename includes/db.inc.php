@@ -1,4 +1,13 @@
 <?php
+// This file holds all variables needed to connect to our database
+// It also has functions to
+// 						a) Create the database if it does not exist create_db();
+//						b) Create the tables we need if they do not exist create_tables();
+//						c) Connect to the database to use it for other things connect_to_db();
+// a) and b) are run automatically when this file is included
+// which means it will always try to make sure the database and its tables exist
+
+
 // Database information we use in the code to connect to it
 //$dbengine 	= 'mysql';
 define('DB_HOST', 'localhost');
@@ -6,12 +15,16 @@ define('DB_USER', 'root');
 define('DB_PASSWORD', '5Bdp32LAHYQ8AemvQM9P');
 define('DB_NAME', 'meetingflow');
 
+//Libraries, functions etc. to include
+include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/magicquotes.inc.php';
+
 // A global array to keep track of log events that occur before
 // the log event table has been created.
 global $logEventArray;
 $logEventArray = array();
 
 // Make sure our database and tables exist
+// ATTEMPT TO CREATE DATABASE AND TABLES
 create_db();
 create_tables();
 
@@ -41,10 +54,10 @@ function create_db()
 		$logEventArray[] = $sqlLog;
 
 	} else {
-		$output = 'Database: ' . DB_NAME . ' already exists.<br />';
+		$output = '<b>Database: ' . DB_NAME . ' already exists.</b><br />';
 	}
 	
-	include 'output.html.php';
+	include $_SERVER['DOCUMENT_ROOT'] . '/includes/output.html.php';
 	
 	//Closing the connection
 	$pdo = null;
@@ -52,7 +65,7 @@ function create_db()
 catch(PDOException $e)
 	{
 	$error = 'Unable to create the database: ' . $e->getMessage() . '<br />';
-	include 'error.html.php';
+	include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
 	$pdo = null;
 	exit();
 	}	
@@ -70,8 +83,8 @@ function connect_to_db()
 	$pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 	$pdo->exec('SET NAMES "utf8"');
 	
-	$output = "Succesfully connected to database: " . DB_NAME . "<br />";
-	include 'output.html.php';
+	$output = "<b>Succesfully connected to database: " . DB_NAME . "</b><br />";
+	include $_SERVER['DOCUMENT_ROOT'] . '/includes/output.html.php';
 	
 	return $pdo; //Return the active connection
 
@@ -79,7 +92,7 @@ function connect_to_db()
 catch(PDOException $e)
 	{
 	$error = 'Unable to connect to the database' . $e->getMessage() . '<br />';
-	include 'error.html.php';
+	include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
 	$pdo = null;	// Close connection
 	exit();
 	}
@@ -123,7 +136,11 @@ function fillAccessLevel($pdo){
 	{
 		//	Cancels the transaction from going through if something went wrong.
 		$pdo->rollback();
-		echo "Error: " . $e->getMessage() . "<br />";
+		$error = 'Encountered an error while trying to insert default values into table accesslevel: ' .
+				$e->getMessage() . '<br />';
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+		$pdo = null;
+		exit();
 	}
 }
 
@@ -144,7 +161,11 @@ function fillCompanyPosition($pdo){
 	{
 		//	Cancels the transaction from going through if something went wrong.
 		$pdo->rollback();
-		echo "Error: " . $e->getMessage() . "<br />";
+		$pdo = null;
+		$error = 'Encountered an error while trying to insert default values into table companyposition: ' .
+			$e->getMessage() . '<br />';
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';		
+		exit();
 	}
 }
 
@@ -173,6 +194,11 @@ function fillLogAction($pdo){
 	{
 		//	Cancels the transaction from going through if something went wrong.
 		$pdo->rollback();
+		$pdo = null;
+		$error = 'Encountered an error while trying to insert default values into table logaction: ' .
+			$e->getMessage() . '<br />';
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+		exit();
 		echo "Error: " . $e->getMessage() . "<br />";
 	}
 }
@@ -661,8 +687,8 @@ function create_tables()
 	}
 	catch(PDOException $e)
 	{
-		$error = 'Failed to create tables for ' . DB_NAME . ": " . $e->getMessage() . "<br />";
-		include 'error.html.php';
+		$error = 'Failed to create tables for ' . DB_NAME . ": " . $e->getMessage() . '<br />';
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
 		$conn = null;
 		exit();
 	}

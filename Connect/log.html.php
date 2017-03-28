@@ -1,3 +1,5 @@
+<?php include_once $_SERVER['DOCUMENT_ROOT'] .
+ '/includes/helpers.inc.php'; ?>
 <!DOCTYPE html>
 <html lang="en">
 	<head>
@@ -47,13 +49,13 @@
 			</tr>
 			<?php foreach ($log as $row): ?>
 				<form action="?deletelog" method="post">
-					<tr><?php 
-							echo '<td>' . htmlspecialchars($row['date'], ENT_QUOTES, 'UTF-8') . '</td>';
-							echo '<td>' . htmlspecialchars($row['actionName'], ENT_QUOTES, 'UTF-8') . '</td>';
-							echo '<td>' . htmlspecialchars($row['actionDescription'], ENT_QUOTES, 'UTF-8') . '</td>';
-							echo '<td>' . htmlspecialchars($row['logDescription'], ENT_QUOTES, 'UTF-8') . '</td>';
-							?>
-							<td><input type="submit" value="Delete"></td>
+					<tr>
+						<td><?php htmlout($row['date'])?></td>
+						<td><?php htmlout($row['actionName'])?></td>
+						<td><?php htmlout($row['actionDescription'])?></td>
+						<td><?php htmlout($row['logDescription'])?></td>
+						
+						<td><input type="submit" value="Delete"></td>
 						<input type="hidden" name="id" value="<?php echo $row['id']; ?>">
 					</tr>
 				</form>

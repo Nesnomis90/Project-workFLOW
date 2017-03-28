@@ -2,6 +2,8 @@ USE test;
 SET NAMES utf8;
 USE meetingflow;
 
+SELECT l.logID, DATE_FORMAT(l.logDateTime, "%d %b %Y %T") AS LogDate, la.`name` AS ActionName, la.description AS ActionDescription, l.description AS LogDescription FROM `logevent` l JOIN `logaction` la ON la.actionID = l.actionID ORDER BY UNIX_TIMESTAMP(l.logDateTime) DESC;
+
 SELECT l.logID, l.logDateTime, la.`name`, la.description, l.description FROM `logevent` l JOIN `logaction` la ON la.actionID = l.actionID;
 
 CREATE DATABASE IF NOT EXISTS test;
