@@ -2,6 +2,36 @@ USE test;
 SET NAMES utf8;
 USE meetingflow;
 
+SELECT 	u.`userID`, 
+					u.`firstname`, 
+					u.`lastname`, 
+					u.`email`,
+					a.`AccessName`,
+					u.`displayname`,
+					u.`bookingdescription`,
+                    GROUP_CONCAT(CONCAT_WS(' for ', cp.`name`, c.`name`) separator ', ') AS WorksFor,
+					DATE_FORMAT(u.`create_time`, "%d %b %Y %T") AS DateCreated,
+					u.`isActive`,
+					DATE_FORMAT(u.`lastActivity`, "%d %b %Y %T") AS LastActive
+					FROM `user` u 
+					LEFT JOIN `employee` e 
+					ON e.UserID = u.userID 
+					LEFT JOIN `company` c 
+					ON e.CompanyID = c.CompanyID 
+					LEFT JOIN `companyposition` cp 
+					ON cp.PositionID = e.PositionID
+					LEFT JOIN `accesslevel` a
+					ON u.AccessID = a.AccessID
+					GROUP BY u.`userID`
+                    ORDER BY u.`AccessID`
+                    ASC;
+
+SELECT u.`firstname`, u.`lastname`, u.`email`, a.`AccessName`, u.`displayname`, u.`bookingdescription`, u.`create_time` FROM `user` u JOIN `accesslevel` a ON u.AccessID = a.AccessID WHERE `isActive` = 1;
+
+SELECT l.logID, DATE_FORMAT(l.logDateTime, "%d %b %Y %T") AS LogDate, la.`name` AS ActionName, la.description AS ActionDescription, l.description AS LogDescription FROM `logevent` l JOIN `logaction` la ON la.actionID = l.actionID ORDER BY UNIX_TIMESTAMP(l.logDateTime) DESC;
+
+SELECT l.logID, l.logDateTime, la.`name`, la.description, l.description FROM `logevent` l JOIN `logaction` la ON la.actionID = l.actionID;
+
 CREATE DATABASE IF NOT EXISTS test;
 
 SHOW DATABASES LIKE 'test';
@@ -39,6 +69,8 @@ SELECT * FROM `logevent`;
 INSERT INTO `logevent`(`actionID`, `description`) VALUES ((SELECT `actionID` FROM `logaction` WHERE `name` = 'Database Created'), 'Database was created automatically by the PHP script.');
 
 INSERT INTO `logevent`(`actionID`, `sessionID`, `description`, `userID`, `companyID`, `bookingID`, `meetingRoomID`, `equipmentID`) VALUES (7, NULL, 'This is a more in-depth description over the details connected to this log event', 1, NULL, NULL, NULL, NULL);
+
+INSERT INTO `logevent`(`actionID`,`description`) VALUES (10, 'test');
 
 SELECT l.logDateTime AS LogDate, la.`name` AS ActionName, la.description AS ActionDescription, l.description AS LogDescription, c.`name` AS CompanyName, c.dateTimeCreated AS CreationDate, w.ip AS BookedFromIPAddress FROM `logevent` l LEFT JOIN `company` c ON c.CompanyID = l.companyID LEFT JOIN `websession` w ON w.sessionID = l.sessionID LEFT JOIN `logaction` la ON la.actionID = l.actionID WHERE la.`name` LIKE 'Company%';
 
