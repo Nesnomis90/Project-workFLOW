@@ -22,13 +22,25 @@
 				id="email" value="<?php htmlout($email); ?>"></label>
 			</div>
 			<div>
-				<label for="accessname">Access: 
-					<select> <?php htmlout($accessnames); ?></select>
+				<label for="accessID">Access: 
+					<select name="accessID">
+						<?php foreach($access as $row): ?> 
+							<option value=<?php htmlout($row['accessID']); ?>>
+							<?php htmlout($row['accessname']);?></option>
+						<?php endforeach; ?>
+					</select>
 				</label>
 			</div>
 			<div>
-				<input type="hidden" name="id" value="<?php
-				htmlout($id); ?>">
+				<label for="displayname">Default Display Name: <input type="<?php htmlout($displaynametype); ?>" name="displayname"
+				id="displayname" value="<?php htmlout($displayname); ?>"></label>
+			</div>
+			<div>
+				<label for="bookingdescription">Default Booking Description: <input type="<?php htmlout($bookingdescriptiontype); ?>" name="bookingdescription"
+				id="bookingdescription" value="<?php htmlout($bookingdescription); ?>"></label>
+			</div>
+			<div>
+				<input type="hidden" name="id" value="<?php htmlout($id); ?>">
 				<input type="submit" value="<?php htmlout($button); ?>">
 			</div>
 			<div>

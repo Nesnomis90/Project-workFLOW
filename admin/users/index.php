@@ -1,10 +1,16 @@
 <?php 
 // This is the index file for the USERS folder
 
+// Include functions
+include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/helpers.inc.php';
+include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/magicquotes.inc.php';
+
 // If admin wants to remove a user from the database
+// TO-DO: ADD A CONFIRMATION BEFORE ACTUALLY DOING THE DELETION!
+// MAYBE BY TYPING ADMIN PASSWORD AGAIN?
 if (isset($_POST['action']) and $_POST['action'] == 'Delete')
 {
-	include $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+	include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 
 	// Delete selected user from database
 	try
@@ -34,7 +40,7 @@ if (isset($_POST['action']) and $_POST['action'] == 'Delete')
 // we load a new html form
 if (isset($_GET['add']))
 {
-	include $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';	
+	include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';	
 	try
 	{
 		// Get name and IDs for access level
@@ -42,16 +48,15 @@ if (isset($_GET['add']))
 		$sql = 'SELECT `accessID` ,`accessname` FROM `accesslevel`';
 		$result = $pdo->query($sql);
 		
-		$accessname = '';
+		$accessnames = '';
 		
 		//TO-DO SE GJENNOM OM TING ER RIKTIG HER
 		// SKAL LAGE EN DROPDOWN LIST MED SELECT TIL HTML UT FRA INNHENTET ACCESSLEVEL INFO FRA DATABASE
 		foreach($result as $row){
 			$access[] = array(
-								'accessID' => row['accessID'],
-								'accessname' => row['accessname']
+								'accessID' => $row['accessID'],
+								'accessname' => $row['accessname']
 								);
-			$accessname = $accessname . "<option> value=" . row['accessID'] . ">". row['accessname'] ."</option><br />";
 		}
 		
 		//Close connection
@@ -70,11 +75,16 @@ if (isset($_GET['add']))
 	$firstname = '';
 	$lastname = '';
 	$email = '';
-	$accessname = 'Normal User';
-	$accessID = 4;
 	$id = '';
+	$displayname = '';
+	$bookingdescription = '';
 	$button = 'Add user';
-	$reset = 'hidden';
+	
+	// We want a reset all fields button while adding a new user
+	$reset = 'reset';
+	// We don't need to see display name and booking description when adding a new user
+	$displaynametype = 'hidden';
+	$bookingdescriptiontype = 'hidden';
 	include 'form.html.php';
 	exit();
 }
@@ -90,11 +100,14 @@ if (isset($_GET['edit']))
 	$firstname = '';
 	$lastname = '';
 	$email = '';
-	$accessname = '';
-	$accessID = '';
 	$id = '';
 	$button = 'Edit user';
-	$reset = 'reset';
+	
+	// Don't want a reset button to blank all fields while editing
+	$reset = 'hidden';
+	// Want to see display name and booking description while editing
+	$displaynametype = 'text';
+	$bookingdescriptiontype = 'text';
 	include 'form.html.php';
 	exit();
 }
@@ -102,7 +115,7 @@ if (isset($_GET['edit']))
 // When admin has added the needed information and wants to add the user
 if (isset($_GET['addform']))
 {
-	include $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+	include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 	
 	// Add the user to the database
 	// TO-DO: Generate password, send password to email, salt/hash password
@@ -111,6 +124,14 @@ if (isset($_GET['addform']))
 	// bind activationcode to :activationcode
 	try
 	{
+		//Generate activation code
+		$activationcode = generateActivationCode();
+		echo 'activation code we generated on addform: ' . $activationcode . '<br />';
+		
+		//Generate password for user
+		//TO-DO: ADD THE ACTUAL PASSWORD GENERATOR. JUST USING ACTIVATION CODE TO GET A 64 CHAR
+		$hashedPassword = generateActivationCode();
+		
 		$pdo = connect_to_db();
 		$sql = 'INSERT INTO `user` SET
 		`firstname` = :firstname,
@@ -121,10 +142,11 @@ if (isset($_GET['addform']))
 		`email` = :email';
 		$s = $pdo->prepare($sql);
 		$s->bindValue(':firstname', $_POST['firstname']);
-		$s->bindValue(':email', $_POST['email']);
+		$s->bindValue(':lastname', $_POST['lastname']);		
 		$s->bindValue(':accessID', $_POST['accessID']);
 		$s->bindValue(':password', $hashedPassword);
 		$s->bindValue(':activationcode', $activationcode);
+		$s->bindValue(':email', $_POST['email']);
 		$s->execute();
 		
 		// close connection
@@ -132,7 +154,7 @@ if (isset($_GET['addform']))
 	}
 	catch (PDOException $e)
 	{
-		$error = 'Error adding submitted user.';
+		$error = 'Error adding submitted user: ' . $e->getMessage();
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
 		$pdo = null;
 		exit();
@@ -146,9 +168,9 @@ if (isset($_GET['addform']))
 
 
 // Display users list
-include $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 try
 {
+	include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 	$pdo = connect_to_db();
 	$sql = "SELECT 	u.`userID`, 
 					u.`firstname`, 
@@ -187,7 +209,6 @@ catch (PDOException $e)
 	exit();
 }
 // Define the users variable to avoid errors if it's empty
-$users[] = array();
 foreach ($result as $row)
 {
 	$users[] = array('id' => $row['userID'], 
