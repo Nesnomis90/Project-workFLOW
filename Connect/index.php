@@ -78,6 +78,7 @@ if (isset($_GET['deletelog'])){
 try
 {	
 	// Get the wanted amount of Log Events the user wants displayed
+	//TO-DO: Make this an admin choice
 	$logLimit = 100;
 
 	// Use connect to Database function from db.inc.php
