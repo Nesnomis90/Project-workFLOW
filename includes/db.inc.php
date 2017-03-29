@@ -306,6 +306,7 @@ function create_tables()
 						  `activationCode` char(64) NOT NULL,
 						  PRIMARY KEY (`userID`),
 						  UNIQUE KEY `email_UNIQUE` (`email`),
+						  UNIQUE KEY `activationCode_UNIQUE` (`activationCode`),
 						  UNIQUE KEY `bookingCode_UNIQUE` (`bookingCode`),
 						  KEY `FK_AccessID_idx` (`AccessID`),
 						  CONSTRAINT `FK_AccessID` FOREIGN KEY (`AccessID`) REFERENCES `accesslevel` (`AccessID`) ON DELETE NO ACTION ON UPDATE CASCADE

@@ -2,6 +2,8 @@ USE test;
 SET NAMES utf8;
 USE meetingflow;
 
+SELECT `accessID` ,`accessname` FROM `accesslevel`;
+
 SELECT 	u.`userID`, 
 					u.`firstname`, 
 					u.`lastname`, 
@@ -288,7 +290,7 @@ INSERT INTO `employee`(`CompanyID`, `UserID`, `PositionID`) VALUES ((SELECT `Com
 
 INSERT INTO `company`(`name`) VALUES ('test6');
 
-INSERT INTO `user`(`email`, `password`, `firstname`, `lastname`,`accessID`, `activationcode`) VALUES ('test15@test.com', '123test', 'testy15', 'mctester15', 4, 'ecd71870d1963316a97e3ac3408c9835ad8cf0f3c1bc703527c30265534f75ae');
+INSERT INTO `user`(`email`, `password`, `firstname`, `lastname`,`accessID`, `activationcode`) VALUES ('test2@test.com', 'ecd71870d1963316a97e3ac3408c9835ad8cf0f3c1bc703527c30265534f75ae', 'Test2', 'McTest2', 4, 'ecd71870d1963316a97e3ac3408c9835ad8cf0f3c1bc703527c30265534f75ae');
 
 SELECT u.`firstname`, u.`lastname`, u.`email`, c.`name` AS CompanyName, cp.`name` AS CompanyRole FROM `user` u JOIN `company` c JOIN `employee` e JOIN `companyposition` cp WHERE e.CompanyID = c.CompanyID AND e.UserID = u.userID AND cp.PositionID = e.PositionID ORDER BY c.`name` ;
 
