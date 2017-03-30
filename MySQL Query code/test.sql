@@ -2,6 +2,25 @@ USE test;
 SET NAMES utf8;
 USE meetingflow;
 
+SELECT  `meetingRoomID`, 
+					`name`, 
+					`capacity`, 
+					`description`, 
+					`location`
+			FROM `meetingroom`;
+
+SELECT 	u.`userID`, 
+						u.`firstname`, 
+						u.`lastname`, 
+						u.`email`,
+						a.`AccessName`,
+						u.`displayname`,
+						u.`bookingdescription`
+						FROM `user` u
+						JOIN `accesslevel` a
+						ON a.accessID = u.accessID
+                        WHERE u.`userID` = 3;
+
 SELECT `accessID` ,`accessname` FROM `accesslevel`;
 
 SELECT 	u.`userID`, 
