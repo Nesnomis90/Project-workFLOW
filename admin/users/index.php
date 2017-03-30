@@ -48,10 +48,8 @@ if (isset($_GET['add']))
 		$sql = 'SELECT `accessID` ,`accessname` FROM `accesslevel`';
 		$result = $pdo->query($sql);
 		
-		$accessnames = '';
-		
-		//TO-DO SE GJENNOM OM TING ER RIKTIG HER
-		// SKAL LAGE EN DROPDOWN LIST MED SELECT TIL HTML UT FRA INNHENTET ACCESSLEVEL INFO FRA DATABASE
+		// Get the rows of information from the query
+		// This will be used to create a dropdown list in HTML
 		foreach($result as $row){
 			$access[] = array(
 								'accessID' => $row['accessID'],
@@ -83,31 +81,82 @@ if (isset($_GET['add']))
 	// We want a reset all fields button while adding a new user
 	$reset = 'reset';
 	// We don't need to see display name and booking description when adding a new user
-	$displaynametype = 'hidden';
-	$bookingdescriptiontype = 'hidden';
+	// style=display:block to show, style=display:none to hide
+	$displaynameStyle = 'none';
+	$bookingdescriptionStyle = 'none';
 	include 'form.html.php';
 	exit();
 }
 
 // if admin wants to edit user information
 // we load a new html form
-// TO-DO: ACTUALLY DO THIS!
-if (isset($_GET['edit']))
+if (isset($_POST['action']) AND $_POST['action'] = 'Edit')
 {
+	// Get information from database again on the selected user
+	try
+	{
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+		
+		$pdo = connect_to_db();
+		$sql = 'SELECT 	u.`userID`, 
+						u.`firstname`, 
+						u.`lastname`, 
+						u.`email`,
+						a.`AccessName`,
+						u.`displayname`,
+						u.`bookingdescription`
+						FROM `user` u
+						JOIN `accesslevel` a
+						ON a.accessID = u.accessID
+						WHERE u.`userID` = :id';
+		$s = $pdo->prepare($sql);
+		$s->bindValue(':id', $_POST['id']);
+		$s->execute();
+		
+		// Get name and IDs for access level
+		$sql = 'SELECT `accessID` ,`accessname` FROM `accesslevel`';
+		$result = $pdo->query($sql);
+		
+		// Get the rows of information from the query
+		// This will be used to create a dropdown list in HTML
+		// TO-DO: MAKE USERS ACTUAL ACCESSID THE SELECTED ACCESSID IN HTML
+		foreach($result as $row){
+			$access[] = array(
+								'accessID' => $row['accessID'],
+								'accessname' => $row['accessname']
+								);
+		}
+		
+		//Close the connection
+		$pdo = null;
+	}
+	catch (PDOException $e)
+	{
+		$error = 'Error fetching user details.';
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+		$pdo = null;
+		exit();
+	}
+	
+	// Create an array with the row information we retrieved
+	$row = $s->fetch();
+	
 	$pageTitle = 'Edit User';
-	// Get values from database
 	$action = 'editform';
-	$firstname = '';
-	$lastname = '';
-	$email = '';
-	$id = '';
+	$firstname = $row['firstname'];
+	$lastname = $row['lastname'];
+	$email = $row['email'];
+	$id = $row['userID'];
+	$displayname = $row['displayname'];
+	$bookingdescription = $row['bookingdescription'];
 	$button = 'Edit user';
 	
 	// Don't want a reset button to blank all fields while editing
 	$reset = 'hidden';
 	// Want to see display name and booking description while editing
-	$displaynametype = 'text';
-	$bookingdescriptiontype = 'text';
+	// style=display:block to show, style=display:none to hide
+	$displaynameStyle = 'block';
+	$bookingdescriptionStyle = 'block';
 	include 'form.html.php';
 	exit();
 }
@@ -120,8 +169,6 @@ if (isset($_GET['addform']))
 	// Add the user to the database
 	// TO-DO: Generate password, send password to email, salt/hash password
 	// bind hashedpassword to :password
-	// TO-DO: Generate activation code, check if code already exists (has to be unique)
-	// bind activationcode to :activationcode
 	try
 	{
 		//Generate activation code
@@ -134,12 +181,12 @@ if (isset($_GET['addform']))
 		
 		$pdo = connect_to_db();
 		$sql = 'INSERT INTO `user` SET
-		`firstname` = :firstname,
-		`lastname` = :lastname,
-		`accessID` = :accessID,
-		`password` = :password,
-		`activationcode` = :activationcode,
-		`email` = :email';
+							`firstname` = :firstname,
+							`lastname` = :lastname,
+							`accessID` = :accessID,
+							`password` = :password,
+							`activationcode` = :activationcode,
+							`email` = :email';
 		$s = $pdo->prepare($sql);
 		$s->bindValue(':firstname', $_POST['firstname']);
 		$s->bindValue(':lastname', $_POST['lastname']);		
@@ -149,7 +196,7 @@ if (isset($_GET['addform']))
 		$s->bindValue(':email', $_POST['email']);
 		$s->execute();
 		
-		// close connection
+		//Close the connection
 		$pdo = null;
 	}
 	catch (PDOException $e)
@@ -165,7 +212,47 @@ if (isset($_GET['addform']))
 	exit();
 }
 
-
+// Perform the actual database update of the edited information
+if (isset($_GET['editform']))
+{
+	try
+	{
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+		$pdo = connect_to_db();
+		$sql = 'UPDATE `user` SET
+						firstname = :firstname,
+						lastname = :lastname,
+						email = :email,
+						accessID = :accessID,
+						displayname = :displayname,
+						bookingdescription = :bookingdescription
+						WHERE userID = :id';
+		$s = $pdo->prepare($sql);
+		$s->bindValue(':id', $_POST['id']);
+		$s->bindValue(':firstname', $_POST['firstname']);
+		$s->bindValue(':lastname', $_POST['lastname']);
+		$s->bindValue(':email', $_POST['email']);
+		$s->bindValue(':accessID', $_POST['accessID']);
+		$s->bindValue(':displayname', $_POST['displayname']);
+		$s->bindValue(':bookingdescription', $_POST['bookingdescription']);
+		$s->execute();
+		
+		echo 'Tried to set accessID = <b>' . $_POST['accessID'] .'</b><br />';
+		// Close the connection
+		$pdo = Null;
+	}
+	catch (PDOException $e)
+	{
+		$error = 'Error updating submitted user: ' . $e->getMessage();
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+		$pdo = null;
+		exit();
+	}
+	
+	// Refresh webpage
+	header('Location: .');
+	exit();
+}
 
 // Display users list
 try
@@ -198,7 +285,7 @@ try
 					;
 	$result = $pdo->query($sql);
 
-	//Close connection
+	//Close the connection
 	$pdo = null;
 }
 catch (PDOException $e)
