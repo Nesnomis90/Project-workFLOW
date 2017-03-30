@@ -13,7 +13,7 @@
 define('DB_HOST', 'localhost');
 define('DB_USER', 'root');
 define('DB_PASSWORD', '5Bdp32LAHYQ8AemvQM9P');
-define('DB_NAME', 'meetingflow');
+define('DB_NAME', 'test');
 
 //Libraries, functions etc. to include
 include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/magicquotes.inc.php';
@@ -242,12 +242,12 @@ function create_tables()
 		if (!tableExists($conn, $table))
 		{
 			$conn->exec("CREATE TABLE IF NOT EXISTS `$table` (
-			  `AccessID` int(10) unsigned NOT NULL AUTO_INCREMENT,
-			  `AccessName` varchar(255) DEFAULT NULL,
-			  `Description` text,
-			  PRIMARY KEY (`AccessID`),
-			  UNIQUE KEY `AccessName_UNIQUE` (`AccessName`)
-			) ENGINE=InnoDB DEFAULT CHARSET=utf8");
+						  `AccessID` int(10) unsigned NOT NULL AUTO_INCREMENT,
+						  `AccessName` varchar(255) DEFAULT NULL,
+						  `Description` text,
+						  PRIMARY KEY (`AccessID`),
+						  UNIQUE KEY `AccessName_UNIQUE` (`AccessName`)
+						) ENGINE=InnoDB DEFAULT CHARSET=utf8");
 			
 			// Fill default values
 			fillAccessLevel($conn);

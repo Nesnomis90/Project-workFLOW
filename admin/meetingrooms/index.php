@@ -6,11 +6,11 @@
 // MAYBE BY TYPING ADMIN PASSWORD AGAIN?
 if (isset($_POST['action']) and $_POST['action'] == 'Delete')
 {
-	include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
-
 	// Delete selected meeting room from database
 	try
 	{
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+		
 		$pdo = connect_to_db();
 		$sql = 'DELETE FROM `meetingroom` WHERE `meetingRoomID` = :id';
 		$s = $pdo->prepare($sql);
@@ -202,14 +202,15 @@ catch (PDOException $e)
 	$pdo = null;
 	exit();
 }
-// Define the users variable to avoid errors if it's empty
+
+
 foreach ($result as $row)
 {
 	$meetingrooms[] = array('id' => $row['meetingRoomID'], 
-					'name' => $row['name'],
-					'capacity' => $row['capacity'],
-					'description' => $row['description'],
-					'location' => $row['location'],
+							'name' => $row['name'],
+							'capacity' => $row['capacity'],
+							'description' => $row['description'],
+							'location' => $row['location'],
 					);
 }
 
