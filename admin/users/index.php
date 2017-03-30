@@ -26,12 +26,12 @@ if (isset($_POST['action']) and $_POST['action'] == 'Delete')
 	}
 	catch (PDOException $e)
 	{
-		$error = 'Error getting user to delete.';
+		$error = 'Error getting user to delete: ' . $e->getMessage();
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
 		exit();
 	}
 	
-	// Refresh webpage
+	// Load user list webpage with updated database
 	header('Location: .');
 	exit();	
 }
@@ -62,7 +62,7 @@ if (isset($_GET['add']))
 	}
 	catch (PDOException $e)
 	{
-		$error = 'Error getting access level info from database.';
+		$error = 'Error getting access level info from database: ' . $e->getMessage();
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
 		$pdo = null;
 		exit();		
@@ -119,7 +119,6 @@ if (isset($_POST['action']) AND $_POST['action'] = 'Edit')
 		
 		// Get the rows of information from the query
 		// This will be used to create a dropdown list in HTML
-		// TO-DO: MAKE USERS ACTUAL ACCESSID THE SELECTED ACCESSID IN HTML
 		foreach($result as $row){
 			$access[] = array(
 								'accessID' => $row['accessID'],
@@ -141,11 +140,13 @@ if (isset($_POST['action']) AND $_POST['action'] = 'Edit')
 	// Create an array with the row information we retrieved
 	$row = $s->fetch();
 	
+	// Set the correct information
 	$pageTitle = 'Edit User';
 	$action = 'editform';
 	$firstname = $row['firstname'];
 	$lastname = $row['lastname'];
 	$email = $row['email'];
+	$accessname = $row['AccessName'];
 	$id = $row['userID'];
 	$displayname = $row['displayname'];
 	$bookingdescription = $row['bookingdescription'];
@@ -164,8 +165,6 @@ if (isset($_POST['action']) AND $_POST['action'] = 'Edit')
 // When admin has added the needed information and wants to add the user
 if (isset($_GET['addform']))
 {
-	include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
-	
 	// Add the user to the database
 	// TO-DO: Generate password, send password to email, salt/hash password
 	// bind hashedpassword to :password
@@ -178,6 +177,8 @@ if (isset($_GET['addform']))
 		//Generate password for user
 		//TO-DO: ADD THE ACTUAL PASSWORD GENERATOR. JUST USING ACTIVATION CODE TO GET A 64 CHAR
 		$hashedPassword = generateActivationCode();
+		
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 		
 		$pdo = connect_to_db();
 		$sql = 'INSERT INTO `user` SET
@@ -201,13 +202,13 @@ if (isset($_GET['addform']))
 	}
 	catch (PDOException $e)
 	{
-		$error = 'Error adding submitted user: ' . $e->getMessage();
+		$error = 'Error adding submitted user to database: ' . $e->getMessage();
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
 		$pdo = null;
 		exit();
 	}
 	
-	// Refresh webpage
+	// Load user list webpage with new user
 	header('Location: .');
 	exit();
 }
@@ -237,7 +238,6 @@ if (isset($_GET['editform']))
 		$s->bindValue(':bookingdescription', $_POST['bookingdescription']);
 		$s->execute();
 		
-		echo 'Tried to set accessID = <b>' . $_POST['accessID'] .'</b><br />';
 		// Close the connection
 		$pdo = Null;
 	}
@@ -249,7 +249,7 @@ if (isset($_GET['editform']))
 		exit();
 	}
 	
-	// Refresh webpage
+	// Load user list webpage with updated database
 	header('Location: .');
 	exit();
 }
@@ -284,13 +284,14 @@ try
                     ASC"
 					;
 	$result = $pdo->query($sql);
+	$rowNum = $result->rowCount();
 
 	//Close the connection
 	$pdo = null;
 }
 catch (PDOException $e)
 {
-	$error = 'Error fetching users from the database!';
+	$error = 'Error fetching users from the database: ' . $e->getMessage();
 	include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
 	$pdo = null;
 	exit();

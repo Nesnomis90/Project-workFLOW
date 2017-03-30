@@ -1,3 +1,4 @@
+<!-- This is the HTML form used for EDITING or ADDING USER information-->
 <?php include_once $_SERVER['DOCUMENT_ROOT'] .
  '/includes/helpers.inc.php'; ?>
 <!DOCTYPE html>
@@ -40,19 +41,31 @@
 				<label for="accessID">Access: 
 					<select name="accessID" id="accessID">
 						<?php foreach($access as $row): ?> 
-							<option value=<?php htmlout($row['accessID']); ?>>
-							<?php htmlout($row['accessname']);?></option>
+							<?php if($row['accessname']==$accessname):?>
+								<option selected="selected" 
+										value=<?php htmlout($row['accessID']); ?>>
+										<?php htmlout($row['accessname']);?>
+								</option>
+							<?php else : ?>
+								<option value=<?php htmlout($row['accessID']); ?>>
+										<?php htmlout($row['accessname']);?>
+								</option>
+							<?php endif;?>
 						<?php endforeach; ?>
 					</select>
 				</label>
 			</div>
 			<div style="display:<?php htmlout($displaynameStyle); ?>">
-				<label for="displayname">Default Display Name: <input type="text" name="displayname"
-				id="displayname" value="<?php htmlout($displayname); ?>"></label>
+				<label for="displayname">Default Display Name: 
+					<input type="text" name="displayname" id="displayname" 
+					value="<?php htmlout($displayname); ?>">
+				</label>
 			</div>
 			<div style="display:<?php htmlout($bookingdescriptionStyle); ?>">
-				<label for="bookingdescription">Default Booking Description: <input type="text" name="bookingdescription"
-				id="bookingdescription" value="<?php htmlout($bookingdescription); ?>"></label>
+				<label for="bookingdescription">Default Booking Description: 
+					<input type="text" name="bookingdescription" id="bookingdescription" 
+					value="<?php htmlout($bookingdescription); ?>">
+				</label>
 			</div>
 			<div>
 				<input type="hidden" name="id" value="<?php htmlout($id); ?>">
