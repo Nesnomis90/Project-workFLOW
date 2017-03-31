@@ -16,7 +16,8 @@ if (isset($_POST['action']) and $_POST['action'] == 'Delete')
 	try
 	{
 		$pdo = connect_to_db();
-		$sql = 'DELETE FROM `user` WHERE `userID` = :id';
+		$sql = 'DELETE FROM `user` 
+				WHERE 		`userID` = :id';
 		$s = $pdo->prepare($sql);
 		$s->bindValue(':id', $_POST['id']);
 		$s->execute();
@@ -45,7 +46,8 @@ if (isset($_GET['add']))
 	{
 		// Get name and IDs for access level
 		$pdo = connect_to_db();
-		$sql = 'SELECT `accessID` ,`accessname` FROM `accesslevel`';
+		$sql = 'SELECT `accessID` ,`accessname` 
+				FROM `accesslevel`';
 		$result = $pdo->query($sql);
 		
 		// Get the rows of information from the query
@@ -105,10 +107,10 @@ if (isset($_POST['action']) AND $_POST['action'] = 'Edit')
 						a.`AccessName`,
 						u.`displayname`,
 						u.`bookingdescription`
-						FROM `user` u
-						JOIN `accesslevel` a
-						ON a.accessID = u.accessID
-						WHERE u.`userID` = :id';
+				FROM 	`user` u
+				JOIN 	`accesslevel` a
+				ON 		a.accessID = u.accessID
+				WHERE 	u.`userID` = :id';
 		$s = $pdo->prepare($sql);
 		$s->bindValue(':id', $_POST['id']);
 		$s->execute();
@@ -172,6 +174,7 @@ if (isset($_GET['addform']))
 	{
 		//Generate activation code
 		$activationcode = generateActivationCode();
+		//TO-DO: Remove echo statement when testing is over
 		echo 'activation code we generated on addform: ' . $activationcode . '<br />';
 		
 		//Generate password for user
@@ -227,7 +230,7 @@ if (isset($_GET['editform']))
 						accessID = :accessID,
 						displayname = :displayname,
 						bookingdescription = :bookingdescription
-						WHERE userID = :id';
+				WHERE 	userID = :id';
 		$s = $pdo->prepare($sql);
 		$s->bindValue(':id', $_POST['id']);
 		$s->bindValue(':firstname', $_POST['firstname']);
@@ -259,29 +262,29 @@ try
 {
 	include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 	$pdo = connect_to_db();
-	$sql = "SELECT 	u.`userID`, 
-					u.`firstname`, 
-					u.`lastname`, 
-					u.`email`,
-					a.`AccessName`,
-					u.`displayname`,
-					u.`bookingdescription`,
-                    GROUP_CONCAT(CONCAT_WS(' for ', cp.`name`, c.`name`) separator ', ') AS WorksFor,
-					DATE_FORMAT(u.`create_time`, '%d %b %Y %T') AS DateCreated,
-					u.`isActive`,
-					DATE_FORMAT(u.`lastActivity`, '%d %b %Y %T') AS LastActive
-					FROM `user` u 
-					LEFT JOIN `employee` e 
-					ON e.UserID = u.userID 
-					LEFT JOIN `company` c 
-					ON e.CompanyID = c.CompanyID 
-					LEFT JOIN `companyposition` cp 
-					ON cp.PositionID = e.PositionID
-					LEFT JOIN `accesslevel` a
-					ON u.AccessID = a.AccessID
-					GROUP BY u.`userID`
-                    ORDER BY u.`AccessID`
-                    ASC"
+	$sql = "SELECT 		u.`userID`, 
+						u.`firstname`, 
+						u.`lastname`, 
+						u.`email`,
+						a.`AccessName`,
+						u.`displayname`,
+						u.`bookingdescription`,
+						GROUP_CONCAT(CONCAT_WS(' for ', cp.`name`, c.`name`) separator ', ') 	AS WorksFor,
+						DATE_FORMAT(u.`create_time`, '%d %b %Y %T') 							AS DateCreated,
+						u.`isActive`,
+						DATE_FORMAT(u.`lastActivity`, '%d %b %Y %T') 							AS LastActive
+			FROM 		`user` u 
+			LEFT JOIN 	`employee` e 
+			ON 			e.UserID = u.userID 
+			LEFT JOIN 	`company` c 
+			ON 			e.CompanyID = c.CompanyID 
+			LEFT JOIN 	`companyposition` cp 
+			ON 			cp.PositionID = e.PositionID
+			LEFT JOIN 	`accesslevel` a
+			ON 			u.AccessID = a.AccessID
+			GROUP BY 	u.`userID`
+			ORDER BY 	u.`AccessID`
+			ASC"
 					;
 	$result = $pdo->query($sql);
 	$rowNum = $result->rowCount();
@@ -309,7 +312,7 @@ foreach ($result as $row)
 					'worksfor' => $row['WorksFor'],
 					'datecreated' => $row['DateCreated'],
 					'isActive' => $row['isActive'],					
-					'lastactive' => $row['LastActive'],
+					'lastactive' => $row['LastActive']
 					);
 }
 

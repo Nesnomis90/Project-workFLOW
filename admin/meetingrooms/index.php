@@ -1,6 +1,10 @@
 <?php
 // This is the index file for the MEETING ROOMS folder
 
+// Include functions
+include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/helpers.inc.php';
+include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/magicquotes.inc.php';
+
 // If admin wants to remove a meeting room from the database
 // TO-DO: ADD A CONFIRMATION BEFORE ACTUALLY DOING THE DELETION!
 // MAYBE BY TYPING ADMIN PASSWORD AGAIN?
@@ -12,7 +16,8 @@ if (isset($_POST['action']) and $_POST['action'] == 'Delete')
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 		
 		$pdo = connect_to_db();
-		$sql = 'DELETE FROM `meetingroom` WHERE `meetingRoomID` = :id';
+		$sql = 'DELETE FROM `meetingroom` 
+				WHERE 		`meetingRoomID` = :id';
 		$s = $pdo->prepare($sql);
 		$s->bindValue(':id', $_POST['id']);
 		$s->execute();
@@ -42,8 +47,8 @@ if (isset($_GET['add']))
 	$name = '';
 	$capacity = '';
 	$description = '';
-	$id = '';
 	$location = '';
+	$id = '';
 	$button = 'Add room';
 	
 	// We want a reset all fields button while adding a new meeting room
@@ -62,7 +67,7 @@ if (isset($_GET['addform']))
 	{		
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 		$pdo = connect_to_db();
-		$sql = 'INSERT INTO `meetingroom` Set
+		$sql = 'INSERT INTO `meetingroom` SET
 							`name` = :name,
 							`capacity` = :capacity,
 							`description` = :description,
@@ -104,12 +109,15 @@ if (isset($_POST['action']) AND $_POST['action'] = 'Edit')
 						`capacity`, 
 						`description`, 
 						`location`
-				FROM `meetingroom`
-				WHERE `meetingRoomID` = :id';
+				FROM 	`meetingroom`
+				WHERE 	`meetingRoomID` = :id';
 				
 		$s = $pdo->prepare($sql);
 		$s->bindValue(':id', $_POST['id']);
 		$s->execute();
+		
+		// Create an array with the row information we retrieved
+		$row = $s->fetch();
 
 		//Close the connection
 		$pdo = null;
@@ -121,9 +129,6 @@ if (isset($_POST['action']) AND $_POST['action'] = 'Edit')
 		$pdo = null;
 		exit();
 	}
-	
-	// Create an array with the row information we retrieved
-	$row = $s->fetch();
 	
 	// Set the correct information
 	$pageTitle = 'Edit User';
@@ -153,7 +158,7 @@ if (isset($_GET['editform']))
 						capacity = :capacity,
 						description = :description,
 						location = :location
-						WHERE meetingRoomID = :id';
+				WHERE 	meetingRoomID = :id';
 		$s = $pdo->prepare($sql);
 		$s->bindValue(':id', $_POST['id']);
 		$s->bindValue(':name', $_POST['name']);
@@ -188,7 +193,7 @@ try
 					`capacity`, 
 					`description`, 
 					`location`
-			FROM `meetingroom`';
+			FROM 	`meetingroom`';
 	$result = $pdo->query($sql);
 	$rowNum = $result->rowCount();
 
