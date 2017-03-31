@@ -71,6 +71,7 @@
 							<td><?php htmlout($booking['StartTime']); ?></td>
 							<td><?php htmlout($booking['EndTime']); ?></td>
 							<td><?php htmlout($booking['BookedBy']); ?></td>
+							<td><?php htmlout($booking['BookedForCompany']); ?></td>
 							<td><?php htmlout($booking['BookingDescription']); ?></td>
 							<td><?php htmlout($booking['BookingWasCreatedOn']); ?></td>
 							<td><?php htmlout($booking['BookingWasCompletedOn']); ?></td>

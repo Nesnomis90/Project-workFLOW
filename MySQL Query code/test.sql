@@ -2,6 +2,78 @@ USE test;
 SET NAMES utf8;
 USE meetingflow;
 
+SELECT 		b.`bookingID`,
+						b.`companyID`,
+						m.`name` 										AS BookedRoomName, 
+						DATE_FORMAT(b.startDateTime, '%d %b %Y %T') 	AS StartTime, 
+						DATE_FORMAT(b.endDateTime, '%d %b %Y %T') 		AS EndTime, 
+						b.displayName 									AS BookedBy,
+						(	SELECT `name` 
+							FROM `company` 
+							WHERE `companyID` = b.`companyID`
+						)											AS BookedForCompany,
+						u.firstName, 
+						u.lastName, 
+						u.email, 
+						GROUP_CONCAT(c.`name` separator ', ') 			AS WorksForCompany, 
+						b.description AS BookingDescription, 
+						DATE_FORMAT(b.dateTimeCreated, '%d %b %Y %T') 	AS BookingWasCreatedOn, 
+						DATE_FORMAT(b.actualEndDateTime, '%d %b %Y %T') AS BookingWasCompletedOn, 
+						DATE_FORMAT(b.dateTimeCancelled, '%d %b %Y %T') AS BookingWasCancelledOn 
+			FROM 		`booking` b 
+			LEFT JOIN 	`meetingroom` m 
+			ON 			b.meetingRoomID = m.meetingRoomID 
+			LEFT JOIN 	`user` u 
+			ON 			u.userID = b.userID 
+			LEFT JOIN 	`employee` e 
+			ON 			e.UserID = u.userID 
+			LEFT JOIN 	`company` c 
+			ON 			c.CompanyID = e.CompanyID 
+			GROUP BY 	b.bookingID
+			ORDER BY 	b.bookingID
+			DESC;
+
+SELECT 1 FROM `booking` WHERE `cancellationCode` = 'ecd71870d1963316a97e3ac3408c9835ad8cf0f3c1bc703527c30265534f75ae';
+
+SELECT 	u.`userID`,
+						u.`bookingdescription`, 
+						u.`displayname`,
+						c.`companyID`,
+						c.`name`AS companyName
+				FROM 	`user` u
+				JOIN 	`employee` e
+				ON 		e.userID = u.userID
+				JOIN	`company` c
+				ON 		c.companyID = e.companyID
+				WHERE 	u.`userID` = 1;
+
+
+SELECT 	b.`bookingID`,
+					m.`name` AS BookedRoomName, 
+					DATE_FORMAT(b.startDateTime, '%d %b %Y %T') AS StartTime, 
+					DATE_FORMAT(b.endDateTime, '%d %b %Y %T') AS EndTime, 
+					b.displayName AS BookedBy, 
+					u.firstName, 
+					u.lastName, 
+					u.email, 
+					GROUP_CONCAT(c.`name` separator ', ') AS WorksForCompany, 
+					b.description AS BookingDescription, 
+					DATE_FORMAT(b.dateTimeCreated, '%d %b %Y %T') AS BookingWasCreatedOn, 
+					DATE_FORMAT(b.actualEndDateTime, '%d %b %Y %T') AS BookingWasCompletedOn, 
+					DATE_FORMAT(b.dateTimeCancelled, '%d %b %Y %T') AS BookingWasCancelledOn 
+					FROM `booking` b 
+					LEFT JOIN `meetingroom` m 
+					ON b.meetingRoomID = m.meetingRoomID 
+					LEFT JOIN `user` u 
+					ON u.userID = b.userID 
+					LEFT JOIN `employee` e 
+					ON e.UserID = u.userID 
+					LEFT JOIN `company` c 
+					ON c.CompanyID = e.CompanyID 
+					GROUP BY b.bookingID
+                    ORDER BY b.bookingID
+                    DESC;
+
 SELECT  `meetingRoomID`, 
 					`name`, 
 					`capacity`, 

@@ -24,6 +24,7 @@ function generateActivationCode(){
 	{
 		// Create a 64char code
 		$code = hash('sha256', mt_rand());
+		//TO-DO: Remove echo statement when testing is over
 		echo 'The 64 bit char generated is : <b>' . $code . '</b>.<br />';
 		
 		// Check if code has already been used
@@ -40,7 +41,7 @@ function generateActivationCode(){
 	}
 	catch (PDOException $e)
 	{
-		$error = 'Error generating Activation Code: ' . $e->getMessage();
+		$error = 'Error generating user Activation Code: ' . $e->getMessage();
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
 		$pdo = null;
 		exit();
@@ -54,7 +55,9 @@ function activationCodeExists($code){
 		// Check database if the code already exists or not
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 		$pdo =  connect_to_db();
-		$sql = 'SELECT 1 FROM `user` WHERE `activationcode` = ' . $code;
+		$sql = 'SELECT 	1 
+				FROM 	`user` 
+				WHERE 	`activationcode` = ' . $code;
 		$result = $pdo->query($sql);
 		$row = $result->rowCount();
 		
@@ -73,4 +76,65 @@ function activationCodeExists($code){
 		return FALSE;
 	}		
 }
+
+// Function to generate a cancellation code for new bookings
+// Result is a 64 char code
+function generateCancellationCode(){
+	try
+	{
+		// Create a 64char code
+		$code = hash('sha256', mt_rand());
+		//TO-DO: Remove echo statement when testing is over
+		echo 'The 64 bit char generated is : <b>' . $code . '</b>.<br />';
+		
+		// Check if code has already been used
+		// If it has, continue making more codes until we find one
+		// that hasn't been used yet.
+		// If it has not been used, return the code
+		if(cancellationCodeExists($code)){
+			$newcode = generateCancellationCode();
+			return $newcode;
+		} else {
+			return $code;
+		}
+		
+	}
+	catch (PDOException $e)
+	{
+		$error = 'Error generating booking Cancellation Code: ' . $e->getMessage();
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+		$pdo = null;
+		exit();
+	}
+}
+
+// Function to check if cancellation code already exists in database or not
+function cancellationCodeExists($code){
+	try 
+	{
+		// Check database if the code already exists or not
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+		$pdo =  connect_to_db();
+		$sql = 'SELECT 	1 
+				FROM 	`booking` 
+				WHERE 	`cancellationCode` = ' . $code;
+		$result = $pdo->query($sql);
+		$row = $result->rowCount();
+		
+		$pdo = null;
+		
+		// The result will either be an empty set, if it doesn't exist. Or a single row, if it does exist.
+		if($row > 0){
+			return TRUE;
+		} else {
+			return FALSE;
+		}
+	}
+	catch (PDOException $e)
+	{
+		$pdo = null;
+		return FALSE;
+	}		
+}
+
 ?>
