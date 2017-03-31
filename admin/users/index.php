@@ -312,7 +312,7 @@ foreach ($result as $row)
 					'worksfor' => $row['WorksFor'],
 					'datecreated' => $row['DateCreated'],
 					'isActive' => $row['isActive'],					
-					'lastactive' => $row['LastActive'],
+					'lastactive' => $row['LastActive']
 					);
 }
 

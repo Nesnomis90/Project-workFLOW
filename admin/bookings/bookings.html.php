@@ -49,10 +49,11 @@
 			<table id= "bookingstable">
 				<caption>All booking history</caption>
 				<tr>
-					<th>Booked Room Name</th>
+					<th>Room Name</th>
 					<th>Start Time</th>
 					<th>End Time</th>
 					<th>Display Name</th>
+					<th>Booked For Company</th>
 					<th>Booking Description</th>
 					<th>Booking Created At</th>
 					<th>Time If Finished</th>
@@ -91,6 +92,7 @@
 			<tr><b>There are no booked meetings registered in the database.</b></tr>
 			<tr><a href="?add">Book a meeting?</a></tr>
 		<?php endif; ?>
+		<input type="hidden" name="userID" value="<?php htmlout($userID); ?>">
 		<p><a href="..">Return to CMS home</a></p>
 	</body>
 </html>

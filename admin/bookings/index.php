@@ -6,7 +6,7 @@ include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/helpers.inc.php';
 include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/magicquotes.inc.php';
 
 // Display booking information list
-// TO-DO: THIS NEEDS THE ADD, ADDFORM, EDIT, EDITFORM CODE SNIPPETS
+// TO-DO: THIS NEEDS THE EDIT, EDITFORM AND CANCEL CODE SNIPPETS
 
 // If admin wants to remove a booked meeting from the database
 // TO-DO: ADD A CONFIRMATION BEFORE ACTUALLY DOING THE DELETION!
@@ -48,6 +48,7 @@ if (isset($_POST['action']) and $_POST['action'] == 'Delete')
 // LATER ANYWAY
 if (isset($_GET['add']))
 {
+	echo 'userID is: ' . $_POST['userID'] . '<br />';
 	try
 	{
 		// Retrieve the user's default displayname and bookingdescription
@@ -64,29 +65,31 @@ if (isset($_GET['add']))
 				ON 		e.userID = u.userID
 				JOIN	`company` c
 				ON 		c.companyID = e.companyID
-				WHERE 	u.`userID` = :userID'; // <--- FIX THIS?
-				
-		$s = $pdo->prepare($sql);
-		$s->bindValue(':userID', $_POST['userID']; // <--- FIX THIS?
-		$s->execute();
+				WHERE 	u.`userID` = 1'; // <--- FIX THIS TO :userID
+			
+		echo 'userID is: ' . $_POST['userID'] . '<br />';	
+		//$s = $pdo->prepare($sql);
+		//$s->bindValue(':userID', $_POST['userID']); // <--- FIX THIS
+		//$s->execute();
+		
 		
 		// Create an array with the row information we retrieved
-		$result = $s->fetchAll();
+		//$result = $s->fetchAll();
+		$result = $pdo->query($sql);
 		
-		foreach($result as $row){
+		foreach($result as $row){		
 			// Get the companies the user works for
 			// This will be used to create a dropdown list in HTML
-			$company = array(
+			$company[] = array(
 								'companyID' => $row['companyID'],
 								'companyName' => $row['companyName']
 								);
 								
 			// Set default booking display name and booking description
-			$displayname = $row['displayname'];
-			$bookingdescription = $row['bookingdescription'];
+			$displayName = $row['displayname'];
+			$description = $row['bookingdescription'];
 			$userID = $row['userID'];
-		}
-
+		}		
 		// Get name and IDs for access level
 		$sql = 'SELECT 	`meetingRoomID`,
 						`name` 
@@ -146,7 +149,7 @@ if (isset($_GET['addform']))
 {
 	// Add the booking to the database
 	try
-	{
+	{	
 		//Generate cancellation code
 		$cancellationCode = generateCancellationCode();
 		//TO-DO: Remove echo statement when testing is over
@@ -167,12 +170,16 @@ if (isset($_GET['addform']))
 							`cancellationCode` = :cancellationCode';
 
 		$s = $pdo->prepare($sql);
+		
+		$startDateTime = correctDatetimeFormat($_POST['startDateTime']);
+		$endDateTime = correctDatetimeFormat($_POST['endDateTime']);
+		
 		$s->bindValue(':meetingRoomID', $_POST['meetingRoomID']);
 		$s->bindValue(':userID', $_POST['userID']);	// <-- NEED TO GET THIS FROM SOMEWHERE
 		$s->bindValue(':companyID', $_POST['companyID']);
 		$s->bindValue(':displayName', $_POST['displayName']);
-		$s->bindValue(':startDateTime', $_POST['startDateTime']);
-		$s->bindValue(':endDateTime', $_POST['endDateTime']);
+		$s->bindValue(':startDateTime', $startDateTime);
+		$s->bindValue(':endDateTime', $endDateTime);
 		$s->bindValue(':description', $_POST['description']);
 		$s->bindValue(':cancellationCode', $cancellationCode);
 		$s->execute();
@@ -233,6 +240,10 @@ try
 
 	//Close the connection
 	$pdo = null;
+	
+	//TO-DO: FIND THIS USERID BASED ON WHO'S LOGGED IN
+	//THIS FIXED NUMBER IS ONLY FOR TESTING PURPOSES
+	$userID = 1;
 }
 catch (PDOException $e)
 {

@@ -2,6 +2,17 @@ USE test;
 SET NAMES utf8;
 USE meetingflow;
 
+INSERT INTO `booking` SET
+							`meetingRoomID` = 1,
+							`userID` = 1,
+							`companyID` = 1,
+							`displayName` = '',
+							`startDateTime` = DATE_FORMAT(STR_TO_DATE('31-03-2017 17:50:00', '%d-%m-%Y %T'),'%Y-%m-%d %T'),
+							`endDateTime` = DATE_FORMAT(STR_TO_DATE('31-03-2017 18:00:00','%d-%m-%Y %T'),'%Y-%m-%d %T'),
+							`description` = '',
+							`cancellationCode` = '09916c78a8b4d26b77e7129641a953371d87dffefab21d4df19c3a7e5c50c6e0';
+
+
 SELECT 		b.`bookingID`,
 						b.`companyID`,
 						m.`name` 										AS BookedRoomName, 
@@ -39,13 +50,15 @@ SELECT 	u.`userID`,
 						u.`bookingdescription`, 
 						u.`displayname`,
 						c.`companyID`,
-						c.`name`AS companyName
+						c.`name` 					AS companyName
 				FROM 	`user` u
 				JOIN 	`employee` e
 				ON 		e.userID = u.userID
 				JOIN	`company` c
 				ON 		c.companyID = e.companyID
 				WHERE 	u.`userID` = 1;
+                
+UPDATE `user` SET `bookingDescription` = '', `displayName` = '' WHERE userID <> 0 AND `bookingDescription` IS NULL AND `displayName` IS NULL; 
 
 
 SELECT 	b.`bookingID`,

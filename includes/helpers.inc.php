@@ -13,6 +13,17 @@ function htmlout($text){
 	echo html($text);
 }
 
+//Function to change date and time formats to be correct for datetime input in database
+function correctDatetimeFormat($wrongDatetimeString){
+	// Correct datetime format is
+	// yyyy-mm-dd hh:mm:ss
+	echo 'old Datetime: ' . $wrongDatetimeString . '<br />';
+	$wrongDatetime = date_create_from_format('d-m-Y H:i:s', $wrongDatetimeString);
+	$correctDatetime = DATE_FORMAT($wrongDatetime,'Y-m-d H:i:s');
+	echo 'new Datetime: ' . $correctDatetime . '<br />';
+	return $correctDatetime;
+}
+
 
 // Function to generate a password to be sent to new users
 

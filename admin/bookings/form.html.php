@@ -33,7 +33,7 @@
 					required placeholder="dd-mm-yyyy hh:mm:ss" 
 					oninvalid="this.setCustomValidity('Enter Your Starting Date And Time Here')"
 					oninput="setCustomValidity('')"
-					value="<?php htmlout($lastname); ?>">
+					value="<?php htmlout($startDateTime); ?>">
 				</label>
 			</div>
 			<div>
@@ -42,7 +42,7 @@
 					required placeholder="dd-mm-yyyy hh:mm:ss" 
 					oninvalid="this.setCustomValidity('Enter Your Ending Date And Time Here')"
 					oninput="setCustomValidity('')"
-					value="<?php htmlout($lastname); ?>">
+					value="<?php htmlout($endDateTime); ?>">
 				</label>
 			</div>
 			<div>
@@ -68,19 +68,20 @@
 				<?php endif; ?>
 			</div>
 			<div>
-				<label for="displayname">Display Name: 
-					<input type="text" name="displayname" id="displayname" 
-					value="<?php htmlout($displayname); ?>">
+				<label for="displayName">Display Name: 
+					<input type="text" name="displayName" id="displayName" 
+					value="<?php htmlout($displayName); ?>">
 				</label>
 			</div>
 			<div>
-				<label for="bookingdescription">Booking Description: 
-					<input type="text" name="bookingdescription" id="bookingdescription" 
-					value="<?php htmlout($bookingdescription); ?>">
+				<label for="description">Booking Description: 
+					<input type="text" name="description" id="description" 
+					value="<?php htmlout($description); ?>">
 				</label>
 			</div>
 			<div>
 				<input type="hidden" name="id" value="<?php htmlout($id); ?>">
+				<input type="hidden" name="userID" value="<?php htmlout($userID); ?>">
 				<input type="submit" value="<?php htmlout($button); ?>">
 			</div>
 			<div>
