@@ -96,7 +96,7 @@ if (isset($_GET['add']))
 
 // if admin wants to edit user information
 // we load a new html form
-if (isset($_POST['action']) AND $_POST['action'] = 'Edit')
+if (isset($_POST['action']) AND $_POST['action'] == 'Edit')
 {
 	// Get information from database again on the selected user
 	try

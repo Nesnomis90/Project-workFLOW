@@ -97,9 +97,81 @@ if (isset($_GET['addform']))
 	exit();
 }
 
-// if admin wants to edit company information
+// if admin wants to set the date to remove
+if (isset($_POST['action']) AND $_POST['action'] == 'Confirm Date')
+{
+	// Update selected company by inserted the date to remove	
+	try
+	{
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+		
+		$pdo = connect_to_db();
+		$sql = 'UPDATE 	`company` 
+				SET		`removeAtDate` = :removeAtDate
+				WHERE 	`companyID` = :id';
+		$s = $pdo->prepare($sql);
+		$s->bindValue(':id', $_POST['id']);
+		$s->bindValue(':removeAtDate', $_POST['DeletionDate']);
+		$s->execute();
+		
+		//close connection
+		$pdo = null;	
+		
+		$SetOrConfirm = 'Set';
+	}
+	catch (PDOException $e)
+	{
+		$error = 'Error cancelling removal date: ' . $e->getMessage();
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+		$pdo = null;
+		exit();		
+	}
+	
+
+	// Load company list webpage with updated database
+	header('Location: .');
+	exit();
+}
+
+// if admin wants to cancel the date to remove
+if (isset($_POST['action']) AND $_POST['action'] == 'Cancel Date')
+{
+	// Update selected company by making date to remove null	
+	try
+	{
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+		
+		$pdo = connect_to_db();
+		$sql = 'UPDATE 	`company` 
+				SET		`removeAtDate` = NULL
+				WHERE 	`companyID` = :id';
+		$s = $pdo->prepare($sql);
+		$s->bindValue(':id', $_POST['id']);
+		$s->execute();
+		
+		echo "trying to null date <br />";
+		//close connection
+		$pdo = null;	
+	}
+	catch (PDOException $e)
+	{
+		$error = 'Error cancelling removal date: ' . $e->getMessage();
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+		$pdo = null;
+		exit();		
+	}
+	
+	// Load company list webpage with updated database
+	header('Location: .');
+	exit();
+}
+		
+// if admin wants to set the date to remove for a company
 // we load a new html form
-if (isset($_POST['action']) AND $_POST['action'] = 'Edit')
+// TO-DO: FIX THIS!
+// NEED TO CHANGE STUFF SO IT'S CORRECT (COPYPASTED FROM USER)
+// Change back to action = 
+if (isset($_POST['action']) AND $_POST['action'] == 'Set Date')
 {
 	// Get information from database again on the selected company	
 	try
@@ -207,9 +279,13 @@ try
 			GROUP BY 	c.`name`";
 	$result = $pdo->query($sql);
 	$rowNum = $result->rowCount();
-
+	
 	//Close the connection
-	$pdo = null;
+	$pdo = null;	
+	
+	if(!isset($CompanyToEdit)){
+		$CompanyToEdit = '';
+	}
 }
 catch (PDOException $e)
 {
