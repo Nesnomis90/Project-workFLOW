@@ -120,7 +120,9 @@ if (isset($_POST['action']) AND $_POST['action'] = 'Edit')
 		$s->execute();
 		
 		// Get name and IDs for access level
-		$sql = 'SELECT `accessID` ,`accessname` FROM `accesslevel`';
+		$sql = 'SELECT 	`accessID`,
+						`accessname` 
+				FROM 	`accesslevel`';
 		$result = $pdo->query($sql);
 		
 		// Get the rows of information from the query
@@ -164,6 +166,8 @@ if (isset($_POST['action']) AND $_POST['action'] = 'Edit')
 	// style=display:block to show, style=display:none to hide
 	$displaynameStyle = 'block';
 	$bookingdescriptionStyle = 'block';
+	
+	// Change to the actual form we want to use
 	include 'form.html.php';
 	exit();
 }

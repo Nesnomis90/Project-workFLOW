@@ -35,7 +35,7 @@
 						<?php endforeach; ?>
 					</select>
 				</label>
-			</div>
+			</div>	
 			<div style="display:<?php htmlout($DateToRemoveStyle); ?>">
 				<label for="DateToRemove">Date to Remove: 
 					<input type="text" name="DateToRemove" id="DateToRemove" 

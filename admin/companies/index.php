@@ -40,39 +40,7 @@ if (isset($_POST['action']) and $_POST['action'] == 'Delete')
 // If admin wants to add a company to the database
 // we load a new html form
 if (isset($_GET['add']))
-{
-	include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';	
-	try
-	{
-		// Get name and IDs for company position
-		$pdo = connect_to_db();
-		$sql = 'SELECT 	`positionID`,
-						`name` 			AS CompanyPositionName,
-						`description`	AS CompanyPositionDescription
-				FROM 	`companyposition`';
-		$result = $pdo->query($sql);
-		
-		// Get the rows of information from the query
-		// This will be used to create a dropdown list in HTML
-		foreach($result as $row){
-			$companyposition[] = array(
-										'positionID' => $row['positionID'],
-										'CompanyPositionName' => $row['CompanyPositionName'],
-										'CompanyPositionDescription' => $row['CompanyPositionDescription']
-										);
-		}
-		
-		//Close connection
-		$pdo = null;
-	}
-	catch (PDOException $e)
-	{
-		$error = 'Error getting company position info from database: ' . $e->getMessage();
-		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
-		$pdo = null;
-		exit();		
-	}
-	
+{	
 	// Set values to be displayed in HTML
 	$pageTitle = 'New Company';
 	$action = 'addform';
@@ -129,7 +97,73 @@ if (isset($_GET['addform']))
 	exit();
 }
 
-
+// if admin wants to edit company information
+// we load a new html form
+if (isset($_POST['action']) AND $_POST['action'] = 'Edit')
+{
+	// Get information from database again on the selected company	
+	try
+	{
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+		
+		// Get company information
+		$pdo = connect_to_db();
+		$sql = 'SELECT 	
+				WHERE 	c.`companyID` = :id';
+		$s = $pdo->prepare($sql);
+		$s->bindValue(':id', $_POST['id']);
+		$s->execute();
+		
+		// Get name and IDs for company position
+		$pdo = connect_to_db();
+		$sql = 'SELECT 	`positionID`,
+						`name` 			AS CompanyPositionName,
+						`description`	AS CompanyPositionDescription
+				FROM 	`companyposition`';
+		$result = $pdo->query($sql);
+		
+		// Get the rows of information from the query
+		// This will be used to create a dropdown list in HTML
+		foreach($result as $row){
+			$companyposition[] = array(
+										'positionID' => $row['positionID'],
+										'CompanyPositionName' => $row['CompanyPositionName'],
+										'CompanyPositionDescription' => $row['CompanyPositionDescription']
+										);
+		}
+		
+		//Close connection
+		$pdo = null;
+	}
+	catch (PDOException $e)
+	{
+		$error = 'Error fetching company details: ' . $e->getMessage();
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+		$pdo = null;
+		exit();		
+	}
+	
+	// Create an array with the row information we retrieved
+	$row = $s->fetch();
+	
+	// Set the correct information
+	$pageTitle = 'Edit Company';
+	$action = 'editform';
+	$DateToRemove = $row['DateToRemove'];
+	$id = $row['companyID'];
+	$button = 'Edit company';
+	
+	// Don't want a reset button to blank all fields while editing
+	$reset = 'hidden';
+	// Want to see company position and date to remove while editing
+	// style=display:block to show, style=display:none to hide
+	$DateToRemoveStyle = 'block';
+	$CompanyPositionStyle = 'block';
+	
+	// Change to the actual form we want to use
+	include 'form.html.php';
+	exit();
+}
 
 // Display companies list
 try
