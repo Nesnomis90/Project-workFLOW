@@ -23,11 +23,6 @@ include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/magicquotes.inc.php';
 global $logEventArray;
 $logEventArray = array();
 
-// Make sure our database and tables exist
-// ATTEMPT TO CREATE DATABASE AND TABLES
-create_db();
-create_tables();
-
 // Function to connect to server and create our wanted database
 function create_db()
 {
@@ -360,7 +355,6 @@ function create_tables()
 						  `name` varchar(255) NOT NULL,
 						  `dateTimeCreated` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
 						  `removeAtDate` date DEFAULT NULL,
-						  `bookingTimeUsedThisMonth` smallint(5) unsigned NOT NULL DEFAULT '0',
 						  PRIMARY KEY (`CompanyID`)
 						) ENGINE=InnoDB DEFAULT CHARSET=utf8");
 						

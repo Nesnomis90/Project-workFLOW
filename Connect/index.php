@@ -7,6 +7,11 @@
 // Get database connection functions
 include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 
+// Make sure our database and tables exist
+// ATTEMPT TO CREATE DATABASE AND TABLES
+create_db();
+create_tables();
+
 // Check if user wants to submit something (this time it's a test for submitting a log description)
 // This is done through isset which checks if the query string contains a variable named addlog
 if (isset($_GET['addlog']))

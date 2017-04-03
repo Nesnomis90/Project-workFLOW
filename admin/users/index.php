@@ -284,8 +284,7 @@ try
 			ON 			u.AccessID = a.AccessID
 			GROUP BY 	u.`userID`
 			ORDER BY 	u.`AccessID`
-			ASC"
-					;
+			ASC";
 	$result = $pdo->query($sql);
 	$rowNum = $result->rowCount();
 

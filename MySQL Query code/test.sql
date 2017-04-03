@@ -132,6 +132,33 @@ SELECT 	u.`userID`,
                     ORDER BY u.`AccessID`
                     ASC;
 
+SELECT 		c.companyID 										AS CompID,
+						c.`name` 											AS CompanyName, 
+						COUNT(c.`name`) 									AS NumberOfEmployees,
+						(SELECT SEC_TO_TIME(SUM(TIME_TO_SEC(b.`actualEndDateTime`) - TIME_TO_SEC(b.`startDateTime`))) 
+						FROM `booking` b 
+						INNER JOIN `employee` e 
+						ON b.`UserID` = e.`UserID` 
+						INNER JOIN `company` c 
+						ON e.`CompanyID` = c.`CompanyID` 
+						WHERE b.`CompanyID` = CompID
+						AND YEAR(b.`actualEndDateTime`) = YEAR(NOW())
+						AND MONTH(b.`actualEndDateTime`) = MONTH(NOW()))   	AS MonthlyCompanyWideBookingTimeUsed,
+						(SELECT SEC_TO_TIME(SUM(TIME_TO_SEC(b.`actualEndDateTime`) - TIME_TO_SEC(b.`startDateTime`))) 
+						FROM `booking` b 
+						INNER JOIN `employee` e 
+						ON b.`UserID` = e.`UserID` 
+						INNER JOIN `company` c 
+						ON e.`CompanyID` = c.`CompanyID` 
+						WHERE b.`CompanyID` = CompID)   					AS TotalCompanyWideBookingTimeUsed,
+						DATE_FORMAT(c.`dateTimeCreated`, '%d %b %Y %T')		AS DatetimeCreated,
+						DATE_FORMAT(c.`removeAtDate`, '%d %b %Y')			AS DeletionDate 
+			FROM 		`company` c 
+			JOIN 		`employee` e 
+			ON 			c.CompanyID = e.CompanyID 
+			GROUP BY 	c.`name`;
+
+
 SELECT u.`firstname`, u.`lastname`, u.`email`, a.`AccessName`, u.`displayname`, u.`bookingdescription`, u.`create_time` FROM `user` u JOIN `accesslevel` a ON u.AccessID = a.AccessID WHERE `isActive` = 1;
 
 SELECT l.logID, DATE_FORMAT(l.logDateTime, "%d %b %Y %T") AS LogDate, la.`name` AS ActionName, la.description AS ActionDescription, l.description AS LogDescription FROM `logevent` l JOIN `logaction` la ON la.actionID = l.actionID ORDER BY UNIX_TIMESTAMP(l.logDateTime) DESC;
