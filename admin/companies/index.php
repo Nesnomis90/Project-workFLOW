@@ -37,6 +37,99 @@ if (isset($_POST['action']) and $_POST['action'] == 'Delete')
 	exit();	
 }
 
+// If admin wants to add a company to the database
+// we load a new html form
+if (isset($_GET['add']))
+{
+	include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';	
+	try
+	{
+		// Get name and IDs for company position
+		$pdo = connect_to_db();
+		$sql = 'SELECT 	`positionID`,
+						`name` 			AS CompanyPositionName,
+						`description`	AS CompanyPositionDescription
+				FROM 	`companyposition`';
+		$result = $pdo->query($sql);
+		
+		// Get the rows of information from the query
+		// This will be used to create a dropdown list in HTML
+		foreach($result as $row){
+			$companyposition[] = array(
+										'positionID' => $row['positionID'],
+										'CompanyPositionName' => $row['CompanyPositionName'],
+										'CompanyPositionDescription' => $row['CompanyPositionDescription']
+										);
+		}
+		
+		//Close connection
+		$pdo = null;
+	}
+	catch (PDOException $e)
+	{
+		$error = 'Error getting company position info from database: ' . $e->getMessage();
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+		$pdo = null;
+		exit();		
+	}
+	
+	// Set values to be displayed in HTML
+	$pageTitle = 'New Company';
+	$action = 'addform';
+	$CompanyName = '';
+	$DateToRemove = '';
+	$id = '';
+	$button = 'Add company';
+	
+	// We want a reset all fields button while adding a new company
+	$reset = 'reset';
+	
+	// We don't need to see date to remove when adding a new company
+	// style=display:block to show, style=display:none to hide
+	$DateToRemoveStyle = 'none';
+	$CompanyPositionStyle = 'none';
+	
+	// Change to the actual html form template
+	include 'form.html.php';
+	exit();
+}
+
+// for edit 	
+// $companypositionname = $row['CompanyPositionName'];
+
+
+// When admin has added the needed information and wants to add the company
+if (isset($_GET['addform']))
+{
+	// Add the company to the database
+	try
+	{	
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+		
+		$pdo = connect_to_db();
+		$sql = 'INSERT INTO `company` SET
+							`name` = :CompanyName';
+		$s = $pdo->prepare($sql);
+		$s->bindValue(':CompanyName', $_POST['CompanyName']);
+		$s->execute();
+		
+		//Close the connection
+		$pdo = null;
+	}
+	catch (PDOException $e)
+	{
+		$error = 'Error adding submitted company to database: ' . $e->getMessage();
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+		$pdo = null;
+		exit();
+	}
+	
+	// Load companies list webpage with new company
+	header('Location: .');
+	exit();
+}
+
+
 
 // Display companies list
 try
@@ -44,29 +137,39 @@ try
 	include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 	$pdo = connect_to_db();
 	$sql = "SELECT 		c.companyID 										AS CompID,
-						c.`name` 											AS CompanyName, 
-						COUNT(c.`name`) 									AS NumberOfEmployees,
-						(SELECT SEC_TO_TIME(SUM(TIME_TO_SEC(b.`actualEndDateTime`) - TIME_TO_SEC(b.`startDateTime`))) 
-						FROM `booking` b 
-						INNER JOIN `employee` e 
-						ON b.`UserID` = e.`UserID` 
-						INNER JOIN `company` c 
-						ON e.`CompanyID` = c.`CompanyID` 
-						WHERE b.`CompanyID` = CompID
-						AND YEAR(b.`actualEndDateTime`) = YEAR(NOW())
-						AND MONTH(b.`actualEndDateTime`) = MONTH(NOW()))   	AS MonthlyCompanyWideBookingTimeUsed,
-						(SELECT SEC_TO_TIME(SUM(TIME_TO_SEC(b.`actualEndDateTime`) - TIME_TO_SEC(b.`startDateTime`))) 
-						FROM `booking` b 
-						INNER JOIN `employee` e 
-						ON b.`UserID` = e.`UserID` 
-						INNER JOIN `company` c 
-						ON e.`CompanyID` = c.`CompanyID` 
-						WHERE b.`CompanyID` = CompID)   					AS TotalCompanyWideBookingTimeUsed,
-			DATE_FORMAT(c.`removeAtDate`, '%d %b %Y')						AS DeletionDate,
-			DATE_FORMAT(c.`dateTimeCreated`, '%d %b %Y %T')					AS DatetimeCreated
+						c.`name` 											AS CompanyName,
+						DATE_FORMAT(c.`dateTimeCreated`, '%d %b %Y %T')		AS DatetimeCreated,
+						DATE_FORMAT(c.`removeAtDate`, '%d %b %Y')			AS DeletionDate,							
+						(
+							SELECT 	COUNT(c.`name`) 
+							FROM 	`company` c 
+							JOIN 	`employee` e 
+							ON 		c.CompanyID = e.CompanyID 
+							WHERE 	e.companyID = CompID
+						)													AS NumberOfEmployees,
+						(
+							SELECT 		(SEC_TO_TIME(SUM(TIME_TO_SEC(b.`actualEndDateTime`) - 
+										TIME_TO_SEC(b.`startDateTime`)))) 
+							FROM 		`booking` b 
+							INNER JOIN 	`employee` e 
+							ON 			b.`UserID` = e.`UserID` 
+							INNER JOIN 	`company` c 
+							ON 			e.`CompanyID` = c.`CompanyID` 
+							WHERE 		b.`CompanyID` = CompID
+							AND 		YEAR(b.`actualEndDateTime`) = YEAR(NOW())
+							AND 		MONTH(b.`actualEndDateTime`) = MONTH(NOW())
+						)   												AS MonthlyCompanyWideBookingTimeUsed,
+						(
+							SELECT 		(SEC_TO_TIME(SUM(TIME_TO_SEC(b.`actualEndDateTime`) - 
+										TIME_TO_SEC(b.`startDateTime`)))) 
+							FROM 		`booking` b 
+							INNER JOIN 	`employee` e 
+							ON 			b.`UserID` = e.`UserID` 
+							INNER JOIN 	`company` c 
+							ON 			e.`CompanyID` = c.`CompanyID` 
+							WHERE 		b.`CompanyID` = CompID
+						)   												AS TotalCompanyWideBookingTimeUsed
 			FROM 		`company` c 
-			JOIN 		`employee` e 
-			ON 			c.CompanyID = e.CompanyID 
 			GROUP BY 	c.`name`";
 	$result = $pdo->query($sql);
 	$rowNum = $result->rowCount();
@@ -81,7 +184,8 @@ catch (PDOException $e)
 	$pdo = null;
 	exit();
 }
-// Define the users variable to avoid errors if it's empty
+
+// Create an array with the actual key/value pairs we want to use in our HTML
 foreach ($result as $row)
 {
 	if($row['MonthlyCompanyWideBookingTimeUsed'] == null){

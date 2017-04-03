@@ -14,149 +14,215 @@ INSERT INTO `booking` SET
 
 
 SELECT 		b.`bookingID`,
-						b.`companyID`,
-						m.`name` 										AS BookedRoomName, 
-						DATE_FORMAT(b.startDateTime, '%d %b %Y %T') 	AS StartTime, 
-						DATE_FORMAT(b.endDateTime, '%d %b %Y %T') 		AS EndTime, 
-						b.displayName 									AS BookedBy,
-						(	SELECT `name` 
-							FROM `company` 
-							WHERE `companyID` = b.`companyID`
-						)											AS BookedForCompany,
-						u.firstName, 
-						u.lastName, 
-						u.email, 
-						GROUP_CONCAT(c.`name` separator ', ') 			AS WorksForCompany, 
-						b.description AS BookingDescription, 
-						DATE_FORMAT(b.dateTimeCreated, '%d %b %Y %T') 	AS BookingWasCreatedOn, 
-						DATE_FORMAT(b.actualEndDateTime, '%d %b %Y %T') AS BookingWasCompletedOn, 
-						DATE_FORMAT(b.dateTimeCancelled, '%d %b %Y %T') AS BookingWasCancelledOn 
-			FROM 		`booking` b 
-			LEFT JOIN 	`meetingroom` m 
-			ON 			b.meetingRoomID = m.meetingRoomID 
-			LEFT JOIN 	`user` u 
-			ON 			u.userID = b.userID 
-			LEFT JOIN 	`employee` e 
-			ON 			e.UserID = u.userID 
-			LEFT JOIN 	`company` c 
-			ON 			c.CompanyID = e.CompanyID 
-			GROUP BY 	b.bookingID
-			ORDER BY 	b.bookingID
-			DESC;
+			b.`companyID`,
+			m.`name` 										AS BookedRoomName, 
+			DATE_FORMAT(b.startDateTime, '%d %b %Y %T') 	AS StartTime, 
+			DATE_FORMAT(b.endDateTime, '%d %b %Y %T') 		AS EndTime, 
+			b.displayName 									AS BookedBy,
+			(	SELECT `name` 
+				FROM `company` 
+				WHERE `companyID` = b.`companyID`
+			)												AS BookedForCompany,
+			u.firstName, 
+			u.lastName, 
+			u.email, 
+			GROUP_CONCAT(c.`name` separator ', ') 			AS WorksForCompany, 
+			b.description AS BookingDescription, 
+			DATE_FORMAT(b.dateTimeCreated, '%d %b %Y %T') 	AS BookingWasCreatedOn, 
+			DATE_FORMAT(b.actualEndDateTime, '%d %b %Y %T') AS BookingWasCompletedOn, 
+			DATE_FORMAT(b.dateTimeCancelled, '%d %b %Y %T') AS BookingWasCancelledOn 
+FROM 		`booking` b 
+LEFT JOIN 	`meetingroom` m 
+ON 			b.meetingRoomID = m.meetingRoomID 
+LEFT JOIN 	`user` u 
+ON 			u.userID = b.userID 
+LEFT JOIN 	`employee` e 
+ON 			e.UserID = u.userID 
+LEFT JOIN 	`company` c 
+ON 			c.CompanyID = e.CompanyID 
+GROUP BY 	b.bookingID
+ORDER BY 	b.bookingID
+DESC;
 
 SELECT 1 FROM `booking` WHERE `cancellationCode` = 'ecd71870d1963316a97e3ac3408c9835ad8cf0f3c1bc703527c30265534f75ae';
 
 SELECT 	u.`userID`,
-						u.`bookingdescription`, 
-						u.`displayname`,
-						c.`companyID`,
-						c.`name` 					AS companyName
-				FROM 	`user` u
-				JOIN 	`employee` e
-				ON 		e.userID = u.userID
-				JOIN	`company` c
-				ON 		c.companyID = e.companyID
-				WHERE 	u.`userID` = 1;
-                
+			u.`bookingdescription`, 
+			u.`displayname`,
+			c.`companyID`,
+			c.`name` 					AS companyName
+	FROM 	`user` u
+	JOIN 	`employee` e
+	ON 		e.userID = u.userID
+	JOIN	`company` c
+	ON 		c.companyID = e.companyID
+	WHERE 	u.`userID` = 1;
+	
 UPDATE `user` SET `bookingDescription` = '', `displayName` = '' WHERE userID <> 0 AND `bookingDescription` IS NULL AND `displayName` IS NULL; 
 
 
 SELECT 	b.`bookingID`,
-					m.`name` AS BookedRoomName, 
-					DATE_FORMAT(b.startDateTime, '%d %b %Y %T') AS StartTime, 
-					DATE_FORMAT(b.endDateTime, '%d %b %Y %T') AS EndTime, 
-					b.displayName AS BookedBy, 
-					u.firstName, 
-					u.lastName, 
-					u.email, 
-					GROUP_CONCAT(c.`name` separator ', ') AS WorksForCompany, 
-					b.description AS BookingDescription, 
-					DATE_FORMAT(b.dateTimeCreated, '%d %b %Y %T') AS BookingWasCreatedOn, 
-					DATE_FORMAT(b.actualEndDateTime, '%d %b %Y %T') AS BookingWasCompletedOn, 
-					DATE_FORMAT(b.dateTimeCancelled, '%d %b %Y %T') AS BookingWasCancelledOn 
-					FROM `booking` b 
-					LEFT JOIN `meetingroom` m 
-					ON b.meetingRoomID = m.meetingRoomID 
-					LEFT JOIN `user` u 
-					ON u.userID = b.userID 
-					LEFT JOIN `employee` e 
-					ON e.UserID = u.userID 
-					LEFT JOIN `company` c 
-					ON c.CompanyID = e.CompanyID 
-					GROUP BY b.bookingID
-                    ORDER BY b.bookingID
-                    DESC;
+		m.`name` AS BookedRoomName, 
+		DATE_FORMAT(b.startDateTime, '%d %b %Y %T') AS StartTime, 
+		DATE_FORMAT(b.endDateTime, '%d %b %Y %T') AS EndTime, 
+		b.displayName AS BookedBy, 
+		u.firstName, 
+		u.lastName, 
+		u.email, 
+		GROUP_CONCAT(c.`name` separator ', ') AS WorksForCompany, 
+		b.description AS BookingDescription, 
+		DATE_FORMAT(b.dateTimeCreated, '%d %b %Y %T') AS BookingWasCreatedOn, 
+		DATE_FORMAT(b.actualEndDateTime, '%d %b %Y %T') AS BookingWasCompletedOn, 
+		DATE_FORMAT(b.dateTimeCancelled, '%d %b %Y %T') AS BookingWasCancelledOn 
+		FROM `booking` b 
+		LEFT JOIN `meetingroom` m 
+		ON b.meetingRoomID = m.meetingRoomID 
+		LEFT JOIN `user` u 
+		ON u.userID = b.userID 
+		LEFT JOIN `employee` e 
+		ON e.UserID = u.userID 
+		LEFT JOIN `company` c 
+		ON c.CompanyID = e.CompanyID 
+		GROUP BY b.bookingID
+		ORDER BY b.bookingID
+		DESC;
 
 SELECT  `meetingRoomID`, 
-					`name`, 
-					`capacity`, 
-					`description`, 
-					`location`
-			FROM `meetingroom`;
+		`name`, 
+		`capacity`, 
+		`description`, 
+		`location`
+FROM `meetingroom`;
 
 SELECT 	u.`userID`, 
-						u.`firstname`, 
-						u.`lastname`, 
-						u.`email`,
-						a.`AccessName`,
-						u.`displayname`,
-						u.`bookingdescription`
-						FROM `user` u
-						JOIN `accesslevel` a
-						ON a.accessID = u.accessID
-                        WHERE u.`userID` = 3;
+			u.`firstname`, 
+			u.`lastname`, 
+			u.`email`,
+			a.`AccessName`,
+			u.`displayname`,
+			u.`bookingdescription`
+			FROM `user` u
+			JOIN `accesslevel` a
+			ON a.accessID = u.accessID
+			WHERE u.`userID` = 3;
 
 SELECT `accessID` ,`accessname` FROM `accesslevel`;
 
 SELECT 	u.`userID`, 
-					u.`firstname`, 
-					u.`lastname`, 
-					u.`email`,
-					a.`AccessName`,
-					u.`displayname`,
-					u.`bookingdescription`,
-                    GROUP_CONCAT(CONCAT_WS(' for ', cp.`name`, c.`name`) separator ', ') AS WorksFor,
-					DATE_FORMAT(u.`create_time`, "%d %b %Y %T") AS DateCreated,
-					u.`isActive`,
-					DATE_FORMAT(u.`lastActivity`, "%d %b %Y %T") AS LastActive
-					FROM `user` u 
-					LEFT JOIN `employee` e 
-					ON e.UserID = u.userID 
-					LEFT JOIN `company` c 
-					ON e.CompanyID = c.CompanyID 
-					LEFT JOIN `companyposition` cp 
-					ON cp.PositionID = e.PositionID
-					LEFT JOIN `accesslevel` a
-					ON u.AccessID = a.AccessID
-					GROUP BY u.`userID`
-                    ORDER BY u.`AccessID`
-                    ASC;
+		u.`firstname`, 
+		u.`lastname`, 
+		u.`email`,
+		a.`AccessName`,
+		u.`displayname`,
+		u.`bookingdescription`,
+		GROUP_CONCAT(CONCAT_WS(' for ', cp.`name`, c.`name`) separator ', ') AS WorksFor,
+		DATE_FORMAT(u.`create_time`, "%d %b %Y %T") AS DateCreated,
+		u.`isActive`,
+		DATE_FORMAT(u.`lastActivity`, "%d %b %Y %T") AS LastActive
+		FROM `user` u 
+		LEFT JOIN `employee` e 
+		ON e.UserID = u.userID 
+		LEFT JOIN `company` c 
+		ON e.CompanyID = c.CompanyID 
+		LEFT JOIN `companyposition` cp 
+		ON cp.PositionID = e.PositionID
+		LEFT JOIN `accesslevel` a
+		ON u.AccessID = a.AccessID
+		GROUP BY u.`userID`
+		ORDER BY u.`AccessID`
+		ASC;
 
 SELECT 		c.companyID 										AS CompID,
-						c.`name` 											AS CompanyName, 
-						COUNT(c.`name`) 									AS NumberOfEmployees,
-						(SELECT SEC_TO_TIME(SUM(TIME_TO_SEC(b.`actualEndDateTime`) - TIME_TO_SEC(b.`startDateTime`))) 
-						FROM `booking` b 
-						INNER JOIN `employee` e 
-						ON b.`UserID` = e.`UserID` 
-						INNER JOIN `company` c 
-						ON e.`CompanyID` = c.`CompanyID` 
-						WHERE b.`CompanyID` = CompID
-						AND YEAR(b.`actualEndDateTime`) = YEAR(NOW())
-						AND MONTH(b.`actualEndDateTime`) = MONTH(NOW()))   	AS MonthlyCompanyWideBookingTimeUsed,
-						(SELECT SEC_TO_TIME(SUM(TIME_TO_SEC(b.`actualEndDateTime`) - TIME_TO_SEC(b.`startDateTime`))) 
-						FROM `booking` b 
-						INNER JOIN `employee` e 
-						ON b.`UserID` = e.`UserID` 
-						INNER JOIN `company` c 
-						ON e.`CompanyID` = c.`CompanyID` 
-						WHERE b.`CompanyID` = CompID)   					AS TotalCompanyWideBookingTimeUsed,
-						DATE_FORMAT(c.`dateTimeCreated`, '%d %b %Y %T')		AS DatetimeCreated,
-						DATE_FORMAT(c.`removeAtDate`, '%d %b %Y')			AS DeletionDate 
-			FROM 		`company` c 
+			c.`name` 											AS CompanyName, 
+			COUNT(c.`name`) 									AS NumberOfEmployees,
+			(SELECT SEC_TO_TIME(SUM(TIME_TO_SEC(b.`actualEndDateTime`) - TIME_TO_SEC(b.`startDateTime`))) 
+			FROM `booking` b 
+			INNER JOIN `employee` e 
+			ON b.`UserID` = e.`UserID` 
+			INNER JOIN `company` c 
+			ON e.`CompanyID` = c.`CompanyID` 
+			WHERE b.`CompanyID` = CompID
+			AND YEAR(b.`actualEndDateTime`) = YEAR(NOW())
+			AND MONTH(b.`actualEndDateTime`) = MONTH(NOW()))   	AS MonthlyCompanyWideBookingTimeUsed,
+			(SELECT SEC_TO_TIME(SUM(TIME_TO_SEC(b.`actualEndDateTime`) - TIME_TO_SEC(b.`startDateTime`))) 
+			FROM `booking` b 
+			INNER JOIN `employee` e 
+			ON b.`UserID` = e.`UserID` 
+			INNER JOIN `company` c 
+			ON e.`CompanyID` = c.`CompanyID` 
+			WHERE b.`CompanyID` = CompID)   					AS TotalCompanyWideBookingTimeUsed,
+			DATE_FORMAT(c.`dateTimeCreated`, '%d %b %Y %T')		AS DatetimeCreated,
+			DATE_FORMAT(c.`removeAtDate`, '%d %b %Y')			AS DeletionDate 
+FROM 		`company` c 
+LEFT JOIN 	`employee` e 
+ON 			c.CompanyID = e.CompanyID 
+GROUP BY 	c.`name`;
+
+
+SELECT 		c.companyID 										AS CompID,
+			c.`name` 											AS CompanyName, 
+			(SELECT 	COUNT(c.`name`) 
+            FROM 		`company` c 
 			JOIN 		`employee` e 
 			ON 			c.CompanyID = e.CompanyID 
+			WHERE 		e.companyID = CompID)								AS NumberOfEmployees,
+			(SELECT SEC_TO_TIME(SUM(TIME_TO_SEC(b.`actualEndDateTime`) - TIME_TO_SEC(b.`startDateTime`))) 
+			FROM `booking` b 
+			INNER JOIN `employee` e 
+			ON b.`UserID` = e.`UserID` 
+			INNER JOIN `company` c 
+			ON e.`CompanyID` = c.`CompanyID` 
+			WHERE b.`CompanyID` = CompID
+			AND YEAR(b.`actualEndDateTime`) = YEAR(NOW())
+			AND MONTH(b.`actualEndDateTime`) = MONTH(NOW()))   	AS MonthlyCompanyWideBookingTimeUsed,
+			(SELECT SEC_TO_TIME(SUM(TIME_TO_SEC(b.`actualEndDateTime`) - TIME_TO_SEC(b.`startDateTime`))) 
+			FROM `booking` b 
+			INNER JOIN `employee` e 
+			ON b.`UserID` = e.`UserID` 
+			INNER JOIN `company` c 
+			ON e.`CompanyID` = c.`CompanyID` 
+			WHERE b.`CompanyID` = CompID)   					AS TotalCompanyWideBookingTimeUsed,
+			DATE_FORMAT(c.`dateTimeCreated`, '%d %b %Y %T')		AS DatetimeCreated,
+			DATE_FORMAT(c.`removeAtDate`, '%d %b %Y')			AS DeletionDate 
+FROM 		`company` c 
+GROUP BY 	c.`name`;
+
+SELECT 		c.companyID 										AS CompID,
+						c.`name` 											AS CompanyName,
+						DATE_FORMAT(c.`dateTimeCreated`, '%d %b %Y %T')		AS DatetimeCreated,
+						DATE_FORMAT(c.`removeAtDate`, '%d %b %Y')			AS DeletionDate,							
+						(
+							SELECT 	COUNT(c.`name`) 
+							FROM 	`company` c 
+							JOIN 	`employee` e 
+							ON 		c.CompanyID = e.CompanyID 
+							WHERE 	e.companyID = CompID
+						)													AS NumberOfEmployees,
+						(
+							SELECT 		(SEC_TO_TIME(SUM(TIME_TO_SEC(b.`actualEndDateTime`) - 
+										TIME_TO_SEC(b.`startDateTime`)))) 
+							FROM 		`booking` b 
+							INNER JOIN 	`employee` e 
+							ON 			b.`UserID` = e.`UserID` 
+							INNER JOIN 	`company` c 
+							ON 			e.`CompanyID` = c.`CompanyID` 
+							WHERE 		b.`CompanyID` = CompID
+							AND 		YEAR(b.`actualEndDateTime`) = YEAR(NOW())
+							AND 		MONTH(b.`actualEndDateTime`) = MONTH(NOW())
+						)   												AS MonthlyCompanyWideBookingTimeUsed,
+						(
+							SELECT 		(SEC_TO_TIME(SUM(TIME_TO_SEC(b.`actualEndDateTime`) - 
+										TIME_TO_SEC(b.`startDateTime`)))) 
+							FROM 		`booking` b 
+							INNER JOIN 	`employee` e 
+							ON 			b.`UserID` = e.`UserID` 
+							INNER JOIN 	`company` c 
+							ON 			e.`CompanyID` = c.`CompanyID` 
+							WHERE 		b.`CompanyID` = CompID
+						)   												AS TotalCompanyWideBookingTimeUsed
+			FROM 		`company` c 
 			GROUP BY 	c.`name`;
+
 
 
 SELECT u.`firstname`, u.`lastname`, u.`email`, a.`AccessName`, u.`displayname`, u.`bookingdescription`, u.`create_time` FROM `user` u JOIN `accesslevel` a ON u.AccessID = a.AccessID WHERE `isActive` = 1;
