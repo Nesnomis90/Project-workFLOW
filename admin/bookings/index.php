@@ -6,7 +6,7 @@ include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/helpers.inc.php';
 include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/magicquotes.inc.php';
 
 // Display booking information list
-// TO-DO: THIS NEEDS THE EDIT, EDITFORM AND CANCEL CODE SNIPPETS
+// TO-DO: THIS NEEDS THE EDIT AND EDITFORM CODE SNIPPETS?? OR MAYBE NOT?
 
 // If admin wants to remove a booked meeting from the database
 // TO-DO: ADD A CONFIRMATION BEFORE ACTUALLY DOING THE DELETION!
@@ -40,12 +40,41 @@ if (isset($_POST['action']) and $_POST['action'] == 'Delete')
 	exit();	
 }
 
+// If admin wants to cancel a scheduled booked meeting (instead of deleting)
+if (isset($_POST['action']) and $_POST['action'] == 'Cancel')
+{
+	// Update cancellation date for selected booked meeting in database
+	try
+	{
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+		
+		$pdo = connect_to_db();
+		$sql = 'UPDATE 	`booking` SET 
+						`dateTimeCancelled` = CURRENT_TIMESTAMP 
+				WHERE 	`bookingID` = :id';
+		$s = $pdo->prepare($sql);
+		$s->bindValue(':id', $_POST['id']);
+		$s->execute();
+		
+		//close connection
+		$pdo = null;
+	}
+	catch (PDOException $e)
+	{
+		$error = 'Error updating selected booked meeting to be cancelled: ' . $e->getMessage();
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+		exit();
+	}
+	
+	// Load booked meetings list webpage with updated database
+	header('Location: .');
+	exit();	
+}
+
+
 // If admin wants to add a booked meeting to the database
 // we load a new html form
 // TO-DO: NEED TO KNOW WHAT USER IS LOGGED IN TO GET THEIR USERID
-// TO-DO: ADMIN STRICTLY SPEAKING DOESN'T NEED THIS ADD FUNCTION
-// IT'S JUST THAT WE HAVE TO MAKE THAT FUNCTION FOR THE ACTUAL USERS
-// LATER ANYWAY
 if (isset($_GET['add']))
 {
 	echo 'userID is: ' . $_POST['userID'] . '<br />';
@@ -255,7 +284,35 @@ catch (PDOException $e)
 
 foreach ($result as $row)
 {
-	$bookings[] = array('id' => $row['bookingID'], 
+	// Make datetime correct formats for comparing them
+	$datetimeNow = getDatetimeNow();
+	//echo "Datetime now is <b>$datetimeNow</b> <br />";
+	$datetimeEndWrongFormat = $row['EndTime'];
+	$datetimeEnd = correctDatetimeFormatForBooking($datetimeEndWrongFormat);
+	//echo "Datetime end is <b>$datetimeEnd</b> <br />";
+	
+	// Describe the status of the booking based on what info is stored in the database
+	// If not finished and not cancelled = active
+	// If meeting time has passed and finished time has updated (and not been cancelled) = completed
+	// If cancelled = cancelled
+	// If meeting time has passed and finished time has NOT updated (and not been cancelled) = Ended without updating
+	// If none of the above = Unknown
+	if(	$row['BookingWasCompletedOn'] == null AND $row['BookingWasCancelledOn'] == null AND 
+		$datetimeNow < $datetimeEnd ) {
+		$status = 'Active';
+	} elseif($row['BookingWasCompletedOn'] != null AND $row['BookingWasCancelledOn'] == null){
+		$status = 'Completed';
+	} elseif($row['BookingWasCancelledOn'] != null){
+		$status = 'Cancelled';
+	} elseif($row['BookingWasCompletedOn'] == null AND $row['BookingWasCancelledOn'] == null AND 
+		$datetimeNow > $datetimeEnd){
+		$status = 'Ended without updating database';
+	} else {
+		$status = 'Unknown';
+	}
+	
+	$bookings[] = array('id' => $row['bookingID'],
+						'BookingStatus' => $status,
 						'BookedRoomName' => $row['BookedRoomName'],
 						'StartTime' => $row['StartTime'],
 						'EndTime' => $row['EndTime'],

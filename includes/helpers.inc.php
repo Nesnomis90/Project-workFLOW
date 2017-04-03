@@ -13,7 +13,14 @@ function htmlout($text){
 	echo html($text);
 }
 
-//Function to change date and time formats to be correct for datetime input in database
+//Function to get the current datetime
+function getDatetimeNow() {
+	date_default_timezone_set('Europe/Oslo');
+	$datetimeNow = new Datetime();
+	return $datetimeNow->format('Y-m-d H:i:s');
+}
+
+//Function to change datetime format to be correct for datetime input in database
 function correctDatetimeFormat($wrongDatetimeString){
 	// Correct datetime format is
 	// yyyy-mm-dd hh:mm:ss
@@ -24,6 +31,16 @@ function correctDatetimeFormat($wrongDatetimeString){
 	return $correctDatetime;
 }
 
+//Function to change datetime format to be correct for comparing with displayed booking time
+function correctDatetimeFormatForBooking($wrongDatetimeString){
+	// Correct datetime format is
+	// yyyy-mm-dd hh:mm:ss
+	//echo 'old Datetime: ' . $wrongDatetimeString . '<br />';
+	$wrongDatetime = date_create_from_format('d M Y H:i:s', $wrongDatetimeString);
+	$correctDatetime = DATE_FORMAT($wrongDatetime,'Y-m-d H:i:s');
+	//echo 'new Datetime: ' . $correctDatetime . '<br />';
+	return $correctDatetime;
+}
 
 // Function to generate a password to be sent to new users
 

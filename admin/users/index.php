@@ -46,8 +46,9 @@ if (isset($_GET['add']))
 	{
 		// Get name and IDs for access level
 		$pdo = connect_to_db();
-		$sql = 'SELECT `accessID` ,`accessname` 
-				FROM `accesslevel`';
+		$sql = 'SELECT 	`accessID`,
+						`accessname` 
+				FROM 	`accesslevel`';
 		$result = $pdo->query($sql);
 		
 		// Get the rows of information from the query
@@ -70,6 +71,7 @@ if (isset($_GET['add']))
 		exit();		
 	}
 	
+	// Set values to be displayed in HTML
 	$pageTitle = 'New User';
 	$action = 'addform';
 	$firstname = '';
@@ -86,13 +88,15 @@ if (isset($_GET['add']))
 	// style=display:block to show, style=display:none to hide
 	$displaynameStyle = 'none';
 	$bookingdescriptionStyle = 'none';
+	
+	// Change to the actual html form template
 	include 'form.html.php';
 	exit();
 }
 
 // if admin wants to edit user information
 // we load a new html form
-if (isset($_POST['action']) AND $_POST['action'] = 'Edit')
+if (isset($_POST['action']) AND $_POST['action'] == 'Edit')
 {
 	// Get information from database again on the selected user
 	try
@@ -116,7 +120,9 @@ if (isset($_POST['action']) AND $_POST['action'] = 'Edit')
 		$s->execute();
 		
 		// Get name and IDs for access level
-		$sql = 'SELECT `accessID` ,`accessname` FROM `accesslevel`';
+		$sql = 'SELECT 	`accessID`,
+						`accessname` 
+				FROM 	`accesslevel`';
 		$result = $pdo->query($sql);
 		
 		// Get the rows of information from the query
@@ -160,6 +166,8 @@ if (isset($_POST['action']) AND $_POST['action'] = 'Edit')
 	// style=display:block to show, style=display:none to hide
 	$displaynameStyle = 'block';
 	$bookingdescriptionStyle = 'block';
+	
+	// Change to the actual form we want to use
 	include 'form.html.php';
 	exit();
 }
@@ -284,8 +292,7 @@ try
 			ON 			u.AccessID = a.AccessID
 			GROUP BY 	u.`userID`
 			ORDER BY 	u.`AccessID`
-			ASC"
-					;
+			ASC";
 	$result = $pdo->query($sql);
 	$rowNum = $result->rowCount();
 
@@ -299,7 +306,8 @@ catch (PDOException $e)
 	$pdo = null;
 	exit();
 }
-// Define the users variable to avoid errors if it's empty
+
+// Create an array with the actual key/value pairs we want to use in our HTML
 foreach ($result as $row)
 {
 	$users[] = array('id' => $row['userID'], 

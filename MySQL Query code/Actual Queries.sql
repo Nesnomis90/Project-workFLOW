@@ -306,7 +306,29 @@ SELECT SEC_TO_TIME(SUM(TIME_TO_SEC(b.`actualEndDateTime`) - TIME_TO_SEC(b.`start
 #SELECT BOOKING TIME USED BY ENTIRE COMPANY BASED ON COMPANY NAME
 SELECT SEC_TO_TIME(SUM(TIME_TO_SEC(b.`actualEndDateTime`) - TIME_TO_SEC(b.`startDateTime`)))  AS CompanyWideBookingTimeUsed FROM `booking` b INNER JOIN `employee` e ON b.`UserID` = e.`UserID` INNER JOIN `company` c ON e.`CompanyID` = c.`CompanyID` WHERE c.`name` = 'Company Name';
 #SELECT ALL COMPANY NAMES AND THE NUMBER OF EMPLOYEES IT HAS
-SELECT c.`name`, COUNT(c.`name`) AS NumberOfEmployees FROM `company` c JOIN `employee` e ON c.CompanyID = e.CompanyID GROUP BY c.`name`;
+SELECT 		c.companyID 										AS CompID,
+			c.`name` 											AS CompanyName, 
+			COUNT(c.`name`) 									AS NumberOfEmployees,
+			(SELECT SEC_TO_TIME(SUM(TIME_TO_SEC(b.`actualEndDateTime`) - TIME_TO_SEC(b.`startDateTime`))) 
+			FROM `booking` b 
+			INNER JOIN `employee` e 
+			ON b.`UserID` = e.`UserID` 
+			INNER JOIN `company` c 
+			ON e.`CompanyID` = c.`CompanyID` 
+			WHERE b.`CompanyID` = CompID
+			AND YEAR(b.`actualEndDateTime`) = YEAR(NOW())
+			AND MONTH(b.`actualEndDateTime`) = MONTH(NOW()))   	AS MonthlyCompanyWideBookingTimeUsed,
+			(SELECT SEC_TO_TIME(SUM(TIME_TO_SEC(b.`actualEndDateTime`) - TIME_TO_SEC(b.`startDateTime`))) 
+			FROM `booking` b 
+			INNER JOIN `employee` e 
+			ON b.`UserID` = e.`UserID` 
+			INNER JOIN `company` c 
+			ON e.`CompanyID` = c.`CompanyID` 
+			WHERE b.`CompanyID` = CompID)   					AS TotalCompanyWideBookingTimeUsed
+FROM 		`company` c 
+JOIN 		`employee` e 
+ON 			c.CompanyID = e.CompanyID 
+GROUP BY 	c.`name`;
 #SELECT ALL USERS THAT ARE REGISTERED AS AN EMPLOYEE AND THE COMPANY AND POSITION THEY HOLD
 SELECT u.`firstname`, u.`lastname`, u.`email`, c.`name` AS CompanyName, cp.`name` AS CompanyRole FROM `user` u JOIN `company` c JOIN `employee` e JOIN `companyposition` cp WHERE e.CompanyID = c.CompanyID AND e.UserID = u.userID AND cp.PositionID = e.PositionID ORDER BY c.`name`;
 #SELECT ALL USERS THAT ARE REGISTERED AND SHOW THEIR CONNECTED COMPANY AND EMPLOYEE POSITION, IF THEY HAVE ONE.

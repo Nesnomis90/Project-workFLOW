@@ -49,6 +49,7 @@
 			<table id= "bookingstable">
 				<caption>All booking history</caption>
 				<tr>
+					<th>Status</th>
 					<th>Room Name</th>
 					<th>Start Time</th>
 					<th>End Time</th>
@@ -62,12 +63,14 @@
 					<th>Last Name</th>
 					<th>Email</th>
 					<th>Works for</th>
-					<th>Edit Booking</th>
+					<th>Cancel Booking</th>
+					<th>Edit Booking (Not functional)</th>
 					<th>Delete Booking</th>
 				</tr>
 				<?php foreach ($bookings as $booking): ?>
 					<form action="" method="post">
 						<tr>
+							<td><?php htmlout($booking['BookingStatus']);?></td>
 							<td><?php htmlout($booking['BookedRoomName']); ?></td>
 							<td><?php htmlout($booking['StartTime']); ?></td>
 							<td><?php htmlout($booking['EndTime']); ?></td>
@@ -81,6 +84,7 @@
 							<td><?php htmlout($booking['lastName']); ?></td>
 							<td><?php htmlout($booking['email']); ?></td>
 							<td><?php htmlout($booking['WorksForCompany']); ?></td>
+							<td><input type="submit" name="action" value="Cancel"></td>
 							<td><input type="submit" name="action" value="Edit"></td>
 							<td><input type="submit" name="action" value="Delete"></td>
 							<input type="hidden" name="id" value="<?php echo $booking['id']; ?>">
