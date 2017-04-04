@@ -40,10 +40,10 @@ if (isset($_POST['action']) and $_POST['action'] == 'Delete')
 // If admin wants to add a user to the database
 // we load a new html form
 if (isset($_GET['add']))
-{
-	include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';	
+{	
 	try
 	{
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 		// Get name and IDs for access level
 		$pdo = connect_to_db();
 		$sql = 'SELECT 	`accessID`,
@@ -84,6 +84,7 @@ if (isset($_GET['add']))
 	
 	// We want a reset all fields button while adding a new user
 	$reset = 'reset';
+	
 	// We don't need to see display name and booking description when adding a new user
 	// style=display:block to show, style=display:none to hide
 	$displaynameStyle = 'none';
@@ -192,8 +193,8 @@ if (isset($_GET['addform']))
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 		
 		$pdo = connect_to_db();
-		$sql = 'INSERT INTO `user` SET
-							`firstname` = :firstname,
+		$sql = 'INSERT INTO `user` 
+				SET			`firstname` = :firstname,
 							`lastname` = :lastname,
 							`accessID` = :accessID,
 							`password` = :password,

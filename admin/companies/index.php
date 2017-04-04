@@ -10,11 +10,11 @@ include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/magicquotes.inc.php';
 // MAYBE BY TYPING ADMIN PASSWORD AGAIN?
 if (isset($_POST['action']) and $_POST['action'] == 'Delete')
 {
-	include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
-
 	// Delete selected company from database
 	try
 	{
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+		
 		$pdo = connect_to_db();
 		$sql = 'DELETE FROM `company` 
 				WHERE 		`companyID` = :id';
@@ -36,6 +36,13 @@ if (isset($_POST['action']) and $_POST['action'] == 'Delete')
 	header('Location: .');
 	exit();	
 }
+// If admin wants to see list of employees in a company from the database
+// TO-DO: REDIRECT THIS TO THE EMPLOYEE STUFF
+if (isset($_POST['action']) AND  $_POST['action'] == 'Employees')
+{
+	exit();
+}
+
 
 // If admin wants to add a company to the database
 // we load a new html form
@@ -45,7 +52,6 @@ if (isset($_GET['add']))
 	$pageTitle = 'New Company';
 	$action = 'addform';
 	$CompanyName = '';
-	$DateToRemove = '';
 	$id = '';
 	$button = 'Add company';
 	
@@ -53,18 +59,64 @@ if (isset($_GET['add']))
 	$reset = 'reset';
 	
 	// We don't need to see date to remove when adding a new company
-	// style=display:block to show, style=display:none to hide
-	$DateToRemoveStyle = 'none';
-	$CompanyPositionStyle = 'none';
+	$ShowDateToRemove = FALSE;
 	
 	// Change to the actual html form template
 	include 'form.html.php';
 	exit();
 }
 
-// for edit 	
-// $companypositionname = $row['CompanyPositionName'];
-
+// if admin wants to set the date to remove for a company
+// we load a new html form
+if (isset($_POST['action']) AND $_POST['action'] == 'Edit')
+{
+	// Get information from database again on the selected company	
+	try
+	{
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+		
+		// Get company information
+		$pdo = connect_to_db();
+		$sql = 'SELECT 	`companyID`,
+						`name`,
+						`removeAtDate`
+				FROM 	`company`
+				WHERE 	`companyID` = :id';
+		$s = $pdo->prepare($sql);
+		$s->bindValue(':id', $_POST['id']);
+		$s->execute();
+						
+		//Close connection
+		$pdo = null;
+	}
+	catch (PDOException $e)
+	{
+		$error = 'Error fetching company details: ' . $e->getMessage();
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+		$pdo = null;
+		exit();		
+	}
+	
+	// Create an array with the row information we retrieved
+	$row = $s->fetch();
+		
+	// Set the correct information
+	$pageTitle = 'Edit Company';
+	$action = 'editform';
+	$CompanyName = $row['name'];
+	$DateToRemove = $row['removeAtDate'];
+	$id = $row['companyID'];
+	$button = 'Edit company';
+	
+	// Don't want a reset button to blank all fields while editing
+	$reset = 'hidden';
+	// Want to see date to remove while editing
+	$ShowDateToRemove = TRUE;
+	
+	// Change to the actual form we want to use
+	include 'form.html.php';
+	exit();
+}
 
 // When admin has added the needed information and wants to add the company
 if (isset($_GET['addform']))
@@ -75,8 +127,8 @@ if (isset($_GET['addform']))
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 		
 		$pdo = connect_to_db();
-		$sql = 'INSERT INTO `company` SET
-							`name` = :CompanyName';
+		$sql = 'INSERT INTO `company` 
+				SET			`name` = :CompanyName';
 		$s = $pdo->prepare($sql);
 		$s->bindValue(':CompanyName', $_POST['CompanyName']);
 		$s->execute();
@@ -97,8 +149,8 @@ if (isset($_GET['addform']))
 	exit();
 }
 
-// if admin wants to set the date to remove
-if (isset($_POST['action']) AND $_POST['action'] == 'Confirm Date')
+// Perform the actual database update of the edited information
+if (isset($_GET['editform']))
 {
 	// Update selected company by inserted the date to remove	
 	try
@@ -107,27 +159,34 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Confirm Date')
 		
 		$pdo = connect_to_db();
 		$sql = 'UPDATE 	`company` 
-				SET		`removeAtDate` = :removeAtDate
+				SET		`removeAtDate` = :removeAtDate,
+						`name` = :name
 				WHERE 	`companyID` = :id';
+		
+		if ($_POST['DateToRemove']!=''){
+			$CorrectDate = correctDateFormat($_POST['DateToRemove']);
+		} else {
+			$CorrectDate = null;
+		}
+
+						
 		$s = $pdo->prepare($sql);
 		$s->bindValue(':id', $_POST['id']);
-		$s->bindValue(':removeAtDate', $_POST['DeletionDate']);
+		$s->bindValue(':removeAtDate', $CorrectDate);
+		$s->bindValue(':name', $_POST['CompanyName']);
 		$s->execute();
 		
 		//close connection
 		$pdo = null;	
-		
-		$SetOrConfirm = 'Set';
 	}
 	catch (PDOException $e)
 	{
-		$error = 'Error cancelling removal date: ' . $e->getMessage();
+		$error = 'Error editing company information: ' . $e->getMessage();
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
 		$pdo = null;
 		exit();		
 	}
 	
-
 	// Load company list webpage with updated database
 	header('Location: .');
 	exit();
@@ -149,7 +208,6 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Cancel Date')
 		$s->bindValue(':id', $_POST['id']);
 		$s->execute();
 		
-		echo "trying to null date <br />";
 		//close connection
 		$pdo = null;	
 	}
@@ -163,77 +221,6 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Cancel Date')
 	
 	// Load company list webpage with updated database
 	header('Location: .');
-	exit();
-}
-		
-// if admin wants to set the date to remove for a company
-// we load a new html form
-// TO-DO: FIX THIS!
-// NEED TO CHANGE STUFF SO IT'S CORRECT (COPYPASTED FROM USER)
-// Change back to action = 
-if (isset($_POST['action']) AND $_POST['action'] == 'Set Date')
-{
-	// Get information from database again on the selected company	
-	try
-	{
-		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
-		
-		// Get company information
-		$pdo = connect_to_db();
-		$sql = 'SELECT 	
-				WHERE 	c.`companyID` = :id';
-		$s = $pdo->prepare($sql);
-		$s->bindValue(':id', $_POST['id']);
-		$s->execute();
-		
-		// Get name and IDs for company position
-		$pdo = connect_to_db();
-		$sql = 'SELECT 	`positionID`,
-						`name` 			AS CompanyPositionName,
-						`description`	AS CompanyPositionDescription
-				FROM 	`companyposition`';
-		$result = $pdo->query($sql);
-		
-		// Get the rows of information from the query
-		// This will be used to create a dropdown list in HTML
-		foreach($result as $row){
-			$companyposition[] = array(
-										'positionID' => $row['positionID'],
-										'CompanyPositionName' => $row['CompanyPositionName'],
-										'CompanyPositionDescription' => $row['CompanyPositionDescription']
-										);
-		}
-		
-		//Close connection
-		$pdo = null;
-	}
-	catch (PDOException $e)
-	{
-		$error = 'Error fetching company details: ' . $e->getMessage();
-		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
-		$pdo = null;
-		exit();		
-	}
-	
-	// Create an array with the row information we retrieved
-	$row = $s->fetch();
-	
-	// Set the correct information
-	$pageTitle = 'Edit Company';
-	$action = 'editform';
-	$DateToRemove = $row['DateToRemove'];
-	$id = $row['companyID'];
-	$button = 'Edit company';
-	
-	// Don't want a reset button to blank all fields while editing
-	$reset = 'hidden';
-	// Want to see company position and date to remove while editing
-	// style=display:block to show, style=display:none to hide
-	$DateToRemoveStyle = 'block';
-	$CompanyPositionStyle = 'block';
-	
-	// Change to the actual form we want to use
-	include 'form.html.php';
 	exit();
 }
 
@@ -282,10 +269,6 @@ try
 	
 	//Close the connection
 	$pdo = null;	
-	
-	if(!isset($CompanyToEdit)){
-		$CompanyToEdit = '';
-	}
 }
 catch (PDOException $e)
 {

@@ -187,6 +187,9 @@ SELECT 		c.companyID 										AS CompID,
 FROM 		`company` c 
 GROUP BY 	c.`name`;
 
+INSERT INTO `company` SET `name` = 'testytessfasad';
+
+
 SELECT 		c.companyID 										AS CompID,
 						c.`name` 											AS CompanyName,
 						DATE_FORMAT(c.`dateTimeCreated`, '%d %b %Y %T')		AS DatetimeCreated,
@@ -223,6 +226,51 @@ SELECT 		c.companyID 										AS CompID,
 			FROM 		`company` c 
 			GROUP BY 	c.`name`;
 
+
+SELECT 	u.`userID`					AS UsrID,
+						c.`companyID`				AS CompanyID,
+						c.`name`					AS CompanyName,
+						u.`firstName`, 
+						u.`lastName`,
+						u.`email`,
+						cp.`name`					AS PositionName, 
+						e.`startDateTime`,
+						(
+							SELECT 		SEC_TO_TIME(SUM(TIME_TO_SEC(b.`actualEndDateTime`) - 
+										TIME_TO_SEC(b.`startDateTime`))) 
+							FROM 		`booking` b
+							INNER JOIN `employee` e
+							ON 			b.`userID` = e.`userID`
+							INNER JOIN `company` c
+							ON 			c.`companyID` = e.`companyID`
+							INNER JOIN 	`user` u 
+							ON 			e.`UserID` = u.`UserID` 
+							WHERE 		b.`userID` = UsrID
+							AND 		b.`companyID` = 5
+							AND 		YEAR(b.`actualEndDateTime`) = YEAR(NOW())
+							AND 		MONTH(b.`actualEndDateTime`) = MONTH(NOW())
+						) 							AS MonthlyBookingTimeUsed,
+						(
+							SELECT 		SEC_TO_TIME(SUM(TIME_TO_SEC(b.`actualEndDateTime`) - 
+										TIME_TO_SEC(b.`startDateTime`))) 
+							FROM 		`booking` b
+							INNER JOIN `employee` e
+							ON 			b.`userID` = e.`userID`
+							INNER JOIN `company` c
+							ON 			c.`companyID` = e.`companyID`
+							INNER JOIN 	`user` u 
+							ON 			e.`UserID` = u.`UserID` 
+							WHERE 		b.`userID` = UsrID
+							AND 		b.`companyID` = 5
+						) 							AS TotalBookingTimeUsed							
+				FROM 	`company` c 
+				JOIN 	`employee` e
+				ON 		e.CompanyID = c.CompanyID 
+				JOIN 	`companyposition` cp 
+				ON 		cp.PositionID = e.PositionID
+				JOIN 	`user` u 
+				ON 		u.userID = e.UserID 
+				WHERE 	c.`companyID` = 5;
 
 
 SELECT u.`firstname`, u.`lastname`, u.`email`, a.`AccessName`, u.`displayname`, u.`bookingdescription`, u.`create_time` FROM `user` u JOIN `accesslevel` a ON u.AccessID = a.AccessID WHERE `isActive` = 1;
