@@ -84,6 +84,7 @@ if (isset($_GET['add']))
 	
 	// We want a reset all fields button while adding a new user
 	$reset = 'reset';
+	
 	// We don't need to see display name and booking description when adding a new user
 	// style=display:block to show, style=display:none to hide
 	$displaynameStyle = 'none';
@@ -192,8 +193,8 @@ if (isset($_GET['addform']))
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 		
 		$pdo = connect_to_db();
-		$sql = 'INSERT INTO `user` SET
-							`firstname` = :firstname,
+		$sql = 'INSERT INTO `user` 
+				SET			`firstname` = :firstname,
 							`lastname` = :lastname,
 							`accessID` = :accessID,
 							`password` = :password,

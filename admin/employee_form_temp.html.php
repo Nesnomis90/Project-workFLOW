@@ -18,14 +18,30 @@
 					value="<?php htmlout($CompanyName); ?>">
 				</label>
 			</div>
-			<?php if ($ShowDateToRemove) :?>
-				<div>
-					<label for="DateToRemove">Date to Remove: 
-						<input type="text" name="DateToRemove" id="DateToRemove"
-						value="<?php htmlout($DateToRemove); ?>">
-					</label>
-				</div>
-			<?php endif; ?>
+			<div style="display:<?php htmlout($CompanyPositionStyle); ?>">
+				<label for="CompanyPositionID">Company Position: 
+					<select name="CompanyPositionID" id="CompanyPositionID">
+						<?php foreach($companyposition as $row): ?> 
+							<?php if($row['CompanyPositionName']==$companypositionname):?>
+								<option selected="selected" 
+										value=<?php htmlout($row['positionID']); ?>>
+										<?php htmlout($row['CompanyPositionName']);?>
+								</option>
+							<?php else : ?>
+								<option value=<?php htmlout($row['positionID']); ?>>
+										<?php htmlout($row['CompanyPositionName']);?>
+								</option>
+							<?php endif;?>
+						<?php endforeach; ?>
+					</select>
+				</label>
+			</div>	
+			<div style="display:<?php htmlout($DateToRemoveStyle); ?>">
+				<label for="DateToRemove">Date to Remove: 
+					<input type="text" name="DateToRemove" id="DateToRemove" 
+					value="<?php htmlout($DateToRemove); ?>">
+				</label>
+			</div>
 			<div>
 				<input type="hidden" name="id" value="<?php htmlout($id); ?>">
 				<input type="submit" value="<?php htmlout($button); ?>">

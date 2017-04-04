@@ -49,42 +49,36 @@
 			<table id= "companiestable">
 				<caption>Registered Companies</caption>
 				<tr>
-					<th>Company Name (click for more info)</th>
+					<th>Company Name (click for employee list)</th>
 					<th># of employees</th>
 					<th>Booking time used (this month)</th>
 					<th>Booking time used (all time)</th>
 					<th>Date to be removed</th>
 					<th>Created at</th>
+					<th>Employee List</th>
+					<th>Edit</th>
 					<th>Delete</th>
 				</tr>
 				<?php foreach ($companies as $company): ?>
 					<form action="" method="post">
 						<tr>
-							<td><a href="?company<?php echo $company['id'] ?>"><?php htmlout($company['CompanyName']); ?></a></td>
+							<td><?php htmlout($company['CompanyName']); ?></td>
 							<td><?php htmlout($company['NumberOfEmployees']); ?></td>
 							<td><?php htmlout($company['MonthlyCompanyWideBookingTimeUsed']); ?></td>
 							<td><?php htmlout($company['TotalCompanyWideBookingTimeUsed']); ?></td>
 							<?php if($company['DeletionDate'] == null) :?>
 									<td>
 										<p>No Date Set</p>
-										<input type="submit" name="action" value="Set Date">
 									</td>
-								<?php elseif($company['DeletionDate'] == null AND $company['id']==$CompanyToEdit): ?>
-									<td>
-										<input type="text" name="DeletionDate" id="Deletion Date" 
-										required placeholder="Set A Date To Remove" 
-										oninvalid="this.setCustomValidity('Enter The Date To Automatically Remove The Company Here')"
-										oninput="setCustomValidity('')"
-										value="<?php htmlout($DeletionDate); ?>">
-										<input type="submit" name="action" value="Confirm Date">
-									</td>
-								<?php elseif($company['DeletionDate'] != null) : ?>
+							<?php elseif($company['DeletionDate'] != null) : ?>
 									<td>
 										<p><?php htmlout($company['DeletionDate']); ?></p>
 										<input type="submit" name="action" value="Cancel Date">
 									</td>
 							<?php endif; ?>
-							<td><?php htmlout($company['DatetimeCreated']); ?></td>
+							<td><?php htmlout($company['DatetimeCreated']); ?></td>							
+							<td><input type="submit" name="action" value="Employees"></td>
+							<td><input type="submit" name="action" value="Edit"></td>
 							<td><input type="submit" name="action" value="Delete"></td>
 							<input type="hidden" name="id" value="<?php echo $company['id']; ?>">
 						</tr>
