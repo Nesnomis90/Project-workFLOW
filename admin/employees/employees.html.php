@@ -57,8 +57,8 @@
 					<th>Booking time used (this month)</th>
 					<th>Booking time used (all time)</th>
 					<th>Added at</th>
-					<th>Change Role</th>
-					<th>Remove</th>
+					<th></th>
+					<th></th>
 				</tr>
 				<?php foreach ($employees as $employee): ?>
 					<form action="" method="post">
@@ -73,7 +73,7 @@
 							<td><?php htmlout($employee['startDateTime']); ?></td>
 							<td><input type="submit" name="action" value="Change Role"></td>
 							<td><input type="submit" name="action" value="Remove"></td>
-							<input type="hidden" name="userID" value="<?php echo $employee['UsrID']; ?>">
+							<input type="hidden" name="UserID" value="<?php echo $employee['UsrID']; ?>">
 							<input type="hidden" name="CompanyID" value="<?php echo $employee['CompanyID']; ?>">
 						</tr>
 					</form>

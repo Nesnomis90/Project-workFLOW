@@ -40,10 +40,10 @@ if (isset($_POST['action']) and $_POST['action'] == 'Delete')
 // If admin wants to add a user to the database
 // we load a new html form
 if (isset($_GET['add']))
-{
-	include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';	
+{	
 	try
 	{
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 		// Get name and IDs for access level
 		$pdo = connect_to_db();
 		$sql = 'SELECT 	`accessID`,

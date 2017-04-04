@@ -5,28 +5,6 @@
 include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/helpers.inc.php';
 include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/magicquotes.inc.php';
 
-		// Stuff til employee redigering
-		// // Get name and IDs for company position
-		// $pdo = connect_to_db();
-		// $sql = 'SELECT 	`positionID`,
-						// `name` 			AS CompanyPositionName,
-						// `description`	AS CompanyPositionDescription
-				// FROM 	`companyposition`';
-		// $result = $pdo->query($sql);
-		
-		// // Get the rows of information from the query
-		// // This will be used to create a dropdown list in HTML
-		// foreach($result as $row){
-			// $companyposition[] = array(
-										// 'positionID' => $row['positionID'],
-										// 'CompanyPositionName' => $row['CompanyPositionName'],
-										// 'CompanyPositionDescription' => $row['CompanyPositionDescription']
-										// );
-		// }
-
-
-
-
 // If admin wants to remove a company from the database
 // TO-DO: ADD A CONFIRMATION BEFORE ACTUALLY DOING THE DELETION!
 // MAYBE BY TYPING ADMIN PASSWORD AGAIN?
@@ -59,108 +37,9 @@ if (isset($_POST['action']) and $_POST['action'] == 'Delete')
 	exit();	
 }
 // If admin wants to see list of employees in a company from the database
+// TO-DO: REDIRECT THIS TO THE EMPLOYEE STUFF
 if (isset($_POST['action']) AND  $_POST['action'] == 'Employees')
 {
-	// Get employee information
-	try
-	{
-		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
-		
-		$pdo = connect_to_db();
-		$sql = 'SELECT 	u.`userID`					AS UsrID,
-						c.`companyID`				AS CompanyID,
-						c.`name`					AS CompanyName,
-						u.`firstName`, 
-						u.`lastName`,
-						u.`email`,
-						cp.`name`					AS PositionName, 
-						e.`startDateTime`,
-						(
-							SELECT 		SEC_TO_TIME(SUM(TIME_TO_SEC(b.`actualEndDateTime`) - 
-										TIME_TO_SEC(b.`startDateTime`))) 
-							FROM 		`booking` b
-							INNER JOIN `employee` e
-							ON 			b.`userID` = e.`userID`
-							INNER JOIN `company` c
-							ON 			c.`companyID` = e.`companyID`
-							INNER JOIN 	`user` u 
-							ON 			e.`UserID` = u.`UserID` 
-							WHERE 		b.`userID` = UsrID
-							AND 		b.`companyID` = :id
-							AND 		YEAR(b.`actualEndDateTime`) = YEAR(NOW())
-							AND 		MONTH(b.`actualEndDateTime`) = MONTH(NOW())
-						) 							AS MonthlyBookingTimeUsed,
-						(
-							SELECT 		SEC_TO_TIME(SUM(TIME_TO_SEC(b.`actualEndDateTime`) - 
-										TIME_TO_SEC(b.`startDateTime`))) 
-							FROM 		`booking` b
-							INNER JOIN `employee` e
-							ON 			b.`userID` = e.`userID`
-							INNER JOIN `company` c
-							ON 			c.`companyID` = e.`companyID`
-							INNER JOIN 	`user` u 
-							ON 			e.`UserID` = u.`UserID` 
-							WHERE 		b.`userID` = UsrID
-							AND 		b.`companyID` = :id
-						) 							AS TotalBookingTimeUsed							
-				FROM 	`company` c 
-				JOIN 	`employee` e
-				ON 		e.CompanyID = c.CompanyID 
-				JOIN 	`companyposition` cp 
-				ON 		cp.PositionID = e.PositionID
-				JOIN 	`user` u 
-				ON 		u.userID = e.UserID 
-				WHERE 	c.`companyID` = :id';
-		$s = $pdo->prepare($sql);
-		$s->bindValue(':id', $_POST['id']);
-		$s->execute();
-		
-		// Create an array with the rows of information we retrieved
-		$result = $s->fetchAll();
-		$rowNum = sizeOf($result);
-		
-		foreach($result AS $row){
-			
-			if($row['MonthlyBookingTimeUsed'] == null){
-				$MonthlyTimeUsed = '00:00:00';
-			} else {
-				$MonthlyTimeUsed = $row['MonthlyBookingTimeUsed'];
-			}
-
-			if($row['TotalBookingTimeUsed'] == null){
-				$TotalTimeUsed = '00:00:00';
-			} else {
-				$TotalTimeUsed = $row['TotalBookingTimeUsed'];
-			}
-			
-			$employees[] = array('CompanyID' => $row['CompanyID'], 
-								'UsrID' => $row['UsrID'],
-								'CompanyName' => $row['CompanyName'],
-								'PositionName' => $row['PositionName'],
-								'firstName' => $row['firstName'],
-								'lastName' => $row['lastName'],
-								'email' => $row['email'],
-								'MonthlyBookingTimeUsed' => $MonthlyTimeUsed,
-								'TotalBookingTimeUsed' => $TotalTimeUsed,
-								'startDateTime' => $row['startDateTime']
-								);
-		}
-		
-		// Set the correct information
-
-		
-		//close connection
-		$pdo = null;
-	}
-	catch (PDOException $e)
-	{
-		$error = 'Error getting employee information: ' . $e->getMessage();
-		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
-		exit();
-	}	
-	
-	// Change to the actual html form template
-	include 'employees.html.php';
 	exit();
 }
 
@@ -390,10 +269,6 @@ try
 	
 	//Close the connection
 	$pdo = null;	
-	
-	if(!isset($CompanyToEdit)){
-		$CompanyToEdit = '';
-	}
 }
 catch (PDOException $e)
 {
