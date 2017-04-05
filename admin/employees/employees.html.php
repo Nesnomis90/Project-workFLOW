@@ -71,7 +71,7 @@
 							<td><?php htmlout($employee['email']); ?></td>						
 							<td><?php htmlout($employee['MonthlyBookingTimeUsed']); ?></td>
 							<td><?php htmlout($employee['TotalBookingTimeUsed']); ?></td>
-							<td><?php htmlout($employee['startDateTime']); ?></td>
+							<td><?php htmlout($employee['StartDateTime']); ?></td>
 							<td><input type="submit" name="action" value="Change Role"></td>
 							<td><input type="submit" name="action" value="Remove"></td>
 							<input type="hidden" name="UserID" value="<?php echo $employee['UsrID']; ?>">

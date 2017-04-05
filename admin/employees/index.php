@@ -1,8 +1,6 @@
 <?php 
 // This is the index file for the EMPLOYEES folder
 
-// TO-DO: This needs fixes to ADD and EDIT!
-
 // Include functions
 include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/helpers.inc.php';
 include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/magicquotes.inc.php';
@@ -42,8 +40,11 @@ if(isset($_POST['action']) AND $_POST['action'] == 'Remove'){
 // 	If admin wants to add a company to the database
 // 	we load a new html form
 //	TO-DO: NEED A WAY TO BE ABLE TO SELECT THE USER AND THE COMPANY WE WANT TO MATCH
-if ((isset($_POST['action']) AND $_POST['action'] == 'Add Employee') OR (isset($_POST['action']) AND $_POST['action'] == 'Search'))
+if ((isset($_POST['action']) AND $_POST['action'] == 'Add Employee') OR 
+	(isset($_POST['action']) AND $_POST['action'] == 'Search'))
 {	
+	// This is a GOTO label.
+	goToAddEmployee:
 	// Update company position for the employee connection in database
 	try
 	{
@@ -244,6 +245,26 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Change Role')
 // When admin has added the needed information and wants to add an employee connection
 if (isset($_POST['action']) AND $_POST['action'] == 'Confirm Employee')
 {
+	// Make sure we only do this if user filled out all values
+	// TO-DO:   GOTO is a bad practice. Find a solution?
+	// 			THIS IS ONLY NEEDED AS LONG AS WE DON'T HAVE ANY
+	// 			REQUIRED ATTRIBUTES ON THE SELECT FIELDS
+	if($_POST['CompanyID'] == '' AND $_POST['UserID'] == ''){
+		// We didn't have enough values filled in. "go back" to employee fill in
+		echo "<b>Need to select a user and a company first!</b><br />";
+		goto goToAddEmployee;
+		echo "Does the code ever get here? <br />";
+		exit();
+	} elseif($_POST['CompanyID'] != '' AND $_POST['UserID'] == ''){
+		echo "<b>Need to select a user first!</b><br />";
+		goto goToAddEmployee;
+		exit();
+	} elseif($_POST['CompanyID'] == '' AND $_POST['UserID'] != ''){
+		echo "<b>Need to select a company first!</b><br />";
+		goto goToAddEmployee;
+		exit();
+	}
+	
 	// TO-DO: CHECK THAT USER ISN'T ALREADY IN THE COMPANY
 	// Add the new employee connection to the database
 	try
@@ -366,49 +387,51 @@ try
 			ON 		u.userID = e.UserID 
 			WHERE 	c.`companyID` = :id'; */
 
-	$sql = 'SELECT 	u.`userID`					AS UsrID,
-					c.`companyID`				AS TheCompanyID,
-					c.`name`					AS CompanyName,
-					u.`firstName`, 
-					u.`lastName`,
-					u.`email`,
-					cp.`name`					AS PositionName, 
-					e.`startDateTime`,
-					(
-						SELECT 		SEC_TO_TIME(SUM(TIME_TO_SEC(b.`actualEndDateTime`) - 
-									TIME_TO_SEC(b.`startDateTime`))) 
-						FROM 		`booking` b
-						INNER JOIN `employee` e
-						ON 			b.`userID` = e.`userID`
-						INNER JOIN `company` c
-						ON 			c.`companyID` = e.`companyID`
-						INNER JOIN 	`user` u 
-						ON 			e.`UserID` = u.`UserID` 
-						WHERE 		b.`userID` = UsrID
-						AND 		b.`companyID` = TheCompanyID
-						AND 		YEAR(b.`actualEndDateTime`) = YEAR(NOW())
-						AND 		MONTH(b.`actualEndDateTime`) = MONTH(NOW())
-					) 							AS MonthlyBookingTimeUsed,
-					(
-						SELECT 		SEC_TO_TIME(SUM(TIME_TO_SEC(b.`actualEndDateTime`) - 
-									TIME_TO_SEC(b.`startDateTime`))) 
-						FROM 		`booking` b
-						INNER JOIN `employee` e
-						ON 			b.`userID` = e.`userID`
-						INNER JOIN `company` c
-						ON 			c.`companyID` = e.`companyID`
-						INNER JOIN 	`user` u 
-						ON 			e.`UserID` = u.`UserID` 
-						WHERE 		b.`userID` = UsrID
-						AND 		b.`companyID` = TheCompanyID
-					) 							AS TotalBookingTimeUsed							
-			FROM 	`company` c 
-			JOIN 	`employee` e
-			ON 		e.CompanyID = c.CompanyID 
-			JOIN 	`companyposition` cp 
-			ON 		cp.PositionID = e.PositionID
-			JOIN 	`user` u 
-			ON 		u.userID = e.UserID';
+	$sql = "SELECT 		u.`userID`										AS UsrID,
+						c.`companyID`									AS TheCompanyID,
+						c.`name`										AS CompanyName,
+						u.`firstName`, 
+						u.`lastName`,
+						u.`email`,
+						cp.`name`										AS PositionName, 
+						DATE_FORMAT(e.`startDateTime`,'%d %b %Y %T') 	AS StartDateTime,
+						UNIX_TIMESTAMP(e.`startDateTime`)				AS OrderByDate,
+						(
+							SELECT 		SEC_TO_TIME(SUM(TIME_TO_SEC(b.`actualEndDateTime`) - 
+										TIME_TO_SEC(b.`startDateTime`))) 
+							FROM 		`booking` b
+							INNER JOIN `employee` e
+							ON 			b.`userID` = e.`userID`
+							INNER JOIN `company` c
+							ON 			c.`companyID` = e.`companyID`
+							INNER JOIN 	`user` u 
+							ON 			e.`UserID` = u.`UserID` 
+							WHERE 		b.`userID` = UsrID
+							AND 		b.`companyID` = TheCompanyID
+							AND 		YEAR(b.`actualEndDateTime`) = YEAR(NOW())
+							AND 		MONTH(b.`actualEndDateTime`) = MONTH(NOW())
+						) 												AS MonthlyBookingTimeUsed,
+						(
+							SELECT 		SEC_TO_TIME(SUM(TIME_TO_SEC(b.`actualEndDateTime`) - 
+										TIME_TO_SEC(b.`startDateTime`))) 
+							FROM 		`booking` b
+							INNER JOIN `employee` e
+							ON 			b.`userID` = e.`userID`
+							INNER JOIN `company` c
+							ON 			c.`companyID` = e.`companyID`
+							INNER JOIN 	`user` u 
+							ON 			e.`UserID` = u.`UserID` 
+							WHERE 		b.`userID` = UsrID
+							AND 		b.`companyID` = TheCompanyID
+						) 												AS TotalBookingTimeUsed							
+			FROM 		`company` c 
+			JOIN 		`employee` e
+			ON 			e.CompanyID = c.CompanyID 
+			JOIN 		`companyposition` cp 
+			ON 			cp.PositionID = e.PositionID
+			JOIN 		`user` u 
+			ON 			u.userID = e.UserID
+			ORDER BY 	OrderByDate DESC";
 			
 	$result = $pdo->query($sql);
 	$rowNum = $result->rowCount();
@@ -449,7 +472,7 @@ foreach($result AS $row){
 						'email' => $row['email'],
 						'MonthlyBookingTimeUsed' => $MonthlyTimeUsed,
 						'TotalBookingTimeUsed' => $TotalTimeUsed,
-						'startDateTime' => $row['startDateTime']
+						'StartDateTime' => $row['StartDateTime']
 						);
 }
 
