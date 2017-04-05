@@ -36,10 +36,103 @@ if (isset($_POST['action']) and $_POST['action'] == 'Delete')
 	header('Location: .');
 	exit();	
 }
-// If admin wants to see list of employees in a company from the database
-// TO-DO: REDIRECT THIS TO THE EMPLOYEE STUFF
+// If admin wants to see list of employees in the specific company from the database
 if (isset($_POST['action']) AND  $_POST['action'] == 'Employees')
 {
+	include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+
+	$pdo = connect_to_db();
+	
+	$sql = "SELECT 	u.`userID`					AS UsrID,
+					c.`companyID`				AS TheCompanyID,
+					c.`name`					AS CompanyName,
+					u.`firstName`, 
+					u.`lastName`,
+					u.`email`,
+					cp.`name`					AS PositionName, 
+					DATE_FORMAT(e.`startDateTime`,'%d %b %Y %T') 	AS StartDateTime,
+					(
+						SELECT 		SEC_TO_TIME(SUM(TIME_TO_SEC(b.`actualEndDateTime`) - 
+									TIME_TO_SEC(b.`startDateTime`))) 
+						FROM 		`booking` b
+						INNER JOIN `employee` e
+						ON 			b.`userID` = e.`userID`
+						INNER JOIN `company` c
+						ON 			c.`companyID` = e.`companyID`
+						INNER JOIN 	`user` u 
+						ON 			e.`UserID` = u.`UserID` 
+						WHERE 		b.`userID` = UsrID
+						AND 		b.`companyID` = :id
+						AND 		YEAR(b.`actualEndDateTime`) = YEAR(NOW())
+						AND 		MONTH(b.`actualEndDateTime`) = MONTH(NOW())
+					) 							AS MonthlyBookingTimeUsed,
+					(
+						SELECT 		SEC_TO_TIME(SUM(TIME_TO_SEC(b.`actualEndDateTime`) - 
+									TIME_TO_SEC(b.`startDateTime`))) 
+						FROM 		`booking` b
+						INNER JOIN `employee` e
+						ON 			b.`userID` = e.`userID`
+						INNER JOIN `company` c
+						ON 			c.`companyID` = e.`companyID`
+						INNER JOIN 	`user` u 
+						ON 			e.`UserID` = u.`UserID` 
+						WHERE 		b.`userID` = UsrID
+						AND 		b.`companyID` = :id
+					) 							AS TotalBookingTimeUsed							
+			FROM 	`company` c 
+			JOIN 	`employee` e
+			ON 		e.CompanyID = c.CompanyID 
+			JOIN 	`companyposition` cp 
+			ON 		cp.PositionID = e.PositionID
+			JOIN 	`user` u 
+			ON 		u.userID = e.UserID 
+			WHERE 	c.`companyID` = :id";
+			
+	$s = $pdo->prepare($sql);
+	$s->bindValue(':id', $_POST['id']);
+	$s->execute();
+	
+	$result = $s->fetchAll();
+	$rowNum = sizeOf($result);
+	
+	//close connection
+	$pdo = null;
+	
+	
+	// Create an array with the actual key/value pairs we want to use in our HTML	
+	foreach($result AS $row){
+		
+		if($row['MonthlyBookingTimeUsed'] == null){
+			$MonthlyTimeUsed = '00:00:00';
+		} else {
+			$MonthlyTimeUsed = $row['MonthlyBookingTimeUsed'];
+		}
+
+		if($row['TotalBookingTimeUsed'] == null){
+			$TotalTimeUsed = '00:00:00';
+		} else {
+			$TotalTimeUsed = $row['TotalBookingTimeUsed'];
+		}
+		
+		// Create an array with the actual key/value pairs we want to use in our HTML
+		$employees[] = array('CompanyID' => $row['TheCompanyID'], 
+							'UsrID' => $row['UsrID'],
+							'CompanyName' => $row['CompanyName'],
+							'PositionName' => $row['PositionName'],
+							'firstName' => $row['firstName'],
+							'lastName' => $row['lastName'],
+							'email' => $row['email'],
+							'MonthlyBookingTimeUsed' => $MonthlyTimeUsed,
+							'TotalBookingTimeUsed' => $TotalTimeUsed,
+							'StartDateTime' => $row['StartDateTime']
+							);
+	}
+	//TO-DO: MAKE THIS WORK WITH A SESSION LATER? URL ISN'T CHANGED. WE'RE ONLY INCLUDING A TEMPLATE
+	// 		 WE'RE STILL IN "COMPANIES"
+	//$location = "http://$_SERVER[HTTP_HOST]/admin/employees";
+	//echo "location is: $location";
+	//header("Location: $location");
+	include_once $_SERVER['DOCUMENT_ROOT'] . '/admin/employees/employees.html.php';
 	exit();
 }
 

@@ -272,6 +272,36 @@ SELECT 	u.`userID`					AS UsrID,
 				ON 		u.userID = e.UserID 
 				WHERE 	c.`companyID` = 5;
 
+SELECT 	`userID` 	AS UserID,
+						`firstname`,
+						`lastname`,
+						`email`
+				FROM 	`user`
+				WHERE	`isActive` > 0;
+
+SELECT 	`userID` 	AS UserID,
+		`firstname`,
+		`lastname`,
+		`email`
+FROM 	`user`
+WHERE	`isActive` > 0
+AND 	(
+		`firstname` LIKE '%4@test%'
+					OR `lastname` LIKE '%4@test%'
+					OR `email` LIKE '%4@test%'
+		);
+
+SELECT 	`companyID` AS CompanyID, 
+		`name`	AS CompanyName 
+FROM 	`company` 
+WHERE 	`name` 
+LIKE 	'%test%';
+
+
+
+UPDATE `user`
+SET 	`isActive` = 1
+WHERE `userID` <> 0;
 
 SELECT u.`firstname`, u.`lastname`, u.`email`, a.`AccessName`, u.`displayname`, u.`bookingdescription`, u.`create_time` FROM `user` u JOIN `accesslevel` a ON u.AccessID = a.AccessID WHERE `isActive` = 1;
 

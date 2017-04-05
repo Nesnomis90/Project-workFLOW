@@ -44,8 +44,9 @@
 	</head>
 	<body>
 		<h1>Manage Company Employees</h1>
+		<form action="" method="post">
 		<?php if($rowNum>0) :?>
-			<p><a href="?add">Add new employee</a></p>
+			<input type="submit" name="action" value="Add Employee">
 			<table id= "companyemployeestable">
 				<caption>Company Employees</caption>
 				<tr>
@@ -70,7 +71,7 @@
 							<td><?php htmlout($employee['email']); ?></td>						
 							<td><?php htmlout($employee['MonthlyBookingTimeUsed']); ?></td>
 							<td><?php htmlout($employee['TotalBookingTimeUsed']); ?></td>
-							<td><?php htmlout($employee['startDateTime']); ?></td>
+							<td><?php htmlout($employee['StartDateTime']); ?></td>
 							<td><input type="submit" name="action" value="Change Role"></td>
 							<td><input type="submit" name="action" value="Remove"></td>
 							<input type="hidden" name="UserID" value="<?php echo $employee['UsrID']; ?>">
@@ -81,8 +82,10 @@
 			</table>
 		<?php else : ?>
 			<tr><b>There are no employees in this company registered in the database.</b></tr>
+			<tr><input type="submit" name="action" value="Add Employee"></tr>
 			<tr><a href="?add">Add an employee?</a></tr>
 		<?php endif; ?>
+		</form>
 		<p><a href="..">Return to CMS home</a></p>
 	</body>
 </html>

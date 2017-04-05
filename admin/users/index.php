@@ -278,7 +278,7 @@ try
 						a.`AccessName`,
 						u.`displayname`,
 						u.`bookingdescription`,
-						GROUP_CONCAT(CONCAT_WS(' for ', cp.`name`, c.`name`) separator ', ') 	AS WorksFor,
+						GROUP_CONCAT(CONCAT_WS(' in ', cp.`name`, c.`name`) separator ', ') 	AS WorksFor,
 						DATE_FORMAT(u.`create_time`, '%d %b %Y %T') 							AS DateCreated,
 						u.`isActive`,
 						DATE_FORMAT(u.`lastActivity`, '%d %b %Y %T') 							AS LastActive
@@ -292,8 +292,8 @@ try
 			LEFT JOIN 	`accesslevel` a
 			ON 			u.AccessID = a.AccessID
 			GROUP BY 	u.`userID`
-			ORDER BY 	u.`AccessID`
-			ASC";
+			ORDER BY 	u.`userID`
+			DESC";
 	$result = $pdo->query($sql);
 	$rowNum = $result->rowCount();
 

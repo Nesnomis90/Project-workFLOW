@@ -46,7 +46,7 @@
 		<h1>Manage Companies</h1>
 		<?php if($rowNum>0) :?>
 			<p><a href="?add">Add new company</a></p>
-			<table id= "companiestable">
+			<table id="companiestable">
 				<caption>Registered Companies</caption>
 				<tr>
 					<th>Company Name (click for employee list)</th>
