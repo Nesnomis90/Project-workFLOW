@@ -44,8 +44,9 @@
 	</head>
 	<body>
 		<h1>Manage Company Employees</h1>
+		<form action="" method="post">
 		<?php if($rowNum>0) :?>
-			<p><a href="?add">Add new employee</a></p>
+			<input type="submit" name="action" value="Add Employee">
 			<table id= "companyemployeestable">
 				<caption>Company Employees</caption>
 				<tr>
@@ -81,8 +82,10 @@
 			</table>
 		<?php else : ?>
 			<tr><b>There are no employees in this company registered in the database.</b></tr>
+			<tr><input type="submit" name="action" value="Add Employee"></tr>
 			<tr><a href="?add">Add an employee?</a></tr>
 		<?php endif; ?>
+		</form>
 		<p><a href="..">Return to CMS home</a></p>
 	</body>
 </html>
