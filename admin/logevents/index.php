@@ -1,6 +1,15 @@
 <?php
 // This is the Index file for the LOG EVENTS folder
 
+// Include functions
+include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/helpers.inc.php';
+include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/magicquotes.inc.php';
+
+// CHECK IF USER TRYING TO ACCESS THIS IS IN FACT THE ADMIN!
+if (!isUserAdmin()){
+	exit();
+}
+
 // To delete the log event selected by the user
 if (isset($_GET['deletelog'])){
 	try

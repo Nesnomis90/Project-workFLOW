@@ -298,10 +298,21 @@ WHERE 	`name`
 LIKE 	'%test%';
 
 
-
 UPDATE `user`
 SET 	`isActive` = 1
 WHERE `userID` <> 0;
+
+SELECT COUNT(*) 
+FROM `user` u 
+JOIN `accesslevel` a 
+ON u.AccessID = a.AccessID
+WHERE u.email = 'Test@test.com'
+AND a.AccessName = 'Admin';
+
+UPDATE `user`
+SET `password` = 'b79fefe5115d86a696c1c880195591d644a6f6c21e22200b4b7ea0e52700a1e1'
+WHERE `userID` = 1;
+
 
 SELECT u.`firstname`, u.`lastname`, u.`email`, a.`AccessName`, u.`displayname`, u.`bookingdescription`, u.`create_time` FROM `user` u JOIN `accesslevel` a ON u.AccessID = a.AccessID WHERE `isActive` = 1;
 

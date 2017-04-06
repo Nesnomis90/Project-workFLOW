@@ -5,7 +5,11 @@
 include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/helpers.inc.php';
 include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/magicquotes.inc.php';
 
-// Display booking information list
+// CHECK IF USER TRYING TO ACCESS THIS IS IN FACT THE ADMIN!
+if (!isUserAdmin()){
+	exit();
+}
+
 // TO-DO: THIS NEEDS THE EDIT AND EDITFORM CODE SNIPPETS?? OR MAYBE NOT?
 
 // If admin wants to remove a booked meeting from the database

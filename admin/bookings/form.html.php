@@ -89,5 +89,6 @@
 			</div>
 		</form>
 	<p><a href="..">Return to CMS home</a></p>
+	<?php include '../logout.inc.html.php'; ?>
 	</body>
 </html>

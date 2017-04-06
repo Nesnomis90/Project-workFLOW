@@ -5,6 +5,11 @@
 include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/helpers.inc.php';
 include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/magicquotes.inc.php';
 
+// CHECK IF USER TRYING TO ACCESS THIS IS IN FACT THE ADMIN!
+if (!isUserAdmin()){
+	exit();
+}
+
 // If admin wants to remove a meeting room from the database
 // TO-DO: ADD A CONFIRMATION BEFORE ACTUALLY DOING THE DELETION!
 // MAYBE BY TYPING ADMIN PASSWORD AGAIN?

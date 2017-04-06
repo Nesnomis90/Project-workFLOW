@@ -5,6 +5,11 @@
 include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/helpers.inc.php';
 include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/magicquotes.inc.php';
 
+// CHECK IF USER TRYING TO ACCESS THIS IS IN FACT THE ADMIN!
+if (!isUserAdmin()){
+	exit();
+}
+
 // If admin wants to remove equipment from a room
 if(isset($_POST['action']) AND $_POST['action'] == 'Remove'){
 	// Remove room equipment connection from database
