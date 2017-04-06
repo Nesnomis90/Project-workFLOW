@@ -154,7 +154,7 @@ if (isset($_GET['editform']))
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 		$pdo = connect_to_db();
 		$sql = 'UPDATE `meetingroom` SET
-						name = :name,
+						`name` = :name,
 						capacity = :capacity,
 						description = :description,
 						location = :location

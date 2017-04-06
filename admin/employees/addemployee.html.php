@@ -54,6 +54,7 @@
 			<div>
 				<input type="submit" name="action" value="Search">
 				<input type="submit" name="action" value="Confirm Employee">
+				<input type="submit" name="action" value="Cancel">
 				<input type="hidden" name="usersearch" id="usersearch"
 				value="<?php htmlout($usersearchstring) ;?>">
 				<input type="hidden" name="companysearch" id="companysearch"

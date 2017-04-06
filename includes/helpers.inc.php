@@ -83,7 +83,7 @@ function correctDatetimeFormatForBooking($wrongDatetimeString){
 }
 
 // Function to generate a password to be sent to new users
-
+// TO-DO: Make this.
 
 // Function to generate an activation code for new users
 // Result is a 64 char code

@@ -37,15 +37,14 @@ if(isset($_POST['action']) AND $_POST['action'] == 'Remove'){
 }
 
 
-// 	If admin wants to add a company to the database
+// 	If admin wants to add an employee to a company in the database
 // 	we load a new html form
-//	TO-DO: NEED A WAY TO BE ABLE TO SELECT THE USER AND THE COMPANY WE WANT TO MATCH
 if ((isset($_POST['action']) AND $_POST['action'] == 'Add Employee') OR 
 	(isset($_POST['action']) AND $_POST['action'] == 'Search'))
 {	
 	// This is a GOTO label.
 	goToAddEmployee:
-	// Update company position for the employee connection in database
+	// Get info about company position, users and companies from the database
 	try
 	{
 		if (isset($_POST['action']) AND $_POST['action'] == 'Search'){
@@ -157,7 +156,7 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Add Employee') OR
 	}
 	catch (PDOException $e)
 	{
-		$error = 'Error fetching searched user and company list: ' . $e->getMessage();
+		$error = 'Error fetching user and company lists: ' . $e->getMessage();
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
 		$pdo = null;
 		exit();
@@ -172,7 +171,7 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Add Employee') OR
 // we load a new html form
 if (isset($_POST['action']) AND $_POST['action'] == 'Change Role')
 {
-	// Get information from database again on the selected company	
+	// Get information from database again on the selected employee
 	try
 	{
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
@@ -221,7 +220,7 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Change Role')
 	}
 	catch (PDOException $e)
 	{
-		$error = 'Error fetching company details: ' . $e->getMessage();
+		$error = 'Error fetching employee details: ' . $e->getMessage();
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
 		$pdo = null;
 		exit();		
@@ -233,7 +232,7 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Change Role')
 	// Set the correct information
 	$CompanyName = $row['CompanyName'];
 	$UserIdentifier = $row['firstName'] . ' ' . $row['lastName'];
-	$companypositionname = $row['PositionName'];
+	$CurrentCompanyPositionName = $row['PositionName'];
 	$CompanyID = $row['TheCompanyID'];
 	$UserID = $row['UsrID'];
 	
@@ -253,7 +252,6 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Confirm Employee')
 		// We didn't have enough values filled in. "go back" to employee fill in
 		echo "<b>Need to select a user and a company first!</b><br />";
 		goto goToAddEmployee;
-		echo "Does the code ever get here? <br />";
 		exit();
 	} elseif($_POST['CompanyID'] != '' AND $_POST['UserID'] == ''){
 		echo "<b>Need to select a user first!</b><br />";
@@ -299,7 +297,7 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Confirm Employee')
 }
 
 // Perform the actual database update of the edited information
-if (isset($_GET['changerole']))
+if (isset($_POST['action']) AND $_POST['action'] == 'Confirm Role')
 {
 	// Update selected employee connection with a new company position
 	try
@@ -333,6 +331,14 @@ if (isset($_GET['changerole']))
 	exit();
 }
 
+// If the user clicks any cancel buttons he'll be directed back to the employees page again
+if (isset($_POST['action']) AND $_POST['action'] == 'Cancel'){
+	// Doesn't actually need any code to work, since it happends automatically when a submit
+	// occurs. *it* being doing the normal startup code.
+	// Might be useful for something later?
+	echo "<b>Cancel button clicked. Taking you back to /admin/employees/!</b><br />";
+}
+
 // Display employee list
 try
 {
@@ -340,53 +346,6 @@ try
 
 	$pdo = connect_to_db();
 	
-	// This SQL is for an employee list for the specific company	
-	
-/*	$sql = 'SELECT 	u.`userID`					AS UsrID,
-					c.`companyID`				AS CompanyID,
-					c.`name`					AS CompanyName,
-					u.`firstName`, 
-					u.`lastName`,
-					u.`email`,
-					cp.`name`					AS PositionName, 
-					e.`startDateTime`,
-					(
-						SELECT 		SEC_TO_TIME(SUM(TIME_TO_SEC(b.`actualEndDateTime`) - 
-									TIME_TO_SEC(b.`startDateTime`))) 
-						FROM 		`booking` b
-						INNER JOIN `employee` e
-						ON 			b.`userID` = e.`userID`
-						INNER JOIN `company` c
-						ON 			c.`companyID` = e.`companyID`
-						INNER JOIN 	`user` u 
-						ON 			e.`UserID` = u.`UserID` 
-						WHERE 		b.`userID` = UsrID
-						AND 		b.`companyID` = :id
-						AND 		YEAR(b.`actualEndDateTime`) = YEAR(NOW())
-						AND 		MONTH(b.`actualEndDateTime`) = MONTH(NOW())
-					) 							AS MonthlyBookingTimeUsed,
-					(
-						SELECT 		SEC_TO_TIME(SUM(TIME_TO_SEC(b.`actualEndDateTime`) - 
-									TIME_TO_SEC(b.`startDateTime`))) 
-						FROM 		`booking` b
-						INNER JOIN `employee` e
-						ON 			b.`userID` = e.`userID`
-						INNER JOIN `company` c
-						ON 			c.`companyID` = e.`companyID`
-						INNER JOIN 	`user` u 
-						ON 			e.`UserID` = u.`UserID` 
-						WHERE 		b.`userID` = UsrID
-						AND 		b.`companyID` = :id
-					) 							AS TotalBookingTimeUsed							
-			FROM 	`company` c 
-			JOIN 	`employee` e
-			ON 		e.CompanyID = c.CompanyID 
-			JOIN 	`companyposition` cp 
-			ON 		cp.PositionID = e.PositionID
-			JOIN 	`user` u 
-			ON 		u.userID = e.UserID 
-			WHERE 	c.`companyID` = :id'; */
-
 	$sql = "SELECT 		u.`userID`										AS UsrID,
 						c.`companyID`									AS TheCompanyID,
 						c.`name`										AS CompanyName,
