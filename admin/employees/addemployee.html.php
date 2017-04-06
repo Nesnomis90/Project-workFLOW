@@ -10,8 +10,8 @@
 		<h1>Add Employee</h1>
 		<form action="" method="post">
 			<div>
-				<label for=CompanyID>Company name:</label>
-				<select name=CompanyID id=CompanyID>
+				<label for="CompanyID">Company name:</label>
+				<select name="CompanyID" id="CompanyID">
 					<option value="">Select a Company</option>
 					<?php foreach($companies as $row): ?> 
 						<option value=<?php htmlout($row['CompanyID']); ?>>
@@ -21,13 +21,13 @@
 				</select>
 			</div>
 			<div>
-				<label for=companysearchstring>Search for Company:</label>
+				<label for="companysearchstring">Search for Company:</label>
 				<input type="text" name="companysearchstring" 
 				value=<?php htmlout($companysearchstring); ?>>
 			</div>
 			<div>
-				<label for=UserID>User:</label>
-				<select name=UserID id=UserID>
+				<label for="UserID">User:</label>
+				<select name="UserID" id="UserID">
 					<option value="">Select a User</option>
 					<?php foreach($users as $row): ?> 
 						<option value=<?php htmlout($row['UserID']); ?>>
@@ -37,13 +37,13 @@
 				</select>
 			</div>
 			<div>
-				<label for=usersearchstring>Search for User:</label>
+				<label for="usersearchstring">Search for User:</label>
 				<input type="text" name="usersearchstring" 
 				value=<?php htmlout($usersearchstring); ?>>
 			</div>
 			<div>
-				<label for=PositionID>Select Role:</label>
-				<select name=PositionID id=PositionID>
+				<label for="PositionID">Select Role:</label>
+				<select name="PositionID" id="PositionID">
 					<?php foreach($companyposition as $row): ?> 
 						<option value=<?php htmlout($row['PositionID']); ?>>
 								<?php htmlout($row['CompanyPositionName']);?>
@@ -54,6 +54,7 @@
 			<div>
 				<input type="submit" name="action" value="Search">
 				<input type="submit" name="action" value="Confirm Employee">
+				<input type="submit" name="action" value="Cancel">
 				<input type="hidden" name="usersearch" id="usersearch"
 				value="<?php htmlout($usersearchstring) ;?>">
 				<input type="hidden" name="companysearch" id="companysearch"

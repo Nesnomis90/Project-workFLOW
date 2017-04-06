@@ -75,5 +75,6 @@
 			<tr><a href="?add">Create a meeting room!</a></tr>
 		<?php endif; ?>
 		<p><a href="..">Return to CMS home</a></p>
+		<?php include '../logout.inc.html.php'; ?>
 	</body>
 </html>

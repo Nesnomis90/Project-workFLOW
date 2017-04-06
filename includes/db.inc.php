@@ -491,10 +491,11 @@ function create_tables()
 		if (!tableExists($conn, $table))
 		{
 			$conn->exec("CREATE TABLE IF NOT EXISTS `$table` (
-						  `EquipmentID` int(10) unsigned NOT NULL AUTO_INCREMENT,
-						  `name` varchar(255) NOT NULL,
-						  `description` text NOT NULL,
-						  PRIMARY KEY (`EquipmentID`)
+						`EquipmentID` int(10) unsigned NOT NULL AUTO_INCREMENT,
+						`name` varchar(255) NOT NULL,
+						`description` text NOT NULL,
+						`datetimeAdded` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+						PRIMARY KEY (`EquipmentID`)
 						) ENGINE=InnoDB DEFAULT CHARSET=utf8");
 						
 			//	Add the creation to log event
@@ -564,6 +565,7 @@ function create_tables()
 						  `EquipmentID` int(10) unsigned NOT NULL,
 						  `MeetingRoomID` int(10) unsigned NOT NULL,
 						  `amount` tinyint(3) unsigned NOT NULL DEFAULT '1',
+						  `datetimeAdded` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
 						  PRIMARY KEY (`EquipmentID`,`MeetingRoomID`),
 						  KEY `FK_MeetingRoomID_idx` (`MeetingRoomID`),
 						  CONSTRAINT `FK_EquipmentID` FOREIGN KEY (`EquipmentID`) REFERENCES `equipment` (`EquipmentID`) ON DELETE CASCADE ON UPDATE CASCADE,

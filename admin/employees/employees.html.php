@@ -57,7 +57,7 @@
 					<th>Email</th>
 					<th>Booking time used (this month)</th>
 					<th>Booking time used (all time)</th>
-					<th>Added at</th>
+					<th>Added At</th>
 					<th></th>
 					<th></th>
 				</tr>
@@ -81,11 +81,11 @@
 				<?php endforeach; ?>
 			</table>
 		<?php else : ?>
-			<tr><b>There are no employees in this company registered in the database.</b></tr>
+			<tr><b>There are no employees registered in the database.</b></tr>
 			<tr><input type="submit" name="action" value="Add Employee"></tr>
-			<tr><a href="?add">Add an employee?</a></tr>
 		<?php endif; ?>
 		</form>
 		<p><a href="..">Return to CMS home</a></p>
+		<?php include '../logout.inc.html.php'; ?>
 	</body>
 </html>
