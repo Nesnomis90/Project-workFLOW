@@ -84,6 +84,7 @@ CREATE TABLE IF NOT EXISTS `logevent` (
   `bookingID` int(10) unsigned DEFAULT NULL,
   `meetingRoomID` int(10) unsigned DEFAULT NULL,
   `equipmentID` int(10) unsigned DEFAULT NULL,
+  `positionID` int(10) unsigned DEFAULT NULL,
   `sessionID` int(10) unsigned DEFAULT NULL,
   `description` text,
   `logDateTime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -95,11 +96,13 @@ CREATE TABLE IF NOT EXISTS `logevent` (
   KEY `FK_MeetingRoomID3_idx` (`meetingRoomID`),
   KEY `FK_EquipmentID2_idx` (`equipmentID`),
   KEY `FK_SessionID_idx` (`sessionID`),
+  KEY `FK_PositionID2_idx` (`positionID`),
   CONSTRAINT `FK_ActionID` FOREIGN KEY (`actionID`) REFERENCES `logaction` (`actionID`) ON DELETE SET NULL ON UPDATE CASCADE,
   CONSTRAINT `FK_BookingID` FOREIGN KEY (`bookingID`) REFERENCES `booking` (`bookingID`) ON DELETE SET NULL ON UPDATE CASCADE,
   CONSTRAINT `FK_CompanyID2` FOREIGN KEY (`companyID`) REFERENCES `company` (`CompanyID`) ON DELETE SET NULL ON UPDATE CASCADE,
   CONSTRAINT `FK_EquipmentID2` FOREIGN KEY (`equipmentID`) REFERENCES `equipment` (`EquipmentID`) ON DELETE SET NULL ON UPDATE CASCADE,
   CONSTRAINT `FK_MeetingRoomID3` FOREIGN KEY (`meetingRoomID`) REFERENCES `meetingroom` (`meetingRoomID`) ON DELETE SET NULL ON UPDATE CASCADE,
+  CONSTRAINT `FK_PositionID2` FOREIGN KEY (`positionID`) REFERENCES `companyposition` (`PositionID`) ON DELETE SET NULL ON UPDATE CASCADE,
   CONSTRAINT `FK_SessionID` FOREIGN KEY (`sessionID`) REFERENCES `websession` (`sessionID`) ON DELETE SET NULL ON UPDATE CASCADE,
   CONSTRAINT `FK_UserID3` FOREIGN KEY (`userID`) REFERENCES `user` (`userID`) ON DELETE SET NULL ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;

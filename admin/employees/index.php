@@ -69,26 +69,31 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Add Employee') OR
 		// Acknowledge that we have refreshed the form
 		unset($_SESSION['refreshAddEmployee']);
 		
+		// Display the 'error' that made us refresh
 		if(isset($_SESSION['AddEmployeeError'])){
 			$AddEmployeeError = $_SESSION['AddEmployeeError'];
 			unset($_SESSION['AddEmployeeError']);
 		}
 		
+		// Remember the company string that was searched before refreshing
 		if(isset($_SESSION['AddEmployeeCompanySearch'])){
 			$companysearchstring = $_SESSION['AddEmployeeCompanySearch'];
 			unset($_SESSION['AddEmployeeCompanySearch']);
 		}
 		
+		// Remember the user string that was searched before refreshing
 		if(isset($_SESSION['AddEmployeeUserSearch'])){
 			$usersearchstring = $_SESSION['AddEmployeeUserSearch'];
 			unset($_SESSION['AddEmployeeUserSearch']);
 		}
 		
+		// Remember what company was selected before refreshing
 		if(isset($_SESSION['AddEmployeeSelectedCompanyID'])){
 			$selectedCompanyID = $_SESSION['AddEmployeeSelectedCompanyID'];
 			unset($_SESSION['AddEmployeeSelectedCompanyID']);
 		}
 		
+		// Remember what user was selected before refreshing
 		if(isset($_SESSION['AddEmployeeSelectedUserID'])){
 			$selectedUserID = $_SESSION['AddEmployeeSelectedUserID'];
 			unset($_SESSION['AddEmployeeSelectedUserID']);
@@ -369,6 +374,12 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Confirm Employee')
 	{
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 		
+		// Save a description with some extra information to be kept after 
+		// the user or company has been removed
+		$description = 'The user: ' . $_POST['UserIdentifier'] . 
+		' was added to the company: ' . $_POST['CompanyName'] . 
+		' and was given the position: ' . $_POST['CompanyPositionName'];
+		
 		$pdo = connect_to_db();
 		$sql = "INSERT INTO `logevent` 
 				SET			`actionID` = 	(
@@ -376,13 +387,15 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Confirm Employee')
 											FROM `logaction`
 											WHERE `name` = 'Employee Added'
 											),
-							`actionID` = :CompanyID,
+							`companyID` = :CompanyID,
 							`userID` = :UserID,
-							`PositionID` = :PositionID";
+							`positionID` = :PositionID,
+							`description` = :description";
 		$s = $pdo->prepare($sql);
 		$s->bindValue(':CompanyID', $_POST['CompanyID']);
 		$s->bindValue(':UserID', $_POST['UserID']);
 		$s->bindValue(':PositionID', $_POST['PositionID']);		
+		$s->bindValue(':description', $description);
 		$s->execute();
 		
 		//Close the connection
@@ -390,7 +403,10 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Confirm Employee')
 	}
 	catch(PDOException $e)
 	{
-		
+		$error = 'Error adding log event to database: ' . $e->getMessage();
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+		$pdo = null;
+		exit();
 	}
 	
 	// Load employee list webpage with new employee connection
