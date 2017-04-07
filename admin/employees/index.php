@@ -122,6 +122,8 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Add Employee') OR
 									'CompanyPositionDescription' => $row['CompanyPositionDescription']
 									);
 		}
+		
+		$_SESSION['AddEmployeeCompanyPositionArray'] = $companyposition;
 
 		// Get all companies and users so the admin can search/choose from them
 			//Companies
@@ -151,6 +153,8 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Add Employee') OR
 									'CompanyName' => $row['CompanyName']
 									);
 		}
+		
+		$_SESSION['AddEmployeeCompaniesArray'] = $companies;
 		
 			//	Users - Only active ones?
 			// 	TO-DO: Change to allow all users?	
@@ -187,7 +191,9 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Add Employee') OR
 									$row['firstname'] . ' - ' . $row['email']
 									);
 		}
-				
+			
+		$_SESSION['AddEmployeeUsersArray'] = $users;
+			
 		//close connection
 		$pdo = null;
 	}
@@ -372,13 +378,51 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Confirm Employee')
 	// Add a log event that a user was added as an employee in a company
 	try
 	{
-		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+		$userinfo = 'N/A';
+		$companyinfo = 'N/A';
+		$positioninfo = 'N/A';
+		
+		// Get selected user info
+		if(isset($_SESSION['AddEmployeeUsersArray'])){
+			foreach($_SESSION['AddEmployeeUsersArray'] AS $row){
+				if($row['UserID'] == $_POST['UserID']){
+					$userinfo = $row['UserIdentifier'];
+					break;
+				}
+			}
+			unset($_SESSION['AddEmployeeUsersArray']);
+		}
+		
+		// Get selected company name
+		if(isset($_SESSION['AddEmployeeCompaniesArray'])){
+			foreach($_SESSION['AddEmployeeCompaniesArray'] AS $row){
+				if($row['CompanyID'] == $_POST['CompanyID']){
+					$companyinfo = $row['CompanyName'];
+					break;
+				}
+			}
+			unset($_SESSION['AddEmployeeCompaniesArray']);
+		}
+		
+		// Get selected position name
+		if(isset($_SESSION['AddEmployeeCompanyPositionArray'])){
+			foreach($_SESSION['AddEmployeeCompanyPositionArray'] AS $row){
+				if($row['PositionID'] == $_POST['PositionID']){
+					$positioninfo = $row['CompanyPositionName'];
+					break;
+				}
+			}
+			unset($_SESSION['AddEmployeeCompanyPositionArray']);
+		}		
+	
 		
 		// Save a description with some extra information to be kept after 
 		// the user or company has been removed
-		$description = 'The user: ' . $_POST['UserIdentifier'] . 
-		' was added to the company: ' . $_POST['CompanyName'] . 
-		' and was given the position: ' . $_POST['CompanyPositionName'];
+		$description = 'The user: ' . $userinfo . 
+		' was added to the company: ' . $companyinfo . 
+		' and was given the position: ' . $positioninfo;
+		
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 		
 		$pdo = connect_to_db();
 		$sql = "INSERT INTO `logevent` 

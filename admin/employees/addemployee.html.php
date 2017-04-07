@@ -43,7 +43,7 @@
 					<?php foreach($users as $row): ?>
 						<?php if (isset($selectedUserID) AND $selectedUserID == $row['UserID']) : ?>
 							<option selected="selected" value=<?php htmlout($row['UserID']); ?>>
-									<?php htmlout($row['UserIdentifier']);?>
+									<?php htmlout($row['UserIdentifier']);?>>
 							</option>
 						<?php else : ?>
 							<option value=<?php htmlout($row['UserID']); ?>>
