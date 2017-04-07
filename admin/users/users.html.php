@@ -47,7 +47,7 @@
 		<?php if($rowNum>0) :?>
 			<p><a href="?add">Add new user</a></p>
 			<table id= "usertable">
-				<caption>Registered Users</caption>
+				<caption>Activated Users</caption>
 				<tr>
 					<th>First Name</th>
 					<th>Last Name</th>
@@ -76,7 +76,30 @@
 							<td><input type="submit" name="action" value="Edit"></td>
 							<td><input type="submit" name="action" value="Delete"></td>
 							<input type="hidden" name="id" value="<?php echo $user['id']; ?>">
-							<input type="hidden" name="isActive" value="<?php echo $user['isActive']; ?>">
+						</tr>
+					</form>
+				<?php endforeach; ?>
+			</table>
+			<table id="usertable">
+				<caption>Unactivated Users</caption>
+					<tr>
+						<th>First Name</th>
+						<th>Last Name</th>
+						<th>Email</th>
+						<th>Access</th>
+						<th>Date Created</th>
+						<th>Delete User</th>
+					</tr>
+					<?php foreach ($inactiveusers as $user): ?>
+					<form action="" method="post">
+						<tr>
+							<td><?php htmlout($user['firstname']); ?></td>
+							<td><?php htmlout($user['lastname']); ?></td>
+							<td><?php htmlout($user['email']); ?></td>
+							<td><?php htmlout($user['accessname']); ?></td>
+							<td><?php htmlout($user['datecreated']); ?></td>
+							<td><input type="submit" name="action" value="Delete"></td>
+							<input type="hidden" name="id" value="<?php echo $user['id']; ?>">
 						</tr>
 					</form>
 				<?php endforeach; ?>

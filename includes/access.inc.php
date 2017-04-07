@@ -153,6 +153,43 @@ function userHasAccess($access)
 	}
 }
 
+// Function to check if the email submitted already is being used
+function databaseContainsEmail($email)
+{
+	try
+	{
+		include_once 'db.inc.php';
+		$pdo = connect_to_db();
+		$sql = 'SELECT 	COUNT(*) 
+				FROM 	`user`
+				WHERE 	email = :email';
+		$s = $pdo->prepare($sql);
+		$s->bindValue(':email', $email);
+		$s->execute();
+		
+		$pdo = null;
+	}
+	catch (PDOException $e)
+	{
+		$error = 'Error searching for email.';
+		include 'error.html.php';
+		$pdo = null;
+		exit();
+	}
+	
+	$row = $s->fetch();
+	// If we got a hit, then the email exists in our database
+	if ($row[0] > 0)
+	{
+		return TRUE;
+	}
+	else
+	{
+		return FALSE;
+	}
+}
+
+
 // Function to make sure user is Admin
 function isUserAdmin(){
 		// Check if user is logged in

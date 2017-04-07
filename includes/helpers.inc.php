@@ -4,6 +4,7 @@
 
 // Include some salts
 require_once 'salts.inc.php';
+require_once 'access.inc.php';
 
 
 // Function to reduce the amount of typing we need to do, since the only thing

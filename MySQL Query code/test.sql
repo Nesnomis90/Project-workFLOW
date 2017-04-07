@@ -2,6 +2,11 @@ USE test;
 SET NAMES utf8;
 USE meetingflow;
 
+INSERT INTO `logaction` 
+SET 
+`name` = 'Employee Added', 
+`description` = 'The referenced user was given the references position in the referenced company.';
+
 INSERT INTO `booking` SET
 							`meetingRoomID` = 1,
 							`userID` = 1,

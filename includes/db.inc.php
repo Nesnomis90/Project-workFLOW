@@ -78,8 +78,8 @@ function connect_to_db()
 	$pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 	$pdo->exec('SET NAMES "utf8"');
 	
-	$output = "<b>Succesfully connected to database: " . DB_NAME . "</b><br />";
-	include $_SERVER['DOCUMENT_ROOT'] . '/includes/output.html.php';
+	//$output = "<b>Succesfully connected to database: " . DB_NAME . "</b><br />";
+	//include $_SERVER['DOCUMENT_ROOT'] . '/includes/output.html.php';
 	
 	return $pdo; //Return the active connection
 
@@ -180,6 +180,7 @@ function fillLogAction($pdo){
 		$pdo->exec("INSERT INTO `logaction`(`name`,`description`) VALUES ('Database Created','The database we are using right now just got created.')");
 		$pdo->exec("INSERT INTO `logaction`(`name`,`description`) VALUES ('Table Created','A table in the database was created.')");
 		$pdo->exec("INSERT INTO `logaction`(`name`,`description`) VALUES ('Test','This is for testing.')");
+		$pdo->exec("INSERT INTO `logaction`(`name`,`description`) VALUES ('Employee Added', 'The referenced user was given the references position in the referenced company.')");
 		
 		// Commit the transaction
 		$pdo->commit();
@@ -194,7 +195,6 @@ function fillLogAction($pdo){
 			$e->getMessage() . '<br />';
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
 		exit();
-		echo "Error: " . $e->getMessage() . "<br />";
 	}
 }
 

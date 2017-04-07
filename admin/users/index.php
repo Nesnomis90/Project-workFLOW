@@ -44,12 +44,21 @@ if (isset($_POST['action']) and $_POST['action'] == 'Delete')
  
 // If admin wants to add a user to the database
 // we load a new html form
-if (isset($_GET['add']))
+if (isset($_GET['add']) OR (isset($_SESSION['refreshUserAddform']) AND $_SESSION['refreshUserAddform']))
 {	
+	// Check if the call was /?add/ or a forced refresh
+	if(isset($_SESSION['refreshUserAddform']) AND $_SESSION['refreshUserAddform']){
+		// Acknowledge that we have refreshed the form
+		unset($_SESSION['refreshUserAddform']);
+		echo "The submitted email is already in use for a registered account. <br />";
+	}
+	
+	// Get name and IDs for access level
+	// Admin needs to give a new user a specific access.
 	try
 	{
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
-		// Get name and IDs for access level
+
 		$pdo = connect_to_db();
 		$sql = 'SELECT 	`accessID`,
 						`accessname` 
@@ -75,6 +84,13 @@ if (isset($_GET['add']))
 		$pdo = null;
 		exit();		
 	}
+	
+	//Generate password for user
+	$generatedPassword = generateUserPassword(6);
+	echo "We generated a password: <b>$generatedPassword</b><br />";
+	
+	$hashedPassword = hashPassword($generatedPassword);
+	echo "Hashed password: <b>$hashedPassword</b><br />";
 	
 	// Set values to be displayed in HTML
 	$pageTitle = 'New User';
@@ -103,49 +119,62 @@ if (isset($_GET['add']))
 // When admin has added the needed information and wants to add the user
 if (isset($_GET['addform']))
 {
+	
 	// Add the user to the database
-	// TO-DO: Generate password, send password to email, salt/hash password
-	// bind hashedpassword to :password
-	try
-	{
-		//Generate activation code
-		$activationcode = generateActivationCode();
+	// TO-DO: Send password and activation link to email
+	
+	// Check if the submitted email has already been used
+	$email = $_POST['email'];
+	if (databaseContainsEmail($email)){
+		// The email has been used before. So we can't create a new user with this info.
+		// TO-DO: Do something that lets admin know that the email has already been used
+		// and that's why nothing happends.
 		
-		//Generate password for user
-		$generatedPassword = generateUserPassword(6);
-		echo "We generated a password: <b>$generatedPassword</b><br />"
-		$hashedPassword = hashPassword($generatedPassword);
-		echo "The hashed version is password: <b>$hashedPassword</b><br />"	
+		$_SESSION['refreshUserAddform'] = TRUE;
+		echo "A user with this email already exists in our database.";
 		
-		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
-		
-		$pdo = connect_to_db();
-		$sql = 'INSERT INTO `user` 
-				SET			`firstname` = :firstname,
-							`lastname` = :lastname,
-							`accessID` = :accessID,
-							`password` = :password,
-							`activationcode` = :activationcode,
-							`email` = :email';
-		$s = $pdo->prepare($sql);
-		$s->bindValue(':firstname', $_POST['firstname']);
-		$s->bindValue(':lastname', $_POST['lastname']);		
-		$s->bindValue(':accessID', $_POST['accessID']);
-		$s->bindValue(':password', $hashedPassword);
-		$s->bindValue(':activationcode', $activationcode);
-		$s->bindValue(':email', $_POST['email']);
-		$s->execute();
-		
-		//Close the connection
-		$pdo = null;
+	} else {
+		// The email has NOT been used before, so we can create the new user!
+		try
+		{
+			//Generate activation code
+			$activationcode = generateActivationCode();
+			
+			// Hash the user generated password
+			$hashedPassword = $_POST['hashedPassword'];
+			echo "The hashed version is password: <b>$hashedPassword</b><br />";	
+			
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+			
+			$pdo = connect_to_db();
+			$sql = 'INSERT INTO `user` 
+					SET			`firstname` = :firstname,
+								`lastname` = :lastname,
+								`accessID` = :accessID,
+								`password` = :password,
+								`activationcode` = :activationcode,
+								`email` = :email';
+			$s = $pdo->prepare($sql);
+			$s->bindValue(':firstname', $_POST['firstname']);
+			$s->bindValue(':lastname', $_POST['lastname']);		
+			$s->bindValue(':accessID', $_POST['accessID']);
+			$s->bindValue(':password', $hashedPassword);
+			$s->bindValue(':activationcode', $activationcode);
+			$s->bindValue(':email', $_POST['email']);
+			$s->execute();
+			
+			//Close the connection
+			$pdo = null;
+		}
+		catch (PDOException $e)
+		{
+			$error = 'Error adding submitted user to database: ' . $e->getMessage();
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+			$pdo = null;
+			exit();
+		}
 	}
-	catch (PDOException $e)
-	{
-		$error = 'Error adding submitted user to database: ' . $e->getMessage();
-		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
-		$pdo = null;
-		exit();
-	}
+
 	
 	// Load user list webpage with new user
 	header('Location: .');
@@ -301,9 +330,6 @@ if (isset($_GET['editform']))
 		exit();
 	}
 	
-	// Check if 
-	
-	
 	// Load user list webpage with updated database
 	header('Location: .');
 	exit();
@@ -354,18 +380,28 @@ catch (PDOException $e)
 // Create an array with the actual key/value pairs we want to use in our HTML
 foreach ($result as $row)
 {
-	$users[] = array('id' => $row['userID'], 
-					'firstname' => $row['firstname'],
-					'lastname' => $row['lastname'],
-					'email' => $row['email'],
-					'accessname' => $row['AccessName'],
-					'displayname' => $row['displayname'],
-					'bookingdescription' => $row['bookingdescription'],
-					'worksfor' => $row['WorksFor'],
-					'datecreated' => $row['DateCreated'],
-					'isActive' => $row['isActive'],					
-					'lastactive' => $row['LastActive']
-					);
+	// If user has activated the account
+	if($row['isActive'] == 1){
+		$users[] = array('id' => $row['userID'], 
+						'firstname' => $row['firstname'],
+						'lastname' => $row['lastname'],
+						'email' => $row['email'],
+						'accessname' => $row['AccessName'],
+						'displayname' => $row['displayname'],
+						'bookingdescription' => $row['bookingdescription'],
+						'worksfor' => $row['WorksFor'],
+						'datecreated' => $row['DateCreated'],			
+						'lastactive' => $row['LastActive']
+						);
+	} elseif ($row['isActive'] == 0) {
+		$inactiveusers[] = array('id' => $row['userID'], 
+				'firstname' => $row['firstname'],
+				'lastname' => $row['lastname'],
+				'email' => $row['email'],
+				'accessname' => $row['AccessName'],
+				'datecreated' => $row['DateCreated']
+				);
+	}
 }
 
 // Create the registered users list in HTML

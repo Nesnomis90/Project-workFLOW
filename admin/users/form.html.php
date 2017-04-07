@@ -36,12 +36,14 @@
 					value="<?php htmlout($email); ?>">
 				</label>
 			</div>
-			<?php if($action == addform) : ?>
+			<?php if($action == 'addform') : ?>
 				<div>
 					<label for="password">Generated Password:</label>
 					<p><?php htmlout($generatedPassword); ?></p>
+					<input type="hidden" name="hashedPassword" id="hashedPassword"
+					value="<?php htmlout($hashedPassword); ?>">
 				</div>
-			<?php elseif($action == editform) : ?>
+			<?php elseif($action == 'editform') : ?>
 				<div>
 					<label for="password">Set new Password:</label>
 					<input type="password" name="password" id="password">
