@@ -78,8 +78,8 @@ function connect_to_db()
 	$pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 	$pdo->exec('SET NAMES "utf8"');
 	
-	$output = "<b>Succesfully connected to database: " . DB_NAME . "</b><br />";
-	include $_SERVER['DOCUMENT_ROOT'] . '/includes/output.html.php';
+	//$output = "<b>Succesfully connected to database: " . DB_NAME . "</b><br />";
+	//include $_SERVER['DOCUMENT_ROOT'] . '/includes/output.html.php';
 	
 	return $pdo; //Return the active connection
 
@@ -180,6 +180,7 @@ function fillLogAction($pdo){
 		$pdo->exec("INSERT INTO `logaction`(`name`,`description`) VALUES ('Database Created','The database we are using right now just got created.')");
 		$pdo->exec("INSERT INTO `logaction`(`name`,`description`) VALUES ('Table Created','A table in the database was created.')");
 		$pdo->exec("INSERT INTO `logaction`(`name`,`description`) VALUES ('Test','This is for testing.')");
+		$pdo->exec("INSERT INTO `logaction`(`name`,`description`) VALUES ('Employee Added', 'The referenced user was given the references position in the referenced company.')");
 		
 		// Commit the transaction
 		$pdo->commit();
@@ -194,7 +195,6 @@ function fillLogAction($pdo){
 			$e->getMessage() . '<br />';
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
 		exit();
-		echo "Error: " . $e->getMessage() . "<br />";
 	}
 }
 
@@ -624,6 +624,7 @@ function create_tables()
 						  `bookingID` int(10) unsigned DEFAULT NULL,
 						  `meetingRoomID` int(10) unsigned DEFAULT NULL,
 						  `equipmentID` int(10) unsigned DEFAULT NULL,
+						  `positionID` int(10) unsigned DEFAULT NULL,
 						  `sessionID` int(10) unsigned DEFAULT NULL,
 						  `description` text,
 						  `logDateTime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -635,11 +636,13 @@ function create_tables()
 						  KEY `FK_MeetingRoomID3_idx` (`meetingRoomID`),
 						  KEY `FK_EquipmentID2_idx` (`equipmentID`),
 						  KEY `FK_SessionID_idx` (`sessionID`),
+						  KEY `FK_PositionID2_idx` (`positionID`),
 						  CONSTRAINT `FK_ActionID` FOREIGN KEY (`actionID`) REFERENCES `logaction` (`actionID`) ON DELETE SET NULL ON UPDATE CASCADE,
 						  CONSTRAINT `FK_BookingID` FOREIGN KEY (`bookingID`) REFERENCES `booking` (`bookingID`) ON DELETE SET NULL ON UPDATE CASCADE,
 						  CONSTRAINT `FK_CompanyID2` FOREIGN KEY (`companyID`) REFERENCES `company` (`CompanyID`) ON DELETE SET NULL ON UPDATE CASCADE,
 						  CONSTRAINT `FK_EquipmentID2` FOREIGN KEY (`equipmentID`) REFERENCES `equipment` (`EquipmentID`) ON DELETE SET NULL ON UPDATE CASCADE,
 						  CONSTRAINT `FK_MeetingRoomID3` FOREIGN KEY (`meetingRoomID`) REFERENCES `meetingroom` (`meetingRoomID`) ON DELETE SET NULL ON UPDATE CASCADE,
+						  CONSTRAINT `FK_PositionID2` FOREIGN KEY (`positionID`) REFERENCES `companyposition` (`PositionID`) ON DELETE SET NULL ON UPDATE CASCADE,
 						  CONSTRAINT `FK_SessionID` FOREIGN KEY (`sessionID`) REFERENCES `websession` (`sessionID`) ON DELETE SET NULL ON UPDATE CASCADE,
 						  CONSTRAINT `FK_UserID3` FOREIGN KEY (`userID`) REFERENCES `user` (`userID`) ON DELETE SET NULL ON UPDATE CASCADE
 						) ENGINE=InnoDB DEFAULT CHARSET=utf8");

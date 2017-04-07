@@ -8,15 +8,26 @@
 	</head>
 	<body>
 		<h1>Add Employee</h1>
+		<?php if(isset($AddEmployeeError)) :?>
+			<div>
+				<p><b><?php htmlout($AddEmployeeError); ?> </b></p>
+			</div>
+		<?php endif; ?>
 		<form action="" method="post">
 			<div>
 				<label for="CompanyID">Company name:</label>
 				<select name="CompanyID" id="CompanyID">
 					<option value="">Select a Company</option>
 					<?php foreach($companies as $row): ?> 
-						<option value=<?php htmlout($row['CompanyID']); ?>>
-								<?php htmlout($row['CompanyName']);?>
-						</option>
+						<?php if (isset($selectedCompanyID) AND $selectedCompanyID == $row['CompanyID']) : ?>
+							<option selected="selected" value=<?php htmlout($row['CompanyID']); ?>>
+									<?php htmlout($row['CompanyName']);?>
+							</option>
+						<?php else : ?>
+							<option value=<?php htmlout($row['CompanyID']); ?>>
+									<?php htmlout($row['CompanyName']);?>
+							</option>
+						<?php endif; ?>					
 					<?php endforeach; ?>
 				</select>
 			</div>
@@ -29,10 +40,16 @@
 				<label for="UserID">User:</label>
 				<select name="UserID" id="UserID">
 					<option value="">Select a User</option>
-					<?php foreach($users as $row): ?> 
-						<option value=<?php htmlout($row['UserID']); ?>>
-								<?php htmlout($row['UserIdentifier']);?>
-						</option>
+					<?php foreach($users as $row): ?>
+						<?php if (isset($selectedUserID) AND $selectedUserID == $row['UserID']) : ?>
+							<option selected="selected" value=<?php htmlout($row['UserID']); ?>>
+									<?php htmlout($row['UserIdentifier']);?>>
+							</option>
+						<?php else : ?>
+							<option value=<?php htmlout($row['UserID']); ?>>
+									<?php htmlout($row['UserIdentifier']);?>
+							</option>
+						<?php endif; ?>
 					<?php endforeach; ?>
 				</select>
 			</div>
@@ -55,10 +72,6 @@
 				<input type="submit" name="action" value="Search">
 				<input type="submit" name="action" value="Confirm Employee">
 				<input type="submit" name="action" value="Cancel">
-				<input type="hidden" name="usersearch" id="usersearch"
-				value="<?php htmlout($usersearchstring) ;?>">
-				<input type="hidden" name="companysearch" id="companysearch"
-				value="<?php htmlout($companysearchstring) ;?>">
 			</div>
 			<div>
 				<input type="reset">

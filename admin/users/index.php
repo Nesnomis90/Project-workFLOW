@@ -44,12 +44,21 @@ if (isset($_POST['action']) and $_POST['action'] == 'Delete')
  
 // If admin wants to add a user to the database
 // we load a new html form
-if (isset($_GET['add']))
+if (isset($_GET['add']) OR (isset($_SESSION['refreshUserAddform']) AND $_SESSION['refreshUserAddform']))
 {	
+	// Check if the call was /?add/ or a forced refresh
+	if(isset($_SESSION['refreshUserAddform']) AND $_SESSION['refreshUserAddform']){
+		// Acknowledge that we have refreshed the form
+		unset($_SESSION['refreshUserAddform']);
+		echo "The submitted email is already in use for a registered account. <br />";
+	}
+	
+	// Get name and IDs for access level
+	// Admin needs to give a new user a specific access.
 	try
 	{
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
-		// Get name and IDs for access level
+
 		$pdo = connect_to_db();
 		$sql = 'SELECT 	`accessID`,
 						`accessname` 
@@ -76,6 +85,13 @@ if (isset($_GET['add']))
 		exit();		
 	}
 	
+	//Generate password for user
+	$generatedPassword = generateUserPassword(6);
+	echo "We generated a password: <b>$generatedPassword</b><br />";
+	
+	$hashedPassword = hashPassword($generatedPassword);
+	echo "Hashed password: <b>$hashedPassword</b><br />";
+	
 	// Set values to be displayed in HTML
 	$pageTitle = 'New User';
 	$action = 'addform';
@@ -97,6 +113,71 @@ if (isset($_GET['add']))
 	
 	// Change to the actual html form template
 	include 'form.html.php';
+	exit();
+}
+
+// When admin has added the needed information and wants to add the user
+if (isset($_GET['addform']))
+{
+	
+	// Add the user to the database
+	// TO-DO: Send password and activation link to email
+	
+	// Check if the submitted email has already been used
+	$email = $_POST['email'];
+	if (databaseContainsEmail($email)){
+		// The email has been used before. So we can't create a new user with this info.
+		// TO-DO: Do something that lets admin know that the email has already been used
+		// and that's why nothing happends.
+		
+		$_SESSION['refreshUserAddform'] = TRUE;
+		echo "A user with this email already exists in our database.";
+		
+	} else {
+		// The email has NOT been used before, so we can create the new user!
+		try
+		{
+			//Generate activation code
+			$activationcode = generateActivationCode();
+			
+			// Hash the user generated password
+			$hashedPassword = $_POST['hashedPassword'];
+			echo "The hashed version is password: <b>$hashedPassword</b><br />";	
+			
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+			
+			$pdo = connect_to_db();
+			$sql = 'INSERT INTO `user` 
+					SET			`firstname` = :firstname,
+								`lastname` = :lastname,
+								`accessID` = :accessID,
+								`password` = :password,
+								`activationcode` = :activationcode,
+								`email` = :email';
+			$s = $pdo->prepare($sql);
+			$s->bindValue(':firstname', $_POST['firstname']);
+			$s->bindValue(':lastname', $_POST['lastname']);		
+			$s->bindValue(':accessID', $_POST['accessID']);
+			$s->bindValue(':password', $hashedPassword);
+			$s->bindValue(':activationcode', $activationcode);
+			$s->bindValue(':email', $_POST['email']);
+			$s->execute();
+			
+			//Close the connection
+			$pdo = null;
+		}
+		catch (PDOException $e)
+		{
+			$error = 'Error adding submitted user to database: ' . $e->getMessage();
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+			$pdo = null;
+			exit();
+		}
+	}
+
+	
+	// Load user list webpage with new user
+	header('Location: .');
 	exit();
 }
 
@@ -178,82 +259,65 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Edit')
 	exit();
 }
 
-// When admin has added the needed information and wants to add the user
-if (isset($_GET['addform']))
-{
-	// Add the user to the database
-	// TO-DO: Generate password, send password to email, salt/hash password
-	// bind hashedpassword to :password
-	try
-	{
-		//Generate activation code
-		$activationcode = generateActivationCode();
-		//TO-DO: Remove echo statement when testing is over
-		echo 'activation code we generated on addform: ' . $activationcode . '<br />';
-		
-		//Generate password for user
-		//TO-DO: ADD THE ACTUAL PASSWORD GENERATOR. JUST USING ACTIVATION CODE TO GET A 64 CHAR
-		$hashedPassword = generateActivationCode();
-		
-		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
-		
-		$pdo = connect_to_db();
-		$sql = 'INSERT INTO `user` 
-				SET			`firstname` = :firstname,
-							`lastname` = :lastname,
-							`accessID` = :accessID,
-							`password` = :password,
-							`activationcode` = :activationcode,
-							`email` = :email';
-		$s = $pdo->prepare($sql);
-		$s->bindValue(':firstname', $_POST['firstname']);
-		$s->bindValue(':lastname', $_POST['lastname']);		
-		$s->bindValue(':accessID', $_POST['accessID']);
-		$s->bindValue(':password', $hashedPassword);
-		$s->bindValue(':activationcode', $activationcode);
-		$s->bindValue(':email', $_POST['email']);
-		$s->execute();
-		
-		//Close the connection
-		$pdo = null;
-	}
-	catch (PDOException $e)
-	{
-		$error = 'Error adding submitted user to database: ' . $e->getMessage();
-		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
-		$pdo = null;
-		exit();
-	}
-	
-	// Load user list webpage with new user
-	header('Location: .');
-	exit();
-}
-
 // Perform the actual database update of the edited information
 if (isset($_GET['editform']))
 {
 	try
 	{
-		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
-		$pdo = connect_to_db();
-		$sql = 'UPDATE `user` SET
-						firstname = :firstname,
-						lastname = :lastname,
-						email = :email,
-						accessID = :accessID,
-						displayname = :displayname,
-						bookingdescription = :bookingdescription
-				WHERE 	userID = :id';
-		$s = $pdo->prepare($sql);
-		$s->bindValue(':id', $_POST['id']);
-		$s->bindValue(':firstname', $_POST['firstname']);
-		$s->bindValue(':lastname', $_POST['lastname']);
-		$s->bindValue(':email', $_POST['email']);
-		$s->bindValue(':accessID', $_POST['accessID']);
-		$s->bindValue(':displayname', $_POST['displayname']);
-		$s->bindValue(':bookingdescription', $_POST['bookingdescription']);
-		$s->execute();
+		if ($_POST['password'] != ''){
+			// Update user info (new password)
+			$newPassword = $_POST['password'];
+			echo "Set new password as: $newPassword <br />";
+			$hashedNewPassword = hashPassword($newPassword);
+			echo "Which is hashed as: $hashedNewPassword <br />";
+			
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+			$pdo = connect_to_db();
+			$sql = 'UPDATE `user` SET
+							firstname = :firstname,
+							lastname = :lastname,
+							email = :email,
+							password = :password,
+							accessID = :accessID,
+							displayname = :displayname,
+							bookingdescription = :bookingdescription
+					WHERE 	userID = :id';
+					
+			$s = $pdo->prepare($sql);
+			$s->bindValue(':id', $_POST['id']);
+			$s->bindValue(':firstname', $_POST['firstname']);
+			$s->bindValue(':lastname', $_POST['lastname']);
+			$s->bindValue(':email', $_POST['email']);
+			$s->bindValue(':password', $hashedNewPassword);
+			$s->bindValue(':accessID', $_POST['accessID']);
+			$s->bindValue(':displayname', $_POST['displayname']);
+			$s->bindValue(':bookingdescription', $_POST['bookingdescription']);
+			$s->execute();			
+		} else {
+			// Update user info (no new password)
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+			$pdo = connect_to_db();
+			$sql = 'UPDATE `user` SET
+							firstname = :firstname,
+							lastname = :lastname,
+							email = :email,
+							accessID = :accessID,
+							displayname = :displayname,
+							bookingdescription = :bookingdescription
+					WHERE 	userID = :id';
+					
+			$s = $pdo->prepare($sql);
+			$s->bindValue(':id', $_POST['id']);
+			$s->bindValue(':firstname', $_POST['firstname']);
+			$s->bindValue(':lastname', $_POST['lastname']);
+			$s->bindValue(':email', $_POST['email']);
+			$s->bindValue(':accessID', $_POST['accessID']);
+			$s->bindValue(':displayname', $_POST['displayname']);
+			$s->bindValue(':bookingdescription', $_POST['bookingdescription']);
+			$s->execute();	
+		}
+		
+
 		
 		// Close the connection
 		$pdo = Null;
@@ -316,18 +380,28 @@ catch (PDOException $e)
 // Create an array with the actual key/value pairs we want to use in our HTML
 foreach ($result as $row)
 {
-	$users[] = array('id' => $row['userID'], 
-					'firstname' => $row['firstname'],
-					'lastname' => $row['lastname'],
-					'email' => $row['email'],
-					'accessname' => $row['AccessName'],
-					'displayname' => $row['displayname'],
-					'bookingdescription' => $row['bookingdescription'],
-					'worksfor' => $row['WorksFor'],
-					'datecreated' => $row['DateCreated'],
-					'isActive' => $row['isActive'],					
-					'lastactive' => $row['LastActive']
-					);
+	// If user has activated the account
+	if($row['isActive'] == 1){
+		$users[] = array('id' => $row['userID'], 
+						'firstname' => $row['firstname'],
+						'lastname' => $row['lastname'],
+						'email' => $row['email'],
+						'accessname' => $row['AccessName'],
+						'displayname' => $row['displayname'],
+						'bookingdescription' => $row['bookingdescription'],
+						'worksfor' => $row['WorksFor'],
+						'datecreated' => $row['DateCreated'],			
+						'lastactive' => $row['LastActive']
+						);
+	} elseif ($row['isActive'] == 0) {
+		$inactiveusers[] = array('id' => $row['userID'], 
+				'firstname' => $row['firstname'],
+				'lastname' => $row['lastname'],
+				'email' => $row['email'],
+				'accessname' => $row['AccessName'],
+				'datecreated' => $row['DateCreated']
+				);
+	}
 }
 
 // Create the registered users list in HTML

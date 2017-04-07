@@ -4,6 +4,13 @@
 // Constants used to salt passwords
 require_once 'salts.inc.php';
 
+// Function to salt and hash passwords
+function hashPassword($rawPassword){
+	$SaltedPassword = $rawPassword . PW_SALT;
+	$HashedPassword = hash('sha256', $SaltedPassword);
+	return $HashedPassword;
+}
+
 // returns TRUE if user is logged in
 function userIsLoggedIn()
 {
@@ -15,15 +22,13 @@ function userIsLoggedIn()
 		!isset($_POST['password']) or $_POST['password'] == '')
 		{
 			$GLOBALS['loginError'] = 'Please fill in both fields';
-			echo "loginError should display 'Please fill in both fields' <br />";
 			return FALSE;
 		}
 		
 		// User has filled in both fields, check if login details are correct
 			// Add our custom password salt and compare the finished hash to the database
 		$SubmittedPassword = $_POST['password'];
-		$SaltedPassword = $SubmittedPassword . PW_SALT;
-		$password = hash('sha256', $SaltedPassword);
+		$password = hashPassword($SubmittedPassword);
 		if (databaseContainsUser($_POST['email'], $password))
 		{
 			// Correct log in info! Start a new session for the user
@@ -108,7 +113,7 @@ function databaseContainsUser($email, $password)
 }
 
 // Check if user has the specific access we're looking for
-function userHasRole($access)
+function userHasAccess($access)
 {
 	try
 	{
@@ -146,5 +151,82 @@ function userHasRole($access)
 		// User does NOT have the access needed.
 		return FALSE;
 	}
+}
+
+// Function to check if the email submitted already is being used
+function databaseContainsEmail($email)
+{
+	try
+	{
+		include_once 'db.inc.php';
+		$pdo = connect_to_db();
+		$sql = 'SELECT 	COUNT(*) 
+				FROM 	`user`
+				WHERE 	email = :email';
+		$s = $pdo->prepare($sql);
+		$s->bindValue(':email', $email);
+		$s->execute();
+		
+		$pdo = null;
+	}
+	catch (PDOException $e)
+	{
+		$error = 'Error searching for email.';
+		include 'error.html.php';
+		$pdo = null;
+		exit();
+	}
+	
+	$row = $s->fetch();
+	// If we got a hit, then the email exists in our database
+	if ($row[0] > 0)
+	{
+		return TRUE;
+	}
+	else
+	{
+		return FALSE;
+	}
+}
+
+
+// Function to make sure user is Admin
+function isUserAdmin(){
+		// Check if user is logged in
+	if (!userIsLoggedIn())
+	{
+		// Not logged in. Send user a login prompt.
+		include '../login.html.php';
+		exit();
+	}
+		// Check if has Admin access
+	if (!userHasAccess('Admin'))
+	{
+		// User is NOT ADMIN.
+		$error = 'Only Admin may access this page.';
+		include '../accessdenied.html.php';
+		return false;
+	}
+	return true;
+}
+
+// Function to make sure user is In-House User
+function isUserInHouseUser(){
+		// Check if user is logged in
+	if (!userIsLoggedIn())
+	{
+		// Not logged in. Send user a login prompt.
+		include '../login.html.php';
+		exit();
+	}
+
+	if (!userHasAccess('In-House User'))
+	{
+		// User is NOT IN-HOUSE USER.
+		$error = 'Only In-House Users can access this page.';
+		include '../accessdenied.html.php';
+		return false;
+	}
+	return true;
 }
 ?>

@@ -10,7 +10,6 @@ if (!isUserAdmin()){
 	exit();
 }
 
-
 // If admin wants to remove an employee from the selected company
 if(isset($_POST['action']) AND $_POST['action'] == 'Remove'){
 	// Remove employee connection in database
@@ -42,26 +41,68 @@ if(isset($_POST['action']) AND $_POST['action'] == 'Remove'){
 	exit();	
 }
 
+if(isset($_POST['action']) AND $_POST['action'] == 'Search'){
+	// Admin clicked the search button, trying to limit the shown company and user lists
+	// Let's remember what was searched for
+	$_SESSION['AddEmployeeCompanySearch'] = $_POST['companysearchstring'];
+	$_SESSION['AddEmployeeUserSearch'] = $_POST['usersearchstring'];
+	$_SESSION['AddEmployeeSelectedCompanyID'] = $_POST['CompanyID'];
+	$_SESSION['AddEmployeeSelectedUserID'] = $_POST['UserID'];
+	
+	// Also we want to refresh AddEmployee with our new values!
+	$_SESSION['refreshAddEmployee'] = TRUE;
+	header('Location: .');
+	exit();
+}
 
 // 	If admin wants to add an employee to a company in the database
 // 	we load a new html form
 if ((isset($_POST['action']) AND $_POST['action'] == 'Add Employee') OR 
-	(isset($_POST['action']) AND $_POST['action'] == 'Search'))
+	(isset($_SESSION['refreshAddEmployee']) AND $_SESSION['refreshAddEmployee']))
 {	
-	// This is a GOTO label.
-	goToAddEmployee:
-	// Get info about company position, users and companies from the database
-	try
-	{
-		if (isset($_POST['action']) AND $_POST['action'] == 'Search'){
-			$usersearchstring = $_POST['usersearchstring'];
-			$companysearchstring = $_POST['companysearchstring'];
-			echo "Search button clicked <br />";
-		} else {
-			$usersearchstring = '';
-			$companysearchstring = '';
+
+	$companysearchstring = '';			
+	$usersearchstring = '';
+
+	// Check if the call was a form submit or a forced refresh
+	if(isset($_SESSION['refreshAddEmployee']) AND $_SESSION['refreshAddEmployee']){
+		// Acknowledge that we have refreshed the form
+		unset($_SESSION['refreshAddEmployee']);
+		
+		// Display the 'error' that made us refresh
+		if(isset($_SESSION['AddEmployeeError'])){
+			$AddEmployeeError = $_SESSION['AddEmployeeError'];
+			unset($_SESSION['AddEmployeeError']);
 		}
 		
+		// Remember the company string that was searched before refreshing
+		if(isset($_SESSION['AddEmployeeCompanySearch'])){
+			$companysearchstring = $_SESSION['AddEmployeeCompanySearch'];
+			unset($_SESSION['AddEmployeeCompanySearch']);
+		}
+		
+		// Remember the user string that was searched before refreshing
+		if(isset($_SESSION['AddEmployeeUserSearch'])){
+			$usersearchstring = $_SESSION['AddEmployeeUserSearch'];
+			unset($_SESSION['AddEmployeeUserSearch']);
+		}
+		
+		// Remember what company was selected before refreshing
+		if(isset($_SESSION['AddEmployeeSelectedCompanyID'])){
+			$selectedCompanyID = $_SESSION['AddEmployeeSelectedCompanyID'];
+			unset($_SESSION['AddEmployeeSelectedCompanyID']);
+		}
+		
+		// Remember what user was selected before refreshing
+		if(isset($_SESSION['AddEmployeeSelectedUserID'])){
+			$selectedUserID = $_SESSION['AddEmployeeSelectedUserID'];
+			unset($_SESSION['AddEmployeeSelectedUserID']);
+		}		
+	}
+
+	// Get info about company position, users and companies from the database
+	try
+	{	
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 		
 		// Get name and IDs for company position
@@ -81,6 +122,8 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Add Employee') OR
 									'CompanyPositionDescription' => $row['CompanyPositionDescription']
 									);
 		}
+		
+		$_SESSION['AddEmployeeCompanyPositionArray'] = $companyposition;
 
 		// Get all companies and users so the admin can search/choose from them
 			//Companies
@@ -88,7 +131,6 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Add Employee') OR
 						`name`		AS CompanyName
 				FROM 	`company`';
 				
-		echo "companysearchstring is: $companysearchstring <br />";
 		if ($companysearchstring != ''){
 			$sqladd = " WHERE `name` LIKE :search";
 			$sql = $sql . $sqladd;	
@@ -99,12 +141,9 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Add Employee') OR
 			$s->bindValue(':search', $finalcompanysearchstring);
 			$s->execute();
 			$result = $s->fetchAll();
-			echo "Size of result: " . sizeOf($result) . "<br />";
 		} else {
 			$result = $pdo->query($sql);
-			echo "Size of result: " . sizeOf($result) . "<br />";
 		}
-		echo "Company SQL is: $sql <br />";
 			
 		// Get the rows of information from the query
 		// This will be used to create a dropdown list in HTML
@@ -115,6 +154,8 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Add Employee') OR
 									);
 		}
 		
+		$_SESSION['AddEmployeeCompaniesArray'] = $companies;
+		
 			//	Users - Only active ones?
 			// 	TO-DO: Change to allow all users?	
 		$sql = "SELECT 	`userID` 	AS UserID,
@@ -124,7 +165,6 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Add Employee') OR
 				FROM 	`user`
 				WHERE	`isActive` > 0";
 
-		echo "usersearchstring is: $usersearchstring <br />";
 		if ($usersearchstring != ''){
 			$sqladd = " AND (`firstname` LIKE :search
 						OR `lastname` LIKE :search
@@ -137,16 +177,11 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Add Employee') OR
 			$s->bindValue(":search", $finalusersearchstring);
 			$s->execute();
 			$result = $s->fetchAll();
-			echo "Size of result: " . sizeOf($result) . "<br />";
 			
 		} else {
 			$result = $pdo->query($sql);
-			echo "Size of result: " . sizeOf($result) . "<br />";
 		}
-		echo "User SQL is: $sql <br />";
-		
-
-		
+			
 		// Get the rows of information from the query
 		// This will be used to create a dropdown list in HTML
 		foreach($result as $row){
@@ -156,7 +191,9 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Add Employee') OR
 									$row['firstname'] . ' - ' . $row['email']
 									);
 		}
-				
+			
+		$_SESSION['AddEmployeeUsersArray'] = $users;
+			
 		//close connection
 		$pdo = null;
 	}
@@ -251,25 +288,66 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Change Role')
 if (isset($_POST['action']) AND $_POST['action'] == 'Confirm Employee')
 {
 	// Make sure we only do this if user filled out all values
-	// TO-DO:   GOTO is a bad practice. Find a solution?
-	// 			THIS IS ONLY NEEDED AS LONG AS WE DON'T HAVE ANY
-	// 			REQUIRED ATTRIBUTES ON THE SELECT FIELDS
 	if($_POST['CompanyID'] == '' AND $_POST['UserID'] == ''){
 		// We didn't have enough values filled in. "go back" to employee fill in
-		echo "<b>Need to select a user and a company first!</b><br />";
-		goto goToAddEmployee;
+		$_SESSION['refreshAddEmployee'] = TRUE;
+		$_SESSION['AddEmployeeError'] = "Need to select a user and a company first!";
+		header('Location: .');
 		exit();
 	} elseif($_POST['CompanyID'] != '' AND $_POST['UserID'] == ''){
-		echo "<b>Need to select a user first!</b><br />";
-		goto goToAddEmployee;
+		$_SESSION['refreshAddEmployee'] = TRUE;
+		$_SESSION['AddEmployeeError'] = "Need to select a user first!";
+		$_SESSION['AddEmployeeSelectedCompanyID'] = $_POST['CompanyID'];
+		header('Location: .');
 		exit();
 	} elseif($_POST['CompanyID'] == '' AND $_POST['UserID'] != ''){
-		echo "<b>Need to select a company first!</b><br />";
-		goto goToAddEmployee;
+		$_SESSION['refreshAddEmployee'] = TRUE;
+		$_SESSION['AddEmployeeError'] = "Need to select a company first!";
+		$_SESSION['AddEmployeeSelectedUserID'] = $_POST['UserID'];
+		header('Location: .');
 		exit();
 	}
 	
-	// TO-DO: CHECK THAT USER ISN'T ALREADY IN THE COMPANY
+	// Check if the employee connection already exists for the user and company.
+	try
+	{
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+		$pdo = connect_to_db();
+		$sql = 'SELECT 	COUNT(*) 
+				FROM 	`employee`
+				WHERE 	`CompanyID`= :CompanyID
+				AND 	`UserID` = :UserID';
+		$s = $pdo->prepare($sql);
+		$s->bindValue(':CompanyID', $_POST['CompanyID']);
+		$s->bindValue(':UserID', $_POST['UserID']);		
+		$s->execute();
+		
+		$pdo = null;
+		
+		$row = $s->fetch();
+		
+		if ($row[0] > 0)
+		{
+			// This user and company combination already exists in our database
+			// This means the user is already an employee in the company!
+			$_SESSION['AddEmployeeSelectedCompanyID'] = $_POST['CompanyID'];
+			$_SESSION['AddEmployeeSelectedUserID'] = $_POST['UserID'];
+			$_SESSION['refreshAddEmployee'] = TRUE;
+			$_SESSION['AddEmployeeError'] = "The selected user is already an employee in the selected company!";
+			header('Location: .');
+			exit();			
+		}
+		
+		// No employee connection found. Now we can create it.
+	}
+	catch (PDOException $e)
+	{
+		$error = 'Error searching for employee connection.' . $e->getMessage();
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+		$pdo = null;
+		exit();
+	}
+	
 	// Add the new employee connection to the database
 	try
 	{	
@@ -292,6 +370,84 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Confirm Employee')
 	catch (PDOException $e)
 	{
 		$error = 'Error creating employee connection in database: ' . $e->getMessage();
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+		$pdo = null;
+		exit();
+	}
+	
+	// Add a log event that a user was added as an employee in a company
+	try
+	{
+		$userinfo = 'N/A';
+		$companyinfo = 'N/A';
+		$positioninfo = 'N/A';
+		
+		// Get selected user info
+		if(isset($_SESSION['AddEmployeeUsersArray'])){
+			foreach($_SESSION['AddEmployeeUsersArray'] AS $row){
+				if($row['UserID'] == $_POST['UserID']){
+					$userinfo = $row['UserIdentifier'];
+					break;
+				}
+			}
+			unset($_SESSION['AddEmployeeUsersArray']);
+		}
+		
+		// Get selected company name
+		if(isset($_SESSION['AddEmployeeCompaniesArray'])){
+			foreach($_SESSION['AddEmployeeCompaniesArray'] AS $row){
+				if($row['CompanyID'] == $_POST['CompanyID']){
+					$companyinfo = $row['CompanyName'];
+					break;
+				}
+			}
+			unset($_SESSION['AddEmployeeCompaniesArray']);
+		}
+		
+		// Get selected position name
+		if(isset($_SESSION['AddEmployeeCompanyPositionArray'])){
+			foreach($_SESSION['AddEmployeeCompanyPositionArray'] AS $row){
+				if($row['PositionID'] == $_POST['PositionID']){
+					$positioninfo = $row['CompanyPositionName'];
+					break;
+				}
+			}
+			unset($_SESSION['AddEmployeeCompanyPositionArray']);
+		}		
+	
+		
+		// Save a description with some extra information to be kept after 
+		// the user or company has been removed
+		$description = 'The user: ' . $userinfo . 
+		' was added to the company: ' . $companyinfo . 
+		' and was given the position: ' . $positioninfo;
+		
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+		
+		$pdo = connect_to_db();
+		$sql = "INSERT INTO `logevent` 
+				SET			`actionID` = 	(
+											SELECT `actionID` 
+											FROM `logaction`
+											WHERE `name` = 'Employee Added'
+											),
+							`companyID` = :CompanyID,
+							`userID` = :UserID,
+							`positionID` = :PositionID,
+							`description` = :description";
+		$s = $pdo->prepare($sql);
+		$s->bindValue(':CompanyID', $_POST['CompanyID']);
+		$s->bindValue(':UserID', $_POST['UserID']);
+		$s->bindValue(':PositionID', $_POST['PositionID']);		
+		$s->bindValue(':description', $description);
+		$s->execute();
+		
+		//Close the connection
+		$pdo = null;		
+	}
+	catch(PDOException $e)
+	{
+		$error = 'Error adding log event to database: ' . $e->getMessage();
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
 		$pdo = null;
 		exit();
