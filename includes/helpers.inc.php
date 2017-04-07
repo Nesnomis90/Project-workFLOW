@@ -1,6 +1,6 @@
 <?php
 // This file has some functions to make our life easier when coding
-// by not having to repeat the same information by ourself.
+// by not having to repeat the same information by ourselves.
 
 // Include some salts
 require_once 'salts.inc.php';
@@ -15,28 +15,6 @@ function html($input){
 // Function that uses the html() function and outputs the information directly
 function htmlout($text){
 	echo html($text);
-}
-
-// Function to check if user is Admin
-function isUserAdmin(){
-
-	require_once $_SERVER['DOCUMENT_ROOT'] . '/includes/access.inc.php';
-		// Check if user is logged in
-	if (!userIsLoggedIn())
-	{
-		// Not logged in. Send user a login prompt.
-		include '../login.html.php';
-		exit();
-	}
-
-	if (!userHasRole('Admin'))
-	{
-		// User is NOT ADMIN.
-		$error = 'Only Admin may access this page.';
-		include '../accessdenied.html.php';
-		return false;
-	}
-	return true;
 }
 
 //Function to get the current datetime
@@ -109,7 +87,14 @@ function correctDatetimeFormatForBooking($wrongDatetimeString){
 }
 
 // Function to generate a password to be sent to new users
-// TO-DO: Make this.
+function generateUserPassword($length){
+	// The characters we want to generate a password string from
+	$chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+	// Use str_shuffle to randomly shuffle the characters around.
+	// Then we use substr to grab a portion of that string as our password
+	$randomString = substr(str_shuffle($chars),0,$length);
+	return $randomString;
+}
 
 // Function to generate an activation code for new users
 // Result is a 64 char code
@@ -131,7 +116,6 @@ function generateActivationCode(){
 		} else {
 			return $code;
 		}
-		
 	}
 	catch (PDOException $e)
 	{

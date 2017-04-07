@@ -100,6 +100,58 @@ if (isset($_GET['add']))
 	exit();
 }
 
+// When admin has added the needed information and wants to add the user
+if (isset($_GET['addform']))
+{
+	// Add the user to the database
+	// TO-DO: Generate password, send password to email, salt/hash password
+	// bind hashedpassword to :password
+	try
+	{
+		//Generate activation code
+		$activationcode = generateActivationCode();
+		
+		//Generate password for user
+		$generatedPassword = generateUserPassword(6);
+		echo "We generated a password: <b>$generatedPassword</b><br />"
+		$hashedPassword = hashPassword($generatedPassword);
+		echo "The hashed version is password: <b>$hashedPassword</b><br />"	
+		
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+		
+		$pdo = connect_to_db();
+		$sql = 'INSERT INTO `user` 
+				SET			`firstname` = :firstname,
+							`lastname` = :lastname,
+							`accessID` = :accessID,
+							`password` = :password,
+							`activationcode` = :activationcode,
+							`email` = :email';
+		$s = $pdo->prepare($sql);
+		$s->bindValue(':firstname', $_POST['firstname']);
+		$s->bindValue(':lastname', $_POST['lastname']);		
+		$s->bindValue(':accessID', $_POST['accessID']);
+		$s->bindValue(':password', $hashedPassword);
+		$s->bindValue(':activationcode', $activationcode);
+		$s->bindValue(':email', $_POST['email']);
+		$s->execute();
+		
+		//Close the connection
+		$pdo = null;
+	}
+	catch (PDOException $e)
+	{
+		$error = 'Error adding submitted user to database: ' . $e->getMessage();
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+		$pdo = null;
+		exit();
+	}
+	
+	// Load user list webpage with new user
+	header('Location: .');
+	exit();
+}
+
 // if admin wants to edit user information
 // we load a new html form
 if (isset($_POST['action']) AND $_POST['action'] == 'Edit')
@@ -178,82 +230,65 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Edit')
 	exit();
 }
 
-// When admin has added the needed information and wants to add the user
-if (isset($_GET['addform']))
-{
-	// Add the user to the database
-	// TO-DO: Generate password, send password to email, salt/hash password
-	// bind hashedpassword to :password
-	try
-	{
-		//Generate activation code
-		$activationcode = generateActivationCode();
-		//TO-DO: Remove echo statement when testing is over
-		echo 'activation code we generated on addform: ' . $activationcode . '<br />';
-		
-		//Generate password for user
-		//TO-DO: ADD THE ACTUAL PASSWORD GENERATOR. JUST USING ACTIVATION CODE TO GET A 64 CHAR
-		$hashedPassword = generateActivationCode();
-		
-		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
-		
-		$pdo = connect_to_db();
-		$sql = 'INSERT INTO `user` 
-				SET			`firstname` = :firstname,
-							`lastname` = :lastname,
-							`accessID` = :accessID,
-							`password` = :password,
-							`activationcode` = :activationcode,
-							`email` = :email';
-		$s = $pdo->prepare($sql);
-		$s->bindValue(':firstname', $_POST['firstname']);
-		$s->bindValue(':lastname', $_POST['lastname']);		
-		$s->bindValue(':accessID', $_POST['accessID']);
-		$s->bindValue(':password', $hashedPassword);
-		$s->bindValue(':activationcode', $activationcode);
-		$s->bindValue(':email', $_POST['email']);
-		$s->execute();
-		
-		//Close the connection
-		$pdo = null;
-	}
-	catch (PDOException $e)
-	{
-		$error = 'Error adding submitted user to database: ' . $e->getMessage();
-		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
-		$pdo = null;
-		exit();
-	}
-	
-	// Load user list webpage with new user
-	header('Location: .');
-	exit();
-}
-
 // Perform the actual database update of the edited information
 if (isset($_GET['editform']))
 {
 	try
 	{
-		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
-		$pdo = connect_to_db();
-		$sql = 'UPDATE `user` SET
-						firstname = :firstname,
-						lastname = :lastname,
-						email = :email,
-						accessID = :accessID,
-						displayname = :displayname,
-						bookingdescription = :bookingdescription
-				WHERE 	userID = :id';
-		$s = $pdo->prepare($sql);
-		$s->bindValue(':id', $_POST['id']);
-		$s->bindValue(':firstname', $_POST['firstname']);
-		$s->bindValue(':lastname', $_POST['lastname']);
-		$s->bindValue(':email', $_POST['email']);
-		$s->bindValue(':accessID', $_POST['accessID']);
-		$s->bindValue(':displayname', $_POST['displayname']);
-		$s->bindValue(':bookingdescription', $_POST['bookingdescription']);
-		$s->execute();
+		if ($_POST['password'] != ''){
+			// Update user info (new password)
+			$newPassword = $_POST['password'];
+			echo "Set new password as: $newPassword <br />";
+			$hashedNewPassword = hashPassword($newPassword);
+			echo "Which is hashed as: $hashedNewPassword <br />";
+			
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+			$pdo = connect_to_db();
+			$sql = 'UPDATE `user` SET
+							firstname = :firstname,
+							lastname = :lastname,
+							email = :email,
+							password = :password,
+							accessID = :accessID,
+							displayname = :displayname,
+							bookingdescription = :bookingdescription
+					WHERE 	userID = :id';
+					
+			$s = $pdo->prepare($sql);
+			$s->bindValue(':id', $_POST['id']);
+			$s->bindValue(':firstname', $_POST['firstname']);
+			$s->bindValue(':lastname', $_POST['lastname']);
+			$s->bindValue(':email', $_POST['email']);
+			$s->bindValue(':password', $hashedNewPassword);
+			$s->bindValue(':accessID', $_POST['accessID']);
+			$s->bindValue(':displayname', $_POST['displayname']);
+			$s->bindValue(':bookingdescription', $_POST['bookingdescription']);
+			$s->execute();			
+		} else {
+			// Update user info (no new password)
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+			$pdo = connect_to_db();
+			$sql = 'UPDATE `user` SET
+							firstname = :firstname,
+							lastname = :lastname,
+							email = :email,
+							accessID = :accessID,
+							displayname = :displayname,
+							bookingdescription = :bookingdescription
+					WHERE 	userID = :id';
+					
+			$s = $pdo->prepare($sql);
+			$s->bindValue(':id', $_POST['id']);
+			$s->bindValue(':firstname', $_POST['firstname']);
+			$s->bindValue(':lastname', $_POST['lastname']);
+			$s->bindValue(':email', $_POST['email']);
+			$s->bindValue(':accessID', $_POST['accessID']);
+			$s->bindValue(':displayname', $_POST['displayname']);
+			$s->bindValue(':bookingdescription', $_POST['bookingdescription']);
+			$s->execute();	
+		}
+		
+
 		
 		// Close the connection
 		$pdo = Null;
@@ -265,6 +300,9 @@ if (isset($_GET['editform']))
 		$pdo = null;
 		exit();
 	}
+	
+	// Check if 
+	
 	
 	// Load user list webpage with updated database
 	header('Location: .');

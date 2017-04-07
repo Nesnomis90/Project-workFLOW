@@ -36,6 +36,17 @@
 					value="<?php htmlout($email); ?>">
 				</label>
 			</div>
+			<?php if($action == addform) : ?>
+				<div>
+					<label for="password">Generated Password:</label>
+					<p><?php htmlout($generatedPassword); ?></p>
+				</div>
+			<?php elseif($action == editform) : ?>
+				<div>
+					<label for="password">Set new Password:</label>
+					<input type="password" name="password" id="password">
+				</div>
+			<?php endif; ?>
 			<div>
 				<label for="accessID">Access: 
 					<select name="accessID" id="accessID">
