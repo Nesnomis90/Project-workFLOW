@@ -210,80 +210,6 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Add Employee') OR
 	exit();
 }
 
-// if admin wants to set the date to remove for a company
-// we load a new html form
-if (isset($_POST['action']) AND $_POST['action'] == 'Change Role')
-{
-	// Get information from database again on the selected employee
-	try
-	{
-		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
-		
-		// Get name and IDs for company position
-		$pdo = connect_to_db();
-		$sql = 'SELECT 	`PositionID`,
-						`name` 			AS CompanyPositionName,
-						`description`	AS CompanyPositionDescription
-				FROM 	`companyposition`';
-		$result = $pdo->query($sql);
-		
-		// Get the rows of information from the query
-		// This will be used to create a dropdown list in HTML
-		foreach($result as $row){
-			$companyposition[] = array(
-									'PositionID' => $row['PositionID'],
-									'CompanyPositionName' => $row['CompanyPositionName'],
-									'CompanyPositionDescription' => $row['CompanyPositionDescription']
-									);
-		}
-		
-		// Get employee information
-		$sql = 'SELECT 	u.`userID`					AS UsrID,
-						c.`companyID`				AS TheCompanyID,
-						c.`name`					AS CompanyName,
-						u.`firstName`, 
-						u.`lastName`,
-						cp.`name`					AS PositionName							
-				FROM 	`company` c 
-				JOIN 	`employee` e
-				ON 		e.CompanyID = c.CompanyID 
-				JOIN 	`companyposition` cp 
-				ON 		cp.PositionID = e.PositionID
-				JOIN 	`user` u 
-				ON 		u.userID = e.UserID
-				WHERE	e.userID = :UserID
-				AND 	e.companyID = :CompanyID';
-		$s = $pdo->prepare($sql);
-		$s->bindValue(':UserID', $_POST['UserID']);
-		$s->bindValue(':CompanyID', $_POST['CompanyID']);
-		$s->execute();
-						
-		//Close connection
-		$pdo = null;
-	}
-	catch (PDOException $e)
-	{
-		$error = 'Error fetching employee details: ' . $e->getMessage();
-		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
-		$pdo = null;
-		exit();		
-	}
-	
-	// Create an array with the row information we retrieved
-	$row = $s->fetch();
-		
-	// Set the correct information
-	$CompanyName = $row['CompanyName'];
-	$UserIdentifier = $row['firstName'] . ' ' . $row['lastName'];
-	$CurrentCompanyPositionName = $row['PositionName'];
-	$CompanyID = $row['TheCompanyID'];
-	$UserID = $row['UsrID'];
-	
-	// Change to the actual form we want to use
-	include 'changerole.html.php';
-	exit();
-}
-
 // When admin has added the needed information and wants to add an employee connection
 if (isset($_POST['action']) AND $_POST['action'] == 'Confirm Employee')
 {
@@ -378,6 +304,21 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Confirm Employee')
 	// Add a log event that a user was added as an employee in a company
 	try
 	{
+		/* The following code is to get the text information that the user selected.
+		This can not be retrieved with a $_POST statement since the value is the IDs
+		and not the text. So we go through the same arrays we used earlier, now saved
+		in a session variable, to get the text again by matching it with the selected IDs.
+		
+		This could be done a lot simpler, with way less code, and no need to use session.
+		This would require javascript to get the actual text from the selected element. Then
+		we could save it as a hidden input and get the values with $_POST directly.
+		PROS: Way less code, better overview and ... faster?
+		CONS: Info isn't retrieved if javascript is disabled.
+		
+		Could also be done by doing a new SELECT QUERY for the information instead, since we 
+		already have the IDs for all the info. This would look cleaner, but would be an
+		unnecessary query since we already have access to all the information.
+		*/
 		$userinfo = 'N/A';
 		$companyinfo = 'N/A';
 		$positioninfo = 'N/A';
@@ -455,6 +396,80 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Confirm Employee')
 	
 	// Load employee list webpage with new employee connection
 	header('Location: .');
+	exit();
+}
+
+// if admin wants to set the date to remove for a company
+// we load a new html form
+if (isset($_POST['action']) AND $_POST['action'] == 'Change Role')
+{
+	// Get information from database again on the selected employee
+	try
+	{
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+		
+		// Get name and IDs for company position
+		$pdo = connect_to_db();
+		$sql = 'SELECT 	`PositionID`,
+						`name` 			AS CompanyPositionName,
+						`description`	AS CompanyPositionDescription
+				FROM 	`companyposition`';
+		$result = $pdo->query($sql);
+		
+		// Get the rows of information from the query
+		// This will be used to create a dropdown list in HTML
+		foreach($result as $row){
+			$companyposition[] = array(
+									'PositionID' => $row['PositionID'],
+									'CompanyPositionName' => $row['CompanyPositionName'],
+									'CompanyPositionDescription' => $row['CompanyPositionDescription']
+									);
+		}
+		
+		// Get employee information
+		$sql = 'SELECT 	u.`userID`					AS UsrID,
+						c.`companyID`				AS TheCompanyID,
+						c.`name`					AS CompanyName,
+						u.`firstName`, 
+						u.`lastName`,
+						cp.`name`					AS PositionName							
+				FROM 	`company` c 
+				JOIN 	`employee` e
+				ON 		e.CompanyID = c.CompanyID 
+				JOIN 	`companyposition` cp 
+				ON 		cp.PositionID = e.PositionID
+				JOIN 	`user` u 
+				ON 		u.userID = e.UserID
+				WHERE	e.userID = :UserID
+				AND 	e.companyID = :CompanyID';
+		$s = $pdo->prepare($sql);
+		$s->bindValue(':UserID', $_POST['UserID']);
+		$s->bindValue(':CompanyID', $_POST['CompanyID']);
+		$s->execute();
+						
+		//Close connection
+		$pdo = null;
+	}
+	catch (PDOException $e)
+	{
+		$error = 'Error fetching employee details: ' . $e->getMessage();
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+		$pdo = null;
+		exit();		
+	}
+	
+	// Create an array with the row information we retrieved
+	$row = $s->fetch();
+		
+	// Set the correct information
+	$CompanyName = $row['CompanyName'];
+	$UserIdentifier = $row['firstName'] . ' ' . $row['lastName'];
+	$CurrentCompanyPositionName = $row['PositionName'];
+	$CompanyID = $row['TheCompanyID'];
+	$UserID = $row['UsrID'];
+	
+	// Change to the actual form we want to use
+	include 'changerole.html.php';
 	exit();
 }
 
