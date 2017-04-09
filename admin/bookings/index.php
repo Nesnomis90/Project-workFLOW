@@ -78,18 +78,15 @@ if (isset($_POST['action']) and $_POST['action'] == 'Cancel')
 
 // If admin wants to add a booked meeting to the database
 // we load a new html form
-// TO-DO: NEED TO KNOW WHAT USER IS LOGGED IN TO GET THEIR USERID
 if (isset($_GET['add']))
 {
-	echo 'userID is: ' . $_POST['userID'] . '<br />';
 	try
 	{
 		// Retrieve the user's default displayname and bookingdescription
 		// if they have any.
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 		$pdo = connect_to_db();
-		$sql = 'SELECT 	u.`userID`,
-						u.`bookingdescription`, 
+		$sql = 'SELECT	u.`bookingdescription`, 
 						u.`displayname`,
 						c.`companyID`,
 						c.`name` 					AS companyName
@@ -98,17 +95,16 @@ if (isset($_GET['add']))
 				ON 		e.userID = u.userID
 				JOIN	`company` c
 				ON 		c.companyID = e.companyID
-				WHERE 	u.`userID` = 1'; // <--- FIX THIS TO :userID
+				WHERE 	u.`userID` = :userID';
 			
-		echo 'userID is: ' . $_POST['userID'] . '<br />';	
-		//$s = $pdo->prepare($sql);
-		//$s->bindValue(':userID', $_POST['userID']); // <--- FIX THIS
-		//$s->execute();
+		$s = $pdo->prepare($sql);
+		$s->bindValue(':userID', $_SESSION['LoggedInUserID']);
+		$s->execute();
 		
 		
 		// Create an array with the row information we retrieved
-		//$result = $s->fetchAll();
-		$result = $pdo->query($sql);
+		$result = $s->fetchAll();
+		//$result = $pdo->query($sql);
 		
 		foreach($result as $row){		
 			// Get the companies the user works for
@@ -121,7 +117,6 @@ if (isset($_GET['add']))
 			// Set default booking display name and booking description
 			$displayName = $row['displayname'];
 			$description = $row['bookingdescription'];
-			$userID = $row['userID'];
 		}		
 		// Get name and IDs for access level
 		$sql = 'SELECT 	`meetingRoomID`,
@@ -185,9 +180,6 @@ if (isset($_GET['addform']))
 	{	
 		//Generate cancellation code
 		$cancellationCode = generateCancellationCode();
-		//TO-DO: Remove echo statement when testing is over
-		echo 'cancellation code we generated on addform: ' . $cancellationCode . '<br />';
-		
 		
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 		
@@ -208,7 +200,7 @@ if (isset($_GET['addform']))
 		$endDateTime = correctDatetimeFormat($_POST['endDateTime']);
 		
 		$s->bindValue(':meetingRoomID', $_POST['meetingRoomID']);
-		$s->bindValue(':userID', $_POST['userID']);	// <-- NEED TO GET THIS FROM SOMEWHERE
+		$s->bindValue(':userID', $_SESSION['LoggedInUserID']);
 		$s->bindValue(':companyID', $_POST['companyID']);
 		$s->bindValue(':displayName', $_POST['displayName']);
 		$s->bindValue(':startDateTime', $startDateTime);
@@ -273,10 +265,6 @@ try
 
 	//Close the connection
 	$pdo = null;
-	
-	//TO-DO: FIND THIS USERID BASED ON WHO'S LOGGED IN
-	//THIS FIXED NUMBER IS ONLY FOR TESTING PURPOSES
-	$userID = 1;
 }
 catch (PDOException $e)
 {

@@ -21,7 +21,11 @@ function userIsLoggedIn()
 		if (!isset($_POST['email']) or $_POST['email'] == '' or
 		!isset($_POST['password']) or $_POST['password'] == '')
 		{
-			$GLOBALS['loginError'] = 'Please fill in both fields';
+			// User didn't fill in enough info
+			// Save a custom error message for the user
+			session_start();
+			$_SESSION['loginError'] = 'Please fill in both fields';
+			//$GLOBALS['loginError'] = 'Please fill in both fields';
 			return FALSE;
 		}
 		
@@ -31,22 +35,31 @@ function userIsLoggedIn()
 		$password = hashPassword($SubmittedPassword);
 		if (databaseContainsUser($_POST['email'], $password))
 		{
-			// Correct log in info! Start a new session for the user
+			// Correct log in info! Update the session data to know we're logged in
 			session_start();
 			$_SESSION['loggedIn'] = TRUE;
 			$_SESSION['email'] = $_POST['email'];
 			$_SESSION['password'] = $password;
+			$_SESSION['LoggedInUserID'] = $_SESSION['DatabaseContainsUserID'];
+			unset($_SESSION['DatabaseContainsUserID']);
 			return TRUE;
 		}
 		else
 		{
 			// Wrong log in info.
+			// Or user data has changed since last check
+			// Meaning the login data isn't correct anymore
+			// So we log out a user if previously logged in
 			session_start();
 			unset($_SESSION['loggedIn']);
 			unset($_SESSION['email']);
 			unset($_SESSION['password']);
-			$GLOBALS['loginError'] =
+			unset($_SESSION['LoggedInUserID']);
+			
+			$_SESSION['loginError'] = 
 			'The specified email address or password was incorrect.';
+			//$GLOBALS['loginError'] =
+			//'The specified email address or password was incorrect.';
 			return FALSE;
 		}
 	}
@@ -57,6 +70,7 @@ function userIsLoggedIn()
 		unset($_SESSION['loggedIn']);
 		unset($_SESSION['email']);
 		unset($_SESSION['password']);
+		unset($_SESSION['LoggedInUserID']);
 		header('Location: ' . $_POST['goto']);
 		exit();
 	}
@@ -64,7 +78,11 @@ function userIsLoggedIn()
 	// The user is in a session that was previously logged in
 	// Let's check if the user STILL EXISTS in the database
 	// i.e. if the login info is still correct
-	session_start(); //Starts a new session or continues a session already in progress
+	// This causes an extra SQL QUERY every single time a page
+	// is loaded again. But is more secure than just checking for the 
+	// loggedIn = true session variable in the case that user info
+	// has been altered while someone is already logged in with old data
+	session_start();
 	if (isset($_SESSION['loggedIn']))
 	{
 		return databaseContainsUser($_SESSION['email'],
@@ -80,7 +98,8 @@ function databaseContainsUser($email, $password)
 	{
 		include_once 'db.inc.php';
 		$pdo = connect_to_db();
-		$sql = 'SELECT 	COUNT(*) 
+		$sql = 'SELECT 	`userID`,
+						COUNT(*) 
 				FROM 	`user`
 				WHERE 	email = :email 
 				AND 	password = :password
@@ -95,7 +114,7 @@ function databaseContainsUser($email, $password)
 	catch (PDOException $e)
 	{
 		$error = 'Error searching for user.';
-		include 'error.html.php';
+		include_once 'error.html.php';
 		$pdo = null;
 		exit();
 	}
@@ -104,10 +123,14 @@ function databaseContainsUser($email, $password)
 	// If we got a hit, then the user info was correct
 	if ($row[0] > 0)
 	{
+		session_start();
+		$_SESSION['DatabaseContainsUserID'] = $row['userID'];
 		return TRUE;
 	}
 	else
 	{
+		session_start();
+		unset($_SESSION['DatabaseContainsUserID']);		
 		return FALSE;
 	}
 }
@@ -135,7 +158,7 @@ function userHasAccess($access)
 	catch (PDOException $e)
 	{
 		$error = 'Error searching for user access.';
-		include 'error.html.php';
+		include_once 'error.html.php';
 		$pdo = connect_to_db();
 		exit();
 	}
@@ -172,7 +195,7 @@ function databaseContainsEmail($email)
 	catch (PDOException $e)
 	{
 		$error = 'Error searching for email.';
-		include 'error.html.php';
+		include_once 'error.html.php';
 		$pdo = null;
 		exit();
 	}
@@ -196,15 +219,15 @@ function isUserAdmin(){
 	if (!userIsLoggedIn())
 	{
 		// Not logged in. Send user a login prompt.
-		include '../login.html.php';
+		include_once '../login.html.php';
 		exit();
 	}
-		// Check if has Admin access
+		// Check if user has Admin access
 	if (!userHasAccess('Admin'))
 	{
 		// User is NOT ADMIN.
 		$error = 'Only Admin may access this page.';
-		include '../accessdenied.html.php';
+		include_once '../accessdenied.html.php';
 		return false;
 	}
 	return true;
@@ -216,15 +239,15 @@ function isUserInHouseUser(){
 	if (!userIsLoggedIn())
 	{
 		// Not logged in. Send user a login prompt.
-		include '../login.html.php';
+		include_once '../login.html.php';
 		exit();
 	}
-
+		// Check if user has In-House User access
 	if (!userHasAccess('In-House User'))
 	{
 		// User is NOT IN-HOUSE USER.
 		$error = 'Only In-House Users can access this page.';
-		include '../accessdenied.html.php';
+		include_once '../accessdenied.html.php';
 		return false;
 	}
 	return true;

@@ -96,7 +96,6 @@
 			<tr><b>There are no booked meetings registered in the database.</b></tr>
 			<tr><a href="?add">Book a meeting?</a></tr>
 		<?php endif; ?>
-		<input type="hidden" name="userID" value="<?php htmlout($userID); ?>">
 		<p><a href="..">Return to CMS home</a></p>
 		<?php include '../logout.inc.html.php'; ?>
 	</body>

@@ -9,8 +9,9 @@
 	<body>
 		<h1>Log In</h1>
 		<p>Please log in to view the page that you requested.</p>
-		<?php if (isset($GLOBALS['loginError'])): ?>
-			<p><b><?php htmlout($GLOBALS['loginError']); ?></b></p>
+		<?php if (isset($_SESSION['loginError'])): ?>
+			<p><b><?php htmlout($_SESSION['loginError']); ?></b></p>
+			<?php unset($_SESSION['loginError']); ?>
 		<?php endif; ?>
 		<form action="" method="post">
 			<div>
