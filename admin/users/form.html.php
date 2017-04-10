@@ -8,6 +8,10 @@
 	</head>
 	<body>
 		<h1><?php htmlout($pageTitle); ?></h1>
+		<?php if (isset($_SESSION['AddNewUserError'])) :?>
+			<p><b><?php htmlout($_SESSION['AddNewUserError']);?></b></p> 
+			<?php unset($_SESSION['AddNewUserError']); ?>
+		<?php endif; ?>
 		<form action="?<?php htmlout($action); ?>" method="post">
 			<div>
 				<label for="firstname">First Name: 
@@ -39,7 +43,7 @@
 			<?php if($action == 'addform') : ?>
 				<div>
 					<label for="password">Generated Password:</label>
-					<p><?php htmlout($generatedPassword); ?></p>
+					<p><b><?php htmlout($generatedPassword); ?></b></p>
 					<input type="hidden" name="hashedPassword" id="hashedPassword"
 					value="<?php htmlout($hashedPassword); ?>">
 				</div>
@@ -53,7 +57,7 @@
 				<label for="accessID">Access: 
 					<select name="accessID" id="accessID">
 						<?php foreach($access as $row): ?> 
-							<?php if($row['accessname']==$accessname):?>
+							<?php if($row['accessID']==$accessID):?>
 								<option selected="selected" 
 										value=<?php htmlout($row['accessID']); ?>>
 										<?php htmlout($row['accessname']);?>

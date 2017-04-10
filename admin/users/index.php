@@ -50,7 +50,6 @@ if (isset($_GET['add']) OR (isset($_SESSION['refreshUserAddform']) AND $_SESSION
 	if(isset($_SESSION['refreshUserAddform']) AND $_SESSION['refreshUserAddform']){
 		// Acknowledge that we have refreshed the form
 		unset($_SESSION['refreshUserAddform']);
-		echo "The submitted email is already in use for a registered account. <br />";
 	}
 	
 	// Get name and IDs for access level
@@ -103,6 +102,24 @@ if (isset($_GET['add']) OR (isset($_SESSION['refreshUserAddform']) AND $_SESSION
 	$bookingdescription = '';
 	$button = 'Add user';
 	
+	// If we refreshed and want to keep the same values
+	if(isset($_SESSION['AddNewUserFirstname'])){
+		$firstname = $_SESSION['AddNewUserFirstname'];
+		unset($_SESSION['AddNewUserFirstname']);		
+	}
+	if(isset($_SESSION['AddNewUserLastname'])){
+		$lastname = $_SESSION['AddNewUserLastname'];
+		unset($_SESSION['AddNewUserLastname']);		
+	}	
+	if(isset($_SESSION['AddNewUserEmail'])){
+		$email = $_SESSION['AddNewUserEmail'];
+		unset($_SESSION['AddNewUserEmail']);		
+	}	
+	if(isset($_SESSION['AddNewUserSelectedAccess'])){
+		$accessID = $_SESSION['AddNewUserSelectedAccess'];
+		unset($_SESSION['AddNewUserSelectedAccess']);		
+	}
+	
 	// We want a reset all fields button while adding a new user
 	$reset = 'reset';
 	
@@ -127,12 +144,15 @@ if (isset($_GET['addform']))
 	$email = $_POST['email'];
 	if (databaseContainsEmail($email)){
 		// The email has been used before. So we can't create a new user with this info.
-		// TO-DO: Do something that lets admin know that the email has already been used
-		// and that's why nothing happends.
 		
 		$_SESSION['refreshUserAddform'] = TRUE;
-		echo "A user with this email already exists in our database.";
+		$_SESSION['AddNewUserError'] = "The submitted email already exists in the database.";
 		
+		// Let's remember the info the admin submitted
+		$_SESSION['AddNewUserFirstname'] = $_POST['firstname'];
+		$_SESSION['AddNewUserLastname'] = $_POST['lastname'];
+		$_SESSION['AddNewUserEmail'] = $_POST['email'];
+		$_SESSION['AddNewUserSelectedAccess'] = $_POST['accessID'];		
 	} else {
 		// The email has NOT been used before, so we can create the new user!
 		try
@@ -241,7 +261,7 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Edit')
 	$firstname = $row['firstname'];
 	$lastname = $row['lastname'];
 	$email = $row['email'];
-	$accessname = $row['AccessName'];
+	$accessID = $row['accessID'];
 	$id = $row['userID'];
 	$displayname = $row['displayname'];
 	$bookingdescription = $row['bookingdescription'];
