@@ -44,6 +44,10 @@
 	</head>
 	<body>
 		<h1>Manage Users</h1>
+		<?php if(isset($_SESSION['UserManagementFeedbackMessage'])) : ?>
+			<p><b><?php htmlout($_SESSION['UserManagementFeedbackMessage']); ?></b></p>
+			<?php unset($_SESSION['UserManagementFeedbackMessage']); ?>
+		<?php endif; ?>
 		<?php if($rowNum>0) :?>
 			<p><a href="?add">Add new user</a></p>
 			<table id= "usertable">

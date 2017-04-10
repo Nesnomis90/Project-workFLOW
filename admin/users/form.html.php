@@ -50,7 +50,13 @@
 			<?php elseif($action == 'editform') : ?>
 				<div>
 					<label for="password">Set new Password:</label>
-					<input type="password" name="password" id="password">
+					<input type="password" name="password" id="password"
+					value="<?php htmlout($password);?>">
+				</div>
+				<div>
+					<label for="confirmpassword">Confirm Password:</label>
+					<input type="password" name="confirmpassword" id="confirmpassword"
+					value="<?php htmlout($confirmpassword);?>">
 				</div>
 			<?php endif; ?>
 			<div>

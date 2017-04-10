@@ -37,6 +37,8 @@ if (isset($_POST['action']) and $_POST['action'] == 'Delete')
 		exit();
 	}
 	
+	$_SESSION['UserManagementFeedbackMessage'] = "User Successfully Removed.";
+	
 	// Load user list webpage with updated database
 	header('Location: .');
 	exit();	
@@ -195,6 +197,8 @@ if (isset($_GET['addform']))
 		}
 	}
 
+	$_SESSION['UserManagementFeedbackMessage'] = 
+	"User Successfully Created. It is currently inactive and unable to log in.";
 	
 	// Load user list webpage with new user
 	header('Location: .');
@@ -203,69 +207,110 @@ if (isset($_GET['addform']))
 
 // if admin wants to edit user information
 // we load a new html form
-if (isset($_POST['action']) AND $_POST['action'] == 'Edit')
+if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR 
+(isset($_SESSION['refreshEditform'])) AND $_SESSION['refreshEditform'])
 {
-	// Get information from database again on the selected user
-	try
-	{
-		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+		// Check if the call was edit button or a forced refresh
+	if(isset($_SESSION['refreshEditform']) AND $_SESSION['refreshEditform']){
+		// Acknowledge that we have refreshed the form
+		unset($_SESSION['refreshEditform']);
+	
+		// Set the information back to what it was before the refresh
+		$firstname = $_SESSION['EditUserChangedFirstname'];
+		unset($_SESSION['EditUserChangedFirstname']);
+		$lastname = $_SESSION['EditUserChangedLastname'];
+		unset($_SESSION['EditUserChangedLastname']);
+		$email = $_SESSION['EditUserChangedEmail'];
+		unset($_SESSION['EditUserChangedEmail']);
+		$accessID = $_SESSION['EditUserChangedAccessID'];
+		unset($_SESSION['EditUserChangedAccessID']);
+		$id = $_SESSION['TheUserID'];
+		unset($_SESSION['TheUserID']);
+		$displayname = $_SESSION['EditUserChangedDisplayname'];
+		unset($_SESSION['EditUserChangedDisplayname']);
+		$bookingdescription = $_SESSION['EditUserChangedBookingDescription'];
+		unset($_SESSION['EditUserChangedBookingDescription']);
+		$access = $_SESSION['EditUserAccessList'];
+		unset($_SESSION['EditUserAccessList']);
 		
-		$pdo = connect_to_db();
-		$sql = 'SELECT 	u.`userID`, 
-						u.`firstname`, 
-						u.`lastname`, 
-						u.`email`,
-						a.`AccessName`,
-						u.`displayname`,
-						u.`bookingdescription`
-				FROM 	`user` u
-				JOIN 	`accesslevel` a
-				ON 		a.accessID = u.accessID
-				WHERE 	u.`userID` = :id';
-		$s = $pdo->prepare($sql);
-		$s->bindValue(':id', $_POST['id']);
-		$s->execute();
+	} else {
 		
-		// Get name and IDs for access level
-		$sql = 'SELECT 	`accessID`,
-						`accessname` 
-				FROM 	`accesslevel`';
-		$result = $pdo->query($sql);
-		
-		// Get the rows of information from the query
-		// This will be used to create a dropdown list in HTML
-		foreach($result as $row){
-			$access[] = array(
-								'accessID' => $row['accessID'],
-								'accessname' => $row['accessname']
-								);
+		// Get information from database again on the selected user
+		try
+		{
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+			
+			$pdo = connect_to_db();
+			$sql = 'SELECT 	u.`userID`, 
+							u.`firstname`, 
+							u.`lastname`, 
+							u.`email`,
+							a.`accessID`,
+							u.`displayname`,
+							u.`bookingdescription`
+					FROM 	`user` u
+					JOIN 	`accesslevel` a
+					ON 		a.accessID = u.accessID
+					WHERE 	u.`userID` = :id';
+			$s = $pdo->prepare($sql);
+			$s->bindValue(':id', $_POST['id']);
+			$s->execute();
+			
+			// Get name and IDs for access level
+			$sql = 'SELECT 	`accessID`,
+							`accessname` 
+					FROM 	`accesslevel`';
+			$result = $pdo->query($sql);
+			
+			// Get the rows of information from the query
+			// This will be used to create a dropdown list in HTML
+			foreach($result as $row){
+				$access[] = array(
+									'accessID' => $row['accessID'],
+									'accessname' => $row['accessname']
+									);
+			}
+			
+			//Close the connection
+			$pdo = null;
+		}
+		catch (PDOException $e)
+		{
+			$error = 'Error fetching user details.';
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+			$pdo = null;
+			exit();
 		}
 		
-		//Close the connection
-		$pdo = null;
+		// Create an array with the row information we retrieved
+		$row = $s->fetch();
+		
+		// Set the correct information
+		$firstname = $row['firstname'];
+		$lastname = $row['lastname'];
+		$email = $row['email'];
+		$accessID = $row['accessID'];
+		$id = $row['userID'];
+		$displayname = $row['displayname'];
+		$bookingdescription = $row['bookingdescription'];
 	}
-	catch (PDOException $e)
-	{
-		$error = 'Error fetching user details.';
-		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
-		$pdo = null;
-		exit();
-	}
-	
-	// Create an array with the row information we retrieved
-	$row = $s->fetch();
 	
 	// Set the correct information
 	$pageTitle = 'Edit User';
 	$action = 'editform';
-	$firstname = $row['firstname'];
-	$lastname = $row['lastname'];
-	$email = $row['email'];
-	$accessID = $row['accessID'];
-	$id = $row['userID'];
-	$displayname = $row['displayname'];
-	$bookingdescription = $row['bookingdescription'];
 	$button = 'Edit user';
+	$password = '';
+	$confirmpassword = '';
+	
+	// Remember the values we retrieved.
+	$_SESSION['EditUserOldFirstname'] = $firstname;
+	$_SESSION['EditUserOldLastname'] = $lastname;
+	$_SESSION['EditUserOldEmail'] = $email;
+	$_SESSION['EditUserOldAccessID'] = $accessID;
+	$_SESSION['EditUserOldDisplayname'] = $displayname;
+	$_SESSION['EditUserOldBookingDescription'] = $bookingdescription;
+	$_SESSION['TheUserID'] = $id;
+	$_SESSION['EditUserAccessList'] = $access;
 	
 	// Don't want a reset button to blank all fields while editing
 	$reset = 'hidden';
@@ -282,6 +327,86 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Edit')
 // Perform the actual database update of the edited information
 if (isset($_GET['editform']))
 {
+	// Check if any values were actually changed
+	$NumberOfChanges = 0;
+	
+	// Check if user is trying to set a new password
+	// And if so, check if both fields are filled in and match each other
+	if($_POST['password'] == $_POST['confirmpassword']){
+		if($_POST['password'] != ''){
+			$NumberOfChanges++;	
+		}
+
+	} else {
+		$_SESSION['AddNewUserError'] = "Password and Confirm Password did not match.";
+		$_SESSION['refreshEditform'] = TRUE;
+		
+		// Remember if admin made any other changes
+		$_SESSION['EditUserChangedFirstname'] = $_POST['firstname'];
+		$_SESSION['EditUserChangedLastname'] = $_POST['lastname'];
+		$_SESSION['EditUserChangedEmail'] = $_POST['email'];
+		$_SESSION['EditUserChangedAccessID'] = $_POST['accessID'];
+		$_SESSION['EditUserChangedDisplayname'] = $_POST['displayname'];
+		$_SESSION['EditUserChangedBookingDescription'] = $_POST['bookingdescription'];
+		
+		// Load user list webpage with updated database
+		header('Location: .');
+		exit();
+	}
+	
+		// Check against the values we retrieved before loading the page
+	if ( isset($_SESSION['EditUserOldFirstname']) AND 
+	$_POST['firstname'] != $_SESSION['EditUserOldFirstname'])
+	{
+		$NumberOfChanges++;
+		unset($_SESSION['EditUserOldFirstname']);
+	}
+	if ( isset($_SESSION['EditUserOldLastname']) AND 
+	$_POST['lastname'] != $_SESSION['EditUserOldLastname'])
+	{
+		$NumberOfChanges++;
+		unset($_SESSION['EditUserOldLastname']);
+	}
+	if ( isset($_SESSION['EditUserOldEmail']) AND 
+	$_POST['email'] != $_SESSION['EditUserOldEmail'])
+	{
+		$NumberOfChanges++;
+		unset($_SESSION['EditUserOldEmail']);
+	}
+	if ( isset($_SESSION['EditUserOldAccessID']) AND 
+	$_POST['accessID'] != $_SESSION['EditUserOldAccessID'])
+	{
+		$NumberOfChanges++;
+		unset($_SESSION['EditUserOldAccessID']);
+	}
+	if ( isset($_SESSION['EditUserOldDisplayname']) AND 
+	$_POST['displayname'] != $_SESSION['EditUserOldDisplayname'])
+	{
+		$NumberOfChanges++;
+		unset($_SESSION['EditUserOldDisplayname']);
+	}	
+	if ( isset($_SESSION['EditUserOldBookingDescription']) AND 
+	$_POST['bookingdescription'] != $_SESSION['EditUserOldBookingDescription'])
+	{
+		$NumberOfChanges++;
+		unset($_SESSION['EditUserOldBookingDescription']);
+	}
+	
+
+	if ($NumberOfChanges == 0){
+		
+		$_SESSION['UserManagementFeedbackMessage'] = "No changes were made.";
+		
+		// Load user list webpage with updated database
+		header('Location: .');
+		exit();
+	}
+	
+	// Don't need to remember the access list anymore
+	unset($_SESSION['EditUserAccessList']);
+
+
+	// We actually have something to update!	
 	try
 	{
 		if ($_POST['password'] != ''){
@@ -336,9 +461,7 @@ if (isset($_GET['editform']))
 			$s->bindValue(':bookingdescription', $_POST['bookingdescription']);
 			$s->execute();	
 		}
-		
-
-		
+			
 		// Close the connection
 		$pdo = Null;
 	}
@@ -349,6 +472,8 @@ if (isset($_GET['editform']))
 		$pdo = null;
 		exit();
 	}
+	
+	$_SESSION['UserManagementFeedbackMessage'] = "User Successfully Updated.";
 	
 	// Load user list webpage with updated database
 	header('Location: .');
