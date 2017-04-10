@@ -44,6 +44,16 @@
 	</head>
 	<body>
 		<h1>Manage Company Employees</h1>
+		<?php $goto = "http://$_SERVER[HTTP_HOST]/admin/companies/"; ?>
+		<?php if(isset($_GET['Company'])) :?>
+			<form action="<?php htmlout($goto); ?>" method="post">
+				<input type="submit" value="Return to Companies">
+			</form>
+		<?php $goto = "http://$_SERVER[HTTP_HOST]/admin/employees/"; ?>
+			<form action="<?php htmlout($goto); ?>" method="post">
+				<input type="submit" value="Get All Employees">
+			</form>
+		<?php endif; ?>
 		<form action="" method="post">
 		<?php if($rowNum>0) :?>
 			<input type="submit" name="action" value="Add Employee">

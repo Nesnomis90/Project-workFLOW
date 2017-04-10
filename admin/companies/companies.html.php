@@ -49,6 +49,7 @@
 			<table id="companiestable">
 				<caption>Registered Companies</caption>
 				<tr>
+					<th>Employee List</th>
 					<th>Company Name (click for employee list)</th>
 					<th># of employees</th>
 					<th>Booking time used (this month)</th>
@@ -57,10 +58,16 @@
 					<th>Created at</th>
 					<th></th>
 					<th></th>
-					<th>Employee List</th>
 				</tr>
 				<?php foreach ($companies as $company): ?>
 					<tr>
+						<?php $goto = "http://$_SERVER[HTTP_HOST]/admin/employees/?Company=" . $company['id'];?>
+						<form action="<?php htmlout($goto) ;?>" method="post">
+							<td>
+								<input type="submit" value="Employees">
+								<input type="hidden" name="Company" value="<?php htmlout($company['id']); ?>">
+							</td>
+						</form>
 						<form action="" method="post">
 							<td><?php htmlout($company['CompanyName']); ?></td>
 							<td><?php htmlout($company['NumberOfEmployees']); ?></td>
@@ -80,14 +87,6 @@
 							<td><input type="submit" name="action" value="Edit"></td>
 							<td><input type="submit" name="action" value="Delete"></td>
 							<input type="hidden" name="id" value="<?php htmlout($company['id']); ?>">
-						</form>
-						<?php $goto = "http://$_SERVER[HTTP_HOST]/admin/employees/?Company=" . $company['id']; 
-								//$goto = "http://$_SERVER[HTTP_HOST]/admin/employees/"; ?>
-						<form action="<?php htmlout($goto) ;?>" method="post">
-							<td>
-								<input type="submit" value="Employees">
-								<input type="hidden" name="Company" value="<?php htmlout($company['id']); ?>">
-							</td>
 						</form>
 					</tr>
 				<?php endforeach; ?>
