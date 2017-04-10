@@ -64,7 +64,6 @@
 					<th>Email</th>
 					<th>Works for</th>
 					<th>Cancel Booking</th>
-					<th>Edit Booking (Not functional)</th>
 					<th>Delete Booking</th>
 				</tr>
 				<?php foreach ($bookings as $booking): ?>
@@ -85,7 +84,6 @@
 							<td><?php htmlout($booking['email']); ?></td>
 							<td><?php htmlout($booking['WorksForCompany']); ?></td>
 							<td><input type="submit" name="action" value="Cancel"></td>
-							<td><input type="submit" name="action" value="Edit"></td>
 							<td><input type="submit" name="action" value="Delete"></td>
 							<input type="hidden" name="id" value="<?php echo $booking['id']; ?>">
 						</tr>
@@ -96,7 +94,6 @@
 			<tr><b>There are no booked meetings registered in the database.</b></tr>
 			<tr><a href="?add">Book a meeting?</a></tr>
 		<?php endif; ?>
-		<input type="hidden" name="userID" value="<?php htmlout($userID); ?>">
 		<p><a href="..">Return to CMS home</a></p>
 		<?php include '../logout.inc.html.php'; ?>
 	</body>

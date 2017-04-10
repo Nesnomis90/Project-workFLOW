@@ -8,6 +8,10 @@
 	</head>
 	<body>
 		<h1><?php htmlout($pageTitle); ?></h1>
+		<?php if (isset($_SESSION['AddNewUserError'])) :?>
+			<p><b><?php htmlout($_SESSION['AddNewUserError']);?></b></p> 
+			<?php unset($_SESSION['AddNewUserError']); ?>
+		<?php endif; ?>
 		<form action="?<?php htmlout($action); ?>" method="post">
 			<div>
 				<label for="firstname">First Name: 
@@ -39,21 +43,27 @@
 			<?php if($action == 'addform') : ?>
 				<div>
 					<label for="password">Generated Password:</label>
-					<p><?php htmlout($generatedPassword); ?></p>
+					<p><b><?php htmlout($generatedPassword); ?></b></p>
 					<input type="hidden" name="hashedPassword" id="hashedPassword"
 					value="<?php htmlout($hashedPassword); ?>">
 				</div>
 			<?php elseif($action == 'editform') : ?>
 				<div>
 					<label for="password">Set new Password:</label>
-					<input type="password" name="password" id="password">
+					<input type="password" name="password" id="password"
+					value="<?php htmlout($password);?>">
+				</div>
+				<div>
+					<label for="confirmpassword">Confirm Password:</label>
+					<input type="password" name="confirmpassword" id="confirmpassword"
+					value="<?php htmlout($confirmpassword);?>">
 				</div>
 			<?php endif; ?>
 			<div>
 				<label for="accessID">Access: 
 					<select name="accessID" id="accessID">
 						<?php foreach($access as $row): ?> 
-							<?php if($row['accessname']==$accessname):?>
+							<?php if($row['accessID']==$accessID):?>
 								<option selected="selected" 
 										value=<?php htmlout($row['accessID']); ?>>
 										<?php htmlout($row['accessname']);?>

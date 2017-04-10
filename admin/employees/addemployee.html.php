@@ -16,26 +16,32 @@
 		<form action="" method="post">
 			<div>
 				<label for="CompanyID">Company name:</label>
-				<select name="CompanyID" id="CompanyID">
-					<option value="">Select a Company</option>
-					<?php foreach($companies as $row): ?> 
-						<?php if (isset($selectedCompanyID) AND $selectedCompanyID == $row['CompanyID']) : ?>
-							<option selected="selected" value=<?php htmlout($row['CompanyID']); ?>>
-									<?php htmlout($row['CompanyName']);?>
-							</option>
-						<?php else : ?>
-							<option value=<?php htmlout($row['CompanyID']); ?>>
-									<?php htmlout($row['CompanyName']);?>
-							</option>
-						<?php endif; ?>					
-					<?php endforeach; ?>
-				</select>
+				<?php if(!isset($_GET['Company'])) : ?>
+					<select name="CompanyID" id="CompanyID">
+						<option value="">Select a Company</option>
+						<?php foreach($companies as $row): ?> 
+							<?php if (isset($selectedCompanyID) AND $selectedCompanyID == $row['CompanyID']) : ?>
+								<option selected="selected" value=<?php htmlout($row['CompanyID']); ?>>
+										<?php htmlout($row['CompanyName']);?>
+								</option>
+							<?php else : ?>
+								<option value=<?php htmlout($row['CompanyID']); ?>>
+										<?php htmlout($row['CompanyName']);?>
+								</option>
+							<?php endif; ?>					
+						<?php endforeach; ?>
+					</select>
+				<?php else :?>
+					<b><?php htmlout($companies['CompanyName']); ?></b>
+				<?php endif; ?>
 			</div>
-			<div>
-				<label for="companysearchstring">Search for Company:</label>
-				<input type="text" name="companysearchstring" 
-				value=<?php htmlout($companysearchstring); ?>>
-			</div>
+			<?php if(!isset($_GET['Company'])) :?>
+				<div>
+					<label for="companysearchstring">Search for Company:</label>
+					<input type="text" name="companysearchstring" 
+					value=<?php htmlout($companysearchstring); ?>>
+				</div>
+			<?php endif; ?>
 			<div>
 				<label for="UserID">User:</label>
 				<select name="UserID" id="UserID">

@@ -78,18 +78,16 @@ if (isset($_POST['action']) and $_POST['action'] == 'Cancel')
 
 // If admin wants to add a booked meeting to the database
 // we load a new html form
-// TO-DO: NEED TO KNOW WHAT USER IS LOGGED IN TO GET THEIR USERID
 if (isset($_GET['add']))
 {
-	echo 'userID is: ' . $_POST['userID'] . '<br />';
 	try
 	{
+		session_start();
 		// Retrieve the user's default displayname and bookingdescription
 		// if they have any.
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 		$pdo = connect_to_db();
-		$sql = 'SELECT 	u.`userID`,
-						u.`bookingdescription`, 
+		$sql = 'SELECT	u.`bookingdescription`, 
 						u.`displayname`,
 						c.`companyID`,
 						c.`name` 					AS companyName
@@ -98,17 +96,20 @@ if (isset($_GET['add']))
 				ON 		e.userID = u.userID
 				JOIN	`company` c
 				ON 		c.companyID = e.companyID
-				WHERE 	u.`userID` = 1'; // <--- FIX THIS TO :userID
+				WHERE 	u.`userID` = :userID';
 			
-		echo 'userID is: ' . $_POST['userID'] . '<br />';	
-		//$s = $pdo->prepare($sql);
-		//$s->bindValue(':userID', $_POST['userID']); // <--- FIX THIS
-		//$s->execute();
+		$s = $pdo->prepare($sql);
+		$s->bindValue(':userID', $_SESSION['LoggedInUserID']);
+		$s->execute();
 		
 		
 		// Create an array with the row information we retrieved
-		//$result = $s->fetchAll();
-		$result = $pdo->query($sql);
+		$result = $s->fetchAll();
+		//$result = $pdo->query($sql);
+		
+		
+		$displayName = '';
+		$description = '';
 		
 		foreach($result as $row){		
 			// Get the companies the user works for
@@ -117,11 +118,17 @@ if (isset($_GET['add']))
 								'companyID' => $row['companyID'],
 								'companyName' => $row['companyName']
 								);
-								
+				
+				
 			// Set default booking display name and booking description
-			$displayName = $row['displayname'];
-			$description = $row['bookingdescription'];
-			$userID = $row['userID'];
+			if($row['displayname']!=NULL){
+				$displayName = $row['displayname'];
+			}
+
+			if($row['bookingdescription']!=NULL){
+				$description = $row['bookingdescription'];
+			}
+
 		}		
 		// Get name and IDs for access level
 		$sql = 'SELECT 	`meetingRoomID`,
@@ -141,11 +148,21 @@ if (isset($_GET['add']))
 		// We only need to allow the user a company dropdown selector if they
 		// are connected to more than 1 company.
 		// If not we just store the companyID in a hidden form field
-		if (sizeOf($company)>1){
-			$displayCompanySelect = TRUE;
-		} else {
+		if(isset($company)){
+			if (sizeOf($company)>1){
+				// User is in multiple companies
+				
+				$displayCompanySelect = TRUE;
+			} elseif(sizeOf($company) == 1) {
+				// User is in ONE company
+				
+				$displayCompanySelect = FALSE;
+				$companyID = $company['companyID'];
+			}
+		} else{
+			// User is NOT in a company
 			$displayCompanySelect = FALSE;
-			$companyID = $company['companyID'];
+			$companyID = NULL;
 		}
 		
 		//Close the connection
@@ -183,11 +200,17 @@ if (isset($_GET['addform']))
 	// Add the booking to the database
 	try
 	{	
+		session_start();
+	
+		if(isset($_POST['companyID']) AND $_POST['companyID'] != NULL AND 
+		$_POST['companyID'] != ''){
+			$companyID = $_POST['companyID'];
+		} else {
+			$companyID = NULL;
+		}
+	
 		//Generate cancellation code
 		$cancellationCode = generateCancellationCode();
-		//TO-DO: Remove echo statement when testing is over
-		echo 'cancellation code we generated on addform: ' . $cancellationCode . '<br />';
-		
 		
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 		
@@ -208,8 +231,8 @@ if (isset($_GET['addform']))
 		$endDateTime = correctDatetimeFormat($_POST['endDateTime']);
 		
 		$s->bindValue(':meetingRoomID', $_POST['meetingRoomID']);
-		$s->bindValue(':userID', $_POST['userID']);	// <-- NEED TO GET THIS FROM SOMEWHERE
-		$s->bindValue(':companyID', $_POST['companyID']);
+		$s->bindValue(':userID', $_SESSION['LoggedInUserID']);
+		$s->bindValue(':companyID', $companyID);
 		$s->bindValue(':displayName', $_POST['displayName']);
 		$s->bindValue(':startDateTime', $startDateTime);
 		$s->bindValue(':endDateTime', $endDateTime);
@@ -273,10 +296,6 @@ try
 
 	//Close the connection
 	$pdo = null;
-	
-	//TO-DO: FIND THIS USERID BASED ON WHO'S LOGGED IN
-	//THIS FIXED NUMBER IS ONLY FOR TESTING PURPOSES
-	$userID = 1;
 }
 catch (PDOException $e)
 {
