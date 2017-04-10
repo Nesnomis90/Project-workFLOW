@@ -82,6 +82,7 @@ if (isset($_GET['add']))
 {
 	try
 	{
+		session_start();
 		// Retrieve the user's default displayname and bookingdescription
 		// if they have any.
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
@@ -106,6 +107,10 @@ if (isset($_GET['add']))
 		$result = $s->fetchAll();
 		//$result = $pdo->query($sql);
 		
+		
+		$displayName = '';
+		$description = '';
+		
 		foreach($result as $row){		
 			// Get the companies the user works for
 			// This will be used to create a dropdown list in HTML
@@ -113,10 +118,17 @@ if (isset($_GET['add']))
 								'companyID' => $row['companyID'],
 								'companyName' => $row['companyName']
 								);
-								
+				
+				
 			// Set default booking display name and booking description
-			$displayName = $row['displayname'];
-			$description = $row['bookingdescription'];
+			if($row['displayname']!=NULL){
+				$displayName = $row['displayname'];
+			}
+
+			if($row['bookingdescription']!=NULL){
+				$description = $row['bookingdescription'];
+			}
+
 		}		
 		// Get name and IDs for access level
 		$sql = 'SELECT 	`meetingRoomID`,
@@ -136,11 +148,21 @@ if (isset($_GET['add']))
 		// We only need to allow the user a company dropdown selector if they
 		// are connected to more than 1 company.
 		// If not we just store the companyID in a hidden form field
-		if (sizeOf($company)>1){
-			$displayCompanySelect = TRUE;
-		} else {
+		if(isset($company)){
+			if (sizeOf($company)>1){
+				// User is in multiple companies
+				
+				$displayCompanySelect = TRUE;
+			} elseif(sizeOf($company) == 1) {
+				// User is in ONE company
+				
+				$displayCompanySelect = FALSE;
+				$companyID = $company['companyID'];
+			}
+		} else{
+			// User is NOT in a company
 			$displayCompanySelect = FALSE;
-			$companyID = $company['companyID'];
+			$companyID = NULL;
 		}
 		
 		//Close the connection
@@ -178,6 +200,15 @@ if (isset($_GET['addform']))
 	// Add the booking to the database
 	try
 	{	
+		session_start();
+	
+		if(isset($_POST['companyID']) AND $_POST['companyID'] != NULL AND 
+		$_POST['companyID'] != ''){
+			$companyID = $_POST['companyID'];
+		} else {
+			$companyID = NULL;
+		}
+	
 		//Generate cancellation code
 		$cancellationCode = generateCancellationCode();
 		
@@ -201,7 +232,7 @@ if (isset($_GET['addform']))
 		
 		$s->bindValue(':meetingRoomID', $_POST['meetingRoomID']);
 		$s->bindValue(':userID', $_SESSION['LoggedInUserID']);
-		$s->bindValue(':companyID', $_POST['companyID']);
+		$s->bindValue(':companyID', $companyID);
 		$s->bindValue(':displayName', $_POST['displayName']);
 		$s->bindValue(':startDateTime', $startDateTime);
 		$s->bindValue(':endDateTime', $endDateTime);

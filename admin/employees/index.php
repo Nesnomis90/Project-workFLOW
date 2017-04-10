@@ -5,6 +5,7 @@
 include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/helpers.inc.php';
 include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/magicquotes.inc.php';
 
+session_start();
 // CHECK IF USER TRYING TO ACCESS THIS IS IN FACT THE ADMIN!
 if (!isUserAdmin()){
 	exit();
@@ -36,6 +37,14 @@ if(isset($_POST['action']) AND $_POST['action'] == 'Remove'){
 		exit();
 	}
 	
+	// If we are looking at a specific company, let's refresh info about
+	// that company again.
+	if(isset($_GET['Company'])){
+		$TheCompanyID = $_GET['Company'];
+		$location = "http://$_SERVER[HTTP_HOST]/admin/employees/?Company=" . $TheCompanyID;
+		header("Location: $location");
+		exit();
+	}
 	// Load company list webpage with updated database
 	header('Location: .');
 	exit();	
@@ -44,15 +53,33 @@ if(isset($_POST['action']) AND $_POST['action'] == 'Remove'){
 if(isset($_POST['action']) AND $_POST['action'] == 'Search'){
 	// Admin clicked the search button, trying to limit the shown company and user lists
 	// Let's remember what was searched for
-	$_SESSION['AddEmployeeCompanySearch'] = $_POST['companysearchstring'];
-	$_SESSION['AddEmployeeUserSearch'] = $_POST['usersearchstring'];
-	$_SESSION['AddEmployeeSelectedCompanyID'] = $_POST['CompanyID'];
-	$_SESSION['AddEmployeeSelectedUserID'] = $_POST['UserID'];
+	session_start();
 	
-	// Also we want to refresh AddEmployee with our new values!
-	$_SESSION['refreshAddEmployee'] = TRUE;
-	header('Location: .');
-	exit();
+	// If we are looking at a specific company, let's refresh info about
+	// that company again.
+	if(isset($_GET['Company'])){	
+		$_SESSION['AddEmployeeUserSearch'] = $_POST['usersearchstring'];
+		$_SESSION['AddEmployeeSelectedUserID'] = $_POST['UserID'];
+		$_SESSION['refreshAddEmployee'] = TRUE;
+		
+		$TheCompanyID = $_GET['Company'];
+		$location = "http://$_SERVER[HTTP_HOST]/admin/employees/?Company=" . $TheCompanyID;
+		header("Location: $location");
+		exit();
+	} else {
+		$_SESSION['AddEmployeeCompanySearch'] = $_POST['companysearchstring'];
+		$_SESSION['AddEmployeeUserSearch'] = $_POST['usersearchstring'];
+		$_SESSION['AddEmployeeSelectedCompanyID'] = $_POST['CompanyID'];
+		$_SESSION['AddEmployeeSelectedUserID'] = $_POST['UserID'];
+		
+		// Also we want to refresh AddEmployee with our new values!
+		$_SESSION['refreshAddEmployee'] = TRUE;
+		header('Location: .');
+		exit();
+	}
+	
+
+
 }
 
 // 	If admin wants to add an employee to a company in the database
@@ -64,6 +91,7 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Add Employee') OR
 	$companysearchstring = '';			
 	$usersearchstring = '';
 
+	session_start();
 	// Check if the call was a form submit or a forced refresh
 	if(isset($_SESSION['refreshAddEmployee']) AND $_SESSION['refreshAddEmployee']){
 		// Acknowledge that we have refreshed the form
@@ -123,38 +151,55 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Add Employee') OR
 									);
 		}
 		
+		session_start();
 		$_SESSION['AddEmployeeCompanyPositionArray'] = $companyposition;
 
 		// Get all companies and users so the admin can search/choose from them
-			//Companies
-		$sql = 'SELECT 	`companyID` AS CompanyID,
-						`name`		AS CompanyName
-				FROM 	`company`';
+			//Companies	
+			
+		if(!isset($_GET['Company'])){
+			// If we're NOT looking at a specific company already
+			$sql = 'SELECT 	`companyID` AS CompanyID,
+							`name`		AS CompanyName
+					FROM 	`company`';
+					
+			if ($companysearchstring != ''){
+				$sqladd = " WHERE `name` LIKE :search";
+				$sql = $sql . $sqladd;	
 				
-		if ($companysearchstring != ''){
-			$sqladd = " WHERE `name` LIKE :search";
-			$sql = $sql . $sqladd;	
+				$finalcompanysearchstring = '%' . $companysearchstring . '%';
+				
+				$s = $pdo->prepare($sql);
+				$s->bindValue(':search', $finalcompanysearchstring);
+				$s->execute();
+				$result = $s->fetchAll();
+			} else {
+				$result = $pdo->query($sql);
+			}
 			
-			$finalcompanysearchstring = '%' . $companysearchstring . '%';
-			
-			$s = $pdo->prepare($sql);
-			$s->bindValue(':search', $finalcompanysearchstring);
-			$s->execute();
-			$result = $s->fetchAll();
+			// Get the rows of information from the query
+			// This will be used to create a dropdown list in HTML
+			foreach($result as $row){
+				$companies[] = array(
+										'CompanyID' => $row['CompanyID'],
+										'CompanyName' => $row['CompanyName']
+										);
+			}
+				
 		} else {
-			$result = $pdo->query($sql);
-		}
-			
-		// Get the rows of information from the query
-		// This will be used to create a dropdown list in HTML
-		foreach($result as $row){
-			$companies[] = array(
-									'CompanyID' => $row['CompanyID'],
-									'CompanyName' => $row['CompanyName']
-									);
+			$sql = 'SELECT 	`companyID` AS CompanyID,
+							`name`		AS CompanyName
+					FROM 	`company`
+					WHERE 	`companyID` = :CompanyID';
+			$s = $pdo->prepare($sql);
+			$s->bindValue(':CompanyID', $_GET['Company']);
+			$s->execute();
+			$companies = $s->fetch();
 		}
 		
+		session_start();
 		$_SESSION['AddEmployeeCompaniesArray'] = $companies;
+
 		
 			//	Users - Only active ones?
 			// 	TO-DO: Change to allow all users?	
@@ -191,7 +236,7 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Add Employee') OR
 									$row['firstname'] . ' - ' . $row['email']
 									);
 		}
-			
+		session_start();
 		$_SESSION['AddEmployeeUsersArray'] = $users;
 			
 		//close connection
@@ -213,25 +258,50 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Add Employee') OR
 // When admin has added the needed information and wants to add an employee connection
 if (isset($_POST['action']) AND $_POST['action'] == 'Confirm Employee')
 {
+	session_start();
 	// Make sure we only do this if user filled out all values
-	if($_POST['CompanyID'] == '' AND $_POST['UserID'] == ''){
-		// We didn't have enough values filled in. "go back" to employee fill in
-		$_SESSION['refreshAddEmployee'] = TRUE;
-		$_SESSION['AddEmployeeError'] = "Need to select a user and a company first!";
-		header('Location: .');
-		exit();
-	} elseif($_POST['CompanyID'] != '' AND $_POST['UserID'] == ''){
-		$_SESSION['refreshAddEmployee'] = TRUE;
-		$_SESSION['AddEmployeeError'] = "Need to select a user first!";
-		$_SESSION['AddEmployeeSelectedCompanyID'] = $_POST['CompanyID'];
-		header('Location: .');
-		exit();
-	} elseif($_POST['CompanyID'] == '' AND $_POST['UserID'] != ''){
-		$_SESSION['refreshAddEmployee'] = TRUE;
-		$_SESSION['AddEmployeeError'] = "Need to select a company first!";
-		$_SESSION['AddEmployeeSelectedUserID'] = $_POST['UserID'];
-		header('Location: .');
-		exit();
+	if(!isset($_GET['Company'])){
+		// If we have to select a company
+		if($_POST['CompanyID'] == '' AND $_POST['UserID'] == ''){
+			// We didn't have enough values filled in. "go back" to employee fill in
+			$_SESSION['refreshAddEmployee'] = TRUE;
+			$_SESSION['AddEmployeeError'] = "Need to select a user and a company first!";
+			header('Location: .');
+			exit();
+		} elseif($_POST['CompanyID'] != '' AND $_POST['UserID'] == ''){
+			$_SESSION['refreshAddEmployee'] = TRUE;
+			$_SESSION['AddEmployeeError'] = "Need to select a user first!";
+			$_SESSION['AddEmployeeSelectedCompanyID'] = $_POST['CompanyID'];
+			header('Location: .');
+			exit();
+		} elseif($_POST['CompanyID'] == '' AND $_POST['UserID'] != ''){
+			$_SESSION['refreshAddEmployee'] = TRUE;
+			$_SESSION['AddEmployeeError'] = "Need to select a company first!";
+			$_SESSION['AddEmployeeSelectedUserID'] = $_POST['UserID'];
+			header('Location: .');
+			exit();
+		}		
+	} else {
+		// If we have already selected a specific company
+		if($_POST['UserID'] == ''){
+			// We didn't have enough values filled in. "go back" to employee fill in
+			$_SESSION['refreshAddEmployee'] = TRUE;
+			$_SESSION['AddEmployeeError'] = "Need to select a user first!";
+			
+			$TheCompanyID = $_GET['Company'];
+			$location = "http://$_SERVER[HTTP_HOST]/admin/employees/?Company=" . $TheCompanyID;
+			header("Location: $location");
+			exit();
+		}
+	}
+
+	
+	// If we're looking at a specific company
+	session_start();
+	if(isset($_GET['Company'])){
+		$CompanyID = $_SESSION['AddEmployeeCompaniesArray']['CompanyID'];
+	} else {
+		$CompanyID = $_POST['CompanyID'];
 	}
 	
 	// Check if the employee connection already exists for the user and company.
@@ -244,7 +314,7 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Confirm Employee')
 				WHERE 	`CompanyID`= :CompanyID
 				AND 	`UserID` = :UserID';
 		$s = $pdo->prepare($sql);
-		$s->bindValue(':CompanyID', $_POST['CompanyID']);
+		$s->bindValue(':CompanyID', $CompanyID);
 		$s->bindValue(':UserID', $_POST['UserID']);		
 		$s->execute();
 		
@@ -256,10 +326,25 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Confirm Employee')
 		{
 			// This user and company combination already exists in our database
 			// This means the user is already an employee in the company!
-			$_SESSION['AddEmployeeSelectedCompanyID'] = $_POST['CompanyID'];
+			
+			session_start();
+			
 			$_SESSION['AddEmployeeSelectedUserID'] = $_POST['UserID'];
 			$_SESSION['refreshAddEmployee'] = TRUE;
 			$_SESSION['AddEmployeeError'] = "The selected user is already an employee in the selected company!";
+			
+			if(isset($_GET['Company'])){
+				
+				$_SESSION['AddEmployeeSelectedCompanyID'] = $_GET['Company'];
+				
+				$TheCompanyID = $_GET['Company'];
+				$location = "http://$_SERVER[HTTP_HOST]/admin/employees/?Company=" . $TheCompanyID;
+				header("Location: $location");
+				exit();
+			}
+
+
+			$_SESSION['AddEmployeeSelectedCompanyID'] = $_POST['CompanyID'];
 			header('Location: .');
 			exit();			
 		}
@@ -285,7 +370,7 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Confirm Employee')
 							`userID` = :UserID,
 							`PositionID` = :PositionID';
 		$s = $pdo->prepare($sql);
-		$s->bindValue(':CompanyID', $_POST['CompanyID']);
+		$s->bindValue(':CompanyID', $CompanyID);
 		$s->bindValue(':UserID', $_POST['UserID']);
 		$s->bindValue(':PositionID', $_POST['PositionID']);		
 		$s->execute();
@@ -323,6 +408,7 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Confirm Employee')
 		$companyinfo = 'N/A';
 		$positioninfo = 'N/A';
 		
+		session_start();
 		// Get selected user info
 		if(isset($_SESSION['AddEmployeeUsersArray'])){
 			foreach($_SESSION['AddEmployeeUsersArray'] AS $row){
@@ -377,7 +463,7 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Confirm Employee')
 							`positionID` = :PositionID,
 							`description` = :description";
 		$s = $pdo->prepare($sql);
-		$s->bindValue(':CompanyID', $_POST['CompanyID']);
+		$s->bindValue(':CompanyID', $CompanyID);
 		$s->bindValue(':UserID', $_POST['UserID']);
 		$s->bindValue(':PositionID', $_POST['PositionID']);		
 		$s->bindValue(':description', $description);
@@ -391,6 +477,15 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Confirm Employee')
 		$error = 'Error adding log event to database: ' . $e->getMessage();
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
 		$pdo = null;
+		exit();
+	}
+	
+	// If we are looking at a specific company, let's refresh info about
+	// that company again.
+	if(isset($_GET['Company'])){
+		$TheCompanyID = $_GET['Company'];
+		$location = "http://$_SERVER[HTTP_HOST]/admin/employees/?Company=" . $TheCompanyID;
+		header("Location: $location");
 		exit();
 	}
 	
@@ -503,6 +598,15 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Confirm Role')
 		exit();		
 	}
 	
+	// If we are looking at a specific company, let's refresh info about
+	// that company again.
+	if(isset($_GET['Company'])){	
+		$TheCompanyID = $_GET['Company'];
+		$location = "http://$_SERVER[HTTP_HOST]/admin/employees/?Company=" . $TheCompanyID;
+		header("Location: $location");
+		exit();
+	}
+	
 	// Load employee list webpage with updated database
 	header('Location: .');
 	exit();
@@ -516,72 +620,138 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Cancel'){
 	echo "<b>Cancel button clicked. Taking you back to /admin/employees/!</b><br />";
 }
 
-// Display employee list
-try
-{
+// Get only information from the specific company
+if(isset($_GET['Company'])){
 	include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 
 	$pdo = connect_to_db();
 	
-	$sql = "SELECT 		u.`userID`										AS UsrID,
-						c.`companyID`									AS TheCompanyID,
-						c.`name`										AS CompanyName,
-						u.`firstName`, 
-						u.`lastName`,
-						u.`email`,
-						cp.`name`										AS PositionName, 
-						DATE_FORMAT(e.`startDateTime`,'%d %b %Y %T') 	AS StartDateTime,
-						UNIX_TIMESTAMP(e.`startDateTime`)				AS OrderByDate,
-						(
-							SELECT 		SEC_TO_TIME(SUM(TIME_TO_SEC(b.`actualEndDateTime`) - 
-										TIME_TO_SEC(b.`startDateTime`))) 
-							FROM 		`booking` b
-							INNER JOIN `employee` e
-							ON 			b.`userID` = e.`userID`
-							INNER JOIN `company` c
-							ON 			c.`companyID` = e.`companyID`
-							INNER JOIN 	`user` u 
-							ON 			e.`UserID` = u.`UserID` 
-							WHERE 		b.`userID` = UsrID
-							AND 		b.`companyID` = TheCompanyID
-							AND 		YEAR(b.`actualEndDateTime`) = YEAR(NOW())
-							AND 		MONTH(b.`actualEndDateTime`) = MONTH(NOW())
-						) 												AS MonthlyBookingTimeUsed,
-						(
-							SELECT 		SEC_TO_TIME(SUM(TIME_TO_SEC(b.`actualEndDateTime`) - 
-										TIME_TO_SEC(b.`startDateTime`))) 
-							FROM 		`booking` b
-							INNER JOIN `employee` e
-							ON 			b.`userID` = e.`userID`
-							INNER JOIN `company` c
-							ON 			c.`companyID` = e.`companyID`
-							INNER JOIN 	`user` u 
-							ON 			e.`UserID` = u.`UserID` 
-							WHERE 		b.`userID` = UsrID
-							AND 		b.`companyID` = TheCompanyID
-						) 												AS TotalBookingTimeUsed							
-			FROM 		`company` c 
-			JOIN 		`employee` e
-			ON 			e.CompanyID = c.CompanyID 
-			JOIN 		`companyposition` cp 
-			ON 			cp.PositionID = e.PositionID
-			JOIN 		`user` u 
-			ON 			u.userID = e.UserID
-			ORDER BY 	OrderByDate DESC";
+	$sql = "SELECT 	u.`userID`					AS UsrID,
+					c.`companyID`				AS TheCompanyID,
+					c.`name`					AS CompanyName,
+					u.`firstName`, 
+					u.`lastName`,
+					u.`email`,
+					cp.`name`					AS PositionName, 
+					DATE_FORMAT(e.`startDateTime`,'%d %b %Y %T') 	AS StartDateTime,
+					(
+						SELECT 		SEC_TO_TIME(SUM(TIME_TO_SEC(b.`actualEndDateTime`) - 
+									TIME_TO_SEC(b.`startDateTime`))) 
+						FROM 		`booking` b
+						INNER JOIN `employee` e
+						ON 			b.`userID` = e.`userID`
+						INNER JOIN `company` c
+						ON 			c.`companyID` = e.`companyID`
+						INNER JOIN 	`user` u 
+						ON 			e.`UserID` = u.`UserID` 
+						WHERE 		b.`userID` = UsrID
+						AND 		b.`companyID` = :id
+						AND 		YEAR(b.`actualEndDateTime`) = YEAR(NOW())
+						AND 		MONTH(b.`actualEndDateTime`) = MONTH(NOW())
+					) 							AS MonthlyBookingTimeUsed,
+					(
+						SELECT 		SEC_TO_TIME(SUM(TIME_TO_SEC(b.`actualEndDateTime`) - 
+									TIME_TO_SEC(b.`startDateTime`))) 
+						FROM 		`booking` b
+						INNER JOIN `employee` e
+						ON 			b.`userID` = e.`userID`
+						INNER JOIN `company` c
+						ON 			c.`companyID` = e.`companyID`
+						INNER JOIN 	`user` u 
+						ON 			e.`UserID` = u.`UserID` 
+						WHERE 		b.`userID` = UsrID
+						AND 		b.`companyID` = :id
+					) 							AS TotalBookingTimeUsed							
+			FROM 	`company` c 
+			JOIN 	`employee` e
+			ON 		e.CompanyID = c.CompanyID 
+			JOIN 	`companyposition` cp 
+			ON 		cp.PositionID = e.PositionID
+			JOIN 	`user` u 
+			ON 		u.userID = e.UserID 
+			WHERE 	c.`companyID` = :id";
 			
-	$result = $pdo->query($sql);
-	$rowNum = $result->rowCount();
+	$s = $pdo->prepare($sql);
+	$s->bindValue(':id', $_GET['Company']);
+	$s->execute();
+	
+	$result = $s->fetchAll();
+	$rowNum = sizeOf($result);
 	
 	//close connection
 	$pdo = null;
-		
 }
-catch (PDOException $e)
-{
-	$error = 'Error getting employee information: ' . $e->getMessage();
-	include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
-	exit();
-}	
+
+session_start();
+
+if(!isset($_GET['Company'])){
+	// Display employee list
+	try
+	{
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+
+		$pdo = connect_to_db();
+		
+		$sql = "SELECT 		u.`userID`										AS UsrID,
+							c.`companyID`									AS TheCompanyID,
+							c.`name`										AS CompanyName,
+							u.`firstName`, 
+							u.`lastName`,
+							u.`email`,
+							cp.`name`										AS PositionName, 
+							DATE_FORMAT(e.`startDateTime`,'%d %b %Y %T') 	AS StartDateTime,
+							UNIX_TIMESTAMP(e.`startDateTime`)				AS OrderByDate,
+							(
+								SELECT 		SEC_TO_TIME(SUM(TIME_TO_SEC(b.`actualEndDateTime`) - 
+											TIME_TO_SEC(b.`startDateTime`))) 
+								FROM 		`booking` b
+								INNER JOIN `employee` e
+								ON 			b.`userID` = e.`userID`
+								INNER JOIN `company` c
+								ON 			c.`companyID` = e.`companyID`
+								INNER JOIN 	`user` u 
+								ON 			e.`UserID` = u.`UserID` 
+								WHERE 		b.`userID` = UsrID
+								AND 		b.`companyID` = TheCompanyID
+								AND 		YEAR(b.`actualEndDateTime`) = YEAR(NOW())
+								AND 		MONTH(b.`actualEndDateTime`) = MONTH(NOW())
+							) 												AS MonthlyBookingTimeUsed,
+							(
+								SELECT 		SEC_TO_TIME(SUM(TIME_TO_SEC(b.`actualEndDateTime`) - 
+											TIME_TO_SEC(b.`startDateTime`))) 
+								FROM 		`booking` b
+								INNER JOIN `employee` e
+								ON 			b.`userID` = e.`userID`
+								INNER JOIN `company` c
+								ON 			c.`companyID` = e.`companyID`
+								INNER JOIN 	`user` u 
+								ON 			e.`UserID` = u.`UserID` 
+								WHERE 		b.`userID` = UsrID
+								AND 		b.`companyID` = TheCompanyID
+							) 												AS TotalBookingTimeUsed							
+				FROM 		`company` c 
+				JOIN 		`employee` e
+				ON 			e.CompanyID = c.CompanyID 
+				JOIN 		`companyposition` cp 
+				ON 			cp.PositionID = e.PositionID
+				JOIN 		`user` u 
+				ON 			u.userID = e.UserID
+				ORDER BY 	OrderByDate DESC";
+				
+		$result = $pdo->query($sql);
+		$rowNum = $result->rowCount();
+		
+		//close connection
+		$pdo = null;
+			
+	}
+	catch (PDOException $e)
+	{
+		$error = 'Error getting employee information: ' . $e->getMessage();
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+		exit();
+	}
+}
 
 // Create an array with the actual key/value pairs we want to use in our HTML	
 foreach($result AS $row){
@@ -611,9 +781,17 @@ foreach($result AS $row){
 						'StartDateTime' => $row['StartDateTime']
 						);
 }
-
-
+/*
+if (isset($_SESSION['EmployeeInfoFromCompany'])){
+	// We are sent here from the company tab
+	// Let's display the company specific information
+	$employees = $_SESSION['EmployeeInfoFromCompany'];
+	unset($_SESSION['EmployeeInfoFromCompany']);
+	
+	$rowNum = sizeOf($employees);
+}*/
 
 // Create the employees list in HTML
-include_once 'employees.html.php';
+include_once 'employees.html.php';	
+
 ?>

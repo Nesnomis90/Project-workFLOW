@@ -104,8 +104,6 @@ function generateActivationCode(){
 	{
 		// Create a 64char code
 		$code = hash('sha256', mt_rand());
-		//TO-DO: Remove echo statement when testing is over
-		echo 'The 64 bit char generated is : <b>' . $code . '</b>.<br />';
 		
 		// Check if code has already been used
 		// If it has, continue making more codes until we find one
@@ -163,8 +161,6 @@ function generateCancellationCode(){
 	{
 		// Create a 64char code
 		$code = hash('sha256', mt_rand());
-		//TO-DO: Remove echo statement when testing is over
-		echo 'The 64 bit char generated is : <b>' . $code . '</b>.<br />';
 		
 		// Check if code has already been used
 		// If it has, continue making more codes until we find one

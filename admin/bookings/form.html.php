@@ -81,7 +81,6 @@
 			</div>
 			<div>
 				<input type="hidden" name="id" value="<?php htmlout($id); ?>">
-				<input type="hidden" name="userID" value="<?php htmlout($userID); ?>">
 				<input type="submit" value="<?php htmlout($button); ?>">
 			</div>
 			<div>
