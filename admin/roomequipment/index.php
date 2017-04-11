@@ -41,20 +41,90 @@ if(isset($_POST['action']) AND $_POST['action'] == 'Remove'){
 	exit();	
 }
 
+// Admin clicked the search button, trying to limit the shown equipment and meeting rooms
+if(isset($_POST['action']) AND $_POST['action'] == 'Search'){
+	// Let's remember what was searched for
+	session_start();
+	
+	// If we are looking at a specific meeting room, let's refresh info about
+	// that meeting room again.
+	if(isset($_GET['Company'])){	
+		$_SESSION['AddRoomEquipmentMeetingRoomSearch'] = $_POST['meetingroomsearchstring'];
+		$_SESSION['AddRoomEquipmentSelectedMeetingRoom'] = $_POST['MeetingRoomID'];
+		$_SESSION['refreshAddRoomEquipment'] = TRUE;
+		
+		$TheMeetingRoomID = $_GET['Meetingroom'];
+		$location = "http://$_SERVER[HTTP_HOST]/admin/roomequipment/?Meetingroom=" . $TheMeetingRoomID;
+		header("Location: $location");
+		exit();
+	} else {
+		$_SESSION['AddRoomEquipmentEquipmentSearch'] = $_POST['equipmentsearchstring'];
+		$_SESSION['AddRoomEquipmentMeetingRoomSearch'] = $_POST['meetingroomsearchstring'];
+		$_SESSION['AddRoomEquipmentSelectedEquipment'] = $_POST['EquipmentID'];
+		$_SESSION['AddRoomEquipmentSelectedMeetingRoom'] = $_POST['MeetingRoomID'];
+		$_SESSION['AddRoomEquipmentSelectedEquipmentAmount'] = $_POST['EquipmentAmount'];
+		
+		// Also we want to refresh AddRoomEquipment with our new values!
+		$_SESSION['refreshAddRoomEquipment'] = TRUE;
+		header('Location: .');
+		exit();
+	}	
+}
+
+
 // 	If admin wants to add a company to the database
 // 	we load a new html form
 if ((isset($_POST['action']) AND $_POST['action'] == 'Add Room Equipment') OR 
-	(isset($_POST['action']) AND $_POST['action'] == 'Search'))
+	(isset($_SESSION['refreshAddRoomEquipment']) AND $_SESSION['refreshAddRoomEquipment']))
 {	
-	// This is a GOTO label.
-	goToAddRoomEquipment:
+
+	$equipmentsearchstring = '';
+	$meetingroomsearchstring = '';
+
+	session_start();
+	// Check if the call was a form submit or a forced refresh
+	if(isset($_SESSION['refreshAddRoomEquipment']) AND $_SESSION['refreshAddRoomEquipment']){
+		// Acknowledge that we have refreshed the page
+		unset($_SESSION['refreshAddRoomEquipment']);
+		
+		// Display the 'error' that made us refresh
+		if(isset($_SESSION['AddEmployeeError'])){
+			$AddRoomEquipmentError = $_SESSION['AddEmployeeError'];
+			unset($_SESSION['AddEmployeeError']);
+		}
+		
+		// Remember the company string that was searched before refreshing
+		if(isset($_SESSION['AddEmployeeCompanySearch'])){
+			$companysearchstring = $_SESSION['AddEmployeeCompanySearch'];
+			unset($_SESSION['AddEmployeeCompanySearch']);
+		}
+		
+		// Remember the user string that was searched before refreshing
+		if(isset($_SESSION['AddEmployeeUserSearch'])){
+			$usersearchstring = $_SESSION['AddEmployeeUserSearch'];
+			unset($_SESSION['AddEmployeeUserSearch']);
+		}
+		
+		// Remember what company was selected before refreshing
+		if(isset($_SESSION['AddEmployeeSelectedCompanyID'])){
+			$selectedCompanyID = $_SESSION['AddEmployeeSelectedCompanyID'];
+			unset($_SESSION['AddEmployeeSelectedCompanyID']);
+		}
+		
+		// Remember what user was selected before refreshing
+		if(isset($_SESSION['AddEmployeeSelectedUserID'])){
+			$selectedUserID = $_SESSION['AddEmployeeSelectedUserID'];
+			unset($_SESSION['AddEmployeeSelectedUserID']);
+		}		
+	}
+
+
 	// Get info about equipment and rooms from the database
 	try
 	{
 		if (isset($_POST['action']) AND $_POST['action'] == 'Search'){
 			$equipmentsearchstring = $_POST['equipmentsearchstring'];
 			$meetingroomsearchstring = $_POST['meetingroomsearchstring'];
-			echo "Search button clicked <br />";
 		} else {
 			$equipmentsearchstring = '';
 			$meetingroomsearchstring = '';
@@ -69,7 +139,6 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Add Room Equipment') OR
 						`name` 			AS MeetingRoomName
 				FROM 	`meetingroom`';
 				
-		echo "meetingroomsearchstring is: $meetingroomsearchstring <br />";
 		if ($meetingroomsearchstring != ''){
 			$sqladd = " WHERE `name` LIKE :search";
 			$sql = $sql . $sqladd;	
@@ -85,7 +154,6 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Add Room Equipment') OR
 			$result = $pdo->query($sql);
 			echo "Size of result: " . sizeOf($result) . "<br />";
 		}
-		echo "Meeting Room SQL is: $sql <br />";
 			
 		// Get the rows of information from the query
 		// This will be used to create a dropdown list in HTML
@@ -118,7 +186,6 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Add Room Equipment') OR
 			$result = $pdo->query($sql);
 			echo "Size of result: " . sizeOf($result) . "<br />";
 		}
-		echo "Equipment SQL is: $sql <br />";
 		
 		// Get the rows of information from the query
 		// This will be used to create a dropdown list in HTML
@@ -150,26 +217,28 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Add Room Equipment') OR
 // When admin has added the needed information and wants to add equipment in a meeting room
 if (isset($_POST['action']) AND $_POST['action'] == 'Confirm Room Equipment')
 {
+	session_start();
 	// Make sure we only do this if user filled out all values
-	// TO-DO:   GOTO is a bad practice. Find a solution?
-	// 			THIS IS ONLY NEEDED AS LONG AS WE DON'T HAVE ANY
-	// 			REQUIRED ATTRIBUTES ON THE SELECT FIELDS
 	if($_POST['EquipmentID'] == '' AND $_POST['MeetingRoomID'] == '' AND $_POST['EquipmentAmount'] == ''){
 		// We didn't have enough values filled in. "go back" to roomequipment fill in
-		echo "<b>Need to select an equipment, a meetingroom and an amount first!</b><br />";
-		goto goToAddRoomEquipment;
+		$_SESSION['refreshAddRoomEquipment'] = TRUE;
+		$_SESSION['AddRoomEquipmentError'] = "Need to select an equipment, a meetingroom and an amount first!";
+		header('Location: .');
 		exit();
 	} elseif(($_POST['EquipmentID'] != '' OR $_POST['EquipmentAmount'] != '') AND $_POST['MeetingRoomID'] == '' ){
-		echo "<b>Need to select a Meeting Room first!</b><br />";
-		goto goToAddRoomEquipment;
+		$_SESSION['refreshAddRoomEquipment'] = TRUE;
+		$_SESSION['AddRoomEquipmentError'] = "Need to select a Meeting Room first!";
+		header('Location: .');	
 		exit();
 	} elseif(($_POST['EquipmentAmount'] != '' OR $_POST['MeetingRoomID'] != '') AND $_POST['EquipmentID'] == ''){
-		echo "<b>Need to select an Equipment first!</b><br />";
-		goto goToAddRoomEquipment;
+		$_SESSION['refreshAddRoomEquipment'] = TRUE;
+		$_SESSION['AddRoomEquipmentError'] = "Need to select an Equipment first!";
+		header('Location: .');			
 		exit();
 	} elseif(($_POST['EquipmentID'] != '' OR $_POST['MeetingRoomID'] != '') AND $_POST['EquipmentAmount'] == ''){
-		echo "<b>Need to select an Equipment Amount first!</b><br />";
-		goto goToAddRoomEquipment;
+		$_SESSION['refreshAddRoomEquipment'] = TRUE;
+		$_SESSION['AddRoomEquipmentError'] = "Need to select an Equipment Amount first!";
+		header('Location: .');			
 		exit();
 	}
 	

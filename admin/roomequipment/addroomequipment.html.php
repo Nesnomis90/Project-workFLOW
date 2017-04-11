@@ -8,17 +8,32 @@
 	</head>
 	<body>
 		<h1>Add Room Equipment</h1>
+		<?php if(isset($AddRoomEquipmentError)) :?>
+			<div>
+				<p><b><?php htmlout($AddRoomEquipmentError); ?> </b></p>
+			</div>
+		<?php endif; ?>
 		<form action="" method="post">
 			<div>
 				<label for="MeetingRoomID">Meeting Room Name:</label>
-				<select name="MeetingRoomID" id="MeetingRoomID">
-					<option value="">Select a Meeting Room</option>
-					<?php foreach($meetingrooms as $row): ?> 
-						<option value=<?php htmlout($row['MeetingRoomID']); ?>>
-								<?php htmlout($row['MeetingRoomName']);?>
-						</option>
-					<?php endforeach; ?>
-				</select>
+				<?php if(!isset($_GET['Meetingroom'])) : ?>
+					<select name="MeetingRoomID" id="MeetingRoomID">
+						<option value="">Select a Meeting Room</option>
+						<?php foreach($meetingrooms as $row): ?> 
+							<?php if (isset($selectedMeetingRoomID) AND $selectedMeetingRoomID == $row['MeetingRoomID']) : ?>
+								<option selected="selected" value=<?php htmlout($row['MeetingRoomID']); ?>>
+										<?php htmlout($row['MeetingRoomName']);?>
+								</option>
+							<?php else : ?>
+								<option value=<?php htmlout($row['MeetingRoomID']); ?>>
+										<?php htmlout($row['MeetingRoomName']);?>
+								</option>
+							<?php endif; ?>	
+						<?php endforeach; ?>
+					</select>
+				<?php else :?>
+					<b><?php htmlout($meetingrooms['MeetingRoomName']); ?></b>
+				<?php endif; ?>					
 			</div>
 			<div>
 				<label for="meetingroomsearchstring">Search for Meeting Room:</label>
@@ -50,10 +65,6 @@
 				<input type="submit" name="action" value="Search">
 				<input type="submit" name="action" value="Confirm Room Equipment">
 				<input type="submit" name="action" value="Cancel">
-				<input type="hidden" name="meetingroomsearch" id="meetingroomsearch"
-				value="<?php htmlout($meetingroomsearchstring) ;?>">
-				<input type="hidden" name="equipmentsearch" id="equipmentsearch"
-				value="<?php htmlout($equipmentsearchstring) ;?>">
 			</div>
 			<div>
 				<input type="reset">

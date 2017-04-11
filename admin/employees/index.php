@@ -49,9 +49,8 @@ if(isset($_POST['action']) AND $_POST['action'] == 'Remove'){
 	header('Location: .');
 	exit();	
 }
-
+// Admin clicked the search button, trying to limit the shown company and user lists
 if(isset($_POST['action']) AND $_POST['action'] == 'Search'){
-	// Admin clicked the search button, trying to limit the shown company and user lists
 	// Let's remember what was searched for
 	session_start();
 	
@@ -77,9 +76,6 @@ if(isset($_POST['action']) AND $_POST['action'] == 'Search'){
 		header('Location: .');
 		exit();
 	}
-	
-
-
 }
 
 // 	If admin wants to add an employee to a company in the database
@@ -94,7 +90,7 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Add Employee') OR
 	session_start();
 	// Check if the call was a form submit or a forced refresh
 	if(isset($_SESSION['refreshAddEmployee']) AND $_SESSION['refreshAddEmployee']){
-		// Acknowledge that we have refreshed the form
+		// Acknowledge that we have refreshed the page
 		unset($_SESSION['refreshAddEmployee']);
 		
 		// Display the 'error' that made us refresh
