@@ -48,9 +48,10 @@ if(isset($_POST['action']) AND $_POST['action'] == 'Search'){
 	
 	// If we are looking at a specific meeting room, let's refresh info about
 	// that meeting room again.
-	if(isset($_GET['Company'])){	
-		$_SESSION['AddRoomEquipmentMeetingRoomSearch'] = $_POST['meetingroomsearchstring'];
-		$_SESSION['AddRoomEquipmentSelectedMeetingRoom'] = $_POST['MeetingRoomID'];
+	if(isset($_GET['Meetingroom'])){	
+		$_SESSION['AddRoomEquipmentEquipmentSearch'] = $_POST['equipmentsearchstring'];
+		$_SESSION['AddRoomEquipmentSelectedEquipment'] = $_POST['EquipmentID'];
+		$_SESSION['AddRoomEquipmentSelectedEquipmentAmount'] = $_POST['EquipmentAmount'];
 		$_SESSION['refreshAddRoomEquipment'] = TRUE;
 		
 		// Refresh RoomEquipment for the specific meeting room again
@@ -73,7 +74,7 @@ if(isset($_POST['action']) AND $_POST['action'] == 'Search'){
 }
 
 
-// 	If admin wants to add a company to the database
+// 	If admin wants to update the database by adding equipment to a meeting room
 // 	we load a new html form
 if ((isset($_POST['action']) AND $_POST['action'] == 'Add Room Equipment') OR 
 	(isset($_SESSION['refreshAddRoomEquipment']) AND $_SESSION['refreshAddRoomEquipment']))
@@ -81,6 +82,7 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Add Room Equipment') OR
 
 	$equipmentsearchstring = '';
 	$meetingroomsearchstring = '';
+	$EquipmentAmount = 0;
 
 	session_start();
 	// Check if the call was a form submit or a forced refresh
@@ -116,61 +118,73 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Add Room Equipment') OR
 		if(isset($_SESSION['AddEmployeeSelectedUserID'])){
 			$selectedEquipmentID = $_SESSION['AddEmployeeSelectedUserID'];
 			unset($_SESSION['AddEmployeeSelectedUserID']);
-		}		
+		}	
+		
+		// Remember the equipment amount that was selected before refreshing
+		if(isset($_SESSION['AddRoomEquipmentSelectedEquipmentAmount'])){
+			$EquipmentAmount = $_SESSION['AddRoomEquipmentSelectedEquipmentAmount'];
+			unset($_SESSION['AddRoomEquipmentSelectedEquipmentAmount']);
+		}	
+		
 	}
 
 
 	// Get info about equipment and rooms from the database
 	try
 	{
-		if (isset($_POST['action']) AND $_POST['action'] == 'Search'){
-			$equipmentsearchstring = $_POST['equipmentsearchstring'];
-			$meetingroomsearchstring = $_POST['meetingroomsearchstring'];
-		} else {
-			$equipmentsearchstring = '';
-			$meetingroomsearchstring = '';
-		}
-		
 		// Get all equipment and meeting rooms so the admin can search/choose from them
 			//Meeting Rooms
-		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';			
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';		
+		$pdo = connect_to_db();		
 			
-		$pdo = connect_to_db();
-		$sql = 'SELECT 	`meetingRoomID`	AS MeetingRoomID,
-						`name` 			AS MeetingRoomName
-				FROM 	`meetingroom`';
+		if(!isset($_GET['Meetingroom'])){
+			// If we're NOT looking at a specific meetingroom already
+			$sql = 'SELECT 	`meetingRoomID`	AS MeetingRoomID,
+							`name` 			AS MeetingRoomName
+					FROM 	`meetingroom`';
+					
+			if ($meetingroomsearchstring != ''){
+				$sqladd = " WHERE `name` LIKE :search";
+				$sql = $sql . $sqladd;	
 				
-		if ($meetingroomsearchstring != ''){
-			$sqladd = " WHERE `name` LIKE :search";
-			$sql = $sql . $sqladd;	
+				$finalmeetingroomsearchstring = '%' . $meetingroomsearchstring . '%';
+				
+				$s = $pdo->prepare($sql);
+				$s->bindValue(':search', $finalmeetingroomsearchstring);
+				$s->execute();
+				$result = $s->fetchAll();
+			} else {
+				$result = $pdo->query($sql);
+			}
 			
-			$finalmeetingroomsearchstring = '%' . $meetingroomsearchstring . '%';
-			
-			$s = $pdo->prepare($sql);
-			$s->bindValue(':search', $finalmeetingroomsearchstring);
-			$s->execute();
-			$result = $s->fetchAll();
-			echo "Size of result: " . sizeOf($result) . "<br />";
+			// Get the rows of information from the query
+			// This will be used to create a dropdown list in HTML
+			foreach($result as $row){
+				$meetingrooms[] = array(
+										'MeetingRoomID' => $row['MeetingRoomID'],
+										'MeetingRoomName' => $row['MeetingRoomName']
+										);
+			}
+				
 		} else {
-			$result = $pdo->query($sql);
-			echo "Size of result: " . sizeOf($result) . "<br />";
-		}
-			
-		// Get the rows of information from the query
-		// This will be used to create a dropdown list in HTML
-		foreach($result as $row){
-			$meetingrooms[] = array(
-									'MeetingRoomID' => $row['MeetingRoomID'],
-									'MeetingRoomName' => $row['MeetingRoomName']
-									);
-		}
+			$sql = 'SELECT 	`meetingRoomID`	AS MeetingRoomID,
+							`name` 			AS MeetingRoomName
+					FROM 	`meetingroom`
+					WHERE 	`meetingRoomID` = :MeetingRoomID';
+			$s = $pdo->prepare($sql);
+			$s->bindValue(':MeetingRoomID', $_GET['Meetingroom']);
+			$s->execute();
+			$meetingrooms = $s->fetch();
+		}	
+
+		session_start();
+		$_SESSION['AddRoomEquipmentMeetingRoomArray'] = $meetingrooms;	
 		
 			// Equipment
 		$sql = 'SELECT 	`EquipmentID`,
 						`name` 			AS EquipmentName
 				FROM 	`equipment`';
 
-		echo "equipmentsearchstring is: $equipmentsearchstring <br />";
 		if ($equipmentsearchstring != ''){
 			$sqladd = " WHERE `name` LIKE :search";
 			$sql = $sql . $sqladd;
@@ -181,11 +195,8 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Add Room Equipment') OR
 			$s->bindValue(":search", $finalequipmentsearchstring);
 			$s->execute();
 			$result = $s->fetchAll();
-			echo "Size of result: " . sizeOf($result) . "<br />";
-			
 		} else {
 			$result = $pdo->query($sql);
-			echo "Size of result: " . sizeOf($result) . "<br />";
 		}
 		
 		// Get the rows of information from the query
@@ -197,7 +208,9 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Add Room Equipment') OR
 									);
 		}
 			
-		$EquipmentAmount = 0;
+		session_start();
+		$_SESSION['AddRoomEquipmentEquipmentArray'] = $equipment;		
+			
 			
 		//close connection
 		$pdo = null;
@@ -220,30 +233,148 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Confirm Room Equipment')
 {
 	session_start();
 	// Make sure we only do this if user filled out all values
-	if($_POST['EquipmentID'] == '' AND $_POST['MeetingRoomID'] == '' AND $_POST['EquipmentAmount'] == ''){
-		// We didn't have enough values filled in. "go back" to roomequipment fill in
-		$_SESSION['refreshAddRoomEquipment'] = TRUE;
-		$_SESSION['AddRoomEquipmentError'] = "Need to select an equipment, a meetingroom and an amount first!";
-		header('Location: .');
-		exit();
-	} elseif(($_POST['EquipmentID'] != '' OR $_POST['EquipmentAmount'] != '') AND $_POST['MeetingRoomID'] == '' ){
-		$_SESSION['refreshAddRoomEquipment'] = TRUE;
-		$_SESSION['AddRoomEquipmentError'] = "Need to select a Meeting Room first!";
-		header('Location: .');	
-		exit();
-	} elseif(($_POST['EquipmentAmount'] != '' OR $_POST['MeetingRoomID'] != '') AND $_POST['EquipmentID'] == ''){
-		$_SESSION['refreshAddRoomEquipment'] = TRUE;
-		$_SESSION['AddRoomEquipmentError'] = "Need to select an Equipment first!";
-		header('Location: .');			
-		exit();
-	} elseif(($_POST['EquipmentID'] != '' OR $_POST['MeetingRoomID'] != '') AND $_POST['EquipmentAmount'] == ''){
-		$_SESSION['refreshAddRoomEquipment'] = TRUE;
-		$_SESSION['AddRoomEquipmentError'] = "Need to select an Equipment Amount first!";
-		header('Location: .');			
-		exit();
+	if(!isset($_GET['Meetingroom'])){
+		$a = ($_POST['EquipmentID'] == '');
+		$b = ($_POST['MeetingRoomID'] == '');
+		$c = ($_POST['EquipmentAmount'] < 1);
+		if ($a AND $b AND $c){
+			$d = "Need to select an equipment, a meeting room and an amount first!";
+			if($a AND $b AND !$c){
+				$d = "Need to select an equipment and a meeting room first!";
+			}
+			if($a AND !$b AND $c){
+				$d = "Need to select an equipment and the amount first!";
+			}
+			if(!$a AND $b AND $c){
+				$d = "Need to select a meeting room and the equipment amount first!";
+			}
+			if($a AND !$b AND !$c){
+				$d = "Need to select an equipment first!";
+			}
+			if(!$a AND $b AND !$c){
+				$d = "Need to select a meeting room first!";
+			}
+			if(!$a AND !$b AND $c){
+				$d = "Need to select an equipment amount first!";
+			}
+			/*
+			if($_POST['EquipmentID'] == '' AND $_POST['MeetingRoomID'] == '' AND $_POST['EquipmentAmount'] == ''){
+				// We didn't have enough values filled in. "go back" to roomequipment fill in
+				$_SESSION['refreshAddRoomEquipment'] = TRUE;
+				$_SESSION['AddRoomEquipmentError'] = "Need to select an equipment, a meetingroom and an amount first!";
+				header('Location: .');
+				exit();
+			} elseif(($_POST['EquipmentID'] != '' OR $_POST['EquipmentAmount'] != '') AND $_POST['MeetingRoomID'] == '' ){
+				$_SESSION['refreshAddRoomEquipment'] = TRUE;
+				$_SESSION['AddRoomEquipmentError'] = "Need to select a Meeting Room first!";
+				header('Location: .');	
+				exit();
+			} elseif(($_POST['EquipmentAmount'] != '' OR $_POST['MeetingRoomID'] != '') AND $_POST['EquipmentID'] == ''){
+				$_SESSION['refreshAddRoomEquipment'] = TRUE;
+				$_SESSION['AddRoomEquipmentError'] = "Need to select an Equipment first!";
+				$_SESSION['AddRoomEquipmentSelectedEquipmentAmount'] = $_POST['EquipmentAmount'];
+				header('Location: .');			
+				exit();
+			} elseif(($_POST['EquipmentID'] != '' OR $_POST['MeetingRoomID'] != '') AND $_POST['EquipmentAmount'] == ''){
+
+				$_SESSION['AddRoomEquipmentError'] = "Need to select an Equipment Amount first!";
+
+			}*/
+			// We didn't have enough values filled in. "go back" to roomequipment fill in
+			$_SESSION['AddRoomEquipmentError'] = $d;
+			$_SESSION['refreshAddRoomEquipment'] = TRUE;
+			header('Location: .');			
+			exit();
+		}
+
+	} else {
+		// If we have already selected a specific meeting room
+		if($_POST['EquipmentID'] == '' OR $_POST['EquipmentAmount'] == 0){
+			// We didn't have enough values filled in. "go back" to room equipment fill in
+			if($_POST['EquipmentID'] == '' AND $_POST['EquipmentAmount'] == 0){
+				$_SESSION['AddRoomEquipmentError'] = "Need to select an equipment and amount first!";
+			} elseif($_POST['EquipmentID'] == '' AND $_POST['EquipmentAmount'] > 0){
+				$_SESSION['AddRoomEquipmentError'] = "Need to select an equipment first!";
+			} elseif($_POST['EquipmentID'] <> '' AND $_POST['EquipmentAmount'] == 0){
+				$_SESSION['AddRoomEquipmentError'] = "Need to select an equipment amount first!";
+			} else {
+				$_SESSION['AddRoomEquipmentError'] = "Unknown refresh.";
+			}
+			// Refresh RoomEquipment for the specific meeting room again
+			$_SESSION['refreshAddRoomEquipment'] = TRUE;
+			$TheMeetingRoomID = $_GET['Meetingroom'];
+			$location = "http://$_SERVER[HTTP_HOST]/admin/roomequipment/?Meetingroom=" . $TheMeetingRoomID;
+			header("Location: $location");
+			exit();
+		}
 	}
 	
-	// TO-DO: CHECK THAT EQUIPMENT ISN'T ALREADY IN THE ROOM
+	// If we're looking at a specific meetingroom
+	session_start();
+	if(isset($_GET['Meetingroom'])){
+		$MeetingRoomID = $_SESSION['AddRoomEquipmentMeetingRoomArray']['MeetingRoomID'];
+	} else {
+		$MeetingRoomID = $_POST['MeetingRoomID'];
+	}	
+	
+	// Check if the room equipment connection already exists for the meeting room and equipment.
+	try
+	{
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+		$pdo = connect_to_db();
+		$sql = 'SELECT 	COUNT(*) 
+				FROM 	`roomequipment`
+				WHERE 	`MeetingRoomID`= :MeetingRoomID
+				AND 	`EquipmentID` = :EquipmentID';
+		$s = $pdo->prepare($sql);
+		$s->bindValue(':MeetingRoomID', $MeetingRoomID);
+		$s->bindValue(':EquipmentID', $_POST['EquipmentID']);		
+		$s->execute();
+		
+		$pdo = null;
+		
+		$row = $s->fetch();
+		
+		if ($row[0] > 0)
+		{
+			// This meeting room and equipment combination already exists in our database
+			// This means the equipment is already in the selected meeting room!
+			
+			session_start();
+			
+			$_SESSION['AddRoomEquipmentSelectedEquipment'] = $_POST['EquipmentID'];
+			$_SESSION['AddRoomEquipmentSelectedEquipmentAmount'] = $_POST['EquipmentAmount'];
+			$_SESSION['refreshAddRoomEquipment'] = TRUE;
+			$_SESSION['AddRoomEquipmentError'] = "The selected equipment is already in the selected meeting room!";
+			
+			
+			if(isset($_GET['Meetingroom'])){
+				
+				$_SESSION['AddRoomEquipmentSelectedMeetingRoom'] = $_GET['Meetingroom'];
+				
+				// Refresh RoomEquipment for the specific meeting room again
+				$TheMeetingRoomID = $_GET['Meetingroom'];
+				$location = "http://$_SERVER[HTTP_HOST]/admin/roomequipment/?Meetingroom=" . $TheMeetingRoomID;
+				header("Location: $location");
+				exit();
+			}
+
+			// Refresh RoomEquipment 
+			$_SESSION['AddRoomEquipmentSelectedMeetingRoom'] = $_POST['MeetingRoomID'];
+			header('Location: .');
+			exit();			
+		}
+		
+		// No roomequipment connection found. Now we can create it.
+	}
+	catch (PDOException $e)
+	{
+		$error = 'Error searching for roomequipment connection.' . $e->getMessage();
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+		$pdo = null;
+		exit();
+	}	
+		
 	// Add the new roomequipment connection to the database
 	try
 	{	
@@ -256,7 +387,7 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Confirm Room Equipment')
 							`amount` = :EquipmentAmount';
 		$s = $pdo->prepare($sql);
 		$s->bindValue(':EquipmentID', $_POST['EquipmentID']);
-		$s->bindValue(':MeetingRoomID', $_POST['MeetingRoomID']);
+		$s->bindValue(':MeetingRoomID', $MeetingRoomID);
 		$s->bindValue(':EquipmentAmount', $_POST['EquipmentAmount']);		
 		$s->execute();
 		
@@ -271,11 +402,108 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Confirm Room Equipment')
 		exit();
 	}
 	
+	// Add a log event that equipment was added in a meeting room	
+	try
+	{
+		/* The following code is to get the text information that the user selected.
+		This can not be retrieved with a $_POST statement since the value is the IDs
+		and not the text. So we go through the same arrays we used earlier, now saved
+		in a session variable, to get the text again by matching it with the selected IDs.
+		
+		This could be done a lot simpler, with way less code, and no need to use session.
+		This would require javascript to get the actual text from the selected element. Then
+		we could save it as a hidden input and get the values with $_POST directly.
+		PROS: Way less code, better overview and ... faster?
+		CONS: Info isn't retrieved if javascript is disabled.
+		
+		Could also be done by doing a new SELECT QUERY for the information instead, since we 
+		already have the IDs for all the info. This would look cleaner, but would be an
+		unnecessary query since we already have access to all the information.
+		*/
+		$meetingroominfo = 'N/A';
+		$equipmentinfo = 'N/A';
+		
+			// move the variables below...
+		$_SESSION['AddRoomEquipmentSelectedEquipment'];
+		$_SESSION['AddRoomEquipmentSelectedMeetingRoom'];
+		$_SESSION['AddRoomEquipmentSelectedEquipmentAmount'];	
+		$_SESSION['AddRoomEquipmentMeetingRoomArray'];
+		$_SESSION['AddRoomEquipmentEquipmentArray'];
+		
+		session_start();
+		// Get selected meeting room name
+		if(isset($_SESSION['AddRoomEquipmentMeetingRoomArray'])){
+			foreach($_SESSION['AddRoomEquipmentMeetingRoomArray'] AS $row){
+				if($row['MeetingRoomID'] == $_POST['MeetingRoomID']){
+					$meetingroominfo = $row['MeetingRoomName'];
+					break;
+				}
+			}
+			unset($_SESSION['AddRoomEquipmentMeetingRoomArray']);
+		}
+		
+		// Get selected equipment name
+		if(isset($_SESSION['AddRoomEquipmentEquipmentArray'])){
+			foreach($_SESSION['AddRoomEquipmentEquipmentArray'] AS $row){
+				if($row['CompanyID'] == $_POST['CompanyID']){
+					$equipmentinfo = $row['CompanyName'];
+					break;
+				}
+			}
+			unset($_SESSION['AddEmployeeCompaniesArray']);
+		}
+	
+		
+		// Save a description with some extra information to be kept after 
+		// the user or company has been removed
+		$description = 'The equipment: ' . $equipmentinfo . 
+		' was added to the meeting room: ' . $meetingroominfo . 
+		' with the amount: ' . $_POST['EquipmentAmount'] . ". Added by: " .
+		$_SESSION['LoggedInUserName'];
+		
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+		
+		$pdo = connect_to_db();
+		$sql = "INSERT INTO `logevent` 
+				SET			`actionID` = 	(
+											SELECT `actionID` 
+											FROM `logaction`
+											WHERE `name` = 'Room Equipment Added'
+											),
+							`meetingRoomID` = :MeetingRoomID,
+							`equipmentID` = :EquipmentID,
+							`description` = :description";
+		$s = $pdo->prepare($sql);
+		$s->bindValue(':MeetingRoomID', $MeetingRoomID);
+		$s->bindValue(':EquipmentID', $_POST['EquipmentID']);	
+		$s->bindValue(':description', $description);
+		$s->execute();
+		
+		//Close the connection
+		$pdo = null;		
+	}
+	catch(PDOException $e)
+	{
+		$error = 'Error adding log event to database: ' . $e->getMessage();
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+		$pdo = null;
+		exit();
+	}
+	
+	// If we are looking at a specific meeting room, let's refresh info about
+	// that meeting room again.
+	if(isset($_GET['Meetingroom'])){
+		// Refresh RoomEquipment for the specific meeting room again
+		$TheMeetingRoomID = $_GET['Meetingroom'];
+		$location = "http://$_SERVER[HTTP_HOST]/admin/roomequipment/?Meetingroom=" . $TheMeetingRoomID;
+		header("Location: $location");
+		exit();
+	}
+	
 	// Load room equipment list webpage with new room equipment connection
 	header('Location: .');
 	exit();
 }
-
 
 // if admin wants to change the amount of an equipment in a room
 // we load a new html form
@@ -378,43 +606,90 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Cancel'){
 	echo "<b>Cancel button clicked. Taking you back to /admin/roomequipment/!</b><br />";
 }
 
-// Display roomequipment list
-try
-{
-	include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+session_start();
+// Get only information from the specific mneetingroom
+if(isset($_GET['Meetingroom'])){
+	
+	try
+	{
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 
-	$pdo = connect_to_db();
-	
-	$sql = "SELECT 		e.`EquipmentID`									AS TheEquipmentID,
-						e.`name`										AS EquipmentName,
-						e.`description`									AS EquipmentDescription,
-						re.`amount`										AS EquipmentAmount,
-						m.`meetingRoomID`								AS MeetingRoomID,
-						m.`name`										AS MeetingRoomName,
-						DATE_FORMAT(re.`datetimeAdded`,'%d %b %Y %T') 	AS DateTimeAdded,
-						UNIX_TIMESTAMP(re.`datetimeAdded`)				AS OrderByDate
-			FROM 		`equipment` e
-			JOIN 		`roomequipment` re
-			ON 			e.`EquipmentID` = re.`EquipmentID`
-			JOIN 		`meetingroom` m
-			ON 			m.`meetingRoomID` = re.`meetingRoomID`
-			ORDER BY	OrderByDate
-			DESC";
-			
-	$result = $pdo->query($sql);
-	$rowNum = $result->rowCount();
-	
-	//close connection
-	$pdo = null;
+		$pdo = connect_to_db();
 		
+		$sql = "SELECT 		e.`EquipmentID`									AS TheEquipmentID,
+							e.`name`										AS EquipmentName,
+							e.`description`									AS EquipmentDescription,
+							re.`amount`										AS EquipmentAmount,
+							m.`meetingRoomID`								AS MeetingRoomID,
+							m.`name`										AS MeetingRoomName,
+							DATE_FORMAT(re.`datetimeAdded`,'%d %b %Y %T') 	AS DateTimeAdded,
+							UNIX_TIMESTAMP(re.`datetimeAdded`)				AS OrderByDate
+				FROM 		`equipment` e
+				JOIN 		`roomequipment` re
+				ON 			e.`EquipmentID` = re.`EquipmentID`
+				JOIN 		`meetingroom` m
+				ON 			m.`meetingRoomID` = re.`meetingRoomID`
+				WHERE 		m.`meetingRoomID` = :MeetingRoomID
+				ORDER BY	OrderByDate
+				DESC";
+				
+		$s = $pdo->prepare($sql);
+		$s->bindValue(':MeetingRoomID', $_GET['Meetingroom']);
+		$s->execute();
+		
+		$result = $s->fetchAll();
+		$rowNum = sizeOf($result);
+		
+		//close connection
+		$pdo = null;
+			
+	}
+	catch (PDOException $e)
+	{
+		$error = 'Error getting room equipment information: ' . $e->getMessage();
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+		exit();
+	}
 }
-catch (PDOException $e)
-{
-	$error = 'Error getting room equipment information: ' . $e->getMessage();
-	include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
-	exit();
-}	
 
+// Display roomequipment list
+if(!isset($_GET['Meetingroom'])){
+	try
+	{
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+
+		$pdo = connect_to_db();
+		
+		$sql = "SELECT 		e.`EquipmentID`									AS TheEquipmentID,
+							e.`name`										AS EquipmentName,
+							e.`description`									AS EquipmentDescription,
+							re.`amount`										AS EquipmentAmount,
+							m.`meetingRoomID`								AS MeetingRoomID,
+							m.`name`										AS MeetingRoomName,
+							DATE_FORMAT(re.`datetimeAdded`,'%d %b %Y %T') 	AS DateTimeAdded,
+							UNIX_TIMESTAMP(re.`datetimeAdded`)				AS OrderByDate
+				FROM 		`equipment` e
+				JOIN 		`roomequipment` re
+				ON 			e.`EquipmentID` = re.`EquipmentID`
+				JOIN 		`meetingroom` m
+				ON 			m.`meetingRoomID` = re.`meetingRoomID`
+				ORDER BY	OrderByDate
+				DESC";
+				
+		$result = $pdo->query($sql);
+		$rowNum = $result->rowCount();
+		
+		//close connection
+		$pdo = null;
+			
+	}
+	catch (PDOException $e)
+	{
+		$error = 'Error getting room equipment information: ' . $e->getMessage();
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+		exit();
+	}	
+}
 // Create an array with the actual key/value pairs we want to use in our HTML	
 foreach($result AS $row){
 	

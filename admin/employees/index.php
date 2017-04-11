@@ -293,6 +293,7 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Confirm Employee')
 			$_SESSION['refreshAddEmployee'] = TRUE;
 			$_SESSION['AddEmployeeError'] = "Need to select a user first!";
 			
+			// Refresh Employee for the specific company again
 			$TheCompanyID = $_GET['Company'];
 			$location = "http://$_SERVER[HTTP_HOST]/admin/employees/?Company=" . $TheCompanyID;
 			header("Location: $location");
@@ -452,7 +453,8 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Confirm Employee')
 		// the user or company has been removed
 		$description = 'The user: ' . $userinfo . 
 		' was added to the company: ' . $companyinfo . 
-		' and was given the position: ' . $positioninfo;
+		' and was given the position: ' . $positioninfo . ". Added by : " .
+		$_SESSION['LoggedInUserName'];
 		
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 		
@@ -499,7 +501,7 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Confirm Employee')
 	exit();
 }
 
-// if admin wants to set the date to remove for a company
+// if admin wants to change the company role for a user
 // we load a new html form
 if (isset($_POST['action']) AND $_POST['action'] == 'Change Role')
 {
@@ -625,70 +627,79 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Cancel'){
 	echo "<b>Cancel button clicked. Taking you back to /admin/employees/!</b><br />";
 }
 
+session_start();
 // Get only information from the specific company
 if(isset($_GET['Company'])){
-	include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+	try
+	{
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 
-	$pdo = connect_to_db();
-	
-	$sql = "SELECT 	u.`userID`					AS UsrID,
-					c.`companyID`				AS TheCompanyID,
-					c.`name`					AS CompanyName,
-					u.`firstName`, 
-					u.`lastName`,
-					u.`email`,
-					cp.`name`					AS PositionName, 
-					DATE_FORMAT(e.`startDateTime`,'%d %b %Y %T') 	AS StartDateTime,
-					(
-						SELECT 		SEC_TO_TIME(SUM(TIME_TO_SEC(b.`actualEndDateTime`) - 
-									TIME_TO_SEC(b.`startDateTime`))) 
-						FROM 		`booking` b
-						INNER JOIN `employee` e
-						ON 			b.`userID` = e.`userID`
-						INNER JOIN `company` c
-						ON 			c.`companyID` = e.`companyID`
-						INNER JOIN 	`user` u 
-						ON 			e.`UserID` = u.`UserID` 
-						WHERE 		b.`userID` = UsrID
-						AND 		b.`companyID` = :id
-						AND 		YEAR(b.`actualEndDateTime`) = YEAR(NOW())
-						AND 		MONTH(b.`actualEndDateTime`) = MONTH(NOW())
-					) 							AS MonthlyBookingTimeUsed,
-					(
-						SELECT 		SEC_TO_TIME(SUM(TIME_TO_SEC(b.`actualEndDateTime`) - 
-									TIME_TO_SEC(b.`startDateTime`))) 
-						FROM 		`booking` b
-						INNER JOIN `employee` e
-						ON 			b.`userID` = e.`userID`
-						INNER JOIN `company` c
-						ON 			c.`companyID` = e.`companyID`
-						INNER JOIN 	`user` u 
-						ON 			e.`UserID` = u.`UserID` 
-						WHERE 		b.`userID` = UsrID
-						AND 		b.`companyID` = :id
-					) 							AS TotalBookingTimeUsed							
-			FROM 	`company` c 
-			JOIN 	`employee` e
-			ON 		e.CompanyID = c.CompanyID 
-			JOIN 	`companyposition` cp 
-			ON 		cp.PositionID = e.PositionID
-			JOIN 	`user` u 
-			ON 		u.userID = e.UserID 
-			WHERE 	c.`companyID` = :id";
-			
-	$s = $pdo->prepare($sql);
-	$s->bindValue(':id', $_GET['Company']);
-	$s->execute();
-	
-	$result = $s->fetchAll();
-	$rowNum = sizeOf($result);
-	
-	//close connection
-	$pdo = null;
+		$pdo = connect_to_db();
+		
+		$sql = "SELECT 	u.`userID`					AS UsrID,
+						c.`companyID`				AS TheCompanyID,
+						c.`name`					AS CompanyName,
+						u.`firstName`, 
+						u.`lastName`,
+						u.`email`,
+						cp.`name`					AS PositionName, 
+						DATE_FORMAT(e.`startDateTime`,'%d %b %Y %T') 	AS StartDateTime,
+						(
+							SELECT 		SEC_TO_TIME(SUM(TIME_TO_SEC(b.`actualEndDateTime`) - 
+										TIME_TO_SEC(b.`startDateTime`))) 
+							FROM 		`booking` b
+							INNER JOIN `employee` e
+							ON 			b.`userID` = e.`userID`
+							INNER JOIN `company` c
+							ON 			c.`companyID` = e.`companyID`
+							INNER JOIN 	`user` u 
+							ON 			e.`UserID` = u.`UserID` 
+							WHERE 		b.`userID` = UsrID
+							AND 		b.`companyID` = :id
+							AND 		YEAR(b.`actualEndDateTime`) = YEAR(NOW())
+							AND 		MONTH(b.`actualEndDateTime`) = MONTH(NOW())
+						) 							AS MonthlyBookingTimeUsed,
+						(
+							SELECT 		SEC_TO_TIME(SUM(TIME_TO_SEC(b.`actualEndDateTime`) - 
+										TIME_TO_SEC(b.`startDateTime`))) 
+							FROM 		`booking` b
+							INNER JOIN `employee` e
+							ON 			b.`userID` = e.`userID`
+							INNER JOIN `company` c
+							ON 			c.`companyID` = e.`companyID`
+							INNER JOIN 	`user` u 
+							ON 			e.`UserID` = u.`UserID` 
+							WHERE 		b.`userID` = UsrID
+							AND 		b.`companyID` = :id
+						) 							AS TotalBookingTimeUsed							
+				FROM 	`company` c 
+				JOIN 	`employee` e
+				ON 		e.CompanyID = c.CompanyID 
+				JOIN 	`companyposition` cp 
+				ON 		cp.PositionID = e.PositionID
+				JOIN 	`user` u 
+				ON 		u.userID = e.UserID 
+				WHERE 	c.`companyID` = :id";
+				
+		$s = $pdo->prepare($sql);
+		$s->bindValue(':id', $_GET['Company']);
+		$s->execute();
+		
+		$result = $s->fetchAll();
+		$rowNum = sizeOf($result);
+		
+		//close connection
+		$pdo = null;
+	}
+	catch(PDOException $e)
+	{
+		$error = 'Error getting employee information: ' . $e->getMessage();
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+		exit();
+	}
 }
 
 session_start();
-
 if(!isset($_GET['Company'])){
 	// Display employee list
 	try
@@ -786,15 +797,6 @@ foreach($result AS $row){
 						'StartDateTime' => $row['StartDateTime']
 						);
 }
-/*
-if (isset($_SESSION['EmployeeInfoFromCompany'])){
-	// We are sent here from the company tab
-	// Let's display the company specific information
-	$employees = $_SESSION['EmployeeInfoFromCompany'];
-	unset($_SESSION['EmployeeInfoFromCompany']);
-	
-	$rowNum = sizeOf($employees);
-}*/
 
 // Create the employees list in HTML
 include_once 'employees.html.php';	

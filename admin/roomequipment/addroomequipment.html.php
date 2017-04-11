@@ -45,7 +45,7 @@
 			<div>
 				<label for="EquipmentID">Equipment:</label>
 				<select name="EquipmentID" id="EquipmentID">
-					<option value="">Select Equipment:</option>
+					<option value="">Select Equipment</option>
 					<?php foreach($equipment as $row): ?> 
 						<?php if (isset($selectedEquipmentID) AND $selectedEquipmentID == $row['EquipmentID']) : ?>
 							<option selected="selected" value=<?php htmlout($row['EquipmentID']); ?>>
