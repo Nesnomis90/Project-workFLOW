@@ -36,9 +36,17 @@ if(isset($_POST['action']) AND $_POST['action'] == 'Remove'){
 		exit();
 	}
 	
-	// Load room equipment list webpage with updated database
-	header('Location: .');
-	exit();	
+	if(isset($_GET['Meetingroom'])){	
+		// Refresh RoomEquipment for the specific meeting room again
+		$TheMeetingRoomID = $_GET['Meetingroom'];
+		$location = "http://$_SERVER[HTTP_HOST]/admin/roomequipment/?Meetingroom=" . $TheMeetingRoomID;
+		header("Location: $location");
+		exit();
+	} else {	
+		// Do a normal page reload
+		header('Location: .');
+		exit();
+	}		
 }
 
 // Admin clicked the search button, trying to limit the shown equipment and meeting rooms
@@ -46,25 +54,27 @@ if(isset($_POST['action']) AND $_POST['action'] == 'Search'){
 	// Let's remember what was searched for
 	session_start();
 	
+	$_SESSION['AddRoomEquipmentEquipmentSearch'] = $_POST['equipmentsearchstring'];
+	$_SESSION['AddRoomEquipmentSelectedEquipment'] = $_POST['EquipmentID'];
+	$_SESSION['AddRoomEquipmentSelectedEquipmentAmount'] = $_POST['EquipmentAmount'];
+	$_SESSION['refreshAddRoomEquipment'] = TRUE;
+	
+	// We are doing a new search, so we need to get new meeting room and equipment arrays
+	unset($_SESSION['AddRoomEquipmentEquipmentArray']);	
+	unset($_SESSION['AddRoomEquipmentMeetingRoomArray']);
+	
 	// If we are looking at a specific meeting room, let's refresh info about
 	// that meeting room again.
 	if(isset($_GET['Meetingroom'])){	
-		$_SESSION['AddRoomEquipmentEquipmentSearch'] = $_POST['equipmentsearchstring'];
-		$_SESSION['AddRoomEquipmentSelectedEquipment'] = $_POST['EquipmentID'];
-		$_SESSION['AddRoomEquipmentSelectedEquipmentAmount'] = $_POST['EquipmentAmount'];
-		$_SESSION['refreshAddRoomEquipment'] = TRUE;
-		
+
 		// Refresh RoomEquipment for the specific meeting room again
 		$TheMeetingRoomID = $_GET['Meetingroom'];
 		$location = "http://$_SERVER[HTTP_HOST]/admin/roomequipment/?Meetingroom=" . $TheMeetingRoomID;
 		header("Location: $location");
 		exit();
 	} else {
-		$_SESSION['AddRoomEquipmentEquipmentSearch'] = $_POST['equipmentsearchstring'];
 		$_SESSION['AddRoomEquipmentMeetingRoomSearch'] = $_POST['meetingroomsearchstring'];
-		$_SESSION['AddRoomEquipmentSelectedEquipment'] = $_POST['EquipmentID'];
 		$_SESSION['AddRoomEquipmentSelectedMeetingRoom'] = $_POST['MeetingRoomID'];
-		$_SESSION['AddRoomEquipmentSelectedEquipmentAmount'] = $_POST['EquipmentAmount'];
 		
 		// Also we want to refresh AddRoomEquipment with our new values!
 		$_SESSION['refreshAddRoomEquipment'] = TRUE;
@@ -96,133 +106,152 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Add Room Equipment') OR
 			unset($_SESSION['AddRoomEquipmentError']);
 		}
 		
-		// Remember the meeting room string that was searched before refreshing
+		// Set the meeting room string that was searched before refreshing
 		if(isset($_SESSION['AddRoomEquipmentMeetingRoomSearch'])){
 			$meetingroomsearchstring = $_SESSION['AddRoomEquipmentMeetingRoomSearch'];
 			unset($_SESSION['AddRoomEquipmentMeetingRoomSearch']);
 		}
-		
-		// Remember the equipment string that was searched before refreshing
+
+		// Set the equipment string that was searched before refreshing
 		if(isset($_SESSION['AddRoomEquipmentEquipmentSearch'])){
 			$equipmentsearchstring = $_SESSION['AddRoomEquipmentEquipmentSearch'];
 			unset($_SESSION['AddRoomEquipmentEquipmentSearch']);
 		}
 		
-		// Remember what meeting room was selected before refreshing
+		// Set what meeting room was selected before refreshing
 		if(isset($_SESSION['AddRoomEquipmentSelectedMeetingRoom'])){
 			$selectedMeetingRoomID = $_SESSION['AddRoomEquipmentSelectedMeetingRoom'];
 			unset($_SESSION['AddRoomEquipmentSelectedMeetingRoom']);
 		}
 		
-		// Remember what equipment was selected before refreshing
-		if(isset($_SESSION['AddEmployeeSelectedUserID'])){
-			$selectedEquipmentID = $_SESSION['AddEmployeeSelectedUserID'];
-			unset($_SESSION['AddEmployeeSelectedUserID']);
+		// Set what equipment was selected before refreshing
+		if(isset($_SESSION['AddRoomEquipmentSelectedEquipment'])){
+			$selectedEquipmentID = $_SESSION['AddRoomEquipmentSelectedEquipment'];
+			unset($_SESSION['AddRoomEquipmentSelectedEquipment']);
 		}	
 		
-		// Remember the equipment amount that was selected before refreshing
+		// Set the equipment amount that was selected before refreshing
 		if(isset($_SESSION['AddRoomEquipmentSelectedEquipmentAmount'])){
 			$EquipmentAmount = $_SESSION['AddRoomEquipmentSelectedEquipmentAmount'];
 			unset($_SESSION['AddRoomEquipmentSelectedEquipmentAmount']);
-		}	
-		
+		}		
 	}
-
-
+	
 	// Get info about equipment and rooms from the database
-	try
-	{
-		// Get all equipment and meeting rooms so the admin can search/choose from them
-			//Meeting Rooms
-		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';		
-		$pdo = connect_to_db();		
+	// if we don't already have them saved in a session array
+	if(	!isset($_SESSION['AddRoomEquipmentMeetingRoomArray']) OR 
+		!isset($_SESSION['AddRoomEquipmentEquipmentArray'])){
+		
+		try
+		{
+			// Get all equipment and meeting rooms so the admin can search/choose from them
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';		
+			$pdo = connect_to_db();	
 			
-		if(!isset($_GET['Meetingroom'])){
-			// If we're NOT looking at a specific meetingroom already
-			$sql = 'SELECT 	`meetingRoomID`	AS MeetingRoomID,
-							`name` 			AS MeetingRoomName
-					FROM 	`meetingroom`';
+				//Meeting Rooms
+			// Only get info if we haven't gotten it before
+			if(!isset($_SESSION['AddRoomEquipmentMeetingRoomArray'])){
+				// We don't have info about meeting rooms saved. Let's get it
+				
+				if(!isset($_GET['Meetingroom'])){
+					// If we're NOT looking at a specific meetingroom already
+					$sql = 'SELECT 	`meetingRoomID`	AS MeetingRoomID,
+									`name` 			AS MeetingRoomName
+							FROM 	`meetingroom`';
+							
+					if ($meetingroomsearchstring != ''){
+						$sqladd = " WHERE `name` LIKE :search";
+						$sql = $sql . $sqladd;	
+						
+						$finalmeetingroomsearchstring = '%' . $meetingroomsearchstring . '%';
+						
+						$s = $pdo->prepare($sql);
+						$s->bindValue(':search', $finalmeetingroomsearchstring);
+						$s->execute();
+						$result = $s->fetchAll();
+					} else {
+						$result = $pdo->query($sql);
+					}
 					
-			if ($meetingroomsearchstring != ''){
-				$sqladd = " WHERE `name` LIKE :search";
-				$sql = $sql . $sqladd;	
-				
-				$finalmeetingroomsearchstring = '%' . $meetingroomsearchstring . '%';
-				
-				$s = $pdo->prepare($sql);
-				$s->bindValue(':search', $finalmeetingroomsearchstring);
-				$s->execute();
-				$result = $s->fetchAll();
+					// Get the rows of information from the query
+					// This will be used to create a dropdown list in HTML
+					foreach($result as $row){
+						$meetingrooms[] = array(
+												'MeetingRoomID' => $row['MeetingRoomID'],
+												'MeetingRoomName' => $row['MeetingRoomName']
+												);
+					}
+					
+				} else {
+					// We want info about a specific meeting room
+					$sql = 'SELECT 	`meetingRoomID`	AS MeetingRoomID,
+									`name` 			AS MeetingRoomName
+							FROM 	`meetingroom`
+							WHERE 	`meetingRoomID` = :MeetingRoomID';
+					$s = $pdo->prepare($sql);
+					$s->bindValue(':MeetingRoomID', $_GET['Meetingroom']);
+					$s->execute();
+					$meetingrooms = $s->fetch();
+				}	
+				session_start();
+				$_SESSION['AddRoomEquipmentMeetingRoomArray'] = $meetingrooms;	
 			} else {
-				$result = $pdo->query($sql);
-			}
-			
-			// Get the rows of information from the query
-			// This will be used to create a dropdown list in HTML
-			foreach($result as $row){
-				$meetingrooms[] = array(
-										'MeetingRoomID' => $row['MeetingRoomID'],
-										'MeetingRoomName' => $row['MeetingRoomName']
-										);
-			}
+				$meetingrooms = $_SESSION['AddRoomEquipmentMeetingRoomArray'];
+			}	
+				// Equipment
+			// Only get info if we haven't gotten it before
+			if(!isset($_SESSION['AddRoomEquipmentEquipmentArray'])){
+				// We don't have info about equipment saved. Let's get it
+		
+				$sql = 'SELECT 	`EquipmentID`,
+								`name` 			AS EquipmentName
+						FROM 	`equipment`';
+
+				if ($equipmentsearchstring != ''){
+					$sqladd = " WHERE `name` LIKE :search";
+					$sql = $sql . $sqladd;
+					
+					$finalequipmentsearchstring = '%' . $equipmentsearchstring . '%';
+					
+					$s = $pdo->prepare($sql);
+					$s->bindValue(":search", $finalequipmentsearchstring);
+					$s->execute();
+					$result = $s->fetchAll();
+				} else {
+					$result = $pdo->query($sql);
+				}
 				
-		} else {
-			$sql = 'SELECT 	`meetingRoomID`	AS MeetingRoomID,
-							`name` 			AS MeetingRoomName
-					FROM 	`meetingroom`
-					WHERE 	`meetingRoomID` = :MeetingRoomID';
-			$s = $pdo->prepare($sql);
-			$s->bindValue(':MeetingRoomID', $_GET['Meetingroom']);
-			$s->execute();
-			$meetingrooms = $s->fetch();
-		}	
-
-		session_start();
-		$_SESSION['AddRoomEquipmentMeetingRoomArray'] = $meetingrooms;	
-		
-			// Equipment
-		$sql = 'SELECT 	`EquipmentID`,
-						`name` 			AS EquipmentName
-				FROM 	`equipment`';
-
-		if ($equipmentsearchstring != ''){
-			$sqladd = " WHERE `name` LIKE :search";
-			$sql = $sql . $sqladd;
+				// Get the rows of information from the query
+				// This will be used to create a dropdown list in HTML
+				foreach($result as $row){
+					$equipment[] = array(
+											'EquipmentID' => $row['EquipmentID'],
+											'EquipmentName' => $row['EquipmentName']
+											);
+				}
+					
+				session_start();
+				$_SESSION['AddRoomEquipmentEquipmentArray'] = $equipment;
+			} else {
+				$equipment = $_SESSION['AddRoomEquipmentEquipmentArray'];
+			}	
 			
-			$finalequipmentsearchstring = '%' . $equipmentsearchstring . '%';
-			
-			$s = $pdo->prepare($sql);
-			$s->bindValue(":search", $finalequipmentsearchstring);
-			$s->execute();
-			$result = $s->fetchAll();
-		} else {
-			$result = $pdo->query($sql);
+			//close connection
+			$pdo = null;
+		}
+		catch (PDOException $e)
+		{
+			$error = 'Error fetching equipment and meeting room lists: ' . $e->getMessage();
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+			$pdo = null;
+			exit();
 		}
 		
-		// Get the rows of information from the query
-		// This will be used to create a dropdown list in HTML
-		foreach($result as $row){
-			$equipment[] = array(
-									'EquipmentID' => $row['EquipmentID'],
-									'EquipmentName' => $row['EquipmentName']
-									);
-		}
-			
-		session_start();
-		$_SESSION['AddRoomEquipmentEquipmentArray'] = $equipment;		
-			
-			
-		//close connection
-		$pdo = null;
+	} else {
+		$meetingrooms = $_SESSION['AddRoomEquipmentMeetingRoomArray'];
+		$equipment = $_SESSION['AddRoomEquipmentEquipmentArray'];
 	}
-	catch (PDOException $e)
-	{
-		$error = 'Error fetching equipment and meeting room lists: ' . $e->getMessage();
-		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
-		$pdo = null;
-		exit();
-	}
-		
+
 	// Change to the actual html form template
 	include 'addroomequipment.html.php';
 	exit();
@@ -231,83 +260,6 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Add Room Equipment') OR
 // When admin has added the needed information and wants to add equipment in a meeting room
 if (isset($_POST['action']) AND $_POST['action'] == 'Confirm Room Equipment')
 {
-	session_start();
-	// Make sure we only do this if user filled out all values
-	if(!isset($_GET['Meetingroom'])){
-		$a = ($_POST['EquipmentID'] == '');
-		$b = ($_POST['MeetingRoomID'] == '');
-		$c = ($_POST['EquipmentAmount'] < 1);
-		if ($a AND $b AND $c){
-			$d = "Need to select an equipment, a meeting room and an amount first!";
-			if($a AND $b AND !$c){
-				$d = "Need to select an equipment and a meeting room first!";
-			}
-			if($a AND !$b AND $c){
-				$d = "Need to select an equipment and the amount first!";
-			}
-			if(!$a AND $b AND $c){
-				$d = "Need to select a meeting room and the equipment amount first!";
-			}
-			if($a AND !$b AND !$c){
-				$d = "Need to select an equipment first!";
-			}
-			if(!$a AND $b AND !$c){
-				$d = "Need to select a meeting room first!";
-			}
-			if(!$a AND !$b AND $c){
-				$d = "Need to select an equipment amount first!";
-			}
-			/*
-			if($_POST['EquipmentID'] == '' AND $_POST['MeetingRoomID'] == '' AND $_POST['EquipmentAmount'] == ''){
-				// We didn't have enough values filled in. "go back" to roomequipment fill in
-				$_SESSION['refreshAddRoomEquipment'] = TRUE;
-				$_SESSION['AddRoomEquipmentError'] = "Need to select an equipment, a meetingroom and an amount first!";
-				header('Location: .');
-				exit();
-			} elseif(($_POST['EquipmentID'] != '' OR $_POST['EquipmentAmount'] != '') AND $_POST['MeetingRoomID'] == '' ){
-				$_SESSION['refreshAddRoomEquipment'] = TRUE;
-				$_SESSION['AddRoomEquipmentError'] = "Need to select a Meeting Room first!";
-				header('Location: .');	
-				exit();
-			} elseif(($_POST['EquipmentAmount'] != '' OR $_POST['MeetingRoomID'] != '') AND $_POST['EquipmentID'] == ''){
-				$_SESSION['refreshAddRoomEquipment'] = TRUE;
-				$_SESSION['AddRoomEquipmentError'] = "Need to select an Equipment first!";
-				$_SESSION['AddRoomEquipmentSelectedEquipmentAmount'] = $_POST['EquipmentAmount'];
-				header('Location: .');			
-				exit();
-			} elseif(($_POST['EquipmentID'] != '' OR $_POST['MeetingRoomID'] != '') AND $_POST['EquipmentAmount'] == ''){
-
-				$_SESSION['AddRoomEquipmentError'] = "Need to select an Equipment Amount first!";
-
-			}*/
-			// We didn't have enough values filled in. "go back" to roomequipment fill in
-			$_SESSION['AddRoomEquipmentError'] = $d;
-			$_SESSION['refreshAddRoomEquipment'] = TRUE;
-			header('Location: .');			
-			exit();
-		}
-
-	} else {
-		// If we have already selected a specific meeting room
-		if($_POST['EquipmentID'] == '' OR $_POST['EquipmentAmount'] == 0){
-			// We didn't have enough values filled in. "go back" to room equipment fill in
-			if($_POST['EquipmentID'] == '' AND $_POST['EquipmentAmount'] == 0){
-				$_SESSION['AddRoomEquipmentError'] = "Need to select an equipment and amount first!";
-			} elseif($_POST['EquipmentID'] == '' AND $_POST['EquipmentAmount'] > 0){
-				$_SESSION['AddRoomEquipmentError'] = "Need to select an equipment first!";
-			} elseif($_POST['EquipmentID'] <> '' AND $_POST['EquipmentAmount'] == 0){
-				$_SESSION['AddRoomEquipmentError'] = "Need to select an equipment amount first!";
-			} else {
-				$_SESSION['AddRoomEquipmentError'] = "Unknown refresh.";
-			}
-			// Refresh RoomEquipment for the specific meeting room again
-			$_SESSION['refreshAddRoomEquipment'] = TRUE;
-			$TheMeetingRoomID = $_GET['Meetingroom'];
-			$location = "http://$_SERVER[HTTP_HOST]/admin/roomequipment/?Meetingroom=" . $TheMeetingRoomID;
-			header("Location: $location");
-			exit();
-		}
-	}
 	
 	// If we're looking at a specific meetingroom
 	session_start();
@@ -315,7 +267,66 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Confirm Room Equipment')
 		$MeetingRoomID = $_SESSION['AddRoomEquipmentMeetingRoomArray']['MeetingRoomID'];
 	} else {
 		$MeetingRoomID = $_POST['MeetingRoomID'];
-	}	
+	}		
+
+	// Make sure we only do this if user filled out all values
+
+	$a = ($_POST['EquipmentID'] == '');
+	$b = ($MeetingRoomID == '');
+	$c = ($_POST['EquipmentAmount'] < 1);
+	
+	if ($a OR $b OR $c){
+		// Some value wasn't filled out.
+		// Set appropriate feedback message to admin
+		if($a AND $b AND !$c){
+			$d = "Need to select an equipment and a meeting room first!";
+			$_SESSION['AddRoomEquipmentSelectedEquipmentAmount'] = $_POST['EquipmentAmount'];
+		}
+		if($a AND !$b AND $c){
+			$d = "Need to select an equipment and the amount first!";
+			$_SESSION['AddRoomEquipmentSelectedMeetingRoom'] = $_POST['MeetingRoomID'];
+		}
+		if(!$a AND $b AND $c){
+			$d = "Need to select a meeting room and the equipment amount first!";
+			$_SESSION['AddRoomEquipmentSelectedEquipment'] = $_POST['EquipmentID'];
+		}
+		if($a AND !$b AND !$c){
+			$d = "Need to select an equipment first!";
+			$_SESSION['AddRoomEquipmentSelectedMeetingRoom'] = $_POST['MeetingRoomID'];
+			$_SESSION['AddRoomEquipmentSelectedEquipmentAmount'] = $_POST['EquipmentAmount'];
+		}
+		if(!$a AND $b AND !$c){
+			$d = "Need to select a meeting room first!";
+			$_SESSION['AddRoomEquipmentSelectedEquipment'] = $_POST['EquipmentID'];
+			$_SESSION['AddRoomEquipmentSelectedEquipmentAmount'] = $_POST['EquipmentAmount'];
+		}
+		if(!$a AND !$b AND $c){
+			$d = "Need to select an equipment amount first!";
+			$_SESSION['AddRoomEquipmentSelectedMeetingRoom'] = $_POST['MeetingRoomID'];
+			$_SESSION['AddRoomEquipmentSelectedEquipment'] = $_POST['EquipmentID'];
+		}
+		if($a AND $b AND $c){
+			$d = "Need to select an equipment, a meeting room and an amount first!";
+		}
+			
+		// We didn't have enough values filled in. "go back" to add roomequipment
+		$_SESSION['refreshAddRoomEquipment'] = TRUE;
+		$_SESSION['AddRoomEquipmentError'] = $d;		
+		$_SESSION['AddRoomEquipmentMeetingRoomSearch'] = $_POST['meetingroomsearchstring'];
+		$_SESSION['AddRoomEquipmentEquipmentSearch'] = $_POST['equipmentsearchstring'];
+		
+		if(isset($_GET['Meetingroom'])){	
+			// We were looking at a specific meeting room. Let's go back to that meetingroom
+			$TheMeetingRoomID = $_GET['Meetingroom'];
+			$location = "http://$_SERVER[HTTP_HOST]/admin/roomequipment/?Meetingroom=" . $TheMeetingRoomID;
+			header("Location: $location");
+			exit();
+		} else {
+			// We were not looking at a specific meeting room. Let's do a normal refresh.
+			header('Location: .');			
+			exit();
+		}
+	}
 	
 	// Check if the room equipment connection already exists for the meeting room and equipment.
 	try
@@ -422,13 +433,6 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Confirm Room Equipment')
 		*/
 		$meetingroominfo = 'N/A';
 		$equipmentinfo = 'N/A';
-		
-			// move the variables below...
-		$_SESSION['AddRoomEquipmentSelectedEquipment'];
-		$_SESSION['AddRoomEquipmentSelectedMeetingRoom'];
-		$_SESSION['AddRoomEquipmentSelectedEquipmentAmount'];	
-		$_SESSION['AddRoomEquipmentMeetingRoomArray'];
-		$_SESSION['AddRoomEquipmentEquipmentArray'];
 		
 		session_start();
 		// Get selected meeting room name
@@ -592,9 +596,17 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Confirm Amount')
 		exit();		
 	}
 	
-	// Load room equipment list webpage with updated database
-	header('Location: .');
-	exit();
+	if(isset($_GET['Meetingroom'])){	
+		// Refresh RoomEquipment for the specific meeting room again
+		$TheMeetingRoomID = $_GET['Meetingroom'];
+		$location = "http://$_SERVER[HTTP_HOST]/admin/roomequipment/?Meetingroom=" . $TheMeetingRoomID;
+		header("Location: $location");
+		exit();
+	} else {	
+		// Do a normal page reload
+		header('Location: .');
+		exit();
+	}	
 }
 
 
@@ -607,7 +619,7 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Cancel'){
 }
 
 session_start();
-// Get only information from the specific mneetingroom
+// Get only information from the specific meetingroom
 if(isset($_GET['Meetingroom'])){
 	
 	try
@@ -704,6 +716,9 @@ foreach($result AS $row){
 							'MeetingRoomName' => $row['MeetingRoomName']							
 						);
 }
-
+// We're clearly getting new values. Forget old values
+session_start();
+unset($_SESSION['AddRoomEquipmentEquipmentArray']);	
+unset($_SESSION['AddRoomEquipmentMeetingRoomArray']);
 // Create the equipment list in HTML
 include_once 'roomequipment.html.php';
