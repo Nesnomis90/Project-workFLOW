@@ -25,7 +25,6 @@ function userIsLoggedIn()
 			// Save a custom error message for the user
 			session_start();
 			$_SESSION['loginError'] = 'Please fill in both fields';
-			//$GLOBALS['loginError'] = 'Please fill in both fields';
 			return FALSE;
 		}
 		
@@ -41,7 +40,9 @@ function userIsLoggedIn()
 			$_SESSION['email'] = $_POST['email'];
 			$_SESSION['password'] = $password;
 			$_SESSION['LoggedInUserID'] = $_SESSION['DatabaseContainsUserID'];
+			$_SESSION['LoggedInUserName'] = $_SESSION['DatabaseContainsUserName'];
 			unset($_SESSION['DatabaseContainsUserID']);
+			unset($_SESSION['DatabaseContainsUserName']);
 			return TRUE;
 		}
 		else
@@ -55,11 +56,10 @@ function userIsLoggedIn()
 			unset($_SESSION['email']);
 			unset($_SESSION['password']);
 			unset($_SESSION['LoggedInUserID']);
+			unset($_SESSION['LoggedInUserName']);
 			
 			$_SESSION['loginError'] = 
 			'The specified email address or password was incorrect.';
-			//$GLOBALS['loginError'] =
-			//'The specified email address or password was incorrect.';
 			return FALSE;
 		}
 	}
@@ -71,6 +71,7 @@ function userIsLoggedIn()
 		unset($_SESSION['email']);
 		unset($_SESSION['password']);
 		unset($_SESSION['LoggedInUserID']);
+		unset($_SESSION['LoggedInUserName']);
 		header('Location: ' . $_POST['goto']);
 		exit();
 	}
@@ -99,6 +100,8 @@ function databaseContainsUser($email, $password)
 		include_once 'db.inc.php';
 		$pdo = connect_to_db();
 		$sql = 'SELECT 	`userID`,
+						`firstname`,
+						`lastname`,
 						COUNT(*) 
 				FROM 	`user`
 				WHERE 	email = :email 
@@ -125,6 +128,7 @@ function databaseContainsUser($email, $password)
 	{
 		session_start();
 		$_SESSION['DatabaseContainsUserID'] = $row['userID'];
+		$_SESSION['DatabaseContainsUserName'] = $row['lastname'] . ", " . $row['firstname'];
 		return TRUE;
 	}
 	else

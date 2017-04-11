@@ -44,6 +44,16 @@
 	</head>
 	<body>
 		<h1>Manage Equipment in Meeting Rooms</h1>
+		<?php $goto = "http://$_SERVER[HTTP_HOST]/admin/meetingrooms/"; ?>
+		<?php if(isset($_GET['Meetingroom'])) :?>
+			<form action="<?php htmlout($goto); ?>" method="post">
+				<input type="submit" value="Return to Meeting Rooms">
+			</form>
+		<?php $goto = "http://$_SERVER[HTTP_HOST]/admin/roomequipment/"; ?>
+			<form action="<?php htmlout($goto); ?>" method="post">
+				<input type="submit" value="Get All Room Equipment">
+			</form>
+		<?php endif; ?>		
 		<form action="" method="post">
 		<?php if($rowNum>0) :?>
 			<input type="submit" name="action" value="Add Room Equipment">

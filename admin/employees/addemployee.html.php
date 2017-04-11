@@ -67,10 +67,16 @@
 			<div>
 				<label for="PositionID">Select Role:</label>
 				<select name="PositionID" id="PositionID">
-					<?php foreach($companyposition as $row): ?> 
-						<option value=<?php htmlout($row['PositionID']); ?>>
-								<?php htmlout($row['CompanyPositionName']);?>
-						</option>
+					<?php foreach($companyposition as $row): ?>
+						<?php if (isset($selectedPositionID) AND $selectedPositionID == $row['PositionID']) : ?>
+							<option selected="selected" value=<?php htmlout($row['PositionID']); ?>>
+									<?php htmlout($row['CompanyPositionName']);?>
+							</option>
+						<?php else : ?>
+							<option value=<?php htmlout($row['PositionID']); ?>>
+									<?php htmlout($row['CompanyPositionName']);?>
+							</option>
+						<?php endif; ?>
 					<?php endforeach; ?>
 				</select>
 			</div>
