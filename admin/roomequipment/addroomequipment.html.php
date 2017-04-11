@@ -35,19 +35,27 @@
 					<b><?php htmlout($meetingrooms['MeetingRoomName']); ?></b>
 				<?php endif; ?>					
 			</div>
-			<div>
-				<label for="meetingroomsearchstring">Search for Meeting Room:</label>
-				<input type="text" name="meetingroomsearchstring" 
-				value=<?php htmlout($meetingroomsearchstring); ?>>
-			</div>
+			<?php if(!isset($_GET['Meetingroom'])) :?>			
+				<div>
+					<label for="meetingroomsearchstring">Search for Meeting Room:</label>
+					<input type="text" name="meetingroomsearchstring" 
+					value=<?php htmlout($meetingroomsearchstring); ?>>
+				</div>
+			<?php endif; ?>	
 			<div>
 				<label for="EquipmentID">Equipment:</label>
 				<select name="EquipmentID" id="EquipmentID">
 					<option value="">Select Equipment:</option>
 					<?php foreach($equipment as $row): ?> 
-						<option value=<?php htmlout($row['EquipmentID']); ?>>
-								<?php htmlout($row['EquipmentName']);?>
-						</option>
+						<?php if (isset($selectedEquipmentID) AND $selectedEquipmentID == $row['EquipmentID']) : ?>
+							<option selected="selected" value=<?php htmlout($row['EquipmentID']); ?>>
+									<?php htmlout($row['EquipmentName']);?>
+							</option>
+						<?php else : ?>
+							<option value=<?php htmlout($row['EquipmentID']); ?>>
+									<?php htmlout($row['EquipmentName']);?>
+							</option>						
+						<?php endif; ?>
 					<?php endforeach; ?>
 				</select>
 			</div>

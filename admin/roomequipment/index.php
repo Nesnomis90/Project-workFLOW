@@ -53,6 +53,7 @@ if(isset($_POST['action']) AND $_POST['action'] == 'Search'){
 		$_SESSION['AddRoomEquipmentSelectedMeetingRoom'] = $_POST['MeetingRoomID'];
 		$_SESSION['refreshAddRoomEquipment'] = TRUE;
 		
+		// Refresh RoomEquipment for the specific meeting room again
 		$TheMeetingRoomID = $_GET['Meetingroom'];
 		$location = "http://$_SERVER[HTTP_HOST]/admin/roomequipment/?Meetingroom=" . $TheMeetingRoomID;
 		header("Location: $location");
@@ -88,32 +89,32 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Add Room Equipment') OR
 		unset($_SESSION['refreshAddRoomEquipment']);
 		
 		// Display the 'error' that made us refresh
-		if(isset($_SESSION['AddEmployeeError'])){
-			$AddRoomEquipmentError = $_SESSION['AddEmployeeError'];
-			unset($_SESSION['AddEmployeeError']);
+		if(isset($_SESSION['AddRoomEquipmentError'])){
+			$AddRoomEquipmentError = $_SESSION['AddRoomEquipmentError'];
+			unset($_SESSION['AddRoomEquipmentError']);
 		}
 		
-		// Remember the company string that was searched before refreshing
-		if(isset($_SESSION['AddEmployeeCompanySearch'])){
-			$companysearchstring = $_SESSION['AddEmployeeCompanySearch'];
-			unset($_SESSION['AddEmployeeCompanySearch']);
+		// Remember the meeting room string that was searched before refreshing
+		if(isset($_SESSION['AddRoomEquipmentMeetingRoomSearch'])){
+			$meetingroomsearchstring = $_SESSION['AddRoomEquipmentMeetingRoomSearch'];
+			unset($_SESSION['AddRoomEquipmentMeetingRoomSearch']);
 		}
 		
-		// Remember the user string that was searched before refreshing
-		if(isset($_SESSION['AddEmployeeUserSearch'])){
-			$usersearchstring = $_SESSION['AddEmployeeUserSearch'];
-			unset($_SESSION['AddEmployeeUserSearch']);
+		// Remember the equipment string that was searched before refreshing
+		if(isset($_SESSION['AddRoomEquipmentEquipmentSearch'])){
+			$equipmentsearchstring = $_SESSION['AddRoomEquipmentEquipmentSearch'];
+			unset($_SESSION['AddRoomEquipmentEquipmentSearch']);
 		}
 		
-		// Remember what company was selected before refreshing
-		if(isset($_SESSION['AddEmployeeSelectedCompanyID'])){
-			$selectedCompanyID = $_SESSION['AddEmployeeSelectedCompanyID'];
-			unset($_SESSION['AddEmployeeSelectedCompanyID']);
+		// Remember what meeting room was selected before refreshing
+		if(isset($_SESSION['AddRoomEquipmentSelectedMeetingRoom'])){
+			$selectedMeetingRoomID = $_SESSION['AddRoomEquipmentSelectedMeetingRoom'];
+			unset($_SESSION['AddRoomEquipmentSelectedMeetingRoom']);
 		}
 		
-		// Remember what user was selected before refreshing
+		// Remember what equipment was selected before refreshing
 		if(isset($_SESSION['AddEmployeeSelectedUserID'])){
-			$selectedUserID = $_SESSION['AddEmployeeSelectedUserID'];
+			$selectedEquipmentID = $_SESSION['AddEmployeeSelectedUserID'];
 			unset($_SESSION['AddEmployeeSelectedUserID']);
 		}		
 	}

@@ -59,8 +59,10 @@ if(isset($_POST['action']) AND $_POST['action'] == 'Search'){
 	if(isset($_GET['Company'])){	
 		$_SESSION['AddEmployeeUserSearch'] = $_POST['usersearchstring'];
 		$_SESSION['AddEmployeeSelectedUserID'] = $_POST['UserID'];
+		$_SESSION['AddEmployeeSelectedPositionID'] = $_POST['PositionID'];
 		$_SESSION['refreshAddEmployee'] = TRUE;
 		
+		// Refresh AddEmployee for the specific company again
 		$TheCompanyID = $_GET['Company'];
 		$location = "http://$_SERVER[HTTP_HOST]/admin/employees/?Company=" . $TheCompanyID;
 		header("Location: $location");
@@ -70,6 +72,7 @@ if(isset($_POST['action']) AND $_POST['action'] == 'Search'){
 		$_SESSION['AddEmployeeUserSearch'] = $_POST['usersearchstring'];
 		$_SESSION['AddEmployeeSelectedCompanyID'] = $_POST['CompanyID'];
 		$_SESSION['AddEmployeeSelectedUserID'] = $_POST['UserID'];
+		$_SESSION['AddEmployeeSelectedPositionID'] = $_POST['PositionID'];
 		
 		// Also we want to refresh AddEmployee with our new values!
 		$_SESSION['refreshAddEmployee'] = TRUE;
@@ -121,6 +124,12 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Add Employee') OR
 		if(isset($_SESSION['AddEmployeeSelectedUserID'])){
 			$selectedUserID = $_SESSION['AddEmployeeSelectedUserID'];
 			unset($_SESSION['AddEmployeeSelectedUserID']);
+		}	
+
+		// Remember what company position was selected before refreshing
+		if(isset($_SESSION['AddEmployeeSelectedPositionID'])){
+			$selectedPositionID = $_SESSION['AddEmployeeSelectedPositionID'];
+			unset($_SESSION['AddEmployeeSelectedPositionID']);
 		}		
 	}
 
