@@ -37,17 +37,61 @@ if(isset($_POST['action']) AND $_POST['action'] == 'Remove'){
 		exit();
 	}
 	
-	// If we are looking at a specific company, let's refresh info about
-	// that company again.
-	if(isset($_GET['Company'])){
+	// Add a log event that an employee was removed from a company
+	// TO-DO: THIS IS UNTESTED!
+	try
+	{
+		session_start();
+
+		// Save a description with information about the employee that was removed
+		// from the company.
+		$description = 'The user: ' . $_POST['UserName'] . 
+		' was removed from the company: ' . $_POST['CompanyName'] . 
+		'. Removed by: ' . $_SESSION['LoggedInUserName'];
+		
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+		
+		$pdo = connect_to_db();
+		$sql = "INSERT INTO `logevent` 
+				SET			`actionID` = 	(
+												SELECT `actionID` 
+												FROM `logaction`
+												WHERE `name` = 'Employee Removed'
+											),
+							`companyID` = :CompanyID,
+							`userID` = :UserID,
+							`positionID` = :PositionID,
+							`description` = :description";
+		$s = $pdo->prepare($sql);
+		$s->bindValue(':CompanyID', $_POST['CompanyID']);
+		$s->bindValue(':UserID', $_POST['UserID']);
+		$s->bindValue(':PositionID', $_POST['PositionID']);		
+		$s->bindValue(':description', $description);
+		$s->execute();
+		
+		//Close the connection
+		$pdo = null;		
+	}
+	catch(PDOException $e)
+	{
+		$error = 'Error adding log event to database: ' . $e->getMessage();
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+		$pdo = null;
+		exit();
+	}		
+	
+	//	Go to the employee main page with the appropriate values
+	if(isset($_GET['Company'])){	
+		// Refresh employee for the specific company again
 		$TheCompanyID = $_GET['Company'];
 		$location = "http://$_SERVER[HTTP_HOST]/admin/employees/?Company=" . $TheCompanyID;
 		header("Location: $location");
 		exit();
+	} else {	
+		// Do a normal page reload
+		header('Location: .');
+		exit();
 	}
-	// Load company list webpage with updated database
-	header('Location: .');
-	exit();	
 }
 // Admin clicked the search button, trying to limit the shown company and user lists
 if(isset($_POST['action']) AND $_POST['action'] == 'Search'){
@@ -134,6 +178,7 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Add Employee') OR
 	}
 
 	// Get info about company position, users and companies from the database
+	// if we don't already have them saved in a session array
 	try
 	{	
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
@@ -449,8 +494,8 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Confirm Employee')
 		}		
 	
 		
-		// Save a description with some extra information to be kept after 
-		// the user or company has been removed
+		// Save a description with information about the employee that was added
+		// to the company.
 		$description = 'The user: ' . $userinfo . 
 		' was added to the company: ' . $companyinfo . 
 		' and was given the position: ' . $positioninfo . ". Added by : " .
@@ -461,9 +506,9 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Confirm Employee')
 		$pdo = connect_to_db();
 		$sql = "INSERT INTO `logevent` 
 				SET			`actionID` = 	(
-											SELECT `actionID` 
-											FROM `logaction`
-											WHERE `name` = 'Employee Added'
+												SELECT `actionID` 
+												FROM `logaction`
+												WHERE `name` = 'Employee Added'
 											),
 							`companyID` = :CompanyID,
 							`userID` = :UserID,

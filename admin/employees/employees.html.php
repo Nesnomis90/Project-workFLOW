@@ -74,7 +74,10 @@
 				<?php foreach ($employees as $employee): ?>
 					<form action="" method="post">
 						<tr>
-							<td><?php htmlout($employee['CompanyName']); ?></td>
+							<td>
+								<?php htmlout($employee['CompanyName']); ?>
+								<input type="submit" name="CompanyName" value="<?php htmlout($employee['CompanyName']); ?>">
+							</td>
 							<td><?php htmlout($employee['PositionName']); ?></td>
 							<td><?php htmlout($employee['firstName']); ?></td>
 							<td><?php htmlout($employee['lastName']); ?></td>
@@ -84,8 +87,9 @@
 							<td><?php htmlout($employee['StartDateTime']); ?></td>
 							<td><input type="submit" name="action" value="Change Role"></td>
 							<td><input type="submit" name="action" value="Remove"></td>
-							<input type="hidden" name="UserID" value="<?php echo $employee['UsrID']; ?>">
-							<input type="hidden" name="CompanyID" value="<?php echo $employee['CompanyID']; ?>">
+							<input type="hidden" name="UserID" value="<?php htmlout($employee['UsrID']); ?>">
+							<input type="hidden" name="CompanyID" value="<?php htmlout($employee['CompanyID']); ?>">
+							<input type="hidden" name="UserName" value="<?php htmlout($employee['lastName'] . ", " . $employee['firstName']); ?>">
 						</tr>
 					</form>
 				<?php endforeach; ?>

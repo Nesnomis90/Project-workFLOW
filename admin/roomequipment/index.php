@@ -36,6 +36,48 @@ if(isset($_POST['action']) AND $_POST['action'] == 'Remove'){
 		exit();
 	}
 	
+	// Add a log event that equipment was removed from a meeting room
+	// TO-DO: THIS IS UNTESTED!
+	try
+	{
+		session_start();
+
+		// Save a description with information about the equipment that was removed
+		// from the meeting room.
+		$description = 'The equipment: ' . $_POST['EquipmentName'] . 
+		' was removed from the meeting room: ' . $_POST['MeetingRoomName'] . 
+		'. Removed by: ' . $_SESSION['LoggedInUserName'];
+		
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+		
+		$pdo = connect_to_db();
+		$sql = "INSERT INTO `logevent` 
+				SET			`actionID` = 	(
+												SELECT `actionID` 
+												FROM `logaction`
+												WHERE `name` = 'Room Equipment Removed'
+											),
+							`meetingRoomID` = :MeetingRoomID,
+							`equipmentID` = :EquipmentID,
+							`description` = :description";
+		$s = $pdo->prepare($sql);
+		$s->bindValue(':MeetingRoomID', $_POST['MeetingRoomID']);
+		$s->bindValue(':EquipmentID', $_POST['EquipmentID']);	
+		$s->bindValue(':description', $description);
+		$s->execute();
+		
+		//Close the connection
+		$pdo = null;		
+	}
+	catch(PDOException $e)
+	{
+		$error = 'Error adding log event to database: ' . $e->getMessage();
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+		$pdo = null;
+		exit();
+	}	
+	
+	//	Go to the room equipment main page with the appropriate values
 	if(isset($_GET['Meetingroom'])){	
 		// Refresh RoomEquipment for the specific meeting room again
 		$TheMeetingRoomID = $_GET['Meetingroom'];
@@ -458,8 +500,8 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Confirm Room Equipment')
 		}
 	
 		
-		// Save a description with some extra information to be kept after 
-		// the user or company has been removed
+		// Save a description with a description of the equipment that was added
+		// to the meeting room.
 		$description = 'The equipment: ' . $equipmentinfo . 
 		' was added to the meeting room: ' . $meetingroominfo . 
 		' with the amount: ' . $_POST['EquipmentAmount'] . ". Added by: " .
@@ -470,9 +512,9 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Confirm Room Equipment')
 		$pdo = connect_to_db();
 		$sql = "INSERT INTO `logevent` 
 				SET			`actionID` = 	(
-											SELECT `actionID` 
-											FROM `logaction`
-											WHERE `name` = 'Room Equipment Added'
+												SELECT `actionID` 
+												FROM `logaction`
+												WHERE `name` = 'Room Equipment Added'
 											),
 							`meetingRoomID` = :MeetingRoomID,
 							`equipmentID` = :EquipmentID,
@@ -618,7 +660,13 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Cancel'){
 	echo "<b>Cancel button clicked. Taking you back to /admin/roomequipment/!</b><br />";
 }
 
+
+// There were no user inputs or forced refreshes. So we're interested in fresh, new values.
+// Let's reset all the "remembered" values
 session_start();
+unset($_SESSION['AddRoomEquipmentEquipmentArray']);	
+unset($_SESSION['AddRoomEquipmentMeetingRoomArray']);
+
 // Get only information from the specific meetingroom
 if(isset($_GET['Meetingroom'])){
 	
@@ -716,9 +764,5 @@ foreach($result AS $row){
 							'MeetingRoomName' => $row['MeetingRoomName']							
 						);
 }
-// We're clearly getting new values. Forget old values
-session_start();
-unset($_SESSION['AddRoomEquipmentEquipmentArray']);	
-unset($_SESSION['AddRoomEquipmentMeetingRoomArray']);
 // Create the equipment list in HTML
 include_once 'roomequipment.html.php';

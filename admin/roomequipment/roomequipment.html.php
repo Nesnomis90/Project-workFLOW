@@ -57,7 +57,7 @@
 		<form action="" method="post">
 		<?php if($rowNum>0) :?>
 			<input type="submit" name="action" value="Add Room Equipment">
-			<table id= "roomequipmenttable">
+			<table id="roomequipmenttable">
 				<caption>Meeting Room Equipment</caption>
 				<tr>
 					<th>Equipment Name</th>
@@ -71,10 +71,16 @@
 				<?php foreach ($roomequipment as $row): ?>
 					<form action="" method="post">
 						<tr>
-							<td><?php htmlout($row['EquipmentName']); ?></td>
+							<td>
+								<?php htmlout($row['EquipmentName']); ?>
+								<input type="submit" name="EquipmentName" value="<?php htmlout($row['EquipmentName']); ?>">
+							</td>
 							<td><?php htmlout($row['EquipmentDescription']); ?></td>
 							<td><?php htmlout($row['EquipmentAmount']); ?></td>
-							<td><?php htmlout($row['MeetingRoomName']); ?></td>	
+							<td>
+								<?php htmlout($row['MeetingRoomName']); ?>
+								<input type="submit" name="MeetingRoomName" value="<?php htmlout($row['MeetingRoomName']); ?>">
+							</td>	
 							<td><?php htmlout($row['DateTimeAdded']); ?></td>
 							<td><input type="submit" name="action" value="Change Amount"></td>
 							<td><input type="submit" name="action" value="Remove"></td>
