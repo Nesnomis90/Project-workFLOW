@@ -134,8 +134,7 @@ function fillAccessLevel($pdo){
 	{
 		//	Cancels the transaction from going through if something went wrong.
 		$pdo->rollback();
-		$error = 'Encountered an error while trying to insert default values into table accesslevel: ' .
-				$e->getMessage() . '<br />';
+		$error = 'Encountered an error while trying to insert default values into table accesslevel: ' . $e->getMessage();
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
 		$pdo = null;
 		exit();

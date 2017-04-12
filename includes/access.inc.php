@@ -57,6 +57,7 @@ function userIsLoggedIn()
 			unset($_SESSION['password']);
 			unset($_SESSION['LoggedInUserID']);
 			unset($_SESSION['LoggedInUserName']);
+			unset($_SESSION['LoggedInUserIsOwnerInTheseCompanies']);
 			
 			$_SESSION['loginError'] = 
 			'The specified email address or password was incorrect.';
@@ -72,6 +73,7 @@ function userIsLoggedIn()
 		unset($_SESSION['password']);
 		unset($_SESSION['LoggedInUserID']);
 		unset($_SESSION['LoggedInUserName']);
+		unset($_SESSION['LoggedInUserIsOwnerInTheseCompanies']);
 		header('Location: ' . $_POST['goto']);
 		exit();
 	}
@@ -99,10 +101,10 @@ function databaseContainsUser($email, $password)
 	{
 		include_once 'db.inc.php';
 		$pdo = connect_to_db();
-		$sql = 'SELECT 	`userID`,
+		$sql = 'SELECT 	COUNT(*),
+						`userID`,
 						`firstname`,
-						`lastname`,
-						COUNT(*) 
+						`lastname`
 				FROM 	`user`
 				WHERE 	email = :email 
 				AND 	password = :password
@@ -239,7 +241,7 @@ function isUserAdmin(){
 
 // Function to make sure user is In-House User
 function isUserInHouseUser(){
-		// Check if user is logged in
+	// Check if user is logged in
 	if (!userIsLoggedIn())
 	{
 		// Not logged in. Send user a login prompt.
@@ -256,4 +258,69 @@ function isUserInHouseUser(){
 	}
 	return true;
 }
+
+// Function to make sure user is the owner of the company
+// TO-DO: UNTESTED!
+function isUserCompanyOwner(){
+	session_start();
+	
+	if(!isset($_SESSION['LoggedInUserIsOwnerInTheseCompanies'])){
+		// Check if user is a company owner
+		try
+		{
+			$UserID = $_SESSION['LoggedInUserID'];
+			
+			include_once 'db.inc.php';
+			$pdo = connect_to_db();
+			$sql = "SELECT 		COUNT(*),
+								c.`name`		AS CompanyName,
+								c.`companyID`   AS CompanyID
+					FROM 		`employee` e
+					INNER JOIN 	`companyposition` cp
+					ON			e.`PositionID` = cp.`PositionID`
+					LEFT JOIN	`company` c
+					ON			c.`companyID` = e.`companyID`
+					WHERE 		e.`UserID` = :UserID 
+					AND 		cp.`name` = 'Owner'";
+			$s = $pdo->prepare($sql);
+			$s->bindValue(':UserID', $UserID);
+			$s->execute();
+			
+			$pdo = null;
+		}
+		catch (PDOException $e)
+		{
+			$error = 'Error checking if user is company owner.' . $e->getMessage();
+			include_once 'error.html.php';
+			$pdo = null;
+			exit();
+		}
+		 
+		$result = $s->fetchAll();
+		// If we got a hit, then the user is an owner for at least 1 company in our database
+		if ($result[0] > 0)
+		{
+			foreach($result AS $row){
+				$OwnerInCompanies[] = array (
+												'CompanyName' => $row['CompanyName'],
+												'CompanyID' => $row['CompanyID']
+											);
+			}
+			
+			session_start();
+			$_SESSION['LoggedInUserIsOwnerInTheseCompanies'] = $OwnerInCompanies;
+			
+			return TRUE;
+		}
+		else
+		{
+			session_start();
+			unset($_SESSION['LoggedInUserIsOwnerInTheseCompanies']);
+			return FALSE;
+		}
+	} else {
+		return TRUE;
+	}
+}
+
 ?>
