@@ -312,7 +312,6 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Confirm Room Equipment')
 	}		
 
 	// Make sure we only do this if user filled out all values
-
 	$a = ($_POST['EquipmentID'] == '');
 	$b = ($MeetingRoomID == '');
 	$c = ($_POST['EquipmentAmount'] < 1);
@@ -353,12 +352,13 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Confirm Room Equipment')
 			
 		// We didn't have enough values filled in. "go back" to add roomequipment
 		$_SESSION['refreshAddRoomEquipment'] = TRUE;
-		$_SESSION['AddRoomEquipmentError'] = $d;		
+		$_SESSION['AddRoomEquipmentError'] = $d;
+		//TO-DO: Remove/Change the search variables if we don't want it to show up after a search		
 		$_SESSION['AddRoomEquipmentMeetingRoomSearch'] = $_POST['meetingroomsearchstring'];
 		$_SESSION['AddRoomEquipmentEquipmentSearch'] = $_POST['equipmentsearchstring'];
 		
 		if(isset($_GET['Meetingroom'])){	
-			// We were looking at a specific meeting room. Let's go back to that meetingroom
+			// We were looking at a specific meeting room. Let's go back to info about that meetingroom
 			$TheMeetingRoomID = $_GET['Meetingroom'];
 			$location = "http://$_SERVER[HTTP_HOST]/admin/roomequipment/?Meetingroom=" . $TheMeetingRoomID;
 			header("Location: $location");
@@ -499,9 +499,8 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Confirm Room Equipment')
 			unset($_SESSION['AddEmployeeCompaniesArray']);
 		}
 	
-		
-		// Save a description with a description of the equipment that was added
-		// to the meeting room.
+		// Save a description with information about the equipment that was added
+		// to the meeting room.		
 		$description = 'The equipment: ' . $equipmentinfo . 
 		' was added to the meeting room: ' . $meetingroominfo . 
 		' with the amount: ' . $_POST['EquipmentAmount'] . ". Added by: " .
@@ -644,11 +643,11 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Confirm Amount')
 		$location = "http://$_SERVER[HTTP_HOST]/admin/roomequipment/?Meetingroom=" . $TheMeetingRoomID;
 		header("Location: $location");
 		exit();
-	} else {	
-		// Do a normal page reload
-		header('Location: .');
-		exit();
 	}	
+		
+	// Do a normal page reload
+	header('Location: .');
+	exit();	
 }
 
 
@@ -712,7 +711,7 @@ if(isset($_GET['Meetingroom'])){
 	}
 }
 
-// Display roomequipment list
+// Get information from all meeting rooms
 if(!isset($_GET['Meetingroom'])){
 	try
 	{
@@ -750,6 +749,7 @@ if(!isset($_GET['Meetingroom'])){
 		exit();
 	}	
 }
+
 // Create an array with the actual key/value pairs we want to use in our HTML	
 foreach($result AS $row){
 	
@@ -764,5 +764,8 @@ foreach($result AS $row){
 							'MeetingRoomName' => $row['MeetingRoomName']							
 						);
 }
+
 // Create the equipment list in HTML
 include_once 'roomequipment.html.php';
+
+?>

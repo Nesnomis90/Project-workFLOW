@@ -179,127 +179,155 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Add Employee') OR
 
 	// Get info about company position, users and companies from the database
 	// if we don't already have them saved in a session array
-	try
-	{	
-		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
-		
-		// Get name and IDs for company position
-		$pdo = connect_to_db();
-		$sql = 'SELECT 	`PositionID`,
-						`name` 			AS CompanyPositionName,
-						`description`	AS CompanyPositionDescription
-				FROM 	`companyposition`';
-		$result = $pdo->query($sql);
-		
-		// Get the rows of information from the query
-		// This will be used to create a dropdown list in HTML
-		foreach($result as $row){
-			$companyposition[] = array(
-									'PositionID' => $row['PositionID'],
-									'CompanyPositionName' => $row['CompanyPositionName'],
-									'CompanyPositionDescription' => $row['CompanyPositionDescription']
-									);
-		}
-		
-		session_start();
-		$_SESSION['AddEmployeeCompanyPositionArray'] = $companyposition;
-
-		// Get all companies and users so the admin can search/choose from them
-			//Companies	
+	if(	!isset($_SESSION['AddEmployeeCompaniesArray']) OR 
+		!isset($_SESSION['AddEmployeeUsersArray']) OR
+		!isset($_SESSION['AddEmployeeCompanyPositionArray'])){	
+	
+		try
+		{	
+			// Get all users, companies and companypositions so admin can search/choose from them
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+			$pdo = connect_to_db();
 			
-		if(!isset($_GET['Company'])){
-			// If we're NOT looking at a specific company already
-			$sql = 'SELECT 	`companyID` AS CompanyID,
-							`name`		AS CompanyName
-					FROM 	`company`';
+				//Companies	
+			// Only get info if we haven't gotten it before
+			if(!isset($_SESSION['AddEmployeeCompaniesArray'])){
+				// We don't have info about companies saved. Let's get it
+				
+				if(!isset($_GET['Company'])){
+					// If we're NOT looking at a specific company already
+					$sql = 'SELECT 	`companyID` AS CompanyID,
+									`name`		AS CompanyName
+							FROM 	`company`';
+							
+					if ($companysearchstring != ''){
+						$sqladd = " WHERE `name` LIKE :search";
+						$sql = $sql . $sqladd;	
+						
+						$finalcompanysearchstring = '%' . $companysearchstring . '%';
+						
+						$s = $pdo->prepare($sql);
+						$s->bindValue(':search', $finalcompanysearchstring);
+						$s->execute();
+						$result = $s->fetchAll();
+					} else {
+						$result = $pdo->query($sql);
+					}
 					
-			if ($companysearchstring != ''){
-				$sqladd = " WHERE `name` LIKE :search";
-				$sql = $sql . $sqladd;	
+					// Get the rows of information from the query
+					// This will be used to create a dropdown list in HTML
+					foreach($result as $row){
+						$companies[] = array(
+												'CompanyID' => $row['CompanyID'],
+												'CompanyName' => $row['CompanyName']
+												);
+					}
+						
+				} else {
+					$sql = 'SELECT 	`companyID` AS CompanyID,
+									`name`		AS CompanyName
+							FROM 	`company`
+							WHERE 	`companyID` = :CompanyID';
+					$s = $pdo->prepare($sql);
+					$s->bindValue(':CompanyID', $_GET['Company']);
+					$s->execute();
+					$companies = $s->fetch();
+				}
 				
-				$finalcompanysearchstring = '%' . $companysearchstring . '%';
-				
-				$s = $pdo->prepare($sql);
-				$s->bindValue(':search', $finalcompanysearchstring);
-				$s->execute();
-				$result = $s->fetchAll();
+				session_start();
+				$_SESSION['AddEmployeeCompaniesArray'] = $companies;			
 			} else {
-				$result = $pdo->query($sql);
+				$companies = $_SESSION['AddEmployeeCompaniesArray'];
 			}
 			
-			// Get the rows of information from the query
-			// This will be used to create a dropdown list in HTML
-			foreach($result as $row){
-				$companies[] = array(
-										'CompanyID' => $row['CompanyID'],
-										'CompanyName' => $row['CompanyName']
-										);
-			}
+				// Company Positions
+			//Only get info if we haven't gotten it before
+			if(!isset($_SESSION['AddEmployeeCompanyPositionArray'])){
+				// We don't have info about company position saved. Let's get it
 				
-		} else {
-			$sql = 'SELECT 	`companyID` AS CompanyID,
-							`name`		AS CompanyName
-					FROM 	`company`
-					WHERE 	`companyID` = :CompanyID';
-			$s = $pdo->prepare($sql);
-			$s->bindValue(':CompanyID', $_GET['Company']);
-			$s->execute();
-			$companies = $s->fetch();
-		}
+				$sql = 'SELECT 	`PositionID`,
+								`name` 			AS CompanyPositionName,
+								`description`	AS CompanyPositionDescription
+						FROM 	`companyposition`';
+				$result = $pdo->query($sql);
+				
+				// Get the rows of information from the query
+				// This will be used to create a dropdown list in HTML
+				foreach($result as $row){
+					$companyposition[] = array(
+											'PositionID' => $row['PositionID'],
+											'CompanyPositionName' => $row['CompanyPositionName'],
+											'CompanyPositionDescription' => $row['CompanyPositionDescription']
+											);
+				}
+				
+				session_start();
+				$_SESSION['AddEmployeeCompanyPositionArray'] = $companyposition;
+			} else {
+				$companyposition = $_SESSION['AddEmployeeCompanyPositionArray'];
+			}
 		
-		session_start();
-		$_SESSION['AddEmployeeCompaniesArray'] = $companies;
+				//	Users - Only active ones
+			// Only get info if we haven't gotten it before
+			if(){
+				// We don't have info about users saved. Let's get it
+				
+				$sql = "SELECT 	`userID` 	AS UserID,
+								`firstname`,
+								`lastname`,
+								`email`
+						FROM 	`user`
+						WHERE	`isActive` > 0";
 
-		
-			//	Users - Only active ones?
-			// 	TO-DO: Change to allow all users?	
-		$sql = "SELECT 	`userID` 	AS UserID,
-						`firstname`,
-						`lastname`,
-						`email`
-				FROM 	`user`
-				WHERE	`isActive` > 0";
-
-		if ($usersearchstring != ''){
-			$sqladd = " AND (`firstname` LIKE :search
-						OR `lastname` LIKE :search
-						OR `email` LIKE :search)";
-			$sql = $sql . $sqladd;
+				if ($usersearchstring != ''){
+					$sqladd = " AND (`firstname` LIKE :search
+								OR `lastname` LIKE :search
+								OR `email` LIKE :search)";
+					$sql = $sql . $sqladd;
+					
+					$finalusersearchstring = '%' . $usersearchstring . '%';
+					
+					$s = $pdo->prepare($sql);
+					$s->bindValue(":search", $finalusersearchstring);
+					$s->execute();
+					$result = $s->fetchAll();
+					
+				} else {
+					$result = $pdo->query($sql);
+				}
+					
+				// Get the rows of information from the query
+				// This will be used to create a dropdown list in HTML
+				foreach($result as $row){
+					$users[] = array(
+											'UserID' => $row['UserID'],
+											'UserIdentifier' => $row['lastname'] . ', ' .
+											$row['firstname'] . ' - ' . $row['email']
+											);
+				}
+				session_start();
+				$_SESSION['AddEmployeeUsersArray'] = $users;
+			} else {
+				$users = $_SESSION['AddEmployeeUsersArray'];
+			}	
 			
-			$finalusersearchstring = '%' . $usersearchstring . '%';
-			
-			$s = $pdo->prepare($sql);
-			$s->bindValue(":search", $finalusersearchstring);
-			$s->execute();
-			$result = $s->fetchAll();
-			
-		} else {
-			$result = $pdo->query($sql);
+			//close connection
+			$pdo = null;
 		}
-			
-		// Get the rows of information from the query
-		// This will be used to create a dropdown list in HTML
-		foreach($result as $row){
-			$users[] = array(
-									'UserID' => $row['UserID'],
-									'UserIdentifier' => $row['lastname'] . ', ' .
-									$row['firstname'] . ' - ' . $row['email']
-									);
+		catch (PDOException $e)
+		{
+			$error = 'Error fetching user, company and company position lists: ' . $e->getMessage();
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+			$pdo = null;
+			exit();
 		}
-		session_start();
-		$_SESSION['AddEmployeeUsersArray'] = $users;
-			
-		//close connection
-		$pdo = null;
+	
+	} else {
+		$companies = $_SESSION['AddEmployeeCompaniesArray'];
+		$companyposition = $_SESSION['AddEmployeeCompanyPositionArray'];
+		$users = $_SESSION['AddEmployeeUsersArray'];
 	}
-	catch (PDOException $e)
-	{
-		$error = 'Error fetching user and company lists: ' . $e->getMessage();
-		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
-		$pdo = null;
-		exit();
-	}
-		
+	
 	// Change to the actual html form template
 	include 'addemployee.html.php';
 	exit();
@@ -308,53 +336,53 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Add Employee') OR
 // When admin has added the needed information and wants to add an employee connection
 if (isset($_POST['action']) AND $_POST['action'] == 'Confirm Employee')
 {
-	session_start();
-	// Make sure we only do this if user filled out all values
-	if(!isset($_GET['Company'])){
-		// If we have to select a company
-		if($_POST['CompanyID'] == '' AND $_POST['UserID'] == ''){
-			// We didn't have enough values filled in. "go back" to employee fill in
-			$_SESSION['refreshAddEmployee'] = TRUE;
-			$_SESSION['AddEmployeeError'] = "Need to select a user and a company first!";
-			header('Location: .');
-			exit();
-		} elseif($_POST['CompanyID'] != '' AND $_POST['UserID'] == ''){
-			$_SESSION['refreshAddEmployee'] = TRUE;
-			$_SESSION['AddEmployeeError'] = "Need to select a user first!";
-			$_SESSION['AddEmployeeSelectedCompanyID'] = $_POST['CompanyID'];
-			header('Location: .');
-			exit();
-		} elseif($_POST['CompanyID'] == '' AND $_POST['UserID'] != ''){
-			$_SESSION['refreshAddEmployee'] = TRUE;
-			$_SESSION['AddEmployeeError'] = "Need to select a company first!";
-			$_SESSION['AddEmployeeSelectedUserID'] = $_POST['UserID'];
-			header('Location: .');
-			exit();
-		}		
-	} else {
-		// If we have already selected a specific company
-		if($_POST['UserID'] == ''){
-			// We didn't have enough values filled in. "go back" to employee fill in
-			$_SESSION['refreshAddEmployee'] = TRUE;
-			$_SESSION['AddEmployeeError'] = "Need to select a user first!";
-			
-			// Refresh Employee for the specific company again
-			$TheCompanyID = $_GET['Company'];
-			$location = "http://$_SERVER[HTTP_HOST]/admin/employees/?Company=" . $TheCompanyID;
-			header("Location: $location");
-			exit();
-		}
-	}
-
-	
 	// If we're looking at a specific company
 	session_start();
 	if(isset($_GET['Company'])){
 		$CompanyID = $_SESSION['AddEmployeeCompaniesArray']['CompanyID'];
 	} else {
 		$CompanyID = $_POST['CompanyID'];
+	}	
+
+	// Make sure we only do this if user filled out all values
+	$a = ($_POST['UserID'] == '');
+	$b = ($CompanyID == '');	
+
+	if($a OR $b){
+		// Some value wasn't filled out.
+		// Set appropriate feedback message to admin
+		if($a AND $b){
+			$c = "Need to select a user and a company first!";
+		}
+		if($a AND $!b){
+			$c = "Need to select a user!";
+			$_SESSION['AddEmployeeSelectedCompanyID'] = $_POST['CompanyID'];
+		}
+		if(!$a AND $b){
+			$c = "Need to select a company first!";
+			$_SESSION['AddEmployeeSelectedUserID'] = $_POST['UserID'];
+		}
+		
+		// We didn't have enough values filled in. "go back" to add employee
+		$_SESSION['refreshAddEmployee'] = TRUE;
+		$_SESSION['AddEmployeeError'] = $c;
+		//TO-DO: Remove/Change the search variables if we don't want it to show up after a search
+		$_SESSION['AddEmployeeCompanySearch'] = $_POST['companysearchstring'];
+		$_SESSION['AddEmployeeUserSearch'] = $_POST['usersearchstring'];	
+		
+		if(isset($_GET['Company'])){	
+			// We were looking at a specific company. Let's go back to info about that company
+			$TheCompanyID = $_GET['Company'];
+			$location = "http://$_SERVER[HTTP_HOST]/admin/employees/?Company=" . $TheCompanyID;
+			header("Location: $location");
+			exit();
+		} else {
+			// We were not looking at a specific meeting room. Let's do a normal refresh.
+			header('Location: .');			
+			exit();
+		}			
 	}
-	
+			
 	// Check if the employee connection already exists for the user and company.
 	try
 	{
@@ -672,7 +700,13 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Cancel'){
 	echo "<b>Cancel button clicked. Taking you back to /admin/employees/!</b><br />";
 }
 
+// There were no user inputs or forced refreshes. So we're interested in fresh, new values.
+// Let's reset all the "remembered" values
 session_start();
+unset($_SESSION['AddEmployeeCompaniesArray']);
+unset($_SESSION['AddEmployeeCompanyPositionArray']);
+unset($_SESSION['AddEmployeeUsersArray']);
+
 // Get only information from the specific company
 if(isset($_GET['Company'])){
 	try
@@ -744,9 +778,8 @@ if(isset($_GET['Company'])){
 	}
 }
 
-session_start();
+// Get information from all companies
 if(!isset($_GET['Company'])){
-	// Display employee list
 	try
 	{
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
