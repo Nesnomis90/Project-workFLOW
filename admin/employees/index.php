@@ -269,7 +269,7 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Add Employee') OR
 		
 				//	Users - Only active ones
 			// Only get info if we haven't gotten it before
-			if(){
+			if(!isset($_SESSION['AddEmployeeUsersArray'])){
 				// We don't have info about users saved. Let's get it
 				
 				$sql = "SELECT 	`userID` 	AS UserID,
