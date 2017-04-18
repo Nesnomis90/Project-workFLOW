@@ -73,13 +73,13 @@
 						<tr>
 							<td>
 								<?php htmlout($row['EquipmentName']); ?>
-								<input type="submit" name="EquipmentName" value="<?php htmlout($row['EquipmentName']); ?>">
+								<input type="hidden" name="EquipmentName" value="<?php htmlout($row['EquipmentName']); ?>">
 							</td>
 							<td><?php htmlout($row['EquipmentDescription']); ?></td>
 							<td><?php htmlout($row['EquipmentAmount']); ?></td>
 							<td>
 								<?php htmlout($row['MeetingRoomName']); ?>
-								<input type="submit" name="MeetingRoomName" value="<?php htmlout($row['MeetingRoomName']); ?>">
+								<input type="hidden" name="MeetingRoomName" value="<?php htmlout($row['MeetingRoomName']); ?>">
 							</td>	
 							<td><?php htmlout($row['DateTimeAdded']); ?></td>
 							<td><input type="submit" name="action" value="Change Amount"></td>

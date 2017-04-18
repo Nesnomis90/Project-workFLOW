@@ -37,7 +37,6 @@ if(isset($_POST['action']) AND $_POST['action'] == 'Remove'){
 	}
 	
 	// Add a log event that equipment was removed from a meeting room
-	// TO-DO: THIS IS UNTESTED!
 	try
 	{
 		session_start();
@@ -491,8 +490,8 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Confirm Room Equipment')
 		// Get selected equipment name
 		if(isset($_SESSION['AddRoomEquipmentEquipmentArray'])){
 			foreach($_SESSION['AddRoomEquipmentEquipmentArray'] AS $row){
-				if($row['CompanyID'] == $_POST['CompanyID']){
-					$equipmentinfo = $row['CompanyName'];
+				if($row['EquipmentID'] == $_POST['EquipmentID']){
+					$equipmentinfo = $row['EquipmentName'];
 					break;
 				}
 			}

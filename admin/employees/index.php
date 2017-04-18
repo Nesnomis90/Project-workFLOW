@@ -38,7 +38,6 @@ if(isset($_POST['action']) AND $_POST['action'] == 'Remove'){
 	}
 	
 	// Add a log event that an employee was removed from a company
-	// TO-DO: THIS IS UNTESTED!
 	try
 	{
 		session_start();
@@ -354,7 +353,7 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Confirm Employee')
 		if($a AND $b){
 			$c = "Need to select a user and a company first!";
 		}
-		if($a AND $!b){
+		if($a AND !$b){
 			$c = "Need to select a user!";
 			$_SESSION['AddEmployeeSelectedCompanyID'] = $_POST['CompanyID'];
 		}

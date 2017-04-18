@@ -76,7 +76,7 @@
 						<tr>
 							<td>
 								<?php htmlout($employee['CompanyName']); ?>
-								<input type="submit" name="CompanyName" value="<?php htmlout($employee['CompanyName']); ?>">
+								<input type="hidden" name="CompanyName" value="<?php htmlout($employee['CompanyName']); ?>">
 							</td>
 							<td><?php htmlout($employee['PositionName']); ?></td>
 							<td><?php htmlout($employee['firstName']); ?></td>

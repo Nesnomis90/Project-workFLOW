@@ -55,16 +55,17 @@ try
 	
 	//Retrieve log data from database
 	//$sql = 'SELECT `logID`,`logDateTime` FROM `logevent`';
-	$sql = 'SELECT 	l.logID, 
-					DATE_FORMAT(l.logDateTime, "%d %b %Y %T") AS LogDate, 
-					la.`name` AS ActionName, la.description AS ActionDescription, 
-					l.description AS LogDescription 
-					FROM `logevent` l 
-					JOIN `logaction` la 
-					ON la.actionID = l.actionID
-					ORDER BY UNIX_TIMESTAMP(l.logDateTime) 
-					DESC
-					LIMIT ' . $logLimit;
+	$sql = 'SELECT 		l.logID, 
+						DATE_FORMAT(l.logDateTime, "%d %b %Y %T") AS LogDate, 
+						la.`name` AS ActionName, 
+						la.description AS ActionDescription, 
+						l.description AS LogDescription 
+			FROM 		`logevent` l 
+			JOIN 		`logaction` la 
+			ON 			la.actionID = l.actionID
+			ORDER BY 	UNIX_TIMESTAMP(l.logDateTime) 
+			DESC
+			LIMIT ' . $logLimit;
 	$result = $pdo->query($sql);
 	$rowNum = $result->rowCount();
 	

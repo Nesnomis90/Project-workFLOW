@@ -4,8 +4,8 @@ USE meetingflow;
 
 INSERT INTO `logaction` 
 SET 
-`name` = 'Employee Added', 
-`description` = 'The referenced user was given the references position in the referenced company.';
+`name` = 'Account Activated', 
+`description` = 'The referenced user just activated their account.';
 
 INSERT INTO `booking` SET
 							`meetingRoomID` = 1,
