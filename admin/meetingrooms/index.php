@@ -114,7 +114,6 @@ if (isset($_GET['add']))
 // When admin has added the needed information and wants to add the meeting room
 if (isset($_GET['addform']))
 {
-	// TO-DO: Check if meeting room already exists
 	// Check if the meeting room already exists (based on name).
 	try
 	{
@@ -146,8 +145,7 @@ if (isset($_GET['addform']))
 			$location = "http://$_SERVER[HTTP_HOST]/admin/meetingrooms/?add";
 			header("Location: $location");
 			exit();		
-		}
-		
+		}	
 		// Meeting room name hasn't been used before
 	}
 	catch (PDOException $e)

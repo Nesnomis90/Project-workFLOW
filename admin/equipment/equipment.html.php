@@ -60,7 +60,11 @@
 				<?php foreach ($equipment as $row): ?>
 					<form action="" method="post">
 						<tr>
-							<td><?php htmlout($row['EquipmentName']); ?></td>
+							<td>
+								<?php htmlout($row['EquipmentName']); ?>
+								<input type="hidden" id="EquipmentName" name="EquipmentName"
+								value="<?php htmlout($row['EquipmentName']); ?>">
+							</td>
 							<td><?php htmlout($row['EquipmentDescription']); ?></td>
 							<td><?php htmlout($row['EquipmentIsInTheseRooms']); ?></td>
 							<td><?php htmlout($row['DateTimeAdded']); ?></td>
