@@ -69,7 +69,11 @@
 							<td><?php htmlout($room['MeetingRoomEquipmentAmount']); ?></td>
 						</form>
 						<form action="" method="post">
-							<td><?php htmlout($room['name']); ?></td>
+							<td>
+								<?php htmlout($room['name']); ?>
+								<input type="hidden" name="MeetingRoomName" id="MeetingRoomName"
+								value="<?php htmlout($room['name']); ?>">
+							</td>
 							<td><?php htmlout($room['capacity']); ?></td>
 							<td><?php htmlout($room['description']); ?></td>
 							<td><?php htmlout($room['location']); ?></td>

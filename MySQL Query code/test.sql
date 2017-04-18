@@ -2,6 +2,15 @@ USE test;
 SET NAMES utf8;
 USE meetingflow;
 
+INSERT INTO `logevent` 
+				SET			`actionID` = 	(
+												SELECT `actionID` 
+												FROM `logaction`
+												WHERE `name` = 'Meeting Room Added'
+											),
+							`meetingRoomID` = 2,
+							`description` = 'text';
+
 SELECT  	m.`meetingRoomID`	AS TheMeetingRoomID, 
 						m.`name`			AS MeetingRoomName, 
 						m.`capacity`		AS MeetingRoomCapacity, 
@@ -20,8 +29,8 @@ SELECT 	`companyID` AS CompanyID,
 
 INSERT INTO `logaction` 
 SET 
-`name` = 'Account Activated', 
-`description` = 'The referenced user just activated their account.';
+`name` = 'Meeting Room Removed', 
+`description` = 'The referenced meeting room was removed.';
 
 INSERT INTO `booking` SET
 							`meetingRoomID` = 1,

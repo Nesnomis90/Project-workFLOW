@@ -188,7 +188,8 @@ function fillLogAction($pdo){
 		$pdo->exec("INSERT INTO `logaction`(`name`,`description`) VALUES ('Equipment Removed','The referenced equipment was removed.')");
 		$pdo->exec("INSERT INTO `logaction`(`name`,`description`) VALUES ('Room Equipment Added', 'The referenced equipment was added into the referenced meeting room with the referenced amount.')");
 		$pdo->exec("INSERT INTO `logaction`(`name`,`description`) VALUES ('Room Equipment Removed', 'The referenced equipment was removed from the referenced meeting room.')");
-		$pdo->exec("INSERT INTO `logaction`(`name`,`description`) VALUES ('Test','This is for testing.')");
+		$pdo->exec("INSERT INTO `logaction`(`name`,`description`) VALUES ('Meeting Room Added', 'The referenced meeting room was added.')");
+		$pdo->exec("INSERT INTO `logaction`(`name`,`description`) VALUES ('Meeting Room Removed', 'The referenced meeting room was removed.')");
 		
 		// Commit the transaction
 		$pdo->commit();

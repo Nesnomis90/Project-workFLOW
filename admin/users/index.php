@@ -54,7 +54,6 @@ if (isset($_POST['action']) and $_POST['action'] == 'Delete')
 			$description = 'An unactivated User was deleted by: ' . $_SESSION['LoggedInUserName'];
 		}
 		
-
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 		
 		$pdo = connect_to_db();
