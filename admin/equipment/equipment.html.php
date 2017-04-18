@@ -44,6 +44,10 @@
 	</head>
 	<body>
 		<h1>Manage Meeting Room Equipment</h1>
+		<?php if(isset($_SESSION['EquipmentUserFeedback'])) : ?>
+			<p><b><?php htmlout($_SESSION['EquipmentUserFeedback']); ?></b></p>
+			<?php unset($_SESSION['EquipmentUserFeedback']); ?>
+		<?php endif; ?>
 		<form action="" method="post">
 		<?php if($rowNum>0) :?>
 			<input type="submit" name="action" value="Add Equipment">

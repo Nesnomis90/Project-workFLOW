@@ -44,6 +44,10 @@
 	</head>
 	<body>
 		<h1>Manage Meeting Rooms</h1>
+		<?php if(isset($_SESSION['MeetingRoomUserFeedback'])) : ?>
+			<p><b><?php htmlout($_SESSION['MeetingRoomUserFeedback']); ?></b></p>
+			<?php unset($_SESSION['MeetingRoomUserFeedback']); ?>
+		<?php endif; ?>		
 		<?php if($rowNum>0) :?>
 			<p><a href="?add">Add new meeting room</a></p>
 			<table id= "meetingroomstable">

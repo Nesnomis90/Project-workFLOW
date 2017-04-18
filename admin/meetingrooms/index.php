@@ -36,6 +36,8 @@ if (isset($_POST['action']) and $_POST['action'] == 'Delete')
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
 		exit();
 	}
+
+	$_SESSION['MeetingRoomUserFeedback'] = "Successfully removed the meeting room.";
 	
 	// Add a log event that a meeting room was removed
 	try
@@ -188,6 +190,8 @@ if (isset($_GET['addform']))
 		exit();
 	}
 	
+	$_SESSION['MeetingRoomUserFeedback'] = "Successfully added the meeting room: " . $_POST['name'];
+	
 		// Add a log event that a meeting room was added
 	try
 	{
@@ -319,6 +323,8 @@ if (isset($_GET['editform']))
 		exit();
 	}
 	
+	$_SESSION['MeetingRoomUserFeedback'] = "Successfully updated the meeting room: " . $_POST['name'];
+	
 	// Load user list webpage with updated database
 	header('Location: .');
 	exit();
@@ -329,7 +335,7 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Cancel'){
 	// Doesn't actually need any code to work, since it happends automatically when a submit
 	// occurs. *it* being doing the normal startup code.
 	// Might be useful for something later?
-	echo "<b>Cancel button clicked. Taking you back to /admin/meetingrooms/!</b><br />";
+	$_SESSION['MeetingRoomUserFeedback'] = "Cancel button clicked. Taking you back to /admin/meetingrooms/!";
 }
 
 

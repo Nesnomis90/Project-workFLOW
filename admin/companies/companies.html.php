@@ -44,6 +44,10 @@
 	</head>
 	<body>
 		<h1>Manage Companies</h1>
+		<?php if(isset($_SESSION['CompanyRoomUserFeedback'])) : ?>
+			<p><b><?php htmlout($_SESSION['CompanyRoomUserFeedback']); ?></b></p>
+			<?php unset($_SESSION['CompanyRoomUserFeedback']); ?>
+		<?php endif; ?>				
 		<?php if($rowNum>0) :?>
 			<p><a href="?add">Add new company</a></p>
 			<table id="companiestable">

@@ -34,6 +34,8 @@ if(isset($_POST['action']) AND $_POST['action'] == 'Remove'){
 		exit();
 	}
 	
+	$_SESSION['EquipmentUserFeedback'] = "Successfully removed the equipment.";
+	
 	// Add a log event that an equipment has been removed
 	try
 	{
@@ -66,8 +68,6 @@ if(isset($_POST['action']) AND $_POST['action'] == 'Remove'){
 		$pdo = null;
 		exit();
 	}	
-	
-	
 	
 	// Load company list webpage with updated database
 	header('Location: .');
@@ -172,6 +172,8 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Confirm Equipment')
 		$pdo = null;
 		exit();
 	}
+	
+	$_SESSION['EquipmentUserFeedback'] = "Successfully added the equipment: " . $_POST['EquipmentName'];
 	
 		// Add a log event that an equipment was added
 	try
@@ -296,6 +298,8 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Edit Equipment')
 		exit();
 	}
 	
+	$_SESSION['EquipmentUserFeedback'] = "Successfully updated the equipment: " . $_POST['EquipmentName'];
+	
 	// Load user list webpage with updated database
 	header('Location: .');
 	exit();
@@ -306,9 +310,8 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Cancel'){
 	// Doesn't actually need any code to work, since it happends automatically when a submit
 	// occurs. *it* being doing the normal startup code.
 	// Might be useful for something later?
-	echo "<b>Cancel button clicked. Taking you back to /admin/equipment/!</b><br />";
+	$_SESSION['EquipmentUserFeedback'] = "Cancel button clicked. Taking you back to /admin/equipment/!";
 }
-
 
 // Display equipment list
 try
