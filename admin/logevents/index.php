@@ -36,6 +36,8 @@ if (isset($_GET['deletelog'])){
 		exit();
 	}
 	
+	$_SESSION['LogEventUserFeedback'] = "Successfully deleted the log event.";
+	
 	// Load Log Events list webpage with updated database
 	header('Location: .');
 	exit();

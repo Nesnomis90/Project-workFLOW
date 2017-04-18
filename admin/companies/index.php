@@ -38,7 +38,7 @@ if (isset($_POST['action']) and $_POST['action'] == 'Delete')
 		exit();
 	}
 	
-	$_SESSION['CompanyRoomUserFeedback'] = "Successfully removed the company!";
+	$_SESSION['CompanyUserFeedback'] = "Successfully removed the company!";
 	
 	// Add a log event that a company was removed
 	try
@@ -184,7 +184,7 @@ if (isset($_GET['addform']))
 		exit();
 	}
 	
-	$_SESSION['CompanyRoomUserFeedback'] = "Successfully added the company: " . $_POST['CompanyName'] . ".";
+	$_SESSION['CompanyUserFeedback'] = "Successfully added the company: " . $_POST['CompanyName'] . ".";
 	
 		// Add a log event that a company was added
 	try
@@ -267,7 +267,7 @@ if (isset($_GET['editform']))
 		exit();		
 	}
 	
-	$_SESSION['CompanyRoomUserFeedback'] = "Successfully updated the company: " . $_POST['CompanyName'] . ".";
+	$_SESSION['CompanyUserFeedback'] = "Successfully updated the company: " . $_POST['CompanyName'] . ".";
 	
 	// Load company list webpage with updated database
 	header('Location: .');
@@ -301,7 +301,7 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Cancel Date')
 		exit();		
 	}
 	
-	$_SESSION['CompanyRoomUserFeedback'] = "Successfully removed the cancel date from the company: " . $_POST['CompanyName'] . ".";
+	$_SESSION['CompanyUserFeedback'] = "Successfully removed the cancel date from the company: " . $_POST['CompanyName'] . ".";
 	
 	
 	// Load company list webpage with updated database

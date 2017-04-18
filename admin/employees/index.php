@@ -37,6 +37,8 @@ if(isset($_POST['action']) AND $_POST['action'] == 'Remove'){
 		exit();
 	}
 	
+	$_SESSION['EmployeeUserFeedback'] = "Successfully removed the employee.";
+	
 	// Add a log event that an employee was removed from a company
 	try
 	{
@@ -465,6 +467,8 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Confirm Employee')
 		exit();
 	}
 	
+		$_SESSION['EmployeeUserFeedback'] = "Successfully added the employee.";
+	
 	// Add a log event that a user was added as an employee in a company
 	try
 	{
@@ -681,6 +685,8 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Confirm Role')
 		$pdo = null;
 		exit();		
 	}
+	
+	$_SESSION['EmployeeUserFeedback'] = "Successfully updated the employee.";
 	
 	// If we are looking at a specific company, let's refresh info about
 	// that company again.

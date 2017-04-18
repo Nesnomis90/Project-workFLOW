@@ -44,6 +44,10 @@
 	</head>
 	<body>
 		<h1>Manage Company Employees</h1>
+		<?php if(isset($_SESSION['EmployeeUserFeedback'])) : ?>
+			<p><b><?php htmlout($_SESSION['EmployeeUserFeedback']); ?></b></p>
+			<?php unset($_SESSION['EmployeeUserFeedback']); ?>
+		<?php endif; ?>			
 		<?php $goto = "http://$_SERVER[HTTP_HOST]/admin/companies/"; ?>
 		<?php if(isset($_GET['Company'])) :?>
 			<form action="<?php htmlout($goto); ?>" method="post">

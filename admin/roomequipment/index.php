@@ -36,6 +36,8 @@ if(isset($_POST['action']) AND $_POST['action'] == 'Remove'){
 		exit();
 	}
 	
+	$_SESSION['RoomEquipmentUserFeedback'] = "Successfully removed the equipment from the room.";
+	
 	// Add a log event that equipment was removed from a meeting room
 	try
 	{
@@ -454,6 +456,8 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Confirm Room Equipment')
 		exit();
 	}
 	
+	$_SESSION['RoomEquipmentUserFeedback'] = "Successfully added the equipment to the room.";
+	
 	// Add a log event that equipment was added in a meeting room	
 	try
 	{
@@ -640,6 +644,8 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Confirm Amount')
 		exit();		
 	}
 	
+	$_SESSION['RoomEquipmentUserFeedback'] = "Successfully updated the equipment info for the room.";
+	
 	if(isset($_GET['Meetingroom'])){	
 		// Refresh RoomEquipment for the specific meeting room again
 		$TheMeetingRoomID = $_GET['Meetingroom'];
@@ -659,7 +665,7 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Cancel'){
 	// Doesn't actually need any code to work, since it happends automatically when a submit
 	// occurs. *it* being doing the normal startup code.
 	// Might be useful for something later?
-	echo "<b>Cancel button clicked. Taking you back to /admin/roomequipment/!</b><br />";
+	$_SESSION['RoomEquipmentUserFeedback'] = "Cancel button clicked. Taking you back to /admin/roomequipment/!";
 }
 
 

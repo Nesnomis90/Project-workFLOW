@@ -43,6 +43,10 @@
 	</head>
 	<body>
 		<h1>Manage Log Events</h1>
+		<?php if(isset($_SESSION['LogEventUserFeedback'])) : ?>
+			<p><b><?php htmlout($_SESSION['LogEventUserFeedback']); ?></b></p>
+			<?php unset($_SESSION['LogEventUserFeedback']); ?>
+		<?php endif; ?>			
 		<table id = "logevent">
 			<caption>Log Events</caption>
 			<tr>

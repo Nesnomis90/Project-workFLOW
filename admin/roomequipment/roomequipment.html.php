@@ -44,6 +44,10 @@
 	</head>
 	<body>
 		<h1>Manage Equipment in Meeting Rooms</h1>
+		<?php if(isset($_SESSION['RoomEquipmentUserFeedback'])) : ?>
+			<p><b><?php htmlout($_SESSION['RoomEquipmentUserFeedback']); ?></b></p>
+			<?php unset($_SESSION['RoomEquipmentUserFeedback']); ?>
+		<?php endif; ?>						
 		<?php $goto = "http://$_SERVER[HTTP_HOST]/admin/meetingrooms/"; ?>
 		<?php if(isset($_GET['Meetingroom'])) :?>
 			<form action="<?php htmlout($goto); ?>" method="post">
