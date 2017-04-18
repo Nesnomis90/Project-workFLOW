@@ -9,6 +9,10 @@
 	</head>
 	<body>
 		<h1><?php htmlout($pageTitle); ?></h1>
+		<?php if(isset($_SESSION['AddEquipmentError'])) :?>
+			<p><b><?php htmlout($_SESSION['AddEquipmentError']); ?></b></p>
+			<?php unset($_SESSION['AddEquipmentError']); ?>
+		<?php endif; ?>
 		<form action="" method="post">
 			<div>
 				<label for="EquipmentName">Equipment Name: 

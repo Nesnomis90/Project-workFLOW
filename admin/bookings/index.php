@@ -39,6 +39,8 @@ if (isset($_POST['action']) and $_POST['action'] == 'Delete')
 		exit();
 	}
 	
+	$_SESSION['BookingUserFeedback'] = "Successfully removed the booking";
+	
 	// Load booked meetings list webpage with updated database
 	header('Location: .');
 	exit();	
@@ -69,6 +71,8 @@ if (isset($_POST['action']) and $_POST['action'] == 'Cancel')
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
 		exit();
 	}
+	
+	$_SESSION['BookingUserFeedback'] = "Successfully cancelled the booking";
 	
 	// Load booked meetings list webpage with updated database
 	header('Location: .');
@@ -105,8 +109,6 @@ if (isset($_GET['add']))
 		
 		// Create an array with the row information we retrieved
 		$result = $s->fetchAll();
-		//$result = $pdo->query($sql);
-		
 		
 		$displayName = '';
 		$description = '';
@@ -250,6 +252,8 @@ if (isset($_GET['addform']))
 		$pdo = null;
 		exit();
 	}
+	
+	$_SESSION['BookingUserFeedback'] = "Successfully created the booking.";
 	
 	// Load booking history list webpage with new booking
 	header('Location: .');

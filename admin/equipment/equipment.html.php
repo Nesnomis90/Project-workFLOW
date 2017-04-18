@@ -44,6 +44,10 @@
 	</head>
 	<body>
 		<h1>Manage Meeting Room Equipment</h1>
+		<?php if(isset($_SESSION['EquipmentUserFeedback'])) : ?>
+			<p><b><?php htmlout($_SESSION['EquipmentUserFeedback']); ?></b></p>
+			<?php unset($_SESSION['EquipmentUserFeedback']); ?>
+		<?php endif; ?>
 		<form action="" method="post">
 		<?php if($rowNum>0) :?>
 			<input type="submit" name="action" value="Add Equipment">
@@ -60,7 +64,11 @@
 				<?php foreach ($equipment as $row): ?>
 					<form action="" method="post">
 						<tr>
-							<td><?php htmlout($row['EquipmentName']); ?></td>
+							<td>
+								<?php htmlout($row['EquipmentName']); ?>
+								<input type="hidden" id="EquipmentName" name="EquipmentName"
+								value="<?php htmlout($row['EquipmentName']); ?>">
+							</td>
 							<td><?php htmlout($row['EquipmentDescription']); ?></td>
 							<td><?php htmlout($row['EquipmentIsInTheseRooms']); ?></td>
 							<td><?php htmlout($row['DateTimeAdded']); ?></td>

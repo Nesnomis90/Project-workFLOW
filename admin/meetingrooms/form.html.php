@@ -9,6 +9,10 @@
 	</head>
 	<body>
 		<h1><?php htmlout($pageTitle); ?></h1>
+		<?php if(isset($_SESSION['AddMeetingRoomError'])) : ?>
+			<p><b><?php htmlout($_SESSION['AddMeetingRoomError']); ?></b></p>
+			<?php unset($_SESSION['AddMeetingRoomError']); ?>
+		<?php endif; ?>
 		<form action="?<?php htmlout($action); ?>" method="post">
 			<div>
 				<label for="name">Room Name: 
@@ -49,6 +53,7 @@
 			<div>
 				<input type="hidden" name="id" value="<?php htmlout($id); ?>">
 				<input type="submit" value="<?php htmlout($button); ?>">
+				<input type="submit" value="Cancel">
 			</div>
 			<div>
 				<input type="<?php htmlout($reset); ?>">

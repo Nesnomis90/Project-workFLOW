@@ -80,6 +80,8 @@
 							<td><input type="submit" name="action" value="Edit"></td>
 							<td><input type="submit" name="action" value="Delete"></td>
 							<input type="hidden" name="id" value="<?php echo $user['id']; ?>">
+							<input type="hidden" name="UserInfo" id="UserInfo"
+							value="<?php htmlout($user['UserInfo']); ?>">
 						</tr>
 					</form>
 				<?php endforeach; ?>

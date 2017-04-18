@@ -36,6 +36,42 @@ if (isset($_POST['action']) and $_POST['action'] == 'Delete')
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
 		exit();
 	}
+
+	$_SESSION['MeetingRoomUserFeedback'] = "Successfully removed the meeting room.";
+	
+	// Add a log event that a meeting room was removed
+	try
+	{
+		session_start();
+
+		// Save a description with information about the meeting room that was removed
+		$description = "The meeting room: " . $_POST['MeetingRoomName'] . " was removed by: " . $_SESSION['LoggedInUserName'];
+		
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+		
+		$pdo = connect_to_db();
+		$sql = "INSERT INTO `logevent` 
+				SET			`actionID` = 	(
+												SELECT `actionID` 
+												FROM `logaction`
+												WHERE `name` = 'Meeting Room Removed'
+											),
+							`description` = :description";
+		$s = $pdo->prepare($sql);
+		$s->bindValue(':description', $description);
+		$s->execute();
+		
+		//Close the connection
+		$pdo = null;		
+	}
+	catch(PDOException $e)
+	{
+		$error = 'Error adding log event to database: ' . $e->getMessage();
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+		$pdo = null;
+		exit();
+	}	
+	
 	
 	// Load user list webpage with updated database
 	header('Location: .');
@@ -56,6 +92,19 @@ if (isset($_GET['add']))
 	$id = '';
 	$button = 'Add room';
 	
+	if(isset($_SESSION['AddMeetingRoomCapacity'])){
+		$capacity = $_SESSION['AddMeetingRoomCapacity'];
+		unset($_SESSION['AddMeetingRoomCapacity']);
+	}
+	if(isset($_SESSION['AddMeetingRoomDescription'])){
+		$description = $_SESSION['AddMeetingRoomDescription'];
+		unset($_SESSION['AddMeetingRoomDescription']);
+	}	
+	if(isset($_SESSION['AddMeetingRoomLocation'])){
+		$location = $_SESSION['AddMeetingRoomLocation'];
+		unset($_SESSION['AddMeetingRoomLocation']);
+	}		
+	
 	// We want a reset all fields button while adding a new meeting room
 	$reset = 'reset';
 	
@@ -67,6 +116,48 @@ if (isset($_GET['add']))
 // When admin has added the needed information and wants to add the meeting room
 if (isset($_GET['addform']))
 {
+	// Check if the meeting room already exists (based on name).
+	try
+	{
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+		$pdo = connect_to_db();
+		$sql = 'SELECT 	COUNT(*) 
+				FROM 	`meetingroom`
+				WHERE 	`name`= :MeetingRoomName';
+		$s = $pdo->prepare($sql);
+		$s->bindValue(':MeetingRoomName', $_POST['name']);		
+		$s->execute();
+		
+		$pdo = null;
+		
+		$row = $s->fetch();
+		
+		if ($row[0] > 0)
+		{
+			// This name is already being used for a meeting room
+			
+			session_start();
+			
+			$_SESSION['AddMeetingRoomCapacity'] = $_POST['capacity'];
+			$_SESSION['AddMeetingRoomDescription'] = $_POST['description'];
+			$_SESSION['AddMeetingRoomLocation'] = $_POST['location'];
+			$_SESSION['AddMeetingRoomError'] = "The name: " . $_POST['name'] . " is already used for a meeting room!";
+			
+			// Refresh meeting rooms add form
+			$location = "http://$_SERVER[HTTP_HOST]/admin/meetingrooms/?add";
+			header("Location: $location");
+			exit();		
+		}	
+		// Meeting room name hasn't been used before
+	}
+	catch (PDOException $e)
+	{
+		$error = 'Error searching through meeting rooms.' . $e->getMessage();
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+		$pdo = null;
+		exit();
+	}		
+	
 	// Add the meeting room to the database
 	try
 	{		
@@ -84,6 +175,10 @@ if (isset($_GET['addform']))
 		$s->bindValue(':location', $_POST['location']);
 		$s->execute();
 		
+		session_start();
+		unset($_SESSION['LastMeetingRoomID']);
+		$_SESSION['LastMeetingRoomID'] = $pdo->lastInsertId();	
+		
 		//Close the connection
 		$pdo = null;
 	}
@@ -94,6 +189,51 @@ if (isset($_GET['addform']))
 		$pdo = null;
 		exit();
 	}
+	
+	$_SESSION['MeetingRoomUserFeedback'] = "Successfully added the meeting room: " . $_POST['name'];
+	
+		// Add a log event that a meeting room was added
+	try
+	{
+		session_start();
+
+		// Save a description with information about the meeting room that was added
+		$description = "The meeting room: " . $_POST['name'] . ", with capacity: " . 
+		$_POST['capacity'] . " and description: " . $_POST['description'] . 
+		" was added by: " . $_SESSION['LoggedInUserName'];
+		
+		if(isset($_SESSION['LastMeetingRoomID'])){
+			$lastMeetingRoomID = $_SESSION['LastMeetingRoomID'];
+			unset($_SESSION['LastMeetingRoomID']);
+		}
+		
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+		
+		$pdo = connect_to_db();
+		$sql = "INSERT INTO `logevent` 
+				SET			`actionID` = 	(
+												SELECT `actionID` 
+												FROM `logaction`
+												WHERE `name` = 'Meeting Room Added'
+											),
+							`meetingRoomID` = :TheMeetingRoomID,
+							`description` = :description";
+		$s = $pdo->prepare($sql);
+		$s->bindValue(':description', $description);
+		$s->bindValue(':TheMeetingRoomID', $lastMeetingRoomID);
+		$s->execute();
+		
+		//Close the connection
+		$pdo = null;		
+	}
+	catch(PDOException $e)
+	{
+		$error = 'Error adding log event to database: ' . $e->getMessage();
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+		$pdo = null;
+		exit();
+	}	
+	
 	
 	// Load meeting room list webpage with new meeting room
 	header('Location: .');
@@ -183,22 +323,37 @@ if (isset($_GET['editform']))
 		exit();
 	}
 	
+	$_SESSION['MeetingRoomUserFeedback'] = "Successfully updated the meeting room: " . $_POST['name'];
+	
 	// Load user list webpage with updated database
 	header('Location: .');
 	exit();
 }
+
+// If the user clicks any cancel buttons he'll be directed back to the meeting room page again
+if (isset($_POST['action']) AND $_POST['action'] == 'Cancel'){
+	// Doesn't actually need any code to work, since it happends automatically when a submit
+	// occurs. *it* being doing the normal startup code.
+	// Might be useful for something later?
+	$_SESSION['MeetingRoomUserFeedback'] = "Cancel button clicked. Taking you back to /admin/meetingrooms/!";
+}
+
 
 // Display meeting room list
 try
 {
 	include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 	$pdo = connect_to_db();
-	$sql = 'SELECT  `meetingRoomID`, 
-					`name`, 
-					`capacity`, 
-					`description`, 
-					`location`
-			FROM 	`meetingroom`';
+	$sql = 'SELECT  	m.`meetingRoomID`	AS TheMeetingRoomID, 
+						m.`name`			AS MeetingRoomName, 
+						m.`capacity`		AS MeetingRoomCapacity, 
+						m.`description`		AS MeetingRoomDescription, 
+						m.`location`		AS MeetingRoomLocation,
+						COUNT(re.`amount`)	AS MeetingRoomEquipmentAmount
+			FROM 		`meetingroom` m
+			LEFT JOIN 	`roomequipment` re
+			ON 			re.`meetingRoomID` = m.`meetingRoomID`
+			GROUP BY 	m.`meetingRoomID`';
 	$result = $pdo->query($sql);
 	$rowNum = $result->rowCount();
 
@@ -216,11 +371,12 @@ catch (PDOException $e)
 
 foreach ($result as $row)
 {
-	$meetingrooms[] = array('id' => $row['meetingRoomID'], 
-							'name' => $row['name'],
-							'capacity' => $row['capacity'],
-							'description' => $row['description'],
-							'location' => $row['location'],
+	$meetingrooms[] = array('id' => $row['TheMeetingRoomID'], 
+							'name' => $row['MeetingRoomName'],
+							'capacity' => $row['MeetingRoomCapacity'],
+							'description' => $row['MeetingRoomDescription'],
+							'location' => $row['MeetingRoomLocation'],
+							'MeetingRoomEquipmentAmount' => $row['MeetingRoomEquipmentAmount']
 					);
 }
 

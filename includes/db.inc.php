@@ -45,7 +45,15 @@ function create_db()
 		$output = 'Created database: ' . DB_NAME . '<br />';
 		
 		//	Add the creation to log event
-		$sqlLog = "INSERT INTO `logevent`(`actionID`, `description`) VALUES ((SELECT `actionID` FROM `logaction` WHERE `name` = 'Database Created'), 'Database " . DB_NAME . " was created automatically by the PHP script. This should only occur once, at the very start of the log event.')";
+		$sqlLog = "	INSERT INTO `logevent`(`actionID`, `description`) 
+					VALUES 		(
+									(
+										SELECT 	`actionID` 
+										FROM 	`logaction` 
+										WHERE 	`name` = 'Database Created'
+									), 
+								'Database " . DB_NAME . " was created automatically by the PHP script. This should only occur once, at the very start of the log event.'
+								)";
 		$logEventArray[] = $sqlLog;
 
 	} else {
@@ -77,9 +85,6 @@ function connect_to_db()
 	//	set the PDO error mode to exception
 	$pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 	$pdo->exec('SET NAMES "utf8"');
-	
-	//$output = "<b>Succesfully connected to database: " . DB_NAME . "</b><br />";
-	//include $_SERVER['DOCUMENT_ROOT'] . '/includes/output.html.php';
 	
 	return $pdo; //Return the active connection
 
@@ -118,10 +123,8 @@ function fillAccessLevel($pdo){
 		//Insert the needed values.
 		$pdo->beginTransaction();
 		$pdo->exec("INSERT INTO `accesslevel`(`AccessName`, `Description`) VALUES ('Admin', 'Has full access to all website pages, company information and user information.')");
-		$pdo->exec("INSERT INTO `accesslevel`(`AccessName`, `Description`) VALUES ('Company Owner', 'Full company information and management.')");
 		$pdo->exec("INSERT INTO `accesslevel`(`AccessName`, `Description`) VALUES ('In-House User', 'Can book meeting rooms with a booking code.')");
 		$pdo->exec("INSERT INTO `accesslevel`(`AccessName`, `Description`) VALUES ('Normal User', 'Can browse meeting room schedules, with limited information, and request a booking.')");
-		$pdo->exec("INSERT INTO `accesslevel`(`AccessName`, `Description`) VALUES ('Meeting Room', 'These are special accounts used to handle booking code login.')");
 		$pdo->exec("INSERT INTO `accesslevel`(`AccessName`, `Description`) VALUES ('test', 'test')");
 		
 		// Commit the transaction
@@ -131,8 +134,7 @@ function fillAccessLevel($pdo){
 	{
 		//	Cancels the transaction from going through if something went wrong.
 		$pdo->rollback();
-		$error = 'Encountered an error while trying to insert default values into table accesslevel: ' .
-				$e->getMessage() . '<br />';
+		$error = 'Encountered an error while trying to insert default values into table accesslevel: ' . $e->getMessage();
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
 		$pdo = null;
 		exit();
@@ -171,17 +173,23 @@ function fillLogAction($pdo){
 		// Insert the needed values.
 		$pdo->beginTransaction();
 		$pdo->exec("INSERT INTO `logaction`(`name`,`description`) VALUES ('Account Created','The referenced user just registered an account.')");
-		$pdo->exec("INSERT INTO `logaction`(`name`,`description`) VALUES ('Account Removed','A user account has been removed. See log description for more information.')");
+		$pdo->exec("INSERT INTO `logaction`(`name`,`description`) VALUES ('Account Activated','The referenced user just activated their account.')");
+		$pdo->exec("INSERT INTO `logaction`(`name`,`description`) VALUES ('Account Removed','The referenced user account has been removed.')");
 		$pdo->exec("INSERT INTO `logaction`(`name`,`description`) VALUES ('Booking Created','The referenced user created a new meeting room booking.')");
 		$pdo->exec("INSERT INTO `logaction`(`name`,`description`) VALUES ('Booking Cancelled','The referenced user cancelled a meeting room booking.')");
 		$pdo->exec("INSERT INTO `logaction`(`name`,`description`) VALUES ('Booking Completed','The referenced booking has been completed.')");
 		$pdo->exec("INSERT INTO `logaction`(`name`,`description`) VALUES ('Company Created','The referenced user just created the referenced company.')");
-		$pdo->exec("INSERT INTO `logaction`(`name`,`description`) VALUES ('Company Removed','A company has been removed. See log description for more information.')");
+		$pdo->exec("INSERT INTO `logaction`(`name`,`description`) VALUES ('Company Removed','The referenced company has been removed.')");
 		$pdo->exec("INSERT INTO `logaction`(`name`,`description`) VALUES ('Database Created','The database we are using right now just got created.')");
 		$pdo->exec("INSERT INTO `logaction`(`name`,`description`) VALUES ('Table Created','A table in the database was created.')");
-		$pdo->exec("INSERT INTO `logaction`(`name`,`description`) VALUES ('Test','This is for testing.')");
 		$pdo->exec("INSERT INTO `logaction`(`name`,`description`) VALUES ('Employee Added', 'The referenced user was given the referenced position in the referenced company.')");
+		$pdo->exec("INSERT INTO `logaction`(`name`,`description`) VALUES ('Employee Removed', 'The referenced user was removed from the referenced company.')");
+		$pdo->exec("INSERT INTO `logaction`(`name`,`description`) VALUES ('Equipment Added','The referenced equipment was added.')");
+		$pdo->exec("INSERT INTO `logaction`(`name`,`description`) VALUES ('Equipment Removed','The referenced equipment was removed.')");
 		$pdo->exec("INSERT INTO `logaction`(`name`,`description`) VALUES ('Room Equipment Added', 'The referenced equipment was added into the referenced meeting room with the referenced amount.')");
+		$pdo->exec("INSERT INTO `logaction`(`name`,`description`) VALUES ('Room Equipment Removed', 'The referenced equipment was removed from the referenced meeting room.')");
+		$pdo->exec("INSERT INTO `logaction`(`name`,`description`) VALUES ('Meeting Room Added', 'The referenced meeting room was added.')");
+		$pdo->exec("INSERT INTO `logaction`(`name`,`description`) VALUES ('Meeting Room Removed', 'The referenced meeting room was removed.')");
 		
 		// Commit the transaction
 		$pdo->commit();
@@ -192,8 +200,7 @@ function fillLogAction($pdo){
 		//	Cancels the transaction from going through if something went wrong.
 		$pdo->rollback();
 		$pdo = null;
-		$error = 'Encountered an error while trying to insert default values into table logaction: ' .
-			$e->getMessage() . '<br />';
+		$error = 'Encountered an error while trying to insert default values into table logaction: ' . $e->getMessage();
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
 		exit();
 	}
@@ -249,7 +256,15 @@ function create_tables()
 			fillAccessLevel($conn);
 			
 			//	Add the creation to log event
-			$sqlLog = "INSERT INTO `logevent`(`actionID`, `description`) VALUES ((SELECT `actionID` FROM `logaction` WHERE `name` = 'Table Created'), 'The table $table was created automatically by the PHP script. This should only occur once, at the very start of the log events.')";
+			$sqlLog = "	INSERT INTO `logevent`(`actionID`, `description`) 
+						VALUES 		(
+										(
+										SELECT 	`actionID` 
+										FROM 	`logaction` 
+										WHERE 	`name` = 'Table Created'
+										), 
+									'The table $table was created automatically by the PHP script. This should only occur once, at the very start of the log events.'
+									)";
 			$logEventArray[] = $sqlLog;
 			
 			$totaltime = microtime(true) - $_SERVER["REQUEST_TIME_FLOAT"];
@@ -309,7 +324,15 @@ function create_tables()
 						) ENGINE=InnoDB DEFAULT CHARSET=utf8");
 						
 			//	Add the creation to log event
-			$sqlLog = "INSERT INTO `logevent`(`actionID`, `description`) VALUES ((SELECT `actionID` FROM `logaction` WHERE `name` = 'Table Created'), 'The table $table was created automatically by the PHP script. This should only occur once, at the very start of the log events.')";
+			$sqlLog = "	INSERT INTO `logevent`(`actionID`, `description`) 
+						VALUES 		(
+										(
+										SELECT 	`actionID` 
+										FROM 	`logaction` 
+										WHERE 	`name` = 'Table Created'
+										), 
+									'The table $table was created automatically by the PHP script. This should only occur once, at the very start of the log events.'
+									)";
 			$logEventArray[] = $sqlLog;						
 								
 			$totaltime = microtime(true) - $_SERVER["REQUEST_TIME_FLOAT"];
@@ -335,7 +358,15 @@ function create_tables()
 						) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8");
 						
 			//	Add the creation to log event
-			$sqlLog = "INSERT INTO `logevent`(`actionID`, `description`) VALUES ((SELECT `actionID` FROM `logaction` WHERE `name` = 'Table Created'), 'The table $table was created automatically by the PHP script. This should only occur once, at the very start of the log events.')";
+			$sqlLog = "	INSERT INTO `logevent`(`actionID`, `description`) 
+						VALUES 		(
+										(
+										SELECT 	`actionID` 
+										FROM 	`logaction` 
+										WHERE 	`name` = 'Table Created'
+										), 
+									'The table $table was created automatically by the PHP script. This should only occur once, at the very start of the log events.'
+									)";
 			$logEventArray[] = $sqlLog;						
 						
 			$totaltime = microtime(true) - $_SERVER["REQUEST_TIME_FLOAT"];
@@ -360,7 +391,15 @@ function create_tables()
 						) ENGINE=InnoDB DEFAULT CHARSET=utf8");
 						
 			//	Add the creation to log event
-			$sqlLog = "INSERT INTO `logevent`(`actionID`, `description`) VALUES ((SELECT `actionID` FROM `logaction` WHERE `name` = 'Table Created'), 'The table $table was created automatically by the PHP script. This should only occur once, at the very start of the log events.')";
+			$sqlLog = "	INSERT INTO `logevent`(`actionID`, `description`) 
+						VALUES 		(
+										(
+										SELECT 	`actionID` 
+										FROM 	`logaction` 
+										WHERE 	`name` = 'Table Created'
+										), 
+									'The table $table was created automatically by the PHP script. This should only occur once, at the very start of the log events.'
+									)";
 			$logEventArray[] = $sqlLog;						
 
 			$totaltime = microtime(true) - $_SERVER["REQUEST_TIME_FLOAT"];
@@ -400,7 +439,15 @@ function create_tables()
 						) ENGINE=InnoDB DEFAULT CHARSET=utf8");
 						
 			//	Add the creation to log event
-			$sqlLog = "INSERT INTO `logevent`(`actionID`, `description`) VALUES ((SELECT `actionID` FROM `logaction` WHERE `name` = 'Table Created'), 'The table $table was created automatically by the PHP script. This should only occur once, at the very start of the log events.')";
+			$sqlLog = "	INSERT INTO `logevent`(`actionID`, `description`) 
+						VALUES 		(
+										(
+										SELECT 	`actionID` 
+										FROM 	`logaction` 
+										WHERE 	`name` = 'Table Created'
+										), 
+									'The table $table was created automatically by the PHP script. This should only occur once, at the very start of the log events.'
+									)";
 			$logEventArray[] = $sqlLog;						
 
 			$totaltime = microtime(true) - $_SERVER["REQUEST_TIME_FLOAT"];
@@ -428,7 +475,15 @@ function create_tables()
 			fillCompanyPosition($conn);
 						
 			//	Add the creation to log event
-			$sqlLog = "INSERT INTO `logevent`(`actionID`, `description`) VALUES ((SELECT `actionID` FROM `logaction` WHERE `name` = 'Table Created'), 'The table $table was created automatically by the PHP script. This should only occur once, at the very start of the log events.')";
+			$sqlLog = "	INSERT INTO `logevent`(`actionID`, `description`) 
+						VALUES 		(
+										(
+										SELECT 	`actionID` 
+										FROM 	`logaction` 
+										WHERE 	`name` = 'Table Created'
+										), 
+									'The table $table was created automatically by the PHP script. This should only occur once, at the very start of the log events.'
+									)";
 			$logEventArray[] = $sqlLog;						
 
 			$totaltime = microtime(true) - $_SERVER["REQUEST_TIME_FLOAT"];
@@ -475,7 +530,15 @@ function create_tables()
 						) ENGINE=InnoDB DEFAULT CHARSET=utf8");
 						
 			//	Add the creation to log event
-			$sqlLog = "INSERT INTO `logevent`(`actionID`, `description`) VALUES ((SELECT `actionID` FROM `logaction` WHERE `name` = 'Table Created'), 'The table $table was created automatically by the PHP script. This should only occur once, at the very start of the log events.')";
+			$sqlLog = "	INSERT INTO `logevent`(`actionID`, `description`) 
+						VALUES 		(
+										(
+										SELECT 	`actionID` 
+										FROM 	`logaction` 
+										WHERE 	`name` = 'Table Created'
+										), 
+									'The table $table was created automatically by the PHP script. This should only occur once, at the very start of the log events.'
+									)";
 			$logEventArray[] = $sqlLog;						
 
 			$totaltime = microtime(true) - $_SERVER["REQUEST_TIME_FLOAT"];
@@ -500,7 +563,15 @@ function create_tables()
 						) ENGINE=InnoDB DEFAULT CHARSET=utf8");
 						
 			//	Add the creation to log event
-			$sqlLog = "INSERT INTO `logevent`(`actionID`, `description`) VALUES ((SELECT `actionID` FROM `logaction` WHERE `name` = 'Table Created'), 'The table $table was created automatically by the PHP script. This should only occur once, at the very start of the log events.')";
+			$sqlLog = "	INSERT INTO `logevent`(`actionID`, `description`) 
+						VALUES 		(
+										(
+										SELECT 	`actionID` 
+										FROM 	`logaction` 
+										WHERE 	`name` = 'Table Created'
+										), 
+									'The table $table was created automatically by the PHP script. This should only occur once, at the very start of the log events.'
+									)";
 			$logEventArray[] = $sqlLog;						
 
 			$totaltime = microtime(true) - $_SERVER["REQUEST_TIME_FLOAT"];
@@ -528,7 +599,15 @@ function create_tables()
 			fillLogAction($conn);
 						
 			//	Add the creation to log event
-			$sqlLog = "INSERT INTO `logevent`(`actionID`, `description`) VALUES ((SELECT `actionID` FROM `logaction` WHERE `name` = 'Table Created'), 'The table $table was created automatically by the PHP script. This should only occur once, at the very start of the log events.')";
+			$sqlLog = "	INSERT INTO `logevent`(`actionID`, `description`) 
+						VALUES 		(
+										(
+										SELECT 	`actionID` 
+										FROM 	`logaction` 
+										WHERE 	`name` = 'Table Created'
+										), 
+									'The table $table was created automatically by the PHP script. This should only occur once, at the very start of the log events.'
+									)";
 			$logEventArray[] = $sqlLog;						
 
 			$totaltime = microtime(true) - $_SERVER["REQUEST_TIME_FLOAT"];
@@ -574,7 +653,15 @@ function create_tables()
 						) ENGINE=InnoDB DEFAULT CHARSET=utf8");
 						
 			//	Add the creation to log event
-			$sqlLog = "INSERT INTO `logevent`(`actionID`, `description`) VALUES ((SELECT `actionID` FROM `logaction` WHERE `name` = 'Table Created'), 'The table $table was created automatically by the PHP script. This should only occur once, at the very start of the log events.')";
+			$sqlLog = "	INSERT INTO `logevent`(`actionID`, `description`) 
+						VALUES 		(
+										(
+										SELECT 	`actionID` 
+										FROM 	`logaction` 
+										WHERE 	`name` = 'Table Created'
+										), 
+									'The table $table was created automatically by the PHP script. This should only occur once, at the very start of the log events.'
+									)";			
 			$logEventArray[] = $sqlLog;						
 
 			$totaltime = microtime(true) - $_SERVER["REQUEST_TIME_FLOAT"];
@@ -601,7 +688,15 @@ function create_tables()
 						) ENGINE=InnoDB DEFAULT CHARSET=utf8");
 						
 			//	Add the creation to log event
-			$sqlLog = "INSERT INTO `logevent`(`actionID`, `description`) VALUES ((SELECT `actionID` FROM `logaction` WHERE `name` = 'Table Created'), 'The table $table was created automatically by the PHP script. This should only occur once, at the very start of the log events.')";
+			$sqlLog = "	INSERT INTO `logevent`(`actionID`, `description`) 
+						VALUES 		(
+										(
+										SELECT 	`actionID` 
+										FROM 	`logaction` 
+										WHERE 	`name` = 'Table Created'
+										), 
+									'The table $table was created automatically by the PHP script. This should only occur once, at the very start of the log events.'
+									)";
 			$logEventArray[] = $sqlLog;						
 
 			$totaltime = microtime(true) - $_SERVER["REQUEST_TIME_FLOAT"];
@@ -649,7 +744,15 @@ function create_tables()
 						) ENGINE=InnoDB DEFAULT CHARSET=utf8");
 												
 			//	Add the creation to log event
-			$sqlLog = "INSERT INTO `logevent`(`actionID`, `description`) VALUES ((SELECT `actionID` FROM `logaction` WHERE `name` = 'Table Created'), 'The table $table was created automatically by the PHP script. This should only occur once, at the very start of the log events.')";
+			$sqlLog = "	INSERT INTO `logevent`(`actionID`, `description`) 
+						VALUES 		(
+										(
+										SELECT 	`actionID` 
+										FROM 	`logaction` 
+										WHERE 	`name` = 'Table Created'
+										), 
+									'The table $table was created automatically by the PHP script. This should only occur once, at the very start of the log events.'
+									)";
 			$logEventArray[] = $sqlLog;						
 
 			$totaltime = microtime(true) - $_SERVER["REQUEST_TIME_FLOAT"];
@@ -665,7 +768,6 @@ function create_tables()
 			if(count($logEventArray)>0){
 				foreach($logEventArray as $sqlStatement){
 					$conn->exec($sqlStatement);
-					//echo $sqlStatement . " <br />";
 				}
 				$logEventArray = array(); //reinitialize it i.e. make it empty	
 				

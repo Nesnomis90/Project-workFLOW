@@ -39,6 +39,46 @@ if (isset($_POST['action']) and $_POST['action'] == 'Delete')
 	
 	$_SESSION['UserManagementFeedbackMessage'] = "User Successfully Removed.";
 	
+	// Add a log event that a user account was removed
+	try
+	{
+		session_start();
+
+		// Save a description with information about the user that was removed
+		
+		$description = "N/A";
+		if(isset($_POST['UserInfo'])){
+			$description = 'The User: ' . $_POST['UserInfo'] . 
+			' was deleted by: ' . $_SESSION['LoggedInUserName'];
+		} else {
+			$description = 'An unactivated User was deleted by: ' . $_SESSION['LoggedInUserName'];
+		}
+		
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+		
+		$pdo = connect_to_db();
+		$sql = "INSERT INTO `logevent` 
+				SET			`actionID` = 	(
+												SELECT `actionID` 
+												FROM `logaction`
+												WHERE `name` = 'Account Removed'
+											),
+							`description` = :description";
+		$s = $pdo->prepare($sql);
+		$s->bindValue(':description', $description);
+		$s->execute();
+		
+		//Close the connection
+		$pdo = null;		
+	}
+	catch(PDOException $e)
+	{
+		$error = 'Error adding log event to database: ' . $e->getMessage();
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+		$pdo = null;
+		exit();
+	}	
+	
 	// Load user list webpage with updated database
 	header('Location: .');
 	exit();	
@@ -87,11 +127,8 @@ if (isset($_GET['add']) OR (isset($_SESSION['refreshUserAddform']) AND $_SESSION
 	}
 	
 	//Generate password for user
-	$generatedPassword = generateUserPassword(6);
-	echo "We generated a password: <b>$generatedPassword</b><br />";
-	
+	$generatedPassword = generateUserPassword(6);	
 	$hashedPassword = hashPassword($generatedPassword);
-	echo "Hashed password: <b>$hashedPassword</b><br />";
 	
 	// Set values to be displayed in HTML
 	$pageTitle = 'New User';
@@ -155,6 +192,8 @@ if (isset($_GET['addform']))
 		$_SESSION['AddNewUserLastname'] = $_POST['lastname'];
 		$_SESSION['AddNewUserEmail'] = $_POST['email'];
 		$_SESSION['AddNewUserSelectedAccess'] = $_POST['accessID'];		
+		
+		
 	} else {
 		// The email has NOT been used before, so we can create the new user!
 		try
@@ -163,8 +202,7 @@ if (isset($_GET['addform']))
 			$activationcode = generateActivationCode();
 			
 			// Hash the user generated password
-			$hashedPassword = $_POST['hashedPassword'];
-			echo "The hashed version is password: <b>$hashedPassword</b><br />";	
+			$hashedPassword = $_POST['hashedPassword'];	
 			
 			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 			
@@ -185,6 +223,10 @@ if (isset($_GET['addform']))
 			$s->bindValue(':email', $_POST['email']);
 			$s->execute();
 			
+			session_start();
+			unset($_SESSION['lastUserID']);
+			$_SESSION['lastUserID'] = $pdo->lastInsertId();
+			
 			//Close the connection
 			$pdo = null;
 		}
@@ -195,10 +237,58 @@ if (isset($_GET['addform']))
 			$pdo = null;
 			exit();
 		}
-	}
+		
+		$_SESSION['UserManagementFeedbackMessage'] = 
+		"User Successfully Created. It is currently inactive and unable to log in.";
+		
+		// Add a log event that a user has been created
+		try
+		{
+			session_start();
 
-	$_SESSION['UserManagementFeedbackMessage'] = 
-	"User Successfully Created. It is currently inactive and unable to log in.";
+			// Save a description with information about the user that was added
+			
+			$description = "N/A";
+			$userinfo = $_POST['lastname'] . ', ' . $_POST['firstname'] . ' - ' . $_POST['email'];
+			if(isset($_SESSION['LoggedInUserName'])){
+				$description = "An account for: " . $userinfo . " was created by: " . $_SESSION['LoggedInUserName'];
+			} else {
+				$description = "An account was created for " . $userinfo;
+			}
+			
+			if(isset($_SESSION['lastUserID'])){
+				$lastUserID = $_SESSION['lastUserID'];
+				unset($_SESSION['lastUserID']);				
+			}
+
+			
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+			
+			$pdo = connect_to_db();
+			$sql = "INSERT INTO `logevent` 
+					SET			`actionID` = 	(
+													SELECT `actionID` 
+													FROM `logaction`
+													WHERE `name` = 'Account Created'
+												),
+								`UserID` = :UserID,
+								`description` = :description";
+			$s = $pdo->prepare($sql);
+			$s->bindValue(':description', $description);
+			$s->bindValue(':UserID', $lastUserID);
+			$s->execute();
+			
+			//Close the connection
+			$pdo = null;		
+		}
+		catch(PDOException $e)
+		{
+			$error = 'Error adding log event to database: ' . $e->getMessage();
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+			$pdo = null;
+			exit();
+		}				
+	}
 	
 	// Load user list webpage with new user
 	header('Location: .');
@@ -412,9 +502,7 @@ if (isset($_GET['editform']))
 		if ($_POST['password'] != ''){
 			// Update user info (new password)
 			$newPassword = $_POST['password'];
-			echo "Set new password as: $newPassword <br />";
 			$hashedNewPassword = hashPassword($newPassword);
-			echo "Which is hashed as: $hashedNewPassword <br />";
 			
 			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 			$pdo = connect_to_db();
@@ -527,6 +615,7 @@ foreach ($result as $row)
 {
 	// If user has activated the account
 	if($row['isActive'] == 1){
+		$userinfo = $row['lastname'] . ', ' . $row['firstname'] . ' - ' . $row['email'];
 		$users[] = array('id' => $row['userID'], 
 						'firstname' => $row['firstname'],
 						'lastname' => $row['lastname'],
@@ -536,7 +625,8 @@ foreach ($result as $row)
 						'bookingdescription' => $row['bookingdescription'],
 						'worksfor' => $row['WorksFor'],
 						'datecreated' => $row['DateCreated'],			
-						'lastactive' => $row['LastActive']
+						'lastactive' => $row['LastActive'],
+						'UserInfo' => $userinfo
 						);
 	} elseif ($row['isActive'] == 0) {
 		$inactiveusers[] = array('id' => $row['userID'], 

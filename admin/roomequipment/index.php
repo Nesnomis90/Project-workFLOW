@@ -36,6 +36,49 @@ if(isset($_POST['action']) AND $_POST['action'] == 'Remove'){
 		exit();
 	}
 	
+	$_SESSION['RoomEquipmentUserFeedback'] = "Successfully removed the equipment from the room.";
+	
+	// Add a log event that equipment was removed from a meeting room
+	try
+	{
+		session_start();
+
+		// Save a description with information about the equipment that was removed
+		// from the meeting room.
+		$description = 'The equipment: ' . $_POST['EquipmentName'] . 
+		' was removed from the meeting room: ' . $_POST['MeetingRoomName'] . 
+		'. Removed by: ' . $_SESSION['LoggedInUserName'];
+		
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+		
+		$pdo = connect_to_db();
+		$sql = "INSERT INTO `logevent` 
+				SET			`actionID` = 	(
+												SELECT `actionID` 
+												FROM `logaction`
+												WHERE `name` = 'Room Equipment Removed'
+											),
+							`meetingRoomID` = :MeetingRoomID,
+							`equipmentID` = :EquipmentID,
+							`description` = :description";
+		$s = $pdo->prepare($sql);
+		$s->bindValue(':MeetingRoomID', $_POST['MeetingRoomID']);
+		$s->bindValue(':EquipmentID', $_POST['EquipmentID']);	
+		$s->bindValue(':description', $description);
+		$s->execute();
+		
+		//Close the connection
+		$pdo = null;		
+	}
+	catch(PDOException $e)
+	{
+		$error = 'Error adding log event to database: ' . $e->getMessage();
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+		$pdo = null;
+		exit();
+	}	
+	
+	//	Go to the room equipment main page with the appropriate values
 	if(isset($_GET['Meetingroom'])){	
 		// Refresh RoomEquipment for the specific meeting room again
 		$TheMeetingRoomID = $_GET['Meetingroom'];
@@ -264,13 +307,12 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Confirm Room Equipment')
 	// If we're looking at a specific meetingroom
 	session_start();
 	if(isset($_GET['Meetingroom'])){
-		$MeetingRoomID = $_SESSION['AddRoomEquipmentMeetingRoomArray']['MeetingRoomID'];
+		$MeetingRoomID = $_GET['Meetingroom'];
 	} else {
 		$MeetingRoomID = $_POST['MeetingRoomID'];
 	}		
 
 	// Make sure we only do this if user filled out all values
-
 	$a = ($_POST['EquipmentID'] == '');
 	$b = ($MeetingRoomID == '');
 	$c = ($_POST['EquipmentAmount'] < 1);
@@ -311,12 +353,13 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Confirm Room Equipment')
 			
 		// We didn't have enough values filled in. "go back" to add roomequipment
 		$_SESSION['refreshAddRoomEquipment'] = TRUE;
-		$_SESSION['AddRoomEquipmentError'] = $d;		
+		$_SESSION['AddRoomEquipmentError'] = $d;
+		//TO-DO: Remove/Change the search variables if we don't want it to show up after a search		
 		$_SESSION['AddRoomEquipmentMeetingRoomSearch'] = $_POST['meetingroomsearchstring'];
 		$_SESSION['AddRoomEquipmentEquipmentSearch'] = $_POST['equipmentsearchstring'];
 		
 		if(isset($_GET['Meetingroom'])){	
-			// We were looking at a specific meeting room. Let's go back to that meetingroom
+			// We were looking at a specific meeting room. Let's go back to info about that meetingroom
 			$TheMeetingRoomID = $_GET['Meetingroom'];
 			$location = "http://$_SERVER[HTTP_HOST]/admin/roomequipment/?Meetingroom=" . $TheMeetingRoomID;
 			header("Location: $location");
@@ -413,6 +456,8 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Confirm Room Equipment')
 		exit();
 	}
 	
+	$_SESSION['RoomEquipmentUserFeedback'] = "Successfully added the equipment to the room.";
+	
 	// Add a log event that equipment was added in a meeting room	
 	try
 	{
@@ -437,10 +482,14 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Confirm Room Equipment')
 		session_start();
 		// Get selected meeting room name
 		if(isset($_SESSION['AddRoomEquipmentMeetingRoomArray'])){
-			foreach($_SESSION['AddRoomEquipmentMeetingRoomArray'] AS $row){
-				if($row['MeetingRoomID'] == $_POST['MeetingRoomID']){
-					$meetingroominfo = $row['MeetingRoomName'];
-					break;
+			if($_SESSION['AddRoomEquipmentMeetingRoomArray'][0] == $MeetingRoomID){
+				$meetingroominfo = $_SESSION['AddRoomEquipmentMeetingRoomArray']['MeetingRoomName'];
+			} else {
+				foreach($_SESSION['AddRoomEquipmentMeetingRoomArray'] AS $row){
+					if($row['MeetingRoomID'] == $MeetingRoomID){
+						$meetingroominfo = $row['MeetingRoomName'];
+						break;
+					}
 				}
 			}
 			unset($_SESSION['AddRoomEquipmentMeetingRoomArray']);
@@ -449,17 +498,16 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Confirm Room Equipment')
 		// Get selected equipment name
 		if(isset($_SESSION['AddRoomEquipmentEquipmentArray'])){
 			foreach($_SESSION['AddRoomEquipmentEquipmentArray'] AS $row){
-				if($row['CompanyID'] == $_POST['CompanyID']){
-					$equipmentinfo = $row['CompanyName'];
+				if($row['EquipmentID'] == $_POST['EquipmentID']){
+					$equipmentinfo = $row['EquipmentName'];
 					break;
 				}
 			}
 			unset($_SESSION['AddEmployeeCompaniesArray']);
 		}
 	
-		
-		// Save a description with some extra information to be kept after 
-		// the user or company has been removed
+		// Save a description with information about the equipment that was added
+		// to the meeting room.		
 		$description = 'The equipment: ' . $equipmentinfo . 
 		' was added to the meeting room: ' . $meetingroominfo . 
 		' with the amount: ' . $_POST['EquipmentAmount'] . ". Added by: " .
@@ -470,9 +518,9 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Confirm Room Equipment')
 		$pdo = connect_to_db();
 		$sql = "INSERT INTO `logevent` 
 				SET			`actionID` = 	(
-											SELECT `actionID` 
-											FROM `logaction`
-											WHERE `name` = 'Room Equipment Added'
+												SELECT `actionID` 
+												FROM `logaction`
+												WHERE `name` = 'Room Equipment Added'
 											),
 							`meetingRoomID` = :MeetingRoomID,
 							`equipmentID` = :EquipmentID,
@@ -596,17 +644,19 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Confirm Amount')
 		exit();		
 	}
 	
+	$_SESSION['RoomEquipmentUserFeedback'] = "Successfully updated the equipment info for the room.";
+	
 	if(isset($_GET['Meetingroom'])){	
 		// Refresh RoomEquipment for the specific meeting room again
 		$TheMeetingRoomID = $_GET['Meetingroom'];
 		$location = "http://$_SERVER[HTTP_HOST]/admin/roomequipment/?Meetingroom=" . $TheMeetingRoomID;
 		header("Location: $location");
 		exit();
-	} else {	
-		// Do a normal page reload
-		header('Location: .');
-		exit();
 	}	
+		
+	// Do a normal page reload
+	header('Location: .');
+	exit();	
 }
 
 
@@ -615,10 +665,16 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Cancel'){
 	// Doesn't actually need any code to work, since it happends automatically when a submit
 	// occurs. *it* being doing the normal startup code.
 	// Might be useful for something later?
-	echo "<b>Cancel button clicked. Taking you back to /admin/roomequipment/!</b><br />";
+	$_SESSION['RoomEquipmentUserFeedback'] = "Cancel button clicked. Taking you back to /admin/roomequipment/!";
 }
 
+
+// There were no user inputs or forced refreshes. So we're interested in fresh, new values.
+// Let's reset all the "remembered" values
 session_start();
+unset($_SESSION['AddRoomEquipmentEquipmentArray']);	
+unset($_SESSION['AddRoomEquipmentMeetingRoomArray']);
+
 // Get only information from the specific meetingroom
 if(isset($_GET['Meetingroom'])){
 	
@@ -664,7 +720,7 @@ if(isset($_GET['Meetingroom'])){
 	}
 }
 
-// Display roomequipment list
+// Get information from all meeting rooms
 if(!isset($_GET['Meetingroom'])){
 	try
 	{
@@ -702,6 +758,7 @@ if(!isset($_GET['Meetingroom'])){
 		exit();
 	}	
 }
+
 // Create an array with the actual key/value pairs we want to use in our HTML	
 foreach($result AS $row){
 	
@@ -716,9 +773,8 @@ foreach($result AS $row){
 							'MeetingRoomName' => $row['MeetingRoomName']							
 						);
 }
-// We're clearly getting new values. Forget old values
-session_start();
-unset($_SESSION['AddRoomEquipmentEquipmentArray']);	
-unset($_SESSION['AddRoomEquipmentMeetingRoomArray']);
+
 // Create the equipment list in HTML
 include_once 'roomequipment.html.php';
+
+?>

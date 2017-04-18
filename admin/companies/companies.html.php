@@ -44,6 +44,10 @@
 	</head>
 	<body>
 		<h1>Manage Companies</h1>
+		<?php if(isset($_SESSION['CompanyUserFeedback'])) : ?>
+			<p><b><?php htmlout($_SESSION['CompanyUserFeedback']); ?></b></p>
+			<?php unset($_SESSION['CompanyUserFeedback']); ?>
+		<?php endif; ?>				
 		<?php if($rowNum>0) :?>
 			<p><a href="?add">Add new company</a></p>
 			<table id="companiestable">
@@ -69,7 +73,11 @@
 							</td>
 						</form>
 						<form action="" method="post">
-							<td><?php htmlout($company['CompanyName']); ?></td>
+							<td>
+								<?php htmlout($company['CompanyName']); ?>
+								<input type="hidden" id="CompanyName" name="CompanyName" 
+								value="<?php htmlout($company['CompanyName']); ?>"> 
+							</td>
 							<td><?php htmlout($company['NumberOfEmployees']); ?></td>
 							<td><?php htmlout($company['MonthlyCompanyWideBookingTimeUsed']); ?></td>
 							<td><?php htmlout($company['TotalCompanyWideBookingTimeUsed']); ?></td>

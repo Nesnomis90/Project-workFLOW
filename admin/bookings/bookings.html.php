@@ -44,6 +44,10 @@
 	</head>
 	<body>
 		<h1>Manage Booked Meetings</h1>
+		<?php if(isset($_SESSION['BookingUserFeedback'])) : ?>
+			<p><b><?php htmlout($_SESSION['BookingUserFeedback']); ?></b></p>
+			<?php unset($_SESSION['BookingUserFeedback']); ?>
+		<?php endif; ?>				
 		<?php if($rowNum>0) :?>
 			<p><a href="?add">Create a new booking?</a></p>
 			<table id= "bookingstable">

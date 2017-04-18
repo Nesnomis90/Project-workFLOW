@@ -44,11 +44,17 @@
 	</head>
 	<body>
 		<h1>Manage Meeting Rooms</h1>
+		<?php if(isset($_SESSION['MeetingRoomUserFeedback'])) : ?>
+			<p><b><?php htmlout($_SESSION['MeetingRoomUserFeedback']); ?></b></p>
+			<?php unset($_SESSION['MeetingRoomUserFeedback']); ?>
+		<?php endif; ?>		
 		<?php if($rowNum>0) :?>
 			<p><a href="?add">Add new meeting room</a></p>
 			<table id= "meetingroomstable">
 				<caption>Current Meeting Rooms</caption>
 				<tr>
+					<th>Equipment List</th>
+					<th># of Equipment</th>
 					<th>Room Name</th>
 					<th>Capacity</th>
 					<th>Room Description</th>
@@ -57,9 +63,21 @@
 					<th>Delete Room</th>
 				</tr>
 				<?php foreach ($meetingrooms as $room): ?>
-					<form action="" method="post">
-						<tr>
-							<td><?php htmlout($room['name']); ?></td>
+					<tr>
+						<?php $goto = "http://$_SERVER[HTTP_HOST]/admin/roomequipment/?Meetingroom=" . $room['id'];?>
+						<form action="<?php htmlout($goto) ;?>" method="post">
+							<td>
+								<input type="submit" value="Equipment">
+								<input type="hidden" name="Meetingroom" value="<?php htmlout($room['id']); ?>">							
+							</td>
+							<td><?php htmlout($room['MeetingRoomEquipmentAmount']); ?></td>
+						</form>
+						<form action="" method="post">
+							<td>
+								<?php htmlout($room['name']); ?>
+								<input type="hidden" name="MeetingRoomName" id="MeetingRoomName"
+								value="<?php htmlout($room['name']); ?>">
+							</td>
 							<td><?php htmlout($room['capacity']); ?></td>
 							<td><?php htmlout($room['description']); ?></td>
 							<td><?php htmlout($room['location']); ?></td>
