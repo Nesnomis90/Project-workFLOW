@@ -90,6 +90,19 @@ if (isset($_GET['add']))
 	$id = '';
 	$button = 'Add room';
 	
+	if(isset($_SESSION['AddMeetingRoomCapacity'])){
+		$capacity = $_SESSION['AddMeetingRoomCapacity'];
+		unset($_SESSION['AddMeetingRoomCapacity']);
+	}
+	if(isset($_SESSION['AddMeetingRoomDescription'])){
+		$description = $_SESSION['AddMeetingRoomDescription'];
+		unset($_SESSION['AddMeetingRoomDescription']);
+	}	
+	if(isset($_SESSION['AddMeetingRoomLocation'])){
+		$location = $_SESSION['AddMeetingRoomLocation'];
+		unset($_SESSION['AddMeetingRoomLocation']);
+	}		
+	
 	// We want a reset all fields button while adding a new meeting room
 	$reset = 'reset';
 	
@@ -102,7 +115,48 @@ if (isset($_GET['add']))
 if (isset($_GET['addform']))
 {
 	// TO-DO: Check if meeting room already exists
-	
+	// Check if the meeting room already exists (based on name).
+	try
+	{
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+		$pdo = connect_to_db();
+		$sql = 'SELECT 	COUNT(*) 
+				FROM 	`meetingroom`
+				WHERE 	`name`= :MeetingRoomName';
+		$s = $pdo->prepare($sql);
+		$s->bindValue(':MeetingRoomName', $_POST['name']);		
+		$s->execute();
+		
+		$pdo = null;
+		
+		$row = $s->fetch();
+		
+		if ($row[0] > 0)
+		{
+			// This name is already being used for a meeting room
+			
+			session_start();
+			
+			$_SESSION['AddMeetingRoomCapacity'] = $_POST['capacity'];
+			$_SESSION['AddMeetingRoomDescription'] = $_POST['description'];
+			$_SESSION['AddMeetingRoomLocation'] = $_POST['location'];
+			$_SESSION['AddMeetingRoomError'] = "The name: " . $_POST['name'] . " is already used for a meeting room!";
+			
+			// Refresh meeting rooms add form
+			$location = "http://$_SERVER[HTTP_HOST]/admin/meetingrooms/?add";
+			header("Location: $location");
+			exit();		
+		}
+		
+		// Meeting room name hasn't been used before
+	}
+	catch (PDOException $e)
+	{
+		$error = 'Error searching through meeting rooms.' . $e->getMessage();
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+		$pdo = null;
+		exit();
+	}		
 	
 	// Add the meeting room to the database
 	try
