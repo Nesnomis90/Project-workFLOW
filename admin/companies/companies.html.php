@@ -69,7 +69,11 @@
 							</td>
 						</form>
 						<form action="" method="post">
-							<td><?php htmlout($company['CompanyName']); ?></td>
+							<td>
+								<?php htmlout($company['CompanyName']); ?>
+								<input type="hidden" id="CompanyName" name="CompanyName" 
+								value="<?php htmlout($company['CompanyName']); ?>"> 
+							</td>
 							<td><?php htmlout($company['NumberOfEmployees']); ?></td>
 							<td><?php htmlout($company['MonthlyCompanyWideBookingTimeUsed']); ?></td>
 							<td><?php htmlout($company['TotalCompanyWideBookingTimeUsed']); ?></td>

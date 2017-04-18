@@ -255,8 +255,12 @@ if (isset($_GET['addform']))
 			} else {
 				$description = "An account was created for " . $userinfo;
 			}
-			$lastUserID = $_SESSION['lastUserID'];
-			unset($_SESSION['lastUserID']);
+			
+			if(isset($_SESSION['lastUserID'])){
+				$lastUserID = $_SESSION['lastUserID'];
+				unset($_SESSION['lastUserID']);				
+			}
+
 			
 			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 			

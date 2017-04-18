@@ -38,6 +38,39 @@ if (isset($_POST['action']) and $_POST['action'] == 'Delete')
 		exit();
 	}
 	
+	// Add a log event that a company was removed
+	try
+	{
+		session_start();
+
+		// Save a description with information about the meeting room that was removed
+		$description = "The company: " . $_POST['CompanyName'] . " was removed by: " . $_SESSION['LoggedInUserName'];
+		
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+		
+		$pdo = connect_to_db();
+		$sql = "INSERT INTO `logevent` 
+				SET			`actionID` = 	(
+												SELECT `actionID` 
+												FROM `logaction`
+												WHERE `name` = 'Company Removed'
+											),
+							`description` = :description";
+		$s = $pdo->prepare($sql);
+		$s->bindValue(':description', $description);
+		$s->execute();
+		
+		//Close the connection
+		$pdo = null;		
+	}
+	catch(PDOException $e)
+	{
+		$error = 'Error adding log event to database: ' . $e->getMessage();
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+		$pdo = null;
+		exit();
+	}		
+	
 	// Load company list webpage with updated database
 	header('Location: .');
 	exit();	
@@ -120,6 +153,8 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Edit')
 // When admin has added the needed information and wants to add the company
 if (isset($_GET['addform']))
 {
+	// TO-DO: Check if company already exists.
+	
 	// Add the company to the database
 	try
 	{	
@@ -132,6 +167,10 @@ if (isset($_GET['addform']))
 		$s->bindValue(':CompanyName', $_POST['CompanyName']);
 		$s->execute();
 		
+		session_start();
+		unset($_SESSION['LastCompanyID']);
+		$_SESSION['LastCompanyID'] = $pdo->lastInsertId();
+		
 		//Close the connection
 		$pdo = null;
 	}
@@ -142,6 +181,44 @@ if (isset($_GET['addform']))
 		$pdo = null;
 		exit();
 	}
+	
+		// Add a log event that a company was added
+	try
+	{
+		session_start();
+		if(isset($_SESSION['LastCompanyID'])){
+			$LastCompanyID = $_SESSION['LastCompanyID'];
+			unset($_SESSION['LastCompanyID']);
+		}
+		// Save a description with information about the meeting room that was added
+		$description = "The company: " . $_POST['CompanyName'] . " was added by: " . $_SESSION['LoggedInUserName'];
+		
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+		
+		$pdo = connect_to_db();
+		$sql = "INSERT INTO `logevent` 
+				SET			`actionID` = 	(
+												SELECT `actionID` 
+												FROM `logaction`
+												WHERE `name` = 'Company Created'
+											),
+							`companyID` = :TheCompanyID,
+							`description` = :description";
+		$s = $pdo->prepare($sql);
+		$s->bindValue(':description', $description);
+		$s->bindValue(':TheCompanyID', $LastCompanyID);
+		$s->execute();
+		
+		//Close the connection
+		$pdo = null;		
+	}
+	catch(PDOException $e)
+	{
+		$error = 'Error adding log event to database: ' . $e->getMessage();
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+		$pdo = null;
+		exit();
+	}		
 	
 	// Load companies list webpage with new company
 	header('Location: .');

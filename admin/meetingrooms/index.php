@@ -101,6 +101,9 @@ if (isset($_GET['add']))
 // When admin has added the needed information and wants to add the meeting room
 if (isset($_GET['addform']))
 {
+	// TO-DO: Check if meeting room already exists
+	
+	
 	// Add the meeting room to the database
 	try
 	{		
@@ -145,6 +148,7 @@ if (isset($_GET['addform']))
 		
 		if(isset($_SESSION['LastMeetingRoomID'])){
 			$lastMeetingRoomID = $_SESSION['LastMeetingRoomID'];
+			unset($_SESSION['LastMeetingRoomID']);
 		}
 		
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
