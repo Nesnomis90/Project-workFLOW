@@ -2,6 +2,22 @@ USE test;
 SET NAMES utf8;
 USE meetingflow;
 
+SELECT  	m.`meetingRoomID`	AS TheMeetingRoomID, 
+						m.`name`			AS MeetingRoomName, 
+						m.`capacity`		AS MeetingRoomCapacity, 
+						m.`description`		AS MeetingRoomDescription, 
+						m.`location`		AS MeetingRoomLocation,
+						COUNT(re.`amount`)	AS MeetingRoomEquipmentAmount
+			FROM 		`meetingroom` m
+			LEFT JOIN 	`roomequipment` re
+			ON 			re.`meetingRoomID` = m.`meetingRoomID`
+			GROUP BY 	m.`meetingRoomID`;
+
+SELECT 	`companyID` AS CompanyID,
+									`name`		AS CompanyName
+							FROM 	`company`
+							WHERE 	`companyID` = 2;
+
 INSERT INTO `logaction` 
 SET 
 `name` = 'Account Activated', 

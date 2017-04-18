@@ -36,6 +36,7 @@ function validateDatetime($datetime){
 }
 
 //Function to change date format to be correct for date input in database
+// TO-DO: Make this function actually change "all" user date inputs
 function correctDateFormat($wrongDateString){
 	// Correct date format is
 	// yyyy-mm-dd
@@ -54,6 +55,7 @@ function correctDateFormat($wrongDateString){
 }
 
 //Function to change datetime format to be correct for datetime input in database
+// TO-DO: Make this function actually change "all" user date inputs
 function correctDatetimeFormat($wrongDatetimeString){
 	// Correct datetime format is
 	// yyyy-mm-dd hh:mm:ss	

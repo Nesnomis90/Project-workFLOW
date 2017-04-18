@@ -49,6 +49,8 @@
 			<table id= "meetingroomstable">
 				<caption>Current Meeting Rooms</caption>
 				<tr>
+					<th>Equipment List</th>
+					<th># of Equipment</th>
 					<th>Room Name</th>
 					<th>Capacity</th>
 					<th>Room Description</th>
@@ -57,8 +59,16 @@
 					<th>Delete Room</th>
 				</tr>
 				<?php foreach ($meetingrooms as $room): ?>
-					<form action="" method="post">
-						<tr>
+					<tr>
+						<?php $goto = "http://$_SERVER[HTTP_HOST]/admin/roomequipment/?Meetingroom=" . $room['id'];?>
+						<form action="<?php htmlout($goto) ;?>" method="post">
+							<td>
+								<input type="submit" value="Equipment">
+								<input type="hidden" name="Meetingroom" value="<?php htmlout($room['id']); ?>">							
+							</td>
+							<td><?php htmlout($room['MeetingRoomEquipmentAmount']); ?></td>
+						</form>
+						<form action="" method="post">
 							<td><?php htmlout($room['name']); ?></td>
 							<td><?php htmlout($room['capacity']); ?></td>
 							<td><?php htmlout($room['description']); ?></td>

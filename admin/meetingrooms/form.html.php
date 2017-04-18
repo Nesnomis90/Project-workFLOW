@@ -49,6 +49,7 @@
 			<div>
 				<input type="hidden" name="id" value="<?php htmlout($id); ?>">
 				<input type="submit" value="<?php htmlout($button); ?>">
+				<input type="submit" value="Cancel">
 			</div>
 			<div>
 				<input type="<?php htmlout($reset); ?>">

@@ -226,11 +226,12 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Add Employee') OR
 					$sql = 'SELECT 	`companyID` AS CompanyID,
 									`name`		AS CompanyName
 							FROM 	`company`
-							WHERE 	`companyID` = :CompanyID';
+							WHERE 	`companyID` = :CompanyID
+							LIMIT 	1';
 					$s = $pdo->prepare($sql);
 					$s->bindValue(':CompanyID', $_GET['Company']);
 					$s->execute();
-					$companies = $s->fetch();
+					$companies = $s->fetch();		
 				}
 				
 				session_start();
@@ -338,7 +339,7 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Confirm Employee')
 	// If we're looking at a specific company
 	session_start();
 	if(isset($_GET['Company'])){
-		$CompanyID = $_SESSION['AddEmployeeCompaniesArray']['CompanyID'];
+		$CompanyID = $_GET['Company'];
 	} else {
 		$CompanyID = $_POST['CompanyID'];
 	}	
@@ -500,11 +501,15 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Confirm Employee')
 		
 		// Get selected company name
 		if(isset($_SESSION['AddEmployeeCompaniesArray'])){
-			foreach($_SESSION['AddEmployeeCompaniesArray'] AS $row){
-				if($row['CompanyID'] == $_POST['CompanyID']){
-					$companyinfo = $row['CompanyName'];
-					break;
-				}
+			if($CompanyID == $_SESSION['AddEmployeeCompaniesArray'][0]){
+				$companyinfo = $_SESSION['AddEmployeeCompaniesArray']['CompanyName'];
+			} else {
+				foreach($_SESSION['AddEmployeeCompaniesArray'] AS $row){
+					if($row['CompanyID'] == $CompanyID){
+						$companyinfo = $row['CompanyName'];
+						break;
+					}
+				} 				
 			}
 			unset($_SESSION['AddEmployeeCompaniesArray']);
 		}

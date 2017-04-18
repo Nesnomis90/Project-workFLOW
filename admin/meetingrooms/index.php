@@ -188,17 +188,30 @@ if (isset($_GET['editform']))
 	exit();
 }
 
+// If the user clicks any cancel buttons he'll be directed back to the meeting room page again
+if (isset($_POST['action']) AND $_POST['action'] == 'Cancel'){
+	// Doesn't actually need any code to work, since it happends automatically when a submit
+	// occurs. *it* being doing the normal startup code.
+	// Might be useful for something later?
+	echo "<b>Cancel button clicked. Taking you back to /admin/meetingrooms/!</b><br />";
+}
+
+
 // Display meeting room list
 try
 {
 	include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 	$pdo = connect_to_db();
-	$sql = 'SELECT  `meetingRoomID`, 
-					`name`, 
-					`capacity`, 
-					`description`, 
-					`location`
-			FROM 	`meetingroom`';
+	$sql = 'SELECT  	m.`meetingRoomID`	AS TheMeetingRoomID, 
+						m.`name`			AS MeetingRoomName, 
+						m.`capacity`		AS MeetingRoomCapacity, 
+						m.`description`		AS MeetingRoomDescription, 
+						m.`location`		AS MeetingRoomLocation,
+						COUNT(re.`amount`)	AS MeetingRoomEquipmentAmount
+			FROM 		`meetingroom` m
+			LEFT JOIN 	`roomequipment` re
+			ON 			re.`meetingRoomID` = m.`meetingRoomID`
+			GROUP BY 	m.`meetingRoomID`';
 	$result = $pdo->query($sql);
 	$rowNum = $result->rowCount();
 
@@ -216,11 +229,12 @@ catch (PDOException $e)
 
 foreach ($result as $row)
 {
-	$meetingrooms[] = array('id' => $row['meetingRoomID'], 
-							'name' => $row['name'],
-							'capacity' => $row['capacity'],
-							'description' => $row['description'],
-							'location' => $row['location'],
+	$meetingrooms[] = array('id' => $row['TheMeetingRoomID'], 
+							'name' => $row['MeetingRoomName'],
+							'capacity' => $row['MeetingRoomCapacity'],
+							'description' => $row['MeetingRoomDescription'],
+							'location' => $row['MeetingRoomLocation'],
+							'MeetingRoomEquipmentAmount' => $row['MeetingRoomEquipmentAmount']
 					);
 }
 

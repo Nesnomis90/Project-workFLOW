@@ -305,7 +305,7 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Confirm Room Equipment')
 	// If we're looking at a specific meetingroom
 	session_start();
 	if(isset($_GET['Meetingroom'])){
-		$MeetingRoomID = $_SESSION['AddRoomEquipmentMeetingRoomArray']['MeetingRoomID'];
+		$MeetingRoomID = $_GET['Meetingroom'];
 	} else {
 		$MeetingRoomID = $_POST['MeetingRoomID'];
 	}		
@@ -478,10 +478,14 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Confirm Room Equipment')
 		session_start();
 		// Get selected meeting room name
 		if(isset($_SESSION['AddRoomEquipmentMeetingRoomArray'])){
-			foreach($_SESSION['AddRoomEquipmentMeetingRoomArray'] AS $row){
-				if($row['MeetingRoomID'] == $_POST['MeetingRoomID']){
-					$meetingroominfo = $row['MeetingRoomName'];
-					break;
+			if($_SESSION['AddRoomEquipmentMeetingRoomArray'][0] == $MeetingRoomID){
+				$meetingroominfo = $_SESSION['AddRoomEquipmentMeetingRoomArray']['MeetingRoomName'];
+			} else {
+				foreach($_SESSION['AddRoomEquipmentMeetingRoomArray'] AS $row){
+					if($row['MeetingRoomID'] == $MeetingRoomID){
+						$meetingroominfo = $row['MeetingRoomName'];
+						break;
+					}
 				}
 			}
 			unset($_SESSION['AddRoomEquipmentMeetingRoomArray']);
