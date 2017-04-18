@@ -39,6 +39,47 @@ if (isset($_POST['action']) and $_POST['action'] == 'Delete')
 	
 	$_SESSION['UserManagementFeedbackMessage'] = "User Successfully Removed.";
 	
+	// Add a log event that a user account was removed
+	try
+	{
+		session_start();
+
+		// Save a description with information about the user that was removed
+		
+		$description = "N/A";
+		if(isset($_POST['UserInfo'])){
+			$description = 'The User: ' . $_POST['UserInfo'] . 
+			' was deleted by: ' . $_SESSION['LoggedInUserName'];
+		} else {
+			$description = 'An unactivated User was deleted by: ' . $_SESSION['LoggedInUserName'];
+		}
+		
+
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+		
+		$pdo = connect_to_db();
+		$sql = "INSERT INTO `logevent` 
+				SET			`actionID` = 	(
+												SELECT `actionID` 
+												FROM `logaction`
+												WHERE `name` = 'Account Removed'
+											),
+							`description` = :description";
+		$s = $pdo->prepare($sql);
+		$s->bindValue(':description', $description);
+		$s->execute();
+		
+		//Close the connection
+		$pdo = null;		
+	}
+	catch(PDOException $e)
+	{
+		$error = 'Error adding log event to database: ' . $e->getMessage();
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+		$pdo = null;
+		exit();
+	}	
+	
 	// Load user list webpage with updated database
 	header('Location: .');
 	exit();	
@@ -527,6 +568,7 @@ foreach ($result as $row)
 {
 	// If user has activated the account
 	if($row['isActive'] == 1){
+		$userinfo = $row['lastname'] . ', ' . $row['firstname'] . ' - ' . $row['email'];
 		$users[] = array('id' => $row['userID'], 
 						'firstname' => $row['firstname'],
 						'lastname' => $row['lastname'],
@@ -536,7 +578,8 @@ foreach ($result as $row)
 						'bookingdescription' => $row['bookingdescription'],
 						'worksfor' => $row['WorksFor'],
 						'datecreated' => $row['DateCreated'],			
-						'lastactive' => $row['LastActive']
+						'lastactive' => $row['LastActive'],
+						'UserInfo' => $userinfo
 						);
 	} elseif ($row['isActive'] == 0) {
 		$inactiveusers[] = array('id' => $row['userID'], 
