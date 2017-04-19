@@ -8,78 +8,75 @@
 	</head>
 	<body>
 		<h1><?php htmlout($pageTitle); ?></h1>
+		<?php if(isset($_SESSION['AddBookingError'])) : ?>
+			<p><b><?php htmlout($_SESSION['AddBookingError']); ?></b></p>
+			<?php unset($_SESSION['AddBookingError']); ?>
+		<?php endif; ?>
 		<form action="?<?php htmlout($action); ?>" method="post">
 			<div>
-				<label for="meetingRoomID">Meeting Room:
-					<select name="meetingRoomID" id="meetingRoomID">
-						<?php foreach($meetingroom as $row): ?> 
-							<?php if($row['meetingRoomName']==$meetingroomname):?>
-								<input type="hidden" name="MeetingRoomName" id="MeetingRoomName" value="<?php htmlout($row['meetingRoomName']); ?>">
-								<option selected="selected" 
-										value=<?php htmlout($row['meetingRoomID']); ?>>
-										<?php htmlout($row['meetingRoomName']);?>
-								</option>
-							<?php else : ?>
-								<option value=<?php htmlout($row['meetingRoomID']); ?>>
-										<?php htmlout($row['meetingRoomName']);?>
-								</option>
-							<?php endif;?>
-						<?php endforeach; ?>
-					</select>	
-				</label>
+				<label for="meetingRoomID">Meeting Room: </label>
+				<select name="meetingRoomID" id="meetingRoomID">
+					<?php foreach($meetingroom as $row): ?> 
+						<?php if($row['meetingRoomName']==$meetingroomname):?>
+							<option selected="selected" 
+									value=<?php htmlout($row['meetingRoomID']); ?>>
+									<?php htmlout($row['meetingRoomName']);?>
+							</option>
+						<?php else : ?>
+							<option value=<?php htmlout($row['meetingRoomID']); ?>>
+									<?php htmlout($row['meetingRoomName']);?>
+							</option>
+						<?php endif;?>
+					<?php endforeach; ?>
+				</select>				
 			</div>
 			<div>
-				<label for="startDateTime">Start Time: 
-					<input type="text" name="startDateTime" id="startDateTime" 
-					required placeholder="dd-mm-yyyy hh:mm:ss" 
-					oninvalid="this.setCustomValidity('Enter Your Starting Date And Time Here')"
-					oninput="setCustomValidity('')"
-					value="<?php htmlout($startDateTime); ?>">
-				</label>
+				<label for="startDateTime">Start Time: </label>
+				<input type="text" name="startDateTime" id="startDateTime" 
+				required placeholder="dd-mm-yyyy hh:mm:ss" 
+				oninvalid="this.setCustomValidity('Enter Your Starting Date And Time Here')"
+				oninput="setCustomValidity('')"
+				value="<?php htmlout($startDateTime); ?>">
 			</div>
 			<div>
-				<label for="endDateTime">End Time: 
-					<input type="text" name="endDateTime" id="endDateTime" 
-					required placeholder="dd-mm-yyyy hh:mm:ss" 
-					oninvalid="this.setCustomValidity('Enter Your Ending Date And Time Here')"
-					oninput="setCustomValidity('')"
-					value="<?php htmlout($endDateTime); ?>">
-				</label>
+				<label for="endDateTime">End Time: </label>
+				<input type="text" name="endDateTime" id="endDateTime" 
+				required placeholder="dd-mm-yyyy hh:mm:ss" 
+				oninvalid="this.setCustomValidity('Enter Your Ending Date And Time Here')"
+				oninput="setCustomValidity('')"
+				value="<?php htmlout($endDateTime); ?>">
 			</div>
 			<div>
 				<?php if($displayCompanySelect == TRUE) : ?>
-					<label for="companyID">Company: 
-						<select name="companyID" id="companyID">
-							<?php foreach($company as $row): ?> 
-								<?php if($row['companyName']==$companyname):?>
-									<option selected="selected" 
-											value=<?php htmlout($row['companyID']); ?>>
-											<?php htmlout($row['companyName']);?>
-									</option>
-								<?php else : ?>
-									<option value=<?php htmlout($row['companyID']); ?>>
-											<?php htmlout($row['companyName']);?>
-									</option>
-								<?php endif;?>
-							<?php endforeach; ?>
-						</select>
-					</label>
+					<label for="companyID">Company: </label>
+					<select name="companyID" id="companyID">
+						<?php foreach($company as $row): ?> 
+							<?php if($row['companyName']==$companyname):?>
+								<option selected="selected" 
+										value=<?php htmlout($row['companyID']); ?>>
+										<?php htmlout($row['companyName']);?>
+								</option>
+							<?php else : ?>
+								<option value=<?php htmlout($row['companyID']); ?>>
+										<?php htmlout($row['companyName']);?>
+								</option>
+							<?php endif;?>
+						<?php endforeach; ?>
+					</select>
 				<?php else : ?>
 					<input type="hidden" name="companyID" id="companyID" 
 					value="<?php htmlout($companyID); ?>">
 				<?php endif; ?>
 			</div>
 			<div>
-				<label for="displayName">Display Name: 
-					<input type="text" name="displayName" id="displayName" 
-					value="<?php htmlout($displayName); ?>">
-				</label>
+				<label for="displayName">Display Name: </label>
+				<input type="text" name="displayName" id="displayName" 
+				value="<?php htmlout($displayName); ?>">
 			</div>
 			<div>
-				<label for="description">Booking Description: 
-					<input type="text" name="description" id="description" 
-					value="<?php htmlout($description); ?>">
-				</label>
+				<label for="description">Booking Description: </label>
+				<input type="text" name="description" id="description" 
+				value="<?php htmlout($description); ?>">
 			</div>
 			<div>
 				<input type="hidden" name="id" value="<?php htmlout($id); ?>">

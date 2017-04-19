@@ -224,6 +224,11 @@ if (isset($_GET['add']))
 								'meetingRoomName' => $row['name']
 								);
 		}
+		
+		// Remember the meeting room info for creating a log event later
+		session_start();
+		unset($_SESSION['AddBookingMeetingRooms']);
+		$_SESSION['AddBookingMeetingRooms'] = $meetingroom;
 			
 		// We only need to allow the user a company dropdown selector if they
 		// are connected to more than 1 company.
@@ -342,17 +347,22 @@ if (isset($_GET['addform']))
 	{
 		session_start();
 
-		$meetinginfo = $_POST['MeetingRoomName'] . ' for the timeslot: ' . 
+		// Get meeting room name
+		$MeetingRoomName = 'N/A';
+		foreach ($_SESSION['AddBookingMeetingRooms'] AS $room){
+			if($room['meetingRoomID'] == $_POST['meetingRoomID']){
+				$MeetingRoomName = $room['meetingRoomName'];
+				break;
+			}
+		}
+		unset($_SESSION['AddBookingMeetingRooms']);
+		
+		$meetinginfo = $MeetingRoomName . ' for the timeslot: ' . 
 		$_POST['startDateTime'] . ' to ' . $_POST['endDateTime'];
 		
 		// Save a description with information about the booking that was created
-		$description = "N/A";
-		if(isset($_POST['MeetingRoomName'])){ //TO-DO: FIX THIS! <---------- Wasn't set?
-			$description = 'A booking was created for the meeting room ' .
-			$meetinginfo . ' by: ' . $_SESSION['LoggedInUserName'];
-		} else {
-			$description = 'A booking was created by: ' . $_SESSION['LoggedInUserName'];
-		}
+		$description = 'A booking was created for the meeting room ' . $meetinginfo . 
+		' by: ' . $_SESSION['LoggedInUserName'];
 		
 		if(isset($_SESSION['lastBookingID'])){
 			$lastBookingID = $_SESSION['lastBookingID'];
@@ -459,16 +469,27 @@ foreach ($result as $row)
 	// If cancelled = cancelled
 	// If meeting time has passed and finished time has NOT updated (and not been cancelled) = Ended without updating
 	// If none of the above = Unknown
+	// TO-DO: CHECK IF THIS MAKES SENSE!
 	if(	$row['BookingWasCompletedOn'] == null AND $row['BookingWasCancelledOn'] == null AND 
 		$datetimeNow < $datetimeEnd ) {
 		$status = 'Active';
 	} elseif($row['BookingWasCompletedOn'] != null AND $row['BookingWasCancelledOn'] == null){
 		$status = 'Completed';
-	} elseif($row['BookingWasCancelledOn'] != null){
+	} elseif($row['BookingWasCompletedOn'] == null AND $row['BookingWasCancelledOn'] != null AND
+	$row['StartTime'] > $row['BookingWasCancelledOn']){
 		$status = 'Cancelled';
+	} elseif($row['BookingWasCompletedOn'] != null AND $row['BookingWasCancelledOn'] != null AND
+			$row['BookingWasCompletedOn'] > $row['BookingWasCancelledOn'] ){
+		$status = 'Ended Early';
+	} elseif($row['BookingWasCompletedOn'] != null AND $row['BookingWasCancelledOn'] != null AND
+			$row['BookingWasCompletedOn'] < $row['BookingWasCancelledOn'] ){
+		$status = 'Cancelled after Completion';
 	} elseif($row['BookingWasCompletedOn'] == null AND $row['BookingWasCancelledOn'] == null AND 
 		$datetimeNow > $datetimeEnd){
 		$status = 'Ended without updating database';
+	} elseif($row['BookingWasCompletedOn'] == null AND $row['BookingWasCancelledOn'] != null AND 
+		$row['EndTime'] < $row['BookingWasCancelledOn']){
+		$status = 'Cancelled after meeting should have been Completed';
 	} else {
 		$status = 'Unknown';
 	}

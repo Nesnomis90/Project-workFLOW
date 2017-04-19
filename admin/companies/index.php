@@ -156,6 +156,49 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Edit')
 if (isset($_GET['addform']))
 {
 	// TO-DO: Check if company already exists.
+	// Check if company name already has been used
+	try
+	{
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+		
+		// Check for company names
+		$pdo = connect_to_db();
+		$sql = 'SELECT 	COUNT(*)
+				FROM 	`company`
+				WHERE 	`name` = :CompanyName
+				LIMIT 1';
+		$s = $pdo->prepare($sql);
+		$s->bindValue(':CompanyName', $_POST['CompanyName']);
+		$s->execute();
+						
+		//Close connection
+		$pdo = null;
+		
+		$row = $s->fetch();
+		
+		if ($row[0] > 0)
+		{
+			// This name is already being used for a company
+			
+			session_start();
+			
+			$_SESSION['AddCompanyError'] = "There is already a company with the name: " . $_POST['CompanyName'] . "!";
+			
+			// Refresh company add form
+			$location = "http://$_SERVER[HTTP_HOST]/admin/companies/?add";
+			header("Location: $location");
+			exit();	
+		}
+		// Company name hasn't been used before		
+		unset($_SESSION['AddCompanyError']);
+	}
+	catch (PDOException $e)
+	{
+		$error = 'Error fetching company details: ' . $e->getMessage();
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+		$pdo = null;
+		exit();		
+	}	
 	
 	// Add the company to the database
 	try
@@ -314,6 +357,9 @@ try
 {
 	include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 	$pdo = connect_to_db();
+	// TO-DO: Fix SQL query if time is broken after change
+	// Made it so the user doesn't have to be an employee anymore for the hours to count
+	// Only takes into account time spent and company the booking was booked for.
 	$sql = "SELECT 		c.companyID 										AS CompID,
 						c.`name` 											AS CompanyName,
 						DATE_FORMAT(c.`dateTimeCreated`, '%d %b %Y %T')		AS DatetimeCreated,
@@ -328,11 +374,9 @@ try
 						(
 							SELECT 		(SEC_TO_TIME(SUM(TIME_TO_SEC(b.`actualEndDateTime`) - 
 										TIME_TO_SEC(b.`startDateTime`)))) 
-							FROM 		`booking` b 
-							INNER JOIN 	`employee` e 
-							ON 			b.`UserID` = e.`UserID` 
+							FROM 		`booking` b  
 							INNER JOIN 	`company` c 
-							ON 			e.`CompanyID` = c.`CompanyID` 
+							ON 			b.`CompanyID` = c.`CompanyID` 
 							WHERE 		b.`CompanyID` = CompID
 							AND 		YEAR(b.`actualEndDateTime`) = YEAR(NOW())
 							AND 		MONTH(b.`actualEndDateTime`) = MONTH(NOW())
@@ -341,10 +385,8 @@ try
 							SELECT 		(SEC_TO_TIME(SUM(TIME_TO_SEC(b.`actualEndDateTime`) - 
 										TIME_TO_SEC(b.`startDateTime`)))) 
 							FROM 		`booking` b 
-							INNER JOIN 	`employee` e 
-							ON 			b.`UserID` = e.`UserID` 
 							INNER JOIN 	`company` c 
-							ON 			e.`CompanyID` = c.`CompanyID` 
+							ON 			b.`CompanyID` = c.`CompanyID` 
 							WHERE 		b.`CompanyID` = CompID
 						)   												AS TotalCompanyWideBookingTimeUsed
 			FROM 		`company` c 

@@ -8,6 +8,10 @@
 	</head>
 	<body>
 		<h1><?php htmlout($pageTitle); ?></h1>
+		<?php if(isset($_SESSION['AddCompanyError'])) : ?>
+			<p><b><?php htmlout($_SESSION['AddCompanyError']); ?></b></p>
+			<?php unset($_SESSION['AddCompanyError']); ?>
+		<?php endif; ?>		
 		<form action="?<?php htmlout($action); ?>" method="post">
 			<div>
 				<label for="CompanyName">Company Name: 

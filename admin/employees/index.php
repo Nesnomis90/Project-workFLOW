@@ -725,6 +725,12 @@ if(isset($_GET['Company'])){
 
 		$pdo = connect_to_db();
 		
+		// TO-DO: Get information about time spent by users that have been removed as an employee
+		// Fix the HTML template too!
+		
+		
+		// TO-DO: Change SQL Query if time calculation is broken
+		// Changed it so it should (in theory at least) calculate correctly now
 		$sql = "SELECT 	u.`userID`					AS UsrID,
 						c.`companyID`				AS TheCompanyID,
 						c.`name`					AS CompanyName,
@@ -745,6 +751,7 @@ if(isset($_GET['Company'])){
 							ON 			e.`UserID` = u.`UserID` 
 							WHERE 		b.`userID` = UsrID
 							AND 		b.`companyID` = :id
+							AND 		c.`CompanyID` = b.`companyID`
 							AND 		YEAR(b.`actualEndDateTime`) = YEAR(NOW())
 							AND 		MONTH(b.`actualEndDateTime`) = MONTH(NOW())
 						) 							AS MonthlyBookingTimeUsed,
@@ -760,6 +767,7 @@ if(isset($_GET['Company'])){
 							ON 			e.`UserID` = u.`UserID` 
 							WHERE 		b.`userID` = UsrID
 							AND 		b.`companyID` = :id
+							AND 		c.`CompanyID` = b.`companyID`
 						) 							AS TotalBookingTimeUsed							
 				FROM 	`company` c 
 				JOIN 	`employee` e
@@ -817,6 +825,7 @@ if(!isset($_GET['Company'])){
 								ON 			e.`UserID` = u.`UserID` 
 								WHERE 		b.`userID` = UsrID
 								AND 		b.`companyID` = TheCompanyID
+								AND 		c.`CompanyID` = b.`companyID`
 								AND 		YEAR(b.`actualEndDateTime`) = YEAR(NOW())
 								AND 		MONTH(b.`actualEndDateTime`) = MONTH(NOW())
 							) 												AS MonthlyBookingTimeUsed,
@@ -832,6 +841,7 @@ if(!isset($_GET['Company'])){
 								ON 			e.`UserID` = u.`UserID` 
 								WHERE 		b.`userID` = UsrID
 								AND 		b.`companyID` = TheCompanyID
+								AND 		c.`CompanyID` = b.`companyID`
 							) 												AS TotalBookingTimeUsed							
 				FROM 		`company` c 
 				JOIN 		`employee` e
