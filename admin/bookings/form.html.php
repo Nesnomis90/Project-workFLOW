@@ -14,6 +14,7 @@
 					<select name="meetingRoomID" id="meetingRoomID">
 						<?php foreach($meetingroom as $row): ?> 
 							<?php if($row['meetingRoomName']==$meetingroomname):?>
+								<input type="hidden" name="MeetingRoomName" id="MeetingRoomName" value="<?php htmlout($row['meetingRoomName']); ?>">
 								<option selected="selected" 
 										value=<?php htmlout($row['meetingRoomID']); ?>>
 										<?php htmlout($row['meetingRoomName']);?>
@@ -24,7 +25,7 @@
 								</option>
 							<?php endif;?>
 						<?php endforeach; ?>
-					</select>
+					</select>	
 				</label>
 			</div>
 			<div>
@@ -64,7 +65,8 @@
 						</select>
 					</label>
 				<?php else : ?>
-					<input type="hidden" name="companyID" value="<?php htmlout($companyID); ?>">
+					<input type="hidden" name="companyID" id="companyID" 
+					value="<?php htmlout($companyID); ?>">
 				<?php endif; ?>
 			</div>
 			<div>

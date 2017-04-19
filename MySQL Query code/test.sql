@@ -29,8 +29,8 @@ SELECT 	`companyID` AS CompanyID,
 
 INSERT INTO `logaction` 
 SET 
-`name` = 'Meeting Room Removed', 
-`description` = 'The referenced meeting room was removed.';
+`name` = 'Booking Removed', 
+`description` = 'The referenced booking was removed.';
 
 INSERT INTO `booking` SET
 							`meetingRoomID` = 1,

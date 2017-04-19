@@ -41,6 +41,46 @@ if (isset($_POST['action']) and $_POST['action'] == 'Delete')
 	
 	$_SESSION['BookingUserFeedback'] = "Successfully removed the booking";
 	
+	// Add a log event that a booking was deleted
+	try
+	{
+		session_start();
+
+		// Save a description with information about the booking that was removed
+		$description = "N/A";
+		if(isset($_POST['UserInfo']) AND isset($_POST['MeetingInfo'])){
+			$description = 'The booking made by ' . $_POST['UserInfo'] . ' for the meeting room ' .
+			$_POST['MeetingInfo'] . ' was deleted by: ' . $_SESSION['LoggedInUserName'];
+		} else {
+			$description = 'A booking was deleted by: ' . $_SESSION['LoggedInUserName'];
+		}
+		
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+		
+		$pdo = connect_to_db();
+		$sql = "INSERT INTO `logevent` 
+				SET			`actionID` = 	(
+												SELECT `actionID` 
+												FROM `logaction`
+												WHERE `name` = 'Booking Removed'
+											),
+							`description` = :description";
+		$s = $pdo->prepare($sql);
+		$s->bindValue(':description', $description);
+		$s->execute();
+		
+		//Close the connection
+		$pdo = null;		
+	}
+	catch(PDOException $e)
+	{
+		$error = 'Error adding log event to database: ' . $e->getMessage();
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+		$pdo = null;
+		exit();
+	}	
+	
+	
 	// Load booked meetings list webpage with updated database
 	header('Location: .');
 	exit();	
@@ -74,11 +114,49 @@ if (isset($_POST['action']) and $_POST['action'] == 'Cancel')
 	
 	$_SESSION['BookingUserFeedback'] = "Successfully cancelled the booking";
 	
+		// Add a log event that a booking was cancelled
+	try
+	{
+		session_start();
+
+		// Save a description with information about the booking that was cancelled
+		$description = "N/A";
+		if(isset($_POST['UserInfo']) AND isset($_POST['MeetingInfo'])){
+			$description = 'The booking made by ' . $_POST['UserInfo'] . ' for the meeting room ' .
+			$_POST['MeetingInfo'] . ' was cancelled by: ' . $_SESSION['LoggedInUserName'];
+		} else {
+			$description = 'A booking was cancelled by: ' . $_SESSION['LoggedInUserName'];
+		}
+		
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+		
+		$pdo = connect_to_db();
+		$sql = "INSERT INTO `logevent` 
+				SET			`actionID` = 	(
+												SELECT `actionID` 
+												FROM `logaction`
+												WHERE `name` = 'Booking Cancelled'
+											),
+							`description` = :description";
+		$s = $pdo->prepare($sql);
+		$s->bindValue(':description', $description);
+		$s->execute();
+		
+		//Close the connection
+		$pdo = null;		
+	}
+	catch(PDOException $e)
+	{
+		$error = 'Error adding log event to database: ' . $e->getMessage();
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+		$pdo = null;
+		exit();
+	}	
+	
 	// Load booked meetings list webpage with updated database
 	header('Location: .');
 	exit();	
 }
-
 
 // If admin wants to add a booked meeting to the database
 // we load a new html form
@@ -241,6 +319,10 @@ if (isset($_GET['addform']))
 		$s->bindValue(':description', $_POST['description']);
 		$s->bindValue(':cancellationCode', $cancellationCode);
 		$s->execute();
+
+		session_start();
+		unset($_SESSION['lastBookingID']);
+		$_SESSION['lastBookingID'] = $pdo->lastInsertId();
 		
 		//Close the connection
 		$pdo = null;
@@ -254,6 +336,61 @@ if (isset($_GET['addform']))
 	}
 	
 	$_SESSION['BookingUserFeedback'] = "Successfully created the booking.";
+	
+	// Add a log event that a user has been created
+	try
+	{
+		session_start();
+
+		$meetinginfo = $_POST['MeetingRoomName'] . ' for the timeslot: ' . 
+		$_POST['startDateTime'] . ' to ' . $_POST['endDateTime'];
+		
+		// Save a description with information about the booking that was created
+		$description = "N/A";
+		if(isset($_POST['MeetingRoomName'])){ //TO-DO: FIX THIS! <---------- Wasn't set?
+			$description = 'A booking was created for the meeting room ' .
+			$meetinginfo . ' by: ' . $_SESSION['LoggedInUserName'];
+		} else {
+			$description = 'A booking was created by: ' . $_SESSION['LoggedInUserName'];
+		}
+		
+		if(isset($_SESSION['lastBookingID'])){
+			$lastBookingID = $_SESSION['lastBookingID'];
+			unset($_SESSION['lastBookingID']);				
+		}
+
+		
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+		
+		$pdo = connect_to_db();
+		$sql = "INSERT INTO `logevent` 
+				SET			`actionID` = 	(
+												SELECT `actionID` 
+												FROM `logaction`
+												WHERE `name` = 'Booking Created'
+											),
+							`userID` = :UserID,
+							`meetingRoomID` = :MeetingRoomID,
+							`bookingID` = :BookingID,
+							`description` = :description";
+		$s = $pdo->prepare($sql);
+		$s->bindValue(':description', $description);
+		$s->bindValue(':BookingID', $lastBookingID);
+		$s->bindValue(':MeetingRoomID', $_POST['meetingRoomID']);
+		$s->bindValue(':UserID', $_SESSION['LoggedInUserID']);
+		$s->execute();
+		
+		//Close the connection
+		$pdo = null;		
+	}
+	catch(PDOException $e)
+	{
+		$error = 'Error adding log event to database: ' . $e->getMessage();
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+		$pdo = null;
+		exit();
+	}		
+	
 	
 	// Load booking history list webpage with new booking
 	header('Location: .');
@@ -313,10 +450,8 @@ foreach ($result as $row)
 {
 	// Make datetime correct formats for comparing them
 	$datetimeNow = getDatetimeNow();
-	//echo "Datetime now is <b>$datetimeNow</b> <br />";
 	$datetimeEndWrongFormat = $row['EndTime'];
 	$datetimeEnd = correctDatetimeFormatForBooking($datetimeEndWrongFormat);
-	//echo "Datetime end is <b>$datetimeEnd</b> <br />";
 	
 	// Describe the status of the booking based on what info is stored in the database
 	// If not finished and not cancelled = active
@@ -338,6 +473,10 @@ foreach ($result as $row)
 		$status = 'Unknown';
 	}
 	
+	$userinfo = $row['lastName'] . ', ' . $row['firstName'] . ' - ' . $row['email'];
+	$meetinginfo = $row['BookedRoomName'] . ' for the timeslot: ' . $row['StartTime'] . ' to ' . $row['EndTime'];
+	
+	
 	$bookings[] = array('id' => $row['bookingID'],
 						'BookingStatus' => $status,
 						'BookedRoomName' => $row['BookedRoomName'],
@@ -352,7 +491,9 @@ foreach ($result as $row)
 						'WorksForCompany' => $row['WorksForCompany'],
 						'BookingWasCreatedOn' => $row['BookingWasCreatedOn'],
 						'BookingWasCompletedOn' => $row['BookingWasCompletedOn'],
-						'BookingWasCancelledOn' => $row['BookingWasCancelledOn'],					
+						'BookingWasCancelledOn' => $row['BookingWasCancelledOn'],	
+						'UserInfo' => $userinfo,
+						'MeetingInfo' => $meetinginfo
 					);
 }
 
