@@ -80,7 +80,7 @@
 			</div>
 			<div>
 				<input type="hidden" name="id" value="<?php htmlout($id); ?>">
-				<input type="submit" value="Add booking">
+				<input type="submit" name="action" value="Add booking">
 			</div>
 			<div>
 				<input type="reset">

@@ -475,6 +475,7 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR
 	$description = $row['BookingDescription'];
 	$userInformation = $row['UserLastname'] . ', ' . $row['UserFirstname'] . ' - ' . $row['UserEmail'];
 	$usersearchstring = '';
+	$users = $_SESSION['EditBookingUsersArray'];
 	
 	// Get the values that we had before the refresh
 		// The user search string
@@ -495,15 +496,16 @@ if(isset($_POST['action']) AND $_POST['action'] == "Edit Booking")
 
 	// Check if all values are valid before doing anything
 		
-	// Check if any values actually changed. If not, we don't need to bother the database	
+	// Check if any values actually changed. If not, we don't need to bother the database
+	$numberOfChanges = 0;
 	$oldinfo = $_SESSION['EditBookingInfoArray'];
 	
 	if($_POST[''] != $oldinfo['']){
-		numberOfChanges++;
+		$numberOfChanges++;
 	}
 	
 
-	if(numberOfChanges == 0){
+	if($numberOfChanges == 0){
 		// There were no changes made. Go back to booking overview
 		$_SESSION['BookingUserFeedback'] = "No changes were made to the booking.";
 		header('Location: .');
@@ -627,20 +629,22 @@ if((isset($_POST['action']) AND $_POST['action'] == "Change User") OR
 			}
 			session_start();
 			$_SESSION['EditBookingUsersArray'] = $users;
-		} else {
-			$users = $_SESSION['EditBookingUsersArray'];
+			
+			$pdo = null;
 		}
-		$pdo = null;
+		catch(PDOException $e)
+		{
+			$error = 'Error fetching user details.';
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+			$pdo = null;
+			exit();		
+		}
+	} else {
+		$users = $_SESSION['EditBookingUsersArray'];
 	}
-	catch(PDOException $e)
-	{
-		$error = 'Error fetching user details.';
-		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
-		$pdo = null;
-		exit();		
-	}
-	
+
 	$_SESSION['refreshEditBooking'] = TRUE;
+	$_SESSION['EditBookingChangeUser'] = TRUE;
 	header('Location: .');
 	exit();
 }

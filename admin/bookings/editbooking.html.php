@@ -47,11 +47,7 @@
 				value="<?php htmlout($endDateTime); ?>">
 			</div>
 			<div>
-				<?php if(!isset($_SESSION['EditBookingChangeUser'])) :?>
-					<label for="UserInformation">Booked For User: </label>
-					<p><b><?php htmlout($userInformation); ?> </b></p>
-					<input type="submit" name="action" value="Change User">
-				<?php else : ?>
+				<?php if(isset($_SESSION['EditBookingChangeUser']) AND $_SESSION['EditBookingChangeUser']) :?>
 					<label for="SelectUser">Select A User: </label>
 					<select name="userID" id="userID">
 						<?php foreach($users as $row): ?> 
@@ -67,10 +63,16 @@
 							<?php endif;?>
 						<?php endforeach; ?>
 					</select>
+				<div>
 					<label for="usersearchstring">Search for User:</label>
 					<input type="text" name="usersearchstring" 
 					value=<?php htmlout($usersearchstring); ?>>
-					<input type="input" name="action" value="Search">
+					<input type="submit" name="action" value="Search">
+				</div>
+				<?php else : ?>	
+					<label for="UserInformation">Booked For User: </label>
+					<b><?php htmlout($userInformation); ?> </b>
+					<input type="submit" name="action" value="Change User">								
 				<?php endif; ?>
 			</div>
 			<div>
