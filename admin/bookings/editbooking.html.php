@@ -47,6 +47,33 @@
 				value="<?php htmlout($endDateTime); ?>">
 			</div>
 			<div>
+				<?php if(!isset($_SESSION['EditBookingChangeUser'])) :?>
+					<label for="UserInformation">Booked For User: </label>
+					<p><b><?php htmlout($userInformation); ?> </b></p>
+					<input type="submit" name="action" value="Change User">
+				<?php else : ?>
+					<label for="SelectUser">Select A User: </label>
+					<select name="userID" id="userID">
+						<?php foreach($users as $row): ?> 
+							<?php if($row['userID']==$SelectedUserID):?>
+								<option selected="selected" 
+										value=<?php htmlout($row['userID']); ?>>
+										<?php htmlout($row['userInformation']);?>
+								</option>
+							<?php else : ?>
+								<option value=<?php htmlout($row['userID']); ?>>
+										<?php htmlout($row['userInformation']);?>
+								</option>
+							<?php endif;?>
+						<?php endforeach; ?>
+					</select>
+					<label for="usersearchstring">Search for User:</label>
+					<input type="text" name="usersearchstring" 
+					value=<?php htmlout($usersearchstring); ?>>
+					<input type="input" name="action" value="Search">
+				<?php endif; ?>
+			</div>
+			<div>
 				<?php if($displayCompanySelect == TRUE) : ?>
 					<label for="companyID">Booked For Company: </label>
 					<select name="companyID" id="companyID">

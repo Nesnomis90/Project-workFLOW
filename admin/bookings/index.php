@@ -402,8 +402,27 @@ if (isset($_POST['action']) AND $_POST['action'] == "Add booking")
 }
 
 // if admin wants to edit a booking, we load a new html form
-if (isset($_POST['action']) AND $_POST['action'] == 'Edit')
+if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR
+	(isset($_SESSION['refreshEditBooking']) AND $_SESSION['refreshEditBooking']))
 {
+	
+	$usersearchstring = '';
+	
+	// Check if the call was a form submit or a forced refresh
+	if(isset($_SESSION['refreshEditBooking'])){
+		// Acknowledge that we have refreshed the page
+		unset($_SESSION['refreshEditBooking']);	
+		
+		// Remember the values that we had before the refresh
+			// The user search string
+		if(isset($_SESSION['EditBookingUserSearch'])){
+			$usersearchstring = $_SESSION['EditBookingUserSearch'];
+			unset($_SESSION['EditBookingUserSearch']);
+		}
+		
+	}
+
+	
 	// Get information from database again on the selected booking	
 	// if we need it.
 	if(!isset($_SESSION['EditBookingInfoArray'])){
@@ -416,8 +435,8 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Edit')
 			$sql = "SELECT 		b.`bookingID`									AS TheBookingID,
 								b.`companyID`									AS TheCompanyID,
 								m.`name` 										AS BookedRoomName, 
-								DATE_FORMAT(b.startDateTime, '%d %b %Y %T') 	AS StartTime, 
-								DATE_FORMAT(b.endDateTime, '%d %b %Y %T') 		AS EndTime, 
+								b.startDateTime 								AS StartTime, 
+								b.endDateTime 									AS EndTime, 
 								b.description 									AS BookingDescription,
 								b.displayName 									AS BookedBy,
 								(	
@@ -474,15 +493,11 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Edit')
 
 // If admin wants to update the booking information after editing
 // or if we forced a refresh to give feedback about invalid inputs
-if(	(isset($_POST['action']) AND $_POST['action'] == "Edit Booking") OR
-	(isset($_SESSION['refreshEditBooking']) AND $_SESSION['refreshEditBooking']))
+if(isset($_POST['action']) AND $_POST['action'] == "Edit Booking")
 {
-	// Confirm that we have refreshed the page
-	unset($_SESSION['refreshEditBooking']);
 
 	// Check if all values are valid before doing anything
-	
-	
+		
 	// Check if any values actually changed. If not, we don't need to bother the database	
 	$oldinfo = $_SESSION['EditBookingInfoArray'];
 	
@@ -490,22 +505,55 @@ if(	(isset($_POST['action']) AND $_POST['action'] == "Edit Booking") OR
 		numberOfChanges++;
 	}
 	
-	
 
 	if(numberOfChanges == 0){
 		// There were no changes made. Go back to booking overview
+		$_SESSION['BookingUserFeedback'] = "No changes were made to the booking.";
 		header('Location: .');
 		exit();	
 	}
 	
+	// Check if the timeslot is taken for the selected meeting room		
 	
-	// Update booking information if values have changed
+	// Check if the booking is for the user doing the edit or for another user.
+	// TO-DO: Fix this if userID is wrong
+	if(!isset($_POST['userID'])){
+		// The booking was for the user who did the edit
+		$UpdateWithThisUserID = $_SESSION['LoggedInUserID'];
+	} else {
+		// The booking was for another selected user.
+		$UpdateWithThisUserID = $_POST['userID'];
+	}
+	
+	// Update booking information because values have changed!
 	try
 	{
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 		$pdo = connect_to_db();
-
-
+		$sql = "UPDATE	`booking`
+				SET 	`meetingRoomID` = :meetingRoomID,
+						`userID` = :userID,
+						`companyID` = :companyID,
+						`startDateTime` = :startDateTime,
+						`endDateTime` = :endDateTime,
+						`displayName` = :displayName,
+						`description` = :description
+				WHERE	`bookingID` = :BookingID";
+		$s = $pdo->prepare($sql);
+		
+		$startDateTime = correctDatetimeFormat($_POST['startDateTime']);
+		$endDateTime = correctDatetimeFormat($_POST['endDateTime']);
+		
+		$s->bindValue(':BookingID', $_POST['bookingID']);
+		$s->bindValue(':meetingRoomID', $_POST['meetingRoomID']);
+		$s->bindValue(':userID', $UpdateWithThisUserID );
+		$s->bindValue(':startDateTime', $startDateTime);
+		$s->bindValue(':endDateTime', $endDateTime);
+		$s->bindValue(':displayName', $_POST['displayName']);
+		$s->bindValue(':description', $_POST['description']);
+		
+		$s->execute();
+		
 		$pdo = null;
 	}
 	catch(PDOException $e)
@@ -515,10 +563,101 @@ if(	(isset($_POST['action']) AND $_POST['action'] == "Edit Booking") OR
 		$pdo = null;
 		exit();
 	}
+	
+	$_SESSION['BookingUserFeedback'] = "Successfully updated the booking information!";
+	unset($_SESSION['EditBookingChangeUser']);
+	
+	// Load booking history list webpage with the updated booking information
+	header('Location: .');
+	exit();	
 }
+// Admin wants to change the user the booking is reserved for
+// We need to get a list of all active users
+if(isset($_POST['action']) AND $_POST['action'] == "Change User"){
+	
+	if(!isset($_SESSION['EditBookingUsersArray'])){
+		// Get all active users and their default booking information
+		try
+		{
+			$pdo = connect_to_db();
+			$sql = "SELECT 	`userID`, 
+							`firstname`, 
+							`lastname`, 
+							`email`,
+							`displayname`,
+							`bookingdescription`
+					FROM 	`user`
+					WHERE 	`isActive` > 0";
+		
+			if ($usersearchstring != ''){
+				$sqladd = " AND (`firstname` LIKE :search
+							OR `lastname` LIKE :search
+							OR `email` LIKE :search)";
+				$sql = $sql . $sqladd;
+				
+				$finalusersearchstring = '%' . $usersearchstring . '%';
+				
+				$s = $pdo->prepare($sql);
+				$s->bindValue(":search", $finalusersearchstring);
+				$s->execute();
+				$result = $s->fetchAll();
+				
+			} else {
+				$result = $pdo->query($sql);
+			}	
+			
+			// Get the rows of information from the query
+			// This will be used to create a dropdown list in HTML
+			foreach($result as $row){
+				$users[] = array(
+									'userID' => $row['userID'],
+									'userInformation' => $row['lastname'] . ', ' . $row['firstname'] . ' - ' . $row['email'],
+									'displayName' => $row['displayname'],
+									'bookingDescription' => $row['bookingdescription']
+									);
+			}
+			session_start();
+			$_SESSION['EditBookingUsersArray'] = $users;
+		} else {
+			$users = $_SESSION['EditBookingUsersArray'];
+		}
+		$pdo = null;
+	}
+	catch(PDOException $e)
+	{
+		$error = 'Error fetching user details.';
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+		$pdo = null;
+		exit();		
+	}
+	
+	$_SESSION['refreshEditBooking'] = TRUE;	
+}
+
+session_start();
+// If admin is editing a booking and wants to limit the users shown by searching
+if(isset($_SESSION['EditBookingChangeUser']) AND isset($_POST['action']) AND $_POST['action'] == "Search"){
+	// Let's remember what was selected and searched for
+	$_SESSION['EditBookingUserSearch'] = $_POST['usersearchstring'];
+	if(isset($_POST['userID'])){
+		$_SESSION['EditBookingSelectedUserID'] = $_POST['userID'];
+	}
+	
+
+	
+	// TO-DO: Add code, not sure what. My brain has melted.
+	// Forget the old search result
+	unset($_SESSION['EditBookingUsersArray']);
+	
+	// Refresh Edit Booking with our new values
+	$_SESSION['refreshEditBooking'] = TRUE;
+}
+
 
 // We're not doing any adding or editing anymore, clear all remembered values
 unset($_SESSION['EditBookingInfoArray']);
+unset($_SESSION['EditBookingChangeUser']);
+unset($_SESSION['EditBookingUsersArray']);
 
 // Display booked meetings history list
 try

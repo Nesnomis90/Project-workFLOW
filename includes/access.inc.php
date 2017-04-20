@@ -108,7 +108,8 @@ function databaseContainsUser($email, $password)
 				FROM 	`user`
 				WHERE 	email = :email 
 				AND 	password = :password
-				AND		`isActive` > 0';
+				AND		`isActive` > 0
+				LIMIT 	1';
 		$s = $pdo->prepare($sql);
 		$s->bindValue(':email', $email);
 		$s->bindValue(':password', $password);
@@ -153,7 +154,8 @@ function userHasAccess($access)
 				INNER JOIN 	accesslevel a
 				ON 			u.AccessID = a.AccessID
 				WHERE 		u.email = :email 
-				AND 		a.AccessName = :AccessName";
+				AND 		a.AccessName = :AccessName
+				LIMIT 	1";
 		$s = $pdo->prepare($sql);
 		$s->bindValue(':email', $_SESSION['email']);
 		$s->bindValue(':AccessName', $access);
@@ -191,7 +193,8 @@ function databaseContainsEmail($email)
 		$pdo = connect_to_db();
 		$sql = 'SELECT 	COUNT(*) 
 				FROM 	`user`
-				WHERE 	email = :email';
+				WHERE 	email = :email
+				LIMIT 	1';
 		$s = $pdo->prepare($sql);
 		$s->bindValue(':email', $email);
 		$s->execute();
@@ -200,7 +203,7 @@ function databaseContainsEmail($email)
 	}
 	catch (PDOException $e)
 	{
-		$error = 'Error searching for email.';
+		$error = 'Error validating email.';
 		include_once 'error.html.php';
 		$pdo = null;
 		exit();
@@ -218,6 +221,93 @@ function databaseContainsEmail($email)
 	}
 }
 
+// Function to check if the booking code submitted already is being used
+// TO-DO: UNTESTED
+function databaseContainsBookingCode($rawBookingCode)
+{
+	$hashedBookingCode = hashPassword($rawBookingCode);
+	
+	try
+	{
+		include_once 'db.inc.php';
+		$pdo = connect_to_db();
+		$sql = 'SELECT 	COUNT(*) 
+				FROM 	`user`
+				WHERE 	`bookingCode` = :BookingCode
+				AND		`isActive` > 0
+				LIMIT 	1';
+		$s = $pdo->prepare($sql);
+		$s->bindValue(':BookingCode', $hashedBookingCode);
+		$s->execute();
+		
+		$pdo = null;		
+	}
+	catch(PDOException $e)
+	{
+		$error = 'Error validating booking code.';
+		include_once 'error.html.php';
+		$pdo = null;
+		exit();		
+	}
+	
+	$row = $s->fetch();
+	// If we got a hit, then the booking code exists in our database
+	if ($row[0] > 0)
+	{
+		return TRUE;
+	}
+	else
+	{
+		return FALSE;
+	}	
+	
+}
+
+// Function to get user information based on the booking code submitted
+// TO-DO: UNTESTED
+function getUserInfoFromBookingCode($rawBookingCode)
+{
+	if(!databaseContainsBookingCode($rawBookingCode))
+	{
+		// The booking code we received does not exist in the database.
+		// Can't retrieve any info then
+		return NULL;
+	}
+	
+	// We know the code exists. Let's get the info of the person it belongs to
+	$hashedBookingCode = hashPassword($rawBookingCode);
+	
+	try
+	{
+		include_once 'db.inc.php';
+		$pdo = connect_to_db();
+		$sql = "SELECT 	`userID`						AS TheUserID,
+						`email`							AS TheUserEmail,
+						`firstName`						AS TheUserFirstname,
+						`lastName`						AS TheUserLastname,
+						`displayName`					AS TheUserDisplayName,
+						`bookingDescription`			AS TheUserBookingDescription
+				FROM 	`user`
+				WHERE 	`bookingCode` = :BookingCode
+				AND		`isActive` > 0
+				LIMIT 	1";
+		$s = $pdo->prepare($sql);
+		$s->bindValue(':BookingCode', $hashedBookingCode);
+		$s->execute();
+		
+		$pdo = null;		
+	}
+	catch(PDOException $e)
+	{
+		$error = 'Error fetching user info based on booking code.';
+		include_once 'error.html.php';
+		$pdo = null;
+		exit();		
+	}
+	
+	$row = $s->fetch();
+	return $row;
+}
 
 // Function to make sure user is Admin
 function isUserAdmin(){

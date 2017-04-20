@@ -96,7 +96,7 @@ if(isset($_POST['action']) AND $_POST['action'] == 'Remove'){
 }
 // Admin clicked the search button, trying to limit the shown company and user lists
 if(isset($_POST['action']) AND $_POST['action'] == 'Search'){
-	// Let's remember what was searched for
+	// Let's remember what was selected and searched for
 	session_start();
 	
 	// If we are looking at a specific company, let's refresh info about
@@ -137,7 +137,7 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Add Employee') OR
 
 	session_start();
 	// Check if the call was a form submit or a forced refresh
-	if(isset($_SESSION['refreshAddEmployee']) AND $_SESSION['refreshAddEmployee']){
+	if(isset($_SESSION['refreshAddEmployee'])){
 		// Acknowledge that we have refreshed the page
 		unset($_SESSION['refreshAddEmployee']);
 		
