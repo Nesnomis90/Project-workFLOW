@@ -405,23 +405,11 @@ if (isset($_POST['action']) AND $_POST['action'] == "Add booking")
 if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR
 	(isset($_SESSION['refreshEditBooking']) AND $_SESSION['refreshEditBooking']))
 {
-	
-	$usersearchstring = '';
-	
 	// Check if the call was a form submit or a forced refresh
 	if(isset($_SESSION['refreshEditBooking'])){
 		// Acknowledge that we have refreshed the page
 		unset($_SESSION['refreshEditBooking']);	
-		
-		// Remember the values that we had before the refresh
-			// The user search string
-		if(isset($_SESSION['EditBookingUserSearch'])){
-			$usersearchstring = $_SESSION['EditBookingUserSearch'];
-			unset($_SESSION['EditBookingUserSearch']);
-		}
-		
 	}
-
 	
 	// Get information from database again on the selected booking	
 	// if we need it.
@@ -444,6 +432,7 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR
 									FROM `company` 
 									WHERE `companyID` = TheCompanyID
 								)												AS BookedForCompany,
+								u.`userID`										AS TheUserID, 
 								u.`firstName`									AS UserFirstname,
 								u.`lastName`									AS UserLastname,
 								u.`email`										AS UserEmail
@@ -485,6 +474,14 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR
 	$displayName = $row['BookedBy'];
 	$description = $row['BookingDescription'];
 	$userInformation = $row['UserLastname'] . ', ' . $row['UserFirstname'] . ' - ' . $row['UserEmail'];
+	$usersearchstring = '';
+	
+	// Get the values that we had before the refresh
+		// The user search string
+	if(isset($_SESSION['EditBookingUserSearch'])){
+		$usersearchstring = $_SESSION['EditBookingUserSearch'];
+		unset($_SESSION['EditBookingUserSearch']);
+	}
 	
 	// Change to the actual form we want to use
 	include 'editbooking.html.php';
@@ -573,7 +570,19 @@ if(isset($_POST['action']) AND $_POST['action'] == "Edit Booking")
 }
 // Admin wants to change the user the booking is reserved for
 // We need to get a list of all active users
-if(isset($_POST['action']) AND $_POST['action'] == "Change User"){
+if((isset($_POST['action']) AND $_POST['action'] == "Change User") OR 
+	(isset($_SESSION['refreshEditBookingChangeUser'])) AND $_SESSION['refreshEditBookingChangeUser']){
+	
+	if(isset($_SESSION['refreshEditBookingChangeUser']) AND $_SESSION['refreshEditBookingChangeUser']){
+		unset($_SESSION['refreshEditBookingChangeUser']);
+	}
+	
+	$usersearchstring = "";
+	
+	if(isset($_SESSION['EditBookingUserSearch'])){
+		$usersearchstring = $_SESSION['EditBookingUserSearch'];
+		unset($_SESSION['EditBookingUserSearch']);
+	}
 	
 	if(!isset($_SESSION['EditBookingUsersArray'])){
 		// Get all active users and their default booking information
@@ -631,26 +640,68 @@ if(isset($_POST['action']) AND $_POST['action'] == "Change User"){
 		exit();		
 	}
 	
-	$_SESSION['refreshEditBooking'] = TRUE;	
+	$_SESSION['refreshEditBooking'] = TRUE;
+	header('Location: .');
+	exit();
 }
 
 session_start();
 // If admin is editing a booking and wants to limit the users shown by searching
 if(isset($_SESSION['EditBookingChangeUser']) AND isset($_POST['action']) AND $_POST['action'] == "Search"){
+	
 	// Let's remember what was selected and searched for
+		// The user search string
 	$_SESSION['EditBookingUserSearch'] = $_POST['usersearchstring'];
+	
+		// The user selected, if the booking is for another user
 	if(isset($_POST['userID'])){
 		$_SESSION['EditBookingSelectedUserID'] = $_POST['userID'];
 	}
 	
-
+	$newValues = $_SESSION['EditBookingInfoArray'];
 	
-	// TO-DO: Add code, not sure what. My brain has melted.
-	// Forget the old search result
+	/* b.`bookingID`									AS TheBookingID,
+								b.`companyID`									AS TheCompanyID,
+								m.`name` 										AS BookedRoomName, 
+								b.startDateTime 								AS StartTime, 
+								b.endDateTime 									AS EndTime, 
+								b.description 									AS BookingDescription,
+								b.displayName 									AS BookedBy,
+								(	
+									SELECT `name` 
+									FROM `company` 
+									WHERE `companyID` = TheCompanyID
+								)												AS BookedForCompany,
+								u.`userID`										AS TheUserID, 
+								u.`firstName`									AS UserFirstname,
+								u.`lastName`									AS UserLastname,
+								u.`email`										AS UserEmail */
+	
+	
+		// The meeting room selected
+	$_SESSION['EditBookingSelectedMeetingID'] = $_POST['meetingRoomID'];
+		// The company selected
+	$newValues['TheCompanyID'] = $_POST['companyID'];
+		// The display name
+	$newValues['DisplayName'] = $_POST['displayName'];
+		// The booking description
+	$newValues['BookingDescription'] = $_POST['description'];
+		// The start time
+	$newValues['StartTime'] = $_POST['startDateTime'];
+		// The end time
+	$newValues['EndTime'] = $_POST['endDateTime'];
+	
+	// TO-DO: Overwrite company name, user firstname/lastname/email etc...
+	
+	$_SESSION['EditBookingInfoArray'] = $newValues;
+	
+	// Forget the old search result for users if we had one saved
 	unset($_SESSION['EditBookingUsersArray']);
 	
-	// Refresh Edit Booking with our new values
-	$_SESSION['refreshEditBooking'] = TRUE;
+	// Get the new users
+	$_SESSION['refreshEditBookingChangeUser'] = TRUE;
+	header('Location: .');
+	exit();
 }
 
 
