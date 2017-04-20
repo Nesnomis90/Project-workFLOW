@@ -1,18 +1,18 @@
-<!-- This is the HTML form used for EDITING or ADDING BOOKING information-->
+<!-- This is the HTML form used for EDITING BOOKING information-->
 <?php include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/helpers.inc.php'; ?>
 <!DOCTYPE html>
 <html lang="en">
 	<head>
 		<meta charset="utf-8">
-		<title><?php htmlout($pageTitle); ?></title>
+		<title>Edit Booking</title>
 	</head>
 	<body>
-		<h1><?php htmlout($pageTitle); ?></h1>
-		<?php if(isset($_SESSION['AddBookingError'])) : ?>
-			<p><b><?php htmlout($_SESSION['AddBookingError']); ?></b></p>
-			<?php unset($_SESSION['AddBookingError']); ?>
+		<h1>Edit Booking</h1>
+		<?php if(isset($_SESSION['EditBookingError'])) : ?>
+			<p><b><?php htmlout($_SESSION['EditBookingError']); ?></b></p>
+			<?php unset($_SESSION['EditBookingError']); ?>
 		<?php endif; ?>
-		<form action="?<?php htmlout($action); ?>" method="post">
+		<form action="" method="post">
 			<div>
 				<label for="meetingRoomID">Meeting Room: </label>
 				<select name="meetingRoomID" id="meetingRoomID">
@@ -79,11 +79,9 @@
 				value="<?php htmlout($description); ?>">
 			</div>
 			<div>
-				<input type="hidden" name="id" value="<?php htmlout($id); ?>">
-				<input type="submit" value="<?php htmlout($button); ?>">
-			</div>
-			<div>
-				<input type="<?php htmlout($reset); ?>">
+				<input type="hidden" name="bookingID" id="bookingID" 
+				value="<?php htmlout($bookingID); ?>">
+				<input type="submit" value="Edit Booking">
 			</div>
 		</form>
 	<p><a href="..">Return to CMS home</a></p>

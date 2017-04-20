@@ -2,6 +2,33 @@ USE test;
 SET NAMES utf8;
 USE meetingflow;
 
+SELECT 		b.`bookingID`									AS TheBookingID,
+							b.`companyID`									AS TheCompanyID,
+							m.`name` 										AS BookedRoomName, 
+							DATE_FORMAT(b.startDateTime, '%d %b %Y %T') 	AS StartTime, 
+							DATE_FORMAT(b.endDateTime, '%d %b %Y %T') 		AS EndTime, 
+							b.description 									AS BookingDescription,
+							b.displayName 									AS BookedBy,
+							(	
+								SELECT `name` 
+								FROM `company` 
+								WHERE `companyID` = TheCompanyID
+							)												AS BookedForCompany,
+							u.`firstName`									AS UserFirstname,
+							u.`lastName`									AS UserLastname,
+							u.`email`										AS UserEmail
+				FROM 		`booking` b 
+				LEFT JOIN 	`meetingroom` m 
+				ON 			b.meetingRoomID = m.meetingRoomID 
+				LEFT JOIN 	`company` c 
+				ON 			b.CompanyID = c.CompanyID
+				LEFT JOIN 	`user` u
+				ON 			b.`userID` = u.`userID`
+				WHERE 		b.`bookingID` = 2
+				GROUP BY 	b.`bookingID`;
+
+
+
 UPDATE `booking`
 SET `actualEndDateTime` = '2017-04-19 17:30:00'
 WHERE `bookingID` = 36;

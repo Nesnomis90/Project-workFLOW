@@ -47,9 +47,12 @@
 		<?php if(isset($_SESSION['BookingUserFeedback'])) : ?>
 			<p><b><?php htmlout($_SESSION['BookingUserFeedback']); ?></b></p>
 			<?php unset($_SESSION['BookingUserFeedback']); ?>
-		<?php endif; ?>				
+		<?php endif; ?>	
+		<form action="" method="post">		
 		<?php if($rowNum>0) :?>
-			<p><a href="?add">Create a new booking?</a></p>
+			<form action="" method="post">
+				<input type="submit" name="action" value="Create Booking">
+			</form>
 			<table id= "bookingstable">
 				<caption>All booking history</caption>
 				<tr>
@@ -67,6 +70,7 @@
 					<th>Last Name</th>
 					<th>Email</th>
 					<th>Works for</th>
+					<th>Edit Booking</th>					
 					<th>Cancel Booking</th>
 					<th>Delete Booking</th>
 				</tr>
@@ -87,6 +91,7 @@
 							<td><?php htmlout($booking['lastName']); ?></td>
 							<td><?php htmlout($booking['email']); ?></td>
 							<td><?php htmlout($booking['WorksForCompany']); ?></td>
+							<td><input type="submit" name="action" value="Edit"></td>							
 							<td><input type="submit" name="action" value="Cancel"></td>
 							<td><input type="submit" name="action" value="Delete"></td>
 							<input type="hidden" name="id" value="<?php htmlout($booking['id']); ?>">
@@ -100,8 +105,11 @@
 			</table>
 		<?php else : ?>
 			<tr><b>There are no booked meetings registered in the database.</b></tr>
-			<tr><a href="?add">Book a meeting?</a></tr>
+			<form action="" method="post">
+				<tr><input type="submit" name="action" value="Create Booking"></tr>
+			</form>
 		<?php endif; ?>
+		</form>
 		<p><a href="..">Return to CMS home</a></p>
 		<?php include '../logout.inc.html.php'; ?>
 	</body>

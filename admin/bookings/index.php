@@ -160,7 +160,7 @@ if (isset($_POST['action']) and $_POST['action'] == 'Cancel')
 
 // If admin wants to add a booked meeting to the database
 // we load a new html form
-if (isset($_GET['add']))
+if (isset($_POST['action']) AND $_POST['action'] == "Create Booking")
 {
 	try
 	{
@@ -210,7 +210,7 @@ if (isset($_GET['add']))
 			}
 
 		}		
-		// Get name and IDs for access level
+		// Get name and IDs for meeting rooms
 		$sql = 'SELECT 	`meetingRoomID`,
 						`name` 
 				FROM 	`meetingroom`';
@@ -254,19 +254,13 @@ if (isset($_GET['add']))
 		$pdo = null;
 		
 		// Set form variables to be ready for adding values
-		$pageTitle = 'New Meeting Booking';
-		$action = 'addform';
 		$meetingroomname = '';
 		$startDateTime = '';
 		$endDateTime = '';
 		$id = '';
-		$button = 'Add booking';
-		
-		// We want a reset all fields button while adding a new meeting room
-		$reset = 'reset';
 		
 		// Change form
-		include 'form.html.php';
+		include 'addbooking.html.php';
 		exit();
 		
 	}
@@ -280,7 +274,7 @@ if (isset($_GET['add']))
 }
 
 // When admin has added the needed information and wants to add the booking
-if (isset($_GET['addform']))
+if (isset($_POST['action']) AND $_POST['action'] == "Add booking")
 {
 	// Add the booking to the database
 	try
@@ -300,8 +294,8 @@ if (isset($_GET['addform']))
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 		
 		$pdo = connect_to_db();
-		$sql = 'INSERT INTO `booking` SET
-							`meetingRoomID` = :meetingRoomID,
+		$sql = 'INSERT INTO `booking` 
+				SET			`meetingRoomID` = :meetingRoomID,
 							`userID` = :userID,
 							`companyID` = :companyID,
 							`displayName` = :displayName,
@@ -407,6 +401,84 @@ if (isset($_GET['addform']))
 	exit();
 }
 
+// if admin wants to edit a booking, we load a new html form
+if (isset($_POST['action']) AND $_POST['action'] == 'Edit')
+{
+	// Get information from database again on the selected booking	
+	// if we need it.
+	if(!isset($_SESSION['EditBookingInfoArray'])){
+		try
+		{
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+			
+			// Get booking information
+			$pdo = connect_to_db();
+			$sql = "SELECT 		b.`bookingID`									AS TheBookingID,
+								b.`companyID`									AS TheCompanyID,
+								m.`name` 										AS BookedRoomName, 
+								DATE_FORMAT(b.startDateTime, '%d %b %Y %T') 	AS StartTime, 
+								DATE_FORMAT(b.endDateTime, '%d %b %Y %T') 		AS EndTime, 
+								b.description 									AS BookingDescription,
+								b.displayName 									AS BookedBy,
+								(	
+									SELECT `name` 
+									FROM `company` 
+									WHERE `companyID` = TheCompanyID
+								)												AS BookedForCompany,
+								u.`firstName`									AS UserFirstname,
+								u.`lastName`									AS UserLastname,
+								u.`email`										AS UserEmail
+					FROM 		`booking` b 
+					LEFT JOIN 	`meetingroom` m 
+					ON 			b.meetingRoomID = m.meetingRoomID 
+					LEFT JOIN 	`company` c 
+					ON 			b.CompanyID = c.CompanyID
+					LEFT JOIN 	`user` u
+					ON 			b.`userID` = u.`userID`
+					WHERE 		b.`bookingID` = :BookingID
+					GROUP BY 	b.`bookingID`";
+			$s = $pdo->prepare($sql);
+			$s->bindValue(':BookingID', $_POST['id']);
+			$s->execute();
+							
+			//Close connection
+			$pdo = null;
+		}
+		catch (PDOException $e)
+		{
+			$error = 'Error fetching booking details: ' . $e->getMessage();
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+			$pdo = null;
+			exit();		
+		}
+		
+		// Create an array with the row information we retrieved		
+		$_SESSION['EditBookingInfoArray'] = $s->fetch();		
+	}
+	
+	// Set the correct information
+	$action = 'editform';
+	$button = 'Edit booking';
+	$reset = 'hidden';
+	
+	$row = $_SESSION['EditBookingInfoArray'];
+	
+	$bookingID = $row['TheBookingID'];
+	$companyName = $row['BookedForCompany'];
+	$startDateTime = $row['StartTime'];
+	$endDateTime = $row['EndTime'];
+	$displayName = $row['BookedBy'];
+	$description = $row['BookingDescription'];
+	$userInformation = $row['UserLastname'] . ', ' . $row['UserFirstname'] . ' - ' . $row['UserEmail'];
+	
+	// Change to the actual form we want to use
+	include 'editbooking.html.php';
+	exit();
+}
+
+// We're not doing any adding or editing anymore, clear all remembered values
+unset($_SESSION['EditBookingInfoArray']);
+
 // Display booked meetings history list
 try
 {
@@ -418,7 +490,8 @@ try
 						DATE_FORMAT(b.startDateTime, '%d %b %Y %T') 	AS StartTime, 
 						DATE_FORMAT(b.endDateTime, '%d %b %Y %T') 		AS EndTime, 
 						b.displayName 									AS BookedBy,
-						(	SELECT `name` 
+						(	
+							SELECT `name` 
 							FROM `company` 
 							WHERE `companyID` = b.`companyID`
 						)												AS BookedForCompany,
