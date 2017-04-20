@@ -178,6 +178,7 @@ function fillLogAction($pdo){
 		$pdo->exec("INSERT INTO `logaction`(`name`,`description`) VALUES ('Booking Created','The referenced user created a new meeting room booking.')");
 		$pdo->exec("INSERT INTO `logaction`(`name`,`description`) VALUES ('Booking Cancelled','The referenced user cancelled a meeting room booking.')");
 		$pdo->exec("INSERT INTO `logaction`(`name`,`description`) VALUES ('Booking Completed','The referenced booking has been completed.')");
+		$pdo->exec("INSERT INTO `logaction`(`name`,`description`) VALUES ('Booking Removed', 'The referenced booking was removed.')");
 		$pdo->exec("INSERT INTO `logaction`(`name`,`description`) VALUES ('Company Created','The referenced user just created the referenced company.')");
 		$pdo->exec("INSERT INTO `logaction`(`name`,`description`) VALUES ('Company Removed','The referenced company has been removed.')");
 		$pdo->exec("INSERT INTO `logaction`(`name`,`description`) VALUES ('Database Created','The database we are using right now just got created.')");
@@ -417,8 +418,8 @@ function create_tables()
 		{
 			$conn->exec("CREATE TABLE IF NOT EXISTS `$table` (
 						  `bookingID` int(10) unsigned NOT NULL AUTO_INCREMENT,
-						  `meetingRoomID` int(10) unsigned NOT NULL,
-						  `userID` int(10) unsigned NOT NULL,
+						  `meetingRoomID` int(10) unsigned DEFAULT NULL,
+						  `userID` int(10) unsigned DEFAULT NULL,
 						  `companyID` int(10) unsigned DEFAULT NULL,
 						  `displayName` varchar(255) DEFAULT NULL,
 						  `dateTimeCreated` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -434,9 +435,9 @@ function create_tables()
 						  KEY `FK_UserID2_idx` (`userID`),
 						  KEY `FK_CompanyID3_idx` (`companyID`),
 						  CONSTRAINT `FK_CompanyID3` FOREIGN KEY (`companyID`) REFERENCES `company` (`CompanyID`) ON DELETE SET NULL ON UPDATE CASCADE,
-						  CONSTRAINT `FK_MeetingRoomID` FOREIGN KEY (`meetingRoomID`) REFERENCES `meetingroom` (`meetingRoomID`) ON DELETE NO ACTION ON UPDATE CASCADE,
-						  CONSTRAINT `FK_UserID2` FOREIGN KEY (`userID`) REFERENCES `user` (`userID`) ON DELETE NO ACTION ON UPDATE CASCADE
-						) ENGINE=InnoDB DEFAULT CHARSET=utf8");
+						  CONSTRAINT `FK_MeetingRoomID` FOREIGN KEY (`meetingRoomID`) REFERENCES `meetingroom` (`meetingRoomID`) ON DELETE SET NULL ON UPDATE CASCADE,
+						  CONSTRAINT `FK_UserID2` FOREIGN KEY (`userID`) REFERENCES `user` (`userID`) ON DELETE SET NULL ON UPDATE CASCADE
+						) ENGINE=InnoDB DEFAULT CHARSET=utf8;");
 						
 			//	Add the creation to log event
 			$sqlLog = "	INSERT INTO `logevent`(`actionID`, `description`) 

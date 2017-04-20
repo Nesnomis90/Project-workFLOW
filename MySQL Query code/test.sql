@@ -2,6 +2,10 @@ USE test;
 SET NAMES utf8;
 USE meetingflow;
 
+UPDATE `booking`
+SET `actualEndDateTime` = '2017-04-19 17:30:00'
+WHERE `bookingID` = 36;
+
 INSERT INTO `logevent` 
 				SET			`actionID` = 	(
 												SELECT `actionID` 
@@ -29,8 +33,8 @@ SELECT 	`companyID` AS CompanyID,
 
 INSERT INTO `logaction` 
 SET 
-`name` = 'Meeting Room Removed', 
-`description` = 'The referenced meeting room was removed.';
+`name` = 'Booking Removed', 
+`description` = 'The referenced booking was removed.';
 
 INSERT INTO `booking` SET
 							`meetingRoomID` = 1,
@@ -167,19 +171,16 @@ SELECT 		c.companyID 										AS CompID,
 			COUNT(c.`name`) 									AS NumberOfEmployees,
 			(SELECT SEC_TO_TIME(SUM(TIME_TO_SEC(b.`actualEndDateTime`) - TIME_TO_SEC(b.`startDateTime`))) 
 			FROM `booking` b 
-			INNER JOIN `employee` e 
-			ON b.`UserID` = e.`UserID` 
 			INNER JOIN `company` c 
-			ON e.`CompanyID` = c.`CompanyID` 
+			ON b.`CompanyID` = c.`CompanyID` 
 			WHERE b.`CompanyID` = CompID
 			AND YEAR(b.`actualEndDateTime`) = YEAR(NOW())
-			AND MONTH(b.`actualEndDateTime`) = MONTH(NOW()))   	AS MonthlyCompanyWideBookingTimeUsed,
+			AND MONTH(b.`actualEndDateTime`) = MONTH(NOW())
+            GROUP BY b.`bookingID`)   	AS MonthlyCompanyWideBookingTimeUsed,
 			(SELECT SEC_TO_TIME(SUM(TIME_TO_SEC(b.`actualEndDateTime`) - TIME_TO_SEC(b.`startDateTime`))) 
 			FROM `booking` b 
-			INNER JOIN `employee` e 
-			ON b.`UserID` = e.`UserID` 
 			INNER JOIN `company` c 
-			ON e.`CompanyID` = c.`CompanyID` 
+			ON b.`CompanyID` = c.`CompanyID` 
 			WHERE b.`CompanyID` = CompID)   					AS TotalCompanyWideBookingTimeUsed,
 			DATE_FORMAT(c.`dateTimeCreated`, '%d %b %Y %T')		AS DatetimeCreated,
 			DATE_FORMAT(c.`removeAtDate`, '%d %b %Y')			AS DeletionDate 
@@ -187,6 +188,33 @@ FROM 		`company` c
 LEFT JOIN 	`employee` e 
 ON 			c.CompanyID = e.CompanyID 
 GROUP BY 	c.`name`;
+
+SELECT SEC_TO_TIME(SUM(TIME_TO_SEC(b.`actualEndDateTime`) - TIME_TO_SEC(b.`startDateTime`))) AS MonthylBookingTime,
+		TIME_TO_SEC(b.`actualEndDateTime`) AS StartSum,
+        TIME_TO_SEC(b.`startDateTime`) AS EndSum,
+        SUM(TIME_TO_SEC(b.`actualEndDateTime`) - TIME_TO_SEC(b.`startDateTime`)) AS WrongSum,
+        timediff(b.`actualEndDateTime`, b.`startDateTime`) AS ActualSum
+FROM `booking` b 
+INNER JOIN `employee` e 
+ON b.`UserID` = e.`UserID` 
+INNER JOIN `company` c 
+ON e.`CompanyID` = c.`CompanyID` 
+WHERE b.`CompanyID` = 1
+AND c.`CompanyID` = b.`companyID`
+AND YEAR(b.`actualEndDateTime`) = YEAR(NOW())
+AND MONTH(b.`actualEndDateTime`) = MONTH(NOW());
+
+SELECT *
+FROM `booking` b 
+INNER JOIN `employee` e 
+ON b.`UserID` = e.`UserID` 
+INNER JOIN `company` c 
+ON b.`CompanyID` = c.`CompanyID` 
+WHERE b.`CompanyID` = 1
+AND c.`CompanyID` = b.`companyID`
+AND YEAR(b.`actualEndDateTime`) = YEAR(NOW())
+AND MONTH(b.`actualEndDateTime`) = MONTH(NOW())
+GROUP BY b.`bookingID`;
 
 
 SELECT 		c.companyID 										AS CompID,

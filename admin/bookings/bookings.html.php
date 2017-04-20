@@ -89,7 +89,11 @@
 							<td><?php htmlout($booking['WorksForCompany']); ?></td>
 							<td><input type="submit" name="action" value="Cancel"></td>
 							<td><input type="submit" name="action" value="Delete"></td>
-							<input type="hidden" name="id" value="<?php echo $booking['id']; ?>">
+							<input type="hidden" name="id" value="<?php htmlout($booking['id']); ?>">
+							<input type="hidden" name="UserInfo" id="UserInfo"
+							value="<?php htmlout($booking['UserInfo']); ?>">
+							<input type="hidden" name="MeetingInfo" id="MeetingInfo"
+							value="<?php htmlout($booking['MeetingInfo']); ?>">
 						</tr>
 					</form>
 				<?php endforeach; ?>

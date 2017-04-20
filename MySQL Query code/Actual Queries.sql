@@ -11,8 +11,8 @@ CREATE TABLE IF NOT EXISTS `accesslevel` (
 #BOOKING
 CREATE TABLE IF NOT EXISTS `booking` (
   `bookingID` int(10) unsigned NOT NULL AUTO_INCREMENT,
-  `meetingRoomID` int(10) unsigned NOT NULL,
-  `userID` int(10) unsigned NOT NULL,
+  `meetingRoomID` int(10) unsigned DEFAULT NULL,
+  `userID` int(10) unsigned DEFAULT NULL,
   `companyID` int(10) unsigned DEFAULT NULL,
   `displayName` varchar(255) DEFAULT NULL,
   `dateTimeCreated` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -28,9 +28,9 @@ CREATE TABLE IF NOT EXISTS `booking` (
   KEY `FK_UserID2_idx` (`userID`),
   KEY `FK_CompanyID3_idx` (`companyID`),
   CONSTRAINT `FK_CompanyID3` FOREIGN KEY (`companyID`) REFERENCES `company` (`CompanyID`) ON DELETE SET NULL ON UPDATE CASCADE,
-  CONSTRAINT `FK_MeetingRoomID` FOREIGN KEY (`meetingRoomID`) REFERENCES `meetingroom` (`meetingRoomID`) ON DELETE NO ACTION ON UPDATE CASCADE,
-  CONSTRAINT `FK_UserID2` FOREIGN KEY (`userID`) REFERENCES `user` (`userID`) ON DELETE NO ACTION ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=utf8;
+  CONSTRAINT `FK_MeetingRoomID` FOREIGN KEY (`meetingRoomID`) REFERENCES `meetingroom` (`meetingRoomID`) ON DELETE SET NULL ON UPDATE CASCADE,
+  CONSTRAINT `FK_UserID2` FOREIGN KEY (`userID`) REFERENCES `user` (`userID`) ON DELETE SET NULL ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 #COMPANY
 CREATE TABLE IF NOT EXISTS `company` (
   `CompanyID` int(10) unsigned NOT NULL AUTO_INCREMENT,
