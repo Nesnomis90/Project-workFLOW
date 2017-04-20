@@ -457,10 +457,6 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Edit')
 	}
 	
 	// Set the correct information
-	$action = 'editform';
-	$button = 'Edit booking';
-	$reset = 'hidden';
-	
 	$row = $_SESSION['EditBookingInfoArray'];
 	
 	$bookingID = $row['TheBookingID'];
@@ -474,6 +470,51 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Edit')
 	// Change to the actual form we want to use
 	include 'editbooking.html.php';
 	exit();
+}
+
+// If admin wants to update the booking information after editing
+// or if we forced a refresh to give feedback about invalid inputs
+if(	(isset($_POST['action']) AND $_POST['action'] == "Edit Booking") OR
+	(isset($_SESSION['refreshEditBooking']) AND $_SESSION['refreshEditBooking']))
+{
+	// Confirm that we have refreshed the page
+	unset($_SESSION['refreshEditBooking']);
+
+	// Check if all values are valid before doing anything
+	
+	
+	// Check if any values actually changed. If not, we don't need to bother the database	
+	$oldinfo = $_SESSION['EditBookingInfoArray'];
+	
+	if($_POST[''] != $oldinfo['']){
+		numberOfChanges++;
+	}
+	
+	
+
+	if(numberOfChanges == 0){
+		// There were no changes made. Go back to booking overview
+		header('Location: .');
+		exit();	
+	}
+	
+	
+	// Update booking information if values have changed
+	try
+	{
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+		$pdo = connect_to_db();
+
+
+		$pdo = null;
+	}
+	catch(PDOException $e)
+	{
+		$error = 'Error updating booking information in the database: ' . $e->getMessage();
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+		$pdo = null;
+		exit();
+	}
 }
 
 // We're not doing any adding or editing anymore, clear all remembered values

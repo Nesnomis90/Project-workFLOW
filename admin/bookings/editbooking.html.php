@@ -14,7 +14,7 @@
 		<?php endif; ?>
 		<form action="" method="post">
 			<div>
-				<label for="meetingRoomID">Meeting Room: </label>
+				<label for="meetingRoomID">Booked Meeting Room: </label>
 				<select name="meetingRoomID" id="meetingRoomID">
 					<?php foreach($meetingroom as $row): ?> 
 						<?php if($row['meetingRoomName']==$meetingroomname):?>
@@ -31,7 +31,7 @@
 				</select>				
 			</div>
 			<div>
-				<label for="startDateTime">Start Time: </label>
+				<label for="startDateTime">Booked Start Time: </label>
 				<input type="text" name="startDateTime" id="startDateTime" 
 				required placeholder="dd-mm-yyyy hh:mm:ss" 
 				oninvalid="this.setCustomValidity('Enter Your Starting Date And Time Here')"
@@ -39,7 +39,7 @@
 				value="<?php htmlout($startDateTime); ?>">
 			</div>
 			<div>
-				<label for="endDateTime">End Time: </label>
+				<label for="endDateTime">Booked End Time: </label>
 				<input type="text" name="endDateTime" id="endDateTime" 
 				required placeholder="dd-mm-yyyy hh:mm:ss" 
 				oninvalid="this.setCustomValidity('Enter Your Ending Date And Time Here')"
@@ -48,7 +48,7 @@
 			</div>
 			<div>
 				<?php if($displayCompanySelect == TRUE) : ?>
-					<label for="companyID">Company: </label>
+					<label for="companyID">Booked For Company: </label>
 					<select name="companyID" id="companyID">
 						<?php foreach($company as $row): ?> 
 							<?php if($row['companyName']==$companyname):?>
