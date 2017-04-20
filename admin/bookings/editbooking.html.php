@@ -110,7 +110,7 @@
 			<div>
 				<input type="hidden" name="bookingID" id="bookingID" 
 				value="<?php htmlout($bookingID); ?>">
-				<input type="submit" value="Edit Booking">
+				<input type="submit" name="action" value="Edit Booking">
 			</div>
 		</form>
 	<p><a href="..">Return to CMS home</a></p>

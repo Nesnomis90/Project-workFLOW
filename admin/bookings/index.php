@@ -411,6 +411,11 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR
 		unset($_SESSION['refreshEditBooking']);	
 	}
 	
+	// TO-DO: Get info if the new selected user works in a company and make a dropdown selected
+	// TO-DO: Fix displayCompanySelect etc ^
+	// TO-DO: Get dropdownlist of meeting rooms and start with the correct room selected
+	// TO-DO: Remember changed values on "Change User"-button press
+	
 	// Get information from database again on the selected booking	
 	// if we need it.
 	if(!isset($_SESSION['EditBookingInfoArray'])){
@@ -422,6 +427,7 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR
 			$pdo = connect_to_db();
 			$sql = "SELECT 		b.`bookingID`									AS TheBookingID,
 								b.`companyID`									AS TheCompanyID,
+								b.`meetingRoomID`								AS TheMeetingRoomID,
 								m.`name` 										AS BookedRoomName, 
 								b.startDateTime 								AS StartTime, 
 								b.endDateTime 									AS EndTime, 
@@ -461,7 +467,8 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR
 		}
 		
 		// Create an array with the row information we retrieved		
-		$_SESSION['EditBookingInfoArray'] = $s->fetch();		
+		$_SESSION['EditBookingInfoArray'] = $s->fetch();
+		$_SESSION['EditBookingOriginalInfoArray'] = $_SESSION['EditBookingInfoArray'];
 	}
 	
 	// Set the correct information
@@ -469,13 +476,18 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR
 	
 	$bookingID = $row['TheBookingID'];
 	$companyName = $row['BookedForCompany'];
+	$companyID = $row['TheCompanyID'];
+	$meetingroomID = $row['TheMeetingRoomID']; //TO-DO: fix/change when doing the proper dropdown select etc?
 	$startDateTime = $row['StartTime'];
 	$endDateTime = $row['EndTime'];
 	$displayName = $row['BookedBy'];
 	$description = $row['BookingDescription'];
 	$userInformation = $row['UserLastname'] . ', ' . $row['UserFirstname'] . ' - ' . $row['UserEmail'];
 	$usersearchstring = '';
-	$users = $_SESSION['EditBookingUsersArray'];
+	if(isset($_SESSION['EditBookingUsersArray'])){
+		$users = $_SESSION['EditBookingUsersArray'];		
+	}
+
 	
 	// Get the values that we had before the refresh
 		// The user search string
@@ -495,15 +507,31 @@ if(isset($_POST['action']) AND $_POST['action'] == "Edit Booking")
 {
 
 	// Check if all values are valid before doing anything
+	// TO-DO:
 		
 	// Check if any values actually changed. If not, we don't need to bother the database
+	// TO-DO: Check all inputs
 	$numberOfChanges = 0;
-	$oldinfo = $_SESSION['EditBookingInfoArray'];
+	$oldinfo = $_SESSION['EditBookingOriginalInfoArray'];
 	
-	if($_POST[''] != $oldinfo['']){
+	if($_POST['startDateTime'] != $oldinfo['StartTime']){
 		$numberOfChanges++;
 	}
-	
+	if($_POST['endDateTime'] != $oldinfo['EndTime']){
+		$numberOfChanges++;
+	}	
+	if($_POST['companyID'] != $oldinfo['TheCompanyID']){
+		$numberOfChanges++;
+	}
+	if($_POST['displayName'] != $oldinfo['BookedBy']){
+		$numberOfChanges++;
+	}	
+	if($_POST['description'] != $oldinfo['BookingDescription']){
+		$numberOfChanges++;
+	}	
+	if($_POST['TheMeetingRoomID'] != $oldinfo['TheMeetingRoomID']){
+		$numberOfChanges++;
+	}	
 
 	if($numberOfChanges == 0){
 		// There were no changes made. Go back to booking overview
@@ -512,7 +540,8 @@ if(isset($_POST['action']) AND $_POST['action'] == "Edit Booking")
 		exit();	
 	}
 	
-	// Check if the timeslot is taken for the selected meeting room		
+	// Check if the timeslot is taken for the selected meeting room	
+	// TO-DO:
 	
 	// Check if the booking is for the user doing the edit or for another user.
 	// TO-DO: Fix this if userID is wrong
@@ -546,6 +575,7 @@ if(isset($_POST['action']) AND $_POST['action'] == "Edit Booking")
 		$s->bindValue(':BookingID', $_POST['bookingID']);
 		$s->bindValue(':meetingRoomID', $_POST['meetingRoomID']);
 		$s->bindValue(':userID', $UpdateWithThisUserID );
+		$s->bindValue(':companyID', $_POST['companyID']);
 		$s->bindValue(':startDateTime', $startDateTime);
 		$s->bindValue(':endDateTime', $endDateTime);
 		$s->bindValue(':displayName', $_POST['displayName']);
@@ -565,6 +595,7 @@ if(isset($_POST['action']) AND $_POST['action'] == "Edit Booking")
 	
 	$_SESSION['BookingUserFeedback'] = "Successfully updated the booking information!";
 	unset($_SESSION['EditBookingChangeUser']);
+	unset($_SESSION['EditBookingOriginalInfoArray']);
 	
 	// Load booking history list webpage with the updated booking information
 	header('Location: .');
@@ -687,7 +718,7 @@ if(isset($_SESSION['EditBookingChangeUser']) AND isset($_POST['action']) AND $_P
 		// The company selected
 	$newValues['TheCompanyID'] = $_POST['companyID'];
 		// The display name
-	$newValues['DisplayName'] = $_POST['displayName'];
+	$newValues['BookedBy'] = $_POST['displayName'];
 		// The booking description
 	$newValues['BookingDescription'] = $_POST['description'];
 		// The start time
@@ -713,6 +744,7 @@ if(isset($_SESSION['EditBookingChangeUser']) AND isset($_POST['action']) AND $_P
 unset($_SESSION['EditBookingInfoArray']);
 unset($_SESSION['EditBookingChangeUser']);
 unset($_SESSION['EditBookingUsersArray']);
+unset($_SESSION['EditBookingOriginalInfoArray']);
 
 // Display booked meetings history list
 try
