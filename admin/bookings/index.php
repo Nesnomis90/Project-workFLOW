@@ -10,7 +10,15 @@ if (!isUserAdmin()){
 	exit();
 }
 
-// TO-DO: THIS NEEDS THE EDIT AND EDITFORM CODE SNIPPETS?? OR MAYBE NOT?
+// Function to clear out session information
+function clearBookingSessions(){
+	
+	unset($_SESSION['EditBookingInfoArray']);
+	unset($_SESSION['EditBookingChangeUser']);
+	unset($_SESSION['EditBookingUsersArray']);
+	unset($_SESSION['EditBookingOriginalInfoArray']);
+	unset($_SESSION['EditBookingMeetingRoomsArray']);	
+}
 
 // If admin wants to remove a booked meeting from the database
 // TO-DO: ADD A CONFIRMATION BEFORE ACTUALLY DOING THE DELETION!
@@ -434,6 +442,44 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR
 			
 	} else {
 		// Get information from database again on the selected booking
+		if(!isset($_SESSION['EditBookingMeetingRoomsArray'])){
+			try
+			{
+				include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+				
+				// Get booking information
+				$pdo = connect_to_db();
+				// Get name and IDs for meeting rooms
+				$sql = 'SELECT 	`meetingRoomID`,
+								`name` 
+						FROM 	`meetingroom`';
+				$result = $pdo->query($sql);
+					
+				//Close connection
+				$pdo = null;
+				
+				// Get the rows of information from the query
+				// This will be used to create a dropdown list in HTML
+				foreach($result as $row){
+					$meetingroom[] = array(
+										'meetingRoomID' => $row['meetingRoomID'],
+										'meetingRoomName' => $row['name']
+										);
+				}		
+				
+				$_SESSION['EditBookingMeetingRoomsArray'] = $meetingroom;
+			}
+			catch (PDOException $e)
+			{
+				$error = 'Error fetching meeting room details: ' . $e->getMessage();
+				include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+				$pdo = null;
+				exit();		
+			}
+		} else {
+			$meetingroom = $_SESSION['EditBookingMeetingRoomsArray'];
+		}
+		
 		if(!isset($_SESSION['EditBookingInfoArray'])){
 			try
 			{
@@ -662,7 +708,6 @@ if(isset($_SESSION['EditBookingChangeUser']) AND isset($_POST['action']) AND $_P
 }
 
 // If admin wants to update the booking information after editing
-// or if we forced a refresh to give feedback about invalid inputs
 if(isset($_POST['action']) AND $_POST['action'] == "Edit Booking")
 {
 
@@ -670,26 +715,32 @@ if(isset($_POST['action']) AND $_POST['action'] == "Edit Booking")
 	// TO-DO:
 		
 	// Check if any values actually changed. If not, we don't need to bother the database
-	// TO-DO: Check all inputs
 	$numberOfChanges = 0;
-	$oldinfo = $_SESSION['EditBookingOriginalInfoArray'];
+	$checkIfTimeslotIsAvailable = FALSE;
+	$originalValue = $_SESSION['EditBookingOriginalInfoArray'];
 	
-	if($_POST['startDateTime'] != $oldinfo['StartTime']){
+	if($_POST['startDateTime'] != $originalValue['StartTime']){
+		$numberOfChanges++;
+		$checkIfTimeslotIsAvailable = TRUE;
+	}
+	if($_POST['endDateTime'] != $originalValue['EndTime']){
+		$numberOfChanges++;
+		$checkIfTimeslotIsAvailable = TRUE;
+	}	
+	if($_POST['companyID'] != $originalValue['TheCompanyID']){
 		$numberOfChanges++;
 	}
-	if($_POST['endDateTime'] != $oldinfo['EndTime']){
+	if($_POST['displayName'] != $originalValue['BookedBy']){
 		$numberOfChanges++;
 	}	
-	if($_POST['companyID'] != $oldinfo['TheCompanyID']){
+	if($_POST['description'] != $originalValue['BookingDescription']){
 		$numberOfChanges++;
+	}	
+	if($_POST['meetingRoomID'] != $originalValue['TheMeetingRoomID']){
+		$numberOfChanges++;
+		$checkIfTimeslotIsAvailable = TRUE;
 	}
-	if($_POST['displayName'] != $oldinfo['BookedBy']){
-		$numberOfChanges++;
-	}	
-	if($_POST['description'] != $oldinfo['BookingDescription']){
-		$numberOfChanges++;
-	}	
-	if($_POST['TheMeetingRoomID'] != $oldinfo['TheMeetingRoomID']){
+	if(isset($_POST['userID']) AND $_POST['userID'] != $originalValue['TheUserID']){
 		$numberOfChanges++;
 	}	
 
@@ -701,7 +752,10 @@ if(isset($_POST['action']) AND $_POST['action'] == "Edit Booking")
 	}
 	
 	// Check if the timeslot is taken for the selected meeting room	
-	// TO-DO:
+	if($checkIfTimeslotIsAvailable){
+		//	TO-DO: Only needed if the time span changes or expands, not if it shrinks
+		// 	Unless the meeting room has been changed.
+	}
 	
 	// Check if the booking is for the user doing the edit or for another user.
 	// TO-DO: Fix this if userID is wrong
@@ -754,20 +808,15 @@ if(isset($_POST['action']) AND $_POST['action'] == "Edit Booking")
 	}
 	
 	$_SESSION['BookingUserFeedback'] = "Successfully updated the booking information!";
-	unset($_SESSION['EditBookingChangeUser']);
-	unset($_SESSION['EditBookingOriginalInfoArray']);
+	clearBookingSessions();
 	
 	// Load booking history list webpage with the updated booking information
 	header('Location: .');
 	exit();	
 }
 
-
 // We're not doing any adding or editing anymore, clear all remembered values
-unset($_SESSION['EditBookingInfoArray']);
-unset($_SESSION['EditBookingChangeUser']);
-unset($_SESSION['EditBookingUsersArray']);
-unset($_SESSION['EditBookingOriginalInfoArray']);
+clearBookingSessions();
 
 // Display booked meetings history list
 try
