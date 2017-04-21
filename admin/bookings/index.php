@@ -415,7 +415,6 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR
 {
 	// TO-DO: Get info if the new selected user works in a company and make a dropdown selected
 	// TO-DO: Fix displayCompanySelect etc ^
-	// TO-DO: Get dropdownlist of meeting rooms and start with the correct room selected
 	// TO-DO: Remember changed values on "Change User"-button press	
 	
 	// Check if the call was a form submit or a forced refresh
@@ -662,27 +661,8 @@ if(isset($_SESSION['EditBookingChangeUser']) AND isset($_POST['action']) AND $_P
 	if(isset($_POST['userID'])){
 		$newValues['TheUserID'] = $_POST['userID'];
 	}
-	
-	/* b.`bookingID`									AS TheBookingID,
-								b.`companyID`									AS TheCompanyID,
-								m.`name` 										AS BookedRoomName, 
-								b.startDateTime 								AS StartTime, 
-								b.endDateTime 									AS EndTime, 
-								b.description 									AS BookingDescription,
-								b.displayName 									AS BookedBy,
-								(	
-									SELECT `name` 
-									FROM `company` 
-									WHERE `companyID` = TheCompanyID
-								)												AS BookedForCompany,
-								u.`userID`										AS TheUserID, 
-								u.`firstName`									AS UserFirstname,
-								u.`lastName`									AS UserLastname,
-								u.`email`										AS UserEmail */
-	
-	
 		// The meeting room selected
-	$_SESSION['EditBookingSelectedMeetingID'] = $_POST['meetingRoomID'];
+	$newValues['TheMeetingRoomID'] = $_POST['meetingRoomID']; 
 		// The company selected
 	$newValues['TheCompanyID'] = $_POST['companyID'];
 		// The display name
@@ -693,8 +673,6 @@ if(isset($_SESSION['EditBookingChangeUser']) AND isset($_POST['action']) AND $_P
 	$newValues['StartTime'] = $_POST['startDateTime'];
 		// The end time
 	$newValues['EndTime'] = $_POST['endDateTime'];
-	
-	// TO-DO: Overwrite company name, user firstname/lastname/email etc...
 	
 	$_SESSION['EditBookingInfoArray'] = $newValues;
 	
@@ -712,7 +690,11 @@ if(isset($_POST['action']) AND $_POST['action'] == "Edit Booking")
 {
 
 	// Check if all values are valid before doing anything
-	// TO-DO:
+		// TO-DO:
+		// Are all inputs filled out?
+		
+		// Are the filled out values actually the correct format?
+
 		
 	// Check if any values actually changed. If not, we don't need to bother the database
 	$numberOfChanges = 0;
