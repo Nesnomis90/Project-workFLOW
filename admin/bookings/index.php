@@ -405,29 +405,220 @@ if (isset($_POST['action']) AND $_POST['action'] == "Add booking")
 if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR
 	(isset($_SESSION['refreshEditBooking']) AND $_SESSION['refreshEditBooking']))
 {
+	// TO-DO: Get info if the new selected user works in a company and make a dropdown selected
+	// TO-DO: Fix displayCompanySelect etc ^
+	// TO-DO: Get dropdownlist of meeting rooms and start with the correct room selected
+	// TO-DO: Remember changed values on "Change User"-button press	
+	
 	// Check if the call was a form submit or a forced refresh
 	if(isset($_SESSION['refreshEditBooking'])){
 		// Acknowledge that we have refreshed the page
 		unset($_SESSION['refreshEditBooking']);	
+		
+		// Set the information back to what it was before the refresh
+				// The user search string
+		if(isset($_SESSION['EditBookingUserSearch'])){
+			$usersearchstring = $_SESSION['EditBookingUserSearch'];
+			unset($_SESSION['EditBookingUserSearch']);
+		}
+				// The user dropdown select options
+		if(isset($_SESSION['EditBookingUsersArray'])){
+			$users = $_SESSION['EditBookingUsersArray'];
+				// The selected user in the dropdown select
+			if(isset($_SESSION['EditBookingSelectedUserID'])){
+				$SelectedUserID = $_SESSION['EditBookingSelectedUserID'];
+			} else {
+				$SelectedUserID = $_SESSION['EditBookingOriginalInfoArray']['TheUserID'];
+			}			
+		}
+			
+	} else {
+		// Get information from database again on the selected booking
+		if(!isset($_SESSION['EditBookingInfoArray'])){
+			try
+			{
+				include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+				
+				// Get booking information
+				$pdo = connect_to_db();
+				$sql = "SELECT 		b.`bookingID`									AS TheBookingID,
+									b.`companyID`									AS TheCompanyID,
+									b.`meetingRoomID`								AS TheMeetingRoomID,
+									m.`name` 										AS BookedRoomName, 
+									b.startDateTime 								AS StartTime, 
+									b.endDateTime 									AS EndTime, 
+									b.description 									AS BookingDescription,
+									b.displayName 									AS BookedBy,
+									(	
+										SELECT `name` 
+										FROM `company` 
+										WHERE `companyID` = TheCompanyID
+									)												AS BookedForCompany,
+									u.`userID`										AS TheUserID, 
+									u.`firstName`									AS UserFirstname,
+									u.`lastName`									AS UserLastname,
+									u.`email`										AS UserEmail
+						FROM 		`booking` b 
+						LEFT JOIN 	`meetingroom` m 
+						ON 			b.meetingRoomID = m.meetingRoomID 
+						LEFT JOIN 	`company` c 
+						ON 			b.CompanyID = c.CompanyID
+						LEFT JOIN 	`user` u
+						ON 			b.`userID` = u.`userID`
+						WHERE 		b.`bookingID` = :BookingID
+						GROUP BY 	b.`bookingID`";
+				$s = $pdo->prepare($sql);
+				$s->bindValue(':BookingID', $_POST['id']);
+				$s->execute();
+								
+				//Close connection
+				$pdo = null;
+			}
+			catch (PDOException $e)
+			{
+				$error = 'Error fetching booking details: ' . $e->getMessage();
+				include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+				$pdo = null;
+				exit();		
+			}
+			
+			// Create an array with the row information we retrieved		
+			$_SESSION['EditBookingInfoArray'] = $s->fetch();
+			$_SESSION['EditBookingOriginalInfoArray'] = $_SESSION['EditBookingInfoArray'];
+		}	
+
+		// Set the correct information on form call
+		$usersearchstring = '';
+		$users = Null;
 	}
 	
-	// TO-DO: Get info if the new selected user works in a company and make a dropdown selected
-	// TO-DO: Fix displayCompanySelect etc ^
-	// TO-DO: Get dropdownlist of meeting rooms and start with the correct room selected
-	// TO-DO: Remember changed values on "Change User"-button press
+	// Set the correct information
+		// Edited inputs
+	$row = $_SESSION['EditBookingInfoArray'];
 	
-	// Get information from database again on the selected booking	
-	// if we need it.
-	if(!isset($_SESSION['EditBookingInfoArray'])){
+	$bookingID = $row['TheBookingID'];
+	$companyName = $row['BookedForCompany'];
+	$companyID = $row['TheCompanyID'];
+	$meetingroomID = $row['TheMeetingRoomID']; //TO-DO: fix/change when doing the proper dropdown select etc?
+	$startDateTime = $row['StartTime'];
+	$endDateTime = $row['EndTime'];
+	$displayName = $row['BookedBy'];
+	$description = $row['BookingDescription'];
+	$userInformation = $row['UserLastname'] . ', ' . $row['UserFirstname'] . ' - ' . $row['UserEmail'];
+		// Original values
+	$original = $_SESSION['EditBookingOriginalInfoArray'];
+		
+	$originalStartDateTime = $original['StartTime'];
+	$originalEndDateTime = $original['EndTime'];
+	$originalMeetingRoomName = $original['BookedRoomName'];
+	$originalDisplayName = $original['BookedBy'];
+	$originalBookingDescription = $original['BookingDescription'];
+	$originalUserInformation = 	$original['UserLastname'] . ', ' . $original['UserFirstname'] . 
+								' - ' . $original['UserEmail'];
+
+	
+	// Change to the actual form we want to use
+	include 'editbooking.html.php';
+	exit();
+}
+
+// Admin wants to change the user the booking is reserved for
+// We need to get a list of all active users
+if((isset($_POST['action']) AND $_POST['action'] == "Change User") OR 
+	(isset($_SESSION['refreshEditBookingChangeUser'])) AND $_SESSION['refreshEditBookingChangeUser']){
+	
+	if(isset($_SESSION['refreshEditBookingChangeUser']) AND $_SESSION['refreshEditBookingChangeUser']){
+		unset($_SESSION['refreshEditBookingChangeUser']);
+	}
+	
+	$usersearchstring = "";
+	
+	if(isset($_SESSION['EditBookingUserSearch'])){
+		$usersearchstring = $_SESSION['EditBookingUserSearch'];
+		unset($_SESSION['EditBookingUserSearch']);
+	}
+	
+	if(!isset($_SESSION['EditBookingUsersArray'])){
+		// Get all active users and their default booking information
 		try
 		{
-			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
-			
-			// Get booking information
 			$pdo = connect_to_db();
-			$sql = "SELECT 		b.`bookingID`									AS TheBookingID,
+			$sql = "SELECT 	`userID`, 
+							`firstname`, 
+							`lastname`, 
+							`email`,
+							`displayname`,
+							`bookingdescription`
+					FROM 	`user`
+					WHERE 	`isActive` > 0";
+		
+			if ($usersearchstring != ''){
+				$sqladd = " AND (`firstname` LIKE :search
+							OR `lastname` LIKE :search
+							OR `email` LIKE :search)";
+				$sql = $sql . $sqladd;
+				
+				$finalusersearchstring = '%' . $usersearchstring . '%';
+				
+				$s = $pdo->prepare($sql);
+				$s->bindValue(":search", $finalusersearchstring);
+				$s->execute();
+				$result = $s->fetchAll();
+				
+			} else {
+				$result = $pdo->query($sql);
+			}	
+			
+			// Get the rows of information from the query
+			// This will be used to create a dropdown list in HTML
+			foreach($result as $row){
+				$users[] = array(
+									'userID' => $row['userID'],
+									'userInformation' => $row['lastname'] . ', ' . $row['firstname'] . ' - ' . $row['email'],
+									'displayName' => $row['displayname'],
+									'bookingDescription' => $row['bookingdescription']
+									);
+			}
+			session_start();
+			$_SESSION['EditBookingUsersArray'] = $users;
+			
+			$pdo = null;
+		}
+		catch(PDOException $e)
+		{
+			$error = 'Error fetching user details.';
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+			$pdo = null;
+			exit();		
+		}
+	} else {
+		$users = $_SESSION['EditBookingUsersArray'];
+	}
+
+	$_SESSION['refreshEditBooking'] = TRUE;
+	$_SESSION['EditBookingChangeUser'] = TRUE;
+	header('Location: .');
+	exit();
+}
+
+session_start();
+// If admin is editing a booking and wants to limit the users shown by searching
+if(isset($_SESSION['EditBookingChangeUser']) AND isset($_POST['action']) AND $_POST['action'] == "Search"){
+	
+	
+	// Let's remember what was selected and searched for
+		// The user search string
+	$_SESSION['EditBookingUserSearch'] = $_POST['usersearchstring'];
+	
+	$newValues = $_SESSION['EditBookingInfoArray'];
+
+		// The user selected, if the booking is for another user
+	if(isset($_POST['userID'])){
+		$newValues['TheUserID'] = $_POST['userID'];
+	}
+	
+	/* b.`bookingID`									AS TheBookingID,
 								b.`companyID`									AS TheCompanyID,
-								b.`meetingRoomID`								AS TheMeetingRoomID,
 								m.`name` 										AS BookedRoomName, 
 								b.startDateTime 								AS StartTime, 
 								b.endDateTime 									AS EndTime, 
@@ -441,63 +632,32 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR
 								u.`userID`										AS TheUserID, 
 								u.`firstName`									AS UserFirstname,
 								u.`lastName`									AS UserLastname,
-								u.`email`										AS UserEmail
-					FROM 		`booking` b 
-					LEFT JOIN 	`meetingroom` m 
-					ON 			b.meetingRoomID = m.meetingRoomID 
-					LEFT JOIN 	`company` c 
-					ON 			b.CompanyID = c.CompanyID
-					LEFT JOIN 	`user` u
-					ON 			b.`userID` = u.`userID`
-					WHERE 		b.`bookingID` = :BookingID
-					GROUP BY 	b.`bookingID`";
-			$s = $pdo->prepare($sql);
-			$s->bindValue(':BookingID', $_POST['id']);
-			$s->execute();
-							
-			//Close connection
-			$pdo = null;
-		}
-		catch (PDOException $e)
-		{
-			$error = 'Error fetching booking details: ' . $e->getMessage();
-			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
-			$pdo = null;
-			exit();		
-		}
-		
-		// Create an array with the row information we retrieved		
-		$_SESSION['EditBookingInfoArray'] = $s->fetch();
-		$_SESSION['EditBookingOriginalInfoArray'] = $_SESSION['EditBookingInfoArray'];
-	}
+								u.`email`										AS UserEmail */
 	
-	// Set the correct information
-	$row = $_SESSION['EditBookingInfoArray'];
 	
-	$bookingID = $row['TheBookingID'];
-	$companyName = $row['BookedForCompany'];
-	$companyID = $row['TheCompanyID'];
-	$meetingroomID = $row['TheMeetingRoomID']; //TO-DO: fix/change when doing the proper dropdown select etc?
-	$startDateTime = $row['StartTime'];
-	$endDateTime = $row['EndTime'];
-	$displayName = $row['BookedBy'];
-	$description = $row['BookingDescription'];
-	$userInformation = $row['UserLastname'] . ', ' . $row['UserFirstname'] . ' - ' . $row['UserEmail'];
-	$usersearchstring = '';
-	if(isset($_SESSION['EditBookingUsersArray'])){
-		$users = $_SESSION['EditBookingUsersArray'];		
-	}
-
+		// The meeting room selected
+	$_SESSION['EditBookingSelectedMeetingID'] = $_POST['meetingRoomID'];
+		// The company selected
+	$newValues['TheCompanyID'] = $_POST['companyID'];
+		// The display name
+	$newValues['BookedBy'] = $_POST['displayName'];
+		// The booking description
+	$newValues['BookingDescription'] = $_POST['description'];
+		// The start time
+	$newValues['StartTime'] = $_POST['startDateTime'];
+		// The end time
+	$newValues['EndTime'] = $_POST['endDateTime'];
 	
-	// Get the values that we had before the refresh
-		// The user search string
-	if(isset($_SESSION['EditBookingUserSearch'])){
-		$usersearchstring = $_SESSION['EditBookingUserSearch'];
-		unset($_SESSION['EditBookingUserSearch']);
-	}
+	// TO-DO: Overwrite company name, user firstname/lastname/email etc...
 	
-	// Change to the actual form we want to use
-	include 'editbooking.html.php';
+	$_SESSION['EditBookingInfoArray'] = $newValues;
+	
+	// Forget the old search result for users if we had one saved
+	unset($_SESSION['EditBookingUsersArray']);
+	
+	// Get the new users
+	$_SESSION['refreshEditBookingChangeUser'] = TRUE;
+	header('Location: .');
 	exit();
 }
 
@@ -600,143 +760,6 @@ if(isset($_POST['action']) AND $_POST['action'] == "Edit Booking")
 	// Load booking history list webpage with the updated booking information
 	header('Location: .');
 	exit();	
-}
-// Admin wants to change the user the booking is reserved for
-// We need to get a list of all active users
-if((isset($_POST['action']) AND $_POST['action'] == "Change User") OR 
-	(isset($_SESSION['refreshEditBookingChangeUser'])) AND $_SESSION['refreshEditBookingChangeUser']){
-	
-	if(isset($_SESSION['refreshEditBookingChangeUser']) AND $_SESSION['refreshEditBookingChangeUser']){
-		unset($_SESSION['refreshEditBookingChangeUser']);
-	}
-	
-	$usersearchstring = "";
-	
-	if(isset($_SESSION['EditBookingUserSearch'])){
-		$usersearchstring = $_SESSION['EditBookingUserSearch'];
-		unset($_SESSION['EditBookingUserSearch']);
-	}
-	
-	if(!isset($_SESSION['EditBookingUsersArray'])){
-		// Get all active users and their default booking information
-		try
-		{
-			$pdo = connect_to_db();
-			$sql = "SELECT 	`userID`, 
-							`firstname`, 
-							`lastname`, 
-							`email`,
-							`displayname`,
-							`bookingdescription`
-					FROM 	`user`
-					WHERE 	`isActive` > 0";
-		
-			if ($usersearchstring != ''){
-				$sqladd = " AND (`firstname` LIKE :search
-							OR `lastname` LIKE :search
-							OR `email` LIKE :search)";
-				$sql = $sql . $sqladd;
-				
-				$finalusersearchstring = '%' . $usersearchstring . '%';
-				
-				$s = $pdo->prepare($sql);
-				$s->bindValue(":search", $finalusersearchstring);
-				$s->execute();
-				$result = $s->fetchAll();
-				
-			} else {
-				$result = $pdo->query($sql);
-			}	
-			
-			// Get the rows of information from the query
-			// This will be used to create a dropdown list in HTML
-			foreach($result as $row){
-				$users[] = array(
-									'userID' => $row['userID'],
-									'userInformation' => $row['lastname'] . ', ' . $row['firstname'] . ' - ' . $row['email'],
-									'displayName' => $row['displayname'],
-									'bookingDescription' => $row['bookingdescription']
-									);
-			}
-			session_start();
-			$_SESSION['EditBookingUsersArray'] = $users;
-			
-			$pdo = null;
-		}
-		catch(PDOException $e)
-		{
-			$error = 'Error fetching user details.';
-			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
-			$pdo = null;
-			exit();		
-		}
-	} else {
-		$users = $_SESSION['EditBookingUsersArray'];
-	}
-
-	$_SESSION['refreshEditBooking'] = TRUE;
-	$_SESSION['EditBookingChangeUser'] = TRUE;
-	header('Location: .');
-	exit();
-}
-
-session_start();
-// If admin is editing a booking and wants to limit the users shown by searching
-if(isset($_SESSION['EditBookingChangeUser']) AND isset($_POST['action']) AND $_POST['action'] == "Search"){
-	
-	// Let's remember what was selected and searched for
-		// The user search string
-	$_SESSION['EditBookingUserSearch'] = $_POST['usersearchstring'];
-	
-		// The user selected, if the booking is for another user
-	if(isset($_POST['userID'])){
-		$_SESSION['EditBookingSelectedUserID'] = $_POST['userID'];
-	}
-	
-	$newValues = $_SESSION['EditBookingInfoArray'];
-	
-	/* b.`bookingID`									AS TheBookingID,
-								b.`companyID`									AS TheCompanyID,
-								m.`name` 										AS BookedRoomName, 
-								b.startDateTime 								AS StartTime, 
-								b.endDateTime 									AS EndTime, 
-								b.description 									AS BookingDescription,
-								b.displayName 									AS BookedBy,
-								(	
-									SELECT `name` 
-									FROM `company` 
-									WHERE `companyID` = TheCompanyID
-								)												AS BookedForCompany,
-								u.`userID`										AS TheUserID, 
-								u.`firstName`									AS UserFirstname,
-								u.`lastName`									AS UserLastname,
-								u.`email`										AS UserEmail */
-	
-	
-		// The meeting room selected
-	$_SESSION['EditBookingSelectedMeetingID'] = $_POST['meetingRoomID'];
-		// The company selected
-	$newValues['TheCompanyID'] = $_POST['companyID'];
-		// The display name
-	$newValues['BookedBy'] = $_POST['displayName'];
-		// The booking description
-	$newValues['BookingDescription'] = $_POST['description'];
-		// The start time
-	$newValues['StartTime'] = $_POST['startDateTime'];
-		// The end time
-	$newValues['EndTime'] = $_POST['endDateTime'];
-	
-	// TO-DO: Overwrite company name, user firstname/lastname/email etc...
-	
-	$_SESSION['EditBookingInfoArray'] = $newValues;
-	
-	// Forget the old search result for users if we had one saved
-	unset($_SESSION['EditBookingUsersArray']);
-	
-	// Get the new users
-	$_SESSION['refreshEditBookingChangeUser'] = TRUE;
-	header('Location: .');
-	exit();
 }
 
 

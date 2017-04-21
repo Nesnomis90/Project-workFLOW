@@ -14,7 +14,11 @@
 		<?php endif; ?>
 		<form action="" method="post">
 			<div>
-				<label for="meetingRoomID">Booked Meeting Room: </label>
+				<label for="originalMeetingRoomName">Booked Meeting Room: </label>
+				<b><?php htmlout($originalMeetingRoomName); ?></b>
+			</div>
+			<div>
+				<label for="meetingRoomID">Set New Meeting Room: </label>
 				<select name="meetingRoomID" id="meetingRoomID">
 					<?php foreach($meetingroom as $row): ?> 
 						<?php if($row['meetingRoomName']==$meetingroomname):?>
@@ -31,24 +35,36 @@
 				</select>				
 			</div>
 			<div>
-				<label for="startDateTime">Booked Start Time: </label>
+				<label for="originalStartDateTime">Booked Start Time: </label>
+				<b><?php htmlout($originalStartDateTime); ?></b>
+			</div>
+			<div>
+				<label for="startDateTime">Set New Start Time: </label>				
 				<input type="text" name="startDateTime" id="startDateTime" 
 				required placeholder="dd-mm-yyyy hh:mm:ss" 
 				oninvalid="this.setCustomValidity('Enter Your Starting Date And Time Here')"
 				oninput="setCustomValidity('')"
 				value="<?php htmlout($startDateTime); ?>">
 			</div>
+			<div>	
+				<label for="originalEndDateTime">Booked End Time: </label>
+				<b><?php htmlout($originalEndDateTime); ?></b>
+			</div>
 			<div>
-				<label for="endDateTime">Booked End Time: </label>
+				<label for="endDateTime">Set New End Time: </label>
 				<input type="text" name="endDateTime" id="endDateTime" 
 				required placeholder="dd-mm-yyyy hh:mm:ss" 
 				oninvalid="this.setCustomValidity('Enter Your Ending Date And Time Here')"
 				oninput="setCustomValidity('')"
 				value="<?php htmlout($endDateTime); ?>">
 			</div>
-			<div>
-				<?php if(isset($_SESSION['EditBookingChangeUser']) AND $_SESSION['EditBookingChangeUser']) :?>
-					<label for="SelectUser">Select A User: </label>
+			<?php if(isset($_SESSION['EditBookingChangeUser']) AND $_SESSION['EditBookingChangeUser']) :?>
+				<div>
+					<label for="originalSelectedUser">Booked For User: </label>
+					<b><?php htmlout($originalUserInformation); ?></b>
+				</div>
+				<div>
+					<label for="SelectedUser">Select A New User: </label>
 					<select name="userID" id="userID">
 						<?php foreach($users as $row): ?> 
 							<?php if($row['userID']==$SelectedUserID):?>
@@ -63,18 +79,20 @@
 							<?php endif;?>
 						<?php endforeach; ?>
 					</select>
+				</div>
 				<div>
 					<label for="usersearchstring">Search for User:</label>
 					<input type="text" name="usersearchstring" 
 					value=<?php htmlout($usersearchstring); ?>>
 					<input type="submit" name="action" value="Search">
 				</div>
-				<?php else : ?>	
+			<?php else : ?>
+				<div>
 					<label for="UserInformation">Booked For User: </label>
 					<b><?php htmlout($userInformation); ?> </b>
-					<input type="submit" name="action" value="Change User">								
-				<?php endif; ?>
-			</div>
+					<input type="submit" name="action" value="Change User">		
+				</div>			
+			<?php endif; ?>
 			<div>
 				<?php if($displayCompanySelect == TRUE) : ?>
 					<label for="companyID">Booked For Company: </label>
@@ -98,12 +116,20 @@
 				<?php endif; ?>
 			</div>
 			<div>
-				<label for="displayName">Display Name: </label>
+				<label for="originalDisplayName">Booked Display Name: </label>
+				<b><?php htmlout($originalDisplayName); ?></b>
+			</div>
+			<div>
+				<label for="displayName">Set New Display Name: </label>
 				<input type="text" name="displayName" id="displayName" 
 				value="<?php htmlout($displayName); ?>">
 			</div>
 			<div>
-				<label for="description">Booking Description: </label>
+				<label for="originalBookingDescription">Booked Description: </label>
+				<b><?php htmlout($originalBookingDescription); ?></b>
+			</div>
+			<div>
+				<label for="description">Set New Booking Description: </label>
 				<input type="text" name="description" id="description" 
 				value="<?php htmlout($description); ?>">
 			</div>
