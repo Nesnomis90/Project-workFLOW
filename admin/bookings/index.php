@@ -403,7 +403,6 @@ if (isset($_POST['action']) AND $_POST['action'] == "Add booking")
 		exit();
 	}		
 	
-	
 	// Load booking history list webpage with new booking
 	header('Location: .');
 	exit();
@@ -699,15 +698,18 @@ if(isset($_POST['action']) AND $_POST['action'] == "Edit Booking")
 	// Check if any values actually changed. If not, we don't need to bother the database
 	$numberOfChanges = 0;
 	$checkIfTimeslotIsAvailable = FALSE;
+	$newMeetingRoom = FALSE;
+	$newStartTime = FALSE;
+	$newEndTime = FALSE;
 	$originalValue = $_SESSION['EditBookingOriginalInfoArray'];
 	
 	if($_POST['startDateTime'] != $originalValue['StartTime']){
 		$numberOfChanges++;
-		$checkIfTimeslotIsAvailable = TRUE;
+		$newStartTime = TRUE;
 	}
 	if($_POST['endDateTime'] != $originalValue['EndTime']){
 		$numberOfChanges++;
-		$checkIfTimeslotIsAvailable = TRUE;
+		$newEndTime = TRUE;
 	}	
 	if($_POST['companyID'] != $originalValue['TheCompanyID']){
 		$numberOfChanges++;
@@ -720,7 +722,7 @@ if(isset($_POST['action']) AND $_POST['action'] == "Edit Booking")
 	}	
 	if($_POST['meetingRoomID'] != $originalValue['TheMeetingRoomID']){
 		$numberOfChanges++;
-		$checkIfTimeslotIsAvailable = TRUE;
+		$newMeetingRoom = TRUE;
 	}
 	if(isset($_POST['userID']) AND $_POST['userID'] != $originalValue['TheUserID']){
 		$numberOfChanges++;
@@ -733,10 +735,68 @@ if(isset($_POST['action']) AND $_POST['action'] == "Edit Booking")
 		exit();	
 	}
 	
-	// Check if the timeslot is taken for the selected meeting room	
+	// Check if we need to check the timeslot or if we can just update the booking
+		// If we changed the meeting room
+	if($newMeetingRoom){
+		$checkIfTimeslotIsAvailable = TRUE;
+	}
+		// If we set the start time earlier than before or
+		// If we set the start time later than the previous end time
+	if( ($newStartTime AND $_POST['startDateTime'] < $originalValue['StartTime']) OR 
+		($newStartTime AND $_POST['startDateTime'] >= $originalValue['EndTime'])){
+		$checkIfTimeslotIsAvailable = TRUE;
+	}
+		// If we set the end time later than before or
+		// If we set the end time earlier than the previous start time
+	if( ($newEndTime AND $_POST['endDateTime'] > $originalValue['EndTime']) OR 
+		($newEndTime AND $_POST['endDateTime'] =< $originalValue['StartTime'])){
+		$checkIfTimeslotIsAvailable = TRUE;
+	}
+	
+	// Check if the timeslot is taken for the selected meeting room
+	// TO-DO: UNTESTED
 	if($checkIfTimeslotIsAvailable){
-		//	TO-DO: Only needed if the time span changes or expands, not if it shrinks
-		// 	Unless the meeting room has been changed.
+		try
+		{
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+			$pdo = connect_to_db();
+			$sql =	" 	SELECT 	COUNT(*)
+						FROM 	`booking`
+						WHERE 	`meetingRoomID` = :MeetingRoomID
+						AND		`startDateTime` = :StartTime
+						AND 	`endDateTime` = :EndTime
+						LIMIT 	1";
+			$s = $pdo->prepare($sql);
+			
+			$startTime = correctDatetimeFormat($_POST['startDateTime']);
+			$endTime = correctDatetimeFormat($_POST['endDateTime']);
+			
+			$s->bindValue(':MeetingRoomID', $_POST['meetingRoomID']);
+			$s->bindValue(':StartTime', $startTime);
+			$s->bindValue(':EndTime', $endTime);			
+			$pdo = null;
+		}
+		catch(PDOException $e)
+		{
+			$error = 'Error checking if booking time is available: ' . $e->getMessage();
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+			$pdo = null;
+			exit();
+		}
+
+		// Check if we got any hits, if so the timeslot is already taken
+		$row = $s->fetch();
+		if ($row[0] > 0){
+			// Timeslot was taken
+			$_SESSION['EditBookingError'] = "The booking couldn't be made. The timeslot is already taken for this meeting room.";
+			if(isset($_SESSION['EditBookingChangeUser']) AND $_SESSION['EditBookingChangeUser']){
+				$_SESSION['refreshEditBookingChangeUser'] = TRUE;				
+			} else {
+				$_SESSION['refreshEditBooking'] = TRUE;	
+			}
+			header('Location: .');
+			exit();				
+		}
 	}
 	
 	// Check if the booking is for the user doing the edit or for another user.
@@ -864,32 +924,33 @@ foreach ($result as $row)
 	// If meeting time has passed and finished time has NOT updated (and not been cancelled) = Ended without updating
 	// If none of the above = Unknown
 	// TO-DO: CHECK IF THIS MAKES SENSE!
-	if(	$row['BookingWasCompletedOn'] == null AND $row['BookingWasCancelledOn'] == null AND 
-		$datetimeNow < $datetimeEnd ) {
+	if(			$row['BookingWasCompletedOn'] == null AND $row['BookingWasCancelledOn'] == null AND 
+				$datetimeNow < $datetimeEnd ) {
 		$status = 'Active';
-	} elseif($row['BookingWasCompletedOn'] != null AND $row['BookingWasCancelledOn'] == null){
+	} elseif(	$row['BookingWasCompletedOn'] != null AND $row['BookingWasCancelledOn'] == null){
 		$status = 'Completed';
-	} elseif($row['BookingWasCompletedOn'] == null AND $row['BookingWasCancelledOn'] != null AND
-	$row['StartTime'] > $row['BookingWasCancelledOn']){
+	} elseif(	$row['BookingWasCompletedOn'] == null AND $row['BookingWasCancelledOn'] != null AND
+				$row['StartTime'] > $row['BookingWasCancelledOn']){
 		$status = 'Cancelled';
-	} elseif($row['BookingWasCompletedOn'] != null AND $row['BookingWasCancelledOn'] != null AND
-			$row['BookingWasCompletedOn'] > $row['BookingWasCancelledOn'] ){
+	} elseif(	$row['BookingWasCompletedOn'] != null AND $row['BookingWasCancelledOn'] != null AND
+				$row['BookingWasCompletedOn'] > $row['BookingWasCancelledOn'] ){
 		$status = 'Ended Early';
-	} elseif($row['BookingWasCompletedOn'] != null AND $row['BookingWasCancelledOn'] != null AND
-			$row['BookingWasCompletedOn'] < $row['BookingWasCancelledOn'] ){
+	} elseif(	$row['BookingWasCompletedOn'] != null AND $row['BookingWasCancelledOn'] != null AND
+				$row['BookingWasCompletedOn'] < $row['BookingWasCancelledOn'] ){
 		$status = 'Cancelled after Completion';
-	} elseif($row['BookingWasCompletedOn'] == null AND $row['BookingWasCancelledOn'] == null AND 
-		$datetimeNow > $datetimeEnd){
+	} elseif(	$row['BookingWasCompletedOn'] == null AND $row['BookingWasCancelledOn'] == null AND 
+				$datetimeNow > $datetimeEnd){
 		$status = 'Ended without updating database';
-	} elseif($row['BookingWasCompletedOn'] == null AND $row['BookingWasCancelledOn'] != null AND 
-		$row['EndTime'] < $row['BookingWasCancelledOn']){
+	} elseif(	$row['BookingWasCompletedOn'] == null AND $row['BookingWasCancelledOn'] != null AND 
+				$row['EndTime'] < $row['BookingWasCancelledOn']){
 		$status = 'Cancelled after meeting should have been Completed';
 	} else {
 		$status = 'Unknown';
 	}
 	
 	$userinfo = $row['lastName'] . ', ' . $row['firstName'] . ' - ' . $row['email'];
-	$meetinginfo = $row['BookedRoomName'] . ' for the timeslot: ' . $row['StartTime'] . ' to ' . $row['EndTime'];
+	$meetinginfo = 	$row['BookedRoomName'] . ' for the timeslot: ' . $row['StartTime'] . 
+					' to ' . $row['EndTime'];
 	
 	
 	$bookings[] = array('id' => $row['bookingID'],
