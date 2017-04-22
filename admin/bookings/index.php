@@ -289,8 +289,8 @@ if (isset($_POST['action']) AND $_POST['action'] == "Add booking")
 	{	
 		session_start();
 	
-		if(isset($_POST['companyID']) AND $_POST['companyID'] != NULL AND 
-		$_POST['companyID'] != ''){
+		if(	isset($_POST['companyID']) AND $_POST['companyID'] != NULL AND 
+			$_POST['companyID'] != ''){
 			$companyID = $_POST['companyID'];
 		} else {
 			$companyID = NULL;
