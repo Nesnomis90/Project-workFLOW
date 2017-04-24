@@ -261,7 +261,7 @@ if (isset($_POST['action']) AND $_POST['action'] == "Create Booking")
 				// User is in ONE company
 				
 				$displayCompanySelect = FALSE;
-				$companyID = $company['companyID'];
+				$companyID = $company[0]['companyID'];
 			}
 		} else{
 			// User is NOT in a company
@@ -606,21 +606,24 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR
 		if(isset($company)){
 			if (sizeOf($company)>1){
 				// User is in multiple companies
+				
 				$_SESSION['EditBookingDisplayCompanySelect'] = TRUE;
 			} elseif(sizeOf($company) == 1) {
 				// User is in ONE company
 				
+				$_SESSION['EditBookingSelectedACompany'] = TRUE;
 				unset($_SESSION['EditBookingDisplayCompanySelect']);
 				$_SESSION['EditBookingInfoArray']['TheCompanyID'] = $company[0]['companyID'];
 				$_SESSION['EditBookingInfoArray']['BookedForCompany'] = $company[0]['companyName'];
 			}
 		} else{
 			// User is NOT in a company
+			
+			$_SESSION['EditBookingSelectedACompany'] = TRUE;
 			unset($_SESSION['EditBookingDisplayCompanySelect']);
 			$_SESSION['EditBookingInfoArray']['TheCompanyID'] = "";
 			$_SESSION['EditBookingInfoArray']['BookedForCompany'] = "";
 		}		
-		
 	}
 	catch(PDOException $e)
 	{
@@ -647,7 +650,6 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR
 				break;
 			}
 		}
-		unset($_SESSION['EditBookingSelectedNewUser']);
 	}
 		// Changed company
 	foreach($company AS $cmp){
@@ -781,6 +783,9 @@ if((isset($_POST['action']) AND $_POST['action'] == "Change User") OR
 
 // Admin confirms what user he wants the booking to be for.
 if(isset($_POST['action']) AND $_POST['action'] == "Select This User"){
+	
+	// We haven't set the company if we are changing the user.
+	unset($_SESSION['EditBookingSelectedACompany']);
 
 	// We no longer need to be able to change the user
 	unset($_SESSION['EditBookingChangeUser']);
@@ -832,7 +837,7 @@ if(isset($_SESSION['EditBookingChangeUser']) AND isset($_POST['action']) AND $_P
 	// Let's remember what was selected and searched for
 		// The user search string
 	$_SESSION['EditBookingUserSearch'] = $_POST['usersearchstring'];
-	
+
 	rememberEditBookingInputs();
 	
 	// Get the new users

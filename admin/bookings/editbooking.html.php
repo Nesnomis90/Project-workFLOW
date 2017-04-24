@@ -103,35 +103,38 @@
 				<?php if(isset($originalCompanyName)) :?>
 					<b><?php htmlout($originalCompanyName); ?></b>
 				<?php else : ?>
-					<b>This user does not work for a company</b>
+					<b>This booking had no company assigned.</b>
 				<?php endif; ?>
 			</div>
 			<div>
 				<label for="companyID">Set New Company: </label>
 				<?php if(	isset($_SESSION['EditBookingDisplayCompanySelect']) AND 
-							$_SESSION['EditBookingDisplayCompanySelect'] AND
-							!isset($_SESSION['EditBookingSelectedACompany'])) : ?>
-					<select name="companyID" id="companyID">
-						<?php foreach($company as $row): ?> 
-							<?php if($row['companyID']==$selectedCompanyID):?>
-								<option selected="selected" 
-										value=<?php htmlout($row['companyID']); ?>>
-										<?php htmlout($row['companyName']);?>
-								</option>
-							<?php else : ?>
-								<option value=<?php htmlout($row['companyID']); ?>>
-										<?php htmlout($row['companyName']);?>
-								</option>
-							<?php endif;?>
-						<?php endforeach; ?>
-					</select>
-					<input type="submit" name="action" value="Select This Company">
-				<?php else : ?>
-					<?php if(isset($_SESSION['EditBookingSelectedACompany'])) : ?>
-						<b>You have selected: <?php htmlout($companyName); ?></b>
+							$_SESSION['EditBookingDisplayCompanySelect']) : ?>
+					<?php if(!isset($_SESSION['EditBookingSelectedACompany'])) : ?>
+						<select name="companyID" id="companyID">
+							<?php foreach($company as $row): ?> 
+								<?php if($row['companyID']==$selectedCompanyID):?>
+									<option selected="selected" 
+											value=<?php htmlout($row['companyID']); ?>>
+											<?php htmlout($row['companyName']);?>
+									</option>
+								<?php else : ?>
+									<option value=<?php htmlout($row['companyID']); ?>>
+											<?php htmlout($row['companyName']);?>
+									</option>
+								<?php endif;?>
+							<?php endforeach; ?>
+						</select>
+						<input type="submit" name="action" value="Select This Company">
+					<?php else : ?>
+						<b><?php htmlout($companyName); ?></b>
+						<input type="hidden" name="companyID" id="companyID" 
+						value="<?php htmlout($companyID); ?>">
 						<input type="submit" name="action" value="Change Company">
-					<?php elseif($companyID != "") : ?>
-						<b>This user is only connected to one company.</b>
+					<?php endif; ?>
+				<?php else : ?>
+					<?php if(isset($company)) : ?>
+						<b>This user is only connected to one company: <?php htmlout($companyName); ?></b>
 					<?php else : ?>
 						<b>This user is not connected to a company.</b>
 					<?php endif; ?>
