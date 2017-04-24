@@ -58,32 +58,32 @@
 				oninput="setCustomValidity('')"
 				value="<?php htmlout($endDateTime); ?>">
 			</div>
+			<div>
+				<label for="originalSelectedUser">Booked For User: </label>
+				<b><?php htmlout($originalUserInformation); ?></b>
+			</div>
+			<div>
+				<label for="SelectedUser">Set New User: </label>
 			<?php if(isset($_SESSION['EditBookingChangeUser']) AND $_SESSION['EditBookingChangeUser']) :?>
-				<div>
-					<label for="originalSelectedUser">Booked For User: </label>
-					<b><?php htmlout($originalUserInformation); ?></b>
-				</div>
-				<div>
-					<label for="SelectedUser">Select A New User: </label>
-					<?php if(isset($users)) : ?>
-						<select name="userID" id="userID">
-							<?php foreach($users as $row): ?> 
-								<?php if($row['userID']==$SelectedUserID):?>
-									<option selected="selected" 
-											value=<?php htmlout($row['userID']); ?>>
-											<?php htmlout($row['userInformation']);?>
-									</option>
-								<?php else : ?>
-									<option value=<?php htmlout($row['userID']); ?>>
-											<?php htmlout($row['userInformation']);?>
-									</option>
-								<?php endif;?>
-							<?php endforeach; ?>
-						</select>
-						<input type="submit" name="action" value="Select This User">
-					<?php else : ?>
-						<b>The search found 0 users.</b>
-					<?php endif; ?>
+				<?php if(isset($users)) : ?>
+					<select name="userID" id="userID">
+						<?php foreach($users as $row): ?> 
+							<?php if($row['userID']==$SelectedUserID):?>
+								<option selected="selected" 
+										value=<?php htmlout($row['userID']); ?>>
+										<?php htmlout($row['userInformation']);?>
+								</option>
+							<?php else : ?>
+								<option value=<?php htmlout($row['userID']); ?>>
+										<?php htmlout($row['userInformation']);?>
+								</option>
+							<?php endif;?>
+						<?php endforeach; ?>
+					</select>
+					<input type="submit" name="action" value="Select This User">
+				<?php else : ?>
+					<b>The search found 0 users.</b>
+				<?php endif; ?>
 				</div>
 				<div>
 					<label for="usersearchstring">Search for User:</label>
@@ -92,8 +92,6 @@
 					<input type="submit" name="action" value="Search">
 				</div>
 			<?php else : ?>
-				<div>
-					<label for="UserInformation">Booked For User: </label>
 					<b><?php htmlout($userInformation); ?> </b>
 					<input type="submit" name="action" value="Change User">
 					<input type="hidden" name="userID" id="userID"
@@ -109,8 +107,10 @@
 				<?php endif; ?>
 			</div>
 			<div>
-				<?php if($displayCompanySelect == TRUE) : ?>
-					<label for="companyID">Set New Company: </label>
+				<label for="companyID">Set New Company: </label>
+				<?php if(	isset($_SESSION['EditBookingDisplayCompanySelect']) AND 
+							$_SESSION['EditBookingDisplayCompanySelect'] AND
+							!isset($_SESSION['EditBookingSelectedACompany'])) : ?>
 					<select name="companyID" id="companyID">
 						<?php foreach($company as $row): ?> 
 							<?php if($row['companyID']==$selectedCompanyID):?>
@@ -125,7 +125,16 @@
 							<?php endif;?>
 						<?php endforeach; ?>
 					</select>
+					<input type="submit" name="action" value="Select This Company">
 				<?php else : ?>
+					<?php if(isset($_SESSION['EditBookingSelectedACompany'])) : ?>
+						<b>You have selected: <?php htmlout($companyName); ?></b>
+						<input type="submit" name="action" value="Change Company">
+					<?php elseif($companyID != "") : ?>
+						<b>This user is only connected to one company.</b>
+					<?php else : ?>
+						<b>This user is not connected to a company.</b>
+					<?php endif; ?>
 					<input type="hidden" name="companyID" id="companyID" 
 					value="<?php htmlout($companyID); ?>">
 				<?php endif; ?>
@@ -165,6 +174,8 @@
 				value="<?php htmlout($bookingID); ?>">
 				<?php if(isset($_SESSION['EditBookingChangeUser']) AND $_SESSION['EditBookingChangeUser']) : ?>
 					<b>You need to select the user you want before you can finish editing.</b>
+				<?php elseif(!isset($_SESSION['EditBookingSelectedACompany'])) : ?>
+					<b>You need to select the company you want before you can finish editing.</b>
 				<?php else : ?>
 					<input type="submit" name="action" value="Edit Booking">
 				<?php endif; ?>

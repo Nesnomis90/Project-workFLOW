@@ -20,6 +20,7 @@ function clearBookingSessions(){
 	unset($_SESSION['EditBookingMeetingRoomsArray']);	
 	unset($_SESSION['EditBookingUserSearch']);
 	unset($_SESSION['EditBookingSelectedNewUser']);
+	unset($_SESSION['EditBookingSelectedACompany']);
 }
 
 // Function to remember the user inputs in Edit Booking
@@ -37,8 +38,6 @@ function rememberEditBookingInputs(){
 			// The company selected
 		$newValues['TheCompanyID'] = $_POST['companyID'];
 			// The user selected
-		//$newValues['TheUserID'] = $_POST['userID'];
-			// The display name
 		$newValues['BookedBy'] = $_POST['displayName'];
 			// The booking description
 		$newValues['BookingDescription'] = $_POST['description'];
@@ -607,18 +606,19 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR
 		if(isset($company)){
 			if (sizeOf($company)>1){
 				// User is in multiple companies
-				
-				$displayCompanySelect = TRUE;
+				$_SESSION['EditBookingDisplayCompanySelect'] = TRUE;
 			} elseif(sizeOf($company) == 1) {
 				// User is in ONE company
 				
-				$displayCompanySelect = FALSE;
-				$_SESSION['EditBookingInfoArray']['TheCompanyID'] = $company['companyID'];
+				unset($_SESSION['EditBookingDisplayCompanySelect']);
+				$_SESSION['EditBookingInfoArray']['TheCompanyID'] = $company[0]['companyID'];
+				$_SESSION['EditBookingInfoArray']['BookedForCompany'] = $company[0]['companyName'];
 			}
 		} else{
 			// User is NOT in a company
-			$displayCompanySelect = FALSE;
+			unset($_SESSION['EditBookingDisplayCompanySelect']);
 			$_SESSION['EditBookingInfoArray']['TheCompanyID'] = "";
+			$_SESSION['EditBookingInfoArray']['BookedForCompany'] = "";
 		}		
 		
 	}
@@ -648,6 +648,13 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR
 			}
 		}
 		unset($_SESSION['EditBookingSelectedNewUser']);
+	}
+		// Changed company
+	foreach($company AS $cmp){
+		if($cmp['companyID'] == $row['TheCompanyID']){
+			$row['BookedForCompany'] = $cmp['companyName'];
+			break;
+		}
 	}
 		// Edited inputs
 	$bookingID = $row['TheBookingID'];
@@ -789,6 +796,35 @@ if(isset($_POST['action']) AND $_POST['action'] == "Select This User"){
 	exit();	
 }
 
+//Admin wants to change the company the booking is for (after having already selected it)
+if(isset($_POST['action']) AND $_POST['action'] == "Change Company"){
+	
+	// We want to select a company again
+	unset($_SESSION['EditBookingSelectedACompany']);
+	
+	// Let's remember what was selected if we do any changes before clicking "Change Company"
+	rememberEditBookingInputs();
+	
+	$_SESSION['refreshEditBooking'] = TRUE;
+	header('Location: .');
+	exit();		
+}
+
+// Admin confirms what company he wants the booking to be for.
+if(isset($_POST['action']) AND $_POST['action'] == "Select This Company"){
+
+	// Remember that we've selected a new company
+	$_SESSION['EditBookingSelectedACompany'] = TRUE;
+	
+	// Let's remember what was selected if we do any changes before clicking "Select This Company"
+	rememberEditBookingInputs();
+	
+	$_SESSION['refreshEditBooking'] = TRUE;
+	header('Location: .');
+	exit();	
+}
+//TO-DO: Add a "Select This Company" aswell!
+
 session_start();
 // If admin is editing a booking and wants to limit the users shown by searching
 if(isset($_SESSION['EditBookingChangeUser']) AND isset($_POST['action']) AND $_POST['action'] == "Search"){
@@ -919,7 +955,6 @@ if(isset($_POST['action']) AND $_POST['action'] == "Edit Booking")
 			exit();				
 		}
 	}
-	
 	
 	if($_POST['companyID'] == ""){
 		$TheCompanyID = NULL;
