@@ -59,7 +59,7 @@ function correctDateFormat($wrongDateString){
 function correctDatetimeFormat($wrongDatetimeString){
 	// Correct datetime format is
 	// yyyy-mm-dd hh:mm:ss	
-	echo 'old Datetime: ' . $wrongDatetimeString . '<br />';
+	//echo 'old Datetime: ' . $wrongDatetimeString . '<br />';
 	
 	if(validateDatetime($wrongDatetimeString)){
 		$wrongDatetime = date_create_from_format('Y-m-d H:i:s', $wrongDatetimeString);
@@ -69,7 +69,7 @@ function correctDatetimeFormat($wrongDatetimeString){
 		$correctDatetime = DATE_FORMAT($wrongDatetime,'Y-m-d H:i:s');
 	}
 	
-	echo 'new Datetime: ' . $correctDatetime . '<br />';
+	//echo 'new Datetime: ' . $correctDatetime . '<br />';
 	return $correctDatetime;
 }
 

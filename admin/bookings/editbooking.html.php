@@ -80,6 +80,7 @@
 								<?php endif;?>
 							<?php endforeach; ?>
 						</select>
+						<input type="submit" name="action" value="Select This User">
 					<?php else : ?>
 						<b>The search found 0 users.</b>
 					<?php endif; ?>
@@ -94,7 +95,9 @@
 				<div>
 					<label for="UserInformation">Booked For User: </label>
 					<b><?php htmlout($userInformation); ?> </b>
-					<input type="submit" name="action" value="Change User">		
+					<input type="submit" name="action" value="Change User">
+					<input type="hidden" name="userID" id="userID"
+					value="<?php htmlout($SelectedUserID);?>">
 				</div>			
 			<?php endif; ?>
 			<div>
@@ -160,7 +163,11 @@
 			<div>
 				<input type="hidden" name="bookingID" id="bookingID" 
 				value="<?php htmlout($bookingID); ?>">
-				<input type="submit" name="action" value="Edit Booking">
+				<?php if(isset($_SESSION['EditBookingChangeUser']) AND $_SESSION['EditBookingChangeUser']) : ?>
+					<b>You need to select the user you want before you can finish editing.</b>
+				<?php else : ?>
+					<input type="submit" name="action" value="Edit Booking">
+				<?php endif; ?>
 			</div>
 		</form>
 	<p><a href="..">Return to CMS home</a></p>
