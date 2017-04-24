@@ -218,26 +218,7 @@ if (isset($_POST['action']) AND $_POST['action'] == "Create Booking")
 			}
 
 		}		
-		// Get name and IDs for meeting rooms
-		$sql = 'SELECT 	`meetingRoomID`,
-						`name` 
-				FROM 	`meetingroom`';
-		$result = $pdo->query($sql);
-		
-		// Get the rows of information from the query
-		// This will be used to create a dropdown list in HTML
-		foreach($result as $row){
-			$meetingroom[] = array(
-								'meetingRoomID' => $row['meetingRoomID'],
-								'meetingRoomName' => $row['name']
-								);
-		}
-		
-		// Remember the meeting room info for creating a log event later
-		session_start();
-		unset($_SESSION['AddBookingMeetingRooms']);
-		$_SESSION['AddBookingMeetingRooms'] = $meetingroom;
-			
+	
 		// We only need to allow the user a company dropdown selector if they
 		// are connected to more than 1 company.
 		// If not we just store the companyID in a hidden form field
@@ -257,6 +238,26 @@ if (isset($_POST['action']) AND $_POST['action'] == "Create Booking")
 			$displayCompanySelect = FALSE;
 			$companyID = NULL;
 		}
+		
+		// Get name and IDs for meeting rooms
+		$sql = 'SELECT 	`meetingRoomID`,
+						`name` 
+				FROM 	`meetingroom`';
+		$result = $pdo->query($sql);
+		
+		// Get the rows of information from the query
+		// This will be used to create a dropdown list in HTML
+		foreach($result as $row){
+			$meetingroom[] = array(
+								'meetingRoomID' => $row['meetingRoomID'],
+								'meetingRoomName' => $row['name']
+								);
+		}
+		
+		// Remember the meeting room info for creating a log event later
+		session_start();
+		unset($_SESSION['AddBookingMeetingRooms']);
+		$_SESSION['AddBookingMeetingRooms'] = $meetingroom;		
 		
 		//Close the connection
 		$pdo = null;
@@ -426,6 +427,8 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR
 		if(isset($_SESSION['EditBookingUserSearch'])){
 			$usersearchstring = $_SESSION['EditBookingUserSearch'];
 			unset($_SESSION['EditBookingUserSearch']);
+		} else {
+			$usersearchstring = "";
 		}
 				// The user dropdown select options
 		if(isset($_SESSION['EditBookingUsersArray'])){
@@ -436,8 +439,7 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR
 			} else {
 				$SelectedUserID = $_SESSION['EditBookingOriginalInfoArray']['TheUserID'];
 			}			
-		}
-			
+		}	
 	} else {
 		// Get information from database again on the selected booking
 		if(!isset($_SESSION['EditBookingMeetingRoomsArray'])){
@@ -530,10 +532,80 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR
 			$_SESSION['EditBookingInfoArray'] = $s->fetch();
 			$_SESSION['EditBookingOriginalInfoArray'] = $_SESSION['EditBookingInfoArray'];
 		}	
-
+		
 		// Set the correct information on form call
 		$usersearchstring = '';
 		$users = Null;
+		$SelectedUserID = $_SESSION['EditBookingInfoArray']['TheUserID'];
+	}
+
+		// Get the userID we want to work with.
+	// Just $SelectedUserID ?
+	
+		// Check if we need a company select for the booking
+	try
+	{		
+		session_start();
+		// We want the companies the user works for to decide if we need to
+		// have a dropdown select or just a fixed value (with 0 or 1 company)
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+		$pdo = connect_to_db();
+		$sql = 'SELECT	c.`companyID`,
+						c.`name` 					AS companyName
+				FROM 	`user` u
+				JOIN 	`employee` e
+				ON 		e.userID = u.userID
+				JOIN	`company` c
+				ON 		c.companyID = e.companyID
+				WHERE 	u.`userID` = :userID';
+			
+		$s = $pdo->prepare($sql);
+		$s->bindValue(':userID', $SelectedUserID);
+		$s->execute();
+		
+		
+		// Create an array with the row information we retrieved
+		$result = $s->fetchAll();
+			
+		foreach($result as $row){		
+			// Get the companies the user works for
+			// This will be used to create a dropdown list in HTML
+			$company[] = array(
+								'companyID' => $row['companyID'],
+								'companyName' => $row['companyName']
+								);
+
+		}
+			
+		$pdo = null;
+		
+		// We only need to allow the user a company dropdown selector if they
+		// are connected to more than 1 company.
+		// If not we just store the companyID in a hidden form field
+		if(isset($company)){
+			if (sizeOf($company)>1){
+				// User is in multiple companies
+				
+				$displayCompanySelect = TRUE;
+			} elseif(sizeOf($company) == 1) {
+				// User is in ONE company
+				
+				$displayCompanySelect = FALSE;
+				$companyID = $company['companyID'];
+			}
+		} else{
+			// User is NOT in a company
+			$displayCompanySelect = FALSE;
+			$companyID = NULL;
+		}		
+		
+	}
+	catch(PDOException $e)
+	{
+		$error = 'Error fetching user details: ' . $e->getMessage();
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+		$pdo = null;
+		exit();					
 	}
 	
 	// Set the correct information
@@ -543,6 +615,7 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR
 	$bookingID = $row['TheBookingID'];
 	$companyName = $row['BookedForCompany'];
 	$companyID = $row['TheCompanyID'];
+	//userID has been set earlier
 	$meetingroomID = $row['TheMeetingRoomID']; //TO-DO: fix/change when doing the proper dropdown select etc?
 	$startDateTime = $row['StartTime'];
 	$endDateTime = $row['EndTime'];
@@ -554,12 +627,14 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR
 		
 	$originalStartDateTime = $original['StartTime'];
 	$originalEndDateTime = $original['EndTime'];
+	if($original['BookedForCompany']!=NULL){
+		$originalCompanyName = $original['BookedForCompany'];
+	}
 	$originalMeetingRoomName = $original['BookedRoomName'];
 	$originalDisplayName = $original['BookedBy'];
 	$originalBookingDescription = $original['BookingDescription'];
 	$originalUserInformation = 	$original['UserLastname'] . ', ' . $original['UserFirstname'] . 
 								' - ' . $original['UserEmail'];
-
 	
 	// Change to the actual form we want to use
 	include 'editbooking.html.php';
@@ -579,7 +654,8 @@ if((isset($_POST['action']) AND $_POST['action'] == "Change User") OR
 	
 	if(isset($_SESSION['EditBookingUserSearch'])){
 		$usersearchstring = $_SESSION['EditBookingUserSearch'];
-		unset($_SESSION['EditBookingUserSearch']);
+		//unset($_SESSION['EditBookingUserSearch']);
+		// TO-DO:
 	}
 	
 	if(!isset($_SESSION['EditBookingUsersArray'])){
@@ -749,7 +825,7 @@ if(isset($_POST['action']) AND $_POST['action'] == "Edit Booking")
 		// If we set the end time later than before or
 		// If we set the end time earlier than the previous start time
 	if( ($newEndTime AND $_POST['endDateTime'] > $originalValue['EndTime']) OR 
-		($newEndTime AND $_POST['endDateTime'] =< $originalValue['StartTime'])){
+		($newEndTime AND $_POST['endDateTime'] <= $originalValue['StartTime'])){
 		$checkIfTimeslotIsAvailable = TRUE;
 	}
 	

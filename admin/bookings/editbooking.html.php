@@ -94,8 +94,16 @@
 				</div>			
 			<?php endif; ?>
 			<div>
+				<label for="originalCompanyInBooking">Booked for Company: </label>
+				<?php if(isset($originalCompanyName)) :?>
+					<b><?php htmlout($originalCompanyName); ?></b>
+				<?php else : ?>
+					<b>This user does not work for a company/Booking had no company set</b>
+				<?php endif; ?>
+			</div>
+			<div>
 				<?php if($displayCompanySelect == TRUE) : ?>
-					<label for="companyID">Booked For Company: </label>
+					<label for="companyID">Set New Company: </label>
 					<select name="companyID" id="companyID">
 						<?php foreach($company as $row): ?> 
 							<?php if($row['companyName']==$companyname):?>
@@ -117,7 +125,13 @@
 			</div>
 			<div>
 				<label for="originalDisplayName">Booked Display Name: </label>
-				<b><?php htmlout($originalDisplayName); ?></b>
+				<b>
+					<?php if($originalDisplayName == "") : ?>
+						This booking has no Display Name set.
+					<?php else : ?>
+						<?php htmlout($originalDisplayName); ?>
+					<?php endif; ?>
+				</b>
 			</div>
 			<div>
 				<label for="displayName">Set New Display Name: </label>
@@ -126,7 +140,13 @@
 			</div>
 			<div>
 				<label for="originalBookingDescription">Booked Description: </label>
-				<b><?php htmlout($originalBookingDescription); ?></b>
+				<b>
+					<?php if($originalBookingDescription == "") : ?>
+						This booking has no Booking Description set.
+					<?php else : ?>
+						<?php htmlout($originalBookingDescription); ?>
+					<?php endif; ?>
+				</b>
 			</div>
 			<div>
 				<label for="description">Set New Booking Description: </label>
