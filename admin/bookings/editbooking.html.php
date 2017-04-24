@@ -21,7 +21,7 @@
 				<label for="meetingRoomID">Set New Meeting Room: </label>
 				<select name="meetingRoomID" id="meetingRoomID">
 					<?php foreach($meetingroom as $row): ?> 
-						<?php if($row['meetingRoomName']==$meetingroomname):?>
+						<?php if($row['meetingRoomID']==$selectedMeetingRoomID):?>
 							<option selected="selected" 
 									value=<?php htmlout($row['meetingRoomID']); ?>>
 									<?php htmlout($row['meetingRoomName']);?>
@@ -65,20 +65,24 @@
 				</div>
 				<div>
 					<label for="SelectedUser">Select A New User: </label>
-					<select name="userID" id="userID">
-						<?php foreach($users as $row): ?> 
-							<?php if($row['userID']==$SelectedUserID):?>
-								<option selected="selected" 
-										value=<?php htmlout($row['userID']); ?>>
-										<?php htmlout($row['userInformation']);?>
-								</option>
-							<?php else : ?>
-								<option value=<?php htmlout($row['userID']); ?>>
-										<?php htmlout($row['userInformation']);?>
-								</option>
-							<?php endif;?>
-						<?php endforeach; ?>
-					</select>
+					<?php if(isset($users)) : ?>
+						<select name="userID" id="userID">
+							<?php foreach($users as $row): ?> 
+								<?php if($row['userID']==$SelectedUserID):?>
+									<option selected="selected" 
+											value=<?php htmlout($row['userID']); ?>>
+											<?php htmlout($row['userInformation']);?>
+									</option>
+								<?php else : ?>
+									<option value=<?php htmlout($row['userID']); ?>>
+											<?php htmlout($row['userInformation']);?>
+									</option>
+								<?php endif;?>
+							<?php endforeach; ?>
+						</select>
+					<?php else : ?>
+						<b>The search found 0 users.</b>
+					<?php endif; ?>
 				</div>
 				<div>
 					<label for="usersearchstring">Search for User:</label>
@@ -98,7 +102,7 @@
 				<?php if(isset($originalCompanyName)) :?>
 					<b><?php htmlout($originalCompanyName); ?></b>
 				<?php else : ?>
-					<b>This user does not work for a company/Booking had no company set</b>
+					<b>This user does not work for a company</b>
 				<?php endif; ?>
 			</div>
 			<div>
@@ -106,7 +110,7 @@
 					<label for="companyID">Set New Company: </label>
 					<select name="companyID" id="companyID">
 						<?php foreach($company as $row): ?> 
-							<?php if($row['companyName']==$companyname):?>
+							<?php if($row['companyID']==$selectedCompanyID):?>
 								<option selected="selected" 
 										value=<?php htmlout($row['companyID']); ?>>
 										<?php htmlout($row['companyName']);?>

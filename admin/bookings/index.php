@@ -18,6 +18,7 @@ function clearBookingSessions(){
 	unset($_SESSION['EditBookingUsersArray']);
 	unset($_SESSION['EditBookingOriginalInfoArray']);
 	unset($_SESSION['EditBookingMeetingRoomsArray']);	
+	unset($_SESSION['EditBookingUserSearch']);
 }
 
 // If admin wants to remove a booked meeting from the database
@@ -413,8 +414,6 @@ if (isset($_POST['action']) AND $_POST['action'] == "Add booking")
 if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR
 	(isset($_SESSION['refreshEditBooking']) AND $_SESSION['refreshEditBooking']))
 {
-	// TO-DO: Get info if the new selected user works in a company and make a dropdown selected
-	// TO-DO: Fix displayCompanySelect etc ^
 	// TO-DO: Remember changed values on "Change User"-button press	
 	
 	// Check if the call was a form submit or a forced refresh
@@ -476,8 +475,6 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR
 				$pdo = null;
 				exit();		
 			}
-		} else {
-			$meetingroom = $_SESSION['EditBookingMeetingRoomsArray'];
 		}
 		
 		if(!isset($_SESSION['EditBookingInfoArray'])){
@@ -539,9 +536,6 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR
 		$SelectedUserID = $_SESSION['EditBookingInfoArray']['TheUserID'];
 	}
 
-		// Get the userID we want to work with.
-	// Just $SelectedUserID ?
-	
 		// Check if we need a company select for the booking
 	try
 	{		
@@ -614,9 +608,11 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR
 	
 	$bookingID = $row['TheBookingID'];
 	$companyName = $row['BookedForCompany'];
+	$selectedCompanyID = $row['TheCompanyID'];
 	$companyID = $row['TheCompanyID'];
 	//userID has been set earlier
-	$meetingroomID = $row['TheMeetingRoomID']; //TO-DO: fix/change when doing the proper dropdown select etc?
+	$meetingroom = $_SESSION['EditBookingMeetingRoomsArray'];
+	$selectedMeetingRoomID = $row['TheMeetingRoomID'];
 	$startDateTime = $row['StartTime'];
 	$endDateTime = $row['EndTime'];
 	$displayName = $row['BookedBy'];
@@ -641,22 +637,46 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR
 	exit();
 }
 
+session_start();
 // Admin wants to change the user the booking is reserved for
 // We need to get a list of all active users
 if((isset($_POST['action']) AND $_POST['action'] == "Change User") OR 
 	(isset($_SESSION['refreshEditBookingChangeUser'])) AND $_SESSION['refreshEditBookingChangeUser']){
 	
 	if(isset($_SESSION['refreshEditBookingChangeUser']) AND $_SESSION['refreshEditBookingChangeUser']){
+		// Confirm that we have refreshed
 		unset($_SESSION['refreshEditBookingChangeUser']);
-	}
+	}	
 	
+	// Let's remember what was selected if we do any changes before clicking "change user"
+	if(isset($_POST['action']) AND $_POST['action'] == "Change User"){
+		$newValues = $_SESSION['EditBookingInfoArray'];
+
+			// The user selected, if the booking is for another user
+		if(isset($_POST['userID'])){
+			$newValues['TheUserID'] = $_POST['userID'];
+		}
+			// The meeting room selected
+		$newValues['TheMeetingRoomID'] = $_POST['meetingRoomID']; 
+			// The company selected
+		$newValues['TheCompanyID'] = $_POST['companyID'];
+			// The display name
+		$newValues['BookedBy'] = $_POST['displayName'];
+			// The booking description
+		$newValues['BookingDescription'] = $_POST['description'];
+			// The start time
+		$newValues['StartTime'] = $_POST['startDateTime'];
+			// The end time
+		$newValues['EndTime'] = $_POST['endDateTime'];
+		
+		$_SESSION['EditBookingInfoArray'] = $newValues;		
+	}
+
 	$usersearchstring = "";
 	
 	if(isset($_SESSION['EditBookingUserSearch'])){
 		$usersearchstring = $_SESSION['EditBookingUserSearch'];
-		//unset($_SESSION['EditBookingUserSearch']);
-		// TO-DO:
-	}
+	}	
 	
 	if(!isset($_SESSION['EditBookingUsersArray'])){
 		// Get all active users and their default booking information
