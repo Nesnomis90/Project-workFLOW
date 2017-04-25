@@ -445,8 +445,6 @@ if (isset($_POST['action']) AND $_POST['action'] == "Add booking")
 if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR
 	(isset($_SESSION['refreshEditBooking']) AND $_SESSION['refreshEditBooking']))
 {
-	// TO-DO: Remember changed values on "Change User"-button press	
-	
 	// Check if the call was a form submit or a forced refresh
 	if(isset($_SESSION['refreshEditBooking'])){
 		// Acknowledge that we have refreshed the page
@@ -832,8 +830,6 @@ if(isset($_POST['action']) AND $_POST['action'] == "Select This Company"){
 	exit();	
 }
 
-//TO-DO: Add a "Select This Company" aswell!
-
 session_start();
 // If admin is editing a booking and wants to limit the users shown by searching
 if(isset($_SESSION['EditBookingChangeUser']) AND isset($_POST['action']) AND $_POST['action'] == "Search"){
@@ -1037,7 +1033,6 @@ if(isset($_POST['action']) AND $_POST['action'] == "Finish Edit")
 	}
 	
 	// Check if the timeslot is taken for the selected meeting room
-	// TO-DO: UNTESTED
 	if($checkIfTimeslotIsAvailable){
 		try
 		{
@@ -1046,22 +1041,25 @@ if(isset($_POST['action']) AND $_POST['action'] == "Finish Edit")
 			$sql =	" 	SELECT 	COUNT(*)
 						FROM 	`booking`
 						WHERE 	`meetingRoomID` = :MeetingRoomID
-						AND		(
+						AND		
+						(		
+								(
 									`startDateTime` 
-									BETWEEN :StartTime 
+									BETWEEN :StartTime
 									AND :EndTime
 								) 
 						OR 		(
 									`endDateTime`
-									BETWEEN :StartTime 
+									BETWEEN :StartTime
 									AND :EndTime
 								)
-						LIMIT 	1;";
+						)";
 			$s = $pdo->prepare($sql);
 			
 			$s->bindValue(':MeetingRoomID', $_POST['meetingRoomID']);
 			$s->bindValue(':StartTime', $startTime);
-			$s->bindValue(':EndTime', $endTime);			
+			$s->bindValue(':EndTime', $endTime);
+			$s->execute();
 			$pdo = null;
 		}
 		catch(PDOException $e)
@@ -1072,10 +1070,10 @@ if(isset($_POST['action']) AND $_POST['action'] == "Finish Edit")
 			exit();
 		}
 
-		// TO-DO: Checking if timeslot is available doesn't work as intended. It doesn't fetch a result even though it should get one?
 		// Check if we got any hits, if so the timeslot is already taken
-		$row = $s->fetch();
+		$row = $s->fetch();		
 		if ($row[0] > 0){
+	
 			// Timeslot was taken
 			$_SESSION['EditBookingError'] = "The booking couldn't be made. The timeslot is already taken for this meeting room.";
 			if(isset($_SESSION['EditBookingChangeUser']) AND $_SESSION['EditBookingChangeUser']){
@@ -1133,8 +1131,8 @@ if(isset($_POST['action']) AND $_POST['action'] == "Finish Edit")
 		$pdo = null;
 		exit();
 	}
-	
-	$_SESSION['BookingUserFeedback'] = "Successfully updated the booking information! with $startTime $endTime";
+		
+	$_SESSION['BookingUserFeedback'] = "Successfully updated the booking information! with $startTime compared to $oldStartTime and $endTime compared to $oldEndTime";
 	clearBookingSessions();
 	
 	// Load booking history list webpage with the updated booking information

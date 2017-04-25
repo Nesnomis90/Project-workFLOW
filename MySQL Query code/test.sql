@@ -5,11 +5,10 @@ USE meetingflow;
 SELECT 	COUNT(*)
 FROM 	`booking`
 WHERE 	`meetingRoomID` = 2
-AND		(`startDateTime` 
-BETWEEN '2017-04-20 15:50:00' AND '2017-04-20 16:50:00') 
+AND		((`startDateTime` 
+BETWEEN '2017-04-25 15:00:00' AND '2017-04-25 16:50:00') 
 OR 		(`endDateTime`
-BETWEEN '2017-04-20 15:50:00' AND '2017-04-20 16:50:00')
-LIMIT 	1;
+BETWEEN '2017-04-25 15:00:00' AND '2017-04-25 16:50:00'));
 
 SELECT 		b.`bookingID`									AS TheBookingID,
 							b.`companyID`									AS TheCompanyID,
