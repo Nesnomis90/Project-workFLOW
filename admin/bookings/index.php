@@ -208,7 +208,6 @@ if (isset($_POST['action']) AND $_POST['action'] == "Create Booking")
 	// (without selecting a user) for when normal users want to book a meeting room.
 	try
 	{
-		session_start();
 		// Retrieve the user's default displayname and bookingdescription
 		// if they have any.
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
@@ -262,18 +261,23 @@ if (isset($_POST['action']) AND $_POST['action'] == "Create Booking")
 			if (sizeOf($company)>1){
 				// User is in multiple companies
 				
-				$displayCompanySelect = TRUE;
+				$_SESSION['AddBookingDisplayCompanySelect'] = TRUE;
 			} elseif(sizeOf($company) == 1) {
 				// User is in ONE company
 				
-				$displayCompanySelect = FALSE;
-				$companyID = $company[0]['companyID'];
+				$_SESSION['AddBookingSelectedACompany'] = TRUE;
+				unset($_SESSION['AddBookingDisplayCompanySelect']);
+				$_SESSION['AddBookingInfoArray']['TheCompanyID'] = $company[0]['companyID'];
+				$_SESSION['AddBookingInfoArray']['BookedForCompany'] = $company[0]['companyName'];
 			}
 		} else{
 			// User is NOT in a company
-			$displayCompanySelect = FALSE;
-			$companyID = NULL;
-		}
+			
+			$_SESSION['AddBookingSelectedACompany'] = TRUE;
+			unset($_SESSION['AddBookingDisplayCompanySelect']);
+			$_SESSION['AddBookingInfoArray']['TheCompanyID'] = "";
+			$_SESSION['AddBookingInfoArray']['BookedForCompany'] = "";
+		}				
 		
 		// Get name and IDs for meeting rooms
 		$sql = 'SELECT 	`meetingRoomID`,
@@ -291,7 +295,6 @@ if (isset($_POST['action']) AND $_POST['action'] == "Create Booking")
 		}
 		
 		// Remember the meeting room info for creating a log event later
-		session_start();
 		unset($_SESSION['AddBookingMeetingRooms']);
 		$_SESSION['AddBookingMeetingRooms'] = $meetingroom;		
 		
@@ -319,7 +322,7 @@ if (isset($_POST['action']) AND $_POST['action'] == "Create Booking")
 }
 
 // When admin has added the needed information and wants to add the booking
-if (isset($_POST['action']) AND $_POST['action'] == "Add booking")
+if (isset($_POST['add']) AND $_POST['add'] == "Add booking")
 {
 	// Add the booking to the database
 	try
@@ -332,6 +335,8 @@ if (isset($_POST['action']) AND $_POST['action'] == "Add booking")
 		} else {
 			$companyID = NULL;
 		}
+	
+		// TO-DO: Check if timeslot is available.
 	
 		//Generate cancellation code
 		$cancellationCode = generateCancellationCode();
@@ -695,10 +700,9 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR
 	exit();
 }
 
-session_start();
 // Admin wants to change the user the booking is reserved for
 // We need to get a list of all active users
-if((isset($_POST['action']) AND $_POST['action'] == "Change User") OR 
+if((isset($_POST['edit']) AND $_POST['edit'] == "Change User") OR 
 	(isset($_SESSION['refreshEditBookingChangeUser'])) AND $_SESSION['refreshEditBookingChangeUser']){
 	
 	if(isset($_SESSION['refreshEditBookingChangeUser']) AND $_SESSION['refreshEditBookingChangeUser']){
@@ -710,7 +714,7 @@ if((isset($_POST['action']) AND $_POST['action'] == "Change User") OR
 	unset($_SESSION['EditBookingUsersArray']);	
 	
 	// Let's remember what was selected if we do any changes before clicking "change user"
-	if(isset($_POST['action']) AND $_POST['action'] == "Change User"){
+	if(isset($_POST['edit']) AND $_POST['edit'] == "Change User"){
 		rememberEditBookingInputs();
 	}
 
@@ -787,7 +791,7 @@ if((isset($_POST['action']) AND $_POST['action'] == "Change User") OR
 }
 
 // Admin confirms what user he wants the booking to be for.
-if(isset($_POST['action']) AND $_POST['action'] == "Select This User"){
+if(isset($_POST['edit']) AND $_POST['edit'] == "Select This User"){
 	
 	// We haven't set the company if we are changing the user.
 	unset($_SESSION['EditBookingSelectedACompany']);
@@ -807,7 +811,7 @@ if(isset($_POST['action']) AND $_POST['action'] == "Select This User"){
 }
 
 //	Admin wants to change the company the booking is for (after having already selected it)
-if(isset($_POST['action']) AND $_POST['action'] == "Change Company"){
+if(isset($_POST['edit']) AND $_POST['edit'] == "Change Company"){
 	
 	// We want to select a company again
 	unset($_SESSION['EditBookingSelectedACompany']);
@@ -821,7 +825,7 @@ if(isset($_POST['action']) AND $_POST['action'] == "Change Company"){
 }
 
 // Admin confirms what company he wants the booking to be for.
-if(isset($_POST['action']) AND $_POST['action'] == "Select This Company"){
+if(isset($_POST['edit']) AND $_POST['edit'] == "Select This Company"){
 
 	// Remember that we've selected a new company
 	$_SESSION['EditBookingSelectedACompany'] = TRUE;
@@ -834,9 +838,8 @@ if(isset($_POST['action']) AND $_POST['action'] == "Select This Company"){
 	exit();	
 }
 
-session_start();
 // If admin is editing a booking and wants to limit the users shown by searching
-if(isset($_SESSION['EditBookingChangeUser']) AND isset($_POST['action']) AND $_POST['action'] == "Search"){
+if(isset($_SESSION['EditBookingChangeUser']) AND isset($_POST['edit']) AND $_POST['edit'] == "Search"){
 	
 	// Let's remember what was selected and searched for
 		// The user search string
@@ -851,7 +854,7 @@ if(isset($_SESSION['EditBookingChangeUser']) AND isset($_POST['action']) AND $_P
 }
 
 // If admin wants to get the default values for the user's display name
-if(isset($_POST['action']) AND $_POST['action'] == "Get Default Display Name"){
+if(isset($_POST['edit']) AND $_POST['edit'] == "Get Default Display Name"){
 	  
 	session_start();
 	
@@ -897,7 +900,7 @@ if(isset($_POST['action']) AND $_POST['action'] == "Get Default Display Name"){
 }
 
 // If admin wants to get the default values for the user's booking description
-if(isset($_POST['action']) AND $_POST['action'] == "Get Default Booking Description"){
+if(isset($_POST['edit']) AND $_POST['edit'] == "Get Default Booking Description"){
 	
 	session_start();
 	
@@ -943,7 +946,7 @@ if(isset($_POST['action']) AND $_POST['action'] == "Get Default Booking Descript
 }
 
 // If admin wants to change the values back to the original values
-if (isset($_POST['action']) AND $_POST['action'] == "Reset"){
+if (isset($_POST['edit']) AND $_POST['edit'] == "Reset"){
 
 	$_SESSION['EditBookingInfoArray'] = $_SESSION['EditBookingOriginalInfoArray'];
 	
@@ -953,16 +956,14 @@ if (isset($_POST['action']) AND $_POST['action'] == "Reset"){
 }
 
 // If admin wants to leave the page and be directed back to the booking page again
-if (isset($_POST['action']) AND $_POST['action'] == 'Cancel Edit'){
-	// Doesn't actually need any code to work, since it happends automatically when a submit
-	// occurs. *it* being doing the normal startup code.
-	// Might be useful for something later?
+if (isset($_POST['edit']) AND $_POST['edit'] == 'Cancel'){
+
 	$_SESSION['BookingUserFeedback'] = "You cancelled your booking editing.";
 }
 
 
 // If admin wants to update the booking information after editing
-if(isset($_POST['action']) AND $_POST['action'] == "Finish Edit")
+if(isset($_POST['edit']) AND $_POST['edit'] == "Finish Edit")
 {
 
 	// Check if all values are valid before doing anything
@@ -1144,6 +1145,284 @@ if(isset($_POST['action']) AND $_POST['action'] == "Finish Edit")
 	exit();	
 }
 
+
+
+
+
+
+
+
+
+
+// ADD BOOKING CODE STUFF //
+
+// Admin wants to change the user the booking is for
+// We need to get a list of all active users
+if((isset($_POST['add']) AND $_POST['add'] == "Change User") OR 
+	(isset($_SESSION['refreshAddBookingChangeUser'])) AND $_SESSION['refreshAddBookingChangeUser']){
+	
+	if(isset($_SESSION['refreshAddBookingChangeUser']) AND $_SESSION['refreshAddBookingChangeUser']){
+		// Confirm that we have refreshed
+		unset($_SESSION['refreshAddBookingChangeUser']);
+	}	
+	
+	// Forget the old search result for users if we had one saved
+	unset($_SESSION['AddBookingUsersArray']);	
+	
+	// Let's remember what was selected if we do any changes before clicking "change user"
+	if(isset($_POST['add']) AND $_POST['add'] == "Change User"){
+		rememberEditBookingInputs();
+	}
+
+	$usersearchstring = "";
+	
+	if(isset($_SESSION['AddBookingUserSearch'])){
+		$usersearchstring = $_SESSION['AddBookingUserSearch'];
+	}	
+	
+	if(!isset($_SESSION['AddBookingUsersArray'])){
+		// Get all active users and their default booking information
+		try
+		{
+			$pdo = connect_to_db();
+			$sql = "SELECT 	`userID`, 
+							`firstname`, 
+							`lastname`, 
+							`email`,
+							`displayname`,
+							`bookingdescription`
+					FROM 	`user`
+					WHERE 	`isActive` > 0";
+		
+			if ($usersearchstring != ''){
+				$sqladd = " AND (`firstname` LIKE :search
+							OR `lastname` LIKE :search
+							OR `email` LIKE :search)";
+				$sql = $sql . $sqladd;
+				
+				$finalusersearchstring = '%' . $usersearchstring . '%';
+				
+				$s = $pdo->prepare($sql);
+				$s->bindValue(":search", $finalusersearchstring);
+				$s->execute();
+				$result = $s->fetchAll();
+				
+			} else {
+				$result = $pdo->query($sql);
+			}	
+			
+			// Get the rows of information from the query
+			// This will be used to create a dropdown list in HTML
+			foreach($result as $row){
+				$users[] = array(
+									'userID' => $row['userID'],
+									'lastName' => $row['lastname'],
+									'firstName' => $row['firstname'],
+									'email' => $row['email'],
+									'userInformation' => $row['lastname'] . ', ' . $row['firstname'] . ' - ' . $row['email'],
+									'displayName' => $row['displayname'],
+									'bookingDescription' => $row['bookingdescription']
+									);
+			}
+			session_start();
+			$_SESSION['AddBookingUsersArray'] = $users;
+			
+			$pdo = null;
+		}
+		catch(PDOException $e)
+		{
+			$error = 'Error fetching user details.';
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+			$pdo = null;
+			exit();		
+		}
+	} else {
+		$users = $_SESSION['AddBookingUsersArray'];
+	}
+
+	$_SESSION['refreshAddBooking'] = TRUE;
+	$_SESSION['AddBookingChangeUser'] = TRUE;
+	header('Location: .');
+	exit();
+}
+
+// Admin confirms what user he wants the booking to be for.
+if(isset($_POST['add']) AND $_POST['add'] == "Select This User"){
+	
+	// We haven't set the company if we are changing the user.
+	unset($_SESSION['AddBookingSelectedACompany']);
+
+	// We no longer need to be able to change the user
+	unset($_SESSION['AddBookingChangeUser']);
+	
+	// Remember that we've selected a new user
+	$_SESSION['AddBookingSelectedNewUser'] = TRUE;
+	
+	// Let's remember what was selected if we do any changes before clicking "Select This User"
+	rememberAddBookingInputs();
+	
+	$_SESSION['refreshAddBooking'] = TRUE;
+	header('Location: .');
+	exit();	
+}
+
+//	Admin wants to change the company the booking is for (after having already selected it)
+if(isset($_POST['add']) AND $_POST['add'] == "Change Company"){
+	
+	// We want to select a company again
+	unset($_SESSION['AddBookingSelectedACompany']);
+	
+	// Let's remember what was selected if we do any changes before clicking "Change Company"
+	rememberAddBookingInputs();
+	
+	$_SESSION['refreshAddBooking'] = TRUE;
+	header('Location: .');
+	exit();		
+}
+
+// Admin confirms what company he wants the booking to be for.
+if(isset($_POST['add']) AND $_POST['add'] == "Select This Company"){
+
+	// Remember that we've selected a new company
+	$_SESSION['AddBookingSelectedACompany'] = TRUE;
+	
+	// Let's remember what was selected if we do any changes before clicking "Select This Company"
+	rememberAddBookingInputs();
+	
+	$_SESSION['refreshAddBooking'] = TRUE;
+	header('Location: .');
+	exit();	
+}
+
+
+// If admin wants to get the default values for the user's display name
+if(isset($_POST['add']) AND $_POST['add'] == "Get Default Display Name"){
+	  
+	session_start();
+	
+	$displayName = $_SESSION['AddBookingDefaultDisplayNameForNewUser'];
+	if(isset($_SESSION['AddBookingInfoArray'])){
+		$newValues = $_SESSION['AddBookingInfoArray'];
+
+		if($displayName != ""){
+			if($displayName != $newValues['BookedBy']){
+				
+				if(isset($_POST['userID'])){
+					$newValues['TheUserID'] = $_POST['userID'];
+				}
+					// The meeting room selected
+				$newValues['TheMeetingRoomID'] = $_POST['meetingRoomID']; 
+					// The company selected
+				$newValues['TheCompanyID'] = $_POST['companyID'];
+					// The user selected
+				$newValues['BookedBy'] = $displayName;
+					// The booking description
+				$newValues['BookingDescription'] = $_POST['description'];
+					// The start time
+				$newValues['StartTime'] = $_POST['startDateTime'];
+					// The end time
+				$newValues['EndTime'] = $_POST['endDateTime'];
+				
+				$_SESSION['AddBookingInfoArray'] = $newValues;	
+
+				unset($_SESSION['AddBookingDefaultDisplayNameForNewUser']);				
+			} else {
+				// Description was already the default booking description
+				$_SESSION['AddBookingError'] = "This is already the user's default display name.";
+			}
+		} else {
+			// The user has no default display name
+			$_SESSION['AddBookingError'] = "This user has no default display name.";
+		}		
+	}
+	
+	$_SESSION['refreshAddBooking'] = TRUE;
+	header('Location: .');
+	exit();	
+}
+
+// If admin wants to get the default values for the user's booking description
+if(isset($_POST['add']) AND $_POST['add'] == "Get Default Booking Description"){
+	
+	session_start();
+	
+	$bookingDescription = $_SESSION['AddBookingDefaultBookingDescriptionForNewUser'];
+	if(isset($_SESSION['AddBookingInfoArray'])){
+		$newValues = $_SESSION['AddBookingInfoArray'];
+
+		if($bookingDescription != ""){
+			if($bookingDescription != $newValues['BookingDescription']){
+				
+				if(isset($_POST['userID'])){
+					$newValues['TheUserID'] = $_POST['userID'];
+				}
+					// The meeting room selected
+				$newValues['TheMeetingRoomID'] = $_POST['meetingRoomID']; 
+					// The company selected
+				$newValues['TheCompanyID'] = $_POST['companyID'];
+					// The user selected
+				$newValues['BookedBy'] = $_POST['displayName'];
+					// The booking description
+				$newValues['BookingDescription'] = $bookingDescription;
+					// The start time
+				$newValues['StartTime'] = $_POST['startDateTime'];
+					// The end time
+				$newValues['EndTime'] = $_POST['endDateTime'];
+				
+				$_SESSION['AddBookingInfoArray'] = $newValues;	
+
+				unset($_SESSION['AddBookingDefaultBookingDescriptionForNewUser']);			
+			} else {
+				// Description was already the default booking description
+				$_SESSION['AddBookingError'] = "This is already the user's default booking description.";
+			}
+		} else {
+			// The user has no default booking description
+			$_SESSION['AddBookingError'] = "This user has no default booking description.";
+		}
+	}
+	
+	$_SESSION['refreshAddBooking'] = TRUE;
+	header('Location: .');
+	exit();	
+}
+
+// If admin is adding a booking and wants to limit the users shown by searching
+if(isset($_SESSION['AddBookingChangeUser']) AND isset($_POST['add']) AND $_POST['add'] == "Search"){
+	
+	// Let's remember what was selected and searched for
+		// The user search string
+	$_SESSION['AddBookingUserSearch'] = $_POST['usersearchstring'];
+
+	rememberEditBookingInputs();
+	
+	// Get the new users
+	$_SESSION['refreshAddBookingChangeUser'] = TRUE;
+	header('Location: .');
+	exit();
+}
+
+// If admin wants to change the values back to the original values
+if (isset($_POST['add']) AND $_POST['add'] == "Reset"){
+
+	// TO-DO: Change for add values. Just blank everything?
+	$_SESSION['AddBookingInfoArray'] = $_SESSION['AddBookingOriginalInfoArray'];
+	
+	$_SESSION['refreshAddBooking'] = TRUE;
+	header('Location: .');
+	exit();		
+}
+
+// If admin wants to leave the page and be directed back to the booking page again
+if (isset($_POST['add']) AND $_POST['add'] == 'Cancel'){
+
+	$_SESSION['BookingUserFeedback'] = "You cancelled your new booking.";
+}
+
+
+
+// END OF USER INPUT CODE //
+
 // We're not doing any adding or editing anymore, clear all remembered values
 clearBookingSessions();
 
@@ -1262,5 +1541,4 @@ foreach ($result as $row)
 
 // Create the booking information table in HTML
 include_once 'bookings.html.php';
-
 ?>
