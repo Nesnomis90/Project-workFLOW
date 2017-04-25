@@ -155,7 +155,6 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Edit')
 // When admin has added the needed information and wants to add the company
 if (isset($_GET['addform']))
 {
-	// TO-DO: Check if company already exists.
 	// Check if company name already has been used
 	try
 	{

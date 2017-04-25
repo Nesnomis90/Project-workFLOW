@@ -58,9 +58,10 @@
 				<input type="submit" value="Get All Employees">
 			</form>
 		<?php endif; ?>
-		<form action="" method="post">
 		<?php if($rowNum>0) :?>
-			<input type="submit" name="action" value="Add Employee">
+			<form action="" method="post">
+				<input type="submit" name="action" value="Add Employee">
+			</form>
 			<table id= "companyemployeestable">
 				<caption>Company Employees</caption>
 				<tr>
@@ -100,9 +101,12 @@
 			</table>
 		<?php else : ?>
 			<tr><b>There are no employees registered in the database.</b></tr>
-			<tr><input type="submit" name="action" value="Add Employee"></tr>
+			<tr>
+				<form action="" method="post">
+					<input type="submit" name="action" value="Add Employee">
+				</form>
+			</tr>
 		<?php endif; ?>
-		</form>
 		<p><a href="..">Return to CMS home</a></p>
 		<?php include '../logout.inc.html.php'; ?>
 	</body>
