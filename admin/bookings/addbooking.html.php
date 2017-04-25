@@ -77,7 +77,7 @@
 					</div>
 				<?php else : ?>
 					<?php if($_SESSION['LoggedInUserID'] == $SelectedUserID) : ?>
-						<b>You:  <?php htmlout($_SESSION['LoggedInUserName']); ?></b>
+						<b>You:  <?php htmlout($userInformation); ?> </b>
 					<?php else : ?>
 						<b><?php htmlout($userInformation); ?> </b>
 					<?php endif; ?>

@@ -8,7 +8,8 @@ WHERE 	`meetingRoomID` = 2
 AND		((`startDateTime` 
 BETWEEN '2017-04-25 15:00:00' AND '2017-04-25 16:50:00') 
 OR 		(`endDateTime`
-BETWEEN '2017-04-25 15:00:00' AND '2017-04-25 16:50:00'));
+BETWEEN '2017-04-25 15:00:00' AND '2017-04-25 16:50:00'))
+AND 	`bookingID` != 38;
 
 SELECT 		b.`bookingID`									AS TheBookingID,
 							b.`companyID`									AS TheCompanyID,
