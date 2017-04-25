@@ -21,6 +21,8 @@ function clearBookingSessions(){
 	unset($_SESSION['EditBookingUserSearch']);
 	unset($_SESSION['EditBookingSelectedNewUser']);
 	unset($_SESSION['EditBookingSelectedACompany']);
+	unset($_SESSION['EditBookingDefaultDisplayNameForNewUser']);
+	unset($_SESSION['EditBookingDefaultBookingDescriptionForNewUser']);
 }
 
 // Function to remember the user inputs in Edit Booking
@@ -643,10 +645,9 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR
 				$row['UserLastname'] = $user['lastName'];
 				$row['UserFirstname'] = $user['firstName'];
 				$row['UserEmail'] = $user['email'];
-				// TO-DO: If we want a "set default booking description/display name" for a new user
-				// Get the values out of $user first.
-				// $somevariablefordisplayname = $user['displayName'];
-				// $somevariableforbookingdescription = $user['bookingDescription'];
+				
+				$_SESSION['EditBookingDefaultDisplayNameForNewUser'] = $user['displayName'];
+				$_SESSION['EditBookingDefaultBookingDescriptionForNewUser'] = $user['bookingDescription'];
 				break;
 			}
 		}
@@ -801,7 +802,7 @@ if(isset($_POST['action']) AND $_POST['action'] == "Select This User"){
 	exit();	
 }
 
-//Admin wants to change the company the booking is for (after having already selected it)
+//	Admin wants to change the company the booking is for (after having already selected it)
 if(isset($_POST['action']) AND $_POST['action'] == "Change Company"){
 	
 	// We want to select a company again
@@ -828,6 +829,7 @@ if(isset($_POST['action']) AND $_POST['action'] == "Select This Company"){
 	header('Location: .');
 	exit();	
 }
+
 //TO-DO: Add a "Select This Company" aswell!
 
 session_start();
@@ -845,6 +847,93 @@ if(isset($_SESSION['EditBookingChangeUser']) AND isset($_POST['action']) AND $_P
 	header('Location: .');
 	exit();
 }
+
+// If admin wants to get the default values for the user's display name
+if(isset($_POST['action']) AND $_POST['action'] == "Get Default Display Name"){
+	  
+	session_start();
+	if(isset($_SESSION['EditBookingInfoArray'])){
+		$newValues = $_SESSION['EditBookingInfoArray'];
+
+			// The user selected, if the booking is for another user
+		if(isset($_POST['userID'])){
+			$newValues['TheUserID'] = $_POST['userID'];
+		}
+			// The meeting room selected
+		$newValues['TheMeetingRoomID'] = $_POST['meetingRoomID']; 
+			// The company selected
+		$newValues['TheCompanyID'] = $_POST['companyID'];
+			// The user selected
+		$newValues['BookedBy'] = $_SESSION['EditBookingDefaultDisplayNameForNewUser'];
+			// The booking description
+		$newValues['BookingDescription'] = $_POST['description'];
+			// The start time
+		$newValues['StartTime'] = $_POST['startDateTime'];
+			// The end time
+		$newValues['EndTime'] = $_POST['endDateTime'];
+		
+		$_SESSION['EditBookingInfoArray'] = $newValues;	
+
+		unset($_SESSION['EditBookingDefaultDisplayNameForNewUser']);
+	}
+	
+	$_SESSION['refreshEditBooking'] = TRUE;
+	header('Location: .');
+	exit();	
+}
+
+// If admin wants to get the default values for the user's booking description
+if(isset($_POST['action']) AND $_POST['action'] == "Get Default Booking Description"){
+	  
+	session_start();
+	if(isset($_SESSION['EditBookingInfoArray'])){
+		$newValues = $_SESSION['EditBookingInfoArray'];
+
+			// The user selected, if the booking is for another user
+		if(isset($_POST['userID'])){
+			$newValues['TheUserID'] = $_POST['userID'];
+		}
+			// The meeting room selected
+		$newValues['TheMeetingRoomID'] = $_POST['meetingRoomID']; 
+			// The company selected
+		$newValues['TheCompanyID'] = $_POST['companyID'];
+			// The user selected
+		$newValues['BookedBy'] = $_POST['displayName'];
+			// The booking description
+		$newValues['BookingDescription'] = $_SESSION['EditBookingDefaultBookingDescriptionForNewUser'];
+			// The start time
+		$newValues['StartTime'] = $_POST['startDateTime'];
+			// The end time
+		$newValues['EndTime'] = $_POST['endDateTime'];
+		
+		$_SESSION['EditBookingInfoArray'] = $newValues;	
+
+		unset($_SESSION['EditBookingDefaultBookingDescriptionForNewUser']);
+	}
+	
+	$_SESSION['refreshEditBooking'] = TRUE;
+	header('Location: .');
+	exit();	
+}
+
+// If admin wants to change the values back to the original values
+if (isset($_POST['action']) AND $_POST['action'] == "Reset"){
+
+	$_SESSION['EditBookingInfoArray'] = $_SESSION['EditBookingOriginalInfoArray'];
+	
+	$_SESSION['refreshEditBooking'] = TRUE;
+	header('Location: .');
+	exit();		
+}
+
+// If admin wants to leave the page and be directed back to the booking page again
+if (isset($_POST['action']) AND $_POST['action'] == 'Cancel Edit'){
+	// Doesn't actually need any code to work, since it happends automatically when a submit
+	// occurs. *it* being doing the normal startup code.
+	// Might be useful for something later?
+	$_SESSION['BookingUserFeedback'] = "You cancelled your booking editing.";
+}
+
 
 // If admin wants to update the booking information after editing
 if(isset($_POST['action']) AND $_POST['action'] == "Edit Booking")

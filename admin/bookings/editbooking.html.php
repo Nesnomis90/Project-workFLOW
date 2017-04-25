@@ -156,6 +156,7 @@
 				<label for="displayName">Set New Display Name: </label>
 				<input type="text" name="displayName" id="displayName" 
 				value="<?php htmlout($displayName); ?>">
+				<input type="submit" name="action" value="Get Default Display Name">
 			</div>
 			<div>
 				<label for="originalBookingDescription">Booked Description: </label>
@@ -171,10 +172,13 @@
 				<label for="description">Set New Booking Description: </label>
 				<input type="text" name="description" id="description" 
 				value="<?php htmlout($description); ?>">
+				<input type="submit" name="action" value="Get Default Booking Description">
 			</div>
 			<div>
 				<input type="hidden" name="bookingID" id="bookingID" 
 				value="<?php htmlout($bookingID); ?>">
+				<input type="submit" name="action" value="Reset">
+				<input type="submit" name="action" value="Cancel Edit">
 				<?php if(isset($_SESSION['EditBookingChangeUser']) AND $_SESSION['EditBookingChangeUser']) : ?>
 					<b>You need to select the user you want before you can finish editing.</b>
 				<?php elseif(!isset($_SESSION['EditBookingSelectedACompany'])) : ?>
