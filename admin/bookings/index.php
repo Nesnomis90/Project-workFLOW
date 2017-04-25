@@ -529,7 +529,9 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR
 									u.`userID`										AS TheUserID, 
 									u.`firstName`									AS UserFirstname,
 									u.`lastName`									AS UserLastname,
-									u.`email`										AS UserEmail
+									u.`email`										AS UserEmail,
+									u.`displayName` 								AS UserDefaultDisplayName,
+									u.`bookingDescription`							AS UserDefaultBookingDescription
 						FROM 		`booking` b 
 						LEFT JOIN 	`meetingroom` m 
 						ON 			b.meetingRoomID = m.meetingRoomID 
@@ -586,7 +588,6 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR
 		$s->bindValue(':userID', $SelectedUserID);
 		$s->execute();
 		
-		
 		// Create an array with the row information we retrieved
 		$result = $s->fetchAll();
 			
@@ -597,7 +598,6 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR
 								'companyID' => $row['companyID'],
 								'companyName' => $row['companyName']
 								);
-
 		}
 			
 		$pdo = null;
@@ -637,6 +637,7 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR
 	
 	// Set the correct information
 	$row = $_SESSION['EditBookingInfoArray'];
+	$original = $_SESSION['EditBookingOriginalInfoArray'];
 		// Changed user
 	if(isset($_SESSION['EditBookingSelectedNewUser'])){
 		
@@ -651,6 +652,9 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR
 				break;
 			}
 		}
+	} else {
+		$_SESSION['EditBookingDefaultDisplayNameForNewUser'] = $original['UserDefaultDisplayName'];
+		$_SESSION['EditBookingDefaultBookingDescriptionForNewUser'] = $original['UserDefaultBookingDescription'];
 	}
 		// Changed company
 	foreach($company AS $cmp){
@@ -672,9 +676,7 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR
 	$displayName = $row['BookedBy'];
 	$description = $row['BookingDescription'];
 	$userInformation = $row['UserLastname'] . ', ' . $row['UserFirstname'] . ' - ' . $row['UserEmail'];
-		// Original values
-	$original = $_SESSION['EditBookingOriginalInfoArray'];
-		
+		// Original values	
 	$originalStartDateTime = $original['StartTime'];
 	$originalEndDateTime = $original['EndTime'];
 	if($original['BookedForCompany']!=NULL){
@@ -852,29 +854,41 @@ if(isset($_SESSION['EditBookingChangeUser']) AND isset($_POST['action']) AND $_P
 if(isset($_POST['action']) AND $_POST['action'] == "Get Default Display Name"){
 	  
 	session_start();
+	
+	$displayName = $_SESSION['EditBookingDefaultDisplayNameForNewUser'];
 	if(isset($_SESSION['EditBookingInfoArray'])){
 		$newValues = $_SESSION['EditBookingInfoArray'];
 
-			// The user selected, if the booking is for another user
-		if(isset($_POST['userID'])){
-			$newValues['TheUserID'] = $_POST['userID'];
-		}
-			// The meeting room selected
-		$newValues['TheMeetingRoomID'] = $_POST['meetingRoomID']; 
-			// The company selected
-		$newValues['TheCompanyID'] = $_POST['companyID'];
-			// The user selected
-		$newValues['BookedBy'] = $_SESSION['EditBookingDefaultDisplayNameForNewUser'];
-			// The booking description
-		$newValues['BookingDescription'] = $_POST['description'];
-			// The start time
-		$newValues['StartTime'] = $_POST['startDateTime'];
-			// The end time
-		$newValues['EndTime'] = $_POST['endDateTime'];
-		
-		$_SESSION['EditBookingInfoArray'] = $newValues;	
+		if($displayName != ""){
+			if($displayName != $newValues['BookedBy']){
+				
+				if(isset($_POST['userID'])){
+					$newValues['TheUserID'] = $_POST['userID'];
+				}
+					// The meeting room selected
+				$newValues['TheMeetingRoomID'] = $_POST['meetingRoomID']; 
+					// The company selected
+				$newValues['TheCompanyID'] = $_POST['companyID'];
+					// The user selected
+				$newValues['BookedBy'] = $displayName;
+					// The booking description
+				$newValues['BookingDescription'] = $_POST['description'];
+					// The start time
+				$newValues['StartTime'] = $_POST['startDateTime'];
+					// The end time
+				$newValues['EndTime'] = $_POST['endDateTime'];
+				
+				$_SESSION['EditBookingInfoArray'] = $newValues;	
 
-		unset($_SESSION['EditBookingDefaultDisplayNameForNewUser']);
+				unset($_SESSION['EditBookingDefaultDisplayNameForNewUser']);				
+			} else {
+				// Description was already the default booking description
+				$_SESSION['EditBookingError'] = "This is already the user's default display name.";
+			}
+		} else {
+			// The user has no default display name
+			$_SESSION['EditBookingError'] = "This user has no default display name.";
+		}		
 	}
 	
 	$_SESSION['refreshEditBooking'] = TRUE;
@@ -884,31 +898,43 @@ if(isset($_POST['action']) AND $_POST['action'] == "Get Default Display Name"){
 
 // If admin wants to get the default values for the user's booking description
 if(isset($_POST['action']) AND $_POST['action'] == "Get Default Booking Description"){
-	  
+	
 	session_start();
+	
+	$bookingDescription = $_SESSION['EditBookingDefaultBookingDescriptionForNewUser'];
 	if(isset($_SESSION['EditBookingInfoArray'])){
 		$newValues = $_SESSION['EditBookingInfoArray'];
 
-			// The user selected, if the booking is for another user
-		if(isset($_POST['userID'])){
-			$newValues['TheUserID'] = $_POST['userID'];
-		}
-			// The meeting room selected
-		$newValues['TheMeetingRoomID'] = $_POST['meetingRoomID']; 
-			// The company selected
-		$newValues['TheCompanyID'] = $_POST['companyID'];
-			// The user selected
-		$newValues['BookedBy'] = $_POST['displayName'];
-			// The booking description
-		$newValues['BookingDescription'] = $_SESSION['EditBookingDefaultBookingDescriptionForNewUser'];
-			// The start time
-		$newValues['StartTime'] = $_POST['startDateTime'];
-			// The end time
-		$newValues['EndTime'] = $_POST['endDateTime'];
-		
-		$_SESSION['EditBookingInfoArray'] = $newValues;	
+		if($bookingDescription != ""){
+			if($bookingDescription != $newValues['BookingDescription']){
+				
+				if(isset($_POST['userID'])){
+					$newValues['TheUserID'] = $_POST['userID'];
+				}
+					// The meeting room selected
+				$newValues['TheMeetingRoomID'] = $_POST['meetingRoomID']; 
+					// The company selected
+				$newValues['TheCompanyID'] = $_POST['companyID'];
+					// The user selected
+				$newValues['BookedBy'] = $_POST['displayName'];
+					// The booking description
+				$newValues['BookingDescription'] = $bookingDescription;
+					// The start time
+				$newValues['StartTime'] = $_POST['startDateTime'];
+					// The end time
+				$newValues['EndTime'] = $_POST['endDateTime'];
+				
+				$_SESSION['EditBookingInfoArray'] = $newValues;	
 
-		unset($_SESSION['EditBookingDefaultBookingDescriptionForNewUser']);
+				unset($_SESSION['EditBookingDefaultBookingDescriptionForNewUser']);			
+			} else {
+				// Description was already the default booking description
+				$_SESSION['EditBookingError'] = "This is already the user's default booking description.";
+			}
+		} else {
+			// The user has no default booking description
+			$_SESSION['EditBookingError'] = "This user has no default booking description.";
+		}
 	}
 	
 	$_SESSION['refreshEditBooking'] = TRUE;
@@ -936,7 +962,7 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Cancel Edit'){
 
 
 // If admin wants to update the booking information after editing
-if(isset($_POST['action']) AND $_POST['action'] == "Edit Booking")
+if(isset($_POST['action']) AND $_POST['action'] == "Finish Edit")
 {
 
 	// Check if all values are valid before doing anything

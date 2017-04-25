@@ -180,11 +180,13 @@
 				<input type="submit" name="action" value="Reset">
 				<input type="submit" name="action" value="Cancel Edit">
 				<?php if(isset($_SESSION['EditBookingChangeUser']) AND $_SESSION['EditBookingChangeUser']) : ?>
+					<input type="submit" name="disabled" value="Finish Edit" disabled>
 					<b>You need to select the user you want before you can finish editing.</b>
 				<?php elseif(!isset($_SESSION['EditBookingSelectedACompany'])) : ?>
+					<input type="submit" name="disabled" value="Finish Edit" disabled>
 					<b>You need to select the company you want before you can finish editing.</b>
 				<?php else : ?>
-					<input type="submit" name="action" value="Edit Booking">
+					<input type="submit" name="action" value="Finish Edit">
 				<?php endif; ?>
 			</div>
 		</form>
