@@ -64,40 +64,40 @@
 			</div>
 			<div>
 				<label for="SelectedUser">Set New User: </label>
-			<?php if(isset($_SESSION['EditBookingChangeUser']) AND $_SESSION['EditBookingChangeUser']) :?>
-				<?php if(isset($users)) : ?>
-					<select name="userID" id="userID">
-						<?php foreach($users as $row): ?> 
-							<?php if($row['userID']==$SelectedUserID):?>
-								<option selected="selected" 
-										value=<?php htmlout($row['userID']); ?>>
-										<?php htmlout($row['userInformation']);?>
-								</option>
-							<?php else : ?>
-								<option value=<?php htmlout($row['userID']); ?>>
-										<?php htmlout($row['userInformation']);?>
-								</option>
-							<?php endif;?>
-						<?php endforeach; ?>
-					</select>
-					<input type="submit" name="action" value="Select This User">
+				<?php if(isset($_SESSION['EditBookingChangeUser']) AND $_SESSION['EditBookingChangeUser']) :?>
+					<?php if(isset($users)) : ?>
+						<select name="userID" id="userID">
+							<?php foreach($users as $row): ?> 
+								<?php if($row['userID']==$SelectedUserID):?>
+									<option selected="selected" 
+											value=<?php htmlout($row['userID']); ?>>
+											<?php htmlout($row['userInformation']);?>
+									</option>
+								<?php else : ?>
+									<option value=<?php htmlout($row['userID']); ?>>
+											<?php htmlout($row['userInformation']);?>
+									</option>
+								<?php endif;?>
+							<?php endforeach; ?>
+						</select>
+						<input type="submit" name="edit" value="Select This User">
+					<?php else : ?>
+						<b>The search found 0 users.</b>
+					<?php endif; ?>
+					</div>
+					<div>
+						<label for="usersearchstring">Search for User:</label>
+						<input type="text" name="usersearchstring" 
+						value=<?php htmlout($usersearchstring); ?>>
+						<input type="submit" name="edit" value="Search">
+					</div>
 				<?php else : ?>
-					<b>The search found 0 users.</b>
+						<b><?php htmlout($userInformation); ?> </b>
+						<input type="submit" name="edit" value="Change User">
+						<input type="hidden" name="userID" id="userID"
+						value="<?php htmlout($SelectedUserID);?>">
+					</div>			
 				<?php endif; ?>
-				</div>
-				<div>
-					<label for="usersearchstring">Search for User:</label>
-					<input type="text" name="usersearchstring" 
-					value=<?php htmlout($usersearchstring); ?>>
-					<input type="submit" name="action" value="Search">
-				</div>
-			<?php else : ?>
-					<b><?php htmlout($userInformation); ?> </b>
-					<input type="submit" name="action" value="Change User">
-					<input type="hidden" name="userID" id="userID"
-					value="<?php htmlout($SelectedUserID);?>">
-				</div>			
-			<?php endif; ?>
 			<div>
 				<label for="originalCompanyInBooking">Booked for Company: </label>
 				<?php if(isset($originalCompanyName)) :?>
@@ -125,12 +125,12 @@
 								<?php endif;?>
 							<?php endforeach; ?>
 						</select>
-						<input type="submit" name="action" value="Select This Company">
+						<input type="submit" name="edit" value="Select This Company">
 					<?php else : ?>
 						<b><?php htmlout($companyName); ?></b>
 						<input type="hidden" name="companyID" id="companyID" 
 						value="<?php htmlout($companyID); ?>">
-						<input type="submit" name="action" value="Change Company">
+						<input type="submit" name="edit" value="Change Company">
 					<?php endif; ?>
 				<?php else : ?>
 					<?php if(isset($company)) : ?>
@@ -156,7 +156,7 @@
 				<label for="displayName">Set New Display Name: </label>
 				<input type="text" name="displayName" id="displayName" 
 				value="<?php htmlout($displayName); ?>">
-				<input type="submit" name="action" value="Get Default Display Name">
+				<input type="submit" name="edit" value="Get Default Display Name">
 			</div>
 			<div>
 				<label for="originalBookingDescription">Booked Description: </label>
@@ -172,13 +172,13 @@
 				<label for="description">Set New Booking Description: </label>
 				<input type="text" name="description" id="description" 
 				value="<?php htmlout($description); ?>">
-				<input type="submit" name="action" value="Get Default Booking Description">
+				<input type="submit" name="edit" value="Get Default Booking Description">
 			</div>
 			<div>
 				<input type="hidden" name="bookingID" id="bookingID" 
 				value="<?php htmlout($bookingID); ?>">
-				<input type="submit" name="action" value="Reset">
-				<input type="submit" name="action" value="Cancel Edit">
+				<input type="submit" name="edit" value="Reset">
+				<input type="submit" name="edit" value="Cancel">
 				<?php if(isset($_SESSION['EditBookingChangeUser']) AND $_SESSION['EditBookingChangeUser']) : ?>
 					<input type="submit" name="disabled" value="Finish Edit" disabled>
 					<b>You need to select the user you want before you can finish editing.</b>
@@ -186,7 +186,7 @@
 					<input type="submit" name="disabled" value="Finish Edit" disabled>
 					<b>You need to select the company you want before you can finish editing.</b>
 				<?php else : ?>
-					<input type="submit" name="action" value="Finish Edit">
+					<input type="submit" name="edit" value="Finish Edit">
 				<?php endif; ?>
 			</div>
 		</form>
