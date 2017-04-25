@@ -17,7 +17,7 @@
 				<label for="meetingRoomID">Meeting Room: </label>
 				<select name="meetingRoomID" id="meetingRoomID">
 					<?php foreach($meetingroom as $row): ?> 
-						<?php if($row['meetingRoomName']==$meetingroomname):?>
+						<?php if($row['meetingRoomID']==$selectedMeetingRoomID):?>
 							<option selected="selected" 
 									value=<?php htmlout($row['meetingRoomID']); ?>>
 									<?php htmlout($row['meetingRoomName']);?>
@@ -135,7 +135,6 @@
 				<input type="submit" name="add" value="Get Default Booking Description">
 			</div>
 			<div>
-				<input type="hidden" name="id" value="<?php htmlout($id); ?>">
 				<input type="submit" name="add" value="Reset">
 				<input type="submit" name="add" value="Cancel">
 				<?php if(isset($_SESSION['AddBookingChangeUser']) AND $_SESSION['AddBookingChangeUser']) : ?>

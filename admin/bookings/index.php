@@ -23,6 +23,18 @@ function clearBookingSessions(){
 	unset($_SESSION['EditBookingSelectedACompany']);
 	unset($_SESSION['EditBookingDefaultDisplayNameForNewUser']);
 	unset($_SESSION['EditBookingDefaultBookingDescriptionForNewUser']);
+	
+	unset($_SESSION['AddBookingInfoArray']);
+	unset($_SESSION['AddBookingChangeUser']);
+	unset($_SESSION['AddBookingUsersArray']);
+	unset($_SESSION['AddBookingOriginalInfoArray']);
+	unset($_SESSION['AddBookingMeetingRoomsArray']);	
+	unset($_SESSION['AddBookingUserSearch']);
+	unset($_SESSION['AddBookingSelectedNewUser']);
+	unset($_SESSION['AddBookingSelectedACompany']);
+	unset($_SESSION['AddBookingDefaultDisplayNameForNewUser']);
+	unset($_SESSION['AddBookingDefaultBookingDescriptionForNewUser']);	
+	
 }
 
 // Function to remember the user inputs in Edit Booking
@@ -49,6 +61,33 @@ function rememberEditBookingInputs(){
 		$newValues['EndTime'] = $_POST['endDateTime'];
 		
 		$_SESSION['EditBookingInfoArray'] = $newValues;			
+	}
+}
+
+// Function to remember the user inputs in Add Booking
+function rememberAddBookingInputs(){
+	session_start();
+	if(isset($_SESSION['AddBookingInfoArray'])){
+		$newValues = $_SESSION['AddBookingInfoArray'];
+
+			// The user selected, if the booking is for another user
+		if(isset($_POST['userID'])){
+			$newValues['TheUserID'] = $_POST['userID'];
+		}
+			// The meeting room selected
+		$newValues['TheMeetingRoomID'] = $_POST['meetingRoomID']; 
+			// The company selected
+		$newValues['TheCompanyID'] = $_POST['companyID'];
+			// The user selected
+		$newValues['BookedBy'] = $_POST['displayName'];
+			// The booking description
+		$newValues['BookingDescription'] = $_POST['description'];
+			// The start time
+		$newValues['StartTime'] = $_POST['startDateTime'];
+			// The end time
+		$newValues['EndTime'] = $_POST['endDateTime'];
+		
+		$_SESSION['AddBookingInfoArray'] = $newValues;			
 	}
 }
 
@@ -135,8 +174,8 @@ if (isset($_POST['action']) and $_POST['action'] == 'Cancel')
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 		
 		$pdo = connect_to_db();
-		$sql = 'UPDATE 	`booking` SET 
-						`dateTimeCancelled` = CURRENT_TIMESTAMP 
+		$sql = 'UPDATE 	`booking` 
+				SET 	`dateTimeCancelled` = CURRENT_TIMESTAMP 
 				WHERE 	`bookingID` = :id';
 		$s = $pdo->prepare($sql);
 		$s->bindValue(':id', $_POST['id']);
@@ -200,21 +239,164 @@ if (isset($_POST['action']) and $_POST['action'] == 'Cancel')
 
 // If admin wants to add a booked meeting to the database
 // we load a new html form
-if (isset($_POST['action']) AND $_POST['action'] == "Create Booking")
+if (	(isset($_POST['action']) AND $_POST['action'] == "Create Booking") OR 
+		(isset($_SESSION['refreshAddBooking']) AND $_SESSION['refreshAddBooking']))
 {
 	
-	// TO-DO: Let admin select the user
-	// Try not to mess this up too much, since we can use this code snippet
-	// (without selecting a user) for when normal users want to book a meeting room.
+	// Check if the call was a form submit or a forced refresh
+	if(isset($_SESSION['refreshAddBooking'])){
+		// Acknowledge that we have refreshed the page
+		unset($_SESSION['refreshAddBooking']);	
+		
+		// Set the information back to what it was before the refresh
+				// The user search string
+		if(isset($_SESSION['AddBookingUserSearch'])){
+			$usersearchstring = $_SESSION['AddBookingUserSearch'];
+			unset($_SESSION['AddBookingUserSearch']);
+		} else {
+			$usersearchstring = "";
+		}
+				// The user dropdown select options
+		if(isset($_SESSION['AddBookingUsersArray'])){
+			$users = $_SESSION['AddBookingUsersArray'];
+					
+		}
+			// The selected user in the dropdown select	
+		$SelectedUserID = $_SESSION['AddBookingInfoArray']['TheUserID'];	
+	
+		} else {
+			// Get information from database on booking information user can choose between
+			if(!isset($_SESSION['AddBookingMeetingRoomsArray'])){
+				try
+				{
+					include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+					
+					// Get booking information
+					$pdo = connect_to_db();
+					// Get name and IDs for meeting rooms
+					$sql = 'SELECT 	`meetingRoomID`,
+									`name` 
+							FROM 	`meetingroom`';
+					$result = $pdo->query($sql);
+						
+					//Close connection
+					$pdo = null;
+					
+					// Get the rows of information from the query
+					// This will be used to create a dropdown list in HTML
+					foreach($result as $row){
+						$meetingroom[] = array(
+											'meetingRoomID' => $row['meetingRoomID'],
+											'meetingRoomName' => $row['name']
+											);
+					}		
+					
+					$_SESSION['AddBookingMeetingRoomsArray'] = $meetingroom;
+				}
+				catch (PDOException $e)
+				{
+					$error = 'Error fetching meeting room details: ' . $e->getMessage();
+					include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+					$pdo = null;
+					exit();		
+				}
+			}
+		
+			if(!isset($_SESSION['AddBookingInfoArray'])){
+				try
+				{
+					include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+					
+					// Get the logged in user's default booking information
+					$pdo = connect_to_db();
+					$sql = 'SELECT	`bookingdescription`, 
+									`displayname`,
+									`firstName`,
+									`lastName`,
+									`email`
+							FROM 	`user`
+							WHERE 	`userID` = :userID
+							LIMIT 	1';
+						
+					$s = $pdo->prepare($sql);
+					$s->bindValue(':userID', $_SESSION['LoggedInUserID']);
+					$s->execute();
+					
+					// Create an array with the row information we retrieved
+					$result = $s->fetch();
+						
+					// Set default booking display name and booking description
+					if($result['displayname']!=NULL){
+						$displayName = $result['displayname'];
+					}
+
+					if($result['bookingdescription']!=NULL){
+						$description = $result['bookingdescription'];
+					}
+					
+					if($result['firstName']!=NULL){
+						$firstname = $result['firstName'];
+					}		
+					
+					if($result['lastName']!=NULL){
+						$lastname = $result['lastName'];
+					}	
+					
+					if($result['email']!=NULL){
+						$email = $result['email'];
+					}					
+		
+					//Close connection
+					$pdo = null;
+				}
+				catch (PDOException $e)
+				{
+					$error = 'Error fetching default user details: ' . $e->getMessage();
+					include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+					$pdo = null;
+					exit();		
+				}	
+			
+				// Create an array with the row information we want to use	
+				$_SESSION['AddBookingInfoArray'][] = array(
+															'TheCompanyID' => '',
+															'TheMeetingRoomID' => '',
+															'StartTime' => '',
+															'EndTime' => '',
+															'BookingDescription' => '',
+															'BookedBy' => '',
+															'BookedForCompany' => '',
+															'TheUserID' => '',
+															'UserFirstname' => '',
+															'UserLastname' => '',
+															'UserEmail' => '',
+															'UserDefaultDisplayName' => '',
+															'UserDefaultBookingDescription' => ''
+														);
+				$_SESSION['AddBookingOriginalInfoArray'] = $_SESSION['AddBookingInfoArray'];			
+				
+				$_SESSION['AddBookingInfoArray']['UserDefaultBookingDescription'] = $description;
+				$_SESSION['AddBookingInfoArray']['UserDefaultDisplayName'] = $displayName;
+				$_SESSION['AddBookingInfoArray']['UserFirstname'] = $firstname;	
+				$_SESSION['AddBookingInfoArray']['UserLastname'] = $lastname;	
+				$_SESSION['AddBookingInfoArray']['UserEmail'] = $email;	
+				$_SESSION['AddBookingInfoArray']['TheUserID'] = $_SESSION['LoggedInUserID'];
+			}
+			
+			// Set the correct information on form call
+			$usersearchstring = '';
+			$users = Null;
+			$SelectedUserID = $_SESSION['AddBookingInfoArray']['TheUserID'];
+	}
+
+		// Check if we need a company select for the booking
 	try
-	{
-		// Retrieve the user's default displayname and bookingdescription
-		// if they have any.
+	{		
+		// We want the companies the user works for to decide if we need to
+		// have a dropdown select or just a fixed value (with 0 or 1 company)
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 		$pdo = connect_to_db();
-		$sql = 'SELECT	u.`bookingdescription`, 
-						u.`displayname`,
-						c.`companyID`,
+		$sql = 'SELECT	c.`companyID`,
 						c.`name` 					AS companyName
 				FROM 	`user` u
 				JOIN 	`employee` e
@@ -224,16 +406,12 @@ if (isset($_POST['action']) AND $_POST['action'] == "Create Booking")
 				WHERE 	u.`userID` = :userID';
 			
 		$s = $pdo->prepare($sql);
-		$s->bindValue(':userID', $_SESSION['LoggedInUserID']);
+		$s->bindValue(':userID', $SelectedUserID);
 		$s->execute();
-		
 		
 		// Create an array with the row information we retrieved
 		$result = $s->fetchAll();
-		
-		$displayName = '';
-		$description = '';
-		
+			
 		foreach($result as $row){		
 			// Get the companies the user works for
 			// This will be used to create a dropdown list in HTML
@@ -241,19 +419,10 @@ if (isset($_POST['action']) AND $_POST['action'] == "Create Booking")
 								'companyID' => $row['companyID'],
 								'companyName' => $row['companyName']
 								);
+		}
+			
+		$pdo = null;
 				
-				
-			// Set default booking display name and booking description
-			if($row['displayname']!=NULL){
-				$displayName = $row['displayname'];
-			}
-
-			if($row['bookingdescription']!=NULL){
-				$description = $row['bookingdescription'];
-			}
-
-		}		
-	
 		// We only need to allow the user a company dropdown selector if they
 		// are connected to more than 1 company.
 		// If not we just store the companyID in a hidden form field
@@ -277,48 +446,60 @@ if (isset($_POST['action']) AND $_POST['action'] == "Create Booking")
 			unset($_SESSION['AddBookingDisplayCompanySelect']);
 			$_SESSION['AddBookingInfoArray']['TheCompanyID'] = "";
 			$_SESSION['AddBookingInfoArray']['BookedForCompany'] = "";
-		}				
-		
-		// Get name and IDs for meeting rooms
-		$sql = 'SELECT 	`meetingRoomID`,
-						`name` 
-				FROM 	`meetingroom`';
-		$result = $pdo->query($sql);
-		
-		// Get the rows of information from the query
-		// This will be used to create a dropdown list in HTML
-		foreach($result as $row){
-			$meetingroom[] = array(
-								'meetingRoomID' => $row['meetingRoomID'],
-								'meetingRoomName' => $row['name']
-								);
-		}
-		
-		// Remember the meeting room info for creating a log event later
-		unset($_SESSION['AddBookingMeetingRooms']);
-		$_SESSION['AddBookingMeetingRooms'] = $meetingroom;		
-		
-		//Close the connection
-		$pdo = null;
-		
-		// Set form variables to be ready for adding values
-		$meetingroomname = '';
-		$startDateTime = '';
-		$endDateTime = '';
-		$id = '';
-		
-		// Change form
-		include 'addbooking.html.php';
-		exit();
-		
+		}		
 	}
 	catch(PDOException $e)
 	{
-		$error = 'Error fetching user information from the database: ' . $e->getMessage();
+		$error = 'Error fetching user details: ' . $e->getMessage();
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
 		$pdo = null;
-		exit();
+		exit();					
 	}
+	
+	// Set the correct information
+	$row = $_SESSION['AddBookingInfoArray'];
+	$original = $_SESSION['AddBookingOriginalInfoArray'];
+		// Changed user
+	if(isset($_SESSION['AddBookingSelectedNewUser'])){
+		
+		foreach($users AS $user){
+			if($user['userID'] == $row['TheUserID']){
+				$row['UserLastname'] = $user['lastName'];
+				$row['UserFirstname'] = $user['firstName'];
+				$row['UserEmail'] = $user['email'];
+				
+				$_SESSION['AddBookingDefaultDisplayNameForNewUser'] = $user['displayName'];
+				$_SESSION['AddBookingDefaultBookingDescriptionForNewUser'] = $user['bookingDescription'];
+				break;
+			}
+		}
+	} else {
+		$_SESSION['AddBookingDefaultDisplayNameForNewUser'] = $original['UserDefaultDisplayName'];
+		$_SESSION['AddBookingDefaultBookingDescriptionForNewUser'] = $original['UserDefaultBookingDescription'];
+	}
+		// Changed company
+	foreach($company AS $cmp){
+		if($cmp['companyID'] == $row['TheCompanyID']){
+			$row['BookedForCompany'] = $cmp['companyName'];
+			break;
+		}
+	}
+		// Altered inputs
+	$companyName = $row['BookedForCompany'];
+	$selectedCompanyID = $row['TheCompanyID'];
+	$companyID = $row['TheCompanyID'];
+	//	userID has been set earlier
+	$meetingroom = $_SESSION['AddBookingMeetingRoomsArray'];
+	$selectedMeetingRoomID = $row['TheMeetingRoomID'];
+	$startDateTime = $row['StartTime'];
+	$endDateTime = $row['EndTime'];
+	$displayName = $row['BookedBy'];
+	$description = $row['BookingDescription'];
+	$userInformation = $row['UserLastname'] . ', ' . $row['UserFirstname'] . ' - ' . $row['UserEmail'];	
+
+	// Change form
+	include 'addbooking.html.php';
+	exit();	
 }
 
 // When admin has added the needed information and wants to add the booking
@@ -393,13 +574,13 @@ if (isset($_POST['add']) AND $_POST['add'] == "Add booking")
 
 		// Get meeting room name
 		$MeetingRoomName = 'N/A';
-		foreach ($_SESSION['AddBookingMeetingRooms'] AS $room){
+		foreach ($_SESSION['AddBookingMeetingRoomsArray'] AS $room){
 			if($room['meetingRoomID'] == $_POST['meetingRoomID']){
 				$MeetingRoomName = $room['meetingRoomName'];
 				break;
 			}
 		}
-		unset($_SESSION['AddBookingMeetingRooms']);
+		unset($_SESSION['AddBookingMeetingRoomsArray']);
 		
 		$meetinginfo = $MeetingRoomName . ' for the timeslot: ' . 
 		$_POST['startDateTime'] . ' to ' . $_POST['endDateTime'];
