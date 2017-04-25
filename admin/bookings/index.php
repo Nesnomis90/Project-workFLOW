@@ -1394,6 +1394,7 @@ if(isset($_POST['edit']) AND $_POST['edit'] == "Finish Edit")
 	}
 	
 	// Check if the timeslot is taken for the selected meeting room
+	// and ignore our own booking since it's the one we're editing
 	if($checkIfTimeslotIsAvailable){
 		try
 		{
@@ -1766,8 +1767,9 @@ if(isset($_SESSION['AddBookingChangeUser']) AND isset($_POST['add']) AND $_POST[
 // If admin wants to change the values back to the original values
 if (isset($_POST['add']) AND $_POST['add'] == "Reset"){
 
-	// TO-DO: Change for add values. Just blank everything?
+	// TO-DO: Maybe not completly done?
 	$_SESSION['AddBookingInfoArray'] = $_SESSION['AddBookingOriginalInfoArray'];
+	unset($_SESSION['AddBookingSelectedACompany']);
 	
 	$_SESSION['refreshAddBooking'] = TRUE;
 	header('Location: .');
