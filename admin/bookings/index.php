@@ -1011,22 +1011,28 @@ if(isset($_POST['action']) AND $_POST['action'] == "Finish Edit")
 		header('Location: .');
 		exit();	
 	}
-	
+
 	// Check if we need to check the timeslot or if we can just update the booking
 		// If we changed the meeting room
 	if($newMeetingRoom){
 		$checkIfTimeslotIsAvailable = TRUE;
 	}
+	
+		$startTime = correctDatetimeFormat($_POST['startDateTime']);
+		$endTime = correctDatetimeFormat($_POST['endDateTime']);
+		$oldStartTime = $originalValue['StartTime'];
+		$oldEndTime = $originalValue['EndTime'];
+	
 		// If we set the start time earlier than before or
 		// If we set the start time later than the previous end time
-	if( ($newStartTime AND $_POST['startDateTime'] < $originalValue['StartTime']) OR 
-		($newStartTime AND $_POST['startDateTime'] >= $originalValue['EndTime'])){
+	if( ($newStartTime AND $startTime < $oldStartTime) OR 
+		($newStartTime AND $startTime >= $oldEndTime)){
 		$checkIfTimeslotIsAvailable = TRUE;
 	}
 		// If we set the end time later than before or
 		// If we set the end time earlier than the previous start time
-	if( ($newEndTime AND $_POST['endDateTime'] > $originalValue['EndTime']) OR 
-		($newEndTime AND $_POST['endDateTime'] <= $originalValue['StartTime'])){
+	if( ($newEndTime AND $endTime > $oldEndTime) OR 
+		($newEndTime AND $endTime <= $oldStartTime)){
 		$checkIfTimeslotIsAvailable = TRUE;
 	}
 	
@@ -1040,13 +1046,18 @@ if(isset($_POST['action']) AND $_POST['action'] == "Finish Edit")
 			$sql =	" 	SELECT 	COUNT(*)
 						FROM 	`booking`
 						WHERE 	`meetingRoomID` = :MeetingRoomID
-						AND		`startDateTime` = :StartTime
-						AND 	`endDateTime` = :EndTime
-						LIMIT 	1";
+						AND		(
+									`startDateTime` 
+									BETWEEN :StartTime 
+									AND :EndTime
+								) 
+						OR 		(
+									`endDateTime`
+									BETWEEN :StartTime 
+									AND :EndTime
+								)
+						LIMIT 	1;";
 			$s = $pdo->prepare($sql);
-			
-			$startTime = correctDatetimeFormat($_POST['startDateTime']);
-			$endTime = correctDatetimeFormat($_POST['endDateTime']);
 			
 			$s->bindValue(':MeetingRoomID', $_POST['meetingRoomID']);
 			$s->bindValue(':StartTime', $startTime);
@@ -1061,6 +1072,7 @@ if(isset($_POST['action']) AND $_POST['action'] == "Finish Edit")
 			exit();
 		}
 
+		// TO-DO: Checking if timeslot is available doesn't work as intended. It doesn't fetch a result even though it should get one?
 		// Check if we got any hits, if so the timeslot is already taken
 		$row = $s->fetch();
 		if ($row[0] > 0){
@@ -1122,7 +1134,7 @@ if(isset($_POST['action']) AND $_POST['action'] == "Finish Edit")
 		exit();
 	}
 	
-	$_SESSION['BookingUserFeedback'] = "Successfully updated the booking information!";
+	$_SESSION['BookingUserFeedback'] = "Successfully updated the booking information! with $startTime $endTime";
 	clearBookingSessions();
 	
 	// Load booking history list webpage with the updated booking information

@@ -26,11 +26,13 @@ function getDatetimeNow() {
 }
 // Function to check if a variable is a date with the Y-m-d format
 function validateDate($date){
+	date_default_timezone_set('Europe/Oslo');
 	$d = date_create_from_format('Y-m-d', $date);
     return $d && $d->format('Y-m-d') === $date;
 }
 // Function to check if a variable is a datetime with the Y-m-d H:i:s format
 function validateDatetime($datetime){
+	date_default_timezone_set('Europe/Oslo');
 	$d = date_create_from_format('Y-m-d H:i:s', $datetime);
     return $d && $d->format('Y-m-d H:i:s') === $datetime;
 }
@@ -40,8 +42,8 @@ function validateDatetime($datetime){
 function correctDateFormat($wrongDateString){
 	// Correct date format is
 	// yyyy-mm-dd
-	echo 'old Date: ' . $wrongDateString . '<br />';
-			
+	//echo 'old Date: ' . $wrongDateString . '<br />';
+	date_default_timezone_set('Europe/Oslo');		
 	if (validateDate($wrongDateString)){
 		$wrongDate = date_create_from_format('Y-m-d', $wrongDateString);
 		$correctDate = DATE_FORMAT($wrongDate,'Y-m-d');
@@ -49,7 +51,7 @@ function correctDateFormat($wrongDateString){
 		$wrongDate = date_create_from_format('d-m-Y', $wrongDateString);
 		$correctDate = DATE_FORMAT($wrongDate,'Y-m-d');
 	}
-	echo 'new Date: ' . $correctDate . '<br />';
+	//echo 'new Date: ' . $correctDate . '<br />';
 	return $correctDate;
 
 }
@@ -60,7 +62,7 @@ function correctDatetimeFormat($wrongDatetimeString){
 	// Correct datetime format is
 	// yyyy-mm-dd hh:mm:ss	
 	//echo 'old Datetime: ' . $wrongDatetimeString . '<br />';
-	
+	date_default_timezone_set('Europe/Oslo');
 	if(validateDatetime($wrongDatetimeString)){
 		$wrongDatetime = date_create_from_format('Y-m-d H:i:s', $wrongDatetimeString);
 		$correctDatetime = DATE_FORMAT($wrongDatetime,'Y-m-d H:i:s');
@@ -78,6 +80,7 @@ function correctDatetimeFormatForBooking($wrongDatetimeString){
 	// Correct datetime format is
 	// yyyy-mm-dd hh:mm:ss
 	//echo 'old Datetime: ' . $wrongDatetimeString . '<br />';
+	date_default_timezone_set('Europe/Oslo');
 	if(validateDatetime($wrongDatetimeString)){	
 		$wrongDatetime = date_create_from_format('Y-m-d H:i:s', $wrongDatetimeString);
 		$correctDatetime = DATE_FORMAT($wrongDatetime,'Y-m-d H:i:s');
