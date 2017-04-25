@@ -202,6 +202,10 @@ if (isset($_POST['action']) and $_POST['action'] == 'Cancel')
 // we load a new html form
 if (isset($_POST['action']) AND $_POST['action'] == "Create Booking")
 {
+	
+	// TO-DO: Let admin select the user
+	// Try not to mess this up too much, since we can use this code snippet
+	// (without selecting a user) for when normal users want to book a meeting room.
 	try
 	{
 		session_start();
@@ -1132,7 +1136,7 @@ if(isset($_POST['action']) AND $_POST['action'] == "Finish Edit")
 		exit();
 	}
 		
-	$_SESSION['BookingUserFeedback'] = "Successfully updated the booking information! with $startTime compared to $oldStartTime and $endTime compared to $oldEndTime";
+	$_SESSION['BookingUserFeedback'] = "Successfully updated the booking information!";
 	clearBookingSessions();
 	
 	// Load booking history list webpage with the updated booking information
