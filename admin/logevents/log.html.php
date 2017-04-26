@@ -70,28 +70,28 @@
 				<label for="checkboxSearch">Select what logs to display: </label>
 			</div>
 			<div>
-				<input type="checkbox" name="search" value="All" >All<br />
-				<input type="checkbox" name="search" value="AllAccount">All Account
-				<input type="checkbox" name="search" value="AccountActivated">Account Activated
-				<input type="checkbox" name="search" value="AccountCreated">Account Created
-				<input type="checkbox" name="search" value="AccountRemoved">Account Removed<br />
-				<input type="checkbox" name="search" value="AllBooking">All Booking
-				<input type="checkbox" name="search" value="BookingCancelled">Booking Cancelled
-				<input type="checkbox" name="search" value="BookingCompleted">Booking Completed
-				<input type="checkbox" name="search" value="BookingCreated">Booking Created
-				<input type="checkbox" name="search" value="BookingRemoved">Booking Removed<br />
-				<input type="checkbox" name="search" value="CompanyCreated">Company Created
-				<input type="checkbox" name="search" value="CompanyRemoved">Company Removed<br />
-				<input type="checkbox" name="search" value="DatabaseCreated">Database Created
-				<input type="checkbox" name="search" value="TableCreated">Database Table Created<br />
-				<input type="checkbox" name="search" value="EmployeeAdded">Employee Added
-				<input type="checkbox" name="search" value="EmployeeRemoved">Employee Removed<br />
-				<input type="checkbox" name="search" value="EquipmentAdded">Equipment Added
-				<input type="checkbox" name="search" value="EquipmentRemoved">Equipment Removed<br />
-				<input type="checkbox" name="search" value="MeetingRoomAdded">Meeting Room Added
-				<input type="checkbox" name="search" value="MeetingRoomRemoved">Meeting Room Removed<br />
-				<input type="checkbox" name="search" value="RoomEquipmentAdded">Room Equipment Added
-				<input type="checkbox" name="search" value="RoomEquipmentRemoved">Room Equipment Removed<br />
+				<input type="checkbox" name="searchAll" value="All">All<br />
+				<input type="checkbox" name="search[]" value="All Account">All Account
+				<input type="checkbox" name="search[]" value="Account Activated">Account Activated
+				<input type="checkbox" name="search[]" value="Account Created">Account Created
+				<input type="checkbox" name="search[]" value="Account Removed">Account Removed<br />
+				<input type="checkbox" name="search[]" value="All Booking">All Booking
+				<input type="checkbox" name="search[]" value="Booking Cancelled">Booking Cancelled
+				<input type="checkbox" name="search[]" value="Booking Completed">Booking Completed
+				<input type="checkbox" name="search[]" value="Booking Created">Booking Created
+				<input type="checkbox" name="search[]" value="Booking Removed">Booking Removed<br />
+				<input type="checkbox" name="search[]" value="Company Created">Company Created
+				<input type="checkbox" name="search[]" value="Company Removed">Company Removed<br />
+				<input type="checkbox" name="search[]" value="Database Created">Database Created
+				<input type="checkbox" name="search[]" value="Table Created">Database Table Created<br />
+				<input type="checkbox" name="search[]" value="Employee Added">Employee Added
+				<input type="checkbox" name="search[]" value="Employee Removed">Employee Removed<br />
+				<input type="checkbox" name="search[]" value="Equipment Added">Equipment Added
+				<input type="checkbox" name="search[]" value="Equipment Removed">Equipment Removed<br />
+				<input type="checkbox" name="search[]" value="Meeting Room Added">Meeting Room Added
+				<input type="checkbox" name="search[]" value="Meeting Room Removed">Meeting Room Removed<br />
+				<input type="checkbox" name="search[]" value="Room Equipment Added">Room Equipment Added
+				<input type="checkbox" name="search[]" value="Room Equipment Removed">Room Equipment Removed<br />
 				<input type="submit" name="action" value="Refresh Logs">
 			</div>
 		</form>
@@ -124,7 +124,7 @@
 					</form>
 				<?php endforeach; ?>
 			<?php else : ?>
-				<tr><b>There are no log events that match your search.</b></tr>
+				<tr><td colspan="5"><b>There are no log events that match your search.</b></td></tr>
 			<?php endif; ?>
 		</table>
 	<p><a href="..">Return to CMS home</a></p>
