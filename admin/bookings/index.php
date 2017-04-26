@@ -1305,31 +1305,36 @@ if (isset($_POST['add']) AND $_POST['add'] == "Add booking")
 	$invalidInput = FALSE;
 	
 		// Are values actually filled in?
-	if($_POST['startDateTime'] == "" OR $_POST['endDateTime'] == ""){
+	if($_POST['startDateTime'] == "" AND $_POST['endDateTime'] == ""){
 		
 		$_SESSION['AddBookingError'] = "You need to fill in a start and end time for your booking.";	
 		$invalidInput = TRUE;
+	} elseif($_POST['startDateTime'] != "" AND $_POST['endDateTime'] == "") {
+		$_SESSION['AddBookingError'] = "You need to fill in an end time for your booking.";	
+		$invalidInput = TRUE;		
+	} elseif($_POST['startDateTime'] == "" AND $_POST['endDateTime'] != ""){
+		$_SESSION['AddBookingError'] = "You need to fill in a start time for your booking.";	
+		$invalidInput = TRUE;		
 	}
 		// DateTime formats
 	// TO-DO: Check if stuff is valid when the proper datetime user input submit has been decided
 		
 		// DisplayName
-			// Has to be less than 255 chars
+			// Has to be less than 255 chars (MySQL - VARCHAR 255)
 	$dspname = $_POST['displayName'];
 	$dspnameLength = strlen(utf8_decode($dspname));
-	$dspnameMaxLength = 255;
+	$dspnameMaxLength = 255; // TO-DO: Adjust if needed.
 	if($dspnameLength > $dspnameMaxLength AND !$invalidInput){
 		
 		$_SESSION['AddBookingError'] = "The displayName submitted is too long.";	
 		$invalidInput = TRUE;		
 	}	
 		// BookingDescription
-			// Has to be less than 65,535 bytes
-			// TO-DO: Reduce booking description size to an appropriate amount later.
+			// Has to be less than 65,535 bytes (MySQL - TEXT) (too much anyway)
 	$bknDscrptn = $_POST['description'];
-	$dspnameSize = strlen($bknDscrptn);
-	$dspnameMaxSize = 65535;
-	if($dspnameSize > $dspnameMaxSize AND !$invalidInput){
+	$bknDscrptnLength = strlen(utf8_decode($bknDscrptn));
+	$bknDscrptnMaxLength = 500; // TO-DO: Adjust if needed.
+	if($bknDscrptnLength > $bknDscrptnMaxLength AND !$invalidInput){
 		
 		$_SESSION['AddBookingError'] = "The booking description submitted is too long.";	
 		$invalidInput = TRUE;		
