@@ -144,7 +144,7 @@ if($numberOfCheckboxesActivated > 0){
 					DESC
 					LIMIT ' . $logLimit;			
 		}
-	echo $sql;
+		
 		$result = $pdo->query($sql);
 		$rowNum = $result->rowCount();
 		
