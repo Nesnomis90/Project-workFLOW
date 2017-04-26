@@ -672,41 +672,6 @@ function create_tables()
 		} else { 
 			echo '<b>Table ' . $table. ' already exists</b>.<br />';
 		}
-		
-			//Web Session information
-		$table = 'websession';
-		//Check if table already exists
-		if (!tableExists($conn, $table))
-		{
-			$conn->exec("CREATE TABLE IF NOT EXISTS `$table` (
-						  `sessionID` int(10) unsigned NOT NULL AUTO_INCREMENT,
-						  `userID` int(10) unsigned DEFAULT NULL,
-						  `dateTimeStart` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-						  `IP` char(64) NOT NULL,
-						  PRIMARY KEY (`sessionID`),
-						  KEY `FK_UserID4_idx` (`userID`),
-						  CONSTRAINT `FK_UserID4` FOREIGN KEY (`userID`) REFERENCES `user` (`userID`) ON DELETE SET NULL ON UPDATE CASCADE
-						) ENGINE=InnoDB DEFAULT CHARSET=utf8");
-						
-			//	Add the creation to log event
-			$sqlLog = "	INSERT INTO `logevent`(`actionID`, `description`) 
-						VALUES 		(
-										(
-										SELECT 	`actionID` 
-										FROM 	`logaction` 
-										WHERE 	`name` = 'Table Created'
-										), 
-									'The table $table was created automatically by the PHP script. This should only occur once, at the very start of the log events.'
-									)";
-			$logEventArray[] = $sqlLog;						
-
-			$totaltime = microtime(true) - $_SERVER["REQUEST_TIME_FLOAT"];
-			$time = $totaltime - $prevtime;
-			$prevtime = $totaltime;
-			echo '<b>Execution time for creating table ' . $table. ':</b> ' . $time . 's<br />';	
-		} else { 
-			echo '<b>Table ' . $table. ' already exists</b>.<br />';
-		}		
 				
 			//Log Event
 		$table = 'logevent';
@@ -722,7 +687,6 @@ function create_tables()
 						  `meetingRoomID` int(10) unsigned DEFAULT NULL,
 						  `equipmentID` int(10) unsigned DEFAULT NULL,
 						  `positionID` int(10) unsigned DEFAULT NULL,
-						  `sessionID` int(10) unsigned DEFAULT NULL,
 						  `description` text,
 						  `logDateTime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
 						  PRIMARY KEY (`logID`),
@@ -732,7 +696,6 @@ function create_tables()
 						  KEY `FK_BookingID_idx` (`bookingID`),
 						  KEY `FK_MeetingRoomID3_idx` (`meetingRoomID`),
 						  KEY `FK_EquipmentID2_idx` (`equipmentID`),
-						  KEY `FK_SessionID_idx` (`sessionID`),
 						  KEY `FK_PositionID2_idx` (`positionID`),
 						  CONSTRAINT `FK_ActionID` FOREIGN KEY (`actionID`) REFERENCES `logaction` (`actionID`) ON DELETE SET NULL ON UPDATE CASCADE,
 						  CONSTRAINT `FK_BookingID` FOREIGN KEY (`bookingID`) REFERENCES `booking` (`bookingID`) ON DELETE SET NULL ON UPDATE CASCADE,
@@ -740,7 +703,6 @@ function create_tables()
 						  CONSTRAINT `FK_EquipmentID2` FOREIGN KEY (`equipmentID`) REFERENCES `equipment` (`EquipmentID`) ON DELETE SET NULL ON UPDATE CASCADE,
 						  CONSTRAINT `FK_MeetingRoomID3` FOREIGN KEY (`meetingRoomID`) REFERENCES `meetingroom` (`meetingRoomID`) ON DELETE SET NULL ON UPDATE CASCADE,
 						  CONSTRAINT `FK_PositionID2` FOREIGN KEY (`positionID`) REFERENCES `companyposition` (`PositionID`) ON DELETE SET NULL ON UPDATE CASCADE,
-						  CONSTRAINT `FK_SessionID` FOREIGN KEY (`sessionID`) REFERENCES `websession` (`sessionID`) ON DELETE SET NULL ON UPDATE CASCADE,
 						  CONSTRAINT `FK_UserID3` FOREIGN KEY (`userID`) REFERENCES `user` (`userID`) ON DELETE SET NULL ON UPDATE CASCADE
 						) ENGINE=InnoDB DEFAULT CHARSET=utf8");
 												

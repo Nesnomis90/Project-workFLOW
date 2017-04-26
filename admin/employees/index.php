@@ -5,7 +5,6 @@
 include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/helpers.inc.php';
 include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/magicquotes.inc.php';
 
-session_start();
 // CHECK IF USER TRYING TO ACCESS THIS IS IN FACT THE ADMIN!
 if (!isUserAdmin()){
 	exit();
@@ -42,8 +41,6 @@ if(isset($_POST['action']) AND $_POST['action'] == 'Remove'){
 	// Add a log event that an employee was removed from a company
 	try
 	{
-		session_start();
-
 		// Save a description with information about the employee that was removed
 		// from the company.
 		$description = 'The user: ' . $_POST['UserName'] . 
@@ -97,7 +94,6 @@ if(isset($_POST['action']) AND $_POST['action'] == 'Remove'){
 // Admin clicked the search button, trying to limit the shown company and user lists
 if(isset($_POST['action']) AND $_POST['action'] == 'Search'){
 	// Let's remember what was selected and searched for
-	session_start();
 	
 	// If we are looking at a specific company, let's refresh info about
 	// that company again.
@@ -135,7 +131,6 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Add Employee') OR
 	$companysearchstring = '';			
 	$usersearchstring = '';
 
-	session_start();
 	// Check if the call was a form submit or a forced refresh
 	if(isset($_SESSION['refreshAddEmployee'])){
 		// Acknowledge that we have refreshed the page
@@ -236,7 +231,6 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Add Employee') OR
 					$companies = $s->fetch();		
 				}
 				
-				session_start();
 				$_SESSION['AddEmployeeCompaniesArray'] = $companies;			
 			} else {
 				$companies = $_SESSION['AddEmployeeCompaniesArray'];
@@ -263,7 +257,6 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Add Employee') OR
 											);
 				}
 				
-				session_start();
 				$_SESSION['AddEmployeeCompanyPositionArray'] = $companyposition;
 			} else {
 				$companyposition = $_SESSION['AddEmployeeCompanyPositionArray'];
@@ -307,7 +300,7 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Add Employee') OR
 											$row['firstname'] . ' - ' . $row['email']
 											);
 				}
-				session_start();
+
 				$_SESSION['AddEmployeeUsersArray'] = $users;
 			} else {
 				$users = $_SESSION['AddEmployeeUsersArray'];
@@ -339,7 +332,6 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Add Employee') OR
 if (isset($_POST['action']) AND $_POST['action'] == 'Confirm Employee')
 {
 	// If we're looking at a specific company
-	session_start();
 	if(isset($_GET['Company'])){
 		$CompanyID = $_GET['Company'];
 	} else {
@@ -407,8 +399,6 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Confirm Employee')
 		{
 			// This user and company combination already exists in our database
 			// This means the user is already an employee in the company!
-			
-			session_start();
 			
 			$_SESSION['AddEmployeeSelectedUserID'] = $_POST['UserID'];
 			$_SESSION['refreshAddEmployee'] = TRUE;
@@ -491,7 +481,6 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Confirm Employee')
 		$companyinfo = 'N/A';
 		$positioninfo = 'N/A';
 		
-		session_start();
 		// Get selected user info
 		if(isset($_SESSION['AddEmployeeUsersArray'])){
 			foreach($_SESSION['AddEmployeeUsersArray'] AS $row){
@@ -712,7 +701,6 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Cancel'){
 
 // There were no user inputs or forced refreshes. So we're interested in fresh, new values.
 // Let's reset all the "remembered" values
-session_start();
 unset($_SESSION['AddEmployeeCompaniesArray']);
 unset($_SESSION['AddEmployeeCompanyPositionArray']);
 unset($_SESSION['AddEmployeeUsersArray']);

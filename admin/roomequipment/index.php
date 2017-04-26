@@ -41,8 +41,6 @@ if(isset($_POST['action']) AND $_POST['action'] == 'Remove'){
 	// Add a log event that equipment was removed from a meeting room
 	try
 	{
-		session_start();
-
 		// Save a description with information about the equipment that was removed
 		// from the meeting room.
 		$description = 'The equipment: ' . $_POST['EquipmentName'] . 
@@ -95,7 +93,6 @@ if(isset($_POST['action']) AND $_POST['action'] == 'Remove'){
 // Admin clicked the search button, trying to limit the shown equipment and meeting rooms
 if(isset($_POST['action']) AND $_POST['action'] == 'Search'){
 	// Let's remember what was searched for
-	session_start();
 	
 	$_SESSION['AddRoomEquipmentEquipmentSearch'] = $_POST['equipmentsearchstring'];
 	$_SESSION['AddRoomEquipmentSelectedEquipment'] = $_POST['EquipmentID'];
@@ -137,7 +134,6 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Add Room Equipment') OR
 	$meetingroomsearchstring = '';
 	$EquipmentAmount = 0;
 
-	session_start();
 	// Check if the call was a form submit or a forced refresh
 	if(isset($_SESSION['refreshAddRoomEquipment']) AND $_SESSION['refreshAddRoomEquipment']){
 		// Acknowledge that we have refreshed the page
@@ -236,7 +232,6 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Add Room Equipment') OR
 					$s->execute();
 					$meetingrooms = $s->fetch();
 				}	
-				session_start();
 				$_SESSION['AddRoomEquipmentMeetingRoomArray'] = $meetingrooms;	
 			} else {
 				$meetingrooms = $_SESSION['AddRoomEquipmentMeetingRoomArray'];
@@ -272,8 +267,6 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Add Room Equipment') OR
 											'EquipmentName' => $row['EquipmentName']
 											);
 				}
-					
-				session_start();
 				$_SESSION['AddRoomEquipmentEquipmentArray'] = $equipment;
 			} else {
 				$equipment = $_SESSION['AddRoomEquipmentEquipmentArray'];
@@ -305,7 +298,6 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Confirm Room Equipment')
 {
 	
 	// If we're looking at a specific meetingroom
-	session_start();
 	if(isset($_GET['Meetingroom'])){
 		$MeetingRoomID = $_GET['Meetingroom'];
 	} else {
@@ -394,8 +386,6 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Confirm Room Equipment')
 			// This meeting room and equipment combination already exists in our database
 			// This means the equipment is already in the selected meeting room!
 			
-			session_start();
-			
 			$_SESSION['AddRoomEquipmentSelectedEquipment'] = $_POST['EquipmentID'];
 			$_SESSION['AddRoomEquipmentSelectedEquipmentAmount'] = $_POST['EquipmentAmount'];
 			$_SESSION['refreshAddRoomEquipment'] = TRUE;
@@ -479,7 +469,6 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Confirm Room Equipment')
 		$meetingroominfo = 'N/A';
 		$equipmentinfo = 'N/A';
 		
-		session_start();
 		// Get selected meeting room name
 		if(isset($_SESSION['AddRoomEquipmentMeetingRoomArray'])){
 			if($_SESSION['AddRoomEquipmentMeetingRoomArray'][0] == $MeetingRoomID){
@@ -671,7 +660,6 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Cancel'){
 
 // There were no user inputs or forced refreshes. So we're interested in fresh, new values.
 // Let's reset all the "remembered" values
-session_start();
 unset($_SESSION['AddRoomEquipmentEquipmentArray']);	
 unset($_SESSION['AddRoomEquipmentMeetingRoomArray']);
 

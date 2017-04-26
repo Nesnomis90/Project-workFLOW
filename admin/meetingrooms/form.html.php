@@ -16,7 +16,7 @@
 		<form action="?<?php htmlout($action); ?>" method="post">
 			<div>
 				<label for="name">Room Name: 
-					<input type="text" name="name" id="name" 
+					<input type="text" name="name" id="name"
 					required placeholder="Enter Room Name" 
 					oninvalid="this.setCustomValidity('Enter Room Name Here')"
 					oninput="setCustomValidity('')"
@@ -25,10 +25,10 @@
 			</div>
 			<div>
 				<label for="capacity">Capacity: 
-					<input type="number" name="capacity" id="capacity" 
-					required placeholder="Enter Capacity" 
-					oninvalid="this.setCustomValidity('Enter Capacity Here')"
-					oninput="setCustomValidity('')"
+					<input type="number" name="capacity" id="capacity"
+					min="1" max="255" required
+					oninvalid="this.setCustomValidity('Enter Room Capacity Here')"
+					oninput="setCustomValidity('')"					
 					value="<?php htmlout($capacity); ?>">
 				</label>
 			</div>
