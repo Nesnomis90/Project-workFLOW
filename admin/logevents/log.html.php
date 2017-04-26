@@ -57,7 +57,7 @@
 				<?php endif; ?>
 			</div>
 			<div>
-				<label for="logsToShow">Maximum log events shown: </label>
+				<label for="logsToShow">Maximum log events to display: </label>
 				<input type="number" name="logsToShow" min="10" max="1000"
 				value="<?php htmlout($logLimit); ?>">
 				<input type="submit" name="action" value="Set New Maximum">
@@ -71,11 +71,9 @@
 			</div>
 			<div>
 				<input type="checkbox" name="searchAll" value="All">All<br />
-				<input type="checkbox" name="search[]" value="All Account">All Account
 				<input type="checkbox" name="search[]" value="Account Activated">Account Activated
 				<input type="checkbox" name="search[]" value="Account Created">Account Created
 				<input type="checkbox" name="search[]" value="Account Removed">Account Removed<br />
-				<input type="checkbox" name="search[]" value="All Booking">All Booking
 				<input type="checkbox" name="search[]" value="Booking Cancelled">Booking Cancelled
 				<input type="checkbox" name="search[]" value="Booking Completed">Booking Completed
 				<input type="checkbox" name="search[]" value="Booking Created">Booking Created

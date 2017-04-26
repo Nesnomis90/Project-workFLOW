@@ -2,6 +2,20 @@ USE test;
 SET NAMES utf8;
 USE meetingflow;
 
+SELECT 		l.logID, 
+							DATE_FORMAT(l.logDateTime, "%d %b %Y %T") 	AS LogDate, 
+							la.`name` 									AS ActionName, 
+							la.description 								AS ActionDescription, 
+							l.description 								AS LogDescription 
+				FROM 		`logevent` l 
+				JOIN 		`logaction` la 
+				ON 			la.actionID = l.actionID
+                WHERE 		la.`name` = 'Account Created'
+                OR 			la.`name` = 'Account Removed'
+				ORDER BY 	UNIX_TIMESTAMP(l.logDateTime) 
+				DESC
+				LIMIT 10;
+
 SELECT 	COUNT(*)
 FROM 	`booking`
 WHERE 	`meetingRoomID` = 2

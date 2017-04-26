@@ -35,11 +35,16 @@ if (isset($_POST['action']) AND $_POST['action'] == "Refresh Logs"){
 		
 		if(isset($_POST['search']) AND !empty($_POST['search'])) {
 			// The user has checked some checkmarks
+			
 				// Let's check how many are activated
 			foreach($_POST['search'] AS $check){
+				if($numberOfCheckboxesActivated==0){
+					$sqlAdd = " WHERE la.`name` = '" . $check . "'";
+				} else {
+					$sqlAdd .= " OR la.`name` = '" . $check ."'";
+				}
 				$numberOfCheckboxesActivated++;
 			}
-			
 			
 		} else {
 			// The user has not checked any checkmarks. Let's tell the user
@@ -100,7 +105,7 @@ if($numberOfCheckboxesActivated > 0){
 		if(isset($_POST['logsToShow']) AND $setNewMaximum){
 			$logLimit = $_POST['logsToShow'];
 			
-			if ($logLimit < 0 OR $logLimit > 1000){
+			if ($logLimit < 10 OR $logLimit > 1000){
 				$logLimit = 10;
 			}	
 			$setNewMaximum = FALSE;
@@ -114,17 +119,32 @@ if($numberOfCheckboxesActivated > 0){
 		$pdo = connect_to_db();
 		
 		//Retrieve log data from database
-		$sql = 'SELECT 		l.logID, 
-							DATE_FORMAT(l.logDateTime, "%d %b %Y %T") 	AS LogDate, 
-							la.`name` 									AS ActionName, 
-							la.description 								AS ActionDescription, 
-							l.description 								AS LogDescription 
-				FROM 		`logevent` l 
-				JOIN 		`logaction` la 
-				ON 			la.actionID = l.actionID
-				ORDER BY 	UNIX_TIMESTAMP(l.logDateTime) 
-				DESC
-				LIMIT ' . $logLimit;
+		if (isset($sqlAdd)){
+			$sql = 'SELECT 		l.logID, 
+								DATE_FORMAT(l.logDateTime, "%d %b %Y %T") 	AS LogDate, 
+								la.`name` 									AS ActionName, 
+								la.description 								AS ActionDescription, 
+								l.description 								AS LogDescription 
+					FROM 		`logevent` l 
+					JOIN 		`logaction` la 
+					ON 			la.actionID = l.actionID' . $sqlAdd . ' 
+					ORDER BY 	UNIX_TIMESTAMP(l.logDateTime) 
+					DESC
+					LIMIT ' . $logLimit;				
+		} else {
+			$sql = 'SELECT 		l.logID, 
+								DATE_FORMAT(l.logDateTime, "%d %b %Y %T") 	AS LogDate, 
+								la.`name` 									AS ActionName, 
+								la.description 								AS ActionDescription, 
+								l.description 								AS LogDescription 
+					FROM 		`logevent` l 
+					JOIN 		`logaction` la 
+					ON 			la.actionID = l.actionID
+					ORDER BY 	UNIX_TIMESTAMP(l.logDateTime) 
+					DESC
+					LIMIT ' . $logLimit;			
+		}
+	echo $sql;
 		$result = $pdo->query($sql);
 		$rowNum = $result->rowCount();
 		
