@@ -14,6 +14,7 @@ function hashPassword($rawPassword){
 // returns TRUE if user is logged in
 function userIsLoggedIn()
 {
+	session_start();
 	// If user is trying to log in
 	if (isset($_POST['action']) and $_POST['action'] == 'login')
 	{
@@ -23,7 +24,6 @@ function userIsLoggedIn()
 		{
 			// User didn't fill in enough info
 			// Save a custom error message for the user
-			session_start();
 			$_SESSION['loginError'] = 'Please fill in both fields';
 			return FALSE;
 		}
@@ -35,7 +35,6 @@ function userIsLoggedIn()
 		if (databaseContainsUser($_POST['email'], $password))
 		{
 			// Correct log in info! Update the session data to know we're logged in
-			session_start();
 			$_SESSION['loggedIn'] = TRUE;
 			$_SESSION['email'] = $_POST['email'];
 			$_SESSION['password'] = $password;
@@ -51,7 +50,6 @@ function userIsLoggedIn()
 			// Or user data has changed since last check
 			// Meaning the login data isn't correct anymore
 			// So we log out a user if previously logged in
-			session_start();
 			unset($_SESSION['loggedIn']);
 			unset($_SESSION['email']);
 			unset($_SESSION['password']);
@@ -67,7 +65,6 @@ function userIsLoggedIn()
 	// If user wants to log out
 	if (isset($_POST['action']) and $_POST['action'] == 'logout')
 	{
-		session_start();
 		unset($_SESSION['loggedIn']);
 		unset($_SESSION['email']);
 		unset($_SESSION['password']);
@@ -85,7 +82,6 @@ function userIsLoggedIn()
 	// is loaded again. But is more secure than just checking for the 
 	// loggedIn = true session variable in the case that user info
 	// has been altered while someone is already logged in with old data
-	session_start();
 	if (isset($_SESSION['loggedIn']))
 	{
 		return databaseContainsUser($_SESSION['email'],
@@ -129,14 +125,12 @@ function databaseContainsUser($email, $password)
 	// If we got a hit, then the user info was correct
 	if ($row[0] > 0)
 	{
-		session_start();
 		$_SESSION['DatabaseContainsUserID'] = $row['userID'];
 		$_SESSION['DatabaseContainsUserName'] = $row['lastname'] . ", " . $row['firstname'];
 		return TRUE;
 	}
 	else
 	{
-		session_start();
 		unset($_SESSION['DatabaseContainsUserID']);		
 		return FALSE;
 	}
@@ -397,14 +391,12 @@ function isUserCompanyOwner(){
 											);
 			}
 			
-			session_start();
 			$_SESSION['LoggedInUserIsOwnerInTheseCompanies'] = $OwnerInCompanies;
 			
 			return TRUE;
 		}
 		else
 		{
-			session_start();
 			unset($_SESSION['LoggedInUserIsOwnerInTheseCompanies']);
 			return FALSE;
 		}
