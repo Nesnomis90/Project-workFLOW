@@ -39,7 +39,6 @@ function clearBookingSessions(){
 
 // Function to remember the user inputs in Edit Booking
 function rememberEditBookingInputs(){
-	session_start();
 	if(isset($_SESSION['EditBookingInfoArray'])){
 		$newValues = $_SESSION['EditBookingInfoArray'];
 
@@ -66,7 +65,6 @@ function rememberEditBookingInputs(){
 
 // Function to remember the user inputs in Add Booking
 function rememberAddBookingInputs(){
-	session_start();
 	if(isset($_SESSION['AddBookingInfoArray'])){
 		$newValues = $_SESSION['AddBookingInfoArray'];
 
@@ -123,8 +121,6 @@ if (isset($_POST['action']) and $_POST['action'] == 'Delete')
 	// Add a log event that a booking was deleted
 	try
 	{
-		session_start();
-
 		// Save a description with information about the booking that was removed
 		$description = "N/A";
 		if(isset($_POST['UserInfo']) AND isset($_POST['MeetingInfo'])){
@@ -196,8 +192,6 @@ if (isset($_POST['action']) and $_POST['action'] == 'Cancel')
 		// Add a log event that a booking was cancelled
 	try
 	{
-		session_start();
-
 		// Save a description with information about the booking that was cancelled
 		$description = "N/A";
 		if(isset($_POST['UserInfo']) AND isset($_POST['MeetingInfo'])){
@@ -369,7 +363,6 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR
 		// Check if we need a company select for the booking
 	try
 	{		
-		session_start();
 		// We want the companies the user works for to decide if we need to
 		// have a dropdown select or just a fixed value (with 0 or 1 company)
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
@@ -560,7 +553,6 @@ if((isset($_POST['edit']) AND $_POST['edit'] == "Change User") OR
 									'bookingDescription' => $row['bookingdescription']
 									);
 			}
-			session_start();
 			$_SESSION['EditBookingUsersArray'] = $users;
 			
 			$pdo = null;
@@ -648,8 +640,6 @@ if(isset($_SESSION['EditBookingChangeUser']) AND isset($_POST['edit']) AND $_POS
 // If admin wants to get the default values for the user's display name
 if(isset($_POST['edit']) AND $_POST['edit'] == "Get Default Display Name"){
 	  
-	session_start();
-	
 	$displayName = $_SESSION['EditBookingDefaultDisplayNameForNewUser'];
 	if(isset($_SESSION['EditBookingInfoArray'])){
 		$newValues = $_SESSION['EditBookingInfoArray'];
@@ -693,8 +683,6 @@ if(isset($_POST['edit']) AND $_POST['edit'] == "Get Default Display Name"){
 
 // If admin wants to get the default values for the user's booking description
 if(isset($_POST['edit']) AND $_POST['edit'] == "Get Default Booking Description"){
-	
-	session_start();
 	
 	$bookingDescription = $_SESSION['EditBookingDefaultBookingDescriptionForNewUser'];
 	if(isset($_SESSION['EditBookingInfoArray'])){
@@ -758,17 +746,50 @@ if (isset($_POST['edit']) AND $_POST['edit'] == 'Cancel'){
 if(isset($_POST['edit']) AND $_POST['edit'] == "Finish Edit")
 {
 
-	// Check if all values are valid before doing anything
-		// TO-DO:
-		// Are all inputs filled out?
+	// Start validating user inputs
+	$invalidInput = FALSE;
+	
+		// Are values actually filled in?
+	if($_POST['startDateTime'] == "" AND $_POST['endDateTime'] == ""){
 		
-		// Are the filled out values actually the correct format?
-
+		$_SESSION['EditBookingError'] = "You need to fill in a start and end time for your booking.";	
+		$invalidInput = TRUE;
+	} elseif($_POST['startDateTime'] != "" AND $_POST['endDateTime'] == "") {
+		$_SESSION['EditBookingError'] = "You need to fill in an end time for your booking.";	
+		$invalidInput = TRUE;		
+	} elseif($_POST['startDateTime'] == "" AND $_POST['endDateTime'] != ""){
+		$_SESSION['EditBookingError'] = "You need to fill in a start time for your booking.";	
+		$invalidInput = TRUE;		
+	}
+		// DateTime formats
+	// TO-DO: Check if stuff is valid when the proper datetime user input submit has been decided
+		
+		// DisplayName
+			// Has to be less than 255 chars (MySQL - VARCHAR 255)
+	$dspname = $_POST['displayName'];
+	$dspnameLength = strlen(utf8_decode($dspname));
+	$dspnameMaxLength = 255; // TO-DO: Adjust if needed.
+	if($dspnameLength > $dspnameMaxLength AND !$invalidInput){
+		
+		$_SESSION['EditBookingError'] = "The displayName submitted is too long.";	
+		$invalidInput = TRUE;		
+	}	
+		// BookingDescription
+			// Has to be less than 65,535 bytes (MySQL - TEXT) (too much anyway)
+	$bknDscrptn = $_POST['description'];
+	$bknDscrptnLength = strlen(utf8_decode($bknDscrptn));
+	$bknDscrptnMaxLength = 500; // TO-DO: Adjust if needed.
+	if($bknDscrptnLength > $bknDscrptnMaxLength AND !$invalidInput){
+		
+		$_SESSION['EditBookingError'] = "The booking description submitted is too long.";	
+		$invalidInput = TRUE;		
+	}
+	
+	
 	$startDateTime = correctDatetimeFormat($_POST['startDateTime']);
 	$endDateTime = correctDatetimeFormat($_POST['endDateTime']);
 
 	$timeNow = getDatetimeNow();
-	$invalidInput = FALSE;
 	
 	if($startDateTime > $endDateTime){
 		// End time can't be before the start time
@@ -1627,7 +1648,6 @@ if((isset($_POST['add']) AND $_POST['add'] == "Change User") OR
 									'bookingDescription' => $row['bookingdescription']
 									);
 			}
-			session_start();
 			$_SESSION['AddBookingUsersArray'] = $users;
 			
 			$pdo = null;
@@ -1701,8 +1721,6 @@ if(isset($_POST['add']) AND $_POST['add'] == "Select This Company"){
 // If admin wants to get the default values for the user's display name
 if(isset($_POST['add']) AND $_POST['add'] == "Get Default Display Name"){
 	  
-	session_start();
-	
 	$displayName = $_SESSION['AddBookingDefaultDisplayNameForNewUser'];
 	if(isset($_SESSION['AddBookingInfoArray'])){
 		$newValues = $_SESSION['AddBookingInfoArray'];
@@ -1746,8 +1764,6 @@ if(isset($_POST['add']) AND $_POST['add'] == "Get Default Display Name"){
 
 // If admin wants to get the default values for the user's booking description
 if(isset($_POST['add']) AND $_POST['add'] == "Get Default Booking Description"){
-	
-	session_start();
 	
 	$bookingDescription = $_SESSION['AddBookingDefaultBookingDescriptionForNewUser'];
 	if(isset($_SESSION['AddBookingInfoArray'])){
@@ -1808,9 +1824,10 @@ if(isset($_SESSION['AddBookingChangeUser']) AND isset($_POST['add']) AND $_POST[
 // If admin wants to change the values back to the original values
 if (isset($_POST['add']) AND $_POST['add'] == "Reset"){
 
-	// TO-DO: Maybe not completly done?
 	$_SESSION['AddBookingInfoArray'] = $_SESSION['AddBookingOriginalInfoArray'];
 	unset($_SESSION['AddBookingSelectedACompany']);
+	unset($_SESSION['AddBookingChangeUser']);
+	unset($_SESSION['AddBookingSelectedNewUser']);
 	
 	$_SESSION['refreshAddBooking'] = TRUE;
 	header('Location: .');

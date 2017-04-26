@@ -404,5 +404,4 @@ function isUserCompanyOwner(){
 		return TRUE;
 	}
 }
-
 ?>

@@ -43,8 +43,6 @@ if (isset($_POST['action']) and $_POST['action'] == 'Delete')
 	// Add a log event that a company was removed
 	try
 	{
-		session_start();
-
 		// Save a description with information about the meeting room that was removed
 		$description = "The company: " . $_POST['CompanyName'] . " was removed by: " . $_SESSION['LoggedInUserName'];
 		
@@ -179,8 +177,6 @@ if (isset($_GET['addform']))
 		{
 			// This name is already being used for a company
 			
-			session_start();
-			
 			$_SESSION['AddCompanyError'] = "There is already a company with the name: " . $_POST['CompanyName'] . "!";
 			
 			// Refresh company add form
@@ -211,7 +207,6 @@ if (isset($_GET['addform']))
 		$s->bindValue(':CompanyName', $_POST['CompanyName']);
 		$s->execute();
 		
-		session_start();
 		unset($_SESSION['LastCompanyID']);
 		$_SESSION['LastCompanyID'] = $pdo->lastInsertId();
 		
@@ -231,7 +226,6 @@ if (isset($_GET['addform']))
 		// Add a log event that a company was added
 	try
 	{
-		session_start();
 		if(isset($_SESSION['LastCompanyID'])){
 			$LastCompanyID = $_SESSION['LastCompanyID'];
 			unset($_SESSION['LastCompanyID']);

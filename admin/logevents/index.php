@@ -10,8 +10,29 @@ if (!isUserAdmin()){
 	exit();
 }
 
+// If admin wants to be able to delete logs it needs to enabled first
+if (isset($_POST['action']) AND $_POST['action'] == "Enable Delete"){
+	$_SESSION['logEventsEnableDelete'] = TRUE;
+}
+
+// If admin wants to be disable log deletion
+if (isset($_POST['action']) AND $_POST['action'] == "Disable Delete"){
+	unset($_SESSION['logEventsEnableDelete']);
+}
+
+// If admin wants to change the amount of log events displayed
+if (isset($_POST['action']) AND $_POST['action'] == "Set New Maximum"){
+	$setNewMaximum = TRUE;
+}
+
+// If admin wants to change what type of logs to display
+if (isset($_POST['action']) AND $_POST['action'] == "Refresh Logs"){
+	// TO-DO:
+}
+
+
 // To delete the log event selected by the user
-if (isset($_GET['deletelog'])){
+if (isset($_POST['action']) AND $_POST['action'] == "Delete"){
 	try
 	{
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
@@ -20,7 +41,8 @@ if (isset($_GET['deletelog'])){
 		$pdo = connect_to_db();
 		
 		$logEventIDToDelete = $_POST['id'];
-		$sql = 'DELETE FROM `logevent` WHERE `logID` = :id';
+		$sql = 'DELETE FROM `logevent` 
+				WHERE 		`logID` = :id';
 		$s = $pdo->prepare($sql);
 		$s->bindValue(':id', $logEventIDToDelete);
 		$s->execute();
@@ -46,10 +68,22 @@ if (isset($_GET['deletelog'])){
 // Get log data we need to display it in our html template
 try
 {
+	if(!isset($setNewMaximum)){
+		$setNewMaximum = FALSE;
+	}
 	// Get the wanted amount of Log Events the user wants displayed
 	//TO-DO: Make this an admin choice
-	$logLimit = 100;
-
+	if(isset($_POST['logsToShow']) AND $setNewMaximum){
+		$logLimit = $_POST['logsToShow'];
+		
+		if ($logLimit < 0 OR $logLimit > 1000){
+			$logLimit = 10;
+		}	
+		$setNewMaximum = FALSE;
+	} else {
+		$logLimit = 10;
+	}
+	
 	include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 	
 	// Use connect to Database function from db.inc.php
@@ -58,10 +92,10 @@ try
 	//Retrieve log data from database
 	//$sql = 'SELECT `logID`,`logDateTime` FROM `logevent`';
 	$sql = 'SELECT 		l.logID, 
-						DATE_FORMAT(l.logDateTime, "%d %b %Y %T") AS LogDate, 
-						la.`name` AS ActionName, 
-						la.description AS ActionDescription, 
-						l.description AS LogDescription 
+						DATE_FORMAT(l.logDateTime, "%d %b %Y %T") 	AS LogDate, 
+						la.`name` 									AS ActionName, 
+						la.description 								AS ActionDescription, 
+						l.description 								AS LogDescription 
 			FROM 		`logevent` l 
 			JOIN 		`logaction` la 
 			ON 			la.actionID = l.actionID
