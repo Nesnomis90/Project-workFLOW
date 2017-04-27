@@ -57,7 +57,12 @@
 			</div>
 			<div>
 				<label for="currentLogsDisplayed">Logs currently being displayed: </label>
-				<b><?php htmlout($rowNum); ?></b>
+				<?php if (isset($rowNum)) : ?>
+					<b><?php htmlout($rowNum); ?></b>
+				<?php else : ?>
+					<b>N/A</b>
+				<?php endif; ?>
+				
 			</div>
 			<div>
 				<label for="checkboxSearch">Select what logs to display: </label>
@@ -125,7 +130,7 @@
 				<th>Log Description</th>
 				<th>Delete Log Entry</th>
 			</tr>
-			<?php if($rowNum>0) :?>
+			<?php if(isset($rowNum) AND $rowNum>0) :?>
 				<?php foreach ($log as $row): ?>
 					<form action="" method="post">
 						<tr>
@@ -144,8 +149,10 @@
 						</tr>
 					</form>
 				<?php endforeach; ?>
-			<?php else : ?>
+			<?php elseif(isset($rowNum) AND $rowNum < 1) : ?>
 				<tr><td colspan="5"><b>There are no log events that match your search.</b></td></tr>
+			<?php elseif(!isset($rowNum)) : ?>
+				<tr><td colspan="5"><b>No log event categories has been selected.</b></td></tr>
 			<?php endif; ?>
 		</table>
 	<p><a href="..">Return to CMS home</a></p>

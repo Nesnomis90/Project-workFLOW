@@ -144,10 +144,6 @@ if(!isset($numberOfCheckboxesActivated)){
 	
 }
 
-if(!isset($setNewMaximum)){
-	$setNewMaximum = FALSE;
-}
-
 // Fix the amount of logs to display
 if (isset($newLogLimit)){
 	$logLimit = $newLogLimit;
@@ -180,6 +176,13 @@ if (!isset($_POST['filterEndDate'])){
 } else {
 	// TO-DO: Validate the date
 	$filterEndDate = $_POST['filterEndDate'];
+}
+
+// Check if admin has even checked any boxes yet, if not just give a warning
+if (!isset($_POST['search']) AND !isset($_POST['searchAll'])){
+	$_SESSION['LogEventUserFeedback'] = "You need to select at least one category of log events with the checkboxes.";
+	include_once 'log.html.php';
+	exit();
 }
 
 if(!isset($sqlAdd)){
