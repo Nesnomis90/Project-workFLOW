@@ -87,8 +87,14 @@ if (isset($_POST['action']) AND $_POST['action'] == "Refresh Logs" OR
 	isset($_POST['action']) AND $_POST['action'] == "Set New Maximum" OR 
 	isset($refreshLogs) AND $refreshLogs){
 
-	$setNewMaximum = TRUE;
-	
+	if(isset($_POST['logsToShow'])){
+		$newLogLimit = $_POST['logsToShow'];
+
+		if ($newLogLimit < 10 OR $newLogLimit > 1000){
+			$newLogLimit = 10;
+		}			
+	}
+
 	if(isset($_POST['searchAll'])){
 		$numberOfCheckboxesActivated = 1;
 	} else {
@@ -133,23 +139,79 @@ if (isset($_POST['action']) AND $_POST['action'] == "Refresh Logs" OR
 
 
 if(!isset($numberOfCheckboxesActivated)){
+	// Default 
 	$numberOfCheckboxesActivated = 1;
+	
 }
 
 if(!isset($setNewMaximum)){
 	$setNewMaximum = FALSE;
 }
 
-// Get the wanted amount of Log Events the user wants displayed
-if(isset($_POST['logsToShow']) AND $setNewMaximum){
-	$logLimit = $_POST['logsToShow'];
-	
-	if ($logLimit < 10 OR $logLimit > 1000){
-		$logLimit = 10;
-	}	
-	$setNewMaximum = FALSE;
+// Fix the amount of logs to display
+if (isset($newLogLimit)){
+	$logLimit = $newLogLimit;
 } else {
-	$logLimit = 10;
+	if(isset($_POST['logsToShow'])){
+		$logLimit = $_POST['logsToShow'];
+	} else {
+		$logLimit = 10;
+	}
+}
+
+// We handle when the checkbox "All" should be checked.
+if (isset($_POST['search']) AND !empty($_POST['search']) AND !isset($_POST['searchAll'])){
+	$checkAll = "";
+} elseif(!isset($_POST['search']) AND !isset($_POST['searchAll'])){
+	$checkAll = "";
+} else {
+	$checkAll = 'checked="checked"';
+}
+
+// We handle filter dates
+if (!isset($_POST['filterStartDate'])){
+	$filterStartDate = '';
+} else {
+	// TO-DO: Validate the date
+	$filterStartDate = $_POST['filterStartDate'];
+}
+if (!isset($_POST['filterEndDate'])){
+	$filterEndDate = '';
+} else {
+	// TO-DO: Validate the date
+	$filterEndDate = $_POST['filterEndDate'];
+}
+
+if(!isset($sqlAdd)){
+	// We've not added any additional SQL code yet
+	if($filterStartDate != '' AND $filterEndDate != ''){
+		// Both dates are filled out. Use BETWEEN for MySQL
+		$sqlAddDates = ' WHERE (l.`logDateTime` BETWEEN :filterStartDate AND :filterEndDate) ';
+		$useBothDates = TRUE;
+	} elseif($filterStartDate == '' AND $filterEndDate != ''){
+		// Only end date is filled out. Use less than
+		$sqlAddDates = ' WHERE (l.`logDateTime` < :filterEndDate) ';
+		$useEndDate = TRUE;
+	} elseif($filterStartDate != '' AND $filterEndDate == ''){
+		// Only start date is filled out. Use greater than
+		$sqlAddDates = ' WHERE (l.`logDateTime` > :filterStartDate) ';
+		$useStartDate = TRUE;
+	}
+} else {
+	// We've already altered the sql code earlier, which means we've already started a "WHERE"-segment
+	if($filterStartDate != '' AND $filterEndDate != ''){
+		// Both dates are filled out. Use BETWEEN for MySQL
+		$sqlAddDates = ' AND (l.`logDateTime` BETWEEN :filterStartDate AND :filterEndDate) ';
+		$useBothDates = TRUE;
+	} elseif($filterStartDate == '' AND $filterEndDate != ''){
+		// Only end date is filled out. Use less than
+		$sqlAddDates = ' AND (l.`logDateTime` < :filterEndDate) ';
+		$useEndDate = TRUE;
+	} elseif($filterStartDate != '' AND $filterEndDate == ''){
+		// Only start date is filled out. Use greater than
+		$sqlAddDates = ' AND (l.`logDateTime` > :filterStartDate) ';
+		$useStartDate = TRUE;
+	}	
 }
 
 //	Make sure admin has selected a category of log events to show, if not we can't show anything.
@@ -165,7 +227,56 @@ if($numberOfCheckboxesActivated > 0){
 		$pdo = connect_to_db();
 		
 		//Retrieve log data from database
-		if (isset($sqlAdd)){
+		if (isset($sqlAddDates)){
+			// We want to filter by date, we need to use a prepared statement
+			if (isset($sqlAdd)){
+			$sql = 'SELECT 		l.logID, 
+								DATE_FORMAT(l.logDateTime, "%d %b %Y %T") 	AS LogDate, 
+								la.`name` 									AS ActionName, 
+								la.description 								AS ActionDescription, 
+								l.description 								AS LogDescription 
+					FROM 		`logevent` l 
+					JOIN 		`logaction` la 
+					ON 			la.actionID = l.actionID' . $sqlAdd . $sqlAddDates . ' 
+					ORDER BY 	UNIX_TIMESTAMP(l.logDateTime) 
+					DESC
+					LIMIT ' . $logLimit;				
+			} else {
+				$sql = 'SELECT 		l.logID, 
+									DATE_FORMAT(l.logDateTime, "%d %b %Y %T") 	AS LogDate, 
+									la.`name` 									AS ActionName, 
+									la.description 								AS ActionDescription, 
+									l.description 								AS LogDescription 
+						FROM 		`logevent` l 
+						JOIN 		`logaction` la 
+						ON 			la.actionID = l.actionID' . $sqlAddDates . ' 
+						ORDER BY 	UNIX_TIMESTAMP(l.logDateTime) 
+						DESC
+						LIMIT ' . $logLimit;			
+			}
+			
+			$filterStartDate = correctDatetimeFormat($filterStartDate);
+			$filterEndDate = correctDatetimeFormat($filterEndDate);
+			
+			$s = $pdo->prepare($sql);
+			if (isset($useBothDates) AND $useBothDates){
+				$s->bindValue(':filterStartDate', $filterStartDate);
+				$s->bindValue(':filterEndDate', $filterEndDate);				
+			}
+			if (isset($useStartDate) AND $useStartDate){
+				$s->bindValue(':filterStartDate', $filterStartDate);			
+			}			
+			if (isset($useEndDate) AND $useEndDate){
+				$s->bindValue(':filterEndDate', $filterEndDate);			
+			}	
+			
+			$s->execute();
+			
+			$result = $s->fetchAll();
+			$rowNum = sizeOf($result);
+		} else {
+			// We don't want to filter by date, we just use a standard query
+			if (isset($sqlAdd)){
 			$sql = 'SELECT 		l.logID, 
 								DATE_FORMAT(l.logDateTime, "%d %b %Y %T") 	AS LogDate, 
 								la.`name` 									AS ActionName, 
@@ -177,22 +288,24 @@ if($numberOfCheckboxesActivated > 0){
 					ORDER BY 	UNIX_TIMESTAMP(l.logDateTime) 
 					DESC
 					LIMIT ' . $logLimit;				
-		} else {
-			$sql = 'SELECT 		l.logID, 
-								DATE_FORMAT(l.logDateTime, "%d %b %Y %T") 	AS LogDate, 
-								la.`name` 									AS ActionName, 
-								la.description 								AS ActionDescription, 
-								l.description 								AS LogDescription 
-					FROM 		`logevent` l 
-					JOIN 		`logaction` la 
-					ON 			la.actionID = l.actionID
-					ORDER BY 	UNIX_TIMESTAMP(l.logDateTime) 
-					DESC
-					LIMIT ' . $logLimit;			
+			} else {
+				$sql = 'SELECT 		l.logID, 
+									DATE_FORMAT(l.logDateTime, "%d %b %Y %T") 	AS LogDate, 
+									la.`name` 									AS ActionName, 
+									la.description 								AS ActionDescription, 
+									l.description 								AS LogDescription 
+						FROM 		`logevent` l 
+						JOIN 		`logaction` la 
+						ON 			la.actionID = l.actionID
+						ORDER BY 	UNIX_TIMESTAMP(l.logDateTime) 
+						DESC
+						LIMIT ' . $logLimit;			
+			}
+			
+			$result = $pdo->query($sql);
+			$rowNum = $result->rowCount();		
 		}
-		
-		$result = $pdo->query($sql);
-		$rowNum = $result->rowCount();
+
 		
 		//Close connection
 		$pdo = null;

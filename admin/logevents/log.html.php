@@ -50,13 +50,6 @@
 		<?php endif; ?>
 		<form action="" method="post">
 			<div>
-				<?php if(isset($_SESSION['logEventsEnableDelete']) AND $_SESSION['logEventsEnableDelete']) : ?>
-					<input type="submit" name="action" value="Disable Delete">
-				<?php else : ?>
-					<input type="submit" name="action" value="Enable Delete">
-				<?php endif; ?>
-			</div>
-			<div>
 				<label for="logsToShow">Maximum log events to display: </label>
 				<input type="number" name="logsToShow" min="10" max="1000"
 				value="<?php htmlout($logLimit); ?>">
@@ -70,10 +63,14 @@
 				<label for="checkboxSearch">Select what logs to display: </label>
 			</div>
 			<div>
-				<input type="checkbox" name="searchAll" value="All" 
-				<?php if(isset($_POST['searchAll'])){ htmlout('checked="checked"');}?>>All<br />
+				<b>Limit logs displayed by category: </b><br />
+				<input type="checkbox" name="searchAll" value="All" <?php htmlout($checkAll); ?>>All<br />
 				<?php foreach($checkboxes AS $checkbox) : ?>
 					<?php foreach($checkbox AS $info) : ?>
+						<?php //info[0] is the log action name ?>
+						<?php //info[1] is the text displayed ?>
+						<?php //info[2] is if it should have a linefeed ?>
+						<?php //info[3] is if it should be checked ?>
 						<?php if($info[2]) : ?>
 							<?php if($info[3]) : ?>
 								<input type="checkbox" name="search[]" 
@@ -93,7 +90,30 @@
 						<?php endif; ?>
 					<?php endforeach; ?>
 				<?php endforeach; ?>
+			<div>
+				<b>Limit logs displayed by date: </b><br />
+				<label for="filterStartDate">Earliest date to display logs from: </label>
+				<input type="text" name="filterStartDate" 
+				placeholder="dd-mm-yyyy hh:mm:ss" 
+				oninvalid="this.setCustomValidity('Enter Your Starting Date And Time Here')"
+				oninput="setCustomValidity('')"
+				value="<?php htmlout($filterStartDate); ?>"><br />
+				<label for="filterEndDate">Latest date to display logs from: </label>
+				<input type="text" name="filterEndDate"
+				placeholder="dd-mm-yyyy hh:mm:ss" 
+				oninvalid="this.setCustomValidity('Enter Your Ending Date And Time Here')"
+				oninput="setCustomValidity('')"
+				value="<?php htmlout($filterEndDate); ?>">
+			</div>
+			</div>
 				<input type="submit" name="action" value="Refresh Logs">
+			</div>
+			<div>
+				<?php if(isset($_SESSION['logEventsEnableDelete']) AND $_SESSION['logEventsEnableDelete']) : ?>
+					<input type="submit" name="action" value="Disable Delete">
+				<?php else : ?>
+					<input type="submit" name="action" value="Enable Delete">
+				<?php endif; ?>
 			</div>
 		</form>
 		<table id = "logevent">
