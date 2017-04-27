@@ -62,7 +62,6 @@
 				<?php else : ?>
 					<b>N/A</b>
 				<?php endif; ?>
-				
 			</div>
 			<div>
 				<label for="checkboxSearch">Select what logs to display: </label>
