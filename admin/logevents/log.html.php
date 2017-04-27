@@ -70,26 +70,29 @@
 				<label for="checkboxSearch">Select what logs to display: </label>
 			</div>
 			<div>
-				<input type="checkbox" name="searchAll" value="All">All<br />
-				<input type="checkbox" name="search[]" value="Account Activated">Account Activated
-				<input type="checkbox" name="search[]" value="Account Created">Account Created
-				<input type="checkbox" name="search[]" value="Account Removed">Account Removed<br />
-				<input type="checkbox" name="search[]" value="Booking Cancelled">Booking Cancelled
-				<input type="checkbox" name="search[]" value="Booking Completed">Booking Completed
-				<input type="checkbox" name="search[]" value="Booking Created">Booking Created
-				<input type="checkbox" name="search[]" value="Booking Removed">Booking Removed<br />
-				<input type="checkbox" name="search[]" value="Company Created">Company Created
-				<input type="checkbox" name="search[]" value="Company Removed">Company Removed<br />
-				<input type="checkbox" name="search[]" value="Database Created">Database Created
-				<input type="checkbox" name="search[]" value="Table Created">Database Table Created<br />
-				<input type="checkbox" name="search[]" value="Employee Added">Employee Added
-				<input type="checkbox" name="search[]" value="Employee Removed">Employee Removed<br />
-				<input type="checkbox" name="search[]" value="Equipment Added">Equipment Added
-				<input type="checkbox" name="search[]" value="Equipment Removed">Equipment Removed<br />
-				<input type="checkbox" name="search[]" value="Meeting Room Added">Meeting Room Added
-				<input type="checkbox" name="search[]" value="Meeting Room Removed">Meeting Room Removed<br />
-				<input type="checkbox" name="search[]" value="Room Equipment Added">Room Equipment Added
-				<input type="checkbox" name="search[]" value="Room Equipment Removed">Room Equipment Removed<br />
+				<input type="checkbox" name="searchAll" value="All" 
+				<?php if(isset($_POST['searchAll'])){ htmlout('checked="checked"');}?>>All<br />
+				<?php foreach($checkboxes AS $checkbox) : ?>
+					<?php foreach($checkbox AS $info) : ?>
+						<?php if($info[2]) : ?>
+							<?php if($info[3]) : ?>
+								<input type="checkbox" name="search[]" 
+								value="<?php htmlout($info[0]); ?>" checked="checked"><?php htmlout($info[1]); ?></br />
+							<?php else : ?>
+								<input type="checkbox" name="search[]" 
+								value="<?php htmlout($info[0]); ?>"><?php htmlout($info[1]); ?></br />
+							<?php endif; ?>
+						<?php else : ?>
+							<?php if($info[3]) : ?>
+								<input type="checkbox" name="search[]" 
+								value="<?php htmlout($info[0]); ?>" checked="checked"><?php htmlout($info[1]); ?>
+							<?php else : ?>
+								<input type="checkbox" name="search[]" 
+								value="<?php htmlout($info[0]); ?>"><?php htmlout($info[1]); ?>
+							<?php endif; ?>						
+						<?php endif; ?>
+					<?php endforeach; ?>
+				<?php endforeach; ?>
 				<input type="submit" name="action" value="Refresh Logs">
 			</div>
 		</form>
