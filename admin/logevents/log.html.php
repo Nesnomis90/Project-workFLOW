@@ -50,13 +50,6 @@
 		<?php endif; ?>
 		<form action="" method="post">
 			<div>
-				<?php if(isset($_SESSION['logEventsEnableDelete']) AND $_SESSION['logEventsEnableDelete']) : ?>
-					<input type="submit" name="action" value="Disable Delete">
-				<?php else : ?>
-					<input type="submit" name="action" value="Enable Delete">
-				<?php endif; ?>
-			</div>
-			<div>
 				<label for="logsToShow">Maximum log events to display: </label>
 				<input type="number" name="logsToShow" min="10" max="1000"
 				value="<?php htmlout($logLimit); ?>">
@@ -64,33 +57,67 @@
 			</div>
 			<div>
 				<label for="currentLogsDisplayed">Logs currently being displayed: </label>
-				<b><?php htmlout($rowNum); ?></b>
+				<?php if (isset($rowNum)) : ?>
+					<b><?php htmlout($rowNum); ?></b>
+				<?php else : ?>
+					<b>N/A</b>
+				<?php endif; ?>
 			</div>
 			<div>
 				<label for="checkboxSearch">Select what logs to display: </label>
 			</div>
 			<div>
-				<input type="checkbox" name="searchAll" value="All">All<br />
-				<input type="checkbox" name="search[]" value="Account Activated">Account Activated
-				<input type="checkbox" name="search[]" value="Account Created">Account Created
-				<input type="checkbox" name="search[]" value="Account Removed">Account Removed<br />
-				<input type="checkbox" name="search[]" value="Booking Cancelled">Booking Cancelled
-				<input type="checkbox" name="search[]" value="Booking Completed">Booking Completed
-				<input type="checkbox" name="search[]" value="Booking Created">Booking Created
-				<input type="checkbox" name="search[]" value="Booking Removed">Booking Removed<br />
-				<input type="checkbox" name="search[]" value="Company Created">Company Created
-				<input type="checkbox" name="search[]" value="Company Removed">Company Removed<br />
-				<input type="checkbox" name="search[]" value="Database Created">Database Created
-				<input type="checkbox" name="search[]" value="Table Created">Database Table Created<br />
-				<input type="checkbox" name="search[]" value="Employee Added">Employee Added
-				<input type="checkbox" name="search[]" value="Employee Removed">Employee Removed<br />
-				<input type="checkbox" name="search[]" value="Equipment Added">Equipment Added
-				<input type="checkbox" name="search[]" value="Equipment Removed">Equipment Removed<br />
-				<input type="checkbox" name="search[]" value="Meeting Room Added">Meeting Room Added
-				<input type="checkbox" name="search[]" value="Meeting Room Removed">Meeting Room Removed<br />
-				<input type="checkbox" name="search[]" value="Room Equipment Added">Room Equipment Added
-				<input type="checkbox" name="search[]" value="Room Equipment Removed">Room Equipment Removed<br />
+				<b>Limit logs displayed by category: </b><br />
+				<input type="checkbox" name="searchAll" value="All" <?php htmlout($checkAll); ?>>All<br />
+				<?php foreach($checkboxes AS $checkbox) : ?>
+					<?php foreach($checkbox AS $info) : ?>
+						<?php //info[0] is the log action name ?>
+						<?php //info[1] is the text displayed ?>
+						<?php //info[2] is if it should have a linefeed ?>
+						<?php //info[3] is if it should be checked ?>
+						<?php if($info[2]) : ?>
+							<?php if($info[3]) : ?>
+								<input type="checkbox" name="search[]" 
+								value="<?php htmlout($info[0]); ?>" checked="checked"><?php htmlout($info[1]); ?></br />
+							<?php else : ?>
+								<input type="checkbox" name="search[]" 
+								value="<?php htmlout($info[0]); ?>"><?php htmlout($info[1]); ?></br />
+							<?php endif; ?>
+						<?php else : ?>
+							<?php if($info[3]) : ?>
+								<input type="checkbox" name="search[]" 
+								value="<?php htmlout($info[0]); ?>" checked="checked"><?php htmlout($info[1]); ?>
+							<?php else : ?>
+								<input type="checkbox" name="search[]" 
+								value="<?php htmlout($info[0]); ?>"><?php htmlout($info[1]); ?>
+							<?php endif; ?>						
+						<?php endif; ?>
+					<?php endforeach; ?>
+				<?php endforeach; ?>
+			<div>
+				<b>Limit logs displayed by date: </b><br />
+				<label for="filterStartDate">Earliest date to display logs from: </label>
+				<input type="text" name="filterStartDate" 
+				placeholder="dd-mm-yyyy hh:mm:ss" 
+				oninvalid="this.setCustomValidity('Enter Your Starting Date And Time Here')"
+				oninput="setCustomValidity('')"
+				value="<?php htmlout($filterStartDate); ?>"><br />
+				<label for="filterEndDate">Latest date to display logs from: </label>
+				<input type="text" name="filterEndDate"
+				placeholder="dd-mm-yyyy hh:mm:ss" 
+				oninvalid="this.setCustomValidity('Enter Your Ending Date And Time Here')"
+				oninput="setCustomValidity('')"
+				value="<?php htmlout($filterEndDate); ?>">
+			</div>
+			</div>
 				<input type="submit" name="action" value="Refresh Logs">
+			</div>
+			<div>
+				<?php if(isset($_SESSION['logEventsEnableDelete']) AND $_SESSION['logEventsEnableDelete']) : ?>
+					<input type="submit" name="action" value="Disable Delete">
+				<?php else : ?>
+					<input type="submit" name="action" value="Enable Delete">
+				<?php endif; ?>
 			</div>
 		</form>
 		<table id = "logevent">
@@ -102,7 +129,7 @@
 				<th>Log Description</th>
 				<th>Delete Log Entry</th>
 			</tr>
-			<?php if($rowNum>0) :?>
+			<?php if(isset($rowNum) AND $rowNum>0) :?>
 				<?php foreach ($log as $row): ?>
 					<form action="" method="post">
 						<tr>
@@ -121,8 +148,10 @@
 						</tr>
 					</form>
 				<?php endforeach; ?>
-			<?php else : ?>
+			<?php elseif(isset($rowNum) AND $rowNum < 1) : ?>
 				<tr><td colspan="5"><b>There are no log events that match your search.</b></td></tr>
+			<?php elseif(!isset($rowNum)) : ?>
+				<tr><td colspan="5"><b>No log event categories has been selected.</b></td></tr>
 			<?php endif; ?>
 		</table>
 	<p><a href="..">Return to CMS home</a></p>

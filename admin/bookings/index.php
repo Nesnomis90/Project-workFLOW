@@ -1261,12 +1261,14 @@ if (	(isset($_POST['action']) AND $_POST['action'] == "Create Booking") OR
 	if(isset($row['TheCompanyID'])){
 		
 			// Changed company?
-		foreach($company AS $cmp){
-			if($cmp['companyID'] == $row['TheCompanyID']){
-				$row['BookedForCompany'] = $cmp['companyName'];
-				break;
-			}
-		}	
+		if(isset($company)){
+			foreach($company AS $cmp){
+				if($cmp['companyID'] == $row['TheCompanyID']){
+					$row['BookedForCompany'] = $cmp['companyName'];
+					break;
+				}
+			}				
+		}
 		
 		$selectedCompanyID = $row['TheCompanyID'];
 		$companyID = $row['TheCompanyID'];
@@ -1337,6 +1339,7 @@ if (isset($_POST['add']) AND $_POST['add'] == "Add booking")
 		$_SESSION['AddBookingError'] = "You need to fill in a start time for your booking.";	
 		$invalidInput = TRUE;		
 	}
+	
 		// DateTime formats
 	// TO-DO: Check if stuff is valid when the proper datetime user input submit has been decided
 		
@@ -1387,6 +1390,13 @@ if (isset($_POST['add']) AND $_POST['add'] == "Add booking")
 		$_SESSION['AddBookingError'] = "The end time you selected is already over. Select a new end time.";
 		$invalidInput = TRUE;	
 	}	
+	
+	if($endDateTime == $startDateTime AND !$invalidInput){
+		$_SESSION['AddBookingError'] = "You need to select an end time that is different from your start time.";	
+		$invalidInput = TRUE;				
+	} 
+	
+	//TO-DO: If we want to check if a booking is long enough, we do it here e.g. has to be longer than 10 min	
 	
 	if($invalidInput){
 		
@@ -1484,7 +1494,7 @@ if (isset($_POST['add']) AND $_POST['add'] == "Add booking")
 		$s = $pdo->prepare($sql);
 		
 		$s->bindValue(':meetingRoomID', $_POST['meetingRoomID']);
-		$s->bindValue(':userID', $_SESSION['LoggedInUserID']);
+		$s->bindValue(':userID', $_POST['userID']);
 		$s->bindValue(':companyID', $companyID);
 		$s->bindValue(':displayName', $_POST['displayName']);
 		$s->bindValue(':startDateTime', $startDateTime);

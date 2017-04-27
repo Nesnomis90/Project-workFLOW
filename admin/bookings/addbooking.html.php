@@ -130,9 +130,8 @@
 			</div>
 			<div>
 				<label for="description">Booking Description: </label>
-				<input type="text" name="description" id="description" 
-				value="<?php htmlout($description); ?>">
-				<input type="submit" name="add" value="Get Default Booking Description">
+				<textarea rows="4" cols="50" name="description" id="description"><?php htmlout($description); ?></textarea>
+				<input type="submit" name="add" value="Get Default Booking Description"> 
 			</div>
 			<div>
 				<input type="submit" name="add" value="Reset">
