@@ -164,25 +164,52 @@ if (isset($_POST['search']) AND !empty($_POST['search']) AND !isset($_POST['sear
 	$checkAll = 'checked="checked"';
 }
 
-// We handle filter dates
+// We start validating date inputs
+$invalidInput = FALSE;
+
 if (!isset($_POST['filterStartDate'])){
 	$filterStartDate = '';
 } else {
-	// TO-DO: Validate the date
-	$filterStartDate = $_POST['filterStartDate'];
+	$filterStartDate = trim($_POST['filterStartDate']);
 }
+
+if(!$invalidInput AND $filterStartDate != ""){
+	$validatedStartDate = correctDatetimeFormat($filterStartDate);
+	$displayValidatedStartDate = convertDatetimeToFormat($validatedStartDate , 'Y-m-d H:i:s', 'F jS Y H:i');
+	if($validatedStartDate === FALSE){
+		// The user submitted a start date in a format we had not expected
+		$_SESSION['LogEventUserFeedback'] = "The start date you submitted did not have a correct format. Please try again.";
+		$invalidInput = TRUE;
+	}		
+}
+
 if (!isset($_POST['filterEndDate'])){
 	$filterEndDate = '';
 } else {
-	// TO-DO: Validate the date
-	$filterEndDate = $_POST['filterEndDate'];
+	$filterEndDate = trim($_POST['filterEndDate']);	
 }
 
+if(!$invalidInput AND $filterEndDate != ""){
+	$validatedEndDate = correctDatetimeFormat($filterEndDate);
+	$displayValidatedEndDate = convertDatetimeToFormat($validatedEndDate, 'Y-m-d H:i:s', 'F jS Y H:i');
+	if($validatedEndDate === FALSE){
+		// The user submitted a start date in a format we had not expected
+		$_SESSION['LogEventUserFeedback'] = "The end date you submitted did not have a correct format. Please try again.";
+		$invalidInput = TRUE;
+	}		
+}
+
+
 // Check if admin has even checked any boxes yet, if not just give a warning
-if (!isset($_POST['search']) AND !isset($_POST['searchAll'])){
+if (!isset($_POST['search']) AND !isset($_POST['searchAll']) AND !$invalidInput){
 	$_SESSION['LogEventUserFeedback'] = "You need to select at least one category of log events with the checkboxes.";
+	$invalidInput = TRUE;
+}
+
+if($invalidInput){
+	// We've found some invalid user inputs
 	include_once 'log.html.php';
-	exit();
+	exit();	
 }
 
 if(!isset($sqlAdd)){
@@ -258,19 +285,16 @@ if($numberOfCheckboxesActivated > 0){
 						LIMIT ' . $logLimit;			
 			}
 			
-			$filterStartDate = correctDatetimeFormat($filterStartDate);
-			$filterEndDate = correctDatetimeFormat($filterEndDate);
-			
 			$s = $pdo->prepare($sql);
 			if (isset($useBothDates) AND $useBothDates){
-				$s->bindValue(':filterStartDate', $filterStartDate);
-				$s->bindValue(':filterEndDate', $filterEndDate);				
+				$s->bindValue(':filterStartDate', $validatedStartDate);
+				$s->bindValue(':filterEndDate', $validatedEndDate);			
 			}
 			if (isset($useStartDate) AND $useStartDate){
-				$s->bindValue(':filterStartDate', $filterStartDate);			
+				$s->bindValue(':filterStartDate', $validatedStartDate);			
 			}			
 			if (isset($useEndDate) AND $useEndDate){
-				$s->bindValue(':filterEndDate', $filterEndDate);			
+				$s->bindValue(':filterEndDate', $validatedEndDate);			
 			}	
 			
 			$s->execute();
@@ -309,7 +333,6 @@ if($numberOfCheckboxesActivated > 0){
 			$rowNum = $result->rowCount();		
 		}
 
-		
 		//Close connection
 		$pdo = null;
 	}

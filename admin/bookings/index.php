@@ -455,6 +455,15 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR
 			break;
 		}
 	}
+	
+	/* TO-DO: CompanyID does not get saved in booking on finish edit
+Notice: Undefined variable: company in C:\Apache24\htdocs\admin\bookings\index.php on line 452
+
+Warning: Invalid argument supplied for foreach() in C:\Apache24\htdocs\admin\bookings\index.php on line 452 */
+
+// TO-DO: Fix datetime validation for EDIT
+// TO-DO: Give same datetime validation for ADD!
+	
 		// Edited inputs
 	$bookingID = $row['TheBookingID'];
 	$companyName = $row['BookedForCompany'];
@@ -750,20 +759,6 @@ if(isset($_POST['edit']) AND $_POST['edit'] == "Finish Edit")
 	$invalidInput = FALSE;
 	
 		// Are values actually filled in?
-	if($_POST['startDateTime'] == "" AND $_POST['endDateTime'] == ""){
-		
-		$_SESSION['EditBookingError'] = "You need to fill in a start and end time for your booking.";	
-		$invalidInput = TRUE;
-	} elseif($_POST['startDateTime'] != "" AND $_POST['endDateTime'] == "") {
-		$_SESSION['EditBookingError'] = "You need to fill in an end time for your booking.";	
-		$invalidInput = TRUE;		
-	} elseif($_POST['startDateTime'] == "" AND $_POST['endDateTime'] != ""){
-		$_SESSION['EditBookingError'] = "You need to fill in a start time for your booking.";	
-		$invalidInput = TRUE;		
-	}
-		// DateTime formats
-	// TO-DO: Check if stuff is valid when the proper datetime user input submit has been decided
-		
 		// DisplayName
 			// Has to be less than 255 chars (MySQL - VARCHAR 255)
 	$dspname = $_POST['displayName'];
@@ -785,13 +780,56 @@ if(isset($_POST['edit']) AND $_POST['edit'] == "Finish Edit")
 		$invalidInput = TRUE;		
 	}
 	
+		// Datetime format check
+	if(isset($_POST['startDateTime'])){
+		$filterStartDate = trim($_POST['startDateTime']);
+	} else {
+		$filterStartDate = "";
+	}
+	if(isset($_POST['endDateTime'])){
+		$filterEndDate = trim($_POST['endDateTime']);
+	} else {
+		$filterEndDate = "";
+	}	
 	
-	$startDateTime = correctDatetimeFormat($_POST['startDateTime']);
-	$endDateTime = correctDatetimeFormat($_POST['endDateTime']);
+	if($filterStartDate == "" AND $filterEndDate == "" AND !invalidInput){
+		
+		$_SESSION['EditBookingError'] = "You need to fill in a start and end time for your booking.";	
+		$invalidInput = TRUE;
+	} elseif($filterStartDate != "" AND $filterEndDate == "" AND !invalidInput) {
+		$_SESSION['EditBookingError'] = "You need to fill in an end time for your booking.";	
+		$invalidInput = TRUE;		
+	} elseif($filterStartDate == "" AND $filterEndDate != "" AND !invalidInput){
+		$_SESSION['EditBookingError'] = "You need to fill in a start time for your booking.";	
+		$invalidInput = TRUE;		
+	}			
+		
+	if(!$invalidInput AND $filterStartDate != ""){
+		$validatedStartDate = correctDatetimeFormat($filterStartDate);
+		$displayValidatedStartDate = convertDatetimeToFormat($validatedStartDate , 'Y-m-d H:i:s', 'F jS Y H:i');
+		if($validatedStartDate === FALSE){
+			// The user submitted a start date in a format we had not expected
+			$_SESSION['EditBookingError'] = "The start date you submitted did not have a correct format. Please try again.";
+			$invalidInput = TRUE;
+		}		
+	}
+
+	if(!$invalidInput AND $filterEndDate != ""){
+		$validatedEndDate = correctDatetimeFormat($filterEndDate);
+		$displayValidatedEndDate = convertDatetimeToFormat($validatedEndDate, 'Y-m-d H:i:s', 'F jS Y H:i');
+		if($validatedEndDate === FALSE){
+			// The user submitted a start date in a format we had not expected
+			$_SESSION['EditBookingError'] = "The end date you submitted did not have a correct format. Please try again.";
+			$invalidInput = TRUE;
+		}		
+	}
+		
+	$startDateTime = $validatedStartDate;
+	$endDateTime = $validatedEndDate;
 
 	$timeNow = getDatetimeNow();
 	
-	if($startDateTime > $endDateTime){
+	if($startDateTime > $endDateTime AND !invalidInput){
 		// End time can't be before the start time
 		
 		$_SESSION['EditBookingError'] = "The start time can't be later than the end time. Please select a new start time or end time.";
@@ -834,11 +872,11 @@ if(isset($_POST['edit']) AND $_POST['edit'] == "Finish Edit")
 	$newEndTime = FALSE;
 	$originalValue = $_SESSION['EditBookingOriginalInfoArray'];
 	
-	if($_POST['startDateTime'] != $originalValue['StartTime']){
+	if($startDateTime != $originalValue['StartTime']){
 		$numberOfChanges++;
 		$newStartTime = TRUE;
 	}
-	if($_POST['endDateTime'] != $originalValue['EndTime']){
+	if($endDateTime != $originalValue['EndTime']){
 		$numberOfChanges++;
 		$newEndTime = TRUE;
 	}	
@@ -871,22 +909,19 @@ if(isset($_POST['edit']) AND $_POST['edit'] == "Finish Edit")
 	if($newMeetingRoom){
 		$checkIfTimeslotIsAvailable = TRUE;
 	}
-	
-		$startTime = correctDatetimeFormat($_POST['startDateTime']);
-		$endTime = correctDatetimeFormat($_POST['endDateTime']);
 		$oldStartTime = $originalValue['StartTime'];
 		$oldEndTime = $originalValue['EndTime'];
 	
 		// If we set the start time earlier than before or
 		// If we set the start time later than the previous end time
-	if( ($newStartTime AND $startTime < $oldStartTime) OR 
-		($newStartTime AND $startTime >= $oldEndTime)){
+	if( ($newStartTime AND $startDateTime < $oldStartTime) OR 
+		($newStartTime AND $startDateTime >= $oldEndTime)){
 		$checkIfTimeslotIsAvailable = TRUE;
 	}
 		// If we set the end time later than before or
 		// If we set the end time earlier than the previous start time
-	if( ($newEndTime AND $endTime > $oldEndTime) OR 
-		($newEndTime AND $endTime <= $oldStartTime)){
+	if( ($newEndTime AND $endDateTime > $oldEndTime) OR 
+		($newEndTime AND $endDateTime <= $oldStartTime)){
 		$checkIfTimeslotIsAvailable = TRUE;
 	}
 	
@@ -917,8 +952,8 @@ if(isset($_POST['edit']) AND $_POST['edit'] == "Finish Edit")
 			$s = $pdo->prepare($sql);
 			
 			$s->bindValue(':MeetingRoomID', $_POST['meetingRoomID']);
-			$s->bindValue(':StartTime', $startTime);
-			$s->bindValue(':EndTime', $endTime);
+			$s->bindValue(':StartTime', $startDateTime);
+			$s->bindValue(':EndTime', $endDateTime);
 			$s->bindValue(':BookingID', $_POST['bookingID']);
 			$s->execute();
 			$pdo = null;
@@ -972,13 +1007,10 @@ if(isset($_POST['edit']) AND $_POST['edit'] == "Finish Edit")
 				WHERE	`bookingID` = :BookingID";
 		$s = $pdo->prepare($sql);
 		
-		$startDateTime = correctDatetimeFormat($_POST['startDateTime']);
-		$endDateTime = correctDatetimeFormat($_POST['endDateTime']);
-		
 		$s->bindValue(':BookingID', $_POST['bookingID']);
 		$s->bindValue(':meetingRoomID', $_POST['meetingRoomID']);
 		$s->bindValue(':userID', $_POST['userID']);
-		$s->bindValue(':companyID', $TheCompanyID);
+		$s->bindValue(':companyID', $companyID);
 		$s->bindValue(':startDateTime', $startDateTime);
 		$s->bindValue(':endDateTime', $endDateTime);
 		$s->bindValue(':displayName', $_POST['displayName']);
@@ -1913,7 +1945,7 @@ foreach ($result as $row)
 	// Make datetime correct formats for comparing them
 	$datetimeNow = getDatetimeNow();
 	$datetimeEndWrongFormat = $row['EndTime'];
-	$datetimeEnd = correctDatetimeFormatForBooking($datetimeEndWrongFormat);
+	$datetimeEnd = correctDatetimeFormat($datetimeEndWrongFormat);
 	
 	// Describe the status of the booking based on what info is stored in the database
 	// If not finished and not cancelled = active
