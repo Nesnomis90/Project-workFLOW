@@ -1913,7 +1913,7 @@ foreach ($result as $row)
 	// Make datetime correct formats for comparing them
 	$datetimeNow = getDatetimeNow();
 	$datetimeEndWrongFormat = $row['EndTime'];
-	$datetimeEnd = correctDatetimeFormatForBooking($datetimeEndWrongFormat);
+	$datetimeEnd = correctDatetimeFormat($datetimeEndWrongFormat);
 	
 	// Describe the status of the booking based on what info is stored in the database
 	// If not finished and not cancelled = active

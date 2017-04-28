@@ -164,25 +164,56 @@ if (isset($_POST['search']) AND !empty($_POST['search']) AND !isset($_POST['sear
 	$checkAll = 'checked="checked"';
 }
 
-// We handle filter dates
+// We start validating date inputs
+$invalidInput = FALSE;
+
 if (!isset($_POST['filterStartDate'])){
 	$filterStartDate = '';
 } else {
-	// TO-DO: Validate the date
 	$filterStartDate = $_POST['filterStartDate'];
 }
+
+// TO-DO: Check why 03 martch 2017 isn't a valid datetime
+
+if(!$invalidInput AND $filterStartDate != ""){
+	$validatedStartDate = correctDatetimeFormat($filterStartDate);
+	if($validatedStartDate !== FALSE){
+		$filterStartDate = $validatedStartDate;
+	} else {
+		// The user submitted a start date in a format we had not expected
+		$_SESSION['LogEventUserFeedback'] = "The start date you submitted did not have a correct format. Please try again.";
+		$invalidInput = TRUE;
+	}		
+}
+
 if (!isset($_POST['filterEndDate'])){
 	$filterEndDate = '';
 } else {
-	// TO-DO: Validate the date
-	$filterEndDate = $_POST['filterEndDate'];
+	$filterEndDate = $_POST['filterEndDate'];	
 }
 
+if(!$invalidInput AND $filterEndDate != ""){
+	$validatedEndDate = correctDatetimeFormat($filterEndDate);
+	if($validatedEndDate !== FALSE){
+		$filterEndDate = $validatedEndDate ;
+	} else {
+		// The user submitted a start date in a format we had not expected
+		$_SESSION['LogEventUserFeedback'] = "The end date you submitted did not have a correct format. Please try again.";
+		$invalidInput = TRUE;
+	}		
+}
+
+
 // Check if admin has even checked any boxes yet, if not just give a warning
-if (!isset($_POST['search']) AND !isset($_POST['searchAll'])){
+if (!isset($_POST['search']) AND !isset($_POST['searchAll']) AND !$invalidInput){
 	$_SESSION['LogEventUserFeedback'] = "You need to select at least one category of log events with the checkboxes.";
+	$invalidInput = TRUE;
+}
+
+if($invalidInput){
+	// We've found some invalid user inputs
 	include_once 'log.html.php';
-	exit();
+	exit();	
 }
 
 if(!isset($sqlAdd)){
