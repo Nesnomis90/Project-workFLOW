@@ -173,13 +173,9 @@ if (!isset($_POST['filterStartDate'])){
 	$filterStartDate = $_POST['filterStartDate'];
 }
 
-// TO-DO: Check why 03 martch 2017 isn't a valid datetime
-
 if(!$invalidInput AND $filterStartDate != ""){
 	$validatedStartDate = correctDatetimeFormat($filterStartDate);
-	if($validatedStartDate !== FALSE){
-		$filterStartDate = $validatedStartDate;
-	} else {
+	if($validatedStartDate === FALSE){
 		// The user submitted a start date in a format we had not expected
 		$_SESSION['LogEventUserFeedback'] = "The start date you submitted did not have a correct format. Please try again.";
 		$invalidInput = TRUE;
@@ -194,9 +190,7 @@ if (!isset($_POST['filterEndDate'])){
 
 if(!$invalidInput AND $filterEndDate != ""){
 	$validatedEndDate = correctDatetimeFormat($filterEndDate);
-	if($validatedEndDate !== FALSE){
-		$filterEndDate = $validatedEndDate ;
-	} else {
+	if($validatedEndDate === FALSE){
 		// The user submitted a start date in a format we had not expected
 		$_SESSION['LogEventUserFeedback'] = "The end date you submitted did not have a correct format. Please try again.";
 		$invalidInput = TRUE;
@@ -289,19 +283,23 @@ if($numberOfCheckboxesActivated > 0){
 						LIMIT ' . $logLimit;			
 			}
 			
-			$filterStartDate = correctDatetimeFormat($filterStartDate);
-			$filterEndDate = correctDatetimeFormat($filterEndDate);
+			$correctStartDate = correctDatetimeFormat($filterStartDate);
+			$correctEndDate = correctDatetimeFormat($filterEndDate);
+			
+			echo $correctStartDate;
+			echo '<br />';
+			echo $correctEndDate;
 			
 			$s = $pdo->prepare($sql);
 			if (isset($useBothDates) AND $useBothDates){
-				$s->bindValue(':filterStartDate', $filterStartDate);
-				$s->bindValue(':filterEndDate', $filterEndDate);				
+				$s->bindValue(':filterStartDate', $correctStartDate);
+				$s->bindValue(':filterEndDate', $correctEndDate);				
 			}
 			if (isset($useStartDate) AND $useStartDate){
-				$s->bindValue(':filterStartDate', $filterStartDate);			
+				$s->bindValue(':filterStartDate', $correctStartDate);			
 			}			
 			if (isset($useEndDate) AND $useEndDate){
-				$s->bindValue(':filterEndDate', $filterEndDate);			
+				$s->bindValue(':filterEndDate', $correctEndDate);			
 			}	
 			
 			$s->execute();

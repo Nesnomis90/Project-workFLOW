@@ -98,15 +98,9 @@
 				<b>Limit logs displayed by date: </b><br />
 				<label for="filterStartDate">Earliest date to display logs from: </label>
 				<input type="text" name="filterStartDate" 
-				placeholder="dd-mm-yyyy hh:mm:ss" 
-				oninvalid="this.setCustomValidity('Enter Your Starting Date And Time Here')"
-				oninput="setCustomValidity('')"
 				value="<?php htmlout($filterStartDate); ?>"><br />
 				<label for="filterEndDate">Latest date to display logs from: </label>
 				<input type="text" name="filterEndDate"
-				placeholder="dd-mm-yyyy hh:mm:ss" 
-				oninvalid="this.setCustomValidity('Enter Your Ending Date And Time Here')"
-				oninput="setCustomValidity('')"
 				value="<?php htmlout($filterEndDate); ?>">
 			</div>
 			</div>
