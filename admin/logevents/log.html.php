@@ -96,6 +96,15 @@
 				<?php endforeach; ?>
 			<div>
 				<b>Limit logs displayed by date: </b><br />
+				<?php if(isset($displayValidatedStartDate) AND isset($displayValidatedEndDate)) : ?>
+					<b>Currently displaying logs from <?php htmlout($displayValidatedStartDate); ?> to <?php htmlout($displayValidatedEndDate); ?>.</b>
+				<?php elseif(isset($displayValidatedStartDate) AND !isset($displayValidatedEndDate)) : ?>
+					<b>Currently displaying logs from <?php htmlout($displayValidatedStartDate); ?> to today.</b>
+				<?php elseif(!isset($displayValidatedStartDate) AND isset($displayValidatedEndDate)) : ?>
+					<b>Currently displaying logs from the beginning up to <?php htmlout($displayValidatedStartDate); ?>.</b>
+				<?php else : ?>
+					<b>Currently displaying logs from the beginning up to today.</b>
+				<?php endif; ?> <br />
 				<label for="filterStartDate">Earliest date to display logs from: </label>
 				<input type="text" name="filterStartDate" 
 				value="<?php htmlout($filterStartDate); ?>"><br />
@@ -105,7 +114,7 @@
 			</div>
 			</div>
 				<input type="submit" name="action" value="Refresh Logs">
-			</div>
+			</div>		
 			<div>
 				<?php if(isset($_SESSION['logEventsEnableDelete']) AND $_SESSION['logEventsEnableDelete']) : ?>
 					<input type="submit" name="action" value="Disable Delete">

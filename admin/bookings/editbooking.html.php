@@ -41,9 +41,7 @@
 			<div>
 				<label for="startDateTime">Set New Start Time: </label>				
 				<input type="text" name="startDateTime" id="startDateTime" 
-				required placeholder="dd-mm-yyyy hh:mm:ss" 
-				oninvalid="this.setCustomValidity('Enter Your Starting Date And Time Here')"
-				oninput="setCustomValidity('')"
+				placeholder="date hh:mm:ss"
 				value="<?php htmlout($startDateTime); ?>">
 			</div>
 			<div>	
@@ -53,9 +51,7 @@
 			<div>
 				<label for="endDateTime">Set New End Time: </label>
 				<input type="text" name="endDateTime" id="endDateTime" 
-				required placeholder="dd-mm-yyyy hh:mm:ss" 
-				oninvalid="this.setCustomValidity('Enter Your Ending Date And Time Here')"
-				oninput="setCustomValidity('')"
+				placeholder="date hh:mm:ss" 
 				value="<?php htmlout($endDateTime); ?>">
 			</div>
 			<div>

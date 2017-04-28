@@ -175,6 +175,7 @@ if (!isset($_POST['filterStartDate'])){
 
 if(!$invalidInput AND $filterStartDate != ""){
 	$validatedStartDate = correctDatetimeFormat($filterStartDate);
+	$displayValidatedStartDate = convertDatetimeToFormat($validatedStartDate , 'Y-m-d H:i:s', 'F jS Y H:i');
 	if($validatedStartDate === FALSE){
 		// The user submitted a start date in a format we had not expected
 		$_SESSION['LogEventUserFeedback'] = "The start date you submitted did not have a correct format. Please try again.";
@@ -190,6 +191,7 @@ if (!isset($_POST['filterEndDate'])){
 
 if(!$invalidInput AND $filterEndDate != ""){
 	$validatedEndDate = correctDatetimeFormat($filterEndDate);
+	$displayValidatedEndDate = convertDatetimeToFormat($validatedEndDate, 'Y-m-d H:i:s', 'F jS Y H:i');
 	if($validatedEndDate === FALSE){
 		// The user submitted a start date in a format we had not expected
 		$_SESSION['LogEventUserFeedback'] = "The end date you submitted did not have a correct format. Please try again.";

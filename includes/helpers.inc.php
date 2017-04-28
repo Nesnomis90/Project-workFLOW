@@ -66,12 +66,13 @@ function correctDatetimeFormat($wrongDatetimeString){
 	// TO-DO: When converting non time strings into timestrings it submits the time right now
 	// 			Let's make this return 00:00:00 instead?
 	// TO-DO: Not heavily tested!!!!
+	// TO-DO: Still needs fixing separating date and time parts
 
 	date_default_timezone_set('Europe/Oslo');
 	
 	// Remove white spaces before and after the datetime submitted
 	$wrongDatetimeString = trim($wrongDatetimeString);
-	//echo $wrongDatetimeString . "<br />";
+	echo $wrongDatetimeString . "<br />";
 	
 	// Replace some characters if the user for some reason uses it
 	// TO-DO: use regex to limit what user can submit later?
@@ -79,7 +80,7 @@ function correctDatetimeFormat($wrongDatetimeString){
 	$wrongDatetimeString = str_replace('/', '-',$wrongDatetimeString);
 	$wrongDatetimeString = str_replace('_', '-',$wrongDatetimeString);
 	
-	//echo $wrongDatetimeString . "<br />";
+	echo $wrongDatetimeString . "<br />";
 	
 	// The characters we want to allow in the string
 	$allowedChars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 -:";
@@ -96,13 +97,15 @@ function correctDatetimeFormat($wrongDatetimeString){
 	
 	$totalDividersInDatetimeString = $spacesInDatetimeString + $dashesInDatetimeString;
 	
-	if ($spacesInDatetimeString > 1 AND $totalDividersInDatetimeString > 2){
+	if ($spacesInDatetimeString > 0 AND $totalDividersInDatetimeString < 2){
+		$datePart = $wrongDatetimeString;
+	} elseif($spacesInDatetimeString > 0 AND $totalDividersInDatetimeString > 2) {
 		$datePart = substr($wrongDatetimeString, 0, strrpos($wrongDatetimeString, " "));
 		$timePart = substr(strrchr($wrongDatetimeString, " "), 0);
-	} else {
-		$datePart = $wrongDatetimeString;
-	}
+	} 
 	
+	echo "datepart: $datePart <br />";
+	echo "timepart: $timePart <br />";
 	// change spaces in date part
 	$datePart= str_replace(' ', '-',$datePart);
 
@@ -122,7 +125,7 @@ function correctDatetimeFormat($wrongDatetimeString){
 	}
 	$wrongDatetimeString = $datePartWithNoSpacesOrLeadingZeros . $timePart;
 
-	//echo $wrongDatetimeString . "<br />";
+	echo $wrongDatetimeString . "<br />";
 	
 	if(validateDatetimeWithFormat($wrongDatetimeString, 'Y-n-j H:i:s')){
 		$wrongDatetime = date_create_from_format('Y-n-j H:i:s', $wrongDatetimeString);
