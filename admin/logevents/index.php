@@ -170,7 +170,7 @@ $invalidInput = FALSE;
 if (!isset($_POST['filterStartDate'])){
 	$filterStartDate = '';
 } else {
-	$filterStartDate = $_POST['filterStartDate'];
+	$filterStartDate = trim($_POST['filterStartDate']);
 }
 
 if(!$invalidInput AND $filterStartDate != ""){
@@ -185,7 +185,7 @@ if(!$invalidInput AND $filterStartDate != ""){
 if (!isset($_POST['filterEndDate'])){
 	$filterEndDate = '';
 } else {
-	$filterEndDate = $_POST['filterEndDate'];	
+	$filterEndDate = trim($_POST['filterEndDate']);	
 }
 
 if(!$invalidInput AND $filterEndDate != ""){
@@ -283,23 +283,16 @@ if($numberOfCheckboxesActivated > 0){
 						LIMIT ' . $logLimit;			
 			}
 			
-			$correctStartDate = correctDatetimeFormat($filterStartDate);
-			$correctEndDate = correctDatetimeFormat($filterEndDate);
-			
-			echo $correctStartDate;
-			echo '<br />';
-			echo $correctEndDate;
-			
 			$s = $pdo->prepare($sql);
 			if (isset($useBothDates) AND $useBothDates){
-				$s->bindValue(':filterStartDate', $correctStartDate);
-				$s->bindValue(':filterEndDate', $correctEndDate);				
+				$s->bindValue(':filterStartDate', $validatedStartDate);
+				$s->bindValue(':filterEndDate', $validatedEndDate);			
 			}
 			if (isset($useStartDate) AND $useStartDate){
-				$s->bindValue(':filterStartDate', $correctStartDate);			
+				$s->bindValue(':filterStartDate', $validatedStartDate);			
 			}			
 			if (isset($useEndDate) AND $useEndDate){
-				$s->bindValue(':filterEndDate', $correctEndDate);			
+				$s->bindValue(':filterEndDate', $validatedEndDate);			
 			}	
 			
 			$s->execute();
@@ -338,7 +331,6 @@ if($numberOfCheckboxesActivated > 0){
 			$rowNum = $result->rowCount();		
 		}
 
-		
 		//Close connection
 		$pdo = null;
 	}
