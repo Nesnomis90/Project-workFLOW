@@ -16,7 +16,7 @@
 // Function that prepares an email to be sent
 // Returns TRUE if prepared, FALSE if not prepared.
 // TO-DO: UNTESTED
-function($toEmail, $subject, $message){
+function sendEmail($toEmail, $subject, $message){
 	
 	// Check if email is valid email
 	if(validateUserEmail($toEmail)){
