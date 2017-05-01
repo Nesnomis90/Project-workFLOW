@@ -1,15 +1,23 @@
 <?php
-// These are functions to handle user access
-
 // Constants used to salt passwords
 require_once 'salts.inc.php';
 
-// Function to salt and hash passwords
+// Functions to salt and hash info
+	// Function to salt and hash passwords
 function hashPassword($rawPassword){
 	$SaltedPassword = $rawPassword . PW_SALT;
 	$HashedPassword = hash('sha256', $SaltedPassword);
 	return $HashedPassword;
 }
+	// Function to salt and hash booking codes
+function hashBookingCode($rawBookingCode){
+	$SaltedBookingCode = $rawBookingCode . BC_SALT;
+	$HashedBookingCode = hash('sha256', $SaltedBookingCode);
+	return $HashedBookingCode;	
+}
+
+
+// These are functions to handle user access
 
 // returns TRUE if user is logged in
 function userIsLoggedIn()
@@ -219,7 +227,7 @@ function databaseContainsEmail($email)
 // TO-DO: UNTESTED
 function databaseContainsBookingCode($rawBookingCode)
 {
-	$hashedBookingCode = hashPassword($rawBookingCode);
+	$hashedBookingCode = hashBookingCode($rawBookingCode);
 	
 	try
 	{
@@ -269,7 +277,7 @@ function getUserInfoFromBookingCode($rawBookingCode)
 	}
 	
 	// We know the code exists. Let's get the info of the person it belongs to
-	$hashedBookingCode = hashPassword($rawBookingCode);
+	$hashedBookingCode = hashBookingCode($rawBookingCode);
 	
 	try
 	{
@@ -302,6 +310,65 @@ function getUserInfoFromBookingCode($rawBookingCode)
 	$row = $s->fetch();
 	return $row;
 }
+
+// Function to "return" the raw booking code value to a user who has forgotten their own
+// TO-DO: UNTESTED
+function revealBookingCode($userID){
+	// Since the booking code has been salted and hashed, we have to repeat the process
+	// We can only do this by "brute forcing", but we know the possible values we can have
+	// For 7+ digits a for loop will take over 10 seconds to loop through all combinations
+	// For 6 digits a for loop will take up to 1.4s loop through all combinations
+	// TO-DO: Limit booking code to 6 digits?
+	
+	// First we need to get the hashed booking code for the logged in user
+	try
+	{
+		include_once 'db.inc.php';
+		$pdo = connect_to_db();
+		$sql = "SELECT 	`bookingCode`
+				FROM 	`user`
+				WHERE 	`userID` = :UserID
+				AND		`isActive` > 0
+				AND 	`bookingCode` IS NOT NULL
+				LIMIT 	1";
+		$s = $pdo->prepare($sql);
+		$s->bindValue(':UserID', $userID);
+		$s->execute();
+		
+		$pdo = null;			
+	}
+	catch(PDOException $e)
+	{
+		$error = 'Error fetching booking code from database.';
+		include_once 'error.html.php';
+		$pdo = null;
+		exit();				
+	}
+	
+	// Check if the select even found something
+	if($s->rowCount()) == 0){
+		return FALSE;
+	}
+	// Get the user's hashed booking code
+	$result = $s->fetch();
+	$hashedBookingCode = $result['bookingCode'];
+	
+	// Loop through possible combinations and hash them
+	for($i=0; $i<1000000; $i++){ // TO-DO: Change number if total booking code digits change. Currently at 6.
+		
+		$viableHashedBookingCode = hashBookingCode($i);
+		
+		if($viableHashedBookingCode == $hashedBookingCode){
+			// We found a match!
+			$actualBookingCode = $i;
+			return $actualBookingCode;
+		}
+	}
+	
+	// Found no match. 
+	return FALSE;
+}
+
 
 // Function to make sure user is Admin
 function isUserAdmin(){
