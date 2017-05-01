@@ -354,6 +354,7 @@ function revealBookingCode($userID){
 	$hashedBookingCode = $result['bookingCode'];
 	
 	// Loop through possible combinations and hash them
+	// TO-DO: Add some sleep to reduce CPU load?
 	for($i=0; $i<1000000; $i++){ // TO-DO: Change number if total booking code digits change. Currently at 6.
 		
 		$viableHashedBookingCode = hashBookingCode($i);
