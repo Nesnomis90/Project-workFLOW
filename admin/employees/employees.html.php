@@ -106,7 +106,7 @@
 								<?php else : ?>
 									<input type="submit" name="disabled" value="Remove" disabled>
 								<?php endif; ?>
-							</td>
+							</td>	
 							<input type="hidden" name="UserID" value="<?php htmlout($employee['UsrID']); ?>">
 							<input type="hidden" name="CompanyID" value="<?php htmlout($employee['CompanyID']); ?>">
 							<input type="hidden" name="UserName" value="<?php htmlout($employee['lastName'] . ", " . $employee['firstName']); ?>">
