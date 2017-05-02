@@ -1564,6 +1564,8 @@ if (isset($_POST['add']) AND $_POST['add'] == "Add booking")
 	
 	$_SESSION['BookingUserFeedback'] = "Successfully created the booking.";
 	
+	// TO-DO: Send email with cancellation code to the user who the booking is for.
+	
 	// Add a log event that a booking has been created
 	try
 	{
