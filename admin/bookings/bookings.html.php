@@ -51,7 +51,16 @@
 		<form action="" method="post">		
 		<?php if($rowNum>0) :?>
 			<form action="" method="post">
-				<input type="submit" name="action" value="Create Booking">
+				<div>
+					<input type="submit" name="action" value="Create Booking">
+				</div>
+				<div>
+				<?php if(isset($_SESSION['bookingsEnableDelete']) AND $_SESSION['bookingsEnableDelete']) : ?>
+					<input type="submit" name="action" value="Disable Delete">
+				<?php else : ?>
+					<input type="submit" name="action" value="Enable Delete">
+				<?php endif; ?>
+			</div>			
 			</form>
 			<table id= "bookingstable">
 				<caption>All booking history</caption>
@@ -93,7 +102,13 @@
 							<td><?php htmlout($booking['WorksForCompany']); ?></td>
 							<td><input type="submit" name="action" value="Edit"></td>							
 							<td><input type="submit" name="action" value="Cancel"></td>
-							<td><input type="submit" name="action" value="Delete"></td>
+							<td>
+								<?php if(isset($_SESSION['bookingsEnableDelete']) AND $_SESSION['bookingsEnableDelete']) : ?>
+									<input type="submit" name="action" value="Delete">
+								<?php else : ?>
+									<input type="submit" name="disabled" value="Delete" disabled>
+								<?php endif; ?>
+							</td>
 							<input type="hidden" name="id" value="<?php htmlout($booking['id']); ?>">
 							<input type="hidden" name="UserInfo" id="UserInfo"
 							value="<?php htmlout($booking['UserInfo']); ?>">

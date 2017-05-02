@@ -346,7 +346,8 @@ function revealBookingCode($userID){
 	}
 	
 	// Check if the select even found something
-	if($s->rowCount()) == 0){
+	$rowCount = $s->rowCount();
+	if($rowCount == 0){
 		return FALSE;
 	}
 	// Get the user's hashed booking code
