@@ -1,4 +1,4 @@
-<!-- This is the HTML form used to display information to normal users-->
+<!-- This is the HTML form used to display user information to normal users-->
 <?php include_once $_SERVER['DOCUMENT_ROOT'] .
  '/includes/helpers.inc.php'; ?>
 <!DOCTYPE html>

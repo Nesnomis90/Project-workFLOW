@@ -183,7 +183,8 @@ if (isset($_POST['action']) and $_POST['action'] == 'Cancel')
 		
 		$pdo = connect_to_db();
 		$sql = 'UPDATE 	`booking` 
-				SET 	`dateTimeCancelled` = CURRENT_TIMESTAMP 
+				SET 	`dateTimeCancelled` = CURRENT_TIMESTAMP,
+						`cancellationCode` = NULL				
 				WHERE 	`bookingID` = :id';
 		$s = $pdo->prepare($sql);
 		$s->bindValue(':id', $_POST['id']);

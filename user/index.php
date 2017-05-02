@@ -1,5 +1,5 @@
 <?php 
-// This is the index file for the user folder
+// This is the index file for the user folder (all users)
 session_start();
 
 // Include functions
@@ -81,7 +81,7 @@ if(isset($_GET['activateaccount'])){
 	}
 	catch(PDOException $e)
 	{
-		$error = 'Error validating activation code: ' . $e->getMessage();
+		$error = 'Error activating user: ' . $e->getMessage();
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
 		$pdo = null;
 		exit();

@@ -2,8 +2,22 @@ USE test;
 SET NAMES utf8;
 USE meetingflow;
 
+SELECT 	`bookingID`,
+						`meetingRoomID`									AS TheMeetingRoomID, 
+						(
+							SELECT	`name`
+							FROM	`meetingroom`
+							WHERE	`meetingRoomID` = TheMeetingRoomID 
+						)												AS TheMeetingRoomName,
+						`startDateTime`,
+						`endDateTime`
+				FROM	`booking`
+				WHERE 	`cancellationCode` = '32ecc2c8f31f3f2de6c4452bd98b52ec6e705ea6c97c6cdc9d99ea91b49ce9a0'
+				AND		`dateTimeCancelled` IS NULL
+				LIMIT 	1;
+                
 UPDATE test.`user` SET `activationCode` = NULL WHERE `userID` <> 0 AND `isActive` = 1;
-
+UPDATE test.`booking` SET `cancellationCode` = NULL WHERE `bookingID` <> 0 AND `dateTimeCancelled` IS NOT NULL;
 UPDATE 	`user`
 				SET		`isActive` = 1,
 						`activationCode` = NULL
