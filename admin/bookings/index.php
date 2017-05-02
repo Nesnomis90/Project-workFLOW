@@ -89,6 +89,18 @@ function rememberAddBookingInputs(){
 	}
 }
 
+// If admin wants to be able to delete bookings it needs to enabled first
+if (isset($_POST['action']) AND $_POST['action'] == "Enable Delete"){
+	$_SESSION['bookingsEnableDelete'] = TRUE;
+	$refreshBookings = TRUE;
+}
+
+// If admin wants to be disable booking deletion
+if (isset($_POST['action']) AND $_POST['action'] == "Disable Delete"){
+	unset($_SESSION['bookingsEnableDelete']);
+	$refreshBookings = TRUE;
+}
+
 // If admin wants to remove a booked meeting from the database
 // TO-DO: ADD A CONFIRMATION BEFORE ACTUALLY DOING THE DELETION!
 // MAYBE BY TYPING ADMIN PASSWORD AGAIN?
@@ -171,7 +183,8 @@ if (isset($_POST['action']) and $_POST['action'] == 'Cancel')
 		
 		$pdo = connect_to_db();
 		$sql = 'UPDATE 	`booking` 
-				SET 	`dateTimeCancelled` = CURRENT_TIMESTAMP 
+				SET 	`dateTimeCancelled` = CURRENT_TIMESTAMP,
+						`cancellationCode` = NULL				
 				WHERE 	`bookingID` = :id';
 		$s = $pdo->prepare($sql);
 		$s->bindValue(':id', $_POST['id']);
@@ -1551,6 +1564,8 @@ if (isset($_POST['add']) AND $_POST['add'] == "Add booking")
 	
 	$_SESSION['BookingUserFeedback'] = "Successfully created the booking.";
 	
+	// TO-DO: Send email with cancellation code to the user who the booking is for.
+	
 	// Add a log event that a booking has been created
 	try
 	{
@@ -1889,6 +1904,20 @@ if (isset($_POST['add']) AND $_POST['add'] == 'Cancel'){
 
 // We're not doing any adding or editing anymore, clear all remembered values
 clearBookingSessions();
+
+
+
+// BOOKING OVERVIEW CODE SNIPPET START //
+
+/*if($refreshBookings) {
+	// TO-DO:
+}*/
+
+
+
+
+// BOOKING OVERVIEW CODE SNIPPET END //
+
 
 // Display booked meetings history list
 try

@@ -47,9 +47,22 @@
 		<?php if(isset($_SESSION['MeetingRoomUserFeedback'])) : ?>
 			<p><b><?php htmlout($_SESSION['MeetingRoomUserFeedback']); ?></b></p>
 			<?php unset($_SESSION['MeetingRoomUserFeedback']); ?>
-		<?php endif; ?>		
+		<?php endif; ?>	
+		<form action="" method="post">
+			<div>
+				<?php if(isset($_SESSION['meetingroomsEnableDelete']) AND $_SESSION['meetingroomsEnableDelete']) : ?>
+					<input type="submit" name="action" value="Disable Delete">
+				<?php else : ?>
+					<input type="submit" name="action" value="Enable Delete">
+				<?php endif; ?>
+			</div>
+		</form>		
 		<?php if($rowNum>0) :?>
-			<p><a href="?add">Add new meeting room</a></p>
+			<form action="?add" method="post">
+				<div>
+					<input type="submit" name="action" value="Create Meeting Room">
+				</div>
+			</form>
 			<table id= "meetingroomstable">
 				<caption>Current Meeting Rooms</caption>
 				<tr>
@@ -82,7 +95,13 @@
 							<td><?php htmlout($room['description']); ?></td>
 							<td><?php htmlout($room['location']); ?></td>
 							<td><input type="submit" name="action" value="Edit"></td>
-							<td><input type="submit" name="action" value="Delete"></td>
+							<td>
+								<?php if(isset($_SESSION['meetingroomsEnableDelete']) AND $_SESSION['meetingroomsEnableDelete']) : ?>
+									<input type="submit" name="action" value="Delete">
+								<?php else : ?>
+									<input type="submit" name="disabled" value="Delete" disabled>
+								<?php endif; ?>
+							</td>
 							<input type="hidden" name="id" value="<?php echo $room['id']; ?>">
 						</tr>
 					</form>
@@ -90,7 +109,13 @@
 			</table>
 		<?php else : ?>
 			<tr><b>There are no meeting rooms registered in the database.</b></tr>
-			<tr><a href="?add">Create a meeting room!</a></tr>
+			<tr>			
+				<form action="?add" method="post">
+					<div>
+						<input type="submit" name="action" value="Create Meeting Room">
+					</div>
+				</form>
+			</tr>
 		<?php endif; ?>
 		<p><a href="..">Return to CMS home</a></p>
 		<?php include '../logout.inc.html.php'; ?>

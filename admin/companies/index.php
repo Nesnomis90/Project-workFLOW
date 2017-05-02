@@ -10,6 +10,18 @@ if (!isUserAdmin()){
 	exit();
 }
 
+// If admin wants to be able to delete companies it needs to enabled first
+if (isset($_POST['action']) AND $_POST['action'] == "Enable Delete"){
+	$_SESSION['companiesEnableDelete'] = TRUE;
+	$refreshcompanies = TRUE;
+}
+
+// If admin wants to be disable company deletion
+if (isset($_POST['action']) AND $_POST['action'] == "Disable Delete"){
+	unset($_SESSION['companiesEnableDelete']);
+	$refreshcompanies = TRUE;
+}
+
 
 // If admin wants to remove a company from the database
 // TO-DO: ADD A CONFIRMATION BEFORE ACTUALLY DOING THE DELETION!
@@ -78,7 +90,7 @@ if (isset($_POST['action']) and $_POST['action'] == 'Delete')
 
 // If admin wants to add a company to the database
 // we load a new html form
-if (isset($_GET['add']))
+if (isset($_POST['action']) AND $_POST['action'] == 'Create Company')
 {	
 	// Set values to be displayed in HTML
 	$pageTitle = 'New Company';
@@ -344,6 +356,11 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Cancel Date')
 	header('Location: .');
 	exit();
 }
+
+/* if($refreshcompanies) {
+	// TO-DO:
+}*/
+
 
 // Display companies list
 try

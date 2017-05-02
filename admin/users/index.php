@@ -10,6 +10,19 @@ if (!isUserAdmin()){
 	exit();
 }
 
+// If admin wants to be able to delete users it needs to enabled first
+if (isset($_POST['action']) AND $_POST['action'] == "Enable Delete"){
+	$_SESSION['usersEnableDelete'] = TRUE;
+	$refreshUsers = TRUE;
+}
+
+// If admin wants to be disable user deletion
+if (isset($_POST['action']) AND $_POST['action'] == "Disable Delete"){
+	unset($_SESSION['usersEnableDelete']);
+	$refreshUsers = TRUE;
+}
+
+
 // If admin wants to remove a user from the database
 // TO-DO: ADD A CONFIRMATION BEFORE ACTUALLY DOING THE DELETION!
 // MAYBE BY TYPING ADMIN PASSWORD AGAIN?
@@ -42,8 +55,6 @@ if (isset($_POST['action']) and $_POST['action'] == 'Delete')
 	// Add a log event that a user account was removed
 	try
 	{
-		session_start();
-
 		// Save a description with information about the user that was removed
 		
 		$description = "N/A";
@@ -175,12 +186,16 @@ if (isset($_GET['add']) OR (isset($_SESSION['refreshUserAddform']) AND $_SESSION
 // When admin has added the needed information and wants to add the user
 if (isset($_GET['addform']))
 {
+	// Input validation
+	$email = $_POST['email'];
+	$email = trim($email);
+	if(!validateUserEmail($email)){
+		$_SESSION['AddNewUserError'] = "The email submitted is not a valid email.";
+	}
 	
-	// Add the user to the database
-	// TO-DO: Send password and activation link to email
+	// TO-DO: Validate all inputs
 	
 	// Check if the submitted email has already been used
-	$email = $_POST['email'];
 	if (databaseContainsEmail($email)){
 		// The email has been used before. So we can't create a new user with this info.
 		
@@ -198,6 +213,8 @@ if (isset($_GET['addform']))
 		// The email has NOT been used before, so we can create the new user!
 		try
 		{
+			// Add the user to the database
+			
 			//Generate activation code
 			$activationcode = generateActivationCode();
 			
@@ -220,10 +237,9 @@ if (isset($_GET['addform']))
 			$s->bindValue(':accessID', $_POST['accessID']);
 			$s->bindValue(':password', $hashedPassword);
 			$s->bindValue(':activationcode', $activationcode);
-			$s->bindValue(':email', $_POST['email']);
+			$s->bindValue(':email', $email);
 			$s->execute();
 			
-			session_start();
 			unset($_SESSION['lastUserID']);
 			$_SESSION['lastUserID'] = $pdo->lastInsertId();
 			
@@ -241,11 +257,32 @@ if (isset($_GET['addform']))
 		$_SESSION['UserManagementFeedbackMessage'] = 
 		"User Successfully Created. It is currently inactive and unable to log in.";
 		
+		// Send user an email with the activation code
+			// TO-DO: This is UNTESTED since we don't have php.ini set up to actually send email
+		$generatedPassword = $_POST['generatedPassword'];
+
+		$emailSubject = "Account Activation Link";
+		
+		$emailMessage = 
+		"Your account has been created.\n" . 
+		"Your registered Email: " . $email . "\n" . 
+		"Your generated Password: " . $generatedPassword . "\n" .
+		"For security reasons you should set a new password after you've logged in.\n\n" .
+		"Before you can log in you need to activate your account.\n" .
+		"Click this link to activate your account: " . $_SERVER['HTTP_HOST'] . 
+		"/user/?activateaccount=" . $activationcode;
+		
+		$mailResult = sendEmail($email, $emailSubject, $emailMessage);
+		
+		if(!$mailResult){
+			$_SESSION['UserManagementFeedbackMessage'] .= " [WARNING] System failed to send Email to user.";
+		}
+		
+		$_SESSION['UserManagementFeedbackMessage'] .= "this is the email msg we're sending out: $emailMessage";
+		
 		// Add a log event that a user has been created
 		try
 		{
-			session_start();
-
 			// Save a description with information about the user that was added
 			
 			$description = "N/A";
@@ -567,6 +604,12 @@ if (isset($_GET['editform']))
 	header('Location: .');
 	exit();
 }
+
+/* if ($refreshUsers){
+	// TO-DO:
+} */
+
+
 
 // Display users list
 try

@@ -308,21 +308,21 @@ function create_tables()
 						  `firstName` varchar(255) DEFAULT NULL,
 						  `lastName` varchar(255) DEFAULT NULL,
 						  `displayName` varchar(255) DEFAULT NULL,
-						  `bookingDescription` text,
-						  `bookingCode` varchar(10) DEFAULT NULL,
+						  `bookingDescription` text DEFAULT NULL,
+						  `bookingCode` char(64) DEFAULT NULL,
 						  `tempPassword` char(64) DEFAULT NULL,
 						  `dateRequested` timestamp NULL DEFAULT NULL,
 						  `AccessID` int(10) unsigned NOT NULL,
 						  `lastActivity` timestamp NULL DEFAULT NULL,
 						  `isActive` tinyint(1) NOT NULL DEFAULT '0',
-						  `activationCode` char(64) NOT NULL,
+						  `activationCode` char(64) DEFAULT NULL,
 						  PRIMARY KEY (`userID`),
 						  UNIQUE KEY `email_UNIQUE` (`email`),
 						  UNIQUE KEY `activationCode_UNIQUE` (`activationCode`),
 						  UNIQUE KEY `bookingCode_UNIQUE` (`bookingCode`),
 						  KEY `FK_AccessID_idx` (`AccessID`),
 						  CONSTRAINT `FK_AccessID` FOREIGN KEY (`AccessID`) REFERENCES `accesslevel` (`AccessID`) ON DELETE NO ACTION ON UPDATE CASCADE
-						) ENGINE=InnoDB DEFAULT CHARSET=utf8");
+						) ENGINE=InnoDB DEFAULT CHARSET=utf8;");
 						
 			//	Add the creation to log event
 			$sqlLog = "	INSERT INTO `logevent`(`actionID`, `description`) 
@@ -428,8 +428,9 @@ function create_tables()
 						  `endDateTime` datetime NOT NULL,
 						  `actualEndDateTime` datetime DEFAULT NULL,
 						  `description` text,
-						  `cancellationCode` char(64) NOT NULL,
+						  `cancellationCode` char(64) DEFAULT NULL,
 						  PRIMARY KEY (`bookingID`),
+						  UNIQUE KEY `cancellationCode_UNIQUE` (`cancellationCode`),
 						  KEY `FK_MeetingRoomID_idx` (`meetingRoomID`),
 						  KEY `FK_UserID_idx` (`userID`),
 						  KEY `FK_UserID2_idx` (`userID`),

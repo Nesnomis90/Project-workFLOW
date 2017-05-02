@@ -47,9 +47,20 @@
 		<?php if(isset($_SESSION['CompanyUserFeedback'])) : ?>
 			<p><b><?php htmlout($_SESSION['CompanyUserFeedback']); ?></b></p>
 			<?php unset($_SESSION['CompanyUserFeedback']); ?>
-		<?php endif; ?>				
+		<?php endif; ?>
+		<form action="" method="post">
+			<div>
+				<?php if(isset($_SESSION['companiesEnableDelete']) AND $_SESSION['companiesEnableDelete']) : ?>
+					<input type="submit" name="action" value="Disable Delete">
+				<?php else : ?>
+					<input type="submit" name="action" value="Enable Delete">
+				<?php endif; ?>
+			</div>
+		</form>
 		<?php if($rowNum>0) :?>
-			<p><a href="?add">Add new company</a></p>
+			<form action="" method="post">
+				<input type="submit" name="action" value="Create Company">
+			</form>
 			<table id="companiestable">
 				<caption>Registered Companies</caption>
 				<tr>
@@ -93,7 +104,13 @@
 							<?php endif; ?>
 							<td><?php htmlout($company['DatetimeCreated']); ?></td>							
 							<td><input type="submit" name="action" value="Edit"></td>
-							<td><input type="submit" name="action" value="Delete"></td>
+							<td>
+								<?php if(isset($_SESSION['companiesEnableDelete']) AND $_SESSION['companiesEnableDelete']) : ?>
+									<input type="submit" name="action" value="Delete">
+								<?php else : ?>
+									<input type="submit" name="disabled" value="Delete" disabled>
+								<?php endif; ?>
+							</td>
 							<input type="hidden" name="id" value="<?php htmlout($company['id']); ?>">
 						</form>
 					</tr>
@@ -101,7 +118,11 @@
 			</table>
 		<?php else : ?>
 			<tr><b>There are no companies registered in the database.</b></tr>
-			<tr><a href="?add">Add a company?</a></tr>
+			<tr>
+				<form action="" method="post">
+					<input type="submit" name="action" value="Create Company">
+				</form>
+			</tr>
 		<?php endif; ?>
 		<p><a href="..">Return to CMS home</a></p>
 		<?php include '../logout.inc.html.php'; ?>

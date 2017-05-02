@@ -48,8 +48,21 @@
 			<p><b><?php htmlout($_SESSION['UserManagementFeedbackMessage']); ?></b></p>
 			<?php unset($_SESSION['UserManagementFeedbackMessage']); ?>
 		<?php endif; ?>
+		<form action="" method="post">
+			<div>
+				<?php if(isset($_SESSION['usersEnableDelete']) AND $_SESSION['usersEnableDelete']) : ?>
+					<input type="submit" name="action" value="Disable Delete">
+				<?php else : ?>
+					<input type="submit" name="action" value="Enable Delete">
+				<?php endif; ?>
+			</div>
+		</form>
 		<?php if($rowNum>0) :?>
-			<p><a href="?add">Add new user</a></p>
+			<form action="?add" method="post">
+				<div>
+					<input type="submit" name="action" value="Create User">
+				</div>
+			</form>
 			<table id= "usertable">
 				<caption>Activated Users</caption>
 				<tr>
@@ -78,7 +91,13 @@
 							<td><?php htmlout($user['datecreated']); ?></td>
 							<td><?php htmlout($user['lastactive']); ?></td>
 							<td><input type="submit" name="action" value="Edit"></td>
-							<td><input type="submit" name="action" value="Delete"></td>
+							<td>
+								<?php if(isset($_SESSION['usersEnableDelete']) AND $_SESSION['usersEnableDelete']) : ?>
+									<input type="submit" name="action" value="Delete">
+								<?php else : ?>
+									<input type="submit" name="disabled" value="Delete" disabled>
+								<?php endif; ?>
+							</td>
 							<input type="hidden" name="id" value="<?php echo $user['id']; ?>">
 							<input type="hidden" name="UserInfo" id="UserInfo"
 							value="<?php htmlout($user['UserInfo']); ?>">
@@ -104,7 +123,13 @@
 							<td><?php htmlout($user['email']); ?></td>
 							<td><?php htmlout($user['accessname']); ?></td>
 							<td><?php htmlout($user['datecreated']); ?></td>
-							<td><input type="submit" name="action" value="Delete"></td>
+							<td>
+								<?php if(isset($_SESSION['usersEnableDelete']) AND $_SESSION['usersEnableDelete']) : ?>
+									<input type="submit" name="action" value="Delete">
+								<?php else : ?>
+									<input type="submit" name="disabled" value="Delete" disabled>
+								<?php endif; ?>
+							</td>
 							<input type="hidden" name="id" value="<?php echo $user['id']; ?>">
 						</tr>
 					</form>
@@ -112,7 +137,13 @@
 			</table>
 		<?php else : ?>
 			<tr><b>There are no users registered in the database.</b></tr>
-			<tr><a href="?add">Add a user?</a></tr>
+			<tr>
+				<form action="?add" method="post">
+					<div>
+						<input type="submit" name="action" value="Create User">
+					</div>
+				</form>
+			</tr>
 		<?php endif; ?>
 		<p><a href="..">Return to CMS home</a></p>
 		<?php include '../logout.inc.html.php'; ?>

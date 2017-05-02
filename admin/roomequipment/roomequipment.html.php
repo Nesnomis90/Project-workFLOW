@@ -59,6 +59,13 @@
 			</form>
 		<?php endif; ?>		
 		<form action="" method="post">
+			<div>
+				<?php if(isset($_SESSION['roomequipmentEnableDelete']) AND $_SESSION['roomequipmentEnableDelete']) : ?>
+					<input type="submit" name="action" value="Disable Remove">
+				<?php else : ?>
+					<input type="submit" name="action" value="Enable Remove">
+				<?php endif; ?>
+			</div>
 		<?php if($rowNum>0) :?>
 			<input type="submit" name="action" value="Add Room Equipment">
 			<table id="roomequipmenttable">
@@ -87,7 +94,13 @@
 							</td>	
 							<td><?php htmlout($row['DateTimeAdded']); ?></td>
 							<td><input type="submit" name="action" value="Change Amount"></td>
-							<td><input type="submit" name="action" value="Remove"></td>
+							<td>
+								<?php if(isset($_SESSION['roomequipmentEnableDelete']) AND $_SESSION['roomequipmentEnableDelete']) : ?>
+									<input type="submit" name="action" value="Remove">
+								<?php else : ?>
+									<input type="submit" name="disabled" value="Remove" disabled>
+								<?php endif; ?>
+							</td>
 							<input type="hidden" name="EquipmentID" value="<?php echo $row['TheEquipmentID']; ?>">
 							<input type="hidden" name="MeetingRoomID" value="<?php echo $row['MeetingRoomID']; ?>">
 						</tr>
