@@ -58,6 +58,15 @@
 				<input type="submit" value="Get All Employees">
 			</form>
 		<?php endif; ?>
+		<form action="" method="post">
+			<div>
+				<?php if(isset($_SESSION['employeesEnableDelete']) AND $_SESSION['employeesEnableDelete']) : ?>
+					<input type="submit" name="action" value="Disable Remove">
+				<?php else : ?>
+					<input type="submit" name="action" value="Enable Remove">
+				<?php endif; ?>
+			</div>
+		</form>		
 		<?php if($rowNum>0) :?>
 			<form action="" method="post">
 				<input type="submit" name="action" value="Add Employee">
@@ -91,7 +100,13 @@
 							<td><?php htmlout($employee['TotalBookingTimeUsed']); ?></td>
 							<td><?php htmlout($employee['StartDateTime']); ?></td>
 							<td><input type="submit" name="action" value="Change Role"></td>
-							<td><input type="submit" name="action" value="Remove"></td>
+							<td>
+								<?php if(isset($_SESSION['employeesEnableDelete']) AND $_SESSION['employeesEnableDelete']) : ?>
+									<input type="submit" name="action" value="Remove">
+								<?php else : ?>
+									<input type="submit" name="disabled" value="Remove" disabled>
+								<?php endif; ?>
+							</td>
 							<input type="hidden" name="UserID" value="<?php htmlout($employee['UsrID']); ?>">
 							<input type="hidden" name="CompanyID" value="<?php htmlout($employee['CompanyID']); ?>">
 							<input type="hidden" name="UserName" value="<?php htmlout($employee['lastName'] . ", " . $employee['firstName']); ?>">

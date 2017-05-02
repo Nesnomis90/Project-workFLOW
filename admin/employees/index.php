@@ -10,6 +10,18 @@ if (!isUserAdmin()){
 	exit();
 }
 
+// If admin wants to be able to delete companies it needs to enabled first
+if (isset($_POST['action']) AND $_POST['action'] == "Enable Remove"){
+	$_SESSION['employeesEnableDelete'] = TRUE;
+	$refreshEmployees = TRUE;
+}
+
+// If admin wants to be disable company deletion
+if (isset($_POST['action']) AND $_POST['action'] == "Disable Remove"){
+	unset($_SESSION['employeesEnableDelete']);
+	$refreshEmployees = TRUE;
+}
+
 // If admin wants to remove an employee from the selected company
 if(isset($_POST['action']) AND $_POST['action'] == 'Remove'){
 	// Remove employee connection in database
@@ -696,8 +708,12 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Cancel'){
 	// Doesn't actually need any code to work, since it happends automatically when a submit
 	// occurs. *it* being doing the normal startup code.
 	// Might be useful for something later?
-	echo "<b>Cancel button clicked. Taking you back to /admin/employees/!</b><br />";
+	$_SESSION['EmployeeUserFeedback'] = "Cancel button clicked. Taking you back to /admin/employees/!";
 }
+
+/* if($refreshEmployees){
+	// TO-DO:
+} */
 
 // There were no user inputs or forced refreshes. So we're interested in fresh, new values.
 // Let's reset all the "remembered" values
