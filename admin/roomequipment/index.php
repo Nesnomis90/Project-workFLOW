@@ -10,6 +10,19 @@ if (!isUserAdmin()){
 	exit();
 }
 
+
+// If admin wants to be able to remove equipment from a room it needs to enabled first
+if (isset($_POST['action']) AND $_POST['action'] == "Enable Remove"){
+	$_SESSION['roomequipmentEnableDelete'] = TRUE;
+	$refreshRoomEquipment = TRUE;
+}
+
+// If admin wants to be disable room equipment deletion
+if (isset($_POST['action']) AND $_POST['action'] == "Disable Remove"){
+	unset($_SESSION['roomequipmentEnableDelete']);
+	$refreshRoomEquipment = TRUE;
+}
+
 // If admin wants to remove equipment from a room
 if(isset($_POST['action']) AND $_POST['action'] == 'Remove'){
 	// Remove room equipment connection from database
@@ -655,7 +668,12 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Cancel'){
 	// occurs. *it* being doing the normal startup code.
 	// Might be useful for something later?
 	$_SESSION['RoomEquipmentUserFeedback'] = "Cancel button clicked. Taking you back to /admin/roomequipment/!";
+	$refreshRoomEquipment = TRUE;
 }
+
+/* if($refreshRoomEquipment){
+	// TO-DO:
+} */
 
 
 // There were no user inputs or forced refreshes. So we're interested in fresh, new values.

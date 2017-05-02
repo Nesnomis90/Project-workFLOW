@@ -48,11 +48,6 @@
 			<p><b><?php htmlout($_SESSION['UserManagementFeedbackMessage']); ?></b></p>
 			<?php unset($_SESSION['UserManagementFeedbackMessage']); ?>
 		<?php endif; ?>
-		<form action="?add" method="post">
-			<div>
-				<input type="submit" name="action" value="Create User">
-			</div>
-		</form>
 		<form action="" method="post">
 			<div>
 				<?php if(isset($_SESSION['usersEnableDelete']) AND $_SESSION['usersEnableDelete']) : ?>
@@ -63,7 +58,11 @@
 			</div>
 		</form>
 		<?php if($rowNum>0) :?>
-			<p><a href="?add">Add new user</a></p>
+			<form action="?add" method="post">
+				<div>
+					<input type="submit" name="action" value="Create User">
+				</div>
+			</form>
 			<table id= "usertable">
 				<caption>Activated Users</caption>
 				<tr>

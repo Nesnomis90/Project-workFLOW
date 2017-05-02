@@ -10,9 +10,21 @@ if (!isUserAdmin()){
 	exit();
 }
 
-// If admin wants to remove unavailable equipment
-if(isset($_POST['action']) AND $_POST['action'] == 'Remove'){
-	// Remove equipment from database
+// If admin wants to be able to delete bookings it needs to enabled first
+if (isset($_POST['action']) AND $_POST['action'] == "Enable Delete"){
+	$_SESSION['equipmentEnableDelete'] = TRUE;
+	$refreshEquipment = TRUE;
+}
+
+// If admin wants to be disable booking deletion
+if (isset($_POST['action']) AND $_POST['action'] == "Disable Delete"){
+	unset($_SESSION['equipmentEnableDelete']);
+	$refreshEquipment = TRUE;
+}
+
+// If admin wants to delete unavailable equipment
+if(isset($_POST['action']) AND $_POST['action'] == 'Delete'){
+	// Delete equipment from database
 	try
 	{
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
@@ -36,12 +48,12 @@ if(isset($_POST['action']) AND $_POST['action'] == 'Remove'){
 	
 	$_SESSION['EquipmentUserFeedback'] = "Successfully removed the equipment.";
 	
-	// Add a log event that an equipment has been removed
+	// Add a log event that an equipment has been Deleted
 	try
 	{
 		session_start();
 
-		// Save a description with information about the equipment that was removed
+		// Save a description with information about the equipment that was Deleted
 		$description = "The equipment: " . $_POST['EquipmentName'] . " was removed by: " . $_SESSION['LoggedInUserName'];
 		
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
@@ -311,7 +323,13 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Cancel'){
 	// occurs. *it* being doing the normal startup code.
 	// Might be useful for something later?
 	$_SESSION['EquipmentUserFeedback'] = "Cancel button clicked. Taking you back to /admin/equipment/!";
+	$refreshEquipment = TRUE;
 }
+
+/*  if($refreshEquipment) {
+	// TO-DO:
+}
+*/
 
 // Display equipment list
 try

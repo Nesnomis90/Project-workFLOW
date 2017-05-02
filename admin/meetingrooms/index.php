@@ -10,6 +10,18 @@ if (!isUserAdmin()){
 	exit();
 }
 
+// If admin wants to be able to delete bookings it needs to enabled first
+if (isset($_POST['action']) AND $_POST['action'] == "Enable Delete"){
+	$_SESSION['meetingroomsEnableDelete'] = TRUE;
+	$refreshMeetingRooms = TRUE;
+}
+
+// If admin wants to be disable booking deletion
+if (isset($_POST['action']) AND $_POST['action'] == "Disable Delete"){
+	unset($_SESSION['meetingroomsEnableDelete']);
+	$refreshMeetingRooms = TRUE;
+}
+
 // If admin wants to remove a meeting room from the database
 // TO-DO: ADD A CONFIRMATION BEFORE ACTUALLY DOING THE DELETION!
 // MAYBE BY TYPING ADMIN PASSWORD AGAIN?
@@ -242,7 +254,7 @@ if (isset($_GET['addform']))
 
 // if admin wants to edit meeting room information
 // we load a new html form
-if (isset($_POST['action']) AND $_POST['action'] = 'Edit')
+if (isset($_POST['action']) AND $_POST['action'] == 'Edit')
 {
 	// Get information from database again on the selected meeting room
 	try
@@ -332,11 +344,15 @@ if (isset($_GET['editform']))
 
 // If the user clicks any cancel buttons he'll be directed back to the meeting room page again
 if (isset($_POST['action']) AND $_POST['action'] == 'Cancel'){
-	// Doesn't actually need any code to work, since it happends automatically when a submit
-	// occurs. *it* being doing the normal startup code.
-	// Might be useful for something later?
 	$_SESSION['MeetingRoomUserFeedback'] = "Cancel button clicked. Taking you back to /admin/meetingrooms/!";
+	$refreshMeetingRooms = TRUE;
 }
+
+
+/* if ($refreshMeetingRooms) {
+	TO-DO:
+}*/
+
 
 
 // Display meeting room list

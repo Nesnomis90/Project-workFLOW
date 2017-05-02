@@ -49,6 +49,13 @@
 			<?php unset($_SESSION['EquipmentUserFeedback']); ?>
 		<?php endif; ?>
 		<form action="" method="post">
+			<div>
+				<?php if(isset($_SESSION['equipmentEnableDelete']) AND $_SESSION['equipmentEnableDelete']) : ?>
+					<input type="submit" name="action" value="Disable Delete">
+				<?php else : ?>
+					<input type="submit" name="action" value="Enable Delete">
+				<?php endif; ?>
+			</div>
 		<?php if($rowNum>0) :?>
 			<input type="submit" name="action" value="Add Equipment">
 			<table id= "equipmenttable">
@@ -73,7 +80,13 @@
 							<td><?php htmlout($row['EquipmentIsInTheseRooms']); ?></td>
 							<td><?php htmlout($row['DateTimeAdded']); ?></td>
 							<td><input type="submit" name="action" value="Edit"></td>
-							<td><input type="submit" name="action" value="Remove"></td>
+							<td>
+								<?php if(isset($_SESSION['equipmentEnableDelete']) AND $_SESSION['equipmentEnableDelete']) : ?>
+									<input type="submit" name="action" value="Delete">
+								<?php else : ?>
+									<input type="submit" name="disabled" value="Delete" disabled>
+								<?php endif; ?>
+							</td>
 							<input type="hidden" name="EquipmentID" value="<?php echo $row['TheEquipmentID']; ?>">
 						</tr>
 					</form>
