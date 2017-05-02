@@ -2,6 +2,13 @@ USE test;
 SET NAMES utf8;
 USE meetingflow;
 
+UPDATE test.`user` SET `activationCode` = NULL WHERE `userID` <> 0 AND `isActive` = 1;
+
+UPDATE 	`user`
+				SET		`isActive` = 1,
+						`activationCode` = NULL
+				WHERE 	`userID` = 43;
+
 SELECT 		l.logID, 
 							DATE_FORMAT(l.logDateTime, "%d %b %Y %T") 	AS LogDate, 
 							la.`name` 									AS ActionName, 

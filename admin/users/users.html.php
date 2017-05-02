@@ -123,7 +123,13 @@
 							<td><?php htmlout($user['email']); ?></td>
 							<td><?php htmlout($user['accessname']); ?></td>
 							<td><?php htmlout($user['datecreated']); ?></td>
-							<td><input type="submit" name="action" value="Delete"></td>
+							<td>
+								<?php if(isset($_SESSION['usersEnableDelete']) AND $_SESSION['usersEnableDelete']) : ?>
+									<input type="submit" name="action" value="Delete">
+								<?php else : ?>
+									<input type="submit" name="disabled" value="Delete" disabled>
+								<?php endif; ?>
+							</td>
 							<input type="hidden" name="id" value="<?php echo $user['id']; ?>">
 						</tr>
 					</form>
