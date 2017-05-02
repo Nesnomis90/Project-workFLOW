@@ -60,7 +60,7 @@
 				<?php else : ?>
 					<input type="submit" name="action" value="Enable Delete">
 				<?php endif; ?>
-			</div>			
+				</div>			
 			</form>
 			<table id= "bookingstable">
 				<caption>All booking history</caption>

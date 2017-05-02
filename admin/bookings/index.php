@@ -89,13 +89,13 @@ function rememberAddBookingInputs(){
 	}
 }
 
-// If admin wants to be able to delete logs it needs to enabled first
+// If admin wants to be able to delete bookings it needs to enabled first
 if (isset($_POST['action']) AND $_POST['action'] == "Enable Delete"){
 	$_SESSION['bookingsEnableDelete'] = TRUE;
 	$refreshBookings = TRUE;
 }
 
-// If admin wants to be disable log deletion
+// If admin wants to be disable booking deletion
 if (isset($_POST['action']) AND $_POST['action'] == "Disable Delete"){
 	unset($_SESSION['bookingsEnableDelete']);
 	$refreshBookings = TRUE;

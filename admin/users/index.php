@@ -10,6 +10,19 @@ if (!isUserAdmin()){
 	exit();
 }
 
+// If admin wants to be able to delete users it needs to enabled first
+if (isset($_POST['action']) AND $_POST['action'] == "Enable Delete"){
+	$_SESSION['usersEnableDelete'] = TRUE;
+	$refreshUsers = TRUE;
+}
+
+// If admin wants to be disable user deletion
+if (isset($_POST['action']) AND $_POST['action'] == "Disable Delete"){
+	unset($_SESSION['usersEnableDelete']);
+	$refreshUsers = TRUE;
+}
+
+
 // If admin wants to remove a user from the database
 // TO-DO: ADD A CONFIRMATION BEFORE ACTUALLY DOING THE DELETION!
 // MAYBE BY TYPING ADMIN PASSWORD AGAIN?
@@ -567,6 +580,12 @@ if (isset($_GET['editform']))
 	header('Location: .');
 	exit();
 }
+
+/* if ($refreshUsers){
+	// TO-DO:
+} */
+
+
 
 // Display users list
 try
