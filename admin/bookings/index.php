@@ -1620,11 +1620,14 @@ if (isset($_POST['add']) AND $_POST['add'] == "Add booking")
 	
 	$emailSubject = "Booking Cancellation Link";
 	
+	$displayValidatedStartDate = convertDatetimeToFormat($startDateTime , 'Y-m-d H:i:s', 'F jS Y H:i:s');
+	$displayValidatedEndDate = convertDatetimeToFormat($endDateTime, 'Y-m-d H:i:s', 'F jS Y H:i:s');
+	
 	$emailMessage = 
 	"Your meeting has been successfully booked!\n" . 
 	"Your booked Meeting Room: " . $MeetingRoomName . ".\n" . 
-	"Your booked Start Time: " . $startDateTime . ".\n" .
-	"Your booked End Time: " . $endDateTime . ".\n\n" .
+	"Your booked Start Time: " . $displayValidatedStartDate . ".\n" .
+	"Your booked End Time: " . $displayValidatedEndDate . ".\n\n" .
 	"If you wish to cancel your meeting, you can easily do so by clicking the link given below.\n" .
 	"Click this link to cancel your booked meeting: " . $_SERVER['HTTP_HOST'] . 
 	"/booking/?cancellationcode=" . $cancellationCode;
