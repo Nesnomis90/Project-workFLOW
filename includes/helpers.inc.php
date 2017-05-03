@@ -7,5 +7,6 @@ require_once 'mail.inc.php';
 require_once 'datetime.inc.php';
 require_once 'codegeneration.inc.php';
 require_once 'htmlout.inc.php';
+require_once 'inputvalidation.inc.php';
 
 ?>

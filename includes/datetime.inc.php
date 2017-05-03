@@ -59,6 +59,7 @@ function correctDatetimeFormat($wrongDatetimeString){
 	// Replace some characters if the user for some reason uses it
 	// TO-DO: use regex to limit what user can submit later?
 	$wrongDatetimeString = str_replace('.', '-',$wrongDatetimeString);
+	$wrongDatetimeString = str_replace(',', '-',$wrongDatetimeString);
 	$wrongDatetimeString = str_replace('/', '-',$wrongDatetimeString);
 	$wrongDatetimeString = str_replace('_', '-',$wrongDatetimeString);
 	

@@ -1369,18 +1369,55 @@ if (	(isset($_POST['action']) AND $_POST['action'] == "Create Booking") OR
 // When admin has added the needed information and wants to add the booking
 if (isset($_POST['add']) AND $_POST['add'] == "Add booking")
 {
-	// Start validating user inputs
+	// Get user inputs
 	$invalidInput = FALSE;
 	
+	if(isset($_POST['startDateTime'])){
+		$startDateTimeString = $_POST['startDateTime'];
+	} else {
+		$invalidInput = TRUE;
+	}
+	if(isset($_POST['endDateTime'])){
+		$endDateTimeString = $_POST['endDateTime'];
+	} else {
+		$invalidInput = TRUE;
+	}
+	
+	if(isset($_POST['displayName'])){
+		$displayNameString = $_POST['displayName'];
+	} else {
+		$displayNameString = '';
+	}
+	if(isset($_POST['description'])){
+		$bookingDescriptionString = $_POST['description'];
+	} else {
+		$bookingDescriptionString = '';
+	}
+	
+	// Do input validation
+	$validatedStartDateTime = validateDateTimeString($startDateTimeString);
+	$validatedEndDateTime = validateDateTimeString($endDateTimeString);
+	$validatedDisplayName = validateString($displayNameString);
+	$validatedBookingDescription = validateString($bookingDescriptionString);
+	
+	if($validatedStartDateTime === FALSE AND !$invalidInput){
+		$invalidInput = TRUE;
+		$_SESSION['AddBookingError'] = "Your submitted start time has illegal characters in it.";
+	}
+	if($validatedEndDateTime === FALSE AND !$invalidInput){
+		$invalidInput = TRUE;
+		$_SESSION['AddBookingError'] = "Your submitted end time has illegal characters in it.";
+	}	
+	
 		// Are values actually filled in?
-	if($_POST['startDateTime'] == "" AND $_POST['endDateTime'] == ""){
+	if($validatedStartDateTime == "" AND $validatedEndDateTime == "" AND !$invalidInput){
 		
 		$_SESSION['AddBookingError'] = "You need to fill in a start and end time for your booking.";	
 		$invalidInput = TRUE;
-	} elseif($_POST['startDateTime'] != "" AND $_POST['endDateTime'] == "") {
+	} elseif($validatedStartDateTime != "" AND $validatedEndDateTime == "" AND !$invalidInput) {
 		$_SESSION['AddBookingError'] = "You need to fill in an end time for your booking.";	
 		$invalidInput = TRUE;		
-	} elseif($_POST['startDateTime'] == "" AND $_POST['endDateTime'] != ""){
+	} elseif($validatedStartDateTime == "" AND $validatedEndDateTime != "" AND !$invalidInput){
 		$_SESSION['AddBookingError'] = "You need to fill in a start time for your booking.";	
 		$invalidInput = TRUE;		
 	}
@@ -1390,9 +1427,9 @@ if (isset($_POST['add']) AND $_POST['add'] == "Add booking")
 		
 		// DisplayName
 			// Has to be less than 255 chars (MySQL - VARCHAR 255)
-	$dspname = $_POST['displayName'];
+	$dspname = $validatedDisplayName;
 	$dspnameLength = strlen(utf8_decode($dspname));
-	$dspnameMaxLength = 255; // TO-DO: Adjust if needed.
+	$dspnameMaxLength = 255; // TO-DO: Adjust max length if needed.
 	if($dspnameLength > $dspnameMaxLength AND !$invalidInput){
 		
 		$_SESSION['AddBookingError'] = "The displayName submitted is too long.";	
@@ -1400,17 +1437,18 @@ if (isset($_POST['add']) AND $_POST['add'] == "Add booking")
 	}	
 		// BookingDescription
 			// Has to be less than 65,535 bytes (MySQL - TEXT) (too much anyway)
-	$bknDscrptn = $_POST['description'];
+	$bknDscrptn = $validatedBookingDescription;
 	$bknDscrptnLength = strlen(utf8_decode($bknDscrptn));
-	$bknDscrptnMaxLength = 500; // TO-DO: Adjust if needed.
+	$bknDscrptnMaxLength = 500; // TO-DO: Adjust max length if needed.
 	if($bknDscrptnLength > $bknDscrptnMaxLength AND !$invalidInput){
 		
 		$_SESSION['AddBookingError'] = "The booking description submitted is too long.";	
 		$invalidInput = TRUE;		
 	}
 	
-	$startDateTime = correctDatetimeFormat($_POST['startDateTime']);
-	$endDateTime = correctDatetimeFormat($_POST['endDateTime']);
+	// Check if the dateTime inputs we received are actually datetimes
+	$startDateTime = correctDatetimeFormat($validatedStartDateTime);
+	$endDateTime = correctDatetimeFormat($validatedEndDateTime]);
 
 	$timeNow = getDatetimeNow();
 	
@@ -1419,7 +1457,6 @@ if (isset($_POST['add']) AND $_POST['add'] == "Add booking")
 		
 		$_SESSION['AddBookingError'] = "The start time can't be later than the end time. Please select a new start time or end time.";
 		$invalidInput = TRUE;
-	
 	}
 	
 	if($startDateTime < $timeNow AND !$invalidInput){
@@ -1628,7 +1665,7 @@ if (isset($_POST['add']) AND $_POST['add'] == "Add booking")
 		exit();
 	}		
 	
-	// TO-DO: Send email with cancellation code to the user who the booking is for.
+	//Send email with cancellation code to the user who the booking is for.
 		// TO-DO: This is UNTESTED since we don't have php.ini set up to actually send email
 	
 	$emailSubject = "Booking Cancellation Link";
@@ -1650,7 +1687,7 @@ if (isset($_POST['add']) AND $_POST['add'] == "Add booking")
 	
 	$_SESSION['BookingUserFeedback'] .= "this is the email msg we're sending out: $emailMessage"; // TO-DO: Remove after testing	
 	
-	
+	// Booking a new meeting is done. Reset all connected sessions.
 	clearBookingSessions();
 	
 	// Load booking history list webpage with new booking
