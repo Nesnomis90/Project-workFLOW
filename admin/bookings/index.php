@@ -1564,8 +1564,6 @@ if (isset($_POST['add']) AND $_POST['add'] == "Add booking")
 	
 	$_SESSION['BookingUserFeedback'] = "Successfully created the booking.";
 	
-	// TO-DO: Send email with cancellation code to the user who the booking is for.
-	
 	// Add a log event that a booking has been created
 	try
 	{
@@ -1629,6 +1627,29 @@ if (isset($_POST['add']) AND $_POST['add'] == "Add booking")
 		$pdo = null;
 		exit();
 	}		
+	
+	// TO-DO: Send email with cancellation code to the user who the booking is for.
+		// TO-DO: This is UNTESTED since we don't have php.ini set up to actually send email
+	
+	$emailSubject = "Booking Cancellation Link";
+	
+	$emailMessage = 
+	"Your meeting has been successfully booked!\n" . 
+	"Your booked Meeting Room: " . $MeetingRoomName . ".\n" . 
+	"Your booked Start Time: " . $startDateTime . ".\n" .
+	"Your booked End Time: " . $endDateTime . ".\n\n" .
+	"If you wish to cancel your meeting, you can easily do so by clicking the link given below.\n" .
+	"Click this link to cancel your booked meeting: " . $_SERVER['HTTP_HOST'] . 
+	"/booking/?cancellationcode=" . $cancellationCode;
+	
+	$mailResult = sendEmail($email, $emailSubject, $emailMessage);
+	
+	if(!$mailResult){
+		$_SESSION['BookingUserFeedback'] .= " [WARNING] System failed to send Email to user.";
+	}
+	
+	$_SESSION['BookingUserFeedback'] .= "this is the email msg we're sending out: $emailMessage"; // TO-DO: Remove after testing	
+	
 	
 	clearBookingSessions();
 	

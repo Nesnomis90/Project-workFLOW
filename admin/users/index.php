@@ -256,30 +256,7 @@ if (isset($_GET['addform']))
 		
 		$_SESSION['UserManagementFeedbackMessage'] = 
 		"User Successfully Created. It is currently inactive and unable to log in.";
-		
-		// Send user an email with the activation code
-			// TO-DO: This is UNTESTED since we don't have php.ini set up to actually send email
-		$generatedPassword = $_POST['generatedPassword'];
-
-		$emailSubject = "Account Activation Link";
-		
-		$emailMessage = 
-		"Your account has been created.\n" . 
-		"Your registered Email: " . $email . "\n" . 
-		"Your generated Password: " . $generatedPassword . "\n" .
-		"For security reasons you should set a new password after you've logged in.\n\n" .
-		"Before you can log in you need to activate your account.\n" .
-		"Click this link to activate your account: " . $_SERVER['HTTP_HOST'] . 
-		"/user/?activateaccount=" . $activationcode;
-		
-		$mailResult = sendEmail($email, $emailSubject, $emailMessage);
-		
-		if(!$mailResult){
-			$_SESSION['UserManagementFeedbackMessage'] .= " [WARNING] System failed to send Email to user.";
-		}
-		
-		$_SESSION['UserManagementFeedbackMessage'] .= "this is the email msg we're sending out: $emailMessage";
-		
+			
 		// Add a log event that a user has been created
 		try
 		{
@@ -326,6 +303,30 @@ if (isset($_GET['addform']))
 			exit();
 		}				
 	}
+	
+// Send user an email with the activation code
+			// TO-DO: This is UNTESTED since we don't have php.ini set up to actually send email
+		$generatedPassword = $_POST['generatedPassword'];
+
+		$emailSubject = "Account Activation Link";
+		
+		$emailMessage = 
+		"Your account has been created.\n" . 
+		"Your registered Email: " . $email . ".\n" . 
+		"Your generated Password: " . $generatedPassword . ".\n" .
+		"For security reasons you should set a new password after you've logged in.\n\n" .
+		"Before you can log in you need to activate your account.\n" .
+		"Click this link to activate your account: " . $_SERVER['HTTP_HOST'] . 
+		"/user/?activateaccount=" . $activationcode;
+		
+		$mailResult = sendEmail($email, $emailSubject, $emailMessage);
+		
+		if(!$mailResult){
+			$_SESSION['UserManagementFeedbackMessage'] .= " [WARNING] System failed to send Email to user.";
+		}
+		
+		$_SESSION['UserManagementFeedbackMessage'] .= "this is the email msg we're sending out: $emailMessage"; // TO-DO: Remove after testing	
+	
 	
 	// Load user list webpage with new user
 	header('Location: .');
