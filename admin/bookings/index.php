@@ -89,6 +89,137 @@ function rememberAddBookingInputs(){
 	}
 }
 
+// Function to validate user inputs
+function validateUserInputs($FeedbackSessionToUse){
+	// Get user inputs
+	$invalidInput = FALSE;
+	
+	if(isset($_POST['startDateTime'])){
+		$startDateTimeString = $_POST['startDateTime'];
+	} else {
+		$invalidInput = TRUE;
+	}
+	if(isset($_POST['endDateTime'])){
+		$endDateTimeString = $_POST['endDateTime'];
+	} else {
+		$invalidInput = TRUE;
+	}
+	
+	if(isset($_POST['displayName'])){
+		$displayNameString = $_POST['displayName'];
+	} else {
+		$displayNameString = '';
+	}
+	if(isset($_POST['description'])){
+		$bookingDescriptionString = $_POST['description'];
+	} else {
+		$bookingDescriptionString = '';
+	}
+	
+	// Do input validation
+	$validatedStartDateTime = validateDateTimeString($startDateTimeString);
+	$validatedEndDateTime = validateDateTimeString($endDateTimeString);
+	$validatedDisplayName = validateString($displayNameString);
+	$validatedBookingDescription = validateString($bookingDescriptionString);
+	
+	if($validatedStartDateTime === FALSE AND !$invalidInput){
+		$invalidInput = TRUE;
+		$_SESSION[$FeedbackSessionToUse] = "Your submitted start time has illegal characters in it.";
+	}
+	if($validatedEndDateTime === FALSE AND !$invalidInput){
+		$invalidInput = TRUE;
+		$_SESSION[$FeedbackSessionToUse] = "Your submitted end time has illegal characters in it.";
+	}
+	if($validatedDisplayName === FALSE AND !$invalidInput){
+		$invalidInput = TRUE;
+		$_SESSION[$FeedbackSessionToUse] = "Your submitted display name has illegal characters in it.";
+	}
+	if($validatedBookingDescription === FALSE AND !$invalidInput){
+		$invalidInput = TRUE;
+		$_SESSION[$FeedbackSessionToUse] = "Your submitted booking description has illegal characters in it.";
+	}
+	
+		// Are values actually filled in?
+	if($validatedStartDateTime == "" AND $validatedEndDateTime == "" AND !$invalidInput){
+		
+		$_SESSION[$FeedbackSessionToUse] = "You need to fill in a start and end time for your booking.";	
+		$invalidInput = TRUE;
+	} elseif($validatedStartDateTime != "" AND $validatedEndDateTime == "" AND !$invalidInput) {
+		$_SESSION[$FeedbackSessionToUse] = "You need to fill in an end time for your booking.";	
+		$invalidInput = TRUE;		
+	} elseif($validatedStartDateTime == "" AND $validatedEndDateTime != "" AND !$invalidInput){
+		$_SESSION[$FeedbackSessionToUse] = "You need to fill in a start time for your booking.";	
+		$invalidInput = TRUE;		
+	}
+		
+		// DisplayName
+			// Has to be less than 255 chars (MySQL - VARCHAR 255)
+	$dspname = $validatedDisplayName;
+	$dspnameLength = strlen(utf8_decode($dspname));
+	$dspnameMaxLength = 255; // TO-DO: Adjust max length if needed.
+	if($dspnameLength > $dspnameMaxLength AND !$invalidInput){
+		
+		$_SESSION[$FeedbackSessionToUse] = "The displayName submitted is too long.";	
+		$invalidInput = TRUE;		
+	}	
+		// BookingDescription
+			// Has to be less than 65,535 bytes (MySQL - TEXT) (too much anyway)
+	$bknDscrptn = $validatedBookingDescription;
+	$bknDscrptnLength = strlen(utf8_decode($bknDscrptn));
+	$bknDscrptnMaxLength = 500; // TO-DO: Adjust max length if needed.
+	if($bknDscrptnLength > $bknDscrptnMaxLength AND !$invalidInput){
+		
+		$_SESSION[$FeedbackSessionToUse] = "The booking description submitted is too long.";	
+		$invalidInput = TRUE;		
+	}
+	
+	// Check if the dateTime inputs we received are actually datetimes
+	$startDateTime = correctDatetimeFormat($validatedStartDateTime);
+	$endDateTime = correctDatetimeFormat($validatedEndDateTime);
+
+	$timeNow = getDatetimeNow();
+	
+	if($startDateTime > $endDateTime AND !$invalidInput){
+		// End time can't be before the start time
+		
+		$_SESSION[$FeedbackSessionToUse] = "The start time can't be later than the end time. Please select a new start time or end time.";
+		$invalidInput = TRUE;
+	}
+	
+	if($startDateTime < $timeNow AND !$invalidInput){
+		// You can't book a meeting starting in the past.
+		
+		$_SESSION[$FeedbackSessionToUse] = "The start time you selected is already over. Select a new start time.";
+		$invalidInput = TRUE;
+	}
+	
+	if($endDateTime < $timeNow AND !$invalidInput){
+		// You can't book a meeting ending in the past.
+		
+		$_SESSION[$FeedbackSessionToUse] = "The end time you selected is already over. Select a new end time.";
+		$invalidInput = TRUE;	
+	}	
+	
+	if($endDateTime == $startDateTime AND !$invalidInput){
+		$_SESSION[$FeedbackSessionToUse] = "You need to select an end time that is different from your start time.";	
+		$invalidInput = TRUE;				
+	} 
+
+	//TO-DO: If we want to check if a booking is long enough, we do it here e.g. has to be longer than 10 min
+	/*
+	$timeDifferenceStartDate = new DateTime($startDateTime);
+	$timeDifferenceEndDate = new DateTime($endDateTime);
+	$timeDifference = $timeDifferenceStartDate->diff($timeDifferenceEndDate);
+	$timeDifferenceInMinutes = $timeDifference->i;
+	$minimumTimeDifferenceInMinutes = 10;
+	if(($timeDifferenceInMinutes < $minimumTimeDifferenceInMinutes) AND !$invalidInput){
+		$_SESSION[$FeedbackSessionToUse] = "A meeting needs to be at least $minimumTimeDifferenceInMinutes minutes long.";
+		$invalidInput = TRUE;	
+	}*/
+	
+	return array($invalidInput, $startDateTime, $endDateTime, $bknDscrptn, $dspname);
+}
+
 // If admin wants to be able to delete bookings it needs to enabled first
 if (isset($_POST['action']) AND $_POST['action'] == "Enable Delete"){
 	$_SESSION['bookingsEnableDelete'] = TRUE;
@@ -461,22 +592,17 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR
 		$_SESSION['EditBookingDefaultDisplayNameForNewUser'] = $original['UserDefaultDisplayName'];
 		$_SESSION['EditBookingDefaultBookingDescriptionForNewUser'] = $original['UserDefaultBookingDescription'];
 	}
-		// Changed company
-	foreach($company AS $cmp){
-		if($cmp['companyID'] == $row['TheCompanyID']){
-			$row['BookedForCompany'] = $cmp['companyName'];
-			break;
-		}
+	
+	// Changed company
+	if(isset($company)){
+		foreach($company AS $cmp){
+			if($cmp['companyID'] == $row['TheCompanyID']){
+				$row['BookedForCompany'] = $cmp['companyName'];
+				break;
+			}
+		}			
 	}
-	
-	/* TO-DO: CompanyID does not get saved in booking on finish edit
-Notice: Undefined variable: company in C:\Apache24\htdocs\admin\bookings\index.php on line 452
 
-Warning: Invalid argument supplied for foreach() in C:\Apache24\htdocs\admin\bookings\index.php on line 452 */
-
-// TO-DO: Fix datetime validation for EDIT
-// TO-DO: Give same datetime validation for ADD!
-	
 		// Edited inputs
 	$bookingID = $row['TheBookingID'];
 	$companyName = $row['BookedForCompany'];
@@ -768,101 +894,8 @@ if (isset($_POST['edit']) AND $_POST['edit'] == 'Cancel'){
 if(isset($_POST['edit']) AND $_POST['edit'] == "Finish Edit")
 {
 
-	// Start validating user inputs
-	$invalidInput = FALSE;
-	
-		// Are values actually filled in?
-		// DisplayName
-			// Has to be less than 255 chars (MySQL - VARCHAR 255)
-	$dspname = $_POST['displayName'];
-	$dspnameLength = strlen(utf8_decode($dspname));
-	$dspnameMaxLength = 255; // TO-DO: Adjust if needed.
-	if($dspnameLength > $dspnameMaxLength AND !$invalidInput){
-		
-		$_SESSION['EditBookingError'] = "The displayName submitted is too long.";	
-		$invalidInput = TRUE;		
-	}	
-		// BookingDescription
-			// Has to be less than 65,535 bytes (MySQL - TEXT) (too much anyway)
-	$bknDscrptn = $_POST['description'];
-	$bknDscrptnLength = strlen(utf8_decode($bknDscrptn));
-	$bknDscrptnMaxLength = 500; // TO-DO: Adjust if needed.
-	if($bknDscrptnLength > $bknDscrptnMaxLength AND !$invalidInput){
-		
-		$_SESSION['EditBookingError'] = "The booking description submitted is too long.";	
-		$invalidInput = TRUE;		
-	}
-	
-		// Datetime format check
-	if(isset($_POST['startDateTime'])){
-		$filterStartDate = trim($_POST['startDateTime']);
-	} else {
-		$filterStartDate = "";
-	}
-	if(isset($_POST['endDateTime'])){
-		$filterEndDate = trim($_POST['endDateTime']);
-	} else {
-		$filterEndDate = "";
-	}	
-	
-	if($filterStartDate == "" AND $filterEndDate == "" AND !invalidInput){
-		
-		$_SESSION['EditBookingError'] = "You need to fill in a start and end time for your booking.";	
-		$invalidInput = TRUE;
-	} elseif($filterStartDate != "" AND $filterEndDate == "" AND !invalidInput) {
-		$_SESSION['EditBookingError'] = "You need to fill in an end time for your booking.";	
-		$invalidInput = TRUE;		
-	} elseif($filterStartDate == "" AND $filterEndDate != "" AND !invalidInput){
-		$_SESSION['EditBookingError'] = "You need to fill in a start time for your booking.";	
-		$invalidInput = TRUE;		
-	}			
-		
-	if(!$invalidInput AND $filterStartDate != ""){
-		$validatedStartDate = correctDatetimeFormat($filterStartDate);
-		$displayValidatedStartDate = convertDatetimeToFormat($validatedStartDate , 'Y-m-d H:i:s', 'F jS Y H:i');
-		if($validatedStartDate === FALSE){
-			// The user submitted a start date in a format we had not expected
-			$_SESSION['EditBookingError'] = "The start date you submitted did not have a correct format. Please try again.";
-			$invalidInput = TRUE;
-		}		
-	}
-
-	if(!$invalidInput AND $filterEndDate != ""){
-		$validatedEndDate = correctDatetimeFormat($filterEndDate);
-		$displayValidatedEndDate = convertDatetimeToFormat($validatedEndDate, 'Y-m-d H:i:s', 'F jS Y H:i');
-		if($validatedEndDate === FALSE){
-			// The user submitted a start date in a format we had not expected
-			$_SESSION['EditBookingError'] = "The end date you submitted did not have a correct format. Please try again.";
-			$invalidInput = TRUE;
-		}		
-	}
-		
-	$startDateTime = $validatedStartDate;
-	$endDateTime = $validatedEndDate;
-
-	$timeNow = getDatetimeNow();
-	
-	if($startDateTime > $endDateTime AND !invalidInput){
-		// End time can't be before the start time
-		
-		$_SESSION['EditBookingError'] = "The start time can't be later than the end time. Please select a new start time or end time.";
-		$invalidInput = TRUE;
-	
-	}
-	
-	if($startDateTime < $timeNow AND !$invalidInput){
-		// You can't book stuff in the past.
-		
-		$_SESSION['EditBookingError'] = "The start time you selected is already over. Select a new start time.";
-		$invalidInput = TRUE;
-	}
-	
-	if($endDateTime < $timeNow AND !$invalidInput){
-		// You can't book stuff in the past.
-		
-		$_SESSION['EditBookingError'] = "The end time you selected is already over. Select a new end time.";
-		$invalidInput = TRUE;	
-	}	
+	// Validate user inputs
+	list($invalidInput, $startDateTime, $endDateTime, $bknDscrptn, $dspname) = validateUserInputs('EditBookingError');
 	
 	if($invalidInput){
 		
@@ -875,8 +908,11 @@ if(isset($_POST['edit']) AND $_POST['edit'] == "Finish Edit")
 		}
 		header('Location: .');
 		exit();			
-	}		
-		
+	}
+	
+	$displayValidatedStartDate = convertDatetimeToFormat($startDateTime , 'Y-m-d H:i:s', 'F jS Y H:i');
+	$displayValidatedEndDate = convertDatetimeToFormat($endDateTime, 'Y-m-d H:i:s', 'F jS Y H:i');
+	
 	// Check if any values actually changed. If not, we don't need to bother the database
 	$numberOfChanges = 0;
 	$checkIfTimeslotIsAvailable = FALSE;
@@ -896,10 +932,10 @@ if(isset($_POST['edit']) AND $_POST['edit'] == "Finish Edit")
 	if($_POST['companyID'] != $originalValue['TheCompanyID']){
 		$numberOfChanges++;
 	}
-	if($_POST['displayName'] != $originalValue['BookedBy']){
+	if($dspname != $originalValue['BookedBy']){
 		$numberOfChanges++;
 	}	
-	if($_POST['description'] != $originalValue['BookingDescription']){
+	if($bknDscrptn != $originalValue['BookingDescription']){
 		$numberOfChanges++;
 	}	
 	if($_POST['meetingRoomID'] != $originalValue['TheMeetingRoomID']){
@@ -960,10 +996,20 @@ if(isset($_POST['edit']) AND $_POST['edit'] == "Finish Edit")
 									BETWEEN :StartTime
 									AND :EndTime
 								)
+						OR 		(
+									:EndTime
+									BETWEEN `startDateTime`
+									AND `endDateTime`
+								)
+						OR 		(
+									:StartTime
+									BETWEEN `startDateTime`
+									AND `endDateTime`
+								)		
 						)
 						AND		`bookingID` != :BookingID";
 			$s = $pdo->prepare($sql);
-			
+				
 			$s->bindValue(':MeetingRoomID', $_POST['meetingRoomID']);
 			$s->bindValue(':StartTime', $startDateTime);
 			$s->bindValue(':EndTime', $endDateTime);
@@ -987,6 +1033,7 @@ if(isset($_POST['edit']) AND $_POST['edit'] == "Finish Edit")
 			rememberEditBookingInputs();
 			
 			$_SESSION['EditBookingError'] = "The booking couldn't be made. The timeslot is already taken for this meeting room.";
+			
 			if(isset($_SESSION['EditBookingChangeUser']) AND $_SESSION['EditBookingChangeUser']){
 				$_SESSION['refreshEditBookingChangeUser'] = TRUE;				
 			} else {
@@ -1026,9 +1073,9 @@ if(isset($_POST['edit']) AND $_POST['edit'] == "Finish Edit")
 		$s->bindValue(':companyID', $companyID);
 		$s->bindValue(':startDateTime', $startDateTime);
 		$s->bindValue(':endDateTime', $endDateTime);
-		$s->bindValue(':displayName', $_POST['displayName']);
-		$s->bindValue(':description', $_POST['description']);
-		
+		$s->bindValue(':displayName', $dspname);
+		$s->bindValue(':description', $bknDscrptn);
+	
 		$s->execute();
 		
 		$pdo = null;
@@ -1369,80 +1416,10 @@ if (	(isset($_POST['action']) AND $_POST['action'] == "Create Booking") OR
 // When admin has added the needed information and wants to add the booking
 if (isset($_POST['add']) AND $_POST['add'] == "Add booking")
 {
-	// Start validating user inputs
-	$invalidInput = FALSE;
-	
-		// Are values actually filled in?
-	if($_POST['startDateTime'] == "" AND $_POST['endDateTime'] == ""){
-		
-		$_SESSION['AddBookingError'] = "You need to fill in a start and end time for your booking.";	
-		$invalidInput = TRUE;
-	} elseif($_POST['startDateTime'] != "" AND $_POST['endDateTime'] == "") {
-		$_SESSION['AddBookingError'] = "You need to fill in an end time for your booking.";	
-		$invalidInput = TRUE;		
-	} elseif($_POST['startDateTime'] == "" AND $_POST['endDateTime'] != ""){
-		$_SESSION['AddBookingError'] = "You need to fill in a start time for your booking.";	
-		$invalidInput = TRUE;		
-	}
-	
-		// DateTime formats
-	// TO-DO: Check if stuff is valid when the proper datetime user input submit has been decided
-		
-		// DisplayName
-			// Has to be less than 255 chars (MySQL - VARCHAR 255)
-	$dspname = $_POST['displayName'];
-	$dspnameLength = strlen(utf8_decode($dspname));
-	$dspnameMaxLength = 255; // TO-DO: Adjust if needed.
-	if($dspnameLength > $dspnameMaxLength AND !$invalidInput){
-		
-		$_SESSION['AddBookingError'] = "The displayName submitted is too long.";	
-		$invalidInput = TRUE;		
-	}	
-		// BookingDescription
-			// Has to be less than 65,535 bytes (MySQL - TEXT) (too much anyway)
-	$bknDscrptn = $_POST['description'];
-	$bknDscrptnLength = strlen(utf8_decode($bknDscrptn));
-	$bknDscrptnMaxLength = 500; // TO-DO: Adjust if needed.
-	if($bknDscrptnLength > $bknDscrptnMaxLength AND !$invalidInput){
-		
-		$_SESSION['AddBookingError'] = "The booking description submitted is too long.";	
-		$invalidInput = TRUE;		
-	}
-	
-	$startDateTime = correctDatetimeFormat($_POST['startDateTime']);
-	$endDateTime = correctDatetimeFormat($_POST['endDateTime']);
-
-	$timeNow = getDatetimeNow();
-	
-	if($startDateTime > $endDateTime AND !$invalidInput){
-		// End time can't be before the start time
-		
-		$_SESSION['AddBookingError'] = "The start time can't be later than the end time. Please select a new start time or end time.";
-		$invalidInput = TRUE;
-	
-	}
-	
-	if($startDateTime < $timeNow AND !$invalidInput){
-		// You can't book a meeting starting in the past.
-		
-		$_SESSION['AddBookingError'] = "The start time you selected is already over. Select a new start time.";
-		$invalidInput = TRUE;
-	}
-	
-	if($endDateTime < $timeNow AND !$invalidInput){
-		// You can't book a meeting ending in the past.
-		
-		$_SESSION['AddBookingError'] = "The end time you selected is already over. Select a new end time.";
-		$invalidInput = TRUE;	
-	}	
-	
-	if($endDateTime == $startDateTime AND !$invalidInput){
-		$_SESSION['AddBookingError'] = "You need to select an end time that is different from your start time.";	
-		$invalidInput = TRUE;				
-	} 
-	
-	//TO-DO: If we want to check if a booking is long enough, we do it here e.g. has to be longer than 10 min	
-	
+	// Validate user inputs
+	list($invalidInput, $startDateTime, $endDateTime, $bknDscrptn, $dspname) = validateUserInputs('AddBookingError');
+					
+	// handle feedback process on invalid input values
 	if($invalidInput){
 		
 		rememberAddBookingInputs();
@@ -1475,6 +1452,16 @@ if (isset($_POST['add']) AND $_POST['add'] == "Add booking")
 								`endDateTime`
 								BETWEEN :StartTime
 								AND :EndTime
+							)
+					OR 		(
+								:EndTime
+								BETWEEN `startDateTime`
+								AND `endDateTime`
+							)
+					OR 		(
+								:StartTime
+								BETWEEN `startDateTime`
+								AND `endDateTime`
 							)
 					)";
 		$s = $pdo->prepare($sql);
@@ -1564,8 +1551,6 @@ if (isset($_POST['add']) AND $_POST['add'] == "Add booking")
 	
 	$_SESSION['BookingUserFeedback'] = "Successfully created the booking.";
 	
-	// TO-DO: Send email with cancellation code to the user who the booking is for.
-	
 	// Add a log event that a booking has been created
 	try
 	{
@@ -1630,6 +1615,32 @@ if (isset($_POST['add']) AND $_POST['add'] == "Add booking")
 		exit();
 	}		
 	
+	//Send email with cancellation code to the user who the booking is for.
+		// TO-DO: This is UNTESTED since we don't have php.ini set up to actually send email
+	
+	$emailSubject = "Booking Cancellation Link";
+	
+	$displayValidatedStartDate = convertDatetimeToFormat($startDateTime , 'Y-m-d H:i:s', 'F jS Y H:i:s');
+	$displayValidatedEndDate = convertDatetimeToFormat($endDateTime, 'Y-m-d H:i:s', 'F jS Y H:i:s');
+	
+	$emailMessage = 
+	"Your meeting has been successfully booked!\n" . 
+	"Your booked Meeting Room: " . $MeetingRoomName . ".\n" . 
+	"Your booked Start Time: " . $displayValidatedStartDate . ".\n" .
+	"Your booked End Time: " . $displayValidatedEndDate . ".\n\n" .
+	"If you wish to cancel your meeting, you can easily do so by clicking the link given below.\n" .
+	"Click this link to cancel your booked meeting: " . $_SERVER['HTTP_HOST'] . 
+	"/booking/?cancellationcode=" . $cancellationCode;
+	
+	$mailResult = sendEmail($email, $emailSubject, $emailMessage);
+	
+	if(!$mailResult){
+		$_SESSION['BookingUserFeedback'] .= " [WARNING] System failed to send Email to user.";
+	}
+	
+	$_SESSION['BookingUserFeedback'] .= "this is the email msg we're sending out: $emailMessage"; // TO-DO: Remove after testing	
+	
+	// Booking a new meeting is done. Reset all connected sessions.
 	clearBookingSessions();
 	
 	// Load booking history list webpage with new booking

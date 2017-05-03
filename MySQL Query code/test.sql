@@ -2,6 +2,50 @@ USE test;
 SET NAMES utf8;
 USE meetingflow;
 
+SELECT 	COUNT(*)
+FROM 	`booking`
+WHERE 	`meetingRoomID` = 1
+AND		
+(		
+		(
+			`startDateTime` 
+			BETWEEN STR_TO_DATE('2017-05-03 14:22:30','%Y-%m-%d %H:%i:%s')
+			AND STR_TO_DATE('2017-05-03 14:24:30','%Y-%m-%d %H:%i:%s')
+		) 
+OR 		(
+			`endDateTime`
+			BETWEEN STR_TO_DATE('2017-05-03 14:22:30','%Y-%m-%d %H:%i:%s')
+			AND STR_TO_DATE('2017-05-03 14:24:30','%Y-%m-%d %H:%i:%s')
+		)
+);
+
+SELECT 	COUNT(*)
+FROM 	`booking`
+WHERE 	`meetingRoomID` = 1
+AND		
+(		
+		(
+			'2017-05-03 14:19:23'
+			BETWEEN `startDateTime`
+			AND `endDateTime`
+		) 
+OR 		(
+			'2017-05-03 14:55:23'
+			BETWEEN `startDateTime`
+			AND `endDateTime`
+		)
+OR 		(
+			`startDateTime` 
+			BETWEEN '2017-05-03 14:22:30'
+			AND '2017-05-03 14:24:30'
+		) 
+OR 		(
+			`endDateTime`
+			BETWEEN '2017-05-03 14:22:30'
+			AND '2017-05-03 14:24:30'
+		)        
+);
+
 SELECT 	`bookingID`,
 						`meetingRoomID`									AS TheMeetingRoomID, 
 						(
