@@ -9,6 +9,10 @@ function validateString($oldString){
 	// Check if string uses allowed characters
 		// " -~" matches all printable ASCII characters (A-Z, a-z, 0-9, etc.)
 		// For unicode we add /u and p{L} for all language letters and p{M} for all accents
+		// There are still characters that are not allowed, like currency symbols
+		// and symbols like ´ (when not used as an accent)
+		// For currency symbols add \p{Sc}
+		// For math symbols add \p{Sm}
 		//	// TO-DO: change because it probably isn't good
 	if (preg_match('/^[ -~\p{L}\p{M}]*$/u', $trimmedString)) {
 		return $trimmedString;
