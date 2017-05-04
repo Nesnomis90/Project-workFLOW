@@ -257,7 +257,7 @@ if (isset($_POST['action']) and $_POST['action'] == 'Delete')
 		// Save a description with information about the booking that was removed
 		$description = "N/A";
 		if(isset($_POST['UserInfo']) AND isset($_POST['MeetingInfo'])){
-			$description = 'The booking made by ' . $_POST['UserInfo'] . ' for the meeting room ' .
+			$description = 'The booking made for ' . $_POST['UserInfo'] . ' for the meeting room ' .
 			$_POST['MeetingInfo'] . ' was deleted by: ' . $_SESSION['LoggedInUserName'];
 		} else {
 			$description = 'A booking was deleted by: ' . $_SESSION['LoggedInUserName'];
@@ -329,7 +329,7 @@ if (isset($_POST['action']) and $_POST['action'] == 'Cancel')
 		// Save a description with information about the booking that was cancelled
 		$description = "N/A";
 		if(isset($_POST['UserInfo']) AND isset($_POST['MeetingInfo'])){
-			$description = 'The booking made by ' . $_POST['UserInfo'] . ' for the meeting room ' .
+			$description = 'The booking made for ' . $_POST['UserInfo'] . ' for the meeting room ' .
 			$_POST['MeetingInfo'] . ' was cancelled by: ' . $_SESSION['LoggedInUserName'];
 		} else {
 			$description = 'A booking was cancelled by: ' . $_SESSION['LoggedInUserName'];
@@ -1543,6 +1543,9 @@ if (isset($_POST['add']) AND $_POST['add'] == "Add booking")
 	
 	$_SESSION['BookingUserFeedback'] = "Successfully created the booking.";
 	
+	$displayValidatedStartDate = convertDatetimeToFormat($startDateTime , 'Y-m-d H:i:s', 'F jS Y H:i:s');
+	$displayValidatedEndDate = convertDatetimeToFormat($endDateTime, 'Y-m-d H:i:s', 'F jS Y H:i:s');
+	
 	// Add a log event that a booking has been created
 	try
 	{
@@ -1557,7 +1560,7 @@ if (isset($_POST['add']) AND $_POST['add'] == "Add booking")
 		unset($_SESSION['AddBookingMeetingRoomsArray']);
 		
 		$meetinginfo = $MeetingRoomName . ' for the timeslot: ' . 
-		$_POST['startDateTime'] . ' to ' . $_POST['endDateTime'];
+		$displayValidatedStartDate . ' to ' . $displayValidatedEndDate;
 		
 		// Get user information
 		$userinfo = 'N/A';
@@ -1609,12 +1612,8 @@ if (isset($_POST['add']) AND $_POST['add'] == "Add booking")
 	
 	//Send email with cancellation code to the user who the booking is for.
 		// TO-DO: This is UNTESTED since we don't have php.ini set up to actually send email
-		// TO-DO: Get email!
 	
 	$emailSubject = "Booking Cancellation Link";
-	
-	$displayValidatedStartDate = convertDatetimeToFormat($startDateTime , 'Y-m-d H:i:s', 'F jS Y H:i:s');
-	$displayValidatedEndDate = convertDatetimeToFormat($endDateTime, 'Y-m-d H:i:s', 'F jS Y H:i:s');
 	
 	$emailMessage = 
 	"Your meeting has been successfully booked!\n" . 
@@ -1933,8 +1932,8 @@ try
 	$sql = "SELECT 		b.`bookingID`,
 						b.`companyID`,
 						m.`name` 										AS BookedRoomName, 
-						DATE_FORMAT(b.startDateTime, '%d %b %Y %T') 	AS StartTime, 
-						DATE_FORMAT(b.endDateTime, '%d %b %Y %T') 		AS EndTime, 
+						b.startDateTime 								AS StartTime, 
+						b.endDateTime									AS EndTime, 
 						b.displayName 									AS BookedBy,
 						(	
 							SELECT `name` 
@@ -1977,10 +1976,8 @@ catch (PDOException $e)
 
 foreach ($result as $row)
 {
-	// Make datetime correct formats for comparing them
 	$datetimeNow = getDatetimeNow();
-	$datetimeEndWrongFormat = $row['EndTime'];
-	$datetimeEnd = correctDatetimeFormat($datetimeEndWrongFormat);
+	$datetimeEnd = $row['EndTime'];
 	
 	// Describe the status of the booking based on what info is stored in the database
 	// If not finished and not cancelled = active
@@ -2013,16 +2010,22 @@ foreach ($result as $row)
 		$status = 'Unknown';
 	}
 	
+	$startDateTime = $row['StartTime'];
+	$endDateTime = $row['EndTime'];
+	
+	$displayValidatedStartDate = convertDatetimeToFormat($startDateTime , 'Y-m-d H:i:s', 'F jS Y H:i:s');
+	$displayValidatedEndDate = convertDatetimeToFormat($endDateTime, 'Y-m-d H:i:s', 'F jS Y H:i:s');
+	
 	$userinfo = $row['lastName'] . ', ' . $row['firstName'] . ' - ' . $row['email'];
-	$meetinginfo = 	$row['BookedRoomName'] . ' for the timeslot: ' . $row['StartTime'] . 
-					' to ' . $row['EndTime'];
+	$meetinginfo = $row['BookedRoomName'] . ' for the timeslot: ' . $displayValidatedStartDate . 
+					' to ' . $displayValidatedEndDate;
 	
 	
 	$bookings[] = array('id' => $row['bookingID'],
 						'BookingStatus' => $status,
 						'BookedRoomName' => $row['BookedRoomName'],
-						'StartTime' => $row['StartTime'],
-						'EndTime' => $row['EndTime'],
+						'StartTime' => $displayValidatedStartDate,
+						'EndTime' => $displayValidatedEndDate,
 						'BookedBy' => $row['BookedBy'],
 						'BookedForCompany' => $row['BookedForCompany'],
 						'BookingDescription' => $row['BookingDescription'],
