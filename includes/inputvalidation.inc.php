@@ -28,25 +28,20 @@ function isLengthInvalidBookingDescription($bookingDescription){
 }
 // Function that (hopefully) removes excess white space, line feeds etc.
 function trimExcessWhitespaceButLeaveLinefeed($oldString){
-	$trimmedString = trim($oldString);
+
 	// TO-DO: Seems to be working, but change if needed
 	// Inner preg replaces takes all white space before and after a line feed and turns it into a single line feed
 	// Outer preg replaces takes all excess spaces and tabs between words on a line and replaces with a single space
-	return preg_replace('/[ \t]+/', ' ', preg_replace('/\s*\R+\s*/', "\n", $trimmedString));
+	// trim removes excess spaces before/after
+	return trim(preg_replace('/[ \t]+/', ' ', preg_replace('/\s*\R+\s*/', "\n", $oldString)));
 }
 
 // Function that (hopefully) removes excess white space, line feeds etc.
 function trimExcessWhitespace($oldString){
-	$trimmedString = trim($oldString);
-	
+
 	// Replace any amount of white space with a single space
-	if(strlen($trimmedString) > 0){
-		return preg_replace('/^[\s]*$/', ' ', $trimmedString);	
-	} else {
-		// To avoid function returning a single space when fed an emptry string
-		// Which would ruin "is string empty?"-checks
-		return "";
-	}
+	// Also remove excess space at start/end
+	return trim(preg_replace('/\s+/', ' ', $oldString))
 }
 
 // Function to check if input string uses legal characters and trims the input down
