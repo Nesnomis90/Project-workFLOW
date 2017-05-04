@@ -113,9 +113,9 @@ function validateUserInputs($FeedbackSessionToUse){
 	}	
 	
 	// Check if the submitted email has already been used
-		//TO-DO: Should not apply when not editing the email at all. AKA OUR OWN EMAIL!
 	if(isset($_SESSION['EditUserOldEmail'])){
 		$originalEmail = $_SESSION['EditUserOldEmail'];
+		// no need to check if our own email exists in the database
 		if($email!=$originalEmail){
 			if (databaseContainsEmail($email)){
 				// The email has been used before. So we can't create a new user with this info.
@@ -129,9 +129,7 @@ function validateUserInputs($FeedbackSessionToUse){
 			$_SESSION[$FeedbackSessionToUse] = "The submitted email is already connected to an account.";
 			$invalidInput = TRUE;	
 		}			
-	}	
-
-	
+	}
 return array($invalidInput, $firstname, $lastname, $email, $validatedFirstname, $validatedLastname, $validatedBookingDescription, $validatedDisplayName);	
 }
 
@@ -309,77 +307,6 @@ if (isset($_GET['add']) OR (isset($_SESSION['refreshUserAddform']) AND $_SESSION
 // When admin has added the needed information and wants to add the user
 if (isset($_GET['addform']))
 {
-/*	$invalidInput = FALSE;
-	
-	// Get user inputs
-		//Firstname
-	if(isset($_POST['firstname'])){
-		$firstname = $_POST['firstname'];
-		$firstname = trim($firstname);
-	} else {
-		$_SESSION['AddNewUserError'] = "A user cannot be created without submitting a first name.";
-		$invalidInput = TRUE;
-	}	
-		//Lastname
-	if(isset($_POST['lastname'])){
-		$lastname = $_POST['lastname'];
-		$lastname = trim($lastname);
-	} else {
-		$_SESSION['AddNewUserError'] = "A user cannot be created without submitting a last name.";
-		$invalidInput = TRUE;
-	}		
-		//Email
-	if(isset($_POST['email'])){
-		$email = $_POST['email'];
-		$email = trim($email);
-	} else {
-		$_SESSION['AddNewUserError'] = "A user cannot be created without submitting an email.";
-		$invalidInput = TRUE;
-	}
-
-	// Do input validation
-	$validatedFirstname = validateNames($firstname);
-	$validatedLastname = validateNames($lastname);
-	
-		// First Name
-	if($validatedFirstname === FALSE AND !$invalidInput){
-		$_SESSION['AddNewUserError'] = "The first name submitted contains illegal characters.";
-		$invalidInput = TRUE;		
-	}
-	if(strlen($validatedFirstname) < 1 AND !$invalidInput){
-		$_SESSION['AddNewUserError'] = "You need to submit a first name.";
-		$invalidInput = TRUE;	
-	}	
-		// Last Name
-	if($validatedLastname === FALSE AND !$invalidInput){
-		$_SESSION['AddNewUserError'] = "The last name submitted contains illegal characters.";
-		$invalidInput = TRUE;			
-	}
-	if(strlen($validatedLastname) < 1 AND !$invalidInput){
-		$_SESSION['AddNewUserError'] = "You need to submit a last name.";
-		$invalidInput = TRUE;	
-	}	
-		// Email
-	if(strlen($email) < 1 AND !$invalidInput){
-		$_SESSION['AddNewUserError'] = "You need to submit an email.";
-		$invalidInput = TRUE;
-	}	
-	if(!validateUserEmail($email) AND !$invalidInput){
-		$_SESSION['AddNewUserError'] = "The email submitted is not a valid email.";
-		$invalidInput = TRUE;
-	}	
-	if(strlen($email) < 3 AND !$invalidInput){
-		$_SESSION['AddNewUserError'] = "You need to submit an actual email.";
-		$invalidInput = TRUE;
-	}
-
-	// Check if the submitted email has already been used
-	if (databaseContainsEmail($email)){
-		// The email has been used before. So we can't create a new user with this info.
-		$_SESSION['AddNewUserError'] = "The submitted email is already connected to an account.";
-		$invalidInput = TRUE;	
-	}*/
-
 	// Validate user inputs
 	list($invalidInput, $firstname, $lastname, $email, $validatedFirstname, $validatedLastname, $validatedBookingDescription, $validatedDisplayName) = validateUserInputs('AddNewUserError');	
 	
@@ -613,8 +540,6 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR
 		$_SESSION['EditUserOldBookingDescription'] = $bookingdescription;
 		$_SESSION['TheUserID'] = $id;
 		$_SESSION['EditUserAccessList'] = $access;
-		
-		
 	}
 	
 	// Set the correct information
@@ -623,16 +548,6 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR
 	$button = 'Edit user';
 	$password = '';
 	$confirmpassword = '';
-	
-	/*// Remember the original values we retrieved.
-	$_SESSION['EditUserOldFirstname'] = $firstname;
-	$_SESSION['EditUserOldLastname'] = $lastname;
-	$_SESSION['EditUserOldEmail'] = $email;
-	$_SESSION['EditUserOldAccessID'] = $accessID;
-	$_SESSION['EditUserOldDisplayname'] = $displayname;
-	$_SESSION['EditUserOldBookingDescription'] = $bookingdescription;
-	$_SESSION['TheUserID'] = $id;
-	$_SESSION['EditUserAccessList'] = $access;*/
 	
 	// Don't want a reset button to blank all fields while editing
 	$reset = 'hidden';
@@ -742,6 +657,8 @@ if (isset($_GET['editform']))
 	if ($NumberOfChanges == 0){
 		
 		$_SESSION['UserManagementFeedbackMessage'] = "No changes were made.";
+		unset($_SESSION['EditUserAccessList']);
+		unset($_SESSION['TheUserID']);
 		
 		// Load user list webpage with updated database
 		header('Location: .');
