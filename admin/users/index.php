@@ -188,175 +188,182 @@ if (isset($_GET['addform']))
 	
 	// Get user inputs
 		//Firstname
-	if(isset($_POST['firstname']) AND !$invalidInput){
-		$email = $_POST['firstname'];
-		$email = trim($email);
-	} else {
-		$_SESSION['AddNewUserError'] = "A user cannot be created without submitting an email.";
-		$invalidInput = TRUE;
-	}	
-		//Lastname
-	if(isset($_POST['lastname']) AND !$invalidInput){
-		$firstname = $_POST['lastname'];
+	if(isset($_POST['firstname'])){
+		$firstname = $_POST['firstname'];
 		$firstname = trim($firstname);
 	} else {
 		$_SESSION['AddNewUserError'] = "A user cannot be created without submitting a first name.";
 		$invalidInput = TRUE;
-	}		
-		//Email
-	if(isset($_POST['email']) AND !$invalidInput){
+	}	
+		//Lastname
+	if(isset($_POST['lastname'])){
 		$lastname = $_POST['lastname'];
 		$lastname = trim($lastname);
 	} else {
 		$_SESSION['AddNewUserError'] = "A user cannot be created without submitting a last name.";
 		$invalidInput = TRUE;
+	}		
+		//Email
+	if(isset($_POST['email'])){
+		$email = $_POST['email'];
+		$email = trim($email);
+	} else {
+		$_SESSION['AddNewUserError'] = "A user cannot be created without submitting an email.";
+		$invalidInput = TRUE;
 	}
 
 	// Do input validation
+	$validatedFirstname = validateNames($firstname);
+	$validatedLastname = validateNames($lastname);
 	
+	if($validatedFirstname === FALSE AND !$invalidInput){
+		$_SESSION['AddNewUserError'] = "The first name submitted contains illegal characters.";
+		$invalidInput = TRUE;		
+	}
+	if($validatedLastname === FALSE AND !$invalidInput){
+		$_SESSION['AddNewUserError'] = "The last name submitted contains illegal characters.";
+		$invalidInput = TRUE;			
+	}
 	if(!validateUserEmail($email) AND !$invalidInput){
 		$_SESSION['AddNewUserError'] = "The email submitted is not a valid email.";
 		$invalidInput = TRUE;
 	}	
 	
-	
-	if($invalidInput){
-		// TO-DO: Remember set values and refresh add template.
-	}
-	
-	
 	// Check if the submitted email has already been used
 	if (databaseContainsEmail($email)){
 		// The email has been used before. So we can't create a new user with this info.
-		
-		$_SESSION['refreshUserAddform'] = TRUE;
 		$_SESSION['AddNewUserError'] = "The submitted email already exists in the database.";
-		
-		// Let's remember the info the admin submitted
-		$_SESSION['AddNewUserFirstname'] = $_POST['firstname'];
-		$_SESSION['AddNewUserLastname'] = $_POST['lastname'];
-		$_SESSION['AddNewUserEmail'] = $_POST['email'];
-		$_SESSION['AddNewUserSelectedAccess'] = $_POST['accessID'];		
-		
-		
-	} else {
-		// The email has NOT been used before, so we can create the new user!
-		try
-		{
-			// Add the user to the database
-			
-			//Generate activation code
-			$activationcode = generateActivationCode();
-			
-			// Hash the user generated password
-			$hashedPassword = $_POST['hashedPassword'];	
-			
-			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
-			
-			$pdo = connect_to_db();
-			$sql = 'INSERT INTO `user` 
-					SET			`firstname` = :firstname,
-								`lastname` = :lastname,
-								`accessID` = :accessID,
-								`password` = :password,
-								`activationcode` = :activationcode,
-								`email` = :email';
-			$s = $pdo->prepare($sql);
-			$s->bindValue(':firstname', $_POST['firstname']);
-			$s->bindValue(':lastname', $_POST['lastname']);		
-			$s->bindValue(':accessID', $_POST['accessID']);
-			$s->bindValue(':password', $hashedPassword);
-			$s->bindValue(':activationcode', $activationcode);
-			$s->bindValue(':email', $email);
-			$s->execute();
-			
-			unset($_SESSION['lastUserID']);
-			$_SESSION['lastUserID'] = $pdo->lastInsertId();
-			
-			//Close the connection
-			$pdo = null;
-		}
-		catch (PDOException $e)
-		{
-			$error = 'Error adding submitted user to database: ' . $e->getMessage();
-			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
-			$pdo = null;
-			exit();
-		}
-		
-		$_SESSION['UserManagementFeedbackMessage'] = 
-		"User Successfully Created. It is currently inactive and unable to log in.";
-			
-		// Add a log event that a user has been created
-		try
-		{
-			// Save a description with information about the user that was added
-			
-			$description = "N/A";
-			$userinfo = $_POST['lastname'] . ', ' . $_POST['firstname'] . ' - ' . $_POST['email'];
-			if(isset($_SESSION['LoggedInUserName'])){
-				$description = "An account for: " . $userinfo . " was created by: " . $_SESSION['LoggedInUserName'];
-			} else {
-				$description = "An account was created for " . $userinfo;
-			}
-			
-			if(isset($_SESSION['lastUserID'])){
-				$lastUserID = $_SESSION['lastUserID'];
-				unset($_SESSION['lastUserID']);				
-			}
+		$invalidInput = TRUE;	
+	}
 
-			
-			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
-			
-			$pdo = connect_to_db();
-			$sql = "INSERT INTO `logevent` 
-					SET			`actionID` = 	(
-													SELECT `actionID` 
-													FROM `logaction`
-													WHERE `name` = 'Account Created'
-												),
-								`UserID` = :UserID,
-								`description` = :description";
-			$s = $pdo->prepare($sql);
-			$s->bindValue(':description', $description);
-			$s->bindValue(':UserID', $lastUserID);
-			$s->execute();
-			
-			//Close the connection
-			$pdo = null;		
-		}
-		catch(PDOException $e)
-		{
-			$error = 'Error adding log event to database: ' . $e->getMessage();
-			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
-			$pdo = null;
-			exit();
-		}				
+	if($invalidInput){
+		// Let's remember the info the admin submitted
+		$_SESSION['AddNewUserFirstname'] = $firstname;
+		$_SESSION['AddNewUserLastname'] = $lastname;
+		$_SESSION['AddNewUserEmail'] = $email;
+		$_SESSION['AddNewUserSelectedAccess'] = $_POST['accessID'];	
+		
+		// Let's refresh the add template
+		$_SESSION['refreshUserAddform'] = TRUE;
+		header('Location: .');
+		exit();
 	}
 	
-// Send user an email with the activation code
-			// TO-DO: This is UNTESTED since we don't have php.ini set up to actually send email
-		$generatedPassword = $_POST['generatedPassword'];
-
-		$emailSubject = "Account Activation Link";
+	// The email has NOT been used before and all inputs are valid, so we can create the new user!
+	try
+	{
+		// Add the user to the database
 		
-		$emailMessage = 
-		"Your account has been created.\n" . 
-		"Your registered Email: " . $email . ".\n" . 
-		"Your generated Password: " . $generatedPassword . ".\n" .
-		"For security reasons you should set a new password after you've logged in.\n\n" .
-		"Before you can log in you need to activate your account.\n" .
-		"Click this link to activate your account: " . $_SERVER['HTTP_HOST'] . 
-		"/user/?activateaccount=" . $activationcode;
+		//Generate activation code
+		$activationcode = generateActivationCode();
 		
-		$mailResult = sendEmail($email, $emailSubject, $emailMessage);
+		// Hash the user generated password
+		$hashedPassword = $_POST['hashedPassword'];	
 		
-		if(!$mailResult){
-			$_SESSION['UserManagementFeedbackMessage'] .= " [WARNING] System failed to send Email to user.";
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+		
+		$pdo = connect_to_db();
+		$sql = 'INSERT INTO `user` 
+				SET			`firstname` = :firstname,
+							`lastname` = :lastname,
+							`accessID` = :accessID,
+							`password` = :password,
+							`activationcode` = :activationcode,
+							`email` = :email';
+		$s = $pdo->prepare($sql);
+		$s->bindValue(':firstname', $firstname);
+		$s->bindValue(':lastname', $lastname);		
+		$s->bindValue(':accessID', $_POST['accessID']);
+		$s->bindValue(':password', $hashedPassword);
+		$s->bindValue(':activationcode', $activationcode);
+		$s->bindValue(':email', $email);
+		$s->execute();
+		
+		unset($_SESSION['lastUserID']);
+		$_SESSION['lastUserID'] = $pdo->lastInsertId();
+		
+		//Close the connection
+		$pdo = null;
+	}
+	catch (PDOException $e)
+	{
+		$error = 'Error adding submitted user to database: ' . $e->getMessage();
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+		$pdo = null;
+		exit();
+	}
+	
+	$_SESSION['UserManagementFeedbackMessage'] = 
+	"User Successfully Created. It is currently inactive and unable to log in.";
+		
+	// Add a log event that a user has been created
+	try
+	{
+		// Save a description with information about the user that was added
+		
+		$description = "N/A";
+		$userinfo = $lastname . ', ' . $firstname . ' - ' . $email;
+		if(isset($_SESSION['LoggedInUserName'])){
+			$description = "An account for: " . $userinfo . " was created by: " . $_SESSION['LoggedInUserName'];
+		} else {
+			$description = "An account was created for " . $userinfo;
 		}
 		
-		$_SESSION['UserManagementFeedbackMessage'] .= "this is the email msg we're sending out: $emailMessage"; // TO-DO: Remove after testing	
+		if(isset($_SESSION['lastUserID'])){
+			$lastUserID = $_SESSION['lastUserID'];
+			unset($_SESSION['lastUserID']);				
+		}
+
+		
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+		
+		$pdo = connect_to_db();
+		$sql = "INSERT INTO `logevent` 
+				SET			`actionID` = 	(
+												SELECT `actionID` 
+												FROM `logaction`
+												WHERE `name` = 'Account Created'
+											),
+							`UserID` = :UserID,
+							`description` = :description";
+		$s = $pdo->prepare($sql);
+		$s->bindValue(':description', $description);
+		$s->bindValue(':UserID', $lastUserID);
+		$s->execute();
+		
+		//Close the connection
+		$pdo = null;		
+	}
+	catch(PDOException $e)
+	{
+		$error = 'Error adding log event to database: ' . $e->getMessage();
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+		$pdo = null;
+		exit();
+	}	
 	
+	// Send user an email with the activation code
+		// TO-DO: This is UNTESTED since we don't have php.ini set up to actually send email
+	$generatedPassword = $_POST['generatedPassword'];
+
+	$emailSubject = "Account Activation Link";
+	
+	$emailMessage = 
+	"Your account has been created.\n" . 
+	"Your registered Email: " . $email . ".\n" . 
+	"Your generated Password: " . $generatedPassword . ".\n" .
+	"For security reasons you should set a new password after you've logged in.\n\n" .
+	"Before you can log in you need to activate your account.\n" .
+	"Click this link to activate your account: " . $_SERVER['HTTP_HOST'] . 
+	"/user/?activateaccount=" . $activationcode;
+	
+	$mailResult = sendEmail($email, $emailSubject, $emailMessage);
+	
+	if(!$mailResult){
+		$_SESSION['UserManagementFeedbackMessage'] .= " [WARNING] System failed to send Email to user.";
+	}
+	
+	$_SESSION['UserManagementFeedbackMessage'] .= "this is the email msg we're sending out: $emailMessage. Sent to: $email."; // TO-DO: Remove after testing	
 	
 	// Load user list webpage with new user
 	header('Location: .');
