@@ -94,6 +94,9 @@ if(isset($_GET['activateaccount'])){
 	
 	$_SESSION['normalUserFeedback'] = "The account for " . $lastname . ", " . $firstname . " - " . $email . 
 									" has been activated!";
+									
+									
+	// TO-DO: Add a log event that the account got activated!
 }
 
 

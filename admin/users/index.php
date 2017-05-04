@@ -10,6 +10,131 @@ if (!isUserAdmin()){
 	exit();
 }
 
+// Function to validate user inputs
+function validateUserInputs($FeedbackSessionToUse){
+	$invalidInput = FALSE;
+	
+	// Get user inputs
+		//Firstname
+	if(isset($_POST['firstname'])){
+		$firstname = $_POST['firstname'];
+		$firstname = trim($firstname);
+	} else {
+		$_SESSION[$FeedbackSessionToUse] = "A user cannot be created without submitting a first name.";
+		$invalidInput = TRUE;
+	}	
+		//Lastname
+	if(isset($_POST['lastname'])){
+		$lastname = $_POST['lastname'];
+		$lastname = trim($lastname);
+	} else {
+		$_SESSION[$FeedbackSessionToUse] = "A user cannot be created without submitting a last name.";
+		$invalidInput = TRUE;
+	}		
+		//Email
+	if(isset($_POST['email'])){
+		$email = $_POST['email'];
+		$email = trim($email);
+	} else {
+		$_SESSION[$FeedbackSessionToUse] = "A user cannot be created without submitting an email.";
+		$invalidInput = TRUE;
+	}
+		// Display Name (edit only)
+	if(isset($_POST['displayname'])){
+		$displayNameString = $_POST['displayname'];
+	} else {
+		$displayNameString = '';
+	}
+		// Booking Description (edit only)
+	if(isset($_POST['bookingdescription'])){
+		$bookingDescriptionString = $_POST['bookingdescription'];
+	} else {
+		$bookingDescriptionString = '';
+	}
+	
+	// Remove excess whitespace and prepare strings for validation
+	$validatedFirstname = trimExcessWhitespace($firstname);
+	$validatedLastname = trimExcessWhitespace($lastname);
+	$validatedDisplayName = trimExcessWhitespaceButLeaveLinefeed($displayNameString);
+	$validatedBookingDescription = trimExcessWhitespaceButLeaveLinefeed($bookingDescriptionString);
+	
+	// Do actual input validation
+		// First Name
+	if(validateNames($validatedFirstname) === FALSE AND !$invalidInput){
+		$_SESSION[$FeedbackSessionToUse] = "The first name submitted contains illegal characters.";
+		$invalidInput = TRUE;		
+	}
+	if(strlen($validatedFirstname) < 1 AND !$invalidInput){
+		$_SESSION[$FeedbackSessionToUse] = "You need to submit a first name.";
+		$invalidInput = TRUE;	
+	}	
+		// Last Name
+	if(validateNames($validatedLastname) === FALSE AND !$invalidInput){
+		$_SESSION[$FeedbackSessionToUse] = "The last name submitted contains illegal characters.";
+		$invalidInput = TRUE;			
+	}
+	if(strlen($validatedLastname) < 1 AND !$invalidInput){
+		$_SESSION[$FeedbackSessionToUse] = "You need to submit a last name.";
+		$invalidInput = TRUE;	
+	}	
+		// Email
+	if(strlen($email) < 1 AND !$invalidInput){
+		$_SESSION[$FeedbackSessionToUse] = "You need to submit an email.";
+		$invalidInput = TRUE;
+	}	
+	if(!validateUserEmail($email) AND !$invalidInput){
+		$_SESSION[$FeedbackSessionToUse] = "The email submitted is not a valid email.";
+		$invalidInput = TRUE;
+	}	
+	if(strlen($email) < 3 AND !$invalidInput){
+		$_SESSION[$FeedbackSessionToUse] = "You need to submit an actual email.";
+		$invalidInput = TRUE;
+	}
+	
+		// Display Name
+	if(validateString($validatedDisplayName) === FALSE AND !$invalidInput){
+		$invalidInput = TRUE;
+		$_SESSION[$FeedbackSessionToUse] = "Your submitted display name has illegal characters in it.";
+	}
+	$invalidDisplayName = isLengthInvalidDisplayName($validatedDisplayName);
+	if($invalidDisplayName AND !$invalidInput){
+		$_SESSION[$FeedbackSessionToUse] = "The displayName submitted is too long.";	
+		$invalidInput = TRUE;		
+	}		
+		// Booking Description
+	if(validateString($validatedBookingDescription) === FALSE AND !$invalidInput){
+		$invalidInput = TRUE;
+		$_SESSION[$FeedbackSessionToUse] = "Your submitted booking description has illegal characters in it.";
+	}	
+	$invalidBookingDescription = isLengthInvalidBookingDescription($validatedBookingDescription);
+	if($invalidBookingDescription AND !$invalidInput){
+		$_SESSION[$FeedbackSessionToUse] = "The booking description submitted is too long.";	
+		$invalidInput = TRUE;		
+	}	
+	
+	// Check if the submitted email has already been used
+		//TO-DO: Should not apply when not editing the email at all. AKA OUR OWN EMAIL!
+	if(isset($_SESSION['EditUserOldEmail'])){
+		$originalEmail = $_SESSION['EditUserOldEmail'];
+		if($email!=$originalEmail){
+			if (databaseContainsEmail($email)){
+				// The email has been used before. So we can't create a new user with this info.
+				$_SESSION[$FeedbackSessionToUse] = "The new email you've set is already connected to an account.";
+				$invalidInput = TRUE;	
+			}				
+		}
+	} else {
+		if (databaseContainsEmail($email)){
+			// The email has been used before. So we can't create a new user with this info.
+			$_SESSION[$FeedbackSessionToUse] = "The submitted email is already connected to an account.";
+			$invalidInput = TRUE;	
+		}			
+	}	
+
+	
+return array($invalidInput, $firstname, $lastname, $email, $validatedFirstname, $validatedLastname, $validatedBookingDescription, $validatedDisplayName);	
+}
+
 // If admin wants to be able to delete users it needs to enabled first
 if (isset($_POST['action']) AND $_POST['action'] == "Enable Delete"){
 	$_SESSION['usersEnableDelete'] = TRUE;
@@ -184,7 +309,7 @@ if (isset($_GET['add']) OR (isset($_SESSION['refreshUserAddform']) AND $_SESSION
 // When admin has added the needed information and wants to add the user
 if (isset($_GET['addform']))
 {
-	$invalidInput = FALSE;
+/*	$invalidInput = FALSE;
 	
 	// Get user inputs
 		//Firstname
@@ -253,8 +378,11 @@ if (isset($_GET['addform']))
 		// The email has been used before. So we can't create a new user with this info.
 		$_SESSION['AddNewUserError'] = "The submitted email is already connected to an account.";
 		$invalidInput = TRUE;	
-	}
+	}*/
 
+	// Validate user inputs
+	list($invalidInput, $firstname, $lastname, $email, $validatedFirstname, $validatedLastname, $validatedBookingDescription, $validatedDisplayName) = validateUserInputs('AddNewUserError');	
+	
 	if($invalidInput){
 		// Let's remember the info the admin submitted
 		$_SESSION['AddNewUserFirstname'] = $firstname;
@@ -511,48 +639,73 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR
 // Perform the actual database update of the edited information
 if (isset($_GET['editform']))
 {
+		// Validate user inputs
+	list($invalidInput, $firstname, $lastname, $email, $validatedFirstname, $validatedLastname, $validatedBookingDescription, $validatedDisplayName) = validateUserInputs('AddNewUserError');
+
 	// Check if any values were actually changed
 	$NumberOfChanges = 0;
+	$changePassword = FALSE;
 	
 	// Check if user is trying to set a new password
 	// And if so, check if both fields are filled in and match each other
-	if($_POST['password'] == $_POST['confirmpassword']){
-		if($_POST['password'] != ''){
-			$NumberOfChanges++;	
-		}
+	if(isset($_POST['password'])){
+		$password = $_POST['password'];
+	} 
+	if(isset($_POST['confirmpassword'])){
+		$confirmPassword = $_POST['confirmpassword'];
+	}
+	$minimumPasswordLength = 0; //TO-DO: Change if we want a minimum password length!
+	if(($password != '' OR $confirmPassword != '') AND !$invalidInput){
+			
+		if($password == $confirmPassword){
+			// Both passwords match, hopefully that means it's the correct password the user wanted to submit
 
+				if(strlen(utf8_decode($password)) < $minimumPasswordLength){
+					$_SESSION['AddNewUserError'] = "The submitted password is not long enough. You are required to make it at least $minimumPasswordLength characters long.";
+					$invalidInput = TRUE;			
+				} else {
+					// Both passwords were the same. They were not empty and they were longer than the minimum requirement
+					$NumberOfChanges++;
+					$changePassword = TRUE;				
+				}
+		} else {
+			$_SESSION['AddNewUserError'] = "Password and Confirm Password did not match.";
+			$invalidInput = TRUE;
+		}
 	} else {
-		$_SESSION['AddNewUserError'] = "Password and Confirm Password did not match.";
-		$_SESSION['refreshEditform'] = TRUE;
-		
-		// Remember if admin made any other changes
-		$_SESSION['EditUserChangedFirstname'] = $_POST['firstname'];
-		$_SESSION['EditUserChangedLastname'] = $_POST['lastname'];
-		$_SESSION['EditUserChangedEmail'] = $_POST['email'];
+		// Password was empty. Not a big deal since it's not required
+		// Just means we won't change it!
+	}
+	if($invalidInput){
+		// Let's remember the info the admin submitted
+		$_SESSION['EditUserChangedFirstname'] = $firstname;
+		$_SESSION['EditUserChangedLastname'] = $lastname;
+		$_SESSION['EditUserChangedEmail'] = $email;
 		$_SESSION['EditUserChangedAccessID'] = $_POST['accessID'];
-		$_SESSION['EditUserChangedDisplayname'] = $_POST['displayname'];
-		$_SESSION['EditUserChangedBookingDescription'] = $_POST['bookingdescription'];
+		$_SESSION['EditUserChangedDisplayname'] = $validatedDisplayName;
+		$_SESSION['EditUserChangedBookingDescription'] = $validatedBookingDescription;		
 		
-		// Load user list webpage with updated database
+		// Let's refresh the edit template
+		$_SESSION['refreshEditform'] = TRUE;
 		header('Location: .');
 		exit();
 	}
-	
+		
 		// Check against the values we retrieved before loading the page
 	if ( isset($_SESSION['EditUserOldFirstname']) AND 
-	$_POST['firstname'] != $_SESSION['EditUserOldFirstname'])
+	$firstname != $_SESSION['EditUserOldFirstname'])
 	{
 		$NumberOfChanges++;
 		unset($_SESSION['EditUserOldFirstname']);
 	}
 	if ( isset($_SESSION['EditUserOldLastname']) AND 
-	$_POST['lastname'] != $_SESSION['EditUserOldLastname'])
+	$lastname != $_SESSION['EditUserOldLastname'])
 	{
 		$NumberOfChanges++;
 		unset($_SESSION['EditUserOldLastname']);
 	}
 	if ( isset($_SESSION['EditUserOldEmail']) AND 
-	$_POST['email'] != $_SESSION['EditUserOldEmail'])
+	$email != $_SESSION['EditUserOldEmail'])
 	{
 		$NumberOfChanges++;
 		unset($_SESSION['EditUserOldEmail']);
@@ -564,19 +717,18 @@ if (isset($_GET['editform']))
 		unset($_SESSION['EditUserOldAccessID']);
 	}
 	if ( isset($_SESSION['EditUserOldDisplayname']) AND 
-	$_POST['displayname'] != $_SESSION['EditUserOldDisplayname'])
+	$validatedDisplayName != $_SESSION['EditUserOldDisplayname'])
 	{
 		$NumberOfChanges++;
 		unset($_SESSION['EditUserOldDisplayname']);
 	}	
 	if ( isset($_SESSION['EditUserOldBookingDescription']) AND 
-	$_POST['bookingdescription'] != $_SESSION['EditUserOldBookingDescription'])
+	$validatedBookingDescription != $_SESSION['EditUserOldBookingDescription'])
 	{
 		$NumberOfChanges++;
 		unset($_SESSION['EditUserOldBookingDescription']);
 	}
 	
-
 	if ($NumberOfChanges == 0){
 		
 		$_SESSION['UserManagementFeedbackMessage'] = "No changes were made.";
@@ -589,13 +741,12 @@ if (isset($_GET['editform']))
 	// Don't need to remember the access list anymore
 	unset($_SESSION['EditUserAccessList']);
 
-
 	// We actually have something to update!	
 	try
 	{
-		if ($_POST['password'] != ''){
+		if ($changePassword){
 			// Update user info (new password)
-			$newPassword = $_POST['password'];
+			$newPassword = $password;
 			$hashedNewPassword = hashPassword($newPassword);
 			
 			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
@@ -612,13 +763,13 @@ if (isset($_GET['editform']))
 					
 			$s = $pdo->prepare($sql);
 			$s->bindValue(':id', $_POST['id']);
-			$s->bindValue(':firstname', $_POST['firstname']);
-			$s->bindValue(':lastname', $_POST['lastname']);
-			$s->bindValue(':email', $_POST['email']);
+			$s->bindValue(':firstname', $firstname);
+			$s->bindValue(':lastname', $lastname);
+			$s->bindValue(':email', $email);
 			$s->bindValue(':password', $hashedNewPassword);
 			$s->bindValue(':accessID', $_POST['accessID']);
-			$s->bindValue(':displayname', $_POST['displayname']);
-			$s->bindValue(':bookingdescription', $_POST['bookingdescription']);
+			$s->bindValue(':displayname', $validatedDisplayName);
+			$s->bindValue(':bookingdescription', $validatedBookingDescription);
 			$s->execute();			
 		} else {
 			// Update user info (no new password)
@@ -635,12 +786,12 @@ if (isset($_GET['editform']))
 					
 			$s = $pdo->prepare($sql);
 			$s->bindValue(':id', $_POST['id']);
-			$s->bindValue(':firstname', $_POST['firstname']);
-			$s->bindValue(':lastname', $_POST['lastname']);
-			$s->bindValue(':email', $_POST['email']);
+			$s->bindValue(':firstname', $firstname);
+			$s->bindValue(':lastname', $lastname);
+			$s->bindValue(':email', $email);
 			$s->bindValue(':accessID', $_POST['accessID']);
-			$s->bindValue(':displayname', $_POST['displayname']);
-			$s->bindValue(':bookingdescription', $_POST['bookingdescription']);
+			$s->bindValue(':displayname', $validatedDisplayName);
+			$s->bindValue(':bookingdescription', $validatedBookingDescription);
 			$s->execute();	
 		}
 			

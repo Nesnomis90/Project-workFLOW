@@ -41,7 +41,7 @@ function trimExcessWhitespace($oldString){
 
 	// Replace any amount of white space with a single space
 	// Also remove excess space at start/end
-	return trim(preg_replace('/\s+/', ' ', $oldString))
+	return trim(preg_replace('/\s+/', ' ', $oldString));
 }
 
 // Function to check if input string uses legal characters and trims the input down

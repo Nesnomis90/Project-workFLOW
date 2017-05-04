@@ -116,25 +116,26 @@ function validateUserInputs($FeedbackSessionToUse){
 		$bookingDescriptionString = '';
 	}
 	
-	// Do input validation
-	$validatedStartDateTime = validateDateTimeString($startDateTimeString);
-	$validatedEndDateTime = validateDateTimeString($endDateTimeString);
-	$validatedDisplayName = validateString($displayNameString);
-	$validatedBookingDescription = validateString($bookingDescriptionString);
+	// Remove excess whitespace and prepare strings for validation
+	$validatedStartDateTime = trimExcessWhitespace($startDateTimeString);
+	$validatedEndDateTime = trimExcessWhitespace($endDateTimeString);
+	$validatedDisplayName = trimExcessWhitespaceButLeaveLinefeed($displayNameString);
+	$validatedBookingDescription = trimExcessWhitespaceButLeaveLinefeed($bookingDescriptionString);	
 	
-	if($validatedStartDateTime === FALSE AND !$invalidInput){
+	// Do actual input validation
+	if(validateDateTimeString($validatedStartDateTime) === FALSE AND !$invalidInput){
 		$invalidInput = TRUE;
 		$_SESSION[$FeedbackSessionToUse] = "Your submitted start time has illegal characters in it.";
 	}
-	if($validatedEndDateTime === FALSE AND !$invalidInput){
+	if(validateDateTimeString($validatedEndDateTime) === FALSE AND !$invalidInput){
 		$invalidInput = TRUE;
 		$_SESSION[$FeedbackSessionToUse] = "Your submitted end time has illegal characters in it.";
 	}
-	if($validatedDisplayName === FALSE AND !$invalidInput){
+	if(validateString($validatedDisplayName) === FALSE AND !$invalidInput){
 		$invalidInput = TRUE;
 		$_SESSION[$FeedbackSessionToUse] = "Your submitted display name has illegal characters in it.";
 	}
-	if($validatedBookingDescription === FALSE AND !$invalidInput){
+	if(validateString($validatedBookingDescription) === FALSE AND !$invalidInput){
 		$invalidInput = TRUE;
 		$_SESSION[$FeedbackSessionToUse] = "Your submitted booking description has illegal characters in it.";
 	}
