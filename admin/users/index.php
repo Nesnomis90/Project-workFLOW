@@ -537,13 +537,11 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR
 		$accessID = $_SESSION['EditUserChangedAccessID'];
 		unset($_SESSION['EditUserChangedAccessID']);
 		$id = $_SESSION['TheUserID'];
-		unset($_SESSION['TheUserID']);
 		$displayname = $_SESSION['EditUserChangedDisplayname'];
 		unset($_SESSION['EditUserChangedDisplayname']);
 		$bookingdescription = $_SESSION['EditUserChangedBookingDescription'];
 		unset($_SESSION['EditUserChangedBookingDescription']);
 		$access = $_SESSION['EditUserAccessList'];
-		unset($_SESSION['EditUserAccessList']);
 		
 	} else {
 		
@@ -605,6 +603,18 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR
 		$id = $row['userID'];
 		$displayname = $row['displayname'];
 		$bookingdescription = $row['bookingdescription'];
+	
+		// Remember the original values we retrieved.
+		$_SESSION['EditUserOldFirstname'] = $firstname;
+		$_SESSION['EditUserOldLastname'] = $lastname;
+		$_SESSION['EditUserOldEmail'] = $email;
+		$_SESSION['EditUserOldAccessID'] = $accessID;
+		$_SESSION['EditUserOldDisplayname'] = $displayname;
+		$_SESSION['EditUserOldBookingDescription'] = $bookingdescription;
+		$_SESSION['TheUserID'] = $id;
+		$_SESSION['EditUserAccessList'] = $access;
+		
+		
 	}
 	
 	// Set the correct information
@@ -614,7 +624,7 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR
 	$password = '';
 	$confirmpassword = '';
 	
-	// Remember the values we retrieved.
+	/*// Remember the original values we retrieved.
 	$_SESSION['EditUserOldFirstname'] = $firstname;
 	$_SESSION['EditUserOldLastname'] = $lastname;
 	$_SESSION['EditUserOldEmail'] = $email;
@@ -622,7 +632,7 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR
 	$_SESSION['EditUserOldDisplayname'] = $displayname;
 	$_SESSION['EditUserOldBookingDescription'] = $bookingdescription;
 	$_SESSION['TheUserID'] = $id;
-	$_SESSION['EditUserAccessList'] = $access;
+	$_SESSION['EditUserAccessList'] = $access;*/
 	
 	// Don't want a reset button to blank all fields while editing
 	$reset = 'hidden';
@@ -740,6 +750,7 @@ if (isset($_GET['editform']))
 	
 	// Don't need to remember the access list anymore
 	unset($_SESSION['EditUserAccessList']);
+	unset($_SESSION['TheUserID']);
 
 	// We actually have something to update!	
 	try
