@@ -15,8 +15,15 @@
 		<?php endif; ?>
 		<form action="" method="post">
 			<div>
+				<?php if(!isset($_SESSION['loginEmailSubmitted'])){
+					$email = "";
+				} else {
+					$email = $_SESSION['loginEmailSubmitted'];
+					unset($_SESSION['loginEmailSubmitted']);
+				}?>
 				<label for="email">Email: </label> 
-				<input type="text" name="email" id="email">
+				<input type="text" name="email" id="email"
+				value="<?php htmlout($email); ?>">
 			</div>
 			<div>
 				<label for="password">Password: </label> 

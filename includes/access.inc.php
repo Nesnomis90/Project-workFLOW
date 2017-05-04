@@ -1,6 +1,7 @@
 <?php
 // Constants used to salt passwords
 require_once 'salts.inc.php';
+//require_once 'inputvalidation.inc.php';
 
 // Functions to salt and hash info
 	// Function to salt and hash passwords
@@ -26,6 +27,12 @@ function userIsLoggedIn()
 	// If user is trying to log in
 	if (isset($_POST['action']) and $_POST['action'] == 'login')
 	{
+		if(isset($_POST['email']) AND $_POST['email'] != ""){
+			// Remember email if it's filled in. Retyping an email is the most annoying thing in the world.
+			$email = trim($_POST['email']);
+			$_SESSION['loginEmailSubmitted'] = $email;
+		}
+		
 		// Check if user has filled in the necessary information
 		if (!isset($_POST['email']) or $_POST['email'] == '' or
 		!isset($_POST['password']) or $_POST['password'] == '')
@@ -40,16 +47,17 @@ function userIsLoggedIn()
 			// Add our custom password salt and compare the finished hash to the database
 		$SubmittedPassword = $_POST['password'];
 		$password = hashPassword($SubmittedPassword);
-		if (databaseContainsUser($_POST['email'], $password))
+		if (databaseContainsUser($email, $password))
 		{
 			// Correct log in info! Update the session data to know we're logged in
 			$_SESSION['loggedIn'] = TRUE;
-			$_SESSION['email'] = $_POST['email'];
+			$_SESSION['email'] = $email;
 			$_SESSION['password'] = $password;
 			$_SESSION['LoggedInUserID'] = $_SESSION['DatabaseContainsUserID'];
 			$_SESSION['LoggedInUserName'] = $_SESSION['DatabaseContainsUserName'];
 			unset($_SESSION['DatabaseContainsUserID']);
 			unset($_SESSION['DatabaseContainsUserName']);
+			unset($_SESSION['loginEmailSubmitted']);
 			return TRUE;
 		}
 		else
@@ -79,6 +87,7 @@ function userIsLoggedIn()
 		unset($_SESSION['LoggedInUserID']);
 		unset($_SESSION['LoggedInUserName']);
 		unset($_SESSION['LoggedInUserIsOwnerInTheseCompanies']);
+		unset($_SESSION['loginEmailSubmitted']);
 		header('Location: ' . $_POST['goto']);
 		exit();
 	}

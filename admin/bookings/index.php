@@ -116,25 +116,26 @@ function validateUserInputs($FeedbackSessionToUse){
 		$bookingDescriptionString = '';
 	}
 	
-	// Do input validation
-	$validatedStartDateTime = validateDateTimeString($startDateTimeString);
-	$validatedEndDateTime = validateDateTimeString($endDateTimeString);
-	$validatedDisplayName = validateString($displayNameString);
-	$validatedBookingDescription = validateString($bookingDescriptionString);
+	// Remove excess whitespace and prepare strings for validation
+	$validatedStartDateTime = trimExcessWhitespace($startDateTimeString);
+	$validatedEndDateTime = trimExcessWhitespace($endDateTimeString);
+	$validatedDisplayName = trimExcessWhitespaceButLeaveLinefeed($displayNameString);
+	$validatedBookingDescription = trimExcessWhitespaceButLeaveLinefeed($bookingDescriptionString);	
 	
-	if($validatedStartDateTime === FALSE AND !$invalidInput){
+	// Do actual input validation
+	if(validateDateTimeString($validatedStartDateTime) === FALSE AND !$invalidInput){
 		$invalidInput = TRUE;
 		$_SESSION[$FeedbackSessionToUse] = "Your submitted start time has illegal characters in it.";
 	}
-	if($validatedEndDateTime === FALSE AND !$invalidInput){
+	if(validateDateTimeString($validatedEndDateTime) === FALSE AND !$invalidInput){
 		$invalidInput = TRUE;
 		$_SESSION[$FeedbackSessionToUse] = "Your submitted end time has illegal characters in it.";
 	}
-	if($validatedDisplayName === FALSE AND !$invalidInput){
+	if(validateString($validatedDisplayName) === FALSE AND !$invalidInput){
 		$invalidInput = TRUE;
 		$_SESSION[$FeedbackSessionToUse] = "Your submitted display name has illegal characters in it.";
 	}
-	if($validatedBookingDescription === FALSE AND !$invalidInput){
+	if(validateString($validatedBookingDescription) === FALSE AND !$invalidInput){
 		$invalidInput = TRUE;
 		$_SESSION[$FeedbackSessionToUse] = "Your submitted booking description has illegal characters in it.";
 	}
@@ -153,22 +154,14 @@ function validateUserInputs($FeedbackSessionToUse){
 	}
 		
 		// DisplayName
-			// Has to be less than 255 chars (MySQL - VARCHAR 255)
-	$dspname = $validatedDisplayName;
-	$dspnameLength = strlen(utf8_decode($dspname));
-	$dspnameMaxLength = 255; // TO-DO: Adjust max length if needed.
-	if($dspnameLength > $dspnameMaxLength AND !$invalidInput){
-		
+	$invalidDisplayName = isLengthInvalidDisplayName($validatedDisplayName);
+	if($invalidDisplayName AND !$invalidInput){
 		$_SESSION[$FeedbackSessionToUse] = "The displayName submitted is too long.";	
 		$invalidInput = TRUE;		
 	}	
 		// BookingDescription
-			// Has to be less than 65,535 bytes (MySQL - TEXT) (too much anyway)
-	$bknDscrptn = $validatedBookingDescription;
-	$bknDscrptnLength = strlen(utf8_decode($bknDscrptn));
-	$bknDscrptnMaxLength = 500; // TO-DO: Adjust max length if needed.
-	if($bknDscrptnLength > $bknDscrptnMaxLength AND !$invalidInput){
-		
+	$invalidBookingDescription = isLengthInvalidBookingDescription($validatedBookingDescription);
+	if($invalidBookingDescription AND !$invalidInput){
 		$_SESSION[$FeedbackSessionToUse] = "The booking description submitted is too long.";	
 		$invalidInput = TRUE;		
 	}
@@ -217,7 +210,7 @@ function validateUserInputs($FeedbackSessionToUse){
 		$invalidInput = TRUE;	
 	}*/
 	
-	return array($invalidInput, $startDateTime, $endDateTime, $bknDscrptn, $dspname);
+	return array($invalidInput, $startDateTime, $endDateTime, $validatedBookingDescription, $validatedDisplayName);
 }
 
 // If admin wants to be able to delete bookings it needs to enabled first
@@ -233,8 +226,6 @@ if (isset($_POST['action']) AND $_POST['action'] == "Disable Delete"){
 }
 
 // If admin wants to remove a booked meeting from the database
-// TO-DO: ADD A CONFIRMATION BEFORE ACTUALLY DOING THE DELETION!
-// MAYBE BY TYPING ADMIN PASSWORD AGAIN?
 if (isset($_POST['action']) and $_POST['action'] == 'Delete')
 {
 	// Delete selected booked meeting from database
@@ -267,7 +258,7 @@ if (isset($_POST['action']) and $_POST['action'] == 'Delete')
 		// Save a description with information about the booking that was removed
 		$description = "N/A";
 		if(isset($_POST['UserInfo']) AND isset($_POST['MeetingInfo'])){
-			$description = 'The booking made by ' . $_POST['UserInfo'] . ' for the meeting room ' .
+			$description = 'The booking made for ' . $_POST['UserInfo'] . ' for the meeting room ' .
 			$_POST['MeetingInfo'] . ' was deleted by: ' . $_SESSION['LoggedInUserName'];
 		} else {
 			$description = 'A booking was deleted by: ' . $_SESSION['LoggedInUserName'];
@@ -339,7 +330,7 @@ if (isset($_POST['action']) and $_POST['action'] == 'Cancel')
 		// Save a description with information about the booking that was cancelled
 		$description = "N/A";
 		if(isset($_POST['UserInfo']) AND isset($_POST['MeetingInfo'])){
-			$description = 'The booking made by ' . $_POST['UserInfo'] . ' for the meeting room ' .
+			$description = 'The booking made for ' . $_POST['UserInfo'] . ' for the meeting room ' .
 			$_POST['MeetingInfo'] . ' was cancelled by: ' . $_SESSION['LoggedInUserName'];
 		} else {
 			$description = 'A booking was cancelled by: ' . $_SESSION['LoggedInUserName'];
@@ -1408,6 +1399,8 @@ if (	(isset($_POST['action']) AND $_POST['action'] == "Create Booking") OR
 	
 	$userInformation = $row['UserLastname'] . ', ' . $row['UserFirstname'] . ' - ' . $row['UserEmail'];	
 
+	$_SESSION['AddBookingInfoArray'] = $row; // Remember the company/user info we changed based on user choice
+	
 	// Change form
 	include 'addbooking.html.php';
 	exit();	
@@ -1528,10 +1521,10 @@ if (isset($_POST['add']) AND $_POST['add'] == "Add booking")
 		$s->bindValue(':meetingRoomID', $_POST['meetingRoomID']);
 		$s->bindValue(':userID', $_POST['userID']);
 		$s->bindValue(':companyID', $companyID);
-		$s->bindValue(':displayName', $_POST['displayName']);
+		$s->bindValue(':displayName', $dspname);
 		$s->bindValue(':startDateTime', $startDateTime);
 		$s->bindValue(':endDateTime', $endDateTime);
-		$s->bindValue(':description', $_POST['description']);
+		$s->bindValue(':description', $bknDscrptn);
 		$s->bindValue(':cancellationCode', $cancellationCode);
 		$s->execute();
 
@@ -1551,6 +1544,9 @@ if (isset($_POST['add']) AND $_POST['add'] == "Add booking")
 	
 	$_SESSION['BookingUserFeedback'] = "Successfully created the booking.";
 	
+	$displayValidatedStartDate = convertDatetimeToFormat($startDateTime , 'Y-m-d H:i:s', 'F jS Y H:i:s');
+	$displayValidatedEndDate = convertDatetimeToFormat($endDateTime, 'Y-m-d H:i:s', 'F jS Y H:i:s');
+	
 	// Add a log event that a booking has been created
 	try
 	{
@@ -1565,11 +1561,11 @@ if (isset($_POST['add']) AND $_POST['add'] == "Add booking")
 		unset($_SESSION['AddBookingMeetingRoomsArray']);
 		
 		$meetinginfo = $MeetingRoomName . ' for the timeslot: ' . 
-		$_POST['startDateTime'] . ' to ' . $_POST['endDateTime'];
+		$displayValidatedStartDate . ' to ' . $displayValidatedEndDate;
 		
 		// Get user information
 		$userinfo = 'N/A';
-		$info = $_SESSION['AddBookingInfoArray'];
+		$info = $_SESSION['AddBookingInfoArray']; 
 		if(isset($info['UserLastname'])){
 			$userinfo = $info['UserLastname'] . ', ' . $info['UserFirstname'] . ' - ' . $info['UserEmail'];
 		}
@@ -1620,9 +1616,6 @@ if (isset($_POST['add']) AND $_POST['add'] == "Add booking")
 	
 	$emailSubject = "Booking Cancellation Link";
 	
-	$displayValidatedStartDate = convertDatetimeToFormat($startDateTime , 'Y-m-d H:i:s', 'F jS Y H:i:s');
-	$displayValidatedEndDate = convertDatetimeToFormat($endDateTime, 'Y-m-d H:i:s', 'F jS Y H:i:s');
-	
 	$emailMessage = 
 	"Your meeting has been successfully booked!\n" . 
 	"Your booked Meeting Room: " . $MeetingRoomName . ".\n" . 
@@ -1632,13 +1625,15 @@ if (isset($_POST['add']) AND $_POST['add'] == "Add booking")
 	"Click this link to cancel your booked meeting: " . $_SERVER['HTTP_HOST'] . 
 	"/booking/?cancellationcode=" . $cancellationCode;
 	
+	$email = $_SESSION['AddBookingInfoArray']['UserEmail'];
+	
 	$mailResult = sendEmail($email, $emailSubject, $emailMessage);
 	
 	if(!$mailResult){
 		$_SESSION['BookingUserFeedback'] .= " [WARNING] System failed to send Email to user.";
 	}
 	
-	$_SESSION['BookingUserFeedback'] .= "this is the email msg we're sending out: $emailMessage"; // TO-DO: Remove after testing	
+	$_SESSION['BookingUserFeedback'] .= "this is the email msg we're sending out: $emailMessage. Sent to email: $email."; // TO-DO: Remove after testing	
 	
 	// Booking a new meeting is done. Reset all connected sessions.
 	clearBookingSessions();
@@ -1938,8 +1933,8 @@ try
 	$sql = "SELECT 		b.`bookingID`,
 						b.`companyID`,
 						m.`name` 										AS BookedRoomName, 
-						DATE_FORMAT(b.startDateTime, '%d %b %Y %T') 	AS StartTime, 
-						DATE_FORMAT(b.endDateTime, '%d %b %Y %T') 		AS EndTime, 
+						b.startDateTime 								AS StartTime, 
+						b.endDateTime									AS EndTime, 
 						b.displayName 									AS BookedBy,
 						(	
 							SELECT `name` 
@@ -1982,10 +1977,8 @@ catch (PDOException $e)
 
 foreach ($result as $row)
 {
-	// Make datetime correct formats for comparing them
 	$datetimeNow = getDatetimeNow();
-	$datetimeEndWrongFormat = $row['EndTime'];
-	$datetimeEnd = correctDatetimeFormat($datetimeEndWrongFormat);
+	$datetimeEnd = $row['EndTime'];
 	
 	// Describe the status of the booking based on what info is stored in the database
 	// If not finished and not cancelled = active
@@ -2018,16 +2011,22 @@ foreach ($result as $row)
 		$status = 'Unknown';
 	}
 	
+	$startDateTime = $row['StartTime'];
+	$endDateTime = $row['EndTime'];
+	
+	$displayValidatedStartDate = convertDatetimeToFormat($startDateTime , 'Y-m-d H:i:s', 'F jS Y H:i:s');
+	$displayValidatedEndDate = convertDatetimeToFormat($endDateTime, 'Y-m-d H:i:s', 'F jS Y H:i:s');
+	
 	$userinfo = $row['lastName'] . ', ' . $row['firstName'] . ' - ' . $row['email'];
-	$meetinginfo = 	$row['BookedRoomName'] . ' for the timeslot: ' . $row['StartTime'] . 
-					' to ' . $row['EndTime'];
+	$meetinginfo = $row['BookedRoomName'] . ' for the timeslot: ' . $displayValidatedStartDate . 
+					' to ' . $displayValidatedEndDate;
 	
 	
 	$bookings[] = array('id' => $row['bookingID'],
 						'BookingStatus' => $status,
 						'BookedRoomName' => $row['BookedRoomName'],
-						'StartTime' => $row['StartTime'],
-						'EndTime' => $row['EndTime'],
+						'StartTime' => $displayValidatedStartDate,
+						'EndTime' => $displayValidatedEndDate,
 						'BookedBy' => $row['BookedBy'],
 						'BookedForCompany' => $row['BookedForCompany'],
 						'BookingDescription' => $row['BookingDescription'],

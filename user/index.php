@@ -6,6 +6,9 @@ session_start();
 include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/helpers.inc.php';
 include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/magicquotes.inc.php';
 
+// TO-DO: Add a "Set new password" after user activates their account with the link?
+// or just have them do it after they log in themselves...
+
 // Function to activate an account from activation link
 if(isset($_GET['activateaccount'])){
 	
@@ -27,7 +30,8 @@ if(isset($_GET['activateaccount'])){
 		$sql = "SELECT 	`userID`,
 						`email`,
 						`firstname`,
-						`lastname`
+						`lastname`,
+						`password`
 				FROM	`user`
 				WHERE 	`activationCode` = :activationCode
 				AND		`isActive` = 0
@@ -62,6 +66,7 @@ if(isset($_GET['activateaccount'])){
 	$email = $result['email'];
 	$firstname = $result['firstname'];
 	$lastname = $result['lastname'];
+	$hashedPassword = $result['password'];
 	
 	try
 	{
@@ -89,6 +94,9 @@ if(isset($_GET['activateaccount'])){
 	
 	$_SESSION['normalUserFeedback'] = "The account for " . $lastname . ", " . $firstname . " - " . $email . 
 									" has been activated!";
+									
+									
+	// TO-DO: Add a log event that the account got activated!
 }
 
 
