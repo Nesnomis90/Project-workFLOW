@@ -225,8 +225,6 @@ if (isset($_POST['action']) AND $_POST['action'] == "Disable Delete"){
 }
 
 // If admin wants to remove a booked meeting from the database
-// TO-DO: ADD A CONFIRMATION BEFORE ACTUALLY DOING THE DELETION!
-// MAYBE BY TYPING ADMIN PASSWORD AGAIN?
 if (isset($_POST['action']) and $_POST['action'] == 'Delete')
 {
 	// Delete selected booked meeting from database
@@ -1400,6 +1398,8 @@ if (	(isset($_POST['action']) AND $_POST['action'] == "Create Booking") OR
 	
 	$userInformation = $row['UserLastname'] . ', ' . $row['UserFirstname'] . ' - ' . $row['UserEmail'];	
 
+	$_SESSION['AddBookingInfoArray'] = $row; // Remember the company/user info we changed based on user choice
+	
 	// Change form
 	include 'addbooking.html.php';
 	exit();	
@@ -1520,10 +1520,10 @@ if (isset($_POST['add']) AND $_POST['add'] == "Add booking")
 		$s->bindValue(':meetingRoomID', $_POST['meetingRoomID']);
 		$s->bindValue(':userID', $_POST['userID']);
 		$s->bindValue(':companyID', $companyID);
-		$s->bindValue(':displayName', $_POST['displayName']);
+		$s->bindValue(':displayName', $dspname);
 		$s->bindValue(':startDateTime', $startDateTime);
 		$s->bindValue(':endDateTime', $endDateTime);
-		$s->bindValue(':description', $_POST['description']);
+		$s->bindValue(':description', $bknDscrptn);
 		$s->bindValue(':cancellationCode', $cancellationCode);
 		$s->execute();
 
@@ -1561,7 +1561,7 @@ if (isset($_POST['add']) AND $_POST['add'] == "Add booking")
 		
 		// Get user information
 		$userinfo = 'N/A';
-		$info = $_SESSION['AddBookingInfoArray'];
+		$info = $_SESSION['AddBookingInfoArray']; 
 		if(isset($info['UserLastname'])){
 			$userinfo = $info['UserLastname'] . ', ' . $info['UserFirstname'] . ' - ' . $info['UserEmail'];
 		}
@@ -1609,6 +1609,7 @@ if (isset($_POST['add']) AND $_POST['add'] == "Add booking")
 	
 	//Send email with cancellation code to the user who the booking is for.
 		// TO-DO: This is UNTESTED since we don't have php.ini set up to actually send email
+		// TO-DO: Get email!
 	
 	$emailSubject = "Booking Cancellation Link";
 	
@@ -1624,13 +1625,15 @@ if (isset($_POST['add']) AND $_POST['add'] == "Add booking")
 	"Click this link to cancel your booked meeting: " . $_SERVER['HTTP_HOST'] . 
 	"/booking/?cancellationcode=" . $cancellationCode;
 	
+	$email = $_SESSION['AddBookingInfoArray']['UserEmail'];
+	
 	$mailResult = sendEmail($email, $emailSubject, $emailMessage);
 	
 	if(!$mailResult){
 		$_SESSION['BookingUserFeedback'] .= " [WARNING] System failed to send Email to user.";
 	}
 	
-	$_SESSION['BookingUserFeedback'] .= "this is the email msg we're sending out: $emailMessage"; // TO-DO: Remove after testing	
+	$_SESSION['BookingUserFeedback'] .= "this is the email msg we're sending out: $emailMessage. Sent to email: $email."; // TO-DO: Remove after testing	
 	
 	// Booking a new meeting is done. Reset all connected sessions.
 	clearBookingSessions();

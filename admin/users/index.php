@@ -24,8 +24,6 @@ if (isset($_POST['action']) AND $_POST['action'] == "Disable Delete"){
 
 
 // If admin wants to remove a user from the database
-// TO-DO: ADD A CONFIRMATION BEFORE ACTUALLY DOING THE DELETION!
-// MAYBE BY TYPING ADMIN PASSWORD AGAIN?
 if (isset($_POST['action']) and $_POST['action'] == 'Delete')
 {
 	include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
@@ -186,14 +184,46 @@ if (isset($_GET['add']) OR (isset($_SESSION['refreshUserAddform']) AND $_SESSION
 // When admin has added the needed information and wants to add the user
 if (isset($_GET['addform']))
 {
-	// Input validation
-	$email = $_POST['email'];
-	$email = trim($email);
-	if(!validateUserEmail($email)){
+	$invalidInput = FALSE;
+	
+	// Get user inputs
+		//Firstname
+	if(isset($_POST['firstname']) AND !$invalidInput){
+		$email = $_POST['firstname'];
+		$email = trim($email);
+	} else {
+		$_SESSION['AddNewUserError'] = "A user cannot be created without submitting an email.";
+		$invalidInput = TRUE;
+	}	
+		//Lastname
+	if(isset($_POST['lastname']) AND !$invalidInput){
+		$firstname = $_POST['lastname'];
+		$firstname = trim($firstname);
+	} else {
+		$_SESSION['AddNewUserError'] = "A user cannot be created without submitting a first name.";
+		$invalidInput = TRUE;
+	}		
+		//Email
+	if(isset($_POST['email']) AND !$invalidInput){
+		$lastname = $_POST['lastname'];
+		$lastname = trim($lastname);
+	} else {
+		$_SESSION['AddNewUserError'] = "A user cannot be created without submitting a last name.";
+		$invalidInput = TRUE;
+	}
+
+	// Do input validation
+	
+	if(!validateUserEmail($email) AND !$invalidInput){
 		$_SESSION['AddNewUserError'] = "The email submitted is not a valid email.";
+		$invalidInput = TRUE;
+	}	
+	
+	
+	if($invalidInput){
+		// TO-DO: Remember set values and refresh add template.
 	}
 	
-	// TO-DO: Validate all inputs
 	
 	// Check if the submitted email has already been used
 	if (databaseContainsEmail($email)){
