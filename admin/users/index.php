@@ -216,23 +216,42 @@ if (isset($_GET['addform']))
 	$validatedFirstname = validateNames($firstname);
 	$validatedLastname = validateNames($lastname);
 	
+		// First Name
 	if($validatedFirstname === FALSE AND !$invalidInput){
 		$_SESSION['AddNewUserError'] = "The first name submitted contains illegal characters.";
 		$invalidInput = TRUE;		
 	}
+	if(strlen($validatedFirstname) < 1 AND !$invalidInput){
+		$_SESSION['AddNewUserError'] = "You need to submit a first name.";
+		$invalidInput = TRUE;	
+	}	
+		// Last Name
 	if($validatedLastname === FALSE AND !$invalidInput){
 		$_SESSION['AddNewUserError'] = "The last name submitted contains illegal characters.";
 		$invalidInput = TRUE;			
 	}
+	if(strlen($validatedLastname) < 1 AND !$invalidInput){
+		$_SESSION['AddNewUserError'] = "You need to submit a last name.";
+		$invalidInput = TRUE;	
+	}	
+		// Email
+	if(strlen($email) < 1 AND !$invalidInput){
+		$_SESSION['AddNewUserError'] = "You need to submit an email.";
+		$invalidInput = TRUE;
+	}	
 	if(!validateUserEmail($email) AND !$invalidInput){
 		$_SESSION['AddNewUserError'] = "The email submitted is not a valid email.";
 		$invalidInput = TRUE;
 	}	
-	
+	if(strlen($email) < 3 AND !$invalidInput){
+		$_SESSION['AddNewUserError'] = "You need to submit an actual email.";
+		$invalidInput = TRUE;
+	}
+
 	// Check if the submitted email has already been used
 	if (databaseContainsEmail($email)){
 		// The email has been used before. So we can't create a new user with this info.
-		$_SESSION['AddNewUserError'] = "The submitted email already exists in the database.";
+		$_SESSION['AddNewUserError'] = "The submitted email is already connected to an account.";
 		$invalidInput = TRUE;	
 	}
 
@@ -271,8 +290,8 @@ if (isset($_GET['addform']))
 							`activationcode` = :activationcode,
 							`email` = :email';
 		$s = $pdo->prepare($sql);
-		$s->bindValue(':firstname', $firstname);
-		$s->bindValue(':lastname', $lastname);		
+		$s->bindValue(':firstname', $validatedFirstname);
+		$s->bindValue(':lastname', $validatedLastname);		
 		$s->bindValue(':accessID', $_POST['accessID']);
 		$s->bindValue(':password', $hashedPassword);
 		$s->bindValue(':activationcode', $activationcode);
@@ -302,7 +321,7 @@ if (isset($_GET['addform']))
 		// Save a description with information about the user that was added
 		
 		$description = "N/A";
-		$userinfo = $lastname . ', ' . $firstname . ' - ' . $email;
+		$userinfo = $validatedLastname . ', ' . $validatedFirstname . ' - ' . $email;
 		if(isset($_SESSION['LoggedInUserName'])){
 			$description = "An account for: " . $userinfo . " was created by: " . $_SESSION['LoggedInUserName'];
 		} else {

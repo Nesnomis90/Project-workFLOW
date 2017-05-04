@@ -16,27 +16,21 @@
 			<div>
 				<label for="firstname">First Name: 
 					<input type="text" name="firstname" id="firstname" 
-					required placeholder="Enter First Name" 
-					oninvalid="this.setCustomValidity('Enter First Name Here')"
-					oninput="setCustomValidity('')"
+					placeholder="Enter First Name"
 					value="<?php htmlout($firstname); ?>">
 				</label>
 			</div>
 			<div>
 				<label for="lastname">Last Name: 
 					<input type="text" name="lastname" id="lastname" 
-					required placeholder="Enter Last Name" 
-					oninvalid="this.setCustomValidity('Enter Last Name Here')"
-					oninput="setCustomValidity('')"
+					placeholder="Enter Last Name"
 					value="<?php htmlout($lastname); ?>">
 				</label>
 			</div>
 			<div>
 				<label for="email">Email: 
-					<input type="email" name="email" id="email" 
-					required placeholder="Enter Email" 
-					oninvalid="this.setCustomValidity('Enter Email Here')"
-					oninput="setCustomValidity('')"
+					<input type="text" name="email" id="email" 
+					placeholder="Enter Email"
 					value="<?php htmlout($email); ?>">
 				</label>
 			</div>

@@ -40,7 +40,13 @@ function trimExcessWhitespace($oldString){
 	$trimmedString = trim($oldString);
 	
 	// Replace any amount of white space with a single space
-	return preg_replace('/^[\s]*$/', ' ', $trimmedString);
+	if(strlen($trimmedString) > 0){
+		return preg_replace('/^[\s]*$/', ' ', $trimmedString);	
+	} else {
+		// To avoid function returning a single space when fed an emptry string
+		// Which would ruin "is string empty?"-checks
+		return "";
+	}
 }
 
 // Function to check if input string uses legal characters and trims the input down
@@ -53,7 +59,7 @@ function validateNames($oldString){
 		// We allow all language letters and accents.
 		// Also space, and the symbols ', . and -
 		// TO-DO: Change if we need other symbols
-	if (preg_match('/^[\p{L}\p{M} \'-]*$/u', $trimmedString)) {
+	if (preg_match("/^[\p{L}\p{M} '-]*$/u", $trimmedString)) {
 		return $trimmedString;
 	} else {
 		return FALSE;
