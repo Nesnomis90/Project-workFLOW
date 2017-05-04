@@ -153,22 +153,14 @@ function validateUserInputs($FeedbackSessionToUse){
 	}
 		
 		// DisplayName
-			// Has to be less than 255 chars (MySQL - VARCHAR 255)
-	$dspname = $validatedDisplayName;
-	$dspnameLength = strlen(utf8_decode($dspname));
-	$dspnameMaxLength = 255; // TO-DO: Adjust max length if needed.
-	if($dspnameLength > $dspnameMaxLength AND !$invalidInput){
-		
+	$invalidDisplayName = isLengthInvalidDisplayName($validatedDisplayName);
+	if($invalidDisplayName AND !$invalidInput){
 		$_SESSION[$FeedbackSessionToUse] = "The displayName submitted is too long.";	
 		$invalidInput = TRUE;		
 	}	
 		// BookingDescription
-			// Has to be less than 65,535 bytes (MySQL - TEXT) (too much anyway)
-	$bknDscrptn = $validatedBookingDescription;
-	$bknDscrptnLength = strlen(utf8_decode($bknDscrptn));
-	$bknDscrptnMaxLength = 500; // TO-DO: Adjust max length if needed.
-	if($bknDscrptnLength > $bknDscrptnMaxLength AND !$invalidInput){
-		
+	$invalidBookingDescription = isLengthInvalidBookingDescription($validatedBookingDescription);
+	if($invalidBookingDescription AND !$invalidInput){
 		$_SESSION[$FeedbackSessionToUse] = "The booking description submitted is too long.";	
 		$invalidInput = TRUE;		
 	}
@@ -217,7 +209,7 @@ function validateUserInputs($FeedbackSessionToUse){
 		$invalidInput = TRUE;	
 	}*/
 	
-	return array($invalidInput, $startDateTime, $endDateTime, $bknDscrptn, $dspname);
+	return array($invalidInput, $startDateTime, $endDateTime, $validatedBookingDescription, $validatedDisplayName);
 }
 
 // If admin wants to be able to delete bookings it needs to enabled first
