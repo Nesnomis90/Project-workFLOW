@@ -874,6 +874,9 @@ if(!isset($_GET['Company'])){
 // Create an array with the actual key/value pairs we want to use in our HTML	
 foreach($result AS $row){
 	
+	// TO-DO: Transform monthly/total booking time into text instead time
+	// e.g. 1 day 24 hours, 30 minutes, 23 hours 40 minutes
+	
 	if($row['MonthlyBookingTimeUsed'] == null){
 		$MonthlyTimeUsed = '00:00:00';
 	} else {

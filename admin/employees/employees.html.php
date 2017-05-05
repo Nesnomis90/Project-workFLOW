@@ -17,6 +17,7 @@
 				text-align: left;
 				background-color: #4CAF50;
 				color: white;
+				border: 1px solid #ddd;
 			}
 			
 			#companyemployeestable tr {
@@ -74,16 +75,23 @@
 			<table id= "companyemployeestable">
 				<caption>Company Employees</caption>
 				<tr>
-					<th>Company Name</th>
-					<th>Company Role</th>
+					<th colspan="2">Company</th>
+					<th colspan="3">User Information</th>
+					<th colspan="2">Booking Time Used</th>
+					<th>Date</th>
+					<th colspan="2">Alter Employee</th>
+				</tr>
+				<tr>
+					<th>Name</th>
+					<th>Role</th>
 					<th>First Name</th>
 					<th>Last Name</th>
 					<th>Email</th>
-					<th>Booking time used (this month)</th>
-					<th>Booking time used (all time)</th>
-					<th>Added At</th>
-					<th></th>
-					<th></th>
+					<th>This Month</th>
+					<th>All Time</th>
+					<th>Added</th>
+					<th>Change Role</th>
+					<th>Remove</th>
 				</tr>
 				<?php foreach ($employees as $employee): ?>
 					<form action="" method="post">

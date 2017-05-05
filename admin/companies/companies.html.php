@@ -17,6 +17,7 @@
 				text-align: left;
 				background-color: #4CAF50;
 				color: white;
+				border: 1px solid #ddd;
 			}
 			
 			#companiestable tr {
@@ -64,15 +65,22 @@
 			<table id="companiestable">
 				<caption>Registered Companies</caption>
 				<tr>
-					<th>Employee List</th>
-					<th>Company Name (click for employee list)</th>
-					<th># of employees</th>
-					<th>Booking time used (this month)</th>
-					<th>Booking time used (all time)</th>
-					<th>Date to be removed</th>
-					<th>Created at</th>
-					<th></th>
-					<th></th>
+					<th colspan="2">Employees</th>
+					<th>Company</th>
+					<th colspan="2">Booking Time Used</th>
+					<th colspan="2">Dates</th>
+					<th colspan="2">Alter Company</th>
+				</tr>
+				<tr>
+					<th>List</th>
+					<th>Amount</th>
+					<th>Name</th>
+					<th>This Month</th>
+					<th>All Time</th>
+					<th>Remove At</th>
+					<th>Created At</th>
+					<th>Edit</th>
+					<th>Delete</th>
 				</tr>
 				<?php if (isset($companies)) : ?>
 					<?php foreach ($companies as $company): ?>
@@ -85,12 +93,12 @@
 								</td>
 							</form>
 							<form action="" method="post">
+								<td><?php htmlout($company['NumberOfEmployees']); ?></td>
 								<td>
 									<?php htmlout($company['CompanyName']); ?>
 									<input type="hidden" id="CompanyName" name="CompanyName" 
 									value="<?php htmlout($company['CompanyName']); ?>"> 
 								</td>
-								<td><?php htmlout($company['NumberOfEmployees']); ?></td>
 								<td><?php htmlout($company['MonthlyCompanyWideBookingTimeUsed']); ?></td>
 								<td><?php htmlout($company['TotalCompanyWideBookingTimeUsed']); ?></td>
 								<?php if($company['DeletionDate'] == null) :?>
@@ -123,10 +131,15 @@
 			<table id="companiestable">
 				<caption>Unactivated Companies</caption>
 				<tr>
-					<th>Company Name</th>
-					<th>Created at</th>
-					<th></th>
-					<th></th>
+					<th>Company</th>
+					<th>Date</th>
+					<th colspan="2">Alter Company</th>
+				</tr>				
+				<tr>
+					<th>Name</th>
+					<th>Created</th>
+					<th>Activate</th>
+					<th>Delete</th>
 				</tr>
 				<?php if (isset($inactivecompanies)) : ?>
 					<?php foreach ($inactivecompanies as $company): ?>

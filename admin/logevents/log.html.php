@@ -23,6 +23,7 @@
 				text-align: left;
 				background-color: #4CAF50;
 				color: white;
+				border: 1px solid #ddd;
 			}
 
 			#logevent td {
@@ -127,10 +128,16 @@
 			<caption>Log Events</caption>
 			<tr>
 				<th>Date</th>
-				<th>Action</th>
-				<th>Action Description</th>
-				<th>Log Description</th>
-				<th>Delete Log Entry</th>
+				<th colspan="2">Log Action</th>
+				<th>Log Information</th>
+				<th>Alter Log</th>
+			</tr>
+			<tr>
+				<th>Created</th>
+				<th>Name</th>
+				<th>Description</th>
+				<th>Description</th>
+				<th>Delete</th>
 			</tr>
 			<?php if(isset($rowNum) AND $rowNum>0) :?>
 				<?php foreach ($log as $row): ?>

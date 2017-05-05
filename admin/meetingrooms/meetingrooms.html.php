@@ -16,6 +16,7 @@
 				padding: 8px;
 				text-align: left;
 				border-bottom: 1px solid #ddd;
+				
 			}
 			
 			#meetingroomstable th {
@@ -23,6 +24,7 @@
 				text-align: left;
 				background-color: #4CAF50;
 				color: white;
+				border: 1px solid #ddd;
 			}
 
 			#meetingroomstable td {
@@ -66,14 +68,19 @@
 			<table id= "meetingroomstable">
 				<caption>Current Meeting Rooms</caption>
 				<tr>
-					<th>Equipment List</th>
-					<th># of Equipment</th>
-					<th>Room Name</th>
+					<th colspan="2">Equipment In Room</th>
+					<th colspan="4">Meeting Room</th>
+					<th colspan="2">Alter Room</th>
+				</tr>
+				<tr>
+					<th>List</th>
+					<th>Amount</th>
+					<th>Name</th>
 					<th>Capacity</th>
-					<th>Room Description</th>
+					<th>Description</th>
 					<th>Location</th>
-					<th>Edit Room</th>
-					<th>Delete Room</th>
+					<th>Edit</th>
+					<th>Delete</th>
 				</tr>
 				<?php foreach ($meetingrooms as $room): ?>
 					<tr>

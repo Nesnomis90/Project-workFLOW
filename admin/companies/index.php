@@ -306,6 +306,32 @@ if (isset($_GET['addform']))
 // Perform the actual database update of the edited information
 if (isset($_GET['editform']))
 {
+	$invalidInput = FALSE;
+	
+	// Get user inputs
+	if(isset($_POST['CompanyName'])){
+		$companyName = trim($_POST['CompanyName']);
+	} else {
+		$invalidInput = TRUE;
+		$_SESSION['AddCompanyError'] = "Company cannot be created without a name!";
+	}
+	if(isset($_POST['DateToRemove'])){
+		$dateToRemove = trim($_POST['DateToRemove']);
+	} else {
+		$dateToRemove = ""; //This can be not set
+	}
+	
+	// TO-DO: Validate user inputs
+	
+	// TO-DO: Check if inputs are even filled out
+	
+	if($invalidInput){
+		// TO-DO: Add refresh and remember values set
+	}
+	
+	// TO-DO: Check if there were any changes made at all
+	
+	
 	// Update selected company by inserted the date to remove	
 	try
 	{
@@ -318,7 +344,7 @@ if (isset($_GET['editform']))
 				WHERE 	`companyID` = :id';
 		
 		if ($_POST['DateToRemove']!=''){
-			$CorrectDate = correctDateFormat($_POST['DateToRemove']);
+			$CorrectDate = correctDateFormat($dateToRemove);
 		} else {
 			$CorrectDate = null;
 		}
@@ -327,7 +353,7 @@ if (isset($_GET['editform']))
 		$s = $pdo->prepare($sql);
 		$s->bindValue(':id', $_POST['id']);
 		$s->bindValue(':removeAtDate', $CorrectDate);
-		$s->bindValue(':name', $_POST['CompanyName']);
+		$s->bindValue(':name', $companyName);
 		$s->execute();
 		
 		//close connection

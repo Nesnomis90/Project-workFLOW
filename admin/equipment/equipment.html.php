@@ -17,6 +17,7 @@
 				text-align: left;
 				background-color: #4CAF50;
 				color: white;
+				border: 1px solid #ddd;
 			}
 			
 			#equipmenttable tr {
@@ -61,12 +62,17 @@
 			<table id= "equipmenttable">
 				<caption>Available Equipment</caption>
 				<tr>
-					<th>Equipment Name</th>
-					<th>Equipment Description</th>
-					<th>Rooms Currently Using This Equipment</th>
-					<th>Added at</th>
-					<th></th>
-					<th></th>
+					<th colspan="3">Equipment</th>
+					<th>Date</th>
+					<th colspan="2">Alter Equipment</th>
+				</tr>
+				<tr>
+					<th>Name</th>
+					<th>Description</th>
+					<th>Used In Room</th>
+					<th>Added</th>
+					<th>Edit</th>
+					<th>Delete</th>
 				</tr>
 				<?php foreach ($equipment as $row): ?>
 					<form action="" method="post">
