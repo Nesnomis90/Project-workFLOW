@@ -381,7 +381,6 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR
 	// Set always correct information
 	$pageTitle = 'Edit User';	
 	$button = 'Edit Equipment';	
-	//$EquipmentID = $_POST['EquipmentID']; // TO-DO: Change if broken
 	
 	// Don't want a reset button to blank all fields while editing
 	$reset = 'hidden';
