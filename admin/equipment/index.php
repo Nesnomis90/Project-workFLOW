@@ -10,6 +10,104 @@ if (!isUserAdmin()){
 	exit();
 }
 
+// Function to check if user inputs for equipment are correct
+function validateUserInputs(){
+	$invalidInput = FALSE;
+	
+	// Get user inputs
+	if(isset($_POST['EquipmentName']) AND !$invalidInput){
+		$equipmentName = trim($_POST['EquipmentName']);
+	} else {
+		$invalidInput = TRUE;
+		$_SESSION['AddEquipmentError'] = "An equipment cannot be added without a name!";
+	}
+	if(isset($_POST['EquipmentDescription']) AND !$invalidInput){
+		$equipmentDescription = trim($_POST['EquipmentDescription']);
+	} else {
+		$invalidInput = TRUE;
+		$_SESSION['AddEquipmentError'] = "An equipment cannot be added with a description!";
+	}	
+
+	// Remove excess whitespace and prepare strings for validation
+	$validatedEquipmentName = trimExcessWhitespace($equipmentName);
+	$validatedEquipmentDescription = trimExcessWhitespaceButLeaveLinefeed($equipmentDescription);
+	
+	// Do actual input validation
+	if(validateString($validatedEquipmentName) === FALSE AND !$invalidInput){
+		$invalidInput = TRUE;
+		$_SESSION['AddEquipmentError'] = "Your submitted equipment name has illegal characters in it.";
+	}
+	if(validateString($validatedEquipmentDescription) === FALSE AND !$invalidInput){
+		$invalidInput = TRUE;
+		$_SESSION['AddEquipmentError'] = "Your submitted equipment description has illegal characters in it.";
+	}	
+	
+	// Are values actually filled in?
+	if($validatedEquipmentName == "" AND !$invalidInput){
+		$_SESSION['AddEquipmentError'] = "You need to fill in a name for your equipment.";	
+		$invalidInput = TRUE;		
+	}
+	if($validatedEquipmentDescription == "" AND !$invalidInput){
+		$_SESSION['AddEquipmentError'] = "You need to fill in a description for your equipment.";	
+		$invalidInput = TRUE;		
+	}		
+
+	// Check if input length is allowed
+		// EquipmentName
+		// Uses same limit as display name (max 255 chars)
+	$invalidEquipmentName = isLengthInvalidDisplayName($validatedEquipmentName);
+	if($invalidEquipmentName AND !$invalidInput){
+		$_SESSION['AddEquipmentError'] = "The equipment name submitted is too long.";	
+		$invalidInput = TRUE;		
+	}	
+		// EquipmentDescription
+	$invalidEquipmentDescription = isLengthInvalidEquipmentDescription($validatedEquipmentDescription);
+	if($invalidEquipmentDescription AND !$invalidInput){
+		$_SESSION['AddEquipmentError'] = "The equipment description submitted is too long.";	
+		$invalidInput = TRUE;		
+	}
+	
+	// Check if the equipment already exists (based on name).
+		// only if have changed the name (edit only)
+	if(isset($_SESSION['EditEquipmentOriginalInfo']) AND $_SESSION['EditEquipmentOriginalInfo']['EquipmentName'] == $validatedEquipmentName){
+		// Do nothing, since we haven't changed the name we're editing
+	} else {
+		// Check if new name is taken
+		try
+		{
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+			$pdo = connect_to_db();
+			$sql = 'SELECT 	COUNT(*) 
+					FROM 	`equipment`
+					WHERE 	`name`= :EquipmentName';
+			$s = $pdo->prepare($sql);
+			$s->bindValue(':EquipmentName', $validatedEquipmentName);		
+			$s->execute();
+			
+			$pdo = null;
+			
+			$row = $s->fetch();
+			
+			if ($row[0] > 0)
+			{
+				// This name is already being used for an equipment
+				$_SESSION['AddEquipmentError'] = "There is already an equipment with the name: " . $validatedEquipmentName . "!";
+				$invalidInput = TRUE;	
+			}
+			// Equipment name hasn't been used before	
+		}
+		catch (PDOException $e)
+		{
+			$error = 'Error searching through equipment.' . $e->getMessage();
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+			$pdo = null;
+			exit();
+		}
+	}	
+
+return array($invalidInput, $validatedEquipmentDescription, $validatedEquipmentName);
+}
+
 // If admin wants to be able to delete bookings it needs to enabled first
 if (isset($_POST['action']) AND $_POST['action'] == "Enable Delete"){
 	$_SESSION['equipmentEnableDelete'] = TRUE;
@@ -51,8 +149,6 @@ if(isset($_POST['action']) AND $_POST['action'] == 'Delete'){
 	// Add a log event that an equipment has been Deleted
 	try
 	{
-		session_start();
-
 		// Save a description with information about the equipment that was Deleted
 		$description = "The equipment: " . $_POST['EquipmentName'] . " was removed by: " . $_SESSION['LoggedInUserName'];
 		
@@ -106,6 +202,11 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Add Equipment') OR
 		unset($_SESSION['AddEquipmentDescription']);
 	}
 	
+	if(isset($_SESSION['AddEquipmentName'])){
+		$EquipmentName = $_SESSION['AddEquipmentName'];
+		unset($_SESSION['AddEquipmentName']);
+	}
+	
 	// We want a reset all fields button while adding a new meeting room
 	$reset = 'reset';
 	
@@ -117,45 +218,20 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Add Equipment') OR
 // When admin has added the needed information and wants to add the equipment
 if (isset($_POST['action']) AND $_POST['action'] == 'Confirm Equipment')
 {
-	// Check if the equipment already exists (based on name).
-	try
-	{
-		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
-		$pdo = connect_to_db();
-		$sql = 'SELECT 	COUNT(*) 
-				FROM 	`equipment`
-				WHERE 	`name`= :EquipmentName';
-		$s = $pdo->prepare($sql);
-		$s->bindValue(':EquipmentName', $_POST['EquipmentName']);		
-		$s->execute();
+	// Validate user inputs
+	list($invalidInput, $validatedEquipmentDescription, $validatedEquipmentName) = validateUserInputs();
+	
+	// Refresh form on invalid
+	if($invalidInput){
 		
-		$pdo = null;
+		// Refresh.
+		$_SESSION['AddEquipmentDescription'] = $validatedEquipmentDescription;
+		$_SESSION['AddEquipmentName'] = $validatedEquipmentName;
 		
-		$row = $s->fetch();
-		
-		if ($row[0] > 0)
-		{
-			// This name is already being used for an equipment
-			
-			session_start();
-			
-			$_SESSION['AddEquipmentDescription'] = $_POST['EquipmentDescription'];
-			$_SESSION['AddEquipmentError'] = "There is already an equipment with the name: " . $_POST['EquipmentName'] . "!";
-			
-			// Refresh equipment add form
-			$_SESSION['refreshAddEquipment'] = TRUE;
-			header('Location: .');
-			exit();	
-		}
-		// Equipment name hasn't been used before	
-	}
-	catch (PDOException $e)
-	{
-		$error = 'Error searching through equipment.' . $e->getMessage();
-		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
-		$pdo = null;
-		exit();
-	}			
+		$_SESSION['refreshAddEquipment'] = TRUE;
+		header('Location: .');
+		exit();			
+	}	
 	
 	// Add the equipment to the database
 	try
@@ -166,11 +242,10 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Confirm Equipment')
 				SET			`name` = :EquipmentName,
 							`description` = :EquipmentDescription';
 		$s = $pdo->prepare($sql);
-		$s->bindValue(':EquipmentName', $_POST['EquipmentName']);
-		$s->bindValue(':EquipmentDescription', $_POST['EquipmentDescription']);		
+		$s->bindValue(':EquipmentName', $validatedEquipmentName);
+		$s->bindValue(':EquipmentDescription', $validatedEquipmentDescription);		
 		$s->execute();
 	
-		session_start();
 		unset($_SESSION['LastEquipmentID']);
 		$_SESSION['LastEquipmentID'] = $pdo->lastInsertId();	
 	
@@ -185,16 +260,14 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Confirm Equipment')
 		exit();
 	}
 	
-	$_SESSION['EquipmentUserFeedback'] = "Successfully added the equipment: " . $_POST['EquipmentName'];
+	$_SESSION['EquipmentUserFeedback'] = "Successfully added the equipment: " . $validatedEquipmentName;
 	
 		// Add a log event that an equipment was added
 	try
 	{
-		session_start();
-
 		// Save a description with information about the equipment that was added
-		$description = "The equipment: " . $_POST['EquipmentName'] . ", with description: " . 
-		$_POST['EquipmentDescription'] . " was added by: " . $_SESSION['LoggedInUserName'];
+		$description = "The equipment: " . $validatedEquipmentName . ", with description: " . 
+		$validatedEquipmentDescription . " was added by: " . $_SESSION['LoggedInUserName'];
 		
 		if(isset($_SESSION['LastEquipmentID'])){
 			$lastEquipmentID = $_SESSION['LastEquipmentID'];
@@ -236,43 +309,79 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Confirm Equipment')
 
 // if admin wants to edit equipment information
 // we load a new html form
-if (isset($_POST['action']) AND $_POST['action'] == 'Edit')
+if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR
+	(isset($_SESSION['refreshEditEquipment']) AND $_SESSION['refreshEditEquipment']))
 {
-	// Get information from database again on the selected meeting room
-	try
-	{
-		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
-		$pdo = connect_to_db();
-		$sql = "SELECT 		`EquipmentID`					AS TheEquipmentID,
-							`name`							AS EquipmentName,
-							`description`					AS EquipmentDescription
-				FROM 		`equipment`
-				WHERE		`EquipmentID` = :EquipmentID";
-				
-		$s = $pdo->prepare($sql);
-		$s->bindValue(':EquipmentID', $_POST['EquipmentID']);
-		$s->execute();
-		
-		// Create an array with the row information we retrieved
-		$row = $s->fetch();
-
-		//Close the connection
-		$pdo = null;
-	}
-	catch (PDOException $e)
-	{
-		$error = 'Error fetching meeting room details.';
-		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
-		$pdo = null;
-		exit();
-	}
 	
-	// Set the correct information
-	$pageTitle = 'Edit User';
-	$EquipmentID = $row['TheEquipmentID'];
-	$EquipmentName = $row['EquipmentName'];
-	$EquipmentDescription = $row['EquipmentDescription'];
-	$button = 'Edit Equipment';
+	// Check if we're activated by a user or by a forced refresh
+	if(isset($_SESSION['refreshEditEquipment']) AND $_SESSION['refreshEditEquipment']){
+		//Confirm we've refreshed
+		unset($_SESSION['refreshEditEquipment']);	
+		
+		// Get values we had before refresh
+		if(isset($_SESSION['EditEquipmentDescription'])){
+			$EquipmentDescription = $_SESSION['EditEquipmentDescription'];
+			unset($_SESSION['EditEquipmentDescription']);
+		} else {
+			$EquipmentDescription = '';
+		}
+		
+		if(isset($_SESSION['EditEquipmentName'])){
+			$EquipmentName = $_SESSION['EditEquipmentName'];
+			unset($_SESSION['EditEquipmentName']);
+		} else {
+			$EquipmentName = '';
+		}
+		
+		if(isset($_SESSION['EditEquipmentEquipmentID'])){
+			$EquipmentID = $_SESSION['EditEquipmentEquipmentID'];
+			unset($_SESSION['EditEquipmentEquipmentID']);
+		} else {
+			// No equipment ID was remembered? We can't update the edit then!
+			// TO-DO: fix if no ID
+		}
+	
+	} else {
+		// Get information from database again on the selected meeting room
+		try
+		{
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+			$pdo = connect_to_db();
+			$sql = "SELECT 		`EquipmentID`					AS TheEquipmentID,
+								`name`							AS EquipmentName,
+								`description`					AS EquipmentDescription
+					FROM 		`equipment`
+					WHERE		`EquipmentID` = :EquipmentID";
+					
+			$s = $pdo->prepare($sql);
+			$s->bindValue(':EquipmentID', $_POST['EquipmentID']);
+			$s->execute();
+			
+			// Create an array with the row information we retrieved
+			$row = $s->fetch();
+			$_SESSION['EditEquipmentOriginalInfo'] = $row;
+			
+			// Set the correct information
+			$EquipmentID = $row['TheEquipmentID'];
+			$EquipmentName = $row['EquipmentName'];
+			$EquipmentDescription = $row['EquipmentDescription'];
+
+			//Close the connection
+			$pdo = null;
+		}
+		catch (PDOException $e)
+		{
+			$error = 'Error fetching meeting room details.';
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+			$pdo = null;
+			exit();
+		}		
+	}
+
+	// Set always correct information
+	$pageTitle = 'Edit User';	
+	$button = 'Edit Equipment';	
+	//$EquipmentID = $_POST['EquipmentID']; // TO-DO: Change if broken
 	
 	// Don't want a reset button to blank all fields while editing
 	$reset = 'hidden';
@@ -285,34 +394,71 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Edit')
 // Perform the actual database update of the edited information
 if (isset($_POST['action']) AND $_POST['action'] == 'Edit Equipment')
 {
-	try
-	{
-		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
-		$pdo = connect_to_db();
-		$sql = 'UPDATE `equipment`
-				SET		`name` = :EquipmentName,
-						description = :EquipmentDescription
-				WHERE 	EquipmentID = :id';
-		$s = $pdo->prepare($sql);
-		$s->bindValue(':id', $_POST['EquipmentID']);
-		$s->bindValue(':EquipmentName', $_POST['EquipmentName']);
-		$s->bindValue(':EquipmentDescription', $_POST['EquipmentDescription']);
-		$s->execute();
+	// Validate user inputs
+	list($invalidInput, $validatedEquipmentDescription, $validatedEquipmentName) = validateUserInputs();
+
+	// Refresh form on invalid
+	if($invalidInput){
 		
-		// Close the connection
-		$pdo = Null;
+		// Refresh.
+		$_SESSION['EditEquipmentDescription'] = $validatedEquipmentDescription;
+		$_SESSION['EditEquipmentName'] = $validatedEquipmentName;
+		$_SESSION['EditEquipmentEquipmentID'] = $_POST['EquipmentID'];
+		
+		$_SESSION['refreshEditEquipment'] = TRUE;
+		header('Location: .');
+		exit();			
+	}	
+	
+	// Check if values have actually changed
+	$numberOfChanges = 0;
+	$original = $_SESSION['EditEquipmentOriginalInfo'];
+
+	if($original['EquipmentName'] != $validatedEquipmentName){
+		$numberOfChanges++;
 	}
-	catch (PDOException $e)
-	{
-		$error = 'Error updating submitted equipment: ' . $e->getMessage();
-		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
-		$pdo = null;
-		exit();
+	if($original['EquipmentDescription'] != $validatedEquipmentDescription){
+		$numberOfChanges++;
 	}
 	
-	$_SESSION['EquipmentUserFeedback'] = "Successfully updated the equipment: " . $_POST['EquipmentName'];
+	if($numberOfChanges > 0){
+		// Some changes were made, let's update!
+		try
+		{
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+			$pdo = connect_to_db();
+			$sql = 'UPDATE `equipment`
+					SET		`name` = :EquipmentName,
+							description = :EquipmentDescription
+					WHERE 	EquipmentID = :id';
+			$s = $pdo->prepare($sql);
+			$s->bindValue(':id', $_POST['EquipmentID']);
+			$s->bindValue(':EquipmentName', $validatedEquipmentName);
+			$s->bindValue(':EquipmentDescription', $validatedEquipmentDescription);
+			$s->execute();
+			
+			// Close the connection
+			$pdo = Null;
+		}
+		catch (PDOException $e)
+		{
+			$error = 'Error updating submitted equipment: ' . $e->getMessage();
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+			$pdo = null;
+			exit();
+		}
+		
+		$_SESSION['EquipmentUserFeedback'] = "Successfully updated the equipment: " . $validatedEquipmentName;		
+	} else {
+		$_SESSION['EquipmentUserFeedback'] = "No changes were made to the equipment: " . $validatedEquipmentName;
+	}
+
+	unset($_SESSION['EditEquipmentOriginalInfo']);
+	unset($_SESSION['EditEquipmentDescription']);
+	unset($_SESSION['EditEquipmentName']);
+	unset($_SESSION['EditEquipmentEquipmentID']);
 	
-	// Load user list webpage with updated database
+	// Load equipment list webpage
 	header('Location: .');
 	exit();
 }

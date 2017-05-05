@@ -383,7 +383,7 @@ function create_tables()
 		//Check if table already exists
 		if (!tableExists($conn, $table))
 		{
-			$conn->exec("CREATE IF NOT EXISTS TABLE `$table` (
+			$conn->exec("CREATE TABLE IF NOT EXISTS `$table` (
 						  `CompanyID` int(10) unsigned NOT NULL AUTO_INCREMENT,
 						  `name` varchar(255) NOT NULL,
 						  `dateTimeCreated` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,

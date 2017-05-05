@@ -94,15 +94,17 @@ function validateUserInputs($FeedbackSessionToUse){
 	// Get user inputs
 	$invalidInput = FALSE;
 	
-	if(isset($_POST['startDateTime'])){
+	if(isset($_POST['startDateTime']) AND !$invalidInput){
 		$startDateTimeString = $_POST['startDateTime'];
 	} else {
 		$invalidInput = TRUE;
+		$_SESSION[$FeedbackSessionToUse] = "A booking cannot be finished without submitting a start time.";
 	}
-	if(isset($_POST['endDateTime'])){
+	if(isset($_POST['endDateTime']) AND !$invalidInput){
 		$endDateTimeString = $_POST['endDateTime'];
 	} else {
 		$invalidInput = TRUE;
+		$_SESSION[$FeedbackSessionToUse] = "A booking cannot be finished without submitting an end time.";
 	}
 	
 	if(isset($_POST['displayName'])){
@@ -140,7 +142,7 @@ function validateUserInputs($FeedbackSessionToUse){
 		$_SESSION[$FeedbackSessionToUse] = "Your submitted booking description has illegal characters in it.";
 	}
 	
-		// Are values actually filled in?
+	// Are values actually filled in?
 	if($validatedStartDateTime == "" AND $validatedEndDateTime == "" AND !$invalidInput){
 		
 		$_SESSION[$FeedbackSessionToUse] = "You need to fill in a start and end time for your booking.";	
@@ -152,11 +154,12 @@ function validateUserInputs($FeedbackSessionToUse){
 		$_SESSION[$FeedbackSessionToUse] = "You need to fill in a start time for your booking.";	
 		$invalidInput = TRUE;		
 	}
-		
+	
+	// Check if input length is allowed
 		// DisplayName
 	$invalidDisplayName = isLengthInvalidDisplayName($validatedDisplayName);
 	if($invalidDisplayName AND !$invalidInput){
-		$_SESSION[$FeedbackSessionToUse] = "The displayName submitted is too long.";	
+		$_SESSION[$FeedbackSessionToUse] = "The display name submitted is too long.";	
 		$invalidInput = TRUE;		
 	}	
 		// BookingDescription
