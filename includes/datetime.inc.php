@@ -208,7 +208,7 @@ function convertDatetimeToFormat($oldDatetimeString, $oldformat, $format){
 	// 'Y-m-d H:i:s' = 2017-03-03 12:15:33 (MySQL Datetime)
 	// 'Y-m-d' = 2017-03-03 (MySQL Date)
 	// 'd M Y H:i:s' = 3 March 2017 12:15:33
-	// 
+	// 'F jS Y H:i' = March 3rd 2017 12:15
 	date_default_timezone_set('Europe/Oslo');
 	
 	if(validateDatetimeWithFormat($oldDatetimeString, $oldformat)){

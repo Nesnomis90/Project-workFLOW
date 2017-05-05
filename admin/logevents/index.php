@@ -241,6 +241,7 @@ if(isset($endDateTime) AND $endDateTime !== FALSE){
 if (!isset($_POST['search']) AND !isset($_POST['searchAll']) AND !$invalidInput){
 	$_SESSION['LogEventUserFeedback'] = "You need to select at least one category of log events with the checkboxes.";
 	$invalidInput = TRUE;
+	$noCheckedCheckboxes = TRUE;
 }
 
 if($invalidInput){
@@ -300,7 +301,7 @@ if($numberOfCheckboxesActivated > 0){
 			// We want to filter by date, we need to use a prepared statement
 			if (isset($sqlAdd)){
 			$sql = 'SELECT 		l.logID, 
-								DATE_FORMAT(l.logDateTime, "%d %b %Y %T") 	AS LogDate, 
+								l.logDateTime								AS LogDate, 
 								la.`name` 									AS ActionName, 
 								la.description 								AS ActionDescription, 
 								l.description 								AS LogDescription 
@@ -312,7 +313,7 @@ if($numberOfCheckboxesActivated > 0){
 					LIMIT ' . $logLimit;				
 			} else {
 				$sql = 'SELECT 		l.logID, 
-									DATE_FORMAT(l.logDateTime, "%d %b %Y %T") 	AS LogDate, 
+									l.logDateTime								AS LogDate, 
 									la.`name` 									AS ActionName, 
 									la.description 								AS ActionDescription, 
 									l.description 								AS LogDescription 
@@ -344,7 +345,7 @@ if($numberOfCheckboxesActivated > 0){
 			// We don't want to filter by date, we just use a standard query
 			if (isset($sqlAdd)){
 			$sql = 'SELECT 		l.logID, 
-								DATE_FORMAT(l.logDateTime, "%d %b %Y %T") 	AS LogDate, 
+								l.logDateTime 								AS LogDate, 
 								la.`name` 									AS ActionName, 
 								la.description 								AS ActionDescription, 
 								l.description 								AS LogDescription 
@@ -356,7 +357,7 @@ if($numberOfCheckboxesActivated > 0){
 					LIMIT ' . $logLimit;				
 			} else {
 				$sql = 'SELECT 		l.logID, 
-									DATE_FORMAT(l.logDateTime, "%d %b %Y %T") 	AS LogDate, 
+									l.logDateTime 								AS LogDate, 
 									la.`name` 									AS ActionName, 
 									la.description 								AS ActionDescription, 
 									l.description 								AS LogDescription 
@@ -384,12 +385,19 @@ if($numberOfCheckboxesActivated > 0){
 		exit();
 	}
 	
+
+	
 	// Create the array we will go through to display information in HTML
 	foreach ($result as $row)
 	{
+		
+	// Turn the datetime retrieved into a more displayable format
+	$dateCreated = $row['LogDate'];
+	$displayableDateCreated = convertDatetimeToFormat($dateCreated, 'Y-m-d H:i:s', 'F jS Y H:i');
+	
 		$log[] = array(
 			'id' => $row['logID'], 
-			'date' => $row['LogDate'], 
+			'date' => $displayableDateCreated, 
 			'actionName' => $row['ActionName'], 
 			'actionDescription' => $row['ActionDescription'], 
 			'logDescription' => $row['LogDescription']
