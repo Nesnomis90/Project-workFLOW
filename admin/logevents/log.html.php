@@ -102,7 +102,7 @@
 				<?php elseif(isset($displayValidatedStartDate) AND !isset($displayValidatedEndDate)) : ?>
 					<b>Currently displaying logs from <?php htmlout($displayValidatedStartDate); ?> to today.</b>
 				<?php elseif(!isset($displayValidatedStartDate) AND isset($displayValidatedEndDate)) : ?>
-					<b>Currently displaying logs from the beginning up to <?php htmlout($displayValidatedStartDate); ?>.</b>
+					<b>Currently displaying logs from the beginning up to <?php htmlout($displayValidatedEndDate); ?>.</b>
 				<?php else : ?>
 					<b>Currently displaying logs from the beginning up to today.</b>
 				<?php endif; ?> <br />

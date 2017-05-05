@@ -207,11 +207,19 @@ if($validatedStartDate != ""){
 if($validatedEndDate != ""){
 	$endDateTime = correctDatetimeFormat($validatedEndDate);
 }
+
+if (isset($startDateTime) AND $startDateTime === FALSE AND !$invalidInput){
+	$_SESSION['LogEventUserFeedback'] = "The start date you submitted did not have a correct format. Please try again.";
+	$invalidInput = TRUE;
+}
+if (isset($endDateTime) AND $endDateTime === FALSE AND !$invalidInput){
+	$_SESSION['LogEventUserFeedback'] = "The end date you submitted did not have a correct format. Please try again.";
+	$invalidInput = TRUE;
+}
  
 if($validatedStartDate != "" AND $validatedEndDate != ""){
 	if($startDateTime > $endDateTime AND !$invalidInput){
 		// End time can't be before the start time
-		
 		$_SESSION['LogEventUserFeedback'] = "The start time can't be later than the end time. Please select a new start time or end time.";
 		$invalidInput = TRUE;
 	}	
@@ -221,34 +229,13 @@ if($validatedStartDate != "" AND $validatedEndDate != ""){
 	}
 }
 
-
 // Convert datetime to a more display friendly format
-if(isset($startDateTime)){
+if(isset($startDateTime) AND $startDateTime !== FALSE){
 	$displayValidatedStartDate = convertDatetimeToFormat($startDateTime , 'Y-m-d H:i:s', 'F jS Y H:i');	
 }
-if(isset($endDateTime)){
+if(isset($endDateTime) AND $endDateTime !== FALSE){
 	$displayValidatedEndDate = convertDatetimeToFormat($endDateTime, 'Y-m-d H:i:s', 'F jS Y H:i');	
 }
-
-/*if(!$invalidInput AND $filterStartDate != ""){
-	$validatedStartDate = correctDatetimeFormat($filterStartDate);
-	$displayValidatedStartDate = convertDatetimeToFormat($validatedStartDate , 'Y-m-d H:i:s', 'F jS Y H:i');
-	if($validatedStartDate === FALSE){
-		// The user submitted a start date in a format we had not expected
-		$_SESSION['LogEventUserFeedback'] = "The start date you submitted did not have a correct format. Please try again.";
-		$invalidInput = TRUE;
-	}		
-}
-
-if(!$invalidInput AND $filterEndDate != ""){
-	$validatedEndDate = correctDatetimeFormat($filterEndDate);
-	$displayValidatedEndDate = convertDatetimeToFormat($validatedEndDate, 'Y-m-d H:i:s', 'F jS Y H:i');
-	if($validatedEndDate === FALSE){
-		// The user submitted a start date in a format we had not expected
-		$_SESSION['LogEventUserFeedback'] = "The end date you submitted did not have a correct format. Please try again.";
-		$invalidInput = TRUE;
-	}		
-}*/
 
 // Check if admin has even checked any boxes yet, if not just give a warning
 if (!isset($_POST['search']) AND !isset($_POST['searchAll']) AND !$invalidInput){
@@ -264,34 +251,36 @@ if($invalidInput){
 
 if(!isset($sqlAdd)){
 	// We've not added any additional SQL code yet
-	if($filterStartDate != '' AND $filterEndDate != ''){
+	if(	isset($startDateTime) AND $startDateTime !== FALSE AND
+		isset($endDateTime) AND $endDateTime !== FALSE){
 		// Both dates are filled out. Use BETWEEN for MySQL
 		$sqlAddDates = ' WHERE (l.`logDateTime` BETWEEN :filterStartDate AND :filterEndDate) ';
 		$useBothDates = TRUE;
-	} elseif($filterStartDate == '' AND $filterEndDate != ''){
+	} elseif(!isset($startDateTime) AND isset($endDateTime) AND $endDateTime !== FALSE){
 		// Only end date is filled out. Use less than
 		$sqlAddDates = ' WHERE (l.`logDateTime` < :filterEndDate) ';
 		$useEndDate = TRUE;
-	} elseif($filterStartDate != '' AND $filterEndDate == ''){
+	} elseif(isset($startDateTime) AND $startDateTime !== FALSE AND !isset($endDateTime)){
 		// Only start date is filled out. Use greater than
 		$sqlAddDates = ' WHERE (l.`logDateTime` > :filterStartDate) ';
 		$useStartDate = TRUE;
 	}
 } else {
 	// We've already altered the sql code earlier, which means we've already started a "WHERE"-segment
-	if($filterStartDate != '' AND $filterEndDate != ''){
+	if(	isset($startDateTime) AND $startDateTime !== FALSE AND
+		isset($endDateTime) AND $endDateTime !== FALSE){
 		// Both dates are filled out. Use BETWEEN for MySQL
 		$sqlAddDates = ' AND (l.`logDateTime` BETWEEN :filterStartDate AND :filterEndDate) ';
 		$useBothDates = TRUE;
-	} elseif($filterStartDate == '' AND $filterEndDate != ''){
+	} elseif(!isset($startDateTime) AND isset($endDateTime) AND $endDateTime !== FALSE){
 		// Only end date is filled out. Use less than
 		$sqlAddDates = ' AND (l.`logDateTime` < :filterEndDate) ';
 		$useEndDate = TRUE;
-	} elseif($filterStartDate != '' AND $filterEndDate == ''){
+	} elseif(isset($startDateTime) AND $startDateTime !== FALSE AND !isset($endDateTime)){
 		// Only start date is filled out. Use greater than
 		$sqlAddDates = ' AND (l.`logDateTime` > :filterStartDate) ';
 		$useStartDate = TRUE;
-	}	
+	}
 }
 
 //	Make sure admin has selected a category of log events to show, if not we can't show anything.
@@ -337,14 +326,14 @@ if($numberOfCheckboxesActivated > 0){
 			
 			$s = $pdo->prepare($sql);
 			if (isset($useBothDates) AND $useBothDates){
-				$s->bindValue(':filterStartDate', $validatedStartDate);
-				$s->bindValue(':filterEndDate', $validatedEndDate);			
+				$s->bindValue(':filterStartDate', $startDateTime);
+				$s->bindValue(':filterEndDate', $endDateTime);			
 			}
 			if (isset($useStartDate) AND $useStartDate){
-				$s->bindValue(':filterStartDate', $validatedStartDate);			
+				$s->bindValue(':filterStartDate', $startDateTime);			
 			}			
 			if (isset($useEndDate) AND $useEndDate){
-				$s->bindValue(':filterEndDate', $validatedEndDate);			
+				$s->bindValue(':filterEndDate', $endDateTime);			
 			}	
 			
 			$s->execute();
@@ -380,7 +369,7 @@ if($numberOfCheckboxesActivated > 0){
 			}
 			
 			$result = $pdo->query($sql);
-			$rowNum = $result->rowCount();		
+			$rowNum = $result->rowCount();
 		}
 
 		//Close connection

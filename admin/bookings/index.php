@@ -170,6 +170,15 @@ function validateUserInputs($FeedbackSessionToUse){
 	$startDateTime = correctDatetimeFormat($validatedStartDateTime);
 	$endDateTime = correctDatetimeFormat($validatedEndDateTime);
 
+	if (isset($startDateTime) AND $startDateTime === FALSE AND !$invalidInput){
+		$_SESSION[$FeedbackSessionToUse] = "The start date you submitted did not have a correct format. Please try again.";
+		$invalidInput = TRUE;
+	}
+	if (isset($endDateTime) AND $endDateTime === FALSE AND !$invalidInput){
+		$_SESSION[$FeedbackSessionToUse] = "The end date you submitted did not have a correct format. Please try again.";
+		$invalidInput = TRUE;
+	}	
+	
 	$timeNow = getDatetimeNow();
 	
 	if($startDateTime > $endDateTime AND !$invalidInput){
