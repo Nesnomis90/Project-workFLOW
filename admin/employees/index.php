@@ -712,7 +712,7 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Cancel'){
 }
 
 /* if($refreshEmployees){
-	// TO-DO:
+	// TO-DO: Add code that should occur on a refresh
 } */
 
 // There were no user inputs or forced refreshes. So we're interested in fresh, new values.

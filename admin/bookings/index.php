@@ -1925,7 +1925,7 @@ clearBookingSessions();
 // BOOKING OVERVIEW CODE SNIPPET START //
 
 /*if($refreshBookings) {
-	// TO-DO:
+	// TO-DO: Add code that should occur on a refresh
 }*/
 
 
