@@ -383,13 +383,15 @@ function create_tables()
 		//Check if table already exists
 		if (!tableExists($conn, $table))
 		{
-			$conn->exec("CREATE TABLE IF NOT EXISTS `$table` (
+			$conn->exec("CREATE IF NOT EXISTS TABLE `$table` (
 						  `CompanyID` int(10) unsigned NOT NULL AUTO_INCREMENT,
 						  `name` varchar(255) NOT NULL,
 						  `dateTimeCreated` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
 						  `removeAtDate` date DEFAULT NULL,
-						  PRIMARY KEY (`CompanyID`)
-						) ENGINE=InnoDB DEFAULT CHARSET=utf8");
+						  `isActive` tinyint(1) NOT NULL DEFAULT '0',
+						  PRIMARY KEY (`CompanyID`),
+						  UNIQUE KEY `name_UNIQUE` (`name`)
+						) ENGINE=InnoDB DEFAULT CHARSET=utf8;");
 						
 			//	Add the creation to log event
 			$sqlLog = "	INSERT INTO `logevent`(`actionID`, `description`) 

@@ -74,48 +74,86 @@
 					<th></th>
 					<th></th>
 				</tr>
-				<?php foreach ($companies as $company): ?>
-					<tr>
-						<?php $goto = "http://$_SERVER[HTTP_HOST]/admin/employees/?Company=" . $company['id'];?>
-						<form action="<?php htmlout($goto) ;?>" method="post">
-							<td>
-								<input type="submit" value="Employees">
-								<input type="hidden" name="Company" value="<?php htmlout($company['id']); ?>">
-							</td>
-						</form>
-						<form action="" method="post">
-							<td>
-								<?php htmlout($company['CompanyName']); ?>
-								<input type="hidden" id="CompanyName" name="CompanyName" 
-								value="<?php htmlout($company['CompanyName']); ?>"> 
-							</td>
-							<td><?php htmlout($company['NumberOfEmployees']); ?></td>
-							<td><?php htmlout($company['MonthlyCompanyWideBookingTimeUsed']); ?></td>
-							<td><?php htmlout($company['TotalCompanyWideBookingTimeUsed']); ?></td>
-							<?php if($company['DeletionDate'] == null) :?>
-									<td>
-										<p>No Date Set</p>
-									</td>
-							<?php elseif($company['DeletionDate'] != null) : ?>
-									<td>
-										<p><?php htmlout($company['DeletionDate']); ?></p>
-										<input type="submit" name="action" value="Cancel Date">
-									</td>
-							<?php endif; ?>
-							<td><?php htmlout($company['DatetimeCreated']); ?></td>							
-							<td><input type="submit" name="action" value="Edit"></td>
-							<td>
-								<?php if(isset($_SESSION['companiesEnableDelete']) AND $_SESSION['companiesEnableDelete']) : ?>
-									<input type="submit" name="action" value="Delete">
-								<?php else : ?>
-									<input type="submit" name="disabled" value="Delete" disabled>
+				<?php if (isset($companies)) : ?>
+					<?php foreach ($companies as $company): ?>
+						<tr>
+							<?php $goto = "http://$_SERVER[HTTP_HOST]/admin/employees/?Company=" . $company['id'];?>
+							<form action="<?php htmlout($goto) ;?>" method="post">
+								<td>
+									<input type="submit" value="Employees">
+									<input type="hidden" name="Company" value="<?php htmlout($company['id']); ?>">
+								</td>
+							</form>
+							<form action="" method="post">
+								<td>
+									<?php htmlout($company['CompanyName']); ?>
+									<input type="hidden" id="CompanyName" name="CompanyName" 
+									value="<?php htmlout($company['CompanyName']); ?>"> 
+								</td>
+								<td><?php htmlout($company['NumberOfEmployees']); ?></td>
+								<td><?php htmlout($company['MonthlyCompanyWideBookingTimeUsed']); ?></td>
+								<td><?php htmlout($company['TotalCompanyWideBookingTimeUsed']); ?></td>
+								<?php if($company['DeletionDate'] == null) :?>
+										<td>
+											<p>No Date Set</p>
+										</td>
+								<?php elseif($company['DeletionDate'] != null) : ?>
+										<td>
+											<p><?php htmlout($company['DeletionDate']); ?></p>
+											<input type="submit" name="action" value="Cancel Date">
+										</td>
 								<?php endif; ?>
-							</td>
-							<input type="hidden" name="id" value="<?php htmlout($company['id']); ?>">
-						</form>
-					</tr>
-				<?php endforeach; ?>
+								<td><?php htmlout($company['DatetimeCreated']); ?></td>							
+								<td><input type="submit" name="action" value="Edit"></td>
+								<td>
+									<?php if(isset($_SESSION['companiesEnableDelete']) AND $_SESSION['companiesEnableDelete']) : ?>
+										<input type="submit" name="action" value="Delete">
+									<?php else : ?>
+										<input type="submit" name="disabled" value="Delete" disabled>
+									<?php endif; ?>
+								</td>
+								<input type="hidden" name="id" value="<?php htmlout($company['id']); ?>">
+							</form>
+						</tr>
+					<?php endforeach; ?>
+				<?php else : ?>
+					<tr><td colspan=7><b>There are no active companies</b></td></tr>
+				<?php endif; ?>
 			</table>
+			<table id="companiestable">
+				<caption>Unactivated Companies</caption>
+				<tr>
+					<th>Company Name</th>
+					<th>Created at</th>
+					<th></th>
+					<th></th>
+				</tr>
+				<?php if (isset($inactivecompanies)) : ?>
+					<?php foreach ($inactivecompanies as $company): ?>
+						<tr>
+							<form action="" method="post">
+								<td>
+									<?php htmlout($company['CompanyName']); ?>
+									<input type="hidden" id="CompanyName" name="CompanyName" 
+									value="<?php htmlout($company['CompanyName']); ?>"> 
+								</td>
+								<td><?php htmlout($company['DatetimeCreated']); ?></td>							
+								<td><input type="submit" name="action" value="Activate"></td>
+								<td>
+									<?php if(isset($_SESSION['companiesEnableDelete']) AND $_SESSION['companiesEnableDelete']) : ?>
+										<input type="submit" name="action" value="Delete">
+									<?php else : ?>
+										<input type="submit" name="disabled" value="Delete" disabled>
+									<?php endif; ?>
+								</td>
+								<input type="hidden" name="id" value="<?php htmlout($company['id']); ?>">
+							</form>
+						</tr>
+					<?php endforeach; ?>
+				<?php else : ?>
+					<tr><td colspan=4><b>There are no inactive companies</b></td></tr>
+				<?php endif; ?>
+			</table>			
 		<?php else : ?>
 			<tr><b>There are no companies registered in the database.</b></tr>
 			<tr>

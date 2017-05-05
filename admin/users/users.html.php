@@ -63,7 +63,7 @@
 					<input type="submit" name="action" value="Create User">
 				</div>
 			</form>
-			<table id= "usertable">
+			<table id="usertable">
 				<caption>Activated Users</caption>
 				<tr>
 					<th>First Name</th>
