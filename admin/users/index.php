@@ -742,7 +742,7 @@ if (isset($_GET['editform']))
 }
 
 /* if ($refreshUsers){
-	// TO-DO:
+	// TO-DO: Add code that should occur on a refresh
 } */
 
 

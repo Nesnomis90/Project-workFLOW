@@ -22,6 +22,32 @@ if (isset($_POST['action']) AND $_POST['action'] == "Disable Delete"){
 	$refreshcompanies = TRUE;
 }
 
+// If admin wants to activate a registered company
+if (isset($_POST['action']) AND $_POST['action'] == 'Activate') {
+	
+	// Update selected company in database to be active
+	try
+	{
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+		
+		$pdo = connect_to_db();
+		$sql = 'UPDATE 	`company`
+				SET		`isActive` = 1
+				WHERE 	`companyID` = :id';
+		$s = $pdo->prepare($sql);
+		$s->bindValue(':id', $_POST['id']);
+		$s->execute();
+		
+		//close connection
+		$pdo = null;
+	}
+	catch (PDOException $e)
+	{
+		$error = 'Error activating company: ' . $e->getMessage();
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+		exit();
+	}	
+}
 
 // If admin wants to remove a company from the database
 // TO-DO: ADD A CONFIRMATION BEFORE ACTUALLY DOING THE DELETION!
@@ -280,6 +306,32 @@ if (isset($_GET['addform']))
 // Perform the actual database update of the edited information
 if (isset($_GET['editform']))
 {
+	$invalidInput = FALSE;
+	
+	// Get user inputs
+	if(isset($_POST['CompanyName'])){
+		$companyName = trim($_POST['CompanyName']);
+	} else {
+		$invalidInput = TRUE;
+		$_SESSION['AddCompanyError'] = "Company cannot be created without a name!";
+	}
+	if(isset($_POST['DateToRemove'])){
+		$dateToRemove = trim($_POST['DateToRemove']);
+	} else {
+		$dateToRemove = ""; //This can be not set
+	}
+	
+	// TO-DO: Validate user inputs
+	
+	// TO-DO: Check if inputs are even filled out
+	
+	if($invalidInput){
+		// TO-DO: Add refresh and remember values set
+	}
+	
+	// TO-DO: Check if there were any changes made at all
+	
+	
 	// Update selected company by inserted the date to remove	
 	try
 	{
@@ -292,7 +344,7 @@ if (isset($_GET['editform']))
 				WHERE 	`companyID` = :id';
 		
 		if ($_POST['DateToRemove']!=''){
-			$CorrectDate = correctDateFormat($_POST['DateToRemove']);
+			$CorrectDate = correctDateFormat($dateToRemove);
 		} else {
 			$CorrectDate = null;
 		}
@@ -301,7 +353,7 @@ if (isset($_GET['editform']))
 		$s = $pdo->prepare($sql);
 		$s->bindValue(':id', $_POST['id']);
 		$s->bindValue(':removeAtDate', $CorrectDate);
-		$s->bindValue(':name', $_POST['CompanyName']);
+		$s->bindValue(':name', $companyName);
 		$s->execute();
 		
 		//close connection
@@ -358,7 +410,7 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Cancel Date')
 }
 
 /* if($refreshcompanies) {
-	// TO-DO:
+	// TO-DO: Add code that should occur on a refresh
 }*/
 
 
@@ -373,7 +425,8 @@ try
 	$sql = "SELECT 		c.companyID 										AS CompID,
 						c.`name` 											AS CompanyName,
 						DATE_FORMAT(c.`dateTimeCreated`, '%d %b %Y %T')		AS DatetimeCreated,
-						DATE_FORMAT(c.`removeAtDate`, '%d %b %Y')			AS DeletionDate,							
+						DATE_FORMAT(c.`removeAtDate`, '%d %b %Y')			AS DeletionDate,
+						c.`isActive`										AS CompanyActivated,
 						(
 							SELECT 	COUNT(c.`name`) 
 							FROM 	`company` c 
@@ -418,6 +471,8 @@ catch (PDOException $e)
 // Create an array with the actual key/value pairs we want to use in our HTML
 foreach ($result as $row)
 {
+	// TO-DO: Change booking time used from time to easily readable text instead
+	
 	if($row['MonthlyCompanyWideBookingTimeUsed'] == null){
 		$MonthlyTimeUsed = '00:00:00';
 	} else {
@@ -430,15 +485,23 @@ foreach ($result as $row)
 		$TotalTimeUsed = $row['TotalCompanyWideBookingTimeUsed'];
 	}
 	
-	$companies[] = array('id' => $row['CompID'], 
-					'CompanyName' => $row['CompanyName'],
-					'NumberOfEmployees' => $row['NumberOfEmployees'],
-					'MonthlyCompanyWideBookingTimeUsed' => $MonthlyTimeUsed,
-					'TotalCompanyWideBookingTimeUsed' => $TotalTimeUsed,
-					'DeletionDate' => $row['DeletionDate'],
-					'DatetimeCreated' => $row['DatetimeCreated']
-					);
+	if($row['CompanyActivated'] == 1){
+		$companies[] = array('id' => $row['CompID'], 
+						'CompanyName' => $row['CompanyName'],
+						'NumberOfEmployees' => $row['NumberOfEmployees'],
+						'MonthlyCompanyWideBookingTimeUsed' => $MonthlyTimeUsed,
+						'TotalCompanyWideBookingTimeUsed' => $TotalTimeUsed,
+						'DeletionDate' => $row['DeletionDate'],
+						'DatetimeCreated' => $row['DatetimeCreated']
+						);
+	} elseif($row['CompanyActivated'] == 0) {
+		$inactivecompanies[] = array('id' => $row['CompID'], 
+						'CompanyName' => $row['CompanyName'],
+						'DatetimeCreated' => $row['DatetimeCreated']
+						);		
+	}	
 }
+
 
 // Create the companies list in HTML
 include_once 'companies.html.php';

@@ -17,6 +17,7 @@
 				text-align: left;
 				background-color: #4CAF50;
 				color: white;
+				border: 1px solid #ddd;
 			}
 			
 			#companiestable tr {
@@ -64,58 +65,108 @@
 			<table id="companiestable">
 				<caption>Registered Companies</caption>
 				<tr>
-					<th>Employee List</th>
-					<th>Company Name (click for employee list)</th>
-					<th># of employees</th>
-					<th>Booking time used (this month)</th>
-					<th>Booking time used (all time)</th>
-					<th>Date to be removed</th>
-					<th>Created at</th>
-					<th></th>
-					<th></th>
+					<th colspan="2">Employees</th>
+					<th>Company</th>
+					<th colspan="2">Booking Time Used</th>
+					<th colspan="2">Dates</th>
+					<th colspan="2">Alter Company</th>
 				</tr>
-				<?php foreach ($companies as $company): ?>
-					<tr>
-						<?php $goto = "http://$_SERVER[HTTP_HOST]/admin/employees/?Company=" . $company['id'];?>
-						<form action="<?php htmlout($goto) ;?>" method="post">
-							<td>
-								<input type="submit" value="Employees">
-								<input type="hidden" name="Company" value="<?php htmlout($company['id']); ?>">
-							</td>
-						</form>
-						<form action="" method="post">
-							<td>
-								<?php htmlout($company['CompanyName']); ?>
-								<input type="hidden" id="CompanyName" name="CompanyName" 
-								value="<?php htmlout($company['CompanyName']); ?>"> 
-							</td>
-							<td><?php htmlout($company['NumberOfEmployees']); ?></td>
-							<td><?php htmlout($company['MonthlyCompanyWideBookingTimeUsed']); ?></td>
-							<td><?php htmlout($company['TotalCompanyWideBookingTimeUsed']); ?></td>
-							<?php if($company['DeletionDate'] == null) :?>
-									<td>
-										<p>No Date Set</p>
-									</td>
-							<?php elseif($company['DeletionDate'] != null) : ?>
-									<td>
-										<p><?php htmlout($company['DeletionDate']); ?></p>
-										<input type="submit" name="action" value="Cancel Date">
-									</td>
-							<?php endif; ?>
-							<td><?php htmlout($company['DatetimeCreated']); ?></td>							
-							<td><input type="submit" name="action" value="Edit"></td>
-							<td>
-								<?php if(isset($_SESSION['companiesEnableDelete']) AND $_SESSION['companiesEnableDelete']) : ?>
-									<input type="submit" name="action" value="Delete">
-								<?php else : ?>
-									<input type="submit" name="disabled" value="Delete" disabled>
+				<tr>
+					<th>List</th>
+					<th>Amount</th>
+					<th>Name</th>
+					<th>This Month</th>
+					<th>All Time</th>
+					<th>Remove At</th>
+					<th>Created At</th>
+					<th>Edit</th>
+					<th>Delete</th>
+				</tr>
+				<?php if (isset($companies)) : ?>
+					<?php foreach ($companies as $company): ?>
+						<tr>
+							<?php $goto = "http://$_SERVER[HTTP_HOST]/admin/employees/?Company=" . $company['id'];?>
+							<form action="<?php htmlout($goto) ;?>" method="post">
+								<td>
+									<input type="submit" value="Employees">
+									<input type="hidden" name="Company" value="<?php htmlout($company['id']); ?>">
+								</td>
+							</form>
+							<form action="" method="post">
+								<td><?php htmlout($company['NumberOfEmployees']); ?></td>
+								<td>
+									<?php htmlout($company['CompanyName']); ?>
+									<input type="hidden" id="CompanyName" name="CompanyName" 
+									value="<?php htmlout($company['CompanyName']); ?>"> 
+								</td>
+								<td><?php htmlout($company['MonthlyCompanyWideBookingTimeUsed']); ?></td>
+								<td><?php htmlout($company['TotalCompanyWideBookingTimeUsed']); ?></td>
+								<?php if($company['DeletionDate'] == null) :?>
+										<td>
+											<p>No Date Set</p>
+										</td>
+								<?php elseif($company['DeletionDate'] != null) : ?>
+										<td>
+											<p><?php htmlout($company['DeletionDate']); ?></p>
+											<input type="submit" name="action" value="Cancel Date">
+										</td>
 								<?php endif; ?>
-							</td>
-							<input type="hidden" name="id" value="<?php htmlout($company['id']); ?>">
-						</form>
-					</tr>
-				<?php endforeach; ?>
+								<td><?php htmlout($company['DatetimeCreated']); ?></td>							
+								<td><input type="submit" name="action" value="Edit"></td>
+								<td>
+									<?php if(isset($_SESSION['companiesEnableDelete']) AND $_SESSION['companiesEnableDelete']) : ?>
+										<input type="submit" name="action" value="Delete">
+									<?php else : ?>
+										<input type="submit" name="disabled" value="Delete" disabled>
+									<?php endif; ?>
+								</td>
+								<input type="hidden" name="id" value="<?php htmlout($company['id']); ?>">
+							</form>
+						</tr>
+					<?php endforeach; ?>
+				<?php else : ?>
+					<tr><td colspan=7><b>There are no active companies</b></td></tr>
+				<?php endif; ?>
 			</table>
+			<table id="companiestable">
+				<caption>Unactivated Companies</caption>
+				<tr>
+					<th>Company</th>
+					<th>Date</th>
+					<th colspan="2">Alter Company</th>
+				</tr>				
+				<tr>
+					<th>Name</th>
+					<th>Created</th>
+					<th>Activate</th>
+					<th>Delete</th>
+				</tr>
+				<?php if (isset($inactivecompanies)) : ?>
+					<?php foreach ($inactivecompanies as $company): ?>
+						<tr>
+							<form action="" method="post">
+								<td>
+									<?php htmlout($company['CompanyName']); ?>
+									<input type="hidden" id="CompanyName" name="CompanyName" 
+									value="<?php htmlout($company['CompanyName']); ?>"> 
+								</td>
+								<td><?php htmlout($company['DatetimeCreated']); ?></td>							
+								<td><input type="submit" name="action" value="Activate"></td>
+								<td>
+									<?php if(isset($_SESSION['companiesEnableDelete']) AND $_SESSION['companiesEnableDelete']) : ?>
+										<input type="submit" name="action" value="Delete">
+									<?php else : ?>
+										<input type="submit" name="disabled" value="Delete" disabled>
+									<?php endif; ?>
+								</td>
+								<input type="hidden" name="id" value="<?php htmlout($company['id']); ?>">
+							</form>
+						</tr>
+					<?php endforeach; ?>
+				<?php else : ?>
+					<tr><td colspan=4><b>There are no inactive companies</b></td></tr>
+				<?php endif; ?>
+			</table>			
 		<?php else : ?>
 			<tr><b>There are no companies registered in the database.</b></tr>
 			<tr>

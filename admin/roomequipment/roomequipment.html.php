@@ -17,6 +17,7 @@
 				text-align: left;
 				background-color: #4CAF50;
 				color: white;
+				border: 1px solid #ddd;
 			}
 			
 			#roomequipmenttable tr {
@@ -71,13 +72,19 @@
 			<table id="roomequipmenttable">
 				<caption>Meeting Room Equipment</caption>
 				<tr>
-					<th>Equipment Name</th>
-					<th>Equipment Description</th>
+					<th colspan="3">Equipment</th>
+					<th>Meeting Room</th>
+					<th>Date</th>
+					<th colspan=2">Alter Room Equipment</th>
+				</tr>
+				<tr>
+					<th>Name</th>
+					<th>Description</th>
 					<th>Amount</th>
-					<th>Meeting Room Name</th>
+					<th>Name</th>
 					<th>Added At</th>
-					<th></th>
-					<th></th>
+					<th>Change Amount</th>
+					<th>Remove</th>
 				</tr>
 				<?php foreach ($roomequipment as $row): ?>
 					<form action="" method="post">

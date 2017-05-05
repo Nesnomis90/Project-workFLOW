@@ -23,6 +23,7 @@
 				text-align: left;
 				background-color: #4CAF50;
 				color: white;
+				border: 1px solid #ddd;
 			}
 
 			#logevent td {
@@ -101,16 +102,20 @@
 				<?php elseif(isset($displayValidatedStartDate) AND !isset($displayValidatedEndDate)) : ?>
 					<b>Currently displaying logs from <?php htmlout($displayValidatedStartDate); ?> to today.</b>
 				<?php elseif(!isset($displayValidatedStartDate) AND isset($displayValidatedEndDate)) : ?>
-					<b>Currently displaying logs from the beginning up to <?php htmlout($displayValidatedStartDate); ?>.</b>
+					<b>Currently displaying logs from the beginning up to <?php htmlout($displayValidatedEndDate); ?>.</b>
 				<?php else : ?>
-					<b>Currently displaying logs from the beginning up to today.</b>
+					<?php if($invalidInput) : ?>
+						<b>Currently not displaying any logs due to an incorrect date being submitted.</b>
+					<?php else : ?>
+						<b>Currently displaying logs from the beginning up to today.</b>
+					<?php endif; ?>
 				<?php endif; ?> <br />
 				<label for="filterStartDate">Earliest date to display logs from: </label>
 				<input type="text" name="filterStartDate" 
-				value="<?php htmlout($filterStartDate); ?>"><br />
+				value="<?php htmlout($validatedStartDate); ?>"><br />
 				<label for="filterEndDate">Latest date to display logs from: </label>
 				<input type="text" name="filterEndDate"
-				value="<?php htmlout($filterEndDate); ?>">
+				value="<?php htmlout($validatedEndDate); ?>">
 			</div>
 			</div>
 				<input type="submit" name="action" value="Refresh Logs">
@@ -127,34 +132,46 @@
 			<caption>Log Events</caption>
 			<tr>
 				<th>Date</th>
-				<th>Action</th>
-				<th>Action Description</th>
-				<th>Log Description</th>
-				<th>Delete Log Entry</th>
+				<th colspan="2">Log Action</th>
+				<th>Log Information</th>
+				<th>Alter Log</th>
 			</tr>
-			<?php if(isset($rowNum) AND $rowNum>0) :?>
-				<?php foreach ($log as $row): ?>
-					<form action="" method="post">
-						<tr>
-							<td><?php htmlout($row['date'])?></td>
-							<td><?php htmlout($row['actionName'])?></td>
-							<td><?php htmlout($row['actionDescription'])?></td>
-							<td><?php htmlout($row['logDescription'])?></td>
-							<td>
-								<?php if(isset($_SESSION['logEventsEnableDelete']) AND $_SESSION['logEventsEnableDelete']) : ?>
-									<input type="submit" name="action" value="Delete">
-								<?php else : ?>
-									<input type="submit" name="disabled" value="Delete" disabled>
-								<?php endif; ?>
-							</td>
-							<input type="hidden" name="id" value="<?php echo $row['id']; ?>">
-						</tr>
-					</form>
-				<?php endforeach; ?>
-			<?php elseif(isset($rowNum) AND $rowNum < 1) : ?>
-				<tr><td colspan="5"><b>There are no log events that match your search.</b></td></tr>
-			<?php elseif(!isset($rowNum)) : ?>
+			<tr>
+				<th>Created</th>
+				<th>Name</th>
+				<th>Description</th>
+				<th>Description</th>
+				<th>Delete</th>
+			</tr>
+			<?php if(isset($_POST['search']) OR isset($_POST['searchAll'])) : ?>
+				<?php if(isset($rowNum) AND $rowNum>0) :?>
+					<?php foreach ($log as $row): ?>
+						<form action="" method="post">
+							<tr>
+								<td><?php htmlout($row['date'])?></td>
+								<td><?php htmlout($row['actionName'])?></td>
+								<td><?php htmlout($row['actionDescription'])?></td>
+								<td><?php htmlout($row['logDescription'])?></td>
+								<td>
+									<?php if(isset($_SESSION['logEventsEnableDelete']) AND $_SESSION['logEventsEnableDelete']) : ?>
+										<input type="submit" name="action" value="Delete">
+									<?php else : ?>
+										<input type="submit" name="disabled" value="Delete" disabled>
+									<?php endif; ?>
+								</td>
+								<input type="hidden" name="id" value="<?php echo $row['id']; ?>">
+							</tr>
+						</form>
+					<?php endforeach; ?>
+				<?php elseif(isset($rowNum) AND $rowNum < 1) : ?>
+					<tr><td colspan="5"><b>There are no log events that match your search.</b></td></tr>
+				<?php elseif($invalidInput) : ?>
+					<tr><td colspan="5"><b>No logs could be found due to an incorrect date being submitted.</b></td></tr>
+				<?php endif; ?>
+			<?php elseif(isset($noCheckedCheckboxes) AND $noCheckedCheckboxes) : ?>
 				<tr><td colspan="5"><b>No log event categories has been selected.</b></td></tr>
+			<?php elseif(!isset($noCheckedCheckboxes) AND $invalidInput) : ?>
+				<tr><td colspan="5"><b>No logs could be found due to no categories being selected and an incorrect date being submitted.</b></td></tr>
 			<?php endif; ?>
 		</table>
 	<p><a href="..">Return to CMS home</a></p>

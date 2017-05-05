@@ -712,7 +712,7 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Cancel'){
 }
 
 /* if($refreshEmployees){
-	// TO-DO:
+	// TO-DO: Add code that should occur on a refresh
 } */
 
 // There were no user inputs or forced refreshes. So we're interested in fresh, new values.
@@ -873,6 +873,9 @@ if(!isset($_GET['Company'])){
 
 // Create an array with the actual key/value pairs we want to use in our HTML	
 foreach($result AS $row){
+	
+	// TO-DO: Transform monthly/total booking time into text instead time
+	// e.g. 1 day 24 hours, 30 minutes, 23 hours 40 minutes
 	
 	if($row['MonthlyBookingTimeUsed'] == null){
 		$MonthlyTimeUsed = '00:00:00';

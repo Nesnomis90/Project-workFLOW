@@ -388,8 +388,10 @@ function create_tables()
 						  `name` varchar(255) NOT NULL,
 						  `dateTimeCreated` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
 						  `removeAtDate` date DEFAULT NULL,
-						  PRIMARY KEY (`CompanyID`)
-						) ENGINE=InnoDB DEFAULT CHARSET=utf8");
+						  `isActive` tinyint(1) NOT NULL DEFAULT '0',
+						  PRIMARY KEY (`CompanyID`),
+						  UNIQUE KEY `name_UNIQUE` (`name`)
+						) ENGINE=InnoDB DEFAULT CHARSET=utf8;");
 						
 			//	Add the creation to log event
 			$sqlLog = "	INSERT INTO `logevent`(`actionID`, `description`) 

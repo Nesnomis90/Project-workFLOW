@@ -17,6 +17,7 @@
 				text-align: left;
 				background-color: #4CAF50;
 				color: white;
+				border: 1px solid #ddd;
 			}
 			
 			#usertable tr {
@@ -63,20 +64,28 @@
 					<input type="submit" name="action" value="Create User">
 				</div>
 			</form>
-			<table id= "usertable">
+			<table id="usertable">
 				<caption>Activated Users</caption>
+				<tr>
+					<th colspan="3">User Information</th>
+					<th>Website</th>
+					<th colspan="2">Default Booking</th>
+					<th>Works For</th>
+					<th colspan="2">Dates</th>
+					<th colspan="2">Alter User</th>
+				</tr>
 				<tr>
 					<th>First Name</th>
 					<th>Last Name</th>
 					<th>Email</th>
 					<th>Access</th>
-					<th>Default Booking Name</th>
-					<th>Default Booking Description</th>
-					<th>Works for</th>
-					<th>Date Created</th>
-					<th>Last Active Date</th>
-					<th>Edit User</th>
-					<th>Delete User</th>
+					<th>Name</th>
+					<th>Description</th>
+					<th>Company</th>
+					<th>Created</th>
+					<th>Last Active</th>
+					<th>Edit</th>
+					<th>Delete</th>
 				</tr>
 				<?php foreach ($users as $user): ?>
 					<form action="" method="post">
@@ -107,32 +116,38 @@
 			</table>
 			<table id="usertable">
 				<caption>Unactivated Users</caption>
+				<tr>
+					<th colspan="3">User Information</th>
+					<th>Website</th>
+					<th>Date</th>
+					<th>Alter User</th>
+				</tr>				
+				<tr>
+					<th>First Name</th>
+					<th>Last Name</th>
+					<th>Email</th>
+					<th>Access</th>
+					<th>Created</th>
+					<th>Delete</th>
+				</tr>
+				<?php foreach ($inactiveusers as $user): ?>
+				<form action="" method="post">
 					<tr>
-						<th>First Name</th>
-						<th>Last Name</th>
-						<th>Email</th>
-						<th>Access</th>
-						<th>Date Created</th>
-						<th>Delete User</th>
+						<td><?php htmlout($user['firstname']); ?></td>
+						<td><?php htmlout($user['lastname']); ?></td>
+						<td><?php htmlout($user['email']); ?></td>
+						<td><?php htmlout($user['accessname']); ?></td>
+						<td><?php htmlout($user['datecreated']); ?></td>
+						<td>
+							<?php if(isset($_SESSION['usersEnableDelete']) AND $_SESSION['usersEnableDelete']) : ?>
+								<input type="submit" name="action" value="Delete">
+							<?php else : ?>
+								<input type="submit" name="disabled" value="Delete" disabled>
+							<?php endif; ?>
+						</td>
+						<input type="hidden" name="id" value="<?php echo $user['id']; ?>">
 					</tr>
-					<?php foreach ($inactiveusers as $user): ?>
-					<form action="" method="post">
-						<tr>
-							<td><?php htmlout($user['firstname']); ?></td>
-							<td><?php htmlout($user['lastname']); ?></td>
-							<td><?php htmlout($user['email']); ?></td>
-							<td><?php htmlout($user['accessname']); ?></td>
-							<td><?php htmlout($user['datecreated']); ?></td>
-							<td>
-								<?php if(isset($_SESSION['usersEnableDelete']) AND $_SESSION['usersEnableDelete']) : ?>
-									<input type="submit" name="action" value="Delete">
-								<?php else : ?>
-									<input type="submit" name="disabled" value="Delete" disabled>
-								<?php endif; ?>
-							</td>
-							<input type="hidden" name="id" value="<?php echo $user['id']; ?>">
-						</tr>
-					</form>
+				</form>
 				<?php endforeach; ?>
 			</table>
 		<?php else : ?>

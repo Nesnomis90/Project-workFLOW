@@ -87,12 +87,19 @@ if (isset($_POST['action']) AND $_POST['action'] == "Refresh Logs" OR
 	isset($_POST['action']) AND $_POST['action'] == "Set New Maximum" OR 
 	isset($refreshLogs) AND $refreshLogs){
 
+	// TO-DO: Change if too high
+	$minimumLogLimit = 10;
+	$maximumLogLimit = 1000;
+	
 	if(isset($_POST['logsToShow'])){
 		$newLogLimit = $_POST['logsToShow'];
 
-		if ($newLogLimit < 10 OR $newLogLimit > 1000){
-			$newLogLimit = 10;
-		}			
+		if ($newLogLimit < $minimumLogLimit){
+			$newLogLimit = $minimumLogLimit;
+		}
+		if($newLogLimit > $maximumLogLimit){
+			$newLogLimit = $maximumLogLimit;
+		}
 	}
 
 	if(isset($_POST['searchAll'])){
@@ -124,19 +131,17 @@ if (isset($_POST['action']) AND $_POST['action'] == "Refresh Logs" OR
 											// Or else the original array gets all messed up.
 											
 							// No need to look through the array more, we've already updated the value
-							break 2;	
+							break 2; // Exit both for each loops
 						}	
 					}
 				}
 			}
-			
 		} else {
 			// The user has not checked any checkmarks. Let's tell the user
 			$_SESSION['LogEventUserFeedback'] = "You need to select at least one category of log events to display with the checkboxes.";
 		}		
 	}
 }
-
 
 if(!isset($numberOfCheckboxesActivated)){
 	// Default 
@@ -167,20 +172,11 @@ if (isset($_POST['search']) AND !empty($_POST['search']) AND !isset($_POST['sear
 // We start validating date inputs
 $invalidInput = FALSE;
 
+// Get user inputs
 if (!isset($_POST['filterStartDate'])){
 	$filterStartDate = '';
 } else {
 	$filterStartDate = trim($_POST['filterStartDate']);
-}
-
-if(!$invalidInput AND $filterStartDate != ""){
-	$validatedStartDate = correctDatetimeFormat($filterStartDate);
-	$displayValidatedStartDate = convertDatetimeToFormat($validatedStartDate , 'Y-m-d H:i:s', 'F jS Y H:i');
-	if($validatedStartDate === FALSE){
-		// The user submitted a start date in a format we had not expected
-		$_SESSION['LogEventUserFeedback'] = "The start date you submitted did not have a correct format. Please try again.";
-		$invalidInput = TRUE;
-	}		
 }
 
 if (!isset($_POST['filterEndDate'])){
@@ -189,21 +185,63 @@ if (!isset($_POST['filterEndDate'])){
 	$filterEndDate = trim($_POST['filterEndDate']);	
 }
 
-if(!$invalidInput AND $filterEndDate != ""){
-	$validatedEndDate = correctDatetimeFormat($filterEndDate);
-	$displayValidatedEndDate = convertDatetimeToFormat($validatedEndDate, 'Y-m-d H:i:s', 'F jS Y H:i');
-	if($validatedEndDate === FALSE){
-		// The user submitted a start date in a format we had not expected
-		$_SESSION['LogEventUserFeedback'] = "The end date you submitted did not have a correct format. Please try again.";
-		$invalidInput = TRUE;
-	}		
+// Remove excess whitespace and prepare strings for validation
+$validatedStartDate = trimExcessWhitespace($filterStartDate);
+$validatedEndDate = trimExcessWhitespace($filterEndDate);
+
+// Do actual input validation
+if(validateDateTimeString($validatedStartDate) === FALSE AND !$invalidInput){
+	$invalidInput = TRUE;
+	$_SESSION['LogEventUserFeedback'] = "Your submitted start time has illegal characters in it.";
+}
+if(validateDateTimeString($validatedEndDate) === FALSE AND !$invalidInput){
+	$invalidInput = TRUE;
+	$_SESSION['LogEventUserFeedback'] = "Your submitted end time has illegal characters in it.";
 }
 
+
+// Check if the dateTime inputs we received are actually datetimes 
+if($validatedStartDate != ""){
+	$startDateTime = correctDatetimeFormat($validatedStartDate);
+}
+if($validatedEndDate != ""){
+	$endDateTime = correctDatetimeFormat($validatedEndDate);
+}
+
+if (isset($startDateTime) AND $startDateTime === FALSE AND !$invalidInput){
+	$_SESSION['LogEventUserFeedback'] = "The start date you submitted did not have a correct format. Please try again.";
+	$invalidInput = TRUE;
+}
+if (isset($endDateTime) AND $endDateTime === FALSE AND !$invalidInput){
+	$_SESSION['LogEventUserFeedback'] = "The end date you submitted did not have a correct format. Please try again.";
+	$invalidInput = TRUE;
+}
+ 
+if($validatedStartDate != "" AND $validatedEndDate != ""){
+	if($startDateTime > $endDateTime AND !$invalidInput){
+		// End time can't be before the start time
+		$_SESSION['LogEventUserFeedback'] = "The start time can't be later than the end time. Please select a new start time or end time.";
+		$invalidInput = TRUE;
+	}	
+	if($endDateTime == $startDateTime AND !$invalidInput){
+		$_SESSION['LogEventUserFeedback'] = "You need to select an end time that is different from your start time.";	
+		$invalidInput = TRUE;				
+	}
+}
+
+// Convert datetime to a more display friendly format
+if(isset($startDateTime) AND $startDateTime !== FALSE){
+	$displayValidatedStartDate = convertDatetimeToFormat($startDateTime , 'Y-m-d H:i:s', 'F jS Y H:i');	
+}
+if(isset($endDateTime) AND $endDateTime !== FALSE){
+	$displayValidatedEndDate = convertDatetimeToFormat($endDateTime, 'Y-m-d H:i:s', 'F jS Y H:i');	
+}
 
 // Check if admin has even checked any boxes yet, if not just give a warning
 if (!isset($_POST['search']) AND !isset($_POST['searchAll']) AND !$invalidInput){
 	$_SESSION['LogEventUserFeedback'] = "You need to select at least one category of log events with the checkboxes.";
 	$invalidInput = TRUE;
+	$noCheckedCheckboxes = TRUE;
 }
 
 if($invalidInput){
@@ -214,34 +252,36 @@ if($invalidInput){
 
 if(!isset($sqlAdd)){
 	// We've not added any additional SQL code yet
-	if($filterStartDate != '' AND $filterEndDate != ''){
+	if(	isset($startDateTime) AND $startDateTime !== FALSE AND
+		isset($endDateTime) AND $endDateTime !== FALSE){
 		// Both dates are filled out. Use BETWEEN for MySQL
 		$sqlAddDates = ' WHERE (l.`logDateTime` BETWEEN :filterStartDate AND :filterEndDate) ';
 		$useBothDates = TRUE;
-	} elseif($filterStartDate == '' AND $filterEndDate != ''){
+	} elseif(!isset($startDateTime) AND isset($endDateTime) AND $endDateTime !== FALSE){
 		// Only end date is filled out. Use less than
 		$sqlAddDates = ' WHERE (l.`logDateTime` < :filterEndDate) ';
 		$useEndDate = TRUE;
-	} elseif($filterStartDate != '' AND $filterEndDate == ''){
+	} elseif(isset($startDateTime) AND $startDateTime !== FALSE AND !isset($endDateTime)){
 		// Only start date is filled out. Use greater than
 		$sqlAddDates = ' WHERE (l.`logDateTime` > :filterStartDate) ';
 		$useStartDate = TRUE;
 	}
 } else {
 	// We've already altered the sql code earlier, which means we've already started a "WHERE"-segment
-	if($filterStartDate != '' AND $filterEndDate != ''){
+	if(	isset($startDateTime) AND $startDateTime !== FALSE AND
+		isset($endDateTime) AND $endDateTime !== FALSE){
 		// Both dates are filled out. Use BETWEEN for MySQL
 		$sqlAddDates = ' AND (l.`logDateTime` BETWEEN :filterStartDate AND :filterEndDate) ';
 		$useBothDates = TRUE;
-	} elseif($filterStartDate == '' AND $filterEndDate != ''){
+	} elseif(!isset($startDateTime) AND isset($endDateTime) AND $endDateTime !== FALSE){
 		// Only end date is filled out. Use less than
 		$sqlAddDates = ' AND (l.`logDateTime` < :filterEndDate) ';
 		$useEndDate = TRUE;
-	} elseif($filterStartDate != '' AND $filterEndDate == ''){
+	} elseif(isset($startDateTime) AND $startDateTime !== FALSE AND !isset($endDateTime)){
 		// Only start date is filled out. Use greater than
 		$sqlAddDates = ' AND (l.`logDateTime` > :filterStartDate) ';
 		$useStartDate = TRUE;
-	}	
+	}
 }
 
 //	Make sure admin has selected a category of log events to show, if not we can't show anything.
@@ -261,7 +301,7 @@ if($numberOfCheckboxesActivated > 0){
 			// We want to filter by date, we need to use a prepared statement
 			if (isset($sqlAdd)){
 			$sql = 'SELECT 		l.logID, 
-								DATE_FORMAT(l.logDateTime, "%d %b %Y %T") 	AS LogDate, 
+								l.logDateTime								AS LogDate, 
 								la.`name` 									AS ActionName, 
 								la.description 								AS ActionDescription, 
 								l.description 								AS LogDescription 
@@ -273,7 +313,7 @@ if($numberOfCheckboxesActivated > 0){
 					LIMIT ' . $logLimit;				
 			} else {
 				$sql = 'SELECT 		l.logID, 
-									DATE_FORMAT(l.logDateTime, "%d %b %Y %T") 	AS LogDate, 
+									l.logDateTime								AS LogDate, 
 									la.`name` 									AS ActionName, 
 									la.description 								AS ActionDescription, 
 									l.description 								AS LogDescription 
@@ -287,14 +327,14 @@ if($numberOfCheckboxesActivated > 0){
 			
 			$s = $pdo->prepare($sql);
 			if (isset($useBothDates) AND $useBothDates){
-				$s->bindValue(':filterStartDate', $validatedStartDate);
-				$s->bindValue(':filterEndDate', $validatedEndDate);			
+				$s->bindValue(':filterStartDate', $startDateTime);
+				$s->bindValue(':filterEndDate', $endDateTime);			
 			}
 			if (isset($useStartDate) AND $useStartDate){
-				$s->bindValue(':filterStartDate', $validatedStartDate);			
+				$s->bindValue(':filterStartDate', $startDateTime);			
 			}			
 			if (isset($useEndDate) AND $useEndDate){
-				$s->bindValue(':filterEndDate', $validatedEndDate);			
+				$s->bindValue(':filterEndDate', $endDateTime);			
 			}	
 			
 			$s->execute();
@@ -305,7 +345,7 @@ if($numberOfCheckboxesActivated > 0){
 			// We don't want to filter by date, we just use a standard query
 			if (isset($sqlAdd)){
 			$sql = 'SELECT 		l.logID, 
-								DATE_FORMAT(l.logDateTime, "%d %b %Y %T") 	AS LogDate, 
+								l.logDateTime 								AS LogDate, 
 								la.`name` 									AS ActionName, 
 								la.description 								AS ActionDescription, 
 								l.description 								AS LogDescription 
@@ -317,7 +357,7 @@ if($numberOfCheckboxesActivated > 0){
 					LIMIT ' . $logLimit;				
 			} else {
 				$sql = 'SELECT 		l.logID, 
-									DATE_FORMAT(l.logDateTime, "%d %b %Y %T") 	AS LogDate, 
+									l.logDateTime 								AS LogDate, 
 									la.`name` 									AS ActionName, 
 									la.description 								AS ActionDescription, 
 									l.description 								AS LogDescription 
@@ -330,7 +370,7 @@ if($numberOfCheckboxesActivated > 0){
 			}
 			
 			$result = $pdo->query($sql);
-			$rowNum = $result->rowCount();		
+			$rowNum = $result->rowCount();
 		}
 
 		//Close connection
@@ -345,12 +385,19 @@ if($numberOfCheckboxesActivated > 0){
 		exit();
 	}
 	
+
+	
 	// Create the array we will go through to display information in HTML
 	foreach ($result as $row)
 	{
+		
+	// Turn the datetime retrieved into a more displayable format
+	$dateCreated = $row['LogDate'];
+	$displayableDateCreated = convertDatetimeToFormat($dateCreated, 'Y-m-d H:i:s', 'F jS Y H:i');
+	
 		$log[] = array(
 			'id' => $row['logID'], 
-			'date' => $row['LogDate'], 
+			'date' => $displayableDateCreated, 
 			'actionName' => $row['ActionName'], 
 			'actionDescription' => $row['ActionDescription'], 
 			'logDescription' => $row['LogDescription']

@@ -23,6 +23,7 @@
 				text-align: left;
 				background-color: #4CAF50;
 				color: white;
+				border: 1px solid #ddd;
 			}
 
 			#bookingstable td {
@@ -65,23 +66,29 @@
 			<table id= "bookingstable">
 				<caption>All booking history</caption>
 				<tr>
+					<th colspan="8">Booking information</th>
+					<th colspan="2">Completion Dates</th>
+					<th colspan="4">Connected user information</th>
+					<th colspan="3">Alter Booking</th>
+				</tr>				
+				<tr>
 					<th>Status</th>
 					<th>Room Name</th>
 					<th>Start Time</th>
 					<th>End Time</th>
 					<th>Display Name</th>
-					<th>Booked For Company</th>
-					<th>Booking Description</th>
-					<th>Booking Created At</th>
-					<th>Time If Finished</th>
-					<th>Time If Cancelled</th>
+					<th>For Company</th>
+					<th>Description</th>
+					<th>Created At</th>
+					<th>Finished</th>
+					<th>Cancelled</th>
 					<th>First Name</th>
 					<th>Last Name</th>
 					<th>Email</th>
-					<th>Works for</th>
-					<th>Edit Booking</th>					
-					<th>Cancel Booking</th>
-					<th>Delete Booking</th>
+					<th>Works For Company</th>
+					<th>Edit</th>					
+					<th>Cancel</th>
+					<th>Delete</th>
 				</tr>
 				<?php foreach ($bookings as $booking): ?>
 					<form action="" method="post">

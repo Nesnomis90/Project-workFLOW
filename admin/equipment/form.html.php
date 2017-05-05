@@ -17,18 +17,14 @@
 			<div>
 				<label for="EquipmentName">Equipment Name: 
 					<input type="text" name="EquipmentName" id="EquipmentName" 
-					required placeholder="Enter Equipment Name" 
-					oninvalid="this.setCustomValidity('Enter Equipment Name Here')"
-					oninput="setCustomValidity('')"
+					placeholder="Enter Equipment Name"
 					value="<?php htmlout($EquipmentName); ?>">
 				</label>
 			</div>
 			<div>
 				<label for="EquipmentDescription">Equipment Description: 
 					<input type="text" name="EquipmentDescription" id="EquipmentDescription" 
-					required placeholder="Enter Equipment Description" 
-					oninvalid="this.setCustomValidity('Enter Equipment Description Here')"
-					oninput="setCustomValidity('')"
+					placeholder="Enter Equipment Description" 
 					value="<?php htmlout($EquipmentDescription); ?>">
 				</label>
 			</div>

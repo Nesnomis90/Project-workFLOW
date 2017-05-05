@@ -26,6 +26,20 @@ function isLengthInvalidBookingDescription($bookingDescription){
 	}
 	Return FALSE;
 }
+
+	//Equipment Descriptions
+// Returns TRUE on invalid, FALSE on valid
+function isLengthInvalidEquipmentDescription($equipmentDescription){
+	// Has to be less than 65,535 bytes (MySQL - TEXT) (too much anyway)
+
+	$eqpmntDscrptnLength = strlen(utf8_decode($equipmentDescription));
+	$eqpmntDscrptnMaxLength = 500; // TO-DO: Adjust max length if needed.
+	if($eqpmntDscrptnLength > $eqpmntDscrptnMaxLength AND !$invalidInput){
+		Return TRUE;	
+	}
+	Return FALSE;
+}
+
 // Function that (hopefully) removes excess white space, line feeds etc.
 function trimExcessWhitespaceButLeaveLinefeed($oldString){
 
@@ -48,14 +62,14 @@ function trimExcessWhitespace($oldString){
 // For Names
 // Allows empty strings
 function validateNames($oldString){
-	$trimmedString = trimExcessWhitespace($oldString);
+	//$trimmedString = trimExcessWhitespace($oldString);
 	
 	// Check if string uses allowed characters
 		// We allow all language letters and accents.
 		// Also space, and the symbols ', . and -
 		// TO-DO: Change if we need other symbols
-	if (preg_match("/^[\p{L}\p{M} '-]*$/u", $trimmedString)) {
-		return $trimmedString;
+	if (preg_match("/^[\p{L}\p{M} '-]*$/u", $oldString)) {
+		return TRUE;
 	} else {
 		return FALSE;
 	}		
@@ -65,7 +79,7 @@ function validateNames($oldString){
 // 
 // Allows empty strings
 function validateString($oldString){
-	$trimmedString = trimExcessWhitespaceButLeaveLinefeed($oldString);
+	//$trimmedString = trimExcessWhitespaceButLeaveLinefeed($oldString);
 	
 	// Check if string uses allowed characters
 		// " -~" matches all printable ASCII characters (A-Z, a-z, 0-9, etc.)
@@ -76,8 +90,8 @@ function validateString($oldString){
 		// For math symbols add \p{Sm}
 		// TO-DO: change because it probably isn't good
 		
-	if (preg_match('/^[ -~\p{L}\p{M}\r\n]*$/u', $trimmedString)) {
-		return $trimmedString;
+	if (preg_match('/^[ -~\p{L}\p{M}\r\n]*$/u', $oldString)) {
+		return TRUE;
 	} else {
 		return FALSE;
 	}
@@ -86,12 +100,12 @@ function validateString($oldString){
 // Function to check if input string uses legal characters for our datetime convertions and trims excess spaces
 // Allows empty strings
 function validateDateTimeString($oldString){
-	$trimmedString = trimExcessWhitespace($oldString);
+	//$trimmedString = trimExcessWhitespace($oldString);
 	
 	// Check if string uses allowed characters
 		// We allow the characters , . : / - _ and space
-	if (preg_match('/^[A-Za-z0-9.:\/_ -]*$/', $trimmedString)) {
-		return $trimmedString;
+	if (preg_match('/^[A-Za-z0-9.:\/_ -]*$/', $oldString)) {
+		return TRUE;
 	} else {
 		return FALSE;
 	}	

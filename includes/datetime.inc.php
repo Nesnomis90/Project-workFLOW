@@ -54,7 +54,7 @@ function correctDatetimeFormat($wrongDatetimeString){
 	
 	// Remove white spaces before and after the datetime submitted
 	$wrongDatetimeString = trim($wrongDatetimeString);
-	//echo $wrongDatetimeString . "<br />";
+	echo $wrongDatetimeString . "<br />";
 	
 	// Replace some characters if the user for some reason uses it
 	// TO-DO: use regex to limit what user can submit later?
@@ -63,7 +63,7 @@ function correctDatetimeFormat($wrongDatetimeString){
 	$wrongDatetimeString = str_replace('/', '-',$wrongDatetimeString);
 	$wrongDatetimeString = str_replace('_', '-',$wrongDatetimeString);
 	
-	//echo $wrongDatetimeString . "<br />";
+	echo $wrongDatetimeString . "<br />";
 	
 	// The characters we want to allow in the string
 	$allowedChars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 -:";
@@ -80,15 +80,18 @@ function correctDatetimeFormat($wrongDatetimeString){
 	
 	$totalDividersInDatetimeString = $spacesInDatetimeString + $dashesInDatetimeString;
 	
-	if ($spacesInDatetimeString > 0 AND $totalDividersInDatetimeString < 2){
+	if ($spacesInDatetimeString > 0 AND $totalDividersInDatetimeString < 3){
 		$datePart = $wrongDatetimeString;
 	} elseif($spacesInDatetimeString > 0 AND $totalDividersInDatetimeString > 2) {
 		$datePart = substr($wrongDatetimeString, 0, strrpos($wrongDatetimeString, " "));
 		$timePart = substr(strrchr($wrongDatetimeString, " "), 0);
 	} 
 	
-	//echo "datepart: $datePart <br />";
-	//echo "timepart: $timePart <br />";
+	echo "datepart: $datePart <br />";
+	if(isset($timePart)){
+		echo "timepart: $timePart <br />";		
+	}
+
 	// change spaces in date part
 	$datePart= str_replace(' ', '-',$datePart);
 
@@ -108,7 +111,7 @@ function correctDatetimeFormat($wrongDatetimeString){
 	}
 	$wrongDatetimeString = $datePartWithNoSpacesOrLeadingZeros . $timePart;
 
-	//echo $wrongDatetimeString . "<br />";
+	echo $wrongDatetimeString . "<br />";
 	
 	if(validateDatetimeWithFormat($wrongDatetimeString, 'Y-n-j H:i:s')){
 		$wrongDatetime = date_create_from_format('Y-n-j H:i:s', $wrongDatetimeString);
@@ -125,8 +128,7 @@ function correctDatetimeFormat($wrongDatetimeString){
 		$correctDatetime = DATE_FORMAT($wrongDatetime,'Y-m-d H:i:s');
 		return $correctDatetime;
 	}
-	if(validateDatetimeWithFormat($wrongDatetimeString, 'Y-n-j')){
-			
+	if(validateDatetimeWithFormat($wrongDatetimeString, 'Y-n-j')){		
 		$wrongDatetime = date_create_from_format('Y-n-j', $wrongDatetimeString);
 		$correctDatetime = DATE_FORMAT($wrongDatetime,'Y-m-d H:i:s');
 		return $correctDatetime;
@@ -206,7 +208,7 @@ function convertDatetimeToFormat($oldDatetimeString, $oldformat, $format){
 	// 'Y-m-d H:i:s' = 2017-03-03 12:15:33 (MySQL Datetime)
 	// 'Y-m-d' = 2017-03-03 (MySQL Date)
 	// 'd M Y H:i:s' = 3 March 2017 12:15:33
-	// 
+	// 'F jS Y H:i' = March 3rd 2017 12:15
 	date_default_timezone_set('Europe/Oslo');
 	
 	if(validateDatetimeWithFormat($oldDatetimeString, $oldformat)){
