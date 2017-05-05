@@ -471,6 +471,8 @@ catch (PDOException $e)
 // Create an array with the actual key/value pairs we want to use in our HTML
 foreach ($result as $row)
 {
+	// TO-DO: Change booking time used from time to easily readable text instead
+	
 	if($row['MonthlyCompanyWideBookingTimeUsed'] == null){
 		$MonthlyTimeUsed = '00:00:00';
 	} else {

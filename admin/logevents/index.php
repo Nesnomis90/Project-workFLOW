@@ -87,12 +87,19 @@ if (isset($_POST['action']) AND $_POST['action'] == "Refresh Logs" OR
 	isset($_POST['action']) AND $_POST['action'] == "Set New Maximum" OR 
 	isset($refreshLogs) AND $refreshLogs){
 
+	// TO-DO: Change if too high
+	$minimumLogLimit = 10;
+	$maximumLogLimit = 1000;
+	
 	if(isset($_POST['logsToShow'])){
 		$newLogLimit = $_POST['logsToShow'];
 
-		if ($newLogLimit < 10 OR $newLogLimit > 1000){
-			$newLogLimit = 10;
-		}			
+		if ($newLogLimit < $minimumLogLimit){
+			$newLogLimit = $minimumLogLimit;
+		}
+		if($newLogLimit > $maximumLogLimit){
+			$newLogLimit = $maximumLogLimit;
+		}
 	}
 
 	if(isset($_POST['searchAll'])){
@@ -124,19 +131,17 @@ if (isset($_POST['action']) AND $_POST['action'] == "Refresh Logs" OR
 											// Or else the original array gets all messed up.
 											
 							// No need to look through the array more, we've already updated the value
-							break 2;	
+							break 2; // Exit both for each loops
 						}	
 					}
 				}
 			}
-			
 		} else {
 			// The user has not checked any checkmarks. Let's tell the user
 			$_SESSION['LogEventUserFeedback'] = "You need to select at least one category of log events to display with the checkboxes.";
 		}		
 	}
 }
-
 
 if(!isset($numberOfCheckboxesActivated)){
 	// Default 
@@ -167,13 +172,65 @@ if (isset($_POST['search']) AND !empty($_POST['search']) AND !isset($_POST['sear
 // We start validating date inputs
 $invalidInput = FALSE;
 
+// Get user inputs
 if (!isset($_POST['filterStartDate'])){
 	$filterStartDate = '';
 } else {
 	$filterStartDate = trim($_POST['filterStartDate']);
 }
 
-if(!$invalidInput AND $filterStartDate != ""){
+if (!isset($_POST['filterEndDate'])){
+	$filterEndDate = '';
+} else {
+	$filterEndDate = trim($_POST['filterEndDate']);	
+}
+
+// Remove excess whitespace and prepare strings for validation
+$validatedStartDate = trimExcessWhitespace($filterStartDate);
+$validatedEndDate = trimExcessWhitespace($filterEndDate);
+
+// Do actual input validation
+if(validateDateTimeString($validatedStartDate) === FALSE AND !$invalidInput){
+	$invalidInput = TRUE;
+	$_SESSION['LogEventUserFeedback'] = "Your submitted start time has illegal characters in it.";
+}
+if(validateDateTimeString($validatedEndDate) === FALSE AND !$invalidInput){
+	$invalidInput = TRUE;
+	$_SESSION['LogEventUserFeedback'] = "Your submitted end time has illegal characters in it.";
+}
+
+
+// Check if the dateTime inputs we received are actually datetimes 
+if($validatedStartDate != ""){
+	$startDateTime = correctDatetimeFormat($validatedStartDate);
+}
+if($validatedEndDate != ""){
+	$endDateTime = correctDatetimeFormat($validatedEndDate);
+}
+ 
+if($validatedStartDate != "" AND $validatedEndDate != ""){
+	if($startDateTime > $endDateTime AND !$invalidInput){
+		// End time can't be before the start time
+		
+		$_SESSION['LogEventUserFeedback'] = "The start time can't be later than the end time. Please select a new start time or end time.";
+		$invalidInput = TRUE;
+	}	
+	if($endDateTime == $startDateTime AND !$invalidInput){
+		$_SESSION['LogEventUserFeedback'] = "You need to select an end time that is different from your start time.";	
+		$invalidInput = TRUE;				
+	}
+}
+
+
+// Convert datetime to a more display friendly format
+if(isset($startDateTime)){
+	$displayValidatedStartDate = convertDatetimeToFormat($startDateTime , 'Y-m-d H:i:s', 'F jS Y H:i');	
+}
+if(isset($endDateTime)){
+	$displayValidatedEndDate = convertDatetimeToFormat($endDateTime, 'Y-m-d H:i:s', 'F jS Y H:i');	
+}
+
+/*if(!$invalidInput AND $filterStartDate != ""){
 	$validatedStartDate = correctDatetimeFormat($filterStartDate);
 	$displayValidatedStartDate = convertDatetimeToFormat($validatedStartDate , 'Y-m-d H:i:s', 'F jS Y H:i');
 	if($validatedStartDate === FALSE){
@@ -181,12 +238,6 @@ if(!$invalidInput AND $filterStartDate != ""){
 		$_SESSION['LogEventUserFeedback'] = "The start date you submitted did not have a correct format. Please try again.";
 		$invalidInput = TRUE;
 	}		
-}
-
-if (!isset($_POST['filterEndDate'])){
-	$filterEndDate = '';
-} else {
-	$filterEndDate = trim($_POST['filterEndDate']);	
 }
 
 if(!$invalidInput AND $filterEndDate != ""){
@@ -197,8 +248,7 @@ if(!$invalidInput AND $filterEndDate != ""){
 		$_SESSION['LogEventUserFeedback'] = "The end date you submitted did not have a correct format. Please try again.";
 		$invalidInput = TRUE;
 	}		
-}
-
+}*/
 
 // Check if admin has even checked any boxes yet, if not just give a warning
 if (!isset($_POST['search']) AND !isset($_POST['searchAll']) AND !$invalidInput){
