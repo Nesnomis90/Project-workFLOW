@@ -10,9 +10,9 @@ function isLengthInvalidDisplayName($displayName){
 	$dspnameLength = strlen(utf8_decode($displayName));
 	$dspnameMaxLength = 255; // TO-DO: Adjust max length if needed.
 	if($dspnameLength > $dspnameMaxLength AND !$invalidInput){	
-		Return TRUE;	
+		return TRUE;	
 	}
-	Return FALSE;
+	return FALSE;
 }
 	//Booking Descriptions
 // Returns TRUE on invalid, FALSE on valid
@@ -22,9 +22,9 @@ function isLengthInvalidBookingDescription($bookingDescription){
 	$bknDscrptnLength = strlen(utf8_decode($bookingDescription));
 	$bknDscrptnMaxLength = 500; // TO-DO: Adjust max length if needed.
 	if($bknDscrptnLength > $bknDscrptnMaxLength AND !$invalidInput){
-		Return TRUE;	
+		return TRUE;	
 	}
-	Return FALSE;
+	return FALSE;
 }
 
 	//Equipment Descriptions
@@ -35,9 +35,21 @@ function isLengthInvalidEquipmentDescription($equipmentDescription){
 	$eqpmntDscrptnLength = strlen(utf8_decode($equipmentDescription));
 	$eqpmntDscrptnMaxLength = 500; // TO-DO: Adjust max length if needed.
 	if($eqpmntDscrptnLength > $eqpmntDscrptnMaxLength AND !$invalidInput){
-		Return TRUE;	
+		return TRUE;	
 	}
-	Return FALSE;
+	return FALSE;
+}
+
+function isNumberInvalidMeetingRoomCapacity($capacityNumber){
+	// Has to be between 0 and 255
+	// In practice the meeting room needs at least room for 1 person.
+	
+	$maxNumber = 255;	// To-do: change if needed
+	$minNumber = 1;
+	if($capacityNumber < $minNumber OR $capacityNumber > $maxNumber){
+		return TRUE;
+	}
+	return FALSE;
 }
 
 // Function that (hopefully) removes excess white space, line feeds etc.
@@ -58,6 +70,11 @@ function trimExcessWhitespace($oldString){
 	return trim(preg_replace('/\s+/', ' ', $oldString));
 }
 
+// Function that (hopefully) removes all white space
+function trimAllWhitespace($oldString){
+	return preg_replace('/\s+/', '', $oldString);
+}
+
 // Function to check if input string uses legal characters and trims the input down
 // For Names
 // Allows empty strings
@@ -76,7 +93,6 @@ function validateNames($oldString){
 }
 
 // Function to check if input string uses legal characters and trims the input down
-// 
 // Allows empty strings
 function validateString($oldString){
 	//$trimmedString = trimExcessWhitespaceButLeaveLinefeed($oldString);
@@ -95,6 +111,28 @@ function validateString($oldString){
 	} else {
 		return FALSE;
 	}
+}
+
+// Function to check if input string uses legal characters for an integer number only
+// \d = any digit
+// TO-DO: UNTESTED
+function validateIntegerNumber($oldString){
+	if(preg_match('/^[+-]?\d+$/', $oldString)){
+		return TRUE;
+	} else {
+		return FALSE;
+	}
+}
+
+// Function to check if input string uses legal characters for a float number only
+// We also allow + or - in front and a single decimal point (.)
+function validateFloatNumber($oldString){
+	$oldString = str_replace(',','.',$oldString);
+	if(preg_match('/^[+-]?\d+\.?\d*$/', $oldString)){
+			return TRUE;
+		} else {
+			return FALSE;
+		}	
 }
 
 // Function to check if input string uses legal characters for our datetime convertions and trims excess spaces

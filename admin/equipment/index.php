@@ -25,7 +25,7 @@ function validateUserInputs(){
 		$equipmentDescription = trim($_POST['EquipmentDescription']);
 	} else {
 		$invalidInput = TRUE;
-		$_SESSION['AddEquipmentError'] = "An equipment cannot be added with a description!";
+		$_SESSION['AddEquipmentError'] = "An equipment cannot be added without a description!";
 	}	
 
 	// Remove excess whitespace and prepare strings for validation
@@ -103,8 +103,7 @@ function validateUserInputs(){
 			$pdo = null;
 			exit();
 		}
-	}	
-
+	}
 return array($invalidInput, $validatedEquipmentDescription, $validatedEquipmentName);
 }
 
