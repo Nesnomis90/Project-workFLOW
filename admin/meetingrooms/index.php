@@ -10,6 +10,26 @@ if (!isUserAdmin()){
 	exit();
 }
 
+// Function to clear sessions used to remember user inputs on refreshing the add meeting room form
+function clearAddMeetingRoomSessions(){
+	unset($_SESSION['AddMeetingRoomDescription']);
+	unset($_SESSION['AddMeetingRoomName']);
+	unset($_SESSION['AddMeetingRoomCapacity']);
+	unset($_SESSION['AddMeetingRoomLocation']);
+	unset($_SESSION['LastMeetingRoomID']);
+}
+
+// Function to clear sessions used to remember user inputs on refreshing the edit meeting room form
+function clearEditMeetingRoomSessions(){
+	unset($_SESSION['EditMeetingRoomOriginalInfo']);
+	
+	unset($_SESSION['EditMeetingRoomDescription']);
+	unset($_SESSION['EditMeetingRoomName']);
+	unset($_SESSION['EditMeetingRoomCapacity']);
+	unset($_SESSION['EditMeetingRoomLocation']);
+	unset($_SESSION['EditMeetingRoomMeetingRoomID']);
+}
+
 // Function to check if user inputs for meeting room are correct
 function validateUserInputs(){
 	$invalidInput = FALSE;
@@ -195,8 +215,6 @@ if (isset($_POST['action']) and $_POST['action'] == 'Delete')
 	// Add a log event that a meeting room was removed
 	try
 	{
-		session_start();
-
 		// Save a description with information about the meeting room that was removed
 		$logEventDescription = "The meeting room: " . $validatedMeetingRoomName . " was removed by: " . $_SESSION['LoggedInUserName'];
 		
@@ -240,7 +258,7 @@ if (isset($_GET['add']) OR (isset($_SESSION['refreshMeetingRoomAddform']) AND $_
 		unset($_SESSION['refreshMeetingRoomAddform']);
 	}
 	
-	// Set form variables to be ready for adding values
+	// Set initial values
 	$meetingRoomName = '';
 	$meetingRoomCapacity = '';
 	$meetingRoomDescription = '';
@@ -310,9 +328,9 @@ if (isset($_GET['addform']))
 							`location` = :location';
 		$s = $pdo->prepare($sql);
 		$s->bindValue(':name', $validatedMeetingRoomName);
-		$s->bindValue(':capacity', $_POST['MeetingRoomCapacity']);		
+		$s->bindValue(':capacity', $validatedMeetingRoomCapacity);		
 		$s->bindValue(':description', $validatedMeetingRoomDescription);
-		$s->bindValue(':location', $_POST['MeetingRoomLocation']);
+		$s->bindValue(':location', $validatedMeetingRoomLocation);
 		$s->execute();
 		
 		session_start();
@@ -339,7 +357,7 @@ if (isset($_GET['addform']))
 
 		// Save a description with information about the meeting room that was added
 		$logEventDescription = "The meeting room: " . $validatedMeetingRoomName . ", with capacity: " . 
-		$_POST['MeetingRoomCapacity'] . " and description: " . $validatedMeetingRoomDescription . 
+		$validatedMeetingRoomCapacity . " and description: " . $validatedMeetingRoomDescription . 
 		" was added by: " . $_SESSION['LoggedInUserName'];
 		
 		if(isset($_SESSION['LastMeetingRoomID'])){
@@ -374,6 +392,8 @@ if (isset($_GET['addform']))
 		exit();
 	}	
 	
+	// Forget remembered information
+	clearAddMeetingRoomSessions();
 	
 	// Load meeting room list webpage with new meeting room
 	header('Location: .');
@@ -385,26 +405,43 @@ if (isset($_GET['addform']))
 if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR 
 	(isset($_SESSION['refreshEditMeetingRoom']) AND $_SESSION['refreshEditMeetingRoom']))
 {
-	
-	// TO-DO: Check if refresh or user input
+	// Check if we're activated by a user or by a forced refresh	
 	if(isset($_SESSION['refreshEditMeetingRoom']) AND $_SESSION['refreshEditMeetingRoom']){
 		// Acknowledge that we have refreshed
 		unset($_SESSION['refreshEditMeetingRoom']);
 		
-		//TO-DO: Set values to what they were before refresh
-		
-		
+		// Get values we had before refresh
+		if(isset($_SESSION['EditMeetingRoomName'])){
+			$meetingRoomName = $_SESSION['EditMeetingRoomName'];
+			unset($_SESSION['EditMeetingRoomName']);			
+		}
+		if(isset($_SESSION['EditMeetingRoomCapacity'])){
+			$meetingRoomCapacity = $_SESSION['EditMeetingRoomCapacity'];
+			unset($_SESSION['EditMeetingRoomCapacity']);			
+		}
+		if(isset($_SESSION['EditMeetingRoomDescription'])){
+			$meetingRoomDescription = $_SESSION['EditMeetingRoomDescription'];
+			unset($_SESSION['EditMeetingRoomDescription']);			
+		}
+		if(isset($_SESSION['EditMeetingRoomLocation'])){
+			$meetingRoomLocation = $_SESSION['EditMeetingRoomLocation'];
+			unset($_SESSION['EditMeetingRoomLocation']);
+		}
+		if(isset($_SESSION['EditMeetingRoomMeetingRoomID'])){
+			$meetingRoomID = $_SESSION['EditMeetingRoomMeetingRoomID'];
+			unset($_SESSION['EditMeetingRoomMeetingRoomID']);
+		}	
 	} else {
 		// Get information from database again on the selected meeting room
 		try
 		{
 			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 			$pdo = connect_to_db();
-			$sql = 'SELECT  `meetingRoomID`, 
-							`name`, 
-							`capacity`, 
-							`description`, 
-							`location`
+			$sql = 'SELECT  `meetingRoomID`			AS MeetingRoomID, 
+							`name`					AS MeetingRoomName, 
+							`capacity`				AS MeetingRoomCapacity, 
+							`description`			AS MeetingRoomDescription, 
+							`location`				AS MeetingRoomLocation
 					FROM 	`meetingroom`
 					WHERE 	`meetingRoomID` = :id';
 					
@@ -426,16 +463,15 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR
 			exit();
 		}
 
+		$_SESSION['EditMeetingRoomOriginalInfo'] = $row;
+		
 		// Set correct information
-		$meetingRoomName = $row['name'];
+		$meetingRoomName = $row['MeetingRoomName'];
 		$meetingRoomCapacity = $row['MeetingRoomCapacity'];
-		$meetingRoomID = $row['meetingRoomID'];
+		$meetingRoomID = $row['MeetingRoomID'];
 		$meetingRoomDescription = $row['MeetingRoomDescription'];
 		$meetingRoomLocation = $row['MeetingRoomLocation']; 		
 	}
-	
-
-
 	
 	// Set the always correct information
 	$pageTitle = 'Edit User';
@@ -462,43 +498,72 @@ if (isset($_GET['editform']))
 		$_SESSION['EditMeetingRoomName'] = $validatedMeetingRoomName;
 		$_SESSION['EditMeetingRoomCapacity'] = $validatedMeetingRoomCapacity;
 		$_SESSION['EditMeetingRoomLocation'] = $validatedMeetingRoomLocation;
+		$_SESSION['EditMeetingRoomMeetingRoomID'] = $_POST['MeetingRoomID']; //To-DO: Change if broken
 		
 		$_SESSION['refreshEditMeetingRoom'] = TRUE;
 		header('Location: .');
 		exit();			
 	}	
 	
-	// Update the meeeting room in the database
-	try
-	{
-		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
-		$pdo = connect_to_db();
-		$sql = 'UPDATE `meetingroom` SET
-						`name` = :name,
-						capacity = :capacity,
-						description = :description,
-						location = :location
-				WHERE 	meetingRoomID = :id';
-		$s = $pdo->prepare($sql);
-		$s->bindValue(':id', $_POST['MeetingRoomID']); // TO-DO: Change to a session variable if the ID isn't saved
-		$s->bindValue(':name', $validatedMeetingRoomName);
-		$s->bindValue(':capacity', $validatedMeetingRoomCapacity);
-		$s->bindValue(':description', $validatedMeetingRoomDescription);
-		$s->bindValue(':location', $validatedMeetingRoomLocation);
-		$s->execute();
+	// Check if any values were actually changed
+	$NumberOfChanges = 0;	
+	
+	if(isset($_SESSION['EditMeetingRoomOriginalInfo'])){
+		$original = $_SESSION['EditMeetingRoomOriginalInfo'];
+		unset($_SESSION['EditMeetingRoomOriginalInfo']);
 		
-		// Close the connection
-		$pdo = Null;
+		if($validatedMeetingRoomDescription != $original['MeetingRoomDescription']) {
+			$NumberOfChanges++;
+		}
+		if($validatedMeetingRoomName != $original['MeetingRoomName']) {
+			$NumberOfChanges++;
+		}
+		if($validatedMeetingRoomCapacity != $original['MeetingRoomCapacity']) {
+			$NumberOfChanges++;
+		}
+		if($validatedMeetingRoomLocation != $original['MeetingRoomLocation']) {
+			$NumberOfChanges++;
+		}
+		unset($original);
 	}
-	catch (PDOException $e)
-	{
-		$error = 'Error updating submitted meeting room: ' . $e->getMessage();
-		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
-		$pdo = null;
-		exit();
+
+	if($NumberOfChanges > 0){
+		// Update the meeeting room in the database
+		try
+		{
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+			$pdo = connect_to_db();
+			$sql = 'UPDATE `meetingroom` SET
+							`name` = :name,
+							capacity = :capacity,
+							description = :description,
+							location = :location
+					WHERE 	meetingRoomID = :id';
+			$s = $pdo->prepare($sql);
+			$s->bindValue(':id', $_POST['MeetingRoomID']); // TO-DO: Change to a session variable if the ID isn't saved
+			$s->bindValue(':name', $validatedMeetingRoomName);
+			$s->bindValue(':capacity', $validatedMeetingRoomCapacity);
+			$s->bindValue(':description', $validatedMeetingRoomDescription);
+			$s->bindValue(':location', $validatedMeetingRoomLocation);
+			$s->execute();
+			
+			// Close the connection
+			$pdo = Null;
+		}
+		catch (PDOException $e)
+		{
+			$error = 'Error updating submitted meeting room: ' . $e->getMessage();
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+			$pdo = null;
+			exit();
+		}
+		
+		$_SESSION['MeetingRoomUserFeedback'] = "Successfully updated the meeting room: " . $validatedMeetingRoomName;		
+	} else {	
+		$_SESSION['MeetingRoomUserFeedback'] = "No changes were made.";
 	}
 	
-	$_SESSION['MeetingRoomUserFeedback'] = "Successfully updated the meeting room: " . $validatedMeetingRoomName;
+	clearEditMeetingRoomSessions();
 	
 	// Load user list webpage with updated database
 	header('Location: .');
@@ -512,11 +577,14 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Cancel'){
 }
 
 
-/* if ($refreshMeetingRooms) {
-	TO-DO: Add code that should occur on a refresh
-}*/
+if (isset($refreshMeetingRooms) AND $refreshMeetingRooms) {
+	//TO-DO: Add code that should occur on a refresh
+	unset($refreshMeetingRooms);
+}
 
-
+// Remove any unused variables from memory // TO-DO: Change if this ruins having multiple tabs open etc.
+clearAddMeetingRoomSessions();
+clearEditMeetingRoomSessions();
 
 // Display meeting room list
 try

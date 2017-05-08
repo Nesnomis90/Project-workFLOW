@@ -10,6 +10,19 @@ if (!isUserAdmin()){
 	exit();
 }
 
+// Function to clear sessions used to remember user inputs on refreshing the add equipment form
+function clearAddEquipmentSessions(){
+	
+}
+
+// Function to clear sessions used to remember user inputs on refreshing the edit equipment form
+function clearEditEquipmentSessions(){
+	unset($_SESSION['EditEquipmentOriginalInfo']);
+	unset($_SESSION['EditEquipmentDescription']);
+	unset($_SESSION['EditEquipmentName']);
+	unset($_SESSION['EditEquipmentEquipmentID']);
+}
+
 // Function to check if user inputs for equipment are correct
 function validateUserInputs(){
 	$invalidInput = FALSE;
@@ -323,15 +336,13 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR
 			unset($_SESSION['EditEquipmentDescription']);
 		} else {
 			$EquipmentDescription = '';
-		}
-		
+		}		
 		if(isset($_SESSION['EditEquipmentName'])){
 			$EquipmentName = $_SESSION['EditEquipmentName'];
 			unset($_SESSION['EditEquipmentName']);
 		} else {
 			$EquipmentName = '';
-		}
-		
+		}		
 		if(isset($_SESSION['EditEquipmentEquipmentID'])){
 			$EquipmentID = $_SESSION['EditEquipmentEquipmentID'];
 			unset($_SESSION['EditEquipmentEquipmentID']);
@@ -339,7 +350,6 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR
 			// No equipment ID was remembered? We can't update the edit then!
 			// TO-DO: fix if no ID
 		}
-	
 	} else {
 		// Get information from database again on the selected meeting room
 		try
@@ -451,11 +461,8 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Edit Equipment')
 		$_SESSION['EquipmentUserFeedback'] = "No changes were made to the equipment: " . $validatedEquipmentName;
 	}
 
-	unset($_SESSION['EditEquipmentOriginalInfo']);
-	unset($_SESSION['EditEquipmentDescription']);
-	unset($_SESSION['EditEquipmentName']);
-	unset($_SESSION['EditEquipmentEquipmentID']);
-	
+	clearEditEquipmentSessions();
+
 	// Load equipment list webpage
 	header('Location: .');
 	exit();
@@ -470,10 +477,14 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Cancel'){
 	$refreshEquipment = TRUE;
 }
 
-/*  if($refreshEquipment) {
+if(isset($refreshEquipment) AND $refreshEquipment) {
 	// TO-DO: Add code that should occur on a refresh
+	unset($refreshEquipment);
 }
-*/
+
+// Remove any unused variables from memory // TO-DO: Change if this ruins having multiple tabs open etc.
+clearAddEquipmentSessions();
+clearEditEquipmentSessions();
 
 // Display equipment list
 try

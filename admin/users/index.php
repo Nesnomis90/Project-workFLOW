@@ -160,7 +160,7 @@ function validateUserInputs($FeedbackSessionToUse){
 			$invalidInput = TRUE;	
 		}			
 	}
-return array($invalidInput, $firstname, $lastname, $email, $validatedFirstname, $validatedLastname, $validatedBookingDescription, $validatedDisplayName);	
+return array($invalidInput, $email, $validatedFirstname, $validatedLastname, $validatedBookingDescription, $validatedDisplayName);	
 }
 
 // If admin wants to be able to delete users it needs to enabled first
@@ -350,12 +350,12 @@ if (isset($_GET['add']) OR (isset($_SESSION['refreshUserAddform']) AND $_SESSION
 if (isset($_GET['addform']))
 {
 	// Validate user inputs
-	list($invalidInput, $firstname, $lastname, $email, $validatedFirstname, $validatedLastname, $validatedBookingDescription, $validatedDisplayName) = validateUserInputs('AddNewUserError');	
+	list($invalidInput, $email, $validatedFirstname, $validatedLastname, $validatedBookingDescription, $validatedDisplayName) = validateUserInputs('AddNewUserError');	
 	
 	if($invalidInput){
 		// Let's remember the info the admin submitted
-		$_SESSION['AddNewUserFirstname'] = $firstname;
-		$_SESSION['AddNewUserLastname'] = $lastname;
+		$_SESSION['AddNewUserFirstname'] = $validatedFirstname;
+		$_SESSION['AddNewUserLastname'] = $validatedLastname;
 		$_SESSION['AddNewUserEmail'] = $email;
 		$_SESSION['AddNewUserSelectedAccess'] = $_POST['accessID'];	
 		
@@ -612,7 +612,7 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR
 if (isset($_GET['editform']))
 {
 		// Validate user inputs
-	list($invalidInput, $firstname, $lastname, $email, $validatedFirstname, $validatedLastname, $validatedBookingDescription, $validatedDisplayName) = validateUserInputs('AddNewUserError');
+	list($invalidInput, $email, $validatedFirstname, $validatedLastname, $validatedBookingDescription, $validatedDisplayName) = validateUserInputs('AddNewUserError');
 
 	// Check if any values were actually changed
 	$NumberOfChanges = 0;
@@ -650,8 +650,8 @@ if (isset($_GET['editform']))
 	}
 	if($invalidInput){
 		// Let's remember the info the admin submitted
-		$_SESSION['EditUserChangedFirstname'] = $firstname;
-		$_SESSION['EditUserChangedLastname'] = $lastname;
+		$_SESSION['EditUserChangedFirstname'] = $validatedFirstname;
+		$_SESSION['EditUserChangedLastname'] = $validatedLastname;
 		$_SESSION['EditUserChangedEmail'] = $email;
 		$_SESSION['EditUserChangedAccessID'] = $_POST['accessID'];
 		$_SESSION['EditUserChangedDisplayname'] = $validatedDisplayName;
@@ -665,13 +665,13 @@ if (isset($_GET['editform']))
 		
 		// Check against the values we retrieved before loading the page
 	if ( isset($_SESSION['EditUserOldFirstname']) AND 
-	$firstname != $_SESSION['EditUserOldFirstname'])
+	$validatedFirstname != $_SESSION['EditUserOldFirstname'])
 	{
 		$NumberOfChanges++;
 		unset($_SESSION['EditUserOldFirstname']);
 	}
 	if ( isset($_SESSION['EditUserOldLastname']) AND 
-	$lastname != $_SESSION['EditUserOldLastname'])
+	$validatedLastname != $_SESSION['EditUserOldLastname'])
 	{
 		$NumberOfChanges++;
 		unset($_SESSION['EditUserOldLastname']);
@@ -701,82 +701,76 @@ if (isset($_GET['editform']))
 		unset($_SESSION['EditUserOldBookingDescription']);
 	}
 	
-	if ($NumberOfChanges == 0){
-		
-		$_SESSION['UserManagementFeedbackMessage'] = "No changes were made.";
-		clearEditUserSessions();
-
-		// Load user list webpage with updated database
-		header('Location: .');
-		exit();
-	}
-	
-	// We actually have something to update!	
-	try
-	{
-		if ($changePassword){
-			// Update user info (new password)
-			$newPassword = $password;
-			$hashedNewPassword = hashPassword($newPassword);
-			
-			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
-			$pdo = connect_to_db();
-			$sql = 'UPDATE `user` SET
-							firstname = :firstname,
-							lastname = :lastname,
-							email = :email,
-							password = :password,
-							accessID = :accessID,
-							displayname = :displayname,
-							bookingdescription = :bookingdescription
-					WHERE 	userID = :id';
-					
-			$s = $pdo->prepare($sql);
-			$s->bindValue(':id', $_POST['id']);
-			$s->bindValue(':firstname', $firstname);
-			$s->bindValue(':lastname', $lastname);
-			$s->bindValue(':email', $email);
-			$s->bindValue(':password', $hashedNewPassword);
-			$s->bindValue(':accessID', $_POST['accessID']);
-			$s->bindValue(':displayname', $validatedDisplayName);
-			$s->bindValue(':bookingdescription', $validatedBookingDescription);
-			$s->execute();			
-		} else {
-			// Update user info (no new password)
-			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
-			$pdo = connect_to_db();
-			$sql = 'UPDATE `user` 
-					SET		firstname = :firstname,
-							lastname = :lastname,
-							email = :email,
-							accessID = :accessID,
-							displayname = :displayname,
-							bookingdescription = :bookingdescription
-					WHERE 	userID = :id';
-					
-			$s = $pdo->prepare($sql);
-			$s->bindValue(':id', $_POST['id']);
-			$s->bindValue(':firstname', $firstname);
-			$s->bindValue(':lastname', $lastname);
-			$s->bindValue(':email', $email);
-			$s->bindValue(':accessID', $_POST['accessID']);
-			$s->bindValue(':displayname', $validatedDisplayName);
-			$s->bindValue(':bookingdescription', $validatedBookingDescription);
-			$s->execute();	
+	if ($NumberOfChanges > 0){
+		// We actually have something to update!	
+		try
+		{
+			if ($changePassword){
+				// Update user info (new password)
+				$newPassword = $password;
+				$hashedNewPassword = hashPassword($newPassword);
+				
+				include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+				$pdo = connect_to_db();
+				$sql = 'UPDATE `user` SET
+								firstname = :firstname,
+								lastname = :lastname,
+								email = :email,
+								password = :password,
+								accessID = :accessID,
+								displayname = :displayname,
+								bookingdescription = :bookingdescription
+						WHERE 	userID = :id';
+						
+				$s = $pdo->prepare($sql);
+				$s->bindValue(':id', $_POST['id']);
+				$s->bindValue(':firstname', $validatedFirstname);
+				$s->bindValue(':lastname', $validatedLastname);
+				$s->bindValue(':email', $email);
+				$s->bindValue(':password', $hashedNewPassword);
+				$s->bindValue(':accessID', $_POST['accessID']);
+				$s->bindValue(':displayname', $validatedDisplayName);
+				$s->bindValue(':bookingdescription', $validatedBookingDescription);
+				$s->execute();			
+			} else {
+				// Update user info (no new password)
+				include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+				$pdo = connect_to_db();
+				$sql = 'UPDATE `user` 
+						SET		firstname = :firstname,
+								lastname = :lastname,
+								email = :email,
+								accessID = :accessID,
+								displayname = :displayname,
+								bookingdescription = :bookingdescription
+						WHERE 	userID = :id';
+						
+				$s = $pdo->prepare($sql);
+				$s->bindValue(':id', $_POST['id']);
+				$s->bindValue(':firstname', $validatedFirstname);
+				$s->bindValue(':lastname', $validatedLastname);
+				$s->bindValue(':email', $email);
+				$s->bindValue(':accessID', $_POST['accessID']);
+				$s->bindValue(':displayname', $validatedDisplayName);
+				$s->bindValue(':bookingdescription', $validatedBookingDescription);
+				$s->execute();	
+			}
+				
+			// Close the connection
+			$pdo = Null;
 		}
-			
-		// Close the connection
-		$pdo = Null;
+		catch (PDOException $e)
+		{
+			$error = 'Error updating submitted user: ' . $e->getMessage();
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+			$pdo = null;
+			exit();
+		}
+		
+		$_SESSION['UserManagementFeedbackMessage'] = "User Successfully Updated.";		
+	} else {		
+		$_SESSION['UserManagementFeedbackMessage'] = "No changes were made.";
 	}
-	catch (PDOException $e)
-	{
-		$error = 'Error updating submitted user: ' . $e->getMessage();
-		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
-		$pdo = null;
-		exit();
-	}
-	
-	$_SESSION['UserManagementFeedbackMessage'] = "User Successfully Updated.";
 	
 	// No need to remember values anymore
 	clearEditUserSessions();
@@ -788,9 +782,10 @@ if (isset($_GET['editform']))
 
 // End of user input code snippets
 
-/* if ($refreshUsers){
+/if (isset($refreshUsers) AND $refreshUsers){
 	// TO-DO: Add code that should occur on a refresh
-} */
+	unset($refreshUsers);
+}
 
 // Remove any unused variables from memory // TO-DO: Change if this ruins having multiple tabs open etc.
 clearAddUserSessions();
