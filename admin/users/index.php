@@ -12,12 +12,14 @@ if (!isUserAdmin()){
 
 // Function to clear sessions used to remember user inputs on refreshing the add user form
 function clearAddUserSessions(){
-	unset($_SESSION['AddUserGeneratedPassword']);
 	unset($_SESSION['AddNewUserFirstname']);
 	unset($_SESSION['AddNewUserLastname']);
 	unset($_SESSION['AddNewUserEmail']);
 	unset($_SESSION['AddNewUserSelectedAccess']);
+	
 	unset($_SESSION['AddUserAccessArray']);
+	unset($_SESSION['AddUserGeneratedPassword']);	
+	unset($_SESSION['lastUserID']);
 }
 
 // Function to clear sessions used to remember user inputs on refreshing the edit user form

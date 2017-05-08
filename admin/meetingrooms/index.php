@@ -432,6 +432,8 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR
 			unset($_SESSION['EditMeetingRoomMeetingRoomID']);
 		}	
 	} else {
+		// Make sure we don't have any remembered values in memory
+		clearEditMeetingRoomSessions();
 		// Get information from database again on the selected meeting room
 		try
 		{

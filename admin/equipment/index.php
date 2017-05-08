@@ -12,7 +12,9 @@ if (!isUserAdmin()){
 
 // Function to clear sessions used to remember user inputs on refreshing the add equipment form
 function clearAddEquipmentSessions(){
-	
+	unset($_SESSION['AddEquipmentDescription']);
+	unset($_SESSION['AddEquipmentName']);
+	unset($_SESSION['LastEquipmentID']);
 }
 
 // Function to clear sessions used to remember user inputs on refreshing the edit equipment form
@@ -311,8 +313,9 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Confirm Equipment')
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
 		$pdo = null;
 		exit();
-	}		
+	}
 	
+	clearAddEquipmentSessions();
 	
 	// Load equipment list webpage with new equipment
 	header('Location: .');
@@ -351,6 +354,8 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR
 			// TO-DO: fix if no ID
 		}
 	} else {
+		// Make sure we don't have any remembered values in memory
+		clearAddEquipmentSessions();
 		// Get information from database again on the selected meeting room
 		try
 		{
@@ -420,15 +425,19 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Edit Equipment')
 	
 	// Check if values have actually changed
 	$numberOfChanges = 0;
-	$original = $_SESSION['EditEquipmentOriginalInfo'];
+	if(isset($_SESSION['EditEquipmentOriginalInfo'])){
+		$original = $_SESSION['EditEquipmentOriginalInfo'];
+		unset($_SESSION['EditEquipmentOriginalInfo']);
+		
+		if($original['EquipmentName'] != $validatedEquipmentName){
+			$numberOfChanges++;
+		}
+		if($original['EquipmentDescription'] != $validatedEquipmentDescription){
+			$numberOfChanges++;
+		}
+		unset($original);
+	}
 
-	if($original['EquipmentName'] != $validatedEquipmentName){
-		$numberOfChanges++;
-	}
-	if($original['EquipmentDescription'] != $validatedEquipmentDescription){
-		$numberOfChanges++;
-	}
-	
 	if($numberOfChanges > 0){
 		// Some changes were made, let's update!
 		try
