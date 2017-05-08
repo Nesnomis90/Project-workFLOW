@@ -10,6 +10,21 @@ if (!isUserAdmin()){
 	exit();
 }
 
+// Function to clear sessions used to remember user inputs on refreshing the add equipment form
+function clearAddEquipmentSessions(){
+	unset($_SESSION['AddEquipmentDescription']);
+	unset($_SESSION['AddEquipmentName']);
+	unset($_SESSION['LastEquipmentID']);
+}
+
+// Function to clear sessions used to remember user inputs on refreshing the edit equipment form
+function clearEditEquipmentSessions(){
+	unset($_SESSION['EditEquipmentOriginalInfo']);
+	unset($_SESSION['EditEquipmentDescription']);
+	unset($_SESSION['EditEquipmentName']);
+	unset($_SESSION['EditEquipmentEquipmentID']);
+}
+
 // Function to check if user inputs for equipment are correct
 function validateUserInputs(){
 	$invalidInput = FALSE;
@@ -25,7 +40,7 @@ function validateUserInputs(){
 		$equipmentDescription = trim($_POST['EquipmentDescription']);
 	} else {
 		$invalidInput = TRUE;
-		$_SESSION['AddEquipmentError'] = "An equipment cannot be added with a description!";
+		$_SESSION['AddEquipmentError'] = "An equipment cannot be added without a description!";
 	}	
 
 	// Remove excess whitespace and prepare strings for validation
@@ -103,8 +118,7 @@ function validateUserInputs(){
 			$pdo = null;
 			exit();
 		}
-	}	
-
+	}
 return array($invalidInput, $validatedEquipmentDescription, $validatedEquipmentName);
 }
 
@@ -299,8 +313,9 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Confirm Equipment')
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
 		$pdo = null;
 		exit();
-	}		
+	}
 	
+	clearAddEquipmentSessions();
 	
 	// Load equipment list webpage with new equipment
 	header('Location: .');
@@ -324,15 +339,13 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR
 			unset($_SESSION['EditEquipmentDescription']);
 		} else {
 			$EquipmentDescription = '';
-		}
-		
+		}		
 		if(isset($_SESSION['EditEquipmentName'])){
 			$EquipmentName = $_SESSION['EditEquipmentName'];
 			unset($_SESSION['EditEquipmentName']);
 		} else {
 			$EquipmentName = '';
-		}
-		
+		}		
 		if(isset($_SESSION['EditEquipmentEquipmentID'])){
 			$EquipmentID = $_SESSION['EditEquipmentEquipmentID'];
 			unset($_SESSION['EditEquipmentEquipmentID']);
@@ -340,8 +353,9 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR
 			// No equipment ID was remembered? We can't update the edit then!
 			// TO-DO: fix if no ID
 		}
-	
 	} else {
+		// Make sure we don't have any remembered values in memory
+		clearAddEquipmentSessions();
 		// Get information from database again on the selected meeting room
 		try
 		{
@@ -411,15 +425,19 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Edit Equipment')
 	
 	// Check if values have actually changed
 	$numberOfChanges = 0;
-	$original = $_SESSION['EditEquipmentOriginalInfo'];
+	if(isset($_SESSION['EditEquipmentOriginalInfo'])){
+		$original = $_SESSION['EditEquipmentOriginalInfo'];
+		unset($_SESSION['EditEquipmentOriginalInfo']);
+		
+		if($original['EquipmentName'] != $validatedEquipmentName){
+			$numberOfChanges++;
+		}
+		if($original['EquipmentDescription'] != $validatedEquipmentDescription){
+			$numberOfChanges++;
+		}
+		unset($original);
+	}
 
-	if($original['EquipmentName'] != $validatedEquipmentName){
-		$numberOfChanges++;
-	}
-	if($original['EquipmentDescription'] != $validatedEquipmentDescription){
-		$numberOfChanges++;
-	}
-	
 	if($numberOfChanges > 0){
 		// Some changes were made, let's update!
 		try
@@ -452,11 +470,8 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Edit Equipment')
 		$_SESSION['EquipmentUserFeedback'] = "No changes were made to the equipment: " . $validatedEquipmentName;
 	}
 
-	unset($_SESSION['EditEquipmentOriginalInfo']);
-	unset($_SESSION['EditEquipmentDescription']);
-	unset($_SESSION['EditEquipmentName']);
-	unset($_SESSION['EditEquipmentEquipmentID']);
-	
+	clearEditEquipmentSessions();
+
 	// Load equipment list webpage
 	header('Location: .');
 	exit();
@@ -471,10 +486,14 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Cancel'){
 	$refreshEquipment = TRUE;
 }
 
-/*  if($refreshEquipment) {
+if(isset($refreshEquipment) AND $refreshEquipment) {
 	// TO-DO: Add code that should occur on a refresh
+	unset($refreshEquipment);
 }
-*/
+
+// Remove any unused variables from memory // TO-DO: Change if this ruins having multiple tabs open etc.
+clearAddEquipmentSessions();
+clearEditEquipmentSessions();
 
 // Display equipment list
 try

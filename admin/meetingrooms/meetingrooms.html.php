@@ -84,23 +84,23 @@
 				</tr>
 				<?php foreach ($meetingrooms as $room): ?>
 					<tr>
-						<?php $goto = "http://$_SERVER[HTTP_HOST]/admin/roomequipment/?Meetingroom=" . $room['id'];?>
+						<?php $goto = "http://$_SERVER[HTTP_HOST]/admin/roomequipment/?Meetingroom=" . $room['MeetingRoomID'];?>
 						<form action="<?php htmlout($goto) ;?>" method="post">
 							<td>
 								<input type="submit" value="Equipment">
-								<input type="hidden" name="Meetingroom" value="<?php htmlout($room['id']); ?>">							
+								<?php //TO-DO: test if needed <input type="hidden" name="Meetingroom" value="<?php htmlout($room['MeetingRoomID']); //"> after php end?>				
 							</td>
 							<td><?php htmlout($room['MeetingRoomEquipmentAmount']); ?></td>
 						</form>
 						<form action="" method="post">
 							<td>
-								<?php htmlout($room['name']); ?>
+								<?php htmlout($room['MeetingRoomName']); ?>
 								<input type="hidden" name="MeetingRoomName" id="MeetingRoomName"
-								value="<?php htmlout($room['name']); ?>">
+								value="<?php htmlout($room['MeetingRoomName']); ?>">
 							</td>
-							<td><?php htmlout($room['capacity']); ?></td>
-							<td><?php htmlout($room['description']); ?></td>
-							<td><?php htmlout($room['location']); ?></td>
+							<td><?php htmlout($room['MeetingRoomCapacity']); ?></td>
+							<td><?php htmlout($room['MeetingRoomDescription']); ?></td>
+							<td><?php htmlout($room['MeetingRoomLocation']); ?></td>
 							<td><input type="submit" name="action" value="Edit"></td>
 							<td>
 								<?php if(isset($_SESSION['meetingroomsEnableDelete']) AND $_SESSION['meetingroomsEnableDelete']) : ?>
@@ -109,7 +109,7 @@
 									<input type="submit" name="disabled" value="Delete" disabled>
 								<?php endif; ?>
 							</td>
-							<input type="hidden" name="id" value="<?php echo $room['id']; ?>">
+							<input type="hidden" name="MeetingRoomID" value="<?php echo $room['MeetingRoomID']; ?>">
 						</tr>
 					</form>
 				<?php endforeach; ?>

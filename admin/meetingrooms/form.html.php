@@ -15,43 +15,35 @@
 		<?php endif; ?>
 		<form action="?<?php htmlout($action); ?>" method="post">
 			<div>
-				<label for="name">Room Name: 
-					<input type="text" name="name" id="name"
-					required placeholder="Enter Room Name" 
-					oninvalid="this.setCustomValidity('Enter Room Name Here')"
-					oninput="setCustomValidity('')"
-					value="<?php htmlout($name); ?>">
+				<label for="MeetingRoomName">Room Name: 
+					<input type="text" name="MeetingRoomName" id="MeetingRoomName"
+					placeholder="Enter Room Name" 
+					value="<?php htmlout($meetingRoomName); ?>">
 				</label>
 			</div>
 			<div>
-				<label for="capacity">Capacity: 
-					<input type="number" name="capacity" id="capacity"
-					min="1" max="255" required
-					oninvalid="this.setCustomValidity('Enter Room Capacity Here')"
-					oninput="setCustomValidity('')"					
-					value="<?php htmlout($capacity); ?>">
+				<label for="MeetingRoomCapacity">Capacity: 
+					<input type="number" name="MeetingRoomCapacity" id="MeetingRoomCapacity"
+					min="1" max="255"				
+					value="<?php htmlout($meetingRoomCapacity); ?>">
 				</label>
 			</div>
 			<div>
-				<label for="description">Room Description: 
-					<input type="text" name="description" id="description" 
-					required placeholder="Enter Room Description" 
-					oninvalid="this.setCustomValidity('Enter Room Description Here')"
-					oninput="setCustomValidity('')"
-					value="<?php htmlout($description); ?>">
+				<label for="MeetingRoomDescription">Room Description: 
+					<input type="text" name="MeetingRoomDescription" id="MeetingRoomDescription" 
+					placeholder="Enter Room Description" 
+					value="<?php htmlout($meetingRoomDescription); ?>">
 				</label>
 			</div>
 			<div>
-				<label for="location">Location: 
-					<input type="text" name="location" id="location" 
-					required placeholder="Enter Location" 
-					oninvalid="this.setCustomValidity('Enter Room Location Here')"
-					oninput="setCustomValidity('')"
-					value="<?php htmlout($location); ?>">
+				<label for="MeetingRoomLocation">Location: 
+					<input type="text" name="MeetingRoomLocation" id="MeetingRoomLocation" 
+					placeholder="Enter Location" 
+					value="<?php htmlout($meetingRoomLocation); ?>">
 				</label>
 			</div>
 			<div>
-				<input type="hidden" name="id" value="<?php htmlout($id); ?>">
+				<input type="hidden" name="MeetingRoomID" value="<?php htmlout($meetingRoomID); ?>">
 				<input type="submit" value="<?php htmlout($button); ?>">
 				<input type="submit" value="Cancel">
 			</div>
