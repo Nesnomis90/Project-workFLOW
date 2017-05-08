@@ -40,6 +40,34 @@ function isLengthInvalidEquipmentDescription($equipmentDescription){
 	return FALSE;
 }
 
+	//Meeting Room Descriptions
+// Returns TRUE on invalid, FALSE on valid
+function isLengthInvalidMeetingRoomDescription($meetingRoomDescription){
+	// Has to be less than 65,535 bytes (MySQL - TEXT) (too much anyway)
+
+	$mtngrmDscrptnLength = strlen(utf8_decode($meetingRoomDescription));
+	$mtngrmDscrptnMaxLength = 500; // TO-DO: Adjust max length if needed.
+	if($mtngrmDscrptnLength > $mtngrmDscrptnMaxLength AND !$invalidInput){
+		return TRUE;	
+	}
+	return FALSE;
+}
+
+	//Meeting Room Location
+// Returns TRUE on invalid, FALSE on valid
+function isLengthInvalidMeetingRoomLocation($meetingRoomCapacity){
+	// Has to be less than 65,535 bytes (MySQL - TEXT) (too much anyway)
+
+	$mtngrmCapacityLength = strlen(utf8_decode($meetingRoomCapacity));
+	$mtngrmCapacityMaxLength = 500; // TO-DO: Adjust max length if needed.
+	if($mtngrmCapacityLength > $mtngrmCapacityMaxLength AND !$invalidInput){
+		return TRUE;	
+	}
+	return FALSE;
+}
+
+	// Meeting Room Capacity
+// Returns TRUE on invalid, FALSE on valid
 function isNumberInvalidMeetingRoomCapacity($capacityNumber){
 	// Has to be between 0 and 255
 	// In practice the meeting room needs at least room for 1 person.

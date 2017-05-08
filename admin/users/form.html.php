@@ -37,11 +37,7 @@
 			<?php if($action == 'addform') : ?>
 				<div>
 					<label for="password">Generated Password:</label>
-					<p><b><?php htmlout($generatedPassword); ?></b></p>
-					<input type="hidden" name="generatedPassword"
-					value="<?php htmlout($generatedPassword); ?>">
-					<input type="hidden" name="hashedPassword" id="hashedPassword"
-					value="<?php htmlout($hashedPassword); ?>">
+					<b><?php htmlout($generatedPassword); ?></b>
 				</div>
 			<?php elseif($action == 'editform') : ?>
 				<div>

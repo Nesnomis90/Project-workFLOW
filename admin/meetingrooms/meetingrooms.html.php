@@ -88,7 +88,7 @@
 						<form action="<?php htmlout($goto) ;?>" method="post">
 							<td>
 								<input type="submit" value="Equipment">
-								<?php // test if needed <input type="hidden" name="Meetingroom" value="<?php htmlout($room['MeetingRoomID']); //"> after php end?>				
+								<?php //TO-DO: test if needed <input type="hidden" name="Meetingroom" value="<?php htmlout($room['MeetingRoomID']); //"> after php end?>				
 							</td>
 							<td><?php htmlout($room['MeetingRoomEquipmentAmount']); ?></td>
 						</form>

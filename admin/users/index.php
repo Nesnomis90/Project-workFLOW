@@ -10,6 +10,36 @@ if (!isUserAdmin()){
 	exit();
 }
 
+// Function to clear sessions used to remember user inputs on refreshing the add user form
+function clearAddUserSessions(){
+	unset($_SESSION['AddUserGeneratedPassword']);
+	unset($_SESSION['AddNewUserFirstname']);
+	unset($_SESSION['AddNewUserLastname']);
+	unset($_SESSION['AddNewUserEmail']);
+	unset($_SESSION['AddNewUserSelectedAccess']);
+	unset($_SESSION['AddUserAccessArray']);
+}
+
+// Function to clear sessions used to remember user inputs on refreshing the edit user form
+function clearEditUserSessions(){
+	unset($_SESSION['EditUserOldEmail']);
+	unset($_SESSION['EditUserOldFirstname']);
+	unset($_SESSION['EditUserOldLastname']);
+	unset($_SESSION['EditUserOldAccessID']);
+	unset($_SESSION['EditUserOldDisplayname'])
+	unset($_SESSION['EditUserOldBookingDescription']);
+	
+	unset($_SESSION['EditUserChangedEmail']);	
+	unset($_SESSION['EditUserChangedFirstname']);
+	unset($_SESSION['EditUserChangedLastname']);
+	unset($_SESSION['EditUserChangedAccessID']);
+	unset($_SESSION['EditUserChangedDisplayname']);
+	unset($_SESSION['EditUserChangedBookingDescription']);
+	
+	unset($_SESSION['TheUserID']);
+	unset($_SESSION['EditUserAccessList']);	
+}
+
 // Function to validate user inputs
 function validateUserInputs($FeedbackSessionToUse){
 	$invalidInput = FALSE;
@@ -224,54 +254,66 @@ if (isset($_GET['add']) OR (isset($_SESSION['refreshUserAddform']) AND $_SESSION
 	if(isset($_SESSION['refreshUserAddform']) AND $_SESSION['refreshUserAddform']){
 		// Acknowledge that we have refreshed the form
 		unset($_SESSION['refreshUserAddform']);
-	}
-	
-	// Get name and IDs for access level
-	// Admin needs to give a new user a specific access.
-	try
-	{
-		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
-
-		$pdo = connect_to_db();
-		$sql = 'SELECT 	`accessID`,
-						`accessname` 
-				FROM 	`accesslevel`';
-		$result = $pdo->query($sql);
 		
-		// Get the rows of information from the query
-		// This will be used to create a dropdown list in HTML
-		foreach($result as $row){
-			$access[] = array(
-								'accessID' => $row['accessID'],
-								'accessname' => $row['accessname']
-								);
+		// Set correct values
+		$access = $_SESSION['AddUserAccessArray'];
+		$generatedPassword = $_SESSION['AddUserGeneratedPassword'];
+	} else {
+		// Make sure we don't have any remembered values in memory
+		clearAddUserSessions();
+		
+		// Get name and IDs for access level
+		// Admin needs to give a new user a specific access.
+		try
+		{
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+
+			$pdo = connect_to_db();
+			$sql = 'SELECT 	`accessID`,
+							`accessname` 
+					FROM 	`accesslevel`';
+			$result = $pdo->query($sql);
+			
+			// Get the rows of information from the query
+			// This will be used to create a dropdown list in HTML
+			foreach($result as $row){
+				$access[] = array(
+									'accessID' => $row['accessID'],
+									'accessname' => $row['accessname']
+									);
+			}
+			
+			//Close connection
+			$pdo = null;
+		}
+		catch (PDOException $e)
+		{
+			$error = 'Error getting access level info from database: ' . $e->getMessage();
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+			$pdo = null;
+			exit();		
 		}
 		
-		//Close connection
-		$pdo = null;
-	}
-	catch (PDOException $e)
-	{
-		$error = 'Error getting access level info from database: ' . $e->getMessage();
-		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
-		$pdo = null;
-		exit();		
+		// Generate password for user
+		$generatedPassword = generateUserPassword(6);
+		
+		// Set correct values
+		$_SESSION['AddUserAccessArray'] = $access;
+		$_SESSION['AddUserGeneratedPassword'] = $generatedPassword;
 	}
 	
-	//Generate password for user
-	$generatedPassword = generateUserPassword(6);	
-	$hashedPassword = hashPassword($generatedPassword);
-	
-	// Set values to be displayed in HTML
-	$pageTitle = 'New User';
-	$action = 'addform';
+	// Set initial values
 	$firstname = '';
 	$lastname = '';
-	$email = '';
+	$email = '';	
+	
+	// Set always correct values
+	$pageTitle = 'New User';
+	$action = 'addform';
+	$button = 'Add user';	
 	$id = '';
 	$displayname = '';
-	$bookingdescription = '';
-	$button = 'Add user';
+	$bookingdescription = '';	
 	
 	// If we refreshed and want to keep the same values
 	if(isset($_SESSION['AddNewUserFirstname'])){
@@ -332,7 +374,7 @@ if (isset($_GET['addform']))
 		$activationcode = generateActivationCode();
 		
 		// Hash the user generated password
-		$hashedPassword = $_POST['hashedPassword'];	
+		$hashedPassword = hashPassword($_SESSION['AddUserGeneratedPassword']);
 		
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 		
@@ -418,7 +460,7 @@ if (isset($_GET['addform']))
 	
 	// Send user an email with the activation code
 		// TO-DO: This is UNTESTED since we don't have php.ini set up to actually send email
-	$generatedPassword = $_POST['generatedPassword'];
+	$generatedPassword = $_SESSION['AddUserGeneratedPassword'];
 
 	$emailSubject = "Account Activation Link";
 	
@@ -439,6 +481,9 @@ if (isset($_GET['addform']))
 	
 	$_SESSION['UserManagementFeedbackMessage'] .= "this is the email msg we're sending out: $emailMessage. Sent to: $email."; // TO-DO: Remove after testing	
 	
+	// Forget information we don't need anymore
+	clearAddUserSessions();
+
 	// Load user list webpage with new user
 	header('Location: .');
 	exit();
@@ -472,6 +517,8 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR
 		
 	} else {
 		
+		// Make sure we don't come in with old info in memory
+		clearEditUserSessions();
 		// Get information from database again on the selected user
 		try
 		{
@@ -657,18 +704,13 @@ if (isset($_GET['editform']))
 	if ($NumberOfChanges == 0){
 		
 		$_SESSION['UserManagementFeedbackMessage'] = "No changes were made.";
-		unset($_SESSION['EditUserAccessList']);
-		unset($_SESSION['TheUserID']);
-		
+		clearEditUserSessions();
+
 		// Load user list webpage with updated database
 		header('Location: .');
 		exit();
 	}
 	
-	// Don't need to remember the access list anymore
-	unset($_SESSION['EditUserAccessList']);
-	unset($_SESSION['TheUserID']);
-
 	// We actually have something to update!	
 	try
 	{
@@ -703,8 +745,8 @@ if (isset($_GET['editform']))
 			// Update user info (no new password)
 			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 			$pdo = connect_to_db();
-			$sql = 'UPDATE `user` SET
-							firstname = :firstname,
+			$sql = 'UPDATE `user` 
+					SET		firstname = :firstname,
 							lastname = :lastname,
 							email = :email,
 							accessID = :accessID,
@@ -736,16 +778,23 @@ if (isset($_GET['editform']))
 	
 	$_SESSION['UserManagementFeedbackMessage'] = "User Successfully Updated.";
 	
+	// No need to remember values anymore
+	clearEditUserSessions();
+	
 	// Load user list webpage with updated database
 	header('Location: .');
 	exit();
 }
 
+// End of user input code snippets
+
 /* if ($refreshUsers){
 	// TO-DO: Add code that should occur on a refresh
 } */
 
-
+// Remove any unused variables from memory // TO-DO: Change if this ruins having multiple tabs open etc.
+clearAddUserSessions();
+clearEditUserSessions();
 
 // Display users list
 try

@@ -10,7 +10,7 @@ if (!isUserAdmin()){
 	exit();
 }
 
-// Function to check if user inputs for equipment are correct
+// Function to check if user inputs for meeting room are correct
 function validateUserInputs(){
 	$invalidInput = FALSE;
 	
