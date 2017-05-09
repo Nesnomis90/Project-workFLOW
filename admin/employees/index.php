@@ -818,8 +818,19 @@ if(!isset($_GET['Company'])){
 							DATE_FORMAT(e.`startDateTime`,'%d %b %Y %T') 	AS StartDateTime,
 							UNIX_TIMESTAMP(e.`startDateTime`)				AS OrderByDate,
 							(
-								SELECT 		SEC_TO_TIME(SUM(TIME_TO_SEC(b.`actualEndDateTime`) - 
-											TIME_TO_SEC(b.`startDateTime`))) 
+								SELECT (
+										BIG_SEC_TO_TIME(
+														SUM(
+															DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
+															)*86400 
+														+ 
+														SUM(
+															TIME_TO_SEC(b.`actualEndDateTime`) 
+															- 
+															TIME_TO_SEC(b.`startDateTime`)
+															) 
+														) 
+										) 
 								FROM 		`booking` b
 								INNER JOIN `employee` e
 								ON 			b.`userID` = e.`userID`
@@ -834,8 +845,19 @@ if(!isset($_GET['Company'])){
 								AND 		MONTH(b.`actualEndDateTime`) = MONTH(NOW())
 							) 												AS MonthlyBookingTimeUsed,
 							(
-								SELECT 		SEC_TO_TIME(SUM(TIME_TO_SEC(b.`actualEndDateTime`) - 
-											TIME_TO_SEC(b.`startDateTime`))) 
+								SELECT (
+										BIG_SEC_TO_TIME(
+														SUM(
+															DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
+															)*86400 
+														+ 
+														SUM(
+															TIME_TO_SEC(b.`actualEndDateTime`) 
+															- 
+															TIME_TO_SEC(b.`startDateTime`)
+															) 
+														) 
+										)
 								FROM 		`booking` b
 								INNER JOIN `employee` e
 								ON 			b.`userID` = e.`userID`
@@ -878,13 +900,13 @@ foreach($result AS $row){
 	// e.g. 1 day 24 hours, 30 minutes, 23 hours 40 minutes
 	
 	if($row['MonthlyBookingTimeUsed'] == null){
-		$MonthlyTimeUsed = '00:00:00';
+		$MonthlyTimeUsed = 'N/A';
 	} else {
 		$MonthlyTimeUsed = $row['MonthlyBookingTimeUsed'];
 	}
 
 	if($row['TotalBookingTimeUsed'] == null){
-		$TotalTimeUsed = '00:00:00';
+		$TotalTimeUsed = 'N/A';
 	} else {
 		$TotalTimeUsed = $row['TotalBookingTimeUsed'];
 	}

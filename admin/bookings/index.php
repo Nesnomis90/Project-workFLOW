@@ -1960,9 +1960,9 @@ try
 						u.email, 
 						GROUP_CONCAT(c.`name` separator ', ') 			AS WorksForCompany, 
 						b.description 									AS BookingDescription, 
-						DATE_FORMAT(b.dateTimeCreated, '%d %b %Y %T') 	AS BookingWasCreatedOn, 
-						DATE_FORMAT(b.actualEndDateTime, '%d %b %Y %T') AS BookingWasCompletedOn, 
-						DATE_FORMAT(b.dateTimeCancelled, '%d %b %Y %T') AS BookingWasCancelledOn 
+						b.dateTimeCreated 								AS BookingWasCreatedOn, 
+						b.actualEndDateTime								AS BookingWasCompletedOn, 
+						b.dateTimeCancelled								AS BookingWasCancelledOn 
 			FROM 		`booking` b 
 			LEFT JOIN 	`meetingroom` m 
 			ON 			b.meetingRoomID = m.meetingRoomID 
@@ -2027,9 +2027,15 @@ foreach ($result as $row)
 	
 	$startDateTime = $row['StartTime'];
 	$endDateTime = $row['EndTime'];
+	$completedDateTime = $row['BookingWasCompletedOn'];
+	$cancelledDateTime = $row['BookingWasCancelledOn'];
+	$createdDateTime = $row['BookingWasCreatedOn'];
 	
 	$displayValidatedStartDate = convertDatetimeToFormat($startDateTime , 'Y-m-d H:i:s', 'F jS Y H:i:s');
 	$displayValidatedEndDate = convertDatetimeToFormat($endDateTime, 'Y-m-d H:i:s', 'F jS Y H:i:s');
+	$displayCompletedDateTime = convertDatetimeToFormat($completedDateTime, 'Y-m-d H:i:s', 'F jS Y H:i:s');
+	$displayCancelledDateTime = convertDatetimeToFormat($cancelledDateTime, 'Y-m-d H:i:s', 'F jS Y H:i:s');	
+	$displayCreatedDateTime = convertDatetimeToFormat($createdDateTime, 'Y-m-d H:i:s', 'F jS Y H:i:s');
 	
 	$userinfo = $row['lastName'] . ', ' . $row['firstName'] . ' - ' . $row['email'];
 	$meetinginfo = $row['BookedRoomName'] . ' for the timeslot: ' . $displayValidatedStartDate . 
@@ -2048,9 +2054,9 @@ foreach ($result as $row)
 						'lastName' => $row['lastName'],
 						'email' => $row['email'],
 						'WorksForCompany' => $row['WorksForCompany'],
-						'BookingWasCreatedOn' => $row['BookingWasCreatedOn'],
-						'BookingWasCompletedOn' => $row['BookingWasCompletedOn'],
-						'BookingWasCancelledOn' => $row['BookingWasCancelledOn'],	
+						'BookingWasCreatedOn' => $displayCreatedDateTime,
+						'BookingWasCompletedOn' => $displayCompletedDateTime,
+						'BookingWasCancelledOn' => $displayCancelledDateTime,	
 						'UserInfo' => $userinfo,
 						'MeetingInfo' => $meetinginfo
 					);

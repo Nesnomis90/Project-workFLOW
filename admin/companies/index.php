@@ -587,8 +587,19 @@ try
 							WHERE 	e.companyID = CompID
 						)													AS NumberOfEmployees,
 						(
-							SELECT 		(SEC_TO_TIME(SUM(TIME_TO_SEC(b.`actualEndDateTime`) - 
-										TIME_TO_SEC(b.`startDateTime`)))) 
+							SELECT (
+									BIG_SEC_TO_TIME(
+													SUM(
+														DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
+														)*86400 
+													+ 
+													SUM(
+														TIME_TO_SEC(b.`actualEndDateTime`) 
+														- 
+														TIME_TO_SEC(b.`startDateTime`)
+														) 
+													) 
+									) 
 							FROM 		`booking` b  
 							INNER JOIN 	`company` c 
 							ON 			b.`CompanyID` = c.`CompanyID` 
@@ -597,8 +608,19 @@ try
 							AND 		MONTH(b.`actualEndDateTime`) = MONTH(NOW())
 						)   												AS MonthlyCompanyWideBookingTimeUsed,
 						(
-							SELECT 		(SEC_TO_TIME(SUM(TIME_TO_SEC(b.`actualEndDateTime`) - 
-										TIME_TO_SEC(b.`startDateTime`)))) 
+							SELECT (
+									BIG_SEC_TO_TIME(
+													SUM(
+														DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
+														)*86400 
+													+ 
+													SUM(
+														TIME_TO_SEC(b.`actualEndDateTime`) 
+														- 
+														TIME_TO_SEC(b.`startDateTime`)
+														) 
+													) 
+									)
 							FROM 		`booking` b 
 							INNER JOIN 	`company` c 
 							ON 			b.`CompanyID` = c.`CompanyID` 
@@ -606,6 +628,8 @@ try
 						)   												AS TotalCompanyWideBookingTimeUsed
 			FROM 		`company` c 
 			GROUP BY 	c.`name`";
+			
+			// TO-DO: REVERT BIG_SEC_TO_TIME AND FIND ALTERNATE SOLUTION IF BROKEN
 	$result = $pdo->query($sql);
 	$rowNum = $result->rowCount();
 	
@@ -624,15 +648,15 @@ catch (PDOException $e)
 foreach ($result as $row)
 {
 	// TO-DO: Change booking time used from time to easily readable text instead
-	
+
 	if($row['MonthlyCompanyWideBookingTimeUsed'] == null){
-		$MonthlyTimeUsed = '00:00:00';
+		$MonthlyTimeUsed = 'N/A';
 	} else {
 		$MonthlyTimeUsed = $row['MonthlyCompanyWideBookingTimeUsed'];
 	}
 	
 	if($row['TotalCompanyWideBookingTimeUsed'] == null){
-		$TotalTimeUsed = '00:00:00';
+		$TotalTimeUsed = 'N/A';
 	} else {
 		$TotalTimeUsed = $row['TotalCompanyWideBookingTimeUsed'];
 	}
