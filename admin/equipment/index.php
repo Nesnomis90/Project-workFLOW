@@ -86,7 +86,7 @@ function validateUserInputs(){
 		// only if have changed the name (edit only)
 	if(isset($_SESSION['EditEquipmentOriginalInfo']) AND $_SESSION['EditEquipmentOriginalInfo']['EquipmentName'] == $validatedEquipmentName){
 		// Do nothing, since we haven't changed the name we're editing
-	} else {
+	} elseif(!$invalidInput) {
 		// Check if new name is taken
 		try
 		{

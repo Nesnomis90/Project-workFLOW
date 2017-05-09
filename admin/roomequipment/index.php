@@ -10,6 +10,7 @@ if (!isUserAdmin()){
 	exit();
 }
 
+// Function to clear sessions used to remember user inputs on refreshing the add room equipment form
 function clearAddRoomEquipmentSessions(){
 	
 	unset($_SESSION['AddRoomEquipmentEquipmentArray']);	
@@ -25,6 +26,7 @@ function clearAddRoomEquipmentSessions(){
 	unset($_SESSION['AddEmployeeCompaniesArray']);
 }
 
+// Function to clear sessions used to remember user inputs on refreshing the 'edit'/'change amount' room equipment form
 function clearEditRoomEquipmentSessions(){
 	// TO-DO: Add code later if we add any edit sessions
 }
@@ -701,8 +703,7 @@ if(isset($refreshRoomEquipment) AND $refreshRoomEquipment){
 	unset($refreshRoomEquipment);
 }
 
-// There were no user inputs or forced refreshes. So we're interested in fresh, new values.
-// Let's reset all the "remembered" values
+// Remove any unused variables from memory // TO-DO: Change if this ruins having multiple tabs open etc.
 clearAddRoomEquipmentSessions();
 clearEditRoomEquipmentSessions();
 

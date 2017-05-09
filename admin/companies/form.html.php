@@ -12,13 +12,11 @@
 			<p><b><?php htmlout($_SESSION['AddCompanyError']); ?></b></p>
 			<?php unset($_SESSION['AddCompanyError']); ?>
 		<?php endif; ?>		
-		<form action="?<?php htmlout($action); ?>" method="post">
+		<form action="" method="post">
 			<div>
 				<label for="CompanyName">Company Name: 
 					<input type="text" name="CompanyName" id="CompanyName" 
-					required placeholder="Enter A Company Name" 
-					oninvalid="this.setCustomValidity('Enter A Company Name Here')"
-					oninput="setCustomValidity('')"
+					placeholder="Enter A Company Name"
 					value="<?php htmlout($CompanyName); ?>">
 				</label>
 			</div>
@@ -32,7 +30,7 @@
 			<?php endif; ?>
 			<div>
 				<input type="hidden" name="id" value="<?php htmlout($id); ?>">
-				<input type="submit" value="<?php htmlout($button); ?>">
+				<input type="submit" name="action" value="<?php htmlout($button); ?>">
 			</div>
 			<div>
 				<input type="<?php htmlout($reset); ?>">
