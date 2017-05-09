@@ -338,7 +338,7 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR
 	}
 	// Display original values
 	$originalCompanyName = $_SESSION['EditCompanyOriginalName'];
-	$originalDateToDisplay = convertDatetimeToFormat($_SESSION['EditCompanyOriginalRemoveDate'] , 'Y-m-d', 'F jS Y');
+	$originalDateToDisplay = convertDatetimeToFormat($_SESSION['EditCompanyOriginalRemoveDate'] , 'Y-m-d', DATE_DEFAULT_FORMAT_TO_DISPLAY);
 
 	if(isset($_SESSION['EditCompanyOldRemoveDate'])){
 		$DateToRemove = $_SESSION['EditCompanyOldRemoveDate'];
@@ -663,8 +663,8 @@ foreach ($result as $row)
 	
 	$dateCreated = $row['DatetimeCreated'];	
 	$dateToRemove = $row['DeletionDate'];
-	$dateTimeCreatedToDisplay = convertDatetimeToFormat($dateCreated, 'Y-m-d H:i:s', 'F jS Y H:i:s');
-	$dateToRemoveToDisplay = convertDatetimeToFormat($dateToRemove, 'Y-m-d', 'F jS Y');
+	$dateTimeCreatedToDisplay = convertDatetimeToFormat($dateCreated, 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
+	$dateToRemoveToDisplay = convertDatetimeToFormat($dateToRemove, 'Y-m-d', DATE_DEFAULT_FORMAT_TO_DISPLAY);
 	
 	if($row['CompanyActivated'] == 1){
 		$companies[] = array('id' => $row['CompID'], 

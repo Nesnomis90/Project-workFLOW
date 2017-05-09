@@ -815,7 +815,7 @@ if(!isset($_GET['Company'])){
 							u.`lastName`,
 							u.`email`,
 							cp.`name`										AS PositionName, 
-							DATE_FORMAT(e.`startDateTime`,'%d %b %Y %T') 	AS StartDateTime,
+							e.`startDateTime`								AS StartDateTime,
 							UNIX_TIMESTAMP(e.`startDateTime`)				AS OrderByDate,
 							(
 								SELECT (
@@ -911,6 +911,9 @@ foreach($result AS $row){
 		$TotalTimeUsed = $row['TotalBookingTimeUsed'];
 	}
 	
+	$startDateTime = $row['StartDateTime'];
+	$displayStartDateTime = convertDatetimeToFormat($startDateTime , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
+	
 	// Create an array with the actual key/value pairs we want to use in our HTML
 	$employees[] = array('CompanyID' => $row['TheCompanyID'], 
 						'UsrID' => $row['UsrID'],
@@ -921,7 +924,7 @@ foreach($result AS $row){
 						'email' => $row['email'],
 						'MonthlyBookingTimeUsed' => $MonthlyTimeUsed,
 						'TotalBookingTimeUsed' => $TotalTimeUsed,
-						'StartDateTime' => $row['StartDateTime']
+						'StartDateTime' => $displayStartDateTime
 						);
 }
 

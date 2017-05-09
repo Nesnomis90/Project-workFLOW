@@ -1,5 +1,10 @@
 <?php
 
+// Define the default date and datetime format we want to use
+// TO-DO: Change this if we want to display another format
+define('DATETIME_DEFAULT_FORMAT_TO_DISPLAY', 'F jS Y H:i:s');
+define('DATE_DEFAULT_FORMAT_TO_DISPLAY', 'F jS Y');
+
 //Function to get the current datetime
 function getDatetimeNow() {
 	// We use the same format as used in MySQL

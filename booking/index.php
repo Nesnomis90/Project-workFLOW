@@ -92,8 +92,8 @@ if(isset($_GET['cancellationcode'])){
 		exit();
 	}	
 	
-	$displayValidatedStartDate = convertDatetimeToFormat($startDateTime , 'Y-m-d H:i:s', 'F jS Y H:i:s');
-	$displayValidatedEndDate = convertDatetimeToFormat($endDateTime, 'Y-m-d H:i:s', 'F jS Y H:i:s');	
+	$displayValidatedStartDate = convertDatetimeToFormat($startDateTime , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
+	$displayValidatedEndDate = convertDatetimeToFormat($endDateTime, 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);	
 	
 	$_SESSION['normalBookingFeedback'] = "The booking for " . $TheMeetingRoomName . ". Starting at: " . $displayValidatedStartDate . 
 										" and ending at: " . $displayValidatedEndDate . " has been cancelled!";
