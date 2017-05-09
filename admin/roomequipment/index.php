@@ -10,6 +10,24 @@ if (!isUserAdmin()){
 	exit();
 }
 
+function clearAddRoomEquipmentSessions(){
+	
+	unset($_SESSION['AddRoomEquipmentEquipmentArray']);	
+	unset($_SESSION['AddRoomEquipmentEquipmentSearch']);
+	
+	unset($_SESSION['AddRoomEquipmentSelectedEquipment']);
+	unset($_SESSION['AddRoomEquipmentSelectedEquipmentAmount']);
+	unset($_SESSION['AddRoomEquipmentSelectedMeetingRoom']);
+	
+	unset($_SESSION['AddRoomEquipmentMeetingRoomArray']);
+	unset($_SESSION['AddRoomEquipmentMeetingRoomSearch']);
+	
+	unset($_SESSION['AddEmployeeCompaniesArray']);
+}
+
+function clearEditRoomEquipmentSessions(){
+	// TO-DO: Add code later if we add any edit sessions
+}
 
 // If admin wants to be able to remove equipment from a room it needs to enabled first
 if (isset($_POST['action']) AND $_POST['action'] == "Enable Remove"){
@@ -143,9 +161,10 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Add Room Equipment') OR
 	(isset($_SESSION['refreshAddRoomEquipment']) AND $_SESSION['refreshAddRoomEquipment']))
 {	
 
+	// Set initial values
 	$equipmentsearchstring = '';
 	$meetingroomsearchstring = '';
-	$EquipmentAmount = 0;
+	$EquipmentAmount = 1;
 
 	// Check if the call was a form submit or a forced refresh
 	if(isset($_SESSION['refreshAddRoomEquipment']) AND $_SESSION['refreshAddRoomEquipment']){
@@ -280,7 +299,11 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Add Room Equipment') OR
 											'EquipmentName' => $row['EquipmentName']
 											);
 				}
-				$_SESSION['AddRoomEquipmentEquipmentArray'] = $equipment;
+				if(isset($equipment)){
+					$_SESSION['AddRoomEquipmentEquipmentArray'] = $equipment;
+				} else {
+					$_SESSION['AddRoomEquipmentEquipmentArray'] = array();
+				}
 			} else {
 				$equipment = $_SESSION['AddRoomEquipmentEquipmentArray'];
 			}	
@@ -326,34 +349,34 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Confirm Room Equipment')
 		// Some value wasn't filled out.
 		// Set appropriate feedback message to admin
 		if($a AND $b AND !$c){
-			$d = "Need to select an equipment and a meeting room first!";
+			$d = "You need to select an equipment and a meeting room first!";
 			$_SESSION['AddRoomEquipmentSelectedEquipmentAmount'] = $_POST['EquipmentAmount'];
 		}
 		if($a AND !$b AND $c){
-			$d = "Need to select an equipment and the amount first!";
+			$d = "You need to select an equipment and the amount first!";
 			$_SESSION['AddRoomEquipmentSelectedMeetingRoom'] = $_POST['MeetingRoomID'];
 		}
 		if(!$a AND $b AND $c){
-			$d = "Need to select a meeting room and the equipment amount first!";
+			$d = "You need to select a meeting room and the equipment amount first!";
 			$_SESSION['AddRoomEquipmentSelectedEquipment'] = $_POST['EquipmentID'];
 		}
 		if($a AND !$b AND !$c){
-			$d = "Need to select an equipment first!";
+			$d = "You need to select an equipment first!";
 			$_SESSION['AddRoomEquipmentSelectedMeetingRoom'] = $_POST['MeetingRoomID'];
 			$_SESSION['AddRoomEquipmentSelectedEquipmentAmount'] = $_POST['EquipmentAmount'];
 		}
 		if(!$a AND $b AND !$c){
-			$d = "Need to select a meeting room first!";
+			$d = "You need to select a meeting room first!";
 			$_SESSION['AddRoomEquipmentSelectedEquipment'] = $_POST['EquipmentID'];
 			$_SESSION['AddRoomEquipmentSelectedEquipmentAmount'] = $_POST['EquipmentAmount'];
 		}
 		if(!$a AND !$b AND $c){
-			$d = "Need to select an equipment amount first!";
+			$d = "You need to select an equipment amount first!";
 			$_SESSION['AddRoomEquipmentSelectedMeetingRoom'] = $_POST['MeetingRoomID'];
 			$_SESSION['AddRoomEquipmentSelectedEquipment'] = $_POST['EquipmentID'];
 		}
 		if($a AND $b AND $c){
-			$d = "Need to select an equipment, a meeting room and an amount first!";
+			$d = "You need to select an equipment, a meeting room and an amount first!";
 		}
 			
 		// We didn't have enough values filled in. "go back" to add roomequipment
@@ -401,6 +424,9 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Confirm Room Equipment')
 			
 			$_SESSION['AddRoomEquipmentSelectedEquipment'] = $_POST['EquipmentID'];
 			$_SESSION['AddRoomEquipmentSelectedEquipmentAmount'] = $_POST['EquipmentAmount'];
+			$_SESSION['AddRoomEquipmentMeetingRoomSearch'] = $_POST['meetingroomsearchstring'];
+			$_SESSION['AddRoomEquipmentEquipmentSearch'] = $_POST['equipmentsearchstring'];
+			
 			$_SESSION['refreshAddRoomEquipment'] = TRUE;
 			$_SESSION['AddRoomEquipmentError'] = "The selected equipment is already in the selected meeting room!";
 			
@@ -554,6 +580,8 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Confirm Room Equipment')
 		exit();
 	}
 	
+	clearAddRoomEquipmentSessions();
+	
 	// Load room equipment list webpage with new room equipment connection
 	header('Location: .');
 	exit();
@@ -664,22 +692,19 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Confirm Amount')
 
 // If the user clicks any cancel buttons he'll be directed back to the roomequipment page again
 if (isset($_POST['action']) AND $_POST['action'] == 'Cancel'){
-	// Doesn't actually need any code to work, since it happends automatically when a submit
-	// occurs. *it* being doing the normal startup code.
-	// Might be useful for something later?
 	$_SESSION['RoomEquipmentUserFeedback'] = "Cancel button clicked. Taking you back to /admin/roomequipment/!";
 	$refreshRoomEquipment = TRUE;
 }
 
-/* if($refreshRoomEquipment){
+if(isset($refreshRoomEquipment) AND $refreshRoomEquipment){
 	// TO-DO: Add code that should occur on a refresh
-} */
-
+	unset($refreshRoomEquipment);
+}
 
 // There were no user inputs or forced refreshes. So we're interested in fresh, new values.
 // Let's reset all the "remembered" values
-unset($_SESSION['AddRoomEquipmentEquipmentArray']);	
-unset($_SESSION['AddRoomEquipmentMeetingRoomArray']);
+clearAddRoomEquipmentSessions();
+clearEditRoomEquipmentSessions();
 
 // Get only information from the specific meetingroom
 if(isset($_GET['Meetingroom'])){
