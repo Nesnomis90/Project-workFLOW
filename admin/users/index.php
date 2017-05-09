@@ -28,7 +28,7 @@ function clearEditUserSessions(){
 	unset($_SESSION['EditUserOldFirstname']);
 	unset($_SESSION['EditUserOldLastname']);
 	unset($_SESSION['EditUserOldAccessID']);
-	unset($_SESSION['EditUserOldDisplayname'])
+	unset($_SESSION['EditUserOldDisplayname']);
 	unset($_SESSION['EditUserOldBookingDescription']);
 	
 	unset($_SESSION['EditUserChangedEmail']);	
@@ -784,7 +784,7 @@ if (isset($_GET['editform']))
 
 // End of user input code snippets
 
-/if (isset($refreshUsers) AND $refreshUsers){
+if (isset($refreshUsers) AND $refreshUsers){
 	// TO-DO: Add code that should occur on a refresh
 	unset($refreshUsers);
 }

@@ -250,17 +250,18 @@ if (isset($_POST['action']) and $_POST['action'] == 'Delete')
 
 // If admin wants to add a meeting room to the database
 // we load a new html form
-if (isset($_GET['add']) OR (isset($_SESSION['refreshMeetingRoomAddform']) AND $_SESSION['refreshMeetingRoomAddform']))
+if ((isset($_POST['action']) AND $_POST['action'] == "Create Meeting Room") OR 
+	(isset($_SESSION['refreshAddMeetingRoom']) AND $_SESSION['refreshAddMeetingRoom']))
 {
 	// Check if the call was /?add/ or a forced refresh
-	if(isset($_SESSION['refreshMeetingRoomAddform']) AND $_SESSION['refreshMeetingRoomAddform']){
+	if(isset($_SESSION['refreshAddMeetingRoom']) AND $_SESSION['refreshAddMeetingRoom']){
 		// Acknowledge that we have refreshed the form
-		unset($_SESSION['refreshMeetingRoomAddform']);
+		unset($_SESSION['refreshAddMeetingRoom']);
 	}
 	
 	// Set initial values
 	$meetingRoomName = '';
-	$meetingRoomCapacity = '';
+	$meetingRoomCapacity = 1;
 	$meetingRoomDescription = '';
 	$meetingRoomLocation = '';
 
@@ -284,8 +285,7 @@ if (isset($_GET['add']) OR (isset($_SESSION['refreshMeetingRoomAddform']) AND $_
 	
 	// Set always correct info
 	$pageTitle = 'New Meeting Room';
-	$action = 'addform';
-	$button = 'Add room';
+	$button = 'Add Room';
 	$meetingRoomID = '';	
 	
 	// We want a reset all fields button while adding a new meeting room
@@ -297,7 +297,7 @@ if (isset($_GET['add']) OR (isset($_SESSION['refreshMeetingRoomAddform']) AND $_
 }
 
 // When admin has added the needed information and wants to add the meeting room
-if (isset($_GET['addform']))
+if ((isset($_POST['action']) AND $_POST['action'] == "Add Room"))
 {
 	// Validate user inputs
 	list($invalidInput, $validatedMeetingRoomDescription, $validatedMeetingRoomName, $validatedMeetingRoomCapacity, $validatedMeetingRoomLocation) = validateUserInputs();
@@ -477,8 +477,7 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR
 	
 	// Set the always correct information
 	$pageTitle = 'Edit User';
-	$action = 'editform';
-	$button = 'Edit room';
+	$button = 'Edit Room';
 	
 	// Don't want a reset button to blank all fields while editing
 	$reset = 'hidden';
@@ -487,7 +486,7 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR
 }
 
 // Perform the actual database update of the edited information
-if (isset($_GET['editform']))
+if (isset($_POST['action']) AND $_POST['action'] == "Edit Room")
 {
 	// Validate user inputs
 	list($invalidInput, $validatedMeetingRoomDescription, $validatedMeetingRoomName, $validatedMeetingRoomCapacity, $validatedMeetingRoomLocation) = validateUserInputs();
@@ -500,7 +499,7 @@ if (isset($_GET['editform']))
 		$_SESSION['EditMeetingRoomName'] = $validatedMeetingRoomName;
 		$_SESSION['EditMeetingRoomCapacity'] = $validatedMeetingRoomCapacity;
 		$_SESSION['EditMeetingRoomLocation'] = $validatedMeetingRoomLocation;
-		$_SESSION['EditMeetingRoomMeetingRoomID'] = $_POST['MeetingRoomID']; //To-DO: Change if broken
+		$_SESSION['EditMeetingRoomMeetingRoomID'] = $_POST['MeetingRoomID'];
 		
 		$_SESSION['refreshEditMeetingRoom'] = TRUE;
 		header('Location: .');

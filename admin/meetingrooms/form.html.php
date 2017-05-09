@@ -13,7 +13,7 @@
 			<p><b><?php htmlout($_SESSION['AddMeetingRoomError']); ?></b></p>
 			<?php unset($_SESSION['AddMeetingRoomError']); ?>
 		<?php endif; ?>
-		<form action="?<?php htmlout($action); ?>" method="post">
+		<form action="" method="post">
 			<div>
 				<label for="MeetingRoomName">Room Name: 
 					<input type="text" name="MeetingRoomName" id="MeetingRoomName"
@@ -44,8 +44,8 @@
 			</div>
 			<div>
 				<input type="hidden" name="MeetingRoomID" value="<?php htmlout($meetingRoomID); ?>">
-				<input type="submit" value="<?php htmlout($button); ?>">
-				<input type="submit" value="Cancel">
+				<input type="submit" name="action" value="<?php htmlout($button); ?>">
+				<input type="submit" name="action" value="Cancel">
 			</div>
 			<div>
 				<input type="<?php htmlout($reset); ?>">

@@ -60,7 +60,7 @@
 			</div>
 		</form>		
 		<?php if($rowNum>0) :?>
-			<form action="?add" method="post">
+			<form action="" method="post">
 				<div>
 					<input type="submit" name="action" value="Create Meeting Room">
 				</div>
@@ -86,10 +86,7 @@
 					<tr>
 						<?php $goto = "http://$_SERVER[HTTP_HOST]/admin/roomequipment/?Meetingroom=" . $room['MeetingRoomID'];?>
 						<form action="<?php htmlout($goto) ;?>" method="post">
-							<td>
-								<input type="submit" value="Equipment">
-								<?php //TO-DO: test if needed <input type="hidden" name="Meetingroom" value="<?php htmlout($room['MeetingRoomID']); //"> after php end?>				
-							</td>
+							<td><input type="submit" value="Equipment"></td>
 							<td><?php htmlout($room['MeetingRoomEquipmentAmount']); ?></td>
 						</form>
 						<form action="" method="post">
@@ -117,7 +114,7 @@
 		<?php else : ?>
 			<tr><b>There are no meeting rooms registered in the database.</b></tr>
 			<tr>			
-				<form action="?add" method="post">
+				<form action="" method="post">
 					<div>
 						<input type="submit" name="action" value="Create Meeting Room">
 					</div>
