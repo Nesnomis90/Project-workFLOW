@@ -281,6 +281,33 @@ SELECT 	u.`userID`,
 		ORDER BY u.`AccessID`
 		ASC;
 
+SELECT BIG_SEC_TO_TIME(424*86400);
+
+SELECT 		c.companyID 										AS CompID,
+			c.`name` 											AS CompanyName, 
+			COUNT(c.`name`) 									AS NumberOfEmployees,
+			(SELECT BIG_SEC_TO_TIME(SUM(TIME_TO_SEC(b.`actualEndDateTime`) - TIME_TO_SEC(b.`startDateTime`))) 
+			FROM `booking` b 
+			INNER JOIN `company` c 
+			ON b.`CompanyID` = c.`CompanyID` 
+			WHERE b.`CompanyID` = CompID
+			AND YEAR(b.`actualEndDateTime`) = YEAR(NOW())
+			AND MONTH(b.`actualEndDateTime`) = MONTH(NOW())
+            GROUP BY b.`bookingID`)   	AS MonthlyCompanyWideBookingTimeUsed,
+			(
+				SELECT (BIG_SEC_TO_TIME(SUM(DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`))*86400 + SUM(TIME_TO_SEC(b.`actualEndDateTime`) - TIME_TO_SEC(b.`startDateTime`)) ) ) 
+			FROM `booking` b 
+			INNER JOIN `company` c 
+			ON b.`CompanyID` = c.`CompanyID` 
+			WHERE b.`CompanyID` = CompID)   					AS TotalCompanyWideBookingTimeUsed,
+			DATE_FORMAT(c.`dateTimeCreated`, '%d %b %Y %T')		AS DatetimeCreated,
+			DATE_FORMAT(c.`removeAtDate`, '%d %b %Y')			AS DeletionDate 
+FROM 		`company` c 
+LEFT JOIN 	`employee` e 
+ON 			c.CompanyID = e.CompanyID 
+GROUP BY 	c.`name`;
+
+
 SELECT 		c.companyID 										AS CompID,
 			c.`name` 											AS CompanyName, 
 			COUNT(c.`name`) 									AS NumberOfEmployees,

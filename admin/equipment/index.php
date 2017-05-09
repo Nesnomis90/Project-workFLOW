@@ -86,7 +86,7 @@ function validateUserInputs(){
 		// only if have changed the name (edit only)
 	if(isset($_SESSION['EditEquipmentOriginalInfo']) AND $_SESSION['EditEquipmentOriginalInfo']['EquipmentName'] == $validatedEquipmentName){
 		// Do nothing, since we haven't changed the name we're editing
-	} else {
+	} elseif(!$invalidInput) {
 		// Check if new name is taken
 		try
 		{
@@ -505,7 +505,7 @@ try
 	$sql = "SELECT 		e.`EquipmentID`									AS TheEquipmentID,
 						e.`name`										AS EquipmentName,
 						e.`description`									AS EquipmentDescription,
-						DATE_FORMAT(e.`datetimeAdded`,'%d %b %Y %T') 	AS DateTimeAdded,
+						e.`datetimeAdded`								AS DateTimeAdded,
 						UNIX_TIMESTAMP(e.`datetimeAdded`)				AS OrderByDate,
 						GROUP_CONCAT(m.`name` separator ', ')			AS EquipmentIsInTheseRooms
 			FROM 		`equipment` e
@@ -534,12 +534,15 @@ catch (PDOException $e)
 // Create an array with the actual key/value pairs we want to use in our HTML	
 foreach($result AS $row){
 	
+	$addedDateTime = $row['DateTimeAdded'];
+	$displayAddedDateTime = convertDatetimeToFormat($addedDateTime , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
+	
 	// Create an array with the actual key/value pairs we want to use in our HTML
 	$equipment[] = array(
 							'TheEquipmentID' => $row['TheEquipmentID'],
 							'EquipmentName' => $row['EquipmentName'],
 							'EquipmentDescription' => $row['EquipmentDescription'],
-							'DateTimeAdded' => $row['DateTimeAdded'],
+							'DateTimeAdded' => $displayAddedDateTime,
 							'EquipmentIsInTheseRooms' => $row['EquipmentIsInTheseRooms']							
 						);
 }

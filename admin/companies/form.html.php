@@ -12,19 +12,31 @@
 			<p><b><?php htmlout($_SESSION['AddCompanyError']); ?></b></p>
 			<?php unset($_SESSION['AddCompanyError']); ?>
 		<?php endif; ?>		
-		<form action="?<?php htmlout($action); ?>" method="post">
+		<form action="" method="post">
+			<?php if(isset($originalCompanyName)) : ?>
+				<div>
+					<label for="originalCompanyName">Original Company Name:</label>
+					<b><?php htmlout($originalCompanyName); ?></b>	
+				</div>
+			<?php endif; ?>
 			<div>
-				<label for="CompanyName">Company Name: 
+				<label for="CompanyName">Set a new Company Name: 
 					<input type="text" name="CompanyName" id="CompanyName" 
-					required placeholder="Enter A Company Name" 
-					oninvalid="this.setCustomValidity('Enter A Company Name Here')"
-					oninput="setCustomValidity('')"
+					placeholder="Enter A Company Name"
 					value="<?php htmlout($CompanyName); ?>">
 				</label>
 			</div>
 			<?php if ($ShowDateToRemove) :?>
 				<div>
-					<label for="DateToRemove">Date to Remove: 
+					<label for="originalDateToRemove">Original Date to Remove:</label>
+					<?php if(isset($originalDateToDisplay) AND $originalDateToDisplay != "") : ?>
+						<b><?php htmlout($originalDateToDisplay); ?></b>	
+					<?php else : ?>
+						<b>No date has been Set</b>
+					<?php endif; ?>
+				</div>
+				<div>
+					<label for="DateToRemove">Set a new Date to Remove: 
 						<input type="text" name="DateToRemove" id="DateToRemove"
 						value="<?php htmlout($DateToRemove); ?>">
 					</label>
@@ -32,7 +44,7 @@
 			<?php endif; ?>
 			<div>
 				<input type="hidden" name="id" value="<?php htmlout($id); ?>">
-				<input type="submit" value="<?php htmlout($button); ?>">
+				<input type="submit" name="action" value="<?php htmlout($button); ?>">
 			</div>
 			<div>
 				<input type="<?php htmlout($reset); ?>">

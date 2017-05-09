@@ -28,7 +28,7 @@ function clearEditUserSessions(){
 	unset($_SESSION['EditUserOldFirstname']);
 	unset($_SESSION['EditUserOldLastname']);
 	unset($_SESSION['EditUserOldAccessID']);
-	unset($_SESSION['EditUserOldDisplayname'])
+	unset($_SESSION['EditUserOldDisplayname']);
 	unset($_SESSION['EditUserOldBookingDescription']);
 	
 	unset($_SESSION['EditUserChangedEmail']);	
@@ -784,7 +784,7 @@ if (isset($_GET['editform']))
 
 // End of user input code snippets
 
-/if (isset($refreshUsers) AND $refreshUsers){
+if (isset($refreshUsers) AND $refreshUsers){
 	// TO-DO: Add code that should occur on a refresh
 	unset($refreshUsers);
 }
@@ -806,9 +806,9 @@ try
 						u.`displayname`,
 						u.`bookingdescription`,
 						GROUP_CONCAT(CONCAT_WS(' in ', cp.`name`, c.`name`) separator ', ') 	AS WorksFor,
-						DATE_FORMAT(u.`create_time`, '%d %b %Y %T') 							AS DateCreated,
+						u.`create_time`								 							AS DateCreated,
 						u.`isActive`,
-						DATE_FORMAT(u.`lastActivity`, '%d %b %Y %T') 							AS LastActive
+						u.`lastActivity`							 							AS LastActive
 			FROM 		`user` u 
 			LEFT JOIN 	`employee` e 
 			ON 			e.UserID = u.userID 
@@ -838,6 +838,11 @@ catch (PDOException $e)
 // Create an array with the actual key/value pairs we want to use in our HTML
 foreach ($result as $row)
 {
+	$createdDateTime = $row['DateCreated'];
+	$lastActiveDateTime = $row['LastActive'];
+	$displayCreatedDateTime = convertDatetimeToFormat($createdDateTime , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
+	$displayLastActiveDateTime = convertDatetimeToFormat($lastActiveDateTime , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
+	
 	// If user has activated the account
 	if($row['isActive'] == 1){
 		$userinfo = $row['lastname'] . ', ' . $row['firstname'] . ' - ' . $row['email'];
@@ -849,8 +854,8 @@ foreach ($result as $row)
 						'displayname' => $row['displayname'],
 						'bookingdescription' => $row['bookingdescription'],
 						'worksfor' => $row['WorksFor'],
-						'datecreated' => $row['DateCreated'],			
-						'lastactive' => $row['LastActive'],
+						'datecreated' => $displayCreatedDateTime,			
+						'lastactive' => $displayLastActiveDateTime,
 						'UserInfo' => $userinfo
 						);
 	} elseif ($row['isActive'] == 0) {
@@ -859,7 +864,7 @@ foreach ($result as $row)
 				'lastname' => $row['lastname'],
 				'email' => $row['email'],
 				'accessname' => $row['AccessName'],
-				'datecreated' => $row['DateCreated']
+				'datecreated' => $displayCreatedDateTime
 				);
 	}
 }

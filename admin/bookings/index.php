@@ -10,20 +10,8 @@ if (!isUserAdmin()){
 	exit();
 }
 
-// Function to clear out session information
-function clearBookingSessions(){
-	
-	unset($_SESSION['EditBookingInfoArray']);
-	unset($_SESSION['EditBookingChangeUser']);
-	unset($_SESSION['EditBookingUsersArray']);
-	unset($_SESSION['EditBookingOriginalInfoArray']);
-	unset($_SESSION['EditBookingMeetingRoomsArray']);	
-	unset($_SESSION['EditBookingUserSearch']);
-	unset($_SESSION['EditBookingSelectedNewUser']);
-	unset($_SESSION['EditBookingSelectedACompany']);
-	unset($_SESSION['EditBookingDefaultDisplayNameForNewUser']);
-	unset($_SESSION['EditBookingDefaultBookingDescriptionForNewUser']);
-	
+// Function to clear sessions used to remember user inputs on refreshing the add booking form
+function clearAddBookingSessions(){
 	unset($_SESSION['AddBookingInfoArray']);
 	unset($_SESSION['AddBookingChangeUser']);
 	unset($_SESSION['AddBookingUsersArray']);
@@ -33,8 +21,21 @@ function clearBookingSessions(){
 	unset($_SESSION['AddBookingSelectedNewUser']);
 	unset($_SESSION['AddBookingSelectedACompany']);
 	unset($_SESSION['AddBookingDefaultDisplayNameForNewUser']);
-	unset($_SESSION['AddBookingDefaultBookingDescriptionForNewUser']);	
-	
+	unset($_SESSION['AddBookingDefaultBookingDescriptionForNewUser']);		
+}
+
+// Function to clear sessions used to remember user inputs on refreshing the edit booking form
+function clearEditBookingSessions(){
+	unset($_SESSION['EditBookingInfoArray']);
+	unset($_SESSION['EditBookingChangeUser']);
+	unset($_SESSION['EditBookingUsersArray']);
+	unset($_SESSION['EditBookingOriginalInfoArray']);
+	unset($_SESSION['EditBookingMeetingRoomsArray']);	
+	unset($_SESSION['EditBookingUserSearch']);
+	unset($_SESSION['EditBookingSelectedNewUser']);
+	unset($_SESSION['EditBookingSelectedACompany']);
+	unset($_SESSION['EditBookingDefaultDisplayNameForNewUser']);
+	unset($_SESSION['EditBookingDefaultBookingDescriptionForNewUser']);	
 }
 
 // Function to remember the user inputs in Edit Booking
@@ -1092,7 +1093,7 @@ if(isset($_POST['edit']) AND $_POST['edit'] == "Finish Edit")
 	}
 		
 	$_SESSION['BookingUserFeedback'] = "Successfully updated the booking information!";
-	clearBookingSessions();
+	clearEditBookingSessions();
 	
 	// Load booking history list webpage with the updated booking information
 	header('Location: .');
@@ -1556,8 +1557,8 @@ if (isset($_POST['add']) AND $_POST['add'] == "Add booking")
 	
 	$_SESSION['BookingUserFeedback'] = "Successfully created the booking.";
 	
-	$displayValidatedStartDate = convertDatetimeToFormat($startDateTime , 'Y-m-d H:i:s', 'F jS Y H:i:s');
-	$displayValidatedEndDate = convertDatetimeToFormat($endDateTime, 'Y-m-d H:i:s', 'F jS Y H:i:s');
+	$displayValidatedStartDate = convertDatetimeToFormat($startDateTime , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
+	$displayValidatedEndDate = convertDatetimeToFormat($endDateTime, 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
 	
 	// Add a log event that a booking has been created
 	try
@@ -1648,7 +1649,7 @@ if (isset($_POST['add']) AND $_POST['add'] == "Add booking")
 	$_SESSION['BookingUserFeedback'] .= "this is the email msg we're sending out: $emailMessage. Sent to email: $email."; // TO-DO: Remove after testing	
 	
 	// Booking a new meeting is done. Reset all connected sessions.
-	clearBookingSessions();
+	clearAddBookingSessions();
 	
 	// Load booking history list webpage with new booking
 	header('Location: .');
@@ -1920,16 +1921,17 @@ if (isset($_POST['add']) AND $_POST['add'] == 'Cancel'){
 
 // END OF USER INPUT CODE //
 
-// We're not doing any adding or editing anymore, clear all remembered values
-clearBookingSessions();
-
+// Remove any unused variables from memory // TO-DO: Change if this ruins having multiple tabs open etc.
+clearAddBookingSessions();
+clearEditBookingSessions();
 
 
 // BOOKING OVERVIEW CODE SNIPPET START //
 
-/*if($refreshBookings) {
+if(isset($refreshBookings) AND $refreshBookings) {
 	// TO-DO: Add code that should occur on a refresh
-}*/
+	unset($refreshBookings);
+}
 
 
 
@@ -1958,9 +1960,9 @@ try
 						u.email, 
 						GROUP_CONCAT(c.`name` separator ', ') 			AS WorksForCompany, 
 						b.description 									AS BookingDescription, 
-						DATE_FORMAT(b.dateTimeCreated, '%d %b %Y %T') 	AS BookingWasCreatedOn, 
-						DATE_FORMAT(b.actualEndDateTime, '%d %b %Y %T') AS BookingWasCompletedOn, 
-						DATE_FORMAT(b.dateTimeCancelled, '%d %b %Y %T') AS BookingWasCancelledOn 
+						b.dateTimeCreated 								AS BookingWasCreatedOn, 
+						b.actualEndDateTime								AS BookingWasCompletedOn, 
+						b.dateTimeCancelled								AS BookingWasCancelledOn 
 			FROM 		`booking` b 
 			LEFT JOIN 	`meetingroom` m 
 			ON 			b.meetingRoomID = m.meetingRoomID 
@@ -2025,9 +2027,15 @@ foreach ($result as $row)
 	
 	$startDateTime = $row['StartTime'];
 	$endDateTime = $row['EndTime'];
+	$completedDateTime = $row['BookingWasCompletedOn'];
+	$cancelledDateTime = $row['BookingWasCancelledOn'];
+	$createdDateTime = $row['BookingWasCreatedOn'];
 	
-	$displayValidatedStartDate = convertDatetimeToFormat($startDateTime , 'Y-m-d H:i:s', 'F jS Y H:i:s');
-	$displayValidatedEndDate = convertDatetimeToFormat($endDateTime, 'Y-m-d H:i:s', 'F jS Y H:i:s');
+	$displayValidatedStartDate = convertDatetimeToFormat($startDateTime , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
+	$displayValidatedEndDate = convertDatetimeToFormat($endDateTime, 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
+	$displayCompletedDateTime = convertDatetimeToFormat($completedDateTime, 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
+	$displayCancelledDateTime = convertDatetimeToFormat($cancelledDateTime, 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);	
+	$displayCreatedDateTime = convertDatetimeToFormat($createdDateTime, 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
 	
 	$userinfo = $row['lastName'] . ', ' . $row['firstName'] . ' - ' . $row['email'];
 	$meetinginfo = $row['BookedRoomName'] . ' for the timeslot: ' . $displayValidatedStartDate . 
@@ -2046,9 +2054,9 @@ foreach ($result as $row)
 						'lastName' => $row['lastName'],
 						'email' => $row['email'],
 						'WorksForCompany' => $row['WorksForCompany'],
-						'BookingWasCreatedOn' => $row['BookingWasCreatedOn'],
-						'BookingWasCompletedOn' => $row['BookingWasCompletedOn'],
-						'BookingWasCancelledOn' => $row['BookingWasCancelledOn'],	
+						'BookingWasCreatedOn' => $displayCreatedDateTime,
+						'BookingWasCompletedOn' => $displayCompletedDateTime,
+						'BookingWasCancelledOn' => $displayCancelledDateTime,	
 						'UserInfo' => $userinfo,
 						'MeetingInfo' => $meetinginfo
 					);
