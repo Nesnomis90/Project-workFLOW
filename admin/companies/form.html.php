@@ -13,8 +13,14 @@
 			<?php unset($_SESSION['AddCompanyError']); ?>
 		<?php endif; ?>		
 		<form action="" method="post">
+			<?php if(isset($originalCompanyName)) : ?>
+				<div>
+					<label for="originalCompanyName">Original Company Name:</label>
+					<b><?php htmlout($originalCompanyName); ?></b>	
+				</div>
+			<?php endif; ?>
 			<div>
-				<label for="CompanyName">Company Name: 
+				<label for="CompanyName">Set a new Company Name: 
 					<input type="text" name="CompanyName" id="CompanyName" 
 					placeholder="Enter A Company Name"
 					value="<?php htmlout($CompanyName); ?>">
@@ -22,7 +28,15 @@
 			</div>
 			<?php if ($ShowDateToRemove) :?>
 				<div>
-					<label for="DateToRemove">Date to Remove: 
+					<label for="originalDateToRemove">Original Date to Remove:</label>
+					<?php if(isset($originalDateToDisplay) AND $originalDateToDisplay != "") : ?>
+						<b><?php htmlout($originalDateToDisplay); ?></b>	
+					<?php else : ?>
+						<b>No date has been Set</b>
+					<?php endif; ?>
+				</div>
+				<div>
+					<label for="DateToRemove">Set a new Date to Remove: 
 						<input type="text" name="DateToRemove" id="DateToRemove"
 						value="<?php htmlout($DateToRemove); ?>">
 					</label>

@@ -43,7 +43,7 @@ function validateUserInputs(){
 	} else {
 		$dateToRemove = ""; //This doesn't have to be set
 	}
-	
+
 	// Remove excess whitespace and prepare strings for validation
 	$validatedCompanyName = trimExcessWhitespace($companyName);
 	$validatedCompanyDateToRemove = trimExcessWhitespace($dateToRemove);
@@ -72,15 +72,23 @@ function validateUserInputs(){
 		$_SESSION['AddCompanyError'] = "The company name submitted is too long.";	
 		$invalidInput = TRUE;
 	}
-
-	// Check if the dateTime input we received are actually datetime
-	$validatedCompanyDateToRemove = correctDatetimeFormat($validatedCompanyDateToRemove);
-
-	if (isset($validatedCompanyDateToRemove) AND $validatedCompanyDateToRemove === FALSE AND !$invalidInput){
-		$_SESSION[$FeedbackSessionToUse] = "The start date you submitted did not have a correct format. Please try again.";
-		$invalidInput = TRUE;
-	}
 	
+	
+	// Check if the dateTime input we received are actually datetime
+	// if the user submitted one
+	if($validatedCompanyDateToRemove != ""){
+		
+		$correctFormatIfValid = correctDatetimeFormat($validatedCompanyDateToRemove);
+
+		if (isset($correctFormatIfValid) AND $correctFormatIfValid === FALSE AND !$invalidInput){
+			$_SESSION['AddCompanyError'] = "The date you submitted did not have a correct format. Please try again.";
+			$invalidInput = TRUE;
+		}
+		if(isset($correctFormatIfValid) AND $correctFormatIfValid !== FALSE){
+			$validatedCompanyDateToRemove = convertDatetimeToFormat($correctFormatIfValid,'Y-m-d H:i:s', 'Y-m-d');
+		}
+	}
+
 	// Check if the company already exists (based on name).
 		// only if have changed the name (edit only)
 	if(isset($_SESSION['EditCompanyOriginalName']) AND $_SESSION['EditCompanyOriginalName'] == $validatedCompanyName){
@@ -280,13 +288,7 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR
 		} else {
 			$CompanyName = '';
 		}
-		
-		if(isset($_SESSION['EditCompanyOldRemoveDate'])){
-			$DateToRemove = $_SESSION['EditCompanyOldRemoveDate'];
-		} else {
-			$DateToRemove = '';
-		}
-		
+			
 		if(isset($_SESSION['EditCompanyCompanyID'])){
 			$id = $_SESSION['EditCompanyCompanyID'];
 		} else {
@@ -333,12 +335,17 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR
 		$_SESSION['EditCompanyOriginalName'] = $CompanyName;
 		$_SESSION['EditCompanyOriginalRemoveDate'] = $DateToRemove;
 		$_SESSION['EditCompanyCompanyID'] = $id;
-		
-		// TO-DO: Make the whole date format work on edit
+	}
+	// Display original values
+	$originalCompanyName = $_SESSION['EditCompanyOriginalName'];
+	$originalDateToDisplay = convertDatetimeToFormat($_SESSION['EditCompanyOriginalRemoveDate'] , 'Y-m-d', 'F jS Y');
+
+	if(isset($_SESSION['EditCompanyOldRemoveDate'])){
+		$DateToRemove = $_SESSION['EditCompanyOldRemoveDate'];
+	} else {
+		$DateToRemove = $originalDateToDisplay;
 	}
 	
-	$DateToRemove = convertDatetimeToFormat($DateToRemove , 'Y-m-d', 'F jS Y');
-			
 	// Set always correct values
 	$pageTitle = 'Edit Company';
 	$button = 'Edit Company';
@@ -362,7 +369,7 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Add Company')
 	// Refresh form on invalid
 	if($invalidInput){
 		$_SESSION['AddCompanyCompanyName'] = $validatedCompanyName;
-
+		
 		$_SESSION['refreshAddCompany'] = TRUE;
 		header('Location: .');
 		exit();			
@@ -467,8 +474,8 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Edit Company'))
 		$_SESSION['EditCompanyOriginalRemoveDate'] != $validatedCompanyDateToRemove){
 		$NumberOfChanges++;
 	}
-	
-	// Give feedback on what we doesn
+
+	// Give feedback on to user based on what we do
 	// No change or update
 	if($NumberOfChanges > 0){
 		// Update selected company with the new information
@@ -569,8 +576,8 @@ try
 	// Only takes into account time spent and company the booking was booked for.
 	$sql = "SELECT 		c.companyID 										AS CompID,
 						c.`name` 											AS CompanyName,
-						DATE_FORMAT(c.`dateTimeCreated`, '%d %b %Y %T')		AS DatetimeCreated,
-						DATE_FORMAT(c.`removeAtDate`, '%d %b %Y')			AS DeletionDate,
+						c.`dateTimeCreated`									AS DatetimeCreated,
+						c.`removeAtDate`									AS DeletionDate,
 						c.`isActive`										AS CompanyActivated,
 						(
 							SELECT 	COUNT(c.`name`) 
@@ -630,19 +637,24 @@ foreach ($result as $row)
 		$TotalTimeUsed = $row['TotalCompanyWideBookingTimeUsed'];
 	}
 	
+	$dateCreated = $row['DatetimeCreated'];	
+	$dateToRemove = $row['DeletionDate'];
+	$dateTimeCreatedToDisplay = convertDatetimeToFormat($dateCreated, 'Y-m-d H:i:s', 'F jS Y H:i:s');
+	$dateToRemoveToDisplay = convertDatetimeToFormat($dateToRemove, 'Y-m-d', 'F jS Y');
+	
 	if($row['CompanyActivated'] == 1){
 		$companies[] = array('id' => $row['CompID'], 
 						'CompanyName' => $row['CompanyName'],
 						'NumberOfEmployees' => $row['NumberOfEmployees'],
 						'MonthlyCompanyWideBookingTimeUsed' => $MonthlyTimeUsed,
 						'TotalCompanyWideBookingTimeUsed' => $TotalTimeUsed,
-						'DeletionDate' => $row['DeletionDate'],
-						'DatetimeCreated' => $row['DatetimeCreated']
+						'DeletionDate' => $dateToRemoveToDisplay,
+						'DatetimeCreated' => $dateTimeCreatedToDisplay
 						);
 	} elseif($row['CompanyActivated'] == 0) {
 		$inactivecompanies[] = array('id' => $row['CompID'], 
 						'CompanyName' => $row['CompanyName'],
-						'DatetimeCreated' => $row['DatetimeCreated']
+						'DatetimeCreated' => $dateTimeCreatedToDisplay
 						);		
 	}	
 }
