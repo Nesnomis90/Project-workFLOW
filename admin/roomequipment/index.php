@@ -822,5 +822,4 @@ foreach($result AS $row){
 
 // Create the equipment list in HTML
 include_once 'roomequipment.html.php';
-
 ?>
