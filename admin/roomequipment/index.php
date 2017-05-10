@@ -22,13 +22,11 @@ function clearAddRoomEquipmentSessions(){
 	
 	unset($_SESSION['AddRoomEquipmentMeetingRoomArray']);
 	unset($_SESSION['AddRoomEquipmentMeetingRoomSearch']);
-	
-	unset($_SESSION['AddEmployeeCompaniesArray']);
 }
 
 // Function to clear sessions used to remember user inputs on refreshing the 'edit'/'change amount' room equipment form
 function clearEditRoomEquipmentSessions(){
-	// TO-DO: Add code later if we add any edit sessions
+	unset($_SESSION['EditRoomEquipmentOriginalEquipmentAmount']);
 }
 
 // If admin wants to be able to remove equipment from a room it needs to enabled first
@@ -127,7 +125,7 @@ if(isset($_POST['action']) AND $_POST['action'] == 'Remove'){
 if(isset($_POST['action']) AND $_POST['action'] == 'Search'){
 	// Let's remember what was searched for
 	
-	$_SESSION['AddRoomEquipmentEquipmentSearch'] = $_POST['equipmentsearchstring'];
+	$_SESSION['AddRoomEquipmentEquipmentSearch'] = trimExcessWhitespace($_POST['equipmentsearchstring']);
 	$_SESSION['AddRoomEquipmentSelectedEquipment'] = $_POST['EquipmentID'];
 	$_SESSION['AddRoomEquipmentSelectedEquipmentAmount'] = $_POST['EquipmentAmount'];
 	$_SESSION['refreshAddRoomEquipment'] = TRUE;
@@ -146,7 +144,7 @@ if(isset($_POST['action']) AND $_POST['action'] == 'Search'){
 		header("Location: $location");
 		exit();
 	} else {
-		$_SESSION['AddRoomEquipmentMeetingRoomSearch'] = $_POST['meetingroomsearchstring'];
+		$_SESSION['AddRoomEquipmentMeetingRoomSearch'] = trimExcessWhitespace($_POST['meetingroomsearchstring']);
 		$_SESSION['AddRoomEquipmentSelectedMeetingRoom'] = $_POST['MeetingRoomID'];
 		
 		// Also we want to refresh AddRoomEquipment with our new values!
@@ -385,8 +383,8 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Confirm Room Equipment')
 		$_SESSION['refreshAddRoomEquipment'] = TRUE;
 		$_SESSION['AddRoomEquipmentError'] = $d;
 		//TO-DO: Remove/Change the search variables if we don't want it to show up after a search		
-		$_SESSION['AddRoomEquipmentMeetingRoomSearch'] = $_POST['meetingroomsearchstring'];
-		$_SESSION['AddRoomEquipmentEquipmentSearch'] = $_POST['equipmentsearchstring'];
+		$_SESSION['AddRoomEquipmentMeetingRoomSearch'] = trimExcessWhitespace($_POST['meetingroomsearchstring']);
+		$_SESSION['AddRoomEquipmentEquipmentSearch'] = trimExcessWhitespace($_POST['equipmentsearchstring']);
 		
 		if(isset($_GET['Meetingroom'])){	
 			// We were looking at a specific meeting room. Let's go back to info about that meetingroom
@@ -426,12 +424,11 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Confirm Room Equipment')
 			
 			$_SESSION['AddRoomEquipmentSelectedEquipment'] = $_POST['EquipmentID'];
 			$_SESSION['AddRoomEquipmentSelectedEquipmentAmount'] = $_POST['EquipmentAmount'];
-			$_SESSION['AddRoomEquipmentMeetingRoomSearch'] = $_POST['meetingroomsearchstring'];
-			$_SESSION['AddRoomEquipmentEquipmentSearch'] = $_POST['equipmentsearchstring'];
+			$_SESSION['AddRoomEquipmentMeetingRoomSearch'] = trimExcessWhitespace($_POST['meetingroomsearchstring']);
+			$_SESSION['AddRoomEquipmentEquipmentSearch'] = trimExcessWhitespace($_POST['equipmentsearchstring']);
 			
 			$_SESSION['refreshAddRoomEquipment'] = TRUE;
 			$_SESSION['AddRoomEquipmentError'] = "The selected equipment is already in the selected meeting room!";
-			
 			
 			if(isset($_GET['Meetingroom'])){
 				
@@ -533,12 +530,12 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Confirm Room Equipment')
 					break;
 				}
 			}
-			unset($_SESSION['AddEmployeeCompaniesArray']);
+			unset($_SESSION['AddRoomEquipmentEquipmentArray']);
 		}
 	
 		// Save a description with information about the equipment that was added
 		// to the meeting room.		
-		$description = 'The equipment: ' . $equipmentinfo . 
+		$logEventDescription = 'The equipment: ' . $equipmentinfo . 
 		' was added to the meeting room: ' . $meetingroominfo . 
 		' with the amount: ' . $_POST['EquipmentAmount'] . ". Added by: " .
 		$_SESSION['LoggedInUserName'];
@@ -558,7 +555,7 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Confirm Room Equipment')
 		$s = $pdo->prepare($sql);
 		$s->bindValue(':MeetingRoomID', $MeetingRoomID);
 		$s->bindValue(':EquipmentID', $_POST['EquipmentID']);	
-		$s->bindValue(':description', $description);
+		$s->bindValue(':description', $logEventDescription);
 		$s->execute();
 		
 		//Close the connection
@@ -641,6 +638,8 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Change Amount')
 	$EquipmentID = $row['TheEquipmentID'];
 	$MeetingRoomID = $row['MeetingRoomID'];
 	
+	$_SESSION['EditRoomEquipmentOriginalEquipmentAmount'] = $EquipmentID;
+	
 	// Change to the actual form we want to use
 	include 'changeamount.html.php';
 	exit();
@@ -649,34 +648,49 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Change Amount')
 // Perform the actual database update of the edited information
 if (isset($_POST['action']) AND $_POST['action'] == 'Confirm Amount')
 {
-	// Update selected room equipment connection with a new equipment amount
-	try
-	{
-		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+	// Check if there were any changes made
+	$NumberOfChanges = 0;
+	$selectedRoomEquipmentAmount = $_POST['EquipmentAmount'];
+	
+	if(	isset($_SESSION['EditRoomEquipmentOriginalEquipmentAmount']) AND 
+		$_SESSION['EditRoomEquipmentOriginalEquipmentAmount'] != $selectedRoomEquipmentAmount){
+		$NumberOfChanges++;
+	}	
+	
+	if($NumberOfChanges > 0){
+		// Update selected room equipment connection with a new equipment amount
+		try
+		{
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+			
+			$pdo = connect_to_db();
+			$sql = 'UPDATE 	`roomequipment` 
+					SET		`amount` = :EquipmentAmount
+					WHERE 	`MeetingRoomID` = :MeetingRoomID
+					AND 	`EquipmentID` = :EquipmentID';
+			$s = $pdo->prepare($sql);
+			$s->bindValue(':MeetingRoomID', $_POST['MeetingRoomID']);
+			$s->bindValue(':EquipmentID', $_POST['EquipmentID']);
+			$s->bindValue(':EquipmentAmount', $selectedRoomEquipmentAmount);
+			$s->execute(); 
+					
+			//close connection
+			$pdo = null;	
+		}
+		catch (PDOException $e)
+		{
+			$error = 'Error changing equipment amount in room equipment information: ' . $e->getMessage();
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+			$pdo = null;
+			exit();		
+		}
 		
-		$pdo = connect_to_db();
-		$sql = 'UPDATE 	`roomequipment` 
-				SET		`amount` = :EquipmentAmount
-				WHERE 	`MeetingRoomID` = :MeetingRoomID
-				AND 	`EquipmentID` = :EquipmentID';
-		$s = $pdo->prepare($sql);
-		$s->bindValue(':MeetingRoomID', $_POST['MeetingRoomID']);
-		$s->bindValue(':EquipmentID', $_POST['EquipmentID']);
-		$s->bindValue(':EquipmentAmount', $_POST['EquipmentAmount']);
-		$s->execute(); 
-				
-		//close connection
-		$pdo = null;	
-	}
-	catch (PDOException $e)
-	{
-		$error = 'Error changing equipment amount in room equipment information: ' . $e->getMessage();
-		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
-		$pdo = null;
-		exit();		
+		$_SESSION['RoomEquipmentUserFeedback'] = "Successfully updated the equipment info for the room.";		
+	} else {
+		$_SESSION['RoomEquipmentUserFeedback'] = "No changes were made to the equipment info for the room.";
 	}
 	
-	$_SESSION['RoomEquipmentUserFeedback'] = "Successfully updated the equipment info for the room.";
+	clearEditRoomEquipmentSessions();
 	
 	if(isset($_GET['Meetingroom'])){	
 		// Refresh RoomEquipment for the specific meeting room again
@@ -808,5 +822,4 @@ foreach($result AS $row){
 
 // Create the equipment list in HTML
 include_once 'roomequipment.html.php';
-
 ?>

@@ -1921,7 +1921,8 @@ if (isset($_POST['add']) AND $_POST['add'] == 'Cancel'){
 
 // END OF USER INPUT CODE //
 
-// Remove any unused variables from memory // TO-DO: Change if this ruins having multiple tabs open etc.
+// Remove any unused variables from memory 
+// TO-DO: Change if this ruins having multiple tabs open etc.
 clearAddBookingSessions();
 clearEditBookingSessions();
 

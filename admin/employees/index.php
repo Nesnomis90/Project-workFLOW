@@ -10,6 +10,25 @@ if (!isUserAdmin()){
 	exit();
 }
 
+// Function to clear sessions used to remember user inputs on refreshing the add employee form
+clearAddEmployeeSessions(){
+	unset($_SESSION['AddEmployeeCompanySearch']);
+	unset($_SESSION['AddEmployeeUserSearch']);
+	
+	unset($_SESSION['AddEmployeeSelectedCompanyID']);
+	unset($_SESSION['AddEmployeeSelectedUserID']);
+	unset($_SESSION['AddEmployeeSelectedPositionID']);
+	
+	unset($_SESSION['AddEmployeeCompaniesArray']);
+	unset($_SESSION['AddEmployeeCompanyPositionArray']);
+	unset($_SESSION['AddEmployeeUsersArray']);	
+}
+
+// Function to clear sessions used to remember user inputs on refreshing the edit employee form
+clearEditEmployeeSessions(){
+	unset($_SESSION['EditEmployeeOriginalPositionID']);
+}
+
 // If admin wants to be able to delete companies it needs to enabled first
 if (isset($_POST['action']) AND $_POST['action'] == "Enable Remove"){
 	$_SESSION['employeesEnableDelete'] = TRUE;
@@ -55,7 +74,7 @@ if(isset($_POST['action']) AND $_POST['action'] == 'Remove'){
 	{
 		// Save a description with information about the employee that was removed
 		// from the company.
-		$description = 'The user: ' . $_POST['UserName'] . 
+		$logEventDescription = 'The user: ' . $_POST['UserName'] . 
 		' was removed from the company: ' . $_POST['CompanyName'] . 
 		'. Removed by: ' . $_SESSION['LoggedInUserName'];
 		
@@ -76,7 +95,7 @@ if(isset($_POST['action']) AND $_POST['action'] == 'Remove'){
 		$s->bindValue(':CompanyID', $_POST['CompanyID']);
 		$s->bindValue(':UserID', $_POST['UserID']);
 		$s->bindValue(':PositionID', $_POST['PositionID']);		
-		$s->bindValue(':description', $description);
+		$s->bindValue(':description', $logEventDescription);
 		$s->execute();
 		
 		//Close the connection
@@ -110,7 +129,7 @@ if(isset($_POST['action']) AND $_POST['action'] == 'Search'){
 	// If we are looking at a specific company, let's refresh info about
 	// that company again.
 	if(isset($_GET['Company'])){	
-		$_SESSION['AddEmployeeUserSearch'] = $_POST['usersearchstring'];
+		$_SESSION['AddEmployeeUserSearch'] = trimExcessWhitespace($_POST['usersearchstring']);
 		$_SESSION['AddEmployeeSelectedUserID'] = $_POST['UserID'];
 		$_SESSION['AddEmployeeSelectedPositionID'] = $_POST['PositionID'];
 		$_SESSION['refreshAddEmployee'] = TRUE;
@@ -121,8 +140,8 @@ if(isset($_POST['action']) AND $_POST['action'] == 'Search'){
 		header("Location: $location");
 		exit();
 	} else {
-		$_SESSION['AddEmployeeCompanySearch'] = $_POST['companysearchstring'];
-		$_SESSION['AddEmployeeUserSearch'] = $_POST['usersearchstring'];
+		$_SESSION['AddEmployeeCompanySearch'] = trimExcessWhitespace($_POST['companysearchstring']);
+		$_SESSION['AddEmployeeUserSearch'] = trimExcessWhitespace($_POST['usersearchstring']);
 		$_SESSION['AddEmployeeSelectedCompanyID'] = $_POST['CompanyID'];
 		$_SESSION['AddEmployeeSelectedUserID'] = $_POST['UserID'];
 		$_SESSION['AddEmployeeSelectedPositionID'] = $_POST['PositionID'];
@@ -147,12 +166,6 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Add Employee') OR
 	if(isset($_SESSION['refreshAddEmployee'])){
 		// Acknowledge that we have refreshed the page
 		unset($_SESSION['refreshAddEmployee']);
-		
-		// Display the 'error' that made us refresh
-		if(isset($_SESSION['AddEmployeeError'])){
-			$AddEmployeeError = $_SESSION['AddEmployeeError'];
-			unset($_SESSION['AddEmployeeError']);
-		}
 		
 		// Remember the company string that was searched before refreshing
 		if(isset($_SESSION['AddEmployeeCompanySearch'])){
@@ -373,8 +386,8 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Confirm Employee')
 		$_SESSION['refreshAddEmployee'] = TRUE;
 		$_SESSION['AddEmployeeError'] = $c;
 		//TO-DO: Remove/Change the search variables if we don't want it to show up after a search
-		$_SESSION['AddEmployeeCompanySearch'] = $_POST['companysearchstring'];
-		$_SESSION['AddEmployeeUserSearch'] = $_POST['usersearchstring'];	
+		$_SESSION['AddEmployeeCompanySearch'] = trimExcessWhitespace($_POST['companysearchstring']);
+		$_SESSION['AddEmployeeUserSearch'] = trimExcessWhitespace($_POST['usersearchstring']);	
 		
 		if(isset($_GET['Company'])){	
 			// We were looking at a specific company. Let's go back to info about that company
@@ -533,7 +546,7 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Confirm Employee')
 		
 		// Save a description with information about the employee that was added
 		// to the company.
-		$description = 'The user: ' . $userinfo . 
+		$logEventDescription = 'The user: ' . $userinfo . 
 		' was added to the company: ' . $companyinfo . 
 		' and was given the position: ' . $positioninfo . ". Added by : " .
 		$_SESSION['LoggedInUserName'];
@@ -555,7 +568,7 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Confirm Employee')
 		$s->bindValue(':CompanyID', $CompanyID);
 		$s->bindValue(':UserID', $_POST['UserID']);
 		$s->bindValue(':PositionID', $_POST['PositionID']);		
-		$s->bindValue(':description', $description);
+		$s->bindValue(':description', $logEventDescription);
 		$s->execute();
 		
 		//Close the connection
@@ -616,6 +629,7 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Change Role')
 						c.`name`					AS CompanyName,
 						u.`firstName`, 
 						u.`lastName`,
+						cp.`PositionID`,
 						cp.`name`					AS PositionName							
 				FROM 	`company` c 
 				JOIN 	`employee` e
@@ -651,6 +665,7 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Change Role')
 	$CurrentCompanyPositionName = $row['PositionName'];
 	$CompanyID = $row['TheCompanyID'];
 	$UserID = $row['UsrID'];
+	$_SESSION['EditEmployeeOriginalPositionID'] = $row['PositionID'];
 	
 	// Change to the actual form we want to use
 	include 'changerole.html.php';
@@ -660,34 +675,49 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Change Role')
 // Perform the actual database update of the edited information
 if (isset($_POST['action']) AND $_POST['action'] == 'Confirm Role')
 {
-	// Update selected employee connection with a new company position
-	try
-	{
-		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
-		
-		$pdo = connect_to_db();
-		$sql = 'UPDATE 	`employee` 
-				SET		`PositionID` = :PositionID
-				WHERE 	`companyID` = :CompanyID
-				AND 	`userID` = :UserID';
-		$s = $pdo->prepare($sql);
-		$s->bindValue(':CompanyID', $_POST['CompanyID']);
-		$s->bindValue(':UserID', $_POST['UserID']);
-		$s->bindValue(':PositionID', $_POST['PositionID']);
-		$s->execute(); 
-				
-		//close connection
-		$pdo = null;	
-	}
-	catch (PDOException $e)
-	{
-		$error = 'Error changing company position in employee information: ' . $e->getMessage();
-		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
-		$pdo = null;
-		exit();		
+	// TO-DO: Check if anything actually changed
+	$theSelectedPositionID = $_POST['PositionID'];
+	$NumberOfChanges = 0;
+	
+	if(	isset($_SESSION['EditEmployeeOriginalPositionID']) AND 
+		$_SESSION['EditEmployeeOriginalPositionID'] != $theSelectedPositionID){
+		$NumberOfChanges++;
 	}
 	
-	$_SESSION['EmployeeUserFeedback'] = "Successfully updated the employee.";
+	if($NumberOfChanges > 0){
+		// Update selected employee connection with a new company position
+		try
+		{
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+			
+			$pdo = connect_to_db();
+			$sql = 'UPDATE 	`employee` 
+					SET		`PositionID` = :PositionID
+					WHERE 	`companyID` = :CompanyID
+					AND 	`userID` = :UserID';
+			$s = $pdo->prepare($sql);
+			$s->bindValue(':CompanyID', $_POST['CompanyID']);
+			$s->bindValue(':UserID', $_POST['UserID']);
+			$s->bindValue(':PositionID', $theSelectedPositionID);
+			$s->execute(); 
+					
+			//close connection
+			$pdo = null;	
+		}
+		catch (PDOException $e)
+		{
+			$error = 'Error changing company position in employee information: ' . $e->getMessage();
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+			$pdo = null;
+			exit();		
+		}
+		
+		$_SESSION['EmployeeUserFeedback'] = "Successfully updated the employee.";		
+	} else {
+		$_SESSION['EmployeeUserFeedback'] = "No changes were made to the employee.";
+	}
+	
+	clearEditEmployeeSessions();
 	
 	// If we are looking at a specific company, let's refresh info about
 	// that company again.
@@ -705,21 +735,18 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Confirm Role')
 
 // If the user clicks any cancel buttons he'll be directed back to the employees page again
 if (isset($_POST['action']) AND $_POST['action'] == 'Cancel'){
-	// Doesn't actually need any code to work, since it happends automatically when a submit
-	// occurs. *it* being doing the normal startup code.
-	// Might be useful for something later?
 	$_SESSION['EmployeeUserFeedback'] = "Cancel button clicked. Taking you back to /admin/employees/!";
 }
 
-/* if($refreshEmployees){
+if(isset($refreshEmployees) AND $refreshEmployees){
 	// TO-DO: Add code that should occur on a refresh
-} */
+	unset($refreshEmployees);
+}
 
-// There were no user inputs or forced refreshes. So we're interested in fresh, new values.
-// Let's reset all the "remembered" values
-unset($_SESSION['AddEmployeeCompaniesArray']);
-unset($_SESSION['AddEmployeeCompanyPositionArray']);
-unset($_SESSION['AddEmployeeUsersArray']);
+// Remove any unused variables from memory 
+// TO-DO: Change if this ruins having multiple tabs open etc.
+clearAddEmployeeSessions();
+clearEditEmployeeSessions();
 
 // Get only information from the specific company
 if(isset($_GET['Company'])){
@@ -742,10 +769,21 @@ if(isset($_GET['Company'])){
 						u.`lastName`,
 						u.`email`,
 						cp.`name`					AS PositionName, 
-						DATE_FORMAT(e.`startDateTime`,'%d %b %Y %T') 	AS StartDateTime,
+						e.`startDateTime`			AS StartDateTime,
 						(
-							SELECT 		SEC_TO_TIME(SUM(TIME_TO_SEC(b.`actualEndDateTime`) - 
-										TIME_TO_SEC(b.`startDateTime`))) 
+							SELECT (
+									BIG_SEC_TO_TIME(
+													SUM(
+														DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
+														)*86400 
+													+ 
+													SUM(
+														TIME_TO_SEC(b.`actualEndDateTime`) 
+														- 
+														TIME_TO_SEC(b.`startDateTime`)
+														) 
+													) 
+									)
 							FROM 		`booking` b
 							INNER JOIN `employee` e
 							ON 			b.`userID` = e.`userID`
@@ -760,8 +798,19 @@ if(isset($_GET['Company'])){
 							AND 		MONTH(b.`actualEndDateTime`) = MONTH(NOW())
 						) 							AS MonthlyBookingTimeUsed,
 						(
-							SELECT 		SEC_TO_TIME(SUM(TIME_TO_SEC(b.`actualEndDateTime`) - 
-										TIME_TO_SEC(b.`startDateTime`))) 
+							SELECT (
+									BIG_SEC_TO_TIME(
+													SUM(
+														DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
+														)*86400 
+													+ 
+													SUM(
+														TIME_TO_SEC(b.`actualEndDateTime`) 
+														- 
+														TIME_TO_SEC(b.`startDateTime`)
+														) 
+													) 
+									)
 							FROM 		`booking` b
 							INNER JOIN `employee` e
 							ON 			b.`userID` = e.`userID`
@@ -789,6 +838,61 @@ if(isset($_GET['Company'])){
 		$result = $s->fetchAll();
 		$rowNum = sizeOf($result);
 		
+		// Start a second SQL query to collect the booked time by removed users
+		$sql = "SELECT 	c.`companyID`				AS TheCompanyID,
+						c.`name`					AS CompanyName,
+						(
+						SELECT	(
+								BIG_SEC_TO_TIME(
+									SUM(
+										DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
+										)*86400 
+									+ 
+									SUM(
+										TIME_TO_SEC(b.`actualEndDateTime`) 
+										- 
+										TIME_TO_SEC(b.`startDateTime`)
+										) 
+									)
+								)
+						FROM 		`booking` b
+						INNER JOIN `company` c
+						ON 			c.`companyID` = b.`companyID`
+						WHERE 		b.`userID` IS NULL
+						AND 		b.`companyID` = :id
+						AND 		c.`CompanyID` = b.`companyID`
+						AND 		YEAR(b.`actualEndDateTime`) = YEAR(NOW())
+						AND 		MONTH(b.`actualEndDateTime`) = MONTH(NOW())
+						)														AS MonthlyBookingTimeUsed,
+						(
+						SELECT	(
+								BIG_SEC_TO_TIME(
+									SUM(
+										DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
+										)*86400 
+									+ 
+									SUM(
+										TIME_TO_SEC(b.`actualEndDateTime`) 
+										- 
+										TIME_TO_SEC(b.`startDateTime`)
+										) 
+									) 
+								)
+						FROM 		`booking` b
+						INNER JOIN `company` c
+						ON 			c.`companyID` = b.`companyID`
+						WHERE 		b.`userID` IS NULL
+						AND 		b.`companyID` = :id
+						AND 		c.`CompanyID` = b.`companyID`		
+						)	
+						AS TotalBookingTimeUsed";
+		$s = $pdo->prepare($sql);
+		$s->bindValue(':id', $_GET['Company']);
+		$s->execute();
+		
+		$removedEmployeesResult = $s->fetchAll();
+		$removedEmployeesResultRowNum = sizeOf($removedEmployeesResult);
+		
 		//close connection
 		$pdo = null;
 	}
@@ -797,6 +901,18 @@ if(isset($_GET['Company'])){
 		$error = 'Error getting employee information: ' . $e->getMessage();
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
 		exit();
+	}
+	
+	// If we're looking at a specific company and they have removed employees with booking time
+	if($removedEmployeesResultRowNum > 0){
+		foreach($removedEmployeesResult AS $row){	
+			$removedEmployees[] = array(
+										'CompanyID' => $row['TheCompanyID'],
+										'CompanyName' => $row['CompanyName'],
+										'MonthlyBookingTimeUsed' => $row['MonthlyBookingTimeUsed'],
+										'TotalBookingTimeUsed' => $row['TotalBookingTimeUsed']
+										);
+		}
 	}
 }
 
@@ -882,8 +998,7 @@ if(!isset($_GET['Company'])){
 		$rowNum = $result->rowCount();
 		
 		//close connection
-		$pdo = null;
-			
+		$pdo = null;	
 	}
 	catch (PDOException $e)
 	{
@@ -915,7 +1030,8 @@ foreach($result AS $row){
 	$displayStartDateTime = convertDatetimeToFormat($startDateTime , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
 	
 	// Create an array with the actual key/value pairs we want to use in our HTML
-	$employees[] = array('CompanyID' => $row['TheCompanyID'], 
+	$employees[] = array(
+						'CompanyID' => $row['TheCompanyID'], 
 						'UsrID' => $row['UsrID'],
 						'CompanyName' => $row['CompanyName'],
 						'PositionName' => $row['PositionName'],
@@ -929,6 +1045,5 @@ foreach($result AS $row){
 }
 
 // Create the employees list in HTML
-include_once 'employees.html.php';	
-
+include_once 'employees.html.php';
 ?>

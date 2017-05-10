@@ -121,6 +121,18 @@
 						</tr>
 					</form>
 				<?php endforeach; ?>
+				<?php if(isset($removedEmployees)) : ?>
+					<?php foreach($removedEmployees as $employee): ?>
+						<tr>
+							<td><?php htmlout($employee['CompanyName']); ?></td>
+							<td>Removed</td>
+							<td colspan="3">N/A</td>
+							<td><?php htmlout($employee['MonthlyBookingTimeUsed']); ?></td>
+							<td><?php htmlout($employee['TotalBookingTimeUsed']); ?></td>
+							<td colspan="3">N/A</td>
+						</tr>
+					<?php endforeach; ?>
+				<?php endif; ?>
 			</table>
 		<?php else : ?>
 			<tr><b>There are no employees registered in the database.</b></tr>
@@ -131,6 +143,6 @@
 			</tr>
 		<?php endif; ?>
 		<p><a href="..">Return to CMS home</a></p>
-		<?php include '../logout.inc.html.php'; ?>
+	<?php include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/logout.inc.html.php'; ?>
 	</body>
 </html>

@@ -86,6 +86,13 @@ function validateUserInputs(){
 		}
 		if(isset($correctFormatIfValid) AND $correctFormatIfValid !== FALSE){
 			$validatedCompanyDateToRemove = convertDatetimeToFormat($correctFormatIfValid,'Y-m-d H:i:s', 'Y-m-d');
+			
+			// Check if the (now valid) datetime we received is a future date or not
+			$dateNow = getDateNow();
+			if($validatedCompanyDateToRemove < $dateNow){
+				$_SESSION['AddCompanyError'] = "The date you submitted has already occured. Please choose a future date.";
+				$invalidInput = TRUE;
+			}			
 		}
 	}
 
@@ -466,7 +473,8 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Edit Company'))
 	// Check if there has been any changes
 	$NumberOfChanges = 0;
 	
-	if(isset($_SESSION['EditCompanyOriginalName']) AND $_SESSION['EditCompanyOriginalName'] != $validatedCompanyName){
+	if(	isset($_SESSION['EditCompanyOriginalName']) AND 
+		$_SESSION['EditCompanyOriginalName'] != $validatedCompanyName){
 		$NumberOfChanges++;
 	}
 	
@@ -562,7 +570,8 @@ if(isset($refreshcompanies) AND $refreshcompanies) {
 	unset($refreshcompanies);
 }
 
-// Remove any unused variables from memory // TO-DO: Change if this ruins having multiple tabs open etc.
+// Remove any unused variables from memory 
+// TO-DO: Change if this ruins having multiple tabs open etc.
 clearAddCompanySessions();
 clearEditCompanySessions();
 
@@ -647,7 +656,7 @@ catch (PDOException $e)
 // Create an array with the actual key/value pairs we want to use in our HTML
 foreach ($result as $row)
 {
-	// TO-DO: Change booking time used from time to easily readable text instead
+	// TO-DO: Change booking time used from time to easily readable text instead if needed
 
 	if($row['MonthlyCompanyWideBookingTimeUsed'] == null){
 		$MonthlyTimeUsed = 'N/A';

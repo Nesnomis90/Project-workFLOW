@@ -1,24 +1,35 @@
 <?php
 
 // Define the default date and datetime format we want to use
+// Also the default timezone we use for our datetime functions
 // TO-DO: Change this if we want to display another format
 define('DATETIME_DEFAULT_FORMAT_TO_DISPLAY', 'F jS Y H:i:s');
 define('DATE_DEFAULT_FORMAT_TO_DISPLAY', 'F jS Y');
+define('DATE_DEFAULT_TIMEZONE', 'Europe/Oslo');
 
 //Function to get the current datetime
 function getDatetimeNow() {
 	// We use the same format as used in MySQL
 	// yyyy-mm-dd hh:mm:ss
-	date_default_timezone_set('Europe/Oslo');
+	date_default_timezone_set(DATE_DEFAULT_TIMEZONE);
 	$datetimeNow = new Datetime();
 	return $datetimeNow->format('Y-m-d H:i:s');
+}
+
+// Function to get the current date
+function getDateNow() {
+	// We use the same format as used in MySQL
+	// yyyy-mm-dd
+	date_default_timezone_set(DATE_DEFAULT_TIMEZONE);
+	$datetimeNow = new Datetime();
+	return $datetimeNow->format('Y-m-d');	
 }
 
 // Function to check if the datetime submitted is in the format that's submitted
 function validateDatetimeWithFormat($datetime, $format){
 	// We take in a datetime string and the format we want to check if it's in
 	// We then either return true or false
-	date_default_timezone_set('Europe/Oslo');
+	date_default_timezone_set(DATE_DEFAULT_TIMEZONE);
 	$d = date_create_from_format($format, $datetime);
     return $d && $d->format($format) === $datetime;	
 }
@@ -28,7 +39,7 @@ function correctDateFormat($wrongDateString){
 	// Correct date format is
 	// yyyy-mm-dd
 
-	date_default_timezone_set('Europe/Oslo');		
+	date_default_timezone_set(DATE_DEFAULT_TIMEZONE);		
 	if (validateDatetimeWithFormat($wrongDateString, 'Y-m-d')){
 		$wrongDate = date_create_from_format('Y-m-d', $wrongDateString);
 		$correctDate = DATE_FORMAT($wrongDate,'Y-m-d');
@@ -55,7 +66,7 @@ function correctDatetimeFormat($wrongDatetimeString){
 	// TO-DO: Not heavily tested!!!!
 	// TO-DO: Still needs fixing separating date and time parts
 
-	date_default_timezone_set('Europe/Oslo');
+	date_default_timezone_set(DATE_DEFAULT_TIMEZONE);
 	
 	// Remove white spaces before and after the datetime submitted
 	$wrongDatetimeString = trim($wrongDatetimeString);
@@ -277,7 +288,7 @@ function convertDatetimeToFormat($oldDatetimeString, $oldformat, $format){
 	// 'Y-m-d' = 2017-03-03 (MySQL Date)
 	// 'd M Y H:i:s' = 3 March 2017 12:15:33
 	// 'F jS Y H:i' = March 3rd 2017 12:15
-	date_default_timezone_set('Europe/Oslo');
+	date_default_timezone_set(DATE_DEFAULT_TIMEZONE);
 	
 	if(validateDatetimeWithFormat($oldDatetimeString, $oldformat)){
 		$oldDatetime = date_create_from_format($oldformat, $oldDatetimeString);
@@ -288,9 +299,4 @@ function convertDatetimeToFormat($oldDatetimeString, $oldformat, $format){
 		return FALSE;
 	}
 }
-
-
-
-
-
 ?>

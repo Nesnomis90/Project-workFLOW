@@ -10,5 +10,5 @@
 		<h1>Access Denied</h1>
 		<p><?php htmlout($error); ?></p>
 	</body>
-	<?php include 'logout.inc.html.php'; ?>
+	<?php include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/logout.inc.html.php'; ?>
 </html>
