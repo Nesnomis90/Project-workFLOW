@@ -152,7 +152,6 @@ function fillCompanyPosition($pdo){
 		
 		// Commit the transaction
 		$pdo->commit();
-		
 	}
 	catch (PDOException $e)
 	{

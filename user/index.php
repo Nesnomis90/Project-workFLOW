@@ -92,11 +92,43 @@ if(isset($_GET['activateaccount'])){
 		exit();
 	}	
 	
-	$_SESSION['normalUserFeedback'] = "The account for " . $lastname . ", " . $firstname . " - " . $email . 
-									" has been activated!";
+	$_SESSION['normalUserFeedback'] = 	"The account for " . $lastname . ", " . $firstname . " - " . $email . 
+										" has been activated!";
 									
-									
-	// TO-DO: Add a log event that the account got activated!
+	// Add a log event that the account got activated
+	try
+	{
+		// Save a description with information about the user that was activated
+		
+		$logEventDescription = 	"The account for " . $lastname . ", " . $firstname . " - " . $email . 
+								" has been activated by using the activation link!";
+		
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+		
+		$pdo = connect_to_db();
+		$sql = "INSERT INTO `logevent`
+				SET			`actionID` = 	(
+												SELECT `actionID` 
+												FROM `logaction`
+												WHERE `name` = 'Account Activated'
+											),
+							`description` = :description,
+							`userID` = :userID";
+		$s = $pdo->prepare($sql);
+		$s->bindValue(':description', $logEventDescription);
+		$s->bindValue(':userID', $userID);
+		$s->execute();
+		
+		//Close the connection
+		$pdo = null;		
+	}
+	catch(PDOException $e)
+	{
+		$error = 'Error adding log event to database: ' . $e->getMessage();
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+		$pdo = null;
+		exit();
+	}	
 }
 
 

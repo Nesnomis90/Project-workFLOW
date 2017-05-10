@@ -68,6 +68,7 @@ if(isset($_GET['cancellationcode'])){
 	$startDateTime = $result['startDateTime'];
 	$endDateTime = $result['endDateTime'];
 	
+	// Cancel the booked meeting
 	try
 	{
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
@@ -97,6 +98,41 @@ if(isset($_GET['cancellationcode'])){
 	
 	$_SESSION['normalBookingFeedback'] = "The booking for " . $TheMeetingRoomName . ". Starting at: " . $displayValidatedStartDate . 
 										" and ending at: " . $displayValidatedEndDate . " has been cancelled!";
+										
+	// Add a log event that the booking was cancelled
+	try
+	{
+		// Save a description with information about the user that was activated
+		
+		$logEventDescription = 	"The booking for " . $TheMeetingRoomName . ". Starting at: " . $displayValidatedStartDate . 
+								" and ending at: " . $displayValidatedEndDate . " has been cancelled by using the cancellation link!";
+		
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+		
+		$pdo = connect_to_db();
+		$sql = "INSERT INTO `logevent`
+				SET			`actionID` = 	(
+												SELECT `actionID` 
+												FROM `logaction`
+												WHERE `name` = 'Booking Cancelled'
+											),
+							`description` = :description,
+							`bookingID` = :bookingID";
+		$s = $pdo->prepare($sql);
+		$s->bindValue(':description', $logEventDescription);
+		$s->bindValue(':bookingID', $bookingID);
+		$s->execute();
+		
+		//Close the connection
+		$pdo = null;		
+	}
+	catch(PDOException $e)
+	{
+		$error = 'Error adding log event to database: ' . $e->getMessage();
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+		$pdo = null;
+		exit();
+	}		
 }
 
 
