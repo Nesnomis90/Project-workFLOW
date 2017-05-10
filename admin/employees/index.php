@@ -742,10 +742,21 @@ if(isset($_GET['Company'])){
 						u.`lastName`,
 						u.`email`,
 						cp.`name`					AS PositionName, 
-						DATE_FORMAT(e.`startDateTime`,'%d %b %Y %T') 	AS StartDateTime,
+						e.`startDateTime`			AS StartDateTime,
 						(
-							SELECT 		SEC_TO_TIME(SUM(TIME_TO_SEC(b.`actualEndDateTime`) - 
-										TIME_TO_SEC(b.`startDateTime`))) 
+							SELECT (
+									BIG_SEC_TO_TIME(
+													SUM(
+														DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
+														)*86400 
+													+ 
+													SUM(
+														TIME_TO_SEC(b.`actualEndDateTime`) 
+														- 
+														TIME_TO_SEC(b.`startDateTime`)
+														) 
+													) 
+									)
 							FROM 		`booking` b
 							INNER JOIN `employee` e
 							ON 			b.`userID` = e.`userID`
@@ -760,8 +771,19 @@ if(isset($_GET['Company'])){
 							AND 		MONTH(b.`actualEndDateTime`) = MONTH(NOW())
 						) 							AS MonthlyBookingTimeUsed,
 						(
-							SELECT 		SEC_TO_TIME(SUM(TIME_TO_SEC(b.`actualEndDateTime`) - 
-										TIME_TO_SEC(b.`startDateTime`))) 
+							SELECT (
+									BIG_SEC_TO_TIME(
+													SUM(
+														DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
+														)*86400 
+													+ 
+													SUM(
+														TIME_TO_SEC(b.`actualEndDateTime`) 
+														- 
+														TIME_TO_SEC(b.`startDateTime`)
+														) 
+													) 
+									)
 							FROM 		`booking` b
 							INNER JOIN `employee` e
 							ON 			b.`userID` = e.`userID`
@@ -882,8 +904,7 @@ if(!isset($_GET['Company'])){
 		$rowNum = $result->rowCount();
 		
 		//close connection
-		$pdo = null;
-			
+		$pdo = null;	
 	}
 	catch (PDOException $e)
 	{

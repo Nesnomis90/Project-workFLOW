@@ -541,7 +541,7 @@ if (isset($_POST['action']) AND $_POST['action'] == "Edit Room")
 							location = :location
 					WHERE 	meetingRoomID = :id';
 			$s = $pdo->prepare($sql);
-			$s->bindValue(':id', $_POST['MeetingRoomID']); // TO-DO: Change to a session variable if the ID isn't saved
+			$s->bindValue(':id', $_POST['MeetingRoomID']);
 			$s->bindValue(':name', $validatedMeetingRoomName);
 			$s->bindValue(':capacity', $validatedMeetingRoomCapacity);
 			$s->bindValue(':description', $validatedMeetingRoomDescription);

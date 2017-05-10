@@ -569,7 +569,8 @@ if(isset($refreshcompanies) AND $refreshcompanies) {
 	unset($refreshcompanies);
 }
 
-// Remove any unused variables from memory // TO-DO: Change if this ruins having multiple tabs open etc.
+// Remove any unused variables from memory 
+// TO-DO: Change if this ruins having multiple tabs open etc.
 clearAddCompanySessions();
 clearEditCompanySessions();
 
@@ -654,7 +655,7 @@ catch (PDOException $e)
 // Create an array with the actual key/value pairs we want to use in our HTML
 foreach ($result as $row)
 {
-	// TO-DO: Change booking time used from time to easily readable text instead
+	// TO-DO: Change booking time used from time to easily readable text instead if needed
 
 	if($row['MonthlyCompanyWideBookingTimeUsed'] == null){
 		$MonthlyTimeUsed = 'N/A';

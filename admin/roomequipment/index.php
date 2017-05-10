@@ -432,7 +432,6 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Confirm Room Equipment')
 			$_SESSION['refreshAddRoomEquipment'] = TRUE;
 			$_SESSION['AddRoomEquipmentError'] = "The selected equipment is already in the selected meeting room!";
 			
-			
 			if(isset($_GET['Meetingroom'])){
 				
 				$_SESSION['AddRoomEquipmentSelectedMeetingRoom'] = $_GET['Meetingroom'];
