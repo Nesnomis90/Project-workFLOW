@@ -121,6 +121,18 @@
 						</tr>
 					</form>
 				<?php endforeach; ?>
+				<?php if(isset($removedEmployees)) : ?>
+					<?php foreach($removedEmployees as $employee): ?>
+						<tr>
+							<td><?php htmlout($employee['CompanyName']); ?></td>
+							<td>Removed</td>
+							<td colspan="3">N/A</td>
+							<td><?php htmlout($employee['MonthlyBookingTimeUsed']); ?></td>
+							<td><?php htmlout($employee['TotalBookingTimeUsed']); ?></td>
+							<td colspan="3">N/A</td>
+						</tr>
+					<?php endforeach; ?>
+				<?php endif; ?>
 			</table>
 		<?php else : ?>
 			<tr><b>There are no employees registered in the database.</b></tr>

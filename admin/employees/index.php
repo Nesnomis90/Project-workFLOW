@@ -838,6 +838,61 @@ if(isset($_GET['Company'])){
 		$result = $s->fetchAll();
 		$rowNum = sizeOf($result);
 		
+		// Start a second SQL query to collect the booked time by removed users
+		$sql = "SELECT 	c.`companyID`				AS TheCompanyID,
+						c.`name`					AS CompanyName,
+						(
+						SELECT	(
+								BIG_SEC_TO_TIME(
+									SUM(
+										DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
+										)*86400 
+									+ 
+									SUM(
+										TIME_TO_SEC(b.`actualEndDateTime`) 
+										- 
+										TIME_TO_SEC(b.`startDateTime`)
+										) 
+									)
+								)
+						FROM 		`booking` b
+						INNER JOIN `company` c
+						ON 			c.`companyID` = b.`companyID`
+						WHERE 		b.`userID` IS NULL
+						AND 		b.`companyID` = :id
+						AND 		c.`CompanyID` = b.`companyID`
+						AND 		YEAR(b.`actualEndDateTime`) = YEAR(NOW())
+						AND 		MONTH(b.`actualEndDateTime`) = MONTH(NOW())
+						)														AS MonthlyBookingTimeUsed,
+						(
+						SELECT	(
+								BIG_SEC_TO_TIME(
+									SUM(
+										DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
+										)*86400 
+									+ 
+									SUM(
+										TIME_TO_SEC(b.`actualEndDateTime`) 
+										- 
+										TIME_TO_SEC(b.`startDateTime`)
+										) 
+									) 
+								)
+						FROM 		`booking` b
+						INNER JOIN `company` c
+						ON 			c.`companyID` = b.`companyID`
+						WHERE 		b.`userID` IS NULL
+						AND 		b.`companyID` = :id
+						AND 		c.`CompanyID` = b.`companyID`		
+						)	
+						AS TotalBookingTimeUsed";
+		$s = $pdo->prepare($sql);
+		$s->bindValue(':id', $_GET['Company']);
+		$s->execute();
+		
+		$removedEmployeesResult = $s->fetchAll();
+		$removedEmployeesResultRowNum = sizeOf($removedEmployeesResult);
+		
 		//close connection
 		$pdo = null;
 	}
@@ -846,6 +901,18 @@ if(isset($_GET['Company'])){
 		$error = 'Error getting employee information: ' . $e->getMessage();
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
 		exit();
+	}
+	
+	// If we're looking at a specific company and they have removed employees with booking time
+	if($removedEmployeesResultRowNum > 0){
+		foreach($removedEmployeesResult AS $row){	
+			$removedEmployees[] = array(
+										'CompanyID' => $row['TheCompanyID'],
+										'CompanyName' => $row['CompanyName'],
+										'MonthlyBookingTimeUsed' => $row['MonthlyBookingTimeUsed'],
+										'TotalBookingTimeUsed' => $row['TotalBookingTimeUsed']
+										);
+		}
 	}
 }
 
@@ -963,7 +1030,8 @@ foreach($result AS $row){
 	$displayStartDateTime = convertDatetimeToFormat($startDateTime , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
 	
 	// Create an array with the actual key/value pairs we want to use in our HTML
-	$employees[] = array('CompanyID' => $row['TheCompanyID'], 
+	$employees[] = array(
+						'CompanyID' => $row['TheCompanyID'], 
 						'UsrID' => $row['UsrID'],
 						'CompanyName' => $row['CompanyName'],
 						'PositionName' => $row['PositionName'],
