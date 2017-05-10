@@ -8,10 +8,9 @@
 	</head>
 	<body>
 		<h1>Add Employee</h1>
-		<?php if(isset($AddEmployeeError)) :?>
-			<div>
-				<p><b><?php htmlout($AddEmployeeError); ?> </b></p>
-			</div>
+		<?php if(isset($_SESSION['AddEmployeeError'])) :?>
+				<p><b><?php htmlout($_SESSION['AddEmployeeError']); ?></b></p>
+			<?php unset($_SESSION['AddEmployeeError']); ?>
 		<?php endif; ?>
 		<form action="" method="post">
 			<div>

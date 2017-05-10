@@ -473,7 +473,8 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Edit Company'))
 	// Check if there has been any changes
 	$NumberOfChanges = 0;
 	
-	if(isset($_SESSION['EditCompanyOriginalName']) AND $_SESSION['EditCompanyOriginalName'] != $validatedCompanyName){
+	if(	isset($_SESSION['EditCompanyOriginalName']) AND 
+		$_SESSION['EditCompanyOriginalName'] != $validatedCompanyName){
 		$NumberOfChanges++;
 	}
 	
