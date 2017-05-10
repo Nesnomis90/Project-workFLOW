@@ -74,7 +74,7 @@ if(isset($_POST['action']) AND $_POST['action'] == 'Remove'){
 	{
 		// Save a description with information about the employee that was removed
 		// from the company.
-		$description = 'The user: ' . $_POST['UserName'] . 
+		$logEventDescription = 'The user: ' . $_POST['UserName'] . 
 		' was removed from the company: ' . $_POST['CompanyName'] . 
 		'. Removed by: ' . $_SESSION['LoggedInUserName'];
 		
@@ -95,7 +95,7 @@ if(isset($_POST['action']) AND $_POST['action'] == 'Remove'){
 		$s->bindValue(':CompanyID', $_POST['CompanyID']);
 		$s->bindValue(':UserID', $_POST['UserID']);
 		$s->bindValue(':PositionID', $_POST['PositionID']);		
-		$s->bindValue(':description', $description);
+		$s->bindValue(':description', $logEventDescription);
 		$s->execute();
 		
 		//Close the connection
@@ -129,7 +129,7 @@ if(isset($_POST['action']) AND $_POST['action'] == 'Search'){
 	// If we are looking at a specific company, let's refresh info about
 	// that company again.
 	if(isset($_GET['Company'])){	
-		$_SESSION['AddEmployeeUserSearch'] = $_POST['usersearchstring'];
+		$_SESSION['AddEmployeeUserSearch'] = trimExcessWhitespace($_POST['usersearchstring']);
 		$_SESSION['AddEmployeeSelectedUserID'] = $_POST['UserID'];
 		$_SESSION['AddEmployeeSelectedPositionID'] = $_POST['PositionID'];
 		$_SESSION['refreshAddEmployee'] = TRUE;
@@ -140,8 +140,8 @@ if(isset($_POST['action']) AND $_POST['action'] == 'Search'){
 		header("Location: $location");
 		exit();
 	} else {
-		$_SESSION['AddEmployeeCompanySearch'] = $_POST['companysearchstring'];
-		$_SESSION['AddEmployeeUserSearch'] = $_POST['usersearchstring'];
+		$_SESSION['AddEmployeeCompanySearch'] = trimExcessWhitespace($_POST['companysearchstring']);
+		$_SESSION['AddEmployeeUserSearch'] = trimExcessWhitespace($_POST['usersearchstring']);
 		$_SESSION['AddEmployeeSelectedCompanyID'] = $_POST['CompanyID'];
 		$_SESSION['AddEmployeeSelectedUserID'] = $_POST['UserID'];
 		$_SESSION['AddEmployeeSelectedPositionID'] = $_POST['PositionID'];
@@ -386,8 +386,8 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Confirm Employee')
 		$_SESSION['refreshAddEmployee'] = TRUE;
 		$_SESSION['AddEmployeeError'] = $c;
 		//TO-DO: Remove/Change the search variables if we don't want it to show up after a search
-		$_SESSION['AddEmployeeCompanySearch'] = $_POST['companysearchstring'];
-		$_SESSION['AddEmployeeUserSearch'] = $_POST['usersearchstring'];	
+		$_SESSION['AddEmployeeCompanySearch'] = trimExcessWhitespace($_POST['companysearchstring']);
+		$_SESSION['AddEmployeeUserSearch'] = trimExcessWhitespace($_POST['usersearchstring']);	
 		
 		if(isset($_GET['Company'])){	
 			// We were looking at a specific company. Let's go back to info about that company
@@ -977,6 +977,5 @@ foreach($result AS $row){
 }
 
 // Create the employees list in HTML
-include_once 'employees.html.php';	
-
+include_once 'employees.html.php';
 ?>

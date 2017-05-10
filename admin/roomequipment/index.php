@@ -125,7 +125,7 @@ if(isset($_POST['action']) AND $_POST['action'] == 'Remove'){
 if(isset($_POST['action']) AND $_POST['action'] == 'Search'){
 	// Let's remember what was searched for
 	
-	$_SESSION['AddRoomEquipmentEquipmentSearch'] = $_POST['equipmentsearchstring'];
+	$_SESSION['AddRoomEquipmentEquipmentSearch'] = trimExcessWhitespace($_POST['equipmentsearchstring']);
 	$_SESSION['AddRoomEquipmentSelectedEquipment'] = $_POST['EquipmentID'];
 	$_SESSION['AddRoomEquipmentSelectedEquipmentAmount'] = $_POST['EquipmentAmount'];
 	$_SESSION['refreshAddRoomEquipment'] = TRUE;
@@ -144,7 +144,7 @@ if(isset($_POST['action']) AND $_POST['action'] == 'Search'){
 		header("Location: $location");
 		exit();
 	} else {
-		$_SESSION['AddRoomEquipmentMeetingRoomSearch'] = $_POST['meetingroomsearchstring'];
+		$_SESSION['AddRoomEquipmentMeetingRoomSearch'] = trimExcessWhitespace($_POST['meetingroomsearchstring']);
 		$_SESSION['AddRoomEquipmentSelectedMeetingRoom'] = $_POST['MeetingRoomID'];
 		
 		// Also we want to refresh AddRoomEquipment with our new values!
@@ -383,8 +383,8 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Confirm Room Equipment')
 		$_SESSION['refreshAddRoomEquipment'] = TRUE;
 		$_SESSION['AddRoomEquipmentError'] = $d;
 		//TO-DO: Remove/Change the search variables if we don't want it to show up after a search		
-		$_SESSION['AddRoomEquipmentMeetingRoomSearch'] = $_POST['meetingroomsearchstring'];
-		$_SESSION['AddRoomEquipmentEquipmentSearch'] = $_POST['equipmentsearchstring'];
+		$_SESSION['AddRoomEquipmentMeetingRoomSearch'] = trimExcessWhitespace($_POST['meetingroomsearchstring']);
+		$_SESSION['AddRoomEquipmentEquipmentSearch'] = trimExcessWhitespace($_POST['equipmentsearchstring']);
 		
 		if(isset($_GET['Meetingroom'])){	
 			// We were looking at a specific meeting room. Let's go back to info about that meetingroom
@@ -424,8 +424,8 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Confirm Room Equipment')
 			
 			$_SESSION['AddRoomEquipmentSelectedEquipment'] = $_POST['EquipmentID'];
 			$_SESSION['AddRoomEquipmentSelectedEquipmentAmount'] = $_POST['EquipmentAmount'];
-			$_SESSION['AddRoomEquipmentMeetingRoomSearch'] = $_POST['meetingroomsearchstring'];
-			$_SESSION['AddRoomEquipmentEquipmentSearch'] = $_POST['equipmentsearchstring'];
+			$_SESSION['AddRoomEquipmentMeetingRoomSearch'] = trimExcessWhitespace($_POST['meetingroomsearchstring']);
+			$_SESSION['AddRoomEquipmentEquipmentSearch'] = trimExcessWhitespace($_POST['equipmentsearchstring']);
 			
 			$_SESSION['refreshAddRoomEquipment'] = TRUE;
 			$_SESSION['AddRoomEquipmentError'] = "The selected equipment is already in the selected meeting room!";
@@ -648,8 +648,6 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Change Amount')
 // Perform the actual database update of the edited information
 if (isset($_POST['action']) AND $_POST['action'] == 'Confirm Amount')
 {
-	// TO-DO: Check if room equipment combination already exists
-	
 	// Check if there were any changes made
 	$NumberOfChanges = 0;
 	$selectedRoomEquipmentAmount = $_POST['EquipmentAmount'];

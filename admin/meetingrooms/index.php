@@ -616,7 +616,6 @@ catch (PDOException $e)
 	exit();
 }
 
-
 foreach ($result as $row)
 {
 	$meetingrooms[] = array('MeetingRoomID' => $row['TheMeetingRoomID'], 
