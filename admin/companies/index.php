@@ -86,6 +86,13 @@ function validateUserInputs(){
 		}
 		if(isset($correctFormatIfValid) AND $correctFormatIfValid !== FALSE){
 			$validatedCompanyDateToRemove = convertDatetimeToFormat($correctFormatIfValid,'Y-m-d H:i:s', 'Y-m-d');
+			
+			// Check if the (now valid) datetime we received is a future date or not
+			$dateNow = getDateNow();
+			if($validatedCompanyDateToRemove < $dateNow){
+				$_SESSION['AddCompanyError'] = "The date you submitted has already occured. Please choose a future date.";
+				$invalidInput = TRUE;
+			}			
 		}
 	}
 

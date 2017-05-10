@@ -14,6 +14,15 @@ function getDatetimeNow() {
 	return $datetimeNow->format('Y-m-d H:i:s');
 }
 
+// Function to get the current date
+function getDateNow() {
+	// We use the same format as used in MySQL
+	// yyyy-mm-dd
+	date_default_timezone_set('Europe/Oslo');
+	$datetimeNow = new Datetime();
+	return $datetimeNow->format('Y-m-d');	
+}
+
 // Function to check if the datetime submitted is in the format that's submitted
 function validateDatetimeWithFormat($datetime, $format){
 	// We take in a datetime string and the format we want to check if it's in
@@ -288,9 +297,4 @@ function convertDatetimeToFormat($oldDatetimeString, $oldformat, $format){
 		return FALSE;
 	}
 }
-
-
-
-
-
 ?>
