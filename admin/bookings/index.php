@@ -617,12 +617,24 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR
 	$selectedMeetingRoomID = $row['TheMeetingRoomID'];
 	$startDateTime = $row['StartTime'];
 	$endDateTime = $row['EndTime'];
+	if(!validateDatetimeWithFormat($startDateTime, DATETIME_DEFAULT_FORMAT_TO_DISPLAY)){
+		$startDateTime = convertDatetimeToFormat($startDateTime , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
+	}
+	if(!validateDatetimeWithFormat($endDateTime, DATETIME_DEFAULT_FORMAT_TO_DISPLAY)){
+		$endDateTime = convertDatetimeToFormat($endDateTime , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
+	}		
 	$displayName = $row['BookedBy'];
 	$description = $row['BookingDescription'];
 	$userInformation = $row['UserLastname'] . ', ' . $row['UserFirstname'] . ' - ' . $row['UserEmail'];
 		// Original values	
 	$originalStartDateTime = $original['StartTime'];
 	$originalEndDateTime = $original['EndTime'];
+	if(!validateDatetimeWithFormat($originalStartDateTime, DATETIME_DEFAULT_FORMAT_TO_DISPLAY)){
+		$originalStartDateTime = convertDatetimeToFormat($originalStartDateTime , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
+	}
+	if(!validateDatetimeWithFormat($originalEndDateTime, DATETIME_DEFAULT_FORMAT_TO_DISPLAY)){
+		$originalEndDateTime = convertDatetimeToFormat($originalEndDateTime , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
+	}	
 	if($original['BookedForCompany']!=NULL){
 		$originalCompanyName = $original['BookedForCompany'];
 	}
@@ -819,8 +831,6 @@ if(isset($_POST['edit']) AND $_POST['edit'] == "Get Default Display Name"){
 	exit();	
 }
 
-// TO-DO: Change the format of the datetime displayed in booking edit!<----------
-
 // If admin wants to get the default values for the user's booking description
 if(isset($_POST['edit']) AND $_POST['edit'] == "Get Default Booking Description"){
 	
@@ -832,7 +842,7 @@ if(isset($_POST['edit']) AND $_POST['edit'] == "Get Default Booking Description"
 		if($bookingDescription != ""){
 			if($bookingDescription != $_SESSION['EditBookingInfoArray']['BookingDescription']){
 				
-					// The booking description
+					// Set the default booking description
 				$_SESSION['EditBookingInfoArray']['BookingDescription'] = $bookingDescription;
 	
 				unset($_SESSION['EditBookingDefaultBookingDescriptionForNewUser']);			
@@ -888,9 +898,6 @@ if(isset($_POST['edit']) AND $_POST['edit'] == "Finish Edit")
 		header('Location: .');
 		exit();			
 	}
-	
-	$displayValidatedStartDate = convertDatetimeToFormat($startDateTime , 'Y-m-d H:i:s', 'F jS Y H:i');
-	$displayValidatedEndDate = convertDatetimeToFormat($endDateTime, 'Y-m-d H:i:s', 'F jS Y H:i');
 	
 	// Check if any values actually changed. If not, we don't need to bother the database
 	$numberOfChanges = 0;
@@ -1769,7 +1776,6 @@ if(isset($_POST['add']) AND $_POST['add'] == "Select This Company"){
 	header('Location: .');
 	exit();	
 }
-
 
 // If admin wants to get the default values for the user's display name
 if(isset($_POST['add']) AND $_POST['add'] == "Get Default Display Name"){
