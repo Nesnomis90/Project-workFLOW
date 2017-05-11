@@ -873,49 +873,114 @@ if(isset($_GET['Company'])){
 		$rowNum = sizeOf($result);
 		
 		// Start a second SQL query to collect the booked time by removed users
-		// TO-DO: Fix calculation if still broken
-		// I think it works now though...
-		$sql = "SELECT 	`companyID`				AS TheCompanyID,
-						`name`					AS CompanyName,
+		// TO-DO: Still needs fixing. Shows employees as removed.
+		$sql = "SELECT 	u.`userID`					AS UsrID,
+						c.`companyID`				AS TheCompanyID,
+						c.`name`					AS CompanyName,
+						u.`firstName`, 
+						u.`lastName`,
+						u.`email`,
 						(
-						SELECT	(
-							BIG_SEC_TO_TIME(
-								SUM(
-									DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
-									)*86400 
-								+ 
-								SUM(
-									TIME_TO_SEC(b.`actualEndDateTime`) 
-									- 
-									TIME_TO_SEC(b.`startDateTime`)
-									) 
-								)
-						)
-						FROM `employee` e
-						RIGHT OUTER JOIN `booking` b
-						ON b.`userID` = e.`userID`
-						WHERE b.`companyID` = :id
+						SELECT 	(
+								BIG_SEC_TO_TIME(
+												SUM(
+													DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
+													)*86400 
+												+ 
+												SUM(
+													TIME_TO_SEC(b.`actualEndDateTime`) 
+													- 
+													TIME_TO_SEC(b.`startDateTime`)
+													) 
+												) 
+								) AS TotalBookingTimeByRemovedEmployees
+						FROM 	`booking` b
+						INNER JOIN `employee` e
+						ON 		e.`companyID` = b.`companyID`
+						WHERE 	b.`companyID` = :id
+						AND 	b.`userID` IS NOT NULL
+						AND		e.`userID` != b.`userID`
+						AND 	b.`userID` = UsrID
 						AND 			YEAR(b.`actualEndDateTime`) = YEAR(NOW())
 						AND 			MONTH(b.`actualEndDateTime`) = MONTH(NOW())
 						)														AS MonthlyBookingTimeUsed,
 						(
-						SELECT	(
-							BIG_SEC_TO_TIME(
-								SUM(
-									DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
-									)*86400 
-								+ 
-								SUM(
-									TIME_TO_SEC(b.`actualEndDateTime`) 
-									- 
-									TIME_TO_SEC(b.`startDateTime`)
-									) 
-								)
-						)
-						FROM `employee` e
-						RIGHT OUTER JOIN `booking` b
-						ON b.`userID` = e.`userID`
-						WHERE b.`companyID` = :id
+						SELECT 	(
+								BIG_SEC_TO_TIME(
+												SUM(
+													DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
+													)*86400 
+												+ 
+												SUM(
+													TIME_TO_SEC(b.`actualEndDateTime`) 
+													- 
+													TIME_TO_SEC(b.`startDateTime`)
+													) 
+												) 
+								) AS TotalBookingTimeByRemovedEmployees
+						FROM 	`booking` b
+						INNER JOIN `employee` e
+						ON 		e.`companyID` = b.`companyID`
+						WHERE 	b.`companyID` = :id
+						AND 	b.`userID` IS NOT NULL
+						AND		e.`userID` != b.`userID`
+						AND 	b.`userID` = UsrID
+						)														AS TotalBookingTimeUsed
+				FROM 		`company` c
+				JOIN 		`booking` b
+				ON 			c.`companyID` = b.`companyID`
+				JOIN 		`user` u 
+				ON 			u.userID = b.UserID 
+				WHERE 		c.`companyID` = :id
+				GROUP BY 	UsrID";
+		$s = $pdo->prepare($sql);
+		$s->bindValue(':id', $_GET['Company']);
+		$s->execute();
+		
+		$removedEmployeesResult = $s->fetchAll();
+		$removedEmployeesResultRowNum = sizeOf($removedEmployeesResult);
+		
+		// SQL Query to get booked time for deleted users
+		// TO-DO: needs testing
+		$sql = "SELECT 	`companyID`				AS TheCompanyID,
+						`name`					AS CompanyName,
+						(
+						SELECT 	(
+								BIG_SEC_TO_TIME(
+												SUM(
+													DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
+													)*86400 
+												+ 
+												SUM(
+													TIME_TO_SEC(b.`actualEndDateTime`) 
+													- 
+													TIME_TO_SEC(b.`startDateTime`)
+													) 
+												) 
+								) AS TotalBookingTimeByDeletedUsers
+						FROM 	`booking` b
+						WHERE 	b.`companyID` = :id
+						AND 	b.`userID` IS NULL
+						AND 	YEAR(b.`actualEndDateTime`) = YEAR(NOW())
+						AND 	MONTH(b.`actualEndDateTime`) = MONTH(NOW())
+						)														AS MonthlyBookingTimeUsed,
+						(
+						SELECT 	(
+								BIG_SEC_TO_TIME(
+												SUM(
+													DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
+													)*86400 
+												+ 
+												SUM(
+													TIME_TO_SEC(b.`actualEndDateTime`) 
+													- 
+													TIME_TO_SEC(b.`startDateTime`)
+													) 
+												) 
+								) AS TotalBookingTimeByDeletedUsers
+						FROM 	`booking` b
+						WHERE 	b.`companyID` = :id
+						AND 	b.`userID` IS NULL
 						)														AS TotalBookingTimeUsed
 				FROM 	`company`
 				WHERE	`companyID` = :id";
@@ -923,8 +988,8 @@ if(isset($_GET['Company'])){
 		$s->bindValue(':id', $_GET['Company']);
 		$s->execute();
 		
-		$removedEmployeesResult = $s->fetchAll();
-		$removedEmployeesResultRowNum = sizeOf($removedEmployeesResult);
+		$deletedUsersResult = $s->fetchAll();
+		$deletedUsersResultRowNum = sizeOf($deletedUsersResult);	
 		
 		//close connection
 		$pdo = null;
@@ -939,11 +1004,27 @@ if(isset($_GET['Company'])){
 	// If we're looking at a specific company and they have removed employees with booking time
 	if($removedEmployeesResultRowNum > 0){
 		foreach($removedEmployeesResult AS $row){	
+		
+		
+		if($row['MonthlyBookingTimeUsed'] == null){
+			$MonthlyTimeUsed = 'N/A';
+		} else {
+			$MonthlyTimeUsed = $row['MonthlyBookingTimeUsed'];
+		}
+
+		if($row['TotalBookingTimeUsed'] == null){
+			$TotalTimeUsed = 'N/A';
+		} else {
+			$TotalTimeUsed = $row['TotalBookingTimeUsed'];
+		}		
 			$removedEmployees[] = array(
 										'CompanyID' => $row['TheCompanyID'],
 										'CompanyName' => $row['CompanyName'],
-										'MonthlyBookingTimeUsed' => $row['MonthlyBookingTimeUsed'],
-										'TotalBookingTimeUsed' => $row['TotalBookingTimeUsed']
+										'firstName' => $row['firstName'],
+										'lastName' => $row['lastName'],
+										'email' => $row['email'],	
+										'MonthlyBookingTimeUsed' => $MonthlyTimeUsed,
+										'TotalBookingTimeUsed' => $TotalTimeUsed
 										);
 		}
 		if($removedEmployees[0]['TotalBookingTimeUsed'] == ""){
@@ -951,6 +1032,35 @@ if(isset($_GET['Company'])){
 			unset($removedEmployees);
 		}
 	}
+	
+	// If we're looking at a specific company and they have old booking time used by now deleted users
+	if($deletedUsersResultRowNum > 0){
+		foreach($deletedUsersResult AS $row){	
+		
+		
+		if($row['MonthlyBookingTimeUsed'] == null){
+			$MonthlyTimeUsed = 'N/A';
+		} else {
+			$MonthlyTimeUsed = $row['MonthlyBookingTimeUsed'];
+		}
+
+		if($row['TotalBookingTimeUsed'] == null){
+			$TotalTimeUsed = 'N/A';
+		} else {
+			$TotalTimeUsed = $row['TotalBookingTimeUsed'];
+		}		
+			$deletedEmployees[] = array(
+										'CompanyID' => $row['TheCompanyID'],
+										'CompanyName' => $row['CompanyName'],
+										'MonthlyBookingTimeUsed' => $MonthlyTimeUsed,
+										'TotalBookingTimeUsed' => $TotalTimeUsed
+										);
+		}
+		if($deletedEmployees[0]['TotalBookingTimeUsed'] == ""){
+			// The company has no used booking time by deleted users
+			unset($deletedEmployees);
+		}
+	}	
 }
 
 // Get information from all companies
