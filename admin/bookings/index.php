@@ -269,12 +269,12 @@ if (isset($_POST['action']) and $_POST['action'] == 'Delete')
 	try
 	{
 		// Save a description with information about the booking that was removed
-		$description = "N/A";
+		$logEventDescription = "N/A";
 		if(isset($_POST['UserInfo']) AND isset($_POST['MeetingInfo'])){
-			$description = 'The booking made for ' . $_POST['UserInfo'] . ' for the meeting room ' .
+			$logEventDescription = 'The booking made for ' . $_POST['UserInfo'] . ' for the meeting room ' .
 			$_POST['MeetingInfo'] . ' was deleted by: ' . $_SESSION['LoggedInUserName'];
 		} else {
-			$description = 'A booking was deleted by: ' . $_SESSION['LoggedInUserName'];
+			$logEventDescription = 'A booking was deleted by: ' . $_SESSION['LoggedInUserName'];
 		}
 		
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
@@ -288,7 +288,7 @@ if (isset($_POST['action']) and $_POST['action'] == 'Delete')
 											),
 							`description` = :description";
 		$s = $pdo->prepare($sql);
-		$s->bindValue(':description', $description);
+		$s->bindValue(':description', $logEventDescription);
 		$s->execute();
 		
 		//Close the connection
@@ -301,7 +301,6 @@ if (isset($_POST['action']) and $_POST['action'] == 'Delete')
 		$pdo = null;
 		exit();
 	}	
-	
 	
 	// Load booked meetings list webpage with updated database
 	header('Location: .');
@@ -341,12 +340,12 @@ if (isset($_POST['action']) and $_POST['action'] == 'Cancel')
 	try
 	{
 		// Save a description with information about the booking that was cancelled
-		$description = "N/A";
+		$logEventDescription = "N/A";
 		if(isset($_POST['UserInfo']) AND isset($_POST['MeetingInfo'])){
-			$description = 'The booking made for ' . $_POST['UserInfo'] . ' for the meeting room ' .
+			$logEventDescription = 'The booking made for ' . $_POST['UserInfo'] . ' for the meeting room ' .
 			$_POST['MeetingInfo'] . ' was cancelled by: ' . $_SESSION['LoggedInUserName'];
 		} else {
-			$description = 'A booking was cancelled by: ' . $_SESSION['LoggedInUserName'];
+			$logEventDescription = 'A booking was cancelled by: ' . $_SESSION['LoggedInUserName'];
 		}
 		
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
@@ -360,7 +359,7 @@ if (isset($_POST['action']) and $_POST['action'] == 'Cancel')
 											),
 							`description` = :description";
 		$s = $pdo->prepare($sql);
-		$s->bindValue(':description', $description);
+		$s->bindValue(':description', $logEventDescription);
 		$s->execute();
 		
 		//Close the connection
@@ -1568,7 +1567,7 @@ if (isset($_POST['add']) AND $_POST['add'] == "Add booking")
 		}
 		
 		// Save a description with information about the booking that was created
-		$description = 'A booking was created for the meeting room: ' . $meetinginfo . 
+		$logEventDescription = 'A booking was created for the meeting room: ' . $meetinginfo . 
 		', for the user: ' . $userinfo . '. Booking was made by: ' . $_SESSION['LoggedInUserName'];
 		
 		if(isset($_SESSION['lastBookingID'])){
@@ -1591,7 +1590,7 @@ if (isset($_POST['add']) AND $_POST['add'] == "Add booking")
 							`bookingID` = :BookingID,
 							`description` = :description";
 		$s = $pdo->prepare($sql);
-		$s->bindValue(':description', $description);
+		$s->bindValue(':description', $logEventDescription);
 		$s->bindValue(':BookingID', $lastBookingID);
 		$s->bindValue(':MeetingRoomID', $_POST['meetingRoomID']);
 		$s->bindValue(':UserID', $_POST['userID']);

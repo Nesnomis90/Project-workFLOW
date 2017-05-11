@@ -2,6 +2,11 @@ USE test;
 SET NAMES utf8;
 USE meetingflow;
 
+UPDATE 	`user`
+SET		`lastActivity` = CURRENT_TIMESTAMP()
+WHERE 	`userID` = 1
+AND		`isActive` > 0;
+
 SELECT 	COUNT(*)
 FROM 	`booking`
 WHERE 	`meetingRoomID` = 1
