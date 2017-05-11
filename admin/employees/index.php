@@ -250,6 +250,17 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Add Employee') OR
 												'CompanyName' => $row['CompanyName']
 												);
 					}
+					
+					if(isset($companies)){
+						$_SESSION['AddEmployeeCompaniesArray'] = $companies;
+						$companiesFound = sizeOf($companies);
+					} else {
+						$_SESSION['AddEmployeeCompaniesArray'] = array();
+						$companiesFound = 0;
+					}
+					if(isset($_SESSION['AddEmployeeShowSearchResults']) AND $_SESSION['AddEmployeeShowSearchResults'] == TRUE){
+						$_SESSION['AddEmployeeSearchResult'] = "The search result found $companiesFound companies";
+					}					
 						
 				} else {
 					$sql = 'SELECT 	`companyID` AS CompanyID,
@@ -261,16 +272,6 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Add Employee') OR
 					$s->bindValue(':CompanyID', $_GET['Company']);
 					$s->execute();
 					$companies = $s->fetch();		
-				}
-				if(isset($companies)){
-					$_SESSION['AddEmployeeCompaniesArray'] = $companies;
-					$companiesFound = sizeOf($companies);
-				} else {
-					$_SESSION['AddEmployeeCompaniesArray'] = array();
-					$companiesFound = 0;
-				}
-				if(isset($_SESSION['AddEmployeeShowSearchResults']) AND $_SESSION['AddEmployeeShowSearchResults'] == TRUE){
-					$_SESSION['AddEmployeeSearchResult'] = "The search result found $companiesFound companies";
 				}
 			} else {
 				$companies = $_SESSION['AddEmployeeCompaniesArray'];
@@ -872,47 +873,49 @@ if(isset($_GET['Company'])){
 		$rowNum = sizeOf($result);
 		
 		// Start a second SQL query to collect the booked time by removed users
-		// TO-DO: Fix the calculation
-		// A removed user can still exist in the database so 'b.`userID` IS NULL' isn't correct
+		// TO-DO: Fix calculation if still broken
+		// I think it works now though...
 		$sql = "SELECT 	`companyID`				AS TheCompanyID,
 						`name`					AS CompanyName,
 						(
 						SELECT	(
-								BIG_SEC_TO_TIME(
-									SUM(
-										DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
-										)*86400 
-									+ 
-									SUM(
-										TIME_TO_SEC(b.`actualEndDateTime`) 
-										- 
-										TIME_TO_SEC(b.`startDateTime`)
-										) 
-									)
+							BIG_SEC_TO_TIME(
+								SUM(
+									DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
+									)*86400 
+								+ 
+								SUM(
+									TIME_TO_SEC(b.`actualEndDateTime`) 
+									- 
+									TIME_TO_SEC(b.`startDateTime`)
+									) 
 								)
-						FROM 		`booking` b
-						WHERE 		b.`userID` IS NULL
-						AND 		b.`companyID` = :id
-						AND 		YEAR(b.`actualEndDateTime`) = YEAR(NOW())
-						AND 		MONTH(b.`actualEndDateTime`) = MONTH(NOW())
+						)
+						FROM `employee` e
+						RIGHT OUTER JOIN `booking` b
+						ON b.`userID` = e.`userID`
+						WHERE b.`companyID` = :id
+						AND 			YEAR(b.`actualEndDateTime`) = YEAR(NOW())
+						AND 			MONTH(b.`actualEndDateTime`) = MONTH(NOW())
 						)														AS MonthlyBookingTimeUsed,
 						(
 						SELECT	(
-								BIG_SEC_TO_TIME(
-									SUM(
-										DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
-										)*86400 
-									+ 
-									SUM(
-										TIME_TO_SEC(b.`actualEndDateTime`) 
-										- 
-										TIME_TO_SEC(b.`startDateTime`)
-										) 
+							BIG_SEC_TO_TIME(
+								SUM(
+									DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
+									)*86400 
+								+ 
+								SUM(
+									TIME_TO_SEC(b.`actualEndDateTime`) 
+									- 
+									TIME_TO_SEC(b.`startDateTime`)
 									) 
 								)
-						FROM 		`booking` b
-						WHERE 		b.`userID` IS NULL
-						AND 		b.`companyID` = :id		
+						)
+						FROM `employee` e
+						RIGHT OUTER JOIN `booking` b
+						ON b.`userID` = e.`userID`
+						WHERE b.`companyID` = :id
 						)														AS TotalBookingTimeUsed
 				FROM 	`company`
 				WHERE	`companyID` = :id";

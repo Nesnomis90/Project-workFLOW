@@ -126,7 +126,7 @@
 						<tr>
 							<td><?php htmlout($employee['CompanyName']); ?></td>
 							<td>Removed</td>
-							<td colspan="3">All Removed Employees</td>
+							<td colspan="3">All Removed Employees Combined</td>
 							<td><?php htmlout($employee['MonthlyBookingTimeUsed']); ?></td>
 							<td><?php htmlout($employee['TotalBookingTimeUsed']); ?></td>
 							<td colspan="3">N/A</td>

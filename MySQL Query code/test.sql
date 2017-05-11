@@ -2,6 +2,86 @@ USE test;
 SET NAMES utf8;
 USE meetingflow;
 
+SELECT	(
+		BIG_SEC_TO_TIME(
+			SUM(
+				DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
+				)*86400 
+			+ 
+			SUM(
+				TIME_TO_SEC(b.`actualEndDateTime`) 
+				- 
+				TIME_TO_SEC(b.`startDateTime`)
+				) 
+			)
+		)
+FROM 		`booking` b
+LEFT OUTER JOIN	`employee` e
+ON			e.`companyID` != b.`companyID`
+WHERE 		b.`companyID` = 1
+AND			e.`userID` = b.`userID`;
+
+
+SELECT *
+FROM (
+		SELECT	(
+		BIG_SEC_TO_TIME(
+			SUM(
+				DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
+				)*86400 
+			+ 
+			SUM(
+				TIME_TO_SEC(b.`actualEndDateTime`) 
+				- 
+				TIME_TO_SEC(b.`startDateTime`)
+				) 
+			)
+		)
+		FROM 		`booking` b
+		LEFT OUTER JOIN	`employee` e
+		ON			e.`userID` = b.`userID`
+        ) AS TEST
+JOIN `company`
+WHERE `companyID` = 1;
+
+		SELECT	(
+		BIG_SEC_TO_TIME(
+			SUM(
+				DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
+				)*86400 
+			+ 
+			SUM(
+				TIME_TO_SEC(b.`actualEndDateTime`) 
+				- 
+				TIME_TO_SEC(b.`startDateTime`)
+				) 
+			)
+		)
+		FROM 		`booking` b
+		LEFT OUTER JOIN	`employee` e
+		ON			e.`userID` = b.`userID`;
+
+
+SELECT	(
+	BIG_SEC_TO_TIME(
+		SUM(
+			DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
+			)*86400 
+		+ 
+		SUM(
+			TIME_TO_SEC(b.`actualEndDateTime`) 
+			- 
+			TIME_TO_SEC(b.`startDateTime`)
+			) 
+		)
+)
+FROM `employee` e
+RIGHT OUTER JOIN `booking` b
+ON b.`userID` = e.`userID`
+WHERE b.`companyID` = 1;
+
+
+
 SELECT 	c.`companyID`				AS TheCompanyID,
 						c.`name`					AS CompanyName,
 						(
@@ -19,8 +99,10 @@ SELECT 	c.`companyID`				AS TheCompanyID,
 									)
 								)
 						FROM 		`booking` b
-						WHERE 		b.`userID` IS NULL
-						AND 		b.`companyID` = 1
+                        INNER JOIN 	`employee` e
+                        ON			e.`companyID` = b.`companyID`
+						WHERE 		b.`companyID` = 1
+                        AND			e.`userID` != b.`userID`
 						AND 		YEAR(b.`actualEndDateTime`) = YEAR(NOW())
 						AND 		MONTH(b.`actualEndDateTime`) = MONTH(NOW())
 						)														AS MonthlyBookingTimeUsed,
@@ -39,8 +121,10 @@ SELECT 	c.`companyID`				AS TheCompanyID,
 									) 
 								)
 						FROM 		`booking` b
-						WHERE 		b.`userID` IS NULL
-						AND 		b.`companyID` = 1		
+                        INNER JOIN 	`employee` e
+                        ON			e.`companyID` = b.`companyID`
+						WHERE 		b.`companyID` = 1
+                        AND			e.`userID` != b.`userID`	
 						)														AS TotalBookingTimeUsed
 				FROM 	`company` c
 				WHERE	`companyID` = 1;
