@@ -2,6 +2,49 @@ USE test;
 SET NAMES utf8;
 USE meetingflow;
 
+SELECT 	c.`companyID`				AS TheCompanyID,
+						c.`name`					AS CompanyName,
+						(
+						SELECT	(
+								BIG_SEC_TO_TIME(
+									SUM(
+										DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
+										)*86400 
+									+ 
+									SUM(
+										TIME_TO_SEC(b.`actualEndDateTime`) 
+										- 
+										TIME_TO_SEC(b.`startDateTime`)
+										) 
+									)
+								)
+						FROM 		`booking` b
+						WHERE 		b.`userID` IS NULL
+						AND 		b.`companyID` = 1
+						AND 		YEAR(b.`actualEndDateTime`) = YEAR(NOW())
+						AND 		MONTH(b.`actualEndDateTime`) = MONTH(NOW())
+						)														AS MonthlyBookingTimeUsed,
+						(
+						SELECT	(
+								BIG_SEC_TO_TIME(
+									SUM(
+										DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
+										)*86400 
+									+ 
+									SUM(
+										TIME_TO_SEC(b.`actualEndDateTime`) 
+										- 
+										TIME_TO_SEC(b.`startDateTime`)
+										) 
+									) 
+								)
+						FROM 		`booking` b
+						WHERE 		b.`userID` IS NULL
+						AND 		b.`companyID` = 1		
+						)														AS TotalBookingTimeUsed
+				FROM 	`company` c
+				WHERE	`companyID` = 1;
+
 UPDATE 	`user`
 SET		`lastActivity` = CURRENT_TIMESTAMP()
 WHERE 	`userID` = 1

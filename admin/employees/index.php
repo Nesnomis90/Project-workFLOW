@@ -712,7 +712,7 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Change Role')
 // Perform the actual database update of the edited information
 if (isset($_POST['action']) AND $_POST['action'] == 'Confirm Role')
 {
-	// TO-DO: Check if anything actually changed
+	// Check if anything actually changed
 	$theSelectedPositionID = $_POST['PositionID'];
 	$NumberOfChanges = 0;
 	
@@ -793,10 +793,6 @@ if(isset($_GET['Company'])){
 
 		$pdo = connect_to_db();
 		
-		// TO-DO: Get information about time spent by users that have been removed as an employee
-		// Fix the HTML template too!
-		
-		
 		// TO-DO: Change SQL Query if time calculation is broken
 		// Changed it so it should (in theory at least) calculate correctly now
 		$sql = "SELECT 	u.`userID`					AS UsrID,
@@ -876,8 +872,10 @@ if(isset($_GET['Company'])){
 		$rowNum = sizeOf($result);
 		
 		// Start a second SQL query to collect the booked time by removed users
-		$sql = "SELECT 	c.`companyID`				AS TheCompanyID,
-						c.`name`					AS CompanyName,
+		// TO-DO: Fix the calculation
+		// A removed user can still exist in the database so 'b.`userID` IS NULL' isn't correct
+		$sql = "SELECT 	`companyID`				AS TheCompanyID,
+						`name`					AS CompanyName,
 						(
 						SELECT	(
 								BIG_SEC_TO_TIME(
@@ -893,11 +891,8 @@ if(isset($_GET['Company'])){
 									)
 								)
 						FROM 		`booking` b
-						INNER JOIN `company` c
-						ON 			c.`companyID` = b.`companyID`
 						WHERE 		b.`userID` IS NULL
 						AND 		b.`companyID` = :id
-						AND 		c.`CompanyID` = b.`companyID`
 						AND 		YEAR(b.`actualEndDateTime`) = YEAR(NOW())
 						AND 		MONTH(b.`actualEndDateTime`) = MONTH(NOW())
 						)														AS MonthlyBookingTimeUsed,
@@ -916,13 +911,11 @@ if(isset($_GET['Company'])){
 									) 
 								)
 						FROM 		`booking` b
-						INNER JOIN `company` c
-						ON 			c.`companyID` = b.`companyID`
 						WHERE 		b.`userID` IS NULL
-						AND 		b.`companyID` = :id
-						AND 		c.`CompanyID` = b.`companyID`		
-						)	
-						AS TotalBookingTimeUsed";
+						AND 		b.`companyID` = :id		
+						)														AS TotalBookingTimeUsed
+				FROM 	`company`
+				WHERE	`companyID` = :id";
 		$s = $pdo->prepare($sql);
 		$s->bindValue(':id', $_GET['Company']);
 		$s->execute();
@@ -949,6 +942,10 @@ if(isset($_GET['Company'])){
 										'MonthlyBookingTimeUsed' => $row['MonthlyBookingTimeUsed'],
 										'TotalBookingTimeUsed' => $row['TotalBookingTimeUsed']
 										);
+		}
+		if($removedEmployees[0]['TotalBookingTimeUsed'] == ""){
+			// The company has no used booking time by removed users
+			unset($removedEmployees);
 		}
 	}
 }
