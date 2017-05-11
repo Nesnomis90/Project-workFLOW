@@ -27,11 +27,11 @@
 					<?php foreach($companyposition as $row): ?> 
 						<?php if($row['CompanyPositionName']==$CurrentCompanyPositionName):?>
 							<option selected="selected" 
-									value=<?php htmlout($row['PositionID']); ?>>
+									value="<?php htmlout($row['PositionID']); ?>">
 									<?php htmlout($row['CompanyPositionName']);?>
 							</option>
 						<?php else : ?>
-							<option value=<?php htmlout($row['PositionID']); ?>>
+							<option value="<?php htmlout($row['PositionID']); ?>">
 									<?php htmlout($row['CompanyPositionName']);?>
 							</option>
 						<?php endif;?>

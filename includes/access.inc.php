@@ -20,10 +20,49 @@ function hashBookingCode($rawBookingCode){
 
 // These are functions to handle user access
 
-// returns TRUE if user is logged in
-function userIsLoggedIn()
+function updateUserActivity()
+{
+	// If a user logs in, or does something while logged in, we'll update the database
+	// to indicate when they last used the website
+	try
+	{
+		include_once 'db.inc.php';
+		$pdo = connect_to_db();
+		$sql = 'UPDATE 	`user`
+				SET		`lastActivity` = CURRENT_TIMESTAMP()
+				WHERE 	`userID` = :userID
+				AND		`isActive` > 0';
+		$s = $pdo->prepare($sql);
+		$s->bindValue(':userID', $_SESSION['LoggedInUserID']);
+
+		$s->execute();
+		
+		$pdo = null;
+	}
+	catch (PDOException $e)
+	{
+		$error = 'Error updating user activity.';
+		include_once 'error.html.php';
+		$pdo = null;
+		exit();
+	}	
+}
+
+// returns TRUE if user is logged in and updates the database with their last active timestamp
+function userIsLoggedIn() 
 {
 	session_start();
+	if(checkIfUserIsLoggedIn()){
+		updateUserActivity();
+		return TRUE;
+	} else {
+		return FALSE;
+	}
+}
+
+// returns TRUE if user is logged in
+function checkIfUserIsLoggedIn()
+{
 	// If user is trying to log in
 	if (isset($_POST['action']) and $_POST['action'] == 'login')
 	{
