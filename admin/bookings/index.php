@@ -52,13 +52,13 @@ function rememberEditBookingInputs(){
 			// The company selected
 		$newValues['TheCompanyID'] = $_POST['companyID'];
 			// The user selected
-		$newValues['BookedBy'] = $_POST['displayName'];
+		$newValues['BookedBy'] = trimExcessWhitespace($_POST['displayName']);
 			// The booking description
-		$newValues['BookingDescription'] = $_POST['description'];
+		$newValues['BookingDescription'] = trimExcessWhitespaceButLeaveLinefeed($_POST['description']);
 			// The start time
-		$newValues['StartTime'] = $_POST['startDateTime'];
+		$newValues['StartTime'] = trimExcessWhitespace($_POST['startDateTime']);
 			// The end time
-		$newValues['EndTime'] = $_POST['endDateTime'];
+		$newValues['EndTime'] = trimExcessWhitespace($_POST['endDateTime']);
 		
 		$_SESSION['EditBookingInfoArray'] = $newValues;			
 	}
@@ -78,13 +78,13 @@ function rememberAddBookingInputs(){
 			// The company selected
 		$newValues['TheCompanyID'] = $_POST['companyID'];
 			// The user selected
-		$newValues['BookedBy'] = $_POST['displayName'];
+		$newValues['BookedBy'] = trimExcessWhitespace($_POST['displayName']);
 			// The booking description
-		$newValues['BookingDescription'] = $_POST['description'];
+		$newValues['BookingDescription'] = trimExcessWhitespaceButLeaveLinefeed($_POST['description']);
 			// The start time
-		$newValues['StartTime'] = $_POST['startDateTime'];
+		$newValues['StartTime'] = trimExcessWhitespace($_POST['startDateTime']);
 			// The end time
-		$newValues['EndTime'] = $_POST['endDateTime'];
+		$newValues['EndTime'] = trimExcessWhitespace($_POST['endDateTime']);
 		
 		$_SESSION['AddBookingInfoArray'] = $newValues;			
 	}
@@ -794,28 +794,13 @@ if(isset($_POST['edit']) AND $_POST['edit'] == "Get Default Display Name"){
 	  
 	$displayName = $_SESSION['EditBookingDefaultDisplayNameForNewUser'];
 	if(isset($_SESSION['EditBookingInfoArray'])){
-		$newValues = $_SESSION['EditBookingInfoArray'];
+		
+		rememberEditBookingInputs();
 
 		if($displayName != ""){
-			if($displayName != $newValues['BookedBy']){
-				
-				if(isset($_POST['userID'])){
-					$newValues['TheUserID'] = $_POST['userID'];
-				}
-					// The meeting room selected
-				$newValues['TheMeetingRoomID'] = $_POST['meetingRoomID']; 
-					// The company selected
-				$newValues['TheCompanyID'] = $_POST['companyID'];
+			if($displayName != $_SESSION['EditBookingInfoArray']['BookedBy']){
 					// The user selected
-				$newValues['BookedBy'] = $displayName;
-					// The booking description
-				$newValues['BookingDescription'] = $_POST['description'];
-					// The start time
-				$newValues['StartTime'] = $_POST['startDateTime'];
-					// The end time
-				$newValues['EndTime'] = $_POST['endDateTime'];
-				
-				$_SESSION['EditBookingInfoArray'] = $newValues;	
+				$_SESSION['EditBookingInfoArray']['BookedBy'] = $displayName;
 
 				unset($_SESSION['EditBookingDefaultDisplayNameForNewUser']);				
 			} else {
@@ -825,6 +810,7 @@ if(isset($_POST['edit']) AND $_POST['edit'] == "Get Default Display Name"){
 		} else {
 			// The user has no default display name
 			$_SESSION['EditBookingError'] = "This user has no default display name.";
+			$_SESSION['EditBookingInfoArray']['BookedBy'] = "";
 		}		
 	}
 	
@@ -833,34 +819,22 @@ if(isset($_POST['edit']) AND $_POST['edit'] == "Get Default Display Name"){
 	exit();	
 }
 
+// TO-DO: Change the format of the datetime displayed in booking edit!<----------
+
 // If admin wants to get the default values for the user's booking description
 if(isset($_POST['edit']) AND $_POST['edit'] == "Get Default Booking Description"){
 	
 	$bookingDescription = $_SESSION['EditBookingDefaultBookingDescriptionForNewUser'];
 	if(isset($_SESSION['EditBookingInfoArray'])){
-		$newValues = $_SESSION['EditBookingInfoArray'];
+		
+		rememberEditBookingInputs();
 
 		if($bookingDescription != ""){
-			if($bookingDescription != $newValues['BookingDescription']){
+			if($bookingDescription != $_SESSION['EditBookingInfoArray']['BookingDescription']){
 				
-				if(isset($_POST['userID'])){
-					$newValues['TheUserID'] = $_POST['userID'];
-				}
-					// The meeting room selected
-				$newValues['TheMeetingRoomID'] = $_POST['meetingRoomID']; 
-					// The company selected
-				$newValues['TheCompanyID'] = $_POST['companyID'];
-					// The user selected
-				$newValues['BookedBy'] = $_POST['displayName'];
 					// The booking description
-				$newValues['BookingDescription'] = $bookingDescription;
-					// The start time
-				$newValues['StartTime'] = $_POST['startDateTime'];
-					// The end time
-				$newValues['EndTime'] = $_POST['endDateTime'];
-				
-				$_SESSION['EditBookingInfoArray'] = $newValues;	
-
+				$_SESSION['EditBookingInfoArray']['BookingDescription'] = $bookingDescription;
+	
 				unset($_SESSION['EditBookingDefaultBookingDescriptionForNewUser']);			
 			} else {
 				// Description was already the default booking description
@@ -869,6 +843,7 @@ if(isset($_POST['edit']) AND $_POST['edit'] == "Get Default Booking Description"
 		} else {
 			// The user has no default booking description
 			$_SESSION['EditBookingError'] = "This user has no default booking description.";
+			$_SESSION['EditBookingInfoArray']['BookingDescription'] = "";
 		}
 	}
 	
@@ -1390,12 +1365,14 @@ if (	(isset($_POST['action']) AND $_POST['action'] == "Create Booking") OR
 		$startDateTime = $row['StartTime'];
 	} else {
 		$startDateTime = getDatetimeNow();
+		$startDateTime = convertDatetimeToFormat($startDateTime , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
 	}
 	
 	if(isset($row['EndTime'])){
 		$endDateTime = $row['EndTime'];
 	} else {
 		$endDateTime = getDatetimeNow();
+		$endDateTime = convertDatetimeToFormat($endDateTime , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
 	}
 	
 	if(isset($row['BookedBy'])){
@@ -1799,28 +1776,13 @@ if(isset($_POST['add']) AND $_POST['add'] == "Get Default Display Name"){
 	  
 	$displayName = $_SESSION['AddBookingDefaultDisplayNameForNewUser'];
 	if(isset($_SESSION['AddBookingInfoArray'])){
-		$newValues = $_SESSION['AddBookingInfoArray'];
+		rememberAddBookingInputs();
 
 		if($displayName != ""){
-			if($displayName != $newValues['BookedBy']){
+			if($displayName != $_SESSION['AddBookingInfoArray']['BookedBy']){
 				
-				if(isset($_POST['userID'])){
-					$newValues['TheUserID'] = $_POST['userID'];
-				}
-					// The meeting room selected
-				$newValues['TheMeetingRoomID'] = $_POST['meetingRoomID']; 
-					// The company selected
-				$newValues['TheCompanyID'] = $_POST['companyID'];
 					// The user selected
-				$newValues['BookedBy'] = $displayName;
-					// The booking description
-				$newValues['BookingDescription'] = $_POST['description'];
-					// The start time
-				$newValues['StartTime'] = $_POST['startDateTime'];
-					// The end time
-				$newValues['EndTime'] = $_POST['endDateTime'];
-				
-				$_SESSION['AddBookingInfoArray'] = $newValues;	
+				$_SESSION['AddBookingInfoArray']['BookedBy'] = $displayName;
 
 				unset($_SESSION['AddBookingDefaultDisplayNameForNewUser']);				
 			} else {
@@ -1830,6 +1792,7 @@ if(isset($_POST['add']) AND $_POST['add'] == "Get Default Display Name"){
 		} else {
 			// The user has no default display name
 			$_SESSION['AddBookingError'] = "This user has no default display name.";
+			$_SESSION['AddBookingInfoArray']['BookedBy'] = "";
 		}		
 	}
 	
@@ -1843,28 +1806,12 @@ if(isset($_POST['add']) AND $_POST['add'] == "Get Default Booking Description"){
 	
 	$bookingDescription = $_SESSION['AddBookingDefaultBookingDescriptionForNewUser'];
 	if(isset($_SESSION['AddBookingInfoArray'])){
-		$newValues = $_SESSION['AddBookingInfoArray'];
+		
+		rememberAddBookingInputs();
 
 		if($bookingDescription != ""){
-			if($bookingDescription != $newValues['BookingDescription']){
-				
-				if(isset($_POST['userID'])){
-					$newValues['TheUserID'] = $_POST['userID'];
-				}
-					// The meeting room selected
-				$newValues['TheMeetingRoomID'] = $_POST['meetingRoomID']; 
-					// The company selected
-				$newValues['TheCompanyID'] = $_POST['companyID'];
-					// The user selected
-				$newValues['BookedBy'] = $_POST['displayName'];
-					// The booking description
-				$newValues['BookingDescription'] = $bookingDescription;
-					// The start time
-				$newValues['StartTime'] = $_POST['startDateTime'];
-					// The end time
-				$newValues['EndTime'] = $_POST['endDateTime'];
-				
-				$_SESSION['AddBookingInfoArray'] = $newValues;	
+			if($bookingDescription != $_SESSION['AddBookingInfoArray']['BookingDescription']){
+				$_SESSION['AddBookingInfoArray']['BookingDescription'] = $bookingDescription;
 
 				unset($_SESSION['AddBookingDefaultBookingDescriptionForNewUser']);			
 			} else {
@@ -1874,6 +1821,7 @@ if(isset($_POST['add']) AND $_POST['add'] == "Get Default Booking Description"){
 		} else {
 			// The user has no default booking description
 			$_SESSION['AddBookingError'] = "This user has no default booking description.";
+			$_SESSION['AddBookingInfoArray']['BookingDescription'] = "";
 		}
 	}
 	
