@@ -4,6 +4,11 @@
 <html lang="en">
 	<head>
 		<meta charset="utf-8">
+		<style>
+			#description {
+				vertical-align: top;
+			}
+		</style>			
 		<title>Book A New Meeting</title>
 	</head>
 	<body>

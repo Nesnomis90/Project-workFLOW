@@ -4,6 +4,11 @@
 <html lang="en">
 	<head>
 		<meta charset="utf-8">
+		<style>
+			#description {
+				vertical-align: top;
+			}
+		</style>		
 		<title>Edit Booking</title>
 	</head>
 	<body>

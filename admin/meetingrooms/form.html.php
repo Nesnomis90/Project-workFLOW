@@ -5,6 +5,11 @@
 <html lang="en">
 	<head>
 		<meta charset="utf-8">
+		<style>
+			#MeetingRoomDescription {
+				vertical-align: top;
+			}
+		</style>
 		<title><?php htmlout($pageTitle); ?></title>
 	</head>
 	<body>
@@ -15,32 +20,27 @@
 		<?php endif; ?>
 		<form action="" method="post">
 			<div>
-				<label for="MeetingRoomName">Room Name: 
-					<input type="text" name="MeetingRoomName" id="MeetingRoomName"
-					placeholder="Enter Room Name" 
-					value="<?php htmlout($meetingRoomName); ?>">
-				</label>
+				<label for="MeetingRoomName">Room Name: </label>
+				<input type="text" name="MeetingRoomName" id="MeetingRoomName"
+				placeholder="Enter Room Name" 
+				value="<?php htmlout($meetingRoomName); ?>">
 			</div>
 			<div>
-				<label for="MeetingRoomCapacity">Capacity: 
-					<input type="number" name="MeetingRoomCapacity" id="MeetingRoomCapacity"
-					min="1" max="255"				
-					value="<?php htmlout($meetingRoomCapacity); ?>">
-				</label>
+				<label for="MeetingRoomCapacity">Capacity: </label>
+				<input type="number" name="MeetingRoomCapacity" id="MeetingRoomCapacity"
+				min="1" max="255"				
+				value="<?php htmlout($meetingRoomCapacity); ?>">
 			</div>
 			<div>
-				<label for="MeetingRoomDescription">Room Description: 
-					<input type="text" name="MeetingRoomDescription" id="MeetingRoomDescription" 
-					placeholder="Enter Room Description" 
-					value="<?php htmlout($meetingRoomDescription); ?>">
-				</label>
-			</div>
+				<label for="MeetingRoomDescription">Room Description: </label>
+				<textarea rows="4" cols="50" name="MeetingRoomDescription" id="MeetingRoomDescription"
+				placeholder="Enter Room Description"><?php htmlout($meetingRoomDescription); ?></textarea>
+			</div>				
 			<div>
-				<label for="MeetingRoomLocation">Location: 
-					<input type="text" name="MeetingRoomLocation" id="MeetingRoomLocation" 
-					placeholder="Enter Location" 
-					value="<?php htmlout($meetingRoomLocation); ?>">
-				</label>
+				<label for="MeetingRoomLocation">Location: </label> 
+				<input type="text" name="MeetingRoomLocation" id="MeetingRoomLocation" 
+				placeholder="Enter Location" 
+				value="<?php htmlout($meetingRoomLocation); ?>">
 			</div>
 			<div>
 				<input type="hidden" name="MeetingRoomID" value="<?php htmlout($meetingRoomID); ?>">

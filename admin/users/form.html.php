@@ -4,6 +4,11 @@
 <html lang="en">
 	<head>
 		<meta charset="utf-8">
+		<style>
+			#bookingdescription {
+				vertical-align: top;
+			}
+		</style>		
 		<title><?php htmlout($pageTitle); ?></title>
 	</head>
 	<body>
@@ -71,15 +76,18 @@
 			</div>
 			<div style="display:<?php htmlout($displaynameStyle); ?>">
 				<label for="displayname">Default Display Name: 
-					<input type="text" name="displayname" id="displayname" 
+					<input type="text" name="displayname" id="displayname"
+					placeholder="Enter A Default Display Name"					
 					value="<?php htmlout($displayname); ?>">
 				</label>
 			</div>
+			<div>
+
+			</div>				
 			<div style="display:<?php htmlout($bookingdescriptionStyle); ?>">
-				<label for="bookingdescription">Default Booking Description: 
-					<input type="text" name="bookingdescription" id="bookingdescription" 
-					value="<?php htmlout($bookingdescription); ?>">
-				</label>
+				<label for="bookingdescription">Default Booking Description: </label>
+				<textarea rows="4" cols="50" name="bookingdescription" id="bookingdescription"
+				placeholder="Enter A Default Booking Description"><?php htmlout($bookingdescription); ?></textarea>
 			</div>
 			<div>
 				<input type="hidden" name="id" value="<?php htmlout($id); ?>">
