@@ -699,7 +699,7 @@ foreach ($result as $row)
 										'CompanyName' => $row['CompanyName'],
 										'DatetimeCreated' => $dateTimeCreatedToDisplay
 									);		
-	} elseif(!$isActive AND $dateToRemove != "" AND $dateToRemove != NULL)){
+	} elseif(!$isActive AND $dateToRemove != "" AND $dateToRemove != NULL){
 		$inactivecompanies[] = array(
 										'id' => $row['CompID'], 
 										'CompanyName' => $row['CompanyName'],

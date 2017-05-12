@@ -17,7 +17,7 @@ AND		`companyID` <> 0;
 UPDATE 	`company`
 SET		`removeAtDate` = DATE_SUB(DATE(CURRENT_TIMESTAMP), INTERVAL 1 DAY)
 WHERE 	`isActive` = 1
-AND		`companyID` = 33;
+AND		`companyID` = 34;
 
 DELETE FROM `user`
 WHERE DATE_ADD(`create_time`, INTERVAL 8 HOUR) < CURRENT_TIMESTAMP
