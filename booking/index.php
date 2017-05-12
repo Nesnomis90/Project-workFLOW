@@ -32,7 +32,8 @@ if(isset($_GET['cancellationcode'])){
 							WHERE	`meetingRoomID` = TheMeetingRoomID 
 						)												AS TheMeetingRoomName,
 						`startDateTime`,
-						`endDateTime`
+						`endDateTime`,
+						`actualEndDateTime`
 				FROM	`booking`
 				WHERE 	`cancellationCode` = :cancellationCode
 				AND		`dateTimeCancelled` IS NULL
@@ -65,19 +66,71 @@ if(isset($_GET['cancellationcode'])){
 	
 	$bookingID = $result['bookingID'];
 	$TheMeetingRoomName = $result['TheMeetingRoomName'];
-	$startDateTime = $result['startDateTime'];
-	$endDateTime = $result['endDateTime'];
+	$startDateTimeString = $result['startDateTime'];
+	$endDateTimeString = $result['endDateTime'];
+	$actualEndDateTimeString = $result['actualEndDateTime'];
 	
-	// Cancel the booked meeting
+	$startDateTime = stringToDateTime($startDateTime);
+	$endDateTime = stringToDateTime($endDateTime);
+	
+	$displayValidatedStartDate = convertDatetimeToFormat($startDateTimeString , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
+	$displayValidatedEndDate = convertDatetimeToFormat($endDateTimeString, 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);	
+	
+	// Check if the meeting has already ended
+	if($actualEndDateTimeString != "" AND $actualEndDateTimeString != NULL){
+		// Meeting has not ended already.
+		// Check if we're cancelling the booking or simply ending the booking early!
+		$timeNow = getDatetimeNow();
+		if($timeNow > $startDateTime AND $timeNow < $endDateTime) {
+			// The booking is already active, so we're ending it early
+			$sql = "UPDATE 	`booking`
+					SET		`dateTimeCancelled` = CURRENT_TIMESTAMP,
+							`actualEndDateTime` = CURRENT_TIMESTAMP,
+							`cancellationCode` = NULL
+					WHERE 	`bookingID` = :bookingID";
+			$bookingFeedback = 	"The booking for " . $TheMeetingRoomName . ". Starting at: " . $displayValidatedStartDate . 
+								" and ending at: " . $displayValidatedEndDate . " has been ended early by using the cancellation link.";
+			$logEventDescription = $bookingFeedback;
+		} elseif($timeNow < $startDateTime) {
+			// The booking hasn't started yet, so we're actually cancelling the meeting
+			$sql = "UPDATE 	`booking`
+					SET		`dateTimeCancelled` = CURRENT_TIMESTAMP,
+							`cancellationCode` = NULL
+					WHERE 	`bookingID` = :bookingID";	
+			$bookingFeedback = 	"The booking for " . $TheMeetingRoomName . ". Starting at: " . $displayValidatedStartDate . 
+								" and ending at: " . $displayValidatedEndDate . " has been cancelled by using the cancellation link.";
+			$logEventDescription = $bookingFeedback;								
+		} elseif($timeNow > $endDateTime) {
+			// The booking has (in theory) already ended, so there shouldn't be an active cancellation code for it
+			// We just have to assume the booking failed to update itself on completion
+			$sql = "UPDATE 	`booking`
+					SET		`actualEndDateTime` = `endDateTime`
+							`cancellationCode` = NULL
+					WHERE 	`bookingID` = :bookingID";
+			$bookingFeedback = 		"The booked meeting has already ended.";
+			$logEventDescription = 	"The booking for " . $TheMeetingRoomName . ". Starting at: " . $displayValidatedStartDate . 
+									" and ending at: " . $displayValidatedEndDate . " was attempted to be cancelled with the " . 
+									"cancellation link, but the meeting should have already been completed." .
+									" The end date of the booking has been updated to have occured on the scheduled time.";			
+		}	
+	} else {
+		// Meeting has already ended. So there's no reason to cancel it.
+		$bookingFeedback = 	"The booked meeting has already ended.";
+		$sql = "UPDATE 	`booking`
+				SET		`cancellationCode` = NULL
+				WHERE 	`bookingID` = :bookingID";
+		$bookingFeedback = 		"The booked meeting has already ended.";
+		$logEventDescription = 	"The booking for " . $TheMeetingRoomName . ". Starting at: " . $displayValidatedStartDate . 
+								" and ending at: " . $displayValidatedEndDate . " was attempted to be cancelled with the " . 
+								"cancellation link, but the meeting had already ended so it had no effect.";
+	}
+	
+	// Update the booked meeting
 	try
 	{
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 		
 		$pdo = connect_to_db();
-		$sql = "UPDATE 	`booking`
-				SET		`dateTimeCancelled` = CURRENT_TIMESTAMP,
-						`cancellationCode` = NULL
-				WHERE 	`bookingID` = :bookingID";
 		$s = $pdo->prepare($sql);
 		$s->bindValue(':bookingID', $bookingID);
 		$s->execute();
@@ -87,26 +140,17 @@ if(isset($_GET['cancellationcode'])){
 	}
 	catch(PDOException $e)
 	{
-		$error = 'Error cancelling booking: ' . $e->getMessage();
+		$error = 'Error updating booking: ' . $e->getMessage();
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
 		$pdo = null;
 		exit();
 	}	
 	
-	$displayValidatedStartDate = convertDatetimeToFormat($startDateTime , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
-	$displayValidatedEndDate = convertDatetimeToFormat($endDateTime, 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);	
-	
-	$_SESSION['normalBookingFeedback'] = "The booking for " . $TheMeetingRoomName . ". Starting at: " . $displayValidatedStartDate . 
-										" and ending at: " . $displayValidatedEndDate . " has been cancelled!";
+	$_SESSION['normalBookingFeedback'] = $bookingFeedback;
 										
-	// Add a log event that the booking was cancelled
+	// Add a log event about the updated booking
 	try
 	{
-		// Save a description with information about the user that was activated
-		
-		$logEventDescription = 	"The booking for " . $TheMeetingRoomName . ". Starting at: " . $displayValidatedStartDate . 
-								" and ending at: " . $displayValidatedEndDate . " has been cancelled by using the cancellation link!";
-		
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 		
 		$pdo = connect_to_db();
@@ -132,11 +176,8 @@ if(isset($_GET['cancellationcode'])){
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
 		$pdo = null;
 		exit();
-	}		
+	}
 }
-
-
-
 
 // Load the html template
 include_once 'booking.html.php';

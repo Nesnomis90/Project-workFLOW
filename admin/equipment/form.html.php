@@ -5,6 +5,11 @@
 <html lang="en">
 	<head>
 		<meta charset="utf-8">
+		<style>
+			#EquipmentDescription {
+				vertical-align: top;
+			}
+		</style>
 		<title><?php htmlout($pageTitle); ?></title>
 	</head>
 	<body>
@@ -15,19 +20,16 @@
 		<?php endif; ?>
 		<form action="" method="post">
 			<div>
-				<label for="EquipmentName">Equipment Name: 
-					<input type="text" name="EquipmentName" id="EquipmentName" 
-					placeholder="Enter Equipment Name"
-					value="<?php htmlout($EquipmentName); ?>">
-				</label>
+				<label for="EquipmentName">Equipment Name: </label>
+				<input type="text" name="EquipmentName" id="EquipmentName" 
+				placeholder="Enter Equipment Name"
+				value="<?php htmlout($EquipmentName); ?>">
 			</div>
 			<div>
-				<label for="EquipmentDescription">Equipment Description: 
-					<input type="text" name="EquipmentDescription" id="EquipmentDescription" 
-					placeholder="Enter Equipment Description" 
-					value="<?php htmlout($EquipmentDescription); ?>">
-				</label>
-			</div>
+				<label for="EquipmentDescription">Equipment Description: </label>
+					<textarea rows="4" cols="50" name="EquipmentDescription" id="EquipmentDescription"
+					placeholder="Enter Equipment Description"><?php htmlout($EquipmentDescription); ?></textarea>
+			</div>			
 			<div>
 				<input type="hidden" name="EquipmentID" value="<?php htmlout($EquipmentID); ?>">
 				<input type="submit" name="action" value="<?php htmlout($button); ?>">

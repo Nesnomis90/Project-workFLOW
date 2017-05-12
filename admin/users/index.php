@@ -467,11 +467,12 @@ if (isset($_GET['addform']))
 	$emailSubject = "Account Activation Link";
 	
 	$emailMessage = 
-	"Your account has been created.\n" . 
+	"Your account has been created.\n" .
 	"Your registered Email: " . $email . ".\n" . 
 	"Your generated Password: " . $generatedPassword . ".\n" .
 	"For security reasons you should set a new password after you've logged in.\n\n" .
 	"Before you can log in you need to activate your account.\n" .
+	"If the account isn't activated within 8 hours, it is removed.\n" .
 	"Click this link to activate your account: " . $_SERVER['HTTP_HOST'] . 
 	"/user/?activateaccount=" . $activationcode;
 	

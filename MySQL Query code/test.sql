@@ -2,6 +2,87 @@ USE test;
 SET NAMES utf8;
 USE meetingflow;
 
+SELECT 	m.`name`					AS MeetingRoomName,
+		c.`name`					AS CompanyName,
+		u.`email`,       
+		b.`startDateTime`,
+		b.`endDateTime`,
+		b.`displayName`,
+		b.`description`,
+		b.`cancellationCode`
+FROM	`booking` b
+JOIN 	`meetingroom` m
+ON 		b.`meetingRoomID` = m.`meetingRoomID`
+JOIN	`company` c
+ON 		c.`companyID` = b.`companyID`
+JOIN	`user` u
+ON		u.`userID` = b.`userID`
+WHERE 	DATE_SUB(b.`startDateTime`, INTERVAL 20 MINUTE) < CURRENT_TIMESTAMP
+AND		b.`startDateTime` > CURRENT_TIMESTAMP
+AND 	b.`dateTimeCancelled` IS NULL
+AND 	b.`actualEndDateTime` IS NULL
+AND		b.`cancellationCode` IS NOT NULL
+AND 	DATE_ADD(b.`dateTimeCreated`, INTERVAL 0 MINUTE) < CURRENT_TIMESTAMP
+AND		b.`emailSent` = 0
+AND		b.`bookingID` <> 0;
+
+SELECT 	*
+FROM	`booking`
+WHERE 	DATE_SUB(`startDateTime`, INTERVAL 10 MINUTE) < CURRENT_TIMESTAMP
+AND		`startDateTime` > CURRENT_TIMESTAMP
+AND 	`dateTimeCancelled` IS NULL
+AND 	`actualEndDateTime` IS NULL
+AND		`cancellationCode` IS NOT NULL
+AND 	DATE_ADD(`dateTimeCreated`, INTERVAL 5 MINUTE) < CURRENT_TIMESTAMP
+AND		`emailSent` = 0
+AND		`bookingID` <> 0;
+
+SELECT *
+FROM 	`company`
+WHERE 	DATE(CURRENT_TIMESTAMP) >= `removeAtDate`
+AND 	`isActive` = 1
+AND		`companyID` <> 0;
+
+UPDATE 	`company`
+SET		`isActive` = 0
+WHERE 	DATE(CURRENT_TIMESTAMP) >= `removeAtDate`
+AND 	`isActive` = 1
+AND		`companyID` <> 0;
+
+UPDATE 	`company`
+SET		`removeAtDate` = DATE_SUB(DATE(CURRENT_TIMESTAMP), INTERVAL 1 DAY)
+WHERE 	`isActive` = 1
+AND		`companyID` = 34;
+
+DELETE FROM `user`
+WHERE DATE_ADD(`create_time`, INTERVAL 8 HOUR) < CURRENT_TIMESTAMP
+AND 	`isActive` = 0
+AND		`userID` <> 0;
+
+UPDATE 	`booking`
+SET		`dateTimeCancelled` = NULL,
+		`cancellationCode` = NULL
+WHERE 	CURRENT_TIMESTAMP > `endDateTime`
+AND 	`actualEndDateTime` IS NOT NULL
+AND 	`dateTimeCancelled` > `actualEndDateTime`
+AND 	`bookingID` <> 0;
+
+SELECT * 
+FROM 	`booking`
+WHERE 	CURRENT_TIMESTAMP > `endDateTime`
+AND 	`actualEndDateTime` IS NOT NULL
+AND 	`dateTimeCancelled` > `actualEndDateTime`
+AND 	`bookingID` <> 0;
+
+UPDATE 	`booking`
+SET		`actualEndDateTime` = `endDateTime`,
+		`cancellationCode` = NULL
+WHERE 	CURRENT_TIMESTAMP > `endDateTime`
+AND 	`actualEndDateTime` IS NULL
+AND 	`dateTimeCancelled` IS NULL
+AND 	`bookingID` <> 0;
+
+
 SELECT 	u.`userID`					AS UsrID,
 						c.`companyID`				AS TheCompanyID,
 						c.`name`					AS CompanyName,
