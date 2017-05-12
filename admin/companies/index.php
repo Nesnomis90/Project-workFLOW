@@ -663,7 +663,7 @@ catch (PDOException $e)
 // Create an array with the actual key/value pairs we want to use in our HTML
 foreach ($result as $row)
 {
-	// TO-DO: Change booking time used from time to easily readable text instead if needed
+	// TO-DO: Maybe change booking time used from time to easily readable text instead if needed?
 
 	if($row['MonthlyCompanyWideBookingTimeUsed'] == null){
 		$MonthlyTimeUsed = 'N/A';
@@ -679,24 +679,36 @@ foreach ($result as $row)
 	
 	$dateCreated = $row['DatetimeCreated'];	
 	$dateToRemove = $row['DeletionDate'];
+	$isActive = ($row['CompanyActivated'] == 1);
 	$dateTimeCreatedToDisplay = convertDatetimeToFormat($dateCreated, 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
 	$dateToRemoveToDisplay = convertDatetimeToFormat($dateToRemove, 'Y-m-d', DATE_DEFAULT_FORMAT_TO_DISPLAY);
 	
-	if($row['CompanyActivated'] == 1){
-		$companies[] = array('id' => $row['CompID'], 
-						'CompanyName' => $row['CompanyName'],
-						'NumberOfEmployees' => $row['NumberOfEmployees'],
-						'MonthlyCompanyWideBookingTimeUsed' => $MonthlyTimeUsed,
-						'TotalCompanyWideBookingTimeUsed' => $TotalTimeUsed,
-						'DeletionDate' => $dateToRemoveToDisplay,
-						'DatetimeCreated' => $dateTimeCreatedToDisplay
-						);
-	} elseif($row['CompanyActivated'] == 0) {
-		$inactivecompanies[] = array('id' => $row['CompID'], 
-						'CompanyName' => $row['CompanyName'],
-						'DatetimeCreated' => $dateTimeCreatedToDisplay
-						);		
-	}	
+	if($isActive){
+		$companies[] = array(
+								'id' => $row['CompID'], 
+								'CompanyName' => $row['CompanyName'],
+								'NumberOfEmployees' => $row['NumberOfEmployees'],
+								'MonthlyCompanyWideBookingTimeUsed' => $MonthlyTimeUsed,
+								'TotalCompanyWideBookingTimeUsed' => $TotalTimeUsed,
+								'DeletionDate' => $dateToRemoveToDisplay,
+								'DatetimeCreated' => $dateTimeCreatedToDisplay
+							);
+	} elseif(!$isActive AND $dateToRemove == "" AND $dateToRemove == NULL) {
+		$unactivedcompanies[] = array(
+										'id' => $row['CompID'], 
+										'CompanyName' => $row['CompanyName'],
+										'DatetimeCreated' => $dateTimeCreatedToDisplay
+									);		
+	} elseif(!$isActive AND ($dateToRemove != "" OR $dateToRemove != NULL)){
+		$inactivecompanies[] = array(
+										'id' => $row['CompID'], 
+										'CompanyName' => $row['CompanyName'],
+										'MonthlyCompanyWideBookingTimeUsed' => $MonthlyTimeUsed,
+										'TotalCompanyWideBookingTimeUsed' => $TotalTimeUsed,
+										'DeletionDate' => $dateToRemoveToDisplay,
+										'DatetimeCreated' => $dateTimeCreatedToDisplay
+									);		
+	}
 }
 
 

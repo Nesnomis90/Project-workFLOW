@@ -140,7 +140,7 @@ if(isset($_GET['cancellationcode'])){
 	}
 	catch(PDOException $e)
 	{
-		$error = 'Error cancelling booking: ' . $e->getMessage();
+		$error = 'Error updating booking: ' . $e->getMessage();
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
 		$pdo = null;
 		exit();

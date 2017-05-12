@@ -2,6 +2,52 @@ USE test;
 SET NAMES utf8;
 USE meetingflow;
 
+SELECT *
+FROM 	`company`
+WHERE 	DATE(CURRENT_TIMESTAMP) >= `removeAtDate`
+AND 	`isActive` = 1
+AND		`companyID` <> 0;
+
+UPDATE 	`company`
+SET		`isActive` = 0
+WHERE 	DATE(CURRENT_TIMESTAMP) >= `removeAtDate`
+AND 	`isActive` = 1
+AND		`companyID` <> 0;
+
+UPDATE 	`company`
+SET		`removeAtDate` = DATE_SUB(DATE(CURRENT_TIMESTAMP), INTERVAL 1 DAY)
+WHERE 	`isActive` = 1
+AND		`companyID` = 33;
+
+DELETE FROM `user`
+WHERE DATE_ADD(`create_time`, INTERVAL 8 HOUR) < CURRENT_TIMESTAMP
+AND 	`isActive` = 0
+AND		`userID` <> 0;
+
+UPDATE 	`booking`
+SET		`dateTimeCancelled` = NULL,
+		`cancellationCode` = NULL
+WHERE 	CURRENT_TIMESTAMP > `endDateTime`
+AND 	`actualEndDateTime` IS NOT NULL
+AND 	`dateTimeCancelled` > `actualEndDateTime`
+AND 	`bookingID` <> 0;
+
+SELECT * 
+FROM 	`booking`
+WHERE 	CURRENT_TIMESTAMP > `endDateTime`
+AND 	`actualEndDateTime` IS NOT NULL
+AND 	`dateTimeCancelled` > `actualEndDateTime`
+AND 	`bookingID` <> 0;
+
+UPDATE 	`booking`
+SET		`actualEndDateTime` = `endDateTime`,
+		`cancellationCode` = NULL
+WHERE 	CURRENT_TIMESTAMP > `endDateTime`
+AND 	`actualEndDateTime` IS NULL
+AND 	`dateTimeCancelled` IS NULL
+AND 	`bookingID` <> 0;
+
+
 SELECT 	u.`userID`					AS UsrID,
 						c.`companyID`				AS TheCompanyID,
 						c.`name`					AS CompanyName,
