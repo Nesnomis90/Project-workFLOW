@@ -48,11 +48,13 @@
 				<div>
 					<label for="password">Set new Password:</label>
 					<input type="password" name="password" id="password"
+					placeholder="Enter New Password"
 					value="<?php htmlout($password);?>">
 				</div>
 				<div>
 					<label for="confirmpassword">Confirm Password:</label>
 					<input type="password" name="confirmpassword" id="confirmpassword"
+					placeholder="Enter New Password"
 					value="<?php htmlout($confirmpassword);?>">
 				</div>
 			<?php endif; ?>
@@ -77,17 +79,14 @@
 			<div style="display:<?php htmlout($displaynameStyle); ?>">
 				<label for="displayname">Default Display Name: 
 					<input type="text" name="displayname" id="displayname"
-					placeholder="Enter A Default Display Name"					
+					placeholder="Enter A Display Name"					
 					value="<?php htmlout($displayname); ?>">
 				</label>
-			</div>
-			<div>
-
-			</div>				
+			</div>		
 			<div style="display:<?php htmlout($bookingdescriptionStyle); ?>">
 				<label for="bookingdescription">Default Booking Description: </label>
 				<textarea rows="4" cols="50" name="bookingdescription" id="bookingdescription"
-				placeholder="Enter A Default Booking Description"><?php htmlout($bookingdescription); ?></textarea>
+				placeholder="Enter A Booking Description"><?php htmlout($bookingdescription); ?></textarea>
 			</div>
 			<div>
 				<input type="hidden" name="id" value="<?php htmlout($id); ?>">
