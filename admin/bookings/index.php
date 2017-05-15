@@ -1118,6 +1118,7 @@ if(isset($_POST['edit']) AND $_POST['edit'] == "Finish Edit")
 		
 		// Email information	
 		if($newUser){
+			// Send information to new user about meeting
 			$emailSubject = "You have been assigned a booked meeting!";
 	
 			$emailMessage = 
@@ -1131,6 +1132,29 @@ if(isset($_POST['edit']) AND $_POST['edit'] == "Finish Edit")
 			"/booking/?cancellationcode=" . $cancellationCode;
 			
 			$email = $_SESSION['EditBookingInfoArray']['UserEmail'];
+			
+			$mailResult = sendEmail($email, $emailSubject, $emailMessage);
+			
+			if(!$mailResult){
+				$_SESSION['BookingUserFeedback'] .= " [WARNING] System failed to send Email to user.";
+			}
+			
+			$_SESSION['BookingUserFeedback'] .= " This is the email msg we're sending out: $emailMessage. Sent to email: $email."; // TO-DO: Remove after testing
+		
+			// Send information to old user that their meeting has been cancelled/transferred
+			$emailSubject = "Your meeting has been cancelled by an Admin!";
+			
+			$emailMessage = 
+			"Your booked meeting has been altered and transferred to another user by an Admin!\n" .
+			"The meeting you booking for: \n" .
+			"Meeting Room: " . $oldMeetingRoomName . ".\n" . 
+			"Start Time: " . $OldStartDate . ".\n" .
+			"End Time: " . $OldEndDate . ".\n\n" .
+			"Has been altered to: \n" .
+			"Meeting Room: " . $newMeetingRoomName . ".\n" . 
+			"Start Time: " . $NewStartDate . ".\n" .
+			"End Time: " . $NewEndDate . ".\n\n" . 
+			"This meeting is no longer registered as yours and as such the old cancellation link no longer works."; // TO-DO: Fix this email message depending on what we want to inform the old user
 		} else {
 			$emailSubject = "Booking Information Has Changed!";
 			
