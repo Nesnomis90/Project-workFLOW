@@ -1,7 +1,6 @@
 <?php
 // Constants used to salt passwords
 require_once 'salts.inc.php';
-//require_once 'inputvalidation.inc.php';
 
 // Functions to salt and hash info
 	// Function to salt and hash passwords
@@ -17,12 +16,24 @@ function hashBookingCode($rawBookingCode){
 	return $HashedBookingCode;	
 }
 
+	// Function to salt and hash cookie codes
+function hashCookieCode($rawCookieCode){
+	$SaltedCookieCode = $rawCookieCode . CK_SALT;
+	$HashedCookieCode = hash('sha256', $SaltedCookieCode);
+	return $HashedCookieCode;	
+}
 
-// These are functions to handle user access
+// Functions connected to user activity and access
 
+// Checks if the cookie submitted is a valid meeting room
+function databaseContainsMeetingRoomFromCookie($cookie){
+
+}
+
+// Updates the timestamp of when the user was last active
 function updateUserActivity()
 {
-	// If a user logs in, or does something while logged in, we'll update the database
+	// If a user logs in, or does something while logged in, we'll use this to update the database
 	// to indicate when they last used the website
 	try
 	{
@@ -321,7 +332,7 @@ function getUserInfoFromBookingCode($rawBookingCode)
 	{
 		// The booking code we received does not exist in the database.
 		// Can't retrieve any info then
-		return NULL;
+		return FALSE;
 	}
 	
 	// We know the code exists. Let's get the info of the person it belongs to
@@ -336,7 +347,14 @@ function getUserInfoFromBookingCode($rawBookingCode)
 						`firstName`						AS TheUserFirstname,
 						`lastName`						AS TheUserLastname,
 						`displayName`					AS TheUserDisplayName,
-						`bookingDescription`			AS TheUserBookingDescription
+						`bookingDescription`			AS TheUserBookingDescription,
+						`AccessID`						AS TheUserAccessID,
+						(
+							SELECT 	`AccessName`
+							FROM 	`accesslevel`
+							WHERE 	`AccessID` = TheUserAccessID
+							LIMIT 	1
+						)								AS TheUserAccessName
 				FROM 	`user`
 				WHERE 	`bookingCode` = :BookingCode
 				AND		`isActive` > 0
@@ -360,6 +378,7 @@ function getUserInfoFromBookingCode($rawBookingCode)
 }
 
 // Function to "return" the raw booking code value to a user who has forgotten their own
+// returns FALSE if not found.
 // TO-DO: UNTESTED
 function revealBookingCode($userID){
 	// Since the booking code has been salted and hashed, we have to repeat the process
@@ -419,7 +438,6 @@ function revealBookingCode($userID){
 	return FALSE;
 }
 
-
 // Function to make sure user is Admin
 function isUserAdmin(){
 		// Check if user is logged in
@@ -436,6 +454,18 @@ function isUserAdmin(){
 		$error = 'Only Admin may access this page.';
 		include_once '../accessdenied.html.php';
 		return false;
+	}
+	return true;
+}
+
+// Function to make sure only users can access this
+function makeUserLogIn(){
+		// Check if user is logged in
+	if (!userIsLoggedIn())
+	{
+		// Not logged in. Send user a login prompt.
+		include_once '../login.html.php';
+		exit();
 	}
 	return true;
 }

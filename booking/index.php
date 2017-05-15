@@ -6,7 +6,7 @@ session_start();
 include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/helpers.inc.php';
 include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/magicquotes.inc.php';
 
-// Function to cancel a booking from cancellation link
+// Cancels a booking from a submitted cancellation link
 if(isset($_GET['cancellationcode'])){
 	
 	$cancellationCode = $_GET['cancellationcode'];

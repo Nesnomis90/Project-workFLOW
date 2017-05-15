@@ -2,6 +2,18 @@ USE test;
 SET NAMES utf8;
 USE meetingflow;
 
+UPDATE 	`user`
+SET 	`AccessID` = ( 
+						SELECT 	`AccessID`
+						FROM 	`accesslevel`
+						WHERE 	`AccessName` = 'Normal User'
+						LIMIT 	1
+					),
+		`bookingCode` = NULL
+WHERE 	DATE(CURRENT_TIMESTAMP) >= `reduceAccessAtDate`
+AND 	`isActive` = 1
+AND		`userID` <> 0;
+
 SELECT 	m.`name`					AS MeetingRoomName,
 		c.`name`					AS CompanyName,
 		u.`email`,       
@@ -18,7 +30,7 @@ ON 		c.`companyID` = b.`companyID`
 JOIN	`user` u
 ON		u.`userID` = b.`userID`
 WHERE 	DATE_SUB(b.`startDateTime`, INTERVAL 20 MINUTE) < CURRENT_TIMESTAMP
-AND		b.`startDateTime` > CURRENT_TIMESTAMP
+AND		DATE_SUB(b.`startDateTime`, INTERVAL 2 MINUTE) > CURRENT_TIMESTAMP
 AND 	b.`dateTimeCancelled` IS NULL
 AND 	b.`actualEndDateTime` IS NULL
 AND		b.`cancellationCode` IS NOT NULL

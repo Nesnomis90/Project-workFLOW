@@ -604,11 +604,11 @@ try
 						COUNT(re.`amount`)	AS MeetingRoomEquipmentAmount
 			FROM 		`meetingroom` m
 			LEFT JOIN 	`roomequipment` re
-			ON 			re.`meetingRoomID` = m.`meetingRoomID`
+			ON 			re.`meetingRoomID` = m.`meetingRoomID`			
 			GROUP BY 	m.`meetingRoomID`';
 	$result = $pdo->query($sql);
 	$rowNum = $result->rowCount();
-
+	
 	//Close the connection
 	$pdo = null;
 }

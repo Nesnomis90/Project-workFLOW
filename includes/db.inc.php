@@ -125,7 +125,6 @@ function fillAccessLevel($pdo){
 		$pdo->exec("INSERT INTO `accesslevel`(`AccessName`, `Description`) VALUES ('Admin', 'Has full access to all website pages, company information and user information.')");
 		$pdo->exec("INSERT INTO `accesslevel`(`AccessName`, `Description`) VALUES ('In-House User', 'Can book meeting rooms with a booking code.')");
 		$pdo->exec("INSERT INTO `accesslevel`(`AccessName`, `Description`) VALUES ('Normal User', 'Can browse meeting room schedules, with limited information, and request a booking.')");
-		$pdo->exec("INSERT INTO `accesslevel`(`AccessName`, `Description`) VALUES ('test', 'test')");
 		
 		// Commit the transaction
 		$pdo->commit();
@@ -307,11 +306,12 @@ function create_tables()
 						  `firstName` varchar(255) DEFAULT NULL,
 						  `lastName` varchar(255) DEFAULT NULL,
 						  `displayName` varchar(255) DEFAULT NULL,
-						  `bookingDescription` text DEFAULT NULL,
+						  `bookingDescription` text,
 						  `bookingCode` char(64) DEFAULT NULL,
 						  `tempPassword` char(64) DEFAULT NULL,
 						  `dateRequested` timestamp NULL DEFAULT NULL,
 						  `AccessID` int(10) unsigned NOT NULL,
+						  `reduceAccessAtDate` date DEFAULT NULL,
 						  `lastActivity` timestamp NULL DEFAULT NULL,
 						  `isActive` tinyint(1) NOT NULL DEFAULT '0',
 						  `activationCode` char(64) DEFAULT NULL,
@@ -321,7 +321,7 @@ function create_tables()
 						  UNIQUE KEY `bookingCode_UNIQUE` (`bookingCode`),
 						  KEY `FK_AccessID_idx` (`AccessID`),
 						  CONSTRAINT `FK_AccessID` FOREIGN KEY (`AccessID`) REFERENCES `accesslevel` (`AccessID`) ON DELETE NO ACTION ON UPDATE CASCADE
-						) ENGINE=InnoDB DEFAULT CHARSET=utf8;");
+						) ENGINE=InnoDB DEFAULT CHARSET=utf8");
 						
 			//	Add the creation to log event
 			$sqlLog = "	INSERT INTO `logevent`(`actionID`, `description`) 
@@ -390,7 +390,7 @@ function create_tables()
 						  `isActive` tinyint(1) NOT NULL DEFAULT '0',
 						  PRIMARY KEY (`CompanyID`),
 						  UNIQUE KEY `name_UNIQUE` (`name`)
-						) ENGINE=InnoDB DEFAULT CHARSET=utf8;");
+						) ENGINE=InnoDB DEFAULT CHARSET=utf8");
 						
 			//	Add the creation to log event
 			$sqlLog = "	INSERT INTO `logevent`(`actionID`, `description`) 
