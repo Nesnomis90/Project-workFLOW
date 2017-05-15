@@ -6,9 +6,6 @@ include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/magicquotes.inc.php';
 // PHP code that we will set to be run at a certain interval, with CRON, to interact with our database
 // Cron does 1 run per minute (fastest)
 /* TO-DO:
-	Reduce user access on reduceAtDate
-		Make access into Normal User
-		Remove Booking Code
 	Send Email to users that their meeting is starting in x minutes
 */
 
@@ -89,6 +86,37 @@ catch(PDOException $e)
 	exit();
 }
 
+// Make an In-House User (or higher) turn into a normal user when the current date is past the date set by admin
+// TO-DO: only needs to run once per day, if we make another cron for it
+try
+{
+	include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+	
+	$pdo = connect_to_db();
+	$sql = "UPDATE 	`user`
+			SET 	`AccessID` = ( 
+									SELECT 	`AccessID`
+									FROM 	`accesslevel`
+									WHERE 	`AccessName` = 'Normal User'
+									LIMIT 	1
+								),
+					`bookingCode` = NULL
+			WHERE 	DATE(CURRENT_TIMESTAMP) >= `reduceAccessAtDate`
+			AND 	`isActive` = 1
+			AND		`userID` <> 0";		
+	$pdo->exec($sql);
+	
+	//Close the connection
+	$pdo = null;
+}
+catch(PDOException $e)
+{
+	$error = 'Error deleting company with a set remove date: ' . $e->getMessage();
+	include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+	$pdo = null;
+	exit();
+}
+
 /////////////////////////////////////////////////////////////////////////////////////////////
 // START Check if a meeting is about to start and alert the user by sending an email START //
 $minutesBeforeMeetingStarts = 10;
@@ -99,6 +127,10 @@ try
 	include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 	
 	$pdo = connect_to_db();
+	// Get all upcoming meetings that are $minutesBeforeMeetingStarts minutes away from starting.
+	// That we haven't already alerted/sent email to
+	// Only try to alert a user up to 1 minute until meeting starts (in theory they should instantly get alerted)
+	// Only try to alert a user if the booking was made longer than $minutesAfterCreatingMeetingBeforeSendingEmailThatItStartsSoon minutes ago
 	$sql = "SELECT 	m.`name`					AS MeetingRoomName,
 					c.`name`					AS CompanyName,
 					u.`email`					AS UserEmail,

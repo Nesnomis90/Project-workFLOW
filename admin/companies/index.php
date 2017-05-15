@@ -711,7 +711,6 @@ foreach ($result as $row)
 	}
 }
 
-
 // Create the companies list in HTML
 include_once 'companies.html.php';
 ?>
