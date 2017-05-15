@@ -1,7 +1,6 @@
 <?php
 // Constants used to salt passwords
 require_once 'salts.inc.php';
-//require_once 'inputvalidation.inc.php';
 
 // Functions to salt and hash info
 	// Function to salt and hash passwords
@@ -17,12 +16,12 @@ function hashBookingCode($rawBookingCode){
 	return $HashedBookingCode;	
 }
 
-
 // These are functions to handle user access
 
+// Updates the timestamp of when the user was last active
 function updateUserActivity()
 {
-	// If a user logs in, or does something while logged in, we'll update the database
+	// If a user logs in, or does something while logged in, we'll use this to update the database
 	// to indicate when they last used the website
 	try
 	{
@@ -336,7 +335,14 @@ function getUserInfoFromBookingCode($rawBookingCode)
 						`firstName`						AS TheUserFirstname,
 						`lastName`						AS TheUserLastname,
 						`displayName`					AS TheUserDisplayName,
-						`bookingDescription`			AS TheUserBookingDescription
+						`bookingDescription`			AS TheUserBookingDescription,
+						`AccessID`						AS TheUserAccessID,
+						(
+							SELECT 	`AccessName`
+							FROM 	`accesslevel`
+							WHERE 	`AccessID` = TheUserAccessID
+							LIMIT 	1
+						)								AS TheUserAccessName
 				FROM 	`user`
 				WHERE 	`bookingCode` = :BookingCode
 				AND		`isActive` > 0
@@ -360,6 +366,7 @@ function getUserInfoFromBookingCode($rawBookingCode)
 }
 
 // Function to "return" the raw booking code value to a user who has forgotten their own
+// returns FALSE if not found.
 // TO-DO: UNTESTED
 function revealBookingCode($userID){
 	// Since the booking code has been salted and hashed, we have to repeat the process
@@ -418,7 +425,6 @@ function revealBookingCode($userID){
 	// Found no match. 
 	return FALSE;
 }
-
 
 // Function to make sure user is Admin
 function isUserAdmin(){

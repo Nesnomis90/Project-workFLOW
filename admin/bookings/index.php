@@ -90,6 +90,25 @@ function rememberAddBookingInputs(){
 	}
 }
 
+// This is used on cancel and delete.
+function emailUserOnCancelledBooking(){
+	$emailSubject = "Your meeting has been cancelled!";
+
+	$emailMessage = 
+	"A booked meeting has been cancelled by an Admin!\n" .
+	"The meeting was booked for the room " . $_POST['MeetingInfo'];
+	
+	$email = $_POST['Email'];
+	
+	$mailResult = sendEmail($email, $emailSubject, $emailMessage);
+	
+	if(!$mailResult){
+		$_SESSION['BookingUserFeedback'] .= " [WARNING] System failed to send Email to user.";
+	}
+	
+	$_SESSION['BookingUserFeedback'] .= " This is the email msg we're sending out: $emailMessage. Sent to email: $email."; // TO-DO: Remove after testing			
+}
+
 // Function to validate user inputs
 function validateUserInputs($FeedbackSessionToUse){
 	// Get user inputs
@@ -301,6 +320,12 @@ if (isset($_POST['action']) and $_POST['action'] == 'Delete')
 		$pdo = null;
 		exit();
 	}	
+
+	// Check if the meeting that was removed still was active, if so
+	if(isset($_POST['BookingStatus']) AND $_POST['BookingStatus'] == 'Active'){
+		// Send email to user that meeting has been cancelled
+		emailUserOnCancelledBooking();
+	}
 	
 	// Load booked meetings list webpage with updated database
 	header('Location: .');
@@ -310,68 +335,76 @@ if (isset($_POST['action']) and $_POST['action'] == 'Delete')
 // If admin wants to cancel a scheduled booked meeting (instead of deleting)
 if (isset($_POST['action']) and $_POST['action'] == 'Cancel')
 {
-	// Update cancellation date for selected booked meeting in database
-	try
-	{
-		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
-		
-		$pdo = connect_to_db();
-		$sql = 'UPDATE 	`booking` 
-				SET 	`dateTimeCancelled` = CURRENT_TIMESTAMP,
-						`cancellationCode` = NULL				
-				WHERE 	`bookingID` = :id';
-		$s = $pdo->prepare($sql);
-		$s->bindValue(':id', $_POST['id']);
-		$s->execute();
-		
-		//close connection
-		$pdo = null;
-	}
-	catch (PDOException $e)
-	{
-		$error = 'Error updating selected booked meeting to be cancelled: ' . $e->getMessage();
-		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
-		exit();
-	}
-	
-	$_SESSION['BookingUserFeedback'] = "Successfully cancelled the booking";
-	
-		// Add a log event that a booking was cancelled
-	try
-	{
-		// Save a description with information about the booking that was cancelled
-		$logEventDescription = "N/A";
-		if(isset($_POST['UserInfo']) AND isset($_POST['MeetingInfo'])){
-			$logEventDescription = 'The booking made for ' . $_POST['UserInfo'] . ' for the meeting room ' .
-			$_POST['MeetingInfo'] . ' was cancelled by: ' . $_SESSION['LoggedInUserName'];
-		} else {
-			$logEventDescription = 'A booking was cancelled by: ' . $_SESSION['LoggedInUserName'];
+	// Only cancel if booking is currently active
+	if(isset($_POST['BookingStatus']) AND $_POST['BookingStatus'] == 'Active'){	
+		// Update cancellation date for selected booked meeting in database
+		try
+		{
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+			
+			$pdo = connect_to_db();
+			$sql = 'UPDATE 	`booking` 
+					SET 	`dateTimeCancelled` = CURRENT_TIMESTAMP,
+							`cancellationCode` = NULL				
+					WHERE 	`bookingID` = :id';
+			$s = $pdo->prepare($sql);
+			$s->bindValue(':id', $_POST['id']);
+			$s->execute();
+			
+			//close connection
+			$pdo = null;
+		}
+		catch (PDOException $e)
+		{
+			$error = 'Error updating selected booked meeting to be cancelled: ' . $e->getMessage();
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+			exit();
 		}
 		
-		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+		$_SESSION['BookingUserFeedback'] = "Successfully cancelled the booking";
 		
-		$pdo = connect_to_db();
-		$sql = "INSERT INTO `logevent` 
-				SET			`actionID` = 	(
-												SELECT `actionID` 
-												FROM `logaction`
-												WHERE `name` = 'Booking Cancelled'
-											),
-							`description` = :description";
-		$s = $pdo->prepare($sql);
-		$s->bindValue(':description', $logEventDescription);
-		$s->execute();
-		
-		//Close the connection
-		$pdo = null;		
+			// Add a log event that a booking was cancelled
+		try
+		{
+			// Save a description with information about the booking that was cancelled
+			$logEventDescription = "N/A";
+			if(isset($_POST['UserInfo']) AND isset($_POST['MeetingInfo'])){
+				$logEventDescription = 'The booking made for ' . $_POST['UserInfo'] . ' for the meeting room ' .
+				$_POST['MeetingInfo'] . ' was cancelled by: ' . $_SESSION['LoggedInUserName'];
+			} else {
+				$logEventDescription = 'A booking was cancelled by: ' . $_SESSION['LoggedInUserName'];
+			}
+			
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+			
+			$pdo = connect_to_db();
+			$sql = "INSERT INTO `logevent` 
+					SET			`actionID` = 	(
+													SELECT `actionID` 
+													FROM `logaction`
+													WHERE `name` = 'Booking Cancelled'
+												),
+								`description` = :description";
+			$s = $pdo->prepare($sql);
+			$s->bindValue(':description', $logEventDescription);
+			$s->execute();
+			
+			//Close the connection
+			$pdo = null;		
+		}
+		catch(PDOException $e)
+		{
+			$error = 'Error adding log event to database: ' . $e->getMessage();
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+			$pdo = null;
+			exit();
+		}	
+
+		emailUserOnCancelledBooking();
+	} else {
+		// Booking was not active, so no need to cancel it.
+		$_SESSION['BookingUserFeedback'] = "Meeting has already been finished. Did not cancel it.";
 	}
-	catch(PDOException $e)
-	{
-		$error = 'Error adding log event to database: ' . $e->getMessage();
-		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
-		$pdo = null;
-		exit();
-	}	
 	
 	// Load booked meetings list webpage with updated database
 	header('Location: .');
@@ -2084,25 +2117,33 @@ foreach ($result as $row)
 	if(			$row['BookingWasCompletedOn'] == null AND $row['BookingWasCancelledOn'] == null AND 
 				$datetimeNow < $datetimeEnd ) {
 		$status = 'Active';
+		// Valid status
 	} elseif(	$row['BookingWasCompletedOn'] != null AND $row['BookingWasCancelledOn'] == null){
 		$status = 'Completed';
+		// Valid status
 	} elseif(	$row['BookingWasCompletedOn'] == null AND $row['BookingWasCancelledOn'] != null AND
 				$row['StartTime'] > $row['BookingWasCancelledOn']){
 		$status = 'Cancelled';
+		// Valid status
 	} elseif(	$row['BookingWasCompletedOn'] != null AND $row['BookingWasCancelledOn'] != null AND
 				$row['BookingWasCompletedOn'] > $row['BookingWasCancelledOn'] ){
 		$status = 'Ended Early';
+		// Valid status
 	} elseif(	$row['BookingWasCompletedOn'] != null AND $row['BookingWasCancelledOn'] != null AND
 				$row['BookingWasCompletedOn'] < $row['BookingWasCancelledOn'] ){
 		$status = 'Cancelled after Completion';
+		// This should not be allowed to happen eventually
 	} elseif(	$row['BookingWasCompletedOn'] == null AND $row['BookingWasCancelledOn'] == null AND 
 				$datetimeNow > $datetimeEnd){
 		$status = 'Ended without updating database';
+		// This should never occur
 	} elseif(	$row['BookingWasCompletedOn'] == null AND $row['BookingWasCancelledOn'] != null AND 
 				$row['EndTime'] < $row['BookingWasCancelledOn']){
 		$status = 'Cancelled after meeting should have been Completed';
+		// This should not be allowed to happen eventually
 	} else {
 		$status = 'Unknown';
+		// This should never occur
 	}
 	
 	$startDateTime = $row['StartTime'];

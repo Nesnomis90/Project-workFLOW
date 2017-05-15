@@ -121,6 +121,10 @@
 							value="<?php htmlout($booking['UserInfo']); ?>">
 							<input type="hidden" name="MeetingInfo" id="MeetingInfo"
 							value="<?php htmlout($booking['MeetingInfo']); ?>">
+							<input type="hidden" name="BookingStatus" id="BookingStatus"
+							value="<?php htmlout($booking['BookingStatus']); ?>">
+							<input type="hidden" name="Email" id="Email"
+							value="<?php htmlout($booking['email']); ?>">
 						</tr>
 					</form>
 				<?php endforeach; ?>
