@@ -456,7 +456,6 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR
 				$sql = "SELECT 		b.`bookingID`									AS TheBookingID,
 									b.`companyID`									AS TheCompanyID,
 									b.`meetingRoomID`								AS TheMeetingRoomID,
-									m.`name` 										AS BookedRoomName, 
 									b.startDateTime 								AS StartTime, 
 									b.endDateTime 									AS EndTime, 
 									b.description 									AS BookingDescription,
@@ -466,6 +465,8 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR
 										FROM `company` 
 										WHERE `companyID` = TheCompanyID
 									)												AS BookedForCompany,
+									b.`cancellationCode`							AS CancellationCode,
+									m.`name` 										AS BookedRoomName,									
 									u.`userID`										AS TheUserID, 
 									u.`firstName`									AS UserFirstname,
 									u.`lastName`									AS UserLastname,
@@ -605,7 +606,7 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR
 			}
 		}			
 	}
-
+	
 		// Edited inputs
 	$bookingID = $row['TheBookingID'];
 	$companyName = $row['BookedForCompany'];
@@ -904,6 +905,7 @@ if(isset($_POST['edit']) AND $_POST['edit'] == "Finish Edit")
 	$newMeetingRoom = FALSE;
 	$newStartTime = FALSE;
 	$newEndTime = FALSE;
+	$newUser = FALSE;
 	$originalValue = $_SESSION['EditBookingOriginalInfoArray'];
 	
 	if($startDateTime != $originalValue['StartTime']){
@@ -929,6 +931,7 @@ if(isset($_POST['edit']) AND $_POST['edit'] == "Finish Edit")
 	}
 	if(isset($_POST['userID']) AND $_POST['userID'] != $originalValue['TheUserID']){
 		$numberOfChanges++;
+		$newUser = TRUE;
 	}	
 
 	if($numberOfChanges == 0){
@@ -943,8 +946,9 @@ if(isset($_POST['edit']) AND $_POST['edit'] == "Finish Edit")
 	if($newMeetingRoom){
 		$checkIfTimeslotIsAvailable = TRUE;
 	}
-		$oldStartTime = $originalValue['StartTime'];
-		$oldEndTime = $originalValue['EndTime'];
+	
+	$oldStartTime = $originalValue['StartTime'];
+	$oldEndTime = $originalValue['EndTime'];
 	
 		// If we set the start time earlier than before or
 		// If we set the start time later than the previous end time
@@ -1029,11 +1033,19 @@ if(isset($_POST['edit']) AND $_POST['edit'] == "Finish Edit")
 		}
 	}
 	
+	// Set correct companyID
 	if(	isset($_POST['companyID']) AND $_POST['companyID'] != NULL AND 
 		$_POST['companyID'] != ''){
 		$companyID = $_POST['companyID'];
 	} else {
 		$companyID = NULL;
+	}
+	
+	// Generate new cancellation code if we change users
+	if($newUser){
+		$cancellationCode = generateCancellationCode();
+	} else {
+		$cancellationCode = $originalValue['CancellationCode'];
 	}
 	
 	// Update booking information because values have changed!
@@ -1048,7 +1060,8 @@ if(isset($_POST['edit']) AND $_POST['edit'] == "Finish Edit")
 						`startDateTime` = :startDateTime,
 						`endDateTime` = :endDateTime,
 						`displayName` = :displayName,
-						`description` = :description
+						`description` = :description,
+						`cancellationCode` = :cancellationCode
 				WHERE	`bookingID` = :BookingID";
 		$s = $pdo->prepare($sql);
 		
@@ -1060,6 +1073,7 @@ if(isset($_POST['edit']) AND $_POST['edit'] == "Finish Edit")
 		$s->bindValue(':endDateTime', $endDateTime);
 		$s->bindValue(':displayName', $dspname);
 		$s->bindValue(':description', $bknDscrptn);
+		$s->bindValue(':cancellationCode', $cancellationCode);
 	
 		$s->execute();
 		
@@ -1074,6 +1088,78 @@ if(isset($_POST['edit']) AND $_POST['edit'] == "Finish Edit")
 	}
 		
 	$_SESSION['BookingUserFeedback'] = "Successfully updated the booking information!";
+	
+	// Send email to the user (if altered by someone else) that their booking has been changed
+		// TO-DO: This is UNTESTED since we don't have php.ini set up to actually send email
+	if(!$_POST['userID'] == $_SESSION['LoggedInUserID']){
+		
+		// date display formatting
+		$NewStartDate = convertDatetimeToFormat($startDateTime, 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
+		$NewEndDate = convertDatetimeToFormat($endDateTime, 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
+		$OldStartDate = convertDatetimeToFormat($oldStartTime, 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
+		$OldEndDate = convertDatetimeToFormat($oldEndTime, 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
+		
+		// Meeting room name(s)
+		$oldMeetingRoomName = $originalValue['BookedRoomName'];		
+		if($newMeetingRoom){
+			// Get meeting room name
+			foreach ($_SESSION['EditBookingMeetingRoomsArray'] AS $room){
+				if($room['meetingRoomID'] == $_POST['meetingRoomID']){
+					$newMeetingRoomName = $room['meetingRoomName'];
+					break;
+				}
+			}
+		} else {
+			$newMeetingRoomName = $oldMeetingRoomName;
+		}
+
+		// Cancellation Code
+		$cancellationCode = $originalValue['CancellationCode'];
+		
+		// Email information	
+		if($newUser){
+			$emailSubject = "You have been assigned a booked meeting!";
+	
+			$emailMessage = 
+			"A booked meeting has been assigned to you by an Admin!\n" .
+			"The meeting has been set to: \n" .
+			"Meeting Room: " . $newMeetingRoomName . ".\n" . 
+			"Start Time: " . $NewStartDate . ".\n" .
+			"End Time: " . $NewEndDate . ".\n\n" .	
+			"If you wish to cancel this meeting, or just end it early, you can easily do so by clicking the link given below.\n" .
+			"Click this link to cancel your booked meeting: " . $_SERVER['HTTP_HOST'] . 
+			"/booking/?cancellationcode=" . $cancellationCode;
+			
+			$email = $_SESSION['EditBookingInfoArray']['UserEmail'];
+		} else {
+			$emailSubject = "Booking Information Has Changed!";
+			
+			$emailMessage = 
+			"Your booked meeting has been altered by an Admin!\n" .
+			"Your original booking was for: \n" .
+			"Meeting Room: " . $oldMeetingRoomName . ".\n" . 
+			"Start Time: " . $OldStartDate . ".\n" .
+			"End Time: " . $OldEndDate . ".\n\n" .
+			"Your new booking has been set to: \n" .
+			"Meeting Room: " . $newMeetingRoomName . ".\n" . 
+			"Start Time: " . $NewStartDate . ".\n" .
+			"End Time: " . $NewEndDate . ".\n\n" .	
+			"If you wish to cancel your meeting, or just end it early, you can easily do so by clicking the link given below.\n" .
+			"Click this link to cancel your booked meeting: " . $_SERVER['HTTP_HOST'] . 
+			"/booking/?cancellationcode=" . $cancellationCode;	
+
+			$email = $originalValue['UserEmail'];			
+		}
+		
+		$mailResult = sendEmail($email, $emailSubject, $emailMessage);
+		
+		if(!$mailResult){
+			$_SESSION['BookingUserFeedback'] .= " [WARNING] System failed to send Email to user.";
+		}
+		
+		$_SESSION['BookingUserFeedback'] .= " This is the email msg we're sending out: $emailMessage. Sent to email: $email."; // TO-DO: Remove after testing			
+	}
+	
 	clearEditBookingSessions();
 	
 	// Load booking history list webpage with the updated booking information
@@ -1607,20 +1693,36 @@ if (isset($_POST['add']) AND $_POST['add'] == "Add booking")
 		exit();
 	}		
 	
-	//Send email with cancellation code to the user who the booking is for.
-		// TO-DO: This is UNTESTED since we don't have php.ini set up to actually send email
-	
-	$emailSubject = "Booking Cancellation Link";
-	
-	$emailMessage = 
-	"Your meeting has been successfully booked!\n" . 
-	"Your booked Meeting Room: " . $MeetingRoomName . ".\n" . 
-	"Your booked Start Time: " . $displayValidatedStartDate . ".\n" .
-	"Your booked End Time: " . $displayValidatedEndDate . ".\n\n" .
-	"If you wish to cancel your meeting, or just end it early, you can easily do so by clicking the link given below.\n" .
-	"Click this link to cancel your booked meeting: " . $_SERVER['HTTP_HOST'] . 
-	"/booking/?cancellationcode=" . $cancellationCode;
-	
+	//Send email with booking information and cancellation code to the user who the booking is for.
+		// TO-DO: This is UNTESTED since we don't have php.ini set up to actually send email	
+	if($_POST['userID'] == $_SESSION['LoggedInUserID']){
+		// Admin booked a meeting for him/herself
+		$emailSubject = "New Booking Information!";
+		
+		$emailMessage = 
+		"Your meeting has been successfully booked!\n" . 
+		"The meeting has been set to: \n" .
+		"Meeting Room: " . $MeetingRoomName . ".\n" . 
+		"Start Time: " . $displayValidatedStartDate . ".\n" .
+		"End Time: " . $displayValidatedEndDate . ".\n\n" .
+		"If you wish to cancel your meeting, or just end it early, you can easily do so by clicking the link given below.\n" .
+		"Click this link to cancel your booked meeting: " . $_SERVER['HTTP_HOST'] . 
+		"/booking/?cancellationcode=" . $cancellationCode;		
+	} else {
+		// Admin booked a meeting for someone else
+		$emailSubject = "You have been assigned a booked meeting!";
+
+		$emailMessage = 
+		"A booked meeting has been assigned to you by an Admin!\n" .
+		"The meeting has been set to: \n" .
+		"Meeting Room: " . $MeetingRoomName . ".\n" . 
+		"Start Time: " . $displayValidatedStartDate . ".\n" .
+		"End Time: " . $displayValidatedEndDate . ".\n\n" .
+		"If you wish to cancel this meeting, or just end it early, you can easily do so by clicking the link given below.\n" .
+		"Click this link to cancel your booked meeting: " . $_SERVER['HTTP_HOST'] . 
+		"/booking/?cancellationcode=" . $cancellationCode;		
+	}
+
 	$email = $_SESSION['AddBookingInfoArray']['UserEmail'];
 	
 	$mailResult = sendEmail($email, $emailSubject, $emailMessage);
