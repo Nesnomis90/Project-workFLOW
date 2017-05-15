@@ -16,7 +16,19 @@ function hashBookingCode($rawBookingCode){
 	return $HashedBookingCode;	
 }
 
-// These are functions to handle user access
+	// Function to salt and hash cookie codes
+function hashCookieCode($rawCookieCode){
+	$SaltedCookieCode = $rawCookieCode . CK_SALT;
+	$HashedCookieCode = hash('sha256', $SaltedCookieCode);
+	return $HashedCookieCode;	
+}
+
+// Functions connected to user activity and access
+
+// Checks if the cookie submitted is a valid meeting room
+function databaseContainsMeetingRoomFromCookie($cookie){
+
+}
 
 // Updates the timestamp of when the user was last active
 function updateUserActivity()
@@ -320,7 +332,7 @@ function getUserInfoFromBookingCode($rawBookingCode)
 	{
 		// The booking code we received does not exist in the database.
 		// Can't retrieve any info then
-		return NULL;
+		return FALSE;
 	}
 	
 	// We know the code exists. Let's get the info of the person it belongs to
@@ -442,6 +454,18 @@ function isUserAdmin(){
 		$error = 'Only Admin may access this page.';
 		include_once '../accessdenied.html.php';
 		return false;
+	}
+	return true;
+}
+
+// Function to make sure only users can access this
+function makeUserLogIn(){
+		// Check if user is logged in
+	if (!userIsLoggedIn())
+	{
+		// Not logged in. Send user a login prompt.
+		include_once '../login.html.php';
+		exit();
 	}
 	return true;
 }

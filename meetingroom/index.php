@@ -14,7 +14,28 @@ include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/magicquotes.inc.php';
 */
 
 if(isset($_POST['action']) AND $_POST['action'] == "Create Meeting"){
+	// TO-DO: This should create a pop-up with javascript to select a time wheel
+	// and a code panel for typing in the booking code
+	// when accessed locally
+	// When accessed online this should require being logged in to be activated
 	
+	// TO-DO: need some way to check if we're "logged in" as a meeting room locally
+	// Set a special cookie value?
+	if(!isset($_COOKIE[MEETINGROOM_COOKIE_NAME])){
+		// We're not making a booking locally. Make users be logged in
+		if(makeUserLogIn() === TRUE){
+			
+		}
+	} else {
+		// Our local booking identifier is set. Check if it is valid
+		
+		// We're making a booking locally.
+		// Require a start/end time and a booking code
+		
+		// TO-DO:
+	}
+
+	//getUserInfoFromBookingCode();
 }
 
 if(isset($_POST['action']) AND $_POST['action'] == "Set New Max"){

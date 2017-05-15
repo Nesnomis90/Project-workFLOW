@@ -24,17 +24,15 @@
 			</form>
 		</div>
 		<?php if(isset($meetingrooms)) :?>
+			<h2>Available Meeting Rooms:</h2>
 			<?php foreach ($meetingrooms as $room): ?>
 				<?php if(!isset($i)){$i = 0;}; ?>
 				<?php if($i < $maxRoomsToShow) : ?>
 					<form action="" method="post">
-						<div>
-							<div>
-								<label for="MeetingRoomName">Room Name: </label>
-								<?php htmlout($room['MeetingRoomName']); ?>
-								<input type="hidden" name="MeetingRoomName" id="MeetingRoomName"
-								value="<?php htmlout($room['MeetingRoomName']); ?>">
-							</div>
+						<fieldset>
+							<legend><?php htmlout($room['MeetingRoomName']); ?></legend>
+							<input type="hidden" name="MeetingRoomName" id="MeetingRoomName"
+							value="<?php htmlout($room['MeetingRoomName']); ?>">
 							<div>
 								<label for="MeetingRoomCapacity">Capacity: </label>
 								<?php htmlout($room['MeetingRoomCapacity']); ?>
@@ -49,13 +47,13 @@
 							</div>
 							<div><input type="submit" name="action" value="Create Meeting"></div>
 							<input type="hidden" name="MeetingRoomID" value="<?php echo $room['MeetingRoomID']; ?>">
-						</div>
+						</fieldset>
 					</form>
 				<?php $i++; ?>
 				<?php endif; ?>
 			<?php endforeach; ?>
 		<?php else : ?>
-			<div><b>There are no meeting rooms.</b></div>
+			<h2>There are no meeting rooms.</h2>
 		<?php endif; ?>
 		<p><a href="..">Return to CMS home</a></p>
 	<?php include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/logout.inc.html.php'; ?>
