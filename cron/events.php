@@ -5,9 +5,6 @@ include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/magicquotes.inc.php';
 
 // PHP code that we will set to be run at a certain interval, with CRON, to interact with our database
 // Cron does 1 run per minute (fastest)
-/* TO-DO:
-	Send Email to users that their meeting is starting in x minutes
-*/
 
 // TO-DO: This is all untested
 
@@ -86,7 +83,7 @@ catch(PDOException $e)
 	exit();
 }
 
-// Make an In-House User (or higher) turn into a normal user when the current date is past the date set by admin
+// Make any user turn into a normal user (access level) when the current date is past the date set by admin
 // TO-DO: only needs to run once per day, if we make another cron for it
 try
 {
