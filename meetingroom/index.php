@@ -10,10 +10,10 @@ include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/magicquotes.inc.php';
 	TO-DO:
 		Show meeting room status (booked or not?)
 		Search meeting room status by datetime?
-		Redirect to booking directory on a room select
 
 */
 
+// Redirect to booking when a room has been selected
 if(isset($_POST['action']) AND $_POST['action'] == "Select Room"){
 
 	$TheMeetingRoomID = $_POST['MeetingRoomID'];

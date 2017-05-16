@@ -354,8 +354,10 @@ function create_tables()
 						  `capacity` tinyint(3) unsigned NOT NULL DEFAULT '1',
 						  `description` text,
 						  `location` varchar(255) DEFAULT NULL,
-						  PRIMARY KEY (`meetingRoomID`)
-						) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8");
+						  `idCode` char(64) NOT NULL,
+						  PRIMARY KEY (`meetingRoomID`),
+						  UNIQUE KEY `idCode_UNIQUE` (`idCode`)
+						) ENGINE=InnoDB DEFAULT CHARSET=utf8");
 						
 			//	Add the creation to log event
 			$sqlLog = "	INSERT INTO `logevent`(`actionID`, `description`) 

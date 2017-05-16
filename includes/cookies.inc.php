@@ -14,11 +14,12 @@ function setNewMeetingRoomCookies($meetingRoomName, $idCode){
 	setcookie(MEETINGROOM_ID, $hashedIdCode, 2147483647, '/');
 }
 
+// Cookie removal
 function deleteMeetingRoomCookies(){
 	// To delete a cookie you have to make it expire by setting a date in the past
 	// To-DO: Add path if not working?
 	setcookie(MEETINGROOM_NAME, '', time() - 3600);
-	setcookie(MEETINGROOM_ID, '', time() - 3600;	
+	setcookie(MEETINGROOM_ID, '', time() - 3600);	
 	// Just in case?
 	unset($_COOKIE[MEETINGROOM_NAME]);
 	unset($_COOKIE[MEETINGROOM_ID]);
