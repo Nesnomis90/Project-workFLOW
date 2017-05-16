@@ -322,7 +322,7 @@ if ((isset($_POST['action']) AND $_POST['action'] == "Add Room"))
 	}		
 	
 	// Generate the idCode
-	$idCode = hashMeetingRoomName($validatedMeetingRoomName);
+	$idCode = generateMeetingRoomIDCode();
 	
 	// Add the meeting room to the database
 	try

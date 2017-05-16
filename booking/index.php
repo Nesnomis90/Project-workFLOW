@@ -149,32 +149,102 @@ function validateUserInputs($FeedbackSessionToUse){
 	return array($invalidInput, $startDateTime, $endDateTime, $validatedBookingDescription, $validatedDisplayName);
 }
 
+// Function to remember the user inputs in Create Meeting
+function rememberAddBookingInputs(){
+	if(isset($_SESSION['CreateMeetingInfoArray'])){
+		$newValues = $_SESSION['CreateMeetingInfoArray'];
+
+			// The meeting room selected
+		$newValues['TheMeetingRoomID'] = $_POST['meetingRoomID']; 
+			// The company selected
+		$newValues['TheCompanyID'] = $_POST['companyID'];
+			// The user selected
+		$newValues['BookedBy'] = trimExcessWhitespace($_POST['displayName']);
+			// The booking description
+		$newValues['BookingDescription'] = trimExcessWhitespaceButLeaveLinefeed($_POST['description']);
+			// The start time
+		$newValues['StartTime'] = trimExcessWhitespace($_POST['startDateTime']);
+			// The end time
+		$newValues['EndTime'] = trimExcessWhitespace($_POST['endDateTime']);
+		
+		$_SESSION['CreateMeetingInfoArray'] = $newValues;			
+	}
+}
+
 // Handles booking based on selected meeting room
-if(isset($_GET['meetingroom']) AND isset($_POST['action']) AND $_POST['action'] == 'Create Meeting'){
-	
-	
-	// TO-DO: This should create a pop-up with javascript to select a time wheel
-	// and a code panel for typing in the booking code
-	// when accessed locally
-	// When accessed online this should require being logged in to be activated	
+if(	(isset($_POST['action']) AND $_POST['action'] == 'Create Meeting') OR
+	(isset($_SESSION['refreshCreateMeeting']) AND $_SESSION['refreshCreateMeeting'])
+	){
+	// Only a logged in user can create a meeting
+	// or if we're on a local device that can take a booking code
 	
 	if(!isset($_COOKIE[MEETINGROOM_NAME]) OR !isset($_COOKIE[MEETINGROOM_ID]) ){
 	// We're not making a booking locally. Make users be logged in
-	if(makeUserLogIn() === TRUE){
-		// We're logged in and can create the booking
+		if(makeUserLogIn() === TRUE){
+			// We're logged in and can create the booking
+			
+			
+		}
+	} else {
+		// There are local meeting room identifiers set in cookies. Check if it is valid
+		$meetingRoomName = $_COOKIE[MEETINGROOM_NAME];
+		$meetingRoomIDCode = $_COOKIE[MEETINGROOM_ID];
+		$validMeetingRoom = databaseContainsMeetingRoomWithIDCode($meetingRoomName, $meetingRoomIDCode);
+		if ($validMeetingRoom === TRUE){
+			// Cookies are correctly identifying a meeting room
+			// Hopefully this means it's a local device we set up and not someone malicious
+			// TO-DO: Get meeting room's info/schedule?
+			
+		} elseif($validMeetingRoom === FALSE){
+			// The cookies set does not match a meeting room
+			// Remove the cookies
+			deleteMeetingRoomCookies();
+			// TO-DO: Do anything more here to punish cookie manipulation?
+		}
 		
 		
+		// We're making a booking locally.
+		// Require a start/end time and a booking code
+		
+		// TO-DO:
 	}
-} else {
-	// Our local booking identifier is set. Check if it is valid
-	
-	// We're making a booking locally.
-	// Require a start/end time and a booking code
-	
-	// TO-DO:
-}
 
 //getUserInfoFromBookingCode();
+
+function loadCreateBookingTemplate(){
+	
+	// TO-DO: Actually make it
+	include_once 'createBooking.html.php';
+	exit();
+}	
+
+	
+
+	
+	
+
+
+}
+
+if(isset($_POST['action']) AND $_POST['action'] == 'Confirm Meeting'){
+	list($invalidInput, $startDateTime, $endDateTime, $validatedBookingDescription, $validatedDisplayName) = validateUserInputs('MeetingRoomAllUsersFeedback');
+	
+	if(isset($_GET['meetingroom'])){
+		$meetingRoomID = $_GET['meetingroom'];
+		$location = "http://$_SERVER[HTTP_HOST]/booking/?meetingroom=" . $meetingRoomID;
+	} else {
+		$meetingRoomID = $_POST['MeetingRoomID']; // TO-DO: Not set
+		$location = '.';
+	}
+	
+	if($invalidInput){
+		
+		rememberCreateBookingInputs();
+		$_SESSION['refreshCreateMeeting'] = TRUE;
+		
+		header('Location: $location');
+		exit();			
+	}	
 }
 
 

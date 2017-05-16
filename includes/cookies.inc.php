@@ -8,8 +8,19 @@ define('MEETINGROOM_ID', 'This is a temporary cookie name used to hold the meeti
 
 // Cookie setup
 function setNewMeetingRoomCookies($meetingRoomName, $idCode){
+	$hashedIdCode = hashCookies($idCode);
 	// Set to 'never expire' i.e. last until 19th January 2038
 	setcookie(MEETINGROOM_NAME, $meetingRoomName, 2147483647, '/');
-	setcookie(MEETINGROOM_ID, $idCode, 2147483647, '/');
+	setcookie(MEETINGROOM_ID, $hashedIdCode, 2147483647, '/');
+}
+
+function deleteMeetingRoomCookies(){
+	// To delete a cookie you have to make it expire by setting a date in the past
+	// To-DO: Add path if not working?
+	setcookie(MEETINGROOM_NAME, '', time() - 3600);
+	setcookie(MEETINGROOM_ID, '', time() - 3600;	
+	// Just in case?
+	unset($_COOKIE[MEETINGROOM_NAME]);
+	unset($_COOKIE[MEETINGROOM_ID]);
 }
 ?>
