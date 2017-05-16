@@ -45,7 +45,7 @@
 								<label for="MeetingRoomLocation">Location: </label>
 								<?php htmlout($room['MeetingRoomLocation']); ?>
 							</div>
-							<div><input type="submit" name="action" value="Create Meeting"></div>
+							<div><input type="submit" name="action" value="Select Room"></div>
 							<input type="hidden" name="MeetingRoomID" value="<?php echo $room['MeetingRoomID']; ?>">
 						</fieldset>
 					</form>

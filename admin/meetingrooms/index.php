@@ -321,21 +321,26 @@ if ((isset($_POST['action']) AND $_POST['action'] == "Add Room"))
 		exit();	
 	}		
 	
+	// Generate the idCode
+	$idCode = hashMeetingRoomName($validatedMeetingRoomName);
+	
 	// Add the meeting room to the database
 	try
-	{		
+	{	
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 		$pdo = connect_to_db();
 		$sql = 'INSERT INTO `meetingroom` SET
 							`name` = :name,
 							`capacity` = :capacity,
 							`description` = :description,
-							`location` = :location';
+							`location` = :location,
+							`idCode` = :idCode';
 		$s = $pdo->prepare($sql);
 		$s->bindValue(':name', $validatedMeetingRoomName);
 		$s->bindValue(':capacity', $validatedMeetingRoomCapacity);		
 		$s->bindValue(':description', $validatedMeetingRoomDescription);
 		$s->bindValue(':location', $validatedMeetingRoomLocation);
+		$s->bindValue(':idCode', $idCode);
 		$s->execute();
 		
 		session_start();

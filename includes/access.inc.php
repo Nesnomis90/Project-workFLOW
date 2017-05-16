@@ -16,18 +16,52 @@ function hashBookingCode($rawBookingCode){
 	return $HashedBookingCode;	
 }
 
-	// Function to salt and hash cookie codes
-function hashCookieCode($rawCookieCode){
-	$SaltedCookieCode = $rawCookieCode . CK_SALT;
-	$HashedCookieCode = hash('sha256', $SaltedCookieCode);
-	return $HashedCookieCode;	
+	// Function to salt and hash meeting room name into an IDCode
+function hashMeetingRoomName($roomName){
+	$saltedRoomName = $roomName . CK_SALT;
+	$idCode = hash('sha256', $saltedRoomName);
+	return $idCode;	
 }
 
 // Functions connected to user activity and access
 
 // Checks if the cookie submitted is a valid meeting room
-function databaseContainsMeetingRoomFromCookie($cookie){
-
+function databaseContainsMeetingRoomWithIDCode($name, $idCode){
+	
+	try
+	{
+		include_once 'db.inc.php';
+		$pdo = connect_to_db();
+		$sql = 'SELECT 	COUNT(*) 
+				FROM 	`meetingroom`
+				WHERE 	`name` = :name
+				AND		`idCode` = :idCode
+				LIMIT 	1';
+		$s = $pdo->prepare($sql);
+		$s->bindValue(':name', $name);
+		$s->bindValue(':idCode', $idCode);
+		$s->execute();
+		
+		$pdo = null;
+	}
+	catch (PDOException $e)
+	{
+		$error = 'Error validating database from cookie.';
+		include_once 'error.html.php';
+		$pdo = null;
+		exit();
+	}
+	
+	$row = $s->fetch();
+	// If we got a hit, then the email exists in our database
+	if ($row[0] > 0)
+	{
+		return TRUE;
+	}
+	else
+	{
+		return FALSE;
+	}	
 }
 
 // Updates the timestamp of when the user was last active
