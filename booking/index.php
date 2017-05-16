@@ -174,13 +174,80 @@ function rememberCreateBookingInputs(){
 // Function to decide which template to use for booking
 function loadCreateBookingTemplate(){
 	// TO-DO: actually make templates and probably change the logic here
-	if(isset($_COOKIE[MEETINGROOM_NAME]) AND isset($_COOKIE[MEETINGROOM_ID])){
+	if(isset($_COOKIE[MEETINGROOM_NAME]) AND isset($_COOKIE[MEETINGROOM_IDCODE])){
 		include_once 'createBookingLocally.html.php';
 	} else {
 		include_once 'createBookingOnline.html.php';
 	}
 	exit();
 }	
+
+// Check if we're accessing from a local device
+if(isset($_COOKIE[MEETINGROOM_NAME]) AND isset($_COOKIE[MEETINGROOM_IDCODE]))
+{
+	// There are local meeting room identifiers set in cookies. Check if it is valid
+	$meetingRoomName = $_COOKIE[MEETINGROOM_NAME];
+	$meetingRoomIDCode = $_COOKIE[MEETINGROOM_IDCODE];
+	
+	if(!isset($_SESSION['OriginalCookieMeetingRoomName']) AND !isset($_SESSION['OriginalCookieMeetingRoomIDCode'])){
+		$validMeetingRoom = databaseContainsMeetingRoomWithIDCode($meetingRoomName, $meetingRoomIDCode);
+		if ($validMeetingRoom === TRUE){
+			// Cookies are correctly identifying a meeting room
+			// Hopefully this means it's a local device we set up and not someone malicious
+			$_SESSION['OriginalCookieMeetingRoomName'] = $meetingRoomName;
+			$_SESSION['OriginalCookieMeetingRoomIDCode'] = $meetingRoomIDCode;
+			
+			if(!isset($_SESSION['DefaultMeetingRoomID'])){
+				try
+				{
+					include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+					
+					$pdo = connect_to_db();
+					$sql = "SELECT 	`meetingRoomID`							AS TheMeetingRoomID, 
+									`name` 									AS TheMeetingRoomName,
+									`capacity`								AS TheMeetingRoomCapacity,
+									`description`							AS TheMeetingRoomDescription,
+									`location`								AS TheMeetingRoomLocation
+							FROM	`meetingroom`
+							WHERE 	`name` = :meetingRoomName
+							LIMIT 	1";
+					$s = $pdo->prepare($sql);
+					$s->bindValue(':meetingRoomName', $_COOKIE[MEETINGROOM_NAME]);
+					$s->execute();
+					$row = $s->fetch();
+					$_SESSION['DefaultMeetingRoomInfo'] = $row;
+					//Close the connection
+					$pdo = null;
+				}
+				catch(PDOException $e)
+				{
+					$error = 'Error getting meeting room info: ' . $e->getMessage();
+					include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+					$pdo = null;
+					exit();
+				}			
+			}
+
+			// TO-DO:
+			loadCreateBookingTemplate();
+		} elseif($validMeetingRoom === FALSE){
+			// The cookies set does not match a meeting room
+			// Remove the cookies
+			deleteMeetingRoomCookies();
+			unset($_SESSION['DefaultMeetingRoomInfo']);
+			// TO-DO: Do anything more here to punish cookie manipulation?
+		}	
+	}
+	if(	$_COOKIE[MEETINGROOM_NAME] != $_SESSION['OriginalCookieMeetingRoomName'] OR 
+		$_COOKIE[MEETINGROOM_IDCODE] != $_SESSION['OriginalCookieMeetingRoomIDCode']){
+			// Cookies have changed
+			// TO-DO: 
+			deleteMeetingRoomCookies();
+			unset($_SESSION['DefaultMeetingRoomInfo']);
+		}
+} else {
+	unset($_SESSION['DefaultMeetingRoomInfo']);
+}
 
 // Handles booking based on selected meeting room
 if(	(isset($_POST['action']) AND $_POST['action'] == 'Create Meeting') OR
@@ -189,15 +256,16 @@ if(	(isset($_POST['action']) AND $_POST['action'] == 'Create Meeting') OR
 	// Only a logged in user can create a meeting
 	// or if we're on a local device that can take a booking code
 	
-	if(isset($_COOKIE[MEETINGROOM_NAME]) AND isset($_COOKIE[MEETINGROOM_ID])){
+	if(isset($_COOKIE[MEETINGROOM_NAME]) AND isset($_COOKIE[MEETINGROOM_IDCODE])){
 		// There are local meeting room identifiers set in cookies. Check if it is valid
 		$meetingRoomName = $_COOKIE[MEETINGROOM_NAME];
-		$meetingRoomIDCode = $_COOKIE[MEETINGROOM_ID];
+		$meetingRoomIDCode = $_COOKIE[MEETINGROOM_IDCODE];
 		$validMeetingRoom = databaseContainsMeetingRoomWithIDCode($meetingRoomName, $meetingRoomIDCode);
 		if ($validMeetingRoom === TRUE){
 			// Cookies are correctly identifying a meeting room
 			// Hopefully this means it's a local device we set up and not someone malicious
-			// TO-DO: Get meeting room's info/schedule?
+			// Set default meeting room information
+		
 			loadCreateBookingTemplate();
 		} elseif($validMeetingRoom === FALSE){
 			// The cookies set does not match a meeting room
@@ -411,6 +479,9 @@ if(isset($_GET['cancellationcode'])){
 		exit();
 	}
 }
+
+// TO-DO: Get booking default values from admin/booking
+
 
 // Load the html template
 include_once 'booking.html.php';
