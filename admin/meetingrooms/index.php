@@ -216,12 +216,12 @@ if (isset($_POST['action']) and $_POST['action'] == 'Delete')
 	}
 
 	$_SESSION['MeetingRoomUserFeedback'] = "Successfully removed the meeting room.";
-	
+
 	// Add a log event that a meeting room was removed
 	try
 	{
 		// Save a description with information about the meeting room that was removed
-		$logEventDescription = "The meeting room: " . $validatedMeetingRoomName . " was removed by: " . $_SESSION['LoggedInUserName'];
+		$logEventDescription = "The meeting room: " . $_POST['MeetingRoomName'] . " was removed by: " . $_SESSION['LoggedInUserName'];
 		
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 		

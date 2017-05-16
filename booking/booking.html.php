@@ -8,6 +8,7 @@
 		<title>Booking Information</title>
 	</head>
 	<body>
+	<?php if(isset($_GET['meetingroom'])) : ?>
 		<h1>Booking Information</h1>
 		<?php if(isset($_SESSION['normalBookingFeedback'])) : ?>
 			<p><b><?php htmlout($_SESSION['normalBookingFeedback']); ?></b></p>
@@ -108,6 +109,9 @@
 				<?php endif; ?>				
 			</div>
 		</form>
-		<?php //TO-DO: Fix -> include '../logout.inc.html.php'; ?>
+	<?php else : ?>
+		<b>Hard to book a meeting without selecting a meeting room!</b>
+	<?php endif; ?>
+	<?php //TO-DO: Fix -> include '../logout.inc.html.php'; ?>
 	</body>
 </html>
