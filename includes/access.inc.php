@@ -16,18 +16,62 @@ function hashBookingCode($rawBookingCode){
 	return $HashedBookingCode;	
 }
 
-	// Function to salt and hash cookie codes
-function hashCookieCode($rawCookieCode){
-	$SaltedCookieCode = $rawCookieCode . CK_SALT;
-	$HashedCookieCode = hash('sha256', $SaltedCookieCode);
-	return $HashedCookieCode;	
+	// Function to salt and hash meeting room name into an IDCode
+function hashMeetingRoomIDCode($rawCode){
+	$saltedCode = $rawCode . CK_SALT;
+	$hashedCode = hash('sha256', $saltedCode);
+	return $hashedCode;
 }
 
 // Functions connected to user activity and access
 
 // Checks if the cookie submitted is a valid meeting room
-function databaseContainsMeetingRoomFromCookie($cookie){
-
+function databaseContainsMeetingRoomWithIDCode($name, $cookieIdCode){
+	
+	try
+	{
+		include_once 'db.inc.php';
+		$pdo = connect_to_db();
+		$sql = 'SELECT 	COUNT(*),
+						`idCode` 
+				FROM 	`meetingroom`
+				WHERE 	`name` = :name
+				LIMIT 	1';
+		$s = $pdo->prepare($sql);
+		$s->bindValue(':name', $name);
+		$s->execute();
+		
+		$pdo = null;
+	}
+	catch (PDOException $e)
+	{
+		$error = 'Error validating database from cookie.';
+		include_once 'error.html.php';
+		$pdo = null;
+		exit();
+	}
+	
+	$row = $s->fetch();
+	if ($row[0] > 0)
+	{
+		// The cookie had a valid meeting room name.
+		// Check if the idCode is correct
+		$hashedIDCode = hashMeetingRoomIDCode($row['idCode']);
+		if ($hashedIDCode == $cookieIdCode)
+		{
+			return TRUE;
+		}
+		else
+		{
+			// idCode in cookie is not the valid idCode
+			return FALSE;
+		}	
+	}
+	else
+	{
+		// meeting room name in cookie does not match any rooms
+		return FALSE;
+	}
 }
 
 // Updates the timestamp of when the user was last active

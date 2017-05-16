@@ -148,10 +148,10 @@
 					<?php foreach ($log as $row): ?>
 						<form action="" method="post">
 							<tr>
-								<td><?php htmlout($row['date'])?></td>
-								<td><?php htmlout($row['actionName'])?></td>
-								<td><?php htmlout($row['actionDescription'])?></td>
-								<td><?php htmlout($row['logDescription'])?></td>
+								<td><?php htmlout($row['date']); ?></td>
+								<td><?php htmlout($row['actionName']); ?></td>
+								<td><?php htmlout($row['actionDescription']); ?></td>
+								<td><?php htmlout($row['logDescription']); ?></td>
 								<td>
 									<?php if(isset($_SESSION['logEventsEnableDelete']) AND $_SESSION['logEventsEnableDelete']) : ?>
 										<input type="submit" name="action" value="Delete">

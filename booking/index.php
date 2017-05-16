@@ -6,6 +6,307 @@ session_start();
 include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/helpers.inc.php';
 include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/magicquotes.inc.php';
 
+/*
+	TO-DO:
+	Create booking from code
+	Cancel booking from code
+		Admin has master code
+*/
+
+// Function to validate user inputs
+function validateUserInputs($FeedbackSessionToUse){
+	// Get user inputs
+	$invalidInput = FALSE;
+	
+	if(isset($_POST['startDateTime']) AND !$invalidInput){
+		$startDateTimeString = $_POST['startDateTime'];
+	} else {
+		$invalidInput = TRUE;
+		$_SESSION[$FeedbackSessionToUse] = "A booking cannot be created without submitting a start time.";
+	}
+	if(isset($_POST['endDateTime']) AND !$invalidInput){
+		$endDateTimeString = $_POST['endDateTime'];
+	} else {
+		$invalidInput = TRUE;
+		$_SESSION[$FeedbackSessionToUse] = "A booking cannot be created without submitting an end time.";
+	}
+	
+	if(isset($_POST['displayName'])){
+		$displayNameString = $_POST['displayName'];
+	} else {
+		$displayNameString = '';
+	}
+	if(isset($_POST['description'])){
+		$bookingDescriptionString = $_POST['description'];
+	} else {
+		$bookingDescriptionString = '';
+	}
+	
+	// Remove excess whitespace and prepare strings for validation
+	$validatedStartDateTime = trimExcessWhitespace($startDateTimeString);
+	$validatedEndDateTime = trimExcessWhitespace($endDateTimeString);
+	$validatedDisplayName = trimExcessWhitespaceButLeaveLinefeed($displayNameString);
+	$validatedBookingDescription = trimExcessWhitespaceButLeaveLinefeed($bookingDescriptionString);	
+	
+	// Do actual input validation
+	if(validateDateTimeString($validatedStartDateTime) === FALSE AND !$invalidInput){
+		$invalidInput = TRUE;
+		$_SESSION[$FeedbackSessionToUse] = "Your submitted start time has illegal characters in it.";
+	}
+	if(validateDateTimeString($validatedEndDateTime) === FALSE AND !$invalidInput){
+		$invalidInput = TRUE;
+		$_SESSION[$FeedbackSessionToUse] = "Your submitted end time has illegal characters in it.";
+	}
+	if(validateString($validatedDisplayName) === FALSE AND !$invalidInput){
+		$invalidInput = TRUE;
+		$_SESSION[$FeedbackSessionToUse] = "Your submitted display name has illegal characters in it.";
+	}
+	if(validateString($validatedBookingDescription) === FALSE AND !$invalidInput){
+		$invalidInput = TRUE;
+		$_SESSION[$FeedbackSessionToUse] = "Your submitted booking description has illegal characters in it.";
+	}
+	
+	// Are values actually filled in?
+	if($validatedStartDateTime == "" AND $validatedEndDateTime == "" AND !$invalidInput){
+		
+		$_SESSION[$FeedbackSessionToUse] = "You need to fill in a start and end time for your booking.";	
+		$invalidInput = TRUE;
+	} elseif($validatedStartDateTime != "" AND $validatedEndDateTime == "" AND !$invalidInput) {
+		$_SESSION[$FeedbackSessionToUse] = "You need to fill in an end time for your booking.";	
+		$invalidInput = TRUE;		
+	} elseif($validatedStartDateTime == "" AND $validatedEndDateTime != "" AND !$invalidInput){
+		$_SESSION[$FeedbackSessionToUse] = "You need to fill in a start time for your booking.";	
+		$invalidInput = TRUE;		
+	}
+	
+	// Check if input length is allowed
+		// DisplayName
+	$invalidDisplayName = isLengthInvalidDisplayName($validatedDisplayName);
+	if($invalidDisplayName AND !$invalidInput){
+		$_SESSION[$FeedbackSessionToUse] = "The display name submitted is too long.";	
+		$invalidInput = TRUE;		
+	}	
+		// BookingDescription
+	$invalidBookingDescription = isLengthInvalidBookingDescription($validatedBookingDescription);
+	if($invalidBookingDescription AND !$invalidInput){
+		$_SESSION[$FeedbackSessionToUse] = "The booking description submitted is too long.";	
+		$invalidInput = TRUE;		
+	}
+	
+	// Check if the dateTime inputs we received are actually datetimes
+	$startDateTime = correctDatetimeFormat($validatedStartDateTime);
+	$endDateTime = correctDatetimeFormat($validatedEndDateTime);
+
+	if (isset($startDateTime) AND $startDateTime === FALSE AND !$invalidInput){
+		$_SESSION[$FeedbackSessionToUse] = "The start date you submitted did not have a correct format. Please try again.";
+		$invalidInput = TRUE;
+	}
+	if (isset($endDateTime) AND $endDateTime === FALSE AND !$invalidInput){
+		$_SESSION[$FeedbackSessionToUse] = "The end date you submitted did not have a correct format. Please try again.";
+		$invalidInput = TRUE;
+	}	
+	
+	$timeNow = getDatetimeNow();
+	
+	if($startDateTime > $endDateTime AND !$invalidInput){
+		// End time can't be before the start time
+		
+		$_SESSION[$FeedbackSessionToUse] = "The start time can't be later than the end time. Please select a new start time or end time.";
+		$invalidInput = TRUE;
+	}
+	
+	if($startDateTime < $timeNow AND !$invalidInput){
+		// You can't book a meeting starting in the past.
+		
+		$_SESSION[$FeedbackSessionToUse] = "The start time you selected is already over. Select a new start time.";
+		$invalidInput = TRUE;
+	}
+	
+	if($endDateTime < $timeNow AND !$invalidInput){
+		// You can't book a meeting ending in the past.
+		
+		$_SESSION[$FeedbackSessionToUse] = "The end time you selected is already over. Select a new end time.";
+		$invalidInput = TRUE;	
+	}	
+	
+	if($endDateTime == $startDateTime AND !$invalidInput){
+		$_SESSION[$FeedbackSessionToUse] = "You need to select an end time that is different from your start time.";	
+		$invalidInput = TRUE;				
+	} 
+
+	//TO-DO: If we want to check if a booking is long enough, we do it here e.g. has to be longer than 10 min
+	/*
+	$timeDifferenceStartDate = new DateTime($startDateTime);
+	$timeDifferenceEndDate = new DateTime($endDateTime);
+	$timeDifference = $timeDifferenceStartDate->diff($timeDifferenceEndDate);
+	$timeDifferenceInMinutes = $timeDifference->i;
+	$minimumTimeDifferenceInMinutes = 10;
+	if(($timeDifferenceInMinutes < $minimumTimeDifferenceInMinutes) AND !$invalidInput){
+		$_SESSION[$FeedbackSessionToUse] = "A meeting needs to be at least $minimumTimeDifferenceInMinutes minutes long.";
+		$invalidInput = TRUE;	
+	}*/
+	
+	return array($invalidInput, $startDateTime, $endDateTime, $validatedBookingDescription, $validatedDisplayName);
+}
+
+// Function to remember the user inputs in Create Meeting
+function rememberCreateBookingInputs(){
+	if(isset($_SESSION['CreateMeetingInfoArray'])){
+		$newValues = $_SESSION['CreateMeetingInfoArray'];
+
+			// The meeting room selected
+		$newValues['TheMeetingRoomID'] = $_POST['meetingRoomID']; 
+			// The company selected
+		$newValues['TheCompanyID'] = $_POST['companyID'];
+			// The user selected
+		$newValues['BookedBy'] = trimExcessWhitespace($_POST['displayName']);
+			// The booking description
+		$newValues['BookingDescription'] = trimExcessWhitespaceButLeaveLinefeed($_POST['description']);
+			// The start time
+		$newValues['StartTime'] = trimExcessWhitespace($_POST['startDateTime']);
+			// The end time
+		$newValues['EndTime'] = trimExcessWhitespace($_POST['endDateTime']);
+		
+		$_SESSION['CreateMeetingInfoArray'] = $newValues;			
+	}
+}
+
+// Function to decide which template to use for booking
+function loadCreateBookingTemplate(){
+	// TO-DO: actually make templates and probably change the logic here
+	if(isset($_COOKIE[MEETINGROOM_NAME]) AND isset($_COOKIE[MEETINGROOM_IDCODE])){
+		include_once 'createBookingLocally.html.php';
+	} else {
+		include_once 'createBookingOnline.html.php';
+	}
+	exit();
+}	
+
+// Check if we're accessing from a local device
+if(isset($_COOKIE[MEETINGROOM_NAME]) AND isset($_COOKIE[MEETINGROOM_IDCODE]))
+{
+	// There are local meeting room identifiers set in cookies. Check if it is valid
+	$meetingRoomName = $_COOKIE[MEETINGROOM_NAME];
+	$meetingRoomIDCode = $_COOKIE[MEETINGROOM_IDCODE];
+	
+	if(!isset($_SESSION['OriginalCookieMeetingRoomName']) AND !isset($_SESSION['OriginalCookieMeetingRoomIDCode'])){
+		$validMeetingRoom = databaseContainsMeetingRoomWithIDCode($meetingRoomName, $meetingRoomIDCode);
+		if ($validMeetingRoom === TRUE){
+			// Cookies are correctly identifying a meeting room
+			// Hopefully this means it's a local device we set up and not someone malicious
+			$_SESSION['OriginalCookieMeetingRoomName'] = $meetingRoomName;
+			$_SESSION['OriginalCookieMeetingRoomIDCode'] = $meetingRoomIDCode;
+			
+			if(!isset($_SESSION['DefaultMeetingRoomID'])){
+				try
+				{
+					include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+					
+					$pdo = connect_to_db();
+					$sql = "SELECT 	`meetingRoomID`							AS TheMeetingRoomID, 
+									`name` 									AS TheMeetingRoomName,
+									`capacity`								AS TheMeetingRoomCapacity,
+									`description`							AS TheMeetingRoomDescription,
+									`location`								AS TheMeetingRoomLocation
+							FROM	`meetingroom`
+							WHERE 	`name` = :meetingRoomName
+							LIMIT 	1";
+					$s = $pdo->prepare($sql);
+					$s->bindValue(':meetingRoomName', $_COOKIE[MEETINGROOM_NAME]);
+					$s->execute();
+					$row = $s->fetch();
+					$_SESSION['DefaultMeetingRoomInfo'] = $row;
+					//Close the connection
+					$pdo = null;
+				}
+				catch(PDOException $e)
+				{
+					$error = 'Error getting meeting room info: ' . $e->getMessage();
+					include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+					$pdo = null;
+					exit();
+				}			
+			}
+
+			// TO-DO:
+			loadCreateBookingTemplate();
+		} elseif($validMeetingRoom === FALSE){
+			// The cookies set does not match a meeting room
+			// Remove the cookies
+			deleteMeetingRoomCookies();
+			unset($_SESSION['DefaultMeetingRoomInfo']);
+			// TO-DO: Do anything more here to punish cookie manipulation?
+		}	
+	}
+	if(	$_COOKIE[MEETINGROOM_NAME] != $_SESSION['OriginalCookieMeetingRoomName'] OR 
+		$_COOKIE[MEETINGROOM_IDCODE] != $_SESSION['OriginalCookieMeetingRoomIDCode']){
+			// Cookies have changed
+			// TO-DO: 
+			deleteMeetingRoomCookies();
+			unset($_SESSION['DefaultMeetingRoomInfo']);
+		}
+} else {
+	unset($_SESSION['DefaultMeetingRoomInfo']);
+}
+
+// Handles booking based on selected meeting room
+if(	(isset($_POST['action']) AND $_POST['action'] == 'Create Meeting') OR
+	(isset($_SESSION['refreshCreateMeeting']) AND $_SESSION['refreshCreateMeeting']))
+{
+	// Only a logged in user can create a meeting
+	// or if we're on a local device that can take a booking code
+	
+	if(isset($_COOKIE[MEETINGROOM_NAME]) AND isset($_COOKIE[MEETINGROOM_IDCODE])){
+		// There are local meeting room identifiers set in cookies. Check if it is valid
+		$meetingRoomName = $_COOKIE[MEETINGROOM_NAME];
+		$meetingRoomIDCode = $_COOKIE[MEETINGROOM_IDCODE];
+		$validMeetingRoom = databaseContainsMeetingRoomWithIDCode($meetingRoomName, $meetingRoomIDCode);
+		if ($validMeetingRoom === TRUE){
+			// Cookies are correctly identifying a meeting room
+			// Hopefully this means it's a local device we set up and not someone malicious
+			// Set default meeting room information
+		
+			loadCreateBookingTemplate();
+		} elseif($validMeetingRoom === FALSE){
+			// The cookies set does not match a meeting room
+			// Remove the cookies
+			deleteMeetingRoomCookies();
+			// TO-DO: Do anything more here to punish cookie manipulation?
+		}		
+	}
+	
+	// We're not making a booking locally. Make users be logged in
+	if(makeUserLogIn() === TRUE){
+		// We're logged in and can create the booking
+		loadCreateBookingTemplate();
+	}
+
+}
+//getUserInfoFromBookingCode();
+
+
+if(isset($_POST['action']) AND $_POST['action'] == 'Confirm Meeting'){
+	list($invalidInput, $startDateTime, $endDateTime, $validatedBookingDescription, $validatedDisplayName) = validateUserInputs('MeetingRoomAllUsersFeedback');
+	
+	if(isset($_GET['meetingroom'])){
+		$meetingRoomID = $_GET['meetingroom'];
+		$location = "http://$_SERVER[HTTP_HOST]/booking/?meetingroom=" . $meetingRoomID;
+	} else {
+		$meetingRoomID = $_POST['MeetingRoomID']; // TO-DO: Not set
+		$location = '.';
+	}
+	
+	if($invalidInput){
+		
+		rememberCreateBookingInputs();
+		$_SESSION['refreshCreateMeeting'] = TRUE;
+		
+		header('Location: $location');
+		exit();			
+	}	
+}
+
+
 // Cancels a booking from a submitted cancellation link
 if(isset($_GET['cancellationcode'])){
 	
@@ -178,6 +479,9 @@ if(isset($_GET['cancellationcode'])){
 		exit();
 	}
 }
+
+// TO-DO: Get booking default values from admin/booking
+
 
 // Load the html template
 include_once 'booking.html.php';
