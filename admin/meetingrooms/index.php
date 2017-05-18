@@ -131,41 +131,46 @@ function validateUserInputs(){
 	}
 	
 	// Check if the meeting room already exists (based on name).
-		// only if have changed the name (edit only)
-	if(isset($_SESSION['EditMeetingRoomOriginalInfo']) AND $_SESSION['EditMeetingRoomOriginalInfo']['MeetingRoomName'] == $validatedMeetingRoomName){
-		// Do nothing, since we haven't changed the name we're editing
-	} else {
-		// It's a new name, let's check if it has been used before!
-		try
-		{
-			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
-			$pdo = connect_to_db();
-			$sql = 'SELECT 	COUNT(*) 
-					FROM 	`meetingroom`
-					WHERE 	`name`= :MeetingRoomName';
-			$s = $pdo->prepare($sql);
-			$s->bindValue(':MeetingRoomName', $validatedMeetingRoomName);		
-			$s->execute();
-			
-			$pdo = null;
-			
-			$row = $s->fetch();
-			
-			if ($row[0] > 0)
+		// only if we have changed the name (edit only)
+	if(isset($_SESSION['EditMeetingRoomOriginalInfo'])){
+		$originalMeetingRoomName = strtolower($_SESSION['EditMeetingRoomOriginalInfo']['MeetingRoomName']);
+		$newMeetingRoomName = strtolower($validatedMeetingRoomName);
+	
+		if($originalMeetingRoomName == $newMeetingRoomName){
+			// Do nothing, since we haven't changed the name we're editing
+		} else {
+			// It's a new name, let's check if it has been used before!
+			try
 			{
-				// This name is already being used for a meeting room
+				include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+				$pdo = connect_to_db();
+				$sql = 'SELECT 	COUNT(*) 
+						FROM 	`meetingroom`
+						WHERE 	`name`= :MeetingRoomName';
+				$s = $pdo->prepare($sql);
+				$s->bindValue(':MeetingRoomName', $validatedMeetingRoomName);		
+				$s->execute();
+				
+				$pdo = null;
+				
+				$row = $s->fetch();
+				
+				if ($row[0] > 0)
+				{
+					// This name is already being used for a meeting room
 
-				$_SESSION['AddMeetingRoomError'] = "The name: " . $validatedMeetingRoomName . " is already used for a meeting room!";
-				$invalidInput = TRUE;	
+					$_SESSION['AddMeetingRoomError'] = "The name: " . $validatedMeetingRoomName . " is already used for a meeting room!";
+					$invalidInput = TRUE;	
+				}	
+				// Meeting room name hasn't been used before
+			}
+			catch (PDOException $e)
+			{
+				$error = 'Error searching through meeting rooms.' . $e->getMessage();
+				include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+				$pdo = null;
+				exit();
 			}	
-			// Meeting room name hasn't been used before
-		}
-		catch (PDOException $e)
-		{
-			$error = 'Error searching through meeting rooms.' . $e->getMessage();
-			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
-			$pdo = null;
-			exit();
 		}	
 	}
 return array($invalidInput, $validatedMeetingRoomDescription, $validatedMeetingRoomName, $validatedMeetingRoomCapacity, $validatedMeetingRoomLocation);
@@ -211,12 +216,12 @@ if (isset($_POST['action']) and $_POST['action'] == 'Delete')
 	}
 
 	$_SESSION['MeetingRoomUserFeedback'] = "Successfully removed the meeting room.";
-	
+
 	// Add a log event that a meeting room was removed
 	try
 	{
 		// Save a description with information about the meeting room that was removed
-		$logEventDescription = "The meeting room: " . $validatedMeetingRoomName . " was removed by: " . $_SESSION['LoggedInUserName'];
+		$logEventDescription = "The meeting room: " . $_POST['MeetingRoomName'] . " was removed by: " . $_SESSION['LoggedInUserName'];
 		
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 		
@@ -316,21 +321,26 @@ if ((isset($_POST['action']) AND $_POST['action'] == "Add Room"))
 		exit();	
 	}		
 	
+	// Generate the idCode
+	$idCode = generateMeetingRoomIDCode();
+	
 	// Add the meeting room to the database
 	try
-	{		
+	{	
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 		$pdo = connect_to_db();
 		$sql = 'INSERT INTO `meetingroom` SET
 							`name` = :name,
 							`capacity` = :capacity,
 							`description` = :description,
-							`location` = :location';
+							`location` = :location,
+							`idCode` = :idCode';
 		$s = $pdo->prepare($sql);
 		$s->bindValue(':name', $validatedMeetingRoomName);
 		$s->bindValue(':capacity', $validatedMeetingRoomCapacity);		
 		$s->bindValue(':description', $validatedMeetingRoomDescription);
 		$s->bindValue(':location', $validatedMeetingRoomLocation);
+		$s->bindValue(':idCode', $idCode);
 		$s->execute();
 		
 		session_start();
@@ -559,9 +569,9 @@ if (isset($_POST['action']) AND $_POST['action'] == "Edit Room")
 			exit();
 		}
 		
-		$_SESSION['MeetingRoomUserFeedback'] = "Successfully updated the meeting room: " . $validatedMeetingRoomName;		
+		$_SESSION['MeetingRoomUserFeedback'] = "Successfully updated the meeting room: $validatedMeetingRoomName.";		
 	} else {	
-		$_SESSION['MeetingRoomUserFeedback'] = "No changes were made.";
+		$_SESSION['MeetingRoomUserFeedback'] = "No changes were made to the meeting room: $validatedMeetingRoomName.";
 	}
 	
 	clearEditMeetingRoomSessions();
@@ -576,7 +586,6 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Cancel'){
 	$_SESSION['MeetingRoomUserFeedback'] = "Cancel button clicked. Taking you back to /admin/meetingrooms/!";
 	$refreshMeetingRooms = TRUE;
 }
-
 
 if (isset($refreshMeetingRooms) AND $refreshMeetingRooms) {
 	//TO-DO: Add code that should occur on a refresh
@@ -600,11 +609,11 @@ try
 						COUNT(re.`amount`)	AS MeetingRoomEquipmentAmount
 			FROM 		`meetingroom` m
 			LEFT JOIN 	`roomequipment` re
-			ON 			re.`meetingRoomID` = m.`meetingRoomID`
+			ON 			re.`meetingRoomID` = m.`meetingRoomID`			
 			GROUP BY 	m.`meetingRoomID`';
 	$result = $pdo->query($sql);
 	$rowNum = $result->rowCount();
-
+	
 	//Close the connection
 	$pdo = null;
 }

@@ -25,6 +25,13 @@ function getDateNow() {
 	return $datetimeNow->format('Y-m-d');	
 }
 
+// Function to convert string to datetime in MySQL format
+function stringToDateTime($datetimeString){
+	date_default_timezone_set(DATE_DEFAULT_TIMEZONE);
+	$d = date_create_from_format('Y-m-d H:i:s', $datetimeString);
+	return $d;
+}
+
 // Function to check if the datetime submitted is in the format that's submitted
 function validateDatetimeWithFormat($datetime, $format){
 	// We take in a datetime string and the format we want to check if it's in

@@ -59,7 +59,7 @@
 			</div>
 		<?php if($rowNum>0) :?>
 			<input type="submit" name="action" value="Add Equipment">
-			<table id= "equipmenttable">
+			<table id="equipmenttable">
 				<caption>Available Equipment</caption>
 				<tr>
 					<th colspan="3">Equipment</th>

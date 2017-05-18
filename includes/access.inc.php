@@ -1,7 +1,6 @@
 <?php
 // Constants used to salt passwords
 require_once 'salts.inc.php';
-//require_once 'inputvalidation.inc.php';
 
 // Functions to salt and hash info
 	// Function to salt and hash passwords
@@ -17,13 +16,108 @@ function hashBookingCode($rawBookingCode){
 	return $HashedBookingCode;	
 }
 
+	// Function to salt and hash meeting room name into an IDCode
+function hashMeetingRoomIDCode($rawCode){
+	$saltedCode = $rawCode . CK_SALT;
+	$hashedCode = hash('sha256', $saltedCode);
+	return $hashedCode;
+}
 
-// These are functions to handle user access
+// Functions connected to user activity and access
 
-// returns TRUE if user is logged in
-function userIsLoggedIn()
+// Checks if the cookie submitted is a valid meeting room
+function databaseContainsMeetingRoomWithIDCode($name, $cookieIdCode){
+	
+	try
+	{
+		include_once 'db.inc.php';
+		$pdo = connect_to_db();
+		$sql = 'SELECT 	COUNT(*),
+						`idCode` 
+				FROM 	`meetingroom`
+				WHERE 	`name` = :name
+				LIMIT 	1';
+		$s = $pdo->prepare($sql);
+		$s->bindValue(':name', $name);
+		$s->execute();
+		
+		$pdo = null;
+	}
+	catch (PDOException $e)
+	{
+		$error = 'Error validating database from cookie.';
+		include_once 'error.html.php';
+		$pdo = null;
+		exit();
+	}
+	
+	$row = $s->fetch();
+	if ($row[0] > 0)
+	{
+		// The cookie had a valid meeting room name.
+		// Check if the idCode is correct
+		$hashedIDCode = hashMeetingRoomIDCode($row['idCode']);
+		if ($hashedIDCode == $cookieIdCode)
+		{
+			return TRUE;
+		}
+		else
+		{
+			// idCode in cookie is not the valid idCode
+			return FALSE;
+		}	
+	}
+	else
+	{
+		// meeting room name in cookie does not match any rooms
+		return FALSE;
+	}
+}
+
+// Updates the timestamp of when the user was last active
+function updateUserActivity()
+{
+	// If a user logs in, or does something while logged in, we'll use this to update the database
+	// to indicate when they last used the website
+	try
+	{
+		include_once 'db.inc.php';
+		$pdo = connect_to_db();
+		$sql = 'UPDATE 	`user`
+				SET		`lastActivity` = CURRENT_TIMESTAMP()
+				WHERE 	`userID` = :userID
+				AND		`isActive` > 0';
+		$s = $pdo->prepare($sql);
+		$s->bindValue(':userID', $_SESSION['LoggedInUserID']);
+
+		$s->execute();
+		
+		$pdo = null;
+	}
+	catch (PDOException $e)
+	{
+		$error = 'Error updating user activity.';
+		include_once 'error.html.php';
+		$pdo = null;
+		exit();
+	}	
+}
+
+// returns TRUE if user is logged in and updates the database with their last active timestamp
+function userIsLoggedIn() 
 {
 	session_start();
+	if(checkIfUserIsLoggedIn()){
+		updateUserActivity();
+		return TRUE;
+	} else {
+		return FALSE;
+	}
+}
+
+// returns TRUE if user is logged in
+function checkIfUserIsLoggedIn()
+{
 	// If user is trying to log in
 	if (isset($_POST['action']) and $_POST['action'] == 'login')
 	{
@@ -282,7 +376,7 @@ function getUserInfoFromBookingCode($rawBookingCode)
 	{
 		// The booking code we received does not exist in the database.
 		// Can't retrieve any info then
-		return NULL;
+		return FALSE;
 	}
 	
 	// We know the code exists. Let's get the info of the person it belongs to
@@ -297,7 +391,14 @@ function getUserInfoFromBookingCode($rawBookingCode)
 						`firstName`						AS TheUserFirstname,
 						`lastName`						AS TheUserLastname,
 						`displayName`					AS TheUserDisplayName,
-						`bookingDescription`			AS TheUserBookingDescription
+						`bookingDescription`			AS TheUserBookingDescription,
+						`AccessID`						AS TheUserAccessID,
+						(
+							SELECT 	`AccessName`
+							FROM 	`accesslevel`
+							WHERE 	`AccessID` = TheUserAccessID
+							LIMIT 	1
+						)								AS TheUserAccessName
 				FROM 	`user`
 				WHERE 	`bookingCode` = :BookingCode
 				AND		`isActive` > 0
@@ -321,6 +422,7 @@ function getUserInfoFromBookingCode($rawBookingCode)
 }
 
 // Function to "return" the raw booking code value to a user who has forgotten their own
+// returns FALSE if not found.
 // TO-DO: UNTESTED
 function revealBookingCode($userID){
 	// Since the booking code has been salted and hashed, we have to repeat the process
@@ -380,7 +482,6 @@ function revealBookingCode($userID){
 	return FALSE;
 }
 
-
 // Function to make sure user is Admin
 function isUserAdmin(){
 		// Check if user is logged in
@@ -397,6 +498,18 @@ function isUserAdmin(){
 		$error = 'Only Admin may access this page.';
 		include_once '../accessdenied.html.php';
 		return false;
+	}
+	return true;
+}
+
+// Function to make sure only users can access this
+function makeUserLogIn(){
+		// Check if user is logged in
+	if (!userIsLoggedIn())
+	{
+		// Not logged in. Send user a login prompt.
+		include_once '../login.html.php';
+		exit();
 	}
 	return true;
 }

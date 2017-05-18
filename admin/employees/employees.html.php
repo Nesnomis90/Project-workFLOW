@@ -68,31 +68,36 @@
 				<?php endif; ?>
 			</div>
 		</form>		
-		<?php if($rowNum>0) :?>
-			<form action="" method="post">
-				<input type="submit" name="action" value="Add Employee">
-			</form>
-			<table id= "companyemployeestable">
-				<caption>Company Employees</caption>
+		<form action="" method="post">
+			<input type="submit" name="action" value="Add Employee">
+		</form>
+		<table id= "companyemployeestable">
+			<caption>Company Employees</caption>
+			<tr>
+				<th colspan="2">Company</th>
+				<th colspan="3">User Information</th>
+				<th colspan="2">Booking Time Used</th>
+				<th>Date</th>
+				<th colspan="2">Alter Employee</th>
+			</tr>
+			<tr>
+				<th>Name</th>
+				<th>Role</th>
+				<th>First Name</th>
+				<th>Last Name</th>
+				<th>Email</th>
+				<th>This Month</th>
+				<th>All Time</th>
+				<th>Added</th>
+				<th>Change Role</th>
+				<th>Remove</th>
+			</tr>
+			<?php if($rowNum>0) :?>
+				<?php if(isset($_GET['Company'])) : ?>
 				<tr>
-					<th colspan="2">Company</th>
-					<th colspan="3">User Information</th>
-					<th colspan="2">Booking Time Used</th>
-					<th>Date</th>
-					<th colspan="2">Alter Employee</th>
+					<td colspan="10"><b>The Following Are Currently Employed Users</b></td>
 				</tr>
-				<tr>
-					<th>Name</th>
-					<th>Role</th>
-					<th>First Name</th>
-					<th>Last Name</th>
-					<th>Email</th>
-					<th>This Month</th>
-					<th>All Time</th>
-					<th>Added</th>
-					<th>Change Role</th>
-					<th>Remove</th>
-				</tr>
+				<?php endif; ?>
 				<?php foreach ($employees as $employee): ?>
 					<form action="" method="post">
 						<tr>
@@ -121,27 +126,47 @@
 						</tr>
 					</form>
 				<?php endforeach; ?>
+			<?php else : ?>
+				<tr><b>There are no employees registered in the database.</b></tr>
+				<tr>
+					<form action="" method="post">
+						<input type="submit" name="action" value="Add Employee">
+					</form>
+				</tr>
+			<?php endif; ?>	
 				<?php if(isset($removedEmployees)) : ?>
+					<tr>
+						<td colspan="10"><b>The Following Are Previous Employees That Are Still Registered</b></td>
+					</tr>
 					<?php foreach($removedEmployees as $employee): ?>
 						<tr>
 							<td><?php htmlout($employee['CompanyName']); ?></td>
 							<td>Removed</td>
-							<td colspan="3">N/A</td>
+							<td><?php htmlout($employee['firstName']); ?></td>
+							<td><?php htmlout($employee['lastName']); ?></td>
+							<td><?php htmlout($employee['email']); ?></td>	
 							<td><?php htmlout($employee['MonthlyBookingTimeUsed']); ?></td>
 							<td><?php htmlout($employee['TotalBookingTimeUsed']); ?></td>
 							<td colspan="3">N/A</td>
 						</tr>
 					<?php endforeach; ?>
 				<?php endif; ?>
+				<?php if(isset($deletedEmployees)) : ?>
+					<tr>
+						<td colspan="10"><b>The Following Are Previous Employees That Have Deleted Their Account</b></td>
+					</tr>
+					<?php foreach($deletedEmployees as $employee): ?>
+						<tr>
+							<td><?php htmlout($employee['CompanyName']); ?></td>
+							<td>Deleted</td>
+							<td colspan="3">Every Deleted User Summed Together</td>
+							<td><?php htmlout($employee['MonthlyBookingTimeUsed']); ?></td>
+							<td><?php htmlout($employee['TotalBookingTimeUsed']); ?></td>
+							<td colspan="3">N/A</td>
+						</tr>
+					<?php endforeach; ?>				
+				<?php endif; ?>
 			</table>
-		<?php else : ?>
-			<tr><b>There are no employees registered in the database.</b></tr>
-			<tr>
-				<form action="" method="post">
-					<input type="submit" name="action" value="Add Employee">
-				</form>
-			</tr>
-		<?php endif; ?>
 		<p><a href="..">Return to CMS home</a></p>
 	<?php include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/logout.inc.html.php'; ?>
 	</body>

@@ -20,11 +20,10 @@
 				</div>
 			<?php endif; ?>
 			<div>
-				<label for="CompanyName">Set a new Company Name: 
-					<input type="text" name="CompanyName" id="CompanyName" 
-					placeholder="Enter A Company Name"
-					value="<?php htmlout($CompanyName); ?>">
-				</label>
+				<label for="CompanyName">Set a new Company Name: </label>
+				<input type="text" name="CompanyName" id="CompanyName" 
+				placeholder="Enter A Company Name"
+				value="<?php htmlout($CompanyName); ?>">
 			</div>
 			<?php if ($ShowDateToRemove) :?>
 				<div>
@@ -36,10 +35,9 @@
 					<?php endif; ?>
 				</div>
 				<div>
-					<label for="DateToRemove">Set a new Date to Remove: 
-						<input type="text" name="DateToRemove" id="DateToRemove"
-						value="<?php htmlout($DateToRemove); ?>">
-					</label>
+					<label for="DateToRemove">Set a new Date to Remove: </label>
+					<input type="text" name="DateToRemove" id="DateToRemove"
+					value="<?php htmlout($DateToRemove); ?>">
 				</div>
 			<?php endif; ?>
 			<div>

@@ -85,58 +85,65 @@ function validateUserInputs(){
 			$invalidInput = TRUE;
 		}
 		if(isset($correctFormatIfValid) AND $correctFormatIfValid !== FALSE){
-			$validatedCompanyDateToRemove = convertDatetimeToFormat($correctFormatIfValid,'Y-m-d H:i:s', 'Y-m-d');
+			$correctFormatIfValid = convertDatetimeToFormat($correctFormatIfValid,'Y-m-d H:i:s', 'Y-m-d');
 			
 			// Check if the (now valid) datetime we received is a future date or not
 			$dateNow = getDateNow();
-			if($validatedCompanyDateToRemove < $dateNow){
+			if(!($correctFormatIfValid > $dateNow)){
 				$_SESSION['AddCompanyError'] = "The date you submitted has already occured. Please choose a future date.";
 				$invalidInput = TRUE;
-			}			
+			} else {
+				$validatedCompanyDateToRemove = $correctFormatIfValid;
+			}		
 		}
 	}
 
 	// Check if the company already exists (based on name).
 		// only if have changed the name (edit only)
-	if(isset($_SESSION['EditCompanyOriginalName']) AND $_SESSION['EditCompanyOriginalName'] == $validatedCompanyName){
-		// Do nothing, since we haven't changed the name we're editing
-	} elseif(!$invalidInput) {
-		// Check if new name is taken
-		try
-		{
-			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
-			
-			// Check for company names
-			$pdo = connect_to_db();
-			$sql = 'SELECT 	COUNT(*)
-					FROM 	`company`
-					WHERE 	`name` = :CompanyName
-					LIMIT 1';
-			$s = $pdo->prepare($sql);
-			$s->bindValue(':CompanyName', $validatedCompanyName);
-			$s->execute();
-							
-			//Close connection
-			$pdo = null;
-			
-			$row = $s->fetch();
-			
-			if ($row[0] > 0)
+	if(isset($_SESSION['EditCompanyOriginalName'])){
+		$originalCompanyName = strtolower($_SESSION['EditCompanyOriginalName']);
+		$newCompanyName = strtolower($validatedCompanyName);
+
+		if(isset($_SESSION['EditCompanyOriginalName']) AND $originalCompanyName == $newCompanyName){
+			// Do nothing, since we haven't changed the name we're editing
+		} elseif(!$invalidInput) {
+			// Check if new name is taken
+			try
 			{
-				// This name is already being used for a company	
-				$_SESSION['AddCompanyError'] = "There is already a company with the name: " . $validatedCompanyName . "!";
-				$invalidInput = TRUE;
+				include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+				
+				// Check for company names
+				$pdo = connect_to_db();
+				$sql = 'SELECT 	COUNT(*)
+						FROM 	`company`
+						WHERE 	`name` = :CompanyName
+						LIMIT 1';
+				$s = $pdo->prepare($sql);
+				$s->bindValue(':CompanyName', $validatedCompanyName);
+				$s->execute();
+								
+				//Close connection
+				$pdo = null;
+				
+				$row = $s->fetch();
+				
+				if ($row[0] > 0)
+				{
+					// This name is already being used for a company	
+					$_SESSION['AddCompanyError'] = "There is already a company with the name: " . $validatedCompanyName . "!";
+					$invalidInput = TRUE;
+				}
+				// Company name hasn't been used before
 			}
-			// Company name hasn't been used before
-		}
-		catch (PDOException $e)
-		{
-			$error = 'Error fetching company details: ' . $e->getMessage();
-			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
-			$pdo = null;
-			exit();		
+			catch (PDOException $e)
+			{
+				$error = 'Error fetching company details: ' . $e->getMessage();
+				include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+				$pdo = null;
+				exit();		
+			}			
 		}			
-	}	
+	}
 return array($invalidInput, $validatedCompanyName, $validatedCompanyDateToRemove);
 }
 
@@ -656,7 +663,7 @@ catch (PDOException $e)
 // Create an array with the actual key/value pairs we want to use in our HTML
 foreach ($result as $row)
 {
-	// TO-DO: Change booking time used from time to easily readable text instead if needed
+	// TO-DO: Maybe change booking time used from time to easily readable text instead if needed?
 
 	if($row['MonthlyCompanyWideBookingTimeUsed'] == null){
 		$MonthlyTimeUsed = 'N/A';
@@ -672,26 +679,37 @@ foreach ($result as $row)
 	
 	$dateCreated = $row['DatetimeCreated'];	
 	$dateToRemove = $row['DeletionDate'];
+	$isActive = ($row['CompanyActivated'] == 1);
 	$dateTimeCreatedToDisplay = convertDatetimeToFormat($dateCreated, 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
 	$dateToRemoveToDisplay = convertDatetimeToFormat($dateToRemove, 'Y-m-d', DATE_DEFAULT_FORMAT_TO_DISPLAY);
 	
-	if($row['CompanyActivated'] == 1){
-		$companies[] = array('id' => $row['CompID'], 
-						'CompanyName' => $row['CompanyName'],
-						'NumberOfEmployees' => $row['NumberOfEmployees'],
-						'MonthlyCompanyWideBookingTimeUsed' => $MonthlyTimeUsed,
-						'TotalCompanyWideBookingTimeUsed' => $TotalTimeUsed,
-						'DeletionDate' => $dateToRemoveToDisplay,
-						'DatetimeCreated' => $dateTimeCreatedToDisplay
-						);
-	} elseif($row['CompanyActivated'] == 0) {
-		$inactivecompanies[] = array('id' => $row['CompID'], 
-						'CompanyName' => $row['CompanyName'],
-						'DatetimeCreated' => $dateTimeCreatedToDisplay
-						);		
-	}	
+	if($isActive){
+		$companies[] = array(
+								'id' => $row['CompID'], 
+								'CompanyName' => $row['CompanyName'],
+								'NumberOfEmployees' => $row['NumberOfEmployees'],
+								'MonthlyCompanyWideBookingTimeUsed' => $MonthlyTimeUsed,
+								'TotalCompanyWideBookingTimeUsed' => $TotalTimeUsed,
+								'DeletionDate' => $dateToRemoveToDisplay,
+								'DatetimeCreated' => $dateTimeCreatedToDisplay
+							);
+	} elseif(!$isActive AND ($dateToRemove == "" OR $dateToRemove == NULL)) {
+		$unactivedcompanies[] = array(
+										'id' => $row['CompID'], 
+										'CompanyName' => $row['CompanyName'],
+										'DatetimeCreated' => $dateTimeCreatedToDisplay
+									);		
+	} elseif(!$isActive AND $dateToRemove != "" AND $dateToRemove != NULL){
+		$inactivecompanies[] = array(
+										'id' => $row['CompID'], 
+										'CompanyName' => $row['CompanyName'],
+										'MonthlyCompanyWideBookingTimeUsed' => $MonthlyTimeUsed,
+										'TotalCompanyWideBookingTimeUsed' => $TotalTimeUsed,
+										'DeletionDate' => $dateToRemoveToDisplay,
+										'DatetimeCreated' => $dateTimeCreatedToDisplay
+									);		
+	}
 }
-
 
 // Create the companies list in HTML
 include_once 'companies.html.php';

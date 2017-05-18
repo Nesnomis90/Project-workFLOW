@@ -11,7 +11,7 @@ if (!isUserAdmin()){
 }
 
 // Function to clear sessions used to remember user inputs on refreshing the add employee form
-clearAddEmployeeSessions(){
+function clearAddEmployeeSessions(){
 	unset($_SESSION['AddEmployeeCompanySearch']);
 	unset($_SESSION['AddEmployeeUserSearch']);
 	
@@ -25,7 +25,7 @@ clearAddEmployeeSessions(){
 }
 
 // Function to clear sessions used to remember user inputs on refreshing the edit employee form
-clearEditEmployeeSessions(){
+function clearEditEmployeeSessions(){
 	unset($_SESSION['EditEmployeeOriginalPositionID']);
 }
 
@@ -124,6 +124,11 @@ if(isset($_POST['action']) AND $_POST['action'] == 'Remove'){
 }
 // Admin clicked the search button, trying to limit the shown company and user lists
 if(isset($_POST['action']) AND $_POST['action'] == 'Search'){
+	// Forget the old array values we have saved
+	unset($_SESSION['AddEmployeeCompaniesArray']);
+	unset($_SESSION['AddEmployeeUsersArray']);
+	
+	$_SESSION['AddEmployeeShowSearchResults'] = TRUE;
 	// Let's remember what was selected and searched for
 	
 	// If we are looking at a specific company, let's refresh info about
@@ -140,8 +145,10 @@ if(isset($_POST['action']) AND $_POST['action'] == 'Search'){
 		header("Location: $location");
 		exit();
 	} else {
-		$_SESSION['AddEmployeeCompanySearch'] = trimExcessWhitespace($_POST['companysearchstring']);
-		$_SESSION['AddEmployeeUserSearch'] = trimExcessWhitespace($_POST['usersearchstring']);
+		$companySearchString = $_POST['companysearchstring'];
+		$userSearchString = $_POST['usersearchstring'];
+		$_SESSION['AddEmployeeCompanySearch'] = trimExcessWhitespace($companySearchString);
+		$_SESSION['AddEmployeeUserSearch'] = trimExcessWhitespace($userSearchString);
 		$_SESSION['AddEmployeeSelectedCompanyID'] = $_POST['CompanyID'];
 		$_SESSION['AddEmployeeSelectedUserID'] = $_POST['UserID'];
 		$_SESSION['AddEmployeeSelectedPositionID'] = $_POST['PositionID'];
@@ -163,7 +170,7 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Add Employee') OR
 	$usersearchstring = '';
 
 	// Check if the call was a form submit or a forced refresh
-	if(isset($_SESSION['refreshAddEmployee'])){
+	if(isset($_SESSION['refreshAddEmployee']) AND $_SESSION['refreshAddEmployee']){
 		// Acknowledge that we have refreshed the page
 		unset($_SESSION['refreshAddEmployee']);
 		
@@ -243,6 +250,17 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Add Employee') OR
 												'CompanyName' => $row['CompanyName']
 												);
 					}
+					
+					if(isset($companies)){
+						$_SESSION['AddEmployeeCompaniesArray'] = $companies;
+						$companiesFound = sizeOf($companies);
+					} else {
+						$_SESSION['AddEmployeeCompaniesArray'] = array();
+						$companiesFound = 0;
+					}
+					if(isset($_SESSION['AddEmployeeShowSearchResults']) AND $_SESSION['AddEmployeeShowSearchResults'] == TRUE){
+						$_SESSION['AddEmployeeSearchResult'] = "The search result found $companiesFound companies";
+					}					
 						
 				} else {
 					$sql = 'SELECT 	`companyID` AS CompanyID,
@@ -255,8 +273,6 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Add Employee') OR
 					$s->execute();
 					$companies = $s->fetch();		
 				}
-				
-				$_SESSION['AddEmployeeCompaniesArray'] = $companies;			
 			} else {
 				$companies = $_SESSION['AddEmployeeCompaniesArray'];
 			}
@@ -325,8 +341,21 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Add Employee') OR
 											$row['firstname'] . ' - ' . $row['email']
 											);
 				}
+				if(isset($users)){
+					$_SESSION['AddEmployeeUsersArray'] = $users;
+					$usersFound = sizeOf($users);
+				} else {
+					$_SESSION['AddEmployeeUsersArray'] = array();
+					$usersFound = 0;
+				}
+				if(isset($_SESSION['AddEmployeeShowSearchResults']) AND $_SESSION['AddEmployeeShowSearchResults'] == TRUE){
+					if(isset($_SESSION['AddEmployeeSearchResult'])){
+					$_SESSION['AddEmployeeSearchResult'] .= " and $usersFound users";
+					} else {
+						$_SESSION['AddEmployeeSearchResult'] = "The search result found $usersFound users";
+					}
+				}
 
-				$_SESSION['AddEmployeeUsersArray'] = $users;
 			} else {
 				$users = $_SESSION['AddEmployeeUsersArray'];
 			}	
@@ -347,7 +376,13 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Add Employee') OR
 		$companyposition = $_SESSION['AddEmployeeCompanyPositionArray'];
 		$users = $_SESSION['AddEmployeeUsersArray'];
 	}
-	
+
+
+	if(isset($_SESSION['AddEmployeeSearchResult'])){
+		$_SESSION['AddEmployeeSearchResult'] .= ".";
+	}
+	unset($_SESSION['AddEmployeeShowSearchResults']);
+
 	// Change to the actual html form template
 	include 'addemployee.html.php';
 	exit();
@@ -386,8 +421,10 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Confirm Employee')
 		$_SESSION['refreshAddEmployee'] = TRUE;
 		$_SESSION['AddEmployeeError'] = $c;
 		//TO-DO: Remove/Change the search variables if we don't want it to show up after a search
-		$_SESSION['AddEmployeeCompanySearch'] = trimExcessWhitespace($_POST['companysearchstring']);
-		$_SESSION['AddEmployeeUserSearch'] = trimExcessWhitespace($_POST['usersearchstring']);	
+		$companySearchString = $_POST['companysearchstring'];
+		$userSearchString = $_POST['usersearchstring'];
+		$_SESSION['AddEmployeeCompanySearch'] = trimExcessWhitespace($companySearchString);
+		$_SESSION['AddEmployeeUserSearch'] = trimExcessWhitespace($userSearchString);	
 		
 		if(isset($_GET['Company'])){	
 			// We were looking at a specific company. Let's go back to info about that company
@@ -424,27 +461,28 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Confirm Employee')
 		{
 			// This user and company combination already exists in our database
 			// This means the user is already an employee in the company!
-			
-			$_SESSION['AddEmployeeSelectedUserID'] = $_POST['UserID'];
-			$_SESSION['refreshAddEmployee'] = TRUE;
 			$_SESSION['AddEmployeeError'] = "The selected user is already an employee in the selected company!";
+			$_SESSION['AddEmployeeSelectedUserID'] = $_POST['UserID'];
+			$_SESSION['AddEmployeeSelectedPositionID'] = $_POST['PositionID'];
+			$_SESSION['refreshAddEmployee'] = TRUE;
+			$_SESSION['AddEmployeeUserSearch'] = trimExcessWhitespace($_POST['usersearchstring']);
 			
-			if(isset($_GET['Company'])){
-				
-				$_SESSION['AddEmployeeSelectedCompanyID'] = $_GET['Company'];
-				
+			if(isset($_GET['Company'])){	
+				// Refresh AddEmployee for the specific company again
 				$TheCompanyID = $_GET['Company'];
 				$location = "http://$_SERVER[HTTP_HOST]/admin/employees/?Company=" . $TheCompanyID;
 				header("Location: $location");
 				exit();
-			}
-
-
-			$_SESSION['AddEmployeeSelectedCompanyID'] = $_POST['CompanyID'];
-			header('Location: .');
-			exit();			
-		}
-		
+			} else {
+				$_SESSION['AddEmployeeCompanySearch'] = trimExcessWhitespace($_POST['companysearchstring']);
+				$_SESSION['AddEmployeeSelectedCompanyID'] = $_POST['CompanyID'];
+				
+				// Also we want to refresh AddEmployee with our new values!
+				$_SESSION['refreshAddEmployee'] = TRUE;
+				header('Location: .');
+				exit();
+			}		
+		}	
 		// No employee connection found. Now we can create it.
 	}
 	catch (PDOException $e)
@@ -675,7 +713,7 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Change Role')
 // Perform the actual database update of the edited information
 if (isset($_POST['action']) AND $_POST['action'] == 'Confirm Role')
 {
-	// TO-DO: Check if anything actually changed
+	// Check if anything actually changed
 	$theSelectedPositionID = $_POST['PositionID'];
 	$NumberOfChanges = 0;
 	
@@ -756,10 +794,6 @@ if(isset($_GET['Company'])){
 
 		$pdo = connect_to_db();
 		
-		// TO-DO: Get information about time spent by users that have been removed as an employee
-		// Fix the HTML template too!
-		
-		
 		// TO-DO: Change SQL Query if time calculation is broken
 		// Changed it so it should (in theory at least) calculate correctly now
 		$sql = "SELECT 	u.`userID`					AS UsrID,
@@ -839,59 +873,123 @@ if(isset($_GET['Company'])){
 		$rowNum = sizeOf($result);
 		
 		// Start a second SQL query to collect the booked time by removed users
-		$sql = "SELECT 	c.`companyID`				AS TheCompanyID,
+		// TO-DO: Still needs fixing. Shows employees as removed.
+		$sql = "SELECT 	u.`userID`					AS UsrID,
+						c.`companyID`				AS TheCompanyID,
 						c.`name`					AS CompanyName,
+						u.`firstName`, 
+						u.`lastName`,
+						u.`email`,
 						(
-						SELECT	(
+						SELECT 	(
 								BIG_SEC_TO_TIME(
-									SUM(
-										DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
-										)*86400 
-									+ 
-									SUM(
-										TIME_TO_SEC(b.`actualEndDateTime`) 
-										- 
-										TIME_TO_SEC(b.`startDateTime`)
-										) 
-									)
-								)
-						FROM 		`booking` b
-						INNER JOIN `company` c
-						ON 			c.`companyID` = b.`companyID`
-						WHERE 		b.`userID` IS NULL
-						AND 		b.`companyID` = :id
-						AND 		c.`CompanyID` = b.`companyID`
-						AND 		YEAR(b.`actualEndDateTime`) = YEAR(NOW())
-						AND 		MONTH(b.`actualEndDateTime`) = MONTH(NOW())
+												SUM(
+													DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
+													)*86400 
+												+ 
+												SUM(
+													TIME_TO_SEC(b.`actualEndDateTime`) 
+													- 
+													TIME_TO_SEC(b.`startDateTime`)
+													) 
+												) 
+								) AS TotalBookingTimeByRemovedEmployees
+						FROM 	`booking` b
+						INNER JOIN `employee` e
+						ON 		e.`companyID` = b.`companyID`
+						WHERE 	b.`companyID` = :id
+						AND 	b.`userID` IS NOT NULL
+						AND		e.`userID` != b.`userID`
+						AND 	b.`userID` = UsrID
+						AND 			YEAR(b.`actualEndDateTime`) = YEAR(NOW())
+						AND 			MONTH(b.`actualEndDateTime`) = MONTH(NOW())
 						)														AS MonthlyBookingTimeUsed,
 						(
-						SELECT	(
+						SELECT 	(
 								BIG_SEC_TO_TIME(
-									SUM(
-										DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
-										)*86400 
-									+ 
-									SUM(
-										TIME_TO_SEC(b.`actualEndDateTime`) 
-										- 
-										TIME_TO_SEC(b.`startDateTime`)
-										) 
-									) 
-								)
-						FROM 		`booking` b
-						INNER JOIN `company` c
-						ON 			c.`companyID` = b.`companyID`
-						WHERE 		b.`userID` IS NULL
-						AND 		b.`companyID` = :id
-						AND 		c.`CompanyID` = b.`companyID`		
-						)	
-						AS TotalBookingTimeUsed";
+												SUM(
+													DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
+													)*86400 
+												+ 
+												SUM(
+													TIME_TO_SEC(b.`actualEndDateTime`) 
+													- 
+													TIME_TO_SEC(b.`startDateTime`)
+													) 
+												) 
+								) AS TotalBookingTimeByRemovedEmployees
+						FROM 	`booking` b
+						INNER JOIN `employee` e
+						ON 		e.`companyID` = b.`companyID`
+						WHERE 	b.`companyID` = :id
+						AND 	b.`userID` IS NOT NULL
+						AND		e.`userID` != b.`userID`
+						AND 	b.`userID` = UsrID
+						)														AS TotalBookingTimeUsed
+				FROM 		`company` c
+				JOIN 		`booking` b
+				ON 			c.`companyID` = b.`companyID`
+				JOIN 		`user` u 
+				ON 			u.userID = b.UserID 
+				WHERE 		c.`companyID` = :id
+				GROUP BY 	UsrID";
 		$s = $pdo->prepare($sql);
 		$s->bindValue(':id', $_GET['Company']);
 		$s->execute();
 		
 		$removedEmployeesResult = $s->fetchAll();
 		$removedEmployeesResultRowNum = sizeOf($removedEmployeesResult);
+		
+		// SQL Query to get booked time for deleted users
+		// TO-DO: needs testing
+		$sql = "SELECT 	`companyID`				AS TheCompanyID,
+						`name`					AS CompanyName,
+						(
+						SELECT 	(
+								BIG_SEC_TO_TIME(
+												SUM(
+													DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
+													)*86400 
+												+ 
+												SUM(
+													TIME_TO_SEC(b.`actualEndDateTime`) 
+													- 
+													TIME_TO_SEC(b.`startDateTime`)
+													) 
+												) 
+								) AS TotalBookingTimeByDeletedUsers
+						FROM 	`booking` b
+						WHERE 	b.`companyID` = :id
+						AND 	b.`userID` IS NULL
+						AND 	YEAR(b.`actualEndDateTime`) = YEAR(NOW())
+						AND 	MONTH(b.`actualEndDateTime`) = MONTH(NOW())
+						)														AS MonthlyBookingTimeUsed,
+						(
+						SELECT 	(
+								BIG_SEC_TO_TIME(
+												SUM(
+													DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
+													)*86400 
+												+ 
+												SUM(
+													TIME_TO_SEC(b.`actualEndDateTime`) 
+													- 
+													TIME_TO_SEC(b.`startDateTime`)
+													) 
+												) 
+								) AS TotalBookingTimeByDeletedUsers
+						FROM 	`booking` b
+						WHERE 	b.`companyID` = :id
+						AND 	b.`userID` IS NULL
+						)														AS TotalBookingTimeUsed
+				FROM 	`company`
+				WHERE	`companyID` = :id";
+		$s = $pdo->prepare($sql);
+		$s->bindValue(':id', $_GET['Company']);
+		$s->execute();
+		
+		$deletedUsersResult = $s->fetchAll();
+		$deletedUsersResultRowNum = sizeOf($deletedUsersResult);	
 		
 		//close connection
 		$pdo = null;
@@ -906,14 +1004,63 @@ if(isset($_GET['Company'])){
 	// If we're looking at a specific company and they have removed employees with booking time
 	if($removedEmployeesResultRowNum > 0){
 		foreach($removedEmployeesResult AS $row){	
+		
+		
+		if($row['MonthlyBookingTimeUsed'] == null){
+			$MonthlyTimeUsed = 'N/A';
+		} else {
+			$MonthlyTimeUsed = $row['MonthlyBookingTimeUsed'];
+		}
+
+		if($row['TotalBookingTimeUsed'] == null){
+			$TotalTimeUsed = 'N/A';
+		} else {
+			$TotalTimeUsed = $row['TotalBookingTimeUsed'];
+		}		
 			$removedEmployees[] = array(
 										'CompanyID' => $row['TheCompanyID'],
 										'CompanyName' => $row['CompanyName'],
-										'MonthlyBookingTimeUsed' => $row['MonthlyBookingTimeUsed'],
-										'TotalBookingTimeUsed' => $row['TotalBookingTimeUsed']
+										'firstName' => $row['firstName'],
+										'lastName' => $row['lastName'],
+										'email' => $row['email'],	
+										'MonthlyBookingTimeUsed' => $MonthlyTimeUsed,
+										'TotalBookingTimeUsed' => $TotalTimeUsed
 										);
 		}
+		if($removedEmployees[0]['TotalBookingTimeUsed'] == ""){
+			// The company has no used booking time by removed users
+			unset($removedEmployees);
+		}
 	}
+	
+	// If we're looking at a specific company and they have old booking time used by now deleted users
+	if($deletedUsersResultRowNum > 0){
+		foreach($deletedUsersResult AS $row){	
+		
+		
+		if($row['MonthlyBookingTimeUsed'] == null){
+			$MonthlyTimeUsed = 'N/A';
+		} else {
+			$MonthlyTimeUsed = $row['MonthlyBookingTimeUsed'];
+		}
+
+		if($row['TotalBookingTimeUsed'] == null){
+			$TotalTimeUsed = 'N/A';
+		} else {
+			$TotalTimeUsed = $row['TotalBookingTimeUsed'];
+		}		
+			$deletedEmployees[] = array(
+										'CompanyID' => $row['TheCompanyID'],
+										'CompanyName' => $row['CompanyName'],
+										'MonthlyBookingTimeUsed' => $MonthlyTimeUsed,
+										'TotalBookingTimeUsed' => $TotalTimeUsed
+										);
+		}
+		if($deletedEmployees[0]['TotalBookingTimeUsed'] == ""){
+			// The company has no used booking time by deleted users
+			unset($deletedEmployees);
+		}
+	}	
 }
 
 // Get information from all companies

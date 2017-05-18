@@ -21,11 +21,11 @@
 						<option value="">Select a Meeting Room</option>
 						<?php foreach($meetingrooms as $row): ?> 
 							<?php if (isset($selectedMeetingRoomID) AND $selectedMeetingRoomID == $row['MeetingRoomID']) : ?>
-								<option selected="selected" value=<?php htmlout($row['MeetingRoomID']); ?>>
+								<option selected="selected" value="<?php htmlout($row['MeetingRoomID']); ?>">
 										<?php htmlout($row['MeetingRoomName']);?>
 								</option>
 							<?php else : ?>
-								<option value=<?php htmlout($row['MeetingRoomID']); ?>>
+								<option value="<?php htmlout($row['MeetingRoomID']); ?>">
 										<?php htmlout($row['MeetingRoomName']);?>
 								</option>
 							<?php endif; ?>	
@@ -39,7 +39,7 @@
 				<div>
 					<label for="meetingroomsearchstring">Search for Meeting Room:</label>
 					<input type="text" name="meetingroomsearchstring" 
-					value=<?php htmlout($meetingroomsearchstring); ?>>
+					value="<?php htmlout($meetingroomsearchstring); ?>">
 				</div>
 			<?php endif; ?>	
 			<div>
@@ -48,11 +48,11 @@
 					<option value="">Select Equipment</option>
 					<?php foreach($equipment as $row): ?> 
 						<?php if (isset($selectedEquipmentID) AND $selectedEquipmentID == $row['EquipmentID']) : ?>
-							<option selected="selected" value=<?php htmlout($row['EquipmentID']); ?>>
+							<option selected="selected" value="<?php htmlout($row['EquipmentID']); ?>">
 									<?php htmlout($row['EquipmentName']);?>
 							</option>
 						<?php else : ?>
-							<option value=<?php htmlout($row['EquipmentID']); ?>>
+							<option value="<?php htmlout($row['EquipmentID']); ?>">
 									<?php htmlout($row['EquipmentName']);?>
 							</option>						
 						<?php endif; ?>
@@ -62,7 +62,7 @@
 			<div>
 				<label for="equipmentsearchstring">Search for Equipment:</label>
 				<input type="text" name="equipmentsearchstring" 
-				value=<?php htmlout($equipmentsearchstring); ?>>
+				value="<?php htmlout($equipmentsearchstring); ?>">
 			</div>
 			<div>
 				<label for="EquipmentAmount">Select an Amount:</label>

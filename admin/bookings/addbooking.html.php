@@ -4,6 +4,11 @@
 <html lang="en">
 	<head>
 		<meta charset="utf-8">
+		<style>
+			#description {
+				vertical-align: top;
+			}
+		</style>			
 		<title>Book A New Meeting</title>
 	</head>
 	<body>
@@ -19,11 +24,11 @@
 					<?php foreach($meetingroom as $row): ?> 
 						<?php if($row['meetingRoomID']==$selectedMeetingRoomID):?>
 							<option selected="selected" 
-									value=<?php htmlout($row['meetingRoomID']); ?>>
+									value="<?php htmlout($row['meetingRoomID']); ?>">
 									<?php htmlout($row['meetingRoomName']);?>
 							</option>
 						<?php else : ?>
-							<option value=<?php htmlout($row['meetingRoomID']); ?>>
+							<option value="<?php htmlout($row['meetingRoomID']); ?>">
 									<?php htmlout($row['meetingRoomName']);?>
 							</option>
 						<?php endif;?>
@@ -50,11 +55,11 @@
 							<?php foreach($users as $row): ?> 
 								<?php if($row['userID']==$SelectedUserID):?>
 									<option selected="selected" 
-											value=<?php htmlout($row['userID']); ?>>
+											value="<?php htmlout($row['userID']); ?>">
 											<?php htmlout($row['userInformation']);?>
 									</option>
 								<?php else : ?>
-									<option value=<?php htmlout($row['userID']); ?>>
+									<option value="<?php htmlout($row['userID']); ?>">
 											<?php htmlout($row['userInformation']);?>
 									</option>
 								<?php endif;?>
@@ -68,7 +73,7 @@
 					<div>
 						<label for="usersearchstring">Search for User:</label>
 						<input type="text" name="usersearchstring" 
-						value=<?php htmlout($usersearchstring); ?>>
+						value="<?php htmlout($usersearchstring); ?>">
 						<input type="submit" name="add" value="Search">
 					</div>
 				<?php else : ?>
@@ -91,11 +96,11 @@
 							<?php foreach($company as $row): ?> 
 								<?php if($row['companyID']==$selectedCompanyID):?>
 									<option selected="selected" 
-											value=<?php htmlout($row['companyID']); ?>>
+											value="<?php htmlout($row['companyID']); ?>">
 											<?php htmlout($row['companyName']);?>
 									</option>
 								<?php else : ?>
-									<option value=<?php htmlout($row['companyID']); ?>>
+									<option value="<?php htmlout($row['companyID']); ?>">
 											<?php htmlout($row['companyName']);?>
 									</option>
 								<?php endif;?>

@@ -2,6 +2,339 @@ USE test;
 SET NAMES utf8;
 USE meetingflow;
 
+UPDATE 	`user`
+SET 	`AccessID` = ( 
+						SELECT 	`AccessID`
+						FROM 	`accesslevel`
+						WHERE 	`AccessName` = 'Normal User'
+						LIMIT 	1
+					),
+		`bookingCode` = NULL
+WHERE 	DATE(CURRENT_TIMESTAMP) >= `reduceAccessAtDate`
+AND 	`isActive` = 1
+AND		`userID` <> 0;
+
+SELECT 	m.`name`					AS MeetingRoomName,
+		c.`name`					AS CompanyName,
+		u.`email`,       
+		b.`startDateTime`,
+		b.`endDateTime`,
+		b.`displayName`,
+		b.`description`,
+		b.`cancellationCode`
+FROM	`booking` b
+JOIN 	`meetingroom` m
+ON 		b.`meetingRoomID` = m.`meetingRoomID`
+JOIN	`company` c
+ON 		c.`companyID` = b.`companyID`
+JOIN	`user` u
+ON		u.`userID` = b.`userID`
+WHERE 	DATE_SUB(b.`startDateTime`, INTERVAL 20 MINUTE) < CURRENT_TIMESTAMP
+AND		DATE_SUB(b.`startDateTime`, INTERVAL 2 MINUTE) > CURRENT_TIMESTAMP
+AND 	b.`dateTimeCancelled` IS NULL
+AND 	b.`actualEndDateTime` IS NULL
+AND		b.`cancellationCode` IS NOT NULL
+AND 	DATE_ADD(b.`dateTimeCreated`, INTERVAL 0 MINUTE) < CURRENT_TIMESTAMP
+AND		b.`emailSent` = 0
+AND		b.`bookingID` <> 0;
+
+SELECT 	*
+FROM	`booking`
+WHERE 	DATE_SUB(`startDateTime`, INTERVAL 10 MINUTE) < CURRENT_TIMESTAMP
+AND		`startDateTime` > CURRENT_TIMESTAMP
+AND 	`dateTimeCancelled` IS NULL
+AND 	`actualEndDateTime` IS NULL
+AND		`cancellationCode` IS NOT NULL
+AND 	DATE_ADD(`dateTimeCreated`, INTERVAL 5 MINUTE) < CURRENT_TIMESTAMP
+AND		`emailSent` = 0
+AND		`bookingID` <> 0;
+
+SELECT *
+FROM 	`company`
+WHERE 	DATE(CURRENT_TIMESTAMP) >= `removeAtDate`
+AND 	`isActive` = 1
+AND		`companyID` <> 0;
+
+UPDATE 	`company`
+SET		`isActive` = 0
+WHERE 	DATE(CURRENT_TIMESTAMP) >= `removeAtDate`
+AND 	`isActive` = 1
+AND		`companyID` <> 0;
+
+UPDATE 	`company`
+SET		`removeAtDate` = DATE_SUB(DATE(CURRENT_TIMESTAMP), INTERVAL 1 DAY)
+WHERE 	`isActive` = 1
+AND		`companyID` = 34;
+
+DELETE FROM `user`
+WHERE DATE_ADD(`create_time`, INTERVAL 8 HOUR) < CURRENT_TIMESTAMP
+AND 	`isActive` = 0
+AND		`userID` <> 0;
+
+UPDATE 	`booking`
+SET		`dateTimeCancelled` = NULL,
+		`cancellationCode` = NULL
+WHERE 	CURRENT_TIMESTAMP > `endDateTime`
+AND 	`actualEndDateTime` IS NOT NULL
+AND 	`dateTimeCancelled` > `actualEndDateTime`
+AND 	`bookingID` <> 0;
+
+SELECT * 
+FROM 	`booking`
+WHERE 	CURRENT_TIMESTAMP > `endDateTime`
+AND 	`actualEndDateTime` IS NOT NULL
+AND 	`dateTimeCancelled` > `actualEndDateTime`
+AND 	`bookingID` <> 0;
+
+UPDATE 	`booking`
+SET		`actualEndDateTime` = `endDateTime`,
+		`cancellationCode` = NULL
+WHERE 	CURRENT_TIMESTAMP > `endDateTime`
+AND 	`actualEndDateTime` IS NULL
+AND 	`dateTimeCancelled` IS NULL
+AND 	`bookingID` <> 0;
+
+
+SELECT 	u.`userID`					AS UsrID,
+						c.`companyID`				AS TheCompanyID,
+						c.`name`					AS CompanyName,
+						u.`firstName`, 
+						u.`lastName`,
+						u.`email`,
+						(
+						SELECT 	(
+								BIG_SEC_TO_TIME(
+												SUM(
+													DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
+													)*86400 
+												+ 
+												SUM(
+													TIME_TO_SEC(b.`actualEndDateTime`) 
+													- 
+													TIME_TO_SEC(b.`startDateTime`)
+													) 
+												) 
+								) AS TotalBookingTimeByRemovedEmployees
+						FROM 	`booking` b
+						INNER JOIN `employee` e
+						ON 		e.`companyID` = b.`companyID`
+						WHERE 	b.`companyID` = 1
+						AND 	b.`userID` IS NOT NULL
+						AND		e.`userID` != b.`userID`
+                        AND 	b.`userID` = UsrID
+						AND 			YEAR(b.`actualEndDateTime`) = YEAR(NOW())
+						AND 			MONTH(b.`actualEndDateTime`) = MONTH(NOW())
+						)														AS MonthlyBookingTimeUsed,
+						(
+						SELECT 	(
+								BIG_SEC_TO_TIME(
+												SUM(
+													DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
+													)*86400 
+												+ 
+												SUM(
+													TIME_TO_SEC(b.`actualEndDateTime`) 
+													- 
+													TIME_TO_SEC(b.`startDateTime`)
+													) 
+												) 
+								) AS TotalBookingTimeByRemovedEmployees
+						FROM 	`booking` b
+						INNER JOIN `employee` e
+						ON 		e.`companyID` = b.`companyID`
+						WHERE 	b.`companyID` = 1
+						AND 	b.`userID` IS NOT NULL
+						AND		e.`userID` != b.`userID`
+                        AND 	b.`userID` = UsrID
+						)														AS TotalBookingTimeUsed
+				FROM 	`company` c
+				JOIN 	`booking` b
+				ON 		c.`companyID` = b.`companyID`
+				JOIN 	`user` u 
+				ON 		u.userID = b.UserID 
+				WHERE 	c.`companyID` = 1
+                GROUP BY UsrID;
+
+
+
+SELECT *
+FROM (
+		(
+			SELECT 	(
+					BIG_SEC_TO_TIME(
+									SUM(
+										DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
+										)*86400 
+									+ 
+									SUM(
+										TIME_TO_SEC(b.`actualEndDateTime`) 
+										- 
+										TIME_TO_SEC(b.`startDateTime`)
+										) 
+									) 
+					) AS TotalBookingTimeByDeletedUsers
+			FROM 	`booking` b
+			WHERE 	b.`companyID` = 1
+			AND 	b.`userID` IS NULL) AS TotalBookingTimeByDeletedUsers 
+		JOIN
+			(
+			SELECT 	(
+					BIG_SEC_TO_TIME(
+									SUM(
+										DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
+										)*86400 
+									+ 
+									SUM(
+										TIME_TO_SEC(b.`actualEndDateTime`) 
+										- 
+										TIME_TO_SEC(b.`startDateTime`)
+										) 
+									) 
+					) AS TotalBookingTimeByRemovedEmployees
+			FROM 	`booking` b
+			INNER JOIN `employee` e
+			ON 		e.`companyID` = b.`companyID`
+			WHERE 	b.`companyID` = 1
+			AND 	b.`userID` IS NOT NULL
+			AND		e.`userID` != b.`userID`) AS TotalBookingTimeByRemovedEmployees 
+		JOIN 
+			(
+            SELECT 	(
+					BIG_SEC_TO_TIME(
+									SUM(
+										DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
+										)*86400 
+									+ 
+									SUM(
+										TIME_TO_SEC(b.`actualEndDateTime`) 
+										- 
+										TIME_TO_SEC(b.`startDateTime`)
+										) 
+									) 
+					) AS TotalBookingTimeByEmployees
+			FROM 	`booking` b
+			INNER JOIN `employee` e
+			ON 		e.`companyID` = b.`companyID`
+			WHERE 	b.`companyID` = 1
+			AND 	b.`userID` IS NOT NULL
+			AND		e.`userID` = b.`userID`) AS TotalBookingTimeByEmployees 
+		JOIN 
+			(
+            SELECT 	(
+					BIG_SEC_TO_TIME(
+									SUM(
+										DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
+										)*86400 
+									+ 
+									SUM(
+										TIME_TO_SEC(b.`actualEndDateTime`) 
+										- 
+										TIME_TO_SEC(b.`startDateTime`)
+										) 
+									) 
+					) AS TotalBookingTimeByExistingUsers
+			FROM 	`booking` b
+			WHERE 	b.`companyID` = 1
+			AND 	b.`userID` IS NOT NULL) AS TotalBookingTimeByExistingUsers 
+		JOIN 
+			(
+            SELECT 	(
+					BIG_SEC_TO_TIME(
+									SUM(
+										DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
+										)*86400 
+									+ 
+									SUM(
+										TIME_TO_SEC(b.`actualEndDateTime`) 
+										- 
+										TIME_TO_SEC(b.`startDateTime`)
+										) 
+									) 
+					) AS TotalBookingTimeForCompany
+			FROM 	`booking` b
+			WHERE 	b.`companyID` = 1) AS TotalBookingTimeForCompany
+	);
+
+
+
+SELECT	(
+	BIG_SEC_TO_TIME(
+		SUM(
+			DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
+			)*86400 
+		+ 
+		SUM(
+			TIME_TO_SEC(b.`actualEndDateTime`) 
+			- 
+			TIME_TO_SEC(b.`startDateTime`)
+			) 
+		)
+)
+FROM `employee` e
+RIGHT OUTER JOIN `booking` b
+ON b.`userID` = e.`userID`
+WHERE b.`companyID` = 1;
+
+
+SELECT *
+FROM `employee` e
+RIGHT OUTER JOIN `booking` b
+ON b.`userID` = e.`userID`
+WHERE b.`companyID` = 1;
+
+
+SELECT 	c.`companyID`				AS TheCompanyID,
+						c.`name`					AS CompanyName,
+						(
+						SELECT	(
+								BIG_SEC_TO_TIME(
+									SUM(
+										DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
+										)*86400 
+									+ 
+									SUM(
+										TIME_TO_SEC(b.`actualEndDateTime`) 
+										- 
+										TIME_TO_SEC(b.`startDateTime`)
+										) 
+									)
+								)
+						FROM 		`booking` b
+                        INNER JOIN 	`employee` e
+                        ON			e.`companyID` = b.`companyID`
+						WHERE 		b.`companyID` = 1
+                        AND			e.`userID` != b.`userID`
+						AND 		YEAR(b.`actualEndDateTime`) = YEAR(NOW())
+						AND 		MONTH(b.`actualEndDateTime`) = MONTH(NOW())
+						)														AS MonthlyBookingTimeUsed,
+						(
+						SELECT	(
+								BIG_SEC_TO_TIME(
+									SUM(
+										DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
+										)*86400 
+									+ 
+									SUM(
+										TIME_TO_SEC(b.`actualEndDateTime`) 
+										- 
+										TIME_TO_SEC(b.`startDateTime`)
+										) 
+									) 
+								)
+						FROM 		`booking` b
+                        INNER JOIN 	`employee` e
+                        ON			e.`companyID` = b.`companyID`
+						WHERE 		b.`companyID` = 1
+                        AND			e.`userID` != b.`userID`	
+						)														AS TotalBookingTimeUsed
+				FROM 	`company` c
+				WHERE	`companyID` = 1;
+
+UPDATE 	`user`
+SET		`lastActivity` = CURRENT_TIMESTAMP()
+WHERE 	`userID` = 1
+AND		`isActive` > 0;
+
 SELECT 	COUNT(*)
 FROM 	`booking`
 WHERE 	`meetingRoomID` = 1

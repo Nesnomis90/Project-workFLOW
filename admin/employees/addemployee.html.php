@@ -12,6 +12,10 @@
 				<p><b><?php htmlout($_SESSION['AddEmployeeError']); ?></b></p>
 			<?php unset($_SESSION['AddEmployeeError']); ?>
 		<?php endif; ?>
+		<?php if(isset($_SESSION['AddEmployeeSearchResult'])) :?>
+				<p><b><?php htmlout($_SESSION['AddEmployeeSearchResult']); ?></b></p>
+			<?php unset($_SESSION['AddEmployeeSearchResult']); ?>
+		<?php endif; ?>		
 		<form action="" method="post">
 			<div>
 				<label for="CompanyID">Company name:</label>
@@ -20,11 +24,11 @@
 						<option value="">Select a Company</option>
 						<?php foreach($companies as $row): ?> 
 							<?php if (isset($selectedCompanyID) AND $selectedCompanyID == $row['CompanyID']) : ?>
-								<option selected="selected" value=<?php htmlout($row['CompanyID']); ?>>
+								<option selected="selected" value="<?php htmlout($row['CompanyID']); ?>">
 										<?php htmlout($row['CompanyName']);?>
 								</option>
 							<?php else : ?>
-								<option value=<?php htmlout($row['CompanyID']); ?>>
+								<option value="<?php htmlout($row['CompanyID']); ?>">
 										<?php htmlout($row['CompanyName']);?>
 								</option>
 							<?php endif; ?>					
@@ -38,7 +42,7 @@
 				<div>
 					<label for="companysearchstring">Search for Company:</label>
 					<input type="text" name="companysearchstring" 
-					value=<?php htmlout($companysearchstring); ?>>
+					value="<?php htmlout($companysearchstring); ?>">
 				</div>
 			<?php endif; ?>
 			<div>
@@ -47,11 +51,11 @@
 					<option value="">Select a User</option>
 					<?php foreach($users as $row): ?>
 						<?php if (isset($selectedUserID) AND $selectedUserID == $row['UserID']) : ?>
-							<option selected="selected" value=<?php htmlout($row['UserID']); ?>>
+							<option selected="selected" value="<?php htmlout($row['UserID']); ?>">
 									<?php htmlout($row['UserIdentifier']);?>>
 							</option>
 						<?php else : ?>
-							<option value=<?php htmlout($row['UserID']); ?>>
+							<option value="<?php htmlout($row['UserID']); ?>">
 									<?php htmlout($row['UserIdentifier']);?>
 							</option>
 						<?php endif; ?>
@@ -61,18 +65,18 @@
 			<div>
 				<label for="usersearchstring">Search for User:</label>
 				<input type="text" name="usersearchstring" 
-				value=<?php htmlout($usersearchstring); ?>>
+				value="<?php htmlout($usersearchstring); ?>">
 			</div>
 			<div>
 				<label for="PositionID">Select Role:</label>
 				<select name="PositionID" id="PositionID">
 					<?php foreach($companyposition as $row): ?>
 						<?php if (isset($selectedPositionID) AND $selectedPositionID == $row['PositionID']) : ?>
-							<option selected="selected" value=<?php htmlout($row['PositionID']); ?>>
+							<option selected="selected" value="<?php htmlout($row['PositionID']); ?>">
 									<?php htmlout($row['CompanyPositionName']);?>
 							</option>
 						<?php else : ?>
-							<option value=<?php htmlout($row['PositionID']); ?>>
+							<option value="<?php htmlout($row['PositionID']); ?>">
 									<?php htmlout($row['CompanyPositionName']);?>
 							</option>
 						<?php endif; ?>
