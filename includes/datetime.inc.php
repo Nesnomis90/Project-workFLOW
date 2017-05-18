@@ -1,11 +1,15 @@
 <?php
-
 // Define the default date and datetime format we want to use
 // Also the default timezone we use for our datetime functions
 // TO-DO: Change this if we want to display another format
 define('DATETIME_DEFAULT_FORMAT_TO_DISPLAY', 'F jS Y H:i:s');
 define('DATE_DEFAULT_FORMAT_TO_DISPLAY', 'F jS Y');
 define('DATE_DEFAULT_TIMEZONE', 'Europe/Oslo');
+
+// Some time based variables used to validate code, handle events
+define('MINIMUM_BOOKING_TIME_IN_MINUTES', 10);
+define('MINIMUM_TIME_PASSED_AFTER_CREATING_BOOKING_BEFORE_SENDING_EMAIL', 30);
+define('TIME_LEFT_UNTIL_MEETING_STARTS_BEFORE_SENDING_EMAIL', 10);
 
 //Function to get the current datetime
 function getDatetimeNow() {

@@ -83,12 +83,19 @@ function validateUserInputs($FeedbackSessionToUse){
 	} else {
 		$bookingDescriptionString = '';
 	}
+		// Reduce Access At Date (edit only)
+	if(isset($_POST['reduceaccessatdate'])){
+		$reduceAccessAtDate = $_POST['reduceaccessatdate'];
+	} else {
+		$reduceAccessAtDate = '';
+	}	
 	
 	// Remove excess whitespace and prepare strings for validation
 	$validatedFirstname = trimExcessWhitespace($firstname);
 	$validatedLastname = trimExcessWhitespace($lastname);
 	$validatedDisplayName = trimExcessWhitespaceButLeaveLinefeed($displayNameString);
 	$validatedBookingDescription = trimExcessWhitespaceButLeaveLinefeed($bookingDescriptionString);
+	$validatedReduceAccessAtDate = trimExcessWhitespace($reduceAccessAtDate);
 	
 	// Do actual input validation
 		// First Name
@@ -143,6 +150,35 @@ function validateUserInputs($FeedbackSessionToUse){
 		$_SESSION[$FeedbackSessionToUse] = "The booking description submitted is too long.";	
 		$invalidInput = TRUE;		
 	}	
+		// Reduce Access At Date
+	if(validateDateTimeString($validatedReduceAccessAtDate) === FALSE AND !$invalidInput){
+		$invalidInput = TRUE;
+		$_SESSION[$FeedbackSessionToUse] = "Your submitted date has illegal characters in it.";
+	}
+
+	// Check if the dateTime input we received are actually datetime
+	// if the user submitted one
+	if($validatedReduceAccessAtDate != ""){
+		
+		$correctFormatIfValid = correctDatetimeFormat($validatedReduceAccessAtDate);
+
+		if (isset($correctFormatIfValid) AND $correctFormatIfValid === FALSE AND !$invalidInput){
+			$_SESSION[$FeedbackSessionToUse] = "The date you submitted did not have a correct format. Please try again.";
+			$invalidInput = TRUE;
+		}
+		if(isset($correctFormatIfValid) AND $correctFormatIfValid !== FALSE){
+			$correctFormatIfValid = convertDatetimeToFormat($correctFormatIfValid,'Y-m-d H:i:s', 'Y-m-d');
+			
+			// Check if the (now valid) datetime we received is a future date or not
+			$dateNow = getDateNow();
+			if(!($correctFormatIfValid > $dateNow)){
+				$_SESSION[$FeedbackSessionToUse] = "The date you submitted has already occured. Please choose a future date.";
+				$invalidInput = TRUE;
+			} else {
+				$validatedReduceAccessAtDate = $correctFormatIfValid;
+			}		
+		}
+	}
 	
 	// Check if the submitted email has already been used
 	if(isset($_SESSION['EditUserOldEmail'])){
@@ -162,7 +198,7 @@ function validateUserInputs($FeedbackSessionToUse){
 			$invalidInput = TRUE;	
 		}			
 	}
-return array($invalidInput, $email, $validatedFirstname, $validatedLastname, $validatedBookingDescription, $validatedDisplayName);	
+return array($invalidInput, $email, $validatedFirstname, $validatedLastname, $validatedBookingDescription, $validatedDisplayName, $validatedReduceAccessAtDate);	
 }
 
 // If admin wants to be able to delete users it needs to enabled first
@@ -342,6 +378,7 @@ if (isset($_GET['add']) OR (isset($_SESSION['refreshUserAddform']) AND $_SESSION
 	// style=display:block to show, style=display:none to hide
 	$displaynameStyle = 'none';
 	$bookingdescriptionStyle = 'none';
+	$ShowReduceAccessAtDate = FALSE;
 	
 	// Change to the actual html form template
 	include 'form.html.php';
@@ -352,7 +389,7 @@ if (isset($_GET['add']) OR (isset($_SESSION['refreshUserAddform']) AND $_SESSION
 if (isset($_GET['addform']))
 {
 	// Validate user inputs
-	list($invalidInput, $email, $validatedFirstname, $validatedLastname, $validatedBookingDescription, $validatedDisplayName) = validateUserInputs('AddNewUserError');	
+	list($invalidInput, $email, $validatedFirstname, $validatedLastname, $validatedBookingDescription, $validatedDisplayName, $validatedReduceAccessAtDate) = validateUserInputs('AddNewUserError');	
 	
 	if($invalidInput){
 		// Let's remember the info the admin submitted
@@ -516,6 +553,9 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR
 		unset($_SESSION['EditUserChangedDisplayname']);
 		$bookingdescription = $_SESSION['EditUserChangedBookingDescription'];
 		unset($_SESSION['EditUserChangedBookingDescription']);
+		$reduceAccessAtDate = $_SESSION['EditUserChangedReduceAccessAtDate'];
+		unset($_SESSION['EditUserChangedReduceAccessAtDate']);
+		
 		$access = $_SESSION['EditUserAccessList'];
 		
 	} else {
@@ -534,7 +574,8 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR
 							u.`email`,
 							a.`accessID`,
 							u.`displayname`,
-							u.`bookingdescription`
+							u.`bookingdescription`,
+							u.`reduceAccessAtDate`
 					FROM 	`user` u
 					JOIN 	`accesslevel` a
 					ON 		a.accessID = u.accessID
@@ -580,6 +621,11 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR
 		$id = $row['userID'];
 		$displayname = $row['displayname'];
 		$bookingdescription = $row['bookingdescription'];
+		$reduceAccessAtDate = $row['reduceAccessAtDate'];
+	
+		if(!isset($reduceAccessAtDate)){
+			$reduceAccessAtDate = '';
+		}
 	
 		// Remember the original values we retrieved.
 		$_SESSION['EditUserOldFirstname'] = $firstname;
@@ -588,8 +634,18 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR
 		$_SESSION['EditUserOldAccessID'] = $accessID;
 		$_SESSION['EditUserOldDisplayname'] = $displayname;
 		$_SESSION['EditUserOldBookingDescription'] = $bookingdescription;
+		$_SESSION['EditUserOldReduceAccessAtDate'] = $reduceAccessAtDate;
+		
 		$_SESSION['TheUserID'] = $id;
 		$_SESSION['EditUserAccessList'] = $access;
+	}
+	// Display original values
+	$originalDateToDisplay = convertDatetimeToFormat($_SESSION['EditUserOldReduceAccessAtDate'] , 'Y-m-d', DATE_DEFAULT_FORMAT_TO_DISPLAY);
+
+	if(isset($_SESSION['EditUserChangedReduceAccessAtDate'])){
+		$reduceAccessAtDate = $_SESSION['EditUserChangedReduceAccessAtDate'];
+	} else {
+		$reduceAccessAtDate = $originalDateToDisplay;
 	}
 	
 	// Set the correct information
@@ -605,6 +661,7 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR
 	// style=display:block to show, style=display:none to hide
 	$displaynameStyle = 'block';
 	$bookingdescriptionStyle = 'block';
+	$ShowReduceAccessAtDate = TRUE;
 	
 	// Change to the actual form we want to use
 	include 'form.html.php';
@@ -615,7 +672,7 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR
 if (isset($_GET['editform']))
 {
 		// Validate user inputs
-	list($invalidInput, $email, $validatedFirstname, $validatedLastname, $validatedBookingDescription, $validatedDisplayName) = validateUserInputs('AddNewUserError');
+	list($invalidInput, $email, $validatedFirstname, $validatedLastname, $validatedBookingDescription, $validatedDisplayName, $validatedReduceAccessAtDate) = validateUserInputs('AddNewUserError');
 
 	// Check if any values were actually changed
 	$NumberOfChanges = 0;
@@ -658,7 +715,8 @@ if (isset($_GET['editform']))
 		$_SESSION['EditUserChangedEmail'] = $email;
 		$_SESSION['EditUserChangedAccessID'] = $_POST['accessID'];
 		$_SESSION['EditUserChangedDisplayname'] = $validatedDisplayName;
-		$_SESSION['EditUserChangedBookingDescription'] = $validatedBookingDescription;		
+		$_SESSION['EditUserChangedBookingDescription'] = $validatedBookingDescription;	
+		$_SESSION['EditUserChangedReduceAccessAtDate'] = $validatedReduceAccessAtDate;
 		
 		// Let's refresh the edit template
 		$_SESSION['refreshEditform'] = TRUE;
@@ -703,7 +761,13 @@ if (isset($_GET['editform']))
 		$NumberOfChanges++;
 		unset($_SESSION['EditUserOldBookingDescription']);
 	}
-	
+	if ( isset($_SESSION['EditUserOldReduceAccessAtDate']) AND 
+	$validatedReduceAccessAtDate != $_SESSION['EditUserOldReduceAccessAtDate'])
+	{
+		$NumberOfChanges++;
+		unset($_SESSION['EditUserOldReduceAccessAtDate']);
+	}
+
 	if ($NumberOfChanges > 0){
 		// We actually have something to update!	
 		try
@@ -722,7 +786,8 @@ if (isset($_GET['editform']))
 								password = :password,
 								accessID = :accessID,
 								displayname = :displayname,
-								bookingdescription = :bookingdescription
+								bookingdescription = :bookingdescription,
+								reduceAccessAtDate = :reduceAccessAtDate
 						WHERE 	userID = :id';
 						
 				$s = $pdo->prepare($sql);
@@ -734,6 +799,7 @@ if (isset($_GET['editform']))
 				$s->bindValue(':accessID', $_POST['accessID']);
 				$s->bindValue(':displayname', $validatedDisplayName);
 				$s->bindValue(':bookingdescription', $validatedBookingDescription);
+				$s->bindValue(':reduceAccessAtDate', $validatedReduceAccessAtDate);
 				$s->execute();			
 			} else {
 				// Update user info (no new password)
@@ -745,7 +811,8 @@ if (isset($_GET['editform']))
 								email = :email,
 								accessID = :accessID,
 								displayname = :displayname,
-								bookingdescription = :bookingdescription
+								bookingdescription = :bookingdescription,
+								reduceAccessAtDate = :reduceAccessAtDate
 						WHERE 	userID = :id';
 						
 				$s = $pdo->prepare($sql);
@@ -756,6 +823,7 @@ if (isset($_GET['editform']))
 				$s->bindValue(':accessID', $_POST['accessID']);
 				$s->bindValue(':displayname', $validatedDisplayName);
 				$s->bindValue(':bookingdescription', $validatedBookingDescription);
+				$s->bindValue(':reduceAccessAtDate', $validatedReduceAccessAtDate);
 				$s->execute();	
 			}
 				
@@ -777,6 +845,40 @@ if (isset($_GET['editform']))
 	
 	// No need to remember values anymore
 	clearEditUserSessions();
+	
+	// Load user list webpage with updated database
+	header('Location: .');
+	exit();
+}
+
+// if admin wants to cancel the date to reduce access
+if (isset($_POST['action']) AND $_POST['action'] == 'Cancel Date')
+{
+	// Update selected user by making date to reduce access null	
+	try
+	{
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+		
+		$pdo = connect_to_db();
+		$sql = 'UPDATE 	`user` 
+				SET		`reduceAccessAtDate` = NULL
+				WHERE 	userID = :id';
+		$s = $pdo->prepare($sql);
+		$s->bindValue(':id', $_POST['id']);
+		$s->execute();
+		
+		//close connection
+		$pdo = null;	
+	}
+	catch (PDOException $e)
+	{
+		$error = 'Error cancelling reduce access date: ' . $e->getMessage();
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+		$pdo = null;
+		exit();		
+	}
+	
+	$_SESSION['UserManagementFeedbackMessage'] = "Successfully removed the reduce access at date from the user: " . $_POST['UserInfo'] . ".";
 	
 	// Load user list webpage with updated database
 	header('Location: .');
@@ -809,7 +911,8 @@ try
 						GROUP_CONCAT(CONCAT_WS(' in ', cp.`name`, c.`name`) separator ', ') 	AS WorksFor,
 						u.`create_time`								 							AS DateCreated,
 						u.`isActive`,
-						u.`lastActivity`							 							AS LastActive
+						u.`lastActivity`							 							AS LastActive,
+						u.`reduceAccessAtDate`													AS ReduceAccessAtDate
 			FROM 		`user` u 
 			LEFT JOIN 	`employee` e 
 			ON 			e.UserID = u.userID 
@@ -841,8 +944,10 @@ foreach ($result as $row)
 {
 	$createdDateTime = $row['DateCreated'];
 	$lastActiveDateTime = $row['LastActive'];
-	$displayCreatedDateTime = convertDatetimeToFormat($createdDateTime , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
-	$displayLastActiveDateTime = convertDatetimeToFormat($lastActiveDateTime , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
+	$displayCreatedDateTime = convertDatetimeToFormat($createdDateTime, 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
+	$displayLastActiveDateTime = convertDatetimeToFormat($lastActiveDateTime, 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
+	$reduceAccessAtDate = $row['ReduceAccessAtDate'];
+	$displayReduceAccessAtDate = convertDatetimeToFormat($reduceAccessAtDate, 'Y-m-d', DATE_DEFAULT_FORMAT_TO_DISPLAY); // TO-DO: Might not be converting correctly?
 	
 	// If user has activated the account
 	if($row['isActive'] == 1){
@@ -857,7 +962,8 @@ foreach ($result as $row)
 						'worksfor' => $row['WorksFor'],
 						'datecreated' => $displayCreatedDateTime,			
 						'lastactive' => $displayLastActiveDateTime,
-						'UserInfo' => $userinfo
+						'UserInfo' => $userinfo,
+						'reduceaccess' => $reduceAccessAtDate
 						);
 	} elseif ($row['isActive'] == 0) {
 		$inactiveusers[] = array('id' => $row['userID'], 
