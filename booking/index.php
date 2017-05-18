@@ -140,9 +140,8 @@ function validateUserInputs($FeedbackSessionToUse){
 	$timeDifferenceEndDate = new DateTime($endDateTime);
 	$timeDifference = $timeDifferenceStartDate->diff($timeDifferenceEndDate);
 	$timeDifferenceInMinutes = $timeDifference->i;
-	$minimumTimeDifferenceInMinutes = 10;
-	if(($timeDifferenceInMinutes < $minimumTimeDifferenceInMinutes) AND !$invalidInput){
-		$_SESSION[$FeedbackSessionToUse] = "A meeting needs to be at least $minimumTimeDifferenceInMinutes minutes long.";
+	if(($timeDifferenceInMinutes < MINIMUM_BOOKING_TIME_IN_MINUTES) AND !$invalidInput){
+		$_SESSION[$FeedbackSessionToUse] = "A meeting needs to be at least " . MINIMUM_BOOKING_TIME_IN_MINUTES . " minutes long.";
 		$invalidInput = TRUE;	
 	}*/
 	
