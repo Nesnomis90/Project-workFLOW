@@ -71,7 +71,7 @@
 					<th>Website</th>
 					<th colspan="2">Default Booking</th>
 					<th>Works For</th>
-					<th colspan="2">Dates</th>
+					<th colspan="3">Dates</th>
 					<th colspan="2">Alter User</th>
 				</tr>
 				<tr>
@@ -84,6 +84,7 @@
 					<th>Company</th>
 					<th>Created</th>
 					<th>Last Active</th>
+					<th>Reduce Access At</th>
 					<th>Edit</th>
 					<th>Delete</th>
 				</tr>
@@ -99,6 +100,14 @@
 							<td><?php htmlout($user['worksfor']); ?></td>
 							<td><?php htmlout($user['datecreated']); ?></td>
 							<td><?php htmlout($user['lastactive']); ?></td>
+							<?php if($user['reduceaccess'] == null) :?>
+								<td><p>No Date Set</p></td>
+							<?php elseif($user['reduceaccess'] != null) : ?>
+								<td>
+									<p><?php htmlout($user['reduceaccess']); ?></p>
+									<input type="submit" name="action" value="Cancel Date">
+								</td>								
+							<?php endif; ?>
 							<td><input type="submit" name="action" value="Edit"></td>
 							<td>
 								<?php if(isset($_SESSION['usersEnableDelete']) AND $_SESSION['usersEnableDelete']) : ?>
