@@ -80,9 +80,9 @@
 					<?php endif; ?>
 				<?php else : ?>
 					<?php if(isset($company)) : ?>
-						<b>This user is only connected to one company: <?php htmlout($companyName); ?></b>
+						<b>Your booking will automatically be connected with company: <?php htmlout($companyName); ?></b>
 					<?php else : ?>
-						<b>This user is not connected to a company.</b>
+						<b>Your booking will not be connected with a company.</b>
 					<?php endif; ?>
 					<input type="hidden" name="companyID" id="companyID" 
 					value="<?php htmlout($companyID); ?>">
