@@ -251,8 +251,7 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Add Room Equipment') OR
 												'MeetingRoomID' => $row['MeetingRoomID'],
 												'MeetingRoomName' => $row['MeetingRoomName']
 												);
-					}
-					
+					}		
 				} else {
 					// We want info about a specific meeting room
 					$sql = 'SELECT 	`meetingRoomID`	AS MeetingRoomID,
@@ -263,8 +262,12 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Add Room Equipment') OR
 					$s->bindValue(':MeetingRoomID', $_GET['Meetingroom']);
 					$s->execute();
 					$meetingrooms = $s->fetch();
+				}
+				if(isset($meetingrooms)){
+					$_SESSION['AddRoomEquipmentMeetingRoomArray'] = $meetingrooms;
+				} else {
+					$_SESSION['AddRoomEquipmentMeetingRoomArray'] = array();
 				}	
-				$_SESSION['AddRoomEquipmentMeetingRoomArray'] = $meetingrooms;	
 			} else {
 				$meetingrooms = $_SESSION['AddRoomEquipmentMeetingRoomArray'];
 			}	
@@ -705,10 +708,25 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Confirm Amount')
 	exit();	
 }
 
+// If admin wants to null values while adding
+if (isset($_POST['add']) AND $_POST['add'] == "Reset"){
+
+	clearAddRoomEquipmentSessions();
+	
+	$_SESSION['refreshAddRoomEquipment'] = TRUE;
+	header('Location: .');
+	exit();		
+}
 
 // If the user clicks any cancel buttons he'll be directed back to the roomequipment page again
-if (isset($_POST['action']) AND $_POST['action'] == 'Cancel'){
-	$_SESSION['RoomEquipmentUserFeedback'] = "Cancel button clicked. Taking you back to /admin/roomequipment/!";
+if (isset($_POST['add']) AND $_POST['add'] == 'Cancel'){
+	$_SESSION['RoomEquipmentUserFeedback'] = "You cancelled your meeting room and equipment connection creation.";
+	$refreshRoomEquipment = TRUE;
+}
+
+// If the user clicks any cancel buttons he'll be directed back to the roomequipment page again
+if (isset($_POST['edit']) AND $_POST['edit'] == 'Cancel'){
+	$_SESSION['RoomEquipmentUserFeedback'] = "You cancelled your meeting room and equipment connection editing.";
 	$refreshRoomEquipment = TRUE;
 }
 

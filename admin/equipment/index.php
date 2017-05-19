@@ -226,9 +226,6 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Add Equipment') OR
 		unset($_SESSION['AddEquipmentName']);
 	}
 	
-	// We want a reset all fields button while adding a new meeting room
-	$reset = 'reset';
-	
 	// Change form
 	include 'form.html.php';
 	exit();
@@ -327,6 +324,24 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Confirm Equipment')
 	exit();
 }
 
+// If admin wants to null values while adding
+if(isset($_POST['add']) AND $_POST['add'] == 'Reset'){
+	
+	$_SESSION['AddEquipmentDescription'] = "";
+	$_SESSION['AddEquipmentName'] = "";
+
+	$_SESSION['refreshAddEquipment'] = TRUE;
+	header('Location: .');
+	exit();	
+}
+
+// If the admin wants to leave the page and go back to the equipment overview again
+if (isset($_POST['add']) AND $_POST['add'] == 'Cancel'){
+	$_SESSION['EquipmentUserFeedback'] = "You cancelled your equipment creation.";
+	$refreshEquipment = TRUE;
+}
+
+
 // if admin wants to edit equipment information
 // we load a new html form
 if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR
@@ -353,10 +368,6 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR
 		}		
 		if(isset($_SESSION['EditEquipmentEquipmentID'])){
 			$EquipmentID = $_SESSION['EditEquipmentEquipmentID'];
-			unset($_SESSION['EditEquipmentEquipmentID']);
-		} else {
-			// No equipment ID was remembered? We can't update the edit then!
-			// TO-DO: fix if no ID
 		}
 	} else {
 		// Make sure we don't have any remembered values in memory
@@ -384,6 +395,7 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR
 			$EquipmentID = $row['TheEquipmentID'];
 			$EquipmentName = $row['EquipmentName'];
 			$EquipmentDescription = $row['EquipmentDescription'];
+			$_SESSION['EditEquipmentEquipmentID'] = $EquipmentID;
 
 			//Close the connection
 			$pdo = null;
@@ -401,8 +413,9 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR
 	$pageTitle = 'Edit User';	
 	$button = 'Edit Equipment';	
 	
-	// Don't want a reset button to blank all fields while editing
-	$reset = 'hidden';
+	// Set original values
+	$originalEquipmentName = $_SESSION['EditEquipmentOriginalInfo']['EquipmentName'];
+	$originalEquipmentDescription = $_SESSION['EditEquipmentOriginalInfo']['EquipmentDescription'];
 	
 	// Change to the template we want to use
 	include 'form.html.php';
@@ -421,7 +434,6 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Edit Equipment')
 		// Refresh.
 		$_SESSION['EditEquipmentDescription'] = $validatedEquipmentDescription;
 		$_SESSION['EditEquipmentName'] = $validatedEquipmentName;
-		$_SESSION['EditEquipmentEquipmentID'] = $_POST['EquipmentID'];
 		
 		$_SESSION['refreshEditEquipment'] = TRUE;
 		header('Location: .');
@@ -482,12 +494,20 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Edit Equipment')
 	exit();
 }
 
-// If the user clicks any cancel buttons he'll be directed back to the equipment page again
-if (isset($_POST['action']) AND $_POST['action'] == 'Cancel'){
-	// Doesn't actually need any code to work, since it happends automatically when a submit
-	// occurs. *it* being doing the normal startup code.
-	// Might be useful for something later?
-	$_SESSION['EquipmentUserFeedback'] = "Cancel button clicked. Taking you back to /admin/equipment/!";
+// If admin wants to get original values while editing
+if(isset($_POST['edit']) AND $_POST['edit'] == 'Reset'){
+
+	$_SESSION['EditEquipmentName'] = $_SESSION['EditEquipmentOriginalInfo']['EquipmentName'];
+	$_SESSION['EditEquipmentDescription'] = $_SESSION['EditEquipmentOriginalInfo']['EquipmentDescription'];
+
+	$_SESSION['refreshEditEquipment'] = TRUE;
+	header('Location: .');
+	exit();	
+}
+
+// If the admin wants to leave the page and go back to the equipment overview again
+if (isset($_POST['edit']) AND $_POST['edit'] == 'Cancel'){
+	$_SESSION['EquipmentUserFeedback'] = "You cancelled your equipment editing.";
 	$refreshEquipment = TRUE;
 }
 

@@ -72,10 +72,10 @@
 			<div>
 				<input type="submit" name="action" value="Search">
 				<input type="submit" name="action" value="Confirm Room Equipment">
-				<input type="submit" name="action" value="Cancel">
 			</div>
 			<div>
-				<input type="reset">
+				<input type="submit" name="add" value="Reset">
+				<input type="submit" name="add" value="Cancel">
 			</div>
 		</form>
 	<p><a href="..">Return to CMS home</a></p>
