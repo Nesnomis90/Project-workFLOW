@@ -139,14 +139,20 @@
 				<input type="text" name="ReduceAccessAtDate" id="ReduceAccessAtDate"
 				value="<?php htmlout($reduceAccessAtDate); ?>">
 			</div>
-			<?php endif; ?>			
+			<?php endif; ?>
+			<div>
+				<?php if($action == 'addform') :?>
+					<input type="submit" name="add" value="Reset">
+					<input type="submit" name="add" value="Cancel">
+				<?php elseif($action == 'editform') : ?>
+					<input type="submit" name="edit" value="Reset">
+					<input type="submit" name="edit" value="Cancel">				
+				<?php endif; ?>
+			</div>
 			<div>
 				<input type="hidden" name="id" value="<?php htmlout($id); ?>">
 				<input type="submit" value="<?php htmlout($button); ?>">
-			</div>
-			<div>
-				<input type="<?php htmlout($reset); ?>">
-			</div>
+			</div>			
 		</form>
 	<p><a href="..">Return to CMS home</a></p>
 	<?php include '../logout.inc.html.php'; ?>

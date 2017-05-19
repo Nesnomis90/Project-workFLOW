@@ -32,6 +32,7 @@ function clearEditUserSessions(){
 	unset($_SESSION['EditUserOriginaDisplayName']);
 	unset($_SESSION['EditUserOriginaBookingDescription']);
 	unset($_SESSION['EditUserOriginaReduceAccessAtDate']);
+	unset($_SESSION['EditUserOriginalUserID']);
 	
 	unset($_SESSION['EditUserChangedEmail']);	
 	unset($_SESSION['EditUserChangedFirstname']);
@@ -41,7 +42,6 @@ function clearEditUserSessions(){
 	unset($_SESSION['EditUserChangedBookingDescription']);
 	unset($_SESSION['EditUserChangedReduceAccessAtDate']);
 	
-	unset($_SESSION['TheUserID']);
 	unset($_SESSION['EditUserAccessList']);	
 }
 
@@ -529,12 +529,12 @@ if (isset($_GET['addform']))
 // if admin wants to edit user information
 // we load a new html form
 if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR 
-(isset($_SESSION['refreshEditform'])) AND $_SESSION['refreshEditform'])
+(isset($_SESSION['refreshEditUser'])) AND $_SESSION['refreshEditUser'])
 {
 		// Check if the call was edit button or a forced refresh
-	if(isset($_SESSION['refreshEditform']) AND $_SESSION['refreshEditform']){
+	if(isset($_SESSION['refreshEditUser']) AND $_SESSION['refreshEditUser']){
 		// Acknowledge that we have refreshed the form
-		unset($_SESSION['refreshEditform']);
+		unset($_SESSION['refreshEditUser']);
 	
 		// Set the information back to what it was before the refresh
 		$firstname = $_SESSION['EditUserChangedFirstname'];
@@ -545,7 +545,7 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR
 		unset($_SESSION['EditUserChangedEmail']);
 		$accessID = $_SESSION['EditUserChangedAccessID'];
 		unset($_SESSION['EditUserChangedAccessID']);
-		$id = $_SESSION['TheUserID'];
+		$id = $_SESSION['EditUserOriginalUserID'];
 		$displayname = $_SESSION['EditUserChangedDisplayname'];
 		unset($_SESSION['EditUserChangedDisplayname']);
 		$bookingdescription = $_SESSION['EditUserChangedBookingDescription'];
@@ -634,7 +634,7 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR
 		$_SESSION['EditUserOriginaReduceAccessAtDate'] = $reduceAccessAtDate;
 		$_SESSION['EditUserOriginaAccessName'] = $accessName;
 		
-		$_SESSION['TheUserID'] = $id;
+		$_SESSION['EditUserOriginalUserID'] = $id;
 		$_SESSION['EditUserAccessList'] = $access;
 	}
 	// Display original values
@@ -720,7 +720,7 @@ if (isset($_GET['editform']))
 		$_SESSION['EditUserChangedReduceAccessAtDate'] = $validatedReduceAccessAtDate;
 		
 		// Let's refresh the edit template
-		$_SESSION['refreshEditform'] = TRUE;
+		$_SESSION['refreshEditUser'] = TRUE;
 		header('Location: .');
 		exit();
 	}
@@ -900,6 +900,28 @@ if (isset($_GET['editform']))
 	// Load user list webpage with updated database
 	header('Location: .');
 	exit();
+}
+
+// If admin wants to change the values back to the original values while editing
+if (isset($_POST['edit']) AND $_POST['edit'] == "Reset"){
+
+	$_SESSION['EditUserChangedFirstname'] = $_SESSION['EditUserOriginalFirstName'];
+	$_SESSION['EditUserChangedLastname'] = $_SESSION['EditUserOriginalLastName'];
+	$_SESSION['EditUserChangedEmail'] = $_SESSION['EditUserOriginaEmail'];
+	$_SESSION['EditUserChangedAccessID'] = $_SESSION['EditUserOriginaAccessID'];
+	$_SESSION['EditUserChangedDisplayname'] = $_SESSION['EditUserOriginaDisplayName'];
+	$_SESSION['EditUserChangedBookingDescription'] = $_SESSION['EditUserOriginaBookingDescription'];
+	$_SESSION['EditUserChangedReduceAccessAtDate'] = $_SESSION['EditUserOriginaReduceAccessAtDate'];
+	
+	$_SESSION['refreshEditUser'] = TRUE;
+	header('Location: .');
+	exit();		
+}
+
+// If admin wants to leave the page and be directed back to the booking page again
+if (isset($_POST['edit']) AND $_POST['edit'] == 'Cancel'){
+
+	$_SESSION['BookingUserFeedback'] = "You cancelled your booking editing.";
 }
 
 // if admin wants to cancel the date to reduce access

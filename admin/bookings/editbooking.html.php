@@ -92,12 +92,18 @@
 						value="<?php htmlout($usersearchstring); ?>">
 						<input type="submit" name="edit" value="Search">
 					</div>
-				<?php else : ?>
+				<?php elseif(isset($SelectedUserID) AND $SelectedUserID != NULL AND $SelectedUserID != "") : ?>
 						<b><?php htmlout($userInformation); ?> </b>
 						<input type="submit" name="edit" value="Change User">
 						<input type="hidden" name="userID" id="userID"
 						value="<?php htmlout($SelectedUserID);?>">
-					</div>			
+					</div>
+				<?php else : ?>
+						<b>N/A - Deleted</b>
+						<input type="submit" name="edit" value="Change User">
+						<input type="hidden" name="userID" id="userID"
+						value="">			
+					</div>
 				<?php endif; ?>
 			<div>
 				<label for="originalCompanyInBooking">Booked for Company: </label>
@@ -179,12 +185,13 @@
 				value="<?php htmlout($bookingID); ?>">
 				<input type="submit" name="edit" value="Reset">
 				<input type="submit" name="edit" value="Cancel">
-				<?php if(isset($_SESSION['EditBookingChangeUser']) AND $_SESSION['EditBookingChangeUser']) : ?>
+				<?php if(	(isset($_SESSION['EditBookingChangeUser']) AND $_SESSION['EditBookingChangeUser']) OR 
+							($SelectedUserID == "" OR $SelectedUserID == NULL OR !isset($SelectedUserID))) : ?>
 					<input type="submit" name="disabled" value="Finish Edit" disabled>
 					<b>You need to select the user you want before you can finish editing.</b>
 				<?php elseif(!isset($_SESSION['EditBookingSelectedACompany'])) : ?>
 					<input type="submit" name="disabled" value="Finish Edit" disabled>
-					<b>You need to select the company you want before you can finish editing.</b>
+					<b>You need to select the company you want before you can finish editing.</b>				
 				<?php else : ?>
 					<input type="submit" name="edit" value="Finish Edit">
 				<?php endif; ?>
