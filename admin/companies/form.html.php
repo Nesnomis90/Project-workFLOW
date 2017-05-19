@@ -45,7 +45,12 @@
 				<input type="submit" name="action" value="<?php htmlout($button); ?>">
 			</div>
 			<div>
-				<input type="<?php htmlout($reset); ?>">
+				<?php if($button == 'Edit Company') : ?>
+					<input type="submit" name="edit" value="Reset">
+					<input type="submit" name="edit" value="Cancel">
+				<?php elseif($button == 'Add Company') : ?>
+					<input type="submit" name="add" value="Cancel">					
+				<?php endif; ?>
 			</div>
 		</form>
 	<p><a href="..">Return to CMS home</a></p>

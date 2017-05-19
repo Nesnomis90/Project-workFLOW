@@ -21,8 +21,8 @@ function clearEditCompanySessions(){
 	unset($_SESSION['EditCompanyOriginalName']);
 	unset($_SESSION['EditCompanyOriginalRemoveDate']);
 	
-	unset($_SESSION['EditCompanyOldName']);
-	unset($_SESSION['EditCompanyOldRemoveDate']);
+	unset($_SESSION['EditCompanyChangedName']);
+	unset($_SESSION['EditCompanyChangedRemoveDate']);
 	
 	unset($_SESSION['EditCompanyCompanyID']);
 }
@@ -297,16 +297,14 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR
 		unset($_SESSION['refreshEditCompany']);
 		
 		// Get values we had before the refresh
-		if(isset($_SESSION['EditCompanyOldName'])){
-			$CompanyName = $_SESSION['EditCompanyOldName'];
+		if(isset($_SESSION['EditCompanyChangedName'])){
+			$CompanyName = $_SESSION['EditCompanyChangedName'];
 		} else {
 			$CompanyName = '';
 		}
 			
 		if(isset($_SESSION['EditCompanyCompanyID'])){
 			$id = $_SESSION['EditCompanyCompanyID'];
-		} else {
-			// TO-DO: What do we do if we're editing and suddenly no ID?
 		}
 	} else {
 		// Make sure we don't have old values in memory
@@ -354,8 +352,8 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR
 	$originalCompanyName = $_SESSION['EditCompanyOriginalName'];
 	$originalDateToDisplay = convertDatetimeToFormat($_SESSION['EditCompanyOriginalRemoveDate'] , 'Y-m-d', DATE_DEFAULT_FORMAT_TO_DISPLAY);
 
-	if(isset($_SESSION['EditCompanyOldRemoveDate'])){
-		$DateToRemove = $_SESSION['EditCompanyOldRemoveDate'];
+	if(isset($_SESSION['EditCompanyChangedRemoveDate'])){
+		$DateToRemove = $_SESSION['EditCompanyChangedRemoveDate'];
 	} else {
 		$DateToRemove = $originalDateToDisplay;
 	}
@@ -469,8 +467,8 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Edit Company'))
 	
 	// Refresh form on invalid
 	if($invalidInput){
-		$_SESSION['EditCompanyOldName'] = $validatedCompanyName;
-		$_SESSION['EditCompanyOldRemoveDate'] = $validatedCompanyDateToRemove;
+		$_SESSION['EditCompanyChangedName'] = $validatedCompanyName;
+		$_SESSION['EditCompanyChangedRemoveDate'] = $validatedCompanyDateToRemove;
 
 		$_SESSION['refreshEditCompany'] = TRUE;
 		header('Location: .');
@@ -570,6 +568,26 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Cancel Date')
 	// Load company list webpage with updated database
 	header('Location: .');
 	exit();
+}
+
+if(isset($_POST['edit']) AND $_POST['edit'] == 'Reset'){
+	
+	$_SESSION['EditCompanyChangedName'] = $_SESSION['EditCompanyOriginalName'];
+	$_SESSION['EditCompanyChangedRemoveDate'] = $_SESSION['EditCompanyOriginalRemoveDate'];
+	
+	$_SESSION['refreshEditCompany'] = TRUE;
+	header('Location: .');
+	exit();	
+}
+
+if(isset($_POST['edit']) AND $_POST['edit'] == 'Cancel'){
+	$refreshcompanies = TRUE;
+	$_SESSION['CompanyUserFeedback'] = "You cancelled your company editing.";
+}
+
+if(isset($_POST['add']) AND $_POST['add'] == 'Cancel'){
+	$refreshcompanies = TRUE;
+	$_SESSION['CompanyUserFeedback'] = "You cancelled your company creation.";
 }
 
 if(isset($refreshcompanies) AND $refreshcompanies) {

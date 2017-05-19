@@ -13,6 +13,10 @@
 				<p><b><?php htmlout($AddRoomEquipmentError); ?> </b></p>
 			</div>
 		<?php endif; ?>
+		<?php if(isset($_SESSION['AddRoomEquipmentSearchResult'])) :?>
+				<p><b><?php htmlout($_SESSION['AddRoomEquipmentSearchResult']); ?></b></p>
+			<?php unset($_SESSION['AddRoomEquipmentSearchResult']); ?>
+		<?php endif; ?>			
 		<form action="" method="post">
 			<div>
 				<label for="MeetingRoomID">Meeting Room Name:</label>
