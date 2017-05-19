@@ -19,25 +19,40 @@
 		<?php endif; ?>
 		<form action="?<?php htmlout($action); ?>" method="post">
 			<div>
-				<label for="firstname">First Name: 
-					<input type="text" name="firstname" id="firstname" 
-					placeholder="Enter First Name"
-					value="<?php htmlout($firstname); ?>">
-				</label>
+				<?php if($action == 'editform') : ?>
+				<label for="originalFirstName">Original First Name: </label>
+				<b><?php htmlout($originalFirstName); ?></b>
+				</div>
+				<div>
+				<?php endif; ?>
+				<label for="firstname">Set New First Name: </label>
+				<input type="text" name="firstname" id="firstname" 
+				placeholder="Enter First Name"
+				value="<?php htmlout($firstname); ?>">
 			</div>
 			<div>
-				<label for="lastname">Last Name: 
-					<input type="text" name="lastname" id="lastname" 
-					placeholder="Enter Last Name"
-					value="<?php htmlout($lastname); ?>">
-				</label>
+				<?php if($action == 'editform') : ?>
+				<label for="originalLastName">Original Last Name: </label>
+				<b><?php htmlout($originalLastName); ?></b>
+				</div>
+				<div>
+				<?php endif; ?>			
+				<label for="lastname">Set New Last Name: </label>
+				<input type="text" name="lastname" id="lastname" 
+				placeholder="Enter Last Name"
+				value="<?php htmlout($lastname); ?>">
 			</div>
 			<div>
-				<label for="email">Email: 
-					<input type="text" name="email" id="email" 
-					placeholder="Enter Email"
-					value="<?php htmlout($email); ?>">
-				</label>
+				<?php if($action == 'editform') : ?>
+				<label for="originalEmail">Original Email: </label>
+				<b><?php htmlout($originalEmail); ?></b>
+				</div>
+				<div>				
+				<?php endif; ?>			
+				<label for="email">Set New Email: </label>
+				<input type="text" name="email" id="email" 
+				placeholder="Enter Email"
+				value="<?php htmlout($email); ?>">
 			</div>
 			<?php if($action == 'addform') : ?>
 				<div>
@@ -46,20 +61,26 @@
 				</div>
 			<?php elseif($action == 'editform') : ?>
 				<div>
-					<label for="password">Set new Password:</label>
+					<label for="password">Set New Password:</label>
 					<input type="password" name="password" id="password"
 					placeholder="Enter New Password"
 					value="<?php htmlout($password);?>">
 				</div>
 				<div>
-					<label for="confirmpassword">Confirm Password:</label>
+					<label for="confirmpassword">Repeat Password:</label>
 					<input type="password" name="confirmpassword" id="confirmpassword"
 					placeholder="Enter New Password"
 					value="<?php htmlout($confirmpassword);?>">
 				</div>
 			<?php endif; ?>
 			<div>
-				<label for="accessID">Access: 
+				<?php if($action == 'editform') : ?>
+				<label for="originalAccessName">Original Access: </label>
+				<b><?php htmlout($originalAccessName); ?></b>
+				</div>
+				<div>				
+				<?php endif; ?>			
+				<label for="accessID">Set New Access: 
 					<select name="accessID" id="accessID">
 						<?php foreach($access as $row): ?> 
 							<?php if($row['accessID']==$accessID):?>
@@ -76,32 +97,48 @@
 					</select>
 				</label>
 			</div>
-			<div style="display:<?php htmlout($displaynameStyle); ?>">
-				<label for="displayname">Default Display Name: 
-					<input type="text" name="displayname" id="displayname"
-					placeholder="Enter A Display Name"					
-					value="<?php htmlout($displayname); ?>">
-				</label>
-			</div>		
-			<div style="display:<?php htmlout($bookingdescriptionStyle); ?>">
-				<label for="bookingdescription">Default Booking Description: </label>
+			<?php if($action == 'editform') : ?>
+			<div>
+				<label for="originalDisplayName">Original Display Name: </label>
+				<?php if($originalDisplayName != "") : ?>
+					<b><?php htmlout($originalDisplayName); ?></b>
+				<?php else: ?>
+					<b>This User Has No Display Name.</b>
+				<?php endif; ?>
+			</div>
+			<div>				
+				<label for="displayname">Set New Display Name: </label>
+				<input type="text" name="displayname" id="displayname"
+				placeholder="Enter A Display Name"					
+				value="<?php htmlout($displayname); ?>">
+			</div>	
+			<div>
+				<label for="originalBookingDescription">Original Booking Description: </label>
+				<?php if($originalBookingDescription != "") : ?>
+					<b><?php htmlout($originalBookingDescription); ?></b>
+				<?php else: ?>
+					<b>This User Has No Booking Description.</b>
+				<?php endif; ?>				
+				<b><?php htmlout($originalBookingDescription); ?></b>
+			</div>
+			<div>
+				<label for="bookingdescription">Set New Booking Description: </label>
 				<textarea rows="4" cols="50" name="bookingdescription" id="bookingdescription"
 				placeholder="Enter A Booking Description"><?php htmlout($bookingdescription); ?></textarea>
 			</div>
-			<?php if ($ShowReduceAccessAtDate) :?>
-				<div>
-					<label for="originalDateToRemove">Original Date to Reduce Access:</label>
-					<?php if(isset($originalDateToDisplay) AND $originalDateToDisplay != "") : ?>
-						<b><?php htmlout($originalDateToDisplay); ?></b>	
-					<?php else : ?>
-						<b>No date has been Set</b>
-					<?php endif; ?>
-				</div>
-				<div>
-					<label for="ReduceAccessAtDate">Set a new Date to Reduce Access: </label>
-					<input type="text" name="ReduceAccessAtDate" id="ReduceAccessAtDate"
-					value="<?php htmlout($reduceAccessAtDate); ?>">
-				</div>
+			<div>
+				<label for="originalDateToRemove">Original Date to Reduce Access:</label>
+				<?php if(isset($originalDateToDisplay) AND $originalDateToDisplay != "") : ?>
+					<b><?php htmlout($originalDateToDisplay); ?></b>	
+				<?php else : ?>
+					<b>No date has been Set</b>
+				<?php endif; ?>
+			</div>
+			<div>
+				<label for="ReduceAccessAtDate">Set New Date to Reduce Access: </label>
+				<input type="text" name="ReduceAccessAtDate" id="ReduceAccessAtDate"
+				value="<?php htmlout($reduceAccessAtDate); ?>">
+			</div>
 			<?php endif; ?>			
 			<div>
 				<input type="hidden" name="id" value="<?php htmlout($id); ?>">

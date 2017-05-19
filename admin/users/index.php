@@ -24,12 +24,12 @@ function clearAddUserSessions(){
 
 // Function to clear sessions used to remember user inputs on refreshing the edit user form
 function clearEditUserSessions(){
-	unset($_SESSION['EditUserOldEmail']);
-	unset($_SESSION['EditUserOldFirstname']);
-	unset($_SESSION['EditUserOldLastname']);
-	unset($_SESSION['EditUserOldAccessID']);
-	unset($_SESSION['EditUserOldDisplayname']);
-	unset($_SESSION['EditUserOldBookingDescription']);
+	unset($_SESSION['EditUserOriginaEmail']);
+	unset($_SESSION['EditUserOriginalFirstName']);
+	unset($_SESSION['EditUserOriginalLastName']);
+	unset($_SESSION['EditUserOriginaAccessID']);
+	unset($_SESSION['EditUserOriginaDisplayName']);
+	unset($_SESSION['EditUserOriginaBookingDescription']);
 	
 	unset($_SESSION['EditUserChangedEmail']);	
 	unset($_SESSION['EditUserChangedFirstname']);
@@ -181,8 +181,8 @@ function validateUserInputs($FeedbackSessionToUse){
 	}
 	
 	// Check if the submitted email has already been used
-	if(isset($_SESSION['EditUserOldEmail'])){
-		$originalEmail = $_SESSION['EditUserOldEmail'];
+	if(isset($_SESSION['EditUserOriginaEmail'])){
+		$originalEmail = $_SESSION['EditUserOriginaEmail'];
 		// no need to check if our own email exists in the database
 		if($email!=$originalEmail){
 			if (databaseContainsEmail($email)){
@@ -373,12 +373,6 @@ if (isset($_GET['add']) OR (isset($_SESSION['refreshUserAddform']) AND $_SESSION
 	
 	// We want a reset all fields button while adding a new user
 	$reset = 'reset';
-	
-	// We don't need to see display name and booking description when adding a new user
-	// style=display:block to show, style=display:none to hide
-	$displaynameStyle = 'none';
-	$bookingdescriptionStyle = 'none';
-	$ShowReduceAccessAtDate = FALSE;
 	
 	// Change to the actual html form template
 	include 'form.html.php';
@@ -573,6 +567,7 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR
 							u.`lastname`, 
 							u.`email`,
 							a.`accessID`,
+							a.`accessname`,
 							u.`displayname`,
 							u.`bookingdescription`,
 							u.`reduceAccessAtDate`
@@ -618,6 +613,7 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR
 		$lastname = $row['lastname'];
 		$email = $row['email'];
 		$accessID = $row['accessID'];
+		$accessName = $row['accessname'];
 		$id = $row['userID'];
 		$displayname = $row['displayname'];
 		$bookingdescription = $row['bookingdescription'];
@@ -628,19 +624,20 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR
 		}
 	
 		// Remember the original values we retrieved.
-		$_SESSION['EditUserOldFirstname'] = $firstname;
-		$_SESSION['EditUserOldLastname'] = $lastname;
-		$_SESSION['EditUserOldEmail'] = $email;
-		$_SESSION['EditUserOldAccessID'] = $accessID;
-		$_SESSION['EditUserOldDisplayname'] = $displayname;
-		$_SESSION['EditUserOldBookingDescription'] = $bookingdescription;
-		$_SESSION['EditUserOldReduceAccessAtDate'] = $reduceAccessAtDate;
+		$_SESSION['EditUserOriginalFirstName'] = $firstname;
+		$_SESSION['EditUserOriginalLastName'] = $lastname;
+		$_SESSION['EditUserOriginaEmail'] = $email;
+		$_SESSION['EditUserOriginaAccessID'] = $accessID;
+		$_SESSION['EditUserOriginaDisplayName'] = $displayname;
+		$_SESSION['EditUserOriginaBookingDescription'] = $bookingdescription;
+		$_SESSION['EditUserOriginaReduceAccessAtDate'] = $reduceAccessAtDate;
+		$_SESSION['EditUserOriginaAccessName'] = $accessName;
 		
 		$_SESSION['TheUserID'] = $id;
 		$_SESSION['EditUserAccessList'] = $access;
 	}
 	// Display original values
-	$originalDateToDisplay = convertDatetimeToFormat($_SESSION['EditUserOldReduceAccessAtDate'] , 'Y-m-d', DATE_DEFAULT_FORMAT_TO_DISPLAY);
+	$originalDateToDisplay = convertDatetimeToFormat($_SESSION['EditUserOriginaReduceAccessAtDate'] , 'Y-m-d', DATE_DEFAULT_FORMAT_TO_DISPLAY);
 
 	if(isset($_SESSION['EditUserChangedReduceAccessAtDate'])){
 		$reduceAccessAtDate = $_SESSION['EditUserChangedReduceAccessAtDate'];
@@ -655,13 +652,15 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR
 	$password = '';
 	$confirmpassword = '';
 	
+	$originalFirstName = $_SESSION['EditUserOriginalFirstName'];
+	$originalLastName = $_SESSION['EditUserOriginalLastName'];
+	$originalEmail = $_SESSION['EditUserOriginaEmail'];
+	$originalDisplayName = $_SESSION['EditUserOriginaDisplayName'];
+	$originalBookingDescription = $_SESSION['EditUserOriginaBookingDescription'];
+	$originalAccessName = $_SESSION['EditUserOriginaAccessName'];
+	
 	// Don't want a reset button to blank all fields while editing
 	$reset = 'hidden';
-	// Want to see display name and booking description while editing
-	// style=display:block to show, style=display:none to hide
-	$displaynameStyle = 'block';
-	$bookingdescriptionStyle = 'block';
-	$ShowReduceAccessAtDate = TRUE;
 	
 	// Change to the actual form we want to use
 	include 'form.html.php';
@@ -725,47 +724,47 @@ if (isset($_GET['editform']))
 	}
 		
 		// Check against the values we retrieved before loading the page
-	if ( isset($_SESSION['EditUserOldFirstname']) AND 
-	$validatedFirstname != $_SESSION['EditUserOldFirstname'])
+	if ( isset($_SESSION['EditUserOriginalFirstName']) AND 
+	$validatedFirstname != $_SESSION['EditUserOriginalFirstName'])
 	{
 		$NumberOfChanges++;
-		unset($_SESSION['EditUserOldFirstname']);
+		unset($_SESSION['EditUserOriginalFirstName']);
 	}
-	if ( isset($_SESSION['EditUserOldLastname']) AND 
-	$validatedLastname != $_SESSION['EditUserOldLastname'])
+	if ( isset($_SESSION['EditUserOriginalLastName']) AND 
+	$validatedLastname != $_SESSION['EditUserOriginalLastName'])
 	{
 		$NumberOfChanges++;
-		unset($_SESSION['EditUserOldLastname']);
+		unset($_SESSION['EditUserOriginalLastName']);
 	}
-	if ( isset($_SESSION['EditUserOldEmail']) AND 
-	$email != $_SESSION['EditUserOldEmail'])
+	if ( isset($_SESSION['EditUserOriginaEmail']) AND 
+	$email != $_SESSION['EditUserOriginaEmail'])
 	{
 		$NumberOfChanges++;
-		unset($_SESSION['EditUserOldEmail']);
+		unset($_SESSION['EditUserOriginaEmail']);
 	}
-	if ( isset($_SESSION['EditUserOldAccessID']) AND 
-	$_POST['accessID'] != $_SESSION['EditUserOldAccessID'])
+	if ( isset($_SESSION['EditUserOriginaAccessID']) AND 
+	$_POST['accessID'] != $_SESSION['EditUserOriginaAccessID'])
 	{
 		$NumberOfChanges++;
-		unset($_SESSION['EditUserOldAccessID']);
+		unset($_SESSION['EditUserOriginaAccessID']);
 	}
-	if ( isset($_SESSION['EditUserOldDisplayname']) AND 
-	$validatedDisplayName != $_SESSION['EditUserOldDisplayname'])
+	if ( isset($_SESSION['EditUserOriginaDisplayName']) AND 
+	$validatedDisplayName != $_SESSION['EditUserOriginaDisplayName'])
 	{
 		$NumberOfChanges++;
-		unset($_SESSION['EditUserOldDisplayname']);
+		unset($_SESSION['EditUserOriginaDisplayName']);
 	}	
-	if ( isset($_SESSION['EditUserOldBookingDescription']) AND 
-	$validatedBookingDescription != $_SESSION['EditUserOldBookingDescription'])
+	if ( isset($_SESSION['EditUserOriginaBookingDescription']) AND 
+	$validatedBookingDescription != $_SESSION['EditUserOriginaBookingDescription'])
 	{
 		$NumberOfChanges++;
-		unset($_SESSION['EditUserOldBookingDescription']);
+		unset($_SESSION['EditUserOriginaBookingDescription']);
 	}
-	if ( isset($_SESSION['EditUserOldReduceAccessAtDate']) AND 
-	$validatedReduceAccessAtDate != $_SESSION['EditUserOldReduceAccessAtDate'])
+	if ( isset($_SESSION['EditUserOriginaReduceAccessAtDate']) AND 
+	$validatedReduceAccessAtDate != $_SESSION['EditUserOriginaReduceAccessAtDate'])
 	{
 		$NumberOfChanges++;
-		unset($_SESSION['EditUserOldReduceAccessAtDate']);
+		unset($_SESSION['EditUserOriginaReduceAccessAtDate']);
 	}
 
 	if ($NumberOfChanges > 0){
