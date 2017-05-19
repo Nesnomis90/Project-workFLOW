@@ -88,6 +88,21 @@
 				<textarea rows="4" cols="50" name="bookingdescription" id="bookingdescription"
 				placeholder="Enter A Booking Description"><?php htmlout($bookingdescription); ?></textarea>
 			</div>
+			<?php if ($ShowReduceAccessAtDate) :?>
+				<div>
+					<label for="originalDateToRemove">Original Date to Reduce Access:</label>
+					<?php if(isset($originalDateToDisplay) AND $originalDateToDisplay != "") : ?>
+						<b><?php htmlout($originalDateToDisplay); ?></b>	
+					<?php else : ?>
+						<b>No date has been Set</b>
+					<?php endif; ?>
+				</div>
+				<div>
+					<label for="ReduceAccessAtDate">Set a new Date to Reduce Access: </label>
+					<input type="text" name="ReduceAccessAtDate" id="ReduceAccessAtDate"
+					value="<?php htmlout($reduceAccessAtDate); ?>">
+				</div>
+			<?php endif; ?>			
 			<div>
 				<input type="hidden" name="id" value="<?php htmlout($id); ?>">
 				<input type="submit" value="<?php htmlout($button); ?>">

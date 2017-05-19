@@ -140,9 +140,8 @@ function validateUserInputs($FeedbackSessionToUse){
 	$timeDifferenceEndDate = new DateTime($endDateTime);
 	$timeDifference = $timeDifferenceStartDate->diff($timeDifferenceEndDate);
 	$timeDifferenceInMinutes = $timeDifference->i;
-	$minimumTimeDifferenceInMinutes = 10;
-	if(($timeDifferenceInMinutes < $minimumTimeDifferenceInMinutes) AND !$invalidInput){
-		$_SESSION[$FeedbackSessionToUse] = "A meeting needs to be at least $minimumTimeDifferenceInMinutes minutes long.";
+	if(($timeDifferenceInMinutes < MINIMUM_BOOKING_TIME_IN_MINUTES) AND !$invalidInput){
+		$_SESSION[$FeedbackSessionToUse] = "A meeting needs to be at least " . MINIMUM_BOOKING_TIME_IN_MINUTES . " minutes long.";
 		$invalidInput = TRUE;	
 	}*/
 	
@@ -171,21 +170,18 @@ function rememberCreateBookingInputs(){
 	}
 }
 
-// Function to decide which template to use for booking
-function loadCreateBookingTemplate(){
-	// TO-DO: actually make templates and probably change the logic here
-	if(isset($_COOKIE[MEETINGROOM_NAME]) AND isset($_COOKIE[MEETINGROOM_IDCODE])){
-		include_once 'createBookingLocally.html.php';
-	} else {
-		include_once 'createBookingOnline.html.php';
-	}
-	exit();
-}	
+// Function to remove locally set device information
+function resetLocalDevice(){
+	deleteMeetingRoomCookies();
+	unset($_SESSION['DefaultMeetingRoomInfo']);
+	// TO-DO: Do anything more here to punish cookie manipulation?	
+}
 
 // Check if we're accessing from a local device
+// If so, set that meeting room's info as the default meeting room info
 if(isset($_COOKIE[MEETINGROOM_NAME]) AND isset($_COOKIE[MEETINGROOM_IDCODE]))
 {
-	// There are local meeting room identifiers set in cookies. Check if it is valid
+	// There are local meeting room identifiers set in cookies. Check if they are valid
 	$meetingRoomName = $_COOKIE[MEETINGROOM_NAME];
 	$meetingRoomIDCode = $_COOKIE[MEETINGROOM_IDCODE];
 	
@@ -197,7 +193,7 @@ if(isset($_COOKIE[MEETINGROOM_NAME]) AND isset($_COOKIE[MEETINGROOM_IDCODE]))
 			$_SESSION['OriginalCookieMeetingRoomName'] = $meetingRoomName;
 			$_SESSION['OriginalCookieMeetingRoomIDCode'] = $meetingRoomIDCode;
 			
-			if(!isset($_SESSION['DefaultMeetingRoomID'])){
+			if(!isset($_SESSION['DefaultMeetingRoomInfo'])){
 				try
 				{
 					include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
@@ -227,23 +223,15 @@ if(isset($_COOKIE[MEETINGROOM_NAME]) AND isset($_COOKIE[MEETINGROOM_IDCODE]))
 					exit();
 				}			
 			}
-
-			// TO-DO:
-			loadCreateBookingTemplate();
 		} elseif($validMeetingRoom === FALSE){
 			// The cookies set does not match a meeting room
-			// Remove the cookies
-			deleteMeetingRoomCookies();
-			unset($_SESSION['DefaultMeetingRoomInfo']);
-			// TO-DO: Do anything more here to punish cookie manipulation?
+			resetLocalDevice();
 		}	
 	}
 	if(	$_COOKIE[MEETINGROOM_NAME] != $_SESSION['OriginalCookieMeetingRoomName'] OR 
 		$_COOKIE[MEETINGROOM_IDCODE] != $_SESSION['OriginalCookieMeetingRoomIDCode']){
 			// Cookies have changed
-			// TO-DO: 
-			deleteMeetingRoomCookies();
-			unset($_SESSION['DefaultMeetingRoomInfo']);
+			resetLocalDevice();
 		}
 } else {
 	unset($_SESSION['DefaultMeetingRoomInfo']);
@@ -256,35 +244,23 @@ if(	(isset($_POST['action']) AND $_POST['action'] == 'Create Meeting') OR
 	// Only a logged in user can create a meeting
 	// or if we're on a local device that can take a booking code
 	
-	if(isset($_COOKIE[MEETINGROOM_NAME]) AND isset($_COOKIE[MEETINGROOM_IDCODE])){
-		// There are local meeting room identifiers set in cookies. Check if it is valid
-		$meetingRoomName = $_COOKIE[MEETINGROOM_NAME];
-		$meetingRoomIDCode = $_COOKIE[MEETINGROOM_IDCODE];
-		$validMeetingRoom = databaseContainsMeetingRoomWithIDCode($meetingRoomName, $meetingRoomIDCode);
-		if ($validMeetingRoom === TRUE){
-			// Cookies are correctly identifying a meeting room
-			// Hopefully this means it's a local device we set up and not someone malicious
-			// Set default meeting room information
+	if(isset($_SESSION['DefaultMeetingRoomInfo'])){
+		// We're accessing a local device.
+		// Confirm with booking code
 		
-			loadCreateBookingTemplate();
-		} elseif($validMeetingRoom === FALSE){
-			// The cookies set does not match a meeting room
-			// Remove the cookies
-			deleteMeetingRoomCookies();
-			// TO-DO: Do anything more here to punish cookie manipulation?
-		}		
+		// 
+		
+		include_once 'confirm.html.php';
 	}
 	
 	// We're not making a booking locally. Make users be logged in
 	if(makeUserLogIn() === TRUE){
 		// We're logged in and can create the booking
-		loadCreateBookingTemplate();
+		include_once 'confirm.html.php';
 	}
-
 }
 //getUserInfoFromBookingCode();
-
-
+//
 if(isset($_POST['action']) AND $_POST['action'] == 'Confirm Meeting'){
 	list($invalidInput, $startDateTime, $endDateTime, $validatedBookingDescription, $validatedDisplayName) = validateUserInputs('MeetingRoomAllUsersFeedback');
 	

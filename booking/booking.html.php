@@ -8,8 +8,8 @@
 		<title>Booking Information</title>
 	</head>
 	<body>
-	<?php if(isset($_GET['meetingroom'])) : ?>
-		<h1>Booking Information</h1>
+	<?php if(isset($_GET['meetingroom']) AND $_GET['meetingroom']!=NULL AND $_GET['meetingroom']!="") : ?>
+		<h1>Set Booking Information</h1>
 		<?php if(isset($_SESSION['normalBookingFeedback'])) : ?>
 			<p><b><?php htmlout($_SESSION['normalBookingFeedback']); ?></b></p>
 			<?php unset($_SESSION['normalBookingFeedback']); ?>
@@ -109,8 +109,10 @@
 				<?php endif; ?>				
 			</div>
 		</form>
+	<?php elseif(isset($_GET['cancellationcode'])) : ?>
+		<h1>Cancel Your Booking!</h1>
 	<?php else : ?>
-		<b>Hard to book a meeting without selecting a meeting room!</b>
+		<h1>Booking A Meeting Requires Selecting A Room!</h1>
 	<?php endif; ?>
 	<?php //TO-DO: Fix -> include '../logout.inc.html.php'; ?>
 	</body>

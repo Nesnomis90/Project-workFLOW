@@ -6,8 +6,6 @@ include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/magicquotes.inc.php';
 // PHP code that we will set to be run at a certain interval, with CRON, to interact with our database
 // Cron does 1 run per minute (fastest)
 
-// TO-DO: This is all untested
-
 // Update completed bookings 
 try
 {
@@ -34,100 +32,17 @@ catch(PDOException $e)
 	exit();
 }
 
-// Delete users that have not been activated within 8 hours of being created
-try
-{
-	include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
-	
-	$pdo = connect_to_db();
-	$sql = "DELETE 	
-			FROM 	`user`
-			WHERE 	DATE_ADD(`create_time`, INTERVAL 8 HOUR) < CURRENT_TIMESTAMP
-			AND 	`isActive` = 0
-			AND		`userID` <> 0";		
-	$pdo->exec($sql);
-	
-	//Close the connection
-	$pdo = null;
-}
-catch(PDOException $e)
-{
-	$error = 'Error deleting unactivated user: ' . $e->getMessage();
-	include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
-	$pdo = null;
-	exit();
-}
-
-// Make a company inactive when the current date is past the date set by admin
-// TO-DO: only needs to run once per day, if we make another cron for it
-try
-{
-	include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
-	
-	$pdo = connect_to_db();
-	$sql = "UPDATE 	`company`
-			SET 	`isActive` = 0
-			WHERE 	DATE(CURRENT_TIMESTAMP) >= `removeAtDate`
-			AND 	`isActive` = 1
-			AND		`companyID` <> 0";		
-	$pdo->exec($sql);
-	
-	//Close the connection
-	$pdo = null;
-}
-catch(PDOException $e)
-{
-	$error = 'Error deleting company with a set remove date: ' . $e->getMessage();
-	include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
-	$pdo = null;
-	exit();
-}
-
-// Make any user turn into a normal user (access level) when the current date is past the date set by admin
-// TO-DO: only needs to run once per day, if we make another cron for it
-try
-{
-	include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
-	
-	$pdo = connect_to_db();
-	$sql = "UPDATE 	`user`
-			SET 	`AccessID` = ( 
-									SELECT 	`AccessID`
-									FROM 	`accesslevel`
-									WHERE 	`AccessName` = 'Normal User'
-									LIMIT 	1
-								),
-					`bookingCode` = NULL
-			WHERE 	DATE(CURRENT_TIMESTAMP) >= `reduceAccessAtDate`
-			AND 	`isActive` = 1
-			AND		`userID` <> 0";		
-	$pdo->exec($sql);
-	
-	//Close the connection
-	$pdo = null;
-}
-catch(PDOException $e)
-{
-	$error = 'Error deleting company with a set remove date: ' . $e->getMessage();
-	include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
-	$pdo = null;
-	exit();
-}
-
 /////////////////////////////////////////////////////////////////////////////////////////////
 // START Check if a meeting is about to start and alert the user by sending an email START //
-$minutesBeforeMeetingStarts = 10;
-$minutesAfterCreatingMeetingBeforeSendingEmailThatItStartsSoon = 30;
-
 try
 {
 	include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 	
 	$pdo = connect_to_db();
-	// Get all upcoming meetings that are $minutesBeforeMeetingStarts minutes away from starting.
+	// Get all upcoming meetings that are TIME_LEFT_UNTIL_MEETING_STARTS_BEFORE_SENDING_EMAIL minutes away from starting.
 	// That we haven't already alerted/sent email to
 	// Only try to alert a user up to 1 minute until meeting starts (in theory they should instantly get alerted)
-	// Only try to alert a user if the booking was made longer than $minutesAfterCreatingMeetingBeforeSendingEmailThatItStartsSoon minutes ago
+	// Only try to alert a user if the booking was made longer than MINIMUM_TIME_PASSED_AFTER_CREATING_BOOKING_BEFORE_SENDING_EMAIL minutes ago
 	$sql = "SELECT 	m.`name`					AS MeetingRoomName,
 					c.`name`					AS CompanyName,
 					u.`email`					AS UserEmail,
@@ -154,8 +69,8 @@ try
 			AND		b.`emailSent` = 0
 			AND		b.`bookingID` <> 0";		
 	$s = $pdo->preare($sql);
-	$s->bindValue(':bufferMinutes', $minutesBeforeMeetingStarts)
-	$s->bindValue(':waitMinutes', $minutesAfterCreatingMeetingBeforeSendingEmailThatItStartsSoon)
+	$s->bindValue(':bufferMinutes', TIME_LEFT_UNTIL_MEETING_STARTS_BEFORE_SENDING_EMAIL)
+	$s->bindValue(':waitMinutes', MINIMUM_TIME_PASSED_AFTER_CREATING_BOOKING_BEFORE_SENDING_EMAIL)
 	$s->execute();
 	
 	$result = $s->fetchAll();
