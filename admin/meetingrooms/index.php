@@ -456,7 +456,6 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR
 		}
 		if(isset($_SESSION['EditMeetingRoomMeetingRoomID'])){
 			$meetingRoomID = $_SESSION['EditMeetingRoomMeetingRoomID'];
-			unset($_SESSION['EditMeetingRoomMeetingRoomID']);
 		}	
 	} else {
 		// Make sure we don't have any remembered values in memory
@@ -499,7 +498,8 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR
 		$meetingRoomCapacity = $row['MeetingRoomCapacity'];
 		$meetingRoomID = $row['MeetingRoomID'];
 		$meetingRoomDescription = $row['MeetingRoomDescription'];
-		$meetingRoomLocation = $row['MeetingRoomLocation']; 		
+		$meetingRoomLocation = $row['MeetingRoomLocation']; 	
+		$_SESSION['EditMeetingRoomMeetingRoomID'] = $meetingRoomID;	
 	}
 	
 	// Set the always correct information
@@ -532,7 +532,6 @@ if (isset($_POST['action']) AND $_POST['action'] == "Edit Room")
 		$_SESSION['EditMeetingRoomName'] = $validatedMeetingRoomName;
 		$_SESSION['EditMeetingRoomCapacity'] = $validatedMeetingRoomCapacity;
 		$_SESSION['EditMeetingRoomLocation'] = $validatedMeetingRoomLocation;
-		$_SESSION['EditMeetingRoomMeetingRoomID'] = $_POST['MeetingRoomID'];
 		
 		$_SESSION['refreshEditMeetingRoom'] = TRUE;
 		header('Location: .');
@@ -611,7 +610,6 @@ if(isset($_POST['edit']) AND $_POST['edit'] == 'Reset'){
 	$_SESSION['EditMeetingRoomName'] = $_SESSION['EditMeetingRoomOriginalInfo']['MeetingRoomName'];
 	$_SESSION['EditMeetingRoomCapacity'] = $_SESSION['EditMeetingRoomOriginalInfo']['MeetingRoomCapacity'];
 	$_SESSION['EditMeetingRoomLocation'] = $_SESSION['EditMeetingRoomOriginalInfo']['MeetingRoomLocation'];
-	$_SESSION['EditMeetingRoomMeetingRoomID'] = $_SESSION['EditMeetingRoomOriginalInfo'];
 
 	$_SESSION['refreshEditMeetingRoom'] = TRUE;
 	header('Location: .');
