@@ -30,7 +30,7 @@
 				<input type="hidden" name="EquipmentID" value="<?php htmlout($EquipmentID); ?>">
 				<input type="hidden" name="MeetingRoomID" value="<?php htmlout($MeetingRoomID); ?>">
 				<input type="submit" name="action" value="Confirm Amount">
-				<input type="submit" name="action" value="Cancel">
+				<input type="submit" name="edit" value="Cancel">
 			</div>
 		</form>
 	<p><a href="..">Return to CMS home</a></p>

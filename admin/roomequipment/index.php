@@ -123,16 +123,17 @@ if(isset($_POST['action']) AND $_POST['action'] == 'Remove'){
 
 // Admin clicked the search button, trying to limit the shown equipment and meeting rooms
 if(isset($_POST['action']) AND $_POST['action'] == 'Search'){
-	// Let's remember what was searched for
+	// We are doing a new search, so we need to get new meeting room and equipment arrays
+	unset($_SESSION['AddRoomEquipmentEquipmentArray']);	
+	unset($_SESSION['AddRoomEquipmentMeetingRoomArray']);
+
+	$_SESSION['AddRoomEquipmentShowSearchResults'] = TRUE;
 	
+	// Let's remember what was searched for
 	$_SESSION['AddRoomEquipmentEquipmentSearch'] = trimExcessWhitespace($_POST['equipmentsearchstring']);
 	$_SESSION['AddRoomEquipmentSelectedEquipment'] = $_POST['EquipmentID'];
 	$_SESSION['AddRoomEquipmentSelectedEquipmentAmount'] = $_POST['EquipmentAmount'];
 	$_SESSION['refreshAddRoomEquipment'] = TRUE;
-	
-	// We are doing a new search, so we need to get new meeting room and equipment arrays
-	unset($_SESSION['AddRoomEquipmentEquipmentArray']);	
-	unset($_SESSION['AddRoomEquipmentMeetingRoomArray']);
 	
 	// If we are looking at a specific meeting room, let's refresh info about
 	// that meeting room again.
@@ -251,8 +252,7 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Add Room Equipment') OR
 												'MeetingRoomID' => $row['MeetingRoomID'],
 												'MeetingRoomName' => $row['MeetingRoomName']
 												);
-					}
-					
+					}	
 				} else {
 					// We want info about a specific meeting room
 					$sql = 'SELECT 	`meetingRoomID`	AS MeetingRoomID,
@@ -263,8 +263,18 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Add Room Equipment') OR
 					$s->bindValue(':MeetingRoomID', $_GET['Meetingroom']);
 					$s->execute();
 					$meetingrooms = $s->fetch();
+				}
+				if(isset($meetingrooms)){
+					$_SESSION['AddRoomEquipmentMeetingRoomArray'] = $meetingrooms;
+					$meetingRoomsFound = sizeOf($meetingrooms);
+				} else {
+					$_SESSION['AddRoomEquipmentMeetingRoomArray'] = array();
+					$meetingRoomsFound = 0;
 				}	
-				$_SESSION['AddRoomEquipmentMeetingRoomArray'] = $meetingrooms;	
+				
+				if(isset($_SESSION['AddRoomEquipmentShowSearchResults']) AND $_SESSION['AddRoomEquipmentShowSearchResults']){
+					$_SESSION['AddRoomEquipmentSearchResult'] = "The search result found $meetingRoomsFound meeting rooms";
+				}	
 			} else {
 				$meetingrooms = $_SESSION['AddRoomEquipmentMeetingRoomArray'];
 			}	
@@ -301,9 +311,18 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Add Room Equipment') OR
 				}
 				if(isset($equipment)){
 					$_SESSION['AddRoomEquipmentEquipmentArray'] = $equipment;
+					$equipmentFound = sizeOf($equipment);
 				} else {
 					$_SESSION['AddRoomEquipmentEquipmentArray'] = array();
+					$equipmentFound = 0;
 				}
+				if(isset($_SESSION['AddRoomEquipmentShowSearchResults']) AND $_SESSION['AddRoomEquipmentShowSearchResults']){
+					if(isset($_SESSION['AddRoomEquipmentSearchResult'])){
+						$_SESSION['AddRoomEquipmentSearchResult'] .= " and $equipmentFound equipment";
+					} else {
+						$_SESSION['AddRoomEquipmentSearchResult'] = "The search result found $equipmentFound equipment";
+					}	
+				}					
 			} else {
 				$equipment = $_SESSION['AddRoomEquipmentEquipmentArray'];
 			}	
@@ -324,6 +343,11 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Add Room Equipment') OR
 		$equipment = $_SESSION['AddRoomEquipmentEquipmentArray'];
 	}
 
+	if(isset($_SESSION['AddRoomEquipmentSearchResult'])){
+		$_SESSION['AddRoomEquipmentSearchResult'] .= ".";
+	}
+	unset($_SESSION['AddRoomEquipmentShowSearchResults']);
+	
 	// Change to the actual html form template
 	include 'addroomequipment.html.php';
 	exit();
@@ -705,10 +729,25 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Confirm Amount')
 	exit();	
 }
 
+// If admin wants to null values while adding
+if (isset($_POST['add']) AND $_POST['add'] == "Reset"){
+
+	clearAddRoomEquipmentSessions();
+	
+	$_SESSION['refreshAddRoomEquipment'] = TRUE;
+	header('Location: .');
+	exit();		
+}
 
 // If the user clicks any cancel buttons he'll be directed back to the roomequipment page again
-if (isset($_POST['action']) AND $_POST['action'] == 'Cancel'){
-	$_SESSION['RoomEquipmentUserFeedback'] = "Cancel button clicked. Taking you back to /admin/roomequipment/!";
+if (isset($_POST['add']) AND $_POST['add'] == 'Cancel'){
+	$_SESSION['RoomEquipmentUserFeedback'] = "You cancelled your meeting room and equipment connection creation.";
+	$refreshRoomEquipment = TRUE;
+}
+
+// If the user clicks any cancel buttons he'll be directed back to the roomequipment page again
+if (isset($_POST['edit']) AND $_POST['edit'] == 'Cancel'){
+	$_SESSION['RoomEquipmentUserFeedback'] = "You cancelled your meeting room and equipment connection editing.";
 	$refreshRoomEquipment = TRUE;
 }
 

@@ -13,6 +13,10 @@
 				<p><b><?php htmlout($AddRoomEquipmentError); ?> </b></p>
 			</div>
 		<?php endif; ?>
+		<?php if(isset($_SESSION['AddRoomEquipmentSearchResult'])) :?>
+				<p><b><?php htmlout($_SESSION['AddRoomEquipmentSearchResult']); ?></b></p>
+			<?php unset($_SESSION['AddRoomEquipmentSearchResult']); ?>
+		<?php endif; ?>			
 		<form action="" method="post">
 			<div>
 				<label for="MeetingRoomID">Meeting Room Name:</label>
@@ -72,10 +76,10 @@
 			<div>
 				<input type="submit" name="action" value="Search">
 				<input type="submit" name="action" value="Confirm Room Equipment">
-				<input type="submit" name="action" value="Cancel">
 			</div>
 			<div>
-				<input type="reset">
+				<input type="submit" name="add" value="Reset">
+				<input type="submit" name="add" value="Cancel">
 			</div>
 		</form>
 	<p><a href="..">Return to CMS home</a></p>

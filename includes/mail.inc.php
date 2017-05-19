@@ -48,7 +48,6 @@ function sendEmail($toEmail, $subject, $message){
 }
 
 // Function to validate a user email
-// TO-DO: UNTESTED
 function validateUserEmail($email){
 	/*Following RFC 5321, best practice for validating an email address would be to:
 
@@ -76,6 +75,12 @@ function validateUserEmail($email){
 		$domain = substr(strrchr($email, "@"), 1);
 		if(strlen($domain) > 255){
 			// domain is bigger than 255 octets
+			return FALSE;
+		}
+		
+		// Email needs at least a local and a domain part, so *@* minimum.
+		if(strlen($local) == 0 OR strlen($domain) == 0){
+			// missing a local or domain part
 			return FALSE;
 		}
 		
