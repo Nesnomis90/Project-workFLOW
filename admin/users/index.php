@@ -28,8 +28,10 @@ function clearEditUserSessions(){
 	unset($_SESSION['EditUserOriginalFirstName']);
 	unset($_SESSION['EditUserOriginalLastName']);
 	unset($_SESSION['EditUserOriginaAccessID']);
+	unset($_SESSION['EditUserOriginaAccessName']);
 	unset($_SESSION['EditUserOriginaDisplayName']);
 	unset($_SESSION['EditUserOriginaBookingDescription']);
+	unset($_SESSION['EditUserOriginaReduceAccessAtDate']);
 	
 	unset($_SESSION['EditUserChangedEmail']);	
 	unset($_SESSION['EditUserChangedFirstname']);
@@ -37,6 +39,7 @@ function clearEditUserSessions(){
 	unset($_SESSION['EditUserChangedAccessID']);
 	unset($_SESSION['EditUserChangedDisplayname']);
 	unset($_SESSION['EditUserChangedBookingDescription']);
+	unset($_SESSION['EditUserChangedReduceAccessAtDate']);
 	
 	unset($_SESSION['TheUserID']);
 	unset($_SESSION['EditUserAccessList']);	
@@ -84,8 +87,8 @@ function validateUserInputs($FeedbackSessionToUse){
 		$bookingDescriptionString = '';
 	}
 		// Reduce Access At Date (edit only)
-	if(isset($_POST['reduceaccessatdate'])){
-		$reduceAccessAtDate = $_POST['reduceaccessatdate'];
+	if(isset($_POST['ReduceAccessAtDate'])){
+		$reduceAccessAtDate = $_POST['ReduceAccessAtDate'];
 	} else {
 		$reduceAccessAtDate = '';
 	}	
@@ -547,8 +550,6 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR
 		unset($_SESSION['EditUserChangedDisplayname']);
 		$bookingdescription = $_SESSION['EditUserChangedBookingDescription'];
 		unset($_SESSION['EditUserChangedBookingDescription']);
-		$reduceAccessAtDate = $_SESSION['EditUserChangedReduceAccessAtDate'];
-		unset($_SESSION['EditUserChangedReduceAccessAtDate']);
 		
 		$access = $_SESSION['EditUserAccessList'];
 		
@@ -676,6 +677,7 @@ if (isset($_GET['editform']))
 	// Check if any values were actually changed
 	$NumberOfChanges = 0;
 	$changePassword = FALSE;
+	$changedReduceAccessAtDate = FALSE;
 	
 	// Check if user is trying to set a new password
 	// And if so, check if both fields are filled in and match each other
@@ -763,6 +765,7 @@ if (isset($_GET['editform']))
 	if ( isset($_SESSION['EditUserOriginaReduceAccessAtDate']) AND 
 	$validatedReduceAccessAtDate != $_SESSION['EditUserOriginaReduceAccessAtDate'])
 	{
+		$changedReduceAccessAtDate = TRUE;
 		$NumberOfChanges++;
 		unset($_SESSION['EditUserOriginaReduceAccessAtDate']);
 	}
@@ -771,8 +774,8 @@ if (isset($_GET['editform']))
 		// We actually have something to update!	
 		try
 		{
-			if ($changePassword){
-				// Update user info (new password)
+			if ($changePassword AND $changedReduceAccessAtDate){
+				// Update user info (new password and date)
 				$newPassword = $password;
 				$hashedNewPassword = hashPassword($newPassword);
 				
@@ -800,7 +803,34 @@ if (isset($_GET['editform']))
 				$s->bindValue(':bookingdescription', $validatedBookingDescription);
 				$s->bindValue(':reduceAccessAtDate', $validatedReduceAccessAtDate);
 				$s->execute();			
-			} else {
+			} elseif($changePassword AND !$changedReduceAccessAtDate) {
+				// Update user info (no new date)
+				$newPassword = $password;
+				$hashedNewPassword = hashPassword($newPassword);
+				
+				include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+				$pdo = connect_to_db();
+				$sql = 'UPDATE `user` SET
+								firstname = :firstname,
+								lastname = :lastname,
+								email = :email,
+								password = :password,
+								accessID = :accessID,
+								displayname = :displayname,
+								bookingdescription = :bookingdescription
+						WHERE 	userID = :id';
+						
+				$s = $pdo->prepare($sql);
+				$s->bindValue(':id', $_POST['id']);
+				$s->bindValue(':firstname', $validatedFirstname);
+				$s->bindValue(':lastname', $validatedLastname);
+				$s->bindValue(':email', $email);
+				$s->bindValue(':password', $hashedNewPassword);
+				$s->bindValue(':accessID', $_POST['accessID']);
+				$s->bindValue(':displayname', $validatedDisplayName);
+				$s->bindValue(':bookingdescription', $validatedBookingDescription);
+				$s->execute();					
+			} elseif(!$changePassword AND $changedReduceAccessAtDate){
 				// Update user info (no new password)
 				include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 				$pdo = connect_to_db();
@@ -823,7 +853,29 @@ if (isset($_GET['editform']))
 				$s->bindValue(':displayname', $validatedDisplayName);
 				$s->bindValue(':bookingdescription', $validatedBookingDescription);
 				$s->bindValue(':reduceAccessAtDate', $validatedReduceAccessAtDate);
-				$s->execute();	
+				$s->execute();					
+			} elseif(!$changePassword AND !$changedReduceAccessAtDate){
+				// Update user info (no new password and no new date)
+				include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+				$pdo = connect_to_db();
+				$sql = 'UPDATE `user` 
+						SET		firstname = :firstname,
+								lastname = :lastname,
+								email = :email,
+								accessID = :accessID,
+								displayname = :displayname,
+								bookingdescription = :bookingdescription
+						WHERE 	userID = :id';
+						
+				$s = $pdo->prepare($sql);
+				$s->bindValue(':id', $_POST['id']);
+				$s->bindValue(':firstname', $validatedFirstname);
+				$s->bindValue(':lastname', $validatedLastname);
+				$s->bindValue(':email', $email);
+				$s->bindValue(':accessID', $_POST['accessID']);
+				$s->bindValue(':displayname', $validatedDisplayName);
+				$s->bindValue(':bookingdescription', $validatedBookingDescription);
+				$s->execute();						
 			}
 				
 			// Close the connection
@@ -962,7 +1014,7 @@ foreach ($result as $row)
 						'datecreated' => $displayCreatedDateTime,			
 						'lastactive' => $displayLastActiveDateTime,
 						'UserInfo' => $userinfo,
-						'reduceaccess' => $reduceAccessAtDate
+						'reduceaccess' => $displayReduceAccessAtDate
 						);
 	} elseif ($row['isActive'] == 0) {
 		$inactiveusers[] = array('id' => $row['userID'], 
