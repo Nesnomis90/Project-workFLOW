@@ -153,7 +153,7 @@
 				<label for="originalDisplayName">Booked Display Name: </label>
 				<b>
 					<?php if($originalDisplayName == "") : ?>
-						This booking has no Display Name set.
+						<b>This booking has no Display Name set.</b>
 					<?php else : ?>
 						<?php htmlout($originalDisplayName); ?>
 					<?php endif; ?>
@@ -169,7 +169,7 @@
 				<label for="originalBookingDescription">Booked Description: </label>
 				<b>
 					<?php if($originalBookingDescription == "") : ?>
-						This booking has no Booking Description set.
+						<b>This booking has no Booking Description set.</b>
 					<?php else : ?>
 						<?php htmlout($originalBookingDescription); ?>
 					<?php endif; ?>

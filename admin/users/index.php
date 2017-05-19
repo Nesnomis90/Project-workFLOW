@@ -15,10 +15,11 @@ function clearAddUserSessions(){
 	unset($_SESSION['AddNewUserFirstname']);
 	unset($_SESSION['AddNewUserLastname']);
 	unset($_SESSION['AddNewUserEmail']);
-	unset($_SESSION['AddNewUserSelectedAccess']);
+	unset($_SESSION['AddNewUserSelectedAccess']);	
+	unset($_SESSION['AddNewUserAccessArray']);
+	unset($_SESSION['AddNewUserGeneratedPassword']);
+	unset($_SESSION['AddNewUserDefaultAccessID']);
 	
-	unset($_SESSION['AddUserAccessArray']);
-	unset($_SESSION['AddUserGeneratedPassword']);	
 	unset($_SESSION['lastUserID']);
 }
 
@@ -289,16 +290,16 @@ if (isset($_POST['action']) and $_POST['action'] == 'Delete')
  
 // If admin wants to add a user to the database
 // we load a new html form
-if (isset($_GET['add']) OR (isset($_SESSION['refreshUserAddform']) AND $_SESSION['refreshUserAddform']))
+if (isset($_GET['add']) OR (isset($_SESSION['refreshAddUser']) AND $_SESSION['refreshAddUser']))
 {	
 	// Check if the call was /?add/ or a forced refresh
-	if(isset($_SESSION['refreshUserAddform']) AND $_SESSION['refreshUserAddform']){
+	if(isset($_SESSION['refreshAddUser']) AND $_SESSION['refreshAddUser']){
 		// Acknowledge that we have refreshed the form
-		unset($_SESSION['refreshUserAddform']);
+		unset($_SESSION['refreshAddUser']);
 		
 		// Set correct values
-		$access = $_SESSION['AddUserAccessArray'];
-		$generatedPassword = $_SESSION['AddUserGeneratedPassword'];
+		$access = $_SESSION['AddNewUserAccessArray'];
+		$generatedPassword = $_SESSION['AddNewUserGeneratedPassword'];
 	} else {
 		// Make sure we don't have any remembered values in memory
 		clearAddUserSessions();
@@ -322,6 +323,9 @@ if (isset($_GET['add']) OR (isset($_SESSION['refreshUserAddform']) AND $_SESSION
 									'accessID' => $row['accessID'],
 									'accessname' => $row['accessname']
 									);
+				if($row['accessname'] == 'Normal User'){
+					$_SESSION['AddNewUserDefaultAccessID'] = $row['accessID'];
+				}
 			}
 			
 			//Close connection
@@ -339,8 +343,8 @@ if (isset($_GET['add']) OR (isset($_SESSION['refreshUserAddform']) AND $_SESSION
 		$generatedPassword = generateUserPassword(6);
 		
 		// Set correct values
-		$_SESSION['AddUserAccessArray'] = $access;
-		$_SESSION['AddUserGeneratedPassword'] = $generatedPassword;
+		$_SESSION['AddNewUserAccessArray'] = $access;
+		$_SESSION['AddNewUserGeneratedPassword'] = $generatedPassword;
 	}
 	
 	// Set initial values
@@ -351,7 +355,7 @@ if (isset($_GET['add']) OR (isset($_SESSION['refreshUserAddform']) AND $_SESSION
 	// Set always correct values
 	$pageTitle = 'New User';
 	$action = 'addform';
-	$button = 'Add user';	
+	$button = 'Add User';	
 	$id = '';
 	$displayname = '';
 	$bookingdescription = '';	
@@ -372,10 +376,9 @@ if (isset($_GET['add']) OR (isset($_SESSION['refreshUserAddform']) AND $_SESSION
 	if(isset($_SESSION['AddNewUserSelectedAccess'])){
 		$accessID = $_SESSION['AddNewUserSelectedAccess'];
 		unset($_SESSION['AddNewUserSelectedAccess']);		
+	} else {
+		$accessID = $_SESSION['AddNewUserDefaultAccessID'];
 	}
-	
-	// We want a reset all fields button while adding a new user
-	$reset = 'reset';
 	
 	// Change to the actual html form template
 	include 'form.html.php';
@@ -383,7 +386,7 @@ if (isset($_GET['add']) OR (isset($_SESSION['refreshUserAddform']) AND $_SESSION
 }
 
 // When admin has added the needed information and wants to add the user
-if (isset($_GET['addform']))
+if (isset($_GET['addform']) AND isset($_POST['action']) AND $_POST['action'] == 'Add User')
 {
 	// Validate user inputs
 	list($invalidInput, $email, $validatedFirstname, $validatedLastname, $validatedBookingDescription, $validatedDisplayName, $validatedReduceAccessAtDate) = validateUserInputs('AddNewUserError');	
@@ -396,7 +399,7 @@ if (isset($_GET['addform']))
 		$_SESSION['AddNewUserSelectedAccess'] = $_POST['accessID'];	
 		
 		// Let's refresh the add template
-		$_SESSION['refreshUserAddform'] = TRUE;
+		$_SESSION['refreshAddUser'] = TRUE;
 		header('Location: .');
 		exit();
 	}
@@ -410,7 +413,7 @@ if (isset($_GET['addform']))
 		$activationcode = generateActivationCode();
 		
 		// Hash the user generated password
-		$hashedPassword = hashPassword($_SESSION['AddUserGeneratedPassword']);
+		$hashedPassword = hashPassword($_SESSION['AddNewUserGeneratedPassword']);
 		
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 		
@@ -496,7 +499,7 @@ if (isset($_GET['addform']))
 	
 	// Send user an email with the activation code
 		// TO-DO: This is UNTESTED since we don't have php.ini set up to actually send email
-	$generatedPassword = $_SESSION['AddUserGeneratedPassword'];
+	$generatedPassword = $_SESSION['AddNewUserGeneratedPassword'];
 
 	$emailSubject = "Account Activation Link";
 	
@@ -524,6 +527,25 @@ if (isset($_GET['addform']))
 	// Load user list webpage with new user
 	header('Location: .');
 	exit();
+}
+
+// If admin wants to null values while adding
+if (isset($_POST['add']) AND $_POST['add'] == "Reset"){
+
+	$_SESSION['AddNewUserFirstname'] = "";
+	$_SESSION['AddNewUserLastname'] = "";
+	$_SESSION['AddNewUserEmail'] = "";
+	$_SESSION['AddNewUserSelectedAccess'] = $_SESSION['AddNewUserDefaultAccessID'];
+	
+	$_SESSION['refreshAddUser'] = TRUE;
+	header('Location: .');
+	exit();		
+}
+
+// If admin wants to leave the page and be directed back to the booking page again
+if (isset($_POST['add']) AND $_POST['add'] == 'Cancel'){
+
+	$_SESSION['BookingUserFeedback'] = "You cancelled your user creation.";
 }
 
 // if admin wants to edit user information
@@ -649,7 +671,7 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR
 	// Set the correct information
 	$pageTitle = 'Edit User';
 	$action = 'editform';
-	$button = 'Edit user';
+	$button = 'Edit User';
 	$password = '';
 	$confirmpassword = '';
 	
@@ -659,17 +681,14 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR
 	$originalDisplayName = $_SESSION['EditUserOriginaDisplayName'];
 	$originalBookingDescription = $_SESSION['EditUserOriginaBookingDescription'];
 	$originalAccessName = $_SESSION['EditUserOriginaAccessName'];
-	
-	// Don't want a reset button to blank all fields while editing
-	$reset = 'hidden';
-	
+		
 	// Change to the actual form we want to use
 	include 'form.html.php';
 	exit();
 }
 
 // Perform the actual database update of the edited information
-if (isset($_GET['editform']))
+if (isset($_GET['editform'])AND isset($_POST['action']) AND $_POST['action'] == 'Edit User')
 {
 		// Validate user inputs
 	list($invalidInput, $email, $validatedFirstname, $validatedLastname, $validatedBookingDescription, $validatedDisplayName, $validatedReduceAccessAtDate) = validateUserInputs('AddNewUserError');
@@ -921,7 +940,7 @@ if (isset($_POST['edit']) AND $_POST['edit'] == "Reset"){
 // If admin wants to leave the page and be directed back to the booking page again
 if (isset($_POST['edit']) AND $_POST['edit'] == 'Cancel'){
 
-	$_SESSION['BookingUserFeedback'] = "You cancelled your booking editing.";
+	$_SESSION['BookingUserFeedback'] = "You cancelled your user editing.";
 }
 
 // if admin wants to cancel the date to reduce access

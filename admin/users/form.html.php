@@ -118,8 +118,7 @@
 					<b><?php htmlout($originalBookingDescription); ?></b>
 				<?php else: ?>
 					<b>This User Has No Booking Description.</b>
-				<?php endif; ?>				
-				<b><?php htmlout($originalBookingDescription); ?></b>
+				<?php endif; ?>	
 			</div>
 			<div>
 				<label for="bookingdescription">Set New Booking Description: </label>
@@ -151,7 +150,7 @@
 			</div>
 			<div>
 				<input type="hidden" name="id" value="<?php htmlout($id); ?>">
-				<input type="submit" value="<?php htmlout($button); ?>">
+				<input type="submit" name="action" value="<?php htmlout($button); ?>">
 			</div>			
 		</form>
 	<p><a href="..">Return to CMS home</a></p>
