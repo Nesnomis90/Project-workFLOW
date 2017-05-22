@@ -252,7 +252,7 @@ if(	(isset($_POST['action']) AND $_POST['action'] == 'Create Meeting') OR
 	if(isset($_SESSION['DefaultMeetingRoomInfo'])){
 		// We're accessing a local device.
 		// Confirm with booking code
-		
+		// TO-DO:
 		// 
 		
 		include_once 'confirm.html.php';
@@ -264,8 +264,6 @@ if(	(isset($_POST['action']) AND $_POST['action'] == 'Create Meeting') OR
 		// We're not logged in
 		exit();	
 	}	
-	
-	
 	
 	// We're logged in and can create the meeting
 	if(isset($_SESSION['refreshCreateMeeting']) AND $_SESSION['refreshCreateMeeting'])){
@@ -386,7 +384,7 @@ if(	(isset($_POST['action']) AND $_POST['action'] == 'Create Meeting') OR
 				$_SESSION['CreateBookingInfoArray']['UserEmail'] = $email;	
 				$_SESSION['CreateBookingInfoArray']['TheUserID'] = $_SESSION['LoggedInUserID'];
 				
-				$_SESSION['AddBookingOriginalInfoArray'] = $_SESSION['CreateBookingInfoArray'];
+				$_SESSION['CreateBookingOriginalInfoArray'] = $_SESSION['CreateBookingInfoArray'];
 			}
 			
 			// Set the correct information on form call
@@ -462,7 +460,7 @@ if(	(isset($_POST['action']) AND $_POST['action'] == 'Create Meeting') OR
 	
 	// Set the correct information
 	$row = $_SESSION['CreateBookingInfoArray'];
-	$original = $_SESSION['AddBookingOriginalInfoArray'];
+	$original = $_SESSION['CreateBookingOriginalInfoArray'];
 
 		// Altered inputs
 	if(isset($row['TheCompanyID'])){
