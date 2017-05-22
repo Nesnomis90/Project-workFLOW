@@ -258,13 +258,12 @@ if(	(isset($_POST['action']) AND $_POST['action'] == 'Create Meeting') OR
 		include_once 'confirm.html.php';
 		exit();
 	}
-	
 		// If not local, use regular log in
-	if(makeUserLogIn() !== TRUE){
-		// We're not logged in
-		exit();	
-	}	
-	
+	if(checkIfUserIsLoggedIn() === FALSE){
+		makeUserLogIn();
+		exit();
+	}
+		
 	// We're logged in and can create the meeting
 	if(isset($_SESSION['refreshCreateMeeting']) AND $_SESSION['refreshCreateMeeting'])){
 		// TO-DO: get old values on refresh
