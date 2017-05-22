@@ -174,6 +174,8 @@ function rememberCreateBookingInputs(){
 function resetLocalDevice(){
 	deleteMeetingRoomCookies();
 	unset($_SESSION['DefaultMeetingRoomInfo']);
+	unset($_SESSION['OriginalCookieMeetingRoomName']);
+	unset($_SESSION['OriginalCookieMeetingRoomIDCode']);
 	// TO-DO: Do anything more here to punish cookie manipulation?	
 }
 
@@ -224,16 +226,20 @@ if(isset($_COOKIE[MEETINGROOM_NAME]) AND isset($_COOKIE[MEETINGROOM_IDCODE]))
 				}			
 			}
 		} elseif($validMeetingRoom === FALSE){
-			// The cookies set does not match a meeting room
+			// The cookies set does not match a meeting room i.e. someone manually changed a cookie
 			resetLocalDevice();
 		}	
 	}
 	if(	$_COOKIE[MEETINGROOM_NAME] != $_SESSION['OriginalCookieMeetingRoomName'] OR 
 		$_COOKIE[MEETINGROOM_IDCODE] != $_SESSION['OriginalCookieMeetingRoomIDCode']){
 			// Cookies have changed
-			resetLocalDevice();
+			unset($_SESSION['OriginalCookieMeetingRoomName']);
+			unset($_SESSION['OriginalCookieMeetingRoomIDCode']);
+			unset($_SESSION['DefaultMeetingRoomInfo']);
 		}
 } else {
+	unset($_SESSION['OriginalCookieMeetingRoomName']);
+	unset($_SESSION['OriginalCookieMeetingRoomIDCode']);
 	unset($_SESSION['DefaultMeetingRoomInfo']);
 }
 
