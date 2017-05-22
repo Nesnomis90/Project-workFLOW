@@ -19,24 +19,41 @@
 			<?php unset($_SESSION['AddEquipmentError']); ?>
 		<?php endif; ?>
 		<form action="" method="post">
+			<?php if($button == 'Edit Equipment') : ?>
 			<div>
-				<label for="EquipmentName">Equipment Name: </label>
+				<label for="OriginalEquipmentName">Original Equipment Name: </label>
+				<b><?php htmlout($originalEquipmentName); ?></b>
+			</div>
+			<?php endif; ?>		
+			<div>
+				<label for="EquipmentName">Set New Equipment Name: </label>
 				<input type="text" name="EquipmentName" id="EquipmentName" 
 				placeholder="Enter Equipment Name"
 				value="<?php htmlout($EquipmentName); ?>">
 			</div>
+			<?php if($button == 'Edit Equipment') : ?>
 			<div>
-				<label for="EquipmentDescription">Equipment Description: </label>
+				<label for="OriginalEquipmentDescription">Original Equipment Description: </label>
+				<b><?php htmlout($originalEquipmentDescription); ?></b>
+			</div>
+			<?php endif; ?>					
+			<div>
+				<label for="EquipmentDescription">Set New Equipment Description: </label>
 					<textarea rows="4" cols="50" name="EquipmentDescription" id="EquipmentDescription"
 					placeholder="Enter Equipment Description"><?php htmlout($EquipmentDescription); ?></textarea>
 			</div>			
 			<div>
 				<input type="hidden" name="EquipmentID" value="<?php htmlout($EquipmentID); ?>">
 				<input type="submit" name="action" value="<?php htmlout($button); ?>">
-				<input type="submit" name="action" value="Cancel">
 			</div>
 			<div>
-				<input type="<?php htmlout($reset); ?>">
+			<?php if($button == 'Confirm Equipment') : ?>
+				<input type="submit" name="add" value="Reset">
+				<input type="submit" name="add" value="Cancel">
+			<?php elseif($button == 'Edit Equipment') : ?>
+				<input type="submit" name="edit" value="Reset">
+				<input type="submit" name="edit" value="Cancel">				
+			<?php endif; ?>
 			</div>
 		</form>
 	<p><a href="..">Return to CMS home</a></p>

@@ -258,8 +258,8 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Add Employee') OR
 						$_SESSION['AddEmployeeCompaniesArray'] = array();
 						$companiesFound = 0;
 					}
-					if(isset($_SESSION['AddEmployeeShowSearchResults']) AND $_SESSION['AddEmployeeShowSearchResults'] == TRUE){
-						$_SESSION['AddEmployeeSearchResult'] = "The search result found $companiesFound companies";
+					if(isset($_SESSION['AddEmployeeShowSearchResults']) AND $_SESSION['AddEmployeeShowSearchResults']){
+						$_SESSION['AddEmployeeSearchResult'] = "The search result found $companiesFound companies.";
 					}					
 						
 				} else {
@@ -348,7 +348,7 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Add Employee') OR
 					$_SESSION['AddEmployeeUsersArray'] = array();
 					$usersFound = 0;
 				}
-				if(isset($_SESSION['AddEmployeeShowSearchResults']) AND $_SESSION['AddEmployeeShowSearchResults'] == TRUE){
+				if(isset($_SESSION['AddEmployeeShowSearchResults']) AND $_SESSION['AddEmployeeShowSearchResults']){
 					if(isset($_SESSION['AddEmployeeSearchResult'])){
 					$_SESSION['AddEmployeeSearchResult'] .= " and $usersFound users";
 					} else {

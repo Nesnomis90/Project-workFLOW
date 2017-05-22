@@ -281,7 +281,7 @@ if (isset($_POST['action']) and $_POST['action'] == 'Delete')
 		exit();
 	}
 	
-	$_SESSION['BookingUserFeedback'] = "Successfully removed the booking";
+	$_SESSION['BookingUserFeedback'] .= "Successfully removed the booking";
 	
 	// Add a log event that a booking was deleted
 	try
@@ -360,7 +360,7 @@ if (isset($_POST['action']) and $_POST['action'] == 'Cancel')
 			exit();
 		}
 		
-		$_SESSION['BookingUserFeedback'] = "Successfully cancelled the booking";
+		$_SESSION['BookingUserFeedback'] .= "Successfully cancelled the booking";
 		
 			// Add a log event that a booking was cancelled
 		try
@@ -629,6 +629,8 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR
 		$_SESSION['EditBookingDefaultBookingDescriptionForNewUser'] = $original['UserDefaultBookingDescription'];
 	}
 	
+	$_SESSION['EditBookingInfoArray'] = $row;
+	
 	// Changed company
 	if(isset($company)){
 		foreach($company AS $cmp){
@@ -671,10 +673,16 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR
 		$originalCompanyName = $original['BookedForCompany'];
 	}
 	$originalMeetingRoomName = $original['BookedRoomName'];
+	if(!isset($originalMeetingRoomName) OR $originalMeetingRoomName == NULL OR $originalMeetingRoomName == ""){
+		$originalMeetingRoomName = "N/A - Deleted";	
+	}
 	$originalDisplayName = $original['BookedBy'];
 	$originalBookingDescription = $original['BookingDescription'];
 	$originalUserInformation = 	$original['UserLastname'] . ', ' . $original['UserFirstname'] . 
 								' - ' . $original['UserEmail'];
+	if(!isset($originalUserInformation) OR $originalUserInformation == NULL OR $originalUserInformation == ",  - "){
+		$originalUserInformation = "N/A - Deleted";	
+	}	
 	
 	// Change to the actual form we want to use
 	include 'editbooking.html.php';
@@ -894,7 +902,7 @@ if(isset($_POST['edit']) AND $_POST['edit'] == "Get Default Booking Description"
 	exit();	
 }
 
-// If admin wants to change the values back to the original values
+// If admin wants to change the values back to the original values while editing
 if (isset($_POST['edit']) AND $_POST['edit'] == "Reset"){
 
 	$_SESSION['EditBookingInfoArray'] = $_SESSION['EditBookingOriginalInfoArray'];
@@ -1119,11 +1127,11 @@ if(isset($_POST['edit']) AND $_POST['edit'] == "Finish Edit")
 		exit();
 	}
 		
-	$_SESSION['BookingUserFeedback'] = "Successfully updated the booking information!";
+	$_SESSION['BookingUserFeedback'] .= "Successfully updated the booking information!";
 	
 	// Send email to the user (if altered by someone else) that their booking has been changed
 		// TO-DO: This is UNTESTED since we don't have php.ini set up to actually send email
-	if(!$_POST['userID'] == $_SESSION['LoggedInUserID']){
+	if($_POST['userID'] != $_SESSION['LoggedInUserID']){
 		
 		// date display formatting
 		$NewStartDate = convertDatetimeToFormat($startDateTime, 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
@@ -1187,6 +1195,8 @@ if(isset($_POST['edit']) AND $_POST['edit'] == "Finish Edit")
 			"Start Time: " . $NewStartDate . ".\n" .
 			"End Time: " . $NewEndDate . ".\n\n" . 
 			"This meeting is no longer registered as yours and as such the old cancellation link no longer works."; // TO-DO: Fix this email message depending on what we want to inform the old user
+			
+			$email = $originalValue['UserEmail'];
 		} else {
 			$emailSubject = "Booking Information Has Changed!";
 			
@@ -1680,7 +1690,7 @@ if (isset($_POST['add']) AND $_POST['add'] == "Add booking")
 		exit();
 	}
 	
-	$_SESSION['BookingUserFeedback'] = "Successfully created the booking.";
+	$_SESSION['BookingUserFeedback'] .= "Successfully created the booking.";
 	
 	$displayValidatedStartDate = convertDatetimeToFormat($startDateTime , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
 	$displayValidatedEndDate = convertDatetimeToFormat($endDateTime, 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
@@ -2150,30 +2160,47 @@ foreach ($result as $row)
 	$completedDateTime = $row['BookingWasCompletedOn'];
 	$cancelledDateTime = $row['BookingWasCancelledOn'];
 	$createdDateTime = $row['BookingWasCreatedOn'];
-	
+	$roomName = $row['BookedRoomName'];
+	$firstname = $row['firstName'];
+	$lastname = $row['lastName'];
+	$email = $row['email'];
+	$userinfo = $lastname . ', ' . $firstname . ' - ' . $row['email'];
+	$worksForCompany = $row['WorksForCompany'];
+	if(!isset($roomName) OR $roomName == NULL OR $roomName == ""){
+		$roomName = "N/A - Deleted";
+	}
+	if(!isset($userinfo) OR $userinfo == NULL OR $userinfo == ",  - "){
+		$userinfo = "N/A - Deleted";	
+	}
+	if(!isset($email) OR $email == NULL OR $email == ""){
+		$firstname = "N/A - Deleted";
+		$lastname = "N/A - Deleted";
+		$email = "N/A - Deleted";		
+	}
+	if(!isset($worksForCompany) OR $worksForCompany == NULL OR $worksForCompany == ""){
+		$worksForCompany = "N/A";
+	}
 	$displayValidatedStartDate = convertDatetimeToFormat($startDateTime , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
 	$displayValidatedEndDate = convertDatetimeToFormat($endDateTime, 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
 	$displayCompletedDateTime = convertDatetimeToFormat($completedDateTime, 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
 	$displayCancelledDateTime = convertDatetimeToFormat($cancelledDateTime, 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);	
 	$displayCreatedDateTime = convertDatetimeToFormat($createdDateTime, 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
 	
-	$userinfo = $row['lastName'] . ', ' . $row['firstName'] . ' - ' . $row['email'];
-	$meetinginfo = $row['BookedRoomName'] . ' for the timeslot: ' . $displayValidatedStartDate . 
+	$meetinginfo = $roomName . ' for the timeslot: ' . $displayValidatedStartDate . 
 					' to ' . $displayValidatedEndDate;
-	
 	
 	$bookings[] = array('id' => $row['bookingID'],
 						'BookingStatus' => $status,
-						'BookedRoomName' => $row['BookedRoomName'],
+						'BookedRoomName' => $roomName,
 						'StartTime' => $displayValidatedStartDate,
 						'EndTime' => $displayValidatedEndDate,
 						'BookedBy' => $row['BookedBy'],
 						'BookedForCompany' => $row['BookedForCompany'],
 						'BookingDescription' => $row['BookingDescription'],
-						'firstName' => $row['firstName'],
-						'lastName' => $row['lastName'],
-						'email' => $row['email'],
-						'WorksForCompany' => $row['WorksForCompany'],
+						'firstName' => $firstname,
+						'lastName' => $lastname,
+						'email' => $email,
+						'WorksForCompany' => $worksForCompany,
 						'BookingWasCreatedOn' => $displayCreatedDateTime,
 						'BookingWasCompletedOn' => $displayCompletedDateTime,
 						'BookingWasCancelledOn' => $displayCancelledDateTime,	

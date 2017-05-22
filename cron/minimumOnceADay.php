@@ -42,7 +42,8 @@ try
 									WHERE 	`AccessName` = 'Normal User'
 									LIMIT 	1
 								),
-					`bookingCode` = NULL
+					`bookingCode` = NULL,
+					`reduceAccessAtDate` = NULL
 			WHERE 	DATE(CURRENT_TIMESTAMP) >= `reduceAccessAtDate`
 			AND 	`isActive` = 1
 			AND		`userID` <> 0";		

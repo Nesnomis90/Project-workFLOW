@@ -292,10 +292,7 @@ if ((isset($_POST['action']) AND $_POST['action'] == "Create Meeting Room") OR
 	$pageTitle = 'New Meeting Room';
 	$button = 'Add Room';
 	$meetingRoomID = '';	
-	
-	// We want a reset all fields button while adding a new meeting room
-	$reset = 'reset';
-	
+		
 	// Change form
 	include 'form.html.php';
 	exit();
@@ -410,6 +407,26 @@ if ((isset($_POST['action']) AND $_POST['action'] == "Add Room"))
 	exit();
 }
 
+// If admin wants to null values while adding
+if(isset($_POST['add']) AND $_POST['add'] == 'Reset'){
+
+	unset($_SESSION['AddMeetingRoomName']);
+	unset($_SESSION['AddMeetingRoomCapacity']);
+	unset($_SESSION['AddMeetingRoomDescription']);
+	unset($_SESSION['AddMeetingRoomLocation']);
+
+	$_SESSION['refreshAddMeetingRoom'] = TRUE;
+	header('Location: .');
+	exit();	
+}
+
+// If admin wants to leave the page and be directed back to the meeting room page again
+if(isset($_POST['add']) AND $_POST['add'] == 'Cancel'){
+	$_SESSION['MeetingRoomUserFeedback'] = "You cancelled your meeting room creation.";	
+	$refreshMeetingRooms = TRUE;
+}
+
+
 // if admin wants to edit meeting room information
 // we load a new html form
 if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR 
@@ -439,7 +456,6 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR
 		}
 		if(isset($_SESSION['EditMeetingRoomMeetingRoomID'])){
 			$meetingRoomID = $_SESSION['EditMeetingRoomMeetingRoomID'];
-			unset($_SESSION['EditMeetingRoomMeetingRoomID']);
 		}	
 	} else {
 		// Make sure we don't have any remembered values in memory
@@ -482,12 +498,19 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR
 		$meetingRoomCapacity = $row['MeetingRoomCapacity'];
 		$meetingRoomID = $row['MeetingRoomID'];
 		$meetingRoomDescription = $row['MeetingRoomDescription'];
-		$meetingRoomLocation = $row['MeetingRoomLocation']; 		
+		$meetingRoomLocation = $row['MeetingRoomLocation']; 	
+		$_SESSION['EditMeetingRoomMeetingRoomID'] = $meetingRoomID;	
 	}
 	
 	// Set the always correct information
 	$pageTitle = 'Edit User';
 	$button = 'Edit Room';
+	
+	// Set original values
+	$originalMeetingRoomName = $_SESSION['EditMeetingRoomOriginalInfo']['MeetingRoomName'];
+	$originalMeetingRoomCapacity = $_SESSION['EditMeetingRoomOriginalInfo']['MeetingRoomCapacity'];
+	$originalMeetingRoomDescription = $_SESSION['EditMeetingRoomOriginalInfo']['MeetingRoomDescription'];
+	$originalMeetingRoomLocation = $_SESSION['EditMeetingRoomOriginalInfo']['MeetingRoomLocation'];
 	
 	// Don't want a reset button to blank all fields while editing
 	$reset = 'hidden';
@@ -509,7 +532,6 @@ if (isset($_POST['action']) AND $_POST['action'] == "Edit Room")
 		$_SESSION['EditMeetingRoomName'] = $validatedMeetingRoomName;
 		$_SESSION['EditMeetingRoomCapacity'] = $validatedMeetingRoomCapacity;
 		$_SESSION['EditMeetingRoomLocation'] = $validatedMeetingRoomLocation;
-		$_SESSION['EditMeetingRoomMeetingRoomID'] = $_POST['MeetingRoomID'];
 		
 		$_SESSION['refreshEditMeetingRoom'] = TRUE;
 		header('Location: .');
@@ -581,9 +603,22 @@ if (isset($_POST['action']) AND $_POST['action'] == "Edit Room")
 	exit();
 }
 
-// If the user clicks any cancel buttons he'll be directed back to the meeting room page again
-if (isset($_POST['action']) AND $_POST['action'] == 'Cancel'){
-	$_SESSION['MeetingRoomUserFeedback'] = "Cancel button clicked. Taking you back to /admin/meetingrooms/!";
+// If admin wants to null values while adding
+if(isset($_POST['edit']) AND $_POST['edit'] == 'Reset'){
+
+	$_SESSION['EditMeetingRoomDescription'] = $_SESSION['EditMeetingRoomOriginalInfo']['MeetingRoomDescription'];
+	$_SESSION['EditMeetingRoomName'] = $_SESSION['EditMeetingRoomOriginalInfo']['MeetingRoomName'];
+	$_SESSION['EditMeetingRoomCapacity'] = $_SESSION['EditMeetingRoomOriginalInfo']['MeetingRoomCapacity'];
+	$_SESSION['EditMeetingRoomLocation'] = $_SESSION['EditMeetingRoomOriginalInfo']['MeetingRoomLocation'];
+
+	$_SESSION['refreshEditMeetingRoom'] = TRUE;
+	header('Location: .');
+	exit();	
+}
+
+// If admin wants to leave the page and be directed back to the meeting room page again
+if(isset($_POST['edit']) AND $_POST['edit'] == 'Cancel'){
+	$_SESSION['MeetingRoomUserFeedback'] = "You cancelled your meeting room editing.";	
 	$refreshMeetingRooms = TRUE;
 }
 
