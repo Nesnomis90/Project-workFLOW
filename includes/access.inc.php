@@ -239,13 +239,19 @@ function databaseContainsUser($email, $password)
 	// If we got a hit, then the user info was correct
 	if ($row[0] > 0)
 	{
-		$_SESSION['DatabaseContainsUserID'] = $row['userID'];
-		$_SESSION['DatabaseContainsUserName'] = $row['lastname'] . ", " . $row['firstname'];
+		if(!isset($_SESSION['LoggedInUserID'])){
+			$_SESSION['DatabaseContainsUserID'] = $row['userID'];
+		}
+		
+		if(!isset($_SESSION['LoggedInUserName'])){
+			$_SESSION['DatabaseContainsUserName'] = $row['lastname'] . ", " . $row['firstname'];
+		}
 		return TRUE;
 	}
 	else
 	{
-		unset($_SESSION['DatabaseContainsUserID']);		
+		unset($_SESSION['DatabaseContainsUserID']);
+		unset($_SESSION['DatabaseContainsUserName']);	
 		return FALSE;
 	}
 }
