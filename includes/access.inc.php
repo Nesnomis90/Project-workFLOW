@@ -106,7 +106,6 @@ function updateUserActivity()
 // returns TRUE if user is logged in and updates the database with their last active timestamp
 function userIsLoggedIn() 
 {
-	session_start();
 	if(checkIfUserIsLoggedIn()){
 		updateUserActivity();
 		return TRUE;
@@ -488,7 +487,7 @@ function isUserAdmin(){
 	if (!userIsLoggedIn())
 	{
 		// Not logged in. Send user a login prompt.
-		include_once '../login.html.php';
+		include_once 'login.html.php';
 		exit();
 	}
 		// Check if user has Admin access
@@ -496,7 +495,7 @@ function isUserAdmin(){
 	{
 		// User is NOT ADMIN.
 		$error = 'Only Admin may access this page.';
-		include_once '../accessdenied.html.php';
+		include_once 'accessdenied.html.php';
 		return false;
 	}
 	return true;
@@ -508,7 +507,7 @@ function makeUserLogIn(){
 	if (!userIsLoggedIn())
 	{
 		// Not logged in. Send user a login prompt.
-		include_once '../login.html.php';
+		include_once 'login.html.php';
 		exit();
 	}
 	return true;
@@ -520,7 +519,7 @@ function isUserInHouseUser(){
 	if (!userIsLoggedIn())
 	{
 		// Not logged in. Send user a login prompt.
-		include_once '../login.html.php';
+		include_once 'login.html.php';
 		exit();
 	}
 		// Check if user has In-House User access
@@ -528,7 +527,7 @@ function isUserInHouseUser(){
 	{
 		// User is NOT IN-HOUSE USER.
 		$error = 'Only In-House Users can access this page.';
-		include_once '../accessdenied.html.php';
+		include_once 'accessdenied.html.php';
 		return false;
 	}
 	return true;

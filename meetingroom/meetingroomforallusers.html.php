@@ -16,7 +16,7 @@
 			<div><b><?php htmlout($_SESSION['MeetingRoomAllUsersFeedback']); ?></b></div>
 			<?php unset($_SESSION['MeetingRoomAllUsersFeedback']); ?>
 		<?php endif; ?>
-		<?php if(isset($defaultMeetingRoomFeedback) : ?>
+		<?php if(isset($defaultMeetingRoomFeedback)) : ?>
 			<div><b><?php htmlout($defaultMeetingRoomFeedback); ?></b></div>
 		<?php endif; ?>		
 		<div>

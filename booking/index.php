@@ -265,7 +265,7 @@ if(	(isset($_POST['action']) AND $_POST['action'] == 'Create Meeting') OR
 	}
 		
 	// We're logged in and can create the meeting
-	if(isset($_SESSION['refreshCreateMeeting']) AND $_SESSION['refreshCreateMeeting'])){
+	if(isset($_SESSION['refreshCreateMeeting']) AND $_SESSION['refreshCreateMeeting']){
 		// TO-DO: get old values on refresh
 	} else {
 			// Get information from database on booking information user can choose between
@@ -526,8 +526,8 @@ if(	(isset($_POST['action']) AND $_POST['action'] == 'Create Meeting') OR
 	$userInformation = $row['UserLastname'] . ', ' . $row['UserFirstname'] . ' - ' . $row['UserEmail'];	
 
 	$_SESSION['CreateBookingInfoArray'] = $row; // Remember the company/user info we changed based on user choice		
-	}
 }
+
 //getUserInfoFromBookingCode();
 //
 if(isset($_POST['action']) AND $_POST['action'] == 'Confirm Meeting'){
@@ -550,6 +550,14 @@ if(isset($_POST['action']) AND $_POST['action'] == 'Confirm Meeting'){
 		exit();			
 	}	
 }
+
+
+
+
+
+
+
+// CANCELLATION CODE SNIPPET // START //
 
 
 // Cancels a booking from a submitted cancellation link
@@ -724,6 +732,8 @@ if(isset($_GET['cancellationcode'])){
 		exit();
 	}
 }
+
+// CANCELLATION CODE SNIPPET // END //
 
 // TO-DO: Get booking default values from admin/booking
 
