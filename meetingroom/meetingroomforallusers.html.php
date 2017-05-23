@@ -8,9 +8,21 @@
 		<title>Meeting Room</title>
 	</head>
 	<body>
-		<form action="" method="post">
-			<input type="submit" name="action" value="Set Default Room"><span style="color:red">* Requires Admin Access</span>
-		</form>
+		<?php if(isset($_SESSION['DefaultMeetingRoomInfo']) AND !$defaultMeetingRoomFeedback) : ?>
+			<div>
+			<form action="" method="post">
+				<label for="defaultMeetingRoomName">The Default Meeting Room For This Device: </label>
+				<b><?php htmlout($_SESSION['DefaultMeetingRoomInfo']['TheMeetingRoomName']); ?></b>			
+				<input type="submit" name="action" 
+				value="Change Default Room"><span style="color:red">* Requires Admin Access</span>	
+			</form>
+			</div>
+		<?php else : ?>
+			<form action="" method="post">
+				<input type="submit" name="action" 
+				value="Set Default Room"><span style="color:red">* Requires Admin Access</span>
+			</form>
+		<?php endif; ?>
 		<h1>Meeting Room</h1>
 		<?php if(isset($_SESSION['MeetingRoomAllUsersFeedback'])) : ?>
 			<div><b><?php htmlout($_SESSION['MeetingRoomAllUsersFeedback']); ?></b></div>

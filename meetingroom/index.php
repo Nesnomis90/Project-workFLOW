@@ -13,17 +13,18 @@ include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/magicquotes.inc.php';
 
 */
 var_dump($_SESSION);
+
+
 // ADMIN INTERACTIONS // START //
 
 // If Admin wants to set a meeting room as the default room on a local device
 if(	(isset($_POST['action']) AND $_POST['action'] == "Set Default Room") OR 
+	(isset($_POST['action']) AND $_POST['action'] == "Change Default Room") OR
 	(isset($_SESSION['SetDefaultRoom']) AND $_SESSION['SetDefaultRoom'])){
 		// CHECK IF USER TRYING TO ACCESS THIS IS IN FACT THE ADMIN!
 	$_SESSION['SetDefaultRoom'] = TRUE;
-	var_dump($_SESSION);
 	
 	if (!isUserAdmin()){
-		echo "we exit here";
 		exit();
 	}
 	unset($_SESSION['SetDefaultRoom']);
@@ -84,8 +85,11 @@ if(isset($_POST['action']) AND $_POST['action'] == "Set As Default"){
 		$_SESSION['MeetingRoomAllUsersFeedback'] = "Couldn't set default meeting room for local device.";
 	}
 }
-// ADMIN INTERACTIONS // END //
 
+// Update meeting room info for local device
+checkIfLocalDevice();
+
+// ADMIN INTERACTIONS // END //
 
 
 // NON-ADMIN INTERACTIONS // START //
