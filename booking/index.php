@@ -12,6 +12,78 @@ include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/magicquotes.inc.php';
 	Cancel booking from code
 		Admin has master code
 */
+var_dump($_SESSION); // TO-DO: remove after testing is done
+
+// Function to clear sessions used to remember user inputs on refreshing the add booking form
+function clearAddCreateBookingSessions(){
+	unset($_SESSION['AddCreateBookingInfoArray']);
+	unset($_SESSION['AddCreateBookingChangeUser']);
+	unset($_SESSION['AddCreateBookingUsersArray']);
+	unset($_SESSION['AddCreateBookingOriginalInfoArray']);
+	unset($_SESSION['AddCreateBookingMeetingRoomsArray']);	
+	unset($_SESSION['AddCreateBookingUserSearch']);
+	unset($_SESSION['AddCreateBookingSelectedNewUser']);
+	unset($_SESSION['AddCreateBookingSelectedACompany']);
+	unset($_SESSION['AddCreateBookingDefaultDisplayNameForNewUser']);
+	unset($_SESSION['AddCreateBookingDefaultBookingDescriptionForNewUser']);		
+}
+
+// Function to clear sessions used to remember user inputs on refreshing the edit booking form
+function clearEditCreateBookingSessions(){
+	unset($_SESSION['EditCreateBookingInfoArray']);
+	unset($_SESSION['EditCreateBookingChangeUser']);
+	unset($_SESSION['EditCreateBookingUsersArray']);
+	unset($_SESSION['EditCreateBookingOriginalInfoArray']);
+	unset($_SESSION['EditCreateBookingMeetingRoomsArray']);	
+	unset($_SESSION['EditCreateBookingUserSearch']);
+	unset($_SESSION['EditCreateBookingSelectedNewUser']);
+	unset($_SESSION['EditCreateBookingSelectedACompany']);
+	unset($_SESSION['EditCreateBookingDefaultDisplayNameForNewUser']);
+	unset($_SESSION['EditCreateBookingDefaultBookingDescriptionForNewUser']);	
+}
+
+// Function to remember the user inputs in Edit Booking
+function rememberEditCreateBookingInputs(){
+	if(isset($_SESSION['EditCreateBookingInfoArray'])){
+		$newValues = $_SESSION['EditCreateBookingInfoArray'];
+
+			// The company selected
+		$newValues['TheCompanyID'] = $_POST['companyID'];
+			// The user selected
+		$newValues['BookedBy'] = trimExcessWhitespace($_POST['displayName']);
+			// The booking description
+		$newValues['BookingDescription'] = trimExcessWhitespaceButLeaveLinefeed($_POST['description']);
+
+		$_SESSION['EditCreateBookingInfoArray'] = $newValues;			
+	}
+}
+
+// Function to remember the user inputs in Add Booking
+function rememberAddCreateBookingInputs(){
+	if(isset($_SESSION['AddCreateBookingInfoArray'])){
+		$newValues = $_SESSION['AddCreateBookingInfoArray'];
+
+			// The user selected, if the booking is for another user
+		if(isset($_POST['userID'])){
+			$newValues['TheUserID'] = $_POST['userID'];
+		}
+			// The meeting room selected
+		$newValues['TheMeetingRoomID'] = $_POST['meetingRoomID']; 
+			// The company selected
+		$newValues['TheCompanyID'] = $_POST['companyID'];
+			// The user selected
+		$newValues['BookedBy'] = trimExcessWhitespace($_POST['displayName']);
+			// The booking description
+		$newValues['BookingDescription'] = trimExcessWhitespaceButLeaveLinefeed($_POST['description']);
+			// The start time
+		$newValues['StartTime'] = trimExcessWhitespace($_POST['startDateTime']);
+			// The end time
+		$newValues['EndTime'] = trimExcessWhitespace($_POST['endDateTime']);
+		
+		$_SESSION['AddCreateBookingInfoArray'] = $newValues;			
+	}
+}
+
 
 // Function to validate user inputs
 function validateUserInputs($FeedbackSessionToUse){
@@ -42,11 +114,19 @@ function validateUserInputs($FeedbackSessionToUse){
 		$bookingDescriptionString = '';
 	}
 	
+	if(isset($_POST['bookingCode'])){
+		$bookingCode = $_POST['bookingCode'];
+	} else {
+		$invalidInput = TRUE;
+		$_SESSION[$FeedbackSessionToUse] = "A booking cannot be created without submitting a booking code.";		
+	}
+	
 	// Remove excess whitespace and prepare strings for validation
 	$validatedStartDateTime = trimExcessWhitespace($startDateTimeString);
 	$validatedEndDateTime = trimExcessWhitespace($endDateTimeString);
 	$validatedDisplayName = trimExcessWhitespaceButLeaveLinefeed($displayNameString);
-	$validatedBookingDescription = trimExcessWhitespaceButLeaveLinefeed($bookingDescriptionString);	
+	$validatedBookingDescription = trimExcessWhitespaceButLeaveLinefeed($bookingDescriptionString);
+	$validatedBookingCode = trimExcessWhitespace($bookingCode);
 	
 	// Do actual input validation
 	if(validateDateTimeString($validatedStartDateTime) === FALSE AND !$invalidInput){
@@ -65,6 +145,10 @@ function validateUserInputs($FeedbackSessionToUse){
 		$invalidInput = TRUE;
 		$_SESSION[$FeedbackSessionToUse] = "Your submitted booking description has illegal characters in it.";
 	}
+	if(validateIntegerNumber($validatedBookingCode) === FALSE AND !$invalidInput){
+		$invalidInput = TRUE;
+		$_SESSION[$FeedbackSessionToUse] = "Your submitted booking code has illegal characters in it.";		
+	}
 	
 	// Are values actually filled in?
 	if($validatedStartDateTime == "" AND $validatedEndDateTime == "" AND !$invalidInput){
@@ -77,6 +161,10 @@ function validateUserInputs($FeedbackSessionToUse){
 	} elseif($validatedStartDateTime == "" AND $validatedEndDateTime != "" AND !$invalidInput){
 		$_SESSION[$FeedbackSessionToUse] = "You need to fill in a start time for your booking.";	
 		$invalidInput = TRUE;		
+	}
+	if(isset($validatedBookingCode) AND $validatedBookingCode == "" AND !$invalidInput){
+		$_SESSION[$FeedbackSessionToUse] = "You need to fill in a booking code to be able to create the booking.";	
+		$invalidInput = TRUE;
 	}
 	
 	// Check if input length is allowed
@@ -134,6 +222,12 @@ function validateUserInputs($FeedbackSessionToUse){
 		$invalidInput = TRUE;				
 	} 
 
+	// Check if booking code submitted is a valid booking code
+	if(databaseContainsBookingCode($validatedBookingCode) === FALSE AND !$invalidInput){
+		$_SESSION[$FeedbackSessionToUse] = "The booking code you submitted is not valid.";	
+		$invalidInput = TRUE;
+	}
+	
 	//TO-DO: If we want to check if a booking is long enough, we do it here e.g. has to be longer than 10 min
 	/*
 	$timeDifferenceStartDate = new DateTime($startDateTime);
@@ -145,107 +239,106 @@ function validateUserInputs($FeedbackSessionToUse){
 		$invalidInput = TRUE;	
 	}*/
 	
-	return array($invalidInput, $startDateTime, $endDateTime, $validatedBookingDescription, $validatedDisplayName);
-}
-
-// Function to remember the user inputs in Create Meeting
-function rememberCreateBookingInputs(){
-	if(isset($_SESSION['CreateMeetingInfoArray'])){
-		$newValues = $_SESSION['CreateMeetingInfoArray'];
-
-			// The meeting room selected
-		$newValues['TheMeetingRoomID'] = $_POST['meetingRoomID']; 
-			// The company selected
-		$newValues['TheCompanyID'] = $_POST['companyID'];
-			// The user selected
-		$newValues['BookedBy'] = trimExcessWhitespace($_POST['displayName']);
-			// The booking description
-		$newValues['BookingDescription'] = trimExcessWhitespaceButLeaveLinefeed($_POST['description']);
-			// The start time
-		$newValues['StartTime'] = trimExcessWhitespace($_POST['startDateTime']);
-			// The end time
-		$newValues['EndTime'] = trimExcessWhitespace($_POST['endDateTime']);
-		
-		$_SESSION['CreateMeetingInfoArray'] = $newValues;			
-	}
-}
-
-// Function to remove locally set device information
-function resetLocalDevice(){
-	deleteMeetingRoomCookies();
-	unset($_SESSION['DefaultMeetingRoomInfo']);
-	unset($_SESSION['OriginalCookieMeetingRoomName']);
-	unset($_SESSION['OriginalCookieMeetingRoomIDCode']);
-	// TO-DO: Do anything more here to punish cookie manipulation?	
+	return array($invalidInput, $startDateTime, $endDateTime, $validatedBookingDescription, $validatedDisplayName, $validatedBookingCode);
 }
 
 // Check if we're accessing from a local device
 // If so, set that meeting room's info as the default meeting room info
-if(isset($_COOKIE[MEETINGROOM_NAME]) AND isset($_COOKIE[MEETINGROOM_IDCODE]))
+checkIfLocalDevice();
+
+
+
+
+// If user wants to cancel a scheduled booked meeting
+if (isset($_POST['action']) and $_POST['action'] == 'Cancel')
 {
-	// There are local meeting room identifiers set in cookies. Check if they are valid
-	$meetingRoomName = $_COOKIE[MEETINGROOM_NAME];
-	$meetingRoomIDCode = $_COOKIE[MEETINGROOM_IDCODE];
+	// TO-DO: Check if user cancelling is the creator (OR ADMIN) of booking
 	
-	if(!isset($_SESSION['OriginalCookieMeetingRoomName']) AND !isset($_SESSION['OriginalCookieMeetingRoomIDCode'])){
-		$validMeetingRoom = databaseContainsMeetingRoomWithIDCode($meetingRoomName, $meetingRoomIDCode);
-		if ($validMeetingRoom === TRUE){
-			// Cookies are correctly identifying a meeting room
-			// Hopefully this means it's a local device we set up and not someone malicious
-			$_SESSION['OriginalCookieMeetingRoomName'] = $meetingRoomName;
-			$_SESSION['OriginalCookieMeetingRoomIDCode'] = $meetingRoomIDCode;
+	// Only cancel if booking is currently active
+	if(	isset($_POST['BookingStatus']) AND  
+		($_POST['BookingStatus'] == 'Active' OR $_POST['BookingStatus'] == 'Active Today')){
+		// Update cancellation date for selected booked meeting in database
+		try
+		{
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 			
-			if(!isset($_SESSION['DefaultMeetingRoomInfo'])){
-				try
-				{
-					include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
-					
-					$pdo = connect_to_db();
-					$sql = "SELECT 	`meetingRoomID`							AS TheMeetingRoomID, 
-									`name` 									AS TheMeetingRoomName,
-									`capacity`								AS TheMeetingRoomCapacity,
-									`description`							AS TheMeetingRoomDescription,
-									`location`								AS TheMeetingRoomLocation
-							FROM	`meetingroom`
-							WHERE 	`name` = :meetingRoomName
-							LIMIT 	1";
-					$s = $pdo->prepare($sql);
-					$s->bindValue(':meetingRoomName', $_COOKIE[MEETINGROOM_NAME]);
-					$s->execute();
-					$row = $s->fetch();
-					$_SESSION['DefaultMeetingRoomInfo'] = $row;
-					//Close the connection
-					$pdo = null;
-				}
-				catch(PDOException $e)
-				{
-					$error = 'Error getting meeting room info: ' . $e->getMessage();
-					include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
-					$pdo = null;
-					exit();
-				}			
-			}
-		} elseif($validMeetingRoom === FALSE){
-			// The cookies set does not match a meeting room i.e. someone manually changed a cookie
-			resetLocalDevice();
-		}	
-	}
-	if(	$_COOKIE[MEETINGROOM_NAME] != $_SESSION['OriginalCookieMeetingRoomName'] OR 
-		$_COOKIE[MEETINGROOM_IDCODE] != $_SESSION['OriginalCookieMeetingRoomIDCode']){
-			// Cookies have changed
-			unset($_SESSION['OriginalCookieMeetingRoomName']);
-			unset($_SESSION['OriginalCookieMeetingRoomIDCode']);
-			unset($_SESSION['DefaultMeetingRoomInfo']);
+			$pdo = connect_to_db();
+			$sql = 'UPDATE 	`booking` 
+					SET 	`dateTimeCancelled` = CURRENT_TIMESTAMP,
+							`cancellationCode` = NULL				
+					WHERE 	`bookingID` = :id';
+			$s = $pdo->prepare($sql);
+			$s->bindValue(':id', $_POST['id']);
+			$s->execute();
+			
+			//close connection
+			$pdo = null;
 		}
-} else {
-	unset($_SESSION['OriginalCookieMeetingRoomName']);
-	unset($_SESSION['OriginalCookieMeetingRoomIDCode']);
-	unset($_SESSION['DefaultMeetingRoomInfo']);
+		catch (PDOException $e)
+		{
+			$error = 'Error updating selected booked meeting to be cancelled: ' . $e->getMessage();
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+			exit();
+		}
+		
+		$_SESSION['normalBookingUserFeedback'] .= "Successfully cancelled the booking";
+		
+			// Add a log event that a booking was cancelled
+		try
+		{
+			// Save a description with information about the booking that was cancelled
+			$logEventDescription = "N/A";
+			if(isset($_POST['UserInfo']) AND isset($_POST['MeetingInfo'])){
+				$logEventDescription = 'The booking made for ' . $_POST['UserInfo'] . ' for the meeting room ' .
+				$_POST['MeetingInfo'] . ' was cancelled by: ' . $_SESSION['LoggedInUserName'];
+			} else {
+				$logEventDescription = 'A booking was cancelled by: ' . $_SESSION['LoggedInUserName'];
+			}
+			
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+			
+			$pdo = connect_to_db();
+			$sql = "INSERT INTO `logevent` 
+					SET			`actionID` = 	(
+													SELECT `actionID` 
+													FROM `logaction`
+													WHERE `name` = 'Booking Cancelled'
+												),
+								`description` = :description";
+			$s = $pdo->prepare($sql);
+			$s->bindValue(':description', $logEventDescription);
+			$s->execute();
+			
+			//Close the connection
+			$pdo = null;		
+		}
+		catch(PDOException $e)
+		{
+			$error = 'Error adding log event to database: ' . $e->getMessage();
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+			$pdo = null;
+			exit();
+		}	
+
+		// TO-DO: Only do this IF cancelled by ADMIN!
+		emailUserOnCancelledBooking();
+	} else {
+		// Booking was not active, so no need to cancel it.
+		$_SESSION['normalBookingUserFeedback'] = "Meeting has already been completed. Did not cancel it.";
+	}
+	
+	// Load booked meetings list webpage with updated database
+	header('Location: .');
+	exit();	
 }
+
+// BOOKING OVERVIEW CODE SNIPPETS // END //
+
+// ADD BOOKING CODE SNIPPET // START //
 
 // Handles booking based on selected meeting room
 if(	(isset($_POST['action']) AND $_POST['action'] == 'Create Meeting') OR
-	(isset($_SESSION['refreshCreateMeeting']) AND $_SESSION['refreshCreateMeeting']))
+	(isset($_SESSION['refreshAddCreateBooking']) AND $_SESSION['refreshAddCreateBooking']))
 {
 	// Make sure user is logged in before going further
 		// If local, use booking code
@@ -265,11 +358,11 @@ if(	(isset($_POST['action']) AND $_POST['action'] == 'Create Meeting') OR
 	}
 		
 	// We're logged in and can create the meeting
-	if(isset($_SESSION['refreshCreateMeeting']) AND $_SESSION['refreshCreateMeeting'])){
+	if(isset($_SESSION['refreshAddCreateBooking']) AND $_SESSION['refreshAddCreateBooking']){
 		// TO-DO: get old values on refresh
 	} else {
 			// Get information from database on booking information user can choose between
-			if(!isset($_SESSION['CreateBookingMeetingRoomsArray'])){
+			if(!isset($_SESSION['AddCreateBookingMeetingRoomsArray'])){
 				try
 				{
 					include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
@@ -294,7 +387,7 @@ if(	(isset($_POST['action']) AND $_POST['action'] == 'Create Meeting') OR
 											);
 					}		
 					
-					$_SESSION['CreateBookingMeetingRoomsArray'] = $meetingroom;
+					$_SESSION['AddCreateBookingMeetingRoomsArray'] = $meetingroom;
 				}
 				catch (PDOException $e)
 				{
@@ -305,7 +398,7 @@ if(	(isset($_POST['action']) AND $_POST['action'] == 'Create Meeting') OR
 				}
 			}
 		
-			if(!isset($_SESSION['CreateBookingInfoArray'])){
+			if(!isset($_SESSION['AddCreateBookingInfoArray'])){
 				try
 				{
 					include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
@@ -361,7 +454,7 @@ if(	(isset($_POST['action']) AND $_POST['action'] == 'Create Meeting') OR
 				}	
 			
 				// Create an array with the row information we want to use	
-				$_SESSION['CreateBookingInfoArray'][] = array(
+				$_SESSION['AddCreateBookingInfoArray'][] = array(
 															'TheCompanyID' => '',
 															'TheMeetingRoomID' => '',
 															'StartTime' => '',
@@ -376,18 +469,15 @@ if(	(isset($_POST['action']) AND $_POST['action'] == 'Create Meeting') OR
 															'UserDefaultDisplayName' => '',
 															'UserDefaultBookingDescription' => ''
 														);			
-				$_SESSION['CreateBookingInfoArray']['UserDefaultBookingDescription'] = $description;
-				$_SESSION['CreateBookingInfoArray']['UserDefaultDisplayName'] = $displayName;
-				$_SESSION['CreateBookingInfoArray']['UserFirstname'] = $firstname;	
-				$_SESSION['CreateBookingInfoArray']['UserLastname'] = $lastname;	
-				$_SESSION['CreateBookingInfoArray']['UserEmail'] = $email;	
-				$_SESSION['CreateBookingInfoArray']['TheUserID'] = $_SESSION['LoggedInUserID'];
+				$_SESSION['AddCreateBookingInfoArray']['UserDefaultBookingDescription'] = $description;
+				$_SESSION['AddCreateBookingInfoArray']['UserDefaultDisplayName'] = $displayName;
+				$_SESSION['AddCreateBookingInfoArray']['UserFirstname'] = $firstname;	
+				$_SESSION['AddCreateBookingInfoArray']['UserLastname'] = $lastname;	
+				$_SESSION['AddCreateBookingInfoArray']['UserEmail'] = $email;	
+				$_SESSION['AddCreateBookingInfoArray']['TheUserID'] = $_SESSION['LoggedInUserID'];
 				
-				$_SESSION['CreateBookingOriginalInfoArray'] = $_SESSION['CreateBookingInfoArray'];
+				$_SESSION['AddCreateBookingOriginalInfoArray'] = $_SESSION['AddCreateBookingInfoArray'];
 			}
-			
-			// Set the correct information on form call
-			$SelectedUserID = $_SESSION['CreateBookingInfoArray']['TheUserID'];
 	}
 
 		// Check if we need a company select for the booking
@@ -431,22 +521,22 @@ if(	(isset($_POST['action']) AND $_POST['action'] == 'Create Meeting') OR
 			if (sizeOf($company)>1){
 				// User is in multiple companies
 				
-				$_SESSION['CreateBookingDisplayCompanySelect'] = TRUE;
+				$_SESSION['AddCreateBookingDisplayCompanySelect'] = TRUE;
 			} elseif(sizeOf($company) == 1) {
 				// User is in ONE company
 				
-				$_SESSION['CreateBookingSelectedACompany'] = TRUE;
-				unset($_SESSION['CreateBookingDisplayCompanySelect']);
-				$_SESSION['CreateBookingInfoArray']['TheCompanyID'] = $company[0]['companyID'];
-				$_SESSION['CreateBookingInfoArray']['BookedForCompany'] = $company[0]['companyName'];
+				$_SESSION['AddCreateBookingSelectedACompany'] = TRUE;
+				unset($_SESSION['AddCreateBookingDisplayCompanySelect']);
+				$_SESSION['AddCreateBookingInfoArray']['TheCompanyID'] = $company[0]['companyID'];
+				$_SESSION['AddCreateBookingInfoArray']['BookedForCompany'] = $company[0]['companyName'];
 			}
 		} else{
 			// User is NOT in a company
 			
-			$_SESSION['CreateBookingSelectedACompany'] = TRUE;
-			unset($_SESSION['CreateBookingDisplayCompanySelect']);
-			$_SESSION['CreateBookingInfoArray']['TheCompanyID'] = "";
-			$_SESSION['CreateBookingInfoArray']['BookedForCompany'] = "";
+			$_SESSION['AddCreateBookingSelectedACompany'] = TRUE;
+			unset($_SESSION['AddCreateBookingDisplayCompanySelect']);
+			$_SESSION['AddCreateBookingInfoArray']['TheCompanyID'] = "";
+			$_SESSION['AddCreateBookingInfoArray']['BookedForCompany'] = "";
 		}		
 	}
 	catch(PDOException $e)
@@ -458,8 +548,8 @@ if(	(isset($_POST['action']) AND $_POST['action'] == 'Create Meeting') OR
 	}
 	
 	// Set the correct information
-	$row = $_SESSION['CreateBookingInfoArray'];
-	$original = $_SESSION['CreateBookingOriginalInfoArray'];
+	$row = $_SESSION['AddCreateBookingInfoArray'];
+	$original = $_SESSION['AddCreateBookingOriginalInfoArray'];
 
 		// Altered inputs
 	if(isset($row['TheCompanyID'])){
@@ -488,7 +578,7 @@ if(	(isset($_POST['action']) AND $_POST['action'] == 'Create Meeting') OR
 	}	
 	
 	//	userID has been set earlier
-	$meetingroom = $_SESSION['CreateBookingMeetingRoomsArray'];
+	$meetingroom = $_SESSION['AddCreateBookingMeetingRoomsArray'];
 	if(isset($row['TheMeetingRoomID'])){
 		$selectedMeetingRoomID = $row['TheMeetingRoomID'];
 	} else {
@@ -525,11 +615,11 @@ if(	(isset($_POST['action']) AND $_POST['action'] == 'Create Meeting') OR
 	
 	$userInformation = $row['UserLastname'] . ', ' . $row['UserFirstname'] . ' - ' . $row['UserEmail'];	
 
-	$_SESSION['CreateBookingInfoArray'] = $row; // Remember the company/user info we changed based on user choice		
-	}
+	$_SESSION['AddCreateBookingInfoArray'] = $row; // Remember the company/user info we changed based on user choice		
 }
+
 //getUserInfoFromBookingCode();
-//
+// TO-DO: Remove this/merge with add booking
 if(isset($_POST['action']) AND $_POST['action'] == 'Confirm Meeting'){
 	list($invalidInput, $startDateTime, $endDateTime, $validatedBookingDescription, $validatedDisplayName) = validateUserInputs('MeetingRoomAllUsersFeedback');
 	
@@ -544,12 +634,783 @@ if(isset($_POST['action']) AND $_POST['action'] == 'Confirm Meeting'){
 	if($invalidInput){
 		
 		rememberCreateBookingInputs();
-		$_SESSION['refreshCreateMeeting'] = TRUE;
+		$_SESSION['refreshAddCreateBooking'] = TRUE;
 		
 		header('Location: $location');
 		exit();			
 	}	
 }
+
+// When the user has added the needed information and wants to add the booking
+if (isset($_POST['add']) AND $_POST['add'] == "Add booking")
+{
+	// Validate user inputs
+	list($invalidInput, $startDateTime, $endDateTime, $bknDscrptn, $dspname, $bookingCode) = validateUserInputs('AddCreateBookingError');
+					
+	// handle feedback process on invalid input values
+	if($invalidInput){
+		
+		rememberAddCreateBookingInputs();
+		// Refresh.
+		$_SESSION['refreshAddCreateBooking'] = TRUE;	
+
+		header('Location: .');
+		exit();			
+	}
+	
+	// Check if the timeslot is taken for the selected meeting room
+	try
+	{
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+		$pdo = connect_to_db();
+		$sql =	" 	SELECT 	COUNT(*)
+					FROM 	`booking`
+					WHERE 	`meetingRoomID` = :MeetingRoomID
+					AND		
+					(		
+							(
+								`startDateTime` 
+								BETWEEN :StartTime
+								AND :EndTime
+							) 
+					OR 		(
+								`endDateTime`
+								BETWEEN :StartTime
+								AND :EndTime
+							)
+					OR 		(
+								:EndTime
+								BETWEEN `startDateTime`
+								AND `endDateTime`
+							)
+					OR 		(
+								:StartTime
+								BETWEEN `startDateTime`
+								AND `endDateTime`
+							)
+					)";
+		$s = $pdo->prepare($sql);
+		
+		$s->bindValue(':MeetingRoomID', $_POST['meetingRoomID']);
+		$s->bindValue(':StartTime', $startDateTime);
+		$s->bindValue(':EndTime', $endDateTime);
+		$s->execute();
+		$pdo = null;
+	}
+	catch(PDOException $e)
+	{
+		$error = 'Error checking if booking time is available: ' . $e->getMessage();
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+		$pdo = null;
+		exit();
+	}
+
+	// Check if we got any hits, if so the timeslot is already taken
+	$row = $s->fetch();		
+	if ($row[0] > 0){
+
+		// Timeslot was taken
+		rememberAddCreateBookingInputs();
+		
+		$_SESSION['AddCreateBookingError'] = "The booking couldn't be made. The timeslot is already taken for this meeting room.";
+		$_SESSION['refreshAddCreateBooking'] = TRUE;	
+
+		header('Location: .');
+		exit();				
+	}
+	
+	// Add the booking to the database
+	try
+	{	
+		if(	isset($_POST['companyID']) AND $_POST['companyID'] != NULL AND 
+			$_POST['companyID'] != ''){
+			$companyID = $_POST['companyID'];
+		} else {
+			$companyID = NULL;
+		}
+	
+		//Generate cancellation code
+		$cancellationCode = generateCancellationCode();
+		
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+		
+		$pdo = connect_to_db();
+		$sql = 'INSERT INTO `booking` 
+				SET			`meetingRoomID` = :meetingRoomID,
+							`userID` = :userID,
+							`companyID` = :companyID,
+							`displayName` = :displayName,
+							`startDateTime` = :startDateTime,
+							`endDateTime` = :endDateTime,
+							`description` = :description,
+							`cancellationCode` = :cancellationCode';
+
+		$s = $pdo->prepare($sql);
+		
+		$s->bindValue(':meetingRoomID', $_POST['meetingRoomID']);
+		$s->bindValue(':userID', $_POST['userID']);
+		$s->bindValue(':companyID', $companyID);
+		$s->bindValue(':displayName', $dspname);
+		$s->bindValue(':startDateTime', $startDateTime);
+		$s->bindValue(':endDateTime', $endDateTime);
+		$s->bindValue(':description', $bknDscrptn);
+		$s->bindValue(':cancellationCode', $cancellationCode);
+		$s->execute();
+
+		unset($_SESSION['lastBookingID']);
+		$_SESSION['lastBookingID'] = $pdo->lastInsertId();
+		
+		//Close the connection
+		$pdo = null;
+	}
+	catch (PDOException $e)
+	{
+		$error = 'Error adding submitted booking to database: ' . $e->getMessage();
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+		$pdo = null;
+		exit();
+	}
+	
+	$_SESSION['normalBookingUserFeedback'] .= "Successfully created the booking.";
+	
+	$displayValidatedStartDate = convertDatetimeToFormat($startDateTime , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
+	$displayValidatedEndDate = convertDatetimeToFormat($endDateTime, 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
+	
+	// Add a log event that a booking has been created
+	try
+	{
+		// Get meeting room name
+		$MeetingRoomName = 'N/A';
+		foreach ($_SESSION['AddCreateBookingMeetingRoomsArray'] AS $room){
+			if($room['meetingRoomID'] == $_POST['meetingRoomID']){
+				$MeetingRoomName = $room['meetingRoomName'];
+				break;
+			}
+		}
+		unset($_SESSION['AddCreateBookingMeetingRoomsArray']);
+		
+		$meetinginfo = $MeetingRoomName . ' for the timeslot: ' . 
+		$displayValidatedStartDate . ' to ' . $displayValidatedEndDate;
+		
+		// Get user information
+		$userinfo = 'N/A';
+		$info = $_SESSION['AddCreateBookingInfoArray']; 
+		if(isset($info['UserLastname'])){
+			$userinfo = $info['UserLastname'] . ', ' . $info['UserFirstname'] . ' - ' . $info['UserEmail'];
+		}
+		
+		// Get company information
+		$companyinfo = 'N/A';
+		// TO-DO: Get company name
+		
+		// Save a description with information about the booking that was created
+		$logEventDescription = 'A booking was created for the meeting room: ' . $meetinginfo . 
+		', for the user: ' . $userinfo . ' and company: ' . $companyinfo . '. Booking was made by: ' . $_SESSION['LoggedInUserName'];
+		
+		if(isset($_SESSION['lastBookingID'])){
+			$lastBookingID = $_SESSION['lastBookingID'];
+			unset($_SESSION['lastBookingID']);				
+		}
+
+		
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+		
+		$pdo = connect_to_db();
+		$sql = "INSERT INTO `logevent` 
+				SET			`actionID` = 	(
+												SELECT `actionID` 
+												FROM `logaction`
+												WHERE `name` = 'Booking Created'
+											),
+							`userID` = :UserID,
+							`meetingRoomID` = :MeetingRoomID,
+							`bookingID` = :BookingID,
+							`description` = :description";
+		$s = $pdo->prepare($sql);
+		$s->bindValue(':description', $logEventDescription);
+		$s->bindValue(':BookingID', $lastBookingID);
+		$s->bindValue(':MeetingRoomID', $_POST['meetingRoomID']);
+		$s->bindValue(':UserID', $_POST['userID']);
+		$s->execute();
+		
+		//Close the connection
+		$pdo = null;		
+	}
+	catch(PDOException $e)
+	{
+		$error = 'Error adding log event to database: ' . $e->getMessage();
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+		$pdo = null;
+		exit();
+	}		
+	
+	//Send email with booking information and cancellation code to the user who the booking is for.
+		// TO-DO: This is UNTESTED since we don't have php.ini set up to actually send email	
+
+	$emailSubject = "New Booking Information!";
+	
+	$emailMessage = 
+	"Your meeting has been successfully booked!\n" . 
+	"The meeting has been set to: \n" .
+	"Meeting Room: " . $MeetingRoomName . ".\n" . 
+	"Start Time: " . $displayValidatedStartDate . ".\n" .
+	"End Time: " . $displayValidatedEndDate . ".\n\n" .
+	"If you wish to cancel your meeting, or just end it early, you can easily do so by clicking the link given below.\n" .
+	"Click this link to cancel your booked meeting: " . $_SERVER['HTTP_HOST'] . 
+	"/booking/?cancellationcode=" . $cancellationCode;		
+
+	$email = $_SESSION['AddCreateBookingInfoArray']['UserEmail'];
+	
+	$mailResult = sendEmail($email, $emailSubject, $emailMessage);
+	
+	if(!$mailResult){
+		$_SESSION['normalBookingUserFeedback'] .= " [WARNING] System failed to send Email to user.";
+	}
+	
+	$_SESSION['normalBookingUserFeedback'] .= "this is the email msg we're sending out: $emailMessage. Sent to email: $email."; // TO-DO: Remove after testing	
+	
+	// Booking a new meeting is done. Reset all connected sessions.
+	clearAddCreateBookingSessions();
+	
+	// Load booking history list webpage with new booking
+	header('Location: .');
+	exit();
+}
+
+//	User wants to change the company the booking is for (after having already selected it)
+if(isset($_POST['add']) AND $_POST['add'] == "Change Company"){
+	
+	// We want to select a company again
+	unset($_SESSION['AddCreateBookingSelectedACompany']);
+	
+	// Let's remember what was selected if we do any changes before clicking "Change Company"
+	rememberAddCreateBookingInputs();
+	
+	$_SESSION['refreshAddCreateBooking'] = TRUE;
+	header('Location: .');
+	exit();		
+}
+
+// User confirms what company he wants the booking to be for.
+if(isset($_POST['add']) AND $_POST['add'] == "Select This Company"){
+
+	// Remember that we've selected a new company
+	$_SESSION['AddCreateBookingSelectedACompany'] = TRUE;
+	
+	// Let's remember what was selected if we do any changes before clicking "Select This Company"
+	rememberAddCreateBookingInputs();
+	
+	$_SESSION['refreshAddCreateBooking'] = TRUE;
+	header('Location: .');
+	exit();	
+}
+
+// If user wants to get their default display name
+if(isset($_POST['add']) AND $_POST['add'] == "Get Default Display Name"){
+	  
+	$displayName = $_SESSION['AddCreateBookingDefaultDisplayNameForNewUser'];
+	if(isset($_SESSION['AddCreateBookingInfoArray'])){
+		rememberAddCreateBookingInputs();
+
+		if($displayName != ""){
+			if($displayName != $_SESSION['AddCreateBookingInfoArray']['BookedBy']){
+				
+					// The user selected
+				$_SESSION['AddCreateBookingInfoArray']['BookedBy'] = $displayName;
+
+				unset($_SESSION['AddCreateBookingDefaultDisplayNameForNewUser']);				
+			} else {
+				// Description was already the default booking description
+				$_SESSION['AddCreateBookingError'] = "This is already your default display name.";
+			}
+		} else {
+			// The user has no default display name
+			$_SESSION['AddCreateBookingError'] = "You have no default display name. You can set one in your user information.";
+			$_SESSION['AddCreateBookingInfoArray']['BookedBy'] = "";
+		}		
+	}
+	
+	$_SESSION['refreshAddCreateBooking'] = TRUE;
+	header('Location: .');
+	exit();	
+}
+
+// If user wants to get their default booking description
+if(isset($_POST['add']) AND $_POST['add'] == "Get Default Booking Description"){
+	
+	$bookingDescription = $_SESSION['AddCreateBookingDefaultBookingDescriptionForNewUser'];
+	if(isset($_SESSION['AddCreateBookingInfoArray'])){
+		
+		rememberAddCreateBookingInputs();
+
+		if($bookingDescription != ""){
+			if($bookingDescription != $_SESSION['AddCreateBookingInfoArray']['BookingDescription']){
+				$_SESSION['AddCreateBookingInfoArray']['BookingDescription'] = $bookingDescription;
+
+				unset($_SESSION['AddCreateBookingDefaultBookingDescriptionForNewUser']);			
+			} else {
+				// Description was already the default booking description
+				$_SESSION['AddCreateBookingError'] = "This is already your default booking description.";
+			}
+		} else {
+			// The user has no default booking description
+			$_SESSION['AddCreateBookingError'] = "You have no default booking description. You can set one in your user information.";
+			$_SESSION['AddCreateBookingInfoArray']['BookingDescription'] = "";
+		}
+	}
+	
+	$_SESSION['refreshAddCreateBooking'] = TRUE;
+	header('Location: .');
+	exit();	
+}
+
+// If user wants to change the values back to the original values
+if (isset($_POST['add']) AND $_POST['add'] == "Reset"){
+
+	$_SESSION['AddCreateBookingInfoArray'] = $_SESSION['AddCreateBookingOriginalInfoArray'];
+	unset($_SESSION['AddCreateBookingSelectedACompany']);
+	unset($_SESSION['AddCreateBookingChangeUser']);
+	unset($_SESSION['AddCreateBookingSelectedNewUser']);
+	
+	$_SESSION['refreshAddCreateBooking'] = TRUE;
+	header('Location: .');
+	exit();		
+}
+
+// If user wants to leave the page and be directed back to the booking page again
+if (isset($_POST['add']) AND $_POST['add'] == 'Cancel'){
+
+	$_SESSION['normalBookingFeedback'] = "You cancelled your new booking.";
+}
+
+// ADD BOOKING CODE SNIPPET // END //
+
+
+// EDIT BOOKING CODE SNIPPET // START //
+
+// if user wants to edit a booking, we load a new html form
+if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR
+	(isset($_SESSION['refreshEditCreateBooking']) AND $_SESSION['refreshEditCreateBooking']))
+{
+	// Check if the call was a form submit or a forced refresh
+	if(isset($_SESSION['refreshEditCreateBooking'])){
+		// Acknowledge that we have refreshed the page
+		unset($_SESSION['refreshEditCreateBooking']);	
+		
+	} else {
+		// Get information from database again on the selected booking
+		if(!isset($_SESSION['EditCreateBookingMeetingRoomsArray'])){
+			try
+			{
+				include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+				
+				// Get booking information
+				$pdo = connect_to_db();
+				// Get name and IDs for meeting rooms
+				$sql = 'SELECT 	`meetingRoomID`,
+								`name` 
+						FROM 	`meetingroom`';
+				$result = $pdo->query($sql);
+					
+				//Close connection
+				$pdo = null;
+				
+				// Get the rows of information from the query
+				// This will be used to create a dropdown list in HTML
+				foreach($result as $row){
+					$meetingroom[] = array(
+										'meetingRoomID' => $row['meetingRoomID'],
+										'meetingRoomName' => $row['name']
+										);
+				}		
+				
+				$_SESSION['EditCreateBookingMeetingRoomsArray'] = $meetingroom;
+			}
+			catch (PDOException $e)
+			{
+				$error = 'Error fetching meeting room details: ' . $e->getMessage();
+				include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+				$pdo = null;
+				exit();		
+			}
+		}
+		
+		if(!isset($_SESSION['EditCreateBookingInfoArray'])){
+			try
+			{
+				include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+				
+				// Get booking information
+				$pdo = connect_to_db();
+				$sql = "SELECT 		b.`bookingID`									AS TheBookingID,
+									b.`companyID`									AS TheCompanyID,
+									b.`meetingRoomID`								AS TheMeetingRoomID,
+									b.startDateTime 								AS StartTime, 
+									b.endDateTime 									AS EndTime, 
+									b.description 									AS BookingDescription,
+									b.displayName 									AS BookedBy,
+									(	
+										SELECT `name` 
+										FROM `company` 
+										WHERE `companyID` = TheCompanyID
+									)												AS BookedForCompany,
+									b.`cancellationCode`							AS CancellationCode,
+									m.`name` 										AS BookedRoomName,									
+									u.`userID`										AS TheUserID, 
+									u.`firstName`									AS UserFirstname,
+									u.`lastName`									AS UserLastname,
+									u.`email`										AS UserEmail,
+									u.`displayName` 								AS UserDefaultDisplayName,
+									u.`bookingDescription`							AS UserDefaultBookingDescription
+						FROM 		`booking` b 
+						LEFT JOIN 	`meetingroom` m 
+						ON 			b.meetingRoomID = m.meetingRoomID 
+						LEFT JOIN 	`company` c 
+						ON 			b.CompanyID = c.CompanyID
+						LEFT JOIN 	`user` u
+						ON 			b.`userID` = u.`userID`
+						WHERE 		b.`bookingID` = :BookingID
+						GROUP BY 	b.`bookingID`";
+				$s = $pdo->prepare($sql);
+				$s->bindValue(':BookingID', $_POST['id']);
+				$s->execute();
+								
+				//Close connection
+				$pdo = null;
+			}
+			catch (PDOException $e)
+			{
+				$error = 'Error fetching booking details: ' . $e->getMessage();
+				include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+				$pdo = null;
+				exit();		
+			}
+			
+			// Create an array with the row information we retrieved		
+			$_SESSION['EditCreateBookingInfoArray'] = $s->fetch();
+			$_SESSION['EditCreateBookingOriginalInfoArray'] = $_SESSION['EditCreateBookingInfoArray'];
+		}	
+		
+		// Set the correct information on form call
+		$SelectedUserID = $_SESSION['EditCreateBookingInfoArray']['TheUserID'];
+	}
+
+		// Check if we need a company select for the booking
+	try
+	{		
+		// We want the companies the user works for to decide if we need to
+		// have a dropdown select or just a fixed value (with 0 or 1 company)
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+		$pdo = connect_to_db();
+		$sql = 'SELECT	c.`companyID`,
+						c.`name` 					AS companyName
+				FROM 	`user` u
+				JOIN 	`employee` e
+				ON 		e.userID = u.userID
+				JOIN	`company` c
+				ON 		c.companyID = e.companyID
+				WHERE 	u.`userID` = :userID
+				AND 	c.`isActive` = 1';
+			
+		$s = $pdo->prepare($sql);
+		$s->bindValue(':userID', $SelectedUserID);
+		$s->execute();
+		
+		// Create an array with the row information we retrieved
+		$result = $s->fetchAll();
+			
+		foreach($result as $row){		
+			// Get the companies the user works for
+			// This will be used to create a dropdown list in HTML
+			$company[] = array(
+								'companyID' => $row['companyID'],
+								'companyName' => $row['companyName']
+								);
+		}
+			
+		$pdo = null;
+				
+		// We only need to allow the user a company dropdown selector if they
+		// are connected to more than 1 company.
+		// If not we just store the companyID in a hidden form field
+		if(isset($company)){
+			if (sizeOf($company)>1){
+				// User is in multiple companies
+				
+				$_SESSION['EditCreateBookingDisplayCompanySelect'] = TRUE;
+			} elseif(sizeOf($company) == 1) {
+				// User is in ONE company
+				
+				$_SESSION['EditCreateBookingSelectedACompany'] = TRUE;
+				unset($_SESSION['EditCreateBookingDisplayCompanySelect']);
+				$_SESSION['EditCreateBookingInfoArray']['TheCompanyID'] = $company[0]['companyID'];
+				$_SESSION['EditCreateBookingInfoArray']['BookedForCompany'] = $company[0]['companyName'];
+			}
+		} else{
+			// User is NOT in a company
+			
+			$_SESSION['EditCreateBookingSelectedACompany'] = TRUE;
+			unset($_SESSION['EditCreateBookingDisplayCompanySelect']);
+			$_SESSION['EditCreateBookingInfoArray']['TheCompanyID'] = "";
+			$_SESSION['EditCreateBookingInfoArray']['BookedForCompany'] = "";
+		}		
+	}
+	catch(PDOException $e)
+	{
+		$error = 'Error fetching user details: ' . $e->getMessage();
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+		$pdo = null;
+		exit();					
+	}
+	
+	// Set the correct information
+	$row = $_SESSION['EditCreateBookingInfoArray'];
+	$original = $_SESSION['EditCreateBookingOriginalInfoArray'];
+
+	// Changed company
+	if(isset($company)){
+		foreach($company AS $cmp){
+			if($cmp['companyID'] == $row['TheCompanyID']){
+				$row['BookedForCompany'] = $cmp['companyName'];
+				break;
+			}
+		}			
+	}
+	
+		// Edited inputs
+	$bookingID = $row['TheBookingID'];
+	$companyName = $row['BookedForCompany'];
+	$selectedCompanyID = $row['TheCompanyID'];
+	$companyID = $row['TheCompanyID'];
+	//	userID has been set earlier
+	$meetingroom = $_SESSION['EditCreateBookingMeetingRoomsArray'];
+	$selectedMeetingRoomID = $row['TheMeetingRoomID'];	
+	$displayName = $row['BookedBy'];
+	$description = $row['BookingDescription'];
+	$userInformation = $row['UserLastname'] . ', ' . $row['UserFirstname'] . ' - ' . $row['UserEmail'];
+		// Original values	
+	$originalStartDateTime = $original['StartTime'];
+	$originalEndDateTime = $original['EndTime'];
+	if(!validateDatetimeWithFormat($originalStartDateTime, DATETIME_DEFAULT_FORMAT_TO_DISPLAY)){
+		$originalStartDateTime = convertDatetimeToFormat($originalStartDateTime , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
+	}
+	if(!validateDatetimeWithFormat($originalEndDateTime, DATETIME_DEFAULT_FORMAT_TO_DISPLAY)){
+		$originalEndDateTime = convertDatetimeToFormat($originalEndDateTime , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
+	}	
+	if($original['BookedForCompany']!=NULL){
+		$originalCompanyName = $original['BookedForCompany'];
+	}
+	$originalMeetingRoomName = $original['BookedRoomName'];
+	if(!isset($originalMeetingRoomName) OR $originalMeetingRoomName == NULL OR $originalMeetingRoomName == ""){
+		$originalMeetingRoomName = "N/A - Deleted";	
+	}
+	$originalDisplayName = $original['BookedBy'];
+	$originalBookingDescription = $original['BookingDescription'];
+	$originalUserInformation = 	$original['UserLastname'] . ', ' . $original['UserFirstname'] . 
+								' - ' . $original['UserEmail'];
+	if(!isset($originalUserInformation) OR $originalUserInformation == NULL OR $originalUserInformation == ",  - "){
+		$originalUserInformation = "N/A - Deleted";	
+	}	
+	
+	// Change to the actual form we want to use
+	include 'editbooking.html.php';
+	exit();
+}
+
+// If user wants to update the booking information after editing
+if(isset($_POST['edit']) AND $_POST['edit'] == "Finish Edit")
+{
+
+	// Validate user inputs
+	list($invalidInput, $startDateTime, $endDateTime, $bknDscrptn, $dspname, $bookingCode) = validateUserInputs('EditCreateBookingError');
+	
+	// TO-DO: get user info from booking code
+	
+	if($invalidInput){
+		
+		rememberEditCreateBookingInputs();
+		// Refresh.
+		$_SESSION['refreshEditCreateBooking'] = TRUE;	
+
+		header('Location: .');
+		exit();			
+	}
+	
+	// Check if any values actually changed. If not, we don't need to bother the database
+	$numberOfChanges = 0;
+	$originalValue = $_SESSION['EditCreateBookingOriginalInfoArray'];
+	
+	if($_POST['companyID'] != $originalValue['TheCompanyID']){
+		$numberOfChanges++;
+	}
+	if($dspname != $originalValue['BookedBy']){
+		$numberOfChanges++;
+	}	
+	if($bknDscrptn != $originalValue['BookingDescription']){
+		$numberOfChanges++;
+	}
+
+	if($numberOfChanges == 0){
+		// There were no changes made. Go back to booking overview
+		$_SESSION['normalBookingUserFeedback'] = "No changes were made to the booking.";
+		header('Location: .');
+		exit();	
+	}
+
+	// Set correct companyID
+	if(	isset($_POST['companyID']) AND $_POST['companyID'] != NULL AND 
+		$_POST['companyID'] != ''){
+		$companyID = $_POST['companyID'];
+	} else {
+		$companyID = NULL;
+	}
+	
+	// Update booking information because values have changed!
+	try
+	{
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+		$pdo = connect_to_db();
+		$sql = "UPDATE	`booking`
+				SET 	`companyID` = :companyID,
+						`displayName` = :displayName,
+						`description` = :description
+				WHERE	`bookingID` = :BookingID";
+		$s = $pdo->prepare($sql);
+		
+		$s->bindValue(':BookingID', $_POST['bookingID']);
+		$s->bindValue(':companyID', $companyID);
+		$s->bindValue(':displayName', $dspname);
+		$s->bindValue(':description', $bknDscrptn);
+	
+		$s->execute();
+		
+		$pdo = null;
+	}
+	catch(PDOException $e)
+	{
+		$error = 'Error updating booking information in the database: ' . $e->getMessage();
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+		$pdo = null;
+		exit();
+	}
+		
+	$_SESSION['normalBookingUserFeedback'] .= "Successfully updated the booking information!";
+	
+	clearEditCreateBookingSessions();
+	
+	// Load booking history list webpage with the updated booking information
+	header('Location: .');
+	exit();	
+}
+
+//	User wants to change the company the booking is for (after having already selected it)
+if(isset($_POST['edit']) AND $_POST['edit'] == "Change Company"){
+	
+	// We want to select a company again
+	unset($_SESSION['EditCreateBookingSelectedACompany']);
+	
+	// Let's remember what was selected if we do any changes before clicking "Change Company"
+	rememberEditCreateBookingInputs();
+	
+	$_SESSION['refreshEditCreateBooking'] = TRUE;
+	header('Location: .');
+	exit();		
+}
+
+// User confirms what company he wants the booking to be for.
+if(isset($_POST['edit']) AND $_POST['edit'] == "Select This Company"){
+
+	// Remember that we've selected a new company
+	$_SESSION['EditCreateBookingSelectedACompany'] = TRUE;
+	
+	// Let's remember what was selected if we do any changes before clicking "Select This Company"
+	rememberEditCreateBookingInputs();
+	
+	$_SESSION['refreshEditCreateBooking'] = TRUE;
+	header('Location: .');
+	exit();	
+}
+
+// If user wants to get their default display name
+if(isset($_POST['edit']) AND $_POST['edit'] == "Get Default Display Name"){
+
+	$displayName = $_SESSION['EditCreateBookingOriginalInfoArray']['UserDefaultBookingDescription'];
+	if(isset($_SESSION['EditCreateBookingInfoArray'])){
+		
+		rememberEditCreateBookingInputs();
+
+		if($displayName != ""){
+			if($displayName != $_SESSION['EditCreateBookingInfoArray']['BookedBy']){
+					// The user selected
+				$_SESSION['EditCreateBookingInfoArray']['BookedBy'] = $displayName;
+
+				unset($_SESSION['EditCreateBookingDefaultDisplayNameForNewUser']);				
+			} else {
+				// Description was already the default booking description
+				$_SESSION['EditCreateBookingError'] = "This is already the user's default display name.";
+			}
+		} else {
+			// The user has no default display name
+			$_SESSION['EditCreateBookingError'] = "This user has no default display name.";
+			$_SESSION['EditCreateBookingInfoArray']['BookedBy'] = "";
+		}		
+	}
+	
+	$_SESSION['refreshEditCreateBooking'] = TRUE;
+	header('Location: .');
+	exit();	
+}
+
+// If user wants to get their default booking description
+if(isset($_POST['edit']) AND $_POST['edit'] == "Get Default Booking Description"){
+	
+	$bookingDescription = $_SESSION['EditCreateBookingOriginalInfoArray']['UserDefaultDisplayName'];
+	if(isset($_SESSION['EditCreateBookingInfoArray'])){
+		
+		rememberEditCreateBookingInputs();
+
+		if($bookingDescription != ""){
+			if($bookingDescription != $_SESSION['EditCreateBookingInfoArray']['BookingDescription']){
+				
+					// Set the default booking description
+				$_SESSION['EditCreateBookingInfoArray']['BookingDescription'] = $bookingDescription;
+	
+				unset($_SESSION['EditCreateBookingDefaultBookingDescriptionForNewUser']);			
+			} else {
+				// Description was already the default booking description
+				$_SESSION['EditCreateBookingError'] = "This is already the user's default booking description.";
+			}
+		} else {
+			// The user has no default booking description
+			$_SESSION['EditCreateBookingError'] = "This user has no default booking description.";
+			$_SESSION['EditCreateBookingInfoArray']['BookingDescription'] = "";
+		}
+	}
+	
+	$_SESSION['refreshEditCreateBooking'] = TRUE;
+	header('Location: .');
+	exit();	
+}
+
+// If user wants to change the values back to the original values while editing
+if (isset($_POST['edit']) AND $_POST['edit'] == "Reset"){
+
+	$_SESSION['EditCreateBookingInfoArray'] = $_SESSION['EditCreateBookingOriginalInfoArray'];
+	
+	$_SESSION['refreshEditCreateBooking'] = TRUE;
+	header('Location: .');
+	exit();		
+}
+
+// If user wants to leave the page and be directed back to the booking page again
+if (isset($_POST['edit']) AND $_POST['edit'] == 'Cancel'){
+
+	$_SESSION['normalBookingUserFeedback'] = "You cancelled your booking editing.";
+}
+
+// EDIT BOOKING CODE SNIPPET // END //
+
+// CANCELLATION CODE SNIPPET // START //
 
 
 // Cancels a booking from a submitted cancellation link
@@ -725,8 +1586,176 @@ if(isset($_GET['cancellationcode'])){
 	}
 }
 
-// TO-DO: Get booking default values from admin/booking
+// CANCELLATION CODE SNIPPET // END //
 
+// Remove any unused variables from memory 
+// TO-DO: Change if this ruins having multiple tabs open etc.
+clearAddCreateBookingSessions();
+clearEditCreateBookingSessions();
+
+if(isset($refreshBookings) AND $refreshBookings) {
+	// TO-DO: Add code that should occur on a refresh
+	unset($refreshBookings);
+}
+
+// Display relevant booked meetings
+try
+{
+	include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+	$pdo = connect_to_db();
+	$sql = "SELECT 		b.`bookingID`,
+						b.`companyID`,
+						m.`name` 										AS BookedRoomName, 
+						b.startDateTime 								AS StartTime,
+						b.endDateTime									AS EndTime, 
+						b.displayName 									AS BookedBy,
+						(	
+							SELECT `name` 
+							FROM `company` 
+							WHERE `companyID` = b.`companyID`
+						)												AS BookedForCompany,
+						u.firstName, 
+						u.lastName, 
+						u.email, 
+						GROUP_CONCAT(c.`name` separator ', ') 			AS WorksForCompany, 
+						b.description 									AS BookingDescription, 
+						b.dateTimeCreated 								AS BookingWasCreatedOn, 
+						b.actualEndDateTime								AS BookingWasCompletedOn, 
+						b.dateTimeCancelled								AS BookingWasCancelledOn 
+			FROM 		`booking` b 
+			LEFT JOIN 	`meetingroom` m 
+			ON 			b.meetingRoomID = m.meetingRoomID 
+			LEFT JOIN 	`user` u 
+			ON 			u.userID = b.userID 
+			LEFT JOIN 	`employee` e 
+			ON 			e.UserID = u.userID 
+			LEFT JOIN 	`company` c 
+			ON 			c.CompanyID = e.CompanyID
+			GROUP BY 	b.bookingID
+			ORDER BY 	UNIX_TIMESTAMP(b.startDateTime)
+			ASC";
+	$result = $pdo->query($sql);
+	$rowNum = $result->rowCount();
+
+	//Close the connection
+	$pdo = null;
+}
+catch (PDOException $e)
+{
+	$error = 'Error fetching booking information from the database: ' . $e->getMessage();
+	include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+	$pdo = null;
+	exit();
+}
+
+foreach ($result as $row)
+{
+	$datetimeNow = getDatetimeNow();
+	$startDateTime = $row['StartTime'];	
+	$endDateTime = $row['EndTime'];
+	$completedDateTime = $row['BookingWasCompletedOn'];
+	$dateOnlyNow = convertDatetimeToFormat($datetimeNow, 'Y-m-d H:i:s', 'Y-m-d');
+	$dateOnlyCompleted = convertDatetimeToFormat($completedDateTime,'Y-m-d H:i:s','Y-m-d');
+	$dateOnlyStart = convertDatetimeToFormat($startDateTime,'Y-m-d H:i:s','Y-m-d');
+	$cancelledDateTime = $row['BookingWasCancelledOn'];
+	$createdDateTime = $row['BookingWasCreatedOn'];	
+	
+	// Describe the status of the booking based on what info is stored in the database
+	// If not finished and not cancelled = active
+	// If meeting time has passed and finished time has updated (and not been cancelled) = completed
+	// If cancelled = cancelled
+	// If meeting time has passed and finished time has NOT updated (and not been cancelled) = Ended without updating
+	// If none of the above = Unknown
+	// TO-DO: CHECK IF THIS MAKES SENSE!
+	if(			$completedDateTime == null AND $cancelledDateTime == null AND 
+				$datetimeNow < $endDateTime AND $dateOnlyNow != $dateOnlyStart) {
+		$status = 'Active';
+		// Valid status
+	} elseif(	$completedDateTime == null AND $cancelledDateTime == null AND 
+				$datetimeNow < $endDateTime AND $dateOnlyNow == $dateOnlyStart){
+		$status = 'Active Today';
+		// Valid status		
+	} elseif(	$completedDateTime != null AND $cancelledDateTime == null AND 
+				$dateOnlyNow != $dateOnlyCompleted){
+		$status = 'Completed';
+		// Valid status
+	} elseif(	$completedDateTime != null AND $cancelledDateTime == null AND 
+				$dateOnlyNow == $dateOnlyCompleted){
+		$status = 'Completed Today';
+		// Valid status
+	} elseif(	$completedDateTime == null AND $cancelledDateTime != null AND
+				$startDateTime > $row['BookingWasCancelledOn']){
+		$status = 'Cancelled';
+		// Valid status
+	} elseif(	$completedDateTime != null AND $cancelledDateTime != null AND
+				$completedDateTime > $cancelledDateTime ){
+		$status = 'Ended Early';
+		// Valid status
+	} elseif(	$completedDateTime != null AND $cancelledDateTime != null AND
+				$completedDateTime < $cancelledDateTime ){
+		$status = 'Cancelled after Completion';
+		// This should not be allowed to happen eventually
+	} elseif(	$completedDateTime == null AND $cancelledDateTime == null AND 
+				$datetimeNow > $endDateTime){
+		$status = 'Ended without updating database';
+		// This should never occur
+	} elseif(	$completedDateTime == null AND $cancelledDateTime != null AND 
+				$row['EndTime'] < $row['BookingWasCancelledOn']){
+		$status = 'Cancelled after meeting should have been Completed';
+		// This should not be allowed to happen eventually
+	} else {
+		$status = 'Unknown';
+		// This should never occur
+	}
+	
+	$roomName = $row['BookedRoomName'];
+	$firstname = $row['firstName'];
+	$lastname = $row['lastName'];
+	$email = $row['email'];
+	$userinfo = $lastname . ', ' . $firstname . ' - ' . $row['email'];
+	$worksForCompany = $row['WorksForCompany'];
+	if(!isset($roomName) OR $roomName == NULL OR $roomName == ""){
+		$roomName = "N/A - Deleted";
+	}
+	if(!isset($userinfo) OR $userinfo == NULL OR $userinfo == ",  - "){
+		$userinfo = "N/A - Deleted";	
+	}
+	if(!isset($email) OR $email == NULL OR $email == ""){
+		$firstname = "N/A - Deleted";
+		$lastname = "N/A - Deleted";
+		$email = "N/A - Deleted";		
+	}
+	if(!isset($worksForCompany) OR $worksForCompany == NULL OR $worksForCompany == ""){
+		$worksForCompany = "N/A";
+	}
+	$displayValidatedStartDate = convertDatetimeToFormat($startDateTime , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
+	$displayValidatedEndDate = convertDatetimeToFormat($endDateTime, 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
+	$displayCompletedDateTime = convertDatetimeToFormat($completedDateTime, 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
+	$displayCancelledDateTime = convertDatetimeToFormat($cancelledDateTime, 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);	
+	$displayCreatedDateTime = convertDatetimeToFormat($createdDateTime, 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
+	
+	$meetinginfo = $roomName . ' for the timeslot: ' . $displayValidatedStartDate . 
+					' to ' . $displayValidatedEndDate;
+	
+	$bookings[] = array('id' => $row['bookingID'],
+						'BookingStatus' => $status,
+						'BookedRoomName' => $roomName,
+						'StartTime' => $displayValidatedStartDate,
+						'EndTime' => $displayValidatedEndDate,
+						'BookedBy' => $row['BookedBy'],
+						'BookedForCompany' => $row['BookedForCompany'],
+						'BookingDescription' => $row['BookingDescription'],
+						'firstName' => $firstname,
+						'lastName' => $lastname,
+						'email' => $email,
+						'WorksForCompany' => $worksForCompany,
+						'BookingWasCreatedOn' => $displayCreatedDateTime,
+						'BookingWasCompletedOn' => $displayCompletedDateTime,
+						'BookingWasCancelledOn' => $displayCancelledDateTime,	
+						'UserInfo' => $userinfo,
+						'MeetingInfo' => $meetinginfo
+					);
+}
 
 // Load the html template
 include_once 'booking.html.php';

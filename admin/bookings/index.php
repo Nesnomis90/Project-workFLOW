@@ -335,7 +335,8 @@ if (isset($_POST['action']) and $_POST['action'] == 'Delete')
 if (isset($_POST['action']) and $_POST['action'] == 'Cancel')
 {
 	// Only cancel if booking is currently active
-	if(isset($_POST['BookingStatus']) AND $_POST['BookingStatus'] == 'Active'){	
+	if(	isset($_POST['BookingStatus']) AND  
+		($_POST['BookingStatus'] == 'Active' OR $_POST['BookingStatus'] == 'Active Today')){	
 		// Update cancellation date for selected booked meeting in database
 		try
 		{
@@ -402,7 +403,7 @@ if (isset($_POST['action']) and $_POST['action'] == 'Cancel')
 		emailUserOnCancelledBooking();
 	} else {
 		// Booking was not active, so no need to cancel it.
-		$_SESSION['BookingUserFeedback'] = "Meeting has already been finished. Did not cancel it.";
+		$_SESSION['BookingUserFeedback'] = "Meeting has already been completed. Did not cancel it.";
 	}
 	
 	// Load booked meetings list webpage with updated database
@@ -554,7 +555,8 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR
 				ON 		e.userID = u.userID
 				JOIN	`company` c
 				ON 		c.companyID = e.companyID
-				WHERE 	u.`userID` = :userID';
+				WHERE 	u.`userID` = :userID
+				AND 	c.`isActive' = 1;
 			
 		$s = $pdo->prepare($sql);
 		$s->bindValue(':userID', $SelectedUserID);
@@ -2056,11 +2058,6 @@ if(isset($refreshBookings) AND $refreshBookings) {
 }
 
 
-
-
-// BOOKING OVERVIEW CODE SNIPPET END //
-
-
 // Display booked meetings history list
 try
 {
@@ -2093,7 +2090,8 @@ try
 			LEFT JOIN 	`employee` e 
 			ON 			e.UserID = u.userID 
 			LEFT JOIN 	`company` c 
-			ON 			c.CompanyID = e.CompanyID 
+			ON 			c.CompanyID = e.CompanyID
+			WHERE		c.`isActive` = 1
 			GROUP BY 	b.bookingID
 			ORDER BY 	b.bookingID
 			DESC";
@@ -2114,7 +2112,14 @@ catch (PDOException $e)
 foreach ($result as $row)
 {
 	$datetimeNow = getDatetimeNow();
-	$datetimeEnd = $row['EndTime'];
+	$startDateTime = $row['StartTime'];	
+	$endDateTime = $row['EndTime'];
+	$completedDateTime = $row['BookingWasCompletedOn'];
+	$dateOnlyNow = convertDatetimeToFormat($datetimeNow, 'Y-m-d H:i:s', 'Y-m-d');
+	$dateOnlyCompleted = convertDatetimeToFormat($completedDateTime,'Y-m-d H:i:s','Y-m-d');
+	$dateOnlyStart = convertDatetimeToFormat($startDateTime,'Y-m-d H:i:s','Y-m-d');
+	$cancelledDateTime = $row['BookingWasCancelledOn'];
+	$createdDateTime = $row['BookingWasCreatedOn'];	
 	
 	// Describe the status of the booking based on what info is stored in the database
 	// If not finished and not cancelled = active
@@ -2123,30 +2128,39 @@ foreach ($result as $row)
 	// If meeting time has passed and finished time has NOT updated (and not been cancelled) = Ended without updating
 	// If none of the above = Unknown
 	// TO-DO: CHECK IF THIS MAKES SENSE!
-	if(			$row['BookingWasCompletedOn'] == null AND $row['BookingWasCancelledOn'] == null AND 
-				$datetimeNow < $datetimeEnd ) {
+	if(			$completedDateTime == null AND $cancelledDateTime == null AND 
+				$datetimeNow < $endDateTime AND $dateOnlyNow != $dateOnlyStart) {
 		$status = 'Active';
 		// Valid status
-	} elseif(	$row['BookingWasCompletedOn'] != null AND $row['BookingWasCancelledOn'] == null){
+	} elseif(	$completedDateTime == null AND $cancelledDateTime == null AND 
+				$datetimeNow < $endDateTime AND $dateOnlyNow == $dateOnlyStart){
+		$status = 'Active Today';
+		// Valid status		
+	} elseif(	$completedDateTime != null AND $cancelledDateTime == null AND 
+				$dateOnlyNow != $dateOnlyCompleted){
 		$status = 'Completed';
 		// Valid status
-	} elseif(	$row['BookingWasCompletedOn'] == null AND $row['BookingWasCancelledOn'] != null AND
-				$row['StartTime'] > $row['BookingWasCancelledOn']){
+	} elseif(	$completedDateTime != null AND $cancelledDateTime == null AND 
+				$dateOnlyNow == $dateOnlyCompleted){
+		$status = 'Completed Today';
+		// Valid status
+	} elseif(	$completedDateTime == null AND $cancelledDateTime != null AND
+				$startDateTime > $row['BookingWasCancelledOn']){
 		$status = 'Cancelled';
 		// Valid status
-	} elseif(	$row['BookingWasCompletedOn'] != null AND $row['BookingWasCancelledOn'] != null AND
-				$row['BookingWasCompletedOn'] > $row['BookingWasCancelledOn'] ){
+	} elseif(	$completedDateTime != null AND $cancelledDateTime != null AND
+				$completedDateTime > $cancelledDateTime ){
 		$status = 'Ended Early';
 		// Valid status
-	} elseif(	$row['BookingWasCompletedOn'] != null AND $row['BookingWasCancelledOn'] != null AND
-				$row['BookingWasCompletedOn'] < $row['BookingWasCancelledOn'] ){
+	} elseif(	$completedDateTime != null AND $cancelledDateTime != null AND
+				$completedDateTime < $cancelledDateTime ){
 		$status = 'Cancelled after Completion';
 		// This should not be allowed to happen eventually
-	} elseif(	$row['BookingWasCompletedOn'] == null AND $row['BookingWasCancelledOn'] == null AND 
-				$datetimeNow > $datetimeEnd){
+	} elseif(	$completedDateTime == null AND $cancelledDateTime == null AND 
+				$datetimeNow > $endDateTime){
 		$status = 'Ended without updating database';
 		// This should never occur
-	} elseif(	$row['BookingWasCompletedOn'] == null AND $row['BookingWasCancelledOn'] != null AND 
+	} elseif(	$completedDateTime == null AND $cancelledDateTime != null AND 
 				$row['EndTime'] < $row['BookingWasCancelledOn']){
 		$status = 'Cancelled after meeting should have been Completed';
 		// This should not be allowed to happen eventually
@@ -2155,11 +2169,6 @@ foreach ($result as $row)
 		// This should never occur
 	}
 	
-	$startDateTime = $row['StartTime'];
-	$endDateTime = $row['EndTime'];
-	$completedDateTime = $row['BookingWasCompletedOn'];
-	$cancelledDateTime = $row['BookingWasCancelledOn'];
-	$createdDateTime = $row['BookingWasCreatedOn'];
 	$roomName = $row['BookedRoomName'];
 	$firstname = $row['firstName'];
 	$lastname = $row['lastName'];
@@ -2208,6 +2217,8 @@ foreach ($result as $row)
 						'MeetingInfo' => $meetinginfo
 					);
 }
+
+// BOOKING OVERVIEW CODE SNIPPET END //
 
 // Create the booking information table in HTML
 include_once 'bookings.html.php';
