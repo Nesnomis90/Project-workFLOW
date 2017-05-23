@@ -94,6 +94,25 @@ checkIfLocalDevice();
 
 // NON-ADMIN INTERACTIONS // START //
 
+// Updates/Sets the default page when user wants it
+if(isset($_POST['action']) AND $_POST['action'] == "Refresh As Default Room"){
+
+	$TheMeetingRoomID = $_SESSION["DefaultMeetingRoomInfo"]["TheMeetingRoomID"];
+	$location = "http://$_SERVER[HTTP_HOST]/meetingroom/?meetingroom=" . $TheMeetingRoomID;
+	header("Location: $location");
+	exit();
+}
+
+// Updates the page when user wants it
+if(isset($_POST['action']) AND $_POST['action'] == "Refresh As Selected Room"){
+
+	$TheMeetingRoomID = $_GET['meetingroom'];
+	$location = "http://$_SERVER[HTTP_HOST]/meetingroom/?meetingroom=" . $TheMeetingRoomID;
+	header("Location: $location");
+	exit();
+}
+
+
 
 // Redirect to booking when a room has been selected
 if(isset($_POST['action']) AND $_POST['action'] == "Book This Room"){

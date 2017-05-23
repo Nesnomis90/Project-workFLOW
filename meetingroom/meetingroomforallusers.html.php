@@ -8,7 +8,7 @@
 		<title>Meeting Room</title>
 	</head>
 	<body>
-		<?php if(isset($_SESSION['DefaultMeetingRoomInfo']) AND !$defaultMeetingRoomFeedback) : ?>
+		<?php if(isset($_SESSION['DefaultMeetingRoomInfo']) AND !isset($defaultMeetingRoomFeedback)) : ?>
 			<div>
 			<form action="" method="post">
 				<label for="defaultMeetingRoomName">The Default Meeting Room For This Device: </label>
@@ -24,6 +24,10 @@
 			</form>
 		<?php endif; ?>
 		<h1>Meeting Room</h1>
+		<form action="" method="post">
+			<input type="submit" name="action" value="Refresh As Default Room">
+			<input type="submit" name="action" value="Refresh As Selected Room">
+		</form>
 		<?php if(isset($_SESSION['MeetingRoomAllUsersFeedback'])) : ?>
 			<div><b><?php htmlout($_SESSION['MeetingRoomAllUsersFeedback']); ?></b></div>
 			<?php unset($_SESSION['MeetingRoomAllUsersFeedback']); ?>
@@ -33,6 +37,8 @@
 		<?php endif; ?>
 		<?php if(isset($_SESSION['DefaultMeetingRoomInfo'])) : ?>
 		<?php $default = $_SESSION['DefaultMeetingRoomInfo']; ?>
+		<?php endif; ?>
+		<?php if(isset($_GET['meetingroom']) AND $_GET['meetingroom'] != NULL AND $_GET['meetingroom'] != "") : ?>
 			<form action="" method="post">
 				<fieldset>
 					<legend><?php htmlout($default['TheMeetingRoomName']); ?></legend>
