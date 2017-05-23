@@ -12,7 +12,7 @@ include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/magicquotes.inc.php';
 	Cancel booking from code
 		Admin has master code
 */
-
+var_dump($_SESSION);
 // Function to validate user inputs
 function validateUserInputs($FeedbackSessionToUse){
 	// Get user inputs

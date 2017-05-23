@@ -1,14 +1,13 @@
-<?php 
-
+<?php
 // Define some cookies we use to identify if the website is accessed locally by a meeting room panel
 // Cookie name
 	//TO-DO: Change cookie names after uploading
-define('MEETINGROOM_NAME', 'This is a temporary cookie name used to hold the meeting room name'); 
-define('MEETINGROOM_IDCODE', 'This is a temporary cookie name used to hold the meeting room IDCode'); 
+define('MEETINGROOM_NAME', 'Temp_Cookie_Name_To_Hold_Meeting_Room_Name'); 
+define('MEETINGROOM_IDCODE', 'Temp_Cookie_Name_To_Hold_Meeting_Room_ID_CODE'); 
 
 // Cookie setup
 function setNewMeetingRoomCookies($meetingRoomName, $idCode){
-	$hashedIdCode = hashCookies($idCode);
+	$hashedIdCode = hashMeetingRoomIDCode($idCode);
 	// Set to 'never expire' i.e. last until 19th January 2038
 	setcookie(MEETINGROOM_NAME, $meetingRoomName, 2147483647, '/');
 	setcookie(MEETINGROOM_IDCODE, $hashedIdCode, 2147483647, '/');

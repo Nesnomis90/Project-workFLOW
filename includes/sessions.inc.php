@@ -15,6 +15,9 @@ function destroySession(){
 	}
 
 	// Destroy the session.
-	session_destroy();	
+	session_destroy();
+	
+	// Start the new session.
+	session_start();
 }
 ?>

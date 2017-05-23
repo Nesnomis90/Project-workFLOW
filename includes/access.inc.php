@@ -77,40 +77,46 @@ function databaseContainsMeetingRoomWithIDCode($name, $cookieIdCode){
 // Updates the timestamp of when the user was last active
 function updateUserActivity()
 {
-	// If a user logs in, or does something while logged in, we'll use this to update the database
-	// to indicate when they last used the website
-	try
-	{
-		include_once 'db.inc.php';
-		$pdo = connect_to_db();
-		$sql = 'UPDATE 	`user`
-				SET		`lastActivity` = CURRENT_TIMESTAMP()
-				WHERE 	`userID` = :userID
-				AND		`isActive` > 0';
-		$s = $pdo->prepare($sql);
-		$s->bindValue(':userID', $_SESSION['LoggedInUserID']);
+	if(isset($_SESSION['LoggedInUserID'])){
+		// If a user logs in, or does something while logged in, we'll use this to update the database
+		// to indicate when they last used the website
+		try
+		{
+			include_once 'db.inc.php';
+			$pdo = connect_to_db();
+			$sql = 'UPDATE 	`user`
+					SET		`lastActivity` = CURRENT_TIMESTAMP()
+					WHERE 	`userID` = :userID
+					AND		`isActive` > 0';
+			$s = $pdo->prepare($sql);
+			$s->bindValue(':userID', $_SESSION['LoggedInUserID']);
 
-		$s->execute();
-		
-		$pdo = null;
+			$s->execute();
+			
+			$pdo = null;
+		}
+		catch (PDOException $e)
+		{
+			$error = 'Error updating user activity.';
+			include_once 'error.html.php';
+			$pdo = null;
+			exit();
+		}			
 	}
-	catch (PDOException $e)
-	{
-		$error = 'Error updating user activity.';
-		include_once 'error.html.php';
-		$pdo = null;
-		exit();
-	}	
 }
 
 // returns TRUE if user is logged in and updates the database with their last active timestamp
 function userIsLoggedIn() 
 {
-	if(checkIfUserIsLoggedIn()){
+	session_start(); // Do not remove this
+	$isLoggedIn = checkIfUserIsLoggedIn();
+	if($isLoggedIn === TRUE){
 		updateUserActivity();
 		return TRUE;
-	} else {
+	} elseif($isLoggedIn === FALSE) {
 		return FALSE;
+	} else {
+		echo "no return value";
 	}
 }
 
@@ -125,7 +131,6 @@ function checkIfUserIsLoggedIn()
 			$email = trim($_POST['email']);
 			$_SESSION['loginEmailSubmitted'] = $email;
 		}
-		
 		// Check if user has filled in the necessary information
 		if (!isset($_POST['email']) or $_POST['email'] == '' or
 		!isset($_POST['password']) or $_POST['password'] == '')
@@ -135,7 +140,6 @@ function checkIfUserIsLoggedIn()
 			$_SESSION['loginError'] = 'Please fill in both fields';
 			return FALSE;
 		}
-		
 		// User has filled in both fields, check if login details are correct
 			// Add our custom password salt and compare the finished hash to the database
 		$SubmittedPassword = $_POST['password'];
@@ -184,7 +188,6 @@ function checkIfUserIsLoggedIn()
 		header('Location: ' . $_POST['goto']);
 		exit();
 	}
-	
 	// The user is in a session that was previously logged in
 	// Let's check if the user STILL EXISTS in the database
 	// i.e. if the login info is still correct
@@ -197,6 +200,7 @@ function checkIfUserIsLoggedIn()
 		return databaseContainsUser($_SESSION['email'],
 		$_SESSION['password']);
 	}
+	return FALSE;
 }
 
 // Function to check if the submitted user exists in our database

@@ -12,16 +12,21 @@ include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/magicquotes.inc.php';
 		Search meeting room status by datetime?
 
 */
-
+var_dump($_SESSION);
 // ADMIN INTERACTIONS // START //
 
 // If Admin wants to set a meeting room as the default room on a local device
-if(isset($_POST['action']) AND $_POST['action'] == "Set Default Room"){
+if(	(isset($_POST['action']) AND $_POST['action'] == "Set Default Room") OR 
+	(isset($_SESSION['SetDefaultRoom']) AND $_SESSION['SetDefaultRoom'])){
 		// CHECK IF USER TRYING TO ACCESS THIS IS IN FACT THE ADMIN!
+	$_SESSION['SetDefaultRoom'] = TRUE;
+	var_dump($_SESSION);
+	
 	if (!isUserAdmin()){
+		echo "we exit here";
 		exit();
 	}
-	
+	unset($_SESSION['SetDefaultRoom']);
 	// User logged in as Admin and can set the default meeting room on this local device
 	// Display meeting room list to choose from.
 	try
@@ -56,8 +61,7 @@ if(isset($_POST['action']) AND $_POST['action'] == "Set Default Room"){
 								'MeetingRoomDescription' => $row['MeetingRoomDescription'],
 								'MeetingRoomIDCode' => $row['MeetingRoomIDCode']
 						);
-	}	
-	
+	}
 	include_once 'adminroomselect.html.php';
 	exit();
 }
@@ -74,7 +78,7 @@ if(isset($_POST['action']) AND $_POST['action'] == "Set As Default"){
 		$meetingRoomName = $_POST['MeetingRoomName'];
 		
 		setNewMeetingRoomCookies($meetingRoomName, $_POST['MeetingRoomIDCode']);
-		destroySession(); // TO-DO: Not sure if this crashes/works by setting a cookie before/so close to destroying the session
+		destroySession();
 		$defaultMeetingRoomFeedback = "Set $meetingRoomName as the default meeting room for this device. Also logged you off as Admin.";
 	} else {
 		$_SESSION['MeetingRoomAllUsersFeedback'] = "Couldn't set default meeting room for local device.";
