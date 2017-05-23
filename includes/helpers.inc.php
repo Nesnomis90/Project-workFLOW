@@ -9,4 +9,5 @@ require_once 'codegeneration.inc.php';
 require_once 'htmlout.inc.php';
 require_once 'inputvalidation.inc.php';
 require_once 'cookies.inc.php';
+require_once 'sessions.inc.php';
 ?>
