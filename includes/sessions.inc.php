@@ -1,5 +1,7 @@
 <?php
+// Functions to do anything related with sessions
 
+// Removes all stored info e.g. logs out user
 function destroySession(){
 	session_start();
 	// Unset all of the session variables.

@@ -96,7 +96,7 @@ checkIfLocalDevice();
 
 
 // Redirect to booking when a room has been selected
-if(isset($_POST['action']) AND $_POST['action'] == "Select Room"){
+if(isset($_POST['action']) AND $_POST['action'] == "Book This Room"){
 
 	$TheMeetingRoomID = $_POST['MeetingRoomID'];
 	$location = "http://$_SERVER[HTTP_HOST]/booking/?meetingroom=" . $TheMeetingRoomID;
