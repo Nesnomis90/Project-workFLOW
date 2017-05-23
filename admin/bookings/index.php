@@ -554,7 +554,8 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR
 				ON 		e.userID = u.userID
 				JOIN	`company` c
 				ON 		c.companyID = e.companyID
-				WHERE 	u.`userID` = :userID';
+				WHERE 	u.`userID` = :userID
+				AND 	c.`isActive' = 1;
 			
 		$s = $pdo->prepare($sql);
 		$s->bindValue(':userID', $SelectedUserID);
@@ -2093,7 +2094,8 @@ try
 			LEFT JOIN 	`employee` e 
 			ON 			e.UserID = u.userID 
 			LEFT JOIN 	`company` c 
-			ON 			c.CompanyID = e.CompanyID 
+			ON 			c.CompanyID = e.CompanyID
+			WHERE		c.`isActive` = 1
 			GROUP BY 	b.bookingID
 			ORDER BY 	b.bookingID
 			DESC";
