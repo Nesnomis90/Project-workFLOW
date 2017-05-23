@@ -141,32 +141,67 @@ if(isset($_POST['action']) AND $_POST['action'] == "Set New Max"){
 	}
 }
 
-// Display meeting rooms
-try
-{
-	include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
-	$pdo = connect_to_db();
-	$sql = 'SELECT  	m.`meetingRoomID`	AS TheMeetingRoomID, 
-						m.`name`			AS MeetingRoomName, 
-						m.`capacity`		AS MeetingRoomCapacity, 
-						m.`description`		AS MeetingRoomDescription, 
-						m.`location`		AS MeetingRoomLocation,
-						COUNT(re.`amount`)	AS MeetingRoomEquipmentAmount
-			FROM 		`meetingroom` m
-			LEFT JOIN 	`roomequipment` re
-			ON 			re.`meetingRoomID` = m.`meetingRoomID`
-			GROUP BY 	m.`meetingRoomID`';
-	$result = $pdo->query($sql);
+if(isset($_GET['meetingroom'])){
+	// Display selected meeting room
+	try
+	{
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+		$pdo = connect_to_db();
+		$sql = 'SELECT  	m.`meetingRoomID`	AS TheMeetingRoomID, 
+							m.`name`			AS MeetingRoomName, 
+							m.`capacity`		AS MeetingRoomCapacity, 
+							m.`description`		AS MeetingRoomDescription, 
+							m.`location`		AS MeetingRoomLocation,
+							COUNT(re.`amount`)	AS MeetingRoomEquipmentAmount
+				FROM 		`meetingroom` m
+				LEFT JOIN 	`roomequipment` re
+				ON 			re.`meetingRoomID` = m.`meetingRoomID`
+				WHERE		m.`meetingRoomID` = :meetingRoomID
+				GROUP BY 	m.`meetingRoomID`
+				LIMIT 		1'; // TO-DO: remove limit 1 if broken
+		$s = $pdo->prepare($sql);
+		$s->bindValue(':meetingRoomID', $_GET['meetingroom']);
+		$s->execute();
+		$result = $s->fetchAll();
 
-	//Close the connection
-	$pdo = null;
-}
-catch (PDOException $e)
-{
-	$error = 'Error fetching meeting rooms from the database: ' . $e->getMessage();
-	include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
-	$pdo = null;
-	exit();
+		//Close the connection
+		$pdo = null;
+	}
+	catch (PDOException $e)
+	{
+		$error = 'Error fetching meeting rooms from the database: ' . $e->getMessage();
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+		$pdo = null;
+		exit();
+	}	
+} elseif(!isset($_GET['meetingroom'])){
+	// Display meeting rooms
+	try
+	{
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+		$pdo = connect_to_db();
+		$sql = 'SELECT  	m.`meetingRoomID`	AS TheMeetingRoomID, 
+							m.`name`			AS MeetingRoomName, 
+							m.`capacity`		AS MeetingRoomCapacity, 
+							m.`description`		AS MeetingRoomDescription, 
+							m.`location`		AS MeetingRoomLocation,
+							COUNT(re.`amount`)	AS MeetingRoomEquipmentAmount
+				FROM 		`meetingroom` m
+				LEFT JOIN 	`roomequipment` re
+				ON 			re.`meetingRoomID` = m.`meetingRoomID`
+				GROUP BY 	m.`meetingRoomID`';
+		$result = $pdo->query($sql);
+
+		//Close the connection
+		$pdo = null;
+	}
+	catch (PDOException $e)
+	{
+		$error = 'Error fetching meeting rooms from the database: ' . $e->getMessage();
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+		$pdo = null;
+		exit();
+	}
 }
 
 foreach ($result as $row)
@@ -182,18 +217,19 @@ foreach ($result as $row)
 
 $totalMeetingRooms = sizeOf($meetingrooms);
 
-// Sets default values
-if(!isset($maxRoomsToShow)){
-	if($totalMeetingRooms < 10){
-		$maxRoomsToShow = $totalMeetingRooms;
-	} else {
-		$maxRoomsToShow = 10;	
+if(!isset($_GET['meetingroom'])){
+	// Sets default values
+	if(!isset($maxRoomsToShow)){
+		if($totalMeetingRooms < 10){
+			$maxRoomsToShow = $totalMeetingRooms;
+		} else {
+			$maxRoomsToShow = 10;	
+		}
 	}
+	if(!isset($roomDisplayLimit)){
+		$roomDisplayLimit = $maxRoomsToShow;
+	}		
 }
-if(!isset($roomDisplayLimit)){
-	$roomDisplayLimit = $maxRoomsToShow;
-}
-
 // Load the html template
 include_once 'meetingroomforallusers.html.php';
 ?>
