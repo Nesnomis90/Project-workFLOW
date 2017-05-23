@@ -335,7 +335,8 @@ if (isset($_POST['action']) and $_POST['action'] == 'Delete')
 if (isset($_POST['action']) and $_POST['action'] == 'Cancel')
 {
 	// Only cancel if booking is currently active
-	if(isset($_POST['BookingStatus']) AND $_POST['BookingStatus'] == 'Active'){	
+	if(	isset($_POST['BookingStatus']) AND  
+		($_POST['BookingStatus'] == 'Active' OR $_POST['BookingStatus'] == 'Active Today')){	
 		// Update cancellation date for selected booked meeting in database
 		try
 		{
@@ -402,7 +403,7 @@ if (isset($_POST['action']) and $_POST['action'] == 'Cancel')
 		emailUserOnCancelledBooking();
 	} else {
 		// Booking was not active, so no need to cancel it.
-		$_SESSION['BookingUserFeedback'] = "Meeting has already been finished. Did not cancel it.";
+		$_SESSION['BookingUserFeedback'] = "Meeting has already been completed. Did not cancel it.";
 	}
 	
 	// Load booked meetings list webpage with updated database
@@ -2057,11 +2058,6 @@ if(isset($refreshBookings) AND $refreshBookings) {
 }
 
 
-
-
-// BOOKING OVERVIEW CODE SNIPPET END //
-
-
 // Display booked meetings history list
 try
 {
@@ -2221,6 +2217,8 @@ foreach ($result as $row)
 						'MeetingInfo' => $meetinginfo
 					);
 }
+
+// BOOKING OVERVIEW CODE SNIPPET END //
 
 // Create the booking information table in HTML
 include_once 'bookings.html.php';

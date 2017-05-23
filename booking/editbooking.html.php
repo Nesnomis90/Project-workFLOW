@@ -122,6 +122,6 @@
 				<?php endif; ?>
 			</div>
 		</form>
-	<?php include '../logout.inc.html.php'; ?>
+	<?php include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/logout.inc.html.php'; ?>
 	</body>
 </html>
