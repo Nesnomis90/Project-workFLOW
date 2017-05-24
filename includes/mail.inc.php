@@ -15,7 +15,7 @@
 
 // Function that prepares an email to be sent
 // Returns TRUE if prepared, FALSE if not prepared.
-// TO-DO: UNTESTED
+// TO-DO: Untested with proper php.ini settings
 function sendEmail($toEmail, $subject, $message){
 	
 	// Check if email is valid email
@@ -28,7 +28,7 @@ function sendEmail($toEmail, $subject, $message){
 			// If msg is not empty, prepare the email
 		if($message != ""){
 			// Use wordwrap() if lines are longer than 70 characters
-			$msg = wordwrap($msg,70);
+			$message = wordwrap($message,70);
 			
 			// Set a default FROM: header
 			$from = "FROM: Meeting Flow booking service <ouremail@ourhost.com>"; // TO-DO: Insert correct email

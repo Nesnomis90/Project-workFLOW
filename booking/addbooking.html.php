@@ -23,7 +23,7 @@
 				<?php if(isset($_GET['meetingroom'])) : ?>
 					<?php foreach($meetingroom as $row): ?> 
 						<?php if($row['meetingRoomID']==$_GET['meetingroom']):?>
-							<div><b><?php htmlout($row['meetingRoomName']);?></b></div>
+							<b><?php htmlout($row['meetingRoomName']);?></b>
 						<?php endif;?>
 					<?php endforeach; ?>					
 				<?php else : ?>
@@ -57,9 +57,9 @@
 			</div>
 			<div>
 				<label for="companyID">Company: </label>
-				<?php if(	isset($_SESSION['CreateBookingDisplayCompanySelect']) AND 
-							$_SESSION['CreateBookingDisplayCompanySelect']) : ?>
-					<?php if(!isset($_SESSION['CreateBookingSelectedACompany'])) : ?>
+				<?php if(	isset($_SESSION['AddCreateBookingDisplayCompanySelect']) AND 
+							$_SESSION['AddCreateBookingDisplayCompanySelect']) : ?>
+					<?php if(!isset($_SESSION['AddCreateBookingSelectedACompany'])) : ?>
 						<select name="companyID" id="companyID">
 							<?php foreach($company as $row): ?> 
 								<?php if($row['companyID']==$selectedCompanyID):?>
@@ -74,12 +74,12 @@
 								<?php endif;?>
 							<?php endforeach; ?>
 						</select>
-						<input type="submit" name="action" value="Select This Company">
+						<input type="submit" name="add" value="Select This Company">
 					<?php else : ?>
 						<b><?php htmlout($companyName); ?></b>
 						<input type="hidden" name="companyID" id="companyID" 
 						value="<?php htmlout($companyID); ?>">
-						<input type="submit" name="action" value="Change Company">
+						<input type="submit" name="add" value="Change Company">
 					<?php endif; ?>
 				<?php else : ?>
 					<?php if(isset($company)) : ?>
@@ -95,20 +95,21 @@
 				<label for="displayName">Display Name: </label>
 				<input type="text" name="displayName" id="displayName" 
 				value="<?php htmlout($displayName); ?>">
-				<input type="submit" name="action" value="Get Default Display Name">
+				<input type="submit" name="add" value="Get Default Display Name">
 			</div>
 			<div>
 				<label for="description">Booking Description: </label>
 				<textarea rows="4" cols="50" name="description" id="description"><?php htmlout($description); ?></textarea>
-				<input type="submit" name="action" value="Get Default Booking Description"> 
+				<input type="submit" name="add" value="Get Default Booking Description"> 
 			</div>
 			<div>
-				<input type="submit" name="action" value="Reset">
-				<?php if(!isset($_SESSION['CreateBookingSelectedACompany'])) : ?>
-					<input type="submit" name="disabled" value="Create Meeting" disabled>
+				<input type="submit" name="add" value="Reset">
+				<input type="submit" name="add" value="Cancel">
+				<?php if(!isset($_SESSION['AddCreateBookingSelectedACompany'])) : ?>
+					<input type="submit" name="disabled" value="Add Booking" disabled>
 					<b>You need to select the company you want before you can add the booking.</b>
 				<?php else : ?>
-					<input type="submit" name="action" value="Create Meeting">
+					<input type="submit" name="add" value="Add Booking">
 				<?php endif; ?>				
 			</div>
 		</form>
