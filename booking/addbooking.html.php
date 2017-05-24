@@ -23,7 +23,7 @@
 				<?php if(isset($_GET['meetingroom'])) : ?>
 					<?php foreach($meetingroom as $row): ?> 
 						<?php if($row['meetingRoomID']==$_GET['meetingroom']):?>
-							<div><b><?php htmlout($row['meetingRoomName']);?></b></div>
+							<b><?php htmlout($row['meetingRoomName']);?></b>
 						<?php endif;?>
 					<?php endforeach; ?>					
 				<?php else : ?>
