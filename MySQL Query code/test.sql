@@ -2,6 +2,19 @@ USE test;
 SET NAMES utf8;
 USE meetingflow;
 
+SELECT  	m.`meetingRoomID`	AS TheMeetingRoomID, 
+							m.`name`			AS MeetingRoomName, 
+							m.`capacity`		AS MeetingRoomCapacity, 
+							m.`description`		AS MeetingRoomDescription, 
+							m.`location`		AS MeetingRoomLocation,
+							COUNT(re.`amount`)	AS MeetingRoomEquipmentAmount
+				FROM 		`meetingroom` m
+				LEFT JOIN 	`roomequipment` re
+				ON 			re.`meetingRoomID` = m.`meetingRoomID`
+				WHERE		m.`meetingRoomID` = 21
+				GROUP BY 	m.`meetingRoomID`
+                LIMIT 1;
+
 SELECT 		b.`bookingID`,
 						b.`companyID`,
 						m.`name` 										AS BookedRoomName, 
