@@ -15,7 +15,6 @@ function hashBookingCode($rawBookingCode){
 	$HashedBookingCode = hash('sha256', $SaltedBookingCode);
 	return $HashedBookingCode;	
 }
-
 	// Function to salt and hash meeting room name into an IDCode
 function hashMeetingRoomIDCode($rawCode){
 	$saltedCode = $rawCode . CK_SALT;
@@ -147,11 +146,22 @@ function checkIfUserIsLoggedIn()
 		if (databaseContainsUser($email, $password))
 		{
 			// Correct log in info! Update the session data to know we're logged in
-			$_SESSION['loggedIn'] = TRUE;
-			$_SESSION['email'] = $email;
-			$_SESSION['password'] = $password;
-			$_SESSION['LoggedInUserID'] = $_SESSION['DatabaseContainsUserID'];
-			$_SESSION['LoggedInUserName'] = $_SESSION['DatabaseContainsUserName'];
+			if(!isset($_SESSION['loggedIn'])){
+				$_SESSION['loggedIn'] = TRUE;
+			}
+			if(!isset($_SESSION['email'])){
+				$_SESSION['email'] = $email;
+			}
+			if(!isset($_SESSION['password'])){
+				$_SESSION['password'] = $password;
+			}
+			if(!isset($_SESSION['LoggedInUserID'])){
+				$_SESSION['LoggedInUserID'] = $_SESSION['DatabaseContainsUserID'];
+			}
+			if(!isset($_SESSION['LoggedInUserName'])){
+				$_SESSION['LoggedInUserName'] = $_SESSION['DatabaseContainsUserName']; 
+			}
+			
 			unset($_SESSION['DatabaseContainsUserID']);
 			unset($_SESSION['DatabaseContainsUserName']);
 			unset($_SESSION['loginEmailSubmitted']);

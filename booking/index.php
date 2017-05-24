@@ -25,7 +25,10 @@ function clearAddCreateBookingSessions(){
 	unset($_SESSION['AddCreateBookingSelectedNewUser']);
 	unset($_SESSION['AddCreateBookingSelectedACompany']);	
 
-	unset($_SESSION['bookingCodeUserID']);	
+	unset($_SESSION['bookingCodeUserID']);
+	
+	unset($_SESSION['cancelBookingOriginalValues']['BookingID']);
+	unset($_SESSION['cancelBookingOriginalValues']['BookingStatus']);	
 }
 
 // Function to clear sessions used to remember user inputs on refreshing the edit booking form
@@ -38,6 +41,9 @@ function clearEditCreateBookingSessions(){
 	unset($_SESSION['EditCreateBookingUserSearch']);
 	unset($_SESSION['EditCreateBookingSelectedNewUser']);
 	unset($_SESSION['EditCreateBookingSelectedACompany']);
+	
+	unset($_SESSION['cancelBookingOriginalValues']['BookingID']);
+	unset($_SESSION['cancelBookingOriginalValues']['BookingStatus']);	
 }
 
 // Function to remember the user inputs in Edit Booking
@@ -285,14 +291,23 @@ checkIfLocalDevice();
 if (	(isset($_POST['action']) and $_POST['action'] == 'Cancel') OR 
 		(isset($_SESSION['refreshCancelBooking']) AND $_SESSION['refreshCancelBooking']))
 {
-	unset($_SESSION['refreshCancelBooking']);
+	if(isset($_SESSION['refreshCancelBooking']) AND $_SESSION['refreshCancelBooking']){
+		unset($_SESSION['refreshCancelBooking']);
+	} else {
+		$_SESSION['cancelBookingOriginalValues']['BookingID'] = $_POST['id'];
+		$_SESSION['cancelBookingOriginalValues']['BookingStatus'] = $_POST['BookingStatus'];
+	}
+	
+	$bookingID = $_SESSION['cancelBookingOriginalValues']['BookingID'];
+	$bookingStatus = $_SESSION['cancelBookingOriginalValues']['BookingStatus'];
 	
 	$_SESSION['confirmOrigins'] = "Cancel";
 	$SelectedUserID = checkIfLocalDeviceOrLoggedIn();
 	unset($_SESSION['confirmOrigins']);
 	
 	// Check if selected user ID is creator of booking or an admin
-		// Check if the user is the creator of the booking
+	$continueCancel = FALSE;
+		// Check if the user is the creator of the booking	
 	try
 	{
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
@@ -304,21 +319,14 @@ if (	(isset($_POST['action']) and $_POST['action'] == 'Cancel') OR
 				WHERE 	`bookingID` = :id
 				LIMIT 	1';
 		$s = $pdo->prepare($sql);
-		$s->bindValue(':id', $_POST['id']);
+		$s->bindValue(':id', $bookingID);
 		$s->execute();
 		$row = $s->fetch();
-		if($row[0] < 1){
-			$_SESSION['normalBookingFeedback'] = "You cannot cancel this booked meeting.";
-			if(isset($_GET['meetingroom'])){
-				$meetingRoomID = $_GET['meetingroom'];
-				$location = "http://$_SERVER[HTTP_HOST]/booking/?meetingroom=" . $meetingRoomID;
-			} else {
-				$meetingRoomID = $_POST['meetingRoomID'];
-				$location = '.';
+		if($row[0] > 0){
+			if($row['userID'] == $SelectedUserID){
+				$continueCancel = TRUE;
 			}
-			header('Location: ' . $location);
-			exit();			
-		}
+		} 
 		
 		//close connection
 		$pdo = null;
@@ -347,17 +355,8 @@ if (	(isset($_POST['action']) and $_POST['action'] == 'Cancel') OR
 		$s->bindValue(':userID', $SelectedUserID);
 		$s->execute();
 		$row = $s->fetch();
-		if($row['AccessName'] != "Admin"){
-			$_SESSION['normalBookingFeedback'] = "You cannot cancel this booked meeting.";
-			if(isset($_GET['meetingroom'])){
-				$meetingRoomID = $_GET['meetingroom'];
-				$location = "http://$_SERVER[HTTP_HOST]/booking/?meetingroom=" . $meetingRoomID;
-			} else {
-				$meetingRoomID = $_POST['meetingRoomID'];
-				$location = '.';
-			}
-			header('Location: ' . $location);
-			exit();			
+		if($row['AccessName'] == "Admin"){
+			$continueCancel = TRUE;
 		}
 		
 		//close connection
@@ -369,10 +368,24 @@ if (	(isset($_POST['action']) and $_POST['action'] == 'Cancel') OR
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
 		exit();
 	}	
+
+
+	if($continueCancel === FALSE){
+		$_SESSION['normalBookingFeedback'] = "You cannot cancel this booked meeting.";
+		if(isset($_GET['meetingroom'])){
+			$meetingRoomID = $_GET['meetingroom'];
+			$location = "http://$_SERVER[HTTP_HOST]/booking/?meetingroom=" . $meetingRoomID;
+		} else {
+			$meetingRoomID = $_POST['meetingRoomID'];
+			$location = '.';
+		}
+		header('Location: ' . $location);
+		exit();				
+	}
 	
 	// Only cancel if booking is currently active
-	if(	isset($_POST['BookingStatus']) AND  
-		($_POST['BookingStatus'] == 'Active' OR $_POST['BookingStatus'] == 'Active Today')){
+	if(	isset($bookingStatus) AND  
+		($bookingStatus == 'Active' OR $bookingStatus == 'Active Today')){
 		// Update cancellation date for selected booked meeting in database
 		try
 		{
@@ -384,7 +397,7 @@ if (	(isset($_POST['action']) and $_POST['action'] == 'Cancel') OR
 							`cancellationCode` = NULL				
 					WHERE 	`bookingID` = :id';
 			$s = $pdo->prepare($sql);
-			$s->bindValue(':id', $_POST['id']);
+			$s->bindValue(':id', $bookingID);
 			$s->execute();
 			
 			//close connection
@@ -450,7 +463,9 @@ if (	(isset($_POST['action']) and $_POST['action'] == 'Cancel') OR
 		// Booking was not active, so no need to cancel it.
 		$_SESSION['normalBookingFeedback'] = "Meeting has already ended. Did not cancel it.";
 	}
-	
+
+	unset($_SESSION['cancelBookingOriginalValues']['BookingID']);
+	unset($_SESSION['cancelBookingOriginalValues']['BookingStatus']);	
 	// Load booked meetings list webpage with updated database
 	if(isset($_GET['meetingroom'])){
 		$meetingRoomID = $_GET['meetingroom'];
@@ -512,7 +527,7 @@ if(isset($_POST['action']) AND $_POST['action'] == "confirmcode"){
 		if ($row[0] > 0)
 		{
 			// Booking code is a valid user
-			$_SESSION['bookingCodeUserID'] = $row[0];
+			$_SESSION['bookingCodeUserID'] = $row['userID'];
 			// Check if we are confirming a create booking, a cancel or an edit.
 			if($_SESSION['confirmOrigins'] == "Create Meeting"){
 				$_SESSION['refreshAddCreateBooking'] = TRUE;
@@ -1864,39 +1879,79 @@ try
 {
 	include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 	$pdo = connect_to_db();
-	$sql = "SELECT 		b.`bookingID`,
-						b.`companyID`,
-						m.`name` 										AS BookedRoomName, 
-						b.startDateTime 								AS StartTime,
-						b.endDateTime									AS EndTime, 
-						b.displayName 									AS BookedBy,
-						(	
-							SELECT 	`name` 
-							FROM 	`company` 
-							WHERE 	`companyID` = b.`companyID`
-						)												AS BookedForCompany,
-						u.firstName, 
-						u.lastName, 
-						u.email, 
-						GROUP_CONCAT(c.`name` separator ', ') 			AS WorksForCompany, 
-						b.description 									AS BookingDescription, 
-						b.dateTimeCreated 								AS BookingWasCreatedOn, 
-						b.actualEndDateTime								AS BookingWasCompletedOn, 
-						b.dateTimeCancelled								AS BookingWasCancelledOn 
-			FROM 		`booking` b 
-			LEFT JOIN 	`meetingroom` m 
-			ON 			b.meetingRoomID = m.meetingRoomID 
-			LEFT JOIN 	`user` u 
-			ON 			u.userID = b.userID 
-			LEFT JOIN 	`employee` e 
-			ON 			e.UserID = u.userID 
-			LEFT JOIN 	`company` c 
-			ON 			c.CompanyID = e.CompanyID
-			GROUP BY 	b.bookingID
-			ORDER BY 	UNIX_TIMESTAMP(b.startDateTime)
-			ASC";
-	$result = $pdo->query($sql);
-	$rowNum = $result->rowCount();
+	if(isset($_GET['meetingroom']) AND $_GET['meetingroom'] != NULL AND $_GET['meetingroom'] != ""){
+		$sql = "SELECT 		b.`bookingID`,
+							b.`companyID`,
+							m.`name` 										AS BookedRoomName, 
+							b.startDateTime 								AS StartTime,
+							b.endDateTime									AS EndTime, 
+							b.displayName 									AS BookedBy,
+							(	
+								SELECT 	`name` 
+								FROM 	`company` 
+								WHERE 	`companyID` = b.`companyID`
+							)												AS BookedForCompany,
+							u.firstName, 
+							u.lastName, 
+							u.email, 
+							GROUP_CONCAT(c.`name` separator ', ') 			AS WorksForCompany, 
+							b.description 									AS BookingDescription, 
+							b.dateTimeCreated 								AS BookingWasCreatedOn, 
+							b.actualEndDateTime								AS BookingWasCompletedOn, 
+							b.dateTimeCancelled								AS BookingWasCancelledOn 
+				FROM 		`booking` b 
+				LEFT JOIN 	`meetingroom` m 
+				ON 			b.meetingRoomID = m.meetingRoomID 
+				LEFT JOIN 	`user` u 
+				ON 			u.userID = b.userID 
+				LEFT JOIN 	`employee` e 
+				ON 			e.UserID = u.userID 
+				LEFT JOIN 	`company` c 
+				ON 			c.CompanyID = e.CompanyID
+				WHERE		b.`meetingRoomID` = :meetingRoomID
+				GROUP BY 	b.bookingID
+				ORDER BY 	UNIX_TIMESTAMP(b.startDateTime)
+				ASC";
+		$s = $pdo->prepare($sql);
+		$s->bindValue(':meetingRoomID', $_GET['meetingroom']);
+		$s->execute();
+		$result = $s->fetchAll();
+		$rowNum = sizeOf($result);	
+	} elseif(!isset($_GET['meetingroom'])){
+		$sql = "SELECT 		b.`bookingID`,
+							b.`companyID`,
+							m.`name` 										AS BookedRoomName, 
+							b.startDateTime 								AS StartTime,
+							b.endDateTime									AS EndTime, 
+							b.displayName 									AS BookedBy,
+							(	
+								SELECT 	`name` 
+								FROM 	`company` 
+								WHERE 	`companyID` = b.`companyID`
+							)												AS BookedForCompany,
+							u.firstName, 
+							u.lastName, 
+							u.email, 
+							GROUP_CONCAT(c.`name` separator ', ') 			AS WorksForCompany, 
+							b.description 									AS BookingDescription, 
+							b.dateTimeCreated 								AS BookingWasCreatedOn, 
+							b.actualEndDateTime								AS BookingWasCompletedOn, 
+							b.dateTimeCancelled								AS BookingWasCancelledOn 
+				FROM 		`booking` b 
+				LEFT JOIN 	`meetingroom` m 
+				ON 			b.meetingRoomID = m.meetingRoomID 
+				LEFT JOIN 	`user` u 
+				ON 			u.userID = b.userID 
+				LEFT JOIN 	`employee` e 
+				ON 			e.UserID = u.userID 
+				LEFT JOIN 	`company` c 
+				ON 			c.CompanyID = e.CompanyID
+				GROUP BY 	b.bookingID
+				ORDER BY 	UNIX_TIMESTAMP(b.startDateTime)
+				ASC";
+		$result = $pdo->query($sql);
+		$rowNum = $result->rowCount();
+	}
 
 	//Close the connection
 	$pdo = null;

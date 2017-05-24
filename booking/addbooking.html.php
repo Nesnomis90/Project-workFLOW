@@ -74,12 +74,12 @@
 								<?php endif;?>
 							<?php endforeach; ?>
 						</select>
-						<input type="submit" name="action" value="Select This Company">
+						<input type="submit" name="add" value="Select This Company">
 					<?php else : ?>
 						<b><?php htmlout($companyName); ?></b>
 						<input type="hidden" name="companyID" id="companyID" 
 						value="<?php htmlout($companyID); ?>">
-						<input type="submit" name="action" value="Change Company">
+						<input type="submit" name="add" value="Change Company">
 					<?php endif; ?>
 				<?php else : ?>
 					<?php if(isset($company)) : ?>

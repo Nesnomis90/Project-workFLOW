@@ -53,7 +53,6 @@
 		<h1>Cancel Your Booking!</h1>
 	<?php elseif(isset($_SESSION['loggedIn'])) : ?>
 		<form action="" method="post">		
-		<?php if($rowNum>0) :?>
 			<form action="" method="post">
 				<div>
 					<input type="submit" name="action" value="Create Meeting">
@@ -77,6 +76,7 @@
 					<th>Edit</th>			
 					<th>Cancel</th>
 				</tr>
+		<?php if($rowNum>0) :?>				
 				<?php foreach ($bookings as $booking): ?>
 					<form action="" method="post">
 					<?php if(	$booking['BookingStatus'] == "Active Today" OR 
@@ -111,6 +111,7 @@
 					<?php endif; ?>
 					</form>
 				<?php endforeach; ?>
+		<?php endif; ?>				
 			</table>
 			<table id="bookingstable">
 				<caption>Future Bookings</caption>
@@ -130,6 +131,7 @@
 					<th>Edit</th>			
 					<th>Cancel</th>
 				</tr>
+		<?php if($rowNum>0) :?>		
 				<?php foreach ($bookings as $booking): ?>
 					<form action="" method="post">
 					<?php if($booking['BookingStatus'] == "Active"): ?>					
@@ -158,23 +160,17 @@
 					</form>
 				<?php endforeach; ?>
 			</table>			
-		<?php else : ?>
-			<tr><b>There are no booked meetings registered in the database.</b></tr>
-			<form action="" method="post">
-				<tr><input type="submit" name="action" value="Create Meeting"></tr>
-			</form>
 		<?php endif; ?>
 		</form>
 	<?php elseif(!isset($_SESSION['loggedIn'])) : ?>
 		<form action="" method="post">		
-		<?php if($rowNum>0) :?>
 			<form action="" method="post">
 				<div>
 					<input type="submit" name="action" value="Create Meeting">
 				</div>		
 			</form>
 			<table id="bookingstable">
-				<caption>All booking history</caption>
+				<caption>Bookings Today</caption>
 				<tr>
 					<th colspan="4">Booking information</th>
 					<th colspan="2">Alter Booking</th>
@@ -187,6 +183,7 @@
 					<th>Edit</th>			
 					<th>Cancel</th>
 				</tr>
+		<?php if($rowNum>0) :?>				
 				<?php foreach ($bookings as $booking): ?>
 					<form action="" method="post">
 					<?php if(	$booking['BookingStatus'] == "Active Today" OR 
@@ -213,6 +210,7 @@
 					<?php endif; ?>
 					</form>
 				<?php endforeach; ?>
+		<?php endif; ?>	
 			</table>
 			<table id="bookingstable">
 				<caption>Future Bookings</caption>
@@ -228,6 +226,7 @@
 					<th>Edit</th>			
 					<th>Cancel</th>
 				</tr>
+		<?php if($rowNum>0) :?>		
 				<?php foreach ($bookings as $booking): ?>
 					<form action="" method="post">
 					<?php if($booking['BookingStatus'] == "Active"): ?>					
@@ -248,11 +247,6 @@
 					</form>
 				<?php endforeach; ?>
 			</table>				
-		<?php else : ?>
-			<tr><b>There are no booked meetings registered in the database.</b></tr>
-			<form action="" method="post">
-				<tr><input type="submit" name="action" value="Create Meeting"></tr>
-			</form>
 		<?php endif; ?>
 		</form>		
 	<?php endif; ?>
