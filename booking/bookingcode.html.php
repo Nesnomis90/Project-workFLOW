@@ -14,7 +14,7 @@
 		<?php endif; ?>
 		<form action="" method="post">
 			<label for="bookingCode">Submit your booking code: </label>
-			<input type="number" name="bookingCode" id="bookingCode"
+			<input type="text" name="bookingCode" id="bookingCode"
 			value="<?php htmlout($bookingCode); ?>">
 			<input type="hidden" name="action" value="confirmcode">
 			<input type="submit" value="Confirm Code">

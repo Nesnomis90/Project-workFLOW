@@ -83,9 +83,17 @@ function isNumberInvalidMeetingRoomCapacity($capacityNumber){
 	// Booking Code Digits
 // Returns TRUE on invalid, FALSE on valid
 function isNumberInvalidBookingCode($bookingCode){
-	// Has to be between 0 and max digits allowed 
+	// Has to be between 0 and max digits allowed (6?)
 	// Also has to return invalid on blocked digits, if implemented
-	$blockedDigits[] = array(0, 111111, 222222, 333333, 444444, 555555, 666666, 777777, 888888, 999999);
+	
+	// Make sure we have enough digits submitted	
+	if(strlen($bookingCode) < 6){
+		$bookingCode = sprintf("%06d", $bookingCode); // Add 0s before submitted digits
+	}
+	$blockedDigits = array(	'000000', '111111', '222222', '333333', 
+							'444444', '555555', '666666', '777777', 
+							'888888', '999999'
+							);
 	$minNumber = 0;
 	$maxNumber = 999999;
 	if($bookingCode < $minNumber OR $bookingCode > $maxNumber){

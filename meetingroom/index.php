@@ -81,6 +81,8 @@ if(isset($_POST['action']) AND $_POST['action'] == "Set As Default"){
 		setNewMeetingRoomCookies($meetingRoomName, $_POST['MeetingRoomIDCode']);
 		destroySession();
 		$defaultMeetingRoomFeedback = "Set $meetingRoomName as the default meeting room for this device. Also logged you off as Admin.";
+		header("Location: .");
+		exit();
 	} else {
 		$_SESSION['MeetingRoomAllUsersFeedback'] = "Couldn't set default meeting room for local device.";
 	}

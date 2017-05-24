@@ -57,9 +57,9 @@
 			</div>
 			<div>
 				<label for="companyID">Company: </label>
-				<?php if(	isset($_SESSION['CreateBookingDisplayCompanySelect']) AND 
-							$_SESSION['CreateBookingDisplayCompanySelect']) : ?>
-					<?php if(!isset($_SESSION['CreateBookingSelectedACompany'])) : ?>
+				<?php if(	isset($_SESSION['AddCreateBookingDisplayCompanySelect']) AND 
+							$_SESSION['AddCreateBookingDisplayCompanySelect']) : ?>
+					<?php if(!isset($_SESSION['AddCreateBookingSelectedACompany'])) : ?>
 						<select name="companyID" id="companyID">
 							<?php foreach($company as $row): ?> 
 								<?php if($row['companyID']==$selectedCompanyID):?>
@@ -104,7 +104,7 @@
 			</div>
 			<div>
 				<input type="submit" name="action" value="Reset">
-				<?php if(!isset($_SESSION['CreateBookingSelectedACompany'])) : ?>
+				<?php if(!isset($_SESSION['AddCreateBookingSelectedACompany'])) : ?>
 					<input type="submit" name="disabled" value="Create Meeting" disabled>
 					<b>You need to select the company you want before you can add the booking.</b>
 				<?php else : ?>
