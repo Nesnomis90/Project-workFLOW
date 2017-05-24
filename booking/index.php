@@ -281,7 +281,7 @@ if (isset($_POST['action']) and $_POST['action'] == 'Cancel')
 			exit();
 		}
 		
-		$_SESSION['normalBookingUserFeedback'] .= "Successfully cancelled the booking";
+		$_SESSION['normalBookingFeedback'] .= "Successfully cancelled the booking";
 		
 			// Add a log event that a booking was cancelled
 		try
@@ -324,7 +324,7 @@ if (isset($_POST['action']) and $_POST['action'] == 'Cancel')
 		emailUserOnCancelledBooking();
 	} else {
 		// Booking was not active, so no need to cancel it.
-		$_SESSION['normalBookingUserFeedback'] = "Meeting has already been completed. Did not cancel it.";
+		$_SESSION['normalBookingFeedback'] = "Meeting has already been completed. Did not cancel it.";
 	}
 	
 	// Load booked meetings list webpage with updated database
@@ -336,23 +336,43 @@ if (isset($_POST['action']) and $_POST['action'] == 'Cancel')
 
 // ADD BOOKING CODE SNIPPET // START //
 
+// Handles booking code check
+if( isset($_POST['action']) AND $_POST['action'] == "confirmcode" OR 
+	isset($_SESSION['refreshConfirmBookingCode']) AND $_SESSION['refreshConfirmBookingCode']){
+	
+	$bookingCode = trim($_POST['bookingCode']);
+	$validatedBookingCode = trimAllWhitespace($bookingCode);
+	if(validateIntegerNumber($validatedBookingCode) !== TRUE){
+		$_SESSION['refreshConfirmBookingCode'] = TRUE;
+		$_SESSION['confirmBookingCodeError'] = "The booking code you submitted had non-numbers in it.";
+		header("Location: .");
+		exit();
+	}
+	if(isNumberInvalidBookingCode($validatedBookingCode) === TRUE){
+		$_SESSION['refreshConfirmBookingCode'] = TRUE;
+		$_SESSION['confirmBookingCodeError'] = "The booking code you submitted is an invalid code.";
+		header("Location: .");
+		exit();		
+	}
+	
+}
+
 // Handles booking based on selected meeting room
 if(	(isset($_POST['action']) AND $_POST['action'] == 'Create Meeting') OR
 	(isset($_SESSION['refreshAddCreateBooking']) AND $_SESSION['refreshAddCreateBooking']))
 {
 	// Make sure user is logged in before going further
 		// If local, use booking code
-	if(isset($_SESSION['DefaultMeetingRoomInfo'])){
+	if(isset($_SESSION['DefaultMeetingRoomInfo']) AND !isset($_SESSION['bookingCodeUserInfoArray'])){
 		// We're accessing a local device.
 		// Confirm with booking code
-		// TO-DO:
-		// 
-		
-		include_once 'confirm.html.php';
+		// Set default values for bookingcode template
+		$bookingCode = "";
+		include_once 'bookingcode.html.php';
 		exit();
 	}
 		// If not local, use regular log in
-	if(checkIfUserIsLoggedIn() === FALSE){
+	if(!isset($_SESSION['bookingCodeUserInfoArray']) AND checkIfUserIsLoggedIn() === FALSE){
 		makeUserLogIn();
 		exit();
 	}
@@ -771,7 +791,7 @@ if (isset($_POST['add']) AND $_POST['add'] == "Add booking")
 		exit();
 	}
 	
-	$_SESSION['normalBookingUserFeedback'] .= "Successfully created the booking.";
+	$_SESSION['normalBookingFeedback'] .= "Successfully created the booking.";
 	
 	$displayValidatedStartDate = convertDatetimeToFormat($startDateTime , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
 	$displayValidatedEndDate = convertDatetimeToFormat($endDateTime, 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
@@ -864,10 +884,10 @@ if (isset($_POST['add']) AND $_POST['add'] == "Add booking")
 	$mailResult = sendEmail($email, $emailSubject, $emailMessage);
 	
 	if(!$mailResult){
-		$_SESSION['normalBookingUserFeedback'] .= " [WARNING] System failed to send Email to user.";
+		$_SESSION['normalBookingFeedback'] .= " [WARNING] System failed to send Email to user.";
 	}
 	
-	$_SESSION['normalBookingUserFeedback'] .= "this is the email msg we're sending out: $emailMessage. Sent to email: $email."; // TO-DO: Remove after testing	
+	$_SESSION['normalBookingFeedback'] .= "this is the email msg we're sending out: $emailMessage. Sent to email: $email."; // TO-DO: Remove after testing	
 	
 	// Booking a new meeting is done. Reset all connected sessions.
 	clearAddCreateBookingSessions();
@@ -1252,7 +1272,7 @@ if(isset($_POST['edit']) AND $_POST['edit'] == "Finish Edit")
 
 	if($numberOfChanges == 0){
 		// There were no changes made. Go back to booking overview
-		$_SESSION['normalBookingUserFeedback'] = "No changes were made to the booking.";
+		$_SESSION['normalBookingFeedback'] = "No changes were made to the booking.";
 		header('Location: .');
 		exit();	
 	}
@@ -1294,7 +1314,7 @@ if(isset($_POST['edit']) AND $_POST['edit'] == "Finish Edit")
 		exit();
 	}
 		
-	$_SESSION['normalBookingUserFeedback'] .= "Successfully updated the booking information!";
+	$_SESSION['normalBookingFeedback'] .= "Successfully updated the booking information!";
 	
 	clearEditCreateBookingSessions();
 	
@@ -1405,7 +1425,7 @@ if (isset($_POST['edit']) AND $_POST['edit'] == "Reset"){
 // If user wants to leave the page and be directed back to the booking page again
 if (isset($_POST['edit']) AND $_POST['edit'] == 'Cancel'){
 
-	$_SESSION['normalBookingUserFeedback'] = "You cancelled your booking editing.";
+	$_SESSION['normalBookingFeedback'] = "You cancelled your booking editing.";
 }
 
 // EDIT BOOKING CODE SNIPPET // END //

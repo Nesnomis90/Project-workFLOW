@@ -80,6 +80,25 @@ function isNumberInvalidMeetingRoomCapacity($capacityNumber){
 	return FALSE;
 }
 
+	// Booking Code Digits
+// Returns TRUE on invalid, FALSE on valid
+function isNumberInvalidBookingCode($bookingCode){
+	// Has to be between 0 and max digits allowed 
+	// Also has to return invalid on blocked digits, if implemented
+	$blockedDigits[] = array(0, 111111, 222222, 333333, 444444, 555555, 666666, 777777, 888888, 999999);
+	$minNumber = 0;
+	$maxNumber = 999999;
+	if($bookingCode < $minNumber OR $bookingCode > $maxNumber){
+		return TRUE;
+	}
+	foreach($blockedDigits AS $number){
+		if($bookingCode == $number){
+			return TRUE;
+		}
+	}
+	return FALSE;	
+}
+
 // Function that (hopefully) removes excess white space, line feeds etc.
 function trimExcessWhitespaceButLeaveLinefeed($oldString){
 

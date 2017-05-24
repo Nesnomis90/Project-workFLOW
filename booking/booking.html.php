@@ -56,7 +56,7 @@
 		<?php if($rowNum>0) :?>
 			<form action="" method="post">
 				<div>
-					<input type="submit" name="action" value="Create Booking">
+					<input type="submit" name="action" value="Create Meeting">
 				</div>		
 			</form>
 			<table id="bookingstable">
@@ -161,7 +161,7 @@
 		<?php else : ?>
 			<tr><b>There are no booked meetings registered in the database.</b></tr>
 			<form action="" method="post">
-				<tr><input type="submit" name="action" value="Create Booking"></tr>
+				<tr><input type="submit" name="action" value="Create Meeting"></tr>
 			</form>
 		<?php endif; ?>
 		</form>
@@ -170,7 +170,7 @@
 		<?php if($rowNum>0) :?>
 			<form action="" method="post">
 				<div>
-					<input type="submit" name="action" value="Create Booking">
+					<input type="submit" name="action" value="Create Meeting">
 				</div>		
 			</form>
 			<table id="bookingstable">
@@ -251,7 +251,7 @@
 		<?php else : ?>
 			<tr><b>There are no booked meetings registered in the database.</b></tr>
 			<form action="" method="post">
-				<tr><input type="submit" name="action" value="Create Booking"></tr>
+				<tr><input type="submit" name="action" value="Create Meeting"></tr>
 			</form>
 		<?php endif; ?>
 		</form>		
