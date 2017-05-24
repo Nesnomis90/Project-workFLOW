@@ -87,6 +87,35 @@ function rememberAddCreateBookingInputs(){
 	}
 }
 
+// Function to check if user is logged in or if we're on a local device
+function checkIfLocalDeviceOrLoggedIn(){
+	if(isset($_SESSION['LoggedInUserID'])){
+		$SelectedUserID = $_SESSION['LoggedInUserID'];
+	}
+	if(isset($_SESSION['bookingCodeUserID'])){
+		$SelectedUserID = $_SESSION['bookingCodeUserID'];
+	}
+
+	// Make sure user is logged in before going further
+		// If local, use booking code
+	if(!isset($SelectedUserID)){
+		if(isset($_SESSION['DefaultMeetingRoomInfo'])){
+			// We're accessing a local device.
+			// Confirm with booking code
+			// Set default values for bookingcode template
+			$bookingCode = "";
+			include_once 'bookingcode.html.php';
+			exit();
+		}
+			// If not local, use regular log in
+		if(checkIfUserIsLoggedIn() === FALSE){
+			makeUserLogIn();
+			exit();
+		}	
+	}
+	return $SelectedUserID;
+}
+
 
 // Function to validate user inputs
 function validateUserInputs($FeedbackSessionToUse){
@@ -253,9 +282,93 @@ checkIfLocalDevice();
 
 
 // If user wants to cancel a scheduled booked meeting
-if (isset($_POST['action']) and $_POST['action'] == 'Cancel')
+if (	(isset($_POST['action']) and $_POST['action'] == 'Cancel') OR 
+		(isset($_SESSION['refreshCancelBooking']) AND $_SESSION['refreshCancelBooking']))
 {
-	// TO-DO: Check if user cancelling is the creator (OR ADMIN) of booking
+	unset($_SESSION['refreshCancelBooking']);
+	
+	$_SESSION['confirmOrigins'] = "Cancel";
+	$SelectedUserID = checkIfLocalDeviceOrLoggedIn();
+	unset($_SESSION['confirmOrigins']);
+	
+	// Check if selected user ID is creator of booking or an admin
+		// Check if the user is the creator of the booking
+	try
+	{
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+		
+		$pdo = connect_to_db();
+		$sql = 'SELECT 	COUNT(*),
+						`userID`
+				FROM	`booking`
+				WHERE 	`bookingID` = :id
+				LIMIT 	1';
+		$s = $pdo->prepare($sql);
+		$s->bindValue(':id', $_POST['id']);
+		$s->execute();
+		$row = $s->fetch();
+		if($row[0] < 1){
+			$_SESSION['normalBookingFeedback'] = "You cannot cancel this booked meeting.";
+			if(isset($_GET['meetingroom'])){
+				$meetingRoomID = $_GET['meetingroom'];
+				$location = "http://$_SERVER[HTTP_HOST]/booking/?meetingroom=" . $meetingRoomID;
+			} else {
+				$meetingRoomID = $_POST['meetingRoomID'];
+				$location = '.';
+			}
+			header('Location: ' . $location);
+			exit();			
+		}
+		
+		//close connection
+		$pdo = null;
+	}
+	catch (PDOException $e)
+	{
+		$error = 'Error updating selected booked meeting to be cancelled: ' . $e->getMessage();
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+		exit();
+	}
+	
+		// Check if the user is an admin
+	try
+	{
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+		
+		$pdo = connect_to_db();
+		$sql = 'SELECT 	a.`AccessName`	
+				FROM	`user` u
+				JOIN	`accesslevel` a
+				ON 		u.`AccessID` = a.`AccessID`
+				WHERE 	u.`userID` = :userID
+				LIMIT	1';
+				
+		$s = $pdo->prepare($sql);
+		$s->bindValue(':userID', $SelectedUserID);
+		$s->execute();
+		$row = $s->fetch();
+		if($row['AccessName'] != "Admin"){
+			$_SESSION['normalBookingFeedback'] = "You cannot cancel this booked meeting.";
+			if(isset($_GET['meetingroom'])){
+				$meetingRoomID = $_GET['meetingroom'];
+				$location = "http://$_SERVER[HTTP_HOST]/booking/?meetingroom=" . $meetingRoomID;
+			} else {
+				$meetingRoomID = $_POST['meetingRoomID'];
+				$location = '.';
+			}
+			header('Location: ' . $location);
+			exit();			
+		}
+		
+		//close connection
+		$pdo = null;
+	}
+	catch (PDOException $e)
+	{
+		$error = 'Error updating selected booked meeting to be cancelled: ' . $e->getMessage();
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+		exit();
+	}	
 	
 	// Only cancel if booking is currently active
 	if(	isset($_POST['BookingStatus']) AND  
@@ -284,7 +397,7 @@ if (isset($_POST['action']) and $_POST['action'] == 'Cancel')
 			exit();
 		}
 		
-		$_SESSION['normalBookingFeedback'] .= "Successfully cancelled the booking";
+		$_SESSION['normalBookingFeedback'] = "Successfully cancelled the booking";
 		
 			// Add a log event that a booking was cancelled
 		try
@@ -335,12 +448,19 @@ if (isset($_POST['action']) and $_POST['action'] == 'Cancel')
 		//emailUserOnCancelledBooking();
 	} else {
 		// Booking was not active, so no need to cancel it.
-		$_SESSION['normalBookingFeedback'] = "Meeting has already been completed. Did not cancel it.";
+		$_SESSION['normalBookingFeedback'] = "Meeting has already ended. Did not cancel it.";
 	}
 	
 	// Load booked meetings list webpage with updated database
-	header('Location: .');
-	exit();	
+	if(isset($_GET['meetingroom'])){
+		$meetingRoomID = $_GET['meetingroom'];
+		$location = "http://$_SERVER[HTTP_HOST]/booking/?meetingroom=" . $meetingRoomID;
+	} else {
+		$meetingRoomID = $_POST['meetingRoomID'];
+		$location = '.';
+	}
+	header('Location: ' . $location);
+	exit();		
 }
 
 // BOOKING OVERVIEW CODE SNIPPETS // END //
@@ -375,7 +495,8 @@ if(isset($_POST['action']) AND $_POST['action'] == "confirmcode"){
 		// Get booking information
 		$pdo = connect_to_db();
 		// Get name and IDs for meeting rooms
-		$sql = 'SELECT 	`userID`
+		$sql = 'SELECT 	COUNT(*),
+						`userID`
 				FROM 	`user`
 				WHERE	`isActive` = 1
 				AND		`bookingCode` = :bookingCode
@@ -392,8 +513,16 @@ if(isset($_POST['action']) AND $_POST['action'] == "confirmcode"){
 		{
 			// Booking code is a valid user
 			$_SESSION['bookingCodeUserID'] = $row[0];
-			// Continue to create the booking
-			$_SESSION['refreshAddCreateBooking'] = TRUE;
+			// Check if we are confirming a create booking, a cancel or an edit.
+			if($_SESSION['confirmOrigins'] == "Create Meeting"){
+				$_SESSION['refreshAddCreateBooking'] = TRUE;
+				unset($_SESSION['confirmOrigins']);
+			}
+			if($_SESSION['confirmOrigins'] == "Cancel"){
+				$_SESSION['refreshCancelBooking'] = TRUE;
+				unset($_SESSION['confirmOrigins']);
+			}
+			
 			if(isset($_GET['meetingroom'])){
 				$meetingRoomID = $_GET['meetingroom'];
 				$location = "http://$_SERVER[HTTP_HOST]/booking/?meetingroom=" . $meetingRoomID;
@@ -404,8 +533,23 @@ if(isset($_POST['action']) AND $_POST['action'] == "confirmcode"){
 			header('Location: ' . $location);
 			exit();						
 		} else {
-			$_SESSION['confirmBookingCodeError'] = "The booking code you submitted is an invalid code.";
-			include_once 'bookingcode.html.php';
+			if($_SESSION['confirmOrigins'] == "Create Meeting"){
+				$_SESSION['confirmBookingCodeError'] = "The booking code you submitted is an invalid code.";
+				include_once 'bookingcode.html.php';
+				unset($_SESSION['confirmOrigins']);
+			}			
+			if($_SESSION['confirmOrigins'] == "Cancel"){
+				$_SESSION['normalBookingFeedback'] = "The booking code you submitted is an invalid code.";
+				unset($_SESSION['confirmOrigins']);
+			}	
+			if(isset($_GET['meetingroom'])){
+				$meetingRoomID = $_GET['meetingroom'];
+				$location = "http://$_SERVER[HTTP_HOST]/booking/?meetingroom=" . $meetingRoomID;
+			} else {
+				$meetingRoomID = $_POST['meetingRoomID'];
+				$location = '.';
+			}
+			header('Location: ' . $location);			
 			exit();
 		}
 	}
@@ -425,30 +569,9 @@ if(	((isset($_POST['action']) AND $_POST['action'] == 'Create Meeting')) OR
 	// Confirm that we've reset.
 	unset($_SESSION['refreshAddCreateBooking']);
 	
-	if(isset($_SESSION['LoggedInUserID'])){
-		$SelectedUserID = $_SESSION['LoggedInUserID'];
-	}
-	if(isset($_SESSION['bookingCodeUserID'])){
-		$SelectedUserID = $_SESSION['bookingCodeUserID'];
-	}
-
-	// Make sure user is logged in before going further
-		// If local, use booking code
-	if(!isset($SelectedUserID)){
-		if(isset($_SESSION['DefaultMeetingRoomInfo'])){
-			// We're accessing a local device.
-			// Confirm with booking code
-			// Set default values for bookingcode template
-			$bookingCode = "";
-			include_once 'bookingcode.html.php';
-			exit();
-		}
-			// If not local, use regular log in
-		if(checkIfUserIsLoggedIn() === FALSE){
-			makeUserLogIn();
-			exit();
-		}	
-	}
+	$_SESSION['confirmOrigins'] = "Create Meeting";
+	$SelectedUserID = checkIfLocalDeviceOrLoggedIn();
+	unset($_SESSION['confirmOrigins']);
 	
 	// Get information from database on booking information user can choose between
 	if(!isset($_SESSION['AddCreateBookingMeetingRoomsArray'])){
