@@ -23,9 +23,7 @@ function clearAddCreateBookingSessions(){
 	unset($_SESSION['AddCreateBookingMeetingRoomsArray']);	
 	unset($_SESSION['AddCreateBookingUserSearch']);
 	unset($_SESSION['AddCreateBookingSelectedNewUser']);
-	unset($_SESSION['AddCreateBookingSelectedACompany']);
-	unset($_SESSION['AddCreateBookingDefaultDisplayNameForNewUser']);
-	unset($_SESSION['AddCreateBookingDefaultBookingDescriptionForNewUser']);		
+	unset($_SESSION['AddCreateBookingSelectedACompany']);		
 }
 
 // Function to clear sessions used to remember user inputs on refreshing the edit booking form
@@ -38,8 +36,6 @@ function clearEditCreateBookingSessions(){
 	unset($_SESSION['EditCreateBookingUserSearch']);
 	unset($_SESSION['EditCreateBookingSelectedNewUser']);
 	unset($_SESSION['EditCreateBookingSelectedACompany']);
-	unset($_SESSION['EditCreateBookingDefaultDisplayNameForNewUser']);
-	unset($_SESSION['EditCreateBookingDefaultBookingDescriptionForNewUser']);	
 }
 
 // Function to remember the user inputs in Edit Booking
@@ -401,7 +397,7 @@ if(isset($_POST['action']) AND $_POST['action'] == "confirmcode"){
 }
 
 // Handles booking based on selected meeting room
-if(	(isset($_POST['action']) AND $_POST['action'] == 'Create Meeting') OR
+if(	((isset($_POST['action']) AND $_POST['action'] == 'Create Meeting')) OR
 	(isset($_SESSION['refreshAddCreateBooking']) AND $_SESSION['refreshAddCreateBooking']))
 {
 	// Confirm that we've reset.
@@ -416,19 +412,22 @@ if(	(isset($_POST['action']) AND $_POST['action'] == 'Create Meeting') OR
 
 	// Make sure user is logged in before going further
 		// If local, use booking code
-	if(isset($_SESSION['DefaultMeetingRoomInfo']) AND !isset($_SESSION['bookingCodeUserID'])){
-		// We're accessing a local device.
-		// Confirm with booking code
-		// Set default values for bookingcode template
-		$bookingCode = "";
-		include_once 'bookingcode.html.php';
-		exit();
+	if(!isset($SelectedUserID)){
+		if(isset($_SESSION['DefaultMeetingRoomInfo'])){
+			// We're accessing a local device.
+			// Confirm with booking code
+			// Set default values for bookingcode template
+			$bookingCode = "";
+			include_once 'bookingcode.html.php';
+			exit();
+		}
+			// If not local, use regular log in
+		if(checkIfUserIsLoggedIn() === FALSE){
+			makeUserLogIn();
+			exit();
+		}	
 	}
-		// If not local, use regular log in
-	if(!isset($_SESSION['bookingCodeUserID']) AND checkIfUserIsLoggedIn() === FALSE){
-		makeUserLogIn();
-		exit();
-	}		
+	
 	// Get information from database on booking information user can choose between
 	if(!isset($_SESSION['AddCreateBookingMeetingRoomsArray'])){
 		try
@@ -686,33 +685,11 @@ if(	(isset($_POST['action']) AND $_POST['action'] == 'Create Meeting') OR
 	
 	$userInformation = $row['UserLastname'] . ', ' . $row['UserFirstname'] . ' - ' . $row['UserEmail'];	
 
-	$_SESSION['AddCreateBookingInfoArray'] = $row; // Remember the company/user info we changed based on user choice	
+	$_SESSION['AddCreateBookingInfoArray'] = $row; // Remember the company/user info we changed based on user choice
+	
 	// Change form
 	include 'addbooking.html.php';
 	exit();		
-}
-
-//getUserInfoFromBookingCode();
-// TO-DO: Remove this/merge with add booking
-if(isset($_POST['action']) AND $_POST['action'] == 'Confirm Meeting'){
-	list($invalidInput, $startDateTime, $endDateTime, $validatedBookingDescription, $validatedDisplayName) = validateUserInputs('MeetingRoomAllUsersFeedback');
-	
-	if(isset($_GET['meetingroom'])){
-		$meetingRoomID = $_GET['meetingroom'];
-		$location = "http://$_SERVER[HTTP_HOST]/booking/?meetingroom=" . $meetingRoomID;
-	} else {
-		$meetingRoomID = $_POST['MeetingRoomID']; // TO-DO: Not set
-		$location = '.';
-	}
-	
-	if($invalidInput){
-		
-		rememberCreateBookingInputs();
-		$_SESSION['refreshAddCreateBooking'] = TRUE;
-		
-		header('Location: $location');
-		exit();			
-	}	
 }
 
 // When the user has added the needed information and wants to add the booking
@@ -722,13 +699,20 @@ if (isset($_POST['add']) AND $_POST['add'] == "Add booking")
 	list($invalidInput, $startDateTime, $endDateTime, $bknDscrptn, $dspname, $bookingCode) = validateUserInputs('AddCreateBookingError');
 					
 	// handle feedback process on invalid input values
+	if(isset($_GET['meetingroom'])){
+		$meetingRoomID = $_GET['meetingroom'];
+		$location = "http://$_SERVER[HTTP_HOST]/booking/?meetingroom=" . $meetingRoomID;
+	} else {
+		$meetingRoomID = $_POST['MeetingRoomID'];
+		$location = '.';
+	}
+	
 	if($invalidInput){
 		
 		rememberAddCreateBookingInputs();
-		// Refresh.
-		$_SESSION['refreshAddCreateBooking'] = TRUE;	
-
-		header('Location: .');
+		$_SESSION['refreshAddCreateBooking'] = TRUE;
+		
+		header('Location: $location');
 		exit();			
 	}
 	
@@ -982,7 +966,7 @@ if(isset($_POST['add']) AND $_POST['add'] == "Select This Company"){
 // If user wants to get their default display name
 if(isset($_POST['add']) AND $_POST['add'] == "Get Default Display Name"){
 	  
-	$displayName = $_SESSION['AddCreateBookingDefaultDisplayNameForNewUser'];
+	$displayName = $_SESSION['AddCreateBookingOriginalInfoArray']['BookedBy'];
 	if(isset($_SESSION['AddCreateBookingInfoArray'])){
 		rememberAddCreateBookingInputs();
 
@@ -991,8 +975,7 @@ if(isset($_POST['add']) AND $_POST['add'] == "Get Default Display Name"){
 				
 					// The user selected
 				$_SESSION['AddCreateBookingInfoArray']['BookedBy'] = $displayName;
-
-				unset($_SESSION['AddCreateBookingDefaultDisplayNameForNewUser']);				
+				
 			} else {
 				// Description was already the default booking description
 				$_SESSION['AddCreateBookingError'] = "This is already your default display name.";
@@ -1012,7 +995,7 @@ if(isset($_POST['add']) AND $_POST['add'] == "Get Default Display Name"){
 // If user wants to get their default booking description
 if(isset($_POST['add']) AND $_POST['add'] == "Get Default Booking Description"){
 	
-	$bookingDescription = $_SESSION['AddCreateBookingDefaultBookingDescriptionForNewUser'];
+	$bookingDescription = $_SESSION['AddCreateBookingOriginalInfoArray']['BookingDescription'];
 	if(isset($_SESSION['AddCreateBookingInfoArray'])){
 		
 		rememberAddCreateBookingInputs();
@@ -1020,8 +1003,7 @@ if(isset($_POST['add']) AND $_POST['add'] == "Get Default Booking Description"){
 		if($bookingDescription != ""){
 			if($bookingDescription != $_SESSION['AddCreateBookingInfoArray']['BookingDescription']){
 				$_SESSION['AddCreateBookingInfoArray']['BookingDescription'] = $bookingDescription;
-
-				unset($_SESSION['AddCreateBookingDefaultBookingDescriptionForNewUser']);			
+		
 			} else {
 				// Description was already the default booking description
 				$_SESSION['AddCreateBookingError'] = "This is already your default booking description.";
@@ -1485,7 +1467,6 @@ if (isset($_POST['edit']) AND $_POST['edit'] == 'Cancel'){
 // EDIT BOOKING CODE SNIPPET // END //
 
 // CANCELLATION CODE SNIPPET // START //
-
 
 // Cancels a booking from a submitted cancellation link
 if(isset($_GET['cancellationcode'])){

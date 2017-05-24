@@ -95,20 +95,21 @@
 				<label for="displayName">Display Name: </label>
 				<input type="text" name="displayName" id="displayName" 
 				value="<?php htmlout($displayName); ?>">
-				<input type="submit" name="action" value="Get Default Display Name">
+				<input type="submit" name="add" value="Get Default Display Name">
 			</div>
 			<div>
 				<label for="description">Booking Description: </label>
 				<textarea rows="4" cols="50" name="description" id="description"><?php htmlout($description); ?></textarea>
-				<input type="submit" name="action" value="Get Default Booking Description"> 
+				<input type="submit" name="add" value="Get Default Booking Description"> 
 			</div>
 			<div>
-				<input type="submit" name="action" value="Reset">
+				<input type="submit" name="add" value="Reset">
+				<input type="submit" name="add" value="Cancel">
 				<?php if(!isset($_SESSION['AddCreateBookingSelectedACompany'])) : ?>
-					<input type="submit" name="disabled" value="Create Meeting" disabled>
+					<input type="submit" name="disabled" value="Add Booking" disabled>
 					<b>You need to select the company you want before you can add the booking.</b>
 				<?php else : ?>
-					<input type="submit" name="action" value="Create Meeting">
+					<input type="submit" name="add" value="Add Booking">
 				<?php endif; ?>				
 			</div>
 		</form>
