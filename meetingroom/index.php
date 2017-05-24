@@ -61,7 +61,7 @@ if(	(isset($_POST['action']) AND $_POST['action'] == "Set Default Room") OR
 								'MeetingRoomCapacity' => $row['MeetingRoomCapacity'],
 								'MeetingRoomDescription' => $row['MeetingRoomDescription'],
 								'MeetingRoomIDCode' => $row['MeetingRoomIDCode']
-						);
+								);
 	}
 	include_once 'adminroomselect.html.php';
 	exit();

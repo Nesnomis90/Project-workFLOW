@@ -556,7 +556,7 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR
 				JOIN	`company` c
 				ON 		c.companyID = e.companyID
 				WHERE 	u.`userID` = :userID
-				AND 	c.`isActive' = 1;
+				AND 	c.`isActive` = 1';
 			
 		$s = $pdo->prepare($sql);
 		$s->bindValue(':userID', $SelectedUserID);

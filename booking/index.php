@@ -1748,9 +1748,9 @@ try
 						b.endDateTime									AS EndTime, 
 						b.displayName 									AS BookedBy,
 						(	
-							SELECT `name` 
-							FROM `company` 
-							WHERE `companyID` = b.`companyID`
+							SELECT 	`name` 
+							FROM 	`company` 
+							WHERE 	`companyID` = b.`companyID`
 						)												AS BookedForCompany,
 						u.firstName, 
 						u.lastName, 
