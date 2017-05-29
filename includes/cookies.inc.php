@@ -55,10 +55,21 @@ function checkIfLocalDevice(){
 								WHERE 	`name` = :meetingRoomName
 								LIMIT 	1";
 						$s = $pdo->prepare($sql);
-						$s->bindValue(':meetingRoomName', $_COOKIE[MEETINGROOM_NAME]);
+						$s->bindValue(':meetingRoomName', $meetingRoomName);
 						$s->execute();
-						$row = $s->fetch();
-						$_SESSION['DefaultMeetingRoomInfo'] = $row;
+						$result = $s->fetchAll();
+						
+						foreach($result AS $row){
+							$defaultRoomInfo = array(
+														'TheMeetingRoomID' => $row['TheMeetingRoomID'],
+														'TheMeetingRoomName' => $row['TheMeetingRoomName'],
+														'TheMeetingRoomCapacity' => $row['TheMeetingRoomCapacity'],
+														'TheMeetingRoomDescription' => $row['TheMeetingRoomDescription'],
+														'TheMeetingRoomLocation' => $row['TheMeetingRoomLocation']
+														);
+						}
+						
+						$_SESSION['DefaultMeetingRoomInfo'] = $defaultRoomInfo;
 						//Close the connection
 						$pdo = null;
 					}

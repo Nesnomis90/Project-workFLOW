@@ -24,7 +24,8 @@ function clearAddCreateBookingSessions(){
 	unset($_SESSION['AddCreateBookingUserSearch']);
 	unset($_SESSION['AddCreateBookingSelectedNewUser']);
 	unset($_SESSION['AddCreateBookingSelectedACompany']);	
-
+	unset($_SESSION['AddCreateBookingDisplayCompanySelect']);
+	
 	unset($_SESSION['bookingCodeUserID']);
 	
 	unset($_SESSION['cancelBookingOriginalValues']['BookingID']);
@@ -41,6 +42,7 @@ function clearEditCreateBookingSessions(){
 	unset($_SESSION['EditCreateBookingUserSearch']);
 	unset($_SESSION['EditCreateBookingSelectedNewUser']);
 	unset($_SESSION['EditCreateBookingSelectedACompany']);
+	unset($_SESSION['EditCreateBookingDisplayCompanySelect']);
 	
 	unset($_SESSION['cancelBookingOriginalValues']['BookingID']);
 	unset($_SESSION['cancelBookingOriginalValues']['BookingStatus']);	

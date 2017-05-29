@@ -21,7 +21,8 @@ function clearAddBookingSessions(){
 	unset($_SESSION['AddBookingSelectedNewUser']);
 	unset($_SESSION['AddBookingSelectedACompany']);
 	unset($_SESSION['AddBookingDefaultDisplayNameForNewUser']);
-	unset($_SESSION['AddBookingDefaultBookingDescriptionForNewUser']);		
+	unset($_SESSION['AddBookingDefaultBookingDescriptionForNewUser']);	
+	unset($_SESSION['AddBookingDisplayCompanySelect']);	
 }
 
 // Function to clear sessions used to remember user inputs on refreshing the edit booking form
@@ -36,6 +37,7 @@ function clearEditBookingSessions(){
 	unset($_SESSION['EditBookingSelectedACompany']);
 	unset($_SESSION['EditBookingDefaultDisplayNameForNewUser']);
 	unset($_SESSION['EditBookingDefaultBookingDescriptionForNewUser']);	
+	unset($_SESSION['EditBookingDisplayCompanySelect']);
 }
 
 // Function to remember the user inputs in Edit Booking

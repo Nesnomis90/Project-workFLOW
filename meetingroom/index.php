@@ -21,9 +21,9 @@ var_dump($_SESSION);
 if(	(isset($_POST['action']) AND $_POST['action'] == "Set Default Room") OR 
 	(isset($_POST['action']) AND $_POST['action'] == "Change Default Room") OR
 	(isset($_SESSION['SetDefaultRoom']) AND $_SESSION['SetDefaultRoom'])){
-		// CHECK IF USER TRYING TO ACCESS THIS IS IN FACT THE ADMIN!
+		
 	$_SESSION['SetDefaultRoom'] = TRUE;
-	
+		// CHECK IF USER TRYING TO ACCESS THIS IS IN FACT THE ADMIN!
 	if (!isUserAdmin()){
 		exit();
 	}
