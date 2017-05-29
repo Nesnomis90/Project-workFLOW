@@ -49,93 +49,426 @@
 			<p><b><?php htmlout($_SESSION['BookingUserFeedback']); ?></b></p>
 			<?php unset($_SESSION['BookingUserFeedback']); ?>
 		<?php endif; ?>	
-		<form action="" method="post">		
-		<?php if($rowNum>0) :?>
-			<form action="" method="post">
-				<div>
-					<input type="submit" name="action" value="Create Booking">
-				</div>
-				<div>
-				<?php if(isset($_SESSION['bookingsEnableDelete']) AND $_SESSION['bookingsEnableDelete']) : ?>
-					<input type="submit" name="action" value="Disable Delete">
-				<?php else : ?>
-					<input type="submit" name="action" value="Enable Delete">
-				<?php endif; ?>
-				</div>			
-			</form>
-			<table id= "bookingstable">
-				<caption>All booking history</caption>
-				<tr>
-					<th colspan="8">Booking information</th>
-					<th colspan="2">Completion Dates</th>
-					<th colspan="4">Connected user information</th>
-					<th colspan="3">Alter Booking</th>
-				</tr>				
-				<tr>
-					<th>Status</th>
-					<th>Room Name</th>
-					<th>Start Time</th>
-					<th>End Time</th>
-					<th>Display Name</th>
-					<th>For Company</th>
-					<th>Description</th>
-					<th>Created At</th>
-					<th>Finished</th>
-					<th>Cancelled</th>
-					<th>First Name</th>
-					<th>Last Name</th>
-					<th>Email</th>
-					<th>Works For Company</th>
-					<th>Edit</th>					
-					<th>Cancel</th>
-					<th>Delete</th>
-				</tr>
-				<?php foreach ($bookings as $booking): ?>
-					<form action="" method="post">
-						<tr>
-							<td><?php htmlout($booking['BookingStatus']);?></td>
-							<td><?php htmlout($booking['BookedRoomName']); ?></td>
-							<td><?php htmlout($booking['StartTime']); ?></td>
-							<td><?php htmlout($booking['EndTime']); ?></td>
-							<td><?php htmlout($booking['BookedBy']); ?></td>
-							<td><?php htmlout($booking['BookedForCompany']); ?></td>
-							<td><?php htmlout($booking['BookingDescription']); ?></td>
-							<td><?php htmlout($booking['BookingWasCreatedOn']); ?></td>
-							<td><?php htmlout($booking['BookingWasCompletedOn']); ?></td>
-							<td><?php htmlout($booking['BookingWasCancelledOn']); ?></td>
-							<td><?php htmlout($booking['firstName']); ?></td>
-							<td><?php htmlout($booking['lastName']); ?></td>
-							<td><?php htmlout($booking['email']); ?></td>
-							<td><?php htmlout($booking['WorksForCompany']); ?></td>
-							<td><input type="submit" name="action" value="Edit"></td>							
-							<td><input type="submit" name="action" value="Cancel"></td>
-							<td>
-								<?php if(isset($_SESSION['bookingsEnableDelete']) AND $_SESSION['bookingsEnableDelete']) : ?>
-									<input type="submit" name="action" value="Delete">
-								<?php else : ?>
-									<input type="submit" name="disabled" value="Delete" disabled>
-								<?php endif; ?>
-							</td>
-							<input type="hidden" name="id" value="<?php htmlout($booking['id']); ?>">
-							<input type="hidden" name="UserInfo" id="UserInfo"
-							value="<?php htmlout($booking['UserInfo']); ?>">
-							<input type="hidden" name="MeetingInfo" id="MeetingInfo"
-							value="<?php htmlout($booking['MeetingInfo']); ?>">
-							<input type="hidden" name="BookingStatus" id="BookingStatus"
-							value="<?php htmlout($booking['BookingStatus']); ?>">
-							<input type="hidden" name="Email" id="Email"
-							value="<?php htmlout($booking['email']); ?>">
-						</tr>
-					</form>
-				<?php endforeach; ?>
-			</table>
-		<?php else : ?>
-			<tr><b>There are no booked meetings registered in the database.</b></tr>
-			<form action="" method="post">
-				<tr><input type="submit" name="action" value="Create Booking"></tr>
-			</form>
-		<?php endif; ?>
+		<form action="" method="post">
+			<div>
+				<input type="submit" name="action" value="Create Booking">
+			</div>
+			<div>
+			<?php if(isset($_SESSION['bookingsEnableDelete']) AND $_SESSION['bookingsEnableDelete']) : ?>
+				<input type="submit" name="action" value="Disable Delete">
+			<?php else : ?>
+				<input type="submit" name="action" value="Enable Delete">
+			<?php endif; ?>
+			</div>			
 		</form>
+		<table id="bookingstable">
+			<caption>Active Bookings Today</caption>
+			<tr>
+				<th colspan="8">Booking information</th>
+				<th colspan="2">Completion Dates</th>
+				<th colspan="4">Connected user information</th>
+				<th colspan="3">Alter Booking</th>
+			</tr>				
+			<tr>
+				<th>Status</th>
+				<th>Room Name</th>
+				<th>Start Time</th>
+				<th>End Time</th>
+				<th>Display Name</th>
+				<th>For Company</th>
+				<th>Description</th>
+				<th>Created At</th>
+				<th>Finished</th>
+				<th>Cancelled</th>
+				<th>First Name</th>
+				<th>Last Name</th>
+				<th>Email</th>
+				<th>Works For Company</th>
+				<th>Edit</th>					
+				<th>Cancel</th>
+				<th>Delete</th>
+			</tr>
+		<?php if(isset($bookingsActiveToday)) :?>						
+			<?php foreach ($bookingsActiveToday AS $booking): ?>
+				<form action="" method="post">				
+					<tr>
+						<td><?php htmlout($booking['BookingStatus']);?></td>
+						<td><?php htmlout($booking['BookedRoomName']); ?></td>
+						<td><?php htmlout($booking['StartTime']); ?></td>
+						<td><?php htmlout($booking['EndTime']); ?></td>
+						<td><?php htmlout($booking['BookedBy']); ?></td>
+						<td><?php htmlout($booking['BookedForCompany']); ?></td>
+						<td><?php htmlout($booking['BookingDescription']); ?></td>
+						<td><?php htmlout($booking['BookingWasCreatedOn']); ?></td>
+						<td><?php htmlout($booking['BookingWasCompletedOn']); ?></td>
+						<td><?php htmlout($booking['BookingWasCancelledOn']); ?></td>
+						<td><?php htmlout($booking['firstName']); ?></td>
+						<td><?php htmlout($booking['lastName']); ?></td>
+						<td><?php htmlout($booking['email']); ?></td>
+						<td><?php htmlout($booking['WorksForCompany']); ?></td>
+						<td><input type="submit" name="action" value="Edit"></td>							
+						<td><input type="submit" name="action" value="Cancel"></td>
+						<td>
+							<?php if(isset($_SESSION['bookingsEnableDelete']) AND $_SESSION['bookingsEnableDelete']) : ?>
+								<input type="submit" name="action" value="Delete">
+							<?php else : ?>
+								<input type="submit" name="disabled" value="Delete" disabled>
+							<?php endif; ?>
+						</td>
+						<input type="hidden" name="id" value="<?php htmlout($booking['id']); ?>">
+						<input type="hidden" name="UserInfo" id="UserInfo"
+						value="<?php htmlout($booking['UserInfo']); ?>">
+						<input type="hidden" name="MeetingInfo" id="MeetingInfo"
+						value="<?php htmlout($booking['MeetingInfo']); ?>">
+						<input type="hidden" name="BookingStatus" id="BookingStatus"
+						value="<?php htmlout($booking['BookingStatus']); ?>">
+						<input type="hidden" name="Email" id="Email"
+						value="<?php htmlout($booking['email']); ?>">
+					</tr>
+				</form>
+			<?php endforeach; ?>
+		<?php endif; ?>
+		</table>
+		<table id="bookingstable">
+			<caption>Completed Bookings Today</caption>
+			<tr>
+				<th colspan="8">Booking information</th>
+				<th colspan="2">Completion Dates</th>
+				<th colspan="4">Connected user information</th>
+				<th colspan="3">Alter Booking</th>
+			</tr>				
+			<tr>
+				<th>Status</th>
+				<th>Room Name</th>
+				<th>Start Time</th>
+				<th>End Time</th>
+				<th>Display Name</th>
+				<th>For Company</th>
+				<th>Description</th>
+				<th>Created At</th>
+				<th>Finished</th>
+				<th>Cancelled</th>
+				<th>First Name</th>
+				<th>Last Name</th>
+				<th>Email</th>
+				<th>Works For Company</th>
+				<th>Edit</th>					
+				<th>Cancel</th>
+				<th>Delete</th>
+			</tr>
+		<?php if(isset($bookingsCompletedToday)) :?>						
+			<?php foreach ($bookingsCompletedToday AS $booking): ?>
+				<form action="" method="post">				
+					<tr>
+						<td><?php htmlout($booking['BookingStatus']);?></td>
+						<td><?php htmlout($booking['BookedRoomName']); ?></td>
+						<td><?php htmlout($booking['StartTime']); ?></td>
+						<td><?php htmlout($booking['EndTime']); ?></td>
+						<td><?php htmlout($booking['BookedBy']); ?></td>
+						<td><?php htmlout($booking['BookedForCompany']); ?></td>
+						<td><?php htmlout($booking['BookingDescription']); ?></td>
+						<td><?php htmlout($booking['BookingWasCreatedOn']); ?></td>
+						<td><?php htmlout($booking['BookingWasCompletedOn']); ?></td>
+						<td><?php htmlout($booking['BookingWasCancelledOn']); ?></td>
+						<td><?php htmlout($booking['firstName']); ?></td>
+						<td><?php htmlout($booking['lastName']); ?></td>
+						<td><?php htmlout($booking['email']); ?></td>
+						<td><?php htmlout($booking['WorksForCompany']); ?></td>
+						<td><input type="submit" name="action" value="Edit"></td>							
+						<td><input type="submit" name="action" value="Cancel"></td>
+						<td>
+							<?php if(isset($_SESSION['bookingsEnableDelete']) AND $_SESSION['bookingsEnableDelete']) : ?>
+								<input type="submit" name="action" value="Delete">
+							<?php else : ?>
+								<input type="submit" name="disabled" value="Delete" disabled>
+							<?php endif; ?>
+						</td>
+						<input type="hidden" name="id" value="<?php htmlout($booking['id']); ?>">
+						<input type="hidden" name="UserInfo" id="UserInfo"
+						value="<?php htmlout($booking['UserInfo']); ?>">
+						<input type="hidden" name="MeetingInfo" id="MeetingInfo"
+						value="<?php htmlout($booking['MeetingInfo']); ?>">
+						<input type="hidden" name="BookingStatus" id="BookingStatus"
+						value="<?php htmlout($booking['BookingStatus']); ?>">
+						<input type="hidden" name="Email" id="Email"
+						value="<?php htmlout($booking['email']); ?>">
+					</tr>
+				</form>
+			<?php endforeach; ?>
+		<?php endif; ?>
+		</table>		
+		<table id="bookingstable">
+			<caption>Future Bookings</caption>
+			<tr>
+				<th colspan="8">Booking information</th>
+				<th colspan="2">Completion Dates</th>
+				<th colspan="4">Connected user information</th>
+				<th colspan="3">Alter Booking</th>
+			</tr>				
+			<tr>
+				<th>Status</th>
+				<th>Room Name</th>
+				<th>Start Time</th>
+				<th>End Time</th>
+				<th>Display Name</th>
+				<th>For Company</th>
+				<th>Description</th>
+				<th>Created At</th>
+				<th>Finished</th>
+				<th>Cancelled</th>
+				<th>First Name</th>
+				<th>Last Name</th>
+				<th>Email</th>
+				<th>Works For Company</th>
+				<th>Edit</th>					
+				<th>Cancel</th>
+				<th>Delete</th>
+			</tr>	
+		<?php if(isset($bookingsFuture)) :?>						
+			<?php foreach ($bookingsFuture AS $booking): ?>
+				<form action="" method="post">				
+					<tr>
+						<td><?php htmlout($booking['BookingStatus']);?></td>
+						<td><?php htmlout($booking['BookedRoomName']); ?></td>
+						<td><?php htmlout($booking['StartTime']); ?></td>
+						<td><?php htmlout($booking['EndTime']); ?></td>
+						<td><?php htmlout($booking['BookedBy']); ?></td>
+						<td><?php htmlout($booking['BookedForCompany']); ?></td>
+						<td><?php htmlout($booking['BookingDescription']); ?></td>
+						<td><?php htmlout($booking['BookingWasCreatedOn']); ?></td>
+						<td><?php htmlout($booking['BookingWasCompletedOn']); ?></td>
+						<td><?php htmlout($booking['BookingWasCancelledOn']); ?></td>
+						<td><?php htmlout($booking['firstName']); ?></td>
+						<td><?php htmlout($booking['lastName']); ?></td>
+						<td><?php htmlout($booking['email']); ?></td>
+						<td><?php htmlout($booking['WorksForCompany']); ?></td>
+						<td><input type="submit" name="action" value="Edit"></td>							
+						<td><input type="submit" name="action" value="Cancel"></td>
+						<td>
+							<?php if(isset($_SESSION['bookingsEnableDelete']) AND $_SESSION['bookingsEnableDelete']) : ?>
+								<input type="submit" name="action" value="Delete">
+							<?php else : ?>
+								<input type="submit" name="disabled" value="Delete" disabled>
+							<?php endif; ?>
+						</td>
+						<input type="hidden" name="id" value="<?php htmlout($booking['id']); ?>">
+						<input type="hidden" name="UserInfo" id="UserInfo"
+						value="<?php htmlout($booking['UserInfo']); ?>">
+						<input type="hidden" name="MeetingInfo" id="MeetingInfo"
+						value="<?php htmlout($booking['MeetingInfo']); ?>">
+						<input type="hidden" name="BookingStatus" id="BookingStatus"
+						value="<?php htmlout($booking['BookingStatus']); ?>">
+						<input type="hidden" name="Email" id="Email"
+						value="<?php htmlout($booking['email']); ?>">
+					</tr>
+				</form>
+			<?php endforeach; ?>
+		<?php endif; ?>
+		</table>
+		<table id="bookingstable">
+			<caption>Completed Bookings</caption>
+			<tr>
+				<th colspan="8">Booking information</th>
+				<th colspan="2">Completion Dates</th>
+				<th colspan="4">Connected user information</th>
+				<th colspan="3">Alter Booking</th>
+			</tr>				
+			<tr>
+				<th>Status</th>
+				<th>Room Name</th>
+				<th>Start Time</th>
+				<th>End Time</th>
+				<th>Display Name</th>
+				<th>For Company</th>
+				<th>Description</th>
+				<th>Created At</th>
+				<th>Finished</th>
+				<th>Cancelled</th>
+				<th>First Name</th>
+				<th>Last Name</th>
+				<th>Email</th>
+				<th>Works For Company</th>
+				<th>Edit</th>					
+				<th>Cancel</th>
+				<th>Delete</th>
+			</tr>	
+		<?php if(isset($bookingsCompleted)) :?>						
+			<?php foreach ($bookingsCompleted AS $booking): ?>
+				<form action="" method="post">				
+					<tr>
+						<td><?php htmlout($booking['BookingStatus']);?></td>
+						<td><?php htmlout($booking['BookedRoomName']); ?></td>
+						<td><?php htmlout($booking['StartTime']); ?></td>
+						<td><?php htmlout($booking['EndTime']); ?></td>
+						<td><?php htmlout($booking['BookedBy']); ?></td>
+						<td><?php htmlout($booking['BookedForCompany']); ?></td>
+						<td><?php htmlout($booking['BookingDescription']); ?></td>
+						<td><?php htmlout($booking['BookingWasCreatedOn']); ?></td>
+						<td><?php htmlout($booking['BookingWasCompletedOn']); ?></td>
+						<td><?php htmlout($booking['BookingWasCancelledOn']); ?></td>
+						<td><?php htmlout($booking['firstName']); ?></td>
+						<td><?php htmlout($booking['lastName']); ?></td>
+						<td><?php htmlout($booking['email']); ?></td>
+						<td><?php htmlout($booking['WorksForCompany']); ?></td>
+						<td><input type="submit" name="action" value="Edit"></td>							
+						<td><input type="submit" name="action" value="Cancel"></td>
+						<td>
+							<?php if(isset($_SESSION['bookingsEnableDelete']) AND $_SESSION['bookingsEnableDelete']) : ?>
+								<input type="submit" name="action" value="Delete">
+							<?php else : ?>
+								<input type="submit" name="disabled" value="Delete" disabled>
+							<?php endif; ?>
+						</td>
+						<input type="hidden" name="id" value="<?php htmlout($booking['id']); ?>">
+						<input type="hidden" name="UserInfo" id="UserInfo"
+						value="<?php htmlout($booking['UserInfo']); ?>">
+						<input type="hidden" name="MeetingInfo" id="MeetingInfo"
+						value="<?php htmlout($booking['MeetingInfo']); ?>">
+						<input type="hidden" name="BookingStatus" id="BookingStatus"
+						value="<?php htmlout($booking['BookingStatus']); ?>">
+						<input type="hidden" name="Email" id="Email"
+						value="<?php htmlout($booking['email']); ?>">
+					</tr>
+				</form>
+			<?php endforeach; ?>
+		<?php endif; ?>
+		</table>		
+		<table id="bookingstable">
+			<caption>Bookings Cancelled</caption>
+			<tr>
+				<th colspan="8">Booking information</th>
+				<th colspan="2">Completion Dates</th>
+				<th colspan="4">Connected user information</th>
+				<th colspan="3">Alter Booking</th>
+			</tr>				
+			<tr>
+				<th>Status</th>
+				<th>Room Name</th>
+				<th>Start Time</th>
+				<th>End Time</th>
+				<th>Display Name</th>
+				<th>For Company</th>
+				<th>Description</th>
+				<th>Created At</th>
+				<th>Finished</th>
+				<th>Cancelled</th>
+				<th>First Name</th>
+				<th>Last Name</th>
+				<th>Email</th>
+				<th>Works For Company</th>
+				<th>Edit</th>					
+				<th>Cancel</th>
+				<th>Delete</th>
+			</tr>
+		<?php if(isset($bookingsCancelled)) :?>				
+			<?php foreach ($bookingsCancelled AS $booking): ?>
+				<form action="" method="post">			
+					<tr>
+						<td><?php htmlout($booking['BookingStatus']);?></td>
+						<td><?php htmlout($booking['BookedRoomName']); ?></td>
+						<td><?php htmlout($booking['StartTime']); ?></td>
+						<td><?php htmlout($booking['EndTime']); ?></td>
+						<td><?php htmlout($booking['BookedBy']); ?></td>
+						<td><?php htmlout($booking['BookedForCompany']); ?></td>
+						<td><?php htmlout($booking['BookingDescription']); ?></td>
+						<td><?php htmlout($booking['BookingWasCreatedOn']); ?></td>
+						<td><?php htmlout($booking['BookingWasCompletedOn']); ?></td>
+						<td><?php htmlout($booking['BookingWasCancelledOn']); ?></td>
+						<td><?php htmlout($booking['firstName']); ?></td>
+						<td><?php htmlout($booking['lastName']); ?></td>
+						<td><?php htmlout($booking['email']); ?></td>
+						<td><?php htmlout($booking['WorksForCompany']); ?></td>
+						<td><input type="submit" name="action" value="Edit"></td>							
+						<td><input type="submit" name="action" value="Cancel"></td>
+						<td>
+							<?php if(isset($_SESSION['bookingsEnableDelete']) AND $_SESSION['bookingsEnableDelete']) : ?>
+								<input type="submit" name="action" value="Delete">
+							<?php else : ?>
+								<input type="submit" name="disabled" value="Delete" disabled>
+							<?php endif; ?>
+						</td>
+						<input type="hidden" name="id" value="<?php htmlout($booking['id']); ?>">
+						<input type="hidden" name="UserInfo" id="UserInfo"
+						value="<?php htmlout($booking['UserInfo']); ?>">
+						<input type="hidden" name="MeetingInfo" id="MeetingInfo"
+						value="<?php htmlout($booking['MeetingInfo']); ?>">
+						<input type="hidden" name="BookingStatus" id="BookingStatus"
+						value="<?php htmlout($booking['BookingStatus']); ?>">
+						<input type="hidden" name="Email" id="Email"
+						value="<?php htmlout($booking['email']); ?>">
+					</tr>
+				</form>
+			<?php endforeach; ?>
+		<?php endif; ?>		
+		</table>
+	<?php if(isset($bookingsOther)) :?>		
+		<table id="bookingstable">
+			<caption>Other Bookings</caption>
+			<tr>
+				<th colspan="8">Booking information</th>
+				<th colspan="2">Completion Dates</th>
+				<th colspan="4">Connected user information</th>
+				<th colspan="3">Alter Booking</th>
+			</tr>				
+			<tr>
+				<th>Status</th>
+				<th>Room Name</th>
+				<th>Start Time</th>
+				<th>End Time</th>
+				<th>Display Name</th>
+				<th>For Company</th>
+				<th>Description</th>
+				<th>Created At</th>
+				<th>Finished</th>
+				<th>Cancelled</th>
+				<th>First Name</th>
+				<th>Last Name</th>
+				<th>Email</th>
+				<th>Works For Company</th>
+				<th>Edit</th>					
+				<th>Cancel</th>
+				<th>Delete</th>
+			</tr>			
+			<?php foreach ($bookingsOther AS $booking): ?>
+				<form action="" method="post">			
+					<tr>
+						<td><?php htmlout($booking['BookingStatus']);?></td>
+						<td><?php htmlout($booking['BookedRoomName']); ?></td>
+						<td><?php htmlout($booking['StartTime']); ?></td>
+						<td><?php htmlout($booking['EndTime']); ?></td>
+						<td><?php htmlout($booking['BookedBy']); ?></td>
+						<td><?php htmlout($booking['BookedForCompany']); ?></td>
+						<td><?php htmlout($booking['BookingDescription']); ?></td>
+						<td><?php htmlout($booking['BookingWasCreatedOn']); ?></td>
+						<td><?php htmlout($booking['BookingWasCompletedOn']); ?></td>
+						<td><?php htmlout($booking['BookingWasCancelledOn']); ?></td>
+						<td><?php htmlout($booking['firstName']); ?></td>
+						<td><?php htmlout($booking['lastName']); ?></td>
+						<td><?php htmlout($booking['email']); ?></td>
+						<td><?php htmlout($booking['WorksForCompany']); ?></td>
+						<td><input type="submit" name="action" value="Edit"></td>							
+						<td><input type="submit" name="action" value="Cancel"></td>
+						<td>
+							<?php if(isset($_SESSION['bookingsEnableDelete']) AND $_SESSION['bookingsEnableDelete']) : ?>
+								<input type="submit" name="action" value="Delete">
+							<?php else : ?>
+								<input type="submit" name="disabled" value="Delete" disabled>
+							<?php endif; ?>
+						</td>
+						<input type="hidden" name="id" value="<?php htmlout($booking['id']); ?>">
+						<input type="hidden" name="UserInfo" id="UserInfo"
+						value="<?php htmlout($booking['UserInfo']); ?>">
+						<input type="hidden" name="MeetingInfo" id="MeetingInfo"
+						value="<?php htmlout($booking['MeetingInfo']); ?>">
+						<input type="hidden" name="BookingStatus" id="BookingStatus"
+						value="<?php htmlout($booking['BookingStatus']); ?>">
+						<input type="hidden" name="Email" id="Email"
+						value="<?php htmlout($booking['email']); ?>">
+					</tr>
+				</form>
+			<?php endforeach; ?>
+		</table>
+		<?php endif; ?>
 		<p><a href="..">Return to CMS home</a></p>
 	<?php include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/logout.inc.html.php'; ?>
 	</body>
