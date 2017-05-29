@@ -1,5 +1,5 @@
 <?php
-// This is a collection of cuntions we use to check if user inputs are OK
+// This is a collection of functions we use to check if user inputs are OK
 
 // Function to check if variables are too big for MySQL or our liking
 	//Display Names
@@ -210,19 +210,21 @@ function validateDateTimeString($oldString){
 
 // Function to check if the submitted end time has a valid minute slice
 // e.g. with 15 minute booking slices it will be 00, 15, 30 or 45.
+// Returns TRUE on invalid, FALSE on valid
+// TO-DO: Untested in code
 function isBookingEndTimeInvalid($endTimeString){
-	$endTime = stringToDateTime($startTimeString);
+	$endTime = stringToDateTime($endTimeString);
 	$endTimeMinutePart = $endTime->format('i');
 	
 	$minimumBookingTime = MINIMUM_BOOKING_TIME_IN_MINUTES;
 	
-	for($i = 0; $i < 60; ){
+	for($i = 0; $i <= $endTimeMinutePart; ){
 		if($endTimeMinutePart == $i){
-			return TRUE;
+			return FALSE;
 		}
-		$i += $minimumBookingTime;
+		$i += $minimumBookingTime;	
 	}		
 	
-	return FALSE; // End Time is valid
+	return TRUE;
 }
 ?>
