@@ -10,6 +10,8 @@ if (!isUserAdmin()){
 	exit();
 }
 
+var_dump($_SESSION); // TO-DO: remove after testing is done
+
 // Function to clear sessions used to remember user inputs on refreshing the add employee form
 function clearAddEmployeeSessions(){
 	unset($_SESSION['AddEmployeeCompanySearch']);

@@ -7,15 +7,8 @@
 // a) and b) are run automatically when this file is included
 // which means it will always try to make sure the database and its tables exist
 
-
-// Database information we use in the code to connect to it
-//$dbengine 	= 'mysql';
-define('DB_HOST', 'localhost');
-define('DB_USER', 'root');
-define('DB_PASSWORD', '5Bdp32LAHYQ8AemvQM9P');
-define('DB_NAME', 'test');
-
 //Libraries, functions etc. to include
+require_once 'variables.inc.php';
 include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/magicquotes.inc.php';
 
 // A global array to keep track of log events that occur before
@@ -275,7 +268,7 @@ function create_tables()
 			//If the table exists, but for some reason has no values in it, then fill it
 			$result = $conn->query("SELECT `AccessName` FROM `accesslevel`");
 			$row = $result->rowCount();
-			if($row==0){
+			if($row == 0){
 				// No values in the table. Insert the needed values.
 				fillAccessLevel($conn);
 				
@@ -312,6 +305,7 @@ function create_tables()
 						  `dateRequested` timestamp NULL DEFAULT NULL,
 						  `AccessID` int(10) unsigned NOT NULL,
 						  `reduceAccessAtDate` date DEFAULT NULL,
+						  `lastCodeUpdate` date DEFAULT NULL,
 						  `lastActivity` timestamp NULL DEFAULT NULL,
 						  `isActive` tinyint(1) NOT NULL DEFAULT '0',
 						  `activationCode` char(64) DEFAULT NULL,

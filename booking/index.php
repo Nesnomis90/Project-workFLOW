@@ -12,7 +12,6 @@ include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/magicquotes.inc.php';
 	Cancel booking from code
 		Admin has master code
 */
-var_dump($_SESSION); // TO-DO: remove after testing is done
 
 // Function to clear sessions used to remember user inputs on refreshing the add booking form
 function clearAddCreateBookingSessions(){
@@ -24,7 +23,8 @@ function clearAddCreateBookingSessions(){
 	unset($_SESSION['AddCreateBookingUserSearch']);
 	unset($_SESSION['AddCreateBookingSelectedNewUser']);
 	unset($_SESSION['AddCreateBookingSelectedACompany']);	
-
+	unset($_SESSION['AddCreateBookingDisplayCompanySelect']);
+	
 	unset($_SESSION['bookingCodeUserID']);
 	
 	unset($_SESSION['cancelBookingOriginalValues']['BookingID']);
@@ -41,6 +41,7 @@ function clearEditCreateBookingSessions(){
 	unset($_SESSION['EditCreateBookingUserSearch']);
 	unset($_SESSION['EditCreateBookingSelectedNewUser']);
 	unset($_SESSION['EditCreateBookingSelectedACompany']);
+	unset($_SESSION['EditCreateBookingDisplayCompanySelect']);
 	
 	unset($_SESSION['cancelBookingOriginalValues']['BookingID']);
 	unset($_SESSION['cancelBookingOriginalValues']['BookingStatus']);	
@@ -109,6 +110,7 @@ function checkIfLocalDeviceOrLoggedIn(){
 			// We're accessing a local device.
 			// Confirm with booking code
 			// Set default values for bookingcode template
+			var_dump($_SESSION); // TO-DO: remove after testing is done
 			$bookingCode = "";
 			include_once 'bookingcode.html.php';
 			exit();
@@ -116,6 +118,7 @@ function checkIfLocalDeviceOrLoggedIn(){
 			// If not local, use regular log in
 		if(checkIfUserIsLoggedIn() === FALSE){
 			makeUserLogIn();
+			var_dump($_SESSION); // TO-DO: remove after testing is done
 			exit();
 		}	
 	}
@@ -490,12 +493,14 @@ if(isset($_POST['action']) AND $_POST['action'] == "confirmcode"){
 	if(validateIntegerNumber($validatedBookingCode) !== TRUE){
 		$bookingCode = "";
 		$_SESSION['confirmBookingCodeError'] = "The booking code you submitted had non-numbers in it.";
+		var_dump($_SESSION); // TO-DO: remove after testing is done
 		include_once 'bookingcode.html.php';
 		exit();
 	}
 	if(isNumberInvalidBookingCode($validatedBookingCode) === TRUE){
 		$bookingCode = "";
 		$_SESSION['confirmBookingCodeError'] = "The booking code you submitted is an invalid code.";
+		var_dump($_SESSION); // TO-DO: remove after testing is done
 		include_once 'bookingcode.html.php';
 		exit();	
 	}
@@ -685,7 +690,7 @@ if(	((isset($_POST['action']) AND $_POST['action'] == 'Create Meeting')) OR
 		}	
 	
 		// Create an array with the row information we want to use	
-		$_SESSION['AddCreateBookingInfoArray'][] = array(
+		$_SESSION['AddCreateBookingInfoArray'] = array(
 													'TheCompanyID' => '',
 													'TheMeetingRoomID' => '',
 													'StartTime' => '',
@@ -824,14 +829,14 @@ if(	((isset($_POST['action']) AND $_POST['action'] == 'Create Meeting')) OR
 	if(isset($_GET['meetingroom'])){
 		$selectedMeetingRoomID = $_GET['meetingroom'];
 	}
-	if(isset($row['StartTime'])){
+	if(isset($row['StartTime']) AND $row['StartTime'] != ""){
 		$startDateTime = $row['StartTime'];
 	} else {
 		$startDateTime = getDatetimeNow();
 		$startDateTime = convertDatetimeToFormat($startDateTime , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
 	}
 	
-	if(isset($row['EndTime'])){
+	if(isset($row['EndTime']) AND $row['EndTime'] != ""){
 		$endDateTime = $row['EndTime'];
 	} else {
 		$endDateTime = getDatetimeNow();
@@ -854,6 +859,7 @@ if(	((isset($_POST['action']) AND $_POST['action'] == 'Create Meeting')) OR
 
 	$_SESSION['AddCreateBookingInfoArray'] = $row; // Remember the company/user info we changed based on user choice
 	
+	var_dump($_SESSION); // TO-DO: remove after testing is done
 	// Change form
 	include 'addbooking.html.php';
 	exit();		
@@ -1488,6 +1494,7 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR
 	if(!isset($originalUserInformation) OR $originalUserInformation == NULL OR $originalUserInformation == ",  - "){
 		$originalUserInformation = "N/A - Deleted";	
 	}	
+	var_dump($_SESSION); // TO-DO: remove after testing is done
 	
 	// Change to the actual form we want to use
 	include 'editbooking.html.php';
@@ -1982,7 +1989,6 @@ foreach ($result as $row)
 	// If cancelled = cancelled
 	// If meeting time has passed and finished time has NOT updated (and not been cancelled) = Ended without updating
 	// If none of the above = Unknown
-	// TO-DO: CHECK IF THIS MAKES SENSE!
 	if(			$completedDateTime == null AND $cancelledDateTime == null AND 
 				$datetimeNow < $endDateTime AND $dateOnlyNow != $dateOnlyStart) {
 		$status = 'Active';
@@ -2000,7 +2006,7 @@ foreach ($result as $row)
 		$status = 'Completed Today';
 		// Valid status
 	} elseif(	$completedDateTime == null AND $cancelledDateTime != null AND
-				$startDateTime > $row['BookingWasCancelledOn']){
+				$startDateTime > $cancelledDateTime){
 		$status = 'Cancelled';
 		// Valid status
 	} elseif(	$completedDateTime != null AND $cancelledDateTime != null AND
@@ -2016,7 +2022,7 @@ foreach ($result as $row)
 		$status = 'Ended without updating database';
 		// This should never occur
 	} elseif(	$completedDateTime == null AND $cancelledDateTime != null AND 
-				$row['EndTime'] < $row['BookingWasCancelledOn']){
+				$endDateTime < $cancelledDateTime){
 		$status = 'Cancelled after meeting should have been Completed';
 		// This should not be allowed to happen eventually
 	} else {
@@ -2053,26 +2059,47 @@ foreach ($result as $row)
 	$meetinginfo = $roomName . ' for the timeslot: ' . $displayValidatedStartDate . 
 					' to ' . $displayValidatedEndDate;
 	
-	$bookings[] = array('id' => $row['bookingID'],
-						'BookingStatus' => $status,
-						'BookedRoomName' => $roomName,
-						'StartTime' => $displayValidatedStartDate,
-						'EndTime' => $displayValidatedEndDate,
-						'BookedBy' => $row['BookedBy'],
-						'BookedForCompany' => $row['BookedForCompany'],
-						'BookingDescription' => $row['BookingDescription'],
-						'firstName' => $firstname,
-						'lastName' => $lastname,
-						'email' => $email,
-						'WorksForCompany' => $worksForCompany,
-						'BookingWasCreatedOn' => $displayCreatedDateTime,
-						'BookingWasCompletedOn' => $displayCompletedDateTime,
-						'BookingWasCancelledOn' => $displayCancelledDateTime,	
-						'UserInfo' => $userinfo,
-						'MeetingInfo' => $meetinginfo
-					);
+	if($status == "Active Today"){				
+		$bookingsActiveToday[] = array('id' => $row['bookingID'],
+							'BookingStatus' => $status,
+							'BookedRoomName' => $roomName,
+							'StartTime' => $displayValidatedStartDate,
+							'EndTime' => $displayValidatedEndDate,
+							'BookedBy' => $row['BookedBy'],
+							'BookedForCompany' => $row['BookedForCompany'],
+							'BookingDescription' => $row['BookingDescription'],
+							'firstName' => $firstname,
+							'lastName' => $lastname,
+							'email' => $email,
+							'WorksForCompany' => $worksForCompany,
+							'BookingWasCreatedOn' => $displayCreatedDateTime,
+							'BookingWasCompletedOn' => $displayCompletedDateTime,
+							'BookingWasCancelledOn' => $displayCancelledDateTime,	
+							'UserInfo' => $userinfo,
+							'MeetingInfo' => $meetinginfo
+						);
+	}	elseif($status == "Active") {
+		$bookingsFuture[] = array('id' => $row['bookingID'],
+							'BookingStatus' => $status,
+							'BookedRoomName' => $roomName,
+							'StartTime' => $displayValidatedStartDate,
+							'EndTime' => $displayValidatedEndDate,
+							'BookedBy' => $row['BookedBy'],
+							'BookedForCompany' => $row['BookedForCompany'],
+							'BookingDescription' => $row['BookingDescription'],
+							'firstName' => $firstname,
+							'lastName' => $lastname,
+							'email' => $email,
+							'WorksForCompany' => $worksForCompany,
+							'BookingWasCreatedOn' => $displayCreatedDateTime,
+							'BookingWasCompletedOn' => $displayCompletedDateTime,
+							'BookingWasCancelledOn' => $displayCancelledDateTime,	
+							'UserInfo' => $userinfo,
+							'MeetingInfo' => $meetinginfo
+						);		
+	}
 }
-
+var_dump($_SESSION); // TO-DO: remove after testing is done
 // Load the html template
 include_once 'booking.html.php';
 ?>

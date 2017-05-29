@@ -1,9 +1,7 @@
 <?php
-// Define some cookies we use to identify if the website is accessed locally by a meeting room panel
-// Cookie name
-	//TO-DO: Change cookie names after uploading
-define('MEETINGROOM_NAME', 'Temp_Cookie_Name_To_Hold_Meeting_Room_Name'); 
-define('MEETINGROOM_IDCODE', 'Temp_Cookie_Name_To_Hold_Meeting_Room_ID_CODE'); 
+
+// Get variables
+require_once 'variables.inc.php';
 
 // Cookie setup
 function setNewMeetingRoomCookies($meetingRoomName, $idCode){
@@ -55,10 +53,21 @@ function checkIfLocalDevice(){
 								WHERE 	`name` = :meetingRoomName
 								LIMIT 	1";
 						$s = $pdo->prepare($sql);
-						$s->bindValue(':meetingRoomName', $_COOKIE[MEETINGROOM_NAME]);
+						$s->bindValue(':meetingRoomName', $meetingRoomName);
 						$s->execute();
-						$row = $s->fetch();
-						$_SESSION['DefaultMeetingRoomInfo'] = $row;
+						$result = $s->fetchAll();
+						
+						foreach($result AS $row){
+							$defaultRoomInfo = array(
+														'TheMeetingRoomID' => $row['TheMeetingRoomID'],
+														'TheMeetingRoomName' => $row['TheMeetingRoomName'],
+														'TheMeetingRoomCapacity' => $row['TheMeetingRoomCapacity'],
+														'TheMeetingRoomDescription' => $row['TheMeetingRoomDescription'],
+														'TheMeetingRoomLocation' => $row['TheMeetingRoomLocation']
+														);
+						}
+						
+						$_SESSION['DefaultMeetingRoomInfo'] = $defaultRoomInfo;
 						//Close the connection
 						$pdo = null;
 					}
@@ -95,6 +104,7 @@ function resetLocalDevice(){
 	unset($_SESSION['DefaultMeetingRoomInfo']);
 	unset($_SESSION['OriginalCookieMeetingRoomName']);
 	unset($_SESSION['OriginalCookieMeetingRoomIDCode']);
-	// TO-DO: Do anything more here to punish cookie manipulation?	
+	// TO-DO: Do anything more here to punish cookie manipulation?
+	// Remember: also happens on normal log in
 }
 ?>

@@ -1,6 +1,7 @@
 <?php
 // Constants used to salt passwords
 require_once 'salts.inc.php';
+require_once 'cookies.inc.php';
 
 // Functions to salt and hash info
 	// Function to salt and hash passwords
@@ -161,6 +162,9 @@ function checkIfUserIsLoggedIn()
 			if(!isset($_SESSION['LoggedInUserName'])){
 				$_SESSION['LoggedInUserName'] = $_SESSION['DatabaseContainsUserName']; 
 			}
+			
+			// We're not a local device if we can log in
+			resetLocalDevice();
 			
 			unset($_SESSION['DatabaseContainsUserID']);
 			unset($_SESSION['DatabaseContainsUserName']);

@@ -12,8 +12,6 @@ include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/magicquotes.inc.php';
 		Search meeting room status by datetime?
 
 */
-var_dump($_SESSION);
-
 
 // ADMIN INTERACTIONS // START //
 
@@ -21,9 +19,9 @@ var_dump($_SESSION);
 if(	(isset($_POST['action']) AND $_POST['action'] == "Set Default Room") OR 
 	(isset($_POST['action']) AND $_POST['action'] == "Change Default Room") OR
 	(isset($_SESSION['SetDefaultRoom']) AND $_SESSION['SetDefaultRoom'])){
-		// CHECK IF USER TRYING TO ACCESS THIS IS IN FACT THE ADMIN!
+		
 	$_SESSION['SetDefaultRoom'] = TRUE;
-	
+		// CHECK IF USER TRYING TO ACCESS THIS IS IN FACT THE ADMIN!
 	if (!isUserAdmin()){
 		exit();
 	}
@@ -63,6 +61,8 @@ if(	(isset($_POST['action']) AND $_POST['action'] == "Set Default Room") OR
 								'MeetingRoomIDCode' => $row['MeetingRoomIDCode']
 								);
 	}
+	var_dump($_SESSION); // TO-DO: remove after testing is done
+	
 	include_once 'adminroomselect.html.php';
 	exit();
 }
@@ -232,6 +232,8 @@ if(!isset($_GET['meetingroom'])){
 		$roomDisplayLimit = $maxRoomsToShow;
 	}		
 }
+var_dump($_SESSION); // TO-DO: remove after testing is done
+
 // Load the html template
 include_once 'meetingroomforallusers.html.php';
 ?>

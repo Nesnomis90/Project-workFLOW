@@ -21,7 +21,8 @@ function clearAddBookingSessions(){
 	unset($_SESSION['AddBookingSelectedNewUser']);
 	unset($_SESSION['AddBookingSelectedACompany']);
 	unset($_SESSION['AddBookingDefaultDisplayNameForNewUser']);
-	unset($_SESSION['AddBookingDefaultBookingDescriptionForNewUser']);		
+	unset($_SESSION['AddBookingDefaultBookingDescriptionForNewUser']);	
+	unset($_SESSION['AddBookingDisplayCompanySelect']);	
 }
 
 // Function to clear sessions used to remember user inputs on refreshing the edit booking form
@@ -36,6 +37,7 @@ function clearEditBookingSessions(){
 	unset($_SESSION['EditBookingSelectedACompany']);
 	unset($_SESSION['EditBookingDefaultDisplayNameForNewUser']);
 	unset($_SESSION['EditBookingDefaultBookingDescriptionForNewUser']);	
+	unset($_SESSION['EditBookingDisplayCompanySelect']);
 }
 
 // Function to remember the user inputs in Edit Booking
@@ -686,6 +688,8 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR
 		$originalUserInformation = "N/A - Deleted";	
 	}	
 	
+	var_dump($_SESSION); // TO-DO: remove after testing is done
+	
 	// Change to the actual form we want to use
 	include 'editbooking.html.php';
 	exit();
@@ -1184,6 +1188,7 @@ if(isset($_POST['edit']) AND $_POST['edit'] == "Finish Edit")
 			$_SESSION['BookingUserFeedback'] .= " This is the email msg we're sending out: $emailMessage. Sent to email: $email."; // TO-DO: Remove after testing
 		
 			// Send information to old user that their meeting has been cancelled/transferred
+			// TO-DO: Make two emails here. One cancelled for old booking and one created for new booking.
 			$emailSubject = "Your meeting has been cancelled by an Admin!";
 			
 			$emailMessage = 
@@ -1204,14 +1209,14 @@ if(isset($_POST['edit']) AND $_POST['edit'] == "Finish Edit")
 			
 			$emailMessage = 
 			"Your booked meeting has been altered by an Admin!\n" .
+			"Your new booking has been set to: \n" .
+			"Meeting Room: " . $newMeetingRoomName . ".\n" . 
+			"Start Time: " . $NewStartDate . ".\n" .
+			"End Time: " . $NewEndDate . ".\n\n" .				
 			"Your original booking was for: \n" .
 			"Meeting Room: " . $oldMeetingRoomName . ".\n" . 
 			"Start Time: " . $OldStartDate . ".\n" .
 			"End Time: " . $OldEndDate . ".\n\n" .
-			"Your new booking has been set to: \n" .
-			"Meeting Room: " . $newMeetingRoomName . ".\n" . 
-			"Start Time: " . $NewStartDate . ".\n" .
-			"End Time: " . $NewEndDate . ".\n\n" .	
 			"If you wish to cancel your meeting, or just end it early, you can easily do so by clicking the link given below.\n" .
 			"Click this link to cancel your booked meeting: " . $_SERVER['HTTP_HOST'] . 
 			"/booking/?cancellationcode=" . $cancellationCode;	
@@ -1367,7 +1372,7 @@ if (	(isset($_POST['action']) AND $_POST['action'] == "Create Booking") OR
 			}	
 		
 			// Create an array with the row information we want to use	
-			$_SESSION['AddBookingInfoArray'][] = array(
+			$_SESSION['AddBookingInfoArray'] = array(
 														'TheCompanyID' => '',
 														'TheMeetingRoomID' => '',
 														'StartTime' => '',
@@ -1521,14 +1526,14 @@ if (	(isset($_POST['action']) AND $_POST['action'] == "Create Booking") OR
 	} else {
 		$selectedMeetingRoomID = '';
 	}
-	if(isset($row['StartTime'])){
+	if(isset($row['StartTime']) AND $row['StartTime'] != ""){
 		$startDateTime = $row['StartTime'];
 	} else {
 		$startDateTime = getDatetimeNow();
 		$startDateTime = convertDatetimeToFormat($startDateTime , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
 	}
 	
-	if(isset($row['EndTime'])){
+	if(isset($row['EndTime']) AND $row['EndTime'] != ""){
 		$endDateTime = $row['EndTime'];
 	} else {
 		$endDateTime = getDatetimeNow();
@@ -1550,6 +1555,8 @@ if (	(isset($_POST['action']) AND $_POST['action'] == "Create Booking") OR
 	$userInformation = $row['UserLastname'] . ', ' . $row['UserFirstname'] . ' - ' . $row['UserEmail'];	
 
 	$_SESSION['AddBookingInfoArray'] = $row; // Remember the company/user info we changed based on user choice
+	
+	var_dump($_SESSION); // TO-DO: remove after testing is done
 	
 	// Change form
 	include 'addbooking.html.php';
@@ -2127,7 +2134,6 @@ foreach ($result as $row)
 	// If cancelled = cancelled
 	// If meeting time has passed and finished time has NOT updated (and not been cancelled) = Ended without updating
 	// If none of the above = Unknown
-	// TO-DO: CHECK IF THIS MAKES SENSE!
 	if(			$completedDateTime == null AND $cancelledDateTime == null AND 
 				$datetimeNow < $endDateTime AND $dateOnlyNow != $dateOnlyStart) {
 		$status = 'Active';
@@ -2145,7 +2151,7 @@ foreach ($result as $row)
 		$status = 'Completed Today';
 		// Valid status
 	} elseif(	$completedDateTime == null AND $cancelledDateTime != null AND
-				$startDateTime > $row['BookingWasCancelledOn']){
+				$startDateTime > $cancelledDateTime){
 		$status = 'Cancelled';
 		// Valid status
 	} elseif(	$completedDateTime != null AND $cancelledDateTime != null AND
@@ -2161,7 +2167,7 @@ foreach ($result as $row)
 		$status = 'Ended without updating database';
 		// This should never occur
 	} elseif(	$completedDateTime == null AND $cancelledDateTime != null AND 
-				$row['EndTime'] < $row['BookingWasCancelledOn']){
+				endDateTime < $cancelledDateTime){
 		$status = 'Cancelled after meeting should have been Completed';
 		// This should not be allowed to happen eventually
 	} else {
@@ -2197,29 +2203,127 @@ foreach ($result as $row)
 	
 	$meetinginfo = $roomName . ' for the timeslot: ' . $displayValidatedStartDate . 
 					' to ' . $displayValidatedEndDate;
-	
-	$bookings[] = array('id' => $row['bookingID'],
-						'BookingStatus' => $status,
-						'BookedRoomName' => $roomName,
-						'StartTime' => $displayValidatedStartDate,
-						'EndTime' => $displayValidatedEndDate,
-						'BookedBy' => $row['BookedBy'],
-						'BookedForCompany' => $row['BookedForCompany'],
-						'BookingDescription' => $row['BookingDescription'],
-						'firstName' => $firstname,
-						'lastName' => $lastname,
-						'email' => $email,
-						'WorksForCompany' => $worksForCompany,
-						'BookingWasCreatedOn' => $displayCreatedDateTime,
-						'BookingWasCompletedOn' => $displayCompletedDateTime,
-						'BookingWasCancelledOn' => $displayCancelledDateTime,	
-						'UserInfo' => $userinfo,
-						'MeetingInfo' => $meetinginfo
-					);
+
+
+	if($status == "Active Today"){				
+		$bookingsActiveToday[] = array('id' => $row['bookingID'],
+							'BookingStatus' => $status,
+							'BookedRoomName' => $roomName,
+							'StartTime' => $displayValidatedStartDate,
+							'EndTime' => $displayValidatedEndDate,
+							'BookedBy' => $row['BookedBy'],
+							'BookedForCompany' => $row['BookedForCompany'],
+							'BookingDescription' => $row['BookingDescription'],
+							'firstName' => $firstname,
+							'lastName' => $lastname,
+							'email' => $email,
+							'WorksForCompany' => $worksForCompany,
+							'BookingWasCreatedOn' => $displayCreatedDateTime,
+							'BookingWasCompletedOn' => $displayCompletedDateTime,
+							'BookingWasCancelledOn' => $displayCancelledDateTime,	
+							'UserInfo' => $userinfo,
+							'MeetingInfo' => $meetinginfo
+						);
+	}	elseif($status == "Completed Today") {
+		$bookingsCompletedToday[] = array('id' => $row['bookingID'],
+							'BookingStatus' => $status,
+							'BookedRoomName' => $roomName,
+							'StartTime' => $displayValidatedStartDate,
+							'EndTime' => $displayValidatedEndDate,
+							'BookedBy' => $row['BookedBy'],
+							'BookedForCompany' => $row['BookedForCompany'],
+							'BookingDescription' => $row['BookingDescription'],
+							'firstName' => $firstname,
+							'lastName' => $lastname,
+							'email' => $email,
+							'WorksForCompany' => $worksForCompany,
+							'BookingWasCreatedOn' => $displayCreatedDateTime,
+							'BookingWasCompletedOn' => $displayCompletedDateTime,
+							'BookingWasCancelledOn' => $displayCancelledDateTime,	
+							'UserInfo' => $userinfo,
+							'MeetingInfo' => $meetinginfo
+						);		
+	}	elseif($status == "Active"){				
+		$bookingsFuture[] = array('id' => $row['bookingID'],
+							'BookingStatus' => $status,
+							'BookedRoomName' => $roomName,
+							'StartTime' => $displayValidatedStartDate,
+							'EndTime' => $displayValidatedEndDate,
+							'BookedBy' => $row['BookedBy'],
+							'BookedForCompany' => $row['BookedForCompany'],
+							'BookingDescription' => $row['BookingDescription'],
+							'firstName' => $firstname,
+							'lastName' => $lastname,
+							'email' => $email,
+							'WorksForCompany' => $worksForCompany,
+							'BookingWasCreatedOn' => $displayCreatedDateTime,
+							'BookingWasCompletedOn' => $displayCompletedDateTime,
+							'BookingWasCancelledOn' => $displayCancelledDateTime,	
+							'UserInfo' => $userinfo,
+							'MeetingInfo' => $meetinginfo
+						);
+	}	elseif($status == "Completed"){				
+		$bookingsCompleted[] = array('id' => $row['bookingID'],
+							'BookingStatus' => $status,
+							'BookedRoomName' => $roomName,
+							'StartTime' => $displayValidatedStartDate,
+							'EndTime' => $displayValidatedEndDate,
+							'BookedBy' => $row['BookedBy'],
+							'BookedForCompany' => $row['BookedForCompany'],
+							'BookingDescription' => $row['BookingDescription'],
+							'firstName' => $firstname,
+							'lastName' => $lastname,
+							'email' => $email,
+							'WorksForCompany' => $worksForCompany,
+							'BookingWasCreatedOn' => $displayCreatedDateTime,
+							'BookingWasCompletedOn' => $displayCompletedDateTime,
+							'BookingWasCancelledOn' => $displayCancelledDateTime,	
+							'UserInfo' => $userinfo,
+							'MeetingInfo' => $meetinginfo
+						);
+	}	elseif($status == "Cancelled"){
+		$bookingsCancelled[] = array('id' => $row['bookingID'],
+							'BookingStatus' => $status,
+							'BookedRoomName' => $roomName,
+							'StartTime' => $displayValidatedStartDate,
+							'EndTime' => $displayValidatedEndDate,
+							'BookedBy' => $row['BookedBy'],
+							'BookedForCompany' => $row['BookedForCompany'],
+							'BookingDescription' => $row['BookingDescription'],
+							'firstName' => $firstname,
+							'lastName' => $lastname,
+							'email' => $email,
+							'WorksForCompany' => $worksForCompany,
+							'BookingWasCreatedOn' => $displayCreatedDateTime,
+							'BookingWasCompletedOn' => $displayCompletedDateTime,
+							'BookingWasCancelledOn' => $displayCancelledDateTime,	
+							'UserInfo' => $userinfo,
+							'MeetingInfo' => $meetinginfo
+						);		
+	}	else {				
+		$bookingsOther[] = array('id' => $row['bookingID'],
+							'BookingStatus' => $status,
+							'BookedRoomName' => $roomName,
+							'StartTime' => $displayValidatedStartDate,
+							'EndTime' => $displayValidatedEndDate,
+							'BookedBy' => $row['BookedBy'],
+							'BookedForCompany' => $row['BookedForCompany'],
+							'BookingDescription' => $row['BookingDescription'],
+							'firstName' => $firstname,
+							'lastName' => $lastname,
+							'email' => $email,
+							'WorksForCompany' => $worksForCompany,
+							'BookingWasCreatedOn' => $displayCreatedDateTime,
+							'BookingWasCompletedOn' => $displayCompletedDateTime,
+							'BookingWasCancelledOn' => $displayCancelledDateTime,	
+							'UserInfo' => $userinfo,
+							'MeetingInfo' => $meetinginfo
+						);
+	}
 }
 
 // BOOKING OVERVIEW CODE SNIPPET END //
-
+var_dump($_SESSION); // TO-DO: remove after testing is done
 // Create the booking information table in HTML
 include_once 'bookings.html.php';
 ?>
