@@ -268,7 +268,7 @@ function create_tables()
 			//If the table exists, but for some reason has no values in it, then fill it
 			$result = $conn->query("SELECT `AccessName` FROM `accesslevel`");
 			$row = $result->rowCount();
-			if($row==0){
+			if($row == 0){
 				// No values in the table. Insert the needed values.
 				fillAccessLevel($conn);
 				
@@ -305,6 +305,7 @@ function create_tables()
 						  `dateRequested` timestamp NULL DEFAULT NULL,
 						  `AccessID` int(10) unsigned NOT NULL,
 						  `reduceAccessAtDate` date DEFAULT NULL,
+						  `lastCodeUpdate` date DEFAULT NULL,
 						  `lastActivity` timestamp NULL DEFAULT NULL,
 						  `isActive` tinyint(1) NOT NULL DEFAULT '0',
 						  `activationCode` char(64) DEFAULT NULL,
