@@ -12,7 +12,6 @@ include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/magicquotes.inc.php';
 	Cancel booking from code
 		Admin has master code
 */
-var_dump($_SESSION); // TO-DO: remove after testing is done
 
 // Function to clear sessions used to remember user inputs on refreshing the add booking form
 function clearAddCreateBookingSessions(){
@@ -111,6 +110,7 @@ function checkIfLocalDeviceOrLoggedIn(){
 			// We're accessing a local device.
 			// Confirm with booking code
 			// Set default values for bookingcode template
+			var_dump($_SESSION); // TO-DO: remove after testing is done
 			$bookingCode = "";
 			include_once 'bookingcode.html.php';
 			exit();
@@ -118,6 +118,7 @@ function checkIfLocalDeviceOrLoggedIn(){
 			// If not local, use regular log in
 		if(checkIfUserIsLoggedIn() === FALSE){
 			makeUserLogIn();
+			var_dump($_SESSION); // TO-DO: remove after testing is done
 			exit();
 		}	
 	}
@@ -492,12 +493,14 @@ if(isset($_POST['action']) AND $_POST['action'] == "confirmcode"){
 	if(validateIntegerNumber($validatedBookingCode) !== TRUE){
 		$bookingCode = "";
 		$_SESSION['confirmBookingCodeError'] = "The booking code you submitted had non-numbers in it.";
+		var_dump($_SESSION); // TO-DO: remove after testing is done
 		include_once 'bookingcode.html.php';
 		exit();
 	}
 	if(isNumberInvalidBookingCode($validatedBookingCode) === TRUE){
 		$bookingCode = "";
 		$_SESSION['confirmBookingCodeError'] = "The booking code you submitted is an invalid code.";
+		var_dump($_SESSION); // TO-DO: remove after testing is done
 		include_once 'bookingcode.html.php';
 		exit();	
 	}
@@ -856,6 +859,7 @@ if(	((isset($_POST['action']) AND $_POST['action'] == 'Create Meeting')) OR
 
 	$_SESSION['AddCreateBookingInfoArray'] = $row; // Remember the company/user info we changed based on user choice
 	
+	var_dump($_SESSION); // TO-DO: remove after testing is done
 	// Change form
 	include 'addbooking.html.php';
 	exit();		
@@ -1490,6 +1494,7 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR
 	if(!isset($originalUserInformation) OR $originalUserInformation == NULL OR $originalUserInformation == ",  - "){
 		$originalUserInformation = "N/A - Deleted";	
 	}	
+	var_dump($_SESSION); // TO-DO: remove after testing is done
 	
 	// Change to the actual form we want to use
 	include 'editbooking.html.php';
@@ -2094,7 +2099,7 @@ foreach ($result as $row)
 						);		
 	}
 }
-
+var_dump($_SESSION); // TO-DO: remove after testing is done
 // Load the html template
 include_once 'booking.html.php';
 ?>

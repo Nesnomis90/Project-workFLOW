@@ -10,8 +10,6 @@ if (!isUserAdmin()){
 	exit();
 }
 
-var_dump($_SESSION); // TO-DO: remove after testing is done
-
 // Function to clear sessions used to remember user inputs on refreshing the add booking form
 function clearAddBookingSessions(){
 	unset($_SESSION['AddBookingInfoArray']);
@@ -689,6 +687,8 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR
 	if(!isset($originalUserInformation) OR $originalUserInformation == NULL OR $originalUserInformation == ",  - "){
 		$originalUserInformation = "N/A - Deleted";	
 	}	
+	
+	var_dump($_SESSION); // TO-DO: remove after testing is done
 	
 	// Change to the actual form we want to use
 	include 'editbooking.html.php';
@@ -1556,6 +1556,8 @@ if (	(isset($_POST['action']) AND $_POST['action'] == "Create Booking") OR
 
 	$_SESSION['AddBookingInfoArray'] = $row; // Remember the company/user info we changed based on user choice
 	
+	var_dump($_SESSION); // TO-DO: remove after testing is done
+	
 	// Change form
 	include 'addbooking.html.php';
 	exit();	
@@ -2321,7 +2323,7 @@ foreach ($result as $row)
 }
 
 // BOOKING OVERVIEW CODE SNIPPET END //
-
+var_dump($_SESSION); // TO-DO: remove after testing is done
 // Create the booking information table in HTML
 include_once 'bookings.html.php';
 ?>
