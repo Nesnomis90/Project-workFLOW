@@ -7,15 +7,8 @@
 // a) and b) are run automatically when this file is included
 // which means it will always try to make sure the database and its tables exist
 
-
-// Database information we use in the code to connect to it
-//$dbengine 	= 'mysql';
-define('DB_HOST', 'localhost');
-define('DB_USER', 'root');
-define('DB_PASSWORD', '5Bdp32LAHYQ8AemvQM9P');
-define('DB_NAME', 'test');
-
 //Libraries, functions etc. to include
+require_once 'variables.inc.php';
 include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/magicquotes.inc.php';
 
 // A global array to keep track of log events that occur before

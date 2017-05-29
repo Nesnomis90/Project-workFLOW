@@ -1188,6 +1188,7 @@ if(isset($_POST['edit']) AND $_POST['edit'] == "Finish Edit")
 			$_SESSION['BookingUserFeedback'] .= " This is the email msg we're sending out: $emailMessage. Sent to email: $email."; // TO-DO: Remove after testing
 		
 			// Send information to old user that their meeting has been cancelled/transferred
+			// TO-DO: Make two emails here. One cancelled for old booking and one created for new booking.
 			$emailSubject = "Your meeting has been cancelled by an Admin!";
 			
 			$emailMessage = 
@@ -1208,14 +1209,14 @@ if(isset($_POST['edit']) AND $_POST['edit'] == "Finish Edit")
 			
 			$emailMessage = 
 			"Your booked meeting has been altered by an Admin!\n" .
+			"Your new booking has been set to: \n" .
+			"Meeting Room: " . $newMeetingRoomName . ".\n" . 
+			"Start Time: " . $NewStartDate . ".\n" .
+			"End Time: " . $NewEndDate . ".\n\n" .				
 			"Your original booking was for: \n" .
 			"Meeting Room: " . $oldMeetingRoomName . ".\n" . 
 			"Start Time: " . $OldStartDate . ".\n" .
 			"End Time: " . $OldEndDate . ".\n\n" .
-			"Your new booking has been set to: \n" .
-			"Meeting Room: " . $newMeetingRoomName . ".\n" . 
-			"Start Time: " . $NewStartDate . ".\n" .
-			"End Time: " . $NewEndDate . ".\n\n" .	
 			"If you wish to cancel your meeting, or just end it early, you can easily do so by clicking the link given below.\n" .
 			"Click this link to cancel your booked meeting: " . $_SERVER['HTTP_HOST'] . 
 			"/booking/?cancellationcode=" . $cancellationCode;	

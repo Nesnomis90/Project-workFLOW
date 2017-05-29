@@ -1,6 +1,7 @@
 <?php
 // Constants used to salt passwords
 require_once 'salts.inc.php';
+require_once 'cookies.inc.php';
 
 // Functions to salt and hash info
 	// Function to salt and hash passwords

@@ -1,9 +1,7 @@
 <?php
-// Define some cookies we use to identify if the website is accessed locally by a meeting room panel
-// Cookie name
-	//TO-DO: Change cookie names after uploading
-define('MEETINGROOM_NAME', 'Temp_Cookie_Name_To_Hold_Meeting_Room_Name'); 
-define('MEETINGROOM_IDCODE', 'Temp_Cookie_Name_To_Hold_Meeting_Room_ID_CODE'); 
+
+// Get variables
+require_once 'variables.inc.php';
 
 // Cookie setup
 function setNewMeetingRoomCookies($meetingRoomName, $idCode){
