@@ -162,6 +162,9 @@ function checkIfUserIsLoggedIn()
 				$_SESSION['LoggedInUserName'] = $_SESSION['DatabaseContainsUserName']; 
 			}
 			
+			// We're not a local device if we can log in
+			resetLocalDevice();
+			
 			unset($_SESSION['DatabaseContainsUserID']);
 			unset($_SESSION['DatabaseContainsUserName']);
 			unset($_SESSION['loginEmailSubmitted']);

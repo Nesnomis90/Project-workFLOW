@@ -106,6 +106,7 @@ function resetLocalDevice(){
 	unset($_SESSION['DefaultMeetingRoomInfo']);
 	unset($_SESSION['OriginalCookieMeetingRoomName']);
 	unset($_SESSION['OriginalCookieMeetingRoomIDCode']);
-	// TO-DO: Do anything more here to punish cookie manipulation?	
+	// TO-DO: Do anything more here to punish cookie manipulation?
+	// Remember: also happens on normal log in
 }
 ?>

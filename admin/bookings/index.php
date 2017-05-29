@@ -10,6 +10,8 @@ if (!isUserAdmin()){
 	exit();
 }
 
+var_dump($_SESSION); // TO-DO: remove after testing is done
+
 // Function to clear sessions used to remember user inputs on refreshing the add booking form
 function clearAddBookingSessions(){
 	unset($_SESSION['AddBookingInfoArray']);
@@ -1369,7 +1371,7 @@ if (	(isset($_POST['action']) AND $_POST['action'] == "Create Booking") OR
 			}	
 		
 			// Create an array with the row information we want to use	
-			$_SESSION['AddBookingInfoArray'][] = array(
+			$_SESSION['AddBookingInfoArray'] = array(
 														'TheCompanyID' => '',
 														'TheMeetingRoomID' => '',
 														'StartTime' => '',
@@ -1523,14 +1525,14 @@ if (	(isset($_POST['action']) AND $_POST['action'] == "Create Booking") OR
 	} else {
 		$selectedMeetingRoomID = '';
 	}
-	if(isset($row['StartTime'])){
+	if(isset($row['StartTime']) AND $row['StartTime'] != ""){
 		$startDateTime = $row['StartTime'];
 	} else {
 		$startDateTime = getDatetimeNow();
 		$startDateTime = convertDatetimeToFormat($startDateTime , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
 	}
 	
-	if(isset($row['EndTime'])){
+	if(isset($row['EndTime']) AND $row['EndTime'] != ""){
 		$endDateTime = $row['EndTime'];
 	} else {
 		$endDateTime = getDatetimeNow();

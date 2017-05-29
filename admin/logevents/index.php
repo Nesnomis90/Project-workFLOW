@@ -10,6 +10,8 @@ if (!isUserAdmin()){
 	exit();
 }
 
+var_dump($_SESSION); // TO-DO: remove after testing is done
+
 // If admin wants to be able to delete logs it needs to enabled first
 if (isset($_POST['action']) AND $_POST['action'] == "Enable Delete"){
 	$_SESSION['logEventsEnableDelete'] = TRUE;

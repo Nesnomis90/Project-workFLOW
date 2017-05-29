@@ -687,7 +687,7 @@ if(	((isset($_POST['action']) AND $_POST['action'] == 'Create Meeting')) OR
 		}	
 	
 		// Create an array with the row information we want to use	
-		$_SESSION['AddCreateBookingInfoArray'][] = array(
+		$_SESSION['AddCreateBookingInfoArray'] = array(
 													'TheCompanyID' => '',
 													'TheMeetingRoomID' => '',
 													'StartTime' => '',
@@ -826,14 +826,14 @@ if(	((isset($_POST['action']) AND $_POST['action'] == 'Create Meeting')) OR
 	if(isset($_GET['meetingroom'])){
 		$selectedMeetingRoomID = $_GET['meetingroom'];
 	}
-	if(isset($row['StartTime'])){
+	if(isset($row['StartTime']) AND $row['StartTime'] != ""){
 		$startDateTime = $row['StartTime'];
 	} else {
 		$startDateTime = getDatetimeNow();
 		$startDateTime = convertDatetimeToFormat($startDateTime , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
 	}
 	
-	if(isset($row['EndTime'])){
+	if(isset($row['EndTime']) AND $row['EndTime'] != ""){
 		$endDateTime = $row['EndTime'];
 	} else {
 		$endDateTime = getDatetimeNow();
