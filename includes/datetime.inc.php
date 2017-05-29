@@ -1,6 +1,42 @@
 <?php
 require_once 'variables.inc.php';
 
+// Function to check our set minimum booking time slices to get the next valid end time
+// We assume all possible booking slices are 1/5/10/15/30/60
+// TO-DO: UNTESTED in code
+function getNextValidBookingEndTime($startTimeString){
+	$startTime = stringToDateTime($startTimeString);
+	$startTimeDatePart = $startTime->format('Y-m-d');
+	$startTimeHourPart = $startTime->format('H');
+	$startTimeMinutePart = $startTime->format('i');
+	
+	$minimumBookingTime = MINIMUM_BOOKING_TIME_IN_MINUTES;
+	
+	if($startTimeMinutePart+$minimumBookingTime >= 60){
+		if($startTimeHourPart == 23){
+			// Set new day
+			$startTime->modify('+1 day');
+			$startTimeDatePart = $startTime->format('Y-m-d');
+			$endTimeString = $startTimeDatePart . ' 00:00:00'; 
+		} else {
+			// Set new hour
+			$startTime->modify('+1 hour');
+			$startTimeHourPart = $startTime->format('H');
+			$endTimeString = $startTimeDatePart . ' ' . $startTimeHourPart .':00:00';
+		}
+	} else {
+		for($i = 0; $i < 60; ){
+			if($startTimeMinutePart < $i){
+				// Next valid slice found.
+				$endTimeString = $startTimeDatePart . ' ' . $startTimeHourPart . ':' . $i .':00';
+				break; 
+			}
+			$i += $minimumBookingTime;	
+		}		
+	}
+	return $endTimeString;
+}
+
 //Function to get the current datetime
 function getDatetimeNow() {
 	// We use the same format as used in MySQL

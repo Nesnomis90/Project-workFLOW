@@ -224,7 +224,7 @@
 				<th>Cancel</th>
 				<th>Delete</th>
 			</tr>	
-		<?php if(isset($bookingsFuture)) :?>						
+		<?php if(isset($bookingsFuture)) : ?>						
 			<?php foreach ($bookingsFuture AS $booking): ?>
 				<form action="" method="post">				
 					<tr>

@@ -83,16 +83,20 @@ function isNumberInvalidMeetingRoomCapacity($capacityNumber){
 	// Booking Code Digits
 // Returns TRUE on invalid, FALSE on valid
 function isNumberInvalidBookingCode($bookingCode){
-	// Has to be between 0 and max digits allowed (6?)
+	// Has to be between 0 and 6 digits (ideally 6 digits all the time, but we add 0's to make it 6)
 	// Also has to return invalid on blocked digits, if implemented
 	
 	// Make sure we have enough digits submitted	
 	if(strlen($bookingCode) < 6){
 		$bookingCode = sprintf("%06d", $bookingCode); // Add 0s before submitted digits
 	}
-	$blockedDigits = array(	'000000', '111111', '222222', '333333', 
-							'444444', '555555', '666666', '777777', 
-							'888888', '999999'
+	// For security reasons we want to disable some easy to guess codes
+	$blockedDigits = array(	'000000', '111111', '222222', '333333', '444444', 	// Block all equal digits
+							'555555', '666666', '777777', '888888', '999999', 
+							'012345', '123456', '234567', '345678', '456789',	// Block ascending digits
+							'567890', '678901', '789012', '890123', '901234',
+							'987654', '876543', '765432', '654321', '543210',	// Block descendig digits
+							'432109', '321098', '210987', '109876', '098765'
 							);
 	$minNumber = 0;
 	$maxNumber = 999999;
@@ -202,5 +206,23 @@ function validateDateTimeString($oldString){
 	} else {
 		return FALSE;
 	}	
+}
+
+// Function to check if the submitted end time has a valid minute slice
+// e.g. with 15 minute booking slices it will be 00, 15, 30 or 45.
+function isBookingEndTimeInvalid($endTimeString){
+	$endTime = stringToDateTime($startTimeString);
+	$endTimeMinutePart = $endTime->format('i');
+	
+	$minimumBookingTime = MINIMUM_BOOKING_TIME_IN_MINUTES;
+	
+	for($i = 0; $i < 60; ){
+		if($endTimeMinutePart == $i){
+			return TRUE;
+		}
+		$i += $minimumBookingTime;
+	}		
+	
+	return FALSE; // End Time is valid
 }
 ?>

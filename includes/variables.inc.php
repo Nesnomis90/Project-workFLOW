@@ -26,7 +26,7 @@ define('DATE_DEFAULT_TIMEZONE', 'Europe/Oslo');
 
 // Timing variables
 	//variables used to validate code, handle events
-define('MINIMUM_BOOKING_TIME_IN_MINUTES', 15); // TO-DO: This can be 0. "Book from NOW to next 15 min interval..."
+define('MINIMUM_BOOKING_TIME_IN_MINUTES', 15); //1, 5, 10, 15, 30 or 60
 define('MINIMUM_TIME_PASSED_AFTER_CREATING_BOOKING_BEFORE_SENDING_EMAIL', 30);
 define('TIME_LEFT_UNTIL_MEETING_STARTS_BEFORE_SENDING_EMAIL', 30);
 ?>
