@@ -1760,8 +1760,8 @@ if(isset($_GET['cancellationcode'])){
 	$endDateTimeString = $result['endDateTime'];
 	$actualEndDateTimeString = $result['actualEndDateTime'];
 	
-	$startDateTime = stringToDateTime($startDateTime);
-	$endDateTime = stringToDateTime($endDateTime);
+	$startDateTime = stringToDateTime($startDateTime, 'Y-m-d H:i:s');
+	$endDateTime = stringToDateTime($endDateTime, 'Y-m-d H:i:s');
 	
 	$displayValidatedStartDate = convertDatetimeToFormat($startDateTimeString , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
 	$displayValidatedEndDate = convertDatetimeToFormat($endDateTimeString, 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);	

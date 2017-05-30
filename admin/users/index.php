@@ -708,7 +708,7 @@ if (isset($_GET['editform'])AND isset($_POST['action']) AND $_POST['action'] == 
 	if(isset($_POST['confirmpassword'])){
 		$confirmPassword = $_POST['confirmpassword'];
 	}
-	$minimumPasswordLength = 0; //TO-DO: Change if we want a minimum password length!
+	$minimumPasswordLength = MINIMUM_PASSWORD_LENGTH;
 	if(($password != '' OR $confirmPassword != '') AND !$invalidInput){
 			
 		if($password == $confirmPassword){
@@ -1041,11 +1041,12 @@ foreach ($result as $row)
 	$displayCreatedDateTime = convertDatetimeToFormat($createdDateTime, 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
 	$displayLastActiveDateTime = convertDatetimeToFormat($lastActiveDateTime, 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
 	$reduceAccessAtDate = $row['ReduceAccessAtDate'];
-	$displayReduceAccessAtDate = convertDatetimeToFormat($reduceAccessAtDate, 'Y-m-d', DATE_DEFAULT_FORMAT_TO_DISPLAY); // TO-DO: Might not be converting correctly?
+	$displayReduceAccessAtDate = convertDatetimeToFormat($reduceAccessAtDate, 'Y-m-d', DATE_DEFAULT_FORMAT_TO_DISPLAY);
+	
+	$userinfo = $row['lastname'] . ', ' . $row['firstname'] . ' - ' . $row['email'];
 	
 	// If user has activated the account
 	if($row['isActive'] == 1){
-		$userinfo = $row['lastname'] . ', ' . $row['firstname'] . ' - ' . $row['email'];
 		$users[] = array('id' => $row['userID'], 
 						'firstname' => $row['firstname'],
 						'lastname' => $row['lastname'],

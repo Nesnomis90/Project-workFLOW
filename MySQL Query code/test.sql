@@ -2,18 +2,108 @@ USE test;
 SET NAMES utf8;
 USE meetingflow;
 
+SELECT 		c.companyID 										AS CompID,
+			c.`name` 											AS CompanyName,
+			c.`dateTimeCreated`									AS DatetimeCreated,
+			c.`removeAtDate`									AS DeletionDate,
+			c.`isActive`										AS CompanyActivated,
+			(
+				SELECT 	COUNT(c.`name`) 
+				FROM 	`company` c 
+				JOIN 	`employee` e 
+				ON 		c.CompanyID = e.CompanyID 
+				WHERE 	e.companyID = CompID
+			)													AS NumberOfEmployees,
+			(
+				SELECT (
+						BIG_SEC_TO_TIME(
+										SUM(
+											DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
+											)*86400 
+										+ 
+										SUM(
+											TIME_TO_SEC(b.`actualEndDateTime`) 
+											- 
+											TIME_TO_SEC(b.`startDateTime`)
+											) 
+										) 
+						) 
+				FROM 		`booking` b  
+				INNER JOIN 	`company` c 
+				ON 			b.`CompanyID` = c.`CompanyID` 
+				WHERE 		b.`CompanyID` = CompID
+				AND 		YEAR(b.`actualEndDateTime`) = YEAR(NOW())
+				AND 		MONTH(b.`actualEndDateTime`) = MONTH(NOW())
+			)   												AS MonthlyCompanyWideBookingTimeUsed,
+			(
+				SELECT (
+						BIG_SEC_TO_TIME(
+										SUM(
+											DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
+											)*86400 
+										+ 
+										SUM(
+											TIME_TO_SEC(b.`actualEndDateTime`) 
+											- 
+											TIME_TO_SEC(b.`startDateTime`)
+											) 
+										) 
+						)
+				FROM 		`booking` b 
+				INNER JOIN 	`company` c 
+				ON 			b.`CompanyID` = c.`CompanyID` 
+				WHERE 		b.`CompanyID` = CompID
+			)   												AS TotalCompanyWideBookingTimeUsed,
+            cc.`altMinuteAmount`								AS CompanyAlternativeMinuteAmount,
+            cc.`lastModified`									AS CompanyCreditsLastModified,
+            cr.`name`											AS CreditSubscriptionName,
+            cr.`minuteAmount`									AS CreditSubscriptionMinuteAmount,
+            cr.`monthlyPrice`									AS CreditSubscriptionMonthlyPrice,
+            cr.`overCreditMinutePrice`							AS CreditSubscriptionMinutePrice,
+            cr.`overCreditHourPrice`							AS CreditSubscriptionHourPrice
+FROM 		`company` c
+LEFT JOIN	`companycredits` cc
+ON			c.`CompanyID` = cc.`CompanyID`
+LEFT JOIN	`credits` cr
+ON			cr.`CreditsID` = cc.`CreditsID`
+GROUP BY 	c.`name`;
+
+INSERT INTO `companycredits`
+SET 		`CompanyID` = 21,
+			`CreditsID` = 2;
+
+
+INSERT INTO `companycredits`
+SET 		`CompanyID` = 1,
+			`CreditsID` = 1,
+            `altMinuteAmount` = 500;
+
+INSERT INTO `credits`
+SET			`name` = 'Default',
+			`description` = 'Default Subscription set for new companies. They have 0 credit and 0 monthly fee.',
+            `minuteAmount` = 0,
+            `monthlyPrice` = 0,
+            `overCreditHourPrice` = 200;
+
+INSERT INTO `credits`
+SET			`name` = 'test',
+			`description` = 'test',
+            `minuteAmount` = 480,
+            `monthlyPrice` = 2000,
+            `overCreditHourPrice` = 200;
+
 SELECT  	m.`meetingRoomID`	AS TheMeetingRoomID, 
-							m.`name`			AS MeetingRoomName, 
-							m.`capacity`		AS MeetingRoomCapacity, 
-							m.`description`		AS MeetingRoomDescription, 
-							m.`location`		AS MeetingRoomLocation,
-							COUNT(re.`amount`)	AS MeetingRoomEquipmentAmount
-				FROM 		`meetingroom` m
-				LEFT JOIN 	`roomequipment` re
-				ON 			re.`meetingRoomID` = m.`meetingRoomID`
-				WHERE		m.`meetingRoomID` = 21
-				GROUP BY 	m.`meetingRoomID`
-                LIMIT 1;
+			m.`name`			AS MeetingRoomName, 
+			m.`capacity`		AS MeetingRoomCapacity, 
+			m.`description`		AS MeetingRoomDescription, 
+			m.`location`		AS MeetingRoomLocation,
+			COUNT(re.`amount`)	AS MeetingRoomEquipmentAmount
+FROM 		`meetingroom` m
+LEFT JOIN 	`roomequipment` re
+ON 			re.`meetingRoomID` = m.`meetingRoomID`
+WHERE		m.`meetingRoomID` = 21
+GROUP BY 	m.`meetingRoomID`
+LIMIT 1;
 
 SELECT 		b.`bookingID`,
 						b.`companyID`,

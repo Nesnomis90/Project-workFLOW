@@ -10,8 +10,6 @@ if (!isUserAdmin()){
 	exit();
 }
 
-var_dump($_SESSION); // TO-DO: remove after testing is done
-
 // Function to clear sessions used to remember user inputs on refreshing the add company form
 function clearAddCompanySessions(){
 	unset($_SESSION['AddCompanyCompanyName']);
@@ -283,6 +281,8 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Create Company') OR
 	// We don't need to see date to remove when adding a new company
 	$ShowDateToRemove = FALSE;
 	
+	var_dump($_SESSION); // TO-DO: remove after testing is done
+	
 	// Change to the actual html form template
 	include 'form.html.php';
 	exit();
@@ -368,6 +368,8 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR
 	$reset = 'hidden';
 	// Want to see date to remove while editing
 	$ShowDateToRemove = TRUE;
+	
+	var_dump($_SESSION); // TO-DO: remove after testing is done
 	
 	// Change to the actual form we want to use
 	include 'form.html.php';
@@ -607,7 +609,6 @@ try
 {
 	include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 	$pdo = connect_to_db();
-	// TO-DO: Fix SQL query if time is broken after change
 	// Made it so the user doesn't have to be an employee anymore for the hours to count
 	// Only takes into account time spent and company the booking was booked for.
 	$sql = "SELECT 		c.companyID 										AS CompID,
@@ -661,11 +662,20 @@ try
 							INNER JOIN 	`company` c 
 							ON 			b.`CompanyID` = c.`CompanyID` 
 							WHERE 		b.`CompanyID` = CompID
-						)   												AS TotalCompanyWideBookingTimeUsed
-			FROM 		`company` c 
+						)   												AS TotalCompanyWideBookingTimeUsed,
+						cc.`altMinuteAmount`								AS CompanyAlternativeMinuteAmount,
+						cr.`name`											AS CreditSubscriptionName,
+						cr.`minuteAmount`									AS CreditSubscriptionMinuteAmount,
+						cr.`monthlyPrice`									AS CreditSubscriptionMonthlyPrice,
+						cr.`overCreditMinutePrice`							AS CreditSubscriptionMinutePrice,
+						cr.`overCreditHourPrice`							AS CreditSubscriptionHourPrice
+			FROM 		`company` c
+			LEFT JOIN	`companycredits` cc
+			ON			c.`CompanyID` = cc.`CompanyID`
+			LEFT JOIN	`credits` cr
+			ON			cr.`CreditsID` = cc.`CreditsID`
 			GROUP BY 	c.`name`";
-			
-			// TO-DO: REVERT BIG_SEC_TO_TIME AND FIND ALTERNATE SOLUTION IF BROKEN
+
 	$result = $pdo->query($sql);
 	$rowNum = $result->rowCount();
 	
@@ -683,25 +693,123 @@ catch (PDOException $e)
 // Create an array with the actual key/value pairs we want to use in our HTML
 foreach ($result as $row)
 {
-	// TO-DO: Maybe change booking time used from time to easily readable text instead if needed?
-
+	// Calculate and display company booking time details
 	if($row['MonthlyCompanyWideBookingTimeUsed'] == null){
 		$MonthlyTimeUsed = 'N/A';
 	} else {
 		$MonthlyTimeUsed = $row['MonthlyCompanyWideBookingTimeUsed'];
+		$monthlyTimeHour = substr($MonthlyTimeUsed,0,strpos($MonthlyTimeUsed,":"));
+		$monthlyTimeMinute = substr($MonthlyTimeUsed,strpos($MonthlyTimeUsed,":")+1, 2);
+		$MonthlyTimeUsed = $monthlyTimeHour . 'h' . $monthlyTimeMinute . 'm';
 	}
 	
 	if($row['TotalCompanyWideBookingTimeUsed'] == null){
 		$TotalTimeUsed = 'N/A';
 	} else {
 		$TotalTimeUsed = $row['TotalCompanyWideBookingTimeUsed'];
+		$totalTimeHour = substr($TotalTimeUsed,0,strpos($TotalTimeUsed,":"));
+		$totalTimeMinute = substr($TotalTimeUsed,strpos($TotalTimeUsed,":")+1, 2);
+		$TotalTimeUsed = $totalTimeHour . 'h' . $totalTimeMinute . 'm';		
 	}
 	
+	// Calculate and display company booking subscription details
+	if($row["CompanyAlternativeMinuteAmount"] != NULL AND $row["CompanyAlternativeMinuteAmount"] != ""){
+		$companyMinuteCredits = $row["CompanyAlternativeMinuteAmount"];
+	} elseif($row["CreditSubscriptionMinuteAmount"] != NULL AND $row["CreditSubscriptionMinuteAmount"] != "") {
+		$companyMinuteCredits = $row["CreditSubscriptionMinuteAmount"];
+	} else {
+		$companyMinuteCredits = 0;
+	}
+		// Format company credits to be displayed
+	if($companyMinuteCredits >= 60){
+		$displayCompanyCreditsMinutes = $companyMinuteCredits;
+		$displayCompanyCreditsHours = floor($displayCompanyCreditsMinutes/60);
+		$displayCompanyCreditsMinutes -= $displayCompanyCreditsHours*60;
+		$displayCompanyCredits = $displayCompanyCreditsHours . "h" . $displayCompanyCreditsMinutes . "m";
+	} elseif($companyMinuteCredits > 0) {
+		$displayCompanyCredits = "0h" . $companyMinuteCredits . "m";
+	} else {
+		$displayCompanyCredits = "None";
+	}
+	
+	$monthPrice = $row["CreditSubscriptionMonthlyPrice"];
+	if($monthPrice == NULL OR $monthPrice == ""){
+		$monthPrice = 0;
+	}
+	$hourPrice = $row["CreditSubscriptionHourPrice"];
+	if($hourPrice == NULL OR $hourPrice == ""){
+		$hourPrice = 0;
+	}
+	$minPrice = $row["CreditSubscriptionMinutePrice"];
+	if($minPrice == NULL OR $minPrice == ""){
+		$minPrice = 0;
+	}	
+	
+	if(	($minPrice == 0 AND $hourPrice == 0) OR 
+		($minPrice != 0 AND $hourPrice != 0 )){
+			$overCreditsFee = "Not set";
+	} elseif($minPrice != 0 AND $hourPrice == 0) {
+			$overCreditsFee = $minPrice . "/m";
+	} elseif($minPrice == 0 AND $hourPrice != 0) {
+		$overCreditsFee = $hourPrice . "/h";
+	}
+		// Calculate monthly cost (subscription + over credit charges)
+	// TO-DO: Change/fix calculations?
+	if($MonthlyTimeUsed != "N/A"){
+		$actualTimeUsedInMinutesThisMonth = $monthlyTimeHour*60 + $monthlyTimeMinute;
+		if($actualTimeUsedInMinutesThisMonth > $companyMinuteCredits){
+			// Company has used more booking time than credited. Let's calculate how far over they went
+			$actualTimeOverCreditsInMinutes = $actualTimeUsedInMinutesThisMonth - $companyMinuteCredits;
+		
+			// Let's calculate cost
+			if($hourPrice == 0 AND $minPrice == 0){
+				// The subscription has no valid overtime price set, should not occur
+				$bookingCostThisMonth = $monthPrice . "+" . $actualTimeOverCreditsInMinutes . "m * cost (not set)";
+			} elseif($hourPrice != 0 AND $minPrice != 0){
+				// The subscription has two valid overtime price set, should not occur
+				$bookingCostThisMonth = $monthPrice . "+" . $actualTimeOverCreditsInMinutes . "m * cost (not set)";
+			} elseif($hourPrice == 0 AND $minPrice != 0){
+				// The subscription charges by the minute, if over credits
+				$bookingCostThisMonth = $minPrice * $actualTimeOverCreditsInMinutes;
+				$bookingCostThisMonth = $monthPrice . "+" . $bookingCostThisMonth;
+			} elseif($hourPrice != 0 AND $minPrice == 0){
+				// The subsription charges by the hour, if over credits
+				// TO-DO: Round up/down? Break down into minutes? Currently rounding up.
+				$bookingCostThisMonth = $hourPrice * ceil($actualTimeOverCreditsInMinutes/60);
+				$bookingCostThisMonth = $monthPrice . "+" . $bookingCostThisMonth;
+			}
+			$companyMinuteCreditsRemaining = 0;
+			
+		} else {
+			$bookingCostThisMonth = $monthPrice . "+0";
+			$companyMinuteCreditsRemaining = $companyMinuteCredits - $actualTimeUsedInMinutesThisMonth;
+		}		
+	} elseif($monthPrice != 0) {
+		$bookingCostThisMonth = $monthPrice . "+0";
+		$companyMinuteCreditsRemaining = $companyMinuteCredits;
+	} else {
+		$bookingCostThisMonth = "N/A";
+		$companyMinuteCreditsRemaining = $companyMinuteCredits;
+	}
+
+		// Format company credits remaining to be displayed
+	if($companyMinuteCreditsRemaining >= 60){
+		$displayCompanyCreditsRemainingMinutes = $companyMinuteCreditsRemaining;
+		$displayCompanyCreditsRemainingHours = floor($displayCompanyCreditsRemainingMinutes/60);
+		$displayCompanyCreditsRemainingMinutes -= $displayCompanyCreditsRemainingHours*60;
+		$displayCompanyCreditsRemaining = $displayCompanyCreditsRemainingHours . "h" . $displayCompanyCreditsRemainingMinutes . "m";
+	} elseif($companyMinuteCreditsRemaining > 0) {
+		$displayCompanyCreditsRemaining = "0h" . $companyMinuteCreditsRemaining . "m";
+	} else {
+		$displayCompanyCreditsRemaining = "None";
+	}	
+	
+	// Display dates
 	$dateCreated = $row['DatetimeCreated'];	
 	$dateToRemove = $row['DeletionDate'];
 	$isActive = ($row['CompanyActivated'] == 1);
 	$dateTimeCreatedToDisplay = convertDatetimeToFormat($dateCreated, 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
-	$dateToRemoveToDisplay = convertDatetimeToFormat($dateToRemove, 'Y-m-d', DATE_DEFAULT_FORMAT_TO_DISPLAY);
+	$dateToRemoveToDisplay = convertDatetimeToFormat($dateToRemove, 'Y-m-d', DATE_DEFAULT_FORMAT_TO_DISPLAY);	
 	
 	if($isActive){
 		$companies[] = array(
@@ -711,7 +819,13 @@ foreach ($result as $row)
 								'MonthlyCompanyWideBookingTimeUsed' => $MonthlyTimeUsed,
 								'TotalCompanyWideBookingTimeUsed' => $TotalTimeUsed,
 								'DeletionDate' => $dateToRemoveToDisplay,
-								'DatetimeCreated' => $dateTimeCreatedToDisplay
+								'DatetimeCreated' => $dateTimeCreatedToDisplay,
+								'CreditSubscriptionName' => $row["CreditSubscriptionName"],
+								'CompanyCredits' => $displayCompanyCredits,
+								'CompanyCreditsRemaining' => $displayCompanyCreditsRemaining,
+								'CreditSubscriptionMonthlyPrice' => $monthPrice,
+								'BookingCostThisMonth' => $bookingCostThisMonth,
+								'OverCreditsFee' => $overCreditsFee
 							);
 	} elseif(!$isActive AND ($dateToRemove == "" OR $dateToRemove == NULL)) {
 		$unactivedcompanies[] = array(
@@ -730,6 +844,7 @@ foreach ($result as $row)
 									);		
 	}
 }
+var_dump($_SESSION); // TO-DO: remove after testing is done
 
 // Create the companies list in HTML
 include_once 'companies.html.php';

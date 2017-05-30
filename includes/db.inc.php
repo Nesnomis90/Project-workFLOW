@@ -109,6 +109,32 @@ function dbExists($pdo, $databaseName){
 		return FALSE;
 	}
 }
+// Function to fill in default values for the company subscription (credits) table
+function fillCredits($pdo){
+	try
+	{
+		//Insert the needed values.
+		$pdo->beginTransaction();
+		$pdo->exec("INSERT INTO `credits`
+					SET			`name` = 'Default',
+								`description` = 'Default Subscription set for new companies. They have 0 credit and 0 monthly fee.',
+								`minuteAmount` = 0,
+								`monthlyPrice` = 0,
+								`overCreditHourPrice` = 200");
+		
+		// Commit the transaction
+		$pdo->commit();
+	} 
+	catch (PDOException $e)
+	{
+		//	Cancels the transaction from going through if something went wrong.
+		$pdo->rollback();
+		$error = 'Encountered an error while trying to insert default values into table credits: ' . $e->getMessage();
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+		$pdo = null;
+		exit();
+	}
+}
 // Function to fill in default values for the Access Level table
 function fillAccessLevel($pdo){
 	try
@@ -671,7 +697,103 @@ function create_tables()
 		} else { 
 			echo '<b>Table ' . $table. ' already exists</b>.<br />';
 		}
+		
+			//Company booking subscriptions (credits)
+		$table = 'credits';
+		//Check if table already exists
+		if (!tableExists($conn, $table))
+		{
+			$conn->exec("CREATE TABLE IF NOT EXISTS `$table` (
+						  `CreditsID` int(10) unsigned NOT NULL AUTO_INCREMENT,
+						  `name` varchar(255) NOT NULL,
+						  `description` text NOT NULL,
+						  `minuteAmount` smallint(5) unsigned NOT NULL DEFAULT '0',
+						  `monthlyPrice` smallint(5) unsigned NOT NULL DEFAULT '0',
+						  `overCreditMinutePrice` float unsigned DEFAULT NULL,
+						  `overCreditHourPrice` smallint(5) unsigned DEFAULT NULL,
+						  `lastModified` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+						  `datetimeAdded` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+						  PRIMARY KEY (`CreditsID`),
+						  UNIQUE KEY `name_UNIQUE` (`name`)
+						) ENGINE=InnoDB DEFAULT CHARSET=utf8");
+						
+			// Fill default values
+			fillCredits($conn);
+					
+			//	Add the creation to log event
+			$sqlLog = "	INSERT INTO `logevent`(`actionID`, `description`) 
+						VALUES 		(
+										(
+										SELECT 	`actionID` 
+										FROM 	`logaction` 
+										WHERE 	`name` = 'Table Created'
+										), 
+									'The table $table was created automatically by the PHP script. This should only occur once, at the very start of the log events.'
+									)";			
+			$logEventArray[] = $sqlLog;						
+
+			$totaltime = microtime(true) - $_SERVER["REQUEST_TIME_FLOAT"];
+			$time = $totaltime - $prevtime;
+			$prevtime = $totaltime;
+			echo '<b>Execution time for creating table ' . $table. ':</b> ' . $time . 's<br />';		
+		} else {
+			//If the table exists, but for some reason has no values in it, then fill it
+			$result = $conn->query("SELECT `name` FROM `credits`");
+			$row = $result->rowCount();
+			if($row == 0){
+				// No values in the table. Insert the needed values.
+				fillCredits($conn);
 				
+				echo "<b>Inserted default values into $table.</b> <br />";
+		
+				$totaltime = microtime(true) - $_SERVER["REQUEST_TIME_FLOAT"];
+				$time = $totaltime - $prevtime;
+				$prevtime = $totaltime;
+				echo '<b>Execution time for filling table ' . $table. ':</b> ' . $time . 's<br />';	
+			} else {
+				// Table already has (some) values in it
+				echo "<b>Table $table already had values in it.</b> <br />";
+			}
+			
+			echo '<b>Table ' . $table. ' already exists</b>.<br />';
+		}
+		
+			// Selected credits per company
+		$table = 'companycredits';
+		//Check if table already exists
+		if (!tableExists($conn, $table))
+		{
+			$conn->exec("CREATE TABLE IF NOT EXISTS `$table` (
+						  `CompanyID` int(10) unsigned NOT NULL,
+						  `CreditsID` int(10) unsigned NOT NULL,
+						  `altMinuteAmount` smallint(5) unsigned DEFAULT NULL,
+						  `lastModified` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+						  PRIMARY KEY (`CompanyID`,`CreditsID`),
+						  KEY `FK_CreditsID_idx` (`CreditsID`),
+						  CONSTRAINT `FK_CompanyID4` FOREIGN KEY (`CompanyID`) REFERENCES `company` (`CompanyID`) ON DELETE CASCADE ON UPDATE CASCADE,
+						  CONSTRAINT `FK_CreditsID` FOREIGN KEY (`CreditsID`) REFERENCES `credits` (`CreditsID`) ON DELETE CASCADE ON UPDATE CASCADE
+						) ENGINE=InnoDB DEFAULT CHARSET=utf8");
+						
+			//	Add the creation to log event
+			$sqlLog = "	INSERT INTO `logevent`(`actionID`, `description`) 
+						VALUES 		(
+										(
+										SELECT 	`actionID` 
+										FROM 	`logaction` 
+										WHERE 	`name` = 'Table Created'
+										), 
+									'The table $table was created automatically by the PHP script. This should only occur once, at the very start of the log events.'
+									)";			
+			$logEventArray[] = $sqlLog;						
+
+			$totaltime = microtime(true) - $_SERVER["REQUEST_TIME_FLOAT"];
+			$time = $totaltime - $prevtime;
+			$prevtime = $totaltime;
+			echo '<b>Execution time for creating table ' . $table. ':</b> ' . $time . 's<br />';		
+		} else { 
+			echo '<b>Table ' . $table. ' already exists</b>.<br />';
+		}		
+		
 			//Log Event
 		$table = 'logevent';
 		//Check if table already exists
