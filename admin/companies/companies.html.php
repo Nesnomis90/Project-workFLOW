@@ -67,9 +67,9 @@
 				<tr>
 					<th colspan="2">Employees</th>
 					<th>Company</th>
-					<th colspan="3">Booking Subscription</th>
+					<th colspan="4">Booking Subscription</th>
 					<th colspan="3">Booking Time Used</th>
-					<th colspan="3">Billing Amount</th>
+					<th colspan="2">Billing Amount</th>
 					<th colspan="2">Dates</th>
 					<th colspan="2">Alter Company</th>
 				</tr>
@@ -80,12 +80,12 @@
 					<th>Name</th>
 					<th>Credits Given</th>
 					<th>Monthly Fee</th>
+					<th>Over Credits Fee</th>
 					<th>Last Month</th>
 					<th>This Month</th>
 					<th>All Time</th>
 					<th>Last Month</th>
 					<th>This Month (so far)</th>
-					<th>All Time</th>
 					<th>Make Inactive At</th>
 					<th>Created At</th>
 					<th>Edit</th>
@@ -111,12 +111,12 @@
 								<td><?php htmlout($company['CreditSubscriptionName']); ?></td>
 								<td><?php htmlout($company['CompanyCredits']); ?></td>
 								<td><?php htmlout($company['CreditSubscriptionMonthlyPrice']); ?></td>
+								<td><?php htmlout($company['OverCreditsFee']); ?></td>
 								<td><?php htmlout('insert last month calc here'); ?></td>
 								<td><?php htmlout($company['MonthlyCompanyWideBookingTimeUsed']); ?></td>
 								<td><?php htmlout($company['TotalCompanyWideBookingTimeUsed']); ?></td>
 								<td><?php htmlout('insert last month billing here'); ?></td>
 								<td><?php htmlout($company['BookingCostThisMonth']); ?></td>
-								<td><?php htmlout('insert all time billing here'); ?></td>
 								<?php if($company['DeletionDate'] == null) :?>
 										<td>
 											<p>No Date Set</p>

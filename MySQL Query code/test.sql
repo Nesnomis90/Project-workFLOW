@@ -68,11 +68,22 @@ LEFT JOIN	`credits` cr
 ON			cr.`CreditsID` = cc.`CreditsID`
 GROUP BY 	c.`name`;
 
+INSERT INTO `companycredits`
+SET 		`CompanyID` = 21,
+			`CreditsID` = 2;
+
 
 INSERT INTO `companycredits`
 SET 		`CompanyID` = 1,
 			`CreditsID` = 1,
             `altMinuteAmount` = 500;
+
+INSERT INTO `credits`
+SET			`name` = 'Default',
+			`description` = 'Default Subscription set for new companies. They have 0 credit and 0 monthly fee.',
+            `minuteAmount` = 0,
+            `monthlyPrice` = 0,
+            `overCreditHourPrice` = 200;
 
 INSERT INTO `credits`
 SET			`name` = 'test',
@@ -82,17 +93,17 @@ SET			`name` = 'test',
             `overCreditHourPrice` = 200;
 
 SELECT  	m.`meetingRoomID`	AS TheMeetingRoomID, 
-							m.`name`			AS MeetingRoomName, 
-							m.`capacity`		AS MeetingRoomCapacity, 
-							m.`description`		AS MeetingRoomDescription, 
-							m.`location`		AS MeetingRoomLocation,
-							COUNT(re.`amount`)	AS MeetingRoomEquipmentAmount
-				FROM 		`meetingroom` m
-				LEFT JOIN 	`roomequipment` re
-				ON 			re.`meetingRoomID` = m.`meetingRoomID`
-				WHERE		m.`meetingRoomID` = 21
-				GROUP BY 	m.`meetingRoomID`
-                LIMIT 1;
+			m.`name`			AS MeetingRoomName, 
+			m.`capacity`		AS MeetingRoomCapacity, 
+			m.`description`		AS MeetingRoomDescription, 
+			m.`location`		AS MeetingRoomLocation,
+			COUNT(re.`amount`)	AS MeetingRoomEquipmentAmount
+FROM 		`meetingroom` m
+LEFT JOIN 	`roomequipment` re
+ON 			re.`meetingRoomID` = m.`meetingRoomID`
+WHERE		m.`meetingRoomID` = 21
+GROUP BY 	m.`meetingRoomID`
+LIMIT 1;
 
 SELECT 		b.`bookingID`,
 						b.`companyID`,
