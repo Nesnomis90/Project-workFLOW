@@ -771,6 +771,7 @@ foreach ($result as $row)
 			} elseif($hourPrice == 0 AND $minPrice != 0){
 				// The subscription charges by the minute, if over credits
 				$bookingCostThisMonth = $minPrice * $actualTimeOverCreditsInMinutes;
+				$bookingCostThisMonth = $monthPrice . "+" . $bookingCostThisMonth;
 			} elseif($hourPrice != 0 AND $minPrice == 0){
 				// The subsription charges by the hour, if over credits
 				// TO-DO: Round up/down? Break down into minutes? Currently rounding up.

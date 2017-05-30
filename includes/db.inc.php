@@ -709,13 +709,14 @@ function create_tables()
 						  `description` text NOT NULL,
 						  `minuteAmount` smallint(5) unsigned NOT NULL DEFAULT '0',
 						  `monthlyPrice` smallint(5) unsigned NOT NULL DEFAULT '0',
-						  `overCreditMinutePrice` smallint(5) unsigned DEFAULT NULL,
+						  `overCreditMinutePrice` float unsigned DEFAULT NULL,
 						  `overCreditHourPrice` smallint(5) unsigned DEFAULT NULL,
 						  `lastModified` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
 						  `datetimeAdded` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
 						  PRIMARY KEY (`CreditsID`),
 						  UNIQUE KEY `name_UNIQUE` (`name`)
 						) ENGINE=InnoDB DEFAULT CHARSET=utf8");
+						
 			// Fill default values
 			fillCredits($conn);
 					
