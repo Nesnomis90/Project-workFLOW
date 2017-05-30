@@ -222,7 +222,7 @@ function validateDateTimeString($oldString){
 // Returns TRUE on invalid, FALSE on valid
 // TO-DO: Untested in code
 function isBookingEndTimeInvalid($endTimeString){
-	$endTime = stringToDateTime($endTimeString);
+	$endTime = stringToDateTime($endTimeString, 'Y-m-d H:i:s');
 	$endTimeMinutePart = $endTime->format('i');
 	
 	$minimumBookingTime = MINIMUM_BOOKING_TIME_IN_MINUTES;

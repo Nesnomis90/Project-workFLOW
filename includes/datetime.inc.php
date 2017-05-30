@@ -5,7 +5,7 @@ require_once 'variables.inc.php';
 // We assume all possible booking slices are 1/5/10/15/30/60
 // TO-DO: UNTESTED in code
 function getNextValidBookingEndTime($startTimeString){
-	$startTime = stringToDateTime($startTimeString);
+	$startTime = stringToDateTime($startTimeString, 'Y-m-d H:i:s');
 	$startTimeDatePart = $startTime->format('Y-m-d');
 	$startTimeHourPart = $startTime->format('H');
 	$startTimeMinutePart = $startTime->format('i');
@@ -56,9 +56,9 @@ function getDateNow() {
 }
 
 // Function to convert string to datetime in MySQL format
-function stringToDateTime($datetimeString){
+function stringToDateTime($datetimeString, $format){
 	date_default_timezone_set(DATE_DEFAULT_TIMEZONE);
-	$d = date_create_from_format('Y-m-d H:i:s', $datetimeString);
+	$d = date_create_from_format($format, $datetimeString);
 	return $d;
 }
 

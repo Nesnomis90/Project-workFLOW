@@ -67,6 +67,7 @@
 				<tr>
 					<th colspan="2">Employees</th>
 					<th>Company</th>
+					<th colspan="2">Booking Credits</th>
 					<th colspan="2">Booking Time Used</th>
 					<th colspan="2">Dates</th>
 					<th colspan="2">Alter Company</th>
@@ -75,6 +76,8 @@
 					<th>List</th>
 					<th>Amount</th>
 					<th>Name</th>
+					<th>Given Monthly</th>
+					<th>Remaining Credits</th>
 					<th>This Month</th>
 					<th>All Time</th>
 					<th>Remove At</th>

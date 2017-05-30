@@ -1167,12 +1167,19 @@ foreach($result AS $row){
 		$MonthlyTimeUsed = 'N/A';
 	} else {
 		$MonthlyTimeUsed = $row['MonthlyBookingTimeUsed'];
+		$monthlyTimeHour = substr($MonthlyTimeUsed,0,strpos($MonthlyTimeUsed,":"));
+		$monthylTimeMinute = substr($MonthlyTimeUsed,strpos($MonthlyTimeUsed,":")+1, 2);
+		$MonthlyTimeUsed = $monthlyTimeHour . 'h' . $monthylTimeMinute . 'm';	
+	
 	}
 
 	if($row['TotalBookingTimeUsed'] == null){
 		$TotalTimeUsed = 'N/A';
 	} else {
 		$TotalTimeUsed = $row['TotalBookingTimeUsed'];
+		$totalTimeHour = substr($TotalTimeUsed,0,strpos($TotalTimeUsed,":"));
+		$totalTimeMinute = substr($TotalTimeUsed,strpos($TotalTimeUsed,":")+1, 2);
+		$TotalTimeUsed = $totalTimeHour . 'h' . $totalTimeMinute . 'm';			
 	}
 	
 	$startDateTime = $row['StartDateTime'];

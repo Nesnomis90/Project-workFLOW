@@ -1043,9 +1043,10 @@ foreach ($result as $row)
 	$reduceAccessAtDate = $row['ReduceAccessAtDate'];
 	$displayReduceAccessAtDate = convertDatetimeToFormat($reduceAccessAtDate, 'Y-m-d', DATE_DEFAULT_FORMAT_TO_DISPLAY);
 	
+	$userinfo = $row['lastname'] . ', ' . $row['firstname'] . ' - ' . $row['email'];
+	
 	// If user has activated the account
 	if($row['isActive'] == 1){
-		$userinfo = $row['lastname'] . ', ' . $row['firstname'] . ' - ' . $row['email'];
 		$users[] = array('id' => $row['userID'], 
 						'firstname' => $row['firstname'],
 						'lastname' => $row['lastname'],

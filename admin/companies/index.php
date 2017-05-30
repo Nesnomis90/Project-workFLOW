@@ -689,12 +689,18 @@ foreach ($result as $row)
 		$MonthlyTimeUsed = 'N/A';
 	} else {
 		$MonthlyTimeUsed = $row['MonthlyCompanyWideBookingTimeUsed'];
+		$monthlyTimeHour = substr($MonthlyTimeUsed,0,strpos($MonthlyTimeUsed,":"));
+		$monthylTimeMinute = substr($MonthlyTimeUsed,strpos($MonthlyTimeUsed,":")+1, 2);
+		$MonthlyTimeUsed = $monthlyTimeHour . 'h' . $monthylTimeMinute . 'm';
 	}
 	
 	if($row['TotalCompanyWideBookingTimeUsed'] == null){
 		$TotalTimeUsed = 'N/A';
 	} else {
 		$TotalTimeUsed = $row['TotalCompanyWideBookingTimeUsed'];
+		$totalTimeHour = substr($TotalTimeUsed,0,strpos($TotalTimeUsed,":"));
+		$totalTimeMinute = substr($TotalTimeUsed,strpos($TotalTimeUsed,":")+1, 2);
+		$TotalTimeUsed = $totalTimeHour . 'h' . $totalTimeMinute . 'm';		
 	}
 	
 	$dateCreated = $row['DatetimeCreated'];	
