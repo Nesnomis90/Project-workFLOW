@@ -729,7 +729,7 @@ foreach ($result as $row)
 	} elseif($companyMinuteCredits > 0) {
 		$displayCompanyCredits = "0h" . $companyMinuteCredits . "m";
 	} else {
-		$displayCompanyCredits = "0h0m";
+		$displayCompanyCredits = "None";
 	}
 	
 	$monthPrice = $row["CreditSubscriptionMonthlyPrice"];
@@ -777,16 +777,33 @@ foreach ($result as $row)
 				// TO-DO: Round up/down? Break down into minutes? Currently rounding up.
 				$bookingCostThisMonth = $hourPrice * ceil($actualTimeOverCreditsInMinutes/60);
 				$bookingCostThisMonth = $monthPrice . "+" . $bookingCostThisMonth;
-			}		
+			}
+			$companyMinuteCreditsRemaining = 0;
+			
 		} else {
 			$bookingCostThisMonth = $monthPrice . "+0";
+			$companyMinuteCreditsRemaining = $companyMinuteCredits - $actualTimeUsedInMinutesThisMonth;
 		}		
 	} elseif($monthPrice != 0) {
 		$bookingCostThisMonth = $monthPrice . "+0";
+		$companyMinuteCreditsRemaining = $companyMinuteCredits;
 	} else {
 		$bookingCostThisMonth = "N/A";
+		$companyMinuteCreditsRemaining = $companyMinuteCredits;
 	}
 
+		// Format company credits remaining to be displayed
+	if($companyMinuteCreditsRemaining >= 60){
+		$displayCompanyCreditsRemainingMinutes = $companyMinuteCreditsRemaining;
+		$displayCompanyCreditsRemainingHours = floor($displayCompanyCreditsRemainingMinutes/60);
+		$displayCompanyCreditsRemainingMinutes -= $displayCompanyCreditsRemainingHours*60;
+		$displayCompanyCreditsRemaining = $displayCompanyCreditsRemainingHours . "h" . $displayCompanyCreditsRemainingMinutes . "m";
+	} elseif($companyMinuteCreditsRemaining > 0) {
+		$displayCompanyCreditsRemaining = "0h" . $companyMinuteCreditsRemaining . "m";
+	} else {
+		$displayCompanyCreditsRemaining = "None";
+	}	
+	
 	// Display dates
 	$dateCreated = $row['DatetimeCreated'];	
 	$dateToRemove = $row['DeletionDate'];
@@ -805,6 +822,7 @@ foreach ($result as $row)
 								'DatetimeCreated' => $dateTimeCreatedToDisplay,
 								'CreditSubscriptionName' => $row["CreditSubscriptionName"],
 								'CompanyCredits' => $displayCompanyCredits,
+								'CompanyCreditsRemaining' => $displayCompanyCreditsRemaining,
 								'CreditSubscriptionMonthlyPrice' => $monthPrice,
 								'BookingCostThisMonth' => $bookingCostThisMonth,
 								'OverCreditsFee' => $overCreditsFee

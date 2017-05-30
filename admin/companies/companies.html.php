@@ -67,7 +67,7 @@
 				<tr>
 					<th colspan="2">Employees</th>
 					<th>Company</th>
-					<th colspan="4">Booking Subscription</th>
+					<th colspan="5">Booking Subscription</th>
 					<th colspan="3">Booking Time Used</th>
 					<th colspan="2">Billing Amount</th>
 					<th colspan="2">Dates</th>
@@ -79,6 +79,7 @@
 					<th>Name</th>
 					<th>Name</th>
 					<th>Credits Given</th>
+					<th>Credits Remaining</th>
 					<th>Monthly Fee</th>
 					<th>Over Credits Fee</th>
 					<th>Last Month</th>
@@ -110,6 +111,7 @@
 								</td>
 								<td><?php htmlout($company['CreditSubscriptionName']); ?></td>
 								<td><?php htmlout($company['CompanyCredits']); ?></td>
+								<td><?php htmlout($company['CompanyCreditsRemaining']); ?></td>
 								<td><?php htmlout($company['CreditSubscriptionMonthlyPrice']); ?></td>
 								<td><?php htmlout($company['OverCreditsFee']); ?></td>
 								<td><?php htmlout('insert last month calc here'); ?></td>
