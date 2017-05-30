@@ -85,21 +85,30 @@ function isNumberInvalidMeetingRoomCapacity($capacityNumber){
 function isNumberInvalidBookingCode($bookingCode){
 	// Has to be between 0 and 6 digits (ideally 6 digits all the time, but we add 0's to make it 6)
 	// Also has to return invalid on blocked digits, if implemented
-	
+	$bookingCodeLength = BOOKING_CODE_LENGTH;
 	// Make sure we have enough digits submitted	
-	if(strlen($bookingCode) < 6){
-		$bookingCode = sprintf("%06d", $bookingCode); // Add 0s before submitted digits
+	if(strlen($bookingCode) < $bookingCodeLength){
+		$sprintftext = "%0" . $bookingCodeLength . "u";
+		$bookingCode = sprintf($sprintftext, $bookingCode); // Add 0s before submitted digits
 	}
 	// For security reasons we want to disable some easy to guess codes
-	$blockedDigits = array(	'000000', '111111', '222222', '333333', '444444', 	// Block all equal digits
-							'555555', '666666', '777777', '888888', '999999', 
-							'012345', '123456', '234567', '345678', '456789',	// Block ascending digits
-							'567890', '678901', '789012', '890123', '901234',
-							'987654', '876543', '765432', '654321', '543210',	// Block descendig digits
-							'432109', '321098', '210987', '109876', '098765'
-							);
+	/*$blockedDigits = array(	'000000', '111111', '222222', '333333', '444444', 	
+								'555555', '666666', '777777', '888888', '999999', 
+								'012345', '123456', '234567', '345678', '456789',	// Block ascending digits
+								'567890', '678901', '789012', '890123', '901234',
+								'987654', '876543', '765432', '654321', '543210',	// Block descendig digits
+								'432109', '321098', '210987', '109876', '098765'
+							); This has been changed from manual to code generated*/
+	$ascNum = "01234567890123456789";
+	$descNum = "98765432109876543210";
+	for($i=0; $i < 10; $i++){
+		$blockedDigits[] = str_repeat($i,$bookingCodeLength); // Block all equal digits
+		$blockedDigits[] = substr($ascNum,$i,$bookingCodeLength); // Block ascending digits
+		$blockedDigits[] = substr($descNum,$i,$bookingCodeLength); // Block descending digits
+	}	
+							
 	$minNumber = 0;
-	$maxNumber = 999999;
+	$maxNumber = pow(10,BOOKING_CODE_LENGTH)-1; // Sets the highest number with our set digits (10^digits - 1)
 	if($bookingCode < $minNumber OR $bookingCode > $maxNumber){
 		return TRUE;
 	}
