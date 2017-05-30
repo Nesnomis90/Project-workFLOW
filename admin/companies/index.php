@@ -607,7 +607,6 @@ try
 {
 	include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 	$pdo = connect_to_db();
-	// TO-DO: Fix SQL query if time is broken after change
 	// Made it so the user doesn't have to be an employee anymore for the hours to count
 	// Only takes into account time spent and company the booking was booked for.
 	$sql = "SELECT 		c.companyID 										AS CompID,
@@ -661,11 +660,20 @@ try
 							INNER JOIN 	`company` c 
 							ON 			b.`CompanyID` = c.`CompanyID` 
 							WHERE 		b.`CompanyID` = CompID
-						)   												AS TotalCompanyWideBookingTimeUsed
-			FROM 		`company` c 
+						)   												AS TotalCompanyWideBookingTimeUsed,
+						cc.`altMinuteAmount`								AS CompanyAlternativeMinuteAmount,
+						cr.`name`											AS CreditSubscriptionName,
+						cr.`minuteAmount`									AS CreditSubscriptionMinuteAmount,
+						cr.`monthlyPrice`									AS CreditSubscriptionMonthlyPrice,
+						cr.`overCreditMinutePrice`							AS CreditSubscriptionMinutePrice,
+						cr.`overCreditHourPrice`							AS CreditSubscriptionHourPrice
+			FROM 		`company` c
+			LEFT JOIN	`companycredits` cc
+			ON			c.`CompanyID` = cc.`CompanyID`
+			LEFT JOIN	`credits` cr
+			ON			cr.`CreditsID` = cc.`CreditsID`
 			GROUP BY 	c.`name`";
-			
-			// TO-DO: REVERT BIG_SEC_TO_TIME AND FIND ALTERNATE SOLUTION IF BROKEN
+
 	$result = $pdo->query($sql);
 	$rowNum = $result->rowCount();
 	
@@ -683,15 +691,14 @@ catch (PDOException $e)
 // Create an array with the actual key/value pairs we want to use in our HTML
 foreach ($result as $row)
 {
-	// TO-DO: Maybe change booking time used from time to easily readable text instead if needed?
-
+	// Calculate and display company booking time details
 	if($row['MonthlyCompanyWideBookingTimeUsed'] == null){
 		$MonthlyTimeUsed = 'N/A';
 	} else {
 		$MonthlyTimeUsed = $row['MonthlyCompanyWideBookingTimeUsed'];
 		$monthlyTimeHour = substr($MonthlyTimeUsed,0,strpos($MonthlyTimeUsed,":"));
-		$monthylTimeMinute = substr($MonthlyTimeUsed,strpos($MonthlyTimeUsed,":")+1, 2);
-		$MonthlyTimeUsed = $monthlyTimeHour . 'h' . $monthylTimeMinute . 'm';
+		$monthlyTimeMinute = substr($MonthlyTimeUsed,strpos($MonthlyTimeUsed,":")+1, 2);
+		$MonthlyTimeUsed = $monthlyTimeHour . 'h' . $monthlyTimeMinute . 'm';
 	}
 	
 	if($row['TotalCompanyWideBookingTimeUsed'] == null){
@@ -708,7 +715,54 @@ foreach ($result as $row)
 	$isActive = ($row['CompanyActivated'] == 1);
 	$dateTimeCreatedToDisplay = convertDatetimeToFormat($dateCreated, 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
 	$dateToRemoveToDisplay = convertDatetimeToFormat($dateToRemove, 'Y-m-d', DATE_DEFAULT_FORMAT_TO_DISPLAY);
+
+	// Calculate and display company booking subscription details
+	if($row["CompanyAlternativeMinuteAmount"] != NULL AND $row["CompanyAlternativeMinuteAmount"] != ""){
+		$companyMinuteCredits = $row["CompanyAlternativeMinuteAmount"];
+	} else {
+		$companyMinuteCredits = $row["CreditSubscriptionMinuteAmount"];
+	}
 	
+	if($companyMinuteCredits >= 60){
+		$displayCompanyCreditsMinutes = $companyMinuteCredits;
+		$displayCompanyCreditsHours = floor($displayCompanyCreditsMinutes/60);
+		$displayCompanyCreditsMinutes -= $displayCompanyCreditsHours*60;
+		$displayCompanyCredits = $displayCompanyCreditsHours . "h" . $displayCompanyCreditsMinutes . "m";
+	} elseif($companyMinuteCredits > 0) {
+		$displayCompanyCredits = "0h" . $companyMinuteCredits . "m";
+	} else {
+		$displayCompanyCredits = "0h0m";
+	}
+	
+	// TO-DO: Change/fix calculations
+	if(isset($monthlyTimeHour) AND isset($monthlyTimeMinute)){
+		$actualTimeUsedInMinutesThisMonth = $monthlyTimeHour*60 + $monthlyTimeMinute;
+		if($actualTimeUsedInMinutesThisMonth > $companyMinuteCredits){
+			// Company has used more booking time than credited. Let's calculate how far over they went
+			$actualTimeOverCreditsInMinutes = $companyMinuteCredits - $actualTimeUsedInMinutesThisMonth;
+			
+			// Let's calculate cost
+			
+			if($row["CreditSubscriptionHourPrice"] == NULL AND $row["CreditSubscriptionMinutePrice"] == NULL){
+				// The subscription has no valid overtime price set, should not occur
+			} elseif($row["CreditSubscriptionHourPrice"] != NULL AND $row["CreditSubscriptionMinutePrice"] != NULL){
+				// The subscription has two valid overtime price set, should not occur
+			} elseif($row["CreditSubscriptionHourPrice"] == NULL AND $row["CreditSubscriptionMinutePrice"] != NULL){
+				// The subscription charges by the minute, if over credits
+				$bookingCostThisMonth = $row["CreditSubscriptionMinutePrice"] * $actualTimeOverCreditsInMinutes;
+			} elseif($row["CreditSubscriptionHourPrice"] != NULL AND $row["CreditSubscriptionMinutePrice"] == NULL){
+				// The subsription charges by the hour, if over credits
+				// TO-DO: Round up/down? Break down into minutes?
+				$bookingCostThisMonth = $row["CreditSubscriptionHourPrice"] * ceil($actualTimeOverCreditsInMinutes/60);
+			}		
+		} else {
+			$bookingCostThisMonth = "N/A";
+		}		
+	} else {
+		$bookingCostThisMonth = "N/A";
+	}
+
+
 	if($isActive){
 		$companies[] = array(
 								'id' => $row['CompID'], 
@@ -717,7 +771,11 @@ foreach ($result as $row)
 								'MonthlyCompanyWideBookingTimeUsed' => $MonthlyTimeUsed,
 								'TotalCompanyWideBookingTimeUsed' => $TotalTimeUsed,
 								'DeletionDate' => $dateToRemoveToDisplay,
-								'DatetimeCreated' => $dateTimeCreatedToDisplay
+								'DatetimeCreated' => $dateTimeCreatedToDisplay,
+								'CreditSubscriptionName' => $row["CreditSubscriptionName"],
+								'CompanyCredits' => $displayCompanyCredits,
+								'CreditSubscriptionMonthlyPrice' => $row["CreditSubscriptionMonthlyPrice"],
+								'BookingCostThisMonth' => $bookingCostThisMonth
 							);
 	} elseif(!$isActive AND ($dateToRemove == "" OR $dateToRemove == NULL)) {
 		$unactivedcompanies[] = array(
