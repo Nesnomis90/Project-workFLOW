@@ -671,7 +671,82 @@ function create_tables()
 		} else { 
 			echo '<b>Table ' . $table. ' already exists</b>.<br />';
 		}
-				
+		
+			//Company booking subscriptions (credits)
+		$table = 'credits';
+		//Check if table already exists
+		if (!tableExists($conn, $table))
+		{
+			$conn->exec("CREATE TABLE IF NOT EXISTS `$table` (
+						  `CreditsID` int(10) unsigned NOT NULL AUTO_INCREMENT,
+						  `name` varchar(255) NOT NULL,
+						  `description` text NOT NULL,
+						  `minuteAmount` smallint(5) unsigned NOT NULL DEFAULT '0',
+						  `monthlyPrice` smallint(5) unsigned NOT NULL DEFAULT '0',
+						  `overCreditMinutePrice` smallint(5) unsigned DEFAULT NULL,
+						  `overCreditHourPrice` smallint(5) unsigned DEFAULT NULL,
+						  `lastModified` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+						  `datetimeAdded` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+						  PRIMARY KEY (`CreditsID`),
+						  UNIQUE KEY `name_UNIQUE` (`name`)
+						) ENGINE=InnoDB DEFAULT CHARSET=utf8");
+						
+			//	Add the creation to log event
+			$sqlLog = "	INSERT INTO `logevent`(`actionID`, `description`) 
+						VALUES 		(
+										(
+										SELECT 	`actionID` 
+										FROM 	`logaction` 
+										WHERE 	`name` = 'Table Created'
+										), 
+									'The table $table was created automatically by the PHP script. This should only occur once, at the very start of the log events.'
+									)";			
+			$logEventArray[] = $sqlLog;						
+
+			$totaltime = microtime(true) - $_SERVER["REQUEST_TIME_FLOAT"];
+			$time = $totaltime - $prevtime;
+			$prevtime = $totaltime;
+			echo '<b>Execution time for creating table ' . $table. ':</b> ' . $time . 's<br />';		
+		} else { 
+			echo '<b>Table ' . $table. ' already exists</b>.<br />';
+		}
+		
+			// Selected credits per company
+		$table = 'companycredits';
+		//Check if table already exists
+		if (!tableExists($conn, $table))
+		{
+			$conn->exec("CREATE TABLE IF NOT EXISTS `$table` (
+						  `CompanyID` int(10) unsigned NOT NULL,
+						  `CreditsID` int(10) unsigned NOT NULL,
+						  `altMinuteAmount` smallint(5) unsigned DEFAULT NULL,
+						  `lastModified` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+						  PRIMARY KEY (`CompanyID`,`CreditsID`),
+						  KEY `FK_CreditsID_idx` (`CreditsID`),
+						  CONSTRAINT `FK_CompanyID4` FOREIGN KEY (`CompanyID`) REFERENCES `company` (`CompanyID`) ON DELETE CASCADE ON UPDATE CASCADE,
+						  CONSTRAINT `FK_CreditsID` FOREIGN KEY (`CreditsID`) REFERENCES `credits` (`CreditsID`) ON DELETE CASCADE ON UPDATE CASCADE
+						) ENGINE=InnoDB DEFAULT CHARSET=utf8");
+						
+			//	Add the creation to log event
+			$sqlLog = "	INSERT INTO `logevent`(`actionID`, `description`) 
+						VALUES 		(
+										(
+										SELECT 	`actionID` 
+										FROM 	`logaction` 
+										WHERE 	`name` = 'Table Created'
+										), 
+									'The table $table was created automatically by the PHP script. This should only occur once, at the very start of the log events.'
+									)";			
+			$logEventArray[] = $sqlLog;						
+
+			$totaltime = microtime(true) - $_SERVER["REQUEST_TIME_FLOAT"];
+			$time = $totaltime - $prevtime;
+			$prevtime = $totaltime;
+			echo '<b>Execution time for creating table ' . $table. ':</b> ' . $time . 's<br />';		
+		} else { 
+			echo '<b>Table ' . $table. ' already exists</b>.<br />';
+		}		
+		
 			//Log Event
 		$table = 'logevent';
 		//Check if table already exists
