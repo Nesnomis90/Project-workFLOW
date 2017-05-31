@@ -10,8 +10,6 @@ if (!isUserAdmin()){
 	exit();
 }
 
-var_dump($_SESSION); // TO-DO: remove after testing is done
-
 // Function to clear sessions used to remember user inputs on refreshing the add employee form
 function clearAddEmployeeSessions(){
 	unset($_SESSION['AddEmployeeCompanySearch']);
@@ -385,6 +383,8 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Add Employee') OR
 	}
 	unset($_SESSION['AddEmployeeShowSearchResults']);
 
+	var_dump($_SESSION); // TO-DO: remove after testing is done
+	
 	// Change to the actual html form template
 	include 'addemployee.html.php';
 	exit();
@@ -706,6 +706,8 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Change Role')
 	$CompanyID = $row['TheCompanyID'];
 	$UserID = $row['UsrID'];
 	$_SESSION['EditEmployeeOriginalPositionID'] = $row['PositionID'];
+	
+	var_dump($_SESSION); // TO-DO: remove after testing is done
 	
 	// Change to the actual form we want to use
 	include 'changerole.html.php';
@@ -1199,6 +1201,8 @@ foreach($result AS $row){
 						'StartDateTime' => $displayStartDateTime
 						);
 }
+
+var_dump($_SESSION); // TO-DO: remove after testing is done
 
 // Create the employees list in HTML
 include_once 'employees.html.php';

@@ -2,6 +2,65 @@ USE test;
 SET NAMES utf8;
 USE meetingflow;
 
+INSERT INTO `companycredits`(`CompanyID`, `CreditsID`) VALUES (39,2),(18,2);
+
+SELECT 		COUNT(`CompanyID`),
+						`CompanyID`,
+						(
+							SELECT 	`CreditsID`
+							FROM	`credits`
+							WHERE	`name` = 'Default'
+						)	AS CreditsID
+			FROM 		`company`
+			WHERE		`CompanyID` 
+			NOT IN		(
+							SELECT 	`CompanyID`
+							FROM 	`companycredits`
+						)
+			GROUP BY	`CompanyID`;
+
+SELECT 		COUNT(*),
+			`CompanyID`
+FROM 		`company`
+WHERE		`CompanyID` 
+NOT IN		(
+				SELECT 	`CompanyID`
+				FROM 	`companycredits`
+			);
+
+UPDATE 	`company`
+SET		`startDate` = DATE(`dateTimeCreated`),
+		`endDate` = DATE(`dateTimeCreated`) + INTERVAL 1 MONTH
+WHERE 	`companyID` <> 0;
+
+UPDATE 	`company`
+SET		`prevStartDate` = `startDate`,
+		`startDate` = `endDate`,
+        `endDate` = (`startDate` + INTERVAL 1 MONTH)
+WHERE	`companyID` <> 0
+AND		CURDATE() > `endDate`;
+
+UPDATE 	`user`
+SET 	`AccessID` = ( 
+						SELECT 	`AccessID`
+						FROM 	`accesslevel`
+						WHERE 	`AccessName` = 'Normal User'
+						LIMIT 	1
+					),
+		`bookingCode` = NULL,
+        `reduceAccessAtDate` = NULL
+WHERE 	DATE(CURRENT_TIMESTAMP) >= `reduceAccessAtDate`
+AND 	`isActive` = 1
+AND		`userID` <> 0;
+
+UPDATE 	`booking`
+SET		`actualEndDateTime` = `endDateTime`,
+		`cancellationCode` = NULL
+WHERE 	CURRENT_TIMESTAMP > `endDateTime`
+AND 	`actualEndDateTime` IS NULL
+AND 	`dateTimeCancelled` IS NULL
+AND		`bookingID` <> 0;
+
 SELECT 		c.companyID 										AS CompID,
 			c.`name` 											AS CompanyName,
 			c.`dateTimeCreated`									AS DatetimeCreated,
@@ -13,7 +72,29 @@ SELECT 		c.companyID 										AS CompID,
 				JOIN 	`employee` e 
 				ON 		c.CompanyID = e.CompanyID 
 				WHERE 	e.companyID = CompID
-			)													AS NumberOfEmployees,
+			)													AS NumberOfEmployees, 
+ 			(
+				SELECT (
+						BIG_SEC_TO_TIME(
+										SUM(
+											DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
+											)*86400 
+										+ 
+										SUM(
+											TIME_TO_SEC(b.`actualEndDateTime`) 
+											- 
+											TIME_TO_SEC(b.`startDateTime`)
+											) 
+										) 
+						) 
+				FROM 		`booking` b  
+				INNER JOIN 	`company` c 
+				ON 			b.`CompanyID` = c.`CompanyID` 
+				WHERE 		b.`CompanyID` = CompID
+				AND 		b.`actualEndDateTime`
+                BETWEEN		c.`prevStartDate`
+                AND			c.`startDate`
+			)   												AS PreviousMonthCompanyWideBookingTimeUsed,           
 			(
 				SELECT (
 						BIG_SEC_TO_TIME(
@@ -32,8 +113,9 @@ SELECT 		c.companyID 										AS CompID,
 				INNER JOIN 	`company` c 
 				ON 			b.`CompanyID` = c.`CompanyID` 
 				WHERE 		b.`CompanyID` = CompID
-				AND 		YEAR(b.`actualEndDateTime`) = YEAR(NOW())
-				AND 		MONTH(b.`actualEndDateTime`) = MONTH(NOW())
+				AND 		b.`actualEndDateTime`
+                BETWEEN		c.`startDate`
+                AND			c.`endDate`
 			)   												AS MonthlyCompanyWideBookingTimeUsed,
 			(
 				SELECT (
