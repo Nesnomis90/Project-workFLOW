@@ -114,7 +114,7 @@
 								<td><?php htmlout($company['CompanyCreditsRemaining']); ?></td>
 								<td><?php htmlout($company['CreditSubscriptionMonthlyPrice']); ?></td>
 								<td><?php htmlout($company['OverCreditsFee']); ?></td>
-								<td><?php htmlout('insert last month calc here'); ?></td>
+								<td><?php htmlout($company['PreviousMonthCompanyWideBookingTimeUsed']); ?></td>
 								<td><?php htmlout($company['MonthlyCompanyWideBookingTimeUsed']); ?></td>
 								<td><?php htmlout($company['TotalCompanyWideBookingTimeUsed']); ?></td>
 								<td><?php htmlout('insert last month billing here'); ?></td>

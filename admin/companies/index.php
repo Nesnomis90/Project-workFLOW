@@ -398,7 +398,9 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Add Company')
 		
 		$pdo = connect_to_db();
 		$sql = 'INSERT INTO `company` 
-				SET			`name` = :CompanyName';
+				SET			`name` = :CompanyName,
+							`startDate` = CURDATE(),
+							`endDate` = (CURDATE() + INTERVAL 1 MONTH)';
 		$s = $pdo->prepare($sql);
 		$s->bindValue(':CompanyName', $validatedCompanyName);
 		$s->execute();
@@ -622,7 +624,7 @@ try
 							JOIN 	`employee` e 
 							ON 		c.CompanyID = e.CompanyID 
 							WHERE 	e.companyID = CompID
-						)													AS NumberOfEmployees,
+						)													AS NumberOfEmployees, 
 						(
 							SELECT (
 									BIG_SEC_TO_TIME(
@@ -641,8 +643,31 @@ try
 							INNER JOIN 	`company` c 
 							ON 			b.`CompanyID` = c.`CompanyID` 
 							WHERE 		b.`CompanyID` = CompID
-							AND 		YEAR(b.`actualEndDateTime`) = YEAR(NOW())
-							AND 		MONTH(b.`actualEndDateTime`) = MONTH(NOW())
+							AND 		b.`actualEndDateTime`
+							BETWEEN		c.`prevStartDate`
+							AND			c.`startDate`
+						)   												AS PreviousMonthCompanyWideBookingTimeUsed,           
+						(
+							SELECT (
+									BIG_SEC_TO_TIME(
+													SUM(
+														DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
+														)*86400 
+													+ 
+													SUM(
+														TIME_TO_SEC(b.`actualEndDateTime`) 
+														- 
+														TIME_TO_SEC(b.`startDateTime`)
+														) 
+													) 
+									) 
+							FROM 		`booking` b  
+							INNER JOIN 	`company` c 
+							ON 			b.`CompanyID` = c.`CompanyID` 
+							WHERE 		b.`CompanyID` = CompID
+							AND 		b.`actualEndDateTime`
+							BETWEEN		c.`startDate`
+							AND			c.`endDate`
 						)   												AS MonthlyCompanyWideBookingTimeUsed,
 						(
 							SELECT (
@@ -664,6 +689,7 @@ try
 							WHERE 		b.`CompanyID` = CompID
 						)   												AS TotalCompanyWideBookingTimeUsed,
 						cc.`altMinuteAmount`								AS CompanyAlternativeMinuteAmount,
+						cc.`lastModified`									AS CompanyCreditsLastModified,
 						cr.`name`											AS CreditSubscriptionName,
 						cr.`minuteAmount`									AS CreditSubscriptionMinuteAmount,
 						cr.`monthlyPrice`									AS CreditSubscriptionMonthlyPrice,
@@ -692,8 +718,17 @@ catch (PDOException $e)
 
 // Create an array with the actual key/value pairs we want to use in our HTML
 foreach ($result as $row)
-{
+{	
 	// Calculate and display company booking time details
+	if($row['PreviousMonthCompanyWideBookingTimeUsed'] == null){
+		$PrevMonthTimeUsed = 'N/A';
+	} else {
+		$PrevMonthTimeUsed = $row['PreviousMonthCompanyWideBookingTimeUsed'];
+		$prevMonthTimeHour = substr($PrevMonthTimeUsed,0,strpos($PrevMonthTimeUsed,":"));
+		$prevMonthTimeMinute = substr($PrevMonthTimeUsed,strpos($PrevMonthTimeUsed,":")+1, 2);
+		$PrevMonthTimeUsed = $prevMonthTimeHour . 'h' . $prevMonthTimeMinute . 'm';
+	}	
+	
 	if($row['MonthlyCompanyWideBookingTimeUsed'] == null){
 		$MonthlyTimeUsed = 'N/A';
 	} else {
@@ -816,6 +851,7 @@ foreach ($result as $row)
 								'id' => $row['CompID'], 
 								'CompanyName' => $row['CompanyName'],
 								'NumberOfEmployees' => $row['NumberOfEmployees'],
+								'PreviousMonthCompanyWideBookingTimeUsed' => $PrevMonthTimeUsed,
 								'MonthlyCompanyWideBookingTimeUsed' => $MonthlyTimeUsed,
 								'TotalCompanyWideBookingTimeUsed' => $TotalTimeUsed,
 								'DeletionDate' => $dateToRemoveToDisplay,
