@@ -2,6 +2,15 @@ USE test;
 SET NAMES utf8;
 USE meetingflow;
 
+SELECT 		COUNT(*),
+			`CompanyID`
+FROM 		`company`
+WHERE		`CompanyID` 
+NOT IN		(
+				SELECT 	`CompanyID`
+				FROM 	`companycredits`
+			);
+
 UPDATE 	`company`
 SET		`startDate` = DATE(`dateTimeCreated`),
 		`endDate` = DATE(`dateTimeCreated`) + INTERVAL 1 MONTH

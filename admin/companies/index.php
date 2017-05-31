@@ -421,6 +421,34 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Add Company')
 	
 	$_SESSION['CompanyUserFeedback'] = "Successfully added the company: " . $validatedCompanyName . ".";
 	
+		// Give the company the default subscription
+	try
+	{	
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+		
+		$pdo = connect_to_db();
+		$sql = "INSERT INTO `companycredits` 
+				SET			`CompanyID` = :CompanyID,
+							`CreditsID` = (
+											SELECT 	`CreditsID`
+											FROM	`credits`
+											WHERE	`name` = 'Default'
+											)";
+		$s = $pdo->prepare($sql);
+		$s->bindValue(':CompanyID', $_SESSION['LastCompanyID']);
+		$s->execute();
+		
+		//Close the connection
+		$pdo = null;
+	}
+	catch (PDOException $e)
+	{
+		$error = 'Error giving company a booking subscription: ' . $e->getMessage();
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+		$pdo = null;
+		exit();
+	}	
+	
 		// Add a log event that a company was added
 	try
 	{
@@ -826,6 +854,45 @@ foreach ($result as $row)
 		$bookingCostThisMonth = "N/A";
 		$companyMinuteCreditsRemaining = $companyMinuteCredits;
 	}
+		// Calculate cost for previous month (subscription + over credit charges)
+	// TO-DO: Change/fix calculations? This will be wrong if credits/hour rate etc changes from previous month
+	if($PrevMonthTimeUsed != "N/A"){
+		$actualTimeUsedInMinutesPrevMonth = $prevMonthTimeHour*60 + $prevMonthTimeMinute;
+		if($actualTimeUsedInMinutesPrevMonth > $companyMinuteCredits){
+			// Company has used more booking time than credited. Let's calculate how far over they went
+			$actualTimeOverCreditsInMinutes = $actualTimeUsedInMinutesPrevMonth - $companyMinuteCredits;
+		
+			// Let's calculate cost
+			if($hourPrice == 0 AND $minPrice == 0){
+				// The subscription has no valid overtime price set, should not occur
+				$bookingCostPrevMonth = $monthPrice . "+" . $actualTimeOverCreditsInMinutes . "m * cost (not set)";
+			} elseif($hourPrice != 0 AND $minPrice != 0){
+				// The subscription has two valid overtime price set, should not occur
+				$bookingCostPrevMonth = $monthPrice . "+" . $actualTimeOverCreditsInMinutes . "m * cost (not set)";
+			} elseif($hourPrice == 0 AND $minPrice != 0){
+				// The subscription charges by the minute, if over credits
+				$bookingCostPrevMonth = $minPrice * $actualTimeOverCreditsInMinutes;
+				$bookingCostPrevMonth = $monthPrice . "+" . $bookingCostPrevMonth;
+			} elseif($hourPrice != 0 AND $minPrice == 0){
+				// The subsription charges by the hour, if over credits
+				// TO-DO: Round up/down? Break down into minutes? Currently rounding up.
+				$bookingCostPrevMonth = $hourPrice * ceil($actualTimeOverCreditsInMinutes/60);
+				$bookingCostPrevMonth = $monthPrice . "+" . $bookingCostPrevMonth;
+			}
+			$companyMinuteCreditsRemaining = 0;
+			
+		} else {
+			$bookingCostPrevMonth = $monthPrice . "+0";
+			$companyMinuteCreditsRemaining = $companyMinuteCredits - $actualTimeUsedInMinutesPrevMonth;
+		}		
+	} elseif($monthPrice != 0) {
+		$bookingCostPrevMonth = $monthPrice . "+0";
+		$companyMinuteCreditsRemaining = $companyMinuteCredits;
+	} else {
+		$bookingCostPrevMonth = "N/A";
+		$companyMinuteCreditsRemaining = $companyMinuteCredits;
+	}	
+	
 
 		// Format company credits remaining to be displayed
 	if($companyMinuteCreditsRemaining >= 60){
@@ -860,6 +927,7 @@ foreach ($result as $row)
 								'CompanyCredits' => $displayCompanyCredits,
 								'CompanyCreditsRemaining' => $displayCompanyCreditsRemaining,
 								'CreditSubscriptionMonthlyPrice' => $monthPrice,
+								'BookingCostPrevMonth' => $bookingCostPrevMonth,
 								'BookingCostThisMonth' => $bookingCostThisMonth,
 								'OverCreditsFee' => $overCreditsFee
 							);

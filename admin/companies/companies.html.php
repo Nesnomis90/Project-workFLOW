@@ -85,7 +85,7 @@
 					<th>Last Month</th>
 					<th>This Month</th>
 					<th>All Time</th>
-					<th>Last Month</th>
+					<th>Last Month (if same credit and fees)</th>
 					<th>This Month (so far)</th>
 					<th>Make Inactive At</th>
 					<th>Created At</th>
@@ -117,7 +117,7 @@
 								<td><?php htmlout($company['PreviousMonthCompanyWideBookingTimeUsed']); ?></td>
 								<td><?php htmlout($company['MonthlyCompanyWideBookingTimeUsed']); ?></td>
 								<td><?php htmlout($company['TotalCompanyWideBookingTimeUsed']); ?></td>
-								<td><?php htmlout('insert last month billing here'); ?></td>
+								<td><?php htmlout($company['BookingCostPrevMonth']); ?></td>
 								<td><?php htmlout($company['BookingCostThisMonth']); ?></td>
 								<?php if($company['DeletionDate'] == null) :?>
 										<td>
