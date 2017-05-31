@@ -4,59 +4,50 @@ include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/helpers.inc.php';
 include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/magicquotes.inc.php';
 // PHP code that we will set to be run at a certain interval, with CRON, to interact with our database
 // This file is set to run minimum once a day (more often in case SQL connection fails?)
+// TO-DO: add sleep between queries?
 
 // If, for some reason, a company does not have a subscription set. We set it to default.
+// TO-DO: Not extensively tested and probably super broken/bad
 try
 {
 	include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 	
 	$pdo = connect_to_db();
-	$sql = "SELECT 		COUNT(*),
-						`CompanyID`
+	$sql = "SELECT 		COUNT(`CompanyID`),
+						`CompanyID`,
+						(
+							SELECT 	`CreditsID`
+							FROM	`credits`
+							WHERE	`name` = 'Default'
+						)								AS CreditsID
 			FROM 		`company`
 			WHERE		`CompanyID` 
 			NOT IN		(
 							SELECT 	`CompanyID`
 							FROM 	`companycredits`
-						)";
-	$pdo->exec($sql);
-	$result = $pdo->fetchAll();
+						)
+			GROUP BY	`CompanyID`";
+	$return = $pdo->query($sql);
+	$result = $return->fetchAll();
 	
-	//Close the connection
-	$pdo = null;
-	
-	if($result[0] > 0){
-		// Need to add subscription to some companies
-		$
-		foreach($result AS $companyID){
+	$sql = "INSERT INTO `companycredits`(`CompanyID`, `CreditsID`) 
+			VALUES ";
 			
+	if($result[0] != NULL AND $result[0] > 0){
+		// Need to add subscription to some companies
+		$CreditsID = $result[0]['CreditsID'];
+		foreach($result AS $companyRow){
+			$CompanyID = $companyRow['CompanyID'];
+			$sql .= "(" . $CompanyID . "," . $CreditsID ."),";
 		}
+		// Remove last ,
+		$sql = substr($sql,0, -1);
 		
+		$pdo->exec($sql);
 	}
+	$pdo = null;
+	unset($sql);
 	
-	
-	
-	
-	
-	"INSERT INTO `companycredits`
-			SET			`CompanyID` = (
-										SELECT 		`CompanyID`
-										FROM 		`company`
-										WHERE		`CompanyID` 
-										NOT IN		(
-														SELECT 	`CompanyID`
-														FROM 	`companycredits`
-													)
-										LIMIT 		1
-										),
-						`CreditsID` = (
-										SELECT 	`CreditsID`
-										FROM	`credits`
-										WHERE	`name` = 'Default'
-										)";		
-	$pdo->exec($sql);
-	
-
 }
 catch(PDOException $e)
 {

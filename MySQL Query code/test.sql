@@ -2,6 +2,23 @@ USE test;
 SET NAMES utf8;
 USE meetingflow;
 
+INSERT INTO `companycredits`(`CompanyID`, `CreditsID`) VALUES (39,2),(18,2);
+
+SELECT 		COUNT(`CompanyID`),
+						`CompanyID`,
+						(
+							SELECT 	`CreditsID`
+							FROM	`credits`
+							WHERE	`name` = 'Default'
+						)	AS CreditsID
+			FROM 		`company`
+			WHERE		`CompanyID` 
+			NOT IN		(
+							SELECT 	`CompanyID`
+							FROM 	`companycredits`
+						)
+			GROUP BY	`CompanyID`;
+
 SELECT 		COUNT(*),
 			`CompanyID`
 FROM 		`company`
