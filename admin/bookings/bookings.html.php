@@ -65,7 +65,6 @@
 			<caption>Active Bookings Today</caption>
 			<tr>
 				<th colspan="8">Booking information</th>
-				<th colspan="2">Completion Dates</th>
 				<th colspan="4">Connected user information</th>
 				<th colspan="3">Alter Booking</th>
 			</tr>				
@@ -78,8 +77,6 @@
 				<th>For Company</th>
 				<th>Description</th>
 				<th>Created At</th>
-				<th>Finished</th>
-				<th>Cancelled</th>
 				<th>First Name</th>
 				<th>Last Name</th>
 				<th>Email</th>
@@ -100,8 +97,6 @@
 						<td><?php htmlout($booking['BookedForCompany']); ?></td>
 						<td><?php htmlout($booking['BookingDescription']); ?></td>
 						<td><?php htmlout($booking['BookingWasCreatedOn']); ?></td>
-						<td><?php htmlout($booking['BookingWasCompletedOn']); ?></td>
-						<td><?php htmlout($booking['BookingWasCancelledOn']); ?></td>
 						<td><?php htmlout($booking['firstName']); ?></td>
 						<td><?php htmlout($booking['lastName']); ?></td>
 						<td><?php htmlout($booking['email']); ?></td>
@@ -133,7 +128,7 @@
 			<caption>Completed Bookings Today</caption>
 			<tr>
 				<th colspan="8">Booking information</th>
-				<th colspan="2">Completion Dates</th>
+				<th colspan="2">Completion Info</th>
 				<th colspan="4">Connected user information</th>
 				<th colspan="3">Alter Booking</th>
 			</tr>				
@@ -147,7 +142,7 @@
 				<th>Description</th>
 				<th>Created At</th>
 				<th>Finished</th>
-				<th>Cancelled</th>
+				<th>Duration</th>
 				<th>First Name</th>
 				<th>Last Name</th>
 				<th>Email</th>
@@ -169,7 +164,7 @@
 						<td><?php htmlout($booking['BookingDescription']); ?></td>
 						<td><?php htmlout($booking['BookingWasCreatedOn']); ?></td>
 						<td><?php htmlout($booking['BookingWasCompletedOn']); ?></td>
-						<td><?php htmlout($booking['BookingWasCancelledOn']); ?></td>
+						<td><?php htmlout($booking['CompletedMeetingDuration']); ?></td>
 						<td><?php htmlout($booking['firstName']); ?></td>
 						<td><?php htmlout($booking['lastName']); ?></td>
 						<td><?php htmlout($booking['email']); ?></td>
@@ -201,7 +196,6 @@
 			<caption>Future Bookings</caption>
 			<tr>
 				<th colspan="8">Booking information</th>
-				<th colspan="2">Completion Dates</th>
 				<th colspan="4">Connected user information</th>
 				<th colspan="3">Alter Booking</th>
 			</tr>				
@@ -214,8 +208,6 @@
 				<th>For Company</th>
 				<th>Description</th>
 				<th>Created At</th>
-				<th>Finished</th>
-				<th>Cancelled</th>
 				<th>First Name</th>
 				<th>Last Name</th>
 				<th>Email</th>
@@ -236,8 +228,6 @@
 						<td><?php htmlout($booking['BookedForCompany']); ?></td>
 						<td><?php htmlout($booking['BookingDescription']); ?></td>
 						<td><?php htmlout($booking['BookingWasCreatedOn']); ?></td>
-						<td><?php htmlout($booking['BookingWasCompletedOn']); ?></td>
-						<td><?php htmlout($booking['BookingWasCancelledOn']); ?></td>
 						<td><?php htmlout($booking['firstName']); ?></td>
 						<td><?php htmlout($booking['lastName']); ?></td>
 						<td><?php htmlout($booking['email']); ?></td>
@@ -283,7 +273,7 @@
 				<th>Description</th>
 				<th>Created At</th>
 				<th>Finished</th>
-				<th>Cancelled</th>
+				<th>Duration</th>
 				<th>First Name</th>
 				<th>Last Name</th>
 				<th>Email</th>
@@ -305,7 +295,7 @@
 						<td><?php htmlout($booking['BookingDescription']); ?></td>
 						<td><?php htmlout($booking['BookingWasCreatedOn']); ?></td>
 						<td><?php htmlout($booking['BookingWasCompletedOn']); ?></td>
-						<td><?php htmlout($booking['BookingWasCancelledOn']); ?></td>
+						<td><?php htmlout($booking['CompletedMeetingDuration']); ?></td>
 						<td><?php htmlout($booking['firstName']); ?></td>
 						<td><?php htmlout($booking['lastName']); ?></td>
 						<td><?php htmlout($booking['email']); ?></td>
@@ -337,7 +327,7 @@
 			<caption>Bookings Cancelled</caption>
 			<tr>
 				<th colspan="8">Booking information</th>
-				<th colspan="2">Completion Dates</th>
+				<th>Completion Date</th>
 				<th colspan="4">Connected user information</th>
 				<th colspan="3">Alter Booking</th>
 			</tr>				
@@ -350,7 +340,6 @@
 				<th>For Company</th>
 				<th>Description</th>
 				<th>Created At</th>
-				<th>Finished</th>
 				<th>Cancelled</th>
 				<th>First Name</th>
 				<th>Last Name</th>
@@ -372,7 +361,6 @@
 						<td><?php htmlout($booking['BookedForCompany']); ?></td>
 						<td><?php htmlout($booking['BookingDescription']); ?></td>
 						<td><?php htmlout($booking['BookingWasCreatedOn']); ?></td>
-						<td><?php htmlout($booking['BookingWasCompletedOn']); ?></td>
 						<td><?php htmlout($booking['BookingWasCancelledOn']); ?></td>
 						<td><?php htmlout($booking['firstName']); ?></td>
 						<td><?php htmlout($booking['lastName']); ?></td>
@@ -406,7 +394,7 @@
 			<caption>Other Bookings</caption>
 			<tr>
 				<th colspan="8">Booking information</th>
-				<th colspan="2">Completion Dates</th>
+				<th colspan="2">Completion Info</th>
 				<th colspan="4">Connected user information</th>
 				<th colspan="3">Alter Booking</th>
 			</tr>				
