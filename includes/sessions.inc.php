@@ -1,5 +1,39 @@
 <?php
 // Functions to do anything related with sessions
+function unsetSessionsFromAdminUsers(){
+	unset($_SESSION['UserEmailsToBeDisplayed']);
+	
+	unset($_SESSION['AddNewUserFirstname']);
+	unset($_SESSION['AddNewUserLastname']);
+	unset($_SESSION['AddNewUserEmail']);
+	unset($_SESSION['AddNewUserSelectedAccess']);	
+	unset($_SESSION['AddNewUserAccessArray']);
+	unset($_SESSION['AddNewUserGeneratedPassword']);
+	unset($_SESSION['AddNewUserDefaultAccessID']);
+	
+	unset($_SESSION['lastUserID']);
+	
+	unset($_SESSION['EditUserOriginaEmail']);
+	unset($_SESSION['EditUserOriginalFirstName']);
+	unset($_SESSION['EditUserOriginalLastName']);
+	unset($_SESSION['EditUserOriginaAccessID']);
+	unset($_SESSION['EditUserOriginaAccessName']);
+	unset($_SESSION['EditUserOriginaDisplayName']);
+	unset($_SESSION['EditUserOriginaBookingDescription']);
+	unset($_SESSION['EditUserOriginaReduceAccessAtDate']);
+	unset($_SESSION['EditUserOriginalUserID']);
+	
+	unset($_SESSION['EditUserChangedEmail']);	
+	unset($_SESSION['EditUserChangedFirstname']);
+	unset($_SESSION['EditUserChangedLastname']);
+	unset($_SESSION['EditUserChangedAccessID']);
+	unset($_SESSION['EditUserChangedDisplayname']);
+	unset($_SESSION['EditUserChangedBookingDescription']);
+	unset($_SESSION['EditUserChangedReduceAccessAtDate']);
+	
+	unset($_SESSION['EditUserAccessList']);	
+}
+
 
 // Removes all stored info e.g. logs out user
 function destroySession(){

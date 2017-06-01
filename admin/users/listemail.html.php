@@ -43,7 +43,10 @@
 			placeholder="List of User Email"><?php htmlout($emailList); ?></textarea>
 		</div>
 		<div>
-			<label for="emailListTip">Tip: On Windows - Click inside box once. Press Ctrl+A then CTRL+C to copy everything.</label>
+			<label>Tip: On WINDOWS - Click inside box once. Press Ctrl+A then CTRL+C to copy everything. Paste into your Email program with Ctrl+V.</label>
+		</div>
+		<div>
+			<label>Tip: On MAC - Click inside box once. Press Command-A then Command-C to copy everything. Paste into your Email program with Command-V.</label>
 		</div>
 		<p><a href="..">Return to CMS home</a></p>
 	</body>
