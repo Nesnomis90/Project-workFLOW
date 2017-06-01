@@ -1,16 +1,16 @@
 <?php 
 // This is the index file for the EQUIPMENT folder
-
+session_start();
 // Include functions
 include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/helpers.inc.php';
 include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/magicquotes.inc.php';
+
+unsetSessionsFromAdminUsers(); // TO-DO: Add more/remove if it ruins multiple tabs open
 
 // CHECK IF USER TRYING TO ACCESS THIS IS IN FACT THE ADMIN!
 if (!isUserAdmin()){
 	exit();
 }
-
-var_dump($_SESSION); // TO-DO: remove after testing is done
 
 // Function to clear sessions used to remember user inputs on refreshing the add equipment form
 function clearAddEquipmentSessions(){
@@ -129,15 +129,28 @@ function validateUserInputs(){
 return array($invalidInput, $validatedEquipmentDescription, $validatedEquipmentName);
 }
 
-// If admin wants to be able to delete bookings it needs to enabled first
+// If admin wants to be able to delete equipment it needs to enabled first
 if (isset($_POST['action']) AND $_POST['action'] == "Enable Delete"){
 	$_SESSION['equipmentEnableDelete'] = TRUE;
 	$refreshEquipment = TRUE;
 }
 
-// If admin wants to be disable booking deletion
+// If admin wants to be able to delete equipment that is currently being used in a room it needs to enabled first
+if (isset($_POST['action']) AND $_POST['action'] == "Enable Delete Used Equipment"){
+	$_SESSION['equipmentEnableDeleteUsedEquipment'] = TRUE;
+	$refreshEquipment = TRUE;
+}
+
+// If admin wants to be disable used equipment deletion
+if (isset($_POST['action']) AND $_POST['action'] == "Disable Delete Used Equipment"){
+	unset($_SESSION['equipmentEnableDeleteUsedEquipment']);
+	$refreshEquipment = TRUE;
+}
+
+// If admin wants to be disable equipment deletion
 if (isset($_POST['action']) AND $_POST['action'] == "Disable Delete"){
 	unset($_SESSION['equipmentEnableDelete']);
+	unset($_SESSION['equipmentEnableDeleteUsedEquipment']);
 	$refreshEquipment = TRUE;
 }
 
@@ -227,6 +240,8 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Add Equipment') OR
 		$EquipmentName = $_SESSION['AddEquipmentName'];
 		unset($_SESSION['AddEquipmentName']);
 	}
+	
+	var_dump($_SESSION); // TO-DO: remove after testing is done
 	
 	// Change form
 	include 'form.html.php';
@@ -419,6 +434,8 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR
 	$originalEquipmentName = $_SESSION['EditEquipmentOriginalInfo']['EquipmentName'];
 	$originalEquipmentDescription = $_SESSION['EditEquipmentOriginalInfo']['EquipmentDescription'];
 	
+	var_dump($_SESSION); // TO-DO: remove after testing is done
+	
 	// Change to the template we want to use
 	include 'form.html.php';
 	exit();
@@ -573,6 +590,7 @@ foreach($result AS $row){
 							'EquipmentIsInTheseRooms' => $row['EquipmentIsInTheseRooms']							
 						);
 }
+var_dump($_SESSION); // TO-DO: remove after testing is done
 
 // Create the equipment list in HTML
 include_once 'equipment.html.php';

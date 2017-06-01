@@ -2165,7 +2165,7 @@ foreach ($result as $row)
 	} elseif(	$completedDateTime == null AND $cancelledDateTime == null AND 
 				$datetimeNow > $endDateTime){
 		$status = 'Ended without updating database';
-		// This should never occur
+		// This should never occur in practice. Still occurs without manually running update script
 	} elseif(	$completedDateTime == null AND $cancelledDateTime != null AND 
 				endDateTime < $cancelledDateTime){
 		$status = 'Cancelled after meeting should have been Completed';
@@ -2205,6 +2205,23 @@ foreach ($result as $row)
 					' to ' . $displayValidatedEndDate;
 
 
+	// Calculate meeting duration on completion
+	$timeDifferenceStartDate = new DateTime($startDateTime);
+	$timeDifferenceCompletionDate = new DateTime($completedDateTime);
+	$timeDifference = $timeDifferenceStartDate->diff($timeDifferenceCompletionDate);
+	$timeDifferenceInMinutes = $timeDifference->i;
+	$timeDifferenceInHours = $timeDifference->h;
+	$timeDifferenceInDays = $timeDifference->d;
+	
+	if($timeDifferenceInDays > 0){
+		$timeDifferenceInHours += $timeDifferenceInDays*24;
+	}
+	if($timeDifferenceInHours > 0){
+		$displayCompletedMeetingDuration = $timeDifferenceInHours . 'h' . $timeDifferenceInMinutes . 'm';
+	} else {
+		$displayCompletedMeetingDuration = $timeDifferenceInMinutes . 'm';
+	}
+					
 	if($status == "Active Today"){				
 		$bookingsActiveToday[] = array('id' => $row['bookingID'],
 							'BookingStatus' => $status,
@@ -2230,6 +2247,7 @@ foreach ($result as $row)
 							'BookedRoomName' => $roomName,
 							'StartTime' => $displayValidatedStartDate,
 							'EndTime' => $displayValidatedEndDate,
+							'CompletedMeetingDuration' => $displayCompletedMeetingDuration,
 							'BookedBy' => $row['BookedBy'],
 							'BookedForCompany' => $row['BookedForCompany'],
 							'BookingDescription' => $row['BookingDescription'],
@@ -2268,6 +2286,7 @@ foreach ($result as $row)
 							'BookedRoomName' => $roomName,
 							'StartTime' => $displayValidatedStartDate,
 							'EndTime' => $displayValidatedEndDate,
+							'CompletedMeetingDuration' => $displayCompletedMeetingDuration,
 							'BookedBy' => $row['BookedBy'],
 							'BookedForCompany' => $row['BookedForCompany'],
 							'BookingDescription' => $row['BookingDescription'],

@@ -1,9 +1,11 @@
 <?php 
 // This is the index file for the COMPANIES folder
-
+session_start();
 // Include functions
 include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/helpers.inc.php';
 include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/magicquotes.inc.php';
+
+unsetSessionsFromAdminUsers(); // TO-DO: Add sessions from other places too. Remove if it breaks multiple tabs
 
 // CHECK IF USER TRYING TO ACCESS THIS IS IN FACT THE ADMIN!
 if (!isUserAdmin()){
@@ -145,6 +147,40 @@ function validateUserInputs(){
 		}			
 	}
 return array($invalidInput, $validatedCompanyName, $validatedCompanyDateToRemove);
+}
+
+// If admin wants to see the booking history of the selected company
+if (isset($_POST['action']) AND $_POST['action'] == "Booking History"){
+
+	$companyID = $_POST['id'];
+	
+	// Get booking history for the selected company
+	try
+	{
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+	/*	$pdo = connect_to_db();
+
+		//TO-DO: Change SQL to single company
+		$sql = "";
+
+		$result = $pdo->query($sql);
+		$rowNum = $result->rowCount();
+		
+		//Close the connection
+		$pdo = null;	*/
+	}
+	catch (PDOException $e)
+	{
+		$error = 'Error fetching company booking history: ' . $e->getMessage();
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+		$pdo = null;
+		exit();
+	}	
+
+	var_dump($_SESSION); // TO-DO: Remove after testing is over.
+	
+	include_once 'bookinghistory.html.php';
+	exit();
 }
 
 // If admin wants to be able to delete companies it needs to enabled first

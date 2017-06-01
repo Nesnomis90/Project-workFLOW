@@ -2,6 +2,88 @@ USE test;
 SET NAMES utf8;
 USE meetingflow;
 
+SELECT 		c.`companyID` 										AS CompID,
+			c.`name` 											AS CompanyName,
+			c.`dateTimeCreated`									AS DatetimeCreated,
+			(
+				SELECT (
+						BIG_SEC_TO_TIME(
+										SUM(
+											DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
+											)*86400 
+										+ 
+										SUM(
+											TIME_TO_SEC(b.`actualEndDateTime`) 
+											- 
+											TIME_TO_SEC(b.`startDateTime`)
+											) 
+										) 
+						) 
+				FROM 		`booking` b  
+				INNER JOIN 	`company` c 
+				ON 			b.`CompanyID` = c.`CompanyID` 
+				WHERE 		b.`CompanyID` = CompID
+				AND 		b.`actualEndDateTime`
+				BETWEEN		c.`prevStartDate`
+				AND			c.`startDate`
+			)   												AS PreviousMonthCompanyWideBookingTimeUsed,           
+			(
+				SELECT (
+						BIG_SEC_TO_TIME(
+										SUM(
+											DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
+											)*86400 
+										+ 
+										SUM(
+											TIME_TO_SEC(b.`actualEndDateTime`) 
+											- 
+											TIME_TO_SEC(b.`startDateTime`)
+											) 
+										) 
+						) 
+				FROM 		`booking` b  
+				INNER JOIN 	`company` c 
+				ON 			b.`CompanyID` = c.`CompanyID` 
+				WHERE 		b.`CompanyID` = CompID
+				AND 		b.`actualEndDateTime`
+				BETWEEN		c.`startDate`
+				AND			c.`endDate`
+			)   												AS MonthlyCompanyWideBookingTimeUsed,
+			(
+				SELECT (
+						BIG_SEC_TO_TIME(
+										SUM(
+											DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
+											)*86400 
+										+ 
+										SUM(
+											TIME_TO_SEC(b.`actualEndDateTime`) 
+											- 
+											TIME_TO_SEC(b.`startDateTime`)
+											) 
+										) 
+						)
+				FROM 		`booking` b 
+				INNER JOIN 	`company` c 
+				ON 			b.`CompanyID` = c.`CompanyID` 
+				WHERE 		b.`CompanyID` = CompID
+			)   												AS TotalCompanyWideBookingTimeUsed,
+			cc.`altMinuteAmount`								AS CompanyAlternativeMinuteAmount,
+			cc.`lastModified`									AS CompanyCreditsLastModified,
+			cr.`name`											AS CreditSubscriptionName,
+			cr.`minuteAmount`									AS CreditSubscriptionMinuteAmount,
+			cr.`monthlyPrice`									AS CreditSubscriptionMonthlyPrice,
+			cr.`overCreditMinutePrice`							AS CreditSubscriptionMinutePrice,
+			cr.`overCreditHourPrice`							AS CreditSubscriptionHourPrice
+FROM 		`company` c
+LEFT JOIN	`companycredits` cc
+ON			c.`CompanyID` = cc.`CompanyID`
+LEFT JOIN	`credits` cr
+ON			cr.`CreditsID` = cc.`CreditsID`
+WHERE		c.`companyID` = 1
+GROUP BY 	c.`name`;
+
+
 INSERT INTO `companycredits`(`CompanyID`, `CreditsID`) VALUES (39,2),(18,2);
 
 SELECT 		COUNT(`CompanyID`),
