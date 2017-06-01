@@ -206,15 +206,66 @@ return array($invalidInput, $email, $validatedFirstname, $validatedLastname, $va
 }
 
 // If admin wants to get a list of easily copied emails from the users that is being displayed
-if (isset($_POST['action']) AND $_POST['action'] == "Get Emails"){
+if (	(isset($_POST['action']) AND $_POST['action'] == "Get Emails") OR 
+		isset($_SESSION['refreshUserEmailList']) AND $_SESSION['refreshUserEmailList']){
 
-	$separatorChar = "";
-	
+		if(isset($_SESSION['refreshUserEmailList'])){
+			unset($_SESSION['refreshUserEmailList']);
+		}
+		
+	$separatorChar = ",";
+	$_SESSION['UserEmailListSeparatorSelected'] = TRUE;
+	$emailList = implode($separatorChar,$_SESSION['UserEmailsToBeDisplayed']);
 	var_dump($_SESSION);	// TO-DO: Remove when done testing
 	
 	include_once 'listemail.html.php';
 	exit();
 }
+
+// If admin wants to change email separator from the default ","
+if (isset($_POST['action']) AND $_POST['action'] == "Change Separator Char"){
+	
+	unset($_SESSION['UserEmailListSeparatorSelected']);
+	$separatorChar = "";
+	$emailList = "";
+	
+	var_dump($_SESSION);	// TO-DO: Remove when done testing
+	
+	include_once 'listemail.html.php';
+	exit();	
+}
+
+// If admin wants to set the newly selected character as the new email separator
+if (isset($_POST['action']) AND $_POST['action'] == "Select Separator Char"){
+	
+	$separatorChar = trim($_POST['separatorchar']);
+	$invalidInput = FALSE;
+	if(strlen($separatorChar) == 0){
+		$_SESSION['UserEmailListError'] = "You did not submit a character. Set as default character: ','.";
+		$invalidInput = TRUE;
+	}	
+	if(strlen(utf8_decode($separatorChar)) > 1){
+		// We only want one char
+		// TO-DO: Change/remove if wrong
+		$_SESSION['UserEmailListError'] = "You submitted too many characters. Set as default character: ','.";
+		$invalidInput = TRUE;
+	}
+	
+	if($invalidInput){
+ 		$_SESSION['refreshUserEmailList'] = TRUE;
+		header("Location: .");
+		exit();
+	}
+	
+	$_SESSION['UserEmailListSeparatorSelected'] = TRUE;
+	$emailList = implode($separatorChar,$_SESSION['UserEmailsToBeDisplayed']);
+	var_dump($_SESSION);	// TO-DO: Remove when done testing
+	
+	include_once 'listemail.html.php';
+	exit();
+}
+
+
 
 // If admin wants to be able to delete users it needs to enabled first
 if (isset($_POST['action']) AND $_POST['action'] == "Enable Delete"){
@@ -1075,8 +1126,10 @@ foreach ($result as $row)
 						'datecreated' => $displayCreatedDateTime,			
 						'lastactive' => $displayLastActiveDateTime,
 						'UserInfo' => $userinfo,
-						'reduceaccess' => $displayReduceAccessAtDate
+						'reduceaccess' => $displayReduceAccessAtDate				
 						);
+						
+		$email[] = $row['email'];				
 	} elseif ($row['isActive'] == 0) {
 		$inactiveusers[] = array('id' => $row['userID'], 
 				'firstname' => $row['firstname'],
@@ -1087,9 +1140,10 @@ foreach ($result as $row)
 				);
 	}
 	
-	$email[] = $row['email'];
 }
-$_SESSION['UserEmailsToBeDisplayed'] = $email;
+if(isset($email)){
+	$_SESSION['UserEmailsToBeDisplayed'] = $email;
+}
 
 var_dump($_SESSION); // TO-DO: Remove after done testing
 // Create the registered users list in HTML
