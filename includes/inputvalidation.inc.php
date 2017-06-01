@@ -80,6 +80,34 @@ function isNumberInvalidMeetingRoomCapacity($capacityNumber){
 	return FALSE;
 }
 
+	// Credits Amount
+// Returns TRUE on invalid, FALSE on valid
+function isNumberInvalidCreditsAmount($creditsAmount){
+	// Has to be between 0 and 65535 (minutes)
+	
+	$maxNumber = 65535;	// To-do: change if needed
+	$minNumber = 0;
+	if($creditsAmount < $minNumber OR $creditsAmount > $maxNumber){
+		return TRUE;
+	}
+	return FALSE;
+}
+
+	// Credits Hour Price
+// Returns TRUE on invalid, FALSE on valid
+function isNumberInvalidCreditsHourPrice($creditsHourPrice){
+	// Has to be between 0 and 65535
+	
+	$maxNumber = 65535;	// To-do: change if needed
+	$minNumber = 0;
+	if($creditsHourPrice < $minNumber OR $creditsHourPrice > $maxNumber){
+		return TRUE;
+	}
+	return FALSE;
+}
+
+//TO-DO: Add Minute Price like ^
+
 	// Booking Code Digits
 // Returns TRUE on invalid, FALSE on valid
 function isNumberInvalidBookingCode($bookingCode){
