@@ -53,6 +53,11 @@
 			<div>
 				<?php if(isset($_SESSION['equipmentEnableDelete']) AND $_SESSION['equipmentEnableDelete']) : ?>
 					<input type="submit" name="action" value="Disable Delete">
+					<?php if(isset($_SESSION['equipmentEnableDeleteUsedEquipment']) AND $_SESSION['equipmentEnableDeleteUsedEquipment']) : ?>
+						<input type="submit" name="action" value="Disable Delete Used Equipment">
+					<?php else : ?>
+						<input type="submit" name="action" value="Enable Delete Used Equipment">
+					<?php endif; ?>
 				<?php else : ?>
 					<input type="submit" name="action" value="Enable Delete">
 				<?php endif; ?>
@@ -87,8 +92,17 @@
 							<td><?php htmlout($row['DateTimeAdded']); ?></td>
 							<td><input type="submit" name="action" value="Edit"></td>
 							<td>
-								<?php if(isset($_SESSION['equipmentEnableDelete']) AND $_SESSION['equipmentEnableDelete']) : ?>
+								<?php if(isset($_SESSION['equipmentEnableDelete']) AND $_SESSION['equipmentEnableDelete'] AND
+										$row['EquipmentIsInTheseRooms'] == "") : ?>
 									<input type="submit" name="action" value="Delete">
+								<?php elseif(isset($_SESSION['equipmentEnableDelete']) AND $_SESSION['equipmentEnableDelete'] AND
+										$row['EquipmentIsInTheseRooms'] != "") : ?>
+									<?php if(isset($_SESSION['equipmentEnableDeleteUsedEquipment']) AND $_SESSION['equipmentEnableDeleteUsedEquipment']) : ?>
+										<input type="submit" name="action" value="Delete">
+									<?php else : ?>
+										<b>Not Enabled</b>
+										<input type="submit" name="disabled" value="Delete" disabled>
+									<?php endif; ?>									
 								<?php else : ?>
 									<input type="submit" name="disabled" value="Delete" disabled>
 								<?php endif; ?>

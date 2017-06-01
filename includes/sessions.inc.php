@@ -1,8 +1,11 @@
 <?php
 // Functions to do anything related with sessions
+
+// Remove all sessions used by admin in the user overview
 function unsetSessionsFromAdminUsers(){
 	unset($_SESSION['UserEmailsToBeDisplayed']);
-	
+	unset($_SESSION['UserEmailListSeparatorSelected']);
+
 	unset($_SESSION['AddNewUserFirstname']);
 	unset($_SESSION['AddNewUserLastname']);
 	unset($_SESSION['AddNewUserEmail']);
@@ -33,7 +36,6 @@ function unsetSessionsFromAdminUsers(){
 	
 	unset($_SESSION['EditUserAccessList']);	
 }
-
 
 // Removes all stored info e.g. logs out user
 function destroySession(){
