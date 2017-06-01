@@ -10,8 +10,6 @@ if (!isUserAdmin()){
 	exit();
 }
 
-var_dump($_SESSION); // TO-DO: remove after testing is done
-
 // Function to clear sessions used to remember user inputs on refreshing the add user form
 function clearAddUserSessions(){
 	unset($_SESSION['AddNewUserFirstname']);
@@ -207,6 +205,17 @@ function validateUserInputs($FeedbackSessionToUse){
 return array($invalidInput, $email, $validatedFirstname, $validatedLastname, $validatedBookingDescription, $validatedDisplayName, $validatedReduceAccessAtDate);	
 }
 
+// If admin wants to get a list of easily copied emails from the users that is being displayed
+if (isset($_POST['action']) AND $_POST['action'] == "Get Emails"){
+
+	$separatorChar = "";
+	
+	var_dump($_SESSION);	// TO-DO: Remove when done testing
+	
+	include_once 'listemail.html.php';
+	exit();
+}
+
 // If admin wants to be able to delete users it needs to enabled first
 if (isset($_POST['action']) AND $_POST['action'] == "Enable Delete"){
 	$_SESSION['usersEnableDelete'] = TRUE;
@@ -381,6 +390,8 @@ if (isset($_GET['add']) OR (isset($_SESSION['refreshAddUser']) AND $_SESSION['re
 	} else {
 		$accessID = $_SESSION['AddNewUserDefaultAccessID'];
 	}
+	
+	var_dump($_SESSION); // TO-DO: remove after testing is done
 	
 	// Change to the actual html form template
 	include 'form.html.php';
@@ -683,6 +694,8 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR
 	$originalDisplayName = $_SESSION['EditUserOriginaDisplayName'];
 	$originalBookingDescription = $_SESSION['EditUserOriginaBookingDescription'];
 	$originalAccessName = $_SESSION['EditUserOriginaAccessName'];
+		
+	var_dump($_SESSION); // TO-DO: remove after testing is done	
 		
 	// Change to the actual form we want to use
 	include 'form.html.php';
@@ -1041,7 +1054,11 @@ foreach ($result as $row)
 	$displayCreatedDateTime = convertDatetimeToFormat($createdDateTime, 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
 	$displayLastActiveDateTime = convertDatetimeToFormat($lastActiveDateTime, 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
 	$reduceAccessAtDate = $row['ReduceAccessAtDate'];
-	$displayReduceAccessAtDate = convertDatetimeToFormat($reduceAccessAtDate, 'Y-m-d', DATE_DEFAULT_FORMAT_TO_DISPLAY);
+	if($reduceAccessAtDate != NULL AND $reduceAccessAtDate != ""){
+		$displayReduceAccessAtDate = convertDatetimeToFormat($reduceAccessAtDate, 'Y-m-d', DATE_DEFAULT_FORMAT_TO_DISPLAY);
+	} else {
+		$displayReduceAccessAtDate = NULL;
+	}
 	
 	$userinfo = $row['lastname'] . ', ' . $row['firstname'] . ' - ' . $row['email'];
 	
@@ -1069,8 +1086,12 @@ foreach ($result as $row)
 				'datecreated' => $displayCreatedDateTime
 				);
 	}
+	
+	$email[] = $row['email'];
 }
+$_SESSION['UserEmailsToBeDisplayed'] = $email;
 
+var_dump($_SESSION); // TO-DO: Remove after done testing
 // Create the registered users list in HTML
 include_once 'users.html.php';
 ?>

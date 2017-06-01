@@ -58,6 +58,12 @@
 				<?php endif; ?>
 			</div>
 		</form>
+		<form action="" method="post">
+			<div>
+				<label>Get All Visible Emails In List Form To Copy: </label>
+				<input type="submit" name="action" value="Get Emails">
+			</div>
+		</form>
 		<?php if($rowNum>0) :?>
 			<form action="?add" method="post">
 				<div>
