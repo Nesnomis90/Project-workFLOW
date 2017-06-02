@@ -82,11 +82,7 @@
 				<?php foreach ($equipment as $row): ?>
 					<form action="" method="post">
 						<tr>
-							<td>
-								<?php htmlout($row['EquipmentName']); ?>
-								<input type="hidden" id="EquipmentName" name="EquipmentName"
-								value="<?php htmlout($row['EquipmentName']); ?>">
-							</td>
+							<td><?php htmlout($row['EquipmentName']); ?></td>
 							<td><?php htmlout($row['EquipmentDescription']); ?></td>
 							<td><?php htmlout($row['EquipmentIsInTheseRooms']); ?></td>
 							<td><?php htmlout($row['DateTimeAdded']); ?></td>
@@ -107,13 +103,15 @@
 									<input type="submit" name="disabled" value="Delete" disabled>
 								<?php endif; ?>
 							</td>
+							<input type="hidden" id="EquipmentName" name="EquipmentName"
+							value="<?php htmlout($row['EquipmentName']); ?>">
 							<input type="hidden" name="EquipmentID" value="<?php echo $row['TheEquipmentID']; ?>">
 						</tr>
 					</form>
 				<?php endforeach; ?>
 			</table>
 		<?php else : ?>
-			<tr><b>There are no employees in this company registered in the database.</b></tr>
+			<tr><b>There are no equipment registered in the database.</b></tr>
 			<tr><input type="submit" name="action" value="Add Equipment"></tr>
 		<?php endif; ?>
 		</form>

@@ -25,27 +25,30 @@ if (isset($_POST['action']) AND $_POST['action'] == "Disable Delete"){
 }
 
 // Let's define what checkboxes should be displayed
-$checkboxes[] = array(
-							// Log action name`			//text displayed			// If line feed // if checked
-						array('Account Activated', 		'Account Activated', 		FALSE, 			FALSE),
-						array('Account Created', 		'Account Created', 			FALSE, 			FALSE),
-						array('Account Removed', 		'Account Removed', 			TRUE, 			FALSE),
-						array('Booking Cancelled', 		'Booking Cancelled', 		FALSE, 			FALSE),
-						array('Booking Completed', 		'Booking Completed', 		FALSE, 			FALSE),
-						array('Booking Created', 		'Booking Created', 			FALSE, 			FALSE),
-						array('Booking Removed', 		'Booking Removed', 			TRUE, 			FALSE),
-						array('Company Created', 		'Company Created', 			FALSE, 			FALSE),
-						array('Company Removed', 		'Company Removed', 			TRUE, 			FALSE),
-						array('Database Created', 		'Database Created', 		FALSE, 			FALSE),
-						array('Table Created', 			'Database Table Created', 	TRUE,			FALSE),
-						array('Employee Added', 		'Employee Added', 			FALSE, 			FALSE),
-						array('Employee Removed', 		'Employee Removed', 		TRUE, 			FALSE),
-						array('Equipment Added', 		'Equipment Added', 			FALSE,			FALSE),
-						array('Equipment Removed', 		'Equipment Removed', 		TRUE, 			FALSE),
-						array('Meeting Room Added', 	'Meeting Room Added', 		FALSE, 			FALSE),
-						array('Meeting Room Removed', 	'Meeting Room Removed', 	TRUE, 			FALSE),
-						array('Room Equipment Added', 	'Room Equipment Added',		FALSE, 			FALSE),
-						array('Room Equipment Removed', 'Room Equipment Removed', 	TRUE, 			FALSE)
+$checkboxes = array(
+							// Log action name`					//text displayed			// If line feed // if checked
+						array('Account Activated', 				'Account Activated', 		FALSE, 			FALSE),
+						array('Account Created', 				'Account Created', 			FALSE, 			FALSE),
+						array('Account Removed', 				'Account Removed', 			TRUE, 			FALSE),
+						array('Booking Cancelled', 				'Booking Cancelled', 		FALSE, 			FALSE),
+						array('Booking Completed', 				'Booking Completed', 		FALSE, 			FALSE),
+						array('Booking Created', 				'Booking Created', 			FALSE, 			FALSE),
+						array('Booking Removed', 				'Booking Removed', 			TRUE, 			FALSE),
+						array('Company Created', 				'Company Created', 			FALSE, 			FALSE),
+						array('Company Removed', 				'Company Removed', 			FALSE, 			FALSE),
+						array('Company Credits Changed', 		'Company Credits Changed', 	TRUE, 			FALSE),
+						array('Credits Added', 					'Credits Added', 			FALSE, 			FALSE),
+						array('Credits Removed', 				'Credits Removed', 			TRUE, 			FALSE),						
+						array('Database Created', 				'Database Created', 		FALSE, 			FALSE),
+						array('Table Created', 					'Database Table Created', 	TRUE,			FALSE),
+						array('Employee Added', 				'Employee Added', 			FALSE, 			FALSE),
+						array('Employee Removed', 				'Employee Removed', 		TRUE, 			FALSE),
+						array('Equipment Added', 				'Equipment Added', 			FALSE,			FALSE),
+						array('Equipment Removed', 				'Equipment Removed', 		TRUE, 			FALSE),
+						array('Meeting Room Added', 			'Meeting Room Added', 		FALSE, 			FALSE),
+						array('Meeting Room Removed', 			'Meeting Room Removed', 	TRUE, 			FALSE),
+						array('Room Equipment Added',			'Room Equipment Added',		FALSE, 			FALSE),
+						array('Room Equipment Removed', 		'Room Equipment Removed', 	TRUE, 			FALSE)
 					);		
 
 
@@ -124,18 +127,13 @@ if (isset($_POST['action']) AND $_POST['action'] == "Refresh Logs" OR
 				// Let's remember what checkboxes have been checked
 					// We pass the array by reference so we can edit the values
 				foreach($checkboxes AS &$checkbox){
-					foreach($checkbox AS &$info){
-
-						if($check == $info[0]){
-							// Update the checkmark status from FALSE to TRUE
-							$info[3] = TRUE;
-							unset($info); 	// <-- This is IMPORTANT. We need to say we're done with that reference
+					if($check == $checkbox[0]){
+						// Update the checkmark status from FALSE to TRUE
+						$checkbox[3] = TRUE;
+						unset($checkbox); 	// <-- This is IMPORTANT. We need to say we're done with that reference
 											// Or else the original array gets all messed up.
-											
-							// No need to look through the array more, we've already updated the value
-							break 2; // Exit both for each loops
-						}	
-					}
+						break ;
+					}	
 				}
 			}
 		} else {

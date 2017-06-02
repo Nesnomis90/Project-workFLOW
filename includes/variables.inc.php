@@ -24,6 +24,11 @@ define('DATETIME_DEFAULT_FORMAT_TO_DISPLAY', 'F jS Y H:i '); //To-DO: REPLACE WI
 define('DATE_DEFAULT_FORMAT_TO_DISPLAY', 'F jS Y'); //To-DO: REPLACE WITH ABOVE
 define('DATE_DEFAULT_TIMEZONE', 'Europe/Oslo');
 
+// Currency
+define('SET_CURRENCY', 'NOK');
+define('SET_CURRENCY_SYMBOL', '');
+define('SET_CURRENCY_DECIMAL_PRECISION', '2');
+
 // Timing variables
 	//variables used to validate code, handle events
 define('MINIMUM_BOOKING_TIME_IN_MINUTES', 15); //1, 5, 10, 15, 30 or 60
