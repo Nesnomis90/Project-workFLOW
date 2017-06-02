@@ -83,49 +83,51 @@ function validateUserInputs(){
 		$_SESSION['AddEquipmentError'] = "The equipment description submitted is too long.";	
 		$invalidInput = TRUE;		
 	}
-	
+
 	// Check if the equipment already exists (based on name).
-		// only if we have changed the name (edit only)
+	$nameChanged = TRUE;
 	if(isset($_SESSION['EditEquipmentOriginalInfo'])){
 		$originalEquipmentName = strtolower($_SESSION['EditEquipmentOriginalInfo']['EquipmentName']);
-		$newEquipmentName = strtolower($validatedEquipmentName);		
+		$newEquipmentName = strtolower($validatedEquipmentName);	
 
 		if($originalEquipmentName == $newEquipmentName){
-			// Do nothing, since we haven't changed the name we're editing
-		} elseif(!$invalidInput) {
-			// Check if new name is taken
-			try
-			{
-				include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
-				$pdo = connect_to_db();
-				$sql = 'SELECT 	COUNT(*) 
-						FROM 	`equipment`
-						WHERE 	`name`= :EquipmentName';
-				$s = $pdo->prepare($sql);
-				$s->bindValue(':EquipmentName', $validatedEquipmentName);		
-				$s->execute();
-				
-				$pdo = null;
-				
-				$row = $s->fetch();
-				
-				if ($row[0] > 0)
-				{
-					// This name is already being used for an equipment
-					$_SESSION['AddEquipmentError'] = "There is already an equipment with the name: " . $validatedEquipmentName . "!";
-					$invalidInput = TRUE;	
-				}
-				// Equipment name hasn't been used before	
-			}
-			catch (PDOException $e)
-			{
-				$error = 'Error searching through equipment.' . $e->getMessage();
-				include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
-				$pdo = null;
-				exit();
-			}
-		}	
+			$nameChanged = FALSE;
+		} 
 	}
+	if($nameChanged AND !$invalidInput) {
+		// Check if new name is taken
+		try
+		{
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+			$pdo = connect_to_db();
+			$sql = 'SELECT 	COUNT(*) 
+					FROM 	`equipment`
+					WHERE 	`name`= :EquipmentName';
+			$s = $pdo->prepare($sql);
+			$s->bindValue(':EquipmentName', $validatedEquipmentName);		
+			$s->execute();
+			
+			$pdo = null;
+			
+			$row = $s->fetch();
+			
+			if ($row[0] > 0)
+			{
+				// This name is already being used for an equipment
+				$_SESSION['AddEquipmentError'] = "There is already an equipment with the name: " . $validatedEquipmentName . "!";
+				$invalidInput = TRUE;	
+			}
+			// Equipment name hasn't been used before	
+		}
+		catch (PDOException $e)
+		{
+			$error = 'Error searching through equipment.' . $e->getMessage();
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+			$pdo = null;
+			exit();
+		}
+	}
+	
 return array($invalidInput, $validatedEquipmentDescription, $validatedEquipmentName);
 }
 

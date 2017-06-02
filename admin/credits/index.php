@@ -182,46 +182,47 @@ function validateUserInputs(){
 	}
 	
 	// Check if the credits already exists (based on name).
-		// only if we have changed the name (edit only)
+	$nameChanged = TRUE;
 	if(isset($_SESSION['EditCreditsOriginalInfo'])){
 		$originalCreditsName = strtolower($_SESSION['EditCreditsOriginalInfo']['CreditsName']);
 		$newCreditsName = strtolower($validatedCreditsName);		
 
 		if($originalCreditsName == $newCreditsName){
-			// Do nothing, since we haven't changed the name we're editing
-		} elseif(!$invalidInput) {
-			// Check if new name is taken
-			try
+			$nameChanged = FALSE;
+		} 
+	}
+	if($nameChanged AND !$invalidInput) {
+		// Check if new name is taken
+		try
+		{
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+			$pdo = connect_to_db();
+			$sql = 'SELECT 	COUNT(*) 
+					FROM 	`credits`
+					WHERE 	`name`= :creditsName';
+			$s = $pdo->prepare($sql);
+			$s->bindValue(':creditsName', $validatedCreditsName);		
+			$s->execute();
+			
+			$pdo = null;
+			
+			$row = $s->fetch();
+			
+			if ($row[0] > 0)
 			{
-				include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
-				$pdo = connect_to_db();
-				$sql = 'SELECT 	COUNT(*) 
-						FROM 	`credits`
-						WHERE 	`name`= :creditsName';
-				$s = $pdo->prepare($sql);
-				$s->bindValue(':creditsName', $validatedCreditsName);		
-				$s->execute();
-				
-				$pdo = null;
-				
-				$row = $s->fetch();
-				
-				if ($row[0] > 0)
-				{
-					// This name is already being used for a credits
-					$_SESSION['EditCreditsError'] = "There is already a credits with the name: " . $validatedCreditsName . "!";
-					$invalidInput = TRUE;	
-				}
-				// Credits name hasn't been used before	
+				// This name is already being used for a credits
+				$_SESSION['EditCreditsError'] = "There is already a credits with the name: " . $validatedCreditsName . "!";
+				$invalidInput = TRUE;	
 			}
-			catch (PDOException $e)
-			{
-				$error = 'Error searching through credits.' . $e->getMessage();
-				include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
-				$pdo = null;
-				exit();
-			}
-		}	
+			// Credits name hasn't been used before	
+		}
+		catch (PDOException $e)
+		{
+			$error = 'Error searching through credits.' . $e->getMessage();
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+			$pdo = null;
+			exit();
+		}
 	}
 
 return array($invalidInput, $validatedCreditsDescription, $validatedCreditsName, $validatedCreditsAmount, $validatedCreditsHourPrice, $validatedCreditsMinutePrice, $validatedCreditsMonthlyPrice);
@@ -379,6 +380,7 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Confirm Credits')
 {
 	// Validate user inputs
 	list($invalidInput, $validatedCreditsDescription, $validatedCreditsName, $validatedCreditsAmount, $validatedCreditsHourPrice, $validatedCreditsMinutePrice, $validatedCreditsMonthlyPrice) = validateUserInputs();
+	
 	// Refresh form on invalid
 	if($invalidInput){
 		
