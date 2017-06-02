@@ -39,9 +39,58 @@
 			<?php endif; ?>					
 			<div>
 				<label for="CreditsDescription">Set New Credits Description: </label>
-					<textarea rows="4" cols="50" name="CreditsDescription" id="CreditsDescription"
-					placeholder="Enter Credits Description"><?php htmlout($CreditsDescription); ?></textarea>
-			</div>			
+				<textarea rows="4" cols="50" name="CreditsDescription" id="CreditsDescription"
+				placeholder="Enter Credits Description"><?php htmlout($CreditsDescription); ?></textarea>
+			</div>
+			<?php if($button == 'Edit Credits') : ?>
+			<div>
+				<label for="OriginalCreditsAmount">Original Credits Amount: </label>
+				<b><?php htmlout($originalCreditsAmount); ?></b>
+			</div>
+			<?php endif; ?>					
+			<div>
+				<label for="CreditsAmount">Set New Credits Amount: </label>
+				<input type="number" name="CreditsAmount" id="CreditsAmount" 
+				min="0" max="65535"
+				placeholder="Minutes"
+				value="<?php htmlout($CreditsAmount); ?>">
+			</div>
+			<?php if($button == 'Edit Credits') : ?>
+			<div>
+				<label for="OriginalCreditsMonthlyPrice">Original Monthly Subscription Price: </label>
+				<b><?php htmlout($originalCreditsMonthlyPrice); ?></b>
+			</div>
+			<?php endif; ?>					
+			<div>
+				<label for="CreditsMonthlyPrice">Set New Monthly Subscription Price: </label>
+				<input type="number" name="CreditsMonthlyPrice" id="CreditsMonthlyPrice" 
+				min="0" max="65535"
+				value="<?php htmlout($CreditsMonthlyPrice); ?>">
+			</div>
+			<?php if($button == 'Edit Credits') : ?>
+			<div>
+				<label for="OriginalCreditsHourPrice">Original Over Credits Fee (Charged per hour): </label>
+				<b><?php htmlout($originalCreditsHourPrice); ?></b>
+			</div>
+			<?php endif; ?>					
+			<div>
+				<label for="CreditsHourPrice">Set New Over Credits Fee (Charged per hour): </label>
+				<input type="number" name="CreditsHourPrice" id="CreditsHourPrice" 
+				min="0" max="65535"
+				value="<?php htmlout($CreditsHourPrice); ?>">
+			</div>
+			<?php if($button == 'Edit Credits') : ?>
+			<div>
+				<label for="OriginalCreditsMinutePrice">Original Over Credits Fee (Charged per minute): </label>
+				<b><?php htmlout($originalCreditsMinutePrice); ?></b>
+			</div>
+			<?php endif; ?>					
+			<div>
+				<label for="CreditsMinutePrice">Set New Over Credits Fee (Charged per minute): </label>
+				<input type="text" name="CreditsMinutePrice" id="CreditsMinutePrice" 
+				placeholder="e.g. 2.50"
+				value="<?php htmlout($CreditsMinutePrice); ?>">
+			</div>				
 			<div>
 				<input type="hidden" name="CreditsID" value="<?php htmlout($CreditsID); ?>">
 				<input type="submit" name="action" value="<?php htmlout($button); ?>">

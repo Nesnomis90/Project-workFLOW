@@ -96,10 +96,10 @@
 									<b>N/A</b>
 								<?php else : ?>
 									<?php if(isset($_SESSION['creditsEnableDelete']) AND $_SESSION['creditsEnableDelete'] AND
-											$row['CreditsIsUsedByThisManyCompanies'] == "") : ?>
+											$row['CreditsIsUsedByThisManyCompanies'] == 0) : ?>
 										<input type="submit" name="action" value="Delete">
 									<?php elseif(isset($_SESSION['creditsEnableDelete']) AND $_SESSION['creditsEnableDelete'] AND
-											$row['CreditsIsUsedByThisManyCompanies'] != "") : ?>
+											$row['CreditsIsUsedByThisManyCompanies'] != 0) : ?>
 										<?php if(isset($_SESSION['creditsEnableDeleteUsedCredits']) AND $_SESSION['creditsEnableDeleteUsedCredits']) : ?>
 											<input type="submit" name="action" value="Delete">
 										<?php else : ?>

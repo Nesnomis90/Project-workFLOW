@@ -114,7 +114,20 @@ function isNumberInvalidCreditsMinutePrice($creditsMinutePrice){
 	
 	$maxNumber = 65535;	// To-do: change if needed
 	$minNumber = 0;
-	if($creditsHourPrice < $minNumber OR $creditsHourPrice > $maxNumber){
+	if($creditsMinutePrice < $minNumber OR $creditsMinutePrice > $maxNumber){
+		return TRUE;
+	}
+	return FALSE;	
+}
+
+	// Credits Monthly Subscription Price
+// Returns TRUE on invalid, FALSE on valid
+function isNumberInvalidCreditsMonthlyPrice($creditsMonthlyPrice){
+	// Has to be between 0 and 65535
+	
+	$maxNumber = 65535;	// To-do: change if needed
+	$minNumber = 0;
+	if($creditsMonthlyPrice < $minNumber OR $creditsMonthlyPrice > $maxNumber){
 		return TRUE;
 	}
 	return FALSE;	

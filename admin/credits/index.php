@@ -50,6 +50,12 @@ function validateUserInputs(){
 		$invalidInput = TRUE;
 		$_SESSION['EditCreditsError'] = "A credits cannot be added without a monthly given amount!";
 	}
+	if(isset($_POST['CreditsMonthlyPrice']) AND !$invalidInput){
+		$creditsMonthlyPrice = trim($_POST['CreditsMonthlyPrice']);
+	} else {
+		$invalidInput = TRUE;
+		$_SESSION['EditCreditsError'] = "A credits cannot be added without a monthly subscription price!";
+	}
 	if(isset($_POST['CreditsHourPrice']) AND !$invalidInput){
 		$creditsHourPrice = trim($_POST['CreditsHourPrice']);
 	} else {
@@ -75,6 +81,7 @@ function validateUserInputs(){
 	$validatedCreditsAmount = trimAllWhitespace($creditsAmount);
 	$validatedCreditsHourPrice = trimAllWhitespace($creditsHourPrice);
 	$validatedCreditsMinutePrice = trimAllWhitespace($creditsMinutePrice);
+	$validatedCreditsMonthlyPrice = trimAllWhitespace($creditsMonthlyPrice);
 	
 	// Do actual input validation
 	if(validateString($validatedCreditsName) === FALSE AND !$invalidInput){
@@ -97,6 +104,11 @@ function validateUserInputs(){
 	if(validateFloatNumber($validatedCreditsMinutePrice) === FALSE AND !$invalidInput){
 		$invalidInput = TRUE;
 		$_SESSION['EditCreditsError'] = "Your submitted minute by minute over credits fee has illegal characters in it.";
+	}
+	// TO-DO: Make float?
+	if(validateIntegerNumber($validatedCreditsMonthlyPrice) === FALSE AND !$invalidInput){
+		$invalidInput = TRUE;
+		$_SESSION['EditCreditsError'] = "Your submitted monthly subscription price has illegal characters in it.";
 	}	
 	
 	// Are values actually filled in?
@@ -115,6 +127,14 @@ function validateUserInputs(){
 	if($validatedCreditsHourPrice == "" AND $validatedCreditsMinutePrice == "" AND !$invalidInput){
 		$_SESSION['EditCreditsError'] = "You need to fill in a hourly or minute by minute over credits fee for your credits.";	
 		$invalidInput = TRUE;		
+	}
+	if($validatedCreditsHourPrice != "" AND $validatedCreditsMinutePrice != "" AND !$invalidInput){
+		$_SESSION['EditCreditsError'] = "You cannot fill in both a hourly and a minute by minute over credits fee for your credits.";	
+		$invalidInput = TRUE;		
+	}	
+	if($validatedCreditsMonthlyPrice == "" AND !$invalidInput){
+		$_SESSION['EditCreditsError'] = "You need to fill in a monthly subscription price for your credits.";	
+		$invalidInput = TRUE;
 	}
 
 	// Check if input length is allowed
@@ -140,14 +160,20 @@ function validateUserInputs(){
 	}
 		// Credits Hourly Price
 	$invalidCreditsHourPrice = isNumberInvalidCreditsHourPrice($validatedCreditsHourPrice);
-	if($invalidCreditsAmount AND !$invalidInput){
+	if($invalidCreditsHourPrice AND !$invalidInput){
 		$_SESSION['EditCreditsError'] = "The hourly over credits fee submitted is too big.";	
 		$invalidInput = TRUE;
 	}
 		// Credits Minute Price
 	$invalidCreditsMinutePrice = isNumberInvalidCreditsMinutePrice($validatedCreditsMinutePrice);
-	if($invalidCreditsAmount AND !$invalidInput){
+	if($invalidCreditsMinutePrice AND !$invalidInput){
 		$_SESSION['EditCreditsError'] = "The minute by minute over credits fee submitted is too big.";	
+		$invalidInput = TRUE;
+	}
+		// Credits Monthly Price
+	$invalidCreditsMonthlyPrice = isNumberInvalidCreditsMonthlyPrice($validatedCreditsMonthlyPrice);
+	if($invalidCreditsMonthlyPrice AND !$invalidInput){
+		$_SESSION['EditCreditsError'] = "The monthly subscription price is too big.";	
 		$invalidInput = TRUE;
 	}
 	
@@ -193,7 +219,8 @@ function validateUserInputs(){
 			}
 		}	
 	}
-return array($invalidInput, $validatedCreditsDescription, $validatedCreditsName);
+
+return array($invalidInput, $validatedCreditsDescription, $validatedCreditsName, $validatedCreditsAmount, $validatedCreditsHourPrice, $validatedCreditsMinutePrice, $validatedCreditsMonthlyPrice);
 }
 
 // If admin wants to be able to delete credits it needs to enabled first
@@ -328,8 +355,7 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Add Credits') OR
 if (isset($_POST['action']) AND $_POST['action'] == 'Confirm Credits')
 {
 	// Validate user inputs
-	list($invalidInput, $validatedCreditsDescription, $validatedCreditsName) = validateUserInputs();
-	
+	list($invalidInput, $validatedCreditsDescription, $validatedCreditsName, $validatedCreditsAmount, $validatedCreditsHourPrice, $validatedCreditsMinutePrice, $validatedCreditsMonthlyPrice) = validateUserInputs();
 	// Refresh form on invalid
 	if($invalidInput){
 		
@@ -349,10 +375,18 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Confirm Credits')
 		$pdo = connect_to_db();
 		$sql = 'INSERT INTO `credits` 
 				SET			`name` = :CreditsName,
-							`description` = :CreditsDescription';
+							`description` = :CreditsDescription
+							`minuteAmount` = :CreditsAmount,
+							`monthlyPrice` = :CreditsMonthlyPrice,
+							`overCreditMinutePrice` = :CreditsMinutePrice,
+							`overCreditHourPrice` = :CreditsHourPrice';
 		$s = $pdo->prepare($sql);
 		$s->bindValue(':CreditsName', $validatedCreditsName);
-		$s->bindValue(':CreditsDescription', $validatedCreditsDescription);		
+		$s->bindValue(':CreditsDescription', $validatedCreditsDescription);
+		$s->bindValue(':CreditsAmount', $validatedCreditsAmount);
+		$s->bindValue(':CreditsMonthlyPrice', $validatedCreditsMonthlyPrice);
+		$s->bindValue(':CreditsMinutePrice', $validatedCreditsMinutePrice);
+		$s->bindValue(':CreditsHourPrice', $validatedCreditsHourPrice);
 		$s->execute();
 	
 		unset($_SESSION['LastCreditsID']);
@@ -520,7 +554,7 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR
 if (isset($_POST['action']) AND $_POST['action'] == 'Edit Credits')
 {
 	// Validate user inputs
-	list($invalidInput, $validatedCreditsDescription, $validatedCreditsName) = validateUserInputs();
+	list($invalidInput, $validatedCreditsDescription, $validatedCreditsName, $validatedCreditsAmount, $validatedCreditsHourPrice, $validatedCreditsMinutePrice, $validatedCreditsMonthlyPrice) = validateUserInputs();
 
 	// Make sure we don't try to change the name of the Credits named 'Default'
 	// Or try to change the description
@@ -574,7 +608,8 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Edit Credits')
 			$pdo = connect_to_db();
 			$sql = 'UPDATE 	`credits`
 					SET		`name` = :CreditsName,
-							`description` = :CreditsDescription
+							`description` = :CreditsDescription,
+							`lastModified` = CURRENT_TIMESTAMP
 					WHERE 	CreditsID = :id';
 			$s = $pdo->prepare($sql);
 			$s->bindValue(':id', $_POST['CreditsID']);
