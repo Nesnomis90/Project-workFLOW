@@ -379,7 +379,8 @@ function create_tables()
 						  `location` varchar(255) DEFAULT NULL,
 						  `idCode` char(64) NOT NULL,
 						  PRIMARY KEY (`meetingRoomID`),
-						  UNIQUE KEY `idCode_UNIQUE` (`idCode`)
+						  UNIQUE KEY `idCode_UNIQUE` (`idCode`),
+						  UNIQUE KEY `name_UNIQUE` (`name`)
 						) ENGINE=InnoDB DEFAULT CHARSET=utf8");
 						
 			//	Add the creation to log event
@@ -584,11 +585,12 @@ function create_tables()
 		if (!tableExists($conn, $table))
 		{
 			$conn->exec("CREATE TABLE IF NOT EXISTS `$table` (
-						`EquipmentID` int(10) unsigned NOT NULL AUTO_INCREMENT,
-						`name` varchar(255) NOT NULL,
-						`description` text NOT NULL,
-						`datetimeAdded` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-						PRIMARY KEY (`EquipmentID`)
+						  `EquipmentID` int(10) unsigned NOT NULL AUTO_INCREMENT,
+						  `name` varchar(255) NOT NULL,
+						  `description` text NOT NULL,
+						  `datetimeAdded` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+						  PRIMARY KEY (`EquipmentID`),
+						  UNIQUE KEY `name_UNIQUE` (`name`)
 						) ENGINE=InnoDB DEFAULT CHARSET=utf8");
 						
 			//	Add the creation to log event
