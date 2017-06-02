@@ -1,5 +1,28 @@
 <?php
+require_once 'variables.inc.php';
 // This is a collection of functions we use to check if user inputs are OK
+
+function convertToCurrency($input){
+	if(SET_CURRENCY_DECIMAL_PRECISION > 0){
+		if(SET_CURRENCY_SYMBOL != ""){
+			$output = number_format($input,SET_CURRENCY_DECIMAL_PRECISION) . SET_CURRENCY_SYMBOL;
+		} elseif(SET_CURRENCY != ""){
+			$output = number_format($input,SET_CURRENCY_DECIMAL_PRECISION) . " " . SET_CURRENCY;
+		} else {
+			$output = number_format($input,SET_CURRENCY_DECIMAL_PRECISION);
+		}		
+	} else {
+		if(SET_CURRENCY_SYMBOL != ""){
+			$output = $input . SET_CURRENCY_SYMBOL;
+		} elseif(SET_CURRENCY != ""){
+			$output = $input . " " . SET_CURRENCY;
+		} else {
+			$output = $input;
+		}			
+	}
+
+	return $output;
+}
 
 // Function to check if variables are too big for MySQL or our liking
 	//Display Names
@@ -236,7 +259,6 @@ function validateString($oldString){
 
 // Function to check if input string uses legal characters for an integer number only
 // \d = any digit
-// TO-DO: UNTESTED
 function validateIntegerNumber($oldString){
 	if(preg_match('/^[+-]?\d+$/', $oldString)){
 		return TRUE;

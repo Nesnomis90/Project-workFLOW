@@ -67,7 +67,7 @@
 			<table id="creditstable">
 				<caption>Available Credits</caption>
 				<tr>
-					<th colspan="4">Credits</th>
+					<th colspan="5">Credits</th>
 					<th colspan="2">Dates</th>
 					<th colspan="2">Alter Credits</th>
 				</tr>
@@ -75,6 +75,7 @@
 					<th>Name</th>
 					<th>Description</th>
 					<th>Monthly Free Booking Time</th>
+					<th>Over Credits Fee</th>
 					<th>Active for # Companies</th>
 					<th>Added</th>
 					<th>Last Modified</th>
@@ -87,6 +88,7 @@
 							<td><?php htmlout($row['CreditsName']); ?></td>
 							<td><?php htmlout($row['CreditsDescription']); ?></td>
 							<td><?php htmlout($row['CreditsGiven']); ?></td>
+							<td><?php htmlout($row['CreditsOverCreditsFee']); ?></td>
 							<td><?php htmlout($row['CreditsIsUsedByThisManyCompanies']); ?></td>
 							<td><?php htmlout($row['CreditsLastModified']); ?></td>
 							<td><?php htmlout($row['DateTimeAdded']); ?></td>

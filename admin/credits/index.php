@@ -393,8 +393,13 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Confirm Credits')
 		$_SESSION['refreshAddCredits'] = TRUE;
 		header('Location: .');
 		exit();			
+	}
+	if($validatedCreditsMinutePrice == ""){
+		$validatedCreditsMinutePrice = NULL;
+	}
+	if($validatedCreditsHourPrice == ""){
+		$validatedCreditsHourPrice = NULL;
 	}	
-	
 	// Add the Credits to the database
 	try
 	{		
@@ -753,12 +758,24 @@ foreach($result AS $row){
 		$creditsGiven = 'None';
 	}
 	
+	// Format what over fee rate we're using (hourly or minute by minute)
+	$creditsMinutePrice = $row['CreditsMinutePrice'];
+	$creditsHourPrice = $row['CreditsHourPrice'];
+	if($creditsMinutePrice != NULL){
+		$creditsOverCreditsFee = convertToCurrency($creditsMinutePrice) . '/min';
+	} elseif($creditsHourPrice != NULL) {
+		$creditsOverCreditsFee = convertToCurrency($creditsHourPrice) . '/hour';
+	} else {
+		$creditsOverCreditsFee = "Error, not set.";
+	}
+	
 	// Create an array with the actual key/value pairs we want to use in our HTML
 	$credits[] = array(
 							'TheCreditsID' => $row['TheCreditsID'],
 							'CreditsName' => $row['CreditsName'],
 							'CreditsDescription' => $row['CreditsDescription'],
 							'CreditsGiven' => $creditsGiven,
+							'CreditsOverCreditsFee' => $creditsOverCreditsFee,
 							'DateTimeAdded' => $displayAddedDateTime,
 							'CreditsLastModified' => $displayModifiedDateTime,
 							'CreditsIsUsedByThisManyCompanies' => $row['CreditsIsUsedByThisManyCompanies']							
