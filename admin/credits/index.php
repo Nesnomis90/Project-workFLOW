@@ -291,7 +291,7 @@ if(isset($_POST['action']) AND $_POST['action'] == 'Delete'){
 		try
 		{
 			// Save a description with information about the Credits that was Deleted
-			$description = "The Credits: " . $_POST['CreditsID'] . " was removed by: " . $_SESSION['LoggedInUserName'];
+			$description = "The Credits: " . $_POST['CreditsName'] . " was removed by: " . $_SESSION['LoggedInUserName'];
 			
 			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 			
@@ -442,9 +442,35 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Confirm Credits')
 		// Add a log event that we added a Credits
 	try
 	{
-		// Save a description with information about the Credits that was added
-		$description = "The Credits: " . $validatedCreditsName . ", with description: " . 
-		$validatedCreditsDescription . " was added by: " . $_SESSION['LoggedInUserName'];
+		// Format Credits (From minutes to hours and minutes)
+		$creditsGivenInMinutes = $validatedCreditsAmount;
+		if($creditsGivenInMinutes > 59){
+			$creditsGivenInHours = floor($creditsGivenInMinutes/60);
+			$creditsGivenInMinutes -= $creditsGivenInHours*60;
+			$creditsGiven = $creditsGivenInHours . 'h' . $creditsGivenInMinutes . 'm';
+		} elseif($creditsGivenInMinutes > 0) {
+			$creditsGiven = '0h' . $creditsGivenInMinutes . 'm';
+		} else {
+			$creditsGiven = 'None';
+		}
+		
+		// Format what over fee rate we're using (hourly or minute by minute)
+		if($validatedCreditsMinutePrice != NULL){
+			$creditsOverCreditsFee = convertToCurrency($validatedCreditsMinutePrice) . '/min';
+		} elseif($validatedCreditsHourPrice != NULL) {
+			$creditsOverCreditsFee = convertToCurrency($validatedCreditsHourPrice) . '/hour';
+		} else {
+			$creditsOverCreditsFee = "Error, not set.";
+		}
+		
+		$creditsMonthlyPrice = convertToCurrency($validatedCreditsMonthlyPrice);
+		
+	// Save a description with information about the Credits that was added
+		$description = "The Credits: " . $validatedCreditsName . " with description: " . 
+		$validatedCreditsDescription . ", and monthly credits given: " . $creditsGiven . 
+		", and monthly subscription price: " . $creditsMonthlyPrice . 
+		", and over credits fee: " . $creditsOverCreditsFee .
+		" was added by: " . $_SESSION['LoggedInUserName'];
 		
 		if(isset($_SESSION['LastCreditsID'])){
 			$lastCreditsID = $_SESSION['LastCreditsID'];
