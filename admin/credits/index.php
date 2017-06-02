@@ -452,7 +452,7 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Confirm Credits')
 		}
 		
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
-		
+		// TO-DO: Add credits ID, credit amount etc.
 		$pdo = connect_to_db();
 		$sql = "INSERT INTO `logevent` 
 				SET			`actionID` = 	(
