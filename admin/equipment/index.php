@@ -154,7 +154,7 @@ if (isset($_POST['action']) AND $_POST['action'] == "Disable Delete"){
 	$refreshEquipment = TRUE;
 }
 
-// If admin wants to delete unavailable equipment
+// If admin wants to delete no longer wanted equipment
 if(isset($_POST['action']) AND $_POST['action'] == 'Delete'){
 	// Delete equipment from database
 	try
@@ -191,9 +191,9 @@ if(isset($_POST['action']) AND $_POST['action'] == 'Delete'){
 		$pdo = connect_to_db();
 		$sql = "INSERT INTO `logevent` 
 				SET			`actionID` = 	(
-												SELECT `actionID` 
-												FROM `logaction`
-												WHERE `name` = 'Equipment Removed'
+												SELECT 	`actionID` 
+												FROM 	`logaction`
+												WHERE 	`name` = 'Equipment Removed'
 											),
 							`description` = :description";
 		$s = $pdo->prepare($sql);

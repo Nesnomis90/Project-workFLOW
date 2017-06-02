@@ -136,15 +136,21 @@ function validateUserInputs(){
 	if($invalidCreditsAmount AND !$invalidInput){
 		$_SESSION['EditCreditsError'] = "The hourly over credits fee submitted is too big.";	
 		$invalidInput = TRUE;
-	}	
+	}
+		// Credits Minute Price
+	$invalidCreditsMinutePrice = isNumberInvalidCreditsMinutePrice($validatedCreditsMinutePrice);
+	if($invalidCreditsAmount AND !$invalidInput){
+		$_SESSION['EditCreditsError'] = "The minute by minute over credits fee submitted is too big.";	
+		$invalidInput = TRUE;
+	}
 	
 	// Check if the credits already exists (based on name).
 		// only if we have changed the name (edit only)
 	if(isset($_SESSION['EditCreditsOriginalInfo'])){
-		$originalcreditsName = strtolower($_SESSION['EditCreditsOriginalInfo']['CreditsName']);
-		$newcreditsName = strtolower($validatedCreditsName);		
+		$originalCreditsName = strtolower($_SESSION['EditCreditsOriginalInfo']['CreditsName']);
+		$newCreditsName = strtolower($validatedCreditsName);		
 
-		if($originalcreditsName == $newcreditsName){
+		if($originalCreditsName == $newCreditsName){
 			// Do nothing, since we haven't changed the name we're editing
 		} elseif(!$invalidInput) {
 			// Check if new name is taken
@@ -183,4 +189,97 @@ function validateUserInputs(){
 return array($invalidInput, $validatedCreditsDescription, $validatedCreditsName);
 }
 
+// If admin wants to be able to delete credits it needs to enabled first
+if (isset($_POST['action']) AND $_POST['action'] == "Enable Delete"){
+	$_SESSION['creditsEnableDelete'] = TRUE;
+	$refreshCredits = TRUE;
+}
+
+// If admin wants to be able to delete credits that is currently being used in a room it needs to enabled first
+if (isset($_POST['action']) AND $_POST['action'] == "Enable Delete Used Credits"){
+	$_SESSION['creditsEnableDeleteUsedCredits'] = TRUE;
+	$refreshCredits = TRUE;
+}
+
+// If admin wants to be disable used credits deletion
+if (isset($_POST['action']) AND $_POST['action'] == "Disable Delete Used Credits"){
+	unset($_SESSION['creditsEnableDeleteUsedCredits']);
+	$refreshCredits = TRUE;
+}
+
+// If admin wants to be disable credits deletion
+if (isset($_POST['action']) AND $_POST['action'] == "Disable Delete"){
+	unset($_SESSION['creditsEnableDelete']);
+	unset($_SESSION['creditsEnableDeleteUsedCredits']);
+	$refreshCredits = TRUE;
+}
+
+// If admin wants to delete no longer wanted Credits
+if(isset($_POST['action']) AND $_POST['action'] == 'Delete'){
+	// We have one Credits that's should always be in the table and never deleted
+	// This one is called 'Default'
+	
+	if(){
+		
+	}
+	// Delete credits from database
+	try
+	{
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+		
+		$pdo = connect_to_db();
+		$sql = "DELETE FROM `credits` 
+				WHERE 		`CreditsID` = :CreditsID
+				AND			`name` != 'Default'";
+		$s = $pdo->prepare($sql);
+		$s->bindValue(':CreditsID', $_POST['CreditsID']);
+		$s->execute();
+		
+		//close connection
+		$pdo = null;
+	}
+	catch (PDOException $e)
+	{
+		$error = 'Error removing Credits: ' . $e->getMessage();
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+		exit();
+	}
+	
+	$_SESSION['CreditsUserFeedback'] = "Successfully removed the Credits.";
+	
+	// Add a log event that the Credits has been Deleted
+	try
+	{
+		// Save a description with information about the Credits that was Deleted
+		$description = "The Credits: " . $_POST['CreditsID'] . " was removed by: " . $_SESSION['LoggedInUserName'];
+		
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+		
+		$pdo = connect_to_db();
+		$sql = "INSERT INTO `logevent` 
+				SET			`actionID` = 	(
+												SELECT 	`actionID` 
+												FROM 	`logaction`
+												WHERE 	`name` = 'Credits Removed'
+											),
+							`description` = :description";
+		$s = $pdo->prepare($sql);
+		$s->bindValue(':description', $description);
+		$s->execute();
+		
+		//Close the connection
+		$pdo = null;		
+	}
+	catch(PDOException $e)
+	{
+		$error = 'Error adding log event to database: ' . $e->getMessage();
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+		$pdo = null;
+		exit();
+	}	
+	
+	// Load company list webpage with updated database
+	header('Location: .');
+	exit();	
+}
 ?>

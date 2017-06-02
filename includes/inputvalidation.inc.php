@@ -106,7 +106,19 @@ function isNumberInvalidCreditsHourPrice($creditsHourPrice){
 	return FALSE;
 }
 
-//TO-DO: Add Minute Price like ^
+	// Credits Minute Price
+// Returns TRUE on invalid, FALSE on valid
+function isNumberInvalidCreditsMinutePrice($creditsMinutePrice){
+	// Is a float so it has a large range
+	// In practice we only need from 0 to some big number
+	
+	$maxNumber = 65535;	// To-do: change if needed
+	$minNumber = 0;
+	if($creditsHourPrice < $minNumber OR $creditsHourPrice > $maxNumber){
+		return TRUE;
+	}
+	return FALSE;	
+}
 
 	// Booking Code Digits
 // Returns TRUE on invalid, FALSE on valid
