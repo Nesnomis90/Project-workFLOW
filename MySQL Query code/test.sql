@@ -2,6 +2,28 @@ USE test;
 SET NAMES utf8;
 USE meetingflow;
 
+SELECT 		cr.`CreditsID`									AS TheCreditsID,
+			cr.`name`										AS CreditsName,
+			cr.`description`								AS CreditsDescription,
+			cr.`minuteAmount`								AS CreditsGivenInMinutes,
+			cr.`monthlyPrice`								AS CreditsMonthlyPrice,
+			cr.`overCreditMinutePrice`						AS CreditsMinutePrice,
+			cr.`overCreditHourPrice`						AS CreditsHourPrice,
+			cr.`lastModified`								AS CreditsLastModified,
+			cr.`datetimeAdded`								AS DateTimeAdded,
+			UNIX_TIMESTAMP(cr.`datetimeAdded`)				AS OrderByDate,
+			COUNT(cc.`CreditsID`)							AS CreditsIsUsedByThisManyCompanies
+FROM 		`credits` cr
+LEFT JOIN 	`companycredits` cc
+ON 			cr.`CreditsID` = cc.`CreditsID`
+GROUP BY 	cr.`CreditsID`
+ORDER BY	OrderByDate
+DESC;
+
+DELETE FROM 	`credits`
+WHERE	`CreditsID` = 1
+AND		`name` != 'Default';
+
 SELECT 		c.`companyID` 										AS CompID,
 			c.`name` 											AS CompanyName,
 			c.`dateTimeCreated`									AS DatetimeCreated,

@@ -117,7 +117,7 @@ function fillCredits($pdo){
 		$pdo->beginTransaction();
 		$pdo->exec("INSERT INTO `credits`
 					SET			`name` = 'Default',
-								`description` = 'Default Subscription set for new companies. They have 0 credit and 0 monthly fee.',
+								`description` = 'Set by default for all new companies.',
 								`minuteAmount` = 0,
 								`monthlyPrice` = 0,
 								`overCreditHourPrice` = 200");

@@ -221,7 +221,7 @@ if(isset($_POST['action']) AND $_POST['action'] == 'Delete'){
 if ((isset($_POST['action']) AND $_POST['action'] == 'Add Equipment') OR
 	(isset($_SESSION['refreshAddEquipment']) AND $_SESSION['refreshAddEquipment']))
 {
-	//Confirm we've refreshed
+	// Confirm we've refreshed
 	unset($_SESSION['refreshAddEquipment']);
 	
 	// Set form variables to be ready for adding values
@@ -312,9 +312,9 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Confirm Equipment')
 		$pdo = connect_to_db();
 		$sql = "INSERT INTO `logevent` 
 				SET			`actionID` = 	(
-												SELECT `actionID` 
-												FROM `logaction`
-												WHERE `name` = 'Equipment Added'
+												SELECT 	`actionID` 
+												FROM 	`logaction`
+												WHERE 	`name` = 'Equipment Added'
 											),
 							`equipmentID` = :TheEquipmentID,
 							`description` = :description";
@@ -480,9 +480,9 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Edit Equipment')
 		{
 			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 			$pdo = connect_to_db();
-			$sql = 'UPDATE `equipment`
+			$sql = 'UPDATE 	`equipment`
 					SET		`name` = :EquipmentName,
-							description = :EquipmentDescription
+							`description` = :EquipmentDescription
 					WHERE 	EquipmentID = :id';
 			$s = $pdo->prepare($sql);
 			$s->bindValue(':id', $_POST['EquipmentID']);
