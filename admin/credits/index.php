@@ -452,7 +452,7 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Confirm Credits')
 		}
 		
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
-		// TO-DO: Add credits ID, credit amount etc.
+		// TO-DO: Add credit amount etc.
 		$pdo = connect_to_db();
 		$sql = "INSERT INTO `logevent` 
 				SET			`actionID` = 	(
@@ -771,12 +771,15 @@ foreach($result AS $row){
 		$creditsOverCreditsFee = "Error, not set.";
 	}
 	
+	$creditsMonthlyPrice = convertToCurrency($row['CreditsMonthlyPrice']);
+	
 	// Create an array with the actual key/value pairs we want to use in our HTML
 	$credits[] = array(
 							'TheCreditsID' => $row['TheCreditsID'],
 							'CreditsName' => $row['CreditsName'],
 							'CreditsDescription' => $row['CreditsDescription'],
 							'CreditsGiven' => $creditsGiven,
+							'CreditsMonthlyPrice' => $creditsMonthlyPrice,
 							'CreditsOverCreditsFee' => $creditsOverCreditsFee,
 							'DateTimeAdded' => $displayAddedDateTime,
 							'CreditsLastModified' => $displayModifiedDateTime,
