@@ -261,7 +261,7 @@ SET 		`CompanyID` = 21,
 
 INSERT INTO `companycredits`
 SET 		`CompanyID` = 1,
-			`CreditsID` = 1,
+			`CreditsID` = 2,
             `altMinuteAmount` = 500;
 
 INSERT INTO `credits`

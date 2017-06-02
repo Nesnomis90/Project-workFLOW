@@ -71,29 +71,27 @@
 				<b>Limit logs displayed by category: </b><br />
 				<input type="checkbox" name="searchAll" value="All" <?php htmlout($checkAll); ?>>All<br />
 				<?php foreach($checkboxes AS $checkbox) : ?>
-					<?php foreach($checkbox AS $info) : ?>
-						<?php //info[0] is the log action name ?>
-						<?php //info[1] is the text displayed ?>
-						<?php //info[2] is if it should have a linefeed ?>
-						<?php //info[3] is if it should be checked ?>
-						<?php if($info[2]) : ?>
-							<?php if($info[3]) : ?>
-								<input type="checkbox" name="search[]" 
-								value="<?php htmlout($info[0]); ?>" checked="checked"><?php htmlout($info[1]); ?></br />
-							<?php else : ?>
-								<input type="checkbox" name="search[]" 
-								value="<?php htmlout($info[0]); ?>"><?php htmlout($info[1]); ?></br />
-							<?php endif; ?>
+					<?php //checkbox[0] is the log action name ?>
+					<?php //checkbox[1] is the text displayed ?>
+					<?php //checkbox[2] is if it should have a linefeed ?>
+					<?php //checkbox[3] is if it should be checked ?>
+					<?php if($checkbox[2]) : ?>
+						<?php if($checkbox[3]) : ?>
+							<input type="checkbox" name="search[]" 
+							value="<?php htmlout($checkbox[0]); ?>" checked="checked"><?php htmlout($checkbox[1]); ?></br />
 						<?php else : ?>
-							<?php if($info[3]) : ?>
-								<input type="checkbox" name="search[]" 
-								value="<?php htmlout($info[0]); ?>" checked="checked"><?php htmlout($info[1]); ?>
-							<?php else : ?>
-								<input type="checkbox" name="search[]" 
-								value="<?php htmlout($info[0]); ?>"><?php htmlout($info[1]); ?>
-							<?php endif; ?>						
+							<input type="checkbox" name="search[]" 
+							value="<?php htmlout($checkbox[0]); ?>"><?php htmlout($checkbox[1]); ?></br />
 						<?php endif; ?>
-					<?php endforeach; ?>
+					<?php else : ?>
+						<?php if($checkbox[3]) : ?>
+							<input type="checkbox" name="search[]" 
+							value="<?php htmlout($checkbox[0]); ?>" checked="checked"><?php htmlout($checkbox[1]); ?>
+						<?php else : ?>
+							<input type="checkbox" name="search[]" 
+							value="<?php htmlout($checkbox[0]); ?>"><?php htmlout($checkbox[1]); ?>
+						<?php endif; ?>						
+					<?php endif; ?>
 				<?php endforeach; ?>
 			<div>
 				<b>Limit logs displayed by date: </b><br />
