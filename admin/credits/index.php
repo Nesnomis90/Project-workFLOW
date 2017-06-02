@@ -523,6 +523,7 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Edit Credits')
 	list($invalidInput, $validatedCreditsDescription, $validatedCreditsName) = validateUserInputs();
 
 	// Make sure we don't try to change the name of the Credits named 'Default'
+	// Or try to change the description
 	if(isset($_SESSION['EditCreditsOriginalInfo'])){
 		if(	$_SESSION['EditCreditsOriginalInfo']['CreditsName'] == 'Default' AND
 			$validatedCreditsName != 'Default'){
@@ -530,6 +531,12 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Edit Credits')
 			$_SESSION['EditCreditsError'] = "You can not alter the name of this Credits.";
 			$validatedCreditsName = $_SESSION['EditCreditsOriginalInfo']['CreditsName'];
 		}
+		if(	$_SESSION['EditCreditsOriginalInfo']['CreditsName'] == 'Default' AND
+			$validatedCreditsDescription != $_SESSION['EditCreditsOriginalInfo']['CreditsDescription']){
+			$invalidInput = TRUE;
+			$_SESSION['EditCreditsError'] = "You can not alter the description of this Credits.";
+			$validatedCreditsDescription = $_SESSION['EditCreditsOriginalInfo']['CreditsDescription'];
+		}		
 	}
 	
 	// Refresh form on invalid

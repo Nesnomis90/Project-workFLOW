@@ -92,24 +92,28 @@
 							<td><?php htmlout($row['DateTimeAdded']); ?></td>
 							<td><input type="submit" name="action" value="Edit"></td>
 							<td>
-								<?php if(isset($_SESSION['creditsEnableDelete']) AND $_SESSION['creditsEnableDelete'] AND
-										$row['CreditsIsUsedByThisManyCompanies'] == "") : ?>
-									<input type="submit" name="action" value="Delete">
-								<?php elseif(isset($_SESSION['creditsEnableDelete']) AND $_SESSION['creditsEnableDelete'] AND
-										$row['CreditsIsUsedByThisManyCompanies'] != "") : ?>
-									<?php if(isset($_SESSION['creditsEnableDeleteUsedCredits']) AND $_SESSION['creditsEnableDeleteUsedCredits']) : ?>
-										<input type="submit" name="action" value="Delete">
-									<?php else : ?>
-										<b>Not Enabled</b>
-										<input type="submit" name="disabled" value="Delete" disabled>
-									<?php endif; ?>									
+								<?php if($row['CreditsName'] == 'Default') : ?>
+									<b>N/A</b>
 								<?php else : ?>
-									<input type="submit" name="disabled" value="Delete" disabled>
+									<?php if(isset($_SESSION['creditsEnableDelete']) AND $_SESSION['creditsEnableDelete'] AND
+											$row['CreditsIsUsedByThisManyCompanies'] == "") : ?>
+										<input type="submit" name="action" value="Delete">
+									<?php elseif(isset($_SESSION['creditsEnableDelete']) AND $_SESSION['creditsEnableDelete'] AND
+											$row['CreditsIsUsedByThisManyCompanies'] != "") : ?>
+										<?php if(isset($_SESSION['creditsEnableDeleteUsedCredits']) AND $_SESSION['creditsEnableDeleteUsedCredits']) : ?>
+											<input type="submit" name="action" value="Delete">
+										<?php else : ?>
+											<b>Not Enabled</b>
+											<input type="submit" name="disabled" value="Delete" disabled>
+										<?php endif; ?>									
+									<?php else : ?>
+										<input type="submit" name="disabled" value="Delete" disabled>
+									<?php endif; ?>
 								<?php endif; ?>
 							</td>
 							<input type="hidden" id="CreditsName" name="CreditsName"
 							value="<?php htmlout($row['CreditsName']); ?>">
-							<input type="hidden" name="CreditsID" value="<?php echo $row['TheCreditsID']; ?>">
+							<input type="hidden" name="CreditsID" value="<?php htmlout($row['TheCreditsID']); ?>">
 						</tr>
 					</form>
 				<?php endforeach; ?>
