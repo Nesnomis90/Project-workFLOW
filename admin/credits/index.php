@@ -83,34 +83,6 @@ function validateUserInputs(){
 	$validatedCreditsMinutePrice = trimAllWhitespace($creditsMinutePrice);
 	$validatedCreditsMonthlyPrice = trimAllWhitespace($creditsMonthlyPrice);
 	
-	// Do actual input validation
-	if(validateString($validatedCreditsName) === FALSE AND !$invalidInput){
-		$invalidInput = TRUE;
-		$_SESSION['EditCreditsError'] = "Your submitted credits name has illegal characters in it.";
-	}
-	if(validateString($validatedCreditsDescription) === FALSE AND !$invalidInput){
-		$invalidInput = TRUE;
-		$_SESSION['EditCreditsError'] = "Your submitted credits description has illegal characters in it.";
-	}
-	if(validateIntegerNumber($validatedCreditsAmount) === FALSE AND !$invalidInput){
-		$invalidInput = TRUE;
-		$_SESSION['EditCreditsError'] = "Your submitted credits amount has illegal characters in it.";
-	}
-	// TO-DO: Make hour rate a float, just in case?
-	if(validateIntegerNumber($validatedCreditsHourPrice) === FALSE AND !$invalidInput){
-		$invalidInput = TRUE;
-		$_SESSION['EditCreditsError'] = "Your submitted hourly over credits fee has illegal characters in it.";
-	}
-	if(validateFloatNumber($validatedCreditsMinutePrice) === FALSE AND !$invalidInput){
-		$invalidInput = TRUE;
-		$_SESSION['EditCreditsError'] = "Your submitted minute by minute over credits fee has illegal characters in it.";
-	}
-	// TO-DO: Make float?
-	if(validateIntegerNumber($validatedCreditsMonthlyPrice) === FALSE AND !$invalidInput){
-		$invalidInput = TRUE;
-		$_SESSION['EditCreditsError'] = "Your submitted monthly subscription price has illegal characters in it.";
-	}	
-	
 	// Are values actually filled in?
 	if($validatedCreditsName == "" AND !$invalidInput){
 		$_SESSION['EditCreditsError'] = "You need to fill in a name for your credits.";	
@@ -124,18 +96,50 @@ function validateUserInputs(){
 		$_SESSION['EditCreditsError'] = "You need to fill in a monthly given amount for your credits.";	
 		$invalidInput = TRUE;
 	}
-	if($validatedCreditsHourPrice == "" AND $validatedCreditsMinutePrice == "" AND !$invalidInput){
-		$_SESSION['EditCreditsError'] = "You need to fill in a hourly or minute by minute over credits fee for your credits.";	
-		$invalidInput = TRUE;		
-	}
-	if($validatedCreditsHourPrice != "" AND $validatedCreditsMinutePrice != "" AND !$invalidInput){
-		$_SESSION['EditCreditsError'] = "You cannot fill in both a hourly and a minute by minute over credits fee for your credits.";	
-		$invalidInput = TRUE;		
-	}	
 	if($validatedCreditsMonthlyPrice == "" AND !$invalidInput){
 		$_SESSION['EditCreditsError'] = "You need to fill in a monthly subscription price for your credits.";	
 		$invalidInput = TRUE;
+	}	
+	if($validatedCreditsHourPrice == "" AND $validatedCreditsMinutePrice == "" AND !$invalidInput){
+		$_SESSION['EditCreditsError'] = "You need to fill in an hourly or minute by minute over credits fee for your credits.";	
+		$invalidInput = TRUE;		
 	}
+	if($validatedCreditsHourPrice != "" AND $validatedCreditsMinutePrice != "" AND !$invalidInput){
+		$_SESSION['EditCreditsError'] = "You cannot fill in both an hourly and a minute by minute over credits fee for your credits.";	
+		$invalidInput = TRUE;		
+	}		
+	
+	// Do actual input validation
+	if(validateString($validatedCreditsName) === FALSE AND !$invalidInput){
+		$invalidInput = TRUE;
+		$_SESSION['EditCreditsError'] = "Your submitted credits name has illegal characters in it.";
+	}
+	if(validateString($validatedCreditsDescription) === FALSE AND !$invalidInput){
+		$invalidInput = TRUE;
+		$_SESSION['EditCreditsError'] = "Your submitted credits description has illegal characters in it.";
+	}
+	if(validateIntegerNumber($validatedCreditsAmount) === FALSE AND !$invalidInput){
+		$invalidInput = TRUE;
+		$_SESSION['EditCreditsError'] = "Your submitted credits amount has illegal characters in it.";
+	}
+	if($validatedCreditsHourPrice != ""){
+		// TO-DO: Make hour rate a float, just in case?
+		if(validateIntegerNumber($validatedCreditsHourPrice) === FALSE AND !$invalidInput){
+			$invalidInput = TRUE;
+			$_SESSION['EditCreditsError'] = "Your submitted hourly over credits fee has illegal characters in it.";
+		}		
+	}
+	if($validatedCreditsMinutePrice != ""){
+		if(validateFloatNumber($validatedCreditsMinutePrice) === FALSE AND !$invalidInput){
+			$invalidInput = TRUE;
+			$_SESSION['EditCreditsError'] = "Your submitted minute by minute over credits fee has illegal characters in it.";
+		}
+	}
+	// TO-DO: Make float?
+	if(validateIntegerNumber($validatedCreditsMonthlyPrice) === FALSE AND !$invalidInput){
+		$invalidInput = TRUE;
+		$_SESSION['EditCreditsError'] = "Your submitted monthly subscription price has illegal characters in it.";
+	}	
 
 	// Check if input length is allowed
 		// Credits Name
@@ -331,6 +335,10 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Add Credits') OR
 	$pageTitle = 'New Credits';
 	$CreditsName = '';
 	$CreditsDescription = '';
+	$CreditsAmount = '';
+	$CreditsHourPrice = '';
+	$CreditsMinutePrice = '';
+	$CreditsMonthlyPrice = '';
 	$CreditsID = '';
 	$button = 'Confirm Credits';
 	
@@ -338,10 +346,25 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Add Credits') OR
 		$CreditsDescription = $_SESSION['AddCreditsDescription'];
 		unset($_SESSION['AddCreditsDescription']);
 	}
-	
 	if(isset($_SESSION['AddCreditsName'])){
 		$CreditsName = $_SESSION['AddCreditsName'];
 		unset($_SESSION['AddCreditsName']);
+	}
+	if(isset($_SESSION['AddCreditsAmount'])){
+		$CreditsAmount = $_SESSION['AddCreditsAmount'];
+		unset($_SESSION['AddCreditsAmount']);
+	}	
+	if(isset($_SESSION['AddCreditsHourPrice'])){
+		$CreditsHourPrice = $_SESSION['AddCreditsHourPrice'];
+		unset($_SESSION['AddCreditsHourPrice']);
+	}
+	if(isset($_SESSION['AddCreditsMonthlyPrice'])){
+		$CreditsMonthlyPrice = $_SESSION['AddCreditsMonthlyPrice'];
+		unset($_SESSION['AddCreditsMonthlyPrice']);
+	}		
+	if(isset($_SESSION['AddCreditsMinutePrice'])){
+		$CreditsMinutePrice = $_SESSION['AddCreditsMinutePrice'];
+		unset($_SESSION['AddCreditsMinutePrice']);
 	}
 	
 	var_dump($_SESSION); // TO-DO: remove after testing is done
@@ -362,6 +385,10 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Confirm Credits')
 		// Refresh.
 		$_SESSION['AddCreditsDescription'] = $validatedCreditsDescription;
 		$_SESSION['AddCreditsName'] = $validatedCreditsName;
+		$_SESSION['AddCreditsAmount'] = $validatedCreditsAmount;
+		$_SESSION['AddCreditsMonthlyPrice'] = $validatedCreditsMonthlyPrice;
+		$_SESSION['AddCreditsHourPrice'] = $validatedCreditsHourPrice;
+		$_SESSION['AddCreditsMinutePrice'] = $validatedCreditsMinutePrice;
 		
 		$_SESSION['refreshAddCredits'] = TRUE;
 		header('Location: .');
@@ -375,7 +402,7 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Confirm Credits')
 		$pdo = connect_to_db();
 		$sql = 'INSERT INTO `credits` 
 				SET			`name` = :CreditsName,
-							`description` = :CreditsDescription
+							`description` = :CreditsDescription,
 							`minuteAmount` = :CreditsAmount,
 							`monthlyPrice` = :CreditsMonthlyPrice,
 							`overCreditMinutePrice` = :CreditsMinutePrice,
