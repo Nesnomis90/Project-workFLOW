@@ -102,7 +102,7 @@
 				<?php elseif(!isset($displayValidatedStartDate) AND isset($displayValidatedEndDate)) : ?>
 					<b>Currently displaying logs from the beginning up to <?php htmlout($displayValidatedEndDate); ?>.</b>
 				<?php else : ?>
-					<?php if($invalidInput) : ?>
+					<?php if($invalidInput AND !$noCheckedCheckboxes) : ?>
 						<b>Currently not displaying any logs due to an incorrect date being submitted.</b>
 					<?php else : ?>
 						<b>Currently displaying logs from the beginning up to today.</b>

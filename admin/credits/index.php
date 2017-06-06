@@ -785,6 +785,7 @@ if(isset($_POST['edit']) AND $_POST['edit'] == 'Reset'){
 	$_SESSION['EditCreditsMonthlyPrice'] = $original['CreditsMonthlyPrice'];
 	$_SESSION['EditCreditsMinutePrice'] = $original['CreditsMinutePrice'];
 	$_SESSION['EditCreditsHourPrice'] = $original['CreditsHourPrice'];
+	unset($original);
 	
 	$_SESSION['refreshEditCredits'] = TRUE;
 	header('Location: .');

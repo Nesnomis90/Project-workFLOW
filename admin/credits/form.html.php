@@ -27,7 +27,8 @@
 			<?php endif; ?>		
 			<div>
 				<label for="CreditsName">Set New Credits Name: </label>
-				<?php if($button == 'Edit Credits' AND $CreditsName == "Default") : ?>
+				<?php if(	isset($_SESSION['EditCreditsOriginalInfo']) AND 
+							$_SESSION['EditCreditsOriginalInfo']['CreditsName'] == 'Default') : ?>
 					<input type="hidden" name="CreditsName" id="CreditsName"
 					value="<?php htmlout($CreditsName); ?>">
 					<input type="text" name="DisabledCreditsName" id="DisabledCreditsName"
@@ -46,7 +47,8 @@
 			<?php endif; ?>					
 			<div>
 				<label for="CreditsDescription">Set New Credits Description: </label>
-				<?php if($button == 'Edit Credits' AND $CreditsName == "Default") : ?>
+				<?php if(	isset($_SESSION['EditCreditsOriginalInfo']) AND 
+							$_SESSION['EditCreditsOriginalInfo']['CreditsName'] == 'Default') : ?>
 					<input type="hidden" name="CreditsDescription" id="CreditsDescription"
 					value="<?php htmlout($CreditsDescription); ?>">
 					<input type="text" name="DisabledCreditsDescription" id="DisabledCreditsDescription"
