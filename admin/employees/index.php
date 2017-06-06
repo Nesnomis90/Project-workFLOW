@@ -681,7 +681,8 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Change Role')
 				JOIN 	`user` u 
 				ON 		u.userID = e.UserID
 				WHERE	e.userID = :UserID
-				AND 	e.companyID = :CompanyID';
+				AND 	e.companyID = :CompanyID
+				LIMIT 	1';
 		$s = $pdo->prepare($sql);
 		$s->bindValue(':UserID', $_POST['UserID']);
 		$s->bindValue(':CompanyID', $_POST['CompanyID']);

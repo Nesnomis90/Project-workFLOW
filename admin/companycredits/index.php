@@ -12,6 +12,82 @@ if (!isUserAdmin()){
 	exit();
 }
 
+// Function to clear sessions used to remember user inputs on refreshing the 'edit'/'change amount' company credits form
+function clearEditCompanyCreditsSessions(){
+	unset($_SESSION['EditCompanyCreditsOriginalAlternativeCreditsAmount']);
+}
+
+// if admin wants to change credits info for the selected company
+// we load a new html form
+if (isset($_POST['action']) AND $_POST['action'] == 'Edit')
+{
+	
+	// TO-DO: Create if/else and save original array like in other edit index.php's
+	// Get information from database again on the selected company credits
+	try
+	{
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+		$pdo = connect_to_db();
+		
+		$sql = "SELECT 		c.`CompanyID`									AS TheCompanyID,
+							c.`name`										AS CompanyName,
+							c.`startDate`									AS CompanyBillingMonthStart,
+							c.`endDate`										AS CompanyBillingMonthEnd,
+							cr.`CreditsID`									AS CreditsID,
+							cr.`name`										AS CreditsName,
+							cr.`description`								AS CreditsDescription,
+							cr.`minuteAmount`								AS CreditsGivenInMinutes,
+							cr.`monthlyPrice`								AS CreditsMonthlyPrice,
+							cr.`overCreditMinutePrice`						AS CreditsMinutePrice,
+							cr.`overCreditHourPrice`						AS CreditsHourPrice,
+							cc.`altMinuteAmount`							AS CreditsAlternativeAmount,
+							cc.`datetimeAdded` 								AS DateTimeAdded,
+							cc.`lastModified`								AS DateTimeLastModified
+				FROM 		`company` c
+				JOIN 		`companycredits` cc
+				ON 			c.`CompanyID` = cc.`CompanyID`
+				JOIN 		`credits` cr
+				ON 			cr.`CreditsID` = cc.`CreditsID`
+				WHERE 		c.`isActive` > 0
+				AND			c.`CompanyID` = :CompanyID
+				AND			cr.`CreditsID` = :CreditsID
+				LIMIT 		1";
+		
+		$s = $pdo->prepare($sql);
+		$s->bindValue(':CreditsID', $_POST['CreditsID']);
+		$s->bindValue(':CompanyID', $_POST['CompanyID']);
+		$s->execute();
+						
+		//Close connection
+		$pdo = null;
+	}
+	catch (PDOException $e)
+	{
+		$error = 'Error fetching company credits details: ' . $e->getMessage();
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+		$pdo = null;
+		exit();		
+	}
+	
+	// Create an array with the row information we retrieved
+	$row = $s->fetch();
+		
+	// Set the correct information
+	$CompanyName = $row['CompanyName'];
+	$CreditsName = $row['CreditsName'];
+	$CompanyID = $row['TheCompanyID'];
+	$CreditsID = $row['CreditsID'];
+	$CreditsAlternativeAmount = $row['CreditsAlternativeAmount'];
+	
+	$_SESSION['EditCompanyCreditsOriginalAlternativeCreditsAmount'] = $CreditsAlternativeAmount;
+	// TO-DO: Set original variables. Originally selected credits. Make a dropdown list of possible credits.
+	
+	var_dump($_SESSION); // TO-DO: remove after testing is done
+	
+	// Change to the actual form we want to use
+	include 'form.html.php';
+	exit();
+}
 
 // Get only information from the specific company
 if(isset($_GET['Company'])){	
