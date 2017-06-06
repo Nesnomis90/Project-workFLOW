@@ -787,8 +787,7 @@ if(isset($_GET['Meetingroom'])){
 				JOIN 		`meetingroom` m
 				ON 			m.`meetingRoomID` = re.`meetingRoomID`
 				WHERE 		m.`meetingRoomID` = :MeetingRoomID
-				ORDER BY	OrderByDate
-				DESC";
+				LIMIT		1";
 				
 		$s = $pdo->prepare($sql);
 		$s->bindValue(':MeetingRoomID', $_GET['Meetingroom']);
