@@ -27,9 +27,17 @@
 			<?php endif; ?>		
 			<div>
 				<label for="CreditsName">Set New Credits Name: </label>
-				<input type="text" name="CreditsName" id="CreditsName" 
-				placeholder="Enter Credits Name"
-				value="<?php htmlout($CreditsName); ?>">
+				<?php if(	isset($_SESSION['EditCreditsOriginalInfo']) AND 
+							$_SESSION['EditCreditsOriginalInfo']['CreditsName'] == 'Default') : ?>
+					<input type="hidden" name="CreditsName" id="CreditsName"
+					value="<?php htmlout($CreditsName); ?>">
+					<input type="text" name="DisabledCreditsName" id="DisabledCreditsName"
+					disabled value="Can't change.">				
+				<?php else : ?>
+					<input type="text" name="CreditsName" id="CreditsName" 
+					placeholder="Enter Credits Name"
+					value="<?php htmlout($CreditsName); ?>">		
+				<?php endif; ?>
 			</div>
 			<?php if($button == 'Edit Credits') : ?>
 			<div>
@@ -39,8 +47,16 @@
 			<?php endif; ?>					
 			<div>
 				<label for="CreditsDescription">Set New Credits Description: </label>
-				<textarea rows="4" cols="50" name="CreditsDescription" id="CreditsDescription"
-				placeholder="Enter Credits Description"><?php htmlout($CreditsDescription); ?></textarea>
+				<?php if(	isset($_SESSION['EditCreditsOriginalInfo']) AND 
+							$_SESSION['EditCreditsOriginalInfo']['CreditsName'] == 'Default') : ?>
+					<input type="hidden" name="CreditsDescription" id="CreditsDescription"
+					value="<?php htmlout($CreditsDescription); ?>">
+					<input type="text" name="DisabledCreditsDescription" id="DisabledCreditsDescription"
+					disabled value="Can't change.">	
+				<?php else : ?>
+					<textarea rows="4" cols="50" name="CreditsDescription" id="CreditsDescription"
+					placeholder="Enter Credits Description"><?php htmlout($CreditsDescription); ?></textarea>
+				<?php endif; ?>
 			</div>
 			<?php if($button == 'Edit Credits') : ?>
 			<div>

@@ -31,6 +31,12 @@
 				text-align: left;
 				border: 1px solid #ddd;
 			}
+			
+			#creditstable td.alignmid {
+				padding: 8px;
+				text-align: center;
+				border: 1px solid #ddd;
+			}			
 
 			#creditstable tr:hover{background-color:#ddd;}
 			
@@ -78,8 +84,8 @@
 					<th>Monthly Subscription Cost</th>
 					<th>Over Credits Fee</th>
 					<th>Active for # Companies</th>
-					<th>Added</th>
 					<th>Last Modified</th>
+					<th>Added</th>
 					<th>Edit</th>
 					<th>Delete</th>
 				</tr>
@@ -91,11 +97,11 @@
 							<td><?php htmlout($row['CreditsGiven']); ?></td>
 							<td><?php htmlout($row['CreditsMonthlyPrice']); ?></td>
 							<td><?php htmlout($row['CreditsOverCreditsFee']); ?></td>
-							<td><?php htmlout($row['CreditsIsUsedByThisManyCompanies']); ?></td>
+							<td class="alignmid"><?php htmlout($row['CreditsIsUsedByThisManyCompanies']); ?></td>
 							<td><?php htmlout($row['CreditsLastModified']); ?></td>
 							<td><?php htmlout($row['DateTimeAdded']); ?></td>
-							<td><input type="submit" name="action" value="Edit"></td>
-							<td>
+							<td class="alignmid"><input type="submit" name="action" value="Edit"></td>
+							<td class="alignmid">
 								<?php if($row['CreditsName'] == 'Default') : ?>
 									<b>N/A</b>
 								<?php else : ?>

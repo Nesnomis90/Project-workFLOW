@@ -2,6 +2,117 @@ USE test;
 SET NAMES utf8;
 USE meetingflow;
 
+SELECT 	u.`userID`					AS UsrID,
+		c.`companyID`				AS TheCompanyID,
+		c.`name`					AS CompanyName,
+		u.`firstName`, 
+		u.`lastName`,
+		u.`email`,
+		(
+			SELECT 	(
+					BIG_SEC_TO_TIME(
+									SUM(
+										DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
+										)*86400 
+									+ 
+									SUM(
+										TIME_TO_SEC(b.`actualEndDateTime`) 
+										- 
+										TIME_TO_SEC(b.`startDateTime`)
+										) 
+									) 
+					) AS TotalBookingTimeByRemovedEmployees
+			FROM 		`booking` b
+			INNER JOIN 	`employee` e
+			ON 			e.`companyID` = b.`companyID`
+			WHERE 		b.`companyID` = 2
+			AND 		b.`userID` IS NOT NULL
+			AND			b.`userID` NOT IN (SELECT `userID` FROM employee WHERE `CompanyID` = 2)
+			AND 		b.`userID` = UsrID
+			AND 		b.`actualEndDateTime`
+			BETWEEN		c.`prevStartDate`
+			AND			c.`startDate`
+		)														AS PreviousMonthBookingTimeUsed,						
+		(
+			SELECT 	(
+					BIG_SEC_TO_TIME(
+									SUM(
+										DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
+										)*86400 
+									+ 
+									SUM(
+										TIME_TO_SEC(b.`actualEndDateTime`) 
+										- 
+										TIME_TO_SEC(b.`startDateTime`)
+										) 
+									) 
+					) AS TotalBookingTimeByRemovedEmployees
+			FROM 		`booking` b
+			INNER JOIN 	`employee` e
+			ON 			e.`companyID` = b.`companyID`
+			WHERE 		b.`companyID` = 2
+			AND 		b.`userID` IS NOT NULL
+            AND			b.`userID` NOT IN (SELECT `userID` FROM employee WHERE `CompanyID` = 2)
+			AND 		b.`userID` = UsrID
+			AND 		b.`actualEndDateTime`
+			BETWEEN		c.`startDate`
+			AND			c.`endDate`
+		)														AS MonthlyBookingTimeUsed,
+		(
+			SELECT 	(
+					BIG_SEC_TO_TIME(
+									SUM(
+										DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
+										)*86400 
+									+ 
+									SUM(
+										TIME_TO_SEC(b.`actualEndDateTime`) 
+										- 
+										TIME_TO_SEC(b.`startDateTime`)
+										) 
+									) 
+					) AS TotalBookingTimeByRemovedEmployees
+			FROM 		`booking` b
+			INNER JOIN 	`employee` e
+			ON 			e.`companyID` = b.`companyID`
+			WHERE 		b.`companyID` = 2
+			AND 		b.`userID` IS NOT NULL
+			AND			b.`userID` NOT IN (SELECT `userID` FROM employee WHERE `CompanyID` = 2)
+			AND 		b.`userID` = UsrID
+		)														AS TotalBookingTimeUsed
+FROM 		`company` c
+JOIN 		`booking` b
+ON 			c.`companyID` = b.`companyID`
+JOIN 		`user` u 
+ON 			u.userID = b.UserID 
+WHERE 		c.`companyID` = 2
+AND 		b.`userID` NOT IN (SELECT `userID` FROM employee WHERE `CompanyID` = 2)
+GROUP BY 	UsrID;
+
+SELECT 		c.`CompanyID`									AS TheCompanyID,
+			c.`name`										AS CompanyName,
+			c.`startDate`									AS CompanyBillingMonthStart,
+			c.`endDate`										AS CompanyBillingMonthEnd,
+			cr.`CreditsID`									AS CreditsID,
+			cr.`name`										AS CreditsName,
+			cr.`description`								AS CreditsDescription,
+			cr.`minuteAmount`								AS CreditsMinutesGiven,
+			cr.`monthlyPrice`								AS CreditsMonthlyPrice,
+			cr.`overCreditMinutePrice`						AS CreditsMinutePrice,
+			cr.`overCreditHourPrice`						AS CreditsHourPrice,
+			cc.`altMinuteAmount`							AS CreditsAlternativeAmount,
+			cc.`datetimeAdded` 								AS DateTimeAdded,
+			cc.`lastModified`								AS DateTimeLastModified
+FROM 		`company` c
+JOIN 		`companycredits` cc
+ON 			c.`CompanyID` = cc.`CompanyID`
+JOIN 		`credits` cr
+ON 			cr.`CreditsID` = cc.`CreditsID`
+WHERE 		c.`isActive` > 0
+ORDER BY	UNIX_TIMESTAMP(cc.`datetimeAdded`)
+DESC;
+
+
 INSERT INTO `logaction`(`name`,`description`) VALUES ('Company Credits Changed', 'The referenced company received the new referenced Credits.');
 INSERT INTO `logaction`(`name`,`description`) VALUES ('Credits Added', 'The referenced Credits was added.');
 INSERT INTO `logaction`(`name`,`description`) VALUES ('Credits Removed', 'The referenced Credits was removed.');

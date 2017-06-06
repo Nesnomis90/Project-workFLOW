@@ -773,6 +773,7 @@ function create_tables()
 						  `CreditsID` int(10) unsigned NOT NULL,
 						  `altMinuteAmount` smallint(5) unsigned DEFAULT NULL,
 						  `lastModified` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+						  `datetimeAdded` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
 						  PRIMARY KEY (`CompanyID`,`CreditsID`),
 						  KEY `FK_CreditsID_idx` (`CreditsID`),
 						  CONSTRAINT `FK_CompanyID4` FOREIGN KEY (`CompanyID`) REFERENCES `company` (`CompanyID`) ON DELETE CASCADE ON UPDATE CASCADE,
