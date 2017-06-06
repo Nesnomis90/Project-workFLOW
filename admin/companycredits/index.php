@@ -78,7 +78,7 @@ if(!isset($_GET['Company'])){
 							cr.`CreditsID`									AS CreditsID,
 							cr.`name`										AS CreditsName,
 							cr.`description`								AS CreditsDescription,
-							cr.`minuteAmount`								AS CreditsMinutesGiven,
+							cr.`minuteAmount`								AS CreditsGivenInMinutes,
 							cr.`monthlyPrice`								AS CreditsMonthlyPrice,
 							cr.`overCreditMinutePrice`						AS CreditsMinutePrice,
 							cr.`overCreditHourPrice`						AS CreditsHourPrice,
@@ -114,16 +114,60 @@ foreach($result AS $row){
 
 	$addedDateTime = $row['DateTimeAdded'];
 	$displayAddedDateTime = convertDatetimeToFormat($addedDateTime , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
+	$lastModifiedDateTime = $row['DateTimeLastModified'];
+	$displaylastModifiedDateTime = convertDatetimeToFormat($lastModifiedDateTime , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
+	$companyBillingMonthStart = $row['CompanyBillingMonthStart'];
+	$displayCompanyBillingMonthStart = convertDatetimeToFormat($companyBillingMonthStart , 'Y-m-d', DATE_DEFAULT_FORMAT_TO_DISPLAY);
+	$companyBillingMonthEnd = $row['CompanyBillingMonthEnd'];
+	$displayCompanyBillingMonthEnd = convertDatetimeToFormat($companyBillingMonthEnd , 'Y-m-d', DATE_DEFAULT_FORMAT_TO_DISPLAY);
+
+	// Format Credits (From minutes to hours and minutes)
+	if($row['CreditsAlternativeAmount'] != NULL){
+		$creditsGivenInMinutes = $row['CreditsAlternativeAmount'];
+		$alternativeCredits = "Yes";
+	} else {
+		$creditsGivenInMinutes = $row['CreditsGivenInMinutes'];
+		$alternativeCredits = "No";
+	}
+	
+	if($creditsGivenInMinutes > 59){
+		$creditsGivenInHours = floor($creditsGivenInMinutes/60);
+		$creditsGivenInMinutes -= $creditsGivenInHours*60;
+		$creditsGiven = $creditsGivenInHours . 'h' . $creditsGivenInMinutes . 'm';
+	} elseif($creditsGivenInMinutes > 0) {
+		$creditsGiven = '0h' . $creditsGivenInMinutes . 'm';
+	} else {
+		$creditsGiven = 'None';
+	}
+	
+	// Format what over fee rate we're using (hourly or minute by minute)
+	$creditsMinutePrice = $row['CreditsMinutePrice'];
+	$creditsHourPrice = $row['CreditsHourPrice'];
+	if($creditsMinutePrice != NULL){
+		$creditsOverCreditsFee = convertToCurrency($creditsMinutePrice) . '/min';
+	} elseif($creditsHourPrice != NULL) {
+		$creditsOverCreditsFee = convertToCurrency($creditsHourPrice) . '/hour';
+	} else {
+		$creditsOverCreditsFee = "Error, not set.";
+	}
+	
+	$creditsMonthlyPrice = convertToCurrency($row['CreditsMonthlyPrice']);
 	
 	// Create an array with the actual key/value pairs we want to use in our HTML
-	$companycredit[] = array(
-							'TheEquipmentID' => $row['TheEquipmentID'],
-							'EquipmentName' => $row['EquipmentName'],
-							'EquipmentDescription' => $row['EquipmentDescription'],
-							'EquipmentAmount' => $row['EquipmentAmount'],							
+	$companycredits[] = array(
+							'TheCompanyID' => $row['TheCompanyID'],
+							'CompanyName' => $row['CompanyName'],
+							'CompanyBillingMonthStart' => $displayCompanyBillingMonthStart,
+							'CompanyBillingMonthEnd' => $displayCompanyBillingMonthEnd,						
+							'CreditsID' => $row['CreditsID'],
+							'CreditsName' => $row['CreditsName'],
+							'CreditsDescription' => $row['CreditsDescription'],
+							'CreditsGiven' => $creditsGiven,
+							'CreditsMonthlyPrice' => $creditsMonthlyPrice,
+							'CreditsOverCreditsFee' => $creditsOverCreditsFee,
+							'CompanyUsingAlternativeCreditsGiven' => $alternativeCredits,
 							'DateTimeAdded' => $displayAddedDateTime,
-							'MeetingRoomID' => $row['MeetingRoomID'],
-							'MeetingRoomName' => $row['MeetingRoomName']							
+							'DateTimeLastModified' => $displaylastModifiedDateTime						
 						);
 }
 
