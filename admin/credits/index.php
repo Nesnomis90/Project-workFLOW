@@ -22,8 +22,14 @@ function clearAddCreditsSessions(){
 // Function to clear sessions used to remember user inputs on refreshing the edit Credits form
 function clearEditCreditsSessions(){
 	unset($_SESSION['EditCreditsOriginalInfo']);
-	unset($_SESSION['EditCreditsDescription']);
+	
 	unset($_SESSION['EditCreditsName']);
+	unset($_SESSION['EditCreditsDescription']);
+	unset($_SESSION['EditCreditsAmount']);
+	unset($_SESSION['EditCreditsMonthlyPrice']);
+	unset($_SESSION['EditCreditsMinutePrice']);
+	unset($_SESSION['EditCreditsHourPrice']);
+	
 	unset($_SESSION['EditCreditsCreditsID']);
 }
 
@@ -336,10 +342,10 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Add Credits') OR
 	$pageTitle = 'New Credits';
 	$CreditsName = '';
 	$CreditsDescription = '';
-	$CreditsAmount = '';
+	$CreditsAmount = 0;
 	$CreditsHourPrice = '';
 	$CreditsMinutePrice = '';
-	$CreditsMonthlyPrice = '';
+	$CreditsMonthlyPrice = 0;
 	$CreditsID = '';
 	$button = 'Confirm Credits';
 	
@@ -551,21 +557,49 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR
 			unset($_SESSION['EditCreditsName']);
 		} else {
 			$CreditsName = '';
-		}		
+		}
+		if(isset($_SESSION['EditCreditsAmount'])){
+			$CreditsAmount = $_SESSION['EditCreditsAmount'];
+			unset($_SESSION['EditCreditsAmount']);
+		} else {
+			$CreditsAmount = 0;
+		}
+		if(isset($_SESSION['EditCreditsMonthlyPrice'])){
+			$CreditsMonthlyPrice = $_SESSION['EditCreditsMonthlyPrice'];
+			unset($_SESSION['EditCreditsMonthlyPrice']);
+		} else {
+			$CreditsMonthlyPrice = 0;
+		}	
+		if(isset($_SESSION['EditCreditsMinutePrice'])){
+			$CreditsMinutePrice = $_SESSION['EditCreditsMinutePrice'];
+			unset($_SESSION['EditCreditsMinutePrice']);
+		} else {
+			$CreditsMinutePrice = '';
+		}
+		if(isset($_SESSION['EditCreditsHourPrice'])){
+			$CreditsHourPrice = $_SESSION['EditCreditsHourPrice'];
+			unset($_SESSION['EditCreditsHourPrice']);
+		} else {
+			$CreditsHourPrice = '';
+		}			
 		if(isset($_SESSION['EditCreditsCreditsID'])){
 			$CreditsID = $_SESSION['EditCreditsCreditsID'];
 		}
 	} else {
 		// Make sure we don't have any remembered values in memory
 		clearAddCreditsSessions();
-		// Get information from database again on the selected meeting room
+		// Get information from database again on the selected credits
 		try
 		{
 			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 			$pdo = connect_to_db();
-			$sql = "SELECT 		`CreditsID`					AS TheCreditsID,
+			$sql = "SELECT 		`CreditsID`						AS TheCreditsID,
 								`name`							AS CreditsName,
-								`description`					AS CreditsDescription
+								`description`					AS CreditsDescription,
+								`minuteAmount`					AS CreditsGivenInMinutes,
+								`monthlyPrice`					AS CreditsMonthlyPrice,
+								`overCreditMinutePrice`			AS CreditsMinutePrice,
+								`overCreditHourPrice`			AS CreditsHourPrice
 					FROM 		`credits`
 					WHERE		`CreditsID` = :CreditsID";
 					
@@ -581,6 +615,11 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR
 			$CreditsID = $row['TheCreditsID'];
 			$CreditsName = $row['CreditsName'];
 			$CreditsDescription = $row['CreditsDescription'];
+			$CreditsAmount = $row['CreditsGivenInMinutes'];
+			$CreditsMonthlyPrice = $row['CreditsMonthlyPrice'];
+			$CreditsMinutePrice = $row['CreditsMinutePrice'];
+			$CreditsHourPrice = $row['CreditsHourPrice'];
+			
 			$_SESSION['EditCreditsCreditsID'] = $CreditsID;
 
 			//Close the connection
@@ -600,8 +639,13 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR
 	$button = 'Edit Credits';	
 	
 	// Set original values
-	$originalCreditsName = $_SESSION['EditCreditsOriginalInfo']['CreditsName'];
-	$originalCreditsDescription = $_SESSION['EditCreditsOriginalInfo']['CreditsDescription'];
+	$original = $_SESSION['EditCreditsOriginalInfo'];
+	$originalCreditsName = $original['CreditsName'];
+	$originalCreditsDescription = $original['CreditsDescription'];
+	$originalCreditsAmount = $original['CreditsGivenInMinutes'];
+	$originalCreditsMonthlyPrice = $original['CreditsMonthlyPrice'];
+	$originalCreditsMinutePrice = $original['CreditsMinutePrice'];
+	$originalCreditsHourPrice = $original['CreditsHourPrice'];
 	
 	var_dump($_SESSION); // TO-DO: remove after testing is done
 	
@@ -618,7 +662,7 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Edit Credits')
 
 	// Make sure we don't try to change the name of the Credits named 'Default'
 	// Or try to change the description
-	if(isset($_SESSION['EditCreditsOriginalInfo'])){
+	if(isset($_SESSION['EditCreditsOriginalInfo']) AND !$invalidInput){
 		if(	$_SESSION['EditCreditsOriginalInfo']['CreditsName'] == 'Default' AND
 			$validatedCreditsName != 'Default'){
 			$invalidInput = TRUE;
@@ -632,13 +676,17 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Edit Credits')
 			$validatedCreditsDescription = $_SESSION['EditCreditsOriginalInfo']['CreditsDescription'];
 		}		
 	}
-	
+
 	// Refresh form on invalid
 	if($invalidInput){
 		
 		// Refresh.
 		$_SESSION['EditCreditsDescription'] = $validatedCreditsDescription;
 		$_SESSION['EditCreditsName'] = $validatedCreditsName;
+		$_SESSION['EditCreditsAmount'] = $validatedCreditsAmount;
+		$_SESSION['EditCreditsMonthlyPrice'] = $validatedCreditsMonthlyPrice;
+		$_SESSION['EditCreditsMinutePrice'] = $validatedCreditsMinutePrice;
+		$_SESSION['EditCreditsHourPrice'] = $validatedCreditsHourPrice;
 		
 		$_SESSION['refreshEditCredits'] = TRUE;
 		header('Location: .');
@@ -657,7 +705,26 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Edit Credits')
 		if($original['CreditsDescription'] != $validatedCreditsDescription){
 			$numberOfChanges++;
 		}
+		if($original['CreditsGivenInMinutes'] != $validatedCreditsAmount){
+			$numberOfChanges++;
+		}
+		if($original['CreditsMonthlyPrice'] != $validatedCreditsMonthlyPrice){
+			$numberOfChanges++;
+		}
+		if($original['CreditsMinutePrice'] != $validatedCreditsMinutePrice){
+			$numberOfChanges++;
+		}
+		if($original['CreditsHourPrice'] != $validatedCreditsHourPrice){
+			$numberOfChanges++;
+		}
 		unset($original);
+	}
+	
+	if($validatedCreditsHourPrice == 0){
+		$validatedCreditsHourPrice = NULL;
+	}
+	if($validatedCreditsMinutePrice == 0){
+		$validatedCreditsMinutePrice = NULL;
 	}
 	
 	if($numberOfChanges > 0){
@@ -669,14 +736,22 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Edit Credits')
 			$sql = 'UPDATE 	`credits`
 					SET		`name` = :CreditsName,
 							`description` = :CreditsDescription,
+							`minuteAmount` = :CreditsGivenInMinutes,
+							`monthlyPrice` = :CreditsMonthlyPrice,
+							`overCreditMinutePrice`	= :CreditsMinutePrice,
+							`overCreditHourPrice` = :CreditsHourPrice,
 							`lastModified` = CURRENT_TIMESTAMP
 					WHERE 	CreditsID = :id';
 			$s = $pdo->prepare($sql);
 			$s->bindValue(':id', $_POST['CreditsID']);
 			$s->bindValue(':CreditsName', $validatedCreditsName);
 			$s->bindValue(':CreditsDescription', $validatedCreditsDescription);
+			$s->bindValue(':CreditsGivenInMinutes', $validatedCreditsAmount);
+			$s->bindValue(':CreditsMonthlyPrice', $validatedCreditsMonthlyPrice);
+			$s->bindValue(':CreditsMinutePrice', $validatedCreditsMinutePrice);
+			$s->bindValue(':CreditsHourPrice', $validatedCreditsHourPrice);
 			$s->execute();
-			
+															
 			// Close the connection
 			$pdo = Null;
 		}
@@ -702,10 +777,15 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Edit Credits')
 
 // If admin wants to get original values while editing
 if(isset($_POST['edit']) AND $_POST['edit'] == 'Reset'){
-
-	$_SESSION['EditCreditsName'] = $_SESSION['EditCreditsOriginalInfo']['CreditsName'];
-	$_SESSION['EditCreditsDescription'] = $_SESSION['EditCreditsOriginalInfo']['CreditsDescription'];
-
+	
+	$original = $_SESSION['EditCreditsOriginalInfo'];
+	$_SESSION['EditCreditsName'] = $original['CreditsName'];
+	$_SESSION['EditCreditsDescription'] = $original['CreditsDescription'];
+	$_SESSION['EditCreditsAmount'] = $original['CreditsGivenInMinutes'];
+	$_SESSION['EditCreditsMonthlyPrice'] = $original['CreditsMonthlyPrice'];
+	$_SESSION['EditCreditsMinutePrice'] = $original['CreditsMinutePrice'];
+	$_SESSION['EditCreditsHourPrice'] = $original['CreditsHourPrice'];
+	
 	$_SESSION['refreshEditCredits'] = TRUE;
 	header('Location: .');
 	exit();	

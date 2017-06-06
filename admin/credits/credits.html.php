@@ -78,8 +78,8 @@
 					<th>Monthly Subscription Cost</th>
 					<th>Over Credits Fee</th>
 					<th>Active for # Companies</th>
-					<th>Added</th>
 					<th>Last Modified</th>
+					<th>Added</th>
 					<th>Edit</th>
 					<th>Delete</th>
 				</tr>
