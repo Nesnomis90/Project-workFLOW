@@ -19,6 +19,7 @@ function clearEditCompanyCreditsSessions(){
 
 // if admin wants to change credits info for the selected company
 // we load a new html form
+// TO-DO: Copypaste, not done!
 if (isset($_POST['action']) AND $_POST['action'] == 'Edit')
 {
 	
