@@ -2,79 +2,92 @@ USE test;
 SET NAMES utf8;
 USE meetingflow;
 
-
-
-equipment -> company, meetingroom -> credits, roomequipment -> companycredits;
-
 SELECT 	u.`userID`					AS UsrID,
-						c.`companyID`				AS TheCompanyID,
-						c.`name`					AS CompanyName,
-						u.`firstName`, 
-						u.`lastName`,
-						u.`email`,
-						cp.`name`					AS PositionName, 
-						e.`startDateTime`			AS StartDateTime,
-						(
-							SELECT (
-									BIG_SEC_TO_TIME(
-													SUM(
-														DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
-														)*86400 
-													+ 
-													SUM(
-														TIME_TO_SEC(b.`actualEndDateTime`) 
-														- 
-														TIME_TO_SEC(b.`startDateTime`)
-														) 
-													) 
-									)
-							FROM 		`booking` b
-							INNER JOIN `employee` e
-							ON 			b.`userID` = e.`userID`
-							INNER JOIN `company` c
-							ON 			c.`companyID` = e.`companyID`
-							INNER JOIN 	`user` u 
-							ON 			e.`UserID` = u.`UserID` 
-							WHERE 		b.`userID` = UsrID
-							AND 		b.`companyID` = 2
-							AND 		c.`CompanyID` = b.`companyID`
-							AND 		b.`actualEndDateTime`
-							BETWEEN		c.`startDate`
-							AND			c.`endDate`
-						) 							AS MonthlyBookingTimeUsed,
-						(
-							SELECT (
-									BIG_SEC_TO_TIME(
-													SUM(
-														DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
-														)*86400 
-													+ 
-													SUM(
-														TIME_TO_SEC(b.`actualEndDateTime`) 
-														- 
-														TIME_TO_SEC(b.`startDateTime`)
-														) 
-													) 
-									)
-							FROM 		`booking` b
-							INNER JOIN `employee` e
-							ON 			b.`userID` = e.`userID`
-							INNER JOIN `company` c
-							ON 			c.`companyID` = e.`companyID`
-							INNER JOIN 	`user` u 
-							ON 			e.`UserID` = u.`UserID` 
-							WHERE 		b.`userID` = UsrID
-							AND 		b.`companyID` = 2
-							AND 		c.`CompanyID` = b.`companyID`
-						) 							AS TotalBookingTimeUsed							
-				FROM 	`company` c 
-				JOIN 	`employee` e
-				ON 		e.CompanyID = c.CompanyID 
-				JOIN 	`companyposition` cp 
-				ON 		cp.PositionID = e.PositionID
-				JOIN 	`user` u 
-				ON 		u.userID = e.UserID 
-				WHERE 	c.`companyID` = 2;
+		c.`companyID`				AS TheCompanyID,
+		c.`name`					AS CompanyName,
+		u.`firstName`, 
+		u.`lastName`,
+		u.`email`,
+		(
+			SELECT 	(
+					BIG_SEC_TO_TIME(
+									SUM(
+										DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
+										)*86400 
+									+ 
+									SUM(
+										TIME_TO_SEC(b.`actualEndDateTime`) 
+										- 
+										TIME_TO_SEC(b.`startDateTime`)
+										) 
+									) 
+					) AS TotalBookingTimeByRemovedEmployees
+			FROM 		`booking` b
+			INNER JOIN 	`employee` e
+			ON 			e.`companyID` = b.`companyID`
+			WHERE 		b.`companyID` = 2
+			AND 		b.`userID` IS NOT NULL
+			AND			b.`userID` NOT IN (SELECT `userID` FROM employee WHERE `CompanyID` = 2)
+			AND 		b.`userID` = UsrID
+			AND 		b.`actualEndDateTime`
+			BETWEEN		c.`prevStartDate`
+			AND			c.`startDate`
+		)														AS PreviousMonthBookingTimeUsed,						
+		(
+			SELECT 	(
+					BIG_SEC_TO_TIME(
+									SUM(
+										DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
+										)*86400 
+									+ 
+									SUM(
+										TIME_TO_SEC(b.`actualEndDateTime`) 
+										- 
+										TIME_TO_SEC(b.`startDateTime`)
+										) 
+									) 
+					) AS TotalBookingTimeByRemovedEmployees
+			FROM 		`booking` b
+			INNER JOIN 	`employee` e
+			ON 			e.`companyID` = b.`companyID`
+			WHERE 		b.`companyID` = 2
+			AND 		b.`userID` IS NOT NULL
+            AND			b.`userID` NOT IN (SELECT `userID` FROM employee WHERE `CompanyID` = 2)
+			AND 		b.`userID` = UsrID
+			AND 		b.`actualEndDateTime`
+			BETWEEN		c.`startDate`
+			AND			c.`endDate`
+		)														AS MonthlyBookingTimeUsed,
+		(
+			SELECT 	(
+					BIG_SEC_TO_TIME(
+									SUM(
+										DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
+										)*86400 
+									+ 
+									SUM(
+										TIME_TO_SEC(b.`actualEndDateTime`) 
+										- 
+										TIME_TO_SEC(b.`startDateTime`)
+										) 
+									) 
+					) AS TotalBookingTimeByRemovedEmployees
+			FROM 		`booking` b
+			INNER JOIN 	`employee` e
+			ON 			e.`companyID` = b.`companyID`
+			WHERE 		b.`companyID` = 2
+			AND 		b.`userID` IS NOT NULL
+			AND			b.`userID` NOT IN (SELECT `userID` FROM employee WHERE `CompanyID` = 2)
+			AND 		b.`userID` = UsrID
+		)														AS TotalBookingTimeUsed
+FROM 		`company` c
+JOIN 		`booking` b
+ON 			c.`companyID` = b.`companyID`
+JOIN 		`user` u 
+ON 			u.userID = b.UserID 
+WHERE 		c.`companyID` = 2
+AND 		b.`userID` NOT IN (SELECT `userID` FROM employee WHERE `CompanyID` = 2)
+GROUP BY 	UsrID;
 
 SELECT 		c.`CompanyID`									AS TheCompanyID,
 			c.`name`										AS CompanyName,

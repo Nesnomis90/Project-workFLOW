@@ -94,7 +94,8 @@
 				<th>Remove</th>
 			</tr>
 			<?php if($rowNum>0) :?>
-				<?php if(isset($_GET['Company'])) : ?>
+				<?php if(isset($_GET['Company']) AND 
+						(isset($deletedEmployees) OR isset($removedEmployees))) : ?>
 				<tr>
 					<td colspan="11"><b>The Following Are Currently Employed Users</b></td>
 				</tr>
@@ -138,7 +139,7 @@
 			<?php endif; ?>	
 				<?php if(isset($removedEmployees)) : ?>
 					<tr>
-						<td colspan="11"><b>The Following Are Previous Employees That Are Still Registered</b></td>
+						<td colspan="11"><b>The Following Are Previously Employed Users</b></td>
 					</tr>
 					<?php foreach($removedEmployees as $employee): ?>
 						<tr>
@@ -156,7 +157,7 @@
 				<?php endif; ?>
 				<?php if(isset($deletedEmployees)) : ?>
 					<tr>
-						<td colspan="11"><b>The Following Are Previous Employees That Have Deleted Their Account</b></td>
+						<td colspan="11"><b>The Following Is A Summation Of Deleted Users</b></td>
 					</tr>
 					<?php foreach($deletedEmployees as $employee): ?>
 						<tr>
