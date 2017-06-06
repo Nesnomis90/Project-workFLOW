@@ -28,7 +28,7 @@ if(isset($_GET['Company'])){
 							cr.`CreditsID`									AS CreditsID,
 							cr.`name`										AS CreditsName,
 							cr.`description`								AS CreditsDescription,
-							cr.`minuteAmount`								AS CreditsMinutesGiven,
+							cr.`minuteAmount`								AS CreditsGivenInMinutes,
 							cr.`monthlyPrice`								AS CreditsMonthlyPrice,
 							cr.`overCreditMinutePrice`						AS CreditsMinutePrice,
 							cr.`overCreditHourPrice`						AS CreditsHourPrice,

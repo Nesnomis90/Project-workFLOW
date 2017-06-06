@@ -2,6 +2,80 @@ USE test;
 SET NAMES utf8;
 USE meetingflow;
 
+
+
+equipment -> company, meetingroom -> credits, roomequipment -> companycredits;
+
+SELECT 	u.`userID`					AS UsrID,
+						c.`companyID`				AS TheCompanyID,
+						c.`name`					AS CompanyName,
+						u.`firstName`, 
+						u.`lastName`,
+						u.`email`,
+						cp.`name`					AS PositionName, 
+						e.`startDateTime`			AS StartDateTime,
+						(
+							SELECT (
+									BIG_SEC_TO_TIME(
+													SUM(
+														DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
+														)*86400 
+													+ 
+													SUM(
+														TIME_TO_SEC(b.`actualEndDateTime`) 
+														- 
+														TIME_TO_SEC(b.`startDateTime`)
+														) 
+													) 
+									)
+							FROM 		`booking` b
+							INNER JOIN `employee` e
+							ON 			b.`userID` = e.`userID`
+							INNER JOIN `company` c
+							ON 			c.`companyID` = e.`companyID`
+							INNER JOIN 	`user` u 
+							ON 			e.`UserID` = u.`UserID` 
+							WHERE 		b.`userID` = UsrID
+							AND 		b.`companyID` = 2
+							AND 		c.`CompanyID` = b.`companyID`
+							AND 		b.`actualEndDateTime`
+							BETWEEN		c.`startDate`
+							AND			c.`endDate`
+						) 							AS MonthlyBookingTimeUsed,
+						(
+							SELECT (
+									BIG_SEC_TO_TIME(
+													SUM(
+														DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
+														)*86400 
+													+ 
+													SUM(
+														TIME_TO_SEC(b.`actualEndDateTime`) 
+														- 
+														TIME_TO_SEC(b.`startDateTime`)
+														) 
+													) 
+									)
+							FROM 		`booking` b
+							INNER JOIN `employee` e
+							ON 			b.`userID` = e.`userID`
+							INNER JOIN `company` c
+							ON 			c.`companyID` = e.`companyID`
+							INNER JOIN 	`user` u 
+							ON 			e.`UserID` = u.`UserID` 
+							WHERE 		b.`userID` = UsrID
+							AND 		b.`companyID` = 2
+							AND 		c.`CompanyID` = b.`companyID`
+						) 							AS TotalBookingTimeUsed							
+				FROM 	`company` c 
+				JOIN 	`employee` e
+				ON 		e.CompanyID = c.CompanyID 
+				JOIN 	`companyposition` cp 
+				ON 		cp.PositionID = e.PositionID
+				JOIN 	`user` u 
+				ON 		u.userID = e.UserID 
+				WHERE 	c.`companyID` = 2;
+
 SELECT 		c.`CompanyID`									AS TheCompanyID,
 			c.`name`										AS CompanyName,
 			c.`startDate`									AS CompanyBillingMonthStart,

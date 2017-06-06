@@ -67,7 +67,7 @@
 				<tr>
 					<th colspan="2">Employees</th>
 					<th>Company</th>
-					<th colspan="5">Booking Subscription</th>
+					<th colspan="6">Booking Subscription</th>
 					<th colspan="4">Booking Time Used</th>
 					<th colspan="2">Billing Amount</th>
 					<th colspan="2">Dates</th>
@@ -77,6 +77,7 @@
 					<th>List</th>
 					<th>Amount</th>
 					<th>Name</th>
+					<th>Details</th>
 					<th>Name</th>
 					<th>Credits Given</th>
 					<th>Credits Remaining</th>
@@ -107,6 +108,13 @@
 								<td>
 									<?php htmlout($company['CompanyName']); ?> 
 								</td>
+							<?php $goto = "http://$_SERVER[HTTP_HOST]/admin/companycredits/?Company=" . $company['id'];?>
+							<form action="<?php htmlout($goto) ;?>" method="post">
+								<td>
+									<input type="submit" value="Credits">
+									<input type="hidden" name="Company" value="<?php htmlout($company['id']); ?>">
+								</td>
+							</form>								
 								<td><?php htmlout($company['CreditSubscriptionName']); ?></td>
 								<td><?php htmlout($company['CompanyCredits']); ?></td>
 								<td><?php htmlout($company['CompanyCreditsRemaining']); ?></td>

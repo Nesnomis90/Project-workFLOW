@@ -800,8 +800,6 @@ if(isset($_GET['Company'])){
 
 		$pdo = connect_to_db();
 		
-		// TO-DO: Change SQL Query if time calculation is broken
-		// Changed it so it should (in theory at least) calculate correctly now
 		$sql = "SELECT 	u.`userID`					AS UsrID,
 						c.`companyID`				AS TheCompanyID,
 						c.`name`					AS CompanyName,
@@ -834,8 +832,37 @@ if(isset($_GET['Company'])){
 							WHERE 		b.`userID` = UsrID
 							AND 		b.`companyID` = :id
 							AND 		c.`CompanyID` = b.`companyID`
-							AND 		YEAR(b.`actualEndDateTime`) = YEAR(NOW())
-							AND 		MONTH(b.`actualEndDateTime`) = MONTH(NOW())
+							AND 		b.`actualEndDateTime`
+							BETWEEN		c.`prevStartDate`
+							AND			c.`startDate`
+						) 							AS PreviousMonthBookingTimeUsed,						
+						(
+							SELECT (
+									BIG_SEC_TO_TIME(
+													SUM(
+														DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
+														)*86400 
+													+ 
+													SUM(
+														TIME_TO_SEC(b.`actualEndDateTime`) 
+														- 
+														TIME_TO_SEC(b.`startDateTime`)
+														) 
+													) 
+									)
+							FROM 		`booking` b
+							INNER JOIN `employee` e
+							ON 			b.`userID` = e.`userID`
+							INNER JOIN `company` c
+							ON 			c.`companyID` = e.`companyID`
+							INNER JOIN 	`user` u 
+							ON 			e.`UserID` = u.`UserID` 
+							WHERE 		b.`userID` = UsrID
+							AND 		b.`companyID` = :id
+							AND 		c.`CompanyID` = b.`companyID`
+							AND 		b.`actualEndDateTime`
+							BETWEEN		c.`startDate`
+							AND			c.`endDate`
 						) 							AS MonthlyBookingTimeUsed,
 						(
 							SELECT (
@@ -900,15 +927,41 @@ if(isset($_GET['Company'])){
 													) 
 												) 
 								) AS TotalBookingTimeByRemovedEmployees
-						FROM 	`booking` b
-						INNER JOIN `employee` e
-						ON 		e.`companyID` = b.`companyID`
-						WHERE 	b.`companyID` = :id
-						AND 	b.`userID` IS NOT NULL
-						AND		e.`userID` != b.`userID`
-						AND 	b.`userID` = UsrID
-						AND 			YEAR(b.`actualEndDateTime`) = YEAR(NOW())
-						AND 			MONTH(b.`actualEndDateTime`) = MONTH(NOW())
+						FROM 		`booking` b
+						INNER JOIN 	`employee` e
+						ON 			e.`companyID` = b.`companyID`
+						WHERE 		b.`companyID` = :id
+						AND 		b.`userID` IS NOT NULL
+						AND			e.`userID` != b.`userID`
+						AND 		b.`userID` = UsrID
+						AND 		b.`actualEndDateTime`
+						BETWEEN		c.`prevStartDate`
+						AND			c.`startDate`
+						)														AS PreviousMonthBookingTimeUsed,						
+						(
+						SELECT 	(
+								BIG_SEC_TO_TIME(
+												SUM(
+													DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
+													)*86400 
+												+ 
+												SUM(
+													TIME_TO_SEC(b.`actualEndDateTime`) 
+													- 
+													TIME_TO_SEC(b.`startDateTime`)
+													) 
+												) 
+								) AS TotalBookingTimeByRemovedEmployees
+						FROM 		`booking` b
+						INNER JOIN 	`employee` e
+						ON 			e.`companyID` = b.`companyID`
+						WHERE 		b.`companyID` = :id
+						AND 		b.`userID` IS NOT NULL
+						AND			e.`userID` != b.`userID`
+						AND 		b.`userID` = UsrID
+						AND 		b.`actualEndDateTime`
+						BETWEEN		c.`startDate`
+						AND			c.`endDate`
 						)														AS MonthlyBookingTimeUsed,
 						(
 						SELECT 	(
@@ -924,13 +977,13 @@ if(isset($_GET['Company'])){
 													) 
 												) 
 								) AS TotalBookingTimeByRemovedEmployees
-						FROM 	`booking` b
-						INNER JOIN `employee` e
-						ON 		e.`companyID` = b.`companyID`
-						WHERE 	b.`companyID` = :id
-						AND 	b.`userID` IS NOT NULL
-						AND		e.`userID` != b.`userID`
-						AND 	b.`userID` = UsrID
+						FROM 		`booking` b
+						INNER JOIN 	`employee` e
+						ON 			e.`companyID` = b.`companyID`
+						WHERE 		b.`companyID` = :id
+						AND 		b.`userID` IS NOT NULL
+						AND			e.`userID` != b.`userID`
+						AND 		b.`userID` = UsrID
 						)														AS TotalBookingTimeUsed
 				FROM 		`company` c
 				JOIN 		`booking` b
@@ -947,28 +1000,30 @@ if(isset($_GET['Company'])){
 		$removedEmployeesResultRowNum = sizeOf($removedEmployeesResult);
 		
 		// SQL Query to get booked time for deleted users
-		// TO-DO: needs testing
 		$sql = "SELECT 	`companyID`				AS TheCompanyID,
 						`name`					AS CompanyName,
 						(
-						SELECT 	(
-								BIG_SEC_TO_TIME(
-												SUM(
-													DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
-													)*86400 
-												+ 
-												SUM(
-													TIME_TO_SEC(b.`actualEndDateTime`) 
-													- 
-													TIME_TO_SEC(b.`startDateTime`)
+							SELECT 	(
+									BIG_SEC_TO_TIME(
+													SUM(
+														DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
+														)*86400 
+													+ 
+													SUM(
+														TIME_TO_SEC(b.`actualEndDateTime`) 
+														- 
+														TIME_TO_SEC(b.`startDateTime`)
+														) 
 													) 
-												) 
-								) AS TotalBookingTimeByDeletedUsers
-						FROM 	`booking` b
-						WHERE 	b.`companyID` = :id
-						AND 	b.`userID` IS NULL
-						AND 	YEAR(b.`actualEndDateTime`) = YEAR(NOW())
-						AND 	MONTH(b.`actualEndDateTime`) = MONTH(NOW())
+									) AS TotalBookingTimeByDeletedUsers
+							FROM 		`booking` b
+							INNER JOIN 	`company` c
+							ON 			b.`CompanyID` = c.`CompanyID`
+							WHERE 		b.`companyID` = :id
+							AND 		b.`userID` IS NULL
+							AND 		b.`actualEndDateTime`
+							BETWEEN		c.`startDate`
+							AND			c.`endDate`
 						)														AS MonthlyBookingTimeUsed,
 						(
 						SELECT 	(
@@ -1010,28 +1065,34 @@ if(isset($_GET['Company'])){
 	// If we're looking at a specific company and they have removed employees with booking time
 	if($removedEmployeesResultRowNum > 0){
 		foreach($removedEmployeesResult AS $row){	
-		
-		
-		if($row['MonthlyBookingTimeUsed'] == null){
-			$MonthlyTimeUsed = 'N/A';
-		} else {
-			$MonthlyTimeUsed = $row['MonthlyBookingTimeUsed'];
-		}
+			
+			if($row['PreviousMonthBookingTimeUsed'] == null){
+				$PreviousMonthBookingTimeUsed = 'N/A';
+			} else {
+				$PreviousMonthBookingTimeUsed = $row['PreviousMonthBookingTimeUsed'];
+			}
+			
+			if($row['MonthlyBookingTimeUsed'] == null){
+				$MonthlyTimeUsed = 'N/A';
+			} else {
+				$MonthlyTimeUsed = $row['MonthlyBookingTimeUsed'];
+			}
 
-		if($row['TotalBookingTimeUsed'] == null){
-			$TotalTimeUsed = 'N/A';
-		} else {
-			$TotalTimeUsed = $row['TotalBookingTimeUsed'];
-		}		
-			$removedEmployees[] = array(
-										'CompanyID' => $row['TheCompanyID'],
-										'CompanyName' => $row['CompanyName'],
-										'firstName' => $row['firstName'],
-										'lastName' => $row['lastName'],
-										'email' => $row['email'],	
-										'MonthlyBookingTimeUsed' => $MonthlyTimeUsed,
-										'TotalBookingTimeUsed' => $TotalTimeUsed
-										);
+			if($row['TotalBookingTimeUsed'] == null){
+				$TotalTimeUsed = 'N/A';
+			} else {
+				$TotalTimeUsed = $row['TotalBookingTimeUsed'];
+			}		
+				$removedEmployees[] = array(
+											'CompanyID' => $row['TheCompanyID'],
+											'CompanyName' => $row['CompanyName'],
+											'firstName' => $row['firstName'],
+											'lastName' => $row['lastName'],
+											'email' => $row['email'],
+											'PreviousMonthBookingTimeUsed' => $PreviousMonthBookingTimeUsed,											
+											'MonthlyBookingTimeUsed' => $MonthlyTimeUsed,
+											'TotalBookingTimeUsed' => $TotalTimeUsed
+											);
 		}
 		if($removedEmployees[0]['TotalBookingTimeUsed'] == ""){
 			// The company has no used booking time by removed users
@@ -1042,25 +1103,31 @@ if(isset($_GET['Company'])){
 	// If we're looking at a specific company and they have old booking time used by now deleted users
 	if($deletedUsersResultRowNum > 0){
 		foreach($deletedUsersResult AS $row){	
-		
-		
-		if($row['MonthlyBookingTimeUsed'] == null){
-			$MonthlyTimeUsed = 'N/A';
-		} else {
-			$MonthlyTimeUsed = $row['MonthlyBookingTimeUsed'];
-		}
 
-		if($row['TotalBookingTimeUsed'] == null){
-			$TotalTimeUsed = 'N/A';
-		} else {
-			$TotalTimeUsed = $row['TotalBookingTimeUsed'];
-		}		
-			$deletedEmployees[] = array(
-										'CompanyID' => $row['TheCompanyID'],
-										'CompanyName' => $row['CompanyName'],
-										'MonthlyBookingTimeUsed' => $MonthlyTimeUsed,
-										'TotalBookingTimeUsed' => $TotalTimeUsed
-										);
+			if($row['PreviousMonthBookingTimeUsed'] == null){
+				$PreviousMonthBookingTimeUsed = 'N/A';
+			} else {
+				$PreviousMonthBookingTimeUsed = $row['PreviousMonthBookingTimeUsed'];
+			}
+		
+			if($row['MonthlyBookingTimeUsed'] == null){
+				$MonthlyTimeUsed = 'N/A';
+			} else {
+				$MonthlyTimeUsed = $row['MonthlyBookingTimeUsed'];
+			}
+
+			if($row['TotalBookingTimeUsed'] == null){
+				$TotalTimeUsed = 'N/A';
+			} else {
+				$TotalTimeUsed = $row['TotalBookingTimeUsed'];
+			}		
+				$deletedEmployees[] = array(
+											'CompanyID' => $row['TheCompanyID'],
+											'CompanyName' => $row['CompanyName'],
+											'PreviousMonthBookingTimeUsed' => $PreviousMonthBookingTimeUsed,
+											'MonthlyBookingTimeUsed' => $MonthlyTimeUsed,
+											'TotalBookingTimeUsed' => $TotalTimeUsed
+											);
 		}
 		if($deletedEmployees[0]['TotalBookingTimeUsed'] == ""){
 			// The company has no used booking time by deleted users
@@ -1101,17 +1168,46 @@ if(!isset($_GET['Company'])){
 														) 
 										) 
 								FROM 		`booking` b
-								INNER JOIN `employee` e
+								INNER JOIN 	`employee` e
 								ON 			b.`userID` = e.`userID`
-								INNER JOIN `company` c
+								INNER JOIN 	`company` c
 								ON 			c.`companyID` = e.`companyID`
 								INNER JOIN 	`user` u 
 								ON 			e.`UserID` = u.`UserID` 
 								WHERE 		b.`userID` = UsrID
 								AND 		b.`companyID` = TheCompanyID
 								AND 		c.`CompanyID` = b.`companyID`
-								AND 		YEAR(b.`actualEndDateTime`) = YEAR(NOW())
-								AND 		MONTH(b.`actualEndDateTime`) = MONTH(NOW())
+								AND 		b.`actualEndDateTime`
+								BETWEEN		c.`prevStartDate`
+								AND			c.`startDate`
+							) 												AS PreviousMonthBookingTimeUsed,							
+							(
+								SELECT (
+										BIG_SEC_TO_TIME(
+														SUM(
+															DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
+															)*86400 
+														+ 
+														SUM(
+															TIME_TO_SEC(b.`actualEndDateTime`) 
+															- 
+															TIME_TO_SEC(b.`startDateTime`)
+															) 
+														) 
+										) 
+								FROM 		`booking` b
+								INNER JOIN 	`employee` e
+								ON 			b.`userID` = e.`userID`
+								INNER JOIN 	`company` c
+								ON 			c.`companyID` = e.`companyID`
+								INNER JOIN 	`user` u 
+								ON 			e.`UserID` = u.`UserID` 
+								WHERE 		b.`userID` = UsrID
+								AND 		b.`companyID` = TheCompanyID
+								AND 		c.`CompanyID` = b.`companyID`
+								AND 		b.`actualEndDateTime`
+								BETWEEN		c.`startDate`
+								AND			c.`endDate`
 							) 												AS MonthlyBookingTimeUsed,
 							(
 								SELECT (
@@ -1128,9 +1224,9 @@ if(!isset($_GET['Company'])){
 														) 
 										)
 								FROM 		`booking` b
-								INNER JOIN `employee` e
+								INNER JOIN 	`employee` e
 								ON 			b.`userID` = e.`userID`
-								INNER JOIN `company` c
+								INNER JOIN 	`company` c
 								ON 			c.`companyID` = e.`companyID`
 								INNER JOIN 	`user` u 
 								ON 			e.`UserID` = u.`UserID` 
@@ -1145,7 +1241,8 @@ if(!isset($_GET['Company'])){
 				ON 			cp.PositionID = e.PositionID
 				JOIN 		`user` u 
 				ON 			u.userID = e.UserID
-				ORDER BY 	OrderByDate DESC";
+				ORDER BY 	CompanyName DESC,
+							OrderByDate DESC";
 				
 		$result = $pdo->query($sql);
 		$rowNum = $result->rowCount();
@@ -1164,8 +1261,15 @@ if(!isset($_GET['Company'])){
 // Create an array with the actual key/value pairs we want to use in our HTML	
 foreach($result AS $row){
 	
-	// TO-DO: Transform monthly/total booking time into text instead time
-	// e.g. 1 day 24 hours, 30 minutes, 23 hours 40 minutes
+	// Calculate and display company booking time details
+	if($row['PreviousMonthBookingTimeUsed'] == null){
+		$PrevMonthTimeUsed = 'N/A';
+	} else {
+		$PrevMonthTimeUsed = $row['PreviousMonthBookingTimeUsed'];
+		$prevMonthTimeHour = substr($PrevMonthTimeUsed,0,strpos($PrevMonthTimeUsed,":"));
+		$prevMonthTimeMinute = substr($PrevMonthTimeUsed,strpos($PrevMonthTimeUsed,":")+1, 2);
+		$PrevMonthTimeUsed = $prevMonthTimeHour . 'h' . $prevMonthTimeMinute . 'm';
+	}	
 	
 	if($row['MonthlyBookingTimeUsed'] == null){
 		$MonthlyTimeUsed = 'N/A';
@@ -1198,6 +1302,7 @@ foreach($result AS $row){
 						'firstName' => $row['firstName'],
 						'lastName' => $row['lastName'],
 						'email' => $row['email'],
+						'PreviousMonthBookingTimeUsed' => $PrevMonthTimeUsed,
 						'MonthlyBookingTimeUsed' => $MonthlyTimeUsed,
 						'TotalBookingTimeUsed' => $TotalTimeUsed,
 						'StartDateTime' => $displayStartDateTime
