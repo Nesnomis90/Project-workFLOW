@@ -814,7 +814,6 @@ function create_tables()
 					  `meetingRoomID` int(10) unsigned DEFAULT NULL,
 					  `equipmentID` int(10) unsigned DEFAULT NULL,
 					  `positionID` int(10) unsigned DEFAULT NULL,
-					  `sessionID` int(10) unsigned DEFAULT NULL,
 					  `creditsID` int(10) unsigned DEFAULT NULL,
 					  `description` text,
 					  `logDateTime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,

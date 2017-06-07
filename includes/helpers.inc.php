@@ -10,4 +10,5 @@ require_once 'htmlout.inc.php';
 require_once 'inputvalidation.inc.php';
 require_once 'cookies.inc.php';
 require_once 'sessions.inc.php';
+require_once 'convert.inc.php';
 ?>
