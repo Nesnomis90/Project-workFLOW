@@ -19,6 +19,8 @@ function clearEditCompanyCreditsSessions(){
 	unset($_SESSION['EditCompanyCreditsChangeAlternativeCreditsAmount']);
 	unset($_SESSION['EditCompanyCreditsCreditsArray']);
 	unset($_SESSION['EditCompanyCreditsOriginalInfo']);
+	unset($_SESSION['EditCompanyCreditsSelectedCreditsID']);
+	unset($_SESSION['EditCompanyCreditsPreviouslySelectedCreditsID']);	
 }
 
 
@@ -32,7 +34,7 @@ if (	isset($_POST['action']) AND $_POST['action'] == 'Edit' OR
 		// Acknowledge that we have refreshEditCompanyCredits
 		unset($_SESSION['refreshEditCompanyCredits']);
 		
-		$selectedCreditsID = $_POST['CreditsID'];
+		$selectedCreditsID = $_SESSION['EditCompanyCreditsSelectedCreditsID'];
 	} else {
 		// Make sure we don't have any relevant values in memory
 		clearEditCompanyCreditsSessions();
@@ -74,10 +76,8 @@ if (	isset($_POST['action']) AND $_POST['action'] == 'Edit' OR
 			$_SESSION['EditCompanyCreditsOriginalInfo'] = $row;
 				
 			// Set the correct information
-			$selectedCreditsID = $row['CreditsID'];
-			$CreditsAlternativeAmount = $row['CreditsAlternativeAmount'];
-			
-			$_SESSION['EditCompanyCreditsOriginalAlternativeCreditsAmount'] = $CreditsAlternativeAmount;
+			$_SESSION['EditCompanyCreditsSelectedCreditsID'] = $row['CreditsID'];
+			$_SESSION['EditCompanyCreditsNewAlternativeAmount'] = $row['CreditsAlternativeAmount'];
 		}
 		catch (PDOException $e)
 		{
@@ -124,6 +124,8 @@ if (	isset($_POST['action']) AND $_POST['action'] == 'Edit' OR
 				
 				$credits[] = array(
 									'CreditsID' => $row['CreditsID'],
+									'CreditsName' => $row['CreditsName'],
+									'CreditsGivenInMinutes' => $creditsGiven,
 									'CreditsInformation' => $CreditsInformation
 									);
 			}		
@@ -147,15 +149,23 @@ if (	isset($_POST['action']) AND $_POST['action'] == 'Edit' OR
 	$CompanyID = $original['TheCompanyID'];
 	$CompanyName = $original['CompanyName'];
 	$credits = $_SESSION['EditCompanyCreditsCreditsArray'];
-	
+
 	$BillingStart = $original['CompanyBillingMonthStart'];
 	$BillingEnd =  $original['CompanyBillingMonthEnd'];
 	$displayBillingStart = convertDatetimeToFormat($BillingStart , 'Y-m-d', DATE_DEFAULT_FORMAT_TO_DISPLAY);
 	$displayBillingEnd = convertDatetimeToFormat($BillingEnd , 'Y-m-d', DATE_DEFAULT_FORMAT_TO_DISPLAY);
 	$BillingPeriod = $displayBillingStart . " to " . $displayBillingEnd . ".";	
 	
+	if($_SESSION['EditCompanyCreditsNewAlternativeAmount'] == NULL){
+		$creditsAlternativeAmount = 0;
+	} else {
+		$creditsAlternativeAmount = $_SESSION['EditCompanyCreditsNewAlternativeAmount'];
+	}
 	$originalCreditsName = $original['CreditsName']; 
 	$originalCreditsAlternativeCreditsAmount = convertMinutesToHoursAndMinutes($original['CreditsAlternativeAmount']);
+	$CreditsAlternativeCreditsAmount = $creditsAlternativeAmount;
+		
+	$selectedCreditsID = $_SESSION['EditCompanyCreditsSelectedCreditsID'];
 		
 	var_dump($_SESSION); // TO-DO: remove after testing is done
 	
@@ -166,8 +176,16 @@ if (	isset($_POST['action']) AND $_POST['action'] == 'Edit' OR
 
 
 if(isset($_POST['edit']) AND $_POST['edit'] == 'Select Amount'){
+	// TO-DO: Validate values
+	$newAlternativeCreditsAmount = trimAllWhitespace($_POST['CreditsAlternativeCreditsAmount']);
 	
-	unset($_SESSION['EditCompanyCreditsChangeAlternativeCreditsAmount']);
+	if($invalidInput){
+		$_SESSION['EditCompanyCreditsError'] = "";
+	} else {
+		unset($_SESSION['EditCompanyCreditsChangeAlternativeCreditsAmount']);
+		$_SESSION['EditCompanyCreditsNewAlternativeAmount'] = $newAlternativeCreditsAmount;
+	}
+	
 	
 	$_SESSION['refreshEditCompanyCredits'] = TRUE;
 	header('Location: .');
@@ -175,7 +193,6 @@ if(isset($_POST['edit']) AND $_POST['edit'] == 'Select Amount'){
 }
 
 if(isset($_POST['edit']) AND $_POST['edit'] == 'Change Amount'){
-	
 	$_SESSION['EditCompanyCreditsChangeAlternativeCreditsAmount'] = TRUE;
 	
 	$_SESSION['refreshEditCompanyCredits'] = TRUE;
@@ -185,6 +202,16 @@ if(isset($_POST['edit']) AND $_POST['edit'] == 'Change Amount'){
 
 if(isset($_POST['edit']) AND $_POST['edit'] == 'Select Credits'){
 	
+	// Make admin have to confirm alternative amount when changing credits
+	if(	$_POST['CreditsID'] != $_SESSION['EditCompanyCreditsOriginalInfo']['CreditsID'] AND
+		$_POST['CreditsID'] != $_SESSION['EditCompanyCreditsPreviouslySelectedCreditsID']){
+		$_SESSION['EditCompanyCreditsChangeAlternativeCreditsAmount'] = TRUE;
+		$_SESSION['EditCompanyCreditsNewAlternativeAmount']	= 0;
+	}
+	
+	$_SESSION['EditCompanyCreditsSelectedCreditsID'] = $_POST['CreditsID'];
+	
+	unset($_SESSION['EditCompanyCreditsPreviouslySelectedCreditsID']);
 	unset($_SESSION['EditCompanyCreditsChangeCredits']);
 	
 	$_SESSION['refreshEditCompanyCredits'] = TRUE;
@@ -194,8 +221,10 @@ if(isset($_POST['edit']) AND $_POST['edit'] == 'Select Credits'){
 
 if(isset($_POST['edit']) AND $_POST['edit'] == 'Change Credits'){
 	
-	$_SESSION['EditCompanyCreditsChangeCredits'] = TRUE;
+	$_SESSION['EditCompanyCreditsPreviouslySelectedCreditsID'] = $_SESSION['EditCompanyCreditsSelectedCreditsID'];
 	
+	$_SESSION['EditCompanyCreditsChangeCredits'] = TRUE;
+	unset($_SESSION['EditCompanyCreditsChangeAlternativeCreditsAmount']);
 	$_SESSION['refreshEditCompanyCredits'] = TRUE;
 	header('Location: .');
 	exit();	

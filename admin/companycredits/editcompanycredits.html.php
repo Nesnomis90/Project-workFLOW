@@ -18,7 +18,7 @@
 				<b><?php htmlout($CompanyName); ?></b>
 			</div>
 			<div>
-				<label for="currentBillingPeriod">Current Billing Period is: </label>
+				<label for="currentBillingPeriod">Current Billing Period: </label>
 				<b><?php htmlout($BillingPeriod); ?></b>
 			</div>
 			<div>
@@ -44,20 +44,35 @@
 				</select>
 				<input type="submit" name="edit" value="Select Credits">
 			<?php else : ?>
-				<input type="submit" name="edit" value="Change Credits">
+				<label for="CreditsID">Selected Credits: </label>
+					<?php foreach($credits as $row): ?> 
+						<?php if($row['CreditsID']==$selectedCreditsID):?>
+								<b><?php htmlout($row['CreditsName']);?></b>
+								<?php $creditsGivenInHTML = $row['CreditsGivenInMinutes'];?>
+						<?php endif;?>
+					<?php endforeach; ?>
+					<input type="submit" name="edit" value="Change Credits">
+				</div>
+				<div>
+				<label for="CreditsGiven">Credits Given: </label>	
+				<b><?php htmlout($creditsGivenInHTML);?></b>
 			<?php endif; ?>
 			</div>
 			<div>
-				<label for="originalCreditsAmount">Alternative Credits Amount: </label>
+				<label for="originalCreditsAmount">Original Alternative Credits Given: </label>
 				<b><?php htmlout($originalCreditsAlternativeCreditsAmount); ?></b>		
 			</div>
 			<div>
 			<?php if(	isset($_SESSION['EditCompanyCreditsChangeAlternativeCreditsAmount']) AND 
 						$_SESSION['EditCompanyCreditsChangeAlternativeCreditsAmount']) : ?>
+				<label for="CreditsAlternativeCreditsAmount">Set New Alt. Credits Given(minutes): </label>
 				<input type="number" name="CreditsAlternativeCreditsAmount" min="0" max="65535"
 				value="<?php htmlout($CreditsAlternativeCreditsAmount); ?>">
+				<input type="submit" name="edit" value="Set Original Amount">
 				<input type="submit" name="edit" value="Select Amount">
 			<?php else : ?>
+				<label for="CreditsAlternativeCreditsAmount">Selected Alt. Credits Given(minutes): </label>
+				<b><?php htmlout($CreditsAlternativeCreditsAmount); ?>m</b>
 				<input type="submit" name="edit" value="Change Amount">
 			<?php endif; ?>
 			</div>
@@ -69,6 +84,10 @@
 				<?php if(isset($_SESSION['EditCompanyCreditsChangeCredits']) AND $_SESSION['EditCompanyCreditsChangeCredits']) : ?>
 					<input type="submit" name="disabled" value="Finish Edit" disabled>
 					<b>You need to select the credits you want before you can finish editing.</b>
+				<?php elseif(	isset($_SESSION['EditCompanyCreditsChangeAlternativeCreditsAmount']) AND 
+								$_SESSION['EditCompanyCreditsChangeAlternativeCreditsAmount']) : ?>
+					<input type="submit" name="disabled" value="Finish Edit" disabled>
+					<b>You need to select the alternative Credits given before you can finish editing.</b>			
 				<?php else : ?>
 					<input type="submit" name="edit" value="Finish Edit">
 				<?php endif; ?>
