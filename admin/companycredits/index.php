@@ -19,10 +19,8 @@ function clearEditCompanyCreditsSessions(){
 
 // if admin wants to change credits info for the selected company
 // we load a new html form
-// TO-DO: Copypaste, not done!
 if (isset($_POST['action']) AND $_POST['action'] == 'Edit')
 {
-	
 	// TO-DO: Create if/else and save original array like in other edit index.php's
 	// Get information from database again on the selected company credits
 	try
@@ -86,7 +84,7 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Edit')
 	var_dump($_SESSION); // TO-DO: remove after testing is done
 	
 	// Change to the actual form we want to use
-	include 'form.html.php';
+	include 'editcompanycredits.html.php';
 	exit();
 }
 
