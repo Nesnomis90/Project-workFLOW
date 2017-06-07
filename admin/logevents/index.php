@@ -12,13 +12,13 @@ if (!isUserAdmin()){
 
 // If admin wants to be able to delete logs it needs to enabled first
 if (isset($_POST['action']) AND $_POST['action'] == "Enable Delete"){
-	$_SESSION['logEventsEnableDelete'] = TRUE;
+	$_SESSION['logEventsEnableDelete'] = TRUE;	
 	$_SESSION['refreshLogEvents'] = TRUE;
 }
 
 // If admin wants to be disable log deletion
 if (isset($_POST['action']) AND $_POST['action'] == "Disable Delete"){
-	unset($_SESSION['logEventsEnableDelete']);
+	unset($_SESSION['logEventsEnableDelete']);	
 	$_SESSION['refreshLogEvents'] = TRUE;
 }
 
@@ -51,10 +51,6 @@ if (isset($_POST['action']) AND $_POST['action'] == "Delete"){
 	
 	$_SESSION['LogEventUserFeedback'] = "Successfully deleted the log event.";
 	$_SESSION['refreshLogEvents'] = TRUE;
-	
-	/*// Load Log Events list webpage with updated database
-	header('Location: .');
-	exit();*/
 }
 
 // Let's define what checkboxes should be displayed
@@ -86,11 +82,14 @@ $checkboxes = array(
 
 // If admin wants to change what type of logs to display
 // or the max amount of logs
-if (isset($_POST['action']) AND $_POST['action'] == "Refresh Logs" OR 
-	isset($_POST['action']) AND $_POST['action'] == "Set New Maximum" OR 
-	isset($_SESSION['refreshLogEvents']) AND $_SESSION['refreshLogEvents']){
+if ((isset($_POST['action']) AND $_POST['action'] == "Refresh Logs") OR 
+	(isset($_POST['action']) AND $_POST['action'] == "Set New Maximum") OR 
+	(isset($_SESSION['refreshLogEvents']) AND $_SESSION['refreshLogEvents'])){
 
-	unset($_SESSION['refreshLogEvents']);
+	if(isset($_SESSION['refreshLogEvents']) AND $_SESSION['refreshLogEvents']){
+		unset($_SESSION['refreshLogEvents']);
+	}
+	
 	
 	// TO-DO: Change if too high
 	$minimumLogLimit = 10;
@@ -191,11 +190,11 @@ $validatedEndDate = trimExcessWhitespace($filterEndDate);
 // Do actual input validation
 if(validateDateTimeString($validatedStartDate) === FALSE AND !$invalidInput){
 	$invalidInput = TRUE;
-	$_SESSION['LogEventUserFeedback'] .= "Your submitted start time has illegal characters in it.";
+	$_SESSION['LogEventUserFeedback'] = "Your submitted start time has illegal characters in it.";
 }
 if(validateDateTimeString($validatedEndDate) === FALSE AND !$invalidInput){
 	$invalidInput = TRUE;
-	$_SESSION['LogEventUserFeedback'] .= "Your submitted end time has illegal characters in it.";
+	$_SESSION['LogEventUserFeedback'] = "Your submitted end time has illegal characters in it.";
 }
 
 
@@ -208,22 +207,22 @@ if($validatedEndDate != ""){
 }
 
 if (isset($startDateTime) AND $startDateTime === FALSE AND !$invalidInput){
-	$_SESSION['LogEventUserFeedback'] .= "The start date you submitted did not have a correct format. Please try again.";
+	$_SESSION['LogEventUserFeedback'] = "The start date you submitted did not have a correct format. Please try again.";
 	$invalidInput = TRUE;
 }
 if (isset($endDateTime) AND $endDateTime === FALSE AND !$invalidInput){
-	$_SESSION['LogEventUserFeedback'] .= "The end date you submitted did not have a correct format. Please try again.";
+	$_SESSION['LogEventUserFeedback'] = "The end date you submitted did not have a correct format. Please try again.";
 	$invalidInput = TRUE;
 }
  
 if($validatedStartDate != "" AND $validatedEndDate != ""){
 	if($startDateTime > $endDateTime AND !$invalidInput){
 		// End time can't be before the start time
-		$_SESSION['LogEventUserFeedback'] .= "The start time can't be later than the end time. Please select a new start time or end time.";
+		$_SESSION['LogEventUserFeedback'] = "The start time can't be later than the end time. Please select a new start time or end time.";
 		$invalidInput = TRUE;
 	}	
 	if($endDateTime == $startDateTime AND !$invalidInput){
-		$_SESSION['LogEventUserFeedback'] .= "You need to select an end time that is different from your start time.";	
+		$_SESSION['LogEventUserFeedback'] = "You need to select an end time that is different from your start time.";	
 		$invalidInput = TRUE;				
 	}
 }
@@ -239,7 +238,7 @@ if(isset($endDateTime) AND $endDateTime !== FALSE){
 // Check if admin has even checked any boxes yet, if not just give a warning
 $noCheckedCheckboxes = FALSE;
 if (!isset($_POST['search']) AND !isset($_POST['searchAll']) AND !$invalidInput){
-	$_SESSION['LogEventUserFeedback'] .= "You need to select at least one category of log events with the checkboxes.";
+	$_SESSION['LogEventUserFeedback'] = "You need to select at least one category of log events with the checkboxes.";
 	$invalidInput = TRUE;
 	$noCheckedCheckboxes = TRUE;
 }
