@@ -20,7 +20,8 @@ function clearEditCompanyCreditsSessions(){
 	unset($_SESSION['EditCompanyCreditsCreditsArray']);
 	unset($_SESSION['EditCompanyCreditsOriginalInfo']);
 	unset($_SESSION['EditCompanyCreditsSelectedCreditsID']);
-	unset($_SESSION['EditCompanyCreditsPreviouslySelectedCreditsID']);	
+	unset($_SESSION['EditCompanyCreditsPreviouslySelectedCreditsID']);
+	unset($_SESSION['EditCompanyCreditsNewAlternativeAmount']);
 }
 
 
@@ -174,6 +175,15 @@ if (	isset($_POST['action']) AND $_POST['action'] == 'Edit' OR
 	exit();
 }
 
+
+if(isset($_POST['edit']) AND $_POST['edit'] == 'Set Original Amount'){
+	
+	$_SESSION['EditCompanyCreditsNewAlternativeAmount'] = $_SESSION['EditCompanyCreditsOriginalInfo']['CreditsAlternativeAmount'];
+	
+	$_SESSION['refreshEditCompanyCredits'] = TRUE;
+	header('Location: .');
+	exit();	
+}
 
 if(isset($_POST['edit']) AND $_POST['edit'] == 'Select Amount'){
 	// TO-DO: Validate values
