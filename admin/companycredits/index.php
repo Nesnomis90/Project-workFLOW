@@ -15,7 +15,13 @@ if (!isUserAdmin()){
 // Function to clear sessions used to remember user inputs on refreshing the 'edit'/'change amount' company credits form
 function clearEditCompanyCreditsSessions(){
 	unset($_SESSION['EditCompanyCreditsOriginalAlternativeCreditsAmount']);
+	unset($_SESSION['EditCompanyCreditsChangeCredits']);
+	unset($_SESSION['EditCompanyCreditsChangeAlternativeCreditsAmount']);
+	unset($_SESSION['EditCompanyCreditsCreditsArray']);
+	unset($_SESSION['EditCompanyCreditsOriginalInfo']);
 }
+
+
 
 // if admin wants to change credits info for the selected company
 // we load a new html form
@@ -71,10 +77,7 @@ if (	isset($_POST['action']) AND $_POST['action'] == 'Edit' OR
 			$selectedCreditsID = $row['CreditsID'];
 			$CreditsAlternativeAmount = $row['CreditsAlternativeAmount'];
 			
-			$_SESSION['EditCompanyCreditsOriginalAlternativeCreditsAmount'] = $CreditsAlternativeAmount;			
-			
-			//Close connection
-			$pdo = null;
+			$_SESSION['EditCompanyCreditsOriginalAlternativeCreditsAmount'] = $CreditsAlternativeAmount;
 		}
 		catch (PDOException $e)
 		{
@@ -83,12 +86,67 @@ if (	isset($_POST['action']) AND $_POST['action'] == 'Edit' OR
 			$pdo = null;
 			exit();		
 		}
+		
+		// Get information from database again of available credits
+		try
+		{
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+			
+			$sql = 'SELECT 	`CreditsID`				AS CreditsID,
+							`name`					AS CreditsName,
+							`minuteAmount`			AS CreditsGivenInMinutes,
+							`monthlyPrice`			AS CreditsMonthlyPrice,
+							`overCreditHourPrice`	AS CreditsHourPrice,
+							`overCreditMinutePrice`	AS CreditsMinutePrice
+					FROM 	`credits`';
+			$result = $pdo->query($sql);
+				
+			//Close connection
+			$pdo = null;
+			
+			// Get the rows of information from the query
+			// This will be used to create a dropdown list in HTML
+			foreach($result as $row){
+
+				// Format what over fee rate we're using (hourly or minute by minute)
+				$creditsMinutePrice = $row['CreditsMinutePrice'];
+				$creditsHourPrice = $row['CreditsHourPrice'];
+				if($creditsMinutePrice != NULL){
+					$creditsOverCreditsFee = convertToCurrency($creditsMinutePrice) . '/min';
+				} elseif($creditsHourPrice != NULL) {
+					$creditsOverCreditsFee = convertToCurrency($creditsHourPrice) . '/hour';
+				} else {
+					$creditsOverCreditsFee = "Error, not set.";
+				}
+				$creditsMonthlyPrice = convertToCurrency($row['CreditsMonthlyPrice']);
+				$creditsGiven = convertMinutesToHoursAndMinutes($row['CreditsGivenInMinutes']);
+				$CreditsInformation = "Name: " . $row['CreditsName'] . ". Monthly Price: " . $creditsMonthlyPrice . ", Credits Given: " . $creditsGiven . ". Over Credits Fee:  " . $creditsOverCreditsFee . ".";
+				
+				$credits[] = array(
+									'CreditsID' => $row['CreditsID'],
+									'CreditsInformation' => $CreditsInformation
+									);
+			}		
+			
+			$_SESSION['EditCompanyCreditsCreditsArray'] = $credits;
+			
+			$pdo = null;
+		}
+		catch (PDOException $e)
+		{
+			$error = 'Error fetching credits details: ' . $e->getMessage();
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+			$pdo = null;
+			exit();		
+		}	
+		
 	}
 	
 	// Set original/correct values
 	$original = $_SESSION['EditCompanyCreditsOriginalInfo'];	
 	$CompanyID = $original['TheCompanyID'];
 	$CompanyName = $original['CompanyName'];
+	$credits = $_SESSION['EditCompanyCreditsCreditsArray'];
 	
 	$BillingStart = $original['CompanyBillingMonthStart'];
 	$BillingEnd =  $original['CompanyBillingMonthEnd'];
@@ -98,15 +156,72 @@ if (	isset($_POST['action']) AND $_POST['action'] == 'Edit' OR
 	
 	$originalCreditsName = $original['CreditsName']; 
 	$originalCreditsAlternativeCreditsAmount = convertMinutesToHoursAndMinutes($original['CreditsAlternativeAmount']);
-	
-	// TO-DO: Set original variables. Originally selected credits. Make a dropdown list of possible credits.
-	
+		
 	var_dump($_SESSION); // TO-DO: remove after testing is done
 	
 	// Change to the actual form we want to use
 	include 'editcompanycredits.html.php';
 	exit();
 }
+
+
+if(isset($_POST['edit']) AND $_POST['edit'] == 'Select Amount'){
+	
+	unset($_SESSION['EditCompanyCreditsChangeAlternativeCreditsAmount']);
+	
+	$_SESSION['refreshEditCompanyCredits'] = TRUE;
+	header('Location: .');
+	exit();	
+}
+
+if(isset($_POST['edit']) AND $_POST['edit'] == 'Change Amount'){
+	
+	$_SESSION['EditCompanyCreditsChangeAlternativeCreditsAmount'] = TRUE;
+	
+	$_SESSION['refreshEditCompanyCredits'] = TRUE;
+	header('Location: .');
+	exit();	
+}
+
+if(isset($_POST['edit']) AND $_POST['edit'] == 'Select Credits'){
+	
+	unset($_SESSION['EditCompanyCreditsChangeCredits']);
+	
+	$_SESSION['refreshEditCompanyCredits'] = TRUE;
+	header('Location: .');
+	exit();	
+}
+
+if(isset($_POST['edit']) AND $_POST['edit'] == 'Change Credits'){
+	
+	$_SESSION['EditCompanyCreditsChangeCredits'] = TRUE;
+	
+	$_SESSION['refreshEditCompanyCredits'] = TRUE;
+	header('Location: .');
+	exit();	
+}
+
+if(isset($_POST['edit']) AND $_POST['edit'] == 'Reset'){
+	
+	// TO-DO: Reset values ... edit array = original array
+	
+	$_SESSION['refreshEditCompanyCredits'] = TRUE;
+	header('Location: .');
+	exit();	
+}
+
+// If the user clicks any cancel buttons he'll be directed back to the employees page again
+if (isset($_POST['edit']) AND $_POST['edit'] == 'Cancel'){
+	$_SESSION['CompanyCreditsUserFeedback'] = "You cancelled your company credits editing.";
+}
+
+if(isset($refreshCompanyCredits) AND $refreshCompanyCredits){
+	// TO-DO: Add code that should occur on a refresh
+	unset($refreshCompanyCredits);
+}
+
+// Remove any unused variables from memory 
+clearEditCompanyCreditsSessions();
 
 // Get only information from the specific company
 if(isset($_GET['Company'])){	

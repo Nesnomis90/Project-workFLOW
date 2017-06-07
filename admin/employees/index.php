@@ -788,8 +788,7 @@ if(isset($refreshEmployees) AND $refreshEmployees){
 	unset($refreshEmployees);
 }
 
-// Remove any unused variables from memory 
-// TO-DO: Change if this ruins having multiple tabs open etc.
+// Remove any unused variables from memory
 clearAddEmployeeSessions();
 clearEditEmployeeSessions();
 

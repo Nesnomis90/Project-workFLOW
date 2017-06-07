@@ -2,41 +2,6 @@
 require_once 'variables.inc.php';
 // This is a collection of functions we use to check if user inputs are OK
 
-function convertMinutesToHoursAndMinutes($GivenInMinutes){
-	if($GivenInMinutes > 59){
-		$GivenInHours = floor($GivenInMinutes/60);
-		$GivenInMinutes -= $GivenInHours*60;
-		$GivenInHoursAndMinutes = $GivenInHours . 'h' . $GivenInMinutes . 'm';
-	} elseif($GivenInMinutes > 0) {
-		$GivenInHoursAndMinutes = '0h' . $GivenInMinutes . 'm';
-	} else {
-		$GivenInHoursAndMinutes = 'None';
-	}	
-	return $GivenInHoursAndMinutes;
-}
-
-function convertToCurrency($input){
-	if(SET_CURRENCY_DECIMAL_PRECISION > 0){
-		if(SET_CURRENCY_SYMBOL != ""){
-			$output = number_format($input,SET_CURRENCY_DECIMAL_PRECISION) . SET_CURRENCY_SYMBOL;
-		} elseif(SET_CURRENCY != ""){
-			$output = number_format($input,SET_CURRENCY_DECIMAL_PRECISION) . " " . SET_CURRENCY;
-		} else {
-			$output = number_format($input,SET_CURRENCY_DECIMAL_PRECISION);
-		}		
-	} else {
-		if(SET_CURRENCY_SYMBOL != ""){
-			$output = $input . SET_CURRENCY_SYMBOL;
-		} elseif(SET_CURRENCY != ""){
-			$output = $input . " " . SET_CURRENCY;
-		} else {
-			$output = $input;
-		}			
-	}
-
-	return $output;
-}
-
 // Function to check if variables are too big for MySQL or our liking
 	//Display Names
 // Returns TRUE on invalid, FALSE on valid
