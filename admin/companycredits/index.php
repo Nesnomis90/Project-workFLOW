@@ -186,16 +186,24 @@ if(isset($_POST['edit']) AND $_POST['edit'] == 'Set Original Amount'){
 }
 
 if(isset($_POST['edit']) AND $_POST['edit'] == 'Select Amount'){
-	// TO-DO: Validate values
-	$newAlternativeCreditsAmount = trimAllWhitespace($_POST['CreditsAlternativeCreditsAmount']);
+	$invalidInput = FALSE;
 	
-	if($invalidInput){
-		$_SESSION['EditCompanyCreditsError'] = "";
-	} else {
+	$newAlternativeCreditsAmount = trimAllWhitespace($_POST['CreditsAlternativeCreditsAmount']);
+	$validAlternativeCreditAmountFormat = validateIntegerNumber($newAlternativeCreditsAmount);
+	if(!$validAlternativeCreditAmountFormat AND !$invalidInput){
+		$invalidInput = TRUE;
+		$_SESSION['EditCompanyCreditsError'] = "The alt. credit given amount you submitted has illegal characters in it.";		
+	}
+	$invalidAlternativeCreditAmountSize = isNumberInvalidCreditsAmount($newAlternativeCreditsAmount);
+	if($invalidAlternativeCreditAmountSize AND !$invalidInput){
+		$invalidInput = TRUE;
+		$_SESSION['EditCompanyCreditsError'] = "The alt. credit given amount you submitted is too big.";
+	}
+	
+	if(!$invalidInput){
 		unset($_SESSION['EditCompanyCreditsChangeAlternativeCreditsAmount']);
 		$_SESSION['EditCompanyCreditsNewAlternativeAmount'] = $newAlternativeCreditsAmount;
 	}
-	
 	
 	$_SESSION['refreshEditCompanyCredits'] = TRUE;
 	header('Location: .');
