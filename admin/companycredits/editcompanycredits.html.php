@@ -70,10 +70,16 @@
 				value="<?php htmlout($CreditsAlternativeCreditsAmount); ?>">
 				<input type="submit" name="edit" value="Set Original Amount">
 				<input type="submit" name="edit" value="Select Amount">
-			<?php else : ?>
-				<label for="CreditsAlternativeCreditsAmount">Selected Alt. Credits Given: </label>
-				<b><?php htmlout(convertMinutesToHoursAndMinutes($CreditsAlternativeCreditsAmount)); ?></b>
-				<input type="submit" name="edit" value="Change Amount">
+			<?php elseif(!isset($_SESSION['EditCompanyCreditsChangeCredits'])) : ?>
+				<?php if($CreditsAlternativeCreditsAmount == 0) : ?>
+					<label for="CreditsAlternativeCreditsAmount">Using Default Credits Given: </label>
+					<b><?php htmlout($creditsGivenInHTML); ?></b>
+					<input type="submit" name="edit" value="Change Amount">	
+				<?php else : ?>
+					<label for="CreditsAlternativeCreditsAmount">Selected Alt. Credits Given: </label>
+					<b><?php htmlout(convertMinutesToHoursAndMinutes($CreditsAlternativeCreditsAmount)); ?></b>
+					<input type="submit" name="edit" value="Change Amount">
+				<?php endif; ?>
 			<?php endif; ?>
 			</div>
 			<div>

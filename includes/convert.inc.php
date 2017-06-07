@@ -1,7 +1,7 @@
 <?php
 // This holds all the functions we use to convert values (excluding datetime convertions, see datetime.inc.php)
 
-// Integer minute input to text output
+// Integer minute input to string output
 function convertMinutesToHoursAndMinutes($GivenInMinutes){
 	if($GivenInMinutes > 59){
 		$GivenInHours = floor($GivenInMinutes/60);
@@ -15,7 +15,7 @@ function convertMinutesToHoursAndMinutes($GivenInMinutes){
 	return $GivenInHoursAndMinutes;
 }
 
-// Number value to currency output
+// Number value to currency (string) output
 function convertToCurrency($input){
 	if(SET_CURRENCY_DECIMAL_PRECISION > 0){
 		if(SET_CURRENCY_SYMBOL != ""){

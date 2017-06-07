@@ -14,7 +14,6 @@ if (!isUserAdmin()){
 
 // Function to clear sessions used to remember user inputs on refreshing the 'edit'/'change amount' company credits form
 function clearEditCompanyCreditsSessions(){
-	unset($_SESSION['EditCompanyCreditsOriginalAlternativeCreditsAmount']);
 	unset($_SESSION['EditCompanyCreditsChangeCredits']);
 	unset($_SESSION['EditCompanyCreditsChangeAlternativeCreditsAmount']);
 	unset($_SESSION['EditCompanyCreditsCreditsArray']);
@@ -181,6 +180,14 @@ if(isset($_POST['edit']) AND $_POST['edit'] == 'Set Original Amount'){
 	$_SESSION['EditCompanyCreditsNewAlternativeAmount'] = $_SESSION['EditCompanyCreditsOriginalInfo']['CreditsAlternativeAmount'];
 	
 	$_SESSION['refreshEditCompanyCredits'] = TRUE;
+	
+	if(isset($_GET['Company'])){	
+		// Refresh CompanyCredits for the specific company again
+		$TheCompanyID = $_GET['Company'];
+		$location = "http://$_SERVER[HTTP_HOST]/admin/companycredits/?Company=" . $TheCompanyID;
+		header("Location: $location");
+		exit();
+	}	
 	header('Location: .');
 	exit();	
 }
@@ -206,6 +213,14 @@ if(isset($_POST['edit']) AND $_POST['edit'] == 'Select Amount'){
 	}
 	
 	$_SESSION['refreshEditCompanyCredits'] = TRUE;
+	
+	if(isset($_GET['Company'])){	
+		// Refresh CompanyCredits for the specific company again
+		$TheCompanyID = $_GET['Company'];
+		$location = "http://$_SERVER[HTTP_HOST]/admin/companycredits/?Company=" . $TheCompanyID;
+		header("Location: $location");
+		exit();
+	}		
 	header('Location: .');
 	exit();	
 }
@@ -214,6 +229,14 @@ if(isset($_POST['edit']) AND $_POST['edit'] == 'Change Amount'){
 	$_SESSION['EditCompanyCreditsChangeAlternativeCreditsAmount'] = TRUE;
 	
 	$_SESSION['refreshEditCompanyCredits'] = TRUE;
+	
+	if(isset($_GET['Company'])){	
+		// Refresh CompanyCredits for the specific company again
+		$TheCompanyID = $_GET['Company'];
+		$location = "http://$_SERVER[HTTP_HOST]/admin/companycredits/?Company=" . $TheCompanyID;
+		header("Location: $location");
+		exit();
+	}		
 	header('Location: .');
 	exit();	
 }
@@ -233,6 +256,14 @@ if(isset($_POST['edit']) AND $_POST['edit'] == 'Select Credits'){
 	unset($_SESSION['EditCompanyCreditsChangeCredits']);
 	
 	$_SESSION['refreshEditCompanyCredits'] = TRUE;
+	
+	if(isset($_GET['Company'])){	
+		// Refresh CompanyCredits for the specific company again
+		$TheCompanyID = $_GET['Company'];
+		$location = "http://$_SERVER[HTTP_HOST]/admin/companycredits/?Company=" . $TheCompanyID;
+		header("Location: $location");
+		exit();
+	}		
 	header('Location: .');
 	exit();	
 }
@@ -244,15 +275,37 @@ if(isset($_POST['edit']) AND $_POST['edit'] == 'Change Credits'){
 	$_SESSION['EditCompanyCreditsChangeCredits'] = TRUE;
 	unset($_SESSION['EditCompanyCreditsChangeAlternativeCreditsAmount']);
 	$_SESSION['refreshEditCompanyCredits'] = TRUE;
+	
+	if(isset($_GET['Company'])){	
+		// Refresh CompanyCredits for the specific company again
+		$TheCompanyID = $_GET['Company'];
+		$location = "http://$_SERVER[HTTP_HOST]/admin/companycredits/?Company=" . $TheCompanyID;
+		header("Location: $location");
+		exit();
+	}		
 	header('Location: .');
 	exit();	
 }
 
 if(isset($_POST['edit']) AND $_POST['edit'] == 'Reset'){
 	
-	// TO-DO: Reset values ... edit array = original array
+	unset($_SESSION['EditCompanyCreditsChangeCredits']);
+	unset($_SESSION['EditCompanyCreditsChangeAlternativeCreditsAmount']);
+	unset($_SESSION['EditCompanyCreditsPreviouslySelectedCreditsID']);
+	
+	$original = $_SESSION['EditCompanyCreditsOriginalInfo'];
+	
+	$_SESSION['EditCompanyCreditsSelectedCreditsID'] = $original['CreditsID'];
+	$_SESSION['EditCompanyCreditsNewAlternativeAmount'] = $original['CreditsAlternativeAmount'];
 	
 	$_SESSION['refreshEditCompanyCredits'] = TRUE;
+	if(isset($_GET['Company'])){	
+		// Refresh CompanyCredits for the specific company again
+		$TheCompanyID = $_GET['Company'];
+		$location = "http://$_SERVER[HTTP_HOST]/admin/companycredits/?Company=" . $TheCompanyID;
+		header("Location: $location");
+		exit();
+	}	
 	header('Location: .');
 	exit();	
 }
@@ -261,6 +314,72 @@ if(isset($_POST['edit']) AND $_POST['edit'] == 'Reset'){
 if (isset($_POST['edit']) AND $_POST['edit'] == 'Cancel'){
 	$_SESSION['CompanyCreditsUserFeedback'] = "You cancelled your company credits editing.";
 }
+
+// Perform the actual database update of the edited information
+if (isset($_POST['edit']) AND $_POST['edit'] == 'Finish Edit')
+{
+	// Check if there were any changes made
+	$NumberOfChanges = 0;
+	$original = $_SESSION['EditCompanyCreditsOriginalInfo'];
+	
+	if($_SESSION['EditCompanyCreditsSelectedCreditsID'] != $original['CreditsID']){
+		$NumberOfChanges++;
+	}
+	if($_SESSION['EditCompanyCreditsNewAlternativeAmount'] == 0){
+		$_SESSION['EditCompanyCreditsNewAlternativeAmount'] = NULL;
+	}
+	if($_SESSION['EditCompanyCreditsNewAlternativeAmount'] != $original['CreditsAlternativeAmount']){
+		$NumberOfChanges++;
+	}
+
+	if($NumberOfChanges > 0){
+		// Update selected company credits connection with a new credits and/or alternative credits amount
+		try
+		{
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+			
+			$pdo = connect_to_db();
+			$sql = 'UPDATE 	`companycredits` 
+					SET		`CreditsID` = :CreditsID,
+							`altMinuteAmount` = :CreditsGivenInMinutes
+					WHERE 	`CompanyID` = :CompanyID';
+			$s = $pdo->prepare($sql);
+			$s->bindValue(':CompanyID', $original['TheCompanyID']);
+			$s->bindValue(':CreditsID', $_SESSION['EditCompanyCreditsSelectedCreditsID']);
+			$s->bindValue(':CreditsGivenInMinutes', $_SESSION['EditCompanyCreditsNewAlternativeAmount']);
+			$s->execute(); 
+					
+			//close connection
+			$pdo = null;	
+		}
+		catch (PDOException $e)
+		{
+			$error = 'Error changing credits information for company: ' . $e->getMessage();
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+			$pdo = null;
+			exit();		
+		}
+		
+		$_SESSION['CompanyCreditsUserFeedback'] = "Successfully updated the credits info for the company.";
+	} else {
+		$_SESSION['CompanyCreditsUserFeedback'] = "No changes were made to the credits info for the company.";
+	}
+	
+	clearEditCompanyCreditsSessions();
+	
+	if(isset($_GET['Company'])){	
+		// Refresh CompanyCredits for the specific company again
+		$TheCompanyID = $_GET['Company'];
+		$location = "http://$_SERVER[HTTP_HOST]/admin/companycredits/?Company=" . $TheCompanyID;
+		header("Location: $location");
+		exit();
+	}	
+		
+	// Do a normal page reload
+	header('Location: .');
+	exit();	
+}
+
 
 if(isset($refreshCompanyCredits) AND $refreshCompanyCredits){
 	// TO-DO: Add code that should occur on a refresh

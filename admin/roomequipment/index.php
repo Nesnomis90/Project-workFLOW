@@ -678,6 +678,7 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Confirm Amount')
 {
 	// Check if there were any changes made
 	$NumberOfChanges = 0;
+	// TO-DO: validate equipment amount
 	$selectedRoomEquipmentAmount = $_POST['EquipmentAmount'];
 	
 	if(	isset($_SESSION['EditRoomEquipmentOriginalEquipmentAmount']) AND 
