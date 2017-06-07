@@ -10,47 +10,17 @@ if (!isUserAdmin()){
 	exit();
 }
 
-var_dump($_SESSION); // TO-DO: remove after testing is done
-
 // If admin wants to be able to delete logs it needs to enabled first
 if (isset($_POST['action']) AND $_POST['action'] == "Enable Delete"){
 	$_SESSION['logEventsEnableDelete'] = TRUE;
-	$refreshLogs = TRUE;
+	$_SESSION['refreshLogEvents'] = TRUE;
 }
 
 // If admin wants to be disable log deletion
 if (isset($_POST['action']) AND $_POST['action'] == "Disable Delete"){
 	unset($_SESSION['logEventsEnableDelete']);
-	$refreshLogs = TRUE;
+	$_SESSION['refreshLogEvents'] = TRUE;
 }
-
-// Let's define what checkboxes should be displayed
-$checkboxes = array(
-							// Log action name`					//text displayed			// If line feed // if checked
-						array('Account Activated', 				'Account Activated', 		FALSE, 			FALSE),
-						array('Account Created', 				'Account Created', 			FALSE, 			FALSE),
-						array('Account Removed', 				'Account Removed', 			TRUE, 			FALSE),
-						array('Booking Cancelled', 				'Booking Cancelled', 		FALSE, 			FALSE),
-						array('Booking Completed', 				'Booking Completed', 		FALSE, 			FALSE),
-						array('Booking Created', 				'Booking Created', 			FALSE, 			FALSE),
-						array('Booking Removed', 				'Booking Removed', 			TRUE, 			FALSE),
-						array('Company Created', 				'Company Created', 			FALSE, 			FALSE),
-						array('Company Removed', 				'Company Removed', 			FALSE, 			FALSE),
-						array('Company Credits Changed', 		'Company Credits Changed', 	TRUE, 			FALSE),
-						array('Credits Added', 					'Credits Added', 			FALSE, 			FALSE),
-						array('Credits Removed', 				'Credits Removed', 			TRUE, 			FALSE),						
-						array('Database Created', 				'Database Created', 		FALSE, 			FALSE),
-						array('Table Created', 					'Database Table Created', 	TRUE,			FALSE),
-						array('Employee Added', 				'Employee Added', 			FALSE, 			FALSE),
-						array('Employee Removed', 				'Employee Removed', 		TRUE, 			FALSE),
-						array('Equipment Added', 				'Equipment Added', 			FALSE,			FALSE),
-						array('Equipment Removed', 				'Equipment Removed', 		TRUE, 			FALSE),
-						array('Meeting Room Added', 			'Meeting Room Added', 		FALSE, 			FALSE),
-						array('Meeting Room Removed', 			'Meeting Room Removed', 	TRUE, 			FALSE),
-						array('Room Equipment Added',			'Room Equipment Added',		FALSE, 			FALSE),
-						array('Room Equipment Removed', 		'Room Equipment Removed', 	TRUE, 			FALSE)
-					);		
-
 
 // To delete the log event selected by the user
 if (isset($_POST['action']) AND $_POST['action'] == "Delete"){
@@ -80,18 +50,48 @@ if (isset($_POST['action']) AND $_POST['action'] == "Delete"){
 	}
 	
 	$_SESSION['LogEventUserFeedback'] = "Successfully deleted the log event.";
-	$refreshLogs = TRUE;
-	// Load Log Events list webpage with updated database
+	$_SESSION['refreshLogEvents'] = TRUE;
+	
+	/*// Load Log Events list webpage with updated database
 	header('Location: .');
-	exit();
+	exit();*/
 }
+
+// Let's define what checkboxes should be displayed
+$checkboxes = array(
+							// Log action name`					//text displayed			// If line feed // if checked
+						array('Account Activated', 				'Account Activated', 		FALSE, 			FALSE),
+						array('Account Created', 				'Account Created', 			FALSE, 			FALSE),
+						array('Account Removed', 				'Account Removed', 			TRUE, 			FALSE),
+						array('Booking Cancelled', 				'Booking Cancelled', 		FALSE, 			FALSE),
+						array('Booking Completed', 				'Booking Completed', 		FALSE, 			FALSE),
+						array('Booking Created', 				'Booking Created', 			FALSE, 			FALSE),
+						array('Booking Removed', 				'Booking Removed', 			TRUE, 			FALSE),
+						array('Company Created', 				'Company Created', 			FALSE, 			FALSE),
+						array('Company Removed', 				'Company Removed', 			FALSE, 			FALSE),
+						array('Company Credits Changed', 		'Company Credits Changed', 	TRUE, 			FALSE),
+						array('Credits Added', 					'Credits Added', 			FALSE, 			FALSE),
+						array('Credits Removed', 				'Credits Removed', 			TRUE, 			FALSE),						
+						array('Database Created', 				'Database Created', 		FALSE, 			FALSE),
+						array('Table Created', 					'Database Table Created', 	TRUE,			FALSE),
+						array('Employee Added', 				'Employee Added', 			FALSE, 			FALSE),
+						array('Employee Removed', 				'Employee Removed', 		TRUE, 			FALSE),
+						array('Equipment Added', 				'Equipment Added', 			FALSE,			FALSE),
+						array('Equipment Removed', 				'Equipment Removed', 		TRUE, 			FALSE),
+						array('Meeting Room Added', 			'Meeting Room Added', 		FALSE, 			FALSE),
+						array('Meeting Room Removed', 			'Meeting Room Removed', 	TRUE, 			FALSE),
+						array('Room Equipment Added',			'Room Equipment Added',		FALSE, 			FALSE),
+						array('Room Equipment Removed', 		'Room Equipment Removed', 	TRUE, 			FALSE)
+					);		
 
 // If admin wants to change what type of logs to display
 // or the max amount of logs
 if (isset($_POST['action']) AND $_POST['action'] == "Refresh Logs" OR 
 	isset($_POST['action']) AND $_POST['action'] == "Set New Maximum" OR 
-	isset($refreshLogs) AND $refreshLogs){
+	isset($_SESSION['refreshLogEvents']) AND $_SESSION['refreshLogEvents']){
 
+	unset($_SESSION['refreshLogEvents']);
+	
 	// TO-DO: Change if too high
 	$minimumLogLimit = 10;
 	$maximumLogLimit = 1000;
@@ -132,7 +132,7 @@ if (isset($_POST['action']) AND $_POST['action'] == "Refresh Logs" OR
 						$checkbox[3] = TRUE;
 						unset($checkbox); 	// <-- This is IMPORTANT. We need to say we're done with that reference
 											// Or else the original array gets all messed up.
-						break ;
+						break;
 					}	
 				}
 			}
@@ -146,7 +146,6 @@ if (isset($_POST['action']) AND $_POST['action'] == "Refresh Logs" OR
 if(!isset($numberOfCheckboxesActivated)){
 	// Default 
 	$numberOfCheckboxesActivated = 1;
-	
 }
 
 // Fix the amount of logs to display
@@ -192,11 +191,11 @@ $validatedEndDate = trimExcessWhitespace($filterEndDate);
 // Do actual input validation
 if(validateDateTimeString($validatedStartDate) === FALSE AND !$invalidInput){
 	$invalidInput = TRUE;
-	$_SESSION['LogEventUserFeedback'] = "Your submitted start time has illegal characters in it.";
+	$_SESSION['LogEventUserFeedback'] .= "Your submitted start time has illegal characters in it.";
 }
 if(validateDateTimeString($validatedEndDate) === FALSE AND !$invalidInput){
 	$invalidInput = TRUE;
-	$_SESSION['LogEventUserFeedback'] = "Your submitted end time has illegal characters in it.";
+	$_SESSION['LogEventUserFeedback'] .= "Your submitted end time has illegal characters in it.";
 }
 
 
@@ -209,22 +208,22 @@ if($validatedEndDate != ""){
 }
 
 if (isset($startDateTime) AND $startDateTime === FALSE AND !$invalidInput){
-	$_SESSION['LogEventUserFeedback'] = "The start date you submitted did not have a correct format. Please try again.";
+	$_SESSION['LogEventUserFeedback'] .= "The start date you submitted did not have a correct format. Please try again.";
 	$invalidInput = TRUE;
 }
 if (isset($endDateTime) AND $endDateTime === FALSE AND !$invalidInput){
-	$_SESSION['LogEventUserFeedback'] = "The end date you submitted did not have a correct format. Please try again.";
+	$_SESSION['LogEventUserFeedback'] .= "The end date you submitted did not have a correct format. Please try again.";
 	$invalidInput = TRUE;
 }
  
 if($validatedStartDate != "" AND $validatedEndDate != ""){
 	if($startDateTime > $endDateTime AND !$invalidInput){
 		// End time can't be before the start time
-		$_SESSION['LogEventUserFeedback'] = "The start time can't be later than the end time. Please select a new start time or end time.";
+		$_SESSION['LogEventUserFeedback'] .= "The start time can't be later than the end time. Please select a new start time or end time.";
 		$invalidInput = TRUE;
 	}	
 	if($endDateTime == $startDateTime AND !$invalidInput){
-		$_SESSION['LogEventUserFeedback'] = "You need to select an end time that is different from your start time.";	
+		$_SESSION['LogEventUserFeedback'] .= "You need to select an end time that is different from your start time.";	
 		$invalidInput = TRUE;				
 	}
 }
@@ -240,15 +239,18 @@ if(isset($endDateTime) AND $endDateTime !== FALSE){
 // Check if admin has even checked any boxes yet, if not just give a warning
 $noCheckedCheckboxes = FALSE;
 if (!isset($_POST['search']) AND !isset($_POST['searchAll']) AND !$invalidInput){
-	$_SESSION['LogEventUserFeedback'] = "You need to select at least one category of log events with the checkboxes.";
+	$_SESSION['LogEventUserFeedback'] .= "You need to select at least one category of log events with the checkboxes.";
 	$invalidInput = TRUE;
 	$noCheckedCheckboxes = TRUE;
 }
 
 if($invalidInput){
 	// We've found some invalid user inputs
+	
+	var_dump($_SESSION); // TO-DO: remove after testing is done
+	
 	include_once 'log.html.php';
-	exit();	
+	exit();
 }
 
 if(!isset($sqlAdd)){
@@ -386,15 +388,13 @@ if($numberOfCheckboxesActivated > 0){
 		exit();
 	}
 	
-
-	
 	// Create the array we will go through to display information in HTML
 	foreach ($result as $row)
 	{
 		
-	// Turn the datetime retrieved into a more displayable format
-	$dateCreated = $row['LogDate'];
-	$displayableDateCreated = convertDatetimeToFormat($dateCreated, 'Y-m-d H:i:s', 'F jS Y H:i');
+		// Turn the datetime retrieved into a more displayable format
+		$dateCreated = $row['LogDate'];
+		$displayableDateCreated = convertDatetimeToFormat($dateCreated, 'Y-m-d H:i:s', 'F jS Y H:i');
 	
 		$log[] = array(
 			'id' => $row['logID'], 
@@ -407,6 +407,8 @@ if($numberOfCheckboxesActivated > 0){
 } else {
 	$rowNum = 0;
 }
+
+var_dump($_SESSION); // TO-DO: remove after testing is done
 
 // Create the Log Event table in HTML
 include_once 'log.html.php';

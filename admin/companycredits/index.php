@@ -320,16 +320,20 @@ if (isset($_POST['edit']) AND $_POST['edit'] == 'Finish Edit')
 {
 	// Check if there were any changes made
 	$NumberOfChanges = 0;
+	$newCredits = FALSE;
+	$newAltCredits = FALSE;
 	$original = $_SESSION['EditCompanyCreditsOriginalInfo'];
 	
 	if($_SESSION['EditCompanyCreditsSelectedCreditsID'] != $original['CreditsID']){
 		$NumberOfChanges++;
+		$newCredits = TRUE;
 	}
 	if($_SESSION['EditCompanyCreditsNewAlternativeAmount'] == 0){
 		$_SESSION['EditCompanyCreditsNewAlternativeAmount'] = NULL;
 	}
 	if($_SESSION['EditCompanyCreditsNewAlternativeAmount'] != $original['CreditsAlternativeAmount']){
 		$NumberOfChanges++;
+		$newAltCredits = TRUE;
 	}
 
 	if($NumberOfChanges > 0){
@@ -341,7 +345,8 @@ if (isset($_POST['edit']) AND $_POST['edit'] == 'Finish Edit')
 			$pdo = connect_to_db();
 			$sql = 'UPDATE 	`companycredits` 
 					SET		`CreditsID` = :CreditsID,
-							`altMinuteAmount` = :CreditsGivenInMinutes
+							`altMinuteAmount` = :CreditsGivenInMinutes,
+							`lastModified` = CURRENT_TIMESTAMP
 					WHERE 	`CompanyID` = :CompanyID';
 			$s = $pdo->prepare($sql);
 			$s->bindValue(':CompanyID', $original['TheCompanyID']);
@@ -361,9 +366,61 @@ if (isset($_POST['edit']) AND $_POST['edit'] == 'Finish Edit')
 		}
 		
 		$_SESSION['CompanyCreditsUserFeedback'] = "Successfully updated the credits info for the company.";
+		
+		// Add a log event that a company credit was changed
+		try
+		{
+			// Save a description with information about the meeting room that was removed
+			if($_SESSION['EditCompanyCreditsNewAlternativeAmount'] == NULL){
+				$_SESSION['EditCompanyCreditsNewAlternativeAmount'] = "None";
+			}
+			
+			if($newCredits){
+				$credits = $_SESSION['EditCompanyCreditsCreditsArray'];
+				foreach($credits AS $row){
+					if($row['CreditsID'] == $_SESSION['EditCompanyCreditsSelectedCreditsID']){
+						$creditsName = $row['CreditsName'];
+						break;
+					}
+				}
+				$description = "The company: " . $original['CompanyName'] . " went from having the Credit: " . $original['CreditsName'] .
+								" and the alternative credits given: " . $original['CreditsGivenInMinutes'] . ". To having the Credit: " .
+								$creditsName . " and the alternative credits given: " . $_SESSION['EditCompanyCreditsNewAlternativeAmount'] .
+								". This change was done by: " . $_SESSION['LoggedInUserName'];									
+			} elseif(!$newCredits AND $newAltCredits){
+				$description = "The company: " . $original['CompanyName'] . " went from having the alternative credits given: " . 
+								$original['CreditsGivenInMinutes'] . ". To having the alternative credits given: " . $_SESSION['EditCompanyCreditsNewAlternativeAmount'] .
+								". This change was done by: " . $_SESSION['LoggedInUserName'];					
+			}
+	
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+			
+			$pdo = connect_to_db();
+			$sql = "INSERT INTO `logevent` 
+					SET			`actionID` = 	(
+													SELECT 	`actionID` 
+													FROM 	`logaction`
+													WHERE 	`name` = 'Company Credits Changed'
+												),
+								`description` = :description";
+			$s = $pdo->prepare($sql);
+			$s->bindValue(':description', $description);
+			$s->execute();
+			
+			//Close the connection
+			$pdo = null;		
+		}
+		catch(PDOException $e)
+		{
+			$error = 'Error adding log event to database: ' . $e->getMessage();
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+			$pdo = null;
+			exit();
+		}		
 	} else {
 		$_SESSION['CompanyCreditsUserFeedback'] = "No changes were made to the credits info for the company.";
 	}
+
 	
 	clearEditCompanyCreditsSessions();
 	
