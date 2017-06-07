@@ -19,66 +19,86 @@ function clearEditCompanyCreditsSessions(){
 
 // if admin wants to change credits info for the selected company
 // we load a new html form
-if (isset($_POST['action']) AND $_POST['action'] == 'Edit')
+if (	isset($_POST['action']) AND $_POST['action'] == 'Edit' OR
+		isset($_SESSION['refreshEditCompanyCredits']) AND $_SESSION['refreshEditCompanyCredits'])
 {
-	// TO-DO: Create if/else and save original array like in other edit index.php's
-	// Get information from database again on the selected company credits
-	try
-	{
-		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
-		$pdo = connect_to_db();
+	if(isset($_SESSION['refreshEditCompanyCredits']) AND $_SESSION['refreshEditCompanyCredits']){
+		// Acknowledge that we have refreshEditCompanyCredits
+		unset($_SESSION['refreshEditCompanyCredits']);
 		
-		$sql = "SELECT 		c.`CompanyID`									AS TheCompanyID,
-							c.`name`										AS CompanyName,
-							c.`startDate`									AS CompanyBillingMonthStart,
-							c.`endDate`										AS CompanyBillingMonthEnd,
-							cr.`CreditsID`									AS CreditsID,
-							cr.`name`										AS CreditsName,
-							cr.`description`								AS CreditsDescription,
-							cr.`minuteAmount`								AS CreditsGivenInMinutes,
-							cr.`monthlyPrice`								AS CreditsMonthlyPrice,
-							cr.`overCreditMinutePrice`						AS CreditsMinutePrice,
-							cr.`overCreditHourPrice`						AS CreditsHourPrice,
-							cc.`altMinuteAmount`							AS CreditsAlternativeAmount,
-							cc.`datetimeAdded` 								AS DateTimeAdded,
-							cc.`lastModified`								AS DateTimeLastModified
-				FROM 		`company` c
-				JOIN 		`companycredits` cc
-				ON 			c.`CompanyID` = cc.`CompanyID`
-				JOIN 		`credits` cr
-				ON 			cr.`CreditsID` = cc.`CreditsID`
-				WHERE 		c.`isActive` > 0
-				AND			c.`CompanyID` = :CompanyID
-				AND			cr.`CreditsID` = :CreditsID
-				LIMIT 		1";
-		
-		$s = $pdo->prepare($sql);
-		$s->bindValue(':CreditsID', $_POST['CreditsID']);
-		$s->bindValue(':CompanyID', $_POST['CompanyID']);
-		$s->execute();
-						
-		//Close connection
-		$pdo = null;
-	}
-	catch (PDOException $e)
-	{
-		$error = 'Error fetching company credits details: ' . $e->getMessage();
-		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
-		$pdo = null;
-		exit();		
+		$selectedCreditsID = $_POST['CreditsID'];
+	} else {
+		// Make sure we don't have any relevant values in memory
+		clearEditCompanyCreditsSessions();
+		// Get information from database again on the selected company credits
+		try
+		{
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+			$pdo = connect_to_db();
+			
+			$sql = "SELECT 		c.`CompanyID`									AS TheCompanyID,
+								c.`name`										AS CompanyName,
+								c.`startDate`									AS CompanyBillingMonthStart,
+								c.`endDate`										AS CompanyBillingMonthEnd,
+								cr.`CreditsID`									AS CreditsID,
+								cr.`name`										AS CreditsName,
+								cr.`description`								AS CreditsDescription,
+								cr.`minuteAmount`								AS CreditsGivenInMinutes,
+								cr.`monthlyPrice`								AS CreditsMonthlyPrice,
+								cr.`overCreditMinutePrice`						AS CreditsMinutePrice,
+								cr.`overCreditHourPrice`						AS CreditsHourPrice,
+								cc.`altMinuteAmount`							AS CreditsAlternativeAmount
+					FROM 		`company` c
+					JOIN 		`companycredits` cc
+					ON 			c.`CompanyID` = cc.`CompanyID`
+					JOIN 		`credits` cr
+					ON 			cr.`CreditsID` = cc.`CreditsID`
+					WHERE 		c.`isActive` > 0
+					AND			c.`CompanyID` = :CompanyID
+					AND			cr.`CreditsID` = :CreditsID
+					LIMIT 		1";
+			
+			$s = $pdo->prepare($sql);
+			$s->bindValue(':CreditsID', $_POST['CreditsID']);
+			$s->bindValue(':CompanyID', $_POST['CompanyID']);
+			$s->execute();
+			
+			// Create an array with the row information we retrieved
+			$row = $s->fetch();
+			$_SESSION['EditCompanyCreditsOriginalInfo'] = $row;
+				
+			// Set the correct information
+			$selectedCreditsID = $row['CreditsID'];
+			$CreditsAlternativeAmount = $row['CreditsAlternativeAmount'];
+			
+			$_SESSION['EditCompanyCreditsOriginalAlternativeCreditsAmount'] = $CreditsAlternativeAmount;			
+			
+			//Close connection
+			$pdo = null;
+		}
+		catch (PDOException $e)
+		{
+			$error = 'Error fetching company credits details: ' . $e->getMessage();
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+			$pdo = null;
+			exit();		
+		}
 	}
 	
-	// Create an array with the row information we retrieved
-	$row = $s->fetch();
-		
-	// Set the correct information
-	$CompanyName = $row['CompanyName'];
-	$CreditsName = $row['CreditsName'];
-	$CompanyID = $row['TheCompanyID'];
-	$CreditsID = $row['CreditsID'];
-	$CreditsAlternativeAmount = $row['CreditsAlternativeAmount'];
+	// Set original/correct values
+	$original = $_SESSION['EditCompanyCreditsOriginalInfo'];	
+	$CompanyID = $original['TheCompanyID'];
+	$CompanyName = $original['CompanyName'];
 	
-	$_SESSION['EditCompanyCreditsOriginalAlternativeCreditsAmount'] = $CreditsAlternativeAmount;
+	$BillingStart = $original['CompanyBillingMonthStart'];
+	$BillingEnd =  $original['CompanyBillingMonthEnd'];
+	$displayBillingStart = convertDatetimeToFormat($BillingStart , 'Y-m-d', DATE_DEFAULT_FORMAT_TO_DISPLAY);
+	$displayBillingEnd = convertDatetimeToFormat($BillingEnd , 'Y-m-d', DATE_DEFAULT_FORMAT_TO_DISPLAY);
+	$BillingPeriod = $displayBillingStart . " to " . $displayBillingEnd . ".";	
+	
+	$originalCreditsName = $original['CreditsName']; 
+	$originalCreditsAlternativeCreditsAmount = convertMinutesToHoursAndMinutes($original['CreditsAlternativeAmount']);
+	
 	// TO-DO: Set original variables. Originally selected credits. Make a dropdown list of possible credits.
 	
 	var_dump($_SESSION); // TO-DO: remove after testing is done
@@ -198,23 +218,13 @@ foreach($result AS $row){
 
 	// Format Credits (From minutes to hours and minutes)
 	if($row['CreditsAlternativeAmount'] != NULL){
-		$creditsGivenInMinutes = $row['CreditsAlternativeAmount'];
+		$creditsGiven = convertMinutesToHoursAndMinutes($row['CreditsAlternativeAmount']);
 		$alternativeCredits = "Yes";
 	} else {
-		$creditsGivenInMinutes = $row['CreditsGivenInMinutes'];
+		$creditsGiven = convertMinutesToHoursAndMinutes($row['CreditsGivenInMinutes']);
 		$alternativeCredits = "No";
 	}
-	
-	if($creditsGivenInMinutes > 59){
-		$creditsGivenInHours = floor($creditsGivenInMinutes/60);
-		$creditsGivenInMinutes -= $creditsGivenInHours*60;
-		$creditsGiven = $creditsGivenInHours . 'h' . $creditsGivenInMinutes . 'm';
-	} elseif($creditsGivenInMinutes > 0) {
-		$creditsGiven = '0h' . $creditsGivenInMinutes . 'm';
-	} else {
-		$creditsGiven = 'None';
-	}
-	
+		
 	// Format what over fee rate we're using (hourly or minute by minute)
 	$creditsMinutePrice = $row['CreditsMinutePrice'];
 	$creditsHourPrice = $row['CreditsHourPrice'];

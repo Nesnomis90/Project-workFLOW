@@ -18,6 +18,10 @@
 				<b><?php htmlout($CompanyName); ?></b>
 			</div>
 			<div>
+				<label for="currentBillingPeriod">Current Billing Period is: </label>
+				<b><?php htmlout($BillingPeriod); ?></b>
+			</div>
+			<div>
 				<label for="originalCreditsName">Active Credits: </label>
 				<b><?php htmlout($originalCreditsName); ?></b>
 			</div>
@@ -46,6 +50,16 @@
 			<div>
 				<label for="originalCreditsAmount">Alternative Credits Amount: </label>
 				<b><?php htmlout($originalCreditsAlternativeCreditsAmount); ?></b>		
+			</div>
+			<div>
+			<?php if(	isset($_SESSION['EditCompanyCreditsChangeAlternativeCreditsAmount']) AND 
+						$_SESSION['EditCompanyCreditsChangeAlternativeCreditsAmount']) : ?>
+				<input type="number" name="CreditsAlternativeCreditsAmount" min="0" max="65535"
+				value="<?php htmlout($CreditsAlternativeCreditsAmount); ?>">
+				<input type="submit" name="edit" value="Select Amount">
+			<?php else : ?>
+				<input type="submit" name="edit" value="Change Amount">
+			<?php endif; ?>
 			</div>
 			<div>
 				<input type="hidden" name="CompanyID" id="CompanyID" 

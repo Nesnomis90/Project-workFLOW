@@ -586,7 +586,7 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR
 			$CreditsID = $_SESSION['EditCreditsCreditsID'];
 		}
 	} else {
-		// Make sure we don't have any remembered values in memory
+		// Make sure we don't have any relevant values in memory
 		clearAddCreditsSessions();
 		// Get information from database again on the selected credits
 		try
