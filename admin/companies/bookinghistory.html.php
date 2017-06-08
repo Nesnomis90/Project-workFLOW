@@ -24,7 +24,8 @@
 			</div>
 		</form>
 			<h2>For the company: <?php htmlout($CompanyName); ?></h2>
-			<h3>For the period: <?php htmlout($BillingPeriod); ?></h3>
+			<h3>First period starts at: <?php htmlout($displayDateTimeCreated); ?><h3>
+			<h3>Currently viewing the period: <?php htmlout($BillingPeriod); ?></h3>
 			<?php if(isset($bookingHistory)) : ?>
 				<?php foreach($bookingHistory AS $row) : ?>
 				<fieldset>
