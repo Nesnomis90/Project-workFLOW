@@ -149,6 +149,114 @@ function validateUserInputs(){
 return array($invalidInput, $validatedCompanyName, $validatedCompanyDateToRemove);
 }
 
+// If admin wants to see the booking history of the period before the currently shown one
+if (isset($_POST['action']) AND $_POST['action'] == "Previous Period"){
+	$companyID = $_SESSION['BookingHistoryCompanyInfo']['CompanyID'];
+	$CompanyName = $_SESSION['BookingHistoryCompanyInfo']['CompanyName'];
+	
+	// Get booking history for the selected company
+	try
+	{
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+		$pdo = connect_to_db();	
+	
+		
+		if( // If there is a period before this){
+			$PreviousPeriod = FALSE;
+		} else {
+			$PreviousPeriod = TRUE;
+		}
+		$NextPeriod = TRUE;
+	// To-DO: get correct dates
+		// Format billing dates
+		$BillingStart = //$row['CompanyBillingDateStart'];
+		$BillingEnd =  //$row['CompanyBillingDateEnd'];
+		$displayBillingStart = convertDatetimeToFormat($BillingStart , 'Y-m-d', DATE_DEFAULT_FORMAT_TO_DISPLAY);
+		$displayBillingEnd = convertDatetimeToFormat($BillingEnd , 'Y-m-d', DATE_DEFAULT_FORMAT_TO_DISPLAY);
+		$BillingPeriod = $displayBillingStart . " To " . $displayBillingEnd . ".";			
+		
+		//Get completed booking history from the current billing period
+		$sql = "SELECT 		b.`startDateTime`		AS BookingStartedDatetime,
+							b.`actualEndDateTime`	AS BookingCompletedDatetime,
+							u.`firstName`			AS UserFirstname,
+							u.`lastName`			AS UserLastname,
+							u.`email`				AS UserEmail,
+							m.`name`				AS MeetingRoomName
+				FROM 		`booking` b
+				INNER JOIN  `company` c
+				ON 			c.`CompanyID` = b.`companyID`
+				LEFT JOIN	`user` u
+				ON 			u.`userID` = b.`userID`
+				LEFT JOIN 	`meetingroom` m
+				ON			m.`meetingRoomID` = b.`meetingRoomID`
+				WHERE   	b.`CompanyID` = :CompanyID
+				AND 		b.`actualEndDateTime` IS NOT NULL
+				AND     	b.`dateTimeCancelled` IS NULL
+				AND         b.`actualEndDateTime`
+				BETWEEN	    c.`prevStartDate`
+				AND			c.`startDate`";
+
+		$s = $pdo->prepare($sql);
+		$s->bindValue(':CompanyID', $companyID);
+		$s->bindValue(':MonthInterval', $monthInterval);
+		$s->execute();
+		$result = $s->fetchAll();
+			
+		//Close the connection
+		$pdo = null;	
+		
+		$totalBookingTimeThisPeriod = 0;
+		foreach($result as $row){
+			
+			// Format dates to display
+			$startDateTime = convertDatetimeToFormat($row['BookingStartedDatetime'], 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
+			$endDateTime = convertDatetimeToFormat($row['BookingCompletedDatetime'], 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
+			
+			$bookingPeriod = $startDateTime . " to " . $endDateTime;
+			
+			// Calculate time used
+			$bookingTimeUsed =  convertTwoDateTimesToTimeDifferenceInMinutes($row['BookingStartedDatetime'], $row['BookingCompletedDatetime']);
+			$displayBookingTimeUsed = convertMinutesToHoursAndMinutes($bookingTimeUsed);
+			
+			$totalBookingTimeThisPeriod += $bookingTimeUsed;
+
+			if($row['UserLastname'] == NULL){
+				$userInformation = "<deleted user>";
+			} else {
+				$userInformation = $row['UserLastname'] . ", " . $row['UserFirstname'] . " - " . $row['UserEmail'];
+			}
+			
+			if($row['MeetingRoomName'] == NULL){
+				$meetingRoomName = "<deleted room>";
+			} else {
+				$meetingRoomName = $row['MeetingRoomName'];
+			}
+			
+			$bookingHistory[] = array(
+										'BookingPeriod' => $bookingPeriod,
+										'UserInformation' => $userInformation,
+										'MeetingRoomName' => $meetingRoomName,
+										'BookingTimeUsed' => $displayBookingTimeUsed
+										);
+		}
+		
+	}
+	catch (PDOException $e)
+	{
+		$error = 'Error fetching company booking history: ' . $e->getMessage();
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+		$pdo = null;
+		exit();
+	}	
+	
+	$displayTotalBookingTimeThisPeriod = convertMinutesToHoursAndMinutes($totalBookingTimeThisPeriod);
+	
+	var_dump($_SESSION); // TO-DO: Remove after testing is over.
+	
+	include_once 'bookinghistory.html.php';
+	exit();	
+}
+
 // If admin wants to see the booking history of the selected company
 if (isset($_POST['action']) AND $_POST['action'] == "Booking History"){
 
@@ -161,7 +269,8 @@ if (isset($_POST['action']) AND $_POST['action'] == "Booking History"){
 		$pdo = connect_to_db();
 
 		// Get relevant company information
-		$sql = "SELECT 	`name`				AS CompanyName,
+		$sql = "SELECT 	`companyID`			AS CompanyID, 
+						`name`				AS CompanyName,
 						`prevStartDate`		AS CompanyBillingDatePreviousStart,
 						`startDate`			AS CompanyBillingDateStart,
 						`endDate`			AS CompanyBillingDateEnd
@@ -174,6 +283,14 @@ if (isset($_POST['action']) AND $_POST['action'] == "Booking History"){
 		$row = $s->fetch();
 		$_SESSION['BookingHistoryCompanyInfo'] = $row;
 		
+		$CompanyName = $row['CompanyName'];
+		if($row['CompanyBillingDatePreviousStart'] == NULL){
+			$PreviousPeriod = FALSE;
+		} else {
+			$PreviousPeriod = TRUE;
+		}
+		$NextPeriod = FALSE;
+	
 		// Format billing dates
 		$BillingStart = $row['CompanyBillingDateStart'];
 		$BillingEnd =  $row['CompanyBillingDateEnd'];
@@ -210,6 +327,7 @@ if (isset($_POST['action']) AND $_POST['action'] == "Booking History"){
 		//Close the connection
 		$pdo = null;	
 		
+		$totalBookingTimeThisPeriod = 0;
 		foreach($result as $row){
 			
 			// Format dates to display
@@ -219,16 +337,19 @@ if (isset($_POST['action']) AND $_POST['action'] == "Booking History"){
 			$bookingPeriod = $startDateTime . " to " . $endDateTime;
 			
 			// Calculate time used
+			$bookingTimeUsed =  convertTwoDateTimesToTimeDifferenceInMinutes($row['BookingStartedDatetime'], $row['BookingCompletedDatetime']);
+			$displayBookingTimeUsed = convertMinutesToHoursAndMinutes($bookingTimeUsed);
 			
-			
+			$totalBookingTimeThisPeriod += $bookingTimeUsed;
+
 			if($row['UserLastname'] == NULL){
-				$userInformation = "<Deleted User>";
+				$userInformation = "<deleted user>";
 			} else {
 				$userInformation = $row['UserLastname'] . ", " . $row['UserFirstname'] . " - " . $row['UserEmail'];
 			}
 			
 			if($row['MeetingRoomName'] == NULL){
-				$meetingRoomName = "<Deleted Room>";
+				$meetingRoomName = "<deleted room>";
 			} else {
 				$meetingRoomName = $row['MeetingRoomName'];
 			}
@@ -236,7 +357,8 @@ if (isset($_POST['action']) AND $_POST['action'] == "Booking History"){
 			$bookingHistory[] = array(
 										'BookingPeriod' => $bookingPeriod,
 										'UserInformation' => $userInformation,
-										'MeetingRoomName' => $meetingRoomName
+										'MeetingRoomName' => $meetingRoomName,
+										'BookingTimeUsed' => $displayBookingTimeUsed
 										);
 		}
 		
@@ -248,6 +370,8 @@ if (isset($_POST['action']) AND $_POST['action'] == "Booking History"){
 		$pdo = null;
 		exit();
 	}	
+	
+	$displayTotalBookingTimeThisPeriod = convertMinutesToHoursAndMinutes($totalBookingTimeThisPeriod);
 	
 	var_dump($_SESSION); // TO-DO: Remove after testing is over.
 	

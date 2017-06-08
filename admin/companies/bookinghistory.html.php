@@ -5,75 +5,39 @@
 <html lang="en">
 	<head>
 		<meta charset="utf-8">
-		<style>
-			#bookinghistorytable {
-				font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
-				border-collapse: collapse;
-				width: 100%;
-			}
-			
-			#bookinghistorytable th {
-				padding: 12px;
-				text-align: left;
-				background-color: #4CAF50;
-				color: white;
-				border: 1px solid #ddd;
-			}
-			
-			#bookinghistorytable tr {
-				padding: 8px;
-				text-align: left;
-				border-bottom: 1px solid #ddd;
-			}
-			
-			#bookinghistorytable td {
-				padding: 8px;
-				text-align: left;
-				border: 1px solid #ddd;
-			}
-
-			#bookinghistorytable tr:hover{background-color:#ddd;}
-			
-			#bookinghistorytable tr:nth-child(even) {background-color: #f2f2f2;}
-			
-			#bookinghistorytable caption {
-				padding: 8px;
-				font-size: 300%;
-			}
-		</style>
 		<title>Booking History</title>
 	</head>
 	<body>
 		<h1>Booking History</h1>
 		<form action="" method="post">
 			<div>
-				<?php if() : ?>
+				<?php if(isset($PreviousPeriod) AND $PreviousPeriod) : ?>
 					<input type="submit" name="action" value="Previous Period">
 				<?php else : ?>
-					<input type="submit" name="disabled" value="Previous Period">
+					<input type="submit" name="disabled" value="Previous Period" disabled>
 				<?php endif; ?>
-				<?php if() : ?>
+				<?php if(isset($NextPeriod) AND $NextPeriod) : ?>
 					<input type="submit" name="action" value="Next Period">
 				<?php else : ?>
-					<input type="submit" name="disabled" value="Next Period">
+					<input type="submit" name="disabled" value="Next Period" disabled>
 				<?php endif; ?>
 			</div>
 		</form>
-		<table id="bookinghistorytable">
-			<caption>From The Period Of <?php htmlout($BillingPeriod); ?></caption>
+			<h2>For the company: <?php htmlout($CompanyName); ?></h2>
+			<h3>For the period: <?php htmlout($BillingPeriod); ?></h3>
 			<?php if(isset($bookingHistory)) : ?>
 				<?php foreach($bookingHistory AS $row) : ?>
-					<tr>
-						<td>User: <?php htmlout($row['UserInformation']); ?></td>
-						<td>Booked the meeting room: <?php htmlout($row['MeetingRoomName']); ?></td>
-						<td>For the period of: <?php htmlout($row['BookingPeriod']); ?></td>
-						<td>Using a total time of: <?php htmlout($row['BookingPeriod']); ?></td>
-					</tr>
+				<fieldset>
+						User: <b><?php htmlout($row['UserInformation']); ?></b><br />
+						Booked the meeting room: <b><?php htmlout($row['MeetingRoomName']); ?></b><br />
+						For the period of: <b><?php htmlout($row['BookingPeriod']); ?></b><br />
+						Using a total time of: <b><?php htmlout($row['BookingTimeUsed']); ?></b><br />
+				</fieldset>
 				<?php endforeach; ?>
+					Producing a total booking time used this period: <b><?php htmlout($displayTotalBookingTimeThisPeriod); ?></b>
 			<?php else : ?>
-				<b>Company Had No Completed Bookings This Period</b>
+				<b>There were no bookings completed this period.</b>
 			<?php endif; ?>
-		</table>
 		
 		<p><a href="..">Return to CMS home</a></p>
 	<?php include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/logout.inc.html.php'; ?>
