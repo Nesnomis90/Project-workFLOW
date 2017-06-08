@@ -141,7 +141,6 @@ if (	isset($_POST['action']) AND $_POST['action'] == 'Edit' OR
 			$pdo = null;
 			exit();		
 		}	
-		
 	}
 	
 	// Set original/correct values
@@ -173,7 +172,6 @@ if (	isset($_POST['action']) AND $_POST['action'] == 'Edit' OR
 	include 'editcompanycredits.html.php';
 	exit();
 }
-
 
 if(isset($_POST['edit']) AND $_POST['edit'] == 'Set Original Amount'){
 	
@@ -423,7 +421,6 @@ if (isset($_POST['edit']) AND $_POST['edit'] == 'Finish Edit')
 		$_SESSION['CompanyCreditsUserFeedback'] = "No changes were made to the credits info for the company: " . $original['CompanyName'];
 	}
 
-	
 	clearEditCompanyCreditsSessions();
 	
 	if(isset($_GET['Company'])){	
@@ -438,7 +435,6 @@ if (isset($_POST['edit']) AND $_POST['edit'] == 'Finish Edit')
 	header('Location: .');
 	exit();	
 }
-
 
 if(isset($refreshCompanyCredits) AND $refreshCompanyCredits){
 	// TO-DO: Add code that should occur on a refresh
