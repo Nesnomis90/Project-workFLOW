@@ -365,7 +365,7 @@ if (isset($_POST['edit']) AND $_POST['edit'] == 'Finish Edit')
 			exit();		
 		}
 		
-		$_SESSION['CompanyCreditsUserFeedback'] = "Successfully updated the credits info for the company.";
+		$_SESSION['CompanyCreditsUserFeedback'] = "Successfully updated the credits info for the company: " . $original['CompanyName'];
 		
 		// Add a log event that a company credit was changed
 		try
@@ -384,13 +384,15 @@ if (isset($_POST['edit']) AND $_POST['edit'] == 'Finish Edit')
 					}
 				}
 				$description = "The company: " . $original['CompanyName'] . " went from having the Credit: " . $original['CreditsName'] .
-								" and the alternative credits given: " . $original['CreditsGivenInMinutes'] . ". To having the Credit: " .
-								$creditsName . " and the alternative credits given: " . $_SESSION['EditCompanyCreditsNewAlternativeAmount'] .
+								" and the alternative credits given: " . convertMinutesToHoursAndMinutes($original['CreditsAlternativeAmount']) . ". To having the Credit: " .
+								$creditsName . " and the alternative credits given: " . convertMinutesToHoursAndMinutes($_SESSION['EditCompanyCreditsNewAlternativeAmount']) .
 								". This change was done by: " . $_SESSION['LoggedInUserName'];									
 			} elseif(!$newCredits AND $newAltCredits){
 				$description = "The company: " . $original['CompanyName'] . " went from having the alternative credits given: " . 
-								$original['CreditsGivenInMinutes'] . ". To having the alternative credits given: " . $_SESSION['EditCompanyCreditsNewAlternativeAmount'] .
-								". This change was done by: " . $_SESSION['LoggedInUserName'];					
+								convertMinutesToHoursAndMinutes($original['CreditsAlternativeAmount']) . ". To having the alternative credits given: " . 
+								convertMinutesToHoursAndMinutes($_SESSION['EditCompanyCreditsNewAlternativeAmount']) . ". Normally the company would get " . 
+								convertMinutesToHoursAndMinutes($original['CreditsGivenInMinutes']) . " from the assigned Credits. This change was done by: " . 
+								$_SESSION['LoggedInUserName'];					
 			}
 	
 			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
@@ -418,7 +420,7 @@ if (isset($_POST['edit']) AND $_POST['edit'] == 'Finish Edit')
 			exit();
 		}		
 	} else {
-		$_SESSION['CompanyCreditsUserFeedback'] = "No changes were made to the credits info for the company.";
+		$_SESSION['CompanyCreditsUserFeedback'] = "No changes were made to the credits info for the company: " . $original['CompanyName'];
 	}
 
 	
