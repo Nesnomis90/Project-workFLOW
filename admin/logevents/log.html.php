@@ -141,7 +141,7 @@
 				<th>Description</th>
 				<th>Delete</th>
 			</tr>
-			<?php if(isset($_POST['search']) OR isset($_POST['searchAll'])) : ?>
+			<?php if(isset($search) OR isset($searchAll)) : ?>
 				<?php if(isset($rowNum) AND $rowNum>0) :?>
 					<?php foreach ($log as $row): ?>
 						<form action="" method="post">

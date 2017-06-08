@@ -37,5 +37,17 @@ function convertToCurrency($input){
 
 	return $output;
 }
+// Two datetimes to time difference in minutes
+function convertTwoDateTimesToTimeDifferenceInMinutes($startDateTime,$endDateTime){
+	$timeDifferenceStartDate = new DateTime($startDateTime);
+	$timeDifferenceCompletionDate = new DateTime($endDateTime);
+	$timeDifference = $timeDifferenceStartDate->diff($timeDifferenceCompletionDate);
+	$timeDifferenceInMinutes = $timeDifference->i;
+	$timeDifferenceInHours = $timeDifference->h;
+	$timeDifferenceInDays = $timeDifference->d;
+	
+	$timeDifference = $timeDifferenceInDays*3600 + $timeDifferenceInHours*60 + $timeDifferenceInMinutes;
 
+	return $timeDifference;
+}
 ?>

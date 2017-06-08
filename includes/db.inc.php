@@ -198,7 +198,7 @@ function fillLogAction($pdo){
 		$pdo->exec("INSERT INTO `logaction`(`name`,`description`) VALUES ('Booking Removed', 'The referenced booking was removed.')");
 		$pdo->exec("INSERT INTO `logaction`(`name`,`description`) VALUES ('Company Created','The referenced user just created the referenced company.')");
 		$pdo->exec("INSERT INTO `logaction`(`name`,`description`) VALUES ('Company Removed','The referenced company has been removed.')");
-		$pdo->exec("INSERT INTO `logaction`(`name`,`description`) VALUES ('Company Credits Changed', 'The referenced company received the new referenced Credits.')");
+		$pdo->exec("INSERT INTO `logaction`(`name`,`description`) VALUES ('Company Credits Changed', 'The referenced company had its credits information changed.')");
 		$pdo->exec("INSERT INTO `logaction`(`name`,`description`) VALUES ('Credits Added', 'The referenced Credits was added.')");
 		$pdo->exec("INSERT INTO `logaction`(`name`,`description`) VALUES ('Credits Removed', 'The referenced Credits was removed.')");
 		$pdo->exec("INSERT INTO `logaction`(`name`,`description`) VALUES ('Database Created','The database we are using right now just got created.')");

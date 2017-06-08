@@ -2,6 +2,72 @@ USE test;
 SET NAMES utf8;
 USE meetingflow;
 
+SELECT IF(
+			DATE(`endDate`) = DATE_SUB(`startDate`, INTERVAL -1 -1 MONTH), 
+			NULL, 
+			1
+		) AS ValidBillingDate,
+		DATE_SUB(`startDate`,INTERVAL -1 MONTH) AS CompanyBillingDateStart,
+		DATE_SUB(`startDate`,INTERVAL -1 - 1 MONTH) AS CompanyBillingDateEnd,
+        `startDate`
+FROM 	`company`
+WHERE 	`companyID` = 1
+LIMIT 	1;
+
+SELECT *,
+TIMESTAMPDIFF(MONTH, c.`dateTimeCreated`, date_add(c.`startDate`, INTERVAL 1 day))
+FROM `company` c
+WHERE c.`companyID` = 2;
+
+SELECT IF(
+			DATE(`endDate`) = DATE_SUB('2017-04-15', INTERVAL -1 MONTH), 
+            NULL, 
+            DATE_SUB('2017-04-15', INTERVAL -1 MONTH)
+		) AS PreviousBillingDate
+FROM 	`company`
+WHERE 	`companyID` = 2
+LIMIT 	1;
+
+SELECT IF(
+			DATE(`dateTimeCreated`) = DATE_SUB('2017-03-31', INTERVAL 1 MONTH), 
+            NULL, 
+            DATE_SUB('2017-03-31', INTERVAL 5 MONTH)
+		) AS PreviousBillingDate
+FROM 	`company`
+WHERE 	`companyID` = 2
+LIMIT 	1;
+
+SELECT 	`name`,
+		`prevStartDate`,
+        DATE_SUB(`startDate`, INTERVAL 1 MONTH),
+        `endDate`
+FROM 	`company`
+WHERE 	`companyID` = 2
+LIMIT 	1;
+
+SELECT 		b.`displayName`,
+			b.`description`,
+			b.`dateTimeCreated`,
+			b.`startDateTime`,
+			b.`actualEndDateTime`,
+            u.`firstName`,
+            u.`lastName`,
+            u.`email`,
+            m.`name`				AS MeetingRoomName
+FROM 		`booking` b
+INNER JOIN  `company` c
+ON 			c.`CompanyID` = b.`companyID`
+LEFT JOIN	`user` u
+ON 			u.`userID` = b.`userID`
+LEFT JOIN 	`meetingroom` m
+ON			m.`meetingRoomID` = b.`meetingRoomID`
+WHERE   	b.`CompanyID` = 2
+AND 		b.`actualEndDateTime` IS NOT NULL
+AND     	b.`dateTimeCancelled` IS NULL
+AND         b.`actualEndDateTime`
+BETWEEN	    c.`startDate`
+AND			c.`endDate`;
+
 SELECT 	u.`userID`					AS UsrID,
 		c.`companyID`				AS TheCompanyID,
 		c.`name`					AS CompanyName,

@@ -2221,6 +2221,8 @@ foreach ($result as $row)
 	} else {
 		$displayCompletedMeetingDuration = $timeDifferenceInMinutes . 'm';
 	}
+	
+	// TO-DO: Replace code above with this and test if it works $displayCompletedMeetingDuration = convertDateTimesToTimeDifference($startDateTime, $completedDateTime);
 					
 	if($status == "Active Today"){				
 		$bookingsActiveToday[] = array('id' => $row['bookingID'],
