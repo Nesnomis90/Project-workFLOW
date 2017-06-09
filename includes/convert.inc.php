@@ -1,13 +1,12 @@
 <?php
 // This holds all the functions we use to convert values (excluding datetime convertions, see datetime.inc.php)
 
-// Takes xx:yy, x hours and y minutes and returns xxhyym as text
+// Takes time xx:yy (x hours and y minutes) and returns xxhyym as text
 function convertTimeToHoursAndMinutes($time){
 	$timeHour = substr($time,0,strpos($time,":"));
 	$timeMinute = substr($time,strpos($time,":")+1, 2);
 	return = $timeHour . 'h' . $timeMinute . 'm';	
 }
-
 
 // Integer minute input to string output
 function convertMinutesToHoursAndMinutes($GivenInMinutes){

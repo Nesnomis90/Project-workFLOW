@@ -18,8 +18,7 @@ function clearAddCompanySessions(){
 }
 
 // Function to clear sessions used to remember user inputs on refreshing the edit company form
-function clearEditCompanySessions(){
-	
+function clearEditCompanySessions(){	
 	unset($_SESSION['EditCompanyOriginalName']);
 	unset($_SESSION['EditCompanyOriginalRemoveDate']);
 	
@@ -74,7 +73,6 @@ function validateUserInputs(){
 		$_SESSION['AddCompanyError'] = "The company name submitted is too long.";	
 		$invalidInput = TRUE;
 	}
-	
 	
 	// Check if the dateTime input we received are actually datetime
 	// if the user submitted one
@@ -261,8 +259,7 @@ if (isset($_POST['action']) AND $_POST['action'] == "Next Period"){
 										'MeetingRoomName' => $meetingRoomName,
 										'BookingTimeUsed' => $displayBookingTimeUsed
 										);
-		}
-		
+		}	
 	}
 	catch (PDOException $e)
 	{
@@ -277,8 +274,7 @@ if (isset($_POST['action']) AND $_POST['action'] == "Next Period"){
 	var_dump($_SESSION); // TO-DO: Remove after testing is over.
 	
 	include_once 'bookinghistory.html.php';
-	exit();		
-	
+	exit();	
 }
 
 // If admin wants to see the booking history of the period before the currently shown one
@@ -413,7 +409,6 @@ if (isset($_POST['action']) AND $_POST['action'] == "Previous Period"){
 
 // If admin wants to see the booking history of the selected company
 if (isset($_POST['action']) AND $_POST['action'] == "Booking History"){
-
 	$companyID = $_POST['id'];
 	
 	// Get booking history for the selected company
@@ -552,8 +547,7 @@ if (isset($_POST['action']) AND $_POST['action'] == "Disable Delete"){
 }
 
 // If admin wants to activate a registered company
-if (isset($_POST['action']) AND $_POST['action'] == 'Activate') {
-	
+if (isset($_POST['action']) AND $_POST['action'] == 'Activate') {	
 	// Update selected company in database to be active
 	try
 	{
@@ -579,8 +573,6 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Activate') {
 }
 
 // If admin wants to remove a company from the database
-// TO-DO: ADD A CONFIRMATION BEFORE ACTUALLY DOING THE DELETION!
-// MAYBE BY TYPING ADMIN PASSWORD AGAIN?
 if (isset($_POST['action']) and $_POST['action'] == 'Delete')
 {
 	// Delete selected company from database
@@ -735,7 +727,7 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR
 		$DateToRemove = $row['removeAtDate'];
 		$id = $row['companyID'];
 		
-		if(!isset($DateToRemove)){
+		if(!isset($DateToRemove) OR $DateToRemove == NULL){
 			$DateToRemove = '';
 		}
 		$_SESSION['EditCompanyOriginalName'] = $CompanyName;
@@ -771,7 +763,6 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR
 // When admin has added the needed information and wants to add the company
 if (isset($_POST['action']) AND $_POST['action'] == 'Add Company')
 {
-
 	list($invalidInput, $validatedCompanyName, $validatedCompanyDateToRemove) = validateUserInputs();
 
 	// Refresh form on invalid
@@ -888,7 +879,6 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Add Company')
 // Perform the actual database update of the edited information
 if ((isset($_POST['action']) AND $_POST['action'] == 'Edit Company'))
 {
-
 	list($invalidInput, $validatedCompanyName, $validatedCompanyDateToRemove) = validateUserInputs();
 	
 	// Refresh form on invalid
@@ -990,14 +980,12 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Cancel Date')
 	
 	$_SESSION['CompanyUserFeedback'] = "Successfully removed the cancel date from the company: " . $_POST['CompanyName'] . ".";
 	
-	
 	// Load company list webpage with updated database
 	header('Location: .');
 	exit();
 }
 
-if(isset($_POST['edit']) AND $_POST['edit'] == 'Reset'){
-	
+if(isset($_POST['edit']) AND $_POST['edit'] == 'Reset'){	
 	$_SESSION['EditCompanyChangedName'] = $_SESSION['EditCompanyOriginalName'];
 	$_SESSION['EditCompanyChangedRemoveDate'] = $_SESSION['EditCompanyOriginalRemoveDate'];
 	
