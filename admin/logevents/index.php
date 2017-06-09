@@ -1,5 +1,6 @@
 <?php
 // This is the Index file for the LOG EVENTS folder
+session_start();
 
 // Include functions
 include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/helpers.inc.php';
@@ -9,46 +10,64 @@ include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/magicquotes.inc.php';
 if (!isUserAdmin()){
 	exit();
 }
+// Let's define what checkboxes should be displayed
+$checkboxes = array(
+							// Log action name`					//text displayed			// If line feed // if checked
+						array('Account Activated', 				'Account Activated', 		FALSE, 			FALSE),
+						array('Account Created', 				'Account Created', 			FALSE, 			FALSE),
+						array('Account Removed', 				'Account Removed', 			TRUE, 			FALSE),
+						array('Booking Cancelled', 				'Booking Cancelled', 		FALSE, 			FALSE),
+						array('Booking Completed', 				'Booking Completed', 		FALSE, 			FALSE),
+						array('Booking Created', 				'Booking Created', 			FALSE, 			FALSE),
+						array('Booking Removed', 				'Booking Removed', 			TRUE, 			FALSE),
+						array('Company Created', 				'Company Created', 			FALSE, 			FALSE),
+						array('Company Removed', 				'Company Removed', 			FALSE, 			FALSE),
+						array('Company Credits Changed', 		'Company Credits Changed', 	TRUE, 			FALSE),
+						array('Credits Added', 					'Credits Added', 			FALSE, 			FALSE),
+						array('Credits Removed', 				'Credits Removed', 			TRUE, 			FALSE),						
+						array('Database Created', 				'Database Created', 		FALSE, 			FALSE),
+						array('Table Created', 					'Database Table Created', 	TRUE,			FALSE),
+						array('Employee Added', 				'Employee Added', 			FALSE, 			FALSE),
+						array('Employee Removed', 				'Employee Removed', 		TRUE, 			FALSE),
+						array('Equipment Added', 				'Equipment Added', 			FALSE,			FALSE),
+						array('Equipment Removed', 				'Equipment Removed', 		TRUE, 			FALSE),
+						array('Meeting Room Added', 			'Meeting Room Added', 		FALSE, 			FALSE),
+						array('Meeting Room Removed', 			'Meeting Room Removed', 	TRUE, 			FALSE),
+						array('Room Equipment Added',			'Room Equipment Added',		FALSE, 			FALSE),
+						array('Room Equipment Removed', 		'Room Equipment Removed', 	TRUE, 			FALSE)
+					);		
 
 // If admin wants to be able to delete logs it needs to enabled first
 if (isset($_POST['action']) AND $_POST['action'] == "Enable Delete"){
-	$_SESSION['logEventsEnableDelete'] = TRUE;
-	$refreshLogs = TRUE;
+	
+	if(isset($_POST['searchAll'])){
+		$_SESSION['LogEventsSearchAllCheckmarks'] = $_POST['searchAll'];
+	}
+	if(isset($_POST['search'])){
+		$_SESSION['LogEventsSearchCheckmarks'] = $_POST['search'];
+	}	
+	
+	$_SESSION['LogEventsLogLimitSet'] = $_POST['logsToShow'];
+	
+	$_SESSION['logEventsEnableDelete'] = TRUE;	
+	$_SESSION['refreshLogEvents'] = TRUE;
 }
 
 // If admin wants to be disable log deletion
 if (isset($_POST['action']) AND $_POST['action'] == "Disable Delete"){
-	unset($_SESSION['logEventsEnableDelete']);
-	$refreshLogs = TRUE;
+	
+	unset($_SESSION['LogEventsLogLimitSet']);
+	unset($_SESSION['LogEventsSearchCheckmarks']);
+	unset($_SESSION['LogEventsSearchAllCheckmarks']);
+	
+	unset($_SESSION['logEventsEnableDelete']);	
+	$_SESSION['refreshLogEvents'] = TRUE;
 }
-
-// Let's define what checkboxes should be displayed
-$checkboxes[] = array(
-							// Log action name`			//text displayed			// If line feed // if checked
-						array('Account Activated', 		'Account Activated', 		FALSE, 			FALSE),
-						array('Account Created', 		'Account Created', 			FALSE, 			FALSE),
-						array('Account Removed', 		'Account Removed', 			TRUE, 			FALSE),
-						array('Booking Cancelled', 		'Booking Cancelled', 		FALSE, 			FALSE),
-						array('Booking Completed', 		'Booking Completed', 		FALSE, 			FALSE),
-						array('Booking Created', 		'Booking Created', 			FALSE, 			FALSE),
-						array('Booking Removed', 		'Booking Removed', 			TRUE, 			FALSE),
-						array('Company Created', 		'Company Created', 			FALSE, 			FALSE),
-						array('Company Removed', 		'Company Removed', 			TRUE, 			FALSE),
-						array('Database Created', 		'Database Created', 		FALSE, 			FALSE),
-						array('Table Created', 			'Database Table Created', 	TRUE,			FALSE),
-						array('Employee Added', 		'Employee Added', 			FALSE, 			FALSE),
-						array('Employee Removed', 		'Employee Removed', 		TRUE, 			FALSE),
-						array('Equipment Added', 		'Equipment Added', 			FALSE,			FALSE),
-						array('Equipment Removed', 		'Equipment Removed', 		TRUE, 			FALSE),
-						array('Meeting Room Added', 	'Meeting Room Added', 		FALSE, 			FALSE),
-						array('Meeting Room Removed', 	'Meeting Room Removed', 	TRUE, 			FALSE),
-						array('Room Equipment Added', 	'Room Equipment Added',		FALSE, 			FALSE),
-						array('Room Equipment Removed', 'Room Equipment Removed', 	TRUE, 			FALSE)
-					);		
-
 
 // To delete the log event selected by the user
 if (isset($_POST['action']) AND $_POST['action'] == "Delete"){
+	// Delete is on a seperate form from the checkboxes,
+	// so it won't be remembered unless we use sessions
 	try
 	{
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
@@ -63,6 +82,7 @@ if (isset($_POST['action']) AND $_POST['action'] == "Delete"){
 		$s->bindValue(':id', $logEventIDToDelete);
 		$s->execute();
 		
+		unset($sql);
 		//Close connection
 		$pdo = null;
 	}
@@ -74,44 +94,61 @@ if (isset($_POST['action']) AND $_POST['action'] == "Delete"){
 		exit();
 	}
 	
+	$logDeleted = TRUE;
 	$_SESSION['LogEventUserFeedback'] = "Successfully deleted the log event.";
-	$refreshLogs = TRUE;
-	// Load Log Events list webpage with updated database
-	header('Location: .');
-	exit();
-}
-
+	$_SESSION['refreshLogEvents'] = TRUE;
+}					
+				
 // If admin wants to change what type of logs to display
 // or the max amount of logs
-if (isset($_POST['action']) AND $_POST['action'] == "Refresh Logs" OR 
-	isset($_POST['action']) AND $_POST['action'] == "Set New Maximum" OR 
-	isset($refreshLogs) AND $refreshLogs){
-
+if ((isset($_POST['action']) AND $_POST['action'] == "Refresh Logs") OR 
+	(isset($_POST['action']) AND $_POST['action'] == "Set New Maximum") OR 
+	(isset($_SESSION['refreshLogEvents']) AND $_SESSION['refreshLogEvents'])){
+	
+	if ((isset($_POST['action']) AND $_POST['action'] == "Refresh Logs") OR 
+		(isset($_POST['action']) AND $_POST['action'] == "Set New Maximum")){
+		unset($_SESSION['logEventsEnableDelete']); // TO-DO: make all buttons disable delete so we can remember variables on enable delete.
+	}
+	
 	// TO-DO: Change if too high
 	$minimumLogLimit = 10;
 	$maximumLogLimit = 1000;
 	
 	if(isset($_POST['logsToShow'])){
 		$newLogLimit = $_POST['logsToShow'];
+	} elseif(isset($_SESSION['LogEventsLogLimitSet'])) {
+		$newLogLimit = $_SESSION['LogEventsLogLimitSet'];
+	}
 
-		if ($newLogLimit < $minimumLogLimit){
-			$newLogLimit = $minimumLogLimit;
-		}
-		if($newLogLimit > $maximumLogLimit){
-			$newLogLimit = $maximumLogLimit;
-		}
+	if ($newLogLimit < $minimumLogLimit){
+		$newLogLimit = $minimumLogLimit;
+	}
+	if($newLogLimit > $maximumLogLimit){
+		$newLogLimit = $maximumLogLimit;
 	}
 
 	if(isset($_POST['searchAll'])){
+		$searchAll = $_POST['searchAll'];
+	} elseif(isset($_SESSION['LogEventsSearchAllCheckmarks'])){
+		$searchAll = $_SESSION['LogEventsSearchAllCheckmarks'];
+	}
+	
+	if(isset($_POST['search'])){
+		$search = $_POST['search'];
+	} elseif(isset($_SESSION['LogEventsSearchCheckmarks'])){
+		$search = $_SESSION['LogEventsSearchCheckmarks'];
+	}	
+	
+	if(isset($searchAll)){
 		$numberOfCheckboxesActivated = 1;
 	} else {
 		$numberOfCheckboxesActivated = 0;
 		
-		if(isset($_POST['search']) AND !empty($_POST['search'])) {
+		if(isset($search) AND !empty($search)) {
 			// The user has checked some checkmarks
 			
 				// Let's check how many are activated
-			foreach($_POST['search'] AS $check){
+			foreach($search AS $check){
 				if($numberOfCheckboxesActivated == 0){
 					$sqlAdd = " WHERE la.`name` = '" . $check . "'";
 				} else {
@@ -122,18 +159,13 @@ if (isset($_POST['action']) AND $_POST['action'] == "Refresh Logs" OR
 				// Let's remember what checkboxes have been checked
 					// We pass the array by reference so we can edit the values
 				foreach($checkboxes AS &$checkbox){
-					foreach($checkbox AS &$info){
-
-						if($check == $info[0]){
-							// Update the checkmark status from FALSE to TRUE
-							$info[3] = TRUE;
-							unset($info); 	// <-- This is IMPORTANT. We need to say we're done with that reference
+					if($check == $checkbox[0]){
+						// Update the checkmark status from FALSE to TRUE
+						$checkbox[3] = TRUE;
+						unset($checkbox); 	// <-- This is IMPORTANT. We need to say we're done with that reference
 											// Or else the original array gets all messed up.
-											
-							// No need to look through the array more, we've already updated the value
-							break 2; // Exit both for each loops
-						}	
-					}
+						break;
+					}	
 				}
 			}
 		} else {
@@ -141,12 +173,18 @@ if (isset($_POST['action']) AND $_POST['action'] == "Refresh Logs" OR
 			$_SESSION['LogEventUserFeedback'] = "You need to select at least one category of log events to display with the checkboxes.";
 		}		
 	}
+	
+	if(isset($logDeleted) AND $logDeleted){
+		unset($_SESSION['LogEventsLogLimitSet']);
+		unset($_SESSION['LogEventsSearchAllCheckmarks']);
+		unset($_SESSION['LogEventsSearchCheckmarks']);
+		unset($_SESSION['logEventsEnableDelete']); // TO-DO: Remove if we want to fix it so we can delete multiple logs per enable
+	}
 }
 
 if(!isset($numberOfCheckboxesActivated)){
 	// Default 
 	$numberOfCheckboxesActivated = 1;
-	
 }
 
 // Fix the amount of logs to display
@@ -155,15 +193,24 @@ if (isset($newLogLimit)){
 } else {
 	if(isset($_POST['logsToShow'])){
 		$logLimit = $_POST['logsToShow'];
+	} elseif(isset($_SESSION['LogEventsLogLimitSet'])) {
+		$logLimit = $_SESSION['LogEventsLogLimitSet'];
 	} else {
 		$logLimit = 10;
 	}
 }
 
+if(!isset($search) AND isset($_POST['search'])){
+	$search = $_POST['search'];
+}
+if(!isset($searchAll) AND isset($_POST['searchAll'])){
+	$searchAll = $_POST['searchAll'];
+}
+
 // We handle when the checkbox "All" should be checked.
-if (isset($_POST['search']) AND !empty($_POST['search']) AND !isset($_POST['searchAll'])){
+if (isset($search) AND !empty($search) AND !isset($searchAll)){
 	$checkAll = "";
-} elseif(!isset($_POST['search']) AND !isset($_POST['searchAll'])){
+} elseif(!isset($search) AND !isset($searchAll)){
 	$checkAll = "";
 } else {
 	$checkAll = 'checked="checked"';
@@ -198,7 +245,6 @@ if(validateDateTimeString($validatedEndDate) === FALSE AND !$invalidInput){
 	$invalidInput = TRUE;
 	$_SESSION['LogEventUserFeedback'] = "Your submitted end time has illegal characters in it.";
 }
-
 
 // Check if the dateTime inputs we received are actually datetimes 
 if($validatedStartDate != ""){
@@ -238,16 +284,24 @@ if(isset($endDateTime) AND $endDateTime !== FALSE){
 }
 
 // Check if admin has even checked any boxes yet, if not just give a warning
-if (!isset($_POST['search']) AND !isset($_POST['searchAll']) AND !$invalidInput){
+$noCheckedCheckboxes = FALSE;
+if (!isset($search) AND !isset($searchAll) AND !$invalidInput AND !isset($_SESSION['refreshLogEvents'])){
 	$_SESSION['LogEventUserFeedback'] = "You need to select at least one category of log events with the checkboxes.";
 	$invalidInput = TRUE;
 	$noCheckedCheckboxes = TRUE;
 }
 
+if(isset($_SESSION['refreshLogEvents']) AND $_SESSION['refreshLogEvents']){
+	unset($_SESSION['refreshLogEvents']);
+}
+
 if($invalidInput){
 	// We've found some invalid user inputs
+	
+	var_dump($_SESSION); // TO-DO: remove after testing is done
+	
 	include_once 'log.html.php';
-	exit();	
+	exit();
 }
 
 if(!isset($sqlAdd)){
@@ -385,15 +439,13 @@ if($numberOfCheckboxesActivated > 0){
 		exit();
 	}
 	
-
-	
 	// Create the array we will go through to display information in HTML
 	foreach ($result as $row)
 	{
 		
-	// Turn the datetime retrieved into a more displayable format
-	$dateCreated = $row['LogDate'];
-	$displayableDateCreated = convertDatetimeToFormat($dateCreated, 'Y-m-d H:i:s', 'F jS Y H:i');
+		// Turn the datetime retrieved into a more displayable format
+		$dateCreated = $row['LogDate'];
+		$displayableDateCreated = convertDatetimeToFormat($dateCreated, 'Y-m-d H:i:s', 'F jS Y H:i');
 	
 		$log[] = array(
 			'id' => $row['logID'], 
@@ -406,6 +458,8 @@ if($numberOfCheckboxesActivated > 0){
 } else {
 	$rowNum = 0;
 }
+
+var_dump($_SESSION); // TO-DO: remove after testing is done
 
 // Create the Log Event table in HTML
 include_once 'log.html.php';

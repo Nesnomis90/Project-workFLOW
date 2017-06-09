@@ -1,9 +1,11 @@
 <?php 
 // This is the index file for the EQUIPMENT folder
-
+session_start();
 // Include functions
 include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/helpers.inc.php';
 include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/magicquotes.inc.php';
+
+unsetSessionsFromAdminUsers(); // TO-DO: Add more/remove if it ruins multiple tabs open
 
 // CHECK IF USER TRYING TO ACCESS THIS IS IN FACT THE ADMIN!
 if (!isUserAdmin()){
@@ -81,65 +83,80 @@ function validateUserInputs(){
 		$_SESSION['AddEquipmentError'] = "The equipment description submitted is too long.";	
 		$invalidInput = TRUE;		
 	}
-	
+
 	// Check if the equipment already exists (based on name).
-		// only if we have changed the name (edit only)
+	$nameChanged = TRUE;
 	if(isset($_SESSION['EditEquipmentOriginalInfo'])){
 		$originalEquipmentName = strtolower($_SESSION['EditEquipmentOriginalInfo']['EquipmentName']);
-		$newEquipmentName = strtolower($validatedEquipmentName);		
+		$newEquipmentName = strtolower($validatedEquipmentName);	
 
 		if($originalEquipmentName == $newEquipmentName){
-			// Do nothing, since we haven't changed the name we're editing
-		} elseif(!$invalidInput) {
-			// Check if new name is taken
-			try
-			{
-				include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
-				$pdo = connect_to_db();
-				$sql = 'SELECT 	COUNT(*) 
-						FROM 	`equipment`
-						WHERE 	`name`= :EquipmentName';
-				$s = $pdo->prepare($sql);
-				$s->bindValue(':EquipmentName', $validatedEquipmentName);		
-				$s->execute();
-				
-				$pdo = null;
-				
-				$row = $s->fetch();
-				
-				if ($row[0] > 0)
-				{
-					// This name is already being used for an equipment
-					$_SESSION['AddEquipmentError'] = "There is already an equipment with the name: " . $validatedEquipmentName . "!";
-					$invalidInput = TRUE;	
-				}
-				// Equipment name hasn't been used before	
-			}
-			catch (PDOException $e)
-			{
-				$error = 'Error searching through equipment.' . $e->getMessage();
-				include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
-				$pdo = null;
-				exit();
-			}
-		}	
+			$nameChanged = FALSE;
+		} 
 	}
+	if($nameChanged AND !$invalidInput) {
+		// Check if new name is taken
+		try
+		{
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+			$pdo = connect_to_db();
+			$sql = 'SELECT 	COUNT(*) 
+					FROM 	`equipment`
+					WHERE 	`name`= :EquipmentName';
+			$s = $pdo->prepare($sql);
+			$s->bindValue(':EquipmentName', $validatedEquipmentName);		
+			$s->execute();
+			
+			$pdo = null;
+			
+			$row = $s->fetch();
+			
+			if ($row[0] > 0)
+			{
+				// This name is already being used for an equipment
+				$_SESSION['AddEquipmentError'] = "There is already an equipment with the name: " . $validatedEquipmentName . "!";
+				$invalidInput = TRUE;	
+			}
+			// Equipment name hasn't been used before	
+		}
+		catch (PDOException $e)
+		{
+			$error = 'Error searching through equipment.' . $e->getMessage();
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+			$pdo = null;
+			exit();
+		}
+	}
+	
 return array($invalidInput, $validatedEquipmentDescription, $validatedEquipmentName);
 }
 
-// If admin wants to be able to delete bookings it needs to enabled first
+// If admin wants to be able to delete equipment it needs to enabled first
 if (isset($_POST['action']) AND $_POST['action'] == "Enable Delete"){
 	$_SESSION['equipmentEnableDelete'] = TRUE;
 	$refreshEquipment = TRUE;
 }
 
-// If admin wants to be disable booking deletion
-if (isset($_POST['action']) AND $_POST['action'] == "Disable Delete"){
-	unset($_SESSION['equipmentEnableDelete']);
+// If admin wants to be able to delete equipment that is currently being used in a room it needs to enabled first
+if (isset($_POST['action']) AND $_POST['action'] == "Enable Delete Used Equipment"){
+	$_SESSION['equipmentEnableDeleteUsedEquipment'] = TRUE;
 	$refreshEquipment = TRUE;
 }
 
-// If admin wants to delete unavailable equipment
+// If admin wants to be disable used equipment deletion
+if (isset($_POST['action']) AND $_POST['action'] == "Disable Delete Used Equipment"){
+	unset($_SESSION['equipmentEnableDeleteUsedEquipment']);
+	$refreshEquipment = TRUE;
+}
+
+// If admin wants to be disable equipment deletion
+if (isset($_POST['action']) AND $_POST['action'] == "Disable Delete"){
+	unset($_SESSION['equipmentEnableDelete']);
+	unset($_SESSION['equipmentEnableDeleteUsedEquipment']);
+	$refreshEquipment = TRUE;
+}
+
+// If admin wants to delete no longer wanted equipment
 if(isset($_POST['action']) AND $_POST['action'] == 'Delete'){
 	// Delete equipment from database
 	try
@@ -176,9 +193,9 @@ if(isset($_POST['action']) AND $_POST['action'] == 'Delete'){
 		$pdo = connect_to_db();
 		$sql = "INSERT INTO `logevent` 
 				SET			`actionID` = 	(
-												SELECT `actionID` 
-												FROM `logaction`
-												WHERE `name` = 'Equipment Removed'
+												SELECT 	`actionID` 
+												FROM 	`logaction`
+												WHERE 	`name` = 'Equipment Removed'
 											),
 							`description` = :description";
 		$s = $pdo->prepare($sql);
@@ -206,7 +223,7 @@ if(isset($_POST['action']) AND $_POST['action'] == 'Delete'){
 if ((isset($_POST['action']) AND $_POST['action'] == 'Add Equipment') OR
 	(isset($_SESSION['refreshAddEquipment']) AND $_SESSION['refreshAddEquipment']))
 {
-	//Confirm we've refreshed
+	// Confirm we've refreshed
 	unset($_SESSION['refreshAddEquipment']);
 	
 	// Set form variables to be ready for adding values
@@ -225,6 +242,8 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Add Equipment') OR
 		$EquipmentName = $_SESSION['AddEquipmentName'];
 		unset($_SESSION['AddEquipmentName']);
 	}
+	
+	var_dump($_SESSION); // TO-DO: remove after testing is done
 	
 	// Change form
 	include 'form.html.php';
@@ -295,9 +314,9 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Confirm Equipment')
 		$pdo = connect_to_db();
 		$sql = "INSERT INTO `logevent` 
 				SET			`actionID` = 	(
-												SELECT `actionID` 
-												FROM `logaction`
-												WHERE `name` = 'Equipment Added'
+												SELECT 	`actionID` 
+												FROM 	`logaction`
+												WHERE 	`name` = 'Equipment Added'
 											),
 							`equipmentID` = :TheEquipmentID,
 							`description` = :description";
@@ -417,6 +436,8 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR
 	$originalEquipmentName = $_SESSION['EditEquipmentOriginalInfo']['EquipmentName'];
 	$originalEquipmentDescription = $_SESSION['EditEquipmentOriginalInfo']['EquipmentDescription'];
 	
+	var_dump($_SESSION); // TO-DO: remove after testing is done
+	
 	// Change to the template we want to use
 	include 'form.html.php';
 	exit();
@@ -461,9 +482,9 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Edit Equipment')
 		{
 			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 			$pdo = connect_to_db();
-			$sql = 'UPDATE `equipment`
+			$sql = 'UPDATE 	`equipment`
 					SET		`name` = :EquipmentName,
-							description = :EquipmentDescription
+							`description` = :EquipmentDescription
 					WHERE 	EquipmentID = :id';
 			$s = $pdo->prepare($sql);
 			$s->bindValue(':id', $_POST['EquipmentID']);
@@ -571,6 +592,7 @@ foreach($result AS $row){
 							'EquipmentIsInTheseRooms' => $row['EquipmentIsInTheseRooms']							
 						);
 }
+var_dump($_SESSION); // TO-DO: remove after testing is done
 
 // Create the equipment list in HTML
 include_once 'equipment.html.php';

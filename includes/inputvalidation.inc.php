@@ -1,5 +1,6 @@
 <?php
-// This is a collection of cuntions we use to check if user inputs are OK
+require_once 'variables.inc.php';
+// This is a collection of functions we use to check if user inputs are OK
 
 // Function to check if variables are too big for MySQL or our liking
 	//Display Names
@@ -80,6 +81,99 @@ function isNumberInvalidMeetingRoomCapacity($capacityNumber){
 	return FALSE;
 }
 
+	// Credits Amount
+// Returns TRUE on invalid, FALSE on valid
+function isNumberInvalidCreditsAmount($creditsAmount){
+	// Has to be between 0 and 65535 (minutes)
+	
+	$maxNumber = 65535;	// To-do: change if needed
+	$minNumber = 0;
+	if($creditsAmount < $minNumber OR $creditsAmount > $maxNumber){
+		return TRUE;
+	}
+	return FALSE;
+}
+
+	// Credits Hour Price
+// Returns TRUE on invalid, FALSE on valid
+function isNumberInvalidCreditsHourPrice($creditsHourPrice){
+	// Has to be between 0 and 65535
+	
+	$maxNumber = 65535;	// To-do: change if needed
+	$minNumber = 0;
+	if($creditsHourPrice < $minNumber OR $creditsHourPrice > $maxNumber){
+		return TRUE;
+	}
+	return FALSE;
+}
+
+	// Credits Minute Price
+// Returns TRUE on invalid, FALSE on valid
+function isNumberInvalidCreditsMinutePrice($creditsMinutePrice){
+	// Is a float so it has a large range
+	// In practice we only need from 0 to some big number
+	
+	$maxNumber = 65535;	// To-do: change if needed
+	$minNumber = 0;
+	if($creditsMinutePrice < $minNumber OR $creditsMinutePrice > $maxNumber){
+		return TRUE;
+	}
+	return FALSE;	
+}
+
+	// Credits Monthly Subscription Price
+// Returns TRUE on invalid, FALSE on valid
+function isNumberInvalidCreditsMonthlyPrice($creditsMonthlyPrice){
+	// Has to be between 0 and 65535
+	
+	$maxNumber = 65535;	// To-do: change if needed
+	$minNumber = 0;
+	if($creditsMonthlyPrice < $minNumber OR $creditsMonthlyPrice > $maxNumber){
+		return TRUE;
+	}
+	return FALSE;	
+}
+
+	// Booking Code Digits
+// Returns TRUE on invalid, FALSE on valid
+function isNumberInvalidBookingCode($bookingCode){
+	// Has to be between 0 and 6 digits (ideally 6 digits all the time, but we add 0's to make it 6)
+	// Also has to return invalid on blocked digits, if implemented
+	$bookingCodeLength = BOOKING_CODE_LENGTH;
+	// Make sure we have enough digits submitted	
+	if(strlen($bookingCode) < $bookingCodeLength){
+		$sprintftext = "%0" . $bookingCodeLength . "u";
+		$bookingCode = sprintf($sprintftext, $bookingCode); // Add 0s before submitted digits
+	}
+	// For security reasons we want to disable some easy to guess codes
+	/*$blockedDigits = array(	'000000', '111111', '222222', '333333', '444444', 	
+								'555555', '666666', '777777', '888888', '999999', 
+								'012345', '123456', '234567', '345678', '456789',	// Block ascending digits
+								'567890', '678901', '789012', '890123', '901234',
+								'987654', '876543', '765432', '654321', '543210',	// Block descendig digits
+								'432109', '321098', '210987', '109876', '098765'
+							); This has been changed from manual to code generated*/
+	$ascNum = "01234567890123456789";
+	$descNum = "98765432109876543210";
+	for($i=0; $i < 10; $i++){
+		$blockedDigits[] = str_repeat($i,$bookingCodeLength); // Block all equal digits
+		$blockedDigits[] = substr($ascNum,$i,$bookingCodeLength); // Block ascending digits
+		$blockedDigits[] = substr($descNum,$i,$bookingCodeLength); // Block descending digits
+	}	
+							
+	$minNumber = 0;
+	$maxNumber = pow(10,BOOKING_CODE_LENGTH)-1; // Sets the highest number with our set digits (10^digits - 1)
+	if($bookingCode < $minNumber OR $bookingCode > $maxNumber){
+		return TRUE;
+	}
+	foreach($blockedDigits AS $number){
+		if($bookingCode == $number){
+			return TRUE;
+		}
+	}
+	return FALSE;	
+}
+
 // Function that (hopefully) removes excess white space, line feeds etc.
 function trimExcessWhitespaceButLeaveLinefeed($oldString){
 
@@ -143,7 +237,6 @@ function validateString($oldString){
 
 // Function to check if input string uses legal characters for an integer number only
 // \d = any digit
-// TO-DO: UNTESTED
 function validateIntegerNumber($oldString){
 	if(preg_match('/^[+-]?\d+$/', $oldString)){
 		return TRUE;
@@ -175,5 +268,25 @@ function validateDateTimeString($oldString){
 	} else {
 		return FALSE;
 	}	
+}
+
+// Function to check if the submitted end time has a valid minute slice
+// e.g. with 15 minute booking slices it will be 00, 15, 30 or 45.
+// Returns TRUE on invalid, FALSE on valid
+// TO-DO: Untested in code
+function isBookingEndTimeInvalid($endTimeString){
+	$endTime = stringToDateTime($endTimeString, 'Y-m-d H:i:s');
+	$endTimeMinutePart = $endTime->format('i');
+	
+	$minimumBookingTime = MINIMUM_BOOKING_TIME_IN_MINUTES;
+	
+	for($i = 0; $i <= $endTimeMinutePart; ){
+		if($endTimeMinutePart == $i){
+			return FALSE;
+		}
+		$i += $minimumBookingTime;	
+	}		
+	
+	return TRUE;
 }
 ?>

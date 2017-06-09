@@ -76,7 +76,7 @@
 			<tr>
 				<th colspan="2">Company</th>
 				<th colspan="3">User Information</th>
-				<th colspan="2">Booking Time Used</th>
+				<th colspan="3">Booking Time Used</th>
 				<th>Date</th>
 				<th colspan="2">Alter Employee</th>
 			</tr>
@@ -86,6 +86,7 @@
 				<th>First Name</th>
 				<th>Last Name</th>
 				<th>Email</th>
+				<th>Previous Month</th>
 				<th>This Month</th>
 				<th>All Time</th>
 				<th>Added</th>
@@ -93,9 +94,10 @@
 				<th>Remove</th>
 			</tr>
 			<?php if($rowNum>0) :?>
-				<?php if(isset($_GET['Company'])) : ?>
+				<?php if(isset($_GET['Company']) AND 
+						(isset($deletedEmployees) OR isset($removedEmployees))) : ?>
 				<tr>
-					<td colspan="10"><b>The Following Are Currently Employed Users</b></td>
+					<td colspan="11"><b>The Following Are Currently Employed Users</b></td>
 				</tr>
 				<?php endif; ?>
 				<?php foreach ($employees as $employee): ?>
@@ -108,7 +110,8 @@
 							<td><?php htmlout($employee['PositionName']); ?></td>
 							<td><?php htmlout($employee['firstName']); ?></td>
 							<td><?php htmlout($employee['lastName']); ?></td>
-							<td><?php htmlout($employee['email']); ?></td>						
+							<td><?php htmlout($employee['email']); ?></td>
+							<td><?php htmlout($employee['PreviousMonthBookingTimeUsed']); ?></td>							
 							<td><?php htmlout($employee['MonthlyBookingTimeUsed']); ?></td>
 							<td><?php htmlout($employee['TotalBookingTimeUsed']); ?></td>
 							<td><?php htmlout($employee['StartDateTime']); ?></td>
@@ -136,7 +139,7 @@
 			<?php endif; ?>	
 				<?php if(isset($removedEmployees)) : ?>
 					<tr>
-						<td colspan="10"><b>The Following Are Previous Employees That Are Still Registered</b></td>
+						<td colspan="11"><b>The Following Are Previously Employed Users</b></td>
 					</tr>
 					<?php foreach($removedEmployees as $employee): ?>
 						<tr>
@@ -144,7 +147,8 @@
 							<td>Removed</td>
 							<td><?php htmlout($employee['firstName']); ?></td>
 							<td><?php htmlout($employee['lastName']); ?></td>
-							<td><?php htmlout($employee['email']); ?></td>	
+							<td><?php htmlout($employee['email']); ?></td>
+							<td><?php htmlout($employee['PreviousMonthBookingTimeUsed']); ?></td>
 							<td><?php htmlout($employee['MonthlyBookingTimeUsed']); ?></td>
 							<td><?php htmlout($employee['TotalBookingTimeUsed']); ?></td>
 							<td colspan="3">N/A</td>
@@ -153,13 +157,14 @@
 				<?php endif; ?>
 				<?php if(isset($deletedEmployees)) : ?>
 					<tr>
-						<td colspan="10"><b>The Following Are Previous Employees That Have Deleted Their Account</b></td>
+						<td colspan="11"><b>The Following Is A Summation Of Deleted Users</b></td>
 					</tr>
 					<?php foreach($deletedEmployees as $employee): ?>
 						<tr>
 							<td><?php htmlout($employee['CompanyName']); ?></td>
 							<td>Deleted</td>
 							<td colspan="3">Every Deleted User Summed Together</td>
+							<td><?php htmlout($employee['PreviousMonthBookingTimeUsed']); ?></td>
 							<td><?php htmlout($employee['MonthlyBookingTimeUsed']); ?></td>
 							<td><?php htmlout($employee['TotalBookingTimeUsed']); ?></td>
 							<td colspan="3">N/A</td>

@@ -7,15 +7,8 @@
 // a) and b) are run automatically when this file is included
 // which means it will always try to make sure the database and its tables exist
 
-
-// Database information we use in the code to connect to it
-//$dbengine 	= 'mysql';
-define('DB_HOST', 'localhost');
-define('DB_USER', 'root');
-define('DB_PASSWORD', '5Bdp32LAHYQ8AemvQM9P');
-define('DB_NAME', 'test');
-
 //Libraries, functions etc. to include
+require_once 'variables.inc.php';
 include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/magicquotes.inc.php';
 
 // A global array to keep track of log events that occur before
@@ -116,6 +109,32 @@ function dbExists($pdo, $databaseName){
 		return FALSE;
 	}
 }
+// Function to fill in default values for the company subscription (credits) table
+function fillCredits($pdo){
+	try
+	{
+		//Insert the needed values.
+		$pdo->beginTransaction();
+		$pdo->exec("INSERT INTO `credits`
+					SET			`name` = 'Default',
+								`description` = 'Set by default for all new companies.',
+								`minuteAmount` = 0,
+								`monthlyPrice` = 0,
+								`overCreditHourPrice` = 200");
+		
+		// Commit the transaction
+		$pdo->commit();
+	} 
+	catch (PDOException $e)
+	{
+		//	Cancels the transaction from going through if something went wrong.
+		$pdo->rollback();
+		$error = 'Encountered an error while trying to insert default values into table credits: ' . $e->getMessage();
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+		$pdo = null;
+		exit();
+	}
+}
 // Function to fill in default values for the Access Level table
 function fillAccessLevel($pdo){
 	try
@@ -179,6 +198,9 @@ function fillLogAction($pdo){
 		$pdo->exec("INSERT INTO `logaction`(`name`,`description`) VALUES ('Booking Removed', 'The referenced booking was removed.')");
 		$pdo->exec("INSERT INTO `logaction`(`name`,`description`) VALUES ('Company Created','The referenced user just created the referenced company.')");
 		$pdo->exec("INSERT INTO `logaction`(`name`,`description`) VALUES ('Company Removed','The referenced company has been removed.')");
+		$pdo->exec("INSERT INTO `logaction`(`name`,`description`) VALUES ('Company Credits Changed', 'The referenced company had its credits information changed.')");
+		$pdo->exec("INSERT INTO `logaction`(`name`,`description`) VALUES ('Credits Added', 'The referenced Credits was added.')");
+		$pdo->exec("INSERT INTO `logaction`(`name`,`description`) VALUES ('Credits Removed', 'The referenced Credits was removed.')");
 		$pdo->exec("INSERT INTO `logaction`(`name`,`description`) VALUES ('Database Created','The database we are using right now just got created.')");
 		$pdo->exec("INSERT INTO `logaction`(`name`,`description`) VALUES ('Table Created','A table in the database was created.')");
 		$pdo->exec("INSERT INTO `logaction`(`name`,`description`) VALUES ('Employee Added', 'The referenced user was given the referenced position in the referenced company.')");
@@ -275,7 +297,7 @@ function create_tables()
 			//If the table exists, but for some reason has no values in it, then fill it
 			$result = $conn->query("SELECT `AccessName` FROM `accesslevel`");
 			$row = $result->rowCount();
-			if($row==0){
+			if($row == 0){
 				// No values in the table. Insert the needed values.
 				fillAccessLevel($conn);
 				
@@ -312,6 +334,7 @@ function create_tables()
 						  `dateRequested` timestamp NULL DEFAULT NULL,
 						  `AccessID` int(10) unsigned NOT NULL,
 						  `reduceAccessAtDate` date DEFAULT NULL,
+						  `lastCodeUpdate` date DEFAULT NULL,
 						  `lastActivity` timestamp NULL DEFAULT NULL,
 						  `isActive` tinyint(1) NOT NULL DEFAULT '0',
 						  `activationCode` char(64) DEFAULT NULL,
@@ -356,7 +379,8 @@ function create_tables()
 						  `location` varchar(255) DEFAULT NULL,
 						  `idCode` char(64) NOT NULL,
 						  PRIMARY KEY (`meetingRoomID`),
-						  UNIQUE KEY `idCode_UNIQUE` (`idCode`)
+						  UNIQUE KEY `idCode_UNIQUE` (`idCode`),
+						  UNIQUE KEY `name_UNIQUE` (`name`)
 						) ENGINE=InnoDB DEFAULT CHARSET=utf8");
 						
 			//	Add the creation to log event
@@ -561,11 +585,12 @@ function create_tables()
 		if (!tableExists($conn, $table))
 		{
 			$conn->exec("CREATE TABLE IF NOT EXISTS `$table` (
-						`EquipmentID` int(10) unsigned NOT NULL AUTO_INCREMENT,
-						`name` varchar(255) NOT NULL,
-						`description` text NOT NULL,
-						`datetimeAdded` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-						PRIMARY KEY (`EquipmentID`)
+						  `EquipmentID` int(10) unsigned NOT NULL AUTO_INCREMENT,
+						  `name` varchar(255) NOT NULL,
+						  `description` text NOT NULL,
+						  `datetimeAdded` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+						  PRIMARY KEY (`EquipmentID`),
+						  UNIQUE KEY `name_UNIQUE` (`name`)
 						) ENGINE=InnoDB DEFAULT CHARSET=utf8");
 						
 			//	Add the creation to log event
@@ -677,39 +702,139 @@ function create_tables()
 		} else { 
 			echo '<b>Table ' . $table. ' already exists</b>.<br />';
 		}
+		
+			//Company booking subscriptions (credits)
+		$table = 'credits';
+		//Check if table already exists
+		if (!tableExists($conn, $table))
+		{
+			$conn->exec("CREATE TABLE IF NOT EXISTS `$table` (
+						  `CreditsID` int(10) unsigned NOT NULL AUTO_INCREMENT,
+						  `name` varchar(255) NOT NULL,
+						  `description` text NOT NULL,
+						  `minuteAmount` smallint(5) unsigned NOT NULL DEFAULT '0',
+						  `monthlyPrice` smallint(5) unsigned NOT NULL DEFAULT '0',
+						  `overCreditMinutePrice` float unsigned DEFAULT NULL,
+						  `overCreditHourPrice` smallint(5) unsigned DEFAULT NULL,
+						  `lastModified` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+						  `datetimeAdded` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+						  PRIMARY KEY (`CreditsID`),
+						  UNIQUE KEY `name_UNIQUE` (`name`)
+						) ENGINE=InnoDB DEFAULT CHARSET=utf8");
+						
+			// Fill default values
+			fillCredits($conn);
+					
+			//	Add the creation to log event
+			$sqlLog = "	INSERT INTO `logevent`(`actionID`, `description`) 
+						VALUES 		(
+										(
+										SELECT 	`actionID` 
+										FROM 	`logaction` 
+										WHERE 	`name` = 'Table Created'
+										), 
+									'The table $table was created automatically by the PHP script. This should only occur once, at the very start of the log events.'
+									)";			
+			$logEventArray[] = $sqlLog;						
+
+			$totaltime = microtime(true) - $_SERVER["REQUEST_TIME_FLOAT"];
+			$time = $totaltime - $prevtime;
+			$prevtime = $totaltime;
+			echo '<b>Execution time for creating table ' . $table. ':</b> ' . $time . 's<br />';		
+		} else {
+			//If the table exists, but for some reason has no values in it, then fill it
+			$result = $conn->query("SELECT `name` FROM `credits`");
+			$row = $result->rowCount();
+			if($row == 0){
+				// No values in the table. Insert the needed values.
+				fillCredits($conn);
 				
+				echo "<b>Inserted default values into $table.</b> <br />";
+		
+				$totaltime = microtime(true) - $_SERVER["REQUEST_TIME_FLOAT"];
+				$time = $totaltime - $prevtime;
+				$prevtime = $totaltime;
+				echo '<b>Execution time for filling table ' . $table. ':</b> ' . $time . 's<br />';	
+			} else {
+				// Table already has (some) values in it
+				echo "<b>Table $table already had values in it.</b> <br />";
+			}
+			
+			echo '<b>Table ' . $table. ' already exists</b>.<br />';
+		}
+		
+			// Selected credits per company
+		$table = 'companycredits';
+		//Check if table already exists
+		if (!tableExists($conn, $table))
+		{
+			$conn->exec("CREATE TABLE IF NOT EXISTS `$table` (
+						  `CompanyID` int(10) unsigned NOT NULL,
+						  `CreditsID` int(10) unsigned NOT NULL,
+						  `altMinuteAmount` smallint(5) unsigned DEFAULT NULL,
+						  `lastModified` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+						  `datetimeAdded` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+						  PRIMARY KEY (`CompanyID`,`CreditsID`),
+						  KEY `FK_CreditsID_idx` (`CreditsID`),
+						  CONSTRAINT `FK_CompanyID4` FOREIGN KEY (`CompanyID`) REFERENCES `company` (`CompanyID`) ON DELETE CASCADE ON UPDATE CASCADE,
+						  CONSTRAINT `FK_CreditsID` FOREIGN KEY (`CreditsID`) REFERENCES `credits` (`CreditsID`) ON DELETE CASCADE ON UPDATE CASCADE
+						) ENGINE=InnoDB DEFAULT CHARSET=utf8");
+						
+			//	Add the creation to log event
+			$sqlLog = "	INSERT INTO `logevent`(`actionID`, `description`) 
+						VALUES 		(
+										(
+										SELECT 	`actionID` 
+										FROM 	`logaction` 
+										WHERE 	`name` = 'Table Created'
+										), 
+									'The table $table was created automatically by the PHP script. This should only occur once, at the very start of the log events.'
+									)";			
+			$logEventArray[] = $sqlLog;						
+
+			$totaltime = microtime(true) - $_SERVER["REQUEST_TIME_FLOAT"];
+			$time = $totaltime - $prevtime;
+			$prevtime = $totaltime;
+			echo '<b>Execution time for creating table ' . $table. ':</b> ' . $time . 's<br />';		
+		} else { 
+			echo '<b>Table ' . $table. ' already exists</b>.<br />';
+		}		
+		
 			//Log Event
 		$table = 'logevent';
 		//Check if table already exists
 		if (!tableExists($conn, $table))
 		{
 			$conn->exec("CREATE TABLE IF NOT EXISTS `$table` (
-						  `logID` int(10) unsigned NOT NULL AUTO_INCREMENT,
-						  `actionID` int(10) unsigned DEFAULT NULL,
-						  `userID` int(10) unsigned DEFAULT NULL,
-						  `companyID` int(10) unsigned DEFAULT NULL,
-						  `bookingID` int(10) unsigned DEFAULT NULL,
-						  `meetingRoomID` int(10) unsigned DEFAULT NULL,
-						  `equipmentID` int(10) unsigned DEFAULT NULL,
-						  `positionID` int(10) unsigned DEFAULT NULL,
-						  `description` text,
-						  `logDateTime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-						  PRIMARY KEY (`logID`),
-						  KEY `FK_UserID3_idx` (`userID`),
-						  KEY `FK_ActionID_idx` (`actionID`),
-						  KEY `FK_CompanyID2_idx` (`companyID`),
-						  KEY `FK_BookingID_idx` (`bookingID`),
-						  KEY `FK_MeetingRoomID3_idx` (`meetingRoomID`),
-						  KEY `FK_EquipmentID2_idx` (`equipmentID`),
-						  KEY `FK_PositionID2_idx` (`positionID`),
-						  CONSTRAINT `FK_ActionID` FOREIGN KEY (`actionID`) REFERENCES `logaction` (`actionID`) ON DELETE SET NULL ON UPDATE CASCADE,
-						  CONSTRAINT `FK_BookingID` FOREIGN KEY (`bookingID`) REFERENCES `booking` (`bookingID`) ON DELETE SET NULL ON UPDATE CASCADE,
-						  CONSTRAINT `FK_CompanyID2` FOREIGN KEY (`companyID`) REFERENCES `company` (`CompanyID`) ON DELETE SET NULL ON UPDATE CASCADE,
-						  CONSTRAINT `FK_EquipmentID2` FOREIGN KEY (`equipmentID`) REFERENCES `equipment` (`EquipmentID`) ON DELETE SET NULL ON UPDATE CASCADE,
-						  CONSTRAINT `FK_MeetingRoomID3` FOREIGN KEY (`meetingRoomID`) REFERENCES `meetingroom` (`meetingRoomID`) ON DELETE SET NULL ON UPDATE CASCADE,
-						  CONSTRAINT `FK_PositionID2` FOREIGN KEY (`positionID`) REFERENCES `companyposition` (`PositionID`) ON DELETE SET NULL ON UPDATE CASCADE,
-						  CONSTRAINT `FK_UserID3` FOREIGN KEY (`userID`) REFERENCES `user` (`userID`) ON DELETE SET NULL ON UPDATE CASCADE
-						) ENGINE=InnoDB DEFAULT CHARSET=utf8");
+					  `logID` int(10) unsigned NOT NULL AUTO_INCREMENT,
+					  `actionID` int(10) unsigned DEFAULT NULL,
+					  `userID` int(10) unsigned DEFAULT NULL,
+					  `companyID` int(10) unsigned DEFAULT NULL,
+					  `bookingID` int(10) unsigned DEFAULT NULL,
+					  `meetingRoomID` int(10) unsigned DEFAULT NULL,
+					  `equipmentID` int(10) unsigned DEFAULT NULL,
+					  `positionID` int(10) unsigned DEFAULT NULL,
+					  `creditsID` int(10) unsigned DEFAULT NULL,
+					  `description` text,
+					  `logDateTime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+					  PRIMARY KEY (`logID`),
+					  KEY `FK_UserID3_idx` (`userID`),
+					  KEY `FK_ActionID_idx` (`actionID`),
+					  KEY `FK_CompanyID2_idx` (`companyID`),
+					  KEY `FK_BookingID_idx` (`bookingID`),
+					  KEY `FK_MeetingRoomID3_idx` (`meetingRoomID`),
+					  KEY `FK_EquipmentID2_idx` (`equipmentID`),
+					  KEY `FK_PositionID2_idx` (`positionID`),
+					  KEY `FK_CreditsID2_idx` (`creditsID`),
+					  CONSTRAINT `FK_ActionID` FOREIGN KEY (`actionID`) REFERENCES `logaction` (`actionID`) ON DELETE SET NULL ON UPDATE CASCADE,
+					  CONSTRAINT `FK_BookingID` FOREIGN KEY (`bookingID`) REFERENCES `booking` (`bookingID`) ON DELETE SET NULL ON UPDATE CASCADE,
+					  CONSTRAINT `FK_CompanyID2` FOREIGN KEY (`companyID`) REFERENCES `company` (`CompanyID`) ON DELETE SET NULL ON UPDATE CASCADE,
+					  CONSTRAINT `FK_CreditsID2` FOREIGN KEY (`creditsID`) REFERENCES `credits` (`CreditsID`) ON DELETE SET NULL ON UPDATE CASCADE,
+					  CONSTRAINT `FK_EquipmentID2` FOREIGN KEY (`equipmentID`) REFERENCES `equipment` (`EquipmentID`) ON DELETE SET NULL ON UPDATE CASCADE,
+					  CONSTRAINT `FK_MeetingRoomID3` FOREIGN KEY (`meetingRoomID`) REFERENCES `meetingroom` (`meetingRoomID`) ON DELETE SET NULL ON UPDATE CASCADE,
+					  CONSTRAINT `FK_PositionID2` FOREIGN KEY (`positionID`) REFERENCES `companyposition` (`PositionID`) ON DELETE SET NULL ON UPDATE CASCADE,
+					  CONSTRAINT `FK_UserID3` FOREIGN KEY (`userID`) REFERENCES `user` (`userID`) ON DELETE SET NULL ON UPDATE CASCADE
+					) ENGINE=InnoDB DEFAULT CHARSET=utf8");
 												
 			//	Add the creation to log event
 			$sqlLog = "	INSERT INTO `logevent`(`actionID`, `description`) 

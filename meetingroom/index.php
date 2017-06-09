@@ -16,12 +16,16 @@ include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/magicquotes.inc.php';
 // ADMIN INTERACTIONS // START //
 
 // If Admin wants to set a meeting room as the default room on a local device
-if(isset($_POST['action']) AND $_POST['action'] == "Set Default Room"){
+if(	(isset($_POST['action']) AND $_POST['action'] == "Set Default Room") OR 
+	(isset($_POST['action']) AND $_POST['action'] == "Change Default Room") OR
+	(isset($_SESSION['SetDefaultRoom']) AND $_SESSION['SetDefaultRoom'])){
+		
+	$_SESSION['SetDefaultRoom'] = TRUE;
 		// CHECK IF USER TRYING TO ACCESS THIS IS IN FACT THE ADMIN!
 	if (!isUserAdmin()){
 		exit();
 	}
-	
+	unset($_SESSION['SetDefaultRoom']);
 	// User logged in as Admin and can set the default meeting room on this local device
 	// Display meeting room list to choose from.
 	try
@@ -55,8 +59,9 @@ if(isset($_POST['action']) AND $_POST['action'] == "Set Default Room"){
 								'MeetingRoomCapacity' => $row['MeetingRoomCapacity'],
 								'MeetingRoomDescription' => $row['MeetingRoomDescription'],
 								'MeetingRoomIDCode' => $row['MeetingRoomIDCode']
-						);
-	}	
+								);
+	}
+	var_dump($_SESSION); // TO-DO: remove after testing is done
 	
 	include_once 'adminroomselect.html.php';
 	exit();
@@ -74,21 +79,45 @@ if(isset($_POST['action']) AND $_POST['action'] == "Set As Default"){
 		$meetingRoomName = $_POST['MeetingRoomName'];
 		
 		setNewMeetingRoomCookies($meetingRoomName, $_POST['MeetingRoomIDCode']);
-		destroySession(); // TO-DO: Not sure if this crashes/works by setting a cookie before/so close to destroying the session
+		destroySession();
 		$defaultMeetingRoomFeedback = "Set $meetingRoomName as the default meeting room for this device. Also logged you off as Admin.";
+		header("Location: .");
+		exit();
 	} else {
 		$_SESSION['MeetingRoomAllUsersFeedback'] = "Couldn't set default meeting room for local device.";
 	}
 }
-// ADMIN INTERACTIONS // END //
 
+// Update meeting room info for local device
+checkIfLocalDevice();
+
+// ADMIN INTERACTIONS // END //
 
 
 // NON-ADMIN INTERACTIONS // START //
 
+// Updates/Sets the default page when user wants it
+if(isset($_POST['action']) AND $_POST['action'] == "Refresh As Default Room"){
+
+	$TheMeetingRoomID = $_SESSION["DefaultMeetingRoomInfo"]["TheMeetingRoomID"];
+	$location = "http://$_SERVER[HTTP_HOST]/meetingroom/?meetingroom=" . $TheMeetingRoomID;
+	header("Location: $location");
+	exit();
+}
+
+// Updates the page when user wants it
+if(isset($_POST['action']) AND $_POST['action'] == "Refresh As Selected Room"){
+
+	$TheMeetingRoomID = $_GET['meetingroom'];
+	$location = "http://$_SERVER[HTTP_HOST]/meetingroom/?meetingroom=" . $TheMeetingRoomID;
+	header("Location: $location");
+	exit();
+}
+
+
 
 // Redirect to booking when a room has been selected
-if(isset($_POST['action']) AND $_POST['action'] == "Select Room"){
+if(isset($_POST['action']) AND $_POST['action'] == "Book This Room"){
 
 	$TheMeetingRoomID = $_POST['MeetingRoomID'];
 	$location = "http://$_SERVER[HTTP_HOST]/booking/?meetingroom=" . $TheMeetingRoomID;
@@ -114,32 +143,67 @@ if(isset($_POST['action']) AND $_POST['action'] == "Set New Max"){
 	}
 }
 
-// Display meeting rooms
-try
-{
-	include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
-	$pdo = connect_to_db();
-	$sql = 'SELECT  	m.`meetingRoomID`	AS TheMeetingRoomID, 
-						m.`name`			AS MeetingRoomName, 
-						m.`capacity`		AS MeetingRoomCapacity, 
-						m.`description`		AS MeetingRoomDescription, 
-						m.`location`		AS MeetingRoomLocation,
-						COUNT(re.`amount`)	AS MeetingRoomEquipmentAmount
-			FROM 		`meetingroom` m
-			LEFT JOIN 	`roomequipment` re
-			ON 			re.`meetingRoomID` = m.`meetingRoomID`
-			GROUP BY 	m.`meetingRoomID`';
-	$result = $pdo->query($sql);
+if(isset($_GET['meetingroom'])){
+	// Display selected meeting room
+	try
+	{
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+		$pdo = connect_to_db();
+		$sql = 'SELECT  	m.`meetingRoomID`	AS TheMeetingRoomID, 
+							m.`name`			AS MeetingRoomName, 
+							m.`capacity`		AS MeetingRoomCapacity, 
+							m.`description`		AS MeetingRoomDescription, 
+							m.`location`		AS MeetingRoomLocation,
+							COUNT(re.`amount`)	AS MeetingRoomEquipmentAmount
+				FROM 		`meetingroom` m
+				LEFT JOIN 	`roomequipment` re
+				ON 			re.`meetingRoomID` = m.`meetingRoomID`
+				WHERE		m.`meetingRoomID` = :meetingRoomID
+				GROUP BY 	m.`meetingRoomID`
+				LIMIT 		1'; // TO-DO: remove limit 1 if broken
+		$s = $pdo->prepare($sql);
+		$s->bindValue(':meetingRoomID', $_GET['meetingroom']);
+		$s->execute();
+		$result = $s->fetchAll();
 
-	//Close the connection
-	$pdo = null;
-}
-catch (PDOException $e)
-{
-	$error = 'Error fetching meeting rooms from the database: ' . $e->getMessage();
-	include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
-	$pdo = null;
-	exit();
+		//Close the connection
+		$pdo = null;
+	}
+	catch (PDOException $e)
+	{
+		$error = 'Error fetching meeting rooms from the database: ' . $e->getMessage();
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+		$pdo = null;
+		exit();
+	}	
+} elseif(!isset($_GET['meetingroom'])){
+	// Display meeting rooms
+	try
+	{
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+		$pdo = connect_to_db();
+		$sql = 'SELECT  	m.`meetingRoomID`	AS TheMeetingRoomID, 
+							m.`name`			AS MeetingRoomName, 
+							m.`capacity`		AS MeetingRoomCapacity, 
+							m.`description`		AS MeetingRoomDescription, 
+							m.`location`		AS MeetingRoomLocation,
+							COUNT(re.`amount`)	AS MeetingRoomEquipmentAmount
+				FROM 		`meetingroom` m
+				LEFT JOIN 	`roomequipment` re
+				ON 			re.`meetingRoomID` = m.`meetingRoomID`
+				GROUP BY 	m.`meetingRoomID`';
+		$result = $pdo->query($sql);
+
+		//Close the connection
+		$pdo = null;
+	}
+	catch (PDOException $e)
+	{
+		$error = 'Error fetching meeting rooms from the database: ' . $e->getMessage();
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+		$pdo = null;
+		exit();
+	}
 }
 
 foreach ($result as $row)
@@ -155,17 +219,20 @@ foreach ($result as $row)
 
 $totalMeetingRooms = sizeOf($meetingrooms);
 
-// Sets default values
-if(!isset($maxRoomsToShow)){
-	if($totalMeetingRooms < 10){
-		$maxRoomsToShow = $totalMeetingRooms;
-	} else {
-		$maxRoomsToShow = 10;	
+if(!isset($_GET['meetingroom'])){
+	// Sets default values
+	if(!isset($maxRoomsToShow)){
+		if($totalMeetingRooms < 10){
+			$maxRoomsToShow = $totalMeetingRooms;
+		} else {
+			$maxRoomsToShow = 10;	
+		}
 	}
+	if(!isset($roomDisplayLimit)){
+		$roomDisplayLimit = $maxRoomsToShow;
+	}		
 }
-if(!isset($roomDisplayLimit)){
-	$roomDisplayLimit = $maxRoomsToShow;
-}
+var_dump($_SESSION); // TO-DO: remove after testing is done
 
 // Load the html template
 include_once 'meetingroomforallusers.html.php';

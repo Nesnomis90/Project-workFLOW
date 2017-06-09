@@ -1,9 +1,11 @@
 <?php 
 // This is the index file for the COMPANIES folder
-
+session_start();
 // Include functions
 include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/helpers.inc.php';
 include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/magicquotes.inc.php';
+
+unsetSessionsFromAdminUsers(); // TO-DO: Add sessions from other places too. Remove if it breaks multiple tabs
 
 // CHECK IF USER TRYING TO ACCESS THIS IS IN FACT THE ADMIN!
 if (!isUserAdmin()){
@@ -147,6 +149,396 @@ function validateUserInputs(){
 return array($invalidInput, $validatedCompanyName, $validatedCompanyDateToRemove);
 }
 
+// If admin wants to see the booking history of the period after the currently shown one
+if (isset($_POST['action']) AND $_POST['action'] == "Next Period"){
+	
+	if(isset($_SESSION['BookingHistoryIntervalNumber'])){
+		$intervalNumber = $_SESSION['BookingHistoryIntervalNumber'] - 1;
+	} else {
+		$intervalNumber = -1;
+	}
+	$_SESSION['BookingHistoryIntervalNumber'] = $intervalNumber;
+
+	$companyID = $_SESSION['BookingHistoryCompanyInfo']['CompanyID'];
+	$CompanyName = $_SESSION['BookingHistoryCompanyInfo']['CompanyName'];
+	
+	// Get booking history for the selected company
+	try
+	{
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+		$pdo = connect_to_db();	
+
+		$sql = "SELECT IF(
+							DATE(`endDate`) = DATE_SUB(`startDate`,INTERVAL :intervalNumber - 1 MONTH), 
+							NULL, 
+							1
+						) AS ValidBillingDate,
+						DATE_SUB(`startDate`,INTERVAL :intervalNumber MONTH) AS CompanyBillingDateStart,
+						DATE_SUB(`startDate`,INTERVAL :intervalNumber - 1 MONTH) AS CompanyBillingDateEnd
+				FROM 	`company`
+				WHERE 	`companyID` = :CompanyID
+				LIMIT 	1";
+		$s = $pdo->prepare($sql);
+		$s->bindValue(':CompanyID', $companyID);
+		$s->bindValue(':intervalNumber', $intervalNumber);
+		$s->execute();
+		$row = $s->fetch();
+			
+		if($row['ValidBillingDate'] == NULL){
+			$NextPeriod = FALSE;
+		} else {
+			$NextPeriod = TRUE;
+		}
+		$PreviousPeriod = TRUE;
+		
+		// Format billing dates
+		$BillingStart = $row['CompanyBillingDateStart'];
+		$BillingEnd =  $row['CompanyBillingDateEnd'];
+		$displayBillingStart = convertDatetimeToFormat($BillingStart , 'Y-m-d', DATE_DEFAULT_FORMAT_TO_DISPLAY);
+		$displayBillingEnd = convertDatetimeToFormat($BillingEnd , 'Y-m-d', DATE_DEFAULT_FORMAT_TO_DISPLAY);
+		$BillingPeriod = $displayBillingStart . " To " . $displayBillingEnd . ".";			
+		
+		//Get completed booking history from the current billing period
+		$sql = "SELECT 		b.`startDateTime`		AS BookingStartedDatetime,
+							b.`actualEndDateTime`	AS BookingCompletedDatetime,
+							u.`firstName`			AS UserFirstname,
+							u.`lastName`			AS UserLastname,
+							u.`email`				AS UserEmail,
+							m.`name`				AS MeetingRoomName
+				FROM 		`booking` b
+				INNER JOIN  `company` c
+				ON 			c.`CompanyID` = b.`companyID`
+				LEFT JOIN	`user` u
+				ON 			u.`userID` = b.`userID`
+				LEFT JOIN 	`meetingroom` m
+				ON			m.`meetingRoomID` = b.`meetingRoomID`
+				WHERE   	b.`CompanyID` = :CompanyID
+				AND 		b.`actualEndDateTime` IS NOT NULL
+				AND     	b.`dateTimeCancelled` IS NULL
+				AND         b.`actualEndDateTime`
+				BETWEEN	    DATE_SUB(c.`startDate`, INTERVAL :intervalNumber MONTH)
+				AND			DATE_SUB(c.`endDate`, INTERVAL :intervalNumber MONTH)";
+
+		$s = $pdo->prepare($sql);
+		$s->bindValue(':CompanyID', $companyID);
+		$s->bindValue(':intervalNumber', $intervalNumber);
+		$s->execute();
+		$result = $s->fetchAll();
+			
+		//Close the connection
+		$pdo = null;	
+		
+		$totalBookingTimeThisPeriod = 0;
+		foreach($result as $row){
+			
+			// Format dates to display
+			$startDateTime = convertDatetimeToFormat($row['BookingStartedDatetime'], 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
+			$endDateTime = convertDatetimeToFormat($row['BookingCompletedDatetime'], 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
+			
+			$bookingPeriod = $startDateTime . " to " . $endDateTime;
+			
+			// Calculate time used
+			$bookingTimeUsed =  convertTwoDateTimesToTimeDifferenceInMinutes($row['BookingStartedDatetime'], $row['BookingCompletedDatetime']);
+			$displayBookingTimeUsed = convertMinutesToHoursAndMinutes($bookingTimeUsed);
+			
+			$totalBookingTimeThisPeriod += $bookingTimeUsed;
+
+			if($row['UserLastname'] == NULL){
+				$userInformation = "<deleted user>";
+			} else {
+				$userInformation = $row['UserLastname'] . ", " . $row['UserFirstname'] . " - " . $row['UserEmail'];
+			}
+			
+			if($row['MeetingRoomName'] == NULL){
+				$meetingRoomName = "<deleted room>";
+			} else {
+				$meetingRoomName = $row['MeetingRoomName'];
+			}
+			
+			$bookingHistory[] = array(
+										'BookingPeriod' => $bookingPeriod,
+										'UserInformation' => $userInformation,
+										'MeetingRoomName' => $meetingRoomName,
+										'BookingTimeUsed' => $displayBookingTimeUsed
+										);
+		}
+		
+	}
+	catch (PDOException $e)
+	{
+		$error = 'Error fetching company booking history: ' . $e->getMessage();
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+		$pdo = null;
+		exit();
+	}	
+	$displayDateTimeCreated = $_SESSION['BookingHistoryCompanyInfo']['CompanyDateTimeCreated'];
+	$displayTotalBookingTimeThisPeriod = convertMinutesToHoursAndMinutes($totalBookingTimeThisPeriod);
+	
+	var_dump($_SESSION); // TO-DO: Remove after testing is over.
+	
+	include_once 'bookinghistory.html.php';
+	exit();		
+	
+}
+
+// If admin wants to see the booking history of the period before the currently shown one
+if (isset($_POST['action']) AND $_POST['action'] == "Previous Period"){
+	if(isset($_SESSION['BookingHistoryIntervalNumber'])){
+		$intervalNumber = $_SESSION['BookingHistoryIntervalNumber'] + 1;
+	} else {
+		$intervalNumber = 1;
+	}
+	$_SESSION['BookingHistoryIntervalNumber'] = $intervalNumber;
+	
+	$companyID = $_SESSION['BookingHistoryCompanyInfo']['CompanyID'];
+	$CompanyName = $_SESSION['BookingHistoryCompanyInfo']['CompanyName'];
+	
+	// Get booking history for the selected company
+	try
+	{
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+		$pdo = connect_to_db();	
+
+		$sql = "SELECT IF(
+							DATE(`dateTimeCreated`) = DATE_SUB(`startDate`, INTERVAL :intervalNumber MONTH), 
+							NULL, 
+							1
+						) 															AS ValidBillingDate,
+						DATE_SUB(`startDate`, INTERVAL :intervalNumber MONTH)		AS CompanyBillingDateStart,
+						DATE_SUB(`startDate`, INTERVAL :intervalNumber -1 MONTH) 	AS CompanyBillingDateEnd
+				FROM 	`company`
+				WHERE 	`companyID` = :CompanyID
+				LIMIT 	1";
+		$s = $pdo->prepare($sql);
+		$s->bindValue(':CompanyID', $companyID);
+		$s->bindValue(':intervalNumber', $intervalNumber);
+		$s->execute();
+		$row = $s->fetch();
+			
+		if($row['ValidBillingDate'] == NULL){
+			$PreviousPeriod = FALSE;
+		} else {
+			$PreviousPeriod = TRUE;
+		}
+		$NextPeriod = TRUE;
+		
+		// Format billing dates
+		$BillingStart = $row['CompanyBillingDateStart'];
+		$BillingEnd =  $row['CompanyBillingDateEnd'];
+		$displayBillingStart = convertDatetimeToFormat($BillingStart , 'Y-m-d', DATE_DEFAULT_FORMAT_TO_DISPLAY);
+		$displayBillingEnd = convertDatetimeToFormat($BillingEnd , 'Y-m-d', DATE_DEFAULT_FORMAT_TO_DISPLAY);
+		$BillingPeriod = $displayBillingStart . " To " . $displayBillingEnd . ".";			
+		
+		//Get completed booking history from the current billing period
+		$sql = "SELECT 		b.`startDateTime`		AS BookingStartedDatetime,
+							b.`actualEndDateTime`	AS BookingCompletedDatetime,
+							u.`firstName`			AS UserFirstname,
+							u.`lastName`			AS UserLastname,
+							u.`email`				AS UserEmail,
+							m.`name`				AS MeetingRoomName
+				FROM 		`booking` b
+				INNER JOIN  `company` c
+				ON 			c.`CompanyID` = b.`companyID`
+				LEFT JOIN	`user` u
+				ON 			u.`userID` = b.`userID`
+				LEFT JOIN 	`meetingroom` m
+				ON			m.`meetingRoomID` = b.`meetingRoomID`
+				WHERE   	b.`CompanyID` = :CompanyID
+				AND 		b.`actualEndDateTime` IS NOT NULL
+				AND     	b.`dateTimeCancelled` IS NULL
+				AND         b.`actualEndDateTime`
+				BETWEEN	    DATE_SUB(c.`startDate`, INTERVAL :intervalNumber MONTH)
+				AND			DATE_SUB(c.`endDate`, INTERVAL :intervalNumber MONTH)";
+
+		$s = $pdo->prepare($sql);
+		$s->bindValue(':CompanyID', $companyID);
+		$s->bindValue(':intervalNumber', $intervalNumber);
+		$s->execute();
+		$result = $s->fetchAll();
+			
+		//Close the connection
+		$pdo = null;	
+		
+		$totalBookingTimeThisPeriod = 0;
+		foreach($result as $row){
+			
+			// Format dates to display
+			$startDateTime = convertDatetimeToFormat($row['BookingStartedDatetime'], 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
+			$endDateTime = convertDatetimeToFormat($row['BookingCompletedDatetime'], 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
+			
+			$bookingPeriod = $startDateTime . " to " . $endDateTime;
+			
+			// Calculate time used
+			$bookingTimeUsed =  convertTwoDateTimesToTimeDifferenceInMinutes($row['BookingStartedDatetime'], $row['BookingCompletedDatetime']);
+			$displayBookingTimeUsed = convertMinutesToHoursAndMinutes($bookingTimeUsed);
+			
+			$totalBookingTimeThisPeriod += $bookingTimeUsed;
+
+			if($row['UserLastname'] == NULL){
+				$userInformation = "<deleted user>";
+			} else {
+				$userInformation = $row['UserLastname'] . ", " . $row['UserFirstname'] . " - " . $row['UserEmail'];
+			}
+			
+			if($row['MeetingRoomName'] == NULL){
+				$meetingRoomName = "<deleted room>";
+			} else {
+				$meetingRoomName = $row['MeetingRoomName'];
+			}
+			
+			$bookingHistory[] = array(
+										'BookingPeriod' => $bookingPeriod,
+										'UserInformation' => $userInformation,
+										'MeetingRoomName' => $meetingRoomName,
+										'BookingTimeUsed' => $displayBookingTimeUsed
+										);
+		}
+		
+	}
+	catch (PDOException $e)
+	{
+		$error = 'Error fetching company booking history: ' . $e->getMessage();
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+		$pdo = null;
+		exit();
+	}	
+	$displayDateTimeCreated = $_SESSION['BookingHistoryCompanyInfo']['CompanyDateTimeCreated'];
+	$displayTotalBookingTimeThisPeriod = convertMinutesToHoursAndMinutes($totalBookingTimeThisPeriod);
+	
+	var_dump($_SESSION); // TO-DO: Remove after testing is over.
+	
+	include_once 'bookinghistory.html.php';
+	exit();	
+}
+
+// If admin wants to see the booking history of the selected company
+if (isset($_POST['action']) AND $_POST['action'] == "Booking History"){
+
+	$companyID = $_POST['id'];
+	
+	// Get booking history for the selected company
+	try
+	{
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+		$pdo = connect_to_db();
+
+		// Get relevant company information
+		$sql = "SELECT 	`companyID`			AS CompanyID, 
+						`name`				AS CompanyName,
+						`dateTimeCreated`	AS CompanyDateTimeCreated,
+						`prevStartDate`		AS CompanyBillingDatePreviousStart,
+						`startDate`			AS CompanyBillingDateStart,
+						`endDate`			AS CompanyBillingDateEnd
+				FROM 	`company`
+				WHERE 	`companyID` = :CompanyID
+				LIMIT 	1";
+		$s = $pdo->prepare($sql);
+		$s->bindValue(':CompanyID', $companyID);
+		$s->execute();
+		$row = $s->fetch();
+		$_SESSION['BookingHistoryCompanyInfo'] = $row;
+		
+		$displayDateTimeCreated = convertDatetimeToFormat($row['CompanyDateTimeCreated'],'Y-m-d H:i:s',DATE_DEFAULT_FORMAT_TO_DISPLAY);
+		
+		$_SESSION['BookingHistoryCompanyInfo']['CompanyDateTimeCreated'] = $displayDateTimeCreated;
+		
+		$CompanyName = $row['CompanyName'];
+		
+		if($row['CompanyBillingDatePreviousStart'] == NULL){
+			$PreviousPeriod = FALSE;
+		} else {
+			$PreviousPeriod = TRUE;
+		}
+		$NextPeriod = FALSE;
+	
+		// Format billing dates
+		$BillingStart = $row['CompanyBillingDateStart'];
+		$BillingEnd =  $row['CompanyBillingDateEnd'];
+		$displayBillingStart = convertDatetimeToFormat($BillingStart , 'Y-m-d', DATE_DEFAULT_FORMAT_TO_DISPLAY);
+		$displayBillingEnd = convertDatetimeToFormat($BillingEnd , 'Y-m-d', DATE_DEFAULT_FORMAT_TO_DISPLAY);
+		$BillingPeriod = $displayBillingStart . " To " . $displayBillingEnd . ".";			
+		
+		//Get completed booking history from the current billing period
+		$sql = "SELECT 		b.`startDateTime`		AS BookingStartedDatetime,
+							b.`actualEndDateTime`	AS BookingCompletedDatetime,
+							u.`firstName`			AS UserFirstname,
+							u.`lastName`			AS UserLastname,
+							u.`email`				AS UserEmail,
+							m.`name`				AS MeetingRoomName
+				FROM 		`booking` b
+				INNER JOIN  `company` c
+				ON 			c.`CompanyID` = b.`companyID`
+				LEFT JOIN	`user` u
+				ON 			u.`userID` = b.`userID`
+				LEFT JOIN 	`meetingroom` m
+				ON			m.`meetingRoomID` = b.`meetingRoomID`
+				WHERE   	b.`CompanyID` = :CompanyID
+				AND 		b.`actualEndDateTime` IS NOT NULL
+				AND     	b.`dateTimeCancelled` IS NULL
+				AND         b.`actualEndDateTime`
+				BETWEEN	    c.`startDate`
+				AND			c.`endDate`";
+
+		$s = $pdo->prepare($sql);
+		$s->bindValue(':CompanyID', $companyID);
+		$s->execute();
+		$result = $s->fetchAll();
+			
+		//Close the connection
+		$pdo = null;	
+		
+		$totalBookingTimeThisPeriod = 0;
+		foreach($result as $row){
+			
+			// Format dates to display
+			$startDateTime = convertDatetimeToFormat($row['BookingStartedDatetime'], 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
+			$endDateTime = convertDatetimeToFormat($row['BookingCompletedDatetime'], 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
+			
+			$bookingPeriod = $startDateTime . " to " . $endDateTime;
+			
+			// Calculate time used
+			$bookingTimeUsed =  convertTwoDateTimesToTimeDifferenceInMinutes($row['BookingStartedDatetime'], $row['BookingCompletedDatetime']);
+			$displayBookingTimeUsed = convertMinutesToHoursAndMinutes($bookingTimeUsed);
+			
+			$totalBookingTimeThisPeriod += $bookingTimeUsed;
+
+			if($row['UserLastname'] == NULL){
+				$userInformation = "<deleted user>";
+			} else {
+				$userInformation = $row['UserLastname'] . ", " . $row['UserFirstname'] . " - " . $row['UserEmail'];
+			}
+			
+			if($row['MeetingRoomName'] == NULL){
+				$meetingRoomName = "<deleted room>";
+			} else {
+				$meetingRoomName = $row['MeetingRoomName'];
+			}
+			
+			$bookingHistory[] = array(
+										'BookingPeriod' => $bookingPeriod,
+										'UserInformation' => $userInformation,
+										'MeetingRoomName' => $meetingRoomName,
+										'BookingTimeUsed' => $displayBookingTimeUsed
+										);
+		}
+		
+	}
+	catch (PDOException $e)
+	{
+		$error = 'Error fetching company booking history: ' . $e->getMessage();
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+		$pdo = null;
+		exit();
+	}	
+	
+	$displayTotalBookingTimeThisPeriod = convertMinutesToHoursAndMinutes($totalBookingTimeThisPeriod);
+	
+	var_dump($_SESSION); // TO-DO: Remove after testing is over.
+	
+	include_once 'bookinghistory.html.php';
+	exit();
+}
+
 // If admin wants to be able to delete companies it needs to enabled first
 if (isset($_POST['action']) AND $_POST['action'] == "Enable Delete"){
 	$_SESSION['companiesEnableDelete'] = TRUE;
@@ -226,9 +618,9 @@ if (isset($_POST['action']) and $_POST['action'] == 'Delete')
 		$pdo = connect_to_db();
 		$sql = "INSERT INTO `logevent` 
 				SET			`actionID` = 	(
-												SELECT `actionID` 
-												FROM `logaction`
-												WHERE `name` = 'Company Removed'
+												SELECT 	`actionID` 
+												FROM 	`logaction`
+												WHERE 	`name` = 'Company Removed'
 											),
 							`description` = :description";
 		$s = $pdo->prepare($sql);
@@ -280,6 +672,8 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Create Company') OR
 	
 	// We don't need to see date to remove when adding a new company
 	$ShowDateToRemove = FALSE;
+	
+	var_dump($_SESSION); // TO-DO: remove after testing is done
 	
 	// Change to the actual html form template
 	include 'form.html.php';
@@ -367,6 +761,8 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR
 	// Want to see date to remove while editing
 	$ShowDateToRemove = TRUE;
 	
+	var_dump($_SESSION); // TO-DO: remove after testing is done
+	
 	// Change to the actual form we want to use
 	include 'form.html.php';
 	exit();
@@ -394,7 +790,9 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Add Company')
 		
 		$pdo = connect_to_db();
 		$sql = 'INSERT INTO `company` 
-				SET			`name` = :CompanyName';
+				SET			`name` = :CompanyName,
+							`startDate` = CURDATE(),
+							`endDate` = (CURDATE() + INTERVAL 1 MONTH)';
 		$s = $pdo->prepare($sql);
 		$s->bindValue(':CompanyName', $validatedCompanyName);
 		$s->execute();
@@ -414,6 +812,34 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Add Company')
 	}
 	
 	$_SESSION['CompanyUserFeedback'] = "Successfully added the company: " . $validatedCompanyName . ".";
+	
+		// Give the company the default subscription
+	try
+	{	
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+		
+		$pdo = connect_to_db();
+		$sql = "INSERT INTO `companycredits` 
+				SET			`CompanyID` = :CompanyID,
+							`CreditsID` = (
+											SELECT 	`CreditsID`
+											FROM	`credits`
+											WHERE	`name` = 'Default'
+											)";
+		$s = $pdo->prepare($sql);
+		$s->bindValue(':CompanyID', $_SESSION['LastCompanyID']);
+		$s->execute();
+		
+		//Close the connection
+		$pdo = null;
+	}
+	catch (PDOException $e)
+	{
+		$error = 'Error giving company a booking subscription: ' . $e->getMessage();
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+		$pdo = null;
+		exit();
+	}	
 	
 		// Add a log event that a company was added
 	try
@@ -605,7 +1031,6 @@ try
 {
 	include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 	$pdo = connect_to_db();
-	// TO-DO: Fix SQL query if time is broken after change
 	// Made it so the user doesn't have to be an employee anymore for the hours to count
 	// Only takes into account time spent and company the booking was booked for.
 	$sql = "SELECT 		c.companyID 										AS CompID,
@@ -619,7 +1044,7 @@ try
 							JOIN 	`employee` e 
 							ON 		c.CompanyID = e.CompanyID 
 							WHERE 	e.companyID = CompID
-						)													AS NumberOfEmployees,
+						)													AS NumberOfEmployees, 
 						(
 							SELECT (
 									BIG_SEC_TO_TIME(
@@ -638,8 +1063,31 @@ try
 							INNER JOIN 	`company` c 
 							ON 			b.`CompanyID` = c.`CompanyID` 
 							WHERE 		b.`CompanyID` = CompID
-							AND 		YEAR(b.`actualEndDateTime`) = YEAR(NOW())
-							AND 		MONTH(b.`actualEndDateTime`) = MONTH(NOW())
+							AND 		b.`actualEndDateTime`
+							BETWEEN		c.`prevStartDate`
+							AND			c.`startDate`
+						)   												AS PreviousMonthCompanyWideBookingTimeUsed,           
+						(
+							SELECT (
+									BIG_SEC_TO_TIME(
+													SUM(
+														DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
+														)*86400 
+													+ 
+													SUM(
+														TIME_TO_SEC(b.`actualEndDateTime`) 
+														- 
+														TIME_TO_SEC(b.`startDateTime`)
+														) 
+													) 
+									) 
+							FROM 		`booking` b  
+							INNER JOIN 	`company` c 
+							ON 			b.`CompanyID` = c.`CompanyID` 
+							WHERE 		b.`CompanyID` = CompID
+							AND 		b.`actualEndDateTime`
+							BETWEEN		c.`startDate`
+							AND			c.`endDate`
 						)   												AS MonthlyCompanyWideBookingTimeUsed,
 						(
 							SELECT (
@@ -659,11 +1107,21 @@ try
 							INNER JOIN 	`company` c 
 							ON 			b.`CompanyID` = c.`CompanyID` 
 							WHERE 		b.`CompanyID` = CompID
-						)   												AS TotalCompanyWideBookingTimeUsed
-			FROM 		`company` c 
+						)   												AS TotalCompanyWideBookingTimeUsed,
+						cc.`altMinuteAmount`								AS CompanyAlternativeMinuteAmount,
+						cc.`lastModified`									AS CompanyCreditsLastModified,
+						cr.`name`											AS CreditSubscriptionName,
+						cr.`minuteAmount`									AS CreditSubscriptionMinuteAmount,
+						cr.`monthlyPrice`									AS CreditSubscriptionMonthlyPrice,
+						cr.`overCreditMinutePrice`							AS CreditSubscriptionMinutePrice,
+						cr.`overCreditHourPrice`							AS CreditSubscriptionHourPrice
+			FROM 		`company` c
+			LEFT JOIN	`companycredits` cc
+			ON			c.`CompanyID` = cc.`CompanyID`
+			LEFT JOIN	`credits` cr
+			ON			cr.`CreditsID` = cc.`CreditsID`
 			GROUP BY 	c.`name`";
-			
-			// TO-DO: REVERT BIG_SEC_TO_TIME AND FIND ALTERNATE SOLUTION IF BROKEN
+
 	$result = $pdo->query($sql);
 	$rowNum = $result->rowCount();
 	
@@ -680,36 +1138,190 @@ catch (PDOException $e)
 
 // Create an array with the actual key/value pairs we want to use in our HTML
 foreach ($result as $row)
-{
-	// TO-DO: Maybe change booking time used from time to easily readable text instead if needed?
-
+{	
+	// Calculate and display company booking time details
+	if($row['PreviousMonthCompanyWideBookingTimeUsed'] == null){
+		$PrevMonthTimeUsed = 'N/A';
+	} else {
+		$PrevMonthTimeUsed = $row['PreviousMonthCompanyWideBookingTimeUsed'];
+		$prevMonthTimeHour = substr($PrevMonthTimeUsed,0,strpos($PrevMonthTimeUsed,":"));
+		$prevMonthTimeMinute = substr($PrevMonthTimeUsed,strpos($PrevMonthTimeUsed,":")+1, 2);
+		$PrevMonthTimeUsed = $prevMonthTimeHour . 'h' . $prevMonthTimeMinute . 'm';
+	}	
+	
 	if($row['MonthlyCompanyWideBookingTimeUsed'] == null){
 		$MonthlyTimeUsed = 'N/A';
 	} else {
 		$MonthlyTimeUsed = $row['MonthlyCompanyWideBookingTimeUsed'];
+		$monthlyTimeHour = substr($MonthlyTimeUsed,0,strpos($MonthlyTimeUsed,":"));
+		$monthlyTimeMinute = substr($MonthlyTimeUsed,strpos($MonthlyTimeUsed,":")+1, 2);
+		$MonthlyTimeUsed = $monthlyTimeHour . 'h' . $monthlyTimeMinute . 'm';
 	}
 	
 	if($row['TotalCompanyWideBookingTimeUsed'] == null){
 		$TotalTimeUsed = 'N/A';
 	} else {
 		$TotalTimeUsed = $row['TotalCompanyWideBookingTimeUsed'];
+		$totalTimeHour = substr($TotalTimeUsed,0,strpos($TotalTimeUsed,":"));
+		$totalTimeMinute = substr($TotalTimeUsed,strpos($TotalTimeUsed,":")+1, 2);
+		$TotalTimeUsed = $totalTimeHour . 'h' . $totalTimeMinute . 'm';		
 	}
 	
+	// Calculate and display company booking subscription details
+	if($row["CompanyAlternativeMinuteAmount"] != NULL AND $row["CompanyAlternativeMinuteAmount"] != ""){
+		$companyMinuteCredits = $row["CompanyAlternativeMinuteAmount"];
+	} elseif($row["CreditSubscriptionMinuteAmount"] != NULL AND $row["CreditSubscriptionMinuteAmount"] != "") {
+		$companyMinuteCredits = $row["CreditSubscriptionMinuteAmount"];
+	} else {
+		$companyMinuteCredits = 0;
+	}
+		// Format company credits to be displayed
+	if($companyMinuteCredits >= 60){
+		$displayCompanyCreditsMinutes = $companyMinuteCredits;
+		$displayCompanyCreditsHours = floor($displayCompanyCreditsMinutes/60);
+		$displayCompanyCreditsMinutes -= $displayCompanyCreditsHours*60;
+		$displayCompanyCredits = $displayCompanyCreditsHours . "h" . $displayCompanyCreditsMinutes . "m";
+	} elseif($companyMinuteCredits > 0) {
+		$displayCompanyCredits = "0h" . $companyMinuteCredits . "m";
+	} else {
+		$displayCompanyCredits = "None";
+	}
+	
+	$monthPrice = $row["CreditSubscriptionMonthlyPrice"];
+	if($monthPrice == NULL OR $monthPrice == ""){
+		$monthPrice = 0;
+	}
+	$hourPrice = $row["CreditSubscriptionHourPrice"];
+	if($hourPrice == NULL OR $hourPrice == ""){
+		$hourPrice = 0;
+	}
+	$minPrice = $row["CreditSubscriptionMinutePrice"];
+	if($minPrice == NULL OR $minPrice == ""){
+		$minPrice = 0;
+	}	
+	
+	if(	($minPrice == 0 AND $hourPrice == 0) OR 
+		($minPrice != 0 AND $hourPrice != 0 )){
+			$overCreditsFee = "Not set";
+	} elseif($minPrice != 0 AND $hourPrice == 0) {
+			$overCreditsFee = $minPrice . "/m";
+	} elseif($minPrice == 0 AND $hourPrice != 0) {
+		$overCreditsFee = $hourPrice . "/h";
+	}
+		// Calculate monthly cost (subscription + over credit charges)
+	// TO-DO: Change/fix calculations?
+	if($MonthlyTimeUsed != "N/A"){
+		$actualTimeUsedInMinutesThisMonth = $monthlyTimeHour*60 + $monthlyTimeMinute;
+		if($actualTimeUsedInMinutesThisMonth > $companyMinuteCredits){
+			// Company has used more booking time than credited. Let's calculate how far over they went
+			$actualTimeOverCreditsInMinutes = $actualTimeUsedInMinutesThisMonth - $companyMinuteCredits;
+		
+			// Let's calculate cost
+			if($hourPrice == 0 AND $minPrice == 0){
+				// The subscription has no valid overtime price set, should not occur
+				$bookingCostThisMonth = $monthPrice . "+" . $actualTimeOverCreditsInMinutes . "m * cost (not set)";
+			} elseif($hourPrice != 0 AND $minPrice != 0){
+				// The subscription has two valid overtime price set, should not occur
+				$bookingCostThisMonth = $monthPrice . "+" . $actualTimeOverCreditsInMinutes . "m * cost (not set)";
+			} elseif($hourPrice == 0 AND $minPrice != 0){
+				// The subscription charges by the minute, if over credits
+				$bookingCostThisMonth = $minPrice * $actualTimeOverCreditsInMinutes;
+				$bookingCostThisMonth = $monthPrice . "+" . $bookingCostThisMonth;
+			} elseif($hourPrice != 0 AND $minPrice == 0){
+				// The subsription charges by the hour, if over credits
+				// TO-DO: Round up/down? Break down into minutes? Currently rounding up.
+				$bookingCostThisMonth = $hourPrice * ceil($actualTimeOverCreditsInMinutes/60);
+				$bookingCostThisMonth = $monthPrice . "+" . $bookingCostThisMonth;
+			}
+			$companyMinuteCreditsRemaining = 0;
+			
+		} else {
+			$bookingCostThisMonth = $monthPrice . "+0";
+			$companyMinuteCreditsRemaining = $companyMinuteCredits - $actualTimeUsedInMinutesThisMonth;
+		}		
+	} elseif($monthPrice != 0) {
+		$bookingCostThisMonth = $monthPrice . "+0";
+		$companyMinuteCreditsRemaining = $companyMinuteCredits;
+	} else {
+		$bookingCostThisMonth = "N/A";
+		$companyMinuteCreditsRemaining = $companyMinuteCredits;
+	}
+		// Calculate cost for previous month (subscription + over credit charges)
+	// TO-DO: Change/fix calculations? This will be wrong if credits/hour rate etc changes from previous month
+	if($PrevMonthTimeUsed != "N/A"){
+		$actualTimeUsedInMinutesPrevMonth = $prevMonthTimeHour*60 + $prevMonthTimeMinute;
+		if($actualTimeUsedInMinutesPrevMonth > $companyMinuteCredits){
+			// Company has used more booking time than credited. Let's calculate how far over they went
+			$actualTimeOverCreditsInMinutes = $actualTimeUsedInMinutesPrevMonth - $companyMinuteCredits;
+		
+			// Let's calculate cost
+			if($hourPrice == 0 AND $minPrice == 0){
+				// The subscription has no valid overtime price set, should not occur
+				$bookingCostPrevMonth = $monthPrice . "+" . $actualTimeOverCreditsInMinutes . "m * cost (not set)";
+			} elseif($hourPrice != 0 AND $minPrice != 0){
+				// The subscription has two valid overtime price set, should not occur
+				$bookingCostPrevMonth = $monthPrice . "+" . $actualTimeOverCreditsInMinutes . "m * cost (not set)";
+			} elseif($hourPrice == 0 AND $minPrice != 0){
+				// The subscription charges by the minute, if over credits
+				$bookingCostPrevMonth = $minPrice * $actualTimeOverCreditsInMinutes;
+				$bookingCostPrevMonth = $monthPrice . "+" . $bookingCostPrevMonth;
+			} elseif($hourPrice != 0 AND $minPrice == 0){
+				// The subsription charges by the hour, if over credits
+				// TO-DO: Round up/down? Break down into minutes? Currently rounding up.
+				$bookingCostPrevMonth = $hourPrice * ceil($actualTimeOverCreditsInMinutes/60);
+				$bookingCostPrevMonth = $monthPrice . "+" . $bookingCostPrevMonth;
+			}
+			$companyMinuteCreditsRemaining = 0;
+			
+		} else {
+			$bookingCostPrevMonth = $monthPrice . "+0";
+			$companyMinuteCreditsRemaining = $companyMinuteCredits - $actualTimeUsedInMinutesPrevMonth;
+		}		
+	} elseif($monthPrice != 0) {
+		$bookingCostPrevMonth = $monthPrice . "+0";
+		$companyMinuteCreditsRemaining = $companyMinuteCredits;
+	} else {
+		$bookingCostPrevMonth = "N/A";
+		$companyMinuteCreditsRemaining = $companyMinuteCredits;
+	}	
+	
+
+		// Format company credits remaining to be displayed
+	if($companyMinuteCreditsRemaining >= 60){
+		$displayCompanyCreditsRemainingMinutes = $companyMinuteCreditsRemaining;
+		$displayCompanyCreditsRemainingHours = floor($displayCompanyCreditsRemainingMinutes/60);
+		$displayCompanyCreditsRemainingMinutes -= $displayCompanyCreditsRemainingHours*60;
+		$displayCompanyCreditsRemaining = $displayCompanyCreditsRemainingHours . "h" . $displayCompanyCreditsRemainingMinutes . "m";
+	} elseif($companyMinuteCreditsRemaining > 0) {
+		$displayCompanyCreditsRemaining = "0h" . $companyMinuteCreditsRemaining . "m";
+	} else {
+		$displayCompanyCreditsRemaining = "None";
+	}	
+	
+	// Display dates
 	$dateCreated = $row['DatetimeCreated'];	
 	$dateToRemove = $row['DeletionDate'];
 	$isActive = ($row['CompanyActivated'] == 1);
 	$dateTimeCreatedToDisplay = convertDatetimeToFormat($dateCreated, 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
-	$dateToRemoveToDisplay = convertDatetimeToFormat($dateToRemove, 'Y-m-d', DATE_DEFAULT_FORMAT_TO_DISPLAY);
+	$dateToRemoveToDisplay = convertDatetimeToFormat($dateToRemove, 'Y-m-d', DATE_DEFAULT_FORMAT_TO_DISPLAY);	
 	
 	if($isActive){
 		$companies[] = array(
 								'id' => $row['CompID'], 
 								'CompanyName' => $row['CompanyName'],
 								'NumberOfEmployees' => $row['NumberOfEmployees'],
+								'PreviousMonthCompanyWideBookingTimeUsed' => $PrevMonthTimeUsed,
 								'MonthlyCompanyWideBookingTimeUsed' => $MonthlyTimeUsed,
 								'TotalCompanyWideBookingTimeUsed' => $TotalTimeUsed,
 								'DeletionDate' => $dateToRemoveToDisplay,
-								'DatetimeCreated' => $dateTimeCreatedToDisplay
+								'DatetimeCreated' => $dateTimeCreatedToDisplay,
+								'CreditSubscriptionName' => $row["CreditSubscriptionName"],
+								'CompanyCredits' => $displayCompanyCredits,
+								'CompanyCreditsRemaining' => $displayCompanyCreditsRemaining,
+								'CreditSubscriptionMonthlyPrice' => $monthPrice,
+								'BookingCostPrevMonth' => $bookingCostPrevMonth,
+								'BookingCostThisMonth' => $bookingCostThisMonth,
+								'OverCreditsFee' => $overCreditsFee
 							);
 	} elseif(!$isActive AND ($dateToRemove == "" OR $dateToRemove == NULL)) {
 		$unactivedcompanies[] = array(
@@ -728,6 +1340,9 @@ foreach ($result as $row)
 									);		
 	}
 }
+unset($_SESSION["BookingHistoryIntervalNumber"]);
+unset($_SESSION['BookingHistoryCompanyInfo']);
+var_dump($_SESSION); // TO-DO: remove after testing is done
 
 // Create the companies list in HTML
 include_once 'companies.html.php';

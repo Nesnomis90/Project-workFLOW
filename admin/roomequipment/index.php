@@ -348,6 +348,8 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Add Room Equipment') OR
 	}
 	unset($_SESSION['AddRoomEquipmentShowSearchResults']);
 	
+	var_dump($_SESSION); // TO-DO: remove after testing is done
+	
 	// Change to the actual html form template
 	include 'addroomequipment.html.php';
 	exit();
@@ -662,7 +664,9 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Change Amount')
 	$EquipmentID = $row['TheEquipmentID'];
 	$MeetingRoomID = $row['MeetingRoomID'];
 	
-	$_SESSION['EditRoomEquipmentOriginalEquipmentAmount'] = $EquipmentID;
+	$_SESSION['EditRoomEquipmentOriginalEquipmentAmount'] = $EquipmentAmount;
+	
+	var_dump($_SESSION); // TO-DO: remove after testing is done
 	
 	// Change to the actual form we want to use
 	include 'changeamount.html.php';
@@ -674,6 +678,7 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Confirm Amount')
 {
 	// Check if there were any changes made
 	$NumberOfChanges = 0;
+	// TO-DO: validate equipment amount
 	$selectedRoomEquipmentAmount = $_POST['EquipmentAmount'];
 	
 	if(	isset($_SESSION['EditRoomEquipmentOriginalEquipmentAmount']) AND 
@@ -775,7 +780,7 @@ if(isset($_GET['Meetingroom'])){
 							re.`amount`										AS EquipmentAmount,
 							m.`meetingRoomID`								AS MeetingRoomID,
 							m.`name`										AS MeetingRoomName,
-							DATE_FORMAT(re.`datetimeAdded`,'%d %b %Y %T') 	AS DateTimeAdded,
+							re.`datetimeAdded`								AS DateTimeAdded,
 							UNIX_TIMESTAMP(re.`datetimeAdded`)				AS OrderByDate
 				FROM 		`equipment` e
 				JOIN 		`roomequipment` re
@@ -783,8 +788,7 @@ if(isset($_GET['Meetingroom'])){
 				JOIN 		`meetingroom` m
 				ON 			m.`meetingRoomID` = re.`meetingRoomID`
 				WHERE 		m.`meetingRoomID` = :MeetingRoomID
-				ORDER BY	OrderByDate
-				DESC";
+				LIMIT		1";
 				
 		$s = $pdo->prepare($sql);
 		$s->bindValue(':MeetingRoomID', $_GET['Meetingroom']);
@@ -819,7 +823,7 @@ if(!isset($_GET['Meetingroom'])){
 							re.`amount`										AS EquipmentAmount,
 							m.`meetingRoomID`								AS MeetingRoomID,
 							m.`name`										AS MeetingRoomName,
-							DATE_FORMAT(re.`datetimeAdded`,'%d %b %Y %T') 	AS DateTimeAdded,
+							re.`datetimeAdded`								AS DateTimeAdded,
 							UNIX_TIMESTAMP(re.`datetimeAdded`)				AS OrderByDate
 				FROM 		`equipment` e
 				JOIN 		`roomequipment` re
@@ -847,18 +851,23 @@ if(!isset($_GET['Meetingroom'])){
 // Create an array with the actual key/value pairs we want to use in our HTML	
 foreach($result AS $row){
 	
+	$addedDateTime = $row['DateTimeAdded'];
+	$displayAddedDateTime = convertDatetimeToFormat($addedDateTime , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
+	
 	// Create an array with the actual key/value pairs we want to use in our HTML
 	$roomequipment[] = array(
 							'TheEquipmentID' => $row['TheEquipmentID'],
 							'EquipmentName' => $row['EquipmentName'],
 							'EquipmentDescription' => $row['EquipmentDescription'],
 							'EquipmentAmount' => $row['EquipmentAmount'],							
-							'DateTimeAdded' => $row['DateTimeAdded'],
+							'DateTimeAdded' => $displayAddedDateTime,
 							'MeetingRoomID' => $row['MeetingRoomID'],
 							'MeetingRoomName' => $row['MeetingRoomName']							
 						);
 }
 
-// Create the equipment list in HTML
+var_dump($_SESSION); // TO-DO: remove after testing is done
+
+// Create the room equipment list in HTML
 include_once 'roomequipment.html.php';
 ?>

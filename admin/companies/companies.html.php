@@ -67,7 +67,9 @@
 				<tr>
 					<th colspan="2">Employees</th>
 					<th>Company</th>
-					<th colspan="2">Booking Time Used</th>
+					<th colspan="6">Booking Subscription</th>
+					<th colspan="4">Booking Time Used</th>
+					<th colspan="2">Billing Amount</th>
 					<th colspan="2">Dates</th>
 					<th colspan="2">Alter Company</th>
 				</tr>
@@ -75,9 +77,19 @@
 					<th>List</th>
 					<th>Amount</th>
 					<th>Name</th>
+					<th>Details</th>
+					<th>Name</th>
+					<th>Credits Given</th>
+					<th>Credits Remaining</th>
+					<th>Monthly Fee</th>
+					<th>Over Credits Fee</th>
+					<th>Last Month</th>
 					<th>This Month</th>
 					<th>All Time</th>
-					<th>Remove At</th>
+					<th>History</th>
+					<th>Last Month (if same credit and fees)</th>
+					<th>This Month (so far)</th>
+					<th>Make Inactive At</th>
 					<th>Created At</th>
 					<th>Edit</th>
 					<th>Delete</th>
@@ -92,15 +104,29 @@
 									<input type="hidden" name="Company" value="<?php htmlout($company['id']); ?>">
 								</td>
 							</form>
-							<form action="" method="post">
 								<td><?php htmlout($company['NumberOfEmployees']); ?></td>
 								<td>
-									<?php htmlout($company['CompanyName']); ?>
-									<input type="hidden" id="CompanyName" name="CompanyName" 
-									value="<?php htmlout($company['CompanyName']); ?>"> 
+									<?php htmlout($company['CompanyName']); ?> 
 								</td>
+							<?php $goto = "http://$_SERVER[HTTP_HOST]/admin/companycredits/?Company=" . $company['id'];?>
+							<form action="<?php htmlout($goto) ;?>" method="post">
+								<td>
+									<input type="submit" value="Credits">
+									<input type="hidden" name="Company" value="<?php htmlout($company['id']); ?>">
+								</td>
+							</form>								
+								<td><?php htmlout($company['CreditSubscriptionName']); ?></td>
+								<td><?php htmlout($company['CompanyCredits']); ?></td>
+								<td><?php htmlout($company['CompanyCreditsRemaining']); ?></td>
+								<td><?php htmlout($company['CreditSubscriptionMonthlyPrice']); ?></td>
+								<td><?php htmlout($company['OverCreditsFee']); ?></td>
+								<td><?php htmlout($company['PreviousMonthCompanyWideBookingTimeUsed']); ?></td>
 								<td><?php htmlout($company['MonthlyCompanyWideBookingTimeUsed']); ?></td>
 								<td><?php htmlout($company['TotalCompanyWideBookingTimeUsed']); ?></td>
+							<form action="" method="post">
+								<td><input type="submit" name="action" value="Booking History"></td>								
+								<td><?php htmlout($company['BookingCostPrevMonth']); ?></td>
+								<td><?php htmlout($company['BookingCostThisMonth']); ?></td>
 								<?php if($company['DeletionDate'] == null) :?>
 										<td>
 											<p>No Date Set</p>
@@ -120,6 +146,8 @@
 										<input type="submit" name="disabled" value="Delete" disabled>
 									<?php endif; ?>
 								</td>
+								<input type="hidden" id="CompanyName" name="CompanyName" 
+									value="<?php htmlout($company['CompanyName']); ?>">
 								<input type="hidden" name="id" value="<?php htmlout($company['id']); ?>">
 							</form>
 						</tr>

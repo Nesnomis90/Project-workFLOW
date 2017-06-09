@@ -58,6 +58,14 @@
 				<?php endif; ?>
 			</div>
 		</form>
+		<?php if(isset($_SESSION['UserEmailsToBeDisplayed'])) : ?>
+			<form action="" method="post">
+				<div>
+					<label>Get All Visible Emails (<?php htmlout(sizeOf($_SESSION['UserEmailsToBeDisplayed'])); ?>) In List Form To Copy: </label>
+					<input type="submit" name="action" value="Get Emails">
+				</div>
+			</form>
+		<?php endif; ?>
 		<?php if($rowNum>0) :?>
 			<form action="?add" method="post">
 				<div>

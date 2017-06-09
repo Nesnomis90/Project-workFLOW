@@ -67,8 +67,11 @@
 					<input type="submit" name="action" value="Enable Remove">
 				<?php endif; ?>
 			</div>
+		</form>
 		<?php if($rowNum>0) :?>
+		<form action="" method="post">
 			<input type="submit" name="action" value="Add Room Equipment">
+		</form>
 			<table id="roomequipmenttable">
 				<caption>Meeting Room Equipment</caption>
 				<tr>
@@ -116,9 +119,12 @@
 			</table>
 		<?php else : ?>
 			<tr><b>There are no equipment for any meeting rooms registered in the database.</b></tr>
-			<tr><input type="submit" name="action" value="Add Room Equipment"></tr>
+			<tr>
+				<form action="" method="post">
+					<input type="submit" name="action" value="Add Room Equipment">
+				</form>
+			</tr>
 		<?php endif; ?>
-		</form>
 		<p><a href="..">Return to CMS home</a></p>
 	<?php include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/logout.inc.html.php'; ?>
 	</body>

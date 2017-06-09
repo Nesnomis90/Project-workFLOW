@@ -1,15 +1,41 @@
 <?php
-// Define the default date and datetime format we want to use
-// Also the default timezone we use for our datetime functions
-// TO-DO: Change this if we want to display another format
-define('DATETIME_DEFAULT_FORMAT_TO_DISPLAY', 'F jS Y H:i:s');
-define('DATE_DEFAULT_FORMAT_TO_DISPLAY', 'F jS Y');
-define('DATE_DEFAULT_TIMEZONE', 'Europe/Oslo');
+require_once 'variables.inc.php';
 
-// Some time based variables used to validate code, handle events
-define('MINIMUM_BOOKING_TIME_IN_MINUTES', 10);
-define('MINIMUM_TIME_PASSED_AFTER_CREATING_BOOKING_BEFORE_SENDING_EMAIL', 30);
-define('TIME_LEFT_UNTIL_MEETING_STARTS_BEFORE_SENDING_EMAIL', 10);
+// Function to check our set minimum booking time slices to get the next valid end time
+// We assume all possible booking slices are 1/5/10/15/30/60
+// TO-DO: UNTESTED in code
+function getNextValidBookingEndTime($startTimeString){
+	$startTime = stringToDateTime($startTimeString, 'Y-m-d H:i:s');
+	$startTimeDatePart = $startTime->format('Y-m-d');
+	$startTimeHourPart = $startTime->format('H');
+	$startTimeMinutePart = $startTime->format('i');
+	
+	$minimumBookingTime = MINIMUM_BOOKING_TIME_IN_MINUTES;
+	
+	if($startTimeMinutePart+$minimumBookingTime >= 60){
+		if($startTimeHourPart == 23){
+			// Set new day
+			$startTime->modify('+1 day');
+			$startTimeDatePart = $startTime->format('Y-m-d');
+			$endTimeString = $startTimeDatePart . ' 00:00:00'; 
+		} else {
+			// Set new hour
+			$startTime->modify('+1 hour');
+			$startTimeHourPart = $startTime->format('H');
+			$endTimeString = $startTimeDatePart . ' ' . $startTimeHourPart .':00:00';
+		}
+	} else {
+		for($i = 0; $i < 60; ){
+			if($startTimeMinutePart < $i){
+				// Next valid slice found.
+				$endTimeString = $startTimeDatePart . ' ' . $startTimeHourPart . ':' . $i .':00';
+				break; 
+			}
+			$i += $minimumBookingTime;	
+		}		
+	}
+	return $endTimeString;
+}
 
 //Function to get the current datetime
 function getDatetimeNow() {
@@ -30,9 +56,9 @@ function getDateNow() {
 }
 
 // Function to convert string to datetime in MySQL format
-function stringToDateTime($datetimeString){
+function stringToDateTime($datetimeString, $format){
 	date_default_timezone_set(DATE_DEFAULT_TIMEZONE);
-	$d = date_create_from_format('Y-m-d H:i:s', $datetimeString);
+	$d = date_create_from_format($format, $datetimeString);
 	return $d;
 }
 
@@ -299,6 +325,7 @@ function convertDatetimeToFormat($oldDatetimeString, $oldformat, $format){
 	// 'Y-m-d' = 2017-03-03 (MySQL Date)
 	// 'd M Y H:i:s' = 3 March 2017 12:15:33
 	// 'F jS Y H:i' = March 3rd 2017 12:15
+	// 'H:i j F Y' = 12:15 3 March 2017
 	date_default_timezone_set(DATE_DEFAULT_TIMEZONE);
 	
 	if(validateDatetimeWithFormat($oldDatetimeString, $oldformat)){
