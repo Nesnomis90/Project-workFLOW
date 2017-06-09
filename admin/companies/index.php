@@ -1143,28 +1143,19 @@ foreach ($result as $row)
 	if($row['PreviousMonthCompanyWideBookingTimeUsed'] == null){
 		$PrevMonthTimeUsed = 'N/A';
 	} else {
-		$PrevMonthTimeUsed = $row['PreviousMonthCompanyWideBookingTimeUsed'];
-		$prevMonthTimeHour = substr($PrevMonthTimeUsed,0,strpos($PrevMonthTimeUsed,":"));
-		$prevMonthTimeMinute = substr($PrevMonthTimeUsed,strpos($PrevMonthTimeUsed,":")+1, 2);
-		$PrevMonthTimeUsed = $prevMonthTimeHour . 'h' . $prevMonthTimeMinute . 'm';
+		$PrevMonthTimeUsed = convertTimeToHoursAndMinutes($row['PreviousMonthCompanyWideBookingTimeUsed']);
 	}	
 	
 	if($row['MonthlyCompanyWideBookingTimeUsed'] == null){
 		$MonthlyTimeUsed = 'N/A';
 	} else {
-		$MonthlyTimeUsed = $row['MonthlyCompanyWideBookingTimeUsed'];
-		$monthlyTimeHour = substr($MonthlyTimeUsed,0,strpos($MonthlyTimeUsed,":"));
-		$monthlyTimeMinute = substr($MonthlyTimeUsed,strpos($MonthlyTimeUsed,":")+1, 2);
-		$MonthlyTimeUsed = $monthlyTimeHour . 'h' . $monthlyTimeMinute . 'm';
+		$MonthlyTimeUsed = convertTimeToHoursAndMinutes($row['MonthlyCompanyWideBookingTimeUsed']);
 	}
 	
 	if($row['TotalCompanyWideBookingTimeUsed'] == null){
 		$TotalTimeUsed = 'N/A';
 	} else {
-		$TotalTimeUsed = $row['TotalCompanyWideBookingTimeUsed'];
-		$totalTimeHour = substr($TotalTimeUsed,0,strpos($TotalTimeUsed,":"));
-		$totalTimeMinute = substr($TotalTimeUsed,strpos($TotalTimeUsed,":")+1, 2);
-		$TotalTimeUsed = $totalTimeHour . 'h' . $totalTimeMinute . 'm';		
+		$TotalTimeUsed = convertTimeToHoursAndMinutes($row['TotalCompanyWideBookingTimeUsed']);	
 	}
 	
 	// Calculate and display company booking subscription details
@@ -1176,16 +1167,7 @@ foreach ($result as $row)
 		$companyMinuteCredits = 0;
 	}
 		// Format company credits to be displayed
-	if($companyMinuteCredits >= 60){
-		$displayCompanyCreditsMinutes = $companyMinuteCredits;
-		$displayCompanyCreditsHours = floor($displayCompanyCreditsMinutes/60);
-		$displayCompanyCreditsMinutes -= $displayCompanyCreditsHours*60;
-		$displayCompanyCredits = $displayCompanyCreditsHours . "h" . $displayCompanyCreditsMinutes . "m";
-	} elseif($companyMinuteCredits > 0) {
-		$displayCompanyCredits = "0h" . $companyMinuteCredits . "m";
-	} else {
-		$displayCompanyCredits = "None";
-	}
+	$displayCompanyCredits = convertMinutesToHoursAndMinutes($companyMinuteCredits);
 	
 	$monthPrice = $row["CreditSubscriptionMonthlyPrice"];
 	if($monthPrice == NULL OR $monthPrice == ""){
@@ -1285,18 +1267,8 @@ foreach ($result as $row)
 		$companyMinuteCreditsRemaining = $companyMinuteCredits;
 	}	
 	
-
 		// Format company credits remaining to be displayed
-	if($companyMinuteCreditsRemaining >= 60){
-		$displayCompanyCreditsRemainingMinutes = $companyMinuteCreditsRemaining;
-		$displayCompanyCreditsRemainingHours = floor($displayCompanyCreditsRemainingMinutes/60);
-		$displayCompanyCreditsRemainingMinutes -= $displayCompanyCreditsRemainingHours*60;
-		$displayCompanyCreditsRemaining = $displayCompanyCreditsRemainingHours . "h" . $displayCompanyCreditsRemainingMinutes . "m";
-	} elseif($companyMinuteCreditsRemaining > 0) {
-		$displayCompanyCreditsRemaining = "0h" . $companyMinuteCreditsRemaining . "m";
-	} else {
-		$displayCompanyCreditsRemaining = "None";
-	}	
+	$displayCompanyCreditsRemaining = convertMinutesToHoursAndMinutes($companyMinuteCreditsRemaining);	
 	
 	// Display dates
 	$dateCreated = $row['DatetimeCreated'];	
