@@ -232,17 +232,24 @@ function validateUserInputs($FeedbackSessionToUse){
 		$invalidInput = TRUE;				
 	} 
 
-	//TO-DO: If we want to check if a booking is long enough, we do it here e.g. has to be longer than 10 min
-	/*
-	$timeDifferenceStartDate = new DateTime($startDateTime);
-	$timeDifferenceEndDate = new DateTime($endDateTime);
-	$timeDifference = $timeDifferenceStartDate->diff($timeDifferenceEndDate);
-	$timeDifferenceInMinutes = $timeDifference->i;
-	if(($timeDifferenceInMinutes < MINIMUM_BOOKING_TIME_IN_MINUTES) AND !$invalidInput){
-		$_SESSION[$FeedbackSessionToUse] = "A meeting needs to be at least " . MINIMUM_BOOKING_TIME_IN_MINUTES . " minutes long.";
+	// We want to check if a booking is in the correct minute slice e.g. 15 minute increments.
+		// We check both start and end time for online/admin bookings
+	$invalidStartTime = isBookingDateTimeMinutesInvalid($startDateTime);
+	if($invalidStartTime AND !$invalidInput){
+		$_SESSION[$FeedbackSessionToUse] = "Your start time has to be in a " . MINIMUM_BOOKING_TIME_IN_MINUTES . " minutes slice from hh:00.";
 		$invalidInput = TRUE;	
-	}*/
-	
+	}
+	$invalidEndTime = isBookingDateTimeMinutesInvalid($endDateTime);
+	if($invalidEndTime AND !$invalidInput){
+		$_SESSION[$FeedbackSessionToUse] = "Your end time has to be in a " . MINIMUM_BOOKING_TIME_IN_MINUTES . " minutes slice from hh:00.";
+		$invalidInput = TRUE;	
+	}
+	$invalidBookingLength = isBookingTimeDurationInvalid($startDateTime, $endDateTime)
+	if($invalidBookingLength AND !$invalidInput){
+		$_SESSION[$FeedbackSessionToUse] = "Your start time and end time needs to have at least a " . MINIMUM_BOOKING_TIME_IN_MINUTES . " minutes difference.";
+		$invalidInput = TRUE;		
+	}	
+
 	return array($invalidInput, $startDateTime, $endDateTime, $validatedBookingDescription, $validatedDisplayName);
 }
 
@@ -2063,7 +2070,6 @@ if(isset($refreshBookings) AND $refreshBookings) {
 	// TO-DO: Add code that should occur on a refresh
 	unset($refreshBookings);
 }
-
 
 // Display booked meetings history list
 if(!isset($_GET['Meetingroom'])){
