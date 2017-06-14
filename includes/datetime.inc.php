@@ -14,7 +14,18 @@ function getNextValidBookingStartTime(){
 }
 
 function getNextValidBookingEndTime($startTimeString){
-	$startTime = stringToDateTime($startTimeString, 'Y-m-d H:i');
+	echo "<br />";
+	var_dump($startTimeString);
+	echo "<br />";
+	if(validateDatetimeWithFormat($startTimeString,'Y-m-d H:i:s')){
+		$startTime = convertDatetimeToFormat($startTimeString,'Y-m-d H:i:s','Y-m-d H:i');
+		$startTime = stringToDateTime($startTime, 'Y-m-d H:i');
+	} else {
+		$startTime = stringToDateTime($startTimeString, 'Y-m-d H:i');
+	}
+	
+	var_dump($startTime);
+	echo "<br />";
 	$startTimeDatePart = $startTime->format('Y-m-d');
 	$startTimeHourPart = $startTime->format('H');
 	$startTimeMinutePart = $startTime->format('i');
