@@ -244,7 +244,9 @@ function validateUserInputs($FeedbackSessionToUse){
 		$_SESSION[$FeedbackSessionToUse] = "Your end time has to be in a " . MINIMUM_BOOKING_TIME_IN_MINUTES . " minutes slice from hh:00.";
 		$invalidInput = TRUE;	
 	}
-	$invalidBookingLength = isBookingTimeDurationInvalid($startDateTime, $endDateTime)
+	
+	// We want to check if the booking is the correct minimum length
+	$invalidBookingLength = isBookingTimeDurationInvalid($startDateTime, $endDateTime);
 	if($invalidBookingLength AND !$invalidInput){
 		$_SESSION[$FeedbackSessionToUse] = "Your start time and end time needs to have at least a " . MINIMUM_BOOKING_TIME_IN_MINUTES . " minutes difference.";
 		$invalidInput = TRUE;		
@@ -640,8 +642,6 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR
 		$_SESSION['EditBookingDefaultBookingDescriptionForNewUser'] = $original['UserDefaultBookingDescription'];
 	}
 	
-	$_SESSION['EditBookingInfoArray'] = $row;
-	
 	// Changed company
 	if(isset($company)){
 		foreach($company AS $cmp){
@@ -651,6 +651,8 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR
 			}
 		}			
 	}
+	
+	$_SESSION['EditBookingInfoArray'] = $row;	
 	
 		// Edited inputs
 	$bookingID = $row['TheBookingID'];
@@ -663,11 +665,11 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR
 	$startDateTime = $row['StartTime'];
 	$endDateTime = $row['EndTime'];
 	if(!validateDatetimeWithFormat($startDateTime, DATETIME_DEFAULT_FORMAT_TO_DISPLAY)){
-		$startDateTime = convertDatetimeToFormat($startDateTime , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
+		$startDateTime = convertDatetimeToFormat($startDateTime, 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
 	}
 	if(!validateDatetimeWithFormat($endDateTime, DATETIME_DEFAULT_FORMAT_TO_DISPLAY)){
-		$endDateTime = convertDatetimeToFormat($endDateTime , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
-	}		
+		$endDateTime = convertDatetimeToFormat($endDateTime, 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
+	}
 	$displayName = $row['BookedBy'];
 	$description = $row['BookingDescription'];
 	$userInformation = $row['UserLastname'] . ', ' . $row['UserFirstname'] . ' - ' . $row['UserEmail'];
@@ -1166,9 +1168,6 @@ if(isset($_POST['edit']) AND $_POST['edit'] == "Finish Edit")
 			$newMeetingRoomName = $oldMeetingRoomName;
 		}
 
-		// Cancellation Code
-		$cancellationCode = $originalValue['CancellationCode'];
-		
 		// Email information	
 		if($newUser){
 			// Send information to new user about meeting
@@ -1199,16 +1198,11 @@ if(isset($_POST['edit']) AND $_POST['edit'] == "Finish Edit")
 			$emailSubject = "Your meeting has been cancelled by an Admin!";
 			
 			$emailMessage = 
-			"Your booked meeting has been altered and transferred to another user by an Admin!\n" .
+			"Your booked meeting has been removed by an Admin!\n" .
 			"The meeting you booking for: \n" .
 			"Meeting Room: " . $oldMeetingRoomName . ".\n" . 
 			"Start Time: " . $OldStartDate . ".\n" .
-			"End Time: " . $OldEndDate . ".\n\n" .
-			"Has been altered to: \n" .
-			"Meeting Room: " . $newMeetingRoomName . ".\n" . 
-			"Start Time: " . $NewStartDate . ".\n" .
-			"End Time: " . $NewEndDate . ".\n\n" . 
-			"This meeting is no longer registered as yours and as such the old cancellation link no longer works."; // TO-DO: Fix this email message depending on what we want to inform the old user
+			"End Time: " . $OldEndDate . ".\n\n";
 			
 			$email = $originalValue['UserEmail'];
 		} else {
@@ -1533,18 +1527,19 @@ if (	(isset($_POST['action']) AND $_POST['action'] == "Create Booking") OR
 	} else {
 		$selectedMeetingRoomID = '';
 	}
+	
 	if(isset($row['StartTime']) AND $row['StartTime'] != ""){
 		$startDateTime = $row['StartTime'];
 	} else {
-		$startDateTime = getDatetimeNow();
-		$startDateTime = convertDatetimeToFormat($startDateTime , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
+		$validBookingStartTime = getNextValidBookingStartTime();
+		$startDateTime = convertDatetimeToFormat($validBookingStartTime , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
 	}
 	
 	if(isset($row['EndTime']) AND $row['EndTime'] != ""){
 		$endDateTime = $row['EndTime'];
 	} else {
-		$endDateTime = getDatetimeNow();
-		$endDateTime = convertDatetimeToFormat($endDateTime , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
+		$validBookingEndTime = getNextValidBookingEndTime(substr($validBookingStartTime,0,-3));
+		$endDateTime = convertDatetimeToFormat($validBookingEndTime , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
 	}
 	
 	if(isset($row['BookedBy'])){

@@ -4,8 +4,17 @@ require_once 'variables.inc.php';
 // Function to check our set minimum booking time slices to get the next valid end time
 // We assume all possible booking slices are 1/5/10/15/30/60
 // TO-DO: UNTESTED in code
+
+function getNextValidBookingStartTime(){
+	date_default_timezone_set(DATE_DEFAULT_TIMEZONE);
+	$datetimeNow = new Datetime();
+	$timeNow = $datetimeNow->format('Y-m-d H:i');
+	
+	return getNextValidBookingEndTime($timeNow);
+}
+
 function getNextValidBookingEndTime($startTimeString){
-	$startTime = stringToDateTime($startTimeString, 'Y-m-d H:i:s');
+	$startTime = stringToDateTime($startTimeString, 'Y-m-d H:i');
 	$startTimeDatePart = $startTime->format('Y-m-d');
 	$startTimeHourPart = $startTime->format('H');
 	$startTimeMinutePart = $startTime->format('i');
