@@ -58,6 +58,9 @@ function convertTwoDateTimesToTimeDifferenceInMinutes($startDateTime,$endDateTim
 	return $timeDifference;
 }
 
+// Two datetimes to difference in months
+// TO-DO: This might need a change. It does not properly deal with all dates
+// e.g. 31 January 2011 to 28 February 2011 gives 0 months, not 1.
 function convertTwoDateTimesToTimeDifferenceInMonths($startDateTime,$endDateTime){
 	$timeDifferenceStartDate = new DateTime($startDateTime);
 	$timeDifferenceCompletionDate = new DateTime($endDateTime);

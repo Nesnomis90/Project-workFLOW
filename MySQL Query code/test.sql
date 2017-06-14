@@ -2,6 +2,25 @@ USE test;
 SET NAMES utf8;
 USE meetingflow;
 
+SELECT  	m.`meetingRoomID`	AS TheMeetingRoomID, 
+			m.`name`			AS MeetingRoomName, 
+			m.`capacity`		AS MeetingRoomCapacity, 
+			m.`description`		AS MeetingRoomDescription, 
+			m.`location`		AS MeetingRoomLocation,
+			COUNT(re.`amount`)	AS MeetingRoomEquipmentAmount,
+            (
+				SELECT 	COUNT(b.`bookingID`)
+				FROM	`booking` b
+				WHERE  	b.`meetingRoomID` = TheMeetingRoomID
+                AND 	b.`endDateTime` > current_timestamp
+                AND 	b.`dateTimeCancelled` IS NULL
+                AND 	b.`actualEndDateTime` IS NULL
+			)					AS MeetingRoomActiveBookings
+FROM 		`meetingroom` m
+LEFT JOIN 	`roomequipment` re
+ON 			re.`meetingRoomID` = m.`meetingRoomID`			
+GROUP BY 	m.`meetingRoomID`;
+
 SELECT IF(
 			DATE(`endDate`) = DATE_SUB(`startDate`, INTERVAL -1 -1 MONTH), 
 			NULL, 
