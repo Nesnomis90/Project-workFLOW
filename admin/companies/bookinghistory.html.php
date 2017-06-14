@@ -9,18 +9,35 @@
 	</head>
 	<body>
 		<h1>Booking History</h1>
+		<div>
+			<form action="" method="post">
+				<input type="submit" name="history" value="Return To Companies">
+			</form>
+		</div>
 		<form action="" method="post">
 			<div>
 				<?php if(isset($PreviousPeriod) AND $PreviousPeriod) : ?>
-					<input type="submit" name="action" value="Previous Period">
+					<input type="submit" name="history" value="Previous Period">
 				<?php else : ?>
 					<input type="submit" name="disabled" value="Previous Period" disabled>
 				<?php endif; ?>
 				<?php if(isset($NextPeriod) AND $NextPeriod) : ?>
-					<input type="submit" name="action" value="Next Period">
+					<input type="submit" name="history" value="Next Period">
 				<?php else : ?>
 					<input type="submit" name="disabled" value="Next Period" disabled>
 				<?php endif; ?>
+			</div>
+			<div>
+				<?php if(isset($PreviousPeriod) AND $PreviousPeriod) : ?>
+					<input type="submit" name="history" value="First Period">
+				<?php else : ?>
+					<input type="submit" name="disabled" value="First Period" disabled>
+				<?php endif; ?>
+				<?php if(isset($NextPeriod) AND $NextPeriod) : ?>
+					<input type="submit" name="history" value="Last Period">
+				<?php else : ?>
+					<input type="submit" name="disabled" value="Last Period" disabled>
+				<?php endif; ?>				
 			</div>
 		</form>
 			<h2>For the company: <?php htmlout($CompanyName); ?></h2>
@@ -39,7 +56,6 @@
 			<?php else : ?>
 				<b>There were no bookings completed this period.</b>
 			<?php endif; ?>
-		
 		<p><a href="..">Return to CMS home</a></p>
 	<?php include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/logout.inc.html.php'; ?>
 	</body>

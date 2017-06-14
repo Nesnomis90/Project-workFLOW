@@ -5,7 +5,7 @@
 function convertTimeToHoursAndMinutes($time){
 	$timeHour = substr($time,0,strpos($time,":"));
 	$timeMinute = substr($time,strpos($time,":")+1, 2);
-	return = $timeHour . 'h' . $timeMinute . 'm';	
+	return $timeHour . 'h' . $timeMinute . 'm';	
 }
 
 // Integer minute input to string output
@@ -54,6 +54,21 @@ function convertTwoDateTimesToTimeDifferenceInMinutes($startDateTime,$endDateTim
 	$timeDifferenceInDays = $timeDifference->d;
 	
 	$timeDifference = $timeDifferenceInDays*3600 + $timeDifferenceInHours*60 + $timeDifferenceInMinutes;
+
+	return $timeDifference;
+}
+
+// Two datetimes to difference in months
+// TO-DO: This might need a change. It does not properly deal with all dates
+// e.g. 31 January 2011 to 28 February 2011 gives 0 months, not 1.
+function convertTwoDateTimesToTimeDifferenceInMonths($startDateTime,$endDateTime){
+	$timeDifferenceStartDate = new DateTime($startDateTime);
+	$timeDifferenceCompletionDate = new DateTime($endDateTime);
+	$timeDifference = $timeDifferenceStartDate->diff($timeDifferenceCompletionDate);
+	$timeDifferenceInYears = $timeDifference->y;
+	$timeDifferenceInMonths = $timeDifference->m;
+	
+	$timeDifference = $timeDifferenceInYears*12 + $timeDifferenceInMonths;
 
 	return $timeDifference;
 }

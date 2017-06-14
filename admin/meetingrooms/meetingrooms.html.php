@@ -54,6 +54,11 @@
 			<div>
 				<?php if(isset($_SESSION['meetingroomsEnableDelete']) AND $_SESSION['meetingroomsEnableDelete']) : ?>
 					<input type="submit" name="action" value="Disable Delete">
+					<?php if(isset($_SESSION['meetingroomsEnableDeleteUsedMeetingRoom']) AND $_SESSION['meetingroomsEnableDeleteUsedMeetingRoom']) : ?>
+						<input type="submit" name="action" value="Disable Delete Used Meeting Room">
+					<?php else : ?>
+						<input type="submit" name="action" value="Enable Delete Used Meeting Room">
+					<?php endif; ?>
 				<?php else : ?>
 					<input type="submit" name="action" value="Enable Delete">
 				<?php endif; ?>
@@ -69,12 +74,17 @@
 				<caption>Current Meeting Rooms</caption>
 				<tr>
 					<th colspan="2">Equipment In Room</th>
+					<th colspan="4">Booking Information</th>
 					<th colspan="4">Meeting Room</th>
 					<th colspan="2">Alter Room</th>
 				</tr>
 				<tr>
 					<th>List</th>
 					<th>Amount</th>
+					<th>List</th>
+					<th>Active</th>
+					<th>Completed</th>
+					<th>Cancelled</th>
 					<th>Name</th>
 					<th>Capacity</th>
 					<th>Description</th>
@@ -87,28 +97,42 @@
 						<?php $goto = "http://$_SERVER[HTTP_HOST]/admin/roomequipment/?Meetingroom=" . $room['MeetingRoomID'];?>
 						<form action="<?php htmlout($goto) ;?>" method="post">
 							<td><input type="submit" value="Equipment"></td>
-							<td><?php htmlout($room['MeetingRoomEquipmentAmount']); ?></td>
 						</form>
-						<form action="" method="post">
-							<td>
-								<?php htmlout($room['MeetingRoomName']); ?>
-								<input type="hidden" name="MeetingRoomName" id="MeetingRoomName"
-								value="<?php htmlout($room['MeetingRoomName']); ?>">
-							</td>
+							<td><?php htmlout($room['MeetingRoomEquipmentAmount']); ?></td>
+						<?php $goto = "http://$_SERVER[HTTP_HOST]/admin/bookings/?Meetingroom=" . $room['MeetingRoomID'];?>
+						<form action="<?php htmlout($goto) ;?>" method="post">
+							<td><input type="submit" value="Bookings"></td>
+						</form>	
+							<td><?php htmlout($room['MeetingRoomActiveBookings']); ?></td>
+							<td><?php htmlout($room['MeetingRoomCompletedBookings']); ?></td>
+							<td><?php htmlout($room['MeetingRoomCancelledBookings']); ?></td>
+							<td><?php htmlout($room['MeetingRoomName']); ?></td>				
 							<td><?php htmlout($room['MeetingRoomCapacity']); ?></td>
 							<td><?php htmlout($room['MeetingRoomDescription']); ?></td>
 							<td><?php htmlout($room['MeetingRoomLocation']); ?></td>
+						<form action="" method="post">							
 							<td><input type="submit" name="action" value="Edit"></td>
 							<td>
-								<?php if(isset($_SESSION['meetingroomsEnableDelete']) AND $_SESSION['meetingroomsEnableDelete']) : ?>
+								<?php if(isset($_SESSION['meetingroomsEnableDelete']) AND $_SESSION['meetingroomsEnableDelete'] AND
+										$room['MeetingRoomActiveBookings'] == 0) : ?>
 									<input type="submit" name="action" value="Delete">
+								<?php elseif(isset($_SESSION['meetingroomsEnableDelete']) AND $_SESSION['meetingroomsEnableDelete'] AND
+										$room['MeetingRoomActiveBookings'] > 0) : ?>
+									<?php if(isset($_SESSION['meetingroomsEnableDeleteUsedMeetingRoom']) AND $_SESSION['meetingroomsEnableDeleteUsedMeetingRoom']) : ?>
+										<input type="submit" name="action" value="Delete">
+									<?php else : ?>
+										<b>Not Enabled</b>
+										<input type="submit" name="disabled" value="Delete" disabled>
+									<?php endif; ?>									
 								<?php else : ?>
 									<input type="submit" name="disabled" value="Delete" disabled>
 								<?php endif; ?>
 							</td>
+							<input type="hidden" name="MeetingRoomName" id="MeetingRoomName"
+							value="<?php htmlout($room['MeetingRoomName']); ?>">							
 							<input type="hidden" name="MeetingRoomID" value="<?php echo $room['MeetingRoomID']; ?>">
-						</tr>
-					</form>
+						</form>							
+					</tr>
 				<?php endforeach; ?>
 			</table>
 		<?php else : ?>

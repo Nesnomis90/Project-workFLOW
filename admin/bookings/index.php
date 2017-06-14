@@ -232,17 +232,26 @@ function validateUserInputs($FeedbackSessionToUse){
 		$invalidInput = TRUE;				
 	} 
 
-	//TO-DO: If we want to check if a booking is long enough, we do it here e.g. has to be longer than 10 min
-	/*
-	$timeDifferenceStartDate = new DateTime($startDateTime);
-	$timeDifferenceEndDate = new DateTime($endDateTime);
-	$timeDifference = $timeDifferenceStartDate->diff($timeDifferenceEndDate);
-	$timeDifferenceInMinutes = $timeDifference->i;
-	if(($timeDifferenceInMinutes < MINIMUM_BOOKING_TIME_IN_MINUTES) AND !$invalidInput){
-		$_SESSION[$FeedbackSessionToUse] = "A meeting needs to be at least " . MINIMUM_BOOKING_TIME_IN_MINUTES . " minutes long.";
+	// We want to check if a booking is in the correct minute slice e.g. 15 minute increments.
+		// We check both start and end time for online/admin bookings
+	$invalidStartTime = isBookingDateTimeMinutesInvalid($startDateTime);
+	if($invalidStartTime AND !$invalidInput){
+		$_SESSION[$FeedbackSessionToUse] = "Your start time has to be in a " . MINIMUM_BOOKING_TIME_IN_MINUTES . " minutes slice from hh:00.";
 		$invalidInput = TRUE;	
-	}*/
+	}
+	$invalidEndTime = isBookingDateTimeMinutesInvalid($endDateTime);
+	if($invalidEndTime AND !$invalidInput){
+		$_SESSION[$FeedbackSessionToUse] = "Your end time has to be in a " . MINIMUM_BOOKING_TIME_IN_MINUTES . " minutes slice from hh:00.";
+		$invalidInput = TRUE;	
+	}
 	
+	// We want to check if the booking is the correct minimum length
+	$invalidBookingLength = isBookingTimeDurationInvalid($startDateTime, $endDateTime);
+	if($invalidBookingLength AND !$invalidInput){
+		$_SESSION[$FeedbackSessionToUse] = "Your start time and end time needs to have at least a " . MINIMUM_BOOKING_TIME_IN_MINUTES . " minutes difference.";
+		$invalidInput = TRUE;		
+	}	
+
 	return array($invalidInput, $startDateTime, $endDateTime, $validatedBookingDescription, $validatedDisplayName);
 }
 
@@ -633,8 +642,6 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR
 		$_SESSION['EditBookingDefaultBookingDescriptionForNewUser'] = $original['UserDefaultBookingDescription'];
 	}
 	
-	$_SESSION['EditBookingInfoArray'] = $row;
-	
 	// Changed company
 	if(isset($company)){
 		foreach($company AS $cmp){
@@ -644,6 +651,8 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR
 			}
 		}			
 	}
+	
+	$_SESSION['EditBookingInfoArray'] = $row;	
 	
 		// Edited inputs
 	$bookingID = $row['TheBookingID'];
@@ -656,11 +665,11 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR
 	$startDateTime = $row['StartTime'];
 	$endDateTime = $row['EndTime'];
 	if(!validateDatetimeWithFormat($startDateTime, DATETIME_DEFAULT_FORMAT_TO_DISPLAY)){
-		$startDateTime = convertDatetimeToFormat($startDateTime , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
+		$startDateTime = convertDatetimeToFormat($startDateTime, 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
 	}
 	if(!validateDatetimeWithFormat($endDateTime, DATETIME_DEFAULT_FORMAT_TO_DISPLAY)){
-		$endDateTime = convertDatetimeToFormat($endDateTime , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
-	}		
+		$endDateTime = convertDatetimeToFormat($endDateTime, 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
+	}
 	$displayName = $row['BookedBy'];
 	$description = $row['BookingDescription'];
 	$userInformation = $row['UserLastname'] . ', ' . $row['UserFirstname'] . ' - ' . $row['UserEmail'];
@@ -782,6 +791,42 @@ if((isset($_POST['edit']) AND $_POST['edit'] == "Change User") OR
 	$_SESSION['EditBookingChangeUser'] = TRUE;
 	header('Location: .');
 	exit();
+}
+
+// Admin wants to increase the start timer by minimum allowed time (e.g. 15 min)
+if(isset($_POST['edit']) AND $_POST['edit'] == "Increase Start By Minimum"){
+	
+	// Let's remember what was selected if we do any changes before clicking "Select This User"
+	rememberEditBookingInputs();
+	
+	$startTime = $_SESSION['EditBookingInfoArray']['StartTime'];
+	$correctStartTime = correctDatetimeFormat($startTime);
+	$_SESSION['EditBookingInfoArray']['StartTime'] = convertDatetimeToFormat(getNextValidBookingEndTime($correctStartTime), 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
+	
+	if($_SESSION['EditBookingInfoArray']['StartTime'] == $_SESSION['EditBookingInfoArray']['EndTime']){
+		$endTime = $_SESSION['EditBookingInfoArray']['EndTime'];
+		$correctEndTime = correctDatetimeFormat($endTime);
+		$_SESSION['EditBookingInfoArray']['EndTime'] = convertDatetimeToFormat(getNextValidBookingEndTime($correctEndTime), 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
+	}
+	
+	$_SESSION['refreshEditBooking'] = TRUE;
+	header('Location: .');
+	exit();	
+}
+
+// Admin wants to increase the end timer by minimum allowed time (e.g. 15 min)
+if(isset($_POST['edit']) AND $_POST['edit'] == "Increase End By Minimum"){
+	
+	// Let's remember what was selected if we do any changes before clicking "Select This User"
+	rememberEditBookingInputs();
+	
+$endTime = $_SESSION['EditBookingInfoArray']['EndTime'];
+		$correctEndTime = correctDatetimeFormat($endTime);
+		$_SESSION['EditBookingInfoArray']['EndTime'] = convertDatetimeToFormat(getNextValidBookingEndTime($correctEndTime), 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
+
+	$_SESSION['refreshEditBooking'] = TRUE;
+	header('Location: .');
+	exit();	
 }
 
 // Admin confirms what user he wants the booking to be for.
@@ -1159,9 +1204,6 @@ if(isset($_POST['edit']) AND $_POST['edit'] == "Finish Edit")
 			$newMeetingRoomName = $oldMeetingRoomName;
 		}
 
-		// Cancellation Code
-		$cancellationCode = $originalValue['CancellationCode'];
-		
 		// Email information	
 		if($newUser){
 			// Send information to new user about meeting
@@ -1192,16 +1234,11 @@ if(isset($_POST['edit']) AND $_POST['edit'] == "Finish Edit")
 			$emailSubject = "Your meeting has been cancelled by an Admin!";
 			
 			$emailMessage = 
-			"Your booked meeting has been altered and transferred to another user by an Admin!\n" .
+			"Your booked meeting has been removed by an Admin!\n" .
 			"The meeting you booking for: \n" .
 			"Meeting Room: " . $oldMeetingRoomName . ".\n" . 
 			"Start Time: " . $OldStartDate . ".\n" .
-			"End Time: " . $OldEndDate . ".\n\n" .
-			"Has been altered to: \n" .
-			"Meeting Room: " . $newMeetingRoomName . ".\n" . 
-			"Start Time: " . $NewStartDate . ".\n" .
-			"End Time: " . $NewEndDate . ".\n\n" . 
-			"This meeting is no longer registered as yours and as such the old cancellation link no longer works."; // TO-DO: Fix this email message depending on what we want to inform the old user
+			"End Time: " . $OldEndDate . ".\n\n";
 			
 			$email = $originalValue['UserEmail'];
 		} else {
@@ -1526,18 +1563,19 @@ if (	(isset($_POST['action']) AND $_POST['action'] == "Create Booking") OR
 	} else {
 		$selectedMeetingRoomID = '';
 	}
+	
 	if(isset($row['StartTime']) AND $row['StartTime'] != ""){
 		$startDateTime = $row['StartTime'];
 	} else {
-		$startDateTime = getDatetimeNow();
-		$startDateTime = convertDatetimeToFormat($startDateTime , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
+		$validBookingStartTime = getNextValidBookingStartTime();
+		$startDateTime = convertDatetimeToFormat($validBookingStartTime , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
 	}
 	
 	if(isset($row['EndTime']) AND $row['EndTime'] != ""){
 		$endDateTime = $row['EndTime'];
 	} else {
-		$endDateTime = getDatetimeNow();
-		$endDateTime = convertDatetimeToFormat($endDateTime , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
+		$validBookingEndTime = getNextValidBookingEndTime(substr($validBookingStartTime,0,-3));
+		$endDateTime = convertDatetimeToFormat($validBookingEndTime , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
 	}
 	
 	if(isset($row['BookedBy'])){
@@ -1560,6 +1598,43 @@ if (	(isset($_POST['action']) AND $_POST['action'] == "Create Booking") OR
 	
 	// Change form
 	include 'addbooking.html.php';
+	exit();	
+}
+
+// Admin wants to increase the start timer by minimum allowed time (e.g. 15 min)
+if(isset($_POST['add']) AND $_POST['add'] == "Increase Start By Minimum"){
+	
+	// Let's remember what was selected if we do any changes before clicking "Select This User"
+	rememberAddBookingInputs();
+	
+	$startTime = $_SESSION['AddBookingInfoArray']['StartTime'];
+	$correctStartTime = correctDatetimeFormat($startTime);
+	$_SESSION['AddBookingInfoArray']['StartTime'] = convertDatetimeToFormat(getNextValidBookingEndTime($correctStartTime), 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
+	
+	if($_SESSION['AddBookingInfoArray']['StartTime'] == $_SESSION['AddBookingInfoArray']['EndTime']){
+		$endTime = $_SESSION['AddBookingInfoArray']['EndTime'];
+		$correctEndTime = correctDatetimeFormat($endTime);
+		$_SESSION['AddBookingInfoArray']['EndTime'] = convertDatetimeToFormat(getNextValidBookingEndTime($correctEndTime), 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
+	}
+	
+	$_SESSION['refreshAddBooking'] = TRUE;
+	header('Location: .');
+	exit();	
+}
+
+// Admin wants to increase the end timer by minimum allowed time (e.g. 15 min)
+if(isset($_POST['add']) AND $_POST['add'] == "Increase End By Minimum"){
+	
+	// Let's remember what was selected if we do any changes before clicking "Select This User"
+	rememberAddBookingInputs();
+	
+	$endTime = $_SESSION['AddBookingInfoArray']['EndTime'];
+	$correctEndTime = correctDatetimeFormat($endTime);
+	$_SESSION['AddBookingInfoArray']['EndTime'] = convertDatetimeToFormat(getNextValidBookingEndTime($correctEndTime), 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
+	
+
+	$_SESSION['refreshAddBooking'] = TRUE;
+	header('Location: .');
 	exit();	
 }
 
@@ -2064,56 +2139,101 @@ if(isset($refreshBookings) AND $refreshBookings) {
 	unset($refreshBookings);
 }
 
-
 // Display booked meetings history list
-try
-{
-	include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
-	$pdo = connect_to_db();
-	$sql = "SELECT 		b.`bookingID`,
-						b.`companyID`,
-						m.`name` 										AS BookedRoomName, 
-						b.startDateTime 								AS StartTime, 
-						b.endDateTime									AS EndTime, 
-						b.displayName 									AS BookedBy,
-						(	
-							SELECT `name` 
-							FROM `company` 
-							WHERE `companyID` = b.`companyID`
-						)												AS BookedForCompany,
-						u.firstName, 
-						u.lastName, 
-						u.email, 
-						GROUP_CONCAT(c.`name` separator ', ') 			AS WorksForCompany, 
-						b.description 									AS BookingDescription, 
-						b.dateTimeCreated 								AS BookingWasCreatedOn, 
-						b.actualEndDateTime								AS BookingWasCompletedOn, 
-						b.dateTimeCancelled								AS BookingWasCancelledOn 
-			FROM 		`booking` b 
-			LEFT JOIN 	`meetingroom` m 
-			ON 			b.meetingRoomID = m.meetingRoomID 
-			LEFT JOIN 	`user` u 
-			ON 			u.userID = b.userID 
-			LEFT JOIN 	`employee` e 
-			ON 			e.UserID = u.userID 
-			LEFT JOIN 	`company` c 
-			ON 			c.CompanyID = e.CompanyID
-			WHERE		c.`isActive` = 1
-			GROUP BY 	b.bookingID
-			ORDER BY 	b.bookingID
-			DESC";
-	$result = $pdo->query($sql);
-	$rowNum = $result->rowCount();
+if(!isset($_GET['Meetingroom'])){
+	try
+	{
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+		$pdo = connect_to_db();
+		$sql = "SELECT 		b.`bookingID`,
+							b.`companyID`,
+							m.`name` 										AS BookedRoomName, 
+							b.startDateTime 								AS StartTime, 
+							b.endDateTime									AS EndTime, 
+							b.displayName 									AS BookedBy,
+							c.`name` 										AS BookedForCompany,
+							u.firstName, 
+							u.lastName, 
+							u.email, 
+							GROUP_CONCAT(c.`name` separator ', ') 			AS WorksForCompany, 
+							b.description 									AS BookingDescription, 
+							b.dateTimeCreated 								AS BookingWasCreatedOn, 
+							b.actualEndDateTime								AS BookingWasCompletedOn, 
+							b.dateTimeCancelled								AS BookingWasCancelledOn 
+				FROM 		`booking` b 
+				LEFT JOIN 	`meetingroom` m 
+				ON 			b.meetingRoomID = m.meetingRoomID 
+				LEFT JOIN 	`user` u 
+				ON 			u.userID = b.userID 
+				LEFT JOIN 	`employee` e 
+				ON 			e.UserID = u.userID 
+				LEFT JOIN 	`company` c 
+				ON 			c.CompanyID = e.CompanyID
+				WHERE		c.`isActive` = 1
+				GROUP BY 	b.bookingID
+				ORDER BY 	b.bookingID
+				DESC";
+		$result = $pdo->query($sql);
 
-	//Close the connection
-	$pdo = null;
-}
-catch (PDOException $e)
-{
-	$error = 'Error fetching booking information from the database: ' . $e->getMessage();
-	include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
-	$pdo = null;
-	exit();
+		//Close the connection
+		$pdo = null;
+	}
+	catch (PDOException $e)
+	{
+		$error = 'Error fetching booking information from the database: ' . $e->getMessage();
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+		$pdo = null;
+		exit();
+	}
+} else {
+	try
+	{
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+		$pdo = connect_to_db();
+		$sql = "SELECT 		b.`bookingID`,
+							b.`companyID`,
+							m.`name` 										AS BookedRoomName, 
+							b.startDateTime 								AS StartTime, 
+							b.endDateTime									AS EndTime, 
+							b.displayName 									AS BookedBy,
+							c.`name`										AS BookedForCompany,
+							u.firstName, 
+							u.lastName, 
+							u.email, 
+							GROUP_CONCAT(c.`name` separator ', ') 			AS WorksForCompany, 
+							b.description 									AS BookingDescription, 
+							b.dateTimeCreated 								AS BookingWasCreatedOn, 
+							b.actualEndDateTime								AS BookingWasCompletedOn, 
+							b.dateTimeCancelled								AS BookingWasCancelledOn 
+				FROM 		`booking` b 
+				LEFT JOIN 	`meetingroom` m 
+				ON 			b.meetingRoomID = m.meetingRoomID 
+				LEFT JOIN 	`user` u 
+				ON 			u.userID = b.userID 
+				LEFT JOIN 	`employee` e 
+				ON 			e.UserID = u.userID 
+				LEFT JOIN 	`company` c 
+				ON 			c.CompanyID = e.CompanyID
+				WHERE		c.`isActive` = 1
+				AND			b.`meetingRoomID` = :MeetingRoomID 
+				GROUP BY 	b.bookingID
+				ORDER BY 	b.bookingID
+				DESC";	
+		$s = $pdo->prepare($sql);
+		$s->bindValue(':MeetingRoomID', $_GET['Meetingroom']);
+		$s->execute();
+		$result = $s->fetchAll();
+
+		//Close the connection
+		$pdo = null;
+	}
+	catch (PDOException $e)
+	{
+		$error = 'Error fetching booking information from the database: ' . $e->getMessage();
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+		$pdo = null;
+		exit();
+	}
 }
 
 foreach ($result as $row)
@@ -2176,6 +2296,7 @@ foreach ($result as $row)
 	}
 	
 	$roomName = $row['BookedRoomName'];
+	$displayRoomNameForTitle = $roomName;
 	$firstname = $row['firstName'];
 	$lastname = $row['lastName'];
 	$email = $row['email'];
@@ -2342,7 +2463,9 @@ foreach ($result as $row)
 						);
 	}
 }
-
+if(isset($displayRoomNameForTitle) AND ($displayRoomNameForTitle == NULL OR $displayRoomNameForTitle == "N/A - Deleted")){
+	unset($displayRoomNameForTitle);
+}
 // BOOKING OVERVIEW CODE SNIPPET END //
 var_dump($_SESSION); // TO-DO: remove after testing is done
 // Create the booking information table in HTML

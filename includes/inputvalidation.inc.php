@@ -263,22 +263,36 @@ function validateDateTimeString($oldString){
 	}	
 }
 
-// Function to check if the submitted end time has a valid minute slice
+// Function to check if the submitted time has a valid minute slice
 // e.g. with 15 minute booking slices it will be 00, 15, 30 or 45.
 // Returns TRUE on invalid, FALSE on valid
-function isBookingEndTimeInvalid($endTimeString){
-	$endTime = stringToDateTime($endTimeString, 'Y-m-d H:i:s');
-	$endTimeMinutePart = $endTime->format('i');
+function isBookingDateTimeMinutesInvalid($timeString){
+	$time = stringToDateTime($timeString, 'Y-m-d H:i:s');
+	$timeMinutePart = $time->format('i');
 	
 	$minimumBookingTime = MINIMUM_BOOKING_TIME_IN_MINUTES;
 	
-	for($i = 0; $i <= $endTimeMinutePart; ){
-		if($endTimeMinutePart == $i){
+	for($i = 0; $i <= $timeMinutePart; ){
+		if($timeMinutePart == $i){
 			return FALSE;
 		}
 		$i += $minimumBookingTime;	
 	}		
 	
 	return TRUE;
+}
+
+// Function to check if the two submitted times are a valid length apart
+// Returns TRUE on invalid, FALSE on valid
+function isBookingTimeDurationInvalid($startDateTime, $endDateTime){
+	$differenceInMinutes = convertTwoDateTimesToTimeDifferenceInMinutes($startDateTime, $endDateTime);
+	
+	$minimumBookingTime = MINIMUM_BOOKING_TIME_IN_MINUTES;
+	
+	if($differenceInMinutes < $minimumBookingTime){
+		return TRUE;
+	} else {
+		return FALSE;
+	}
 }
 ?>

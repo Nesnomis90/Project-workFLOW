@@ -187,12 +187,23 @@ if (isset($_POST['action']) AND $_POST['action'] == "Enable Delete"){
 // If admin wants to be disable booking deletion
 if (isset($_POST['action']) AND $_POST['action'] == "Disable Delete"){
 	unset($_SESSION['meetingroomsEnableDelete']);
+	unset($_SESSION['meetingroomsEnableDeleteUsedMeetingRoom']);
+	$refreshMeetingRooms = TRUE;
+}
+
+// If admin wants to be able to delete a meeting room that is currently being used in a booking
+if (isset($_POST['action']) AND $_POST['action'] == "Enable Delete Used Meeting Room"){
+	$_SESSION['meetingroomsEnableDeleteUsedMeetingRoom'] = TRUE;
+	$refreshMeetingRooms = TRUE;
+}
+
+// If admin wants to be disable used meeting room delete
+if (isset($_POST['action']) AND $_POST['action'] == "Disable Delete Used Meeting Room"){
+	unset($_SESSION['meetingroomsEnableDeleteUsedMeetingRoom']);
 	$refreshMeetingRooms = TRUE;
 }
 
 // If admin wants to remove a meeting room from the database
-// TO-DO: ADD A CONFIRMATION BEFORE ACTUALLY DOING THE DELETION!
-// MAYBE BY TYPING ADMIN PASSWORD AGAIN?
 if (isset($_POST['action']) and $_POST['action'] == 'Delete')
 {
 	// Delete selected meeting room from database
@@ -643,7 +654,29 @@ try
 						m.`capacity`		AS MeetingRoomCapacity, 
 						m.`description`		AS MeetingRoomDescription, 
 						m.`location`		AS MeetingRoomLocation,
-						COUNT(re.`amount`)	AS MeetingRoomEquipmentAmount
+						COUNT(re.`amount`)	AS MeetingRoomEquipmentAmount,
+						(
+							SELECT 	COUNT(b.`bookingID`)
+							FROM	`booking` b
+							WHERE  	b.`meetingRoomID` = TheMeetingRoomID
+							AND 	b.`endDateTime` > current_timestamp
+							AND 	b.`dateTimeCancelled` IS NULL
+							AND 	b.`actualEndDateTime` IS NULL
+						)					AS MeetingRoomActiveBookings,
+						(
+							SELECT 	COUNT(b.`bookingID`)
+							FROM	`booking` b
+							WHERE  	b.`meetingRoomID` = TheMeetingRoomID
+							AND 	b.`actualEndDateTime` < current_timestamp
+							AND 	b.`dateTimeCancelled` IS NULL
+						)					AS MeetingRoomCompletedBookings,
+						(
+							SELECT 	COUNT(b.`bookingID`)
+							FROM	`booking` b
+							WHERE  	b.`meetingRoomID` = TheMeetingRoomID
+							AND 	b.`dateTimeCancelled` < current_timestamp
+							AND 	b.`actualEndDateTime` IS NULL
+						)					AS MeetingRoomCancelledBookings						
 			FROM 		`meetingroom` m
 			LEFT JOIN 	`roomequipment` re
 			ON 			re.`meetingRoomID` = m.`meetingRoomID`			
@@ -669,7 +702,10 @@ foreach ($result as $row)
 							'MeetingRoomCapacity' => $row['MeetingRoomCapacity'],
 							'MeetingRoomDescription' => $row['MeetingRoomDescription'],
 							'MeetingRoomLocation' => $row['MeetingRoomLocation'],
-							'MeetingRoomEquipmentAmount' => $row['MeetingRoomEquipmentAmount']
+							'MeetingRoomEquipmentAmount' => $row['MeetingRoomEquipmentAmount'],
+							'MeetingRoomActiveBookings' => $row['MeetingRoomActiveBookings'],
+							'MeetingRoomCompletedBookings' => $row['MeetingRoomCompletedBookings'],
+							'MeetingRoomCancelledBookings' => $row['MeetingRoomCancelledBookings']
 					);
 }
 

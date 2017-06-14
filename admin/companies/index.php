@@ -12,6 +12,13 @@ if (!isUserAdmin()){
 	exit();
 }
 
+// Function to clear sessions used to remember values when displaying booking history
+function clearBookingHistorySessions(){
+	unset($_SESSION['BookingHistoryIntervalNumber']);
+	unset($_SESSION['BookingHistoryCompanyInfo']);
+	unset($_SESSION['BookingHistoryFirstPeriodIntervalNumber']);
+}
+
 // Function to clear sessions used to remember user inputs on refreshing the add company form
 function clearAddCompanySessions(){
 	unset($_SESSION['AddCompanyCompanyName']);
@@ -148,7 +155,7 @@ return array($invalidInput, $validatedCompanyName, $validatedCompanyDateToRemove
 }
 
 // If admin wants to see the booking history of the period after the currently shown one
-if (isset($_POST['action']) AND $_POST['action'] == "Next Period"){
+if (isset($_POST['history']) AND $_POST['history'] == "Next Period"){
 	
 	if(isset($_SESSION['BookingHistoryIntervalNumber'])){
 		$intervalNumber = $_SESSION['BookingHistoryIntervalNumber'] - 1;
@@ -278,13 +285,21 @@ if (isset($_POST['action']) AND $_POST['action'] == "Next Period"){
 }
 
 // If admin wants to see the booking history of the period before the currently shown one
-if (isset($_POST['action']) AND $_POST['action'] == "Previous Period"){
-	if(isset($_SESSION['BookingHistoryIntervalNumber'])){
-		$intervalNumber = $_SESSION['BookingHistoryIntervalNumber'] + 1;
-	} else {
-		$intervalNumber = 1;
+if (	(isset($_POST['history']) AND $_POST['history'] == "Previous Period") OR 
+		(isset($_POST['history']) AND $_POST['history'] == "First Period")){
+	
+	// Set correct period based on what user clicked.
+	if(isset($_POST['history']) AND $_POST['history'] == "Previous Period"){
+		if(isset($_SESSION['BookingHistoryIntervalNumber'])){
+			$intervalNumber = $_SESSION['BookingHistoryIntervalNumber'] + 1;
+		} else {
+			$intervalNumber = 1;
+		}
+		$_SESSION['BookingHistoryIntervalNumber'] = $intervalNumber;		
+	} elseif(isset($_POST['history']) AND $_POST['history'] == "First Period"){
+		$_SESSION['BookingHistoryIntervalNumber'] = $_SESSION['BookingHistoryFirstPeriodIntervalNumber'];
+		$intervalNumber = $_SESSION['BookingHistoryIntervalNumber'];
 	}
-	$_SESSION['BookingHistoryIntervalNumber'] = $intervalNumber;
 	
 	$companyID = $_SESSION['BookingHistoryCompanyInfo']['CompanyID'];
 	$CompanyName = $_SESSION['BookingHistoryCompanyInfo']['CompanyName'];
@@ -408,8 +423,15 @@ if (isset($_POST['action']) AND $_POST['action'] == "Previous Period"){
 }
 
 // If admin wants to see the booking history of the selected company
-if (isset($_POST['action']) AND $_POST['action'] == "Booking History"){
-	$companyID = $_POST['id'];
+if ((isset($_POST['action']) AND $_POST['action'] == "Booking History") OR 
+	((isset($_POST['history']) AND $_POST['history'] == "Last Period"))){
+		
+	if(isset($_SESSION['BookingHistoryCompanyInfo'])){
+		unset($_SESSION['BookingHistoryIntervalNumber']);
+		$companyID = $_SESSION['BookingHistoryCompanyInfo']['CompanyID'];
+	} else {
+		$companyID = $_POST['id'];
+	}
 	
 	// Get booking history for the selected company
 	try
@@ -433,7 +455,8 @@ if (isset($_POST['action']) AND $_POST['action'] == "Booking History"){
 		$row = $s->fetch();
 		$_SESSION['BookingHistoryCompanyInfo'] = $row;
 		
-		$displayDateTimeCreated = convertDatetimeToFormat($row['CompanyDateTimeCreated'],'Y-m-d H:i:s',DATE_DEFAULT_FORMAT_TO_DISPLAY);
+		$dateTimeCreated = $row['CompanyDateTimeCreated'];
+		$displayDateTimeCreated = convertDatetimeToFormat($dateTimeCreated,'Y-m-d H:i:s',DATE_DEFAULT_FORMAT_TO_DISPLAY);
 		
 		$_SESSION['BookingHistoryCompanyInfo']['CompanyDateTimeCreated'] = $displayDateTimeCreated;
 		
@@ -452,6 +475,10 @@ if (isset($_POST['action']) AND $_POST['action'] == "Booking History"){
 		$displayBillingStart = convertDatetimeToFormat($BillingStart , 'Y-m-d', DATE_DEFAULT_FORMAT_TO_DISPLAY);
 		$displayBillingEnd = convertDatetimeToFormat($BillingEnd , 'Y-m-d', DATE_DEFAULT_FORMAT_TO_DISPLAY);
 		$BillingPeriod = $displayBillingStart . " To " . $displayBillingEnd . ".";			
+		
+		// Get first period as intervalNumber
+		$firstPeriodIntervalNumber = convertTwoDateTimesToTimeDifferenceInMonths($dateTimeCreated,$BillingEnd);
+		$_SESSION['BookingHistoryFirstPeriodIntervalNumber'] = $firstPeriodIntervalNumber;
 		
 		//Get completed booking history from the current billing period
 		$sql = "SELECT 		b.`startDateTime`		AS BookingStartedDatetime,
@@ -1004,6 +1031,11 @@ if(isset($_POST['add']) AND $_POST['add'] == 'Cancel'){
 	$_SESSION['CompanyUserFeedback'] = "You cancelled your company creation.";
 }
 
+if(isset($_POST['history']) AND $_POST['history'] == 'Return To Companies'){
+	$refreshcompanies = TRUE;
+	clearBookingHistorySessions();
+}
+
 if(isset($refreshcompanies) AND $refreshcompanies) {
 	// TO-DO: Add code that should occur on a refresh
 	unset($refreshcompanies);
@@ -1013,6 +1045,7 @@ if(isset($refreshcompanies) AND $refreshcompanies) {
 // TO-DO: Change if this ruins having multiple tabs open etc.
 clearAddCompanySessions();
 clearEditCompanySessions();
+clearBookingHistorySessions();
 
 // Display companies list
 try
@@ -1179,8 +1212,9 @@ foreach ($result as $row)
 		$overCreditsFee = $hourPrice . "/h";
 	}
 		// Calculate monthly cost (subscription + over credit charges)
-	// TO-DO: Change/fix calculations?
 	if($MonthlyTimeUsed != "N/A"){
+		$monthlyTimeHour = substr($MonthlyTimeUsed,0,strpos($MonthlyTimeUsed,"h"));
+		$monthlyTimeMinute = substr($MonthlyTimeUsed,strpos($MonthlyTimeUsed,"h")+1,-1);
 		$actualTimeUsedInMinutesThisMonth = $monthlyTimeHour*60 + $monthlyTimeMinute;
 		if($actualTimeUsedInMinutesThisMonth > $companyMinuteCredits){
 			// Company has used more booking time than credited. Let's calculate how far over they went
@@ -1219,6 +1253,8 @@ foreach ($result as $row)
 		// Calculate cost for previous month (subscription + over credit charges)
 	// TO-DO: Change/fix calculations? This will be wrong if credits/hour rate etc changes from previous month
 	if($PrevMonthTimeUsed != "N/A"){
+		$prevMonthTimeHour = substr($MonthlyTimeUsed,0,strpos($MonthlyTimeUsed,"h"));
+		$prevMonthTimeMinute = substr($MonthlyTimeUsed,strpos($MonthlyTimeUsed,"h")+1,-1);		
 		$actualTimeUsedInMinutesPrevMonth = $prevMonthTimeHour*60 + $prevMonthTimeMinute;
 		if($actualTimeUsedInMinutesPrevMonth > $companyMinuteCredits){
 			// Company has used more booking time than credited. Let's calculate how far over they went
@@ -1300,8 +1336,6 @@ foreach ($result as $row)
 									);		
 	}
 }
-unset($_SESSION["BookingHistoryIntervalNumber"]);
-unset($_SESSION['BookingHistoryCompanyInfo']);
 var_dump($_SESSION); // TO-DO: remove after testing is done
 
 // Create the companies list in HTML
