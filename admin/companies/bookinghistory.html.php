@@ -9,6 +9,11 @@
 	</head>
 	<body>
 		<h1>Booking History</h1>
+		<div>
+			<form action="" method="post">
+				<input type="submit" name="history" value="Return To Companies">
+			</form>
+		</div>
 		<form action="" method="post">
 			<div>
 				<?php if(isset($PreviousPeriod) AND $PreviousPeriod) : ?>
@@ -51,9 +56,6 @@
 			<?php else : ?>
 				<b>There were no bookings completed this period.</b>
 			<?php endif; ?>
-		<form action="" method="post">
-			<input type="submit" name="history" value="Return">
-		</form>
 		<p><a href="..">Return to CMS home</a></p>
 	<?php include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/logout.inc.html.php'; ?>
 	</body>

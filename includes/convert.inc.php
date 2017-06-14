@@ -57,4 +57,16 @@ function convertTwoDateTimesToTimeDifferenceInMinutes($startDateTime,$endDateTim
 
 	return $timeDifference;
 }
+
+function convertTwoDateTimesToTimeDifferenceInMonths($startDateTime,$endDateTime){
+	$timeDifferenceStartDate = new DateTime($startDateTime);
+	$timeDifferenceCompletionDate = new DateTime($endDateTime);
+	$timeDifference = $timeDifferenceStartDate->diff($timeDifferenceCompletionDate);
+	$timeDifferenceInYears = $timeDifference->y;
+	$timeDifferenceInMonths = $timeDifference->m;
+	
+	$timeDifference = $timeDifferenceInYears*12 + $timeDifferenceInMonths;
+
+	return $timeDifference;
+}
 ?>
