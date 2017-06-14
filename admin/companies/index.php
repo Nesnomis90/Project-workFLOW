@@ -148,7 +148,7 @@ return array($invalidInput, $validatedCompanyName, $validatedCompanyDateToRemove
 }
 
 // If admin wants to see the booking history of the period after the currently shown one
-if (isset($_POST['action']) AND $_POST['action'] == "Next Period"){
+if (isset($_POST['history']) AND $_POST['history'] == "Next Period"){
 	
 	if(isset($_SESSION['BookingHistoryIntervalNumber'])){
 		$intervalNumber = $_SESSION['BookingHistoryIntervalNumber'] - 1;
@@ -278,7 +278,7 @@ if (isset($_POST['action']) AND $_POST['action'] == "Next Period"){
 }
 
 // If admin wants to see the booking history of the period before the currently shown one
-if (isset($_POST['action']) AND $_POST['action'] == "Previous Period"){
+if (isset($_POST['history']) AND $_POST['history'] == "Previous Period"){
 	if(isset($_SESSION['BookingHistoryIntervalNumber'])){
 		$intervalNumber = $_SESSION['BookingHistoryIntervalNumber'] + 1;
 	} else {
@@ -1004,6 +1004,10 @@ if(isset($_POST['add']) AND $_POST['add'] == 'Cancel'){
 	$_SESSION['CompanyUserFeedback'] = "You cancelled your company creation.";
 }
 
+if(isset($_POST['history']) AND $_POST['history'] == 'Return'){
+	$refreshcompanies = TRUE;
+}
+
 if(isset($refreshcompanies) AND $refreshcompanies) {
 	// TO-DO: Add code that should occur on a refresh
 	unset($refreshcompanies);
@@ -1179,8 +1183,9 @@ foreach ($result as $row)
 		$overCreditsFee = $hourPrice . "/h";
 	}
 		// Calculate monthly cost (subscription + over credit charges)
-	// TO-DO: Change/fix calculations?
 	if($MonthlyTimeUsed != "N/A"){
+		$monthlyTimeHour = substr($MonthlyTimeUsed,0,strpos($MonthlyTimeUsed,"h"));
+		$monthlyTimeMinute = substr($MonthlyTimeUsed,strpos($MonthlyTimeUsed,"h")+1,-1);
 		$actualTimeUsedInMinutesThisMonth = $monthlyTimeHour*60 + $monthlyTimeMinute;
 		if($actualTimeUsedInMinutesThisMonth > $companyMinuteCredits){
 			// Company has used more booking time than credited. Let's calculate how far over they went
@@ -1219,6 +1224,8 @@ foreach ($result as $row)
 		// Calculate cost for previous month (subscription + over credit charges)
 	// TO-DO: Change/fix calculations? This will be wrong if credits/hour rate etc changes from previous month
 	if($PrevMonthTimeUsed != "N/A"){
+		$prevMonthTimeHour = substr($MonthlyTimeUsed,0,strpos($MonthlyTimeUsed,"h"));
+		$prevMonthTimeMinute = substr($MonthlyTimeUsed,strpos($MonthlyTimeUsed,"h")+1,-1);		
 		$actualTimeUsedInMinutesPrevMonth = $prevMonthTimeHour*60 + $prevMonthTimeMinute;
 		if($actualTimeUsedInMinutesPrevMonth > $companyMinuteCredits){
 			// Company has used more booking time than credited. Let's calculate how far over they went
