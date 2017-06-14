@@ -176,8 +176,6 @@ function isNumberInvalidBookingCode($bookingCode){
 
 // Function that (hopefully) removes excess white space, line feeds etc.
 function trimExcessWhitespaceButLeaveLinefeed($oldString){
-
-	// TO-DO: Seems to be working, but change if needed
 	// Inner preg replaces takes all white space before and after a line feed and turns it into a single line feed
 	// Outer preg replaces takes all excess spaces and tabs between words on a line and replaces with a single space
 	// trim removes excess spaces before/after
@@ -186,7 +184,6 @@ function trimExcessWhitespaceButLeaveLinefeed($oldString){
 
 // Function that (hopefully) removes excess white space, line feeds etc.
 function trimExcessWhitespace($oldString){
-
 	// Replace any amount of white space with a single space
 	// Also remove excess space at start/end
 	return trim(preg_replace('/\s+/', ' ', $oldString));
@@ -201,8 +198,6 @@ function trimAllWhitespace($oldString){
 // For Names
 // Allows empty strings
 function validateNames($oldString){
-	//$trimmedString = trimExcessWhitespace($oldString);
-	
 	// Check if string uses allowed characters
 		// We allow all language letters and accents.
 		// Also space, and the symbols ', . and -
@@ -217,8 +212,6 @@ function validateNames($oldString){
 // Function to check if input string uses legal characters and trims the input down
 // Allows empty strings
 function validateString($oldString){
-	//$trimmedString = trimExcessWhitespaceButLeaveLinefeed($oldString);
-	
 	// Check if string uses allowed characters
 		// " -~" matches all printable ASCII characters (A-Z, a-z, 0-9, etc.)
 		// For unicode we add /u and p{L} for all language letters and p{M} for all accents
@@ -273,7 +266,6 @@ function validateDateTimeString($oldString){
 // Function to check if the submitted end time has a valid minute slice
 // e.g. with 15 minute booking slices it will be 00, 15, 30 or 45.
 // Returns TRUE on invalid, FALSE on valid
-// TO-DO: Untested in code
 function isBookingEndTimeInvalid($endTimeString){
 	$endTime = stringToDateTime($endTimeString, 'Y-m-d H:i:s');
 	$endTimeMinutePart = $endTime->format('i');
