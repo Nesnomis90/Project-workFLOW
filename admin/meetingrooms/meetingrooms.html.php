@@ -74,7 +74,7 @@
 				<caption>Current Meeting Rooms</caption>
 				<tr>
 					<th colspan="2">Equipment In Room</th>
-					<th colspan="2">Booked Meetings</th>
+					<th colspan="4">Booking Information</th>
 					<th colspan="4">Meeting Room</th>
 					<th colspan="2">Alter Room</th>
 				</tr>
@@ -82,7 +82,9 @@
 					<th>List</th>
 					<th>Amount</th>
 					<th>List</th>
-					<th>Amount</th>
+					<th>Active</th>
+					<th>Completed</th>
+					<th>Cancelled</th>
 					<th>Name</th>
 					<th>Capacity</th>
 					<th>Description</th>
@@ -101,8 +103,10 @@
 						<form action="<?php htmlout($goto) ;?>" method="post">
 							<td><input type="submit" value="Bookings"></td>
 						</form>	
-							<td><?php htmlout($room['MeetingRoomActiveBookings']); ?></td>	
-							<td><?php htmlout($room['MeetingRoomName']); ?></td>							
+							<td><?php htmlout($room['MeetingRoomActiveBookings']); ?></td>
+							<td><?php htmlout($room['MeetingRoomCompletedBookings']); ?></td>
+							<td><?php htmlout($room['MeetingRoomCancelledBookings']); ?></td>
+							<td><?php htmlout($room['MeetingRoomName']); ?></td>				
 							<td><?php htmlout($room['MeetingRoomCapacity']); ?></td>
 							<td><?php htmlout($room['MeetingRoomDescription']); ?></td>
 							<td><?php htmlout($room['MeetingRoomLocation']); ?></td>

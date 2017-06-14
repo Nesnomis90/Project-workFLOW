@@ -2066,54 +2066,100 @@ if(isset($refreshBookings) AND $refreshBookings) {
 
 
 // Display booked meetings history list
-try
-{
-	include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
-	$pdo = connect_to_db();
-	$sql = "SELECT 		b.`bookingID`,
-						b.`companyID`,
-						m.`name` 										AS BookedRoomName, 
-						b.startDateTime 								AS StartTime, 
-						b.endDateTime									AS EndTime, 
-						b.displayName 									AS BookedBy,
-						(	
-							SELECT `name` 
-							FROM `company` 
-							WHERE `companyID` = b.`companyID`
-						)												AS BookedForCompany,
-						u.firstName, 
-						u.lastName, 
-						u.email, 
-						GROUP_CONCAT(c.`name` separator ', ') 			AS WorksForCompany, 
-						b.description 									AS BookingDescription, 
-						b.dateTimeCreated 								AS BookingWasCreatedOn, 
-						b.actualEndDateTime								AS BookingWasCompletedOn, 
-						b.dateTimeCancelled								AS BookingWasCancelledOn 
-			FROM 		`booking` b 
-			LEFT JOIN 	`meetingroom` m 
-			ON 			b.meetingRoomID = m.meetingRoomID 
-			LEFT JOIN 	`user` u 
-			ON 			u.userID = b.userID 
-			LEFT JOIN 	`employee` e 
-			ON 			e.UserID = u.userID 
-			LEFT JOIN 	`company` c 
-			ON 			c.CompanyID = e.CompanyID
-			WHERE		c.`isActive` = 1
-			GROUP BY 	b.bookingID
-			ORDER BY 	b.bookingID
-			DESC";
-	$result = $pdo->query($sql);
-	$rowNum = $result->rowCount();
+if(!isset($_GET['Meetingroom'])){
+	try
+	{
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+		$pdo = connect_to_db();
+		$sql = "SELECT 		b.`bookingID`,
+							b.`companyID`,
+							m.`name` 										AS BookedRoomName, 
+							b.startDateTime 								AS StartTime, 
+							b.endDateTime									AS EndTime, 
+							b.displayName 									AS BookedBy,
+							c.`name` 										AS BookedForCompany,
+							u.firstName, 
+							u.lastName, 
+							u.email, 
+							GROUP_CONCAT(c.`name` separator ', ') 			AS WorksForCompany, 
+							b.description 									AS BookingDescription, 
+							b.dateTimeCreated 								AS BookingWasCreatedOn, 
+							b.actualEndDateTime								AS BookingWasCompletedOn, 
+							b.dateTimeCancelled								AS BookingWasCancelledOn 
+				FROM 		`booking` b 
+				LEFT JOIN 	`meetingroom` m 
+				ON 			b.meetingRoomID = m.meetingRoomID 
+				LEFT JOIN 	`user` u 
+				ON 			u.userID = b.userID 
+				LEFT JOIN 	`employee` e 
+				ON 			e.UserID = u.userID 
+				LEFT JOIN 	`company` c 
+				ON 			c.CompanyID = e.CompanyID
+				WHERE		c.`isActive` = 1
+				GROUP BY 	b.bookingID
+				ORDER BY 	b.bookingID
+				DESC";
+		$result = $pdo->query($sql);
 
-	//Close the connection
-	$pdo = null;
-}
-catch (PDOException $e)
-{
-	$error = 'Error fetching booking information from the database: ' . $e->getMessage();
-	include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
-	$pdo = null;
-	exit();
+		//Close the connection
+		$pdo = null;
+	}
+	catch (PDOException $e)
+	{
+		$error = 'Error fetching booking information from the database: ' . $e->getMessage();
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+		$pdo = null;
+		exit();
+	}
+} else {
+	try
+	{
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+		$pdo = connect_to_db();
+		$sql = "SELECT 		b.`bookingID`,
+							b.`companyID`,
+							m.`name` 										AS BookedRoomName, 
+							b.startDateTime 								AS StartTime, 
+							b.endDateTime									AS EndTime, 
+							b.displayName 									AS BookedBy,
+							c.`name`										AS BookedForCompany,
+							u.firstName, 
+							u.lastName, 
+							u.email, 
+							GROUP_CONCAT(c.`name` separator ', ') 			AS WorksForCompany, 
+							b.description 									AS BookingDescription, 
+							b.dateTimeCreated 								AS BookingWasCreatedOn, 
+							b.actualEndDateTime								AS BookingWasCompletedOn, 
+							b.dateTimeCancelled								AS BookingWasCancelledOn 
+				FROM 		`booking` b 
+				LEFT JOIN 	`meetingroom` m 
+				ON 			b.meetingRoomID = m.meetingRoomID 
+				LEFT JOIN 	`user` u 
+				ON 			u.userID = b.userID 
+				LEFT JOIN 	`employee` e 
+				ON 			e.UserID = u.userID 
+				LEFT JOIN 	`company` c 
+				ON 			c.CompanyID = e.CompanyID
+				WHERE		c.`isActive` = 1
+				AND			b.`meetingRoomID` = :MeetingRoomID 
+				GROUP BY 	b.bookingID
+				ORDER BY 	b.bookingID
+				DESC";	
+		$s = $pdo->prepare($sql);
+		$s->bindValue(':MeetingRoomID', $_GET['Meetingroom']);
+		$s->execute();
+		$result = $s->fetchAll();
+
+		//Close the connection
+		$pdo = null;
+	}
+	catch (PDOException $e)
+	{
+		$error = 'Error fetching booking information from the database: ' . $e->getMessage();
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+		$pdo = null;
+		exit();
+	}
 }
 
 foreach ($result as $row)
@@ -2176,6 +2222,7 @@ foreach ($result as $row)
 	}
 	
 	$roomName = $row['BookedRoomName'];
+	$displayRoomNameForTitle = $roomName;
 	$firstname = $row['firstName'];
 	$lastname = $row['lastName'];
 	$email = $row['email'];
@@ -2342,7 +2389,9 @@ foreach ($result as $row)
 						);
 	}
 }
-
+if(isset($displayRoomNameForTitle) AND ($displayRoomNameForTitle == NULL OR $displayRoomNameForTitle == "N/A - Deleted")){
+	unset($displayRoomNameForTitle);
+}
 // BOOKING OVERVIEW CODE SNIPPET END //
 var_dump($_SESSION); // TO-DO: remove after testing is done
 // Create the booking information table in HTML

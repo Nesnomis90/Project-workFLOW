@@ -662,7 +662,21 @@ try
 							AND 	b.`endDateTime` > current_timestamp
 							AND 	b.`dateTimeCancelled` IS NULL
 							AND 	b.`actualEndDateTime` IS NULL
-						)					AS MeetingRoomActiveBookings
+						)					AS MeetingRoomActiveBookings,
+						(
+							SELECT 	COUNT(b.`bookingID`)
+							FROM	`booking` b
+							WHERE  	b.`meetingRoomID` = TheMeetingRoomID
+							AND 	b.`actualEndDateTime` < current_timestamp
+							AND 	b.`dateTimeCancelled` IS NULL
+						)					AS MeetingRoomCompletedBookings,
+						(
+							SELECT 	COUNT(b.`bookingID`)
+							FROM	`booking` b
+							WHERE  	b.`meetingRoomID` = TheMeetingRoomID
+							AND 	b.`dateTimeCancelled` < current_timestamp
+							AND 	b.`actualEndDateTime` IS NULL
+						)					AS MeetingRoomCancelledBookings						
 			FROM 		`meetingroom` m
 			LEFT JOIN 	`roomequipment` re
 			ON 			re.`meetingRoomID` = m.`meetingRoomID`			
@@ -689,7 +703,9 @@ foreach ($result as $row)
 							'MeetingRoomDescription' => $row['MeetingRoomDescription'],
 							'MeetingRoomLocation' => $row['MeetingRoomLocation'],
 							'MeetingRoomEquipmentAmount' => $row['MeetingRoomEquipmentAmount'],
-							'MeetingRoomActiveBookings' => $row['MeetingRoomActiveBookings']
+							'MeetingRoomActiveBookings' => $row['MeetingRoomActiveBookings'],
+							'MeetingRoomCompletedBookings' => $row['MeetingRoomCompletedBookings'],
+							'MeetingRoomCancelledBookings' => $row['MeetingRoomCancelledBookings']
 					);
 }
 
