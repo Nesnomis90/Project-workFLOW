@@ -12,9 +12,7 @@ function getNextValidBookingStartTime(){
 }
 
 function getNextValidBookingEndTime($startTimeString){
-	echo "<br />";
-	var_dump($startTimeString);
-	echo "<br />";
+
 	if(validateDatetimeWithFormat($startTimeString,'Y-m-d H:i:s')){
 		$startTime = convertDatetimeToFormat($startTimeString,'Y-m-d H:i:s','Y-m-d H:i');
 		$startTime = stringToDateTime($startTime, 'Y-m-d H:i');
@@ -22,8 +20,6 @@ function getNextValidBookingEndTime($startTimeString){
 		$startTime = stringToDateTime($startTimeString, 'Y-m-d H:i');
 	}
 	
-	var_dump($startTime);
-	echo "<br />";
 	$startTimeDatePart = $startTime->format('Y-m-d');
 	$startTimeHourPart = $startTime->format('H');
 	$startTimeMinutePart = $startTime->format('i');
@@ -35,23 +31,33 @@ function getNextValidBookingEndTime($startTimeString){
 			// Set new day
 			$startTime->modify('+1 day');
 			$startTimeDatePart = $startTime->format('Y-m-d');
-			$endTimeString = $startTimeDatePart . ' 00:00:00'; 
-		} else {
-			// Set new hour
-			$startTime->modify('+1 hour');
-			$startTimeHourPart = $startTime->format('H');
-			$endTimeString = $startTimeDatePart . ' ' . $startTimeHourPart .':00:00';
 		}
-	} else {
-		for($i = 0; $i < 60; ){
-			if($startTimeMinutePart < $i){
-				// Next valid slice found.
-				$endTimeString = $startTimeDatePart . ' ' . $startTimeHourPart . ':' . $i .':00';
-				break; 
-			}
-			$i += $minimumBookingTime;	
-		}		
+		
+		// Set new hour
+		$hourIncrease = floor(($startTimeMinutePart+$minimumBookingTime)/60);
+		$startTime->modify('+' . $hourIncrease . ' hour');
+		$startTimeHourPart = $startTime->format('H');
+
+		$startTimeMinutePart -= 60;
 	}
+
+
+	for($i = 0; $i < 61; ){
+		if($startTimeMinutePart < $i){
+			// Next valid slice found.
+			if($i == 0){
+				$min = '00';
+			} elseif($i < 10){
+				$min = '0' . $i;
+			} else {
+				$min = $i;
+			}
+			break; 
+		}
+		$i += $minimumBookingTime;	
+	}		
+
+	$endTimeString = $startTimeDatePart . ' ' . $startTimeHourPart . ':' . $min .':00';	
 	return $endTimeString;
 }
 

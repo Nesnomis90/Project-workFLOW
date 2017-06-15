@@ -31,7 +31,7 @@ define('SET_CURRENCY_DECIMAL_PRECISION', '2');
 
 // Timing variables
 	//variables used to validate code, handle events
-define('MINIMUM_BOOKING_TIME_IN_MINUTES', 15); //1, 5, 10, 15, 30 or 60
+define('MINIMUM_BOOKING_TIME_IN_MINUTES', 5); //1, 5, 10, 15, 30 or 60
 define('MINIMUM_TIME_PASSED_AFTER_CREATING_BOOKING_BEFORE_SENDING_EMAIL', 30);
 define('TIME_LEFT_UNTIL_MEETING_STARTS_BEFORE_SENDING_EMAIL', 30);
 

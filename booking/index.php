@@ -170,7 +170,11 @@ function validateUserInputs($FeedbackSessionToUse){
 	$validatedEndDateTime = trimExcessWhitespace($endDateTimeString);
 	$validatedDisplayName = trimExcessWhitespaceButLeaveLinefeed($displayNameString);
 	$validatedBookingDescription = trimExcessWhitespaceButLeaveLinefeed($bookingDescriptionString);
-	//$validatedBookingCode = trimExcessWhitespace($bookingCode);
+	if($usingBookingCode){
+		$validatedBookingCode = trimExcessWhitespace($bookingCode);
+	} else {
+		$validatedBookingCode = "";
+	}
 	
 	// Do actual input validation
 	if(validateDateTimeString($validatedStartDateTime) === FALSE AND !$invalidInput){
@@ -300,17 +304,13 @@ function validateUserInputs($FeedbackSessionToUse){
 		$_SESSION[$FeedbackSessionToUse] = "Your start time and end time needs to have at least a " . MINIMUM_BOOKING_TIME_IN_MINUTES . " minutes difference.";
 		$invalidInput = TRUE;		
 	}
-	
-	
-	$validatedBookingCode = "";
+
 	return array($invalidInput, $startDateTime, $endDateTime, $validatedBookingDescription, $validatedDisplayName, $validatedBookingCode);
 }
 
 // Check if we're accessing from a local device
 // If so, set that meeting room's info as the default meeting room info
 checkIfLocalDevice();
-
-
 
 
 // If user wants to cancel a scheduled booked meeting
@@ -339,7 +339,7 @@ if (	(isset($_POST['action']) and $_POST['action'] == 'Cancel') OR
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 		
 		$pdo = connect_to_db();
-		$sql = 'SELECT 	COUNT(*),
+		$sql = 'SELECT 	COUNT(*)		AS HitCount,
 						`userID`
 				FROM	`booking`
 				WHERE 	`bookingID` = :id
@@ -347,8 +347,8 @@ if (	(isset($_POST['action']) and $_POST['action'] == 'Cancel') OR
 		$s = $pdo->prepare($sql);
 		$s->bindValue(':id', $bookingID);
 		$s->execute();
-		$row = $s->fetch();
-		if($row[0] > 0){
+		$row = $s->fetch(PDO::FETCH_ASSOC);
+		if($row['HitCount'] > 0){
 			if($row['userID'] == $SelectedUserID){
 				$continueCancel = TRUE;
 			}
@@ -380,7 +380,7 @@ if (	(isset($_POST['action']) and $_POST['action'] == 'Cancel') OR
 		$s = $pdo->prepare($sql);
 		$s->bindValue(':userID', $SelectedUserID);
 		$s->execute();
-		$row = $s->fetch();
+		$row = $s->fetch(PDO::FETCH_ASSOC);
 		if($row['AccessName'] == "Admin"){
 			$continueCancel = TRUE;
 		}
@@ -537,7 +537,7 @@ if(isset($_POST['action']) AND $_POST['action'] == "confirmcode"){
 		// Get booking information
 		$pdo = connect_to_db();
 		// Get name and IDs for meeting rooms
-		$sql = 'SELECT 	COUNT(*),
+		$sql = 'SELECT 	COUNT(*)		AS HitCount,
 						`userID`
 				FROM 	`user`
 				WHERE	`isActive` = 1
@@ -546,12 +546,12 @@ if(isset($_POST['action']) AND $_POST['action'] == "confirmcode"){
 		$s = $pdo->prepare($sql);
 		$s->bindValue(':bookingCode',$hashedBookingCode);
 		$s->execute();
-		$row = $s->fetch();
+		$row = $s->fetch(PDO::FETCH_ASSOC);
 			
 		//Close connection
 		$pdo = null;
 		
-		if ($row[0] > 0)
+		if ($row['HitCount'] > 0)
 		{
 			// Booking code is a valid user
 			$_SESSION['bookingCodeUserID'] = $row['userID'];
@@ -673,7 +673,7 @@ if(	((isset($_POST['action']) AND $_POST['action'] == 'Create Meeting')) OR
 			$s->execute();
 			
 			// Create an array with the row information we retrieved
-			$result = $s->fetch();
+			$result = $s->fetch(PDO::FETCH_ASSOC);
 				
 			// Set default booking display name and booking description
 			if($result['displayname']!=NULL){
@@ -809,8 +809,10 @@ if(	((isset($_POST['action']) AND $_POST['action'] == 'Create Meeting')) OR
 	// Set the correct information
 	if(isset($_GET['meetingroom'])){
 		$_SESSION['AddCreateBookingInfoArray']['TheMeetingRoomID'] = $_GET['meetingroom'];
-	} else {
+	} elseif(isset($_POST['meetingRoomID'])) {
 		$_SESSION['AddCreateBookingInfoArray']['TheMeetingRoomID'] = $_POST['meetingRoomID'];
+	} else {
+		$_SESSION['AddCreateBookingInfoArray']['TheMeetingRoomID'] = "";
 	}
 	$row = $_SESSION['AddCreateBookingInfoArray'];
 	$original = $_SESSION['AddCreateBookingOriginalInfoArray'];
@@ -922,30 +924,26 @@ if (isset($_POST['add']) AND $_POST['add'] == "Add Booking")
 	{
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 		$pdo = connect_to_db();
-		$sql =	" 	SELECT 	COUNT(*)
+		$sql =	" 	SELECT 	COUNT(*)	AS HitCount
 					FROM 	`booking`
 					WHERE 	`meetingRoomID` = :MeetingRoomID
 					AND		
 					(		
 							(
-								`startDateTime` 
-								BETWEEN :StartTime
-								AND :EndTime
+								`startDateTime` > :StartTime AND 
+								`startDateTime` < :EndTime
 							) 
 					OR 		(
-								`endDateTime`
-								BETWEEN :StartTime
-								AND :EndTime
+								`endDateTime` > :StartTime AND 
+								`endDateTime` < :EndTime
 							)
 					OR 		(
-								:EndTime
-								BETWEEN `startDateTime`
-								AND `endDateTime`
+								:EndTime > `startDateTime` AND 
+								:EndTime < `endDateTime`
 							)
 					OR 		(
-								:StartTime
-								BETWEEN `startDateTime`
-								AND `endDateTime`
+								:StartTime > `startDateTime` AND 
+								:StartTime < `endDateTime`
 							)
 					)";
 		$s = $pdo->prepare($sql);
@@ -965,8 +963,8 @@ if (isset($_POST['add']) AND $_POST['add'] == "Add Booking")
 	}
 
 	// Check if we got any hits, if so the timeslot is already taken
-	$row = $s->fetch();		
-	if ($row[0] > 0){
+	$row = $s->fetch(PDO::FETCH_ASSOC);		
+	if ($row['HitCount'] > 0){
 
 		// Timeslot was taken
 		rememberAddCreateBookingInputs();
@@ -1442,8 +1440,8 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR
 				exit();		
 			}
 			
-			// Create an array with the row information we retrieved		
-			$_SESSION['EditCreateBookingInfoArray'] = $s->fetch();
+			// Create an array with the row information we retrieved
+			$_SESSION['EditCreateBookingInfoArray'] = $s->fetch(PDO::FETCH_ASSOC);
 			$_SESSION['EditCreateBookingOriginalInfoArray'] = $_SESSION['EditCreateBookingInfoArray'];
 		}	
 		
@@ -1749,7 +1747,7 @@ if(isset($_POST['edit']) AND $_POST['edit'] == "Get Default Booking Description"
 	exit();	
 }
 
-/* TO-DO: Remove if we will allow editing the start/end time for users
+/* TO-DO: Remove comment block if we will allow editing the start/end time for users
 // If user wants to increase the start timer by minimum allowed time (e.g. 15 min)
 if(isset($_POST['edit']) AND $_POST['edit'] == "Increase Start By Minimum"){
 	
@@ -1862,7 +1860,7 @@ if(isset($_GET['cancellationcode'])){
 		exit();
 	}
 
-	$result = $s->fetch();
+	$result = $s->fetch(PDO::FETCH_ASSOC);
 	
 	$bookingID = $result['bookingID'];
 	$TheMeetingRoomName = $result['TheMeetingRoomName'];
