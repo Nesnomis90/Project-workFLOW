@@ -113,40 +113,29 @@ function correctDateFormat($wrongDateString){
 //	Function to change datetime format to be correct for datetime input in database
 //	We check for the datetimes we assume the user might submit
 function correctDatetimeFormat($wrongDatetimeString){
+	// Take in a bunch of different datetime formats and output the correct format
+	// Accepts dates: Y-n-j, j-n-Y, j-M-Y, j-F-Y, jS-F-Y, F-j-Y, F-jS-Y
+	// Accepts times: H-i-s, H-i, H or none
 	// Correct datetime format we want out is
 	// yyyy-mm-dd hh:mm:ss => 'Y-m-d H:i:s'
-	// If no hit we return FALSE
-	// Seems excessive but execution time to go through everything takes around 1 µ second
-	// TO-DO: Make sure we don't confuse the input by allowing multiple interpretations of the same text string?
-	// TO-DO: When converting non time strings into timestrings it submits the time right now
-	// 			Let's make this return 00:00:00 instead?
-	// TO-DO: Not heavily tested!!!!
-	// TO-DO: Still needs fixing separating date and time parts
+	// If not a correct input format we return FALSE
 
 	date_default_timezone_set(DATE_DEFAULT_TIMEZONE);
 	
 	// Remove white spaces before and after the datetime submitted
 	$wrongDatetimeString = trim($wrongDatetimeString);
-	//echo $wrongDatetimeString . "<br />";
 	
 	// Replace some characters if the user for some reason uses it
-	// TO-DO: use regex to limit what user can submit later?
-	$wrongDatetimeString = str_replace('.', '-',$wrongDatetimeString);
-	$wrongDatetimeString = str_replace(',', '-',$wrongDatetimeString);
-	$wrongDatetimeString = str_replace('/', '-',$wrongDatetimeString);
-	$wrongDatetimeString = str_replace('_', '-',$wrongDatetimeString);
+	// Shouldn't really make a difference if we actually used validateDateTimeString before calling this,
+	// since these characters wouldn't be allowed
+	$wrongDatetimeString = preg_replace('/[\.\/\,_;]/','-', $wrongDatetimeString);
 	
-	//echo $wrongDatetimeString . "<br />";
-	
-	// The characters we want to allow in the string
-	$allowedChars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 -:";
-	foreach(str_split($wrongDatetimeString) AS $char){
-		if(strpos($allowedChars,$char) === FALSE){
-			// Found an illegal character
-			return FALSE;
-		}
+	// Check that we only have legal characters before checking if the format is correct
+	// This should be done before calling this function
+	if(validateDateTimeString() === FALSE){
+		return FALSE;
 	}
-	
+
 	// Reduce number of validateDatetimeWithFormat by replacing spaces and leading 0s
 	$spacesInDatetimeString = substr_count($wrongDatetimeString, ' ');
 	$dashesInDatetimeString = substr_count($wrongDatetimeString, '-');
@@ -160,11 +149,6 @@ function correctDatetimeFormat($wrongDatetimeString){
 		$timePart = substr(strrchr($wrongDatetimeString, " "), 0);
 	} 
 	
-	//echo "datepart: $datePart <br />";
-	if(isset($timePart)){
-		//echo "timepart: $timePart <br />";		
-	}
-
 	// change spaces in date part
 	$datePart= str_replace(' ', '-',$datePart);
 
@@ -183,8 +167,6 @@ function correctDatetimeFormat($wrongDatetimeString){
 		$timePart = "";
 	}
 	$wrongDatetimeString = $datePartWithNoSpacesOrLeadingZeros . $timePart;
-
-	//echo $wrongDatetimeString . "<br />";
 	
 	if(validateDatetimeWithFormat($wrongDatetimeString, 'Y-n-j H:i:s')){
 		$wrongDatetime = date_create_from_format('Y-n-j H:i:s', $wrongDatetimeString);

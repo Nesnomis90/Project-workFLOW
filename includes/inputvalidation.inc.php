@@ -251,9 +251,8 @@ function validateFloatNumber($oldString){
 
 // Function to check if input string uses legal characters for our datetime convertions and trims excess spaces
 // Allows empty strings
+// Returns TRUE on valid, FALSE on invalid.
 function validateDateTimeString($oldString){
-	//$trimmedString = trimExcessWhitespace($oldString);
-	
 	// Check if string uses allowed characters
 		// We allow the characters , . : / - _ and space
 	if (preg_match('/^[A-Za-z0-9.:\/_ -]*$/', $oldString)) {

@@ -820,9 +820,9 @@ if(isset($_POST['edit']) AND $_POST['edit'] == "Increase End By Minimum"){
 	// Let's remember what was selected if we do any changes before clicking "Select This User"
 	rememberEditBookingInputs();
 	
-$endTime = $_SESSION['EditBookingInfoArray']['EndTime'];
-		$correctEndTime = correctDatetimeFormat($endTime);
-		$_SESSION['EditBookingInfoArray']['EndTime'] = convertDatetimeToFormat(getNextValidBookingEndTime($correctEndTime), 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
+	$endTime = $_SESSION['EditBookingInfoArray']['EndTime'];
+	$correctEndTime = correctDatetimeFormat($endTime);
+	$_SESSION['EditBookingInfoArray']['EndTime'] = convertDatetimeToFormat(getNextValidBookingEndTime($correctEndTime), 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
 
 	$_SESSION['refreshEditBooking'] = TRUE;
 	header('Location: .');
