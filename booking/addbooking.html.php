@@ -19,6 +19,13 @@
 		<?php endif; ?>
 		<form action="" method="post">
 			<div>
+				<label for="userInformation">Welcome </label>
+				<?php $firstName = $_SESSION["AddCreateBookingOriginalInfoArray"]["UserFirstname"]; ?>
+				<?php $lastName = $_SESSION["AddCreateBookingOriginalInfoArray"]["UserLastname"]; ?>
+				<?php $userInformation = $lastName . ", " . $firstName; ?>
+				<b><?php htmlout($userInformation); ?></b>
+			</div>
+			<div>
 				<label for="meetingRoomID">Meeting Room: </label>
 				<?php if(isset($_GET['meetingroom'])) : ?>
 					<?php foreach($meetingroom as $row): ?> 
