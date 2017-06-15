@@ -542,7 +542,7 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR
 			}
 			
 			// Create an array with the row information we retrieved		
-			$_SESSION['EditBookingInfoArray'] = $s->fetch();
+			$_SESSION['EditBookingInfoArray'] = $s->fetch(PDO::FETCH_ASSOC);
 			$_SESSION['EditBookingOriginalInfoArray'] = $_SESSION['EditBookingInfoArray'];
 		}	
 		
@@ -1061,33 +1061,33 @@ if(isset($_POST['edit']) AND $_POST['edit'] == "Finish Edit")
 		{
 			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 			$pdo = connect_to_db();
-			$sql =	" 	SELECT 	COUNT(*)
-						FROM 	`booking`
-						WHERE 	`meetingRoomID` = :MeetingRoomID
-						AND		
-						(		
-								(
-									`startDateTime` 
-									BETWEEN :StartTime
-									AND :EndTime
-								) 
-						OR 		(
-									`endDateTime`
-									BETWEEN :StartTime
-									AND :EndTime
-								)
-						OR 		(
-									:EndTime
-									BETWEEN `startDateTime`
-									AND `endDateTime`
-								)
-						OR 		(
-									:StartTime
-									BETWEEN `startDateTime`
-									AND `endDateTime`
-								)		
-						)
-						AND		`bookingID` != :BookingID";
+			$sql =	" 	SELECT 	COUNT(*)	AS HitCount
+						FROM 	(
+									SELECT 	1
+									FROM 	`booking`
+									WHERE 	`meetingRoomID` = 26
+									AND		`bookingID` != :BookingID
+									AND		
+									(		
+											(
+												`startDateTime` > '2017-06-14 17:00:00' AND 
+												`startDateTime` < '2017-06-15 18:39:00'
+											) 
+									OR 		(
+												`endDateTime` > '2017-06-14 17:00:00' AND 
+												`endDateTime` < '2017-06-15 18:39:00'
+											)
+									OR 		(
+												'2017-06-15 18:39:00' > `startDateTime` AND 
+												'2017-06-15 18:39:00' < `endDateTime`
+											)
+									OR 		(
+												'2017-06-14 17:00:00' > `startDateTime` AND 
+												'2017-06-14 17:00:00' < `endDateTime`
+											)
+									)
+									LIMIT 1
+								) AS BookingsFound";
 			$s = $pdo->prepare($sql);
 				
 			$s->bindValue(':MeetingRoomID', $_POST['meetingRoomID']);
@@ -1106,8 +1106,8 @@ if(isset($_POST['edit']) AND $_POST['edit'] == "Finish Edit")
 		}
 
 		// Check if we got any hits, if so the timeslot is already taken
-		$row = $s->fetch();		
-		if ($row[0] > 0){
+		$row = $s->fetch(PDO::FETCH_ASSOC);		
+		if ($row['HitCount'] > 0){
 	
 			// Timeslot was taken
 			rememberEditBookingInputs();
@@ -1374,7 +1374,7 @@ if (	(isset($_POST['action']) AND $_POST['action'] == "Create Booking") OR
 				$s->execute();
 				
 				// Create an array with the row information we retrieved
-				$result = $s->fetch();
+				$result = $s->fetch(PDO::FETCH_ASSOC);
 					
 				// Set default booking display name and booking description
 				if($result['displayname']!=NULL){
@@ -1662,32 +1662,32 @@ if (isset($_POST['add']) AND $_POST['add'] == "Add booking")
 	{
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 		$pdo = connect_to_db();
-		$sql =	" 	SELECT 	COUNT(*)
-					FROM 	`booking`
-					WHERE 	`meetingRoomID` = :MeetingRoomID
-					AND		
-					(		
-							(
-								`startDateTime` 
-								BETWEEN :StartTime
-								AND :EndTime
-							) 
-					OR 		(
-								`endDateTime`
-								BETWEEN :StartTime
-								AND :EndTime
-							)
-					OR 		(
-								:EndTime
-								BETWEEN `startDateTime`
-								AND `endDateTime`
-							)
-					OR 		(
-								:StartTime
-								BETWEEN `startDateTime`
-								AND `endDateTime`
-							)
-					)";
+		$sql =	" 	SELECT 	COUNT(*)	AS HitCount
+					FROM 	(
+								SELECT 	1
+								FROM 	`booking`
+								WHERE 	`meetingRoomID` = 26
+								AND		
+								(		
+										(
+											`startDateTime` > '2017-06-14 17:00:00' AND 
+											`startDateTime` < '2017-06-15 18:39:00'
+										) 
+								OR 		(
+											`endDateTime` > '2017-06-14 17:00:00' AND 
+											`endDateTime` < '2017-06-15 18:39:00'
+										)
+								OR 		(
+											'2017-06-15 18:39:00' > `startDateTime` AND 
+											'2017-06-15 18:39:00' < `endDateTime`
+										)
+								OR 		(
+											'2017-06-14 17:00:00' > `startDateTime` AND 
+											'2017-06-14 17:00:00' < `endDateTime`
+										)
+								)
+								LIMIT 1
+							) AS BookingsFound";
 		$s = $pdo->prepare($sql);
 		
 		$s->bindValue(':MeetingRoomID', $_POST['meetingRoomID']);
@@ -1705,8 +1705,8 @@ if (isset($_POST['add']) AND $_POST['add'] == "Add booking")
 	}
 
 	// Check if we got any hits, if so the timeslot is already taken
-	$row = $s->fetch();		
-	if ($row[0] > 0){
+	$row = $s->fetch(PDO::FETCH_ASSOC);		
+	if ($row['HitCount'] > 0){
 
 		// Timeslot was taken
 		rememberAddBookingInputs();

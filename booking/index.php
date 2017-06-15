@@ -925,27 +925,31 @@ if (isset($_POST['add']) AND $_POST['add'] == "Add Booking")
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 		$pdo = connect_to_db();
 		$sql =	" 	SELECT 	COUNT(*)	AS HitCount
-					FROM 	`booking`
-					WHERE 	`meetingRoomID` = :MeetingRoomID
-					AND		
-					(		
-							(
-								`startDateTime` > :StartTime AND 
-								`startDateTime` < :EndTime
-							) 
-					OR 		(
-								`endDateTime` > :StartTime AND 
-								`endDateTime` < :EndTime
-							)
-					OR 		(
-								:EndTime > `startDateTime` AND 
-								:EndTime < `endDateTime`
-							)
-					OR 		(
-								:StartTime > `startDateTime` AND 
-								:StartTime < `endDateTime`
-							)
-					)";
+					FROM 	(
+								SELECT 	1
+								FROM 	`booking`
+								WHERE 	`meetingRoomID` = 26
+								AND		
+								(		
+										(
+											`startDateTime` > '2017-06-14 17:00:00' AND 
+											`startDateTime` < '2017-06-15 18:39:00'
+										) 
+								OR 		(
+											`endDateTime` > '2017-06-14 17:00:00' AND 
+											`endDateTime` < '2017-06-15 18:39:00'
+										)
+								OR 		(
+											'2017-06-15 18:39:00' > `startDateTime` AND 
+											'2017-06-15 18:39:00' < `endDateTime`
+										)
+								OR 		(
+											'2017-06-14 17:00:00' > `startDateTime` AND 
+											'2017-06-14 17:00:00' < `endDateTime`
+										)
+								)
+								LIMIT 1
+							) AS BookingsFound";
 		$s = $pdo->prepare($sql);
 		
 		$s->bindValue(':MeetingRoomID', $meetingRoomID);
