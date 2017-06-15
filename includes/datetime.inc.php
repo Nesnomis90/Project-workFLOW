@@ -3,8 +3,6 @@ require_once 'variables.inc.php';
 
 // Function to check our set minimum booking time slices to get the next valid end time
 // We assume all possible booking slices are 1/5/10/15/30/60
-// TO-DO: UNTESTED in code
-
 function getNextValidBookingStartTime(){
 	date_default_timezone_set(DATE_DEFAULT_TIMEZONE);
 	$datetimeNow = new Datetime();
@@ -128,11 +126,11 @@ function correctDatetimeFormat($wrongDatetimeString){
 	// Replace some characters if the user for some reason uses it
 	// Shouldn't really make a difference if we actually used validateDateTimeString before calling this,
 	// since these characters wouldn't be allowed
-	$wrongDatetimeString = preg_replace('/[\.\/\,_;]/','-', $wrongDatetimeString);
+	$wrongDatetimeString = preg_replace('/[\.\/\,_;]+/','-', $wrongDatetimeString);
 	
 	// Check that we only have legal characters before checking if the format is correct
 	// This should be done before calling this function
-	if(validateDateTimeString() === FALSE){
+	if(validateDateTimeString($wrongDatetimeString) === FALSE){
 		return FALSE;
 	}
 
