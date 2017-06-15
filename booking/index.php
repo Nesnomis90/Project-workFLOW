@@ -130,6 +130,7 @@ function checkIfLocalDeviceOrLoggedIn(){
 function validateUserInputs($FeedbackSessionToUse){
 	// Get user inputs
 	$invalidInput = FALSE;
+	$usingBookingCode = FALSE;
 	
 	if(isset($_POST['startDateTime']) AND !$invalidInput){
 		$startDateTimeString = $_POST['startDateTime'];
@@ -155,19 +156,25 @@ function validateUserInputs($FeedbackSessionToUse){
 		$bookingDescriptionString = '';
 	}
 	
-/*	if(isset($_POST['bookingCode'])){
-		$bookingCode = $_POST['bookingCode'];
-	} else {
-		$invalidInput = TRUE;
-		$_SESSION[$FeedbackSessionToUse] = "A booking cannot be created without submitting a booking code.";		
-	} */
+	if($usingBookingCode){
+		if(isset($_POST['bookingCode'])){
+			$bookingCode = $_POST['bookingCode'];
+		} else {
+			$invalidInput = TRUE;
+			$_SESSION[$FeedbackSessionToUse] = "A booking cannot be created without submitting a booking code.";		
+		}
+	}
 	
 	// Remove excess whitespace and prepare strings for validation
 	$validatedStartDateTime = trimExcessWhitespace($startDateTimeString);
 	$validatedEndDateTime = trimExcessWhitespace($endDateTimeString);
 	$validatedDisplayName = trimExcessWhitespaceButLeaveLinefeed($displayNameString);
 	$validatedBookingDescription = trimExcessWhitespaceButLeaveLinefeed($bookingDescriptionString);
-	//$validatedBookingCode = trimExcessWhitespace($bookingCode);
+	if($usingBookingCode){
+		$validatedBookingCode = trimExcessWhitespace($bookingCode);
+	} else {
+		$validatedBookingCode = "";
+	}
 	
 	// Do actual input validation
 	if(validateDateTimeString($validatedStartDateTime) === FALSE AND !$invalidInput){
@@ -186,10 +193,13 @@ function validateUserInputs($FeedbackSessionToUse){
 		$invalidInput = TRUE;
 		$_SESSION[$FeedbackSessionToUse] = "Your submitted booking description has illegal characters in it.";
 	}
-	/*if(validateIntegerNumber($validatedBookingCode) === FALSE AND !$invalidInput){
-		$invalidInput = TRUE;
-		$_SESSION[$FeedbackSessionToUse] = "Your submitted booking code has illegal characters in it.";		
-	}*/
+	
+	if($usingBookingCode){	
+		if(validateIntegerNumber($validatedBookingCode) === FALSE AND !$invalidInput){
+			$invalidInput = TRUE;
+			$_SESSION[$FeedbackSessionToUse] = "Your submitted booking code has illegal characters in it.";		
+		}
+	}
 	
 	// Are values actually filled in?
 	if($validatedStartDateTime == "" AND $validatedEndDateTime == "" AND !$invalidInput){
@@ -203,10 +213,12 @@ function validateUserInputs($FeedbackSessionToUse){
 		$_SESSION[$FeedbackSessionToUse] = "You need to fill in a start time for your booking.";	
 		$invalidInput = TRUE;		
 	}
-/*	if(isset($validatedBookingCode) AND $validatedBookingCode == "" AND !$invalidInput){
-		$_SESSION[$FeedbackSessionToUse] = "You need to fill in a booking code to be able to create the booking.";	
-		$invalidInput = TRUE;
-	}*/
+	if($usingBookingCode){
+		if(isset($validatedBookingCode) AND $validatedBookingCode == "" AND !$invalidInput){
+			$_SESSION[$FeedbackSessionToUse] = "You need to fill in a booking code to be able to create the booking.";	
+			$invalidInput = TRUE;
+		}
+	}
 	
 	// Check if input length is allowed
 		// DisplayName
@@ -264,22 +276,35 @@ function validateUserInputs($FeedbackSessionToUse){
 	} 
 
 	// Check if booking code submitted is a valid booking code
-/*	if(databaseContainsBookingCode($validatedBookingCode) === FALSE AND !$invalidInput){
-		$_SESSION[$FeedbackSessionToUse] = "The booking code you submitted is not valid.";	
-		$invalidInput = TRUE;
-	} */
+	if($usingBookingCode){
+		if(databaseContainsBookingCode($validatedBookingCode) === FALSE AND !$invalidInput){
+			$_SESSION[$FeedbackSessionToUse] = "The booking code you submitted is not valid.";	
+			$invalidInput = TRUE;
+		}
+	}
 	
-	//TO-DO: If we want to check if a booking is long enough, we do it here e.g. has to be longer than 10 min
-	/*
-	$timeDifferenceStartDate = new DateTime($startDateTime);
-	$timeDifferenceEndDate = new DateTime($endDateTime);
-	$timeDifference = $timeDifferenceStartDate->diff($timeDifferenceEndDate);
-	$timeDifferenceInMinutes = $timeDifference->i;
-	if(($timeDifferenceInMinutes < MINIMUM_BOOKING_TIME_IN_MINUTES) AND !$invalidInput){
-		$_SESSION[$FeedbackSessionToUse] = "A meeting needs to be at least " . MINIMUM_BOOKING_TIME_IN_MINUTES . " minutes long.";
+	// We want to check if a booking is in the correct minute slice e.g. 15 minute increments.
+		// We check both start and end time for online/admin bookings
+		// Does not apply to booking with booking code (starts immediately until next/selected chunk
+	$invalidStartTime = isBookingDateTimeMinutesInvalid($startDateTime);
+	if($invalidStartTime AND !$usingBookingCode AND !$invalidInput){
+		$_SESSION[$FeedbackSessionToUse] = "Your start time has to be in a " . MINIMUM_BOOKING_TIME_IN_MINUTES . " minutes slice from hh:00.";
 		$invalidInput = TRUE;	
-	}*/
-	$validatedBookingCode = "";
+	}
+	$invalidEndTime = isBookingDateTimeMinutesInvalid($endDateTime);
+	if($invalidEndTime AND !$invalidInput){
+		$_SESSION[$FeedbackSessionToUse] = "Your end time has to be in a " . MINIMUM_BOOKING_TIME_IN_MINUTES . " minutes slice from hh:00.";
+		$invalidInput = TRUE;	
+	}
+	
+	// We want to check if the booking is the correct minimum length
+		// Does not apply to booking with booking code (starts immediately until next/selected chunk
+	$invalidBookingLength = isBookingTimeDurationInvalid($startDateTime, $endDateTime);
+	if($invalidBookingLength AND !$usingBookingCode AND !$invalidInput){
+		$_SESSION[$FeedbackSessionToUse] = "Your start time and end time needs to have at least a " . MINIMUM_BOOKING_TIME_IN_MINUTES . " minutes difference.";
+		$invalidInput = TRUE;		
+	}
+
 	return array($invalidInput, $startDateTime, $endDateTime, $validatedBookingDescription, $validatedDisplayName, $validatedBookingCode);
 }
 
@@ -287,8 +312,19 @@ function validateUserInputs($FeedbackSessionToUse){
 // If so, set that meeting room's info as the default meeting room info
 checkIfLocalDevice();
 
+// If user wants to refresh the page to get the most up-to-date information
+if (isset($_POST['action']) and $_POST['action'] == 'Refresh'){
+	
+	if(isset($_GET['meetingroom'])){
+		$TheMeetingRoomID = $_GET['meetingroom'];
+		$location = "http://$_SERVER[HTTP_HOST]/meetingroom/?meetingroom=" . $TheMeetingRoomID;		
+	} else {
+		$location = ".";
+	}
 
-
+	header("Location: $location");
+	exit();
+}
 
 // If user wants to cancel a scheduled booked meeting
 if (	(isset($_POST['action']) and $_POST['action'] == 'Cancel') OR 
@@ -316,7 +352,7 @@ if (	(isset($_POST['action']) and $_POST['action'] == 'Cancel') OR
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 		
 		$pdo = connect_to_db();
-		$sql = 'SELECT 	COUNT(*),
+		$sql = 'SELECT 	COUNT(*)		AS HitCount,
 						`userID`
 				FROM	`booking`
 				WHERE 	`bookingID` = :id
@@ -324,8 +360,8 @@ if (	(isset($_POST['action']) and $_POST['action'] == 'Cancel') OR
 		$s = $pdo->prepare($sql);
 		$s->bindValue(':id', $bookingID);
 		$s->execute();
-		$row = $s->fetch();
-		if($row[0] > 0){
+		$row = $s->fetch(PDO::FETCH_ASSOC);
+		if($row['HitCount'] > 0){
 			if($row['userID'] == $SelectedUserID){
 				$continueCancel = TRUE;
 			}
@@ -357,7 +393,7 @@ if (	(isset($_POST['action']) and $_POST['action'] == 'Cancel') OR
 		$s = $pdo->prepare($sql);
 		$s->bindValue(':userID', $SelectedUserID);
 		$s->execute();
-		$row = $s->fetch();
+		$row = $s->fetch(PDO::FETCH_ASSOC);
 		if($row['AccessName'] == "Admin"){
 			$continueCancel = TRUE;
 		}
@@ -371,7 +407,6 @@ if (	(isset($_POST['action']) and $_POST['action'] == 'Cancel') OR
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
 		exit();
 	}	
-
 
 	if($continueCancel === FALSE){
 		$_SESSION['normalBookingFeedback'] = "You cannot cancel this booked meeting.";
@@ -497,9 +532,11 @@ if(isset($_POST['action']) AND $_POST['action'] == "confirmcode"){
 		include_once 'bookingcode.html.php';
 		exit();
 	}
-	if(isNumberInvalidBookingCode($validatedBookingCode) === TRUE){
+	
+	list($invalidBookingCode,$bookingCode) = isNumberInvalidBookingCode($validatedBookingCode);
+	if($invalidBookingCode === TRUE){
+		$_SESSION['confirmBookingCodeError'] = "The booking code you submitted (" . $bookingCode .") is an invalid code.";
 		$bookingCode = "";
-		$_SESSION['confirmBookingCodeError'] = "The booking code you submitted is an invalid code.";
 		var_dump($_SESSION); // TO-DO: remove after testing is done
 		include_once 'bookingcode.html.php';
 		exit();	
@@ -515,7 +552,7 @@ if(isset($_POST['action']) AND $_POST['action'] == "confirmcode"){
 		// Get booking information
 		$pdo = connect_to_db();
 		// Get name and IDs for meeting rooms
-		$sql = 'SELECT 	COUNT(*),
+		$sql = 'SELECT 	COUNT(*)		AS HitCount,
 						`userID`
 				FROM 	`user`
 				WHERE	`isActive` = 1
@@ -524,12 +561,12 @@ if(isset($_POST['action']) AND $_POST['action'] == "confirmcode"){
 		$s = $pdo->prepare($sql);
 		$s->bindValue(':bookingCode',$hashedBookingCode);
 		$s->execute();
-		$row = $s->fetch();
+		$row = $s->fetch(PDO::FETCH_ASSOC);
 			
 		//Close connection
 		$pdo = null;
 		
-		if ($row[0] > 0)
+		if ($row['HitCount'] > 0)
 		{
 			// Booking code is a valid user
 			$_SESSION['bookingCodeUserID'] = $row['userID'];
@@ -554,12 +591,17 @@ if(isset($_POST['action']) AND $_POST['action'] == "confirmcode"){
 			exit();						
 		} else {
 			if($_SESSION['confirmOrigins'] == "Create Meeting"){
-				$_SESSION['confirmBookingCodeError'] = "The booking code you submitted is an invalid code.";
+				$_SESSION['confirmBookingCodeError'] = "The booking code you submitted (" . $bookingCode .") is an invalid code.";
+				$bookingCode = "";
+			
+				var_dump($_SESSION); // TO-DO: Remove after testing
+				
 				include_once 'bookingcode.html.php';
-				unset($_SESSION['confirmOrigins']);
+				exit();
 			}			
 			if($_SESSION['confirmOrigins'] == "Cancel"){
-				$_SESSION['normalBookingFeedback'] = "The booking code you submitted is an invalid code.";
+				$_SESSION['normalBookingFeedback'] = "The booking code you submitted (" . $bookingCode .") is an invalid code.";
+				$bookingCode = "";
 				unset($_SESSION['confirmOrigins']);
 			}	
 			if(isset($_GET['meetingroom'])){
@@ -651,7 +693,7 @@ if(	((isset($_POST['action']) AND $_POST['action'] == 'Create Meeting')) OR
 			$s->execute();
 			
 			// Create an array with the row information we retrieved
-			$result = $s->fetch();
+			$result = $s->fetch(PDO::FETCH_ASSOC);
 				
 			// Set default booking display name and booking description
 			if($result['displayname']!=NULL){
@@ -787,8 +829,10 @@ if(	((isset($_POST['action']) AND $_POST['action'] == 'Create Meeting')) OR
 	// Set the correct information
 	if(isset($_GET['meetingroom'])){
 		$_SESSION['AddCreateBookingInfoArray']['TheMeetingRoomID'] = $_GET['meetingroom'];
-	} else {
+	} elseif(isset($_POST['meetingRoomID'])) {
 		$_SESSION['AddCreateBookingInfoArray']['TheMeetingRoomID'] = $_POST['meetingRoomID'];
+	} else {
+		$_SESSION['AddCreateBookingInfoArray']['TheMeetingRoomID'] = "";
 	}
 	$row = $_SESSION['AddCreateBookingInfoArray'];
 	$original = $_SESSION['AddCreateBookingOriginalInfoArray'];
@@ -900,32 +944,32 @@ if (isset($_POST['add']) AND $_POST['add'] == "Add Booking")
 	{
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 		$pdo = connect_to_db();
-		$sql =	" 	SELECT 	COUNT(*)
-					FROM 	`booking`
-					WHERE 	`meetingRoomID` = :MeetingRoomID
-					AND		
-					(		
-							(
-								`startDateTime` 
-								BETWEEN :StartTime
-								AND :EndTime
-							) 
-					OR 		(
-								`endDateTime`
-								BETWEEN :StartTime
-								AND :EndTime
-							)
-					OR 		(
-								:EndTime
-								BETWEEN `startDateTime`
-								AND `endDateTime`
-							)
-					OR 		(
-								:StartTime
-								BETWEEN `startDateTime`
-								AND `endDateTime`
-							)
-					)";
+		$sql =	" 	SELECT 	COUNT(*)	AS HitCount
+					FROM 	(
+								SELECT 	1
+								FROM 	`booking`
+								WHERE 	`meetingRoomID` = 26
+								AND		
+								(		
+										(
+											`startDateTime` > '2017-06-14 17:00:00' AND 
+											`startDateTime` < '2017-06-15 18:39:00'
+										) 
+								OR 		(
+											`endDateTime` > '2017-06-14 17:00:00' AND 
+											`endDateTime` < '2017-06-15 18:39:00'
+										)
+								OR 		(
+											'2017-06-15 18:39:00' > `startDateTime` AND 
+											'2017-06-15 18:39:00' < `endDateTime`
+										)
+								OR 		(
+											'2017-06-14 17:00:00' > `startDateTime` AND 
+											'2017-06-14 17:00:00' < `endDateTime`
+										)
+								)
+								LIMIT 1
+							) AS BookingsFound";
 		$s = $pdo->prepare($sql);
 		
 		$s->bindValue(':MeetingRoomID', $meetingRoomID);
@@ -943,8 +987,8 @@ if (isset($_POST['add']) AND $_POST['add'] == "Add Booking")
 	}
 
 	// Check if we got any hits, if so the timeslot is already taken
-	$row = $s->fetch();		
-	if ($row[0] > 0){
+	$row = $s->fetch(PDO::FETCH_ASSOC);		
+	if ($row['HitCount'] > 0){
 
 		// Timeslot was taken
 		rememberAddCreateBookingInputs();
@@ -1240,6 +1284,57 @@ if(isset($_POST['add']) AND $_POST['add'] == "Get Default Booking Description"){
 	exit();	
 }
 
+// If user wants to increase the start timer by minimum allowed time (e.g. to the closest 15 min chunk)
+if(isset($_POST['add']) AND $_POST['add'] == "Increase Start By Minimum"){
+	
+	// Let's remember what was selected if we do any changes before clicking "Select This User"
+	rememberAddCreateBookingInputs();
+	
+	$startTime = $_SESSION['AddCreateBookingInfoArray']['StartTime'];
+	$correctStartTime = correctDatetimeFormat($startTime);
+	$newStartTime = convertDatetimeToFormat(getNextValidBookingEndTime($correctStartTime), 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
+	$_SESSION['AddCreateBookingInfoArray']['StartTime'] = $newStartTime;
+	
+	if($_SESSION['AddCreateBookingInfoArray']['StartTime'] >= $_SESSION['AddCreateBookingInfoArray']['EndTime']){
+		$newCorrectStartTime = correctDatetimeFormat($newStartTime);
+		$newEndTime = convertDatetimeToFormat(getNextValidBookingEndTime($newCorrectStartTime), 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
+		$_SESSION['AddCreateBookingInfoArray']['EndTime'] = $newEndTime;
+	}
+	
+	$_SESSION['refreshAddCreateBooking'] = TRUE;
+	if(isset($_GET['meetingroom'])){
+		$meetingRoomID = $_GET['meetingroom'];
+		$location = "http://$_SERVER[HTTP_HOST]/booking/?meetingroom=" . $meetingRoomID;
+	} else {
+		$meetingRoomID = $_POST['meetingRoomID'];
+		$location = '.';
+	}
+	header('Location: ' . $location);
+	exit();	
+}
+
+// If user wants to increase the end timer by minimum allowed time (e.g. 15 min)
+if(isset($_POST['add']) AND $_POST['add'] == "Increase End By Minimum"){
+	
+	// Let's remember what was selected if we do any changes before clicking "Select This User"
+	rememberAddCreateBookingInputs();
+	
+	$endTime = $_SESSION['AddCreateBookingInfoArray']['EndTime'];
+	$correctEndTime = correctDatetimeFormat($endTime);
+	$_SESSION['AddCreateBookingInfoArray']['EndTime'] = convertDatetimeToFormat(getNextValidBookingEndTime($correctEndTime), 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
+	
+	$_SESSION['refreshAddCreateBooking'] = TRUE;
+	if(isset($_GET['meetingroom'])){
+		$meetingRoomID = $_GET['meetingroom'];
+		$location = "http://$_SERVER[HTTP_HOST]/booking/?meetingroom=" . $meetingRoomID;
+	} else {
+		$meetingRoomID = $_POST['meetingRoomID'];
+		$location = '.';
+	}
+	header('Location: ' . $location);
+	exit();
+}
+
 // If user wants to change the values back to the original values
 if (isset($_POST['add']) AND $_POST['add'] == "Reset"){
 
@@ -1369,8 +1464,8 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR
 				exit();		
 			}
 			
-			// Create an array with the row information we retrieved		
-			$_SESSION['EditCreateBookingInfoArray'] = $s->fetch();
+			// Create an array with the row information we retrieved
+			$_SESSION['EditCreateBookingInfoArray'] = $s->fetch(PDO::FETCH_ASSOC);
 			$_SESSION['EditCreateBookingOriginalInfoArray'] = $_SESSION['EditCreateBookingInfoArray'];
 		}	
 		
@@ -1676,6 +1771,43 @@ if(isset($_POST['edit']) AND $_POST['edit'] == "Get Default Booking Description"
 	exit();	
 }
 
+/* TO-DO: Remove comment block if we will allow editing the start/end time for users
+// If user wants to increase the start timer by minimum allowed time (e.g. 15 min)
+if(isset($_POST['edit']) AND $_POST['edit'] == "Increase Start By Minimum"){
+	
+	// Let's remember what was selected if we do any changes before clicking "Select This User"
+	rememberEditCreateBookingInputs();
+	
+	$startTime = $_SESSION['EditCreateBookingInfoArray']['StartTime'];
+	$correctStartTime = correctDatetimeFormat($startTime);
+	$_SESSION['EditCreateBookingInfoArray']['StartTime'] = convertDatetimeToFormat(getNextValidBookingEndTime($correctStartTime), 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
+	
+	if($_SESSION['EditCreateBookingInfoArray']['StartTime'] == $_SESSION['EditCreateBookingInfoArray']['EndTime']){
+		$endTime = $_SESSION['EditCreateBookingInfoArray']['EndTime'];
+		$correctEndTime = correctDatetimeFormat($endTime);
+		$_SESSION['EditCreateBookingInfoArray']['EndTime'] = convertDatetimeToFormat(getNextValidBookingEndTime($correctEndTime), 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
+	}
+	
+	$_SESSION['refreshEditCreateBooking'] = TRUE;
+	header('Location: .');
+	exit();	
+}
+
+// If user wants to increase the end timer by minimum allowed time (e.g. 15 min)
+if(isset($_POST['edit']) AND $_POST['edit'] == "Increase End By Minimum"){
+	
+	// Let's remember what was selected if we do any changes before clicking "Select This User"
+	rememberEditCreateBookingInputs();
+	
+	$endTime = $_SESSION['EditCreateBookingInfoArray']['EndTime'];
+	$correctEndTime = correctDatetimeFormat($endTime);
+	$_SESSION['EditCreateBookingInfoArray']['EndTime'] = convertDatetimeToFormat(getNextValidBookingEndTime($correctEndTime), 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
+
+	$_SESSION['refreshEditCreateBooking'] = TRUE;
+	header('Location: .');
+	exit();	
+}*/
+
 // If user wants to change the values back to the original values while editing
 if (isset($_POST['edit']) AND $_POST['edit'] == "Reset"){
 
@@ -1752,7 +1884,7 @@ if(isset($_GET['cancellationcode'])){
 		exit();
 	}
 
-	$result = $s->fetch();
+	$result = $s->fetch(PDO::FETCH_ASSOC);
 	
 	$bookingID = $result['bookingID'];
 	$TheMeetingRoomName = $result['TheMeetingRoomName'];

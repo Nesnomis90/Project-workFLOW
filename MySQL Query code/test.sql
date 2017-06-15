@@ -2,6 +2,33 @@ USE test;
 SET NAMES utf8;
 USE meetingflow;
 
+SELECT 	COUNT(*)	AS HitCount
+FROM 	(
+ 			SELECT 	1
+			FROM 	`booking`
+			WHERE 	`meetingRoomID` = 26
+			AND		
+			(		
+					(
+						`startDateTime` > '2017-06-14 17:00:00' AND 
+						`startDateTime` < '2017-06-15 18:39:00'
+					) 
+			OR 		(
+						`endDateTime` > '2017-06-14 17:00:00' AND 
+						`endDateTime` < '2017-06-15 18:39:00'
+					)
+			OR 		(
+						'2017-06-15 18:39:00' > `startDateTime` AND 
+						'2017-06-15 18:39:00' < `endDateTime`
+					)
+			OR 		(
+						'2017-06-14 17:00:00' > `startDateTime` AND 
+						'2017-06-14 17:00:00' < `endDateTime`
+					)
+			)
+            LIMIT 1
+		) AS BookingsFound;
+
 SELECT  	m.`meetingRoomID`	AS TheMeetingRoomID, 
 			m.`name`			AS MeetingRoomName, 
 			m.`capacity`		AS MeetingRoomCapacity, 

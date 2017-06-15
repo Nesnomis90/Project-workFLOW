@@ -25,8 +25,16 @@
 		<?php endif; ?>
 		<h1>Meeting Room</h1>
 		<form action="" method="post">
-			<input type="submit" name="action" value="Refresh As Default Room">
-			<input type="submit" name="action" value="Refresh As Selected Room">
+			<?php if(isset($_SESSION['DefaultMeetingRoomInfo'])) : ?>
+				<input type="submit" name="action" value="Refresh As Default Room">
+			<?php else : ?>
+				<input type="submit" name="disabled" value="Refresh As Default Room" disabled>
+			<?php endif; ?>
+			<?php if(isset($_GET['meetingroom'])) : ?>
+				<input type="submit" name="action" value="Refresh As Selected Room">
+			<?php else : ?>
+				<input type="submit" name="disabled" value="Refresh As Selected Room" disabled>
+			<?php endif; ?>
 		</form>
 		<?php if(isset($_SESSION['MeetingRoomAllUsersFeedback'])) : ?>
 			<div><b><?php htmlout($_SESSION['MeetingRoomAllUsersFeedback']); ?></b></div>

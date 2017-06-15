@@ -3,8 +3,6 @@ require_once 'variables.inc.php';
 
 // Function to check our set minimum booking time slices to get the next valid end time
 // We assume all possible booking slices are 1/5/10/15/30/60
-// TO-DO: UNTESTED in code
-
 function getNextValidBookingStartTime(){
 	date_default_timezone_set(DATE_DEFAULT_TIMEZONE);
 	$datetimeNow = new Datetime();
@@ -14,9 +12,7 @@ function getNextValidBookingStartTime(){
 }
 
 function getNextValidBookingEndTime($startTimeString){
-	echo "<br />";
-	var_dump($startTimeString);
-	echo "<br />";
+
 	if(validateDatetimeWithFormat($startTimeString,'Y-m-d H:i:s')){
 		$startTime = convertDatetimeToFormat($startTimeString,'Y-m-d H:i:s','Y-m-d H:i');
 		$startTime = stringToDateTime($startTime, 'Y-m-d H:i');
@@ -24,8 +20,6 @@ function getNextValidBookingEndTime($startTimeString){
 		$startTime = stringToDateTime($startTimeString, 'Y-m-d H:i');
 	}
 	
-	var_dump($startTime);
-	echo "<br />";
 	$startTimeDatePart = $startTime->format('Y-m-d');
 	$startTimeHourPart = $startTime->format('H');
 	$startTimeMinutePart = $startTime->format('i');
@@ -37,33 +31,50 @@ function getNextValidBookingEndTime($startTimeString){
 			// Set new day
 			$startTime->modify('+1 day');
 			$startTimeDatePart = $startTime->format('Y-m-d');
-			$endTimeString = $startTimeDatePart . ' 00:00:00'; 
-		} else {
-			// Set new hour
-			$startTime->modify('+1 hour');
-			$startTimeHourPart = $startTime->format('H');
-			$endTimeString = $startTimeDatePart . ' ' . $startTimeHourPart .':00:00';
 		}
-	} else {
-		for($i = 0; $i < 60; ){
-			if($startTimeMinutePart < $i){
-				// Next valid slice found.
-				$endTimeString = $startTimeDatePart . ' ' . $startTimeHourPart . ':' . $i .':00';
-				break; 
-			}
-			$i += $minimumBookingTime;	
-		}		
+		
+		// Set new hour
+		$hourIncrease = floor(($startTimeMinutePart+$minimumBookingTime)/60);
+		$startTime->modify('+' . $hourIncrease . ' hour');
+		$startTimeHourPart = $startTime->format('H');
+
+		$startTimeMinutePart -= 60;
 	}
+
+
+	for($i = 0; $i < 61; ){
+		if($startTimeMinutePart < $i){
+			// Next valid slice found.
+			if($i == 0){
+				$min = '00';
+			} elseif($i < 10){
+				$min = '0' . $i;
+			} else {
+				$min = $i;
+			}
+			break; 
+		}
+		$i += $minimumBookingTime;	
+	}		
+
+	$endTimeString = $startTimeDatePart . ' ' . $startTimeHourPart . ':' . $min .':00';	
 	return $endTimeString;
 }
 
-//Function to get the current datetime
+// Function to get the current datetime in MySQL format
 function getDatetimeNow() {
 	// We use the same format as used in MySQL
 	// yyyy-mm-dd hh:mm:ss
 	date_default_timezone_set(DATE_DEFAULT_TIMEZONE);
 	$datetimeNow = new Datetime();
 	return $datetimeNow->format('Y-m-d H:i:s');
+}
+
+// Function to get the current datetime in display format (with seconds)
+function getDatetimeNowInDisplayFormat(){
+	$timeNow = getDatetimeNow();
+	$displayTimeNow = convertDatetimeToFormat($timeNow,'Y-m-d H:i:s',DATETIME_DEFAULT_FORMAT_TO_DISPLAY_WITH_SECONDS);
+	return $displayTimeNow;
 }
 
 // Function to get the current date
@@ -113,40 +124,29 @@ function correctDateFormat($wrongDateString){
 //	Function to change datetime format to be correct for datetime input in database
 //	We check for the datetimes we assume the user might submit
 function correctDatetimeFormat($wrongDatetimeString){
+	// Take in a bunch of different datetime formats and output the correct format
+	// Accepts dates: Y-n-j, j-n-Y, j-M-Y, j-F-Y, jS-F-Y, F-j-Y, F-jS-Y
+	// Accepts times: H-i-s, H-i, H or none
 	// Correct datetime format we want out is
 	// yyyy-mm-dd hh:mm:ss => 'Y-m-d H:i:s'
-	// If no hit we return FALSE
-	// Seems excessive but execution time to go through everything takes around 1 µ second
-	// TO-DO: Make sure we don't confuse the input by allowing multiple interpretations of the same text string?
-	// TO-DO: When converting non time strings into timestrings it submits the time right now
-	// 			Let's make this return 00:00:00 instead?
-	// TO-DO: Not heavily tested!!!!
-	// TO-DO: Still needs fixing separating date and time parts
+	// If not a correct input format we return FALSE
 
 	date_default_timezone_set(DATE_DEFAULT_TIMEZONE);
 	
 	// Remove white spaces before and after the datetime submitted
 	$wrongDatetimeString = trim($wrongDatetimeString);
-	//echo $wrongDatetimeString . "<br />";
 	
 	// Replace some characters if the user for some reason uses it
-	// TO-DO: use regex to limit what user can submit later?
-	$wrongDatetimeString = str_replace('.', '-',$wrongDatetimeString);
-	$wrongDatetimeString = str_replace(',', '-',$wrongDatetimeString);
-	$wrongDatetimeString = str_replace('/', '-',$wrongDatetimeString);
-	$wrongDatetimeString = str_replace('_', '-',$wrongDatetimeString);
+	// Shouldn't really make a difference if we actually used validateDateTimeString before calling this,
+	// since these characters wouldn't be allowed
+	$wrongDatetimeString = preg_replace('/[\.\/\,_;]+/','-', $wrongDatetimeString);
 	
-	//echo $wrongDatetimeString . "<br />";
-	
-	// The characters we want to allow in the string
-	$allowedChars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 -:";
-	foreach(str_split($wrongDatetimeString) AS $char){
-		if(strpos($allowedChars,$char) === FALSE){
-			// Found an illegal character
-			return FALSE;
-		}
+	// Check that we only have legal characters before checking if the format is correct
+	// This should be done before calling this function
+	if(validateDateTimeString($wrongDatetimeString) === FALSE){
+		return FALSE;
 	}
-	
+
 	// Reduce number of validateDatetimeWithFormat by replacing spaces and leading 0s
 	$spacesInDatetimeString = substr_count($wrongDatetimeString, ' ');
 	$dashesInDatetimeString = substr_count($wrongDatetimeString, '-');
@@ -160,11 +160,6 @@ function correctDatetimeFormat($wrongDatetimeString){
 		$timePart = substr(strrchr($wrongDatetimeString, " "), 0);
 	} 
 	
-	//echo "datepart: $datePart <br />";
-	if(isset($timePart)){
-		//echo "timepart: $timePart <br />";		
-	}
-
 	// change spaces in date part
 	$datePart= str_replace(' ', '-',$datePart);
 
@@ -183,8 +178,6 @@ function correctDatetimeFormat($wrongDatetimeString){
 		$timePart = "";
 	}
 	$wrongDatetimeString = $datePartWithNoSpacesOrLeadingZeros . $timePart;
-
-	//echo $wrongDatetimeString . "<br />";
 	
 	if(validateDatetimeWithFormat($wrongDatetimeString, 'Y-n-j H:i:s')){
 		$wrongDatetime = date_create_from_format('Y-n-j H:i:s', $wrongDatetimeString);
