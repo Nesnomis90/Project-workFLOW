@@ -1632,7 +1632,6 @@ if(isset($_POST['add']) AND $_POST['add'] == "Increase End By Minimum"){
 	$correctEndTime = correctDatetimeFormat($endTime);
 	$_SESSION['AddBookingInfoArray']['EndTime'] = convertDatetimeToFormat(getNextValidBookingEndTime($correctEndTime), 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
 	
-
 	$_SESSION['refreshAddBooking'] = TRUE;
 	header('Location: .');
 	exit();	

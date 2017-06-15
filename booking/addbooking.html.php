@@ -55,12 +55,14 @@
 				<input type="text" name="startDateTime" id="startDateTime" 
 				placeholder="date hh:mm:ss"
 				value="<?php htmlout($startDateTime); ?>">
+				<input type="submit" name="add" value="Increase Start By Minimum">
 			</div>
 			<div>
 				<label for="endDateTime">End Time: </label>
 				<input type="text" name="endDateTime" id="endDateTime" 
 				placeholder="date hh:mm:ss"
 				value="<?php htmlout($endDateTime); ?>">
+				<input type="submit" name="add" value="Increase End By Minimum">
 			</div>
 			<div>
 				<label for="companyID">Company: </label>

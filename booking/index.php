@@ -395,7 +395,6 @@ if (	(isset($_POST['action']) and $_POST['action'] == 'Cancel') OR
 		exit();
 	}	
 
-
 	if($continueCancel === FALSE){
 		$_SESSION['normalBookingFeedback'] = "You cannot cancel this booked meeting.";
 		if(isset($_GET['meetingroom'])){
@@ -1263,6 +1262,57 @@ if(isset($_POST['add']) AND $_POST['add'] == "Get Default Booking Description"){
 	exit();	
 }
 
+// If user wants to increase the start timer by minimum allowed time (e.g. to the closest 15 min chunk)
+if(isset($_POST['add']) AND $_POST['add'] == "Increase Start By Minimum"){
+	
+	// Let's remember what was selected if we do any changes before clicking "Select This User"
+	rememberAddCreateBookingInputs();
+	
+	$startTime = $_SESSION['AddCreateBookingInfoArray']['StartTime'];
+	$correctStartTime = correctDatetimeFormat($startTime);
+	$newStartTime = convertDatetimeToFormat(getNextValidBookingEndTime($correctStartTime), 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
+	$_SESSION['AddCreateBookingInfoArray']['StartTime'] = $newStartTime;
+	
+	if($_SESSION['AddCreateBookingInfoArray']['StartTime'] >= $_SESSION['AddCreateBookingInfoArray']['EndTime']){
+		$newCorrectStartTime = correctDatetimeFormat($newStartTime);
+		$newEndTime = convertDatetimeToFormat(getNextValidBookingEndTime($newCorrectStartTime), 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
+		$_SESSION['AddCreateBookingInfoArray']['EndTime'] = $newEndTime;
+	}
+	
+	$_SESSION['refreshAddCreateBooking'] = TRUE;
+	if(isset($_GET['meetingroom'])){
+		$meetingRoomID = $_GET['meetingroom'];
+		$location = "http://$_SERVER[HTTP_HOST]/booking/?meetingroom=" . $meetingRoomID;
+	} else {
+		$meetingRoomID = $_POST['meetingRoomID'];
+		$location = '.';
+	}
+	header('Location: ' . $location);
+	exit();	
+}
+
+// If user wants to increase the end timer by minimum allowed time (e.g. 15 min)
+if(isset($_POST['add']) AND $_POST['add'] == "Increase End By Minimum"){
+	
+	// Let's remember what was selected if we do any changes before clicking "Select This User"
+	rememberAddCreateBookingInputs();
+	
+	$endTime = $_SESSION['AddCreateBookingInfoArray']['EndTime'];
+	$correctEndTime = correctDatetimeFormat($endTime);
+	$_SESSION['AddCreateBookingInfoArray']['EndTime'] = convertDatetimeToFormat(getNextValidBookingEndTime($correctEndTime), 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
+	
+	$_SESSION['refreshAddCreateBooking'] = TRUE;
+	if(isset($_GET['meetingroom'])){
+		$meetingRoomID = $_GET['meetingroom'];
+		$location = "http://$_SERVER[HTTP_HOST]/booking/?meetingroom=" . $meetingRoomID;
+	} else {
+		$meetingRoomID = $_POST['meetingRoomID'];
+		$location = '.';
+	}
+	header('Location: ' . $location);
+	exit();
+}
+
 // If user wants to change the values back to the original values
 if (isset($_POST['add']) AND $_POST['add'] == "Reset"){
 
@@ -1698,6 +1748,43 @@ if(isset($_POST['edit']) AND $_POST['edit'] == "Get Default Booking Description"
 	header('Location: .');
 	exit();	
 }
+
+/* TO-DO: Remove if we will allow editing the start/end time for users
+// If user wants to increase the start timer by minimum allowed time (e.g. 15 min)
+if(isset($_POST['edit']) AND $_POST['edit'] == "Increase Start By Minimum"){
+	
+	// Let's remember what was selected if we do any changes before clicking "Select This User"
+	rememberEditCreateBookingInputs();
+	
+	$startTime = $_SESSION['EditCreateBookingInfoArray']['StartTime'];
+	$correctStartTime = correctDatetimeFormat($startTime);
+	$_SESSION['EditCreateBookingInfoArray']['StartTime'] = convertDatetimeToFormat(getNextValidBookingEndTime($correctStartTime), 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
+	
+	if($_SESSION['EditCreateBookingInfoArray']['StartTime'] == $_SESSION['EditCreateBookingInfoArray']['EndTime']){
+		$endTime = $_SESSION['EditCreateBookingInfoArray']['EndTime'];
+		$correctEndTime = correctDatetimeFormat($endTime);
+		$_SESSION['EditCreateBookingInfoArray']['EndTime'] = convertDatetimeToFormat(getNextValidBookingEndTime($correctEndTime), 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
+	}
+	
+	$_SESSION['refreshEditCreateBooking'] = TRUE;
+	header('Location: .');
+	exit();	
+}
+
+// If user wants to increase the end timer by minimum allowed time (e.g. 15 min)
+if(isset($_POST['edit']) AND $_POST['edit'] == "Increase End By Minimum"){
+	
+	// Let's remember what was selected if we do any changes before clicking "Select This User"
+	rememberEditCreateBookingInputs();
+	
+	$endTime = $_SESSION['EditCreateBookingInfoArray']['EndTime'];
+	$correctEndTime = correctDatetimeFormat($endTime);
+	$_SESSION['EditCreateBookingInfoArray']['EndTime'] = convertDatetimeToFormat(getNextValidBookingEndTime($correctEndTime), 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
+
+	$_SESSION['refreshEditCreateBooking'] = TRUE;
+	header('Location: .');
+	exit();	
+}*/
 
 // If user wants to change the values back to the original values while editing
 if (isset($_POST['edit']) AND $_POST['edit'] == "Reset"){
