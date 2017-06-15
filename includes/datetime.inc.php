@@ -61,13 +61,20 @@ function getNextValidBookingEndTime($startTimeString){
 	return $endTimeString;
 }
 
-//Function to get the current datetime
+// Function to get the current datetime in MySQL format
 function getDatetimeNow() {
 	// We use the same format as used in MySQL
 	// yyyy-mm-dd hh:mm:ss
 	date_default_timezone_set(DATE_DEFAULT_TIMEZONE);
 	$datetimeNow = new Datetime();
 	return $datetimeNow->format('Y-m-d H:i:s');
+}
+
+// Function to get the current datetime in display format (with seconds)
+function getDatetimeNowInDisplayFormat(){
+	$timeNow = getDatetimeNow();
+	$displayTimeNow = convertDatetimeToFormat($timeNow,'Y-m-d H:i:s',DATETIME_DEFAULT_FORMAT_TO_DISPLAY_WITH_SECONDS);
+	return $displayTimeNow;
 }
 
 // Function to get the current date

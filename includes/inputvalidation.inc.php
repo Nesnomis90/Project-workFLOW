@@ -136,6 +136,7 @@ function isNumberInvalidCreditsMonthlyPrice($creditsMonthlyPrice){
 
 	// Booking Code Digits
 // Returns TRUE on invalid, FALSE on valid
+// Also returns the bookingCode we checked/created
 function isNumberInvalidBookingCode($bookingCode){
 	// Has to be between 0 and 6 digits (ideally 6 digits all the time, but we add 0's to make it 6)
 	// Also has to return invalid on blocked digits, if implemented
@@ -164,14 +165,14 @@ function isNumberInvalidBookingCode($bookingCode){
 	$minNumber = 0;
 	$maxNumber = pow(10,BOOKING_CODE_LENGTH)-1; // Sets the highest number with our set digits (10^digits - 1)
 	if($bookingCode < $minNumber OR $bookingCode > $maxNumber){
-		return TRUE;
+		return array(TRUE, $bookingCode);
 	}
 	foreach($blockedDigits AS $number){
 		if($bookingCode == $number){
-			return TRUE;
+			return array(TRUE, $bookingCode);
 		}
 	}
-	return FALSE;	
+	return array(FALSE, $bookingCode);	
 }
 
 // Function that (hopefully) removes excess white space, line feeds etc.

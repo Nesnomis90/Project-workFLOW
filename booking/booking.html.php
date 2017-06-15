@@ -41,9 +41,13 @@
 				padding: 8px;
 				font-size: 300%;
 			}
-		</style>		
+		</style>
+		<script src="/scripts/myFunctions.js"></script>		
 	</head>
-	<body>
+	<body onload="startTime()">
+	<div id="ClockPlacement">
+		<b id="Clock"></b>
+	</div>
 	<?php if(isset($_SESSION['normalBookingFeedback'])) : ?>
 		<p><b><?php htmlout($_SESSION['normalBookingFeedback']); ?></b></p>
 		<?php unset($_SESSION['normalBookingFeedback']); ?>
@@ -55,6 +59,8 @@
 		<form action="" method="post">
 			<div>
 				<input type="submit" name="action" value="Create Meeting">
+				<input type="submit" name="action" value="Refresh">
+				<b>Last Refresh: <?php htmlout(getDatetimeNowInDisplayFormat()); ?></b>
 			</div>		
 		</form>
 		<table id="bookingstable">
@@ -160,6 +166,8 @@
 		<form action="" method="post">
 			<div>
 				<input type="submit" name="action" value="Create Meeting">
+				<input type="submit" name="action" value="Refresh">
+				<b>Last Refresh: <?php htmlout(getDatetimeNowInDisplayFormat()); ?></b>
 			</div>		
 		</form>
 		<table id="bookingstable">

@@ -312,6 +312,19 @@ function validateUserInputs($FeedbackSessionToUse){
 // If so, set that meeting room's info as the default meeting room info
 checkIfLocalDevice();
 
+// If user wants to refresh the page to get the most up-to-date information
+if (isset($_POST['action']) and $_POST['action'] == 'Refresh'){
+	
+	if(isset($_GET['meetingroom'])){
+		$TheMeetingRoomID = $_GET['meetingroom'];
+		$location = "http://$_SERVER[HTTP_HOST]/meetingroom/?meetingroom=" . $TheMeetingRoomID;		
+	} else {
+		$location = ".";
+	}
+
+	header("Location: $location");
+	exit();
+}
 
 // If user wants to cancel a scheduled booked meeting
 if (	(isset($_POST['action']) and $_POST['action'] == 'Cancel') OR 
@@ -519,9 +532,11 @@ if(isset($_POST['action']) AND $_POST['action'] == "confirmcode"){
 		include_once 'bookingcode.html.php';
 		exit();
 	}
-	if(isNumberInvalidBookingCode($validatedBookingCode) === TRUE){
+	
+	list($invalidBookingCode,$bookingCode) = isNumberInvalidBookingCode($validatedBookingCode);
+	if($invalidBookingCode === TRUE){
+		$_SESSION['confirmBookingCodeError'] = "The booking code you submitted (" . $bookingCode .") is an invalid code.";
 		$bookingCode = "";
-		$_SESSION['confirmBookingCodeError'] = "The booking code you submitted is an invalid code.";
 		var_dump($_SESSION); // TO-DO: remove after testing is done
 		include_once 'bookingcode.html.php';
 		exit();	
@@ -576,12 +591,17 @@ if(isset($_POST['action']) AND $_POST['action'] == "confirmcode"){
 			exit();						
 		} else {
 			if($_SESSION['confirmOrigins'] == "Create Meeting"){
-				$_SESSION['confirmBookingCodeError'] = "The booking code you submitted is an invalid code.";
+				$_SESSION['confirmBookingCodeError'] = "The booking code you submitted (" . $bookingCode .") is an invalid code.";
+				$bookingCode = "";
+			
+				var_dump($_SESSION); // TO-DO: Remove after testing
+				
 				include_once 'bookingcode.html.php';
-				unset($_SESSION['confirmOrigins']);
+				exit();
 			}			
 			if($_SESSION['confirmOrigins'] == "Cancel"){
-				$_SESSION['normalBookingFeedback'] = "The booking code you submitted is an invalid code.";
+				$_SESSION['normalBookingFeedback'] = "The booking code you submitted (" . $bookingCode .") is an invalid code.";
+				$bookingCode = "";
 				unset($_SESSION['confirmOrigins']);
 			}	
 			if(isset($_GET['meetingroom'])){
