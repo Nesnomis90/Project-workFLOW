@@ -115,7 +115,7 @@
 				<input type="hidden" name="bookingID" id="bookingID" 
 				value="<?php htmlout($bookingID); ?>">
 				<input type="submit" name="edit" value="Reset">
-				<input type="submit" name="edit" value="Cancel">
+				<input type="submit" name="edit" value="Go Back">
 				<?php if(!isset($_SESSION['EditCreateBookingSelectedACompany'])) : ?>
 					<input type="submit" name="disabled" value="Finish Edit" disabled>
 					<b>You need to select the company you want before you can finish editing.</b>				

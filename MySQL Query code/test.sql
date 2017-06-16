@@ -6,24 +6,24 @@ SELECT 	COUNT(*)	AS HitCount
 FROM 	(
  			SELECT 	1
 			FROM 	`booking`
-			WHERE 	`meetingRoomID` = 26
+			WHERE 	`meetingRoomID` = 21
 			AND		
 			(		
 					(
-						`startDateTime` > '2017-06-14 17:00:00' AND 
-						`startDateTime` < '2017-06-15 18:39:00'
+						`startDateTime` > '2017-06-16 15:15:00' AND 
+						`startDateTime` < '2017-06-16 17:00:00'
 					) 
 			OR 		(
-						`endDateTime` > '2017-06-14 17:00:00' AND 
-						`endDateTime` < '2017-06-15 18:39:00'
+						`endDateTime` > '2017-06-16 15:15:00' AND 
+						`endDateTime` < '2017-06-16 17:00:00'
 					)
 			OR 		(
-						'2017-06-15 18:39:00' > `startDateTime` AND 
-						'2017-06-15 18:39:00' < `endDateTime`
+						'2017-06-16 17:00:00' > `startDateTime` AND 
+						'2017-06-16 17:00:00' < `endDateTime`
 					)
 			OR 		(
-						'2017-06-14 17:00:00' > `startDateTime` AND 
-						'2017-06-14 17:00:00' < `endDateTime`
+						'2017-06-16 15:15:00' > `startDateTime` AND 
+						'2017-06-16 15:15:00' < `endDateTime`
 					)
 			)
             LIMIT 1

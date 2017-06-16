@@ -125,6 +125,25 @@ function checkIfLocalDeviceOrLoggedIn(){
 	return $SelectedUserID;
 }
 
+// This is used on cancel
+// TO-DO: This does not work properly yet because we can't use POST like this, since we're redirected a lot
+function emailUserOnCancelledBooking(){
+	$emailSubject = "Your meeting has been cancelled!";
+
+	$emailMessage = 
+	"A booked meeting has been cancelled by an Admin!\n" .
+	"The meeting was booked for the room " . $_POST['MeetingInfo'];
+	
+	$email = $_POST['Email'];
+	
+	$mailResult = sendEmail($email, $emailSubject, $emailMessage);
+
+	if(!$mailResult){
+		$_SESSION['normalBookingFeedback'] .= " [WARNING] System failed to send Email to user.";
+	}
+	
+	$_SESSION['normalBookingFeedback'] .= " This is the email msg we're sending out: $emailMessage. Sent to email: $email."; // TO-DO: Remove after testing			
+}
 
 // Function to validate user inputs
 function validateUserInputs($FeedbackSessionToUse){
@@ -312,6 +331,36 @@ function validateUserInputs($FeedbackSessionToUse){
 // If so, set that meeting room's info as the default meeting room info
 checkIfLocalDevice();
 
+// If user wants to go back to the main page while in the confirm booking page
+if (isset($_POST['action']) and $_POST['action'] == 'Go Back'){
+	
+	if(isset($_GET['meetingroom'])){
+		$TheMeetingRoomID = $_GET['meetingroom'];
+		$location = "http://$_SERVER[HTTP_HOST]/booking/?meetingroom=" . $TheMeetingRoomID;		
+	} else {
+		$location = ".";
+	}
+
+	header("Location: $location");
+	exit();
+}
+
+// If user wants to go back to the main page while editing
+if (isset($_POST['edit']) and $_POST['edit'] == 'Go Back'){
+	
+	$_SESSION['normalBookingFeedback'] = "You cancelled your booking editing.";
+	
+	if(isset($_GET['meetingroom'])){
+		$TheMeetingRoomID = $_GET['meetingroom'];
+		$location = "http://$_SERVER[HTTP_HOST]/booking/?meetingroom=" . $TheMeetingRoomID;		
+	} else {
+		$location = ".";
+	}
+
+	header("Location: $location");
+	exit();
+}
+
 // If user wants to refresh the page to get the most up-to-date information
 if (isset($_POST['action']) and $_POST['action'] == 'Refresh'){
 	
@@ -346,6 +395,7 @@ if (	(isset($_POST['action']) and $_POST['action'] == 'Cancel') OR
 	
 	// Check if selected user ID is creator of booking or an admin
 	$continueCancel = FALSE;
+	$cancelledByAdmin = FALSE;
 		// Check if the user is the creator of the booking	
 	try
 	{
@@ -361,8 +411,9 @@ if (	(isset($_POST['action']) and $_POST['action'] == 'Cancel') OR
 		$s->bindValue(':id', $bookingID);
 		$s->execute();
 		$row = $s->fetch(PDO::FETCH_ASSOC);
+		$bookingCreatorUserID = $row['userID'];
 		if($row['HitCount'] > 0){
-			if($row['userID'] == $SelectedUserID){
+			if($bookingCreatorUserID == $SelectedUserID){
 				$continueCancel = TRUE;
 			}
 		} 
@@ -378,35 +429,39 @@ if (	(isset($_POST['action']) and $_POST['action'] == 'Cancel') OR
 	}
 	
 		// Check if the user is an admin
-	try
-	{
-		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
-		
-		$pdo = connect_to_db();
-		$sql = 'SELECT 	a.`AccessName`	
-				FROM	`user` u
-				JOIN	`accesslevel` a
-				ON 		u.`AccessID` = a.`AccessID`
-				WHERE 	u.`userID` = :userID
-				LIMIT	1';
-				
-		$s = $pdo->prepare($sql);
-		$s->bindValue(':userID', $SelectedUserID);
-		$s->execute();
-		$row = $s->fetch(PDO::FETCH_ASSOC);
-		if($row['AccessName'] == "Admin"){
-			$continueCancel = TRUE;
+		// Only needed if the the user isn't the creator of the booking
+	if($SelectedUserID != $bookingCreatorUserID) {
+		try
+		{
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+			
+			$pdo = connect_to_db();
+			$sql = 'SELECT 	a.`AccessName`	
+					FROM	`user` u
+					JOIN	`accesslevel` a
+					ON 		u.`AccessID` = a.`AccessID`
+					WHERE 	u.`userID` = :userID
+					LIMIT	1';
+					
+			$s = $pdo->prepare($sql);
+			$s->bindValue(':userID', $SelectedUserID);
+			$s->execute();
+			$row = $s->fetch(PDO::FETCH_ASSOC);
+			if($row['AccessName'] == "Admin"){
+				$continueCancel = TRUE;
+				$cancelledByAdmin = TRUE;
+			}
+			
+			//close connection
+			$pdo = null;
 		}
-		
-		//close connection
-		$pdo = null;
+		catch (PDOException $e)
+		{
+			$error = 'Error updating selected booked meeting to be cancelled: ' . $e->getMessage();
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+			exit();
+		}		
 	}
-	catch (PDOException $e)
-	{
-		$error = 'Error updating selected booked meeting to be cancelled: ' . $e->getMessage();
-		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
-		exit();
-	}	
 
 	if($continueCancel === FALSE){
 		$_SESSION['normalBookingFeedback'] = "You cannot cancel this booked meeting.";
@@ -494,9 +549,9 @@ if (	(isset($_POST['action']) and $_POST['action'] == 'Cancel') OR
 			$pdo = null;
 			exit();
 		}	
-
-		// TO-DO: Only do this IF cancelled by ADMIN!
-		//emailUserOnCancelledBooking();
+		if($cancelledByAdmin){
+			emailUserOnCancelledBooking(); // TO-DO:
+		}
 	} else {
 		// Booking was not active, so no need to cancel it.
 		$_SESSION['normalBookingFeedback'] = "Meeting has already ended. Did not cancel it.";
@@ -590,7 +645,7 @@ if(isset($_POST['action']) AND $_POST['action'] == "confirmcode"){
 			header('Location: ' . $location);
 			exit();						
 		} else {
-			$_SESSION['confirmBookingCodeError'] = "The booking code you submitted (" . $bookingCode .") is an invalid code.";
+			$_SESSION['confirmBookingCodeError'] = "The booking code you submitted (" . $bookingCode .") is an incorrect code.";
 			$bookingCode = "";
 		
 			var_dump($_SESSION); // TO-DO: Remove after testing
@@ -1800,12 +1855,6 @@ if (isset($_POST['edit']) AND $_POST['edit'] == "Reset"){
 	$_SESSION['refreshEditCreateBooking'] = TRUE;
 	header('Location: .');
 	exit();		
-}
-
-// If user wants to leave the page and be directed back to the booking page again
-if (isset($_POST['edit']) AND $_POST['edit'] == 'Cancel'){
-
-	$_SESSION['normalBookingFeedback'] = "You cancelled your booking editing.";
 }
 
 // EDIT BOOKING CODE SNIPPET // END //
