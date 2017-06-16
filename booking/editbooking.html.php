@@ -25,10 +25,12 @@
 			<div>
 				<label for="originalStartDateTime">Booked Start Time: </label>
 				<b><?php htmlout($originalStartDateTime); ?></b>
+				<input type="hidden" name="startDateTime" value="<?php htmlout($originalStartDateTime); ?>">
 			</div>
 			<div>	
 				<label for="originalEndDateTime">Booked End Time: </label>
 				<b><?php htmlout($originalEndDateTime); ?></b>
+				<input type="hidden" name="endDateTime" value="<?php htmlout($originalEndDateTime); ?>">
 			</div>
 			<div>
 				<label for="originalSelectedUser">Booked For User: </label>
@@ -113,7 +115,7 @@
 				<input type="hidden" name="bookingID" id="bookingID" 
 				value="<?php htmlout($bookingID); ?>">
 				<input type="submit" name="edit" value="Reset">
-				<input type="submit" name="edit" value="Cancel">
+				<input type="submit" name="edit" value="Go Back">
 				<?php if(!isset($_SESSION['EditCreateBookingSelectedACompany'])) : ?>
 					<input type="submit" name="disabled" value="Finish Edit" disabled>
 					<b>You need to select the company you want before you can finish editing.</b>				

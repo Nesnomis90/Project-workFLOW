@@ -6,8 +6,12 @@
 	<head>
 		<meta charset="utf-8">
 		<title>Meeting Room</title>
+		<script src="/scripts/myFunctions.js"></script>		
 	</head>
-	<body>
+	<body onload="startTime()">
+	<div id="ClockPlacement">
+		<b id="Clock"></b>
+	</div>
 		<?php if(isset($_SESSION['DefaultMeetingRoomInfo']) AND !isset($defaultMeetingRoomFeedback)) : ?>
 			<div>
 			<form action="" method="post">
@@ -26,15 +30,16 @@
 		<h1>Meeting Room</h1>
 		<form action="" method="post">
 			<?php if(isset($_SESSION['DefaultMeetingRoomInfo'])) : ?>
-				<input type="submit" name="action" value="Refresh As Default Room">
-			<?php else : ?>
-				<input type="submit" name="disabled" value="Refresh As Default Room" disabled>
+			<?php $default = $_SESSION['DefaultMeetingRoomInfo']; ?>
+				<?php if((!isset($_GET['meetingroom'])) OR
+						(isset($_GET['meetingroom']) AND $_GET['meetingroom'] != $default['TheMeetingRoomID'])) : ?>
+					<input type="submit" name="action" value="Select Default Room">
+				<?php else : ?>
+					<input type="submit" name="action" value="Show All Rooms">
+				<?php endif; ?>			
 			<?php endif; ?>
-			<?php if(isset($_GET['meetingroom'])) : ?>
-				<input type="submit" name="action" value="Refresh As Selected Room">
-			<?php else : ?>
-				<input type="submit" name="disabled" value="Refresh As Selected Room" disabled>
-			<?php endif; ?>
+			<input type="submit" name="action" value="Refresh">
+			<b>Last Refresh: <?php htmlout(getDatetimeNowInDisplayFormat()); ?></b>
 		</form>
 		<?php if(isset($_SESSION['MeetingRoomAllUsersFeedback'])) : ?>
 			<div><b><?php htmlout($_SESSION['MeetingRoomAllUsersFeedback']); ?></b></div>
@@ -42,9 +47,6 @@
 		<?php endif; ?>
 		<?php if(isset($defaultMeetingRoomFeedback)) : ?>
 			<div><b><?php htmlout($defaultMeetingRoomFeedback); ?></b></div>
-		<?php endif; ?>
-		<?php if(isset($_SESSION['DefaultMeetingRoomInfo'])) : ?>
-		<?php $default = $_SESSION['DefaultMeetingRoomInfo']; ?>
 		<?php endif; ?>
 		<?php if(isset($_GET['meetingroom']) AND $_GET['meetingroom'] != NULL AND $_GET['meetingroom'] != "") : ?>
 			<?php if(isset($meetingrooms)) : ?>
@@ -73,7 +75,7 @@
 								<label for="MeetingRoomLocation">Location: </label>
 								<?php htmlout($room['MeetingRoomLocation']); ?>
 							</div>
-							<div><input type="submit" name="action" value="Book This Room"></div>
+							<div><input type="submit" name="action" value="Booking Information"></div>
 							<input type="hidden" name="MeetingRoomID" value="<?php htmlout($room['MeetingRoomID']); ?>">
 						</fieldset>
 					</form>
@@ -114,7 +116,7 @@
 									<label for="MeetingRoomLocation">Location: </label>
 									<?php htmlout($room['MeetingRoomLocation']); ?>
 								</div>
-								<div><input type="submit" name="action" value="Book This Room"></div>
+								<div><input type="submit" name="action" value="Booking Information"></div>
 								<input type="hidden" name="MeetingRoomID" value="<?php htmlout($room['MeetingRoomID']); ?>">
 							</fieldset>
 						</form>

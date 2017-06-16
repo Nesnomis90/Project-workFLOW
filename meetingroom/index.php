@@ -10,7 +10,6 @@ include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/magicquotes.inc.php';
 	TO-DO:
 		Show meeting room status (booked or not?)
 		Search meeting room status by datetime?
-
 */
 
 // ADMIN INTERACTIONS // START //
@@ -97,7 +96,7 @@ checkIfLocalDevice();
 // NON-ADMIN INTERACTIONS // START //
 
 // Updates/Sets the default page when user wants it
-if(isset($_POST['action']) AND $_POST['action'] == "Refresh As Default Room"){
+if(isset($_POST['action']) AND $_POST['action'] == "Select Default Room"){
 
 	$TheMeetingRoomID = $_SESSION["DefaultMeetingRoomInfo"]["TheMeetingRoomID"];
 	$location = "http://$_SERVER[HTTP_HOST]/meetingroom/?meetingroom=" . $TheMeetingRoomID;
@@ -105,19 +104,30 @@ if(isset($_POST['action']) AND $_POST['action'] == "Refresh As Default Room"){
 	exit();
 }
 
-// Updates the page when user wants it
-if(isset($_POST['action']) AND $_POST['action'] == "Refresh As Selected Room"){
+// Shows all meeting rooms again when already looking at single room
+if(isset($_POST['action']) AND $_POST['action'] == "Show All Rooms"){
 
-	$TheMeetingRoomID = $_GET['meetingroom'];
-	$location = "http://$_SERVER[HTTP_HOST]/meetingroom/?meetingroom=" . $TheMeetingRoomID;
+	$location = "http://$_SERVER[HTTP_HOST]/meetingroom/";
 	header("Location: $location");
 	exit();
 }
 
+// If user wants to refresh the page to get the most up-to-date information
+if (isset($_POST['action']) and $_POST['action'] == 'Refresh'){
+	
+	if(isset($_GET['meetingroom'])){
+		$TheMeetingRoomID = $_GET['meetingroom'];
+		$location = "http://$_SERVER[HTTP_HOST]/meetingroom/?meetingroom=" . $TheMeetingRoomID;		
+	} else {
+		$location = ".";
+	}
 
+	header("Location: $location");
+	exit();
+}
 
 // Redirect to booking when a room has been selected
-if(isset($_POST['action']) AND $_POST['action'] == "Book This Room"){
+if(isset($_POST['action']) AND $_POST['action'] == "Booking Information"){
 
 	$TheMeetingRoomID = $_POST['MeetingRoomID'];
 	$location = "http://$_SERVER[HTTP_HOST]/booking/?meetingroom=" . $TheMeetingRoomID;
@@ -160,7 +170,7 @@ if(isset($_GET['meetingroom'])){
 				ON 			re.`meetingRoomID` = m.`meetingRoomID`
 				WHERE		m.`meetingRoomID` = :meetingRoomID
 				GROUP BY 	m.`meetingRoomID`
-				LIMIT 		1'; // TO-DO: remove limit 1 if broken
+				LIMIT 		1';
 		$s = $pdo->prepare($sql);
 		$s->bindValue(':meetingRoomID', $_GET['meetingroom']);
 		$s->execute();

@@ -23,6 +23,7 @@ function clearAddBookingSessions(){
 	unset($_SESSION['AddBookingDefaultDisplayNameForNewUser']);
 	unset($_SESSION['AddBookingDefaultBookingDescriptionForNewUser']);	
 	unset($_SESSION['AddBookingDisplayCompanySelect']);	
+	unset($_SESSION['AddBookingCompanyArray']);
 }
 
 // Function to clear sessions used to remember user inputs on refreshing the edit booking form
@@ -357,7 +358,9 @@ if (isset($_POST['action']) and $_POST['action'] == 'Cancel')
 			$sql = 'UPDATE 	`booking` 
 					SET 	`dateTimeCancelled` = CURRENT_TIMESTAMP,
 							`cancellationCode` = NULL				
-					WHERE 	`bookingID` = :id';
+					WHERE 	`bookingID` = :id
+					AND		`dateTimeCancelled` IS NULL
+					AND		`actualEndDateTime` IS NULL';
 			$s = $pdo->prepare($sql);
 			$s->bindValue(':id', $_POST['id']);
 			$s->execute();
@@ -1065,25 +1068,26 @@ if(isset($_POST['edit']) AND $_POST['edit'] == "Finish Edit")
 						FROM 	(
 									SELECT 	1
 									FROM 	`booking`
-									WHERE 	`meetingRoomID` = 26
-									AND		`bookingID` != :BookingID
+									WHERE 	`meetingRoomID` = :MeetingRoomID
+									AND		`dateTimeCancelled` IS NULL
+									AND		`actualEndDateTime` IS NULL
 									AND		
 									(		
 											(
-												`startDateTime` > '2017-06-14 17:00:00' AND 
-												`startDateTime` < '2017-06-15 18:39:00'
+												`startDateTime` >= :StartTime AND 
+												`startDateTime` < :EndTime
 											) 
 									OR 		(
-												`endDateTime` > '2017-06-14 17:00:00' AND 
-												`endDateTime` < '2017-06-15 18:39:00'
+												`endDateTime` > :StartTime AND 
+												`endDateTime` <= :EndTime
 											)
 									OR 		(
-												'2017-06-15 18:39:00' > `startDateTime` AND 
-												'2017-06-15 18:39:00' < `endDateTime`
+												:EndTime > `startDateTime` AND 
+												:EndTime < `endDateTime`
 											)
 									OR 		(
-												'2017-06-14 17:00:00' > `startDateTime` AND 
-												'2017-06-14 17:00:00' < `endDateTime`
+												:StartTime > `startDateTime` AND 
+												:StartTime < `endDateTime`
 											)
 									)
 									LIMIT 1
@@ -1490,11 +1494,13 @@ if (	(isset($_POST['action']) AND $_POST['action'] == "Create Booking") OR
 				$_SESSION['AddBookingInfoArray']['TheCompanyID'] = $company[0]['companyID'];
 				$_SESSION['AddBookingInfoArray']['BookedForCompany'] = $company[0]['companyName'];
 			}
+			$_SESSION['AddBookingCompanyArray'] = $company;
 		} else{
 			// User is NOT in a company
 			
 			$_SESSION['AddBookingSelectedACompany'] = TRUE;
 			unset($_SESSION['AddBookingDisplayCompanySelect']);
+			unset($_SESSION['AddBookingCompanyArray']);
 			$_SESSION['AddBookingInfoArray']['TheCompanyID'] = "";
 			$_SESSION['AddBookingInfoArray']['BookedForCompany'] = "";
 		}		
@@ -1666,24 +1672,26 @@ if (isset($_POST['add']) AND $_POST['add'] == "Add booking")
 					FROM 	(
 								SELECT 	1
 								FROM 	`booking`
-								WHERE 	`meetingRoomID` = 26
+								WHERE 	`meetingRoomID` = :MeetingRoomID
+								AND		`dateTimeCancelled` IS NULL
+								AND		`actualEndDateTime` IS NULL
 								AND		
 								(		
 										(
-											`startDateTime` > '2017-06-14 17:00:00' AND 
-											`startDateTime` < '2017-06-15 18:39:00'
+											`startDateTime` >= :StartTime AND 
+											`startDateTime` < :EndTime
 										) 
 								OR 		(
-											`endDateTime` > '2017-06-14 17:00:00' AND 
-											`endDateTime` < '2017-06-15 18:39:00'
+											`endDateTime` > :StartTime AND 
+											`endDateTime` <= :EndTime
 										)
 								OR 		(
-											'2017-06-15 18:39:00' > `startDateTime` AND 
-											'2017-06-15 18:39:00' < `endDateTime`
+											:EndTime > `startDateTime` AND 
+											:EndTime < `endDateTime`
 										)
 								OR 		(
-											'2017-06-14 17:00:00' > `startDateTime` AND 
-											'2017-06-14 17:00:00' < `endDateTime`
+											:StartTime > `startDateTime` AND 
+											:StartTime < `endDateTime`
 										)
 								)
 								LIMIT 1
@@ -1801,9 +1809,21 @@ if (isset($_POST['add']) AND $_POST['add'] == "Add booking")
 			$userinfo = $info['UserLastname'] . ', ' . $info['UserFirstname'] . ' - ' . $info['UserEmail'];
 		}
 		
+		// Get company name
+		$companyName = 'N/A';
+		if(isset($companyID)){
+			foreach($_SESSION['AddBookingCompanyArray'] AS $company){
+				if($companyID == $company['companyID']){
+					$companyName = $company['companyName'];
+					break;
+				}
+			}
+		}		
+		
 		// Save a description with information about the booking that was created
 		$logEventDescription = 'A booking was created for the meeting room: ' . $meetinginfo . 
-		', for the user: ' . $userinfo . '. Booking was made by: ' . $_SESSION['LoggedInUserName'];
+								', for the user: ' . $userinfo . " and company: " . $companyName . 
+								'. Booking was made by: ' . $_SESSION['LoggedInUserName'];
 		
 		if(isset($_SESSION['lastBookingID'])){
 			$lastBookingID = $_SESSION['lastBookingID'];
@@ -2274,9 +2294,14 @@ foreach ($result as $row)
 		$status = 'Cancelled';
 		// Valid status
 	} elseif(	$completedDateTime != null AND $cancelledDateTime != null AND
-				$completedDateTime > $cancelledDateTime ){
+				$completedDateTime >= $cancelledDateTime ){
 		$status = 'Ended Early';
-		// Valid status
+		// Valid status?
+	} elseif(	$completedDateTime == null AND $cancelledDateTime != null AND
+				$endDateTime < $cancelledDateTime AND 
+				$startDateTime > $cancelledDateTime){
+		$status = 'Ended Early';
+		// Valid status?
 	} elseif(	$completedDateTime != null AND $cancelledDateTime != null AND
 				$completedDateTime < $cancelledDateTime ){
 		$status = 'Cancelled after Completion';
@@ -2284,9 +2309,9 @@ foreach ($result as $row)
 	} elseif(	$completedDateTime == null AND $cancelledDateTime == null AND 
 				$datetimeNow > $endDateTime){
 		$status = 'Ended without updating database';
-		// This should never occur in practice. Still occurs without manually running update script
+		// This should never occur
 	} elseif(	$completedDateTime == null AND $cancelledDateTime != null AND 
-				endDateTime < $cancelledDateTime){
+				$endDateTime < $cancelledDateTime){
 		$status = 'Cancelled after meeting should have been Completed';
 		// This should not be allowed to happen eventually
 	} else {

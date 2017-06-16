@@ -8,9 +8,9 @@ include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/magicquotes.inc.php';
 
 /*
 	TO-DO:
-	Create booking from code
-	Cancel booking from code
-		Admin has master code
+		Make log in work properly
+		Make log out work properly
+		Make Edit booking work
 */
 
 // Function to clear sessions used to remember user inputs on refreshing the add booking form
@@ -24,11 +24,11 @@ function clearAddCreateBookingSessions(){
 	unset($_SESSION['AddCreateBookingSelectedNewUser']);
 	unset($_SESSION['AddCreateBookingSelectedACompany']);	
 	unset($_SESSION['AddCreateBookingDisplayCompanySelect']);
+	unset($_SESSION['AddCreateBookingCompanyArray']);
 	
 	unset($_SESSION['bookingCodeUserID']);
 	
-	unset($_SESSION['cancelBookingOriginalValues']['BookingID']);
-	unset($_SESSION['cancelBookingOriginalValues']['BookingStatus']);	
+	unset($_SESSION['cancelBookingOriginalValues']);	
 }
 
 // Function to clear sessions used to remember user inputs on refreshing the edit booking form
@@ -43,8 +43,7 @@ function clearEditCreateBookingSessions(){
 	unset($_SESSION['EditCreateBookingSelectedACompany']);
 	unset($_SESSION['EditCreateBookingDisplayCompanySelect']);
 	
-	unset($_SESSION['cancelBookingOriginalValues']['BookingID']);
-	unset($_SESSION['cancelBookingOriginalValues']['BookingStatus']);	
+	unset($_SESSION['cancelBookingOriginalValues']);
 }
 
 // Function to remember the user inputs in Edit Booking
@@ -125,6 +124,28 @@ function checkIfLocalDeviceOrLoggedIn(){
 	return $SelectedUserID;
 }
 
+// This is used on cancel
+function emailUserOnCancelledBooking(){
+
+	$bookingCreatorUserEmail = $_SESSION['cancelBookingOriginalValues']['UserEmail'];
+	unset($_SESSION['cancelBookingOriginalValues']['UserEmail']);
+	$bookingCreatorMeetingInfo = $_SESSION['cancelBookingOriginalValues']['MeetingInfo'];
+	$emailSubject = "Your meeting has been cancelled!";
+
+	$emailMessage = 
+	"A booked meeting has been cancelled by an Admin!\n" .
+	"The meeting was booked for the room " . $bookingCreatorMeetingInfo;
+	
+	$email = $bookingCreatorUserEmail;
+	
+	$mailResult = sendEmail($email, $emailSubject, $emailMessage);
+
+	if(!$mailResult){
+		$_SESSION['normalBookingFeedback'] .= " [WARNING] System failed to send Email to user.";
+	}
+	
+	$_SESSION['normalBookingFeedback'] .= " This is the email msg we're sending out: $emailMessage. Sent to email: $email."; // TO-DO: Remove after testing			
+}
 
 // Function to validate user inputs
 function validateUserInputs($FeedbackSessionToUse){
@@ -312,12 +333,42 @@ function validateUserInputs($FeedbackSessionToUse){
 // If so, set that meeting room's info as the default meeting room info
 checkIfLocalDevice();
 
+// If user wants to go back to the main page while in the confirm booking page
+if (isset($_POST['action']) and $_POST['action'] == 'Go Back'){
+	
+	if(isset($_GET['meetingroom'])){
+		$TheMeetingRoomID = $_GET['meetingroom'];
+		$location = "http://$_SERVER[HTTP_HOST]/booking/?meetingroom=" . $TheMeetingRoomID;		
+	} else {
+		$location = ".";
+	}
+
+	header("Location: $location");
+	exit();
+}
+
+// If user wants to go back to the main page while editing
+if (isset($_POST['edit']) and $_POST['edit'] == 'Go Back'){
+	
+	$_SESSION['normalBookingFeedback'] = "You cancelled your booking editing.";
+	
+	if(isset($_GET['meetingroom'])){
+		$TheMeetingRoomID = $_GET['meetingroom'];
+		$location = "http://$_SERVER[HTTP_HOST]/booking/?meetingroom=" . $TheMeetingRoomID;		
+	} else {
+		$location = ".";
+	}
+
+	header("Location: $location");
+	exit();
+}
+
 // If user wants to refresh the page to get the most up-to-date information
 if (isset($_POST['action']) and $_POST['action'] == 'Refresh'){
 	
 	if(isset($_GET['meetingroom'])){
 		$TheMeetingRoomID = $_GET['meetingroom'];
-		$location = "http://$_SERVER[HTTP_HOST]/meetingroom/?meetingroom=" . $TheMeetingRoomID;		
+		$location = "http://$_SERVER[HTTP_HOST]/booking/?meetingroom=" . $TheMeetingRoomID;		
 	} else {
 		$location = ".";
 	}
@@ -335,10 +386,12 @@ if (	(isset($_POST['action']) and $_POST['action'] == 'Cancel') OR
 	} else {
 		$_SESSION['cancelBookingOriginalValues']['BookingID'] = $_POST['id'];
 		$_SESSION['cancelBookingOriginalValues']['BookingStatus'] = $_POST['BookingStatus'];
+		$_SESSION['cancelBookingOriginalValues']['MeetingInfo'] = $_POST['MeetingInfo'];
 	}
 	
 	$bookingID = $_SESSION['cancelBookingOriginalValues']['BookingID'];
 	$bookingStatus = $_SESSION['cancelBookingOriginalValues']['BookingStatus'];
+	$bookingMeetingInfo = $_SESSION['cancelBookingOriginalValues']['MeetingInfo'];
 	
 	$_SESSION['confirmOrigins'] = "Cancel";
 	$SelectedUserID = checkIfLocalDeviceOrLoggedIn();
@@ -346,23 +399,32 @@ if (	(isset($_POST['action']) and $_POST['action'] == 'Cancel') OR
 	
 	// Check if selected user ID is creator of booking or an admin
 	$continueCancel = FALSE;
+	$cancelledByAdmin = FALSE;
 		// Check if the user is the creator of the booking	
 	try
 	{
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 		
 		$pdo = connect_to_db();
-		$sql = 'SELECT 	COUNT(*)		AS HitCount,
-						`userID`
-				FROM	`booking`
-				WHERE 	`bookingID` = :id
-				LIMIT 	1';
+		$sql = 'SELECT 		COUNT(*)		AS HitCount,
+							b.`userID`,
+							u.`email`		AS UserEmail,
+							u.`firstName`,
+							u.`lastName`
+				FROM		`booking` b
+				INNER JOIN 	`user` u
+				ON 			b.`userID` = u.`userID`
+				WHERE 		`bookingID` = :id
+				LIMIT 		1';
 		$s = $pdo->prepare($sql);
 		$s->bindValue(':id', $bookingID);
 		$s->execute();
 		$row = $s->fetch(PDO::FETCH_ASSOC);
+		$bookingCreatorUserID = $row['userID'];
+		$bookingCreatorUserEmail = $row['UserEmail'];
+		$bookingCreatorUserInfo = $row['lastName'] . ", " . $row['firstName'] . " - " . $row['UserEmail'];
 		if($row['HitCount'] > 0){
-			if($row['userID'] == $SelectedUserID){
+			if($bookingCreatorUserID == $SelectedUserID){
 				$continueCancel = TRUE;
 			}
 		} 
@@ -378,35 +440,39 @@ if (	(isset($_POST['action']) and $_POST['action'] == 'Cancel') OR
 	}
 	
 		// Check if the user is an admin
-	try
-	{
-		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
-		
-		$pdo = connect_to_db();
-		$sql = 'SELECT 	a.`AccessName`	
-				FROM	`user` u
-				JOIN	`accesslevel` a
-				ON 		u.`AccessID` = a.`AccessID`
-				WHERE 	u.`userID` = :userID
-				LIMIT	1';
-				
-		$s = $pdo->prepare($sql);
-		$s->bindValue(':userID', $SelectedUserID);
-		$s->execute();
-		$row = $s->fetch(PDO::FETCH_ASSOC);
-		if($row['AccessName'] == "Admin"){
-			$continueCancel = TRUE;
+		// Only needed if the the user isn't the creator of the booking
+	if($SelectedUserID != $bookingCreatorUserID) {
+		try
+		{
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+			
+			$pdo = connect_to_db();
+			$sql = 'SELECT 	a.`AccessName`	
+					FROM	`user` u
+					JOIN	`accesslevel` a
+					ON 		u.`AccessID` = a.`AccessID`
+					WHERE 	u.`userID` = :userID
+					LIMIT	1';
+					
+			$s = $pdo->prepare($sql);
+			$s->bindValue(':userID', $SelectedUserID);
+			$s->execute();
+			$row = $s->fetch(PDO::FETCH_ASSOC);
+			if($row['AccessName'] == "Admin"){
+				$continueCancel = TRUE;
+				$cancelledByAdmin = TRUE;
+			}
+			
+			//close connection
+			$pdo = null;
 		}
-		
-		//close connection
-		$pdo = null;
+		catch (PDOException $e)
+		{
+			$error = 'Error updating selected booked meeting to be cancelled: ' . $e->getMessage();
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+			exit();
+		}		
 	}
-	catch (PDOException $e)
-	{
-		$error = 'Error updating selected booked meeting to be cancelled: ' . $e->getMessage();
-		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
-		exit();
-	}	
 
 	if($continueCancel === FALSE){
 		$_SESSION['normalBookingFeedback'] = "You cannot cancel this booked meeting.";
@@ -414,7 +480,6 @@ if (	(isset($_POST['action']) and $_POST['action'] == 'Cancel') OR
 			$meetingRoomID = $_GET['meetingroom'];
 			$location = "http://$_SERVER[HTTP_HOST]/booking/?meetingroom=" . $meetingRoomID;
 		} else {
-			$meetingRoomID = $_POST['meetingRoomID'];
 			$location = '.';
 		}
 		header('Location: ' . $location);
@@ -433,7 +498,9 @@ if (	(isset($_POST['action']) and $_POST['action'] == 'Cancel') OR
 			$sql = 'UPDATE 	`booking` 
 					SET 	`dateTimeCancelled` = CURRENT_TIMESTAMP,
 							`cancellationCode` = NULL				
-					WHERE 	`bookingID` = :id';
+					WHERE 	`bookingID` = :id
+					AND		`dateTimeCancelled` IS NULL
+					AND		`actualEndDateTime` IS NULL';
 			$s = $pdo->prepare($sql);
 			$s->bindValue(':id', $bookingID);
 			$s->execute();
@@ -448,7 +515,7 @@ if (	(isset($_POST['action']) and $_POST['action'] == 'Cancel') OR
 			exit();
 		}
 		
-		$_SESSION['normalBookingFeedback'] = "Successfully cancelled the booking";
+		$_SESSION['normalBookingFeedback'] = "Successfully cancelled the booking.";
 		
 			// Add a log event that a booking was cancelled
 		try
@@ -463,9 +530,9 @@ if (	(isset($_POST['action']) and $_POST['action'] == 'Cancel') OR
 			
 			// Save a description with information about the booking that was cancelled
 			$logEventDescription = "N/A";
-			if(isset($_POST['UserInfo']) AND isset($_POST['MeetingInfo'])){
-				$logEventDescription = 'The booking made for ' . $_POST['UserInfo'] . ' for the meeting room ' .
-				$_POST['MeetingInfo'] . ' was cancelled by: ' . $nameOfUserWhoBooked;
+			if(isset($bookingCreatorUserInfo) AND isset($bookingMeetingInfo)){
+				$logEventDescription = 'The booking made for ' . $bookingCreatorUserInfo . ' for the meeting room ' .
+				$bookingMeetingInfo . ' was cancelled by: ' . $nameOfUserWhoBooked;
 			} else {
 				$logEventDescription = 'A booking was cancelled by: ' . $nameOfUserWhoBooked;
 			}
@@ -494,22 +561,21 @@ if (	(isset($_POST['action']) and $_POST['action'] == 'Cancel') OR
 			$pdo = null;
 			exit();
 		}	
-
-		// TO-DO: Only do this IF cancelled by ADMIN!
-		//emailUserOnCancelledBooking();
+		if($cancelledByAdmin){
+			$_SESSION['cancelBookingOriginalValues']['UserEmail'] = $bookingCreatorUserEmail;
+			emailUserOnCancelledBooking();
+		}
 	} else {
 		// Booking was not active, so no need to cancel it.
 		$_SESSION['normalBookingFeedback'] = "Meeting has already ended. Did not cancel it.";
 	}
 
-	unset($_SESSION['cancelBookingOriginalValues']['BookingID']);
-	unset($_SESSION['cancelBookingOriginalValues']['BookingStatus']);	
+	unset($_SESSION['cancelBookingOriginalValues']);	
 	// Load booked meetings list webpage with updated database
 	if(isset($_GET['meetingroom'])){
 		$meetingRoomID = $_GET['meetingroom'];
 		$location = "http://$_SERVER[HTTP_HOST]/booking/?meetingroom=" . $meetingRoomID;
 	} else {
-		$meetingRoomID = $_POST['meetingRoomID'];
 		$location = '.';
 	}
 	header('Location: ' . $location);
@@ -590,28 +656,12 @@ if(isset($_POST['action']) AND $_POST['action'] == "confirmcode"){
 			header('Location: ' . $location);
 			exit();						
 		} else {
-			if($_SESSION['confirmOrigins'] == "Create Meeting"){
-				$_SESSION['confirmBookingCodeError'] = "The booking code you submitted (" . $bookingCode .") is an invalid code.";
-				$bookingCode = "";
+			$_SESSION['confirmBookingCodeError'] = "The booking code you submitted (" . $bookingCode .") is an incorrect code.";
+			$bookingCode = "";
+		
+			var_dump($_SESSION); // TO-DO: Remove after testing
 			
-				var_dump($_SESSION); // TO-DO: Remove after testing
-				
-				include_once 'bookingcode.html.php';
-				exit();
-			}			
-			if($_SESSION['confirmOrigins'] == "Cancel"){
-				$_SESSION['normalBookingFeedback'] = "The booking code you submitted (" . $bookingCode .") is an invalid code.";
-				$bookingCode = "";
-				unset($_SESSION['confirmOrigins']);
-			}	
-			if(isset($_GET['meetingroom'])){
-				$meetingRoomID = $_GET['meetingroom'];
-				$location = "http://$_SERVER[HTTP_HOST]/booking/?meetingroom=" . $meetingRoomID;
-			} else {
-				$meetingRoomID = $_POST['meetingRoomID'];
-				$location = '.';
-			}
-			header('Location: ' . $location);			
+			include_once 'bookingcode.html.php';
 			exit();
 		}
 	}
@@ -790,7 +840,7 @@ if(	((isset($_POST['action']) AND $_POST['action'] == 'Create Meeting')) OR
 								'companyName' => $row['companyName']
 								);
 		}
-			
+	
 		$pdo = null;
 				
 		// We only need to allow the user a company dropdown selector if they
@@ -809,11 +859,13 @@ if(	((isset($_POST['action']) AND $_POST['action'] == 'Create Meeting')) OR
 				$_SESSION['AddCreateBookingInfoArray']['TheCompanyID'] = $company[0]['companyID'];
 				$_SESSION['AddCreateBookingInfoArray']['BookedForCompany'] = $company[0]['companyName'];
 			}
+			$_SESSION['AddCreateBookingCompanyArray'] = $company;
 		} else{
 			// User is NOT in a company
 			
 			$_SESSION['AddCreateBookingSelectedACompany'] = TRUE;
 			unset($_SESSION['AddCreateBookingDisplayCompanySelect']);
+			unset($_SESSION['AddCreateBookingCompanyArray']);
 			$_SESSION['AddCreateBookingInfoArray']['TheCompanyID'] = "";
 			$_SESSION['AddCreateBookingInfoArray']['BookedForCompany'] = "";
 		}		
@@ -948,24 +1000,26 @@ if (isset($_POST['add']) AND $_POST['add'] == "Add Booking")
 					FROM 	(
 								SELECT 	1
 								FROM 	`booking`
-								WHERE 	`meetingRoomID` = 26
+								WHERE 	`meetingRoomID` = :MeetingRoomID
+								AND		`dateTimeCancelled` IS NULL
+								AND		`actualEndDateTime` IS NULL
 								AND		
 								(		
 										(
-											`startDateTime` > '2017-06-14 17:00:00' AND 
-											`startDateTime` < '2017-06-15 18:39:00'
+											`startDateTime` >= :StartTime AND 
+											`startDateTime` < :EndTime
 										) 
 								OR 		(
-											`endDateTime` > '2017-06-14 17:00:00' AND 
-											`endDateTime` < '2017-06-15 18:39:00'
+											`endDateTime` > :StartTime AND 
+											`endDateTime` <= :EndTime
 										)
 								OR 		(
-											'2017-06-15 18:39:00' > `startDateTime` AND 
-											'2017-06-15 18:39:00' < `endDateTime`
+											:EndTime > `startDateTime` AND 
+											:EndTime < `endDateTime`
 										)
 								OR 		(
-											'2017-06-14 17:00:00' > `startDateTime` AND 
-											'2017-06-14 17:00:00' < `endDateTime`
+											:StartTime > `startDateTime` AND 
+											:StartTime < `endDateTime`
 										)
 								)
 								LIMIT 1
@@ -1017,7 +1071,7 @@ if (isset($_POST['add']) AND $_POST['add'] == "Add Booking")
 			$companyID = NULL;
 		}
 	
-		//Generate cancellation code
+		// Generate cancellation code
 		$cancellationCode = generateCancellationCode();
 		
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
@@ -1087,9 +1141,16 @@ if (isset($_POST['add']) AND $_POST['add'] == "Add Booking")
 			$userinfo = $info['UserLastname'] . ', ' . $info['UserFirstname'] . ' - ' . $info['UserEmail'];
 		}
 		
-		// Get company information
-		$companyinfo = 'N/A';
-		// TO-DO: Get company name
+		// Get company name
+		$companyName = 'N/A';
+		if(isset($companyID)){
+			foreach($_SESSION['AddCreateBookingCompanyArray'] AS $company){
+				if($companyID == $company['companyID']){
+					$companyName = $company['companyName'];
+					break;
+				}
+			}
+		}
 		
 		$nameOfUserWhoBooked = "N/A";
 		if(isset($_SESSION['LoggedInUserName'])){
@@ -1101,7 +1162,7 @@ if (isset($_POST['add']) AND $_POST['add'] == "Add Booking")
 	
 		// Save a description with information about the booking that was created
 		$logEventDescription = 'A booking was created for the meeting room: ' . $meetinginfo . 
-		', for the user: ' . $userinfo . ' and company: ' . $companyinfo . '. Booking was made by: ' . $nameOfUserWhoBooked;
+		', for the user: ' . $userinfo . ' and company: ' . $companyName . '. Booking was made by: ' . $nameOfUserWhoBooked;
 		
 		if(isset($_SESSION['lastBookingID'])){
 			$lastBookingID = $_SESSION['lastBookingID'];
@@ -1162,7 +1223,7 @@ if (isset($_POST['add']) AND $_POST['add'] == "Add Booking")
 		$_SESSION['normalBookingFeedback'] .= " [WARNING] System failed to send Email to user.";
 	}
 	
-	$_SESSION['normalBookingFeedback'] .= "this is the email msg we're sending out: $emailMessage. Sent to email: $email."; // TO-DO: Remove after testing	
+	$_SESSION['normalBookingFeedback'] .= " This is the email msg we're sending out: $emailMessage. Sent to email: $email."; // TO-DO: Remove after testing	
 	
 	// Booking a new meeting is done. Reset all connected sessions.
 	clearAddCreateBookingSessions();
@@ -1469,10 +1530,11 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR
 			$_SESSION['EditCreateBookingOriginalInfoArray'] = $_SESSION['EditCreateBookingInfoArray'];
 		}	
 		
-		// Set the correct information on form call
-		$SelectedUserID = $_SESSION['EditCreateBookingInfoArray']['TheUserID'];
 	}
 
+	// Set the correct information on form call
+	$SelectedUserID = $_SESSION['EditCreateBookingInfoArray']['TheUserID'];	
+	
 		// Check if we need a company select for the booking
 	try
 	{		
@@ -1599,7 +1661,6 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR
 // If user wants to update the booking information after editing
 if(isset($_POST['edit']) AND $_POST['edit'] == "Finish Edit")
 {
-
 	// Validate user inputs
 	list($invalidInput, $startDateTime, $endDateTime, $bknDscrptn, $dspname, $bookingCode) = validateUserInputs('EditCreateBookingError');
 	
@@ -1818,12 +1879,6 @@ if (isset($_POST['edit']) AND $_POST['edit'] == "Reset"){
 	exit();		
 }
 
-// If user wants to leave the page and be directed back to the booking page again
-if (isset($_POST['edit']) AND $_POST['edit'] == 'Cancel'){
-
-	$_SESSION['normalBookingFeedback'] = "You cancelled your booking editing.";
-}
-
 // EDIT BOOKING CODE SNIPPET // END //
 
 // CANCELLATION CODE SNIPPET // START //
@@ -2007,6 +2062,9 @@ if(isset($_GET['cancellationcode'])){
 // TO-DO: Change if this ruins having multiple tabs open etc.
 clearAddCreateBookingSessions();
 clearEditCreateBookingSessions();
+unset($_SESSION["cancelBookingOriginalValues"]);
+unset($_SESSION["confirmOrigins"]);
+unset($_SESSION["EditCreateBookingError"]);
 
 if(isset($refreshBookings) AND $refreshBookings) {
 	// TO-DO: Add code that should occur on a refresh
@@ -2142,9 +2200,14 @@ foreach ($result as $row)
 		$status = 'Cancelled';
 		// Valid status
 	} elseif(	$completedDateTime != null AND $cancelledDateTime != null AND
-				$completedDateTime > $cancelledDateTime ){
+				$completedDateTime >= $cancelledDateTime ){
 		$status = 'Ended Early';
-		// Valid status
+		// Valid status?
+	} elseif(	$completedDateTime == null AND $cancelledDateTime != null AND
+				$endDateTime < $cancelledDateTime AND 
+				$startDateTime > $cancelledDateTime){
+		$status = 'Ended Early';
+		// Valid status?
 	} elseif(	$completedDateTime != null AND $cancelledDateTime != null AND
 				$completedDateTime < $cancelledDateTime ){
 		$status = 'Cancelled after Completion';

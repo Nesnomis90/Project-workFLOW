@@ -19,5 +19,8 @@
 			<input type="hidden" name="action" value="confirmcode">
 			<input type="submit" value="Confirm Code">
 		</form>
+		<form action="" method="Post">
+			<input type="submit" name="action" value="Go Back">
+		</form>
 	</body>
 </html>

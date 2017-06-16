@@ -6,24 +6,26 @@ SELECT 	COUNT(*)	AS HitCount
 FROM 	(
  			SELECT 	1
 			FROM 	`booking`
-			WHERE 	`meetingRoomID` = 26
-			AND		
+			WHERE 	`meetingRoomID` = 21
+            AND		`dateTimeCancelled` IS NULL
+            AND		`actualEndDateTime` IS NULL
+            AND
 			(		
 					(
-						`startDateTime` > '2017-06-14 17:00:00' AND 
-						`startDateTime` < '2017-06-15 18:39:00'
+						`startDateTime` > '2017-06-16 15:15:00' AND 
+						`startDateTime` < '2017-06-16 17:00:00'
 					) 
 			OR 		(
-						`endDateTime` > '2017-06-14 17:00:00' AND 
-						`endDateTime` < '2017-06-15 18:39:00'
+						`endDateTime` > '2017-06-16 15:15:00' AND 
+						`endDateTime` < '2017-06-16 17:00:00'
 					)
 			OR 		(
-						'2017-06-15 18:39:00' > `startDateTime` AND 
-						'2017-06-15 18:39:00' < `endDateTime`
+						'2017-06-16 17:00:00' > `startDateTime` AND 
+						'2017-06-16 17:00:00' < `endDateTime`
 					)
 			OR 		(
-						'2017-06-14 17:00:00' > `startDateTime` AND 
-						'2017-06-14 17:00:00' < `endDateTime`
+						'2017-06-16 15:15:00' > `startDateTime` AND 
+						'2017-06-16 15:15:00' < `endDateTime`
 					)
 			)
             LIMIT 1
@@ -391,6 +393,16 @@ WHERE 	CURRENT_TIMESTAMP > `endDateTime`
 AND 	`actualEndDateTime` IS NULL
 AND 	`dateTimeCancelled` IS NULL
 AND		`bookingID` <> 0;
+
+UPDATE 	`booking`
+SET 	`actualEndDateTime` = `dateTimeCancelled`,
+		`cancellationCode` = NULL
+WHERE 	`actualEndDateTime` IS NULL
+AND		`dateTimeCancelled`
+BETWEEN `startDateTime`
+AND		`endDateTime`
+AND 	`bookingID` <> 0;
+
 
 SELECT 		c.companyID 										AS CompID,
 			c.`name` 											AS CompanyName,
