@@ -394,6 +394,16 @@ AND 	`actualEndDateTime` IS NULL
 AND 	`dateTimeCancelled` IS NULL
 AND		`bookingID` <> 0;
 
+UPDATE 	`booking`
+SET 	`actualEndDateTime` = `dateTimeCancelled`,
+		`cancellationCode` = NULL
+WHERE 	`actualEndDateTime` IS NULL
+AND		`dateTimeCancelled`
+BETWEEN `startDateTime`
+AND		`endDateTime`
+AND 	`bookingID` <> 0;
+
+
 SELECT 		c.companyID 										AS CompID,
 			c.`name` 											AS CompanyName,
 			c.`dateTimeCreated`									AS DatetimeCreated,

@@ -8,8 +8,9 @@ include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/magicquotes.inc.php';
 
 /*
 	TO-DO:
-		Cancel with code/login
-		Edit booking from code/login
+		Make log in work properly
+		Make log out work properly
+		Make Edit booking work
 */
 
 // Function to clear sessions used to remember user inputs on refreshing the add booking form
@@ -23,6 +24,7 @@ function clearAddCreateBookingSessions(){
 	unset($_SESSION['AddCreateBookingSelectedNewUser']);
 	unset($_SESSION['AddCreateBookingSelectedACompany']);	
 	unset($_SESSION['AddCreateBookingDisplayCompanySelect']);
+	unset($_SESSION['AddCreateBookingCompanyArray']);
 	
 	unset($_SESSION['bookingCodeUserID']);
 	
@@ -2198,9 +2200,14 @@ foreach ($result as $row)
 		$status = 'Cancelled';
 		// Valid status
 	} elseif(	$completedDateTime != null AND $cancelledDateTime != null AND
-				$completedDateTime > $cancelledDateTime ){
+				$completedDateTime >= $cancelledDateTime ){
 		$status = 'Ended Early';
-		// Valid status
+		// Valid status?
+	} elseif(	$completedDateTime == null AND $cancelledDateTime != null AND
+				$endDateTime < $cancelledDateTime AND 
+				$startDateTime > $cancelledDateTime){
+		$status = 'Ended Early';
+		// Valid status?
 	} elseif(	$completedDateTime != null AND $cancelledDateTime != null AND
 				$completedDateTime < $cancelledDateTime ){
 		$status = 'Cancelled after Completion';

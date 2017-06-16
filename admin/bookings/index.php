@@ -23,6 +23,7 @@ function clearAddBookingSessions(){
 	unset($_SESSION['AddBookingDefaultDisplayNameForNewUser']);
 	unset($_SESSION['AddBookingDefaultBookingDescriptionForNewUser']);	
 	unset($_SESSION['AddBookingDisplayCompanySelect']);	
+	unset($_SESSION['AddBookingCompanyArray']);
 }
 
 // Function to clear sessions used to remember user inputs on refreshing the edit booking form
@@ -357,7 +358,9 @@ if (isset($_POST['action']) and $_POST['action'] == 'Cancel')
 			$sql = 'UPDATE 	`booking` 
 					SET 	`dateTimeCancelled` = CURRENT_TIMESTAMP,
 							`cancellationCode` = NULL				
-					WHERE 	`bookingID` = :id';
+					WHERE 	`bookingID` = :id
+					AND		`dateTimeCancelled` IS NULL
+					AND		`actualEndDateTime` IS NULL';
 			$s = $pdo->prepare($sql);
 			$s->bindValue(':id', $_POST['id']);
 			$s->execute();
@@ -1497,7 +1500,7 @@ if (	(isset($_POST['action']) AND $_POST['action'] == "Create Booking") OR
 			
 			$_SESSION['AddBookingSelectedACompany'] = TRUE;
 			unset($_SESSION['AddBookingDisplayCompanySelect']);
-			unset($_SESSION['AddBookingCompanyArray']):
+			unset($_SESSION['AddBookingCompanyArray']);
 			$_SESSION['AddBookingInfoArray']['TheCompanyID'] = "";
 			$_SESSION['AddBookingInfoArray']['BookedForCompany'] = "";
 		}		
@@ -2291,9 +2294,14 @@ foreach ($result as $row)
 		$status = 'Cancelled';
 		// Valid status
 	} elseif(	$completedDateTime != null AND $cancelledDateTime != null AND
-				$completedDateTime > $cancelledDateTime ){
+				$completedDateTime >= $cancelledDateTime ){
 		$status = 'Ended Early';
-		// Valid status
+		// Valid status?
+	} elseif(	$completedDateTime == null AND $cancelledDateTime != null AND
+				$endDateTime < $cancelledDateTime AND 
+				$startDateTime > $cancelledDateTime){
+		$status = 'Ended Early';
+		// Valid status?
 	} elseif(	$completedDateTime != null AND $cancelledDateTime != null AND
 				$completedDateTime < $cancelledDateTime ){
 		$status = 'Cancelled after Completion';
@@ -2301,9 +2309,9 @@ foreach ($result as $row)
 	} elseif(	$completedDateTime == null AND $cancelledDateTime == null AND 
 				$datetimeNow > $endDateTime){
 		$status = 'Ended without updating database';
-		// This should never occur in practice. Still occurs without manually running update script
+		// This should never occur
 	} elseif(	$completedDateTime == null AND $cancelledDateTime != null AND 
-				endDateTime < $cancelledDateTime){
+				$endDateTime < $cancelledDateTime){
 		$status = 'Cancelled after meeting should have been Completed';
 		// This should not be allowed to happen eventually
 	} else {

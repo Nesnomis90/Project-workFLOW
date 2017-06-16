@@ -6,7 +6,7 @@ include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/magicquotes.inc.php';
 // PHP code that we will set to be run at a certain interval, with CRON, to interact with our database
 // Cron does 1 run per minute (fastest)
 
-// Update completed bookings 
+// Update completed bookings
 try
 {
 	include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';

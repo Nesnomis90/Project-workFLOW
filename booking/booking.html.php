@@ -54,7 +54,7 @@
 	<?php endif; ?>
 	<?php if(isset($_GET['cancellationcode'])) : ?>
 		<h1>Cancel Your Booking!</h1>
-	<?php elseif(isset($_SESSION['loggedIn'])) : ?>
+	<?php elseif(isset($_SESSION['loggedIn']) AND $_SESSION['loggedIn']) : ?>
 		<h1>Booking Information Overview - Logged In Users</h1>	
 		<form action="" method="post">
 			<div>
@@ -162,10 +162,17 @@
 			<?php endif; ?>	
 			</table>
 	<?php elseif(!isset($_SESSION['loggedIn'])) : ?>
-		<h1>Booking Information Overview</h1>	
+		<h1>Booking Information Overview</h1>
+		<?php if(!isset($_SESSION["DefaultMeetingRoomInfo"])) : ?>
+			<form action="" method="">
+				<input type="submit" name="action" value="Log In">
+			</form>
+		<?php endif; ?>
 		<form action="" method="post">
 			<div>
-				<input type="submit" name="action" value="Create Meeting">
+				<?php if(isset($_SESSION["DefaultMeetingRoomInfo"])) : ?>
+					<input type="submit" name="action" value="Create Meeting">
+				<?php endif; ?>
 				<input type="submit" name="action" value="Refresh">
 				<b>Last Refresh: <?php htmlout(getDatetimeNowInDisplayFormat()); ?></b>
 			</div>		
@@ -198,8 +205,16 @@
 								<?php htmlout($booking['EndTime']); ?>
 							<?php endif; ?>
 						</td>
-						<td><input type="submit" name="action" value="Edit"></td>							
-						<td><input type="submit" name="action" value="Cancel"></td>
+						<td>
+							<?php if(isset($_SESSION["DefaultMeetingRoomInfo"])) : ?>
+								<input type="submit" name="action" value="Edit">
+							<?php endif; ?>
+						</td>							
+						<td>
+							<?php if(isset($_SESSION["DefaultMeetingRoomInfo"])) : ?>
+								<input type="submit" name="action" value="Cancel">
+							<?php endif; ?>
+						</td>
 						<input type="hidden" name="id" value="<?php htmlout($booking['id']); ?>">
 						<input type="hidden" name="MeetingInfo" id="MeetingInfo"
 						value="<?php htmlout($booking['MeetingInfo']); ?>">
@@ -232,8 +247,16 @@
 						<td><?php htmlout($booking['BookedRoomName']); ?></td>
 						<td><?php htmlout($booking['StartTime']); ?></td>
 						<td><?php htmlout($booking['EndTime']); ?></td>
-						<td><input type="submit" name="action" value="Edit"></td>							
-						<td><input type="submit" name="action" value="Cancel"></td>
+						<td>
+							<?php if(isset($_SESSION["DefaultMeetingRoomInfo"])) : ?>
+								<input type="submit" name="action" value="Edit">
+							<?php endif; ?>
+						</td>							
+						<td>
+							<?php if(isset($_SESSION["DefaultMeetingRoomInfo"])) : ?>
+								<input type="submit" name="action" value="Cancel">
+							<?php endif; ?>
+						</td>
 						<input type="hidden" name="id" value="<?php htmlout($booking['id']); ?>">
 						<input type="hidden" name="MeetingInfo" id="MeetingInfo"
 						value="<?php htmlout($booking['MeetingInfo']); ?>">
