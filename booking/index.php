@@ -590,28 +590,12 @@ if(isset($_POST['action']) AND $_POST['action'] == "confirmcode"){
 			header('Location: ' . $location);
 			exit();						
 		} else {
-			if($_SESSION['confirmOrigins'] == "Create Meeting"){
-				$_SESSION['confirmBookingCodeError'] = "The booking code you submitted (" . $bookingCode .") is an invalid code.";
-				$bookingCode = "";
+			$_SESSION['confirmBookingCodeError'] = "The booking code you submitted (" . $bookingCode .") is an invalid code.";
+			$bookingCode = "";
+		
+			var_dump($_SESSION); // TO-DO: Remove after testing
 			
-				var_dump($_SESSION); // TO-DO: Remove after testing
-				
-				include_once 'bookingcode.html.php';
-				exit();
-			}			
-			if($_SESSION['confirmOrigins'] == "Cancel"){
-				$_SESSION['normalBookingFeedback'] = "The booking code you submitted (" . $bookingCode .") is an invalid code.";
-				$bookingCode = "";
-				unset($_SESSION['confirmOrigins']);
-			}	
-			if(isset($_GET['meetingroom'])){
-				$meetingRoomID = $_GET['meetingroom'];
-				$location = "http://$_SERVER[HTTP_HOST]/booking/?meetingroom=" . $meetingRoomID;
-			} else {
-				$meetingRoomID = $_POST['meetingRoomID'];
-				$location = '.';
-			}
-			header('Location: ' . $location);			
+			include_once 'bookingcode.html.php';
 			exit();
 		}
 	}
@@ -948,7 +932,7 @@ if (isset($_POST['add']) AND $_POST['add'] == "Add Booking")
 					FROM 	(
 								SELECT 	1
 								FROM 	`booking`
-								WHERE 	`meetingRoomID` = 26
+								WHERE 	`meetingRoomID` = :MeetingRoomID
 								AND		
 								(		
 										(

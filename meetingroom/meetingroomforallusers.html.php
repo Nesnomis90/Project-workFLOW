@@ -32,7 +32,7 @@
 			<?php if(isset($_SESSION['DefaultMeetingRoomInfo'])) : ?>
 			<?php $default = $_SESSION['DefaultMeetingRoomInfo']; ?>
 				<?php if((!isset($_GET['meetingroom'])) OR
-						(isset($_GET['meetingroom']) AND $_GET['meetingroom'] == $default['TheMeetingRoomID'])) : ?>
+						(isset($_GET['meetingroom']) AND $_GET['meetingroom'] != $default['TheMeetingRoomID'])) : ?>
 					<input type="submit" name="action" value="Select Default Room">
 				<?php else : ?>
 					<input type="submit" name="action" value="Show All Rooms">

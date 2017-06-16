@@ -10,8 +10,12 @@
 			}
 		</style>			
 		<title>Book A New Meeting</title>
+		<script src="/scripts/myFunctions.js"></script>		
 	</head>
-	<body>
+	<body onload="startTime()">
+	<div id="ClockPlacement">
+		<b id="Clock"></b>
+	</div>
 		<h1>Book A New Meeting</h1>
 		<?php if(isset($_SESSION['AddCreateBookingError'])) : ?>
 			<p><b><?php htmlout($_SESSION['AddCreateBookingError']); ?></b></p>

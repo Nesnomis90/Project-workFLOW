@@ -1065,7 +1065,7 @@ if(isset($_POST['edit']) AND $_POST['edit'] == "Finish Edit")
 						FROM 	(
 									SELECT 	1
 									FROM 	`booking`
-									WHERE 	`meetingRoomID` = 26
+									WHERE 	`meetingRoomID` = :MeetingRoomID
 									AND		
 									(		
 											(
