@@ -8,9 +8,8 @@ include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/magicquotes.inc.php';
 
 /*
 	TO-DO:
-	Create booking from code
-	Cancel booking from code
-		Admin has master code
+		Cancel with code/login
+		Edit booking from code/login
 */
 
 // Function to clear sessions used to remember user inputs on refreshing the add booking form
@@ -140,10 +139,10 @@ function emailUserOnCancelledBooking(){
 	$mailResult = sendEmail($email, $emailSubject, $emailMessage);
 
 	if(!$mailResult){
-		$_SESSION['normalBookingFeedback'] .= "\n\n [WARNING] System failed to send Email to user.";
+		$_SESSION['normalBookingFeedback'] .= " [WARNING] System failed to send Email to user.";
 	}
 	
-	$_SESSION['normalBookingFeedback'] .= "\n\n This is the email msg we're sending out: $emailMessage. Sent to email: $email."; // TO-DO: Remove after testing			
+	$_SESSION['normalBookingFeedback'] .= " This is the email msg we're sending out: $emailMessage. Sent to email: $email."; // TO-DO: Remove after testing			
 }
 
 // Function to validate user inputs
@@ -562,7 +561,7 @@ if (	(isset($_POST['action']) and $_POST['action'] == 'Cancel') OR
 		}	
 		if($cancelledByAdmin){
 			$_SESSION['cancelBookingOriginalValues']['UserEmail'] = $bookingCreatorUserEmail;
-			emailUserOnCancelledBooking(); // TO-DO:
+			emailUserOnCancelledBooking();
 		}
 	} else {
 		// Booking was not active, so no need to cancel it.
@@ -839,7 +838,7 @@ if(	((isset($_POST['action']) AND $_POST['action'] == 'Create Meeting')) OR
 								'companyName' => $row['companyName']
 								);
 		}
-			
+	
 		$pdo = null;
 				
 		// We only need to allow the user a company dropdown selector if they
@@ -858,11 +857,13 @@ if(	((isset($_POST['action']) AND $_POST['action'] == 'Create Meeting')) OR
 				$_SESSION['AddCreateBookingInfoArray']['TheCompanyID'] = $company[0]['companyID'];
 				$_SESSION['AddCreateBookingInfoArray']['BookedForCompany'] = $company[0]['companyName'];
 			}
+			$_SESSION['AddCreateBookingCompanyArray'] = $company;
 		} else{
 			// User is NOT in a company
 			
 			$_SESSION['AddCreateBookingSelectedACompany'] = TRUE;
 			unset($_SESSION['AddCreateBookingDisplayCompanySelect']);
+			unset($_SESSION['AddCreateBookingCompanyArray']);
 			$_SESSION['AddCreateBookingInfoArray']['TheCompanyID'] = "";
 			$_SESSION['AddCreateBookingInfoArray']['BookedForCompany'] = "";
 		}		
@@ -1139,8 +1140,15 @@ if (isset($_POST['add']) AND $_POST['add'] == "Add Booking")
 		}
 		
 		// Get company information
-		$companyinfo = 'N/A';
-		// TO-DO: Get company name
+		$companyName = 'N/A';
+		if(isset($companyID)){
+			foreach($_SESSION['AddCreateBookingCompanyArray'] AS $company){
+				if($companyID == $company['companyID']){
+					$companyName = $company['companyName'];
+					break;
+				}
+			}
+		}
 		
 		$nameOfUserWhoBooked = "N/A";
 		if(isset($_SESSION['LoggedInUserName'])){
@@ -1152,7 +1160,7 @@ if (isset($_POST['add']) AND $_POST['add'] == "Add Booking")
 	
 		// Save a description with information about the booking that was created
 		$logEventDescription = 'A booking was created for the meeting room: ' . $meetinginfo . 
-		', for the user: ' . $userinfo . ' and company: ' . $companyinfo . '. Booking was made by: ' . $nameOfUserWhoBooked;
+		', for the user: ' . $userinfo . ' and company: ' . $companyName . '. Booking was made by: ' . $nameOfUserWhoBooked;
 		
 		if(isset($_SESSION['lastBookingID'])){
 			$lastBookingID = $_SESSION['lastBookingID'];
@@ -1210,10 +1218,10 @@ if (isset($_POST['add']) AND $_POST['add'] == "Add Booking")
 	$mailResult = sendEmail($email, $emailSubject, $emailMessage);
 	
 	if(!$mailResult){
-		$_SESSION['normalBookingFeedback'] .= "\n\n [WARNING] System failed to send Email to user.";
+		$_SESSION['normalBookingFeedback'] .= " [WARNING] System failed to send Email to user.";
 	}
 	
-	$_SESSION['normalBookingFeedback'] .= "\n\n This is the email msg we're sending out: $emailMessage. Sent to email: $email."; // TO-DO: Remove after testing	
+	$_SESSION['normalBookingFeedback'] .= " This is the email msg we're sending out: $emailMessage. Sent to email: $email."; // TO-DO: Remove after testing	
 	
 	// Booking a new meeting is done. Reset all connected sessions.
 	clearAddCreateBookingSessions();
