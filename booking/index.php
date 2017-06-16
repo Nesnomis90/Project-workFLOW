@@ -27,8 +27,7 @@ function clearAddCreateBookingSessions(){
 	
 	unset($_SESSION['bookingCodeUserID']);
 	
-	unset($_SESSION['cancelBookingOriginalValues']['BookingID']);
-	unset($_SESSION['cancelBookingOriginalValues']['BookingStatus']);	
+	unset($_SESSION['cancelBookingOriginalValues']);	
 }
 
 // Function to clear sessions used to remember user inputs on refreshing the edit booking form
@@ -43,8 +42,7 @@ function clearEditCreateBookingSessions(){
 	unset($_SESSION['EditCreateBookingSelectedACompany']);
 	unset($_SESSION['EditCreateBookingDisplayCompanySelect']);
 	
-	unset($_SESSION['cancelBookingOriginalValues']['BookingID']);
-	unset($_SESSION['cancelBookingOriginalValues']['BookingStatus']);	
+	unset($_SESSION['cancelBookingOriginalValues']);
 }
 
 // Function to remember the user inputs in Edit Booking
@@ -126,15 +124,18 @@ function checkIfLocalDeviceOrLoggedIn(){
 }
 
 // This is used on cancel
-// TO-DO: This does not work properly yet because we can't use POST like this, since we're redirected a lot
 function emailUserOnCancelledBooking(){
+
+	$bookingCreatorUserEmail = $_SESSION['cancelBookingOriginalValues']['UserEmail'];
+	unset($_SESSION['cancelBookingOriginalValues']['UserEmail']);
+	$bookingCreatorMeetingInfo = $_SESSION['cancelBookingOriginalValues']['MeetingInfo'];
 	$emailSubject = "Your meeting has been cancelled!";
 
 	$emailMessage = 
 	"A booked meeting has been cancelled by an Admin!\n" .
-	"The meeting was booked for the room " . $_POST['MeetingInfo'];
+	"The meeting was booked for the room " . $bookingCreatorMeetingInfo;
 	
-	$email = $_POST['Email'];
+	$email = $bookingCreatorUserEmail;
 	
 	$mailResult = sendEmail($email, $emailSubject, $emailMessage);
 
@@ -384,10 +385,12 @@ if (	(isset($_POST['action']) and $_POST['action'] == 'Cancel') OR
 	} else {
 		$_SESSION['cancelBookingOriginalValues']['BookingID'] = $_POST['id'];
 		$_SESSION['cancelBookingOriginalValues']['BookingStatus'] = $_POST['BookingStatus'];
+		$_SESSION['cancelBookingOriginalValues']['MeetingInfo'] = $_POST['MeetingInfo'];
 	}
 	
 	$bookingID = $_SESSION['cancelBookingOriginalValues']['BookingID'];
 	$bookingStatus = $_SESSION['cancelBookingOriginalValues']['BookingStatus'];
+	$bookingMeetingInfo = $_SESSION['cancelBookingOriginalValues']['MeetingInfo'];
 	
 	$_SESSION['confirmOrigins'] = "Cancel";
 	$SelectedUserID = checkIfLocalDeviceOrLoggedIn();
@@ -402,16 +405,23 @@ if (	(isset($_POST['action']) and $_POST['action'] == 'Cancel') OR
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 		
 		$pdo = connect_to_db();
-		$sql = 'SELECT 	COUNT(*)		AS HitCount,
-						`userID`
-				FROM	`booking`
-				WHERE 	`bookingID` = :id
-				LIMIT 	1';
+		$sql = 'SELECT 		COUNT(*)		AS HitCount,
+							b.`userID`,
+							u.`email`		AS UserEmail,
+							u.`firstName`,
+							u.`lastName`
+				FROM		`booking` b
+				INNER JOIN 	`user` u
+				ON 			b.`userID` = u.`userID`
+				WHERE 		`bookingID` = :id
+				LIMIT 		1';
 		$s = $pdo->prepare($sql);
 		$s->bindValue(':id', $bookingID);
 		$s->execute();
 		$row = $s->fetch(PDO::FETCH_ASSOC);
 		$bookingCreatorUserID = $row['userID'];
+		$bookingCreatorUserEmail = $row['UserEmail'];
+		$bookingCreatorUserInfo = $row['lastName'] . ", " . $row['firstName'] . " - " . $row['UserEmail'];
 		if($row['HitCount'] > 0){
 			if($bookingCreatorUserID == $SelectedUserID){
 				$continueCancel = TRUE;
@@ -469,7 +479,6 @@ if (	(isset($_POST['action']) and $_POST['action'] == 'Cancel') OR
 			$meetingRoomID = $_GET['meetingroom'];
 			$location = "http://$_SERVER[HTTP_HOST]/booking/?meetingroom=" . $meetingRoomID;
 		} else {
-			$meetingRoomID = $_POST['meetingRoomID'];
 			$location = '.';
 		}
 		header('Location: ' . $location);
@@ -488,7 +497,9 @@ if (	(isset($_POST['action']) and $_POST['action'] == 'Cancel') OR
 			$sql = 'UPDATE 	`booking` 
 					SET 	`dateTimeCancelled` = CURRENT_TIMESTAMP,
 							`cancellationCode` = NULL				
-					WHERE 	`bookingID` = :id';
+					WHERE 	`bookingID` = :id
+					AND		`dateTimeCancelled` IS NULL
+					AND		`actualEndDateTime` IS NULL';
 			$s = $pdo->prepare($sql);
 			$s->bindValue(':id', $bookingID);
 			$s->execute();
@@ -518,9 +529,9 @@ if (	(isset($_POST['action']) and $_POST['action'] == 'Cancel') OR
 			
 			// Save a description with information about the booking that was cancelled
 			$logEventDescription = "N/A";
-			if(isset($_POST['UserInfo']) AND isset($_POST['MeetingInfo'])){
-				$logEventDescription = 'The booking made for ' . $_POST['UserInfo'] . ' for the meeting room ' .
-				$_POST['MeetingInfo'] . ' was cancelled by: ' . $nameOfUserWhoBooked;
+			if(isset($bookingCreatorUserInfo) AND isset($bookingMeetingInfo)){
+				$logEventDescription = 'The booking made for ' . $bookingCreatorUserInfo . ' for the meeting room ' .
+				$bookingMeetingInfo . ' was cancelled by: ' . $nameOfUserWhoBooked;
 			} else {
 				$logEventDescription = 'A booking was cancelled by: ' . $nameOfUserWhoBooked;
 			}
@@ -550,6 +561,7 @@ if (	(isset($_POST['action']) and $_POST['action'] == 'Cancel') OR
 			exit();
 		}	
 		if($cancelledByAdmin){
+			$_SESSION['cancelBookingOriginalValues']['UserEmail'] = $bookingCreatorUserEmail;
 			emailUserOnCancelledBooking(); // TO-DO:
 		}
 	} else {
@@ -557,14 +569,12 @@ if (	(isset($_POST['action']) and $_POST['action'] == 'Cancel') OR
 		$_SESSION['normalBookingFeedback'] = "Meeting has already ended. Did not cancel it.";
 	}
 
-	unset($_SESSION['cancelBookingOriginalValues']['BookingID']);
-	unset($_SESSION['cancelBookingOriginalValues']['BookingStatus']);	
+	unset($_SESSION['cancelBookingOriginalValues']);	
 	// Load booked meetings list webpage with updated database
 	if(isset($_GET['meetingroom'])){
 		$meetingRoomID = $_GET['meetingroom'];
 		$location = "http://$_SERVER[HTTP_HOST]/booking/?meetingroom=" . $meetingRoomID;
 	} else {
-		$meetingRoomID = $_POST['meetingRoomID'];
 		$location = '.';
 	}
 	header('Location: ' . $location);
