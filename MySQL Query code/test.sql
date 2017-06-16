@@ -7,7 +7,9 @@ FROM 	(
  			SELECT 	1
 			FROM 	`booking`
 			WHERE 	`meetingRoomID` = 21
-			AND		
+            AND		`dateTimeCancelled` IS NULL
+            AND		`actualEndDateTime` IS NULL
+            AND
 			(		
 					(
 						`startDateTime` > '2017-06-16 15:15:00' AND 

@@ -139,10 +139,10 @@ function emailUserOnCancelledBooking(){
 	$mailResult = sendEmail($email, $emailSubject, $emailMessage);
 
 	if(!$mailResult){
-		$_SESSION['normalBookingFeedback'] .= " [WARNING] System failed to send Email to user.";
+		$_SESSION['normalBookingFeedback'] .= "\n\n [WARNING] System failed to send Email to user.";
 	}
 	
-	$_SESSION['normalBookingFeedback'] .= " This is the email msg we're sending out: $emailMessage. Sent to email: $email."; // TO-DO: Remove after testing			
+	$_SESSION['normalBookingFeedback'] .= "\n\n This is the email msg we're sending out: $emailMessage. Sent to email: $email."; // TO-DO: Remove after testing			
 }
 
 // Function to validate user inputs
@@ -503,7 +503,7 @@ if (	(isset($_POST['action']) and $_POST['action'] == 'Cancel') OR
 			exit();
 		}
 		
-		$_SESSION['normalBookingFeedback'] = "Successfully cancelled the booking";
+		$_SESSION['normalBookingFeedback'] = "Successfully cancelled the booking.";
 		
 			// Add a log event that a booking was cancelled
 		try
@@ -988,15 +988,17 @@ if (isset($_POST['add']) AND $_POST['add'] == "Add Booking")
 								SELECT 	1
 								FROM 	`booking`
 								WHERE 	`meetingRoomID` = :MeetingRoomID
+								AND		`dateTimeCancelled` IS NULL
+								AND		`actualEndDateTime` IS NULL
 								AND		
 								(		
 										(
-											`startDateTime` > :StartTime AND 
+											`startDateTime` >= :StartTime AND 
 											`startDateTime` < :EndTime
 										) 
 								OR 		(
 											`endDateTime` > :StartTime AND 
-											`endDateTime` < :EndTime
+											`endDateTime` <= :EndTime
 										)
 								OR 		(
 											:EndTime > `startDateTime` AND 
@@ -1198,10 +1200,10 @@ if (isset($_POST['add']) AND $_POST['add'] == "Add Booking")
 	$mailResult = sendEmail($email, $emailSubject, $emailMessage);
 	
 	if(!$mailResult){
-		$_SESSION['normalBookingFeedback'] .= " [WARNING] System failed to send Email to user.";
+		$_SESSION['normalBookingFeedback'] .= "\n\n [WARNING] System failed to send Email to user.";
 	}
 	
-	$_SESSION['normalBookingFeedback'] .= "this is the email msg we're sending out: $emailMessage. Sent to email: $email."; // TO-DO: Remove after testing	
+	$_SESSION['normalBookingFeedback'] .= "\n\n This is the email msg we're sending out: $emailMessage. Sent to email: $email."; // TO-DO: Remove after testing	
 	
 	// Booking a new meeting is done. Reset all connected sessions.
 	clearAddCreateBookingSessions();

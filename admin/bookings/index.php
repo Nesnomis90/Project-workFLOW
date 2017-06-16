@@ -1066,15 +1066,17 @@ if(isset($_POST['edit']) AND $_POST['edit'] == "Finish Edit")
 									SELECT 	1
 									FROM 	`booking`
 									WHERE 	`meetingRoomID` = :MeetingRoomID
+									AND		`dateTimeCancelled` IS NULL
+									AND		`actualEndDateTime` IS NULL
 									AND		
 									(		
 											(
-												`startDateTime` > :StartTime AND 
+												`startDateTime` >= :StartTime AND 
 												`startDateTime` < :EndTime
 											) 
 									OR 		(
 												`endDateTime` > :StartTime AND 
-												`endDateTime` < :EndTime
+												`endDateTime` <= :EndTime
 											)
 									OR 		(
 												:EndTime > `startDateTime` AND 
