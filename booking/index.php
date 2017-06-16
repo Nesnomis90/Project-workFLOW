@@ -1139,7 +1139,7 @@ if (isset($_POST['add']) AND $_POST['add'] == "Add Booking")
 			$userinfo = $info['UserLastname'] . ', ' . $info['UserFirstname'] . ' - ' . $info['UserEmail'];
 		}
 		
-		// Get company information
+		// Get company name
 		$companyName = 'N/A';
 		if(isset($companyID)){
 			foreach($_SESSION['AddCreateBookingCompanyArray'] AS $company){

@@ -1491,11 +1491,13 @@ if (	(isset($_POST['action']) AND $_POST['action'] == "Create Booking") OR
 				$_SESSION['AddBookingInfoArray']['TheCompanyID'] = $company[0]['companyID'];
 				$_SESSION['AddBookingInfoArray']['BookedForCompany'] = $company[0]['companyName'];
 			}
+			$_SESSION['AddBookingCompanyArray'] = $company;
 		} else{
 			// User is NOT in a company
 			
 			$_SESSION['AddBookingSelectedACompany'] = TRUE;
 			unset($_SESSION['AddBookingDisplayCompanySelect']);
+			unset($_SESSION['AddBookingCompanyArray']):
 			$_SESSION['AddBookingInfoArray']['TheCompanyID'] = "";
 			$_SESSION['AddBookingInfoArray']['BookedForCompany'] = "";
 		}		
@@ -1667,24 +1669,26 @@ if (isset($_POST['add']) AND $_POST['add'] == "Add booking")
 					FROM 	(
 								SELECT 	1
 								FROM 	`booking`
-								WHERE 	`meetingRoomID` = 26
+								WHERE 	`meetingRoomID` = :MeetingRoomID
+								AND		`dateTimeCancelled` IS NULL
+								AND		`actualEndDateTime` IS NULL
 								AND		
 								(		
 										(
-											`startDateTime` > '2017-06-14 17:00:00' AND 
-											`startDateTime` < '2017-06-15 18:39:00'
+											`startDateTime` >= :StartTime AND 
+											`startDateTime` < :EndTime
 										) 
 								OR 		(
-											`endDateTime` > '2017-06-14 17:00:00' AND 
-											`endDateTime` < '2017-06-15 18:39:00'
+											`endDateTime` > :StartTime AND 
+											`endDateTime` <= :EndTime
 										)
 								OR 		(
-											'2017-06-15 18:39:00' > `startDateTime` AND 
-											'2017-06-15 18:39:00' < `endDateTime`
+											:EndTime > `startDateTime` AND 
+											:EndTime < `endDateTime`
 										)
 								OR 		(
-											'2017-06-14 17:00:00' > `startDateTime` AND 
-											'2017-06-14 17:00:00' < `endDateTime`
+											:StartTime > `startDateTime` AND 
+											:StartTime < `endDateTime`
 										)
 								)
 								LIMIT 1
@@ -1802,9 +1806,21 @@ if (isset($_POST['add']) AND $_POST['add'] == "Add booking")
 			$userinfo = $info['UserLastname'] . ', ' . $info['UserFirstname'] . ' - ' . $info['UserEmail'];
 		}
 		
+		// Get company name
+		$companyName = 'N/A';
+		if(isset($companyID)){
+			foreach($_SESSION['AddBookingCompanyArray'] AS $company){
+				if($companyID == $company['companyID']){
+					$companyName = $company['companyName'];
+					break;
+				}
+			}
+		}		
+		
 		// Save a description with information about the booking that was created
 		$logEventDescription = 'A booking was created for the meeting room: ' . $meetinginfo . 
-		', for the user: ' . $userinfo . '. Booking was made by: ' . $_SESSION['LoggedInUserName'];
+								', for the user: ' . $userinfo . " and company: " . $companyName . 
+								'. Booking was made by: ' . $_SESSION['LoggedInUserName'];
 		
 		if(isset($_SESSION['lastBookingID'])){
 			$lastBookingID = $_SESSION['lastBookingID'];
