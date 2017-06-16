@@ -25,10 +25,12 @@
 			<div>
 				<label for="originalStartDateTime">Booked Start Time: </label>
 				<b><?php htmlout($originalStartDateTime); ?></b>
+				<input type="hidden" name="startDateTime" value="<?php htmlout($originalStartDateTime); ?>">
 			</div>
 			<div>	
 				<label for="originalEndDateTime">Booked End Time: </label>
 				<b><?php htmlout($originalEndDateTime); ?></b>
+				<input type="hidden" name="endDateTime" value="<?php htmlout($originalEndDateTime); ?>">
 			</div>
 			<div>
 				<label for="originalSelectedUser">Booked For User: </label>

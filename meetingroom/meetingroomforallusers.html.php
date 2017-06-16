@@ -116,7 +116,7 @@
 									<label for="MeetingRoomLocation">Location: </label>
 									<?php htmlout($room['MeetingRoomLocation']); ?>
 								</div>
-								<div><input type="submit" name="action" value="Book This Room"></div>
+								<div><input type="submit" name="action" value="Booking Information"></div>
 								<input type="hidden" name="MeetingRoomID" value="<?php htmlout($room['MeetingRoomID']); ?>">
 							</fieldset>
 						</form>

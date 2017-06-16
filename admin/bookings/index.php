@@ -1066,24 +1066,23 @@ if(isset($_POST['edit']) AND $_POST['edit'] == "Finish Edit")
 									SELECT 	1
 									FROM 	`booking`
 									WHERE 	`meetingRoomID` = 26
-									AND		`bookingID` != :BookingID
 									AND		
 									(		
 											(
-												`startDateTime` > '2017-06-14 17:00:00' AND 
-												`startDateTime` < '2017-06-15 18:39:00'
+												`startDateTime` > :StartTime AND 
+												`startDateTime` < :EndTime
 											) 
 									OR 		(
-												`endDateTime` > '2017-06-14 17:00:00' AND 
-												`endDateTime` < '2017-06-15 18:39:00'
+												`endDateTime` > :StartTime AND 
+												`endDateTime` < :EndTime
 											)
 									OR 		(
-												'2017-06-15 18:39:00' > `startDateTime` AND 
-												'2017-06-15 18:39:00' < `endDateTime`
+												:EndTime > `startDateTime` AND 
+												:EndTime < `endDateTime`
 											)
 									OR 		(
-												'2017-06-14 17:00:00' > `startDateTime` AND 
-												'2017-06-14 17:00:00' < `endDateTime`
+												:StartTime > `startDateTime` AND 
+												:StartTime < `endDateTime`
 											)
 									)
 									LIMIT 1

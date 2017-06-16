@@ -952,20 +952,20 @@ if (isset($_POST['add']) AND $_POST['add'] == "Add Booking")
 								AND		
 								(		
 										(
-											`startDateTime` > '2017-06-14 17:00:00' AND 
-											`startDateTime` < '2017-06-15 18:39:00'
+											`startDateTime` > :StartTime AND 
+											`startDateTime` < :EndTime
 										) 
 								OR 		(
-											`endDateTime` > '2017-06-14 17:00:00' AND 
-											`endDateTime` < '2017-06-15 18:39:00'
+											`endDateTime` > :StartTime AND 
+											`endDateTime` < :EndTime
 										)
 								OR 		(
-											'2017-06-15 18:39:00' > `startDateTime` AND 
-											'2017-06-15 18:39:00' < `endDateTime`
+											:EndTime > `startDateTime` AND 
+											:EndTime < `endDateTime`
 										)
 								OR 		(
-											'2017-06-14 17:00:00' > `startDateTime` AND 
-											'2017-06-14 17:00:00' < `endDateTime`
+											:StartTime > `startDateTime` AND 
+											:StartTime < `endDateTime`
 										)
 								)
 								LIMIT 1
@@ -1017,7 +1017,7 @@ if (isset($_POST['add']) AND $_POST['add'] == "Add Booking")
 			$companyID = NULL;
 		}
 	
-		//Generate cancellation code
+		// Generate cancellation code
 		$cancellationCode = generateCancellationCode();
 		
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
@@ -1469,10 +1469,11 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR
 			$_SESSION['EditCreateBookingOriginalInfoArray'] = $_SESSION['EditCreateBookingInfoArray'];
 		}	
 		
-		// Set the correct information on form call
-		$SelectedUserID = $_SESSION['EditCreateBookingInfoArray']['TheUserID'];
 	}
 
+	// Set the correct information on form call
+	$SelectedUserID = $_SESSION['EditCreateBookingInfoArray']['TheUserID'];	
+	
 		// Check if we need a company select for the booking
 	try
 	{		
@@ -1599,7 +1600,6 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR
 // If user wants to update the booking information after editing
 if(isset($_POST['edit']) AND $_POST['edit'] == "Finish Edit")
 {
-
 	// Validate user inputs
 	list($invalidInput, $startDateTime, $endDateTime, $bknDscrptn, $dspname, $bookingCode) = validateUserInputs('EditCreateBookingError');
 	
@@ -2007,6 +2007,9 @@ if(isset($_GET['cancellationcode'])){
 // TO-DO: Change if this ruins having multiple tabs open etc.
 clearAddCreateBookingSessions();
 clearEditCreateBookingSessions();
+unset($_SESSION["cancelBookingOriginalValues"]);
+unset($_SESSION["confirmOrigins"]);
+unset($_SESSION["EditCreateBookingError"]);
 
 if(isset($refreshBookings) AND $refreshBookings) {
 	// TO-DO: Add code that should occur on a refresh
