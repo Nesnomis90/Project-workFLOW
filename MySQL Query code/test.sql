@@ -3,6 +3,23 @@ SET NAMES utf8;
 USE meetingflow;
 
 INSERT INTO `companycreditshistory`
+SET			`CompanyID` = 2,
+			`startDate` = '2017-05-15',
+            `endDate` = '2017-06-15',
+            `minuteAmount` = 95,
+            `monthlyPrice` = 2000,
+            `overCreditMinutePrice` = NULL,
+            `overCreditHourPrice` = 250;
+
+SELECT 	COUNT(*) 
+FROM 	information_schema.SCHEMATA
+WHERE	`SCHEMA_NAME` = 'test';
+
+SELECT COUNT(*)
+FROM DATABASES
+LIKE 'test';
+
+INSERT INTO `companycreditshistory`
 SET			`CompanyID` = :companyID,
 			`startDate` = :startDate,
             `endDate` = :endDate,

@@ -173,6 +173,7 @@ if (isset($_POST['history']) AND $_POST['history'] == "Next Period"){
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 		$pdo = connect_to_db();	
 
+		// Check if there is a next period for this company, if not we disable the next period button
 		$sql = "SELECT IF(
 							DATE(`endDate`) = DATE_SUB(`startDate`,INTERVAL :intervalNumber - 1 MONTH), 
 							NULL, 
@@ -201,8 +202,56 @@ if (isset($_POST['history']) AND $_POST['history'] == "Next Period"){
 		$BillingEnd =  $row['CompanyBillingDateEnd'];
 		$displayBillingStart = convertDatetimeToFormat($BillingStart , 'Y-m-d', DATE_DEFAULT_FORMAT_TO_DISPLAY);
 		$displayBillingEnd = convertDatetimeToFormat($BillingEnd , 'Y-m-d', DATE_DEFAULT_FORMAT_TO_DISPLAY);
-		$BillingPeriod = $displayBillingStart . " To " . $displayBillingEnd . ".";			
+		$BillingPeriod = $displayBillingStart . " To " . $displayBillingEnd . ".";	
 		
+		// Get the credit information for the selected period (if we have it saved in companycreditshistory
+		$sql = "SELECT 		`minuteAmount`				AS CreditSubscriptionMinuteAmount,
+							`monthlyPrice`				AS CreditSubscriptionMonthlyPrice,
+							`overCreditMinutePrice`		AS CreditSubscriptionMinutePrice,
+							`overCreditHourPrice`		AS CreditSubscriptionHourPrice
+				FROM 		`companycreditshistory`
+				WHERE 		`companyID` = :CompanyID
+				AND 		`startDate` = :startDate
+				AND			`endDate` = :endDate
+				LIMIT 		1";
+		$s = $pdo->prepare($sql);
+		$s->bindValue(':CompanyID', $companyID);
+		$s->bindValue(':startDate', $BillingStart);
+		$s->bindValue(':endDate', $BillingEnd);
+		$s->execute();
+		$row = $s->fetch(PDO::FETCH_ASSOC);	
+
+		// Get credits values
+		$companyMinuteCredits = $row['CreditSubscriptionMinuteAmount'];
+		if($companyMinuteCredits == NULL OR $companyMinuteCredits == ""){
+			$companyMinuteCredits = 0;
+		}
+		
+			// Format company credits to be displayed
+		$displayCompanyCredits = convertMinutesToHoursAndMinutes($companyMinuteCredits);
+		
+		$monthPrice = $row["CreditSubscriptionMonthlyPrice"];
+		if($monthPrice == NULL OR $monthPrice == ""){
+			$monthPrice = 0;
+		}
+		$hourPrice = $row["CreditSubscriptionHourPrice"];
+		if($hourPrice == NULL OR $hourPrice == ""){
+			$hourPrice = 0;
+		}
+		$minPrice = $row["CreditSubscriptionMinutePrice"];
+		if($minPrice == NULL OR $minPrice == ""){
+			$minPrice = 0;
+		}	
+		
+		if(	($minPrice == 0 AND $hourPrice == 0) OR 
+			($minPrice != 0 AND $hourPrice != 0 )){
+			$overCreditsFee = "Not set";
+		} elseif($minPrice != 0 AND $hourPrice == 0) {
+			$overCreditsFee = convertToCurrency($minPrice) . "/m";
+		} elseif($minPrice == 0 AND $hourPrice != 0) {
+			$overCreditsFee = convertToCurrency($hourPrice) . "/h";
+		}
+
 		//Get completed booking history from the current billing period
 		$sql = "SELECT 		b.`startDateTime`		AS BookingStartedDatetime,
 							b.`actualEndDateTime`	AS BookingCompletedDatetime,
@@ -266,7 +315,62 @@ if (isset($_POST['history']) AND $_POST['history'] == "Next Period"){
 										'MeetingRoomName' => $meetingRoomName,
 										'BookingTimeUsed' => $displayBookingTimeUsed
 										);
-		}	
+		}
+		
+			// Calculate monthly cost (subscription + over credit charges)
+		if($totalBookingTimeThisPeriod > 0){
+			if($totalBookingTimeThisPeriod > $companyMinuteCredits){
+				// Company has used more booking time than credited. Let's calculate how far over they went
+				$actualTimeOverCreditsInMinutes = $totalBookingTimeThisPeriod - $companyMinuteCredits;
+			
+				// Let's calculate cost
+				if($hourPrice == 0 AND $minPrice == 0){
+					// The subscription has no valid overtime price set, should not occur
+					$bookingCostThisMonth = convertToCurrency($monthPrice) . "+" . 
+											convertToCurrency($actualTimeOverCreditsInMinutes) . "m * cost (not set)";
+				} elseif($hourPrice != 0 AND $minPrice != 0){
+					// The subscription has two valid overtime price set, should not occur
+					$bookingCostThisMonth = convertToCurrency($monthPrice) . "+" . 
+											convertToCurrency($actualTimeOverCreditsInMinutes) . "m * cost (not set)";
+				} elseif($hourPrice == 0 AND $minPrice != 0){
+					// The subscription charges by the minute, if over credits
+					$overFeeCostThisMonth = $minPrice * $actualTimeOverCreditsInMinutes;
+					$totalCost = $monthPrice+$overFeeCostThisMonth;
+					$displayOverFeeCostThisMonth = convertToCurrency($overFeeCostThisMonth);
+					$bookingCostThisMonth = convertToCurrency($monthPrice) . "+" . convertToCurrency($overFeeCostThisMonth);
+					$totalBookingCostThisMonth = convertToCurrency($totalCost);
+				} elseif($hourPrice != 0 AND $minPrice == 0){
+					// The subsription charges by the hour, if over credits
+					// TO-DO: Round up/down? Break down into minutes? Currently rounding up.
+					$hourAmountUsedInCalculation = ceil($actualTimeOverCreditsInMinutes/60);
+					$displayHourAmountUsedInCalculation = $hourAmountUsedInCalculation . "h0m";
+					$overFeeCostThisMonth = $hourPrice * $hourAmountUsedInCalculation;
+					$displayOverFeeCostThisMonth = convertToCurrency($overFeeCostThisMonth);
+					$totalCost = $monthPrice+$overFeeCostThisMonth;
+					$bookingCostThisMonth = convertToCurrency($monthPrice) . "+" . convertToCurrency($overFeeCostThisMonth);
+					$totalBookingCostThisMonth = convertToCurrency($totalCost);
+				}
+				$companyMinuteCreditsRemaining = $companyMinuteCredits - $totalBookingTimeThisPeriod;
+				$overCreditsTimeUsed = $totalBookingTimeThisPeriod - $companyMinuteCredits;
+			} else {
+				$bookingCostThisMonth = convertToCurrency($monthPrice) . "+" . convertToCurrency(0);
+				$totalBookingCostThisMonth = convertToCurrency($monthPrice);				
+				$companyMinuteCreditsRemaining = $companyMinuteCredits - $totalBookingTimeThisPeriod;
+			}		
+		} elseif($monthPrice != 0) {
+			$bookingCostThisMonth = convertToCurrency($monthPrice) . "+" . convertToCurrency(0);
+			$displayOverFeeCostThisMonth = convertToCurrency(0);
+			$totalBookingCostThisMonth = convertToCurrency($monthPrice);
+			$companyMinuteCreditsRemaining = $companyMinuteCredits;
+		} else {
+			$bookingCostThisMonth = "N/A";
+			$displayOverFeeCostThisMonth = convertToCurrency(0);
+			$totalBookingCostThisMonth = convertToCurrency(0);
+			$companyMinuteCreditsRemaining = $companyMinuteCredits;
+		}
+		$displayCompanyCreditsRemaining = convertMinutesToHoursAndMinutes($companyMinuteCreditsRemaining);
+		$displayOverCreditsTimeUsed = convertMinutesToHoursAndMinutes($overCreditsTimeUsed);
+		$displayMonthPrice = convertToCurrency($monthPrice);
 	}
 	catch (PDOException $e)
 	{
@@ -274,7 +378,8 @@ if (isset($_POST['history']) AND $_POST['history'] == "Next Period"){
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
 		$pdo = null;
 		exit();
-	}	
+	}
+	
 	$displayDateTimeCreated = $_SESSION['BookingHistoryCompanyInfo']['CompanyDateTimeCreated'];
 	$displayTotalBookingTimeThisPeriod = convertMinutesToHoursAndMinutes($totalBookingTimeThisPeriod);
 	
@@ -287,7 +392,7 @@ if (isset($_POST['history']) AND $_POST['history'] == "Next Period"){
 // If admin wants to see the booking history of the period before the currently shown one
 if (	(isset($_POST['history']) AND $_POST['history'] == "Previous Period") OR 
 		(isset($_POST['history']) AND $_POST['history'] == "First Period")){
-	
+	//TO-DO: Do the same here as in "next period" for calculating cost
 	// Set correct period based on what user clicked.
 	if(isset($_POST['history']) AND $_POST['history'] == "Previous Period"){
 		if(isset($_SESSION['BookingHistoryIntervalNumber'])){
@@ -425,7 +530,7 @@ if (	(isset($_POST['history']) AND $_POST['history'] == "Previous Period") OR
 // If admin wants to see the booking history of the selected company
 if ((isset($_POST['action']) AND $_POST['action'] == "Booking History") OR 
 	((isset($_POST['history']) AND $_POST['history'] == "Last Period"))){
-		
+		//TO-DO: Do the same here as in "next period" for calculating cost
 	if(isset($_SESSION['BookingHistoryCompanyInfo'])){
 		unset($_SESSION['BookingHistoryIntervalNumber']);
 		$companyID = $_SESSION['BookingHistoryCompanyInfo']['CompanyID'];
@@ -1210,9 +1315,9 @@ foreach ($result as $row)
 	
 	if(	($minPrice == 0 AND $hourPrice == 0) OR 
 		($minPrice != 0 AND $hourPrice != 0 )){
-			$overCreditsFee = "Not set";
+		$overCreditsFee = "Not set";
 	} elseif($minPrice != 0 AND $hourPrice == 0) {
-			$overCreditsFee = $minPrice . "/m";
+		$overCreditsFee = $minPrice . "/m";
 	} elseif($minPrice == 0 AND $hourPrice != 0) {
 		$overCreditsFee = $hourPrice . "/h";
 	}
@@ -1281,19 +1386,14 @@ foreach ($result as $row)
 				// TO-DO: Round up/down? Break down into minutes? Currently rounding up.
 				$bookingCostPrevMonth = $hourPrice * ceil($actualTimeOverCreditsInMinutes/60);
 				$bookingCostPrevMonth = $monthPrice . "+" . $bookingCostPrevMonth;
-			}
-			$companyMinuteCreditsRemaining = 0;
-			
+			}	
 		} else {
 			$bookingCostPrevMonth = $monthPrice . "+0";
-			$companyMinuteCreditsRemaining = $companyMinuteCredits - $actualTimeUsedInMinutesPrevMonth;
 		}		
 	} elseif($monthPrice != 0) {
 		$bookingCostPrevMonth = $monthPrice . "+0";
-		$companyMinuteCreditsRemaining = $companyMinuteCredits;
 	} else {
 		$bookingCostPrevMonth = "N/A";
-		$companyMinuteCreditsRemaining = $companyMinuteCredits;
 	}	
 	
 		// Format company credits remaining to be displayed
