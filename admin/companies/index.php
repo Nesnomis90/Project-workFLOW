@@ -365,7 +365,7 @@ if (	(isset($_POST['history']) AND $_POST['history'] == "Previous Period") OR
 		$s->bindValue(':CompanyID', $companyID);
 		$s->bindValue(':intervalNumber', $intervalNumber);
 		$s->execute();
-		$result = $s->fetchAll();
+		$result = $s->fetchAll(PDO::FETCH_ASSOC);
 			
 		//Close the connection
 		$pdo = null;	
@@ -504,7 +504,7 @@ if ((isset($_POST['action']) AND $_POST['action'] == "Booking History") OR
 		$s = $pdo->prepare($sql);
 		$s->bindValue(':CompanyID', $companyID);
 		$s->execute();
-		$result = $s->fetchAll();
+		$result = $s->fetchAll(PDO::FETCH_ASSOC);
 			
 		//Close the connection
 		$pdo = null;	

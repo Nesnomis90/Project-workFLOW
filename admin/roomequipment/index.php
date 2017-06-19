@@ -240,9 +240,10 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Add Room Equipment') OR
 						$s = $pdo->prepare($sql);
 						$s->bindValue(':search', $finalmeetingroomsearchstring);
 						$s->execute();
-						$result = $s->fetchAll();
+						$result = $s->fetchAll(PDO::FETCH_ASSOC);
 					} else {
-						$result = $pdo->query($sql);
+						$return = $pdo->query($sql);
+						$result = $return->fetchAll(PDO::FETCH_ASSOC);
 					}
 					
 					// Get the rows of information from the query
@@ -296,9 +297,10 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Add Room Equipment') OR
 					$s = $pdo->prepare($sql);
 					$s->bindValue(":search", $finalequipmentsearchstring);
 					$s->execute();
-					$result = $s->fetchAll();
+					$result = $s->fetchAll(PDO::FETCH_ASSOC);
 				} else {
-					$result = $pdo->query($sql);
+					$return = $pdo->query($sql);
+					$result = $return->fetchAll(PDO::FETCH_ASSOC);
 				}
 				
 				// Get the rows of information from the query
@@ -794,12 +796,15 @@ if(isset($_GET['Meetingroom'])){
 		$s->bindValue(':MeetingRoomID', $_GET['Meetingroom']);
 		$s->execute();
 		
-		$result = $s->fetchAll();
-		$rowNum = sizeOf($result);
+		$result = $s->fetchAll(PDO::FETCH_ASSOC);
+		if(isset($result)){
+			$rowNum = sizeOf($result);
+		} else {
+			$rowNum = 0;
+		}
 		
 		//close connection
-		$pdo = null;
-			
+		$pdo = null;		
 	}
 	catch (PDOException $e)
 	{

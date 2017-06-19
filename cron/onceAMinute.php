@@ -73,8 +73,12 @@ try
 	$s->bindValue(':waitMinutes', MINIMUM_TIME_PASSED_AFTER_CREATING_BOOKING_BEFORE_SENDING_EMAIL)
 	$s->execute();
 	
-	$result = $s->fetchAll();
-	$rowNum = sizeOf($result);
+	$result = $s->fetchAll(PDO::FETCH_ASSOC);
+	if(isset($result)){
+		$rowNum = sizeOf($result);
+	} else {
+		$rowNum  = 0;
+	}
 	
 	//Close the connection
 	$pdo = null;

@@ -239,9 +239,10 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Add Employee') OR
 						$s = $pdo->prepare($sql);
 						$s->bindValue(':search', $finalcompanysearchstring);
 						$s->execute();
-						$result = $s->fetchAll();
+						$result = $s->fetchAll(PDO::FETCH_ASSOC);
 					} else {
-						$result = $pdo->query($sql);
+						$return = $pdo->query($sql);
+						$result = $return->fetchAll(PDO::FETCH_ASSOC);
 					}
 					
 					// Get the rows of information from the query
@@ -328,10 +329,10 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Add Employee') OR
 					$s = $pdo->prepare($sql);
 					$s->bindValue(":search", $finalusersearchstring);
 					$s->execute();
-					$result = $s->fetchAll();
-					
+					$result = $s->fetchAll(PDO::FETCH_ASSOC);
 				} else {
-					$result = $pdo->query($sql);
+					$return = $pdo->query($sql);
+					$result = $return->fetchAll(PDO::FETCH_ASSOC);
 				}
 					
 				// Get the rows of information from the query
@@ -902,11 +903,14 @@ if(isset($_GET['Company'])){
 		$s->bindValue(':id', $_GET['Company']);
 		$s->execute();
 		
-		$result = $s->fetchAll();
-		$rowNum = sizeOf($result);
+		$result = $s->fetchAll(PDO::FETCH_ASSOC);
+		if(isset($result)){
+			$rowNum = sizeOf($result);
+		} else {
+			$rowNum = 0;
+		}
 		
 		// Start a second SQL query to collect the booked time by removed users
-		// TO-DO: Still needs fixing. Shows employees as removed.
 		$sql = "SELECT 	u.`userID`					AS UsrID,
 						c.`companyID`				AS TheCompanyID,
 						c.`name`					AS CompanyName,
@@ -997,8 +1001,12 @@ if(isset($_GET['Company'])){
 		$s->bindValue(':id', $_GET['Company']);
 		$s->execute();
 		
-		$removedEmployeesResult = $s->fetchAll();
-		$removedEmployeesResultRowNum = sizeOf($removedEmployeesResult);
+		$removedEmployeesResult = $s->fetchAll(PDO::FETCH_ASSOC);
+		if(isset($removedEmployeesResult)){
+			$removedEmployeesResultRowNum = sizeOf($removedEmployeesResult);
+		} else {
+			$removedEmployeesResultRowNum = 0;
+		}
 		
 		// SQL Query to get booked time for deleted users
 		$sql = "SELECT 	`companyID`				AS TheCompanyID,
@@ -1072,9 +1080,13 @@ if(isset($_GET['Company'])){
 		$s = $pdo->prepare($sql);
 		$s->bindValue(':id', $_GET['Company']);
 		$s->execute();
-		
-		$deletedUsersResult = $s->fetchAll();
-		$deletedUsersResultRowNum = sizeOf($deletedUsersResult);	
+
+		$deletedUsersResult = $s->fetchAll(PDO::FETCH_ASSOC);
+		if(isset($deletedUsersResult)){
+			$deletedUsersResultRowNum = sizeOf($deletedUsersResult);
+		} else {
+			$deletedUsersResultRowNum = 0;
+		}
 		
 		//close connection
 		$pdo = null;

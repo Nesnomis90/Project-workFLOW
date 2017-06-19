@@ -577,7 +577,7 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR
 		$s->execute();
 		
 		// Create an array with the row information we retrieved
-		$result = $s->fetchAll();
+		$result = $s->fetchAll(PDO::FETCH_ASSOC);
 			
 		foreach($result as $row){		
 			// Get the companies the user works for
@@ -756,10 +756,11 @@ if((isset($_POST['edit']) AND $_POST['edit'] == "Change User") OR
 				$s = $pdo->prepare($sql);
 				$s->bindValue(":search", $finalusersearchstring);
 				$s->execute();
-				$result = $s->fetchAll();
+				$result = $s->fetchAll(PDO::FETCH_ASSOC);
 				
 			} else {
-				$result = $pdo->query($sql);
+				$return = $pdo->query($sql);
+				$result = $return->fetchAll(PDO::FETCH_ASSOC);
 			}	
 			
 			// Get the rows of information from the query
@@ -1465,7 +1466,7 @@ if (	(isset($_POST['action']) AND $_POST['action'] == "Create Booking") OR
 		$s->execute();
 		
 		// Create an array with the row information we retrieved
-		$result = $s->fetchAll();
+		$result = $s->fetchAll(PDO::FETCH_ASSOC);
 			
 		foreach($result as $row){		
 			// Get the companies the user works for
@@ -1959,10 +1960,11 @@ if((isset($_POST['add']) AND $_POST['add'] == "Change User") OR
 				$s = $pdo->prepare($sql);
 				$s->bindValue(":search", $finalusersearchstring);
 				$s->execute();
-				$result = $s->fetchAll();
+				$result = $s->fetchAll(PDO::FETCH_ASSOC);
 				
 			} else {
-				$result = $pdo->query($sql);
+				$return = $pdo->query($sql);
+				$result = $return->fetchAll(PDO::FETCH_ASSOC);
 			}	
 			
 			// Get the rows of information from the query
@@ -2241,7 +2243,7 @@ if(!isset($_GET['Meetingroom'])){
 		$s = $pdo->prepare($sql);
 		$s->bindValue(':MeetingRoomID', $_GET['Meetingroom']);
 		$s->execute();
-		$result = $s->fetchAll();
+		$result = $s->fetchAll(PDO::FETCH_ASSOC);
 
 		//Close the connection
 		$pdo = null;

@@ -393,8 +393,12 @@ if($numberOfCheckboxesActivated > 0){
 			
 			$s->execute();
 			
-			$result = $s->fetchAll();
-			$rowNum = sizeOf($result);
+			$result = $s->fetchAll(PDO::FETCH_ASSOC);
+			if(isset()){
+				$rowNum = sizeOf($result);
+			} else {
+				$rowNum = 0;
+			}
 		} else {
 			// We don't want to filter by date, we just use a standard query
 			if (isset($sqlAdd)){

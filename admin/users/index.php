@@ -21,6 +21,8 @@ function clearAddUserSessions(){
 	unset($_SESSION['AddNewUserDefaultAccessID']);
 	
 	unset($_SESSION['lastUserID']);
+	
+	unset($_SESSION['UserEmailListSeparatorSelected']);
 }
 
 // Function to clear sessions used to remember user inputs on refreshing the edit user form
@@ -43,7 +45,9 @@ function clearEditUserSessions(){
 	unset($_SESSION['EditUserChangedBookingDescription']);
 	unset($_SESSION['EditUserChangedReduceAccessAtDate']);
 	
-	unset($_SESSION['EditUserAccessList']);	
+	unset($_SESSION['EditUserAccessList']);
+	
+	unset($_SESSION['UserEmailListSeparatorSelected']);
 }
 
 // Function to validate user inputs
@@ -205,6 +209,14 @@ function validateUserInputs($FeedbackSessionToUse){
 return array($invalidInput, $email, $validatedFirstname, $validatedLastname, $validatedBookingDescription, $validatedDisplayName, $validatedReduceAccessAtDate);	
 }
 
+// If admin wants to return to users from the email-list
+if (isset($_POST['action']) AND $_POST['action'] == "Return To Users"){
+	unset($_SESSION['UserEmailListSeparatorSelected']);
+	// Load user list webpage with updated database
+	header('Location: .');
+	exit();
+}
+
 // If admin wants to get a list of easily copied emails from the users that is being displayed
 if (	(isset($_POST['action']) AND $_POST['action'] == "Get Emails") OR 
 		isset($_SESSION['refreshUserEmailList']) AND $_SESSION['refreshUserEmailList']){
@@ -354,6 +366,8 @@ if (isset($_POST['action']) and $_POST['action'] == 'Delete')
 // we load a new html form
 if (isset($_GET['add']) OR (isset($_SESSION['refreshAddUser']) AND $_SESSION['refreshAddUser']))
 {	
+	unset($_SESSION['UserEmailsToBeDisplayed']);
+
 	// Check if the call was /?add/ or a forced refresh
 	if(isset($_SESSION['refreshAddUser']) AND $_SESSION['refreshAddUser']){
 		// Acknowledge that we have refreshed the form
@@ -376,7 +390,8 @@ if (isset($_GET['add']) OR (isset($_SESSION['refreshAddUser']) AND $_SESSION['re
 			$sql = 'SELECT 	`accessID`,
 							`accessname` 
 					FROM 	`accesslevel`';
-			$result = $pdo->query($sql);
+			$return = $pdo->query($sql);
+			$result = $return->fetchAll(PDO::FETCH_ASSOC);
 			
 			// Get the rows of information from the query
 			// This will be used to create a dropdown list in HTML
@@ -617,6 +632,8 @@ if (isset($_POST['add']) AND $_POST['add'] == 'Cancel'){
 if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR 
 (isset($_SESSION['refreshEditUser'])) AND $_SESSION['refreshEditUser'])
 {
+	unset($_SESSION['UserEmailsToBeDisplayed']);
+	
 		// Check if the call was edit button or a forced refresh
 	if(isset($_SESSION['refreshEditUser']) AND $_SESSION['refreshEditUser']){
 		// Acknowledge that we have refreshed the form
@@ -670,7 +687,8 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR
 			$sql = 'SELECT 	`accessID`,
 							`accessname` 
 					FROM 	`accesslevel`';
-			$result = $pdo->query($sql);
+			$return = $pdo->query($sql);
+			$result = $return->fetchAll(PDO::FETCH_ASSOC);
 			
 			// Get the rows of information from the query
 			// This will be used to create a dropdown list in HTML

@@ -830,7 +830,7 @@ if(	((isset($_POST['action']) AND $_POST['action'] == 'Create Meeting')) OR
 		$s->execute();
 		
 		// Create an array with the row information we retrieved
-		$result = $s->fetchAll();
+		$result = $s->fetchAll(PDO::FETCH_ASSOC);
 			
 		foreach($result as $row){		
 			// Get the companies the user works for
@@ -1557,7 +1557,7 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR
 		$s->execute();
 		
 		// Create an array with the row information we retrieved
-		$result = $s->fetchAll();
+		$result = $s->fetchAll(PDO::FETCH_ASSOC);
 			
 		foreach($result as $row){		
 			// Get the companies the user works for
@@ -2115,8 +2115,12 @@ try
 		$s = $pdo->prepare($sql);
 		$s->bindValue(':meetingRoomID', $_GET['meetingroom']);
 		$s->execute();
-		$result = $s->fetchAll();
-		$rowNum = sizeOf($result);	
+		$result = $s->fetchAll(PDO::FETCH_ASSOC);
+		if(isset($result)){
+			$rowNum = sizeOf($result);
+		} else {
+			$rowNum = 0;
+		}
 	} elseif(!isset($_GET['meetingroom'])){
 		$sql = "SELECT 		b.`bookingID`,
 							b.`companyID`,
