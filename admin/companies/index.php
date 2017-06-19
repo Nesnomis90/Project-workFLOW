@@ -187,7 +187,7 @@ if (isset($_POST['history']) AND $_POST['history'] == "Next Period"){
 		$s->bindValue(':CompanyID', $companyID);
 		$s->bindValue(':intervalNumber', $intervalNumber);
 		$s->execute();
-		$row = $s->fetch();
+		$row = $s->fetch(PDO::FETCH_ASSOC);
 			
 		if($row['ValidBillingDate'] == NULL){
 			$NextPeriod = FALSE;
@@ -228,7 +228,7 @@ if (isset($_POST['history']) AND $_POST['history'] == "Next Period"){
 		$s->bindValue(':CompanyID', $companyID);
 		$s->bindValue(':intervalNumber', $intervalNumber);
 		$s->execute();
-		$result = $s->fetchAll();
+		$result = $s->fetchAll(PDO::FETCH_ASSOC);
 			
 		//Close the connection
 		$pdo = null;	
@@ -324,7 +324,7 @@ if (	(isset($_POST['history']) AND $_POST['history'] == "Previous Period") OR
 		$s->bindValue(':CompanyID', $companyID);
 		$s->bindValue(':intervalNumber', $intervalNumber);
 		$s->execute();
-		$row = $s->fetch();
+		$row = $s->fetch(PDO::FETCH_ASSOC);
 			
 		if($row['ValidBillingDate'] == NULL){
 			$PreviousPeriod = FALSE;
@@ -452,7 +452,7 @@ if ((isset($_POST['action']) AND $_POST['action'] == "Booking History") OR
 		$s = $pdo->prepare($sql);
 		$s->bindValue(':CompanyID', $companyID);
 		$s->execute();
-		$row = $s->fetch();
+		$row = $s->fetch(PDO::FETCH_ASSOC);
 		$_SESSION['BookingHistoryCompanyInfo'] = $row;
 		
 		$dateTimeCreated = $row['CompanyDateTimeCreated'];
@@ -749,7 +749,7 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR
 			exit();		
 		}	
 		// Create an array with the row information we retrieved
-		$row = $s->fetch();
+		$row = $s->fetch(PDO::FETCH_ASSOC);
 		$CompanyName = $row['name'];
 		$DateToRemove = $row['removeAtDate'];
 		$id = $row['companyID'];

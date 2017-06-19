@@ -262,7 +262,7 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Add Room Equipment') OR
 					$s = $pdo->prepare($sql);
 					$s->bindValue(':MeetingRoomID', $_GET['Meetingroom']);
 					$s->execute();
-					$meetingrooms = $s->fetch();
+					$meetingrooms = $s->fetch(PDO::FETCH_ASSOC);
 				}
 				if(isset($meetingrooms)){
 					$_SESSION['AddRoomEquipmentMeetingRoomArray'] = $meetingrooms;

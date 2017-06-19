@@ -407,7 +407,7 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR
 			$s->execute();
 			
 			// Create an array with the row information we retrieved
-			$row = $s->fetch();
+			$row = $s->fetch(PDO::FETCH_ASSOC);
 			$_SESSION['EditEquipmentOriginalInfo'] = $row;
 			
 			// Set the correct information

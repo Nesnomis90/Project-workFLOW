@@ -273,7 +273,7 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Add Employee') OR
 					$s = $pdo->prepare($sql);
 					$s->bindValue(':CompanyID', $_GET['Company']);
 					$s->execute();
-					$companies = $s->fetch();		
+					$companies = $s->fetch(PDO::FETCH_ASSOC);		
 				}
 			} else {
 				$companies = $_SESSION['AddEmployeeCompaniesArray'];
@@ -700,7 +700,7 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Change Role')
 	}
 	
 	// Create an array with the row information we retrieved
-	$row = $s->fetch();
+	$row = $s->fetch(PDO::FETCH_ASSOC);
 		
 	// Set the correct information
 	$CompanyName = $row['CompanyName'];
@@ -1331,8 +1331,7 @@ foreach($result AS $row){
 		$MonthlyTimeUsed = $row['MonthlyBookingTimeUsed'];
 		$monthlyTimeHour = substr($MonthlyTimeUsed,0,strpos($MonthlyTimeUsed,":"));
 		$monthylTimeMinute = substr($MonthlyTimeUsed,strpos($MonthlyTimeUsed,":")+1, 2);
-		$MonthlyTimeUsed = $monthlyTimeHour . 'h' . $monthylTimeMinute . 'm';	
-	
+		$MonthlyTimeUsed = $monthlyTimeHour . 'h' . $monthylTimeMinute . 'm';
 	}
 
 	if($row['TotalBookingTimeUsed'] == null){

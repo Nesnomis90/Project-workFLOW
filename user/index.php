@@ -134,9 +134,6 @@ if(isset($_GET['activateaccount'])){
 	}	
 }
 
-
-
-
 // Load the html template
 include_once 'user.html.php';
 ?>
