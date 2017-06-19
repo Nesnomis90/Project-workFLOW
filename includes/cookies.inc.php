@@ -55,7 +55,7 @@ function checkIfLocalDevice(){
 						$s = $pdo->prepare($sql);
 						$s->bindValue(':meetingRoomName', $meetingRoomName);
 						$s->execute();
-						$result = $s->fetchAll();
+						$result = $s->fetchAll(PDO::FETCH_ASSOC);
 						
 						foreach($result AS $row){
 							$defaultRoomInfo = array(

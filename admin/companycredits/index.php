@@ -23,8 +23,6 @@ function clearEditCompanyCreditsSessions(){
 	unset($_SESSION['EditCompanyCreditsNewAlternativeAmount']);
 }
 
-
-
 // if admin wants to change credits info for the selected company
 // we load a new html form
 if (	isset($_POST['action']) AND $_POST['action'] == 'Edit' OR
@@ -70,9 +68,9 @@ if (	isset($_POST['action']) AND $_POST['action'] == 'Edit' OR
 			$s->bindValue(':CreditsID', $_POST['CreditsID']);
 			$s->bindValue(':CompanyID', $_POST['CompanyID']);
 			$s->execute();
-			
+
 			// Create an array with the row information we retrieved
-			$row = $s->fetch();
+			$row = $s->fetch(PDO::FETCH_ASSOC);
 			$_SESSION['EditCompanyCreditsOriginalInfo'] = $row;
 				
 			// Set the correct information
@@ -479,7 +477,8 @@ if(isset($_GET['Company'])){
 		$s->bindValue(':CompanyID', $_GET['Company']);
 		$s->execute();
 		
-		$result = $s->fetchAll();
+		$return = $pdo->query($sql);
+		$result = $return->fetchAll(PDO::FETCH_ASSOC);
 		$rowNum = sizeOf($result);
 		
 		//close connection
@@ -525,8 +524,9 @@ if(!isset($_GET['Company'])){
 				ORDER BY	UNIX_TIMESTAMP(cc.`datetimeAdded`)
 				DESC";
 				
-		$result = $pdo->query($sql);
-		$rowNum = $result->rowCount();
+		$return = $pdo->query($sql);
+		$result = $return->fetchAll(PDO::FETCH_ASSOC);
+		$rowNum = sizeOf($result);
 		
 		//close connection
 		$pdo = null;

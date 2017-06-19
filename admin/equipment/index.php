@@ -407,7 +407,7 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR
 			$s->execute();
 			
 			// Create an array with the row information we retrieved
-			$row = $s->fetch();
+			$row = $s->fetch(PDO::FETCH_ASSOC);
 			$_SESSION['EditEquipmentOriginalInfo'] = $row;
 			
 			// Set the correct information
@@ -563,9 +563,13 @@ try
 			ORDER BY	OrderByDate
 			DESC";
 			
-	$result = $pdo->query($sql);
-	$rowNum = $result->rowCount();
-	
+	$return = $pdo->query($sql);
+	$result = $return->fetchAll(PDO::FETCH_ASSOC);
+	if(isset($result)){
+		$rowNum = sizeOf($result);
+	} else {
+		$rowNum = 0;
+	}
 	//close connection
 	$pdo = null;
 		

@@ -479,13 +479,17 @@ function revealBookingCode($userID){
 		exit();				
 	}
 	
+	// Get the user's hashed booking code
+	$result = $s->fetch(PDO::FETCH_ASSOC);
+	if(isset($result)){
+		$rowNum = sizeOf($result);
+	} else {
+		$rowNum = 0;
+	}
 	// Check if the select even found something
-	$rowCount = $s->rowCount();
-	if($rowCount == 0){
+	if($rowNum == 0){
 		return FALSE;
 	}
-	// Get the user's hashed booking code
-	$result = $s->fetch();
 	$hashedBookingCode = $result['bookingCode'];
 	
 	$maxNumber = pow(10,BOOKING_CODE_LENGTH);

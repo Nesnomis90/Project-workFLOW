@@ -830,7 +830,7 @@ if(	((isset($_POST['action']) AND $_POST['action'] == 'Create Meeting')) OR
 		$s->execute();
 		
 		// Create an array with the row information we retrieved
-		$result = $s->fetchAll();
+		$result = $s->fetchAll(PDO::FETCH_ASSOC);
 			
 		foreach($result as $row){		
 			// Get the companies the user works for
@@ -1557,7 +1557,7 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR
 		$s->execute();
 		
 		// Create an array with the row information we retrieved
-		$result = $s->fetchAll();
+		$result = $s->fetchAll(PDO::FETCH_ASSOC);
 			
 		foreach($result as $row){		
 			// Get the companies the user works for
@@ -1929,17 +1929,20 @@ if(isset($_GET['cancellationcode'])){
 		$pdo = null;
 		exit();
 	}
-	
+
+	$result = $s->fetch(PDO::FETCH_ASSOC);
+	if(isset($result)){
+		$rowNum = sizeOf($result);
+	} else {
+		$rowNum = 0;
+	}
 	// Check if the select even found something
-	$rowCount = $s->rowCount();
-	if($rowCount == 0){
+	if($rowNum == 0){
 		// No match.
 		$_SESSION['normalBookingFeedback'] = "The cancellation code that was submitted is not a valid code.";
 		header("Location: .");
 		exit();
 	}
-
-	$result = $s->fetch(PDO::FETCH_ASSOC);
 	
 	$bookingID = $result['bookingID'];
 	$TheMeetingRoomName = $result['TheMeetingRoomName'];
@@ -2112,8 +2115,12 @@ try
 		$s = $pdo->prepare($sql);
 		$s->bindValue(':meetingRoomID', $_GET['meetingroom']);
 		$s->execute();
-		$result = $s->fetchAll();
-		$rowNum = sizeOf($result);	
+		$result = $s->fetchAll(PDO::FETCH_ASSOC);
+		if(isset($result)){
+			$rowNum = sizeOf($result);
+		} else {
+			$rowNum = 0;
+		}
 	} elseif(!isset($_GET['meetingroom'])){
 		$sql = "SELECT 		b.`bookingID`,
 							b.`companyID`,
@@ -2146,8 +2153,13 @@ try
 				GROUP BY 	b.bookingID
 				ORDER BY 	UNIX_TIMESTAMP(b.startDateTime)
 				ASC";
-		$result = $pdo->query($sql);
-		$rowNum = $result->rowCount();
+		$return = $pdo->query($sql);
+		$result = $return->fetchAll(PDO::FETCH_ASSOC);
+		if(isset($result)){
+			$rowNum = sizeOf($result);
+		} else {
+			$rowNum = 0;
+		}
 	}
 
 	//Close the connection

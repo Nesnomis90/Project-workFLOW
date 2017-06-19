@@ -48,6 +48,11 @@
 		<div>
 			<label>Tip: On MAC - Click inside box once. Press Command-A then Command-C to copy everything. Paste into your Email program with Command-V.</label>
 		</div>
+		<div>
+			<form action="" method="post">
+				<input type="submit" name="action" value="Return To Users">
+			</form>
+		</div>
 		<p><a href="..">Return to CMS home</a></p>
 	</body>
 </html>

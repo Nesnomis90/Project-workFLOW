@@ -491,7 +491,7 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR
 			$s->execute();
 			
 			// Create an array with the row information we retrieved
-			$row = $s->fetch();
+			$row = $s->fetch(PDO::FETCH_ASSOC);
 
 			//Close the connection
 			$pdo = null;
@@ -681,9 +681,13 @@ try
 			LEFT JOIN 	`roomequipment` re
 			ON 			re.`meetingRoomID` = m.`meetingRoomID`			
 			GROUP BY 	m.`meetingRoomID`';
-	$result = $pdo->query($sql);
-	$rowNum = $result->rowCount();
-	
+	$return = $pdo->query($sql);
+	$result = $return->fetchAll(PDO::FETCH_ASSOC);
+	if(isset($result)){
+		$rowNum = sizeOf($result);
+	} else {
+		$rowNum = 0;
+	}
 	//Close the connection
 	$pdo = null;
 }

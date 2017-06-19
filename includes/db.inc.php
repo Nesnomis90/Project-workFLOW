@@ -94,11 +94,12 @@ catch(PDOException $e)
 // Function to see if database exists
 function dbExists($pdo, $databaseName){
 	try{
-		// Run a SHOW DATABASES query on the selected database
-		$result = $pdo->query("SHOW DATABASES LIKE '$databaseName'");
-		// The result will either be an empty set, if it doesn't exist. Or a single row, if it does exist.
-		$row = $result->rowCount();
-		if ($row > 0){
+		// Check if the database exists by counting schemas with that name
+		$return = $pdo->query("	SELECT 	COUNT(*) 
+								FROM 	information_schema.SCHEMATA
+								WHERE	`SCHEMA_NAME` = '" . $databaseName . "'");
+		$rowCount = $return->fetchColumn();
+		if ($rowCount > 0){
 			return TRUE;
 		} else {
 			return FALSE;
@@ -295,9 +296,10 @@ function create_tables()
 		
 		} else {
 			//If the table exists, but for some reason has no values in it, then fill it
-			$result = $conn->query("SELECT `AccessName` FROM `accesslevel`");
-			$row = $result->rowCount();
-			if($row == 0){
+			$return = $conn->query("SELECT 	COUNT(*) 
+									FROM 	`accesslevel`");
+			$rowCount = $return->fetchColumn();
+			if($rowCount == 0){
 				// No values in the table. Insert the needed values.
 				fillAccessLevel($conn);
 				
@@ -522,9 +524,10 @@ function create_tables()
 			echo '<b>Execution time for creating and filling table ' . $table. ':</b> ' . $time . 's<br />';	
 		} else { 
 			//If the table exists, but for some reason has no values in it, then fill it
-			$result = $conn->query("SELECT `name` FROM `companyposition`");
-			$row = $result->rowCount();
-			if($row == 0){
+			$return = $conn->query("SELECT 	COUNT(*) 
+									FROM 	`companyposition`");
+			$rowCount = $return->fetchColumn();
+			if($rowCount == 0){
 				
 				fillCompanyPosition($conn);
 				
@@ -647,9 +650,10 @@ function create_tables()
 			echo '<b>Execution time for creating table ' . $table. ':</b> ' . $time . 's<br />';		
 		} else { 
 			//If the table exists, but for some reason has no values in it, then fill it
-			$result = $conn->query("SELECT `name` FROM `logaction`");
-			$row = $result->rowCount();
-			if($row==0){
+			$return = $conn->query("SELECT 	COUNT(*) 
+									FROM 	`logaction`");
+			$rowCount = $return->fetchColumn();
+			if($rowCount == 0){
 				// No values in the table. Insert the needed values.
 				fillLogAction($conn);
 				
@@ -743,9 +747,10 @@ function create_tables()
 			echo '<b>Execution time for creating table ' . $table. ':</b> ' . $time . 's<br />';		
 		} else {
 			//If the table exists, but for some reason has no values in it, then fill it
-			$result = $conn->query("SELECT `name` FROM `credits`");
-			$row = $result->rowCount();
-			if($row == 0){
+			$return = $conn->query("SELECT 	COUNT(*) 
+									FROM 	`credits`");
+			$rowCount = $return->fetchColumn();
+			if($rowCount == 0){
 				// No values in the table. Insert the needed values.
 				fillCredits($conn);
 				
@@ -778,6 +783,43 @@ function create_tables()
 						  KEY `FK_CreditsID_idx` (`CreditsID`),
 						  CONSTRAINT `FK_CompanyID4` FOREIGN KEY (`CompanyID`) REFERENCES `company` (`CompanyID`) ON DELETE CASCADE ON UPDATE CASCADE,
 						  CONSTRAINT `FK_CreditsID` FOREIGN KEY (`CreditsID`) REFERENCES `credits` (`CreditsID`) ON DELETE CASCADE ON UPDATE CASCADE
+						) ENGINE=InnoDB DEFAULT CHARSET=utf8");
+						
+			//	Add the creation to log event
+			$sqlLog = "	INSERT INTO `logevent`(`actionID`, `description`) 
+						VALUES 		(
+										(
+										SELECT 	`actionID` 
+										FROM 	`logaction` 
+										WHERE 	`name` = 'Table Created'
+										), 
+									'The table $table was created automatically by the PHP script. This should only occur once, at the very start of the log events.'
+									)";			
+			$logEventArray[] = $sqlLog;						
+
+			$totaltime = microtime(true) - $_SERVER["REQUEST_TIME_FLOAT"];
+			$time = $totaltime - $prevtime;
+			$prevtime = $totaltime;
+			echo '<b>Execution time for creating table ' . $table. ':</b> ' . $time . 's<br />';		
+		} else { 
+			echo '<b>Table ' . $table. ' already exists</b>.<br />';
+		}
+
+			// Credits history per billing month per company
+		$table = 'companycreditshistory';
+		//Check if table already exists
+		if (!tableExists($conn, $table))
+		{
+			$conn->exec("CREATE TABLE IF NOT EXISTS `$table` (
+						  `CompanyID` int(10) unsigned NOT NULL,
+						  `startDate` date NOT NULL,
+						  `endDate` date NOT NULL,
+						  `minuteAmount` smallint(5) unsigned NOT NULL,
+						  `monthlyPrice` smallint(5) unsigned NOT NULL DEFAULT '0',
+						  `overCreditMinutePrice` float unsigned DEFAULT NULL,
+						  `overCreditHourPrice` smallint(5) unsigned DEFAULT NULL,
+						  PRIMARY KEY (`CompanyID`,`startDate`,`endDate`),
+						  CONSTRAINT `FK_CompanyID5` FOREIGN KEY (`CompanyID`) REFERENCES `company` (`CompanyID`) ON DELETE CASCADE ON UPDATE CASCADE
 						) ENGINE=InnoDB DEFAULT CHARSET=utf8");
 						
 			//	Add the creation to log event

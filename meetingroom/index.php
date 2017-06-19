@@ -37,8 +37,13 @@ if(	(isset($_POST['action']) AND $_POST['action'] == "Set Default Room") OR
 							`description`	AS MeetingRoomDescription,
 							`idCode`		AS MeetingRoomIDCode
 				FROM 		`meetingroom`';
-		$result = $pdo->query($sql);
-		$rowNum = $result->rowCount();
+		$return = $pdo->query($sql);
+		$result = $return->fetchAll(PDO::FETCH_ASSOC);
+		if(isset($result)){
+			$rowNum = sizeOf($result);
+		} else {
+			$rowNum = 0;
+		}
 		
 		//Close the connection
 		$pdo = null;

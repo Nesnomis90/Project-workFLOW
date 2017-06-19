@@ -48,17 +48,17 @@ function idCodeExists($code){
 		// Check database if the code already exists or not
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 		$pdo =  connect_to_db();
-		$sql = 'SELECT 	1 
+		$sql = 'SELECT 	COUNT(*) 
 				FROM 	`meetingroom` 
 				WHERE 	`idCode` = ' . $code .
 				' LIMIT 1'; //To-do: remove/fix limit 1 if broken
-		$result = $pdo->query($sql);
-		$row = $result->rowCount();
+		$return = $pdo->query($sql);
+		$result = $return->fetchColumn();
 		
 		$pdo = null;
 		
 		// The result will either be an empty set, if it doesn't exist. Or a single row, if it does exist.
-		if($row > 0){
+		if($result > 0){
 			return TRUE;
 		} else {
 			return FALSE;
@@ -106,17 +106,17 @@ function activationCodeExists($code){
 		// Check database if the code already exists or not
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 		$pdo =  connect_to_db();
-		$sql = 'SELECT 	1 
+		$sql = 'SELECT 	COUNT(*) 
 				FROM 	`user` 
 				WHERE 	`activationcode` = ' . $code .
 				' LIMIT 1'; //To-do: remove/fix limit 1 if broken
-		$result = $pdo->query($sql);
-		$row = $result->rowCount();
+		$return = $pdo->query($sql);
+		$result = $return->fetchColumn();
 		
 		$pdo = null;
 		
 		// The result will either be an empty set, if it doesn't exist. Or a single row, if it does exist.
-		if($row > 0){
+		if($result > 0){
 			return TRUE;
 		} else {
 			return FALSE;
@@ -165,17 +165,17 @@ function cancellationCodeExists($code){
 		// Check database if the code already exists or not
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 		$pdo =  connect_to_db();
-		$sql = 'SELECT 	1 
+		$sql = 'SELECT 	COUNT(*) 
 				FROM 	`booking` 
 				WHERE 	`cancellationCode` = ' . $code . 
 				' LIMIT 1'; //To-do: remove/fix limit 1 if broken
-		$result = $pdo->query($sql);
-		$row = $result->rowCount();
+		$return = $pdo->query($sql);
+		$result = $return->fetchColumn();
 		
 		$pdo = null;
 		
 		// The result will either be an empty set, if it doesn't exist. Or a single row, if it does exist.
-		if($row > 0){
+		if($result > 0){
 			return TRUE;
 		} else {
 			return FALSE;
