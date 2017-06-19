@@ -526,7 +526,7 @@ if(!isset($_GET['Company'])){
 				DESC";
 				
 		$result = $pdo->query($sql);
-		$rowNum = $result->rowCount();
+		$rowNum = $result->rowCount(); // TO-DO: rowCount() is not reliable with SELECT statements
 		
 		//close connection
 		$pdo = null;
