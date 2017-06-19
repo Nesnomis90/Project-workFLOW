@@ -94,11 +94,12 @@ catch(PDOException $e)
 // Function to see if database exists
 function dbExists($pdo, $databaseName){
 	try{
-		// Run a SHOW DATABASES query on the selected database
-		$result = $pdo->query("SHOW DATABASES LIKE '$databaseName'");
-		// The result will either be an empty set, if it doesn't exist. Or a single row, if it does exist.
-		$row = $result->rowCount();
-		if ($row > 0){
+		// Check if the database exists by counting schemas with that name
+		$return = $pdo->query("	SELECT 	COUNT(*) 
+								FROM 	information_schema.SCHEMATA
+								WHERE	`SCHEMA_NAME` = '" . $databaseName . "'");
+		$rowCount = $return->fetchColumn();
+		if ($rowCount > 0){
 			return TRUE;
 		} else {
 			return FALSE;
@@ -295,9 +296,10 @@ function create_tables()
 		
 		} else {
 			//If the table exists, but for some reason has no values in it, then fill it
-			$result = $conn->query("SELECT `AccessName` FROM `accesslevel`");
-			$row = $result->rowCount();
-			if($row == 0){
+			$return = $conn->query("SELECT 	COUNT(*) 
+									FROM 	`accesslevel`");
+			$rowCount = $return->fetchColumn();
+			if($rowCount == 0){
 				// No values in the table. Insert the needed values.
 				fillAccessLevel($conn);
 				
@@ -522,9 +524,10 @@ function create_tables()
 			echo '<b>Execution time for creating and filling table ' . $table. ':</b> ' . $time . 's<br />';	
 		} else { 
 			//If the table exists, but for some reason has no values in it, then fill it
-			$result = $conn->query("SELECT `name` FROM `companyposition`");
-			$row = $result->rowCount();
-			if($row == 0){
+			$return = $conn->query("SELECT 	COUNT(*) 
+									FROM 	`companyposition`");
+			$rowCount = $return->fetchColumn();
+			if($rowCount == 0){
 				
 				fillCompanyPosition($conn);
 				
@@ -647,9 +650,10 @@ function create_tables()
 			echo '<b>Execution time for creating table ' . $table. ':</b> ' . $time . 's<br />';		
 		} else { 
 			//If the table exists, but for some reason has no values in it, then fill it
-			$result = $conn->query("SELECT `name` FROM `logaction`");
-			$row = $result->rowCount();
-			if($row==0){
+			$return = $conn->query("SELECT 	COUNT(*) 
+									FROM 	`logaction`");
+			$rowCount = $return->fetchColumn();
+			if($rowCount == 0){
 				// No values in the table. Insert the needed values.
 				fillLogAction($conn);
 				
@@ -743,9 +747,10 @@ function create_tables()
 			echo '<b>Execution time for creating table ' . $table. ':</b> ' . $time . 's<br />';		
 		} else {
 			//If the table exists, but for some reason has no values in it, then fill it
-			$result = $conn->query("SELECT `name` FROM `credits`");
-			$row = $result->rowCount();
-			if($row == 0){
+			$return = $conn->query("SELECT 	COUNT(*) 
+									FROM 	`credits`");
+			$rowCount = $return->fetchColumn();
+			if($rowCount == 0){
 				// No values in the table. Insert the needed values.
 				fillCredits($conn);
 				

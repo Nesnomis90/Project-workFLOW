@@ -1929,17 +1929,20 @@ if(isset($_GET['cancellationcode'])){
 		$pdo = null;
 		exit();
 	}
-	
+
+	$result = $s->fetch(PDO::FETCH_ASSOC);
+	if(isset($result)){
+		$rowNum = sizeOf($result);
+	} else {
+		$rowNum = 0;
+	}
 	// Check if the select even found something
-	$rowCount = $s->rowCount();
-	if($rowCount == 0){
+	if($rowNum == 0){
 		// No match.
 		$_SESSION['normalBookingFeedback'] = "The cancellation code that was submitted is not a valid code.";
 		header("Location: .");
 		exit();
 	}
-
-	$result = $s->fetch(PDO::FETCH_ASSOC);
 	
 	$bookingID = $result['bookingID'];
 	$TheMeetingRoomName = $result['TheMeetingRoomName'];
@@ -2146,8 +2149,13 @@ try
 				GROUP BY 	b.bookingID
 				ORDER BY 	UNIX_TIMESTAMP(b.startDateTime)
 				ASC";
-		$result = $pdo->query($sql);
-		$rowNum = $result->rowCount();
+		$return = $pdo->query($sql);
+		$result = $return->fetchAll(PDO::FETCH_ASSOC);
+		if(isset($result)){
+			$rowNum = sizeOf($result);
+		} else {
+			$rowNum = 0;
+		}
 	}
 
 	//Close the connection

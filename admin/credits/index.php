@@ -832,9 +832,13 @@ try
 			ORDER BY	OrderByDate
 			DESC";
 			
-	$result = $pdo->query($sql);
-	$rowNum = $result->rowCount();
-	
+	$return = $pdo->query($sql);
+	$result = $return->fetchAll(PDO::FETCH_ASSOC);
+	if(isset($result)){
+		$rowNum = sizeOf($result);
+	} else {
+		$rowNum = 0;
+	}
 	//close connection
 	$pdo = null;
 		

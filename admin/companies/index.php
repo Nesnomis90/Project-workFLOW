@@ -1143,8 +1143,13 @@ try
 			ON			cr.`CreditsID` = cc.`CreditsID`
 			GROUP BY 	c.`name`";
 
-	$result = $pdo->query($sql);
-	$rowNum = $result->rowCount();
+	$return = $pdo->query($sql);
+	$result = $return->fetchAll(PDO::FETCH_ASSOC);
+	if(isset($result)){
+		$rowNum = sizeOf($result);
+	} else {
+		$rowNum = 0;
+	}
 	
 	//Close the connection
 	$pdo = null;	

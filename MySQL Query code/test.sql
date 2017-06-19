@@ -2,6 +2,15 @@ USE test;
 SET NAMES utf8;
 USE meetingflow;
 
+INSERT INTO `companycreditshistory`
+SET			`CompanyID` = :companyID,
+			`startDate` = :startDate,
+            `endDate` = :endDate,
+            `minuteAmount` = :minuteAmount,
+            `monthlyPrice` = :monthlyPrice,
+            `overCreditMinutePrice` = :overCreditMinutePrice,
+            `overCreditHourPrice` = :overCreditHourPrice;
+            
 SELECT 		c.`CompanyID`,
 			c.`startDate`,
 			c.`endDate`,
@@ -17,9 +26,6 @@ INNER JOIN 	`credits` cr
 ON			cr.`CreditsID` = cc.`CreditsID`
 WHERE 		c.`isActive` = 1
 AND			CURDATE() > c.`endDate`;
-
-
-
 
 SELECT 	COUNT(*)	AS HitCount
 FROM 	(
@@ -356,20 +362,26 @@ GROUP BY 	c.`name`;
 
 INSERT INTO `companycredits`(`CompanyID`, `CreditsID`) VALUES (39,2),(18,2);
 
-SELECT 		COUNT(`CompanyID`),
-						`CompanyID`,
-						(
-							SELECT 	`CreditsID`
-							FROM	`credits`
-							WHERE	`name` = 'Default'
-						)	AS CreditsID
-			FROM 		`company`
-			WHERE		`CompanyID` 
-			NOT IN		(
-							SELECT 	`CompanyID`
-							FROM 	`companycredits`
-						)
-			GROUP BY	`CompanyID`;
+SELECT 		COUNT(*)
+FROM 		`company`
+WHERE		`CompanyID` 
+NOT IN		(
+				SELECT 	`CompanyID`
+				FROM 	`companycredits`
+			);
+
+SELECT 		`CompanyID`,
+			(
+				SELECT 	`CreditsID`
+				FROM	`credits`
+				WHERE	`name` = 'Default'
+			)	AS CreditsID
+FROM 		`company`
+WHERE		`CompanyID` 
+NOT IN		(
+				SELECT 	`CompanyID`
+				FROM 	`companycredits`
+			);
 
 SELECT 		COUNT(*),
 			`CompanyID`

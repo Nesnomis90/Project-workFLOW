@@ -423,8 +423,13 @@ if($numberOfCheckboxesActivated > 0){
 						LIMIT ' . $logLimit;			
 			}
 			
-			$result = $pdo->query($sql);
-			$rowNum = $result->rowCount();
+			$return = $pdo->query($sql);
+			$result = $return->fetchAll(PDO::FETCH_ASSOC);
+			if(isset($result)){
+				$rowNum = sizeOf($result);
+			} else {
+				$rowNum = 0;
+			}
 		}
 
 		//Close connection

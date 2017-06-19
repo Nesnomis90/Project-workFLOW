@@ -4,8 +4,6 @@ include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/helpers.inc.php';
 include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/magicquotes.inc.php';
 // PHP code that we will set to be run at a certain interval, with CRON, to interact with our database
 // This file is set to run minimum once a day (more often in case SQL connection fails?)
-// TO-DO: add sleep between queries?
-// TO-DO: Make a sleep then repeat function on catch?
 
 // If, for some reason, a company does not have a subscription set. We set it to default.
 // TO-DO: Not extensively tested and probably super broken/bad
@@ -13,44 +11,54 @@ function setDefaultSubscriptionIfCompanyHasNone(){
 	try
 	{
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
-		
-		$pdo = connect_to_db();
-		$sql = "SELECT 		COUNT(`CompanyID`),
-							`CompanyID`,
-							(
-								SELECT 	`CreditsID`
-								FROM	`credits`
-								WHERE	`name` = 'Default'
-							)								AS CreditsID
+
+		// Check if there is any information to change
+		$sql = "SELECT 		COUNT(*)
 				FROM 		`company`
 				WHERE		`CompanyID` 
 				NOT IN		(
 								SELECT 	`CompanyID`
 								FROM 	`companycredits`
-							)
-				GROUP BY	`CompanyID`";
+							)"
 		$return = $pdo->query($sql);
-		$result = $return->fetchAll();
+		$rowCount = $return->fetchColumn();
 		
-		$sql = "INSERT INTO `companycredits`(`CompanyID`, `CreditsID`) 
-				VALUES ";
-				
-		if($result[0] != NULL AND $result[0] > 0){
-			// Need to add subscription to some companies
-			$CreditsID = $result[0]['CreditsID'];
-			foreach($result AS $companyRow){
-				$CompanyID = $companyRow['CompanyID'];
-				$sql .= "(" . $CompanyID . "," . $CreditsID ."),";
-			}
-			// Remove last ,
-			$sql = substr($sql,0, -1);
+		if($rowCount > 0) {		
+			$pdo = connect_to_db();
+			$sql = "SELECT 		`CompanyID`						AS CompanyID,
+								(
+									SELECT 	`CreditsID`
+									FROM	`credits`
+									WHERE	`name` = 'Default'
+								)								AS CreditsID
+					FROM 		`company`
+					WHERE		`CompanyID` 
+					NOT IN		(
+									SELECT 	`CompanyID`
+									FROM 	`companycredits`
+								)";
+			$return = $pdo->query($sql);
+			$result = $return->fetchAll(PDO::FETCH_ASSOC);
 			
-			$pdo->exec($sql);
+			$creditsID = $insert['CreditsID'];
+
+			$pdo->beginTransaction();
+			foreach($result AS $insert){
+				$companyID = $insert['CompanyID'];
+
+				$pdo->exec("INSERT INTO `companycredits`
+							SET			`CompanyID` = " . $companyID . ",
+										`CreditsID` = " . $creditsID);
+			}
+			
+			$success = $pdo->commit();
+			if(!$success){ // If commit failed we have to retry
+				$pdo = null;
+				return FALSE;
+			}				
 		}
 		$pdo = null;
-		unset($sql);
-		return TRUE;
-		
+		return TRUE;	
 	}
 	catch(PDOException $e)
 	{
@@ -59,9 +67,10 @@ function setDefaultSubscriptionIfCompanyHasNone(){
 	}	
 }
 
-
-// Update the billing date periods for the company when the last one has ended
-// Also updates the company credits history table with the current/old values
+// Checks if there are any billing periods that have ended for any company
+// If there are any then we:
+//		Update the company credits history table with the current values
+//		Update the billing date periods
 function updateBillingDatesForCompanies(){
 	try
 	{
@@ -76,9 +85,9 @@ function updateBillingDatesForCompanies(){
 				INNER JOIN 	`credits` cr
 				ON			cr.`CreditsID` = cc.`CreditsID`
 				WHERE 		c.`isActive` = 1
-				AND			CURDATE() > c.`endDate`"
-		$result = $pdo->query($sql);
-		$rowCount = $result->fetchColumn();
+				AND			CURDATE() >= c.`endDate`"
+		$return = $pdo->query($sql);
+		$rowCount = $return->fetchColumn();
 		
 		if($rowCount > 0) {
 			// There is information to update. Get needed values
@@ -96,8 +105,9 @@ function updateBillingDatesForCompanies(){
 					INNER JOIN 	`credits` cr
 					ON			cr.`CreditsID` = cc.`CreditsID`
 					WHERE 		c.`isActive` = 1
-					AND			CURDATE() > c.`endDate`";
-			$result = $pdo->query($sql);
+					AND			CURDATE() >= c.`endDate`";
+			$return = $pdo->query($sql);
+			$result = $return->fetchAll(PDO::FETCH_ASSOC);
 		
 			$pdo->beginTransaction();
 			foreach($result AS $insert){
@@ -128,7 +138,7 @@ function updateBillingDatesForCompanies(){
 							`startDate` = `endDate`,
 							`endDate` = (`startDate` + INTERVAL 1 MONTH)
 					WHERE	`companyID` <> 0
-					AND		CURDATE() > `endDate`";		
+					AND		CURDATE() >= `endDate`";		
 			$pdo->exec($sql);
 			$success = $pdo->commit();
 			if(!$success){ // If commit failed we have to retry
