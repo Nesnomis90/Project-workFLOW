@@ -52,15 +52,18 @@ if(isset($_GET['activateaccount'])){
 	}
 	
 	// Check if the select even found something
-	$rowCount = $s->rowCount();
-	if($rowCount == 0){
+	$result = $s->fetch(PDO::FETCH_ASSOC);
+	if(isset($result)){
+		$rowNum = sizeOf($result);
+	} else {
+		$rowNum = 0;
+	}
+	if($rowNum == 0){
 		// No match.
 		$_SESSION['normalUserFeedback'] = "The activation code that was submitted is not a valid code.";
 		header("Location: .");
 		exit();
 	}
-
-	$result = $s->fetch();
 	
 	$userID = $result['userID'];
 	$email = $result['email'];
