@@ -2,6 +2,25 @@ USE test;
 SET NAMES utf8;
 USE meetingflow;
 
+SELECT 		c.`CompanyID`,
+			c.`startDate`,
+			c.`endDate`,
+            cr.`minuteAmount`,
+            cr.`monthlyPrice`,
+            cr.`overCreditMinutePrice`,
+            cr.`overCreditHourPrice`,
+            cc.`altMinuteAmount`
+FROM 		`company` c
+INNER JOIN 	`companycredits` cc
+ON 			cc.`CompanyID` = c.`CompanyID`
+INNER JOIN 	`credits` cr
+ON			cr.`CreditsID` = cc.`CreditsID`
+WHERE 		c.`isActive` = 1
+AND			CURDATE() > c.`endDate`;
+
+
+
+
 SELECT 	COUNT(*)	AS HitCount
 FROM 	(
  			SELECT 	1
@@ -1685,3 +1704,4 @@ SELECT cp.`name` FROM `companyposition` cp JOIN `company` c JOIN `employee` e JO
 SELECT * FROM `equipment` e JOIN `roomequipment` re JOIN `meetingroom` m WHERE m.meetingroomid = re.meetingroomid AND re.EquipmentID = e.EquipmentID;
 
 INSERT INTO `user`(`email`, `password`, `firstname`, `lastname`, `accessID`, `activationcode`) VALUES ('test15@test.com', '123test', 'testy15', 'mctester15', 4, 'ecd71870d1963316a97e3ac3408c9835ad8cf0f3c1bc703527c30265534f75ae');
+UPDATE  `company` SET  `prevStartDate` = `startDate`,   `startDate` = `endDate`,         `endDate` = (`startDate` + INTERVAL 1 MONTH) WHERE `companyID` <> 0 AND  CURDATE() > `endDate`

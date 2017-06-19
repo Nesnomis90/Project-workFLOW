@@ -173,24 +173,72 @@ function updateCompanyCreditsHistory(){
 }
 
 // The actual actions taken // START //
-	// If we get a FALSE back, the function failed to do its purpose
-	// Let's wait and try again x times.
+	// Run our SQL functions
 $updatedDefaultSubscription = setDefaultSubscriptionIfCompanyHasNone();
 $updatedBillingDates = updateBillingDatesForCompanies();
 $updatedCompanyActivity = setCompanyAsInactiveOnSetDate();
 $updatedUserAccess = setUserAccessToNormalOnSetDate();
 $updatedCompanyCreditsHistory = updateCompanyCreditsHistory();
 
+$repetition = 3;
+$sleepTime = 1;
+
+// If we get a FALSE back, the function failed to do its purpose
+// Let's wait and try again x times.
+
 if(!$updatedDefaultSubscription){
-	for($i = 1; $i < 6; $i++){
-		sleep(5);
+	for($i = 0; $i < $repetition; $i++){
+		sleep($sleepTime);
 		$success = setDefaultSubscriptionIfCompanyHasNone();
 		if($success){
 			break;
 		}
 	}
+	unset($success);
 }
 
+if(!$updatedBillingDates){
+	for($i = 0; $i < $repetition; $i++){
+		sleep($sleepTime);
+		$success = updateBillingDatesForCompanies();
+		if($success){
+			break;
+		}
+	}
+	unset($success);
+}
 
+if(!$updatedCompanyActivity){
+	for($i = 0; $i < $repetition; $i++){
+		sleep($sleepTime);
+		$success = setCompanyAsInactiveOnSetDate();
+		if($success){
+			break;
+		}
+	}
+	unset($success);
+}
+
+if(!$updatedUserAccess){
+	for($i = 0; $i < $repetition; $i++){
+		sleep($sleepTime);
+		$success = setUserAccessToNormalOnSetDate();
+		if($success){
+			break;
+		}
+	}
+	unset($success);
+}
+
+if(!$updatedCompanyCreditsHistory){
+	for($i = 0; $i < $repetition; $i++){
+		sleep($sleepTime);
+		$success = updateCompanyCreditsHistory();
+		if($success){
+			break;
+		}
+	}
+	unset($success);
+}
 // The actual actions taken // END //
 ?>
