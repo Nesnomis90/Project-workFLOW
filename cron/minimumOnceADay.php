@@ -71,6 +71,7 @@ function setDefaultSubscriptionIfCompanyHasNone(){
 // If there are any then we:
 //		Update the company credits history table with the current values
 //		Update the billing date periods
+// TO-DO: Also check if company went over credits and email admin?
 function updateBillingDatesForCompanies(){
 	try
 	{
@@ -223,7 +224,7 @@ $updatedCompanyActivity = setCompanyAsInactiveOnSetDate();
 $updatedUserAccess = setUserAccessToNormalOnSetDate();
 
 $repetition = 3;
-$sleepTime = 1;
+$sleepTime = 1; // Second(s)
 
 // If we get a FALSE back, the function failed to do its purpose
 // Let's wait and try again x times.

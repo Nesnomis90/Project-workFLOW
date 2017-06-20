@@ -5,6 +5,9 @@ require_once 'salts.inc.php';
 
 // Function to generate a password to be sent to new users
 function generateUserPassword($length){
+	if($length < MINIMUM_PASSWORD_LENGTH){
+		$length = MINIMUM_PASSWORD_LENGTH;
+	}
 	// The characters we want to generate a password string from
 	$chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 	// Use str_shuffle to randomly shuffle the characters around.

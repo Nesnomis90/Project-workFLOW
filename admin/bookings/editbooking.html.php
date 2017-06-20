@@ -119,7 +119,7 @@
 				<label for="companyID">Set New Company: </label>
 				<?php if(	isset($_SESSION['EditBookingDisplayCompanySelect']) AND 
 							$_SESSION['EditBookingDisplayCompanySelect']) : ?>
-					<?php if(!isset($_SESSION['EditBookingSelectedACompany'])) : ?>
+					<?php if(isset($_SESSION['EditBookingSelectACompany'])) : ?>
 						<select name="companyID" id="companyID">
 							<?php foreach($company as $row): ?> 
 								<?php if($row['companyID']==$selectedCompanyID):?>
@@ -191,7 +191,7 @@
 							($SelectedUserID == "" OR $SelectedUserID == NULL OR !isset($SelectedUserID))) : ?>
 					<input type="submit" name="disabled" value="Finish Edit" disabled>
 					<b>You need to select the user you want before you can finish editing.</b>
-				<?php elseif(!isset($_SESSION['EditBookingSelectedACompany'])) : ?>
+				<?php elseif(isset($_SESSION['EditBookingSelectACompany'])) : ?>
 					<input type="submit" name="disabled" value="Finish Edit" disabled>
 					<b>You need to select the company you want before you can finish editing.</b>				
 				<?php else : ?>
@@ -200,6 +200,6 @@
 			</div>
 		</form>
 	<p><a href="..">Return to CMS home</a></p>
-	<?php include '../logout.inc.html.php'; ?>
+	<?php include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/logout.inc.html.php'; ?>
 	</body>
 </html>

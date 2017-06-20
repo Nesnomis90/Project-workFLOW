@@ -4,7 +4,7 @@
 <!DOCTYPE html>
 <html lang="en">
 	<head>
-		<meta charset="utf-8">
+		<meta charset="utf-8" HTTP-EQUIV="refresh" CONTENT="<?php htmlout(SECONDS_BEFORE_REFRESHING_BOOKING_PAGE); ?>"> <!-- Refreshes every 30 sec -->
 		<title>Booking Information</title>
 		<style>
 			#bookingstable {
@@ -55,7 +55,7 @@
 	<?php if(isset($_GET['cancellationcode'])) : ?>
 		<h1>Cancel Your Booking!</h1>
 	<?php elseif(isset($_SESSION['loggedIn']) AND $_SESSION['loggedIn']) : ?>
-		<h1>Booking Information Overview - Logged In Users</h1>	
+		<h1>Booking Information Overview (For Logged In Users)</h1>	
 		<form action="" method="post">
 			<div>
 				<input type="submit" name="action" value="Create Meeting">

@@ -19,6 +19,10 @@
 		<?php endif; ?>
 		<form action="" method="post">
 			<div>
+				<label for="userInformation">Welcome </label>
+				<b><?php htmlout($_SESSION['EditCreateBookingLoggedInUserInformation']); ?></b>
+			</div>		
+			<div>
 				<label for="originalMeetingRoomName">Booked Meeting Room: </label>
 				<b><?php htmlout($originalMeetingRoomName); ?></b>
 			</div>
@@ -48,7 +52,7 @@
 				<label for="companyID">Set New Company: </label>
 				<?php if(	isset($_SESSION['EditCreateBookingDisplayCompanySelect']) AND 
 							$_SESSION['EditCreateBookingDisplayCompanySelect']) : ?>
-					<?php if(!isset($_SESSION['EditCreateBookingDisplayCompanySelect'])) : ?>
+					<?php if(isset($_SESSION['EditCreateBookingSelectACompany'])) : ?>
 						<select name="companyID" id="companyID">
 							<?php foreach($company as $row): ?> 
 								<?php if($row['companyID']==$selectedCompanyID):?>
@@ -116,7 +120,7 @@
 				value="<?php htmlout($bookingID); ?>">
 				<input type="submit" name="edit" value="Reset">
 				<input type="submit" name="edit" value="Go Back">
-				<?php if(!isset($_SESSION['EditCreateBookingSelectedACompany'])) : ?>
+				<?php if(isset($_SESSION['EditCreateBookingSelectACompany'])) : ?>
 					<input type="submit" name="disabled" value="Finish Edit" disabled>
 					<b>You need to select the company you want before you can finish editing.</b>				
 				<?php else : ?>
@@ -124,6 +128,5 @@
 				<?php endif; ?>
 			</div>
 		</form>
-	<?php include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/logout.inc.html.php'; ?>
 	</body>
 </html>

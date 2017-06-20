@@ -2,14 +2,45 @@ USE test;
 SET NAMES utf8;
 USE meetingflow;
 
+SELECT 		b.`bookingID`,
+			b.`companyID`,
+			m.`name` 										AS BookedRoomName, 
+			b.startDateTime 								AS StartTime, 
+			b.endDateTime									AS EndTime, 
+			b.displayName 									AS BookedBy,
+			c.`name` 										AS BookedForCompany,
+			u.firstName, 
+			u.lastName, 
+			u.email, 
+			GROUP_CONCAT(c2.`name` separator ', ') 			AS WorksForCompany, 
+			b.description 									AS BookingDescription, 
+			b.dateTimeCreated 								AS BookingWasCreatedOn, 
+			b.actualEndDateTime								AS BookingWasCompletedOn, 
+			b.dateTimeCancelled								AS BookingWasCancelledOn 
+FROM 		`booking` b 
+LEFT JOIN 	`meetingroom` m 
+ON 			b.meetingRoomID = m.meetingRoomID 
+LEFT JOIN 	`user` u 
+ON 			u.userID = b.userID 
+LEFT JOIN 	`employee` e 
+ON 			e.UserID = b.userID 
+LEFT JOIN 	`company` c 
+ON 			c.CompanyID = b.CompanyID
+LEFT JOIN 	`company` c2
+ON 			c2.CompanyID = e.CompanyID
+WHERE		c.`isActive` = 1
+GROUP BY 	b.bookingID
+ORDER BY 	b.bookingID
+DESC;
+
 INSERT INTO `companycreditshistory`
-SET			`CompanyID` = 2,
-			`startDate` = '2017-05-15',
-            `endDate` = '2017-06-15',
-            `minuteAmount` = 95,
-            `monthlyPrice` = 2000,
-            `overCreditMinutePrice` = NULL,
-            `overCreditHourPrice` = 250;
+SET			`CompanyID` = 1,
+			`startDate` = '2017-03-15',
+            `endDate` = '2017-04-15',
+            `minuteAmount` = 90,
+            `monthlyPrice` = 1500,
+            `overCreditMinutePrice` = 2.5,
+            `overCreditHourPrice` = NULL;
 
 SELECT 	COUNT(*) 
 FROM 	information_schema.SCHEMATA

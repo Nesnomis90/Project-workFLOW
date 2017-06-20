@@ -4,7 +4,7 @@
 <!DOCTYPE html>
 <html lang="en">
 	<head>
-		<meta charset="utf-8">
+		<meta charset="utf-8" HTTP-EQUIV="refresh" CONTENT="<?php htmlout(SECONDS_BEFORE_REFRESHING_MEETINGROOM_PAGE); ?>"> <!-- Refreshes every 30 sec -->
 		<title>Meeting Room</title>
 		<script src="/scripts/myFunctions.js"></script>		
 	</head>
@@ -127,6 +127,8 @@
 				<h2>There are no meeting rooms.</h2>
 			<?php endif; ?>
 		<?php endif; ?>
-	<?php include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/logout.inc.html.php'; ?>
+	<?php if(isset($_SESSION['loggedIn'])) : ?>
+		<?php include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/logout.inc.html.php'; ?>
+	<?php endif; ?>
 	</body>
 </html>

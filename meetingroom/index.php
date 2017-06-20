@@ -6,6 +6,12 @@ session_start();
 include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/helpers.inc.php';
 include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/magicquotes.inc.php';
 
+// Make sure logout works properly and that we check if their login details are up-to-date
+if(isset($_SESSION['loggedIn'])){
+	$gotoPage = ".";
+	userIsLoggedIn();
+}
+
 /*
 	TO-DO:
 		Show meeting room status (booked or not?)

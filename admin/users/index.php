@@ -417,7 +417,7 @@ if (isset($_GET['add']) OR (isset($_SESSION['refreshAddUser']) AND $_SESSION['re
 		}
 		
 		// Generate password for user
-		$generatedPassword = generateUserPassword(6);
+		$generatedPassword = generateUserPassword(MINIMUM_PASSWORD_LENGTH);
 		
 		// Set correct values
 		$_SESSION['AddNewUserAccessArray'] = $access;

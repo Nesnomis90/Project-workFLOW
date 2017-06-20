@@ -35,7 +35,7 @@ function clearEditBookingSessions(){
 	unset($_SESSION['EditBookingMeetingRoomsArray']);	
 	unset($_SESSION['EditBookingUserSearch']);
 	unset($_SESSION['EditBookingSelectedNewUser']);
-	unset($_SESSION['EditBookingSelectedACompany']);
+	unset($_SESSION['EditBookingSelectACompany']);
 	unset($_SESSION['EditBookingDefaultDisplayNameForNewUser']);
 	unset($_SESSION['EditBookingDefaultBookingDescriptionForNewUser']);	
 	unset($_SESSION['EditBookingDisplayCompanySelect']);
@@ -113,7 +113,7 @@ function emailUserOnCancelledBooking(){
 }
 
 // Function to validate user inputs
-function validateUserInputs($FeedbackSessionToUse){
+function validateUserInputs($FeedbackSessionToUse, $editing){
 	// Get user inputs
 	$invalidInput = FALSE;
 	
@@ -235,23 +235,25 @@ function validateUserInputs($FeedbackSessionToUse){
 
 	// We want to check if a booking is in the correct minute slice e.g. 15 minute increments.
 		// We check both start and end time for online/admin bookings
-	$invalidStartTime = isBookingDateTimeMinutesInvalid($startDateTime);
-	if($invalidStartTime AND !$invalidInput){
-		$_SESSION[$FeedbackSessionToUse] = "Your start time has to be in a " . MINIMUM_BOOKING_TIME_IN_MINUTES . " minutes slice from hh:00.";
-		$invalidInput = TRUE;	
+	if(!$editing){
+		$invalidStartTime = isBookingDateTimeMinutesInvalid($startDateTime);
+		if($invalidStartTime AND !$invalidInput){
+			$_SESSION[$FeedbackSessionToUse] = "Your start time has to be in a " . MINIMUM_BOOKING_TIME_IN_MINUTES . " minutes slice from hh:00.";
+			$invalidInput = TRUE;	
+		}
+		$invalidEndTime = isBookingDateTimeMinutesInvalid($endDateTime);
+		if($invalidEndTime AND !$invalidInput){
+			$_SESSION[$FeedbackSessionToUse] = "Your end time has to be in a " . MINIMUM_BOOKING_TIME_IN_MINUTES . " minutes slice from hh:00.";
+			$invalidInput = TRUE;	
+		}
+		
+		// We want to check if the booking is the correct minimum length
+		$invalidBookingLength = isBookingTimeDurationInvalid($startDateTime, $endDateTime);
+		if($invalidBookingLength AND !$invalidInput){
+			$_SESSION[$FeedbackSessionToUse] = "Your start time and end time needs to have at least a " . MINIMUM_BOOKING_TIME_IN_MINUTES . " minutes difference.";
+			$invalidInput = TRUE;		
+		}
 	}
-	$invalidEndTime = isBookingDateTimeMinutesInvalid($endDateTime);
-	if($invalidEndTime AND !$invalidInput){
-		$_SESSION[$FeedbackSessionToUse] = "Your end time has to be in a " . MINIMUM_BOOKING_TIME_IN_MINUTES . " minutes slice from hh:00.";
-		$invalidInput = TRUE;	
-	}
-	
-	// We want to check if the booking is the correct minimum length
-	$invalidBookingLength = isBookingTimeDurationInvalid($startDateTime, $endDateTime);
-	if($invalidBookingLength AND !$invalidInput){
-		$_SESSION[$FeedbackSessionToUse] = "Your start time and end time needs to have at least a " . MINIMUM_BOOKING_TIME_IN_MINUTES . " minutes difference.";
-		$invalidInput = TRUE;		
-	}	
 
 	return array($invalidInput, $startDateTime, $endDateTime, $validatedBookingDescription, $validatedDisplayName);
 }
@@ -601,7 +603,6 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR
 			} elseif(sizeOf($company) == 1) {
 				// User is in ONE company
 				
-				$_SESSION['EditBookingSelectedACompany'] = TRUE;
 				unset($_SESSION['EditBookingDisplayCompanySelect']);
 				$_SESSION['EditBookingInfoArray']['TheCompanyID'] = $company[0]['companyID'];
 				$_SESSION['EditBookingInfoArray']['BookedForCompany'] = $company[0]['companyName'];
@@ -609,7 +610,6 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR
 		} else{
 			// User is NOT in a company
 			
-			$_SESSION['EditBookingSelectedACompany'] = TRUE;
 			unset($_SESSION['EditBookingDisplayCompanySelect']);
 			$_SESSION['EditBookingInfoArray']['TheCompanyID'] = "";
 			$_SESSION['EditBookingInfoArray']['BookedForCompany'] = "";
@@ -837,7 +837,7 @@ if(isset($_POST['edit']) AND $_POST['edit'] == "Increase End By Minimum"){
 if(isset($_POST['edit']) AND $_POST['edit'] == "Select This User"){
 	
 	// We haven't set the company if we are changing the user.
-	unset($_SESSION['EditBookingSelectedACompany']);
+	$_SESSION['EditBookingSelectACompany'] = TRUE;
 
 	// We no longer need to be able to change the user
 	unset($_SESSION['EditBookingChangeUser']);
@@ -857,7 +857,8 @@ if(isset($_POST['edit']) AND $_POST['edit'] == "Select This User"){
 if(isset($_POST['edit']) AND $_POST['edit'] == "Change Company"){
 	
 	// We want to select a company again
-	unset($_SESSION['EditBookingSelectedACompany']);
+	$_SESSION['EditBookingSelectACompany'] = TRUE;
+	
 	
 	// Let's remember what was selected if we do any changes before clicking "Change Company"
 	rememberEditBookingInputs();
@@ -871,7 +872,7 @@ if(isset($_POST['edit']) AND $_POST['edit'] == "Change Company"){
 if(isset($_POST['edit']) AND $_POST['edit'] == "Select This Company"){
 
 	// Remember that we've selected a new company
-	$_SESSION['EditBookingSelectedACompany'] = TRUE;
+	unset($_SESSION['EditBookingSelectACompany']);
 	
 	// Let's remember what was selected if we do any changes before clicking "Select This Company"
 	rememberEditBookingInputs();
@@ -979,7 +980,42 @@ if(isset($_POST['edit']) AND $_POST['edit'] == "Finish Edit")
 {
 
 	// Validate user inputs
-	list($invalidInput, $startDateTime, $endDateTime, $bknDscrptn, $dspname) = validateUserInputs('EditBookingError');
+	list($invalidInput, $startDateTime, $endDateTime, $bknDscrptn, $dspname) = validateUserInputs('EditBookingError', TRUE);
+
+	// We want to check if a booking is in the correct minute slice e.g. 15 minute increments.
+		// We check both start and end time for online/admin bookings
+		// We do this for editing only if the times have changed from their original values.
+	$originalValue = $_SESSION['EditBookingOriginalInfoArray'];
+	$compareStartDate = convertDatetimeToFormat($startDateTime, 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
+	$compareEndDate = convertDatetimeToFormat($endDateTime, 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
+	$originalStartDateTime = $originalValue['StartTime'];
+	$compareOriginalStartDate = convertDatetimeToFormat($originalStartDateTime, 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
+	$originalEndDateTime = $originalValue['EndTime'];
+	$compareOriginalEndDate = convertDatetimeToFormat($originalEndDateTime, 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
+	if($compareStartDate != $compareOriginalStartDate AND !$invalidInput){
+		$invalidStartTime = isBookingDateTimeMinutesInvalid($startDateTime);
+		if($invalidStartTime AND !$invalidInput){
+			$_SESSION['EditBookingError'] = "Your start time has to be in a " . MINIMUM_BOOKING_TIME_IN_MINUTES . " minutes slice from hh:00.";
+			$invalidInput = TRUE;	
+		}
+	}
+	if($compareEndDate != $compareOriginalEndDate AND !$invalidInput){	
+		$invalidEndTime = isBookingDateTimeMinutesInvalid($endDateTime);
+		if($invalidEndTime AND !$invalidInput){
+			$_SESSION['EditBookingError'] = "Your end time has to be in a " . MINIMUM_BOOKING_TIME_IN_MINUTES . " minutes slice from hh:00.";
+			$invalidInput = TRUE;	
+		}
+	}
+	if( (($compareStartDate != $compareOriginalStartDate) OR
+		($compareEndDate != $compareOriginalEndDate)) AND
+		!$invalidInput){
+		// We want to check if the booking is the correct minimum length
+		$invalidBookingLength = isBookingTimeDurationInvalid($startDateTime, $endDateTime);
+		if($invalidBookingLength AND !$invalidInput){
+			$_SESSION['EditBookingError'] = "Your start time and end time needs to have at least a " . MINIMUM_BOOKING_TIME_IN_MINUTES . " minutes difference.";
+			$invalidInput = TRUE;		
+		}
+	}
 	
 	if($invalidInput){
 		
@@ -1001,13 +1037,12 @@ if(isset($_POST['edit']) AND $_POST['edit'] == "Finish Edit")
 	$newStartTime = FALSE;
 	$newEndTime = FALSE;
 	$newUser = FALSE;
-	$originalValue = $_SESSION['EditBookingOriginalInfoArray'];
 	
-	if($startDateTime != $originalValue['StartTime']){
+	if($compareStartDate != $compareOriginalStartDate){
 		$numberOfChanges++;
 		$newStartTime = TRUE;
 	}
-	if($endDateTime != $originalValue['EndTime']){
+	if($compareEndDate != $compareOriginalEndDate){
 		$numberOfChanges++;
 		$newEndTime = TRUE;
 	}	
@@ -1648,7 +1683,7 @@ if(isset($_POST['add']) AND $_POST['add'] == "Increase End By Minimum"){
 if (isset($_POST['add']) AND $_POST['add'] == "Add booking")
 {
 	// Validate user inputs
-	list($invalidInput, $startDateTime, $endDateTime, $bknDscrptn, $dspname) = validateUserInputs('AddBookingError');
+	list($invalidInput, $startDateTime, $endDateTime, $bknDscrptn, $dspname) = validateUserInputs('AddBookingError', FALSE);
 					
 	// handle feedback process on invalid input values
 	if($invalidInput){
@@ -2176,7 +2211,7 @@ if(!isset($_GET['Meetingroom'])){
 							u.firstName, 
 							u.lastName, 
 							u.email, 
-							GROUP_CONCAT(c.`name` separator ', ') 			AS WorksForCompany, 
+							GROUP_CONCAT(c2.`name` separator ', ') 			AS WorksForCompany, 
 							b.description 									AS BookingDescription, 
 							b.dateTimeCreated 								AS BookingWasCreatedOn, 
 							b.actualEndDateTime								AS BookingWasCompletedOn, 
@@ -2187,9 +2222,11 @@ if(!isset($_GET['Meetingroom'])){
 				LEFT JOIN 	`user` u 
 				ON 			u.userID = b.userID 
 				LEFT JOIN 	`employee` e 
-				ON 			e.UserID = u.userID 
+				ON 			e.UserID = b.userID 
 				LEFT JOIN 	`company` c 
-				ON 			c.CompanyID = e.CompanyID
+				ON 			c.CompanyID = b.CompanyID
+				LEFT JOIN 	`company` c2
+				ON 			c2.CompanyID = e.CompanyID
 				WHERE		c.`isActive` = 1
 				GROUP BY 	b.bookingID
 				ORDER BY 	b.bookingID
@@ -2221,7 +2258,7 @@ if(!isset($_GET['Meetingroom'])){
 							u.firstName, 
 							u.lastName, 
 							u.email, 
-							GROUP_CONCAT(c.`name` separator ', ') 			AS WorksForCompany, 
+							GROUP_CONCAT(c2.`name` separator ', ') 			AS WorksForCompany, 
 							b.description 									AS BookingDescription, 
 							b.dateTimeCreated 								AS BookingWasCreatedOn, 
 							b.actualEndDateTime								AS BookingWasCompletedOn, 
@@ -2232,9 +2269,11 @@ if(!isset($_GET['Meetingroom'])){
 				LEFT JOIN 	`user` u 
 				ON 			u.userID = b.userID 
 				LEFT JOIN 	`employee` e 
-				ON 			e.UserID = u.userID 
+				ON 			e.UserID = b.userID 
 				LEFT JOIN 	`company` c 
-				ON 			c.CompanyID = e.CompanyID
+				ON 			c.CompanyID = b.CompanyID
+				LEFT JOIN 	`company` c2
+				ON 			c2.CompanyID = e.CompanyID				
 				WHERE		c.`isActive` = 1
 				AND			b.`meetingRoomID` = :MeetingRoomID 
 				GROUP BY 	b.bookingID
