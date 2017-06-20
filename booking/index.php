@@ -46,7 +46,7 @@ function clearEditCreateBookingSessions(){
 	unset($_SESSION['EditCreateBookingMeetingRoomsArray']);	
 	unset($_SESSION['EditCreateBookingUserSearch']);
 	unset($_SESSION['EditCreateBookingSelectedNewUser']);
-	unset($_SESSION['EditCreateBookingSelectedACompany']);
+	unset($_SESSION['EditCreateBookingSelectACompany']);
 	unset($_SESSION['EditCreateBookingDisplayCompanySelect']);
 	
 	unset($_SESSION['cancelBookingOriginalValues']);
@@ -154,22 +154,23 @@ function emailUserOnCancelledBooking(){
 }
 
 // Function to validate user inputs
-function validateUserInputs($FeedbackSessionToUse){
+function validateUserInputs($FeedbackSessionToUse, $editing){
 	// Get user inputs
 	$invalidInput = FALSE;
 	$usingBookingCode = FALSE;
-	
-	if(isset($_POST['startDateTime']) AND !$invalidInput){
-		$startDateTimeString = $_POST['startDateTime'];
-	} else {
-		$invalidInput = TRUE;
-		$_SESSION[$FeedbackSessionToUse] = "A booking cannot be created without submitting a start time.";
-	}
-	if(isset($_POST['endDateTime']) AND !$invalidInput){
-		$endDateTimeString = $_POST['endDateTime'];
-	} else {
-		$invalidInput = TRUE;
-		$_SESSION[$FeedbackSessionToUse] = "A booking cannot be created without submitting an end time.";
+	if(!$editing){
+		if(isset($_POST['startDateTime']) AND !$invalidInput){
+			$startDateTimeString = $_POST['startDateTime'];
+		} else {
+			$invalidInput = TRUE;
+			$_SESSION[$FeedbackSessionToUse] = "A booking cannot be created without submitting a start time.";
+		}
+		if(isset($_POST['endDateTime']) AND !$invalidInput){
+			$endDateTimeString = $_POST['endDateTime'];
+		} else {
+			$invalidInput = TRUE;
+			$_SESSION[$FeedbackSessionToUse] = "A booking cannot be created without submitting an end time.";
+		}
 	}
 	
 	if(isset($_POST['displayName'])){
@@ -193,8 +194,10 @@ function validateUserInputs($FeedbackSessionToUse){
 	}
 	
 	// Remove excess whitespace and prepare strings for validation
-	$validatedStartDateTime = trimExcessWhitespace($startDateTimeString);
-	$validatedEndDateTime = trimExcessWhitespace($endDateTimeString);
+	if(!$editing){
+		$validatedStartDateTime = trimExcessWhitespace($startDateTimeString);
+		$validatedEndDateTime = trimExcessWhitespace($endDateTimeString);
+	}
 	$validatedDisplayName = trimExcessWhitespaceButLeaveLinefeed($displayNameString);
 	$validatedBookingDescription = trimExcessWhitespaceButLeaveLinefeed($bookingDescriptionString);
 	if($usingBookingCode){
@@ -204,13 +207,15 @@ function validateUserInputs($FeedbackSessionToUse){
 	}
 	
 	// Do actual input validation
-	if(validateDateTimeString($validatedStartDateTime) === FALSE AND !$invalidInput){
-		$invalidInput = TRUE;
-		$_SESSION[$FeedbackSessionToUse] = "Your submitted start time has illegal characters in it.";
-	}
-	if(validateDateTimeString($validatedEndDateTime) === FALSE AND !$invalidInput){
-		$invalidInput = TRUE;
-		$_SESSION[$FeedbackSessionToUse] = "Your submitted end time has illegal characters in it.";
+	if(!$editing){
+		if(validateDateTimeString($validatedStartDateTime) === FALSE AND !$invalidInput){
+			$invalidInput = TRUE;
+			$_SESSION[$FeedbackSessionToUse] = "Your submitted start time has illegal characters in it.";
+		}
+		if(validateDateTimeString($validatedEndDateTime) === FALSE AND !$invalidInput){
+			$invalidInput = TRUE;
+			$_SESSION[$FeedbackSessionToUse] = "Your submitted end time has illegal characters in it.";
+		}
 	}
 	if(validateString($validatedDisplayName) === FALSE AND !$invalidInput){
 		$invalidInput = TRUE;
@@ -229,16 +234,18 @@ function validateUserInputs($FeedbackSessionToUse){
 	}
 	
 	// Are values actually filled in?
-	if($validatedStartDateTime == "" AND $validatedEndDateTime == "" AND !$invalidInput){
-		
-		$_SESSION[$FeedbackSessionToUse] = "You need to fill in a start and end time for your booking.";	
-		$invalidInput = TRUE;
-	} elseif($validatedStartDateTime != "" AND $validatedEndDateTime == "" AND !$invalidInput) {
-		$_SESSION[$FeedbackSessionToUse] = "You need to fill in an end time for your booking.";	
-		$invalidInput = TRUE;		
-	} elseif($validatedStartDateTime == "" AND $validatedEndDateTime != "" AND !$invalidInput){
-		$_SESSION[$FeedbackSessionToUse] = "You need to fill in a start time for your booking.";	
-		$invalidInput = TRUE;		
+	if(!$editing){
+		if($validatedStartDateTime == "" AND $validatedEndDateTime == "" AND !$invalidInput){
+			
+			$_SESSION[$FeedbackSessionToUse] = "You need to fill in a start and end time for your booking.";	
+			$invalidInput = TRUE;
+		} elseif($validatedStartDateTime != "" AND $validatedEndDateTime == "" AND !$invalidInput) {
+			$_SESSION[$FeedbackSessionToUse] = "You need to fill in an end time for your booking.";	
+			$invalidInput = TRUE;		
+		} elseif($validatedStartDateTime == "" AND $validatedEndDateTime != "" AND !$invalidInput){
+			$_SESSION[$FeedbackSessionToUse] = "You need to fill in a start time for your booking.";	
+			$invalidInput = TRUE;		
+		}
 	}
 	if($usingBookingCode){
 		if(isset($validatedBookingCode) AND $validatedBookingCode == "" AND !$invalidInput){
@@ -262,77 +269,81 @@ function validateUserInputs($FeedbackSessionToUse){
 	}
 	
 	// Check if the dateTime inputs we received are actually datetimes
-	$startDateTime = correctDatetimeFormat($validatedStartDateTime);
-	$endDateTime = correctDatetimeFormat($validatedEndDateTime);
+	if(!$editing){
+		$startDateTime = correctDatetimeFormat($validatedStartDateTime);
+		$endDateTime = correctDatetimeFormat($validatedEndDateTime);
 
-	if (isset($startDateTime) AND $startDateTime === FALSE AND !$invalidInput){
-		$_SESSION[$FeedbackSessionToUse] = "The start date you submitted did not have a correct format. Please try again.";
-		$invalidInput = TRUE;
-	}
-	if (isset($endDateTime) AND $endDateTime === FALSE AND !$invalidInput){
-		$_SESSION[$FeedbackSessionToUse] = "The end date you submitted did not have a correct format. Please try again.";
-		$invalidInput = TRUE;
-	}	
-	
-	$timeNow = getDatetimeNow();
-	
-	if($startDateTime > $endDateTime AND !$invalidInput){
-		// End time can't be before the start time
-		
-		$_SESSION[$FeedbackSessionToUse] = "The start time can't be later than the end time. Please select a new start time or end time.";
-		$invalidInput = TRUE;
-	}
-	
-	if($startDateTime < $timeNow AND !$invalidInput){
-		// You can't book a meeting starting in the past.
-		
-		$_SESSION[$FeedbackSessionToUse] = "The start time you selected is already over. Select a new start time.";
-		$invalidInput = TRUE;
-	}
-	
-	if($endDateTime < $timeNow AND !$invalidInput){
-		// You can't book a meeting ending in the past.
-		
-		$_SESSION[$FeedbackSessionToUse] = "The end time you selected is already over. Select a new end time.";
-		$invalidInput = TRUE;	
-	}	
-	
-	if($endDateTime == $startDateTime AND !$invalidInput){
-		$_SESSION[$FeedbackSessionToUse] = "You need to select an end time that is different from your start time.";	
-		$invalidInput = TRUE;				
-	} 
-
-	// Check if booking code submitted is a valid booking code
-	if($usingBookingCode){
-		if(databaseContainsBookingCode($validatedBookingCode) === FALSE AND !$invalidInput){
-			$_SESSION[$FeedbackSessionToUse] = "The booking code you submitted is not valid.";	
+		if (isset($startDateTime) AND $startDateTime === FALSE AND !$invalidInput){
+			$_SESSION[$FeedbackSessionToUse] = "The start date you submitted did not have a correct format. Please try again.";
 			$invalidInput = TRUE;
 		}
-	}
+		if (isset($endDateTime) AND $endDateTime === FALSE AND !$invalidInput){
+			$_SESSION[$FeedbackSessionToUse] = "The end date you submitted did not have a correct format. Please try again.";
+			$invalidInput = TRUE;
+		}	
+		
+		$timeNow = getDatetimeNow();
 	
-	// We want to check if a booking is in the correct minute slice e.g. 15 minute increments.
-		// We check both start and end time for online/admin bookings
-		// Does not apply to booking with booking code (starts immediately until next/selected chunk
-	$invalidStartTime = isBookingDateTimeMinutesInvalid($startDateTime);
-	if($invalidStartTime AND !$usingBookingCode AND !$invalidInput){
-		$_SESSION[$FeedbackSessionToUse] = "Your start time has to be in a " . MINIMUM_BOOKING_TIME_IN_MINUTES . " minutes slice from hh:00.";
-		$invalidInput = TRUE;	
-	}
-	$invalidEndTime = isBookingDateTimeMinutesInvalid($endDateTime);
-	if($invalidEndTime AND !$invalidInput){
-		$_SESSION[$FeedbackSessionToUse] = "Your end time has to be in a " . MINIMUM_BOOKING_TIME_IN_MINUTES . " minutes slice from hh:00.";
-		$invalidInput = TRUE;	
-	}
+		if($startDateTime > $endDateTime AND !$invalidInput){
+			// End time can't be before the start time
+			
+			$_SESSION[$FeedbackSessionToUse] = "The start time can't be later than the end time. Please select a new start time or end time.";
+			$invalidInput = TRUE;
+		}
 	
-	// We want to check if the booking is the correct minimum length
-		// Does not apply to booking with booking code (starts immediately until next/selected chunk
-	$invalidBookingLength = isBookingTimeDurationInvalid($startDateTime, $endDateTime);
-	if($invalidBookingLength AND !$usingBookingCode AND !$invalidInput){
-		$_SESSION[$FeedbackSessionToUse] = "Your start time and end time needs to have at least a " . MINIMUM_BOOKING_TIME_IN_MINUTES . " minutes difference.";
-		$invalidInput = TRUE;		
-	}
+		if($startDateTime < $timeNow AND !$invalidInput){
+			// You can't book a meeting starting in the past.
+			
+			$_SESSION[$FeedbackSessionToUse] = "The start time you selected is already over. Select a new start time.";
+			$invalidInput = TRUE;
+		}
+		
+		if($endDateTime < $timeNow AND !$invalidInput){
+			// You can't book a meeting ending in the past.
+			
+			$_SESSION[$FeedbackSessionToUse] = "The end time you selected is already over. Select a new end time.";
+			$invalidInput = TRUE;	
+		}	
+		
+		if($endDateTime == $startDateTime AND !$invalidInput){
+			$_SESSION[$FeedbackSessionToUse] = "You need to select an end time that is different from your start time.";	
+			$invalidInput = TRUE;				
+		} 
 
-	return array($invalidInput, $startDateTime, $endDateTime, $validatedBookingDescription, $validatedDisplayName, $validatedBookingCode);
+		// Check if booking code submitted is a valid booking code
+		if($usingBookingCode){
+			if(databaseContainsBookingCode($validatedBookingCode) === FALSE AND !$invalidInput){
+				$_SESSION[$FeedbackSessionToUse] = "The booking code you submitted is not valid.";	
+				$invalidInput = TRUE;
+			}
+		}
+	
+		// We want to check if a booking is in the correct minute slice e.g. 15 minute increments.
+			// We check both start and end time for online/admin bookings
+			// Does not apply to booking with booking code (starts immediately until next/selected chunk
+		$invalidStartTime = isBookingDateTimeMinutesInvalid($startDateTime);
+		if($invalidStartTime AND !$usingBookingCode AND !$invalidInput){
+			$_SESSION[$FeedbackSessionToUse] = "Your start time has to be in a " . MINIMUM_BOOKING_TIME_IN_MINUTES . " minutes slice from hh:00.";
+			$invalidInput = TRUE;	
+		}
+		$invalidEndTime = isBookingDateTimeMinutesInvalid($endDateTime);
+		if($invalidEndTime AND !$invalidInput){
+			$_SESSION[$FeedbackSessionToUse] = "Your end time has to be in a " . MINIMUM_BOOKING_TIME_IN_MINUTES . " minutes slice from hh:00.";
+			$invalidInput = TRUE;	
+		}
+	
+		// We want to check if the booking is the correct minimum length
+			// Does not apply to booking with booking code (starts immediately until next/selected chunk
+		$invalidBookingLength = isBookingTimeDurationInvalid($startDateTime, $endDateTime);
+		if($invalidBookingLength AND !$usingBookingCode AND !$invalidInput){
+			$_SESSION[$FeedbackSessionToUse] = "Your start time and end time needs to have at least a " . MINIMUM_BOOKING_TIME_IN_MINUTES . " minutes difference.";
+			$invalidInput = TRUE;		
+		}
+		
+		return array($invalidInput, $startDateTime, $endDateTime, $validatedBookingDescription, $validatedDisplayName, $validatedBookingCode);
+	} else {
+		return array($invalidInput, $validatedBookingDescription, $validatedDisplayName, $validatedBookingCode);
+	}
 }
 
 // Check if we're accessing from a local device
@@ -971,7 +982,7 @@ if(	((isset($_POST['action']) AND $_POST['action'] == 'Create Meeting')) OR
 if (isset($_POST['add']) AND $_POST['add'] == "Add Booking")
 {
 	// Validate user inputs
-	list($invalidInput, $startDateTime, $endDateTime, $bknDscrptn, $dspname, $bookingCode) = validateUserInputs('AddCreateBookingError');
+	list($invalidInput, $startDateTime, $endDateTime, $bknDscrptn, $dspname, $bookingCode) = validateUserInputs('AddCreateBookingError', FALSE);
 					
 	// handle feedback process on invalid input values
 	if(isset($_GET['meetingroom'])){
@@ -1589,7 +1600,7 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR
 			} elseif(sizeOf($company) == 1) {
 				// User is in ONE company
 				
-				$_SESSION['EditCreateBookingSelectedACompany'] = TRUE;
+				//$_SESSION['EditCreateBookingSelectedACompany'] = TRUE;
 				unset($_SESSION['EditCreateBookingDisplayCompanySelect']);
 				$_SESSION['EditCreateBookingInfoArray']['TheCompanyID'] = $company[0]['companyID'];
 				$_SESSION['EditCreateBookingInfoArray']['BookedForCompany'] = $company[0]['companyName'];
@@ -1597,7 +1608,7 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR
 		} else{
 			// User is NOT in a company
 			
-			$_SESSION['EditCreateBookingSelectedACompany'] = TRUE;
+			//$_SESSION['EditCreateBookingSelectedACompany'] = TRUE;
 			unset($_SESSION['EditCreateBookingDisplayCompanySelect']);
 			$_SESSION['EditCreateBookingInfoArray']['TheCompanyID'] = "";
 			$_SESSION['EditCreateBookingInfoArray']['BookedForCompany'] = "";
@@ -1631,7 +1642,6 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR
 	$selectedCompanyID = $row['TheCompanyID'];
 	$companyID = $row['TheCompanyID'];
 	//	userID has been set earlier
-	$meetingroom = $_SESSION['EditCreateBookingMeetingRoomsArray'];
 	$selectedMeetingRoomID = $row['TheMeetingRoomID'];	
 	$displayName = $row['BookedBy'];
 	$description = $row['BookingDescription'];
@@ -1670,9 +1680,7 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR
 if(isset($_POST['edit']) AND $_POST['edit'] == "Finish Edit")
 {
 	// Validate user inputs
-	list($invalidInput, $startDateTime, $endDateTime, $bknDscrptn, $dspname, $bookingCode) = validateUserInputs('EditCreateBookingError');
-	
-	// TO-DO: get user info from booking code
+	list($invalidInput, $bknDscrptn, $dspname, $bookingCode) = validateUserInputs('EditCreateBookingError', TRUE);
 	
 	if($invalidInput){
 		
@@ -1755,8 +1763,8 @@ if(isset($_POST['edit']) AND $_POST['edit'] == "Finish Edit")
 if(isset($_POST['edit']) AND $_POST['edit'] == "Change Company"){
 	
 	// We want to select a company again
-	unset($_SESSION['EditCreateBookingSelectedACompany']);
-	
+	//unset($_SESSION['EditCreateBookingSelectedACompany']);
+	$_SESSION['EditCreateBookingSelectACompany'] = TRUE;
 	// Let's remember what was selected if we do any changes before clicking "Change Company"
 	rememberEditCreateBookingInputs();
 	
@@ -1769,8 +1777,8 @@ if(isset($_POST['edit']) AND $_POST['edit'] == "Change Company"){
 if(isset($_POST['edit']) AND $_POST['edit'] == "Select This Company"){
 
 	// Remember that we've selected a new company
-	$_SESSION['EditCreateBookingSelectedACompany'] = TRUE;
-	
+	//$_SESSION['EditCreateBookingSelectedACompany'] = TRUE;
+	unset($_SESSION['EditCreateBookingSelectACompany']);
 	// Let's remember what was selected if we do any changes before clicking "Select This Company"
 	rememberEditCreateBookingInputs();
 	
@@ -2094,15 +2102,11 @@ try
 							b.startDateTime 								AS StartTime,
 							b.endDateTime									AS EndTime, 
 							b.displayName 									AS BookedBy,
-							(	
-								SELECT 	`name` 
-								FROM 	`company` 
-								WHERE 	`companyID` = b.`companyID`
-							)												AS BookedForCompany,
+							c.`name` 										AS BookedForCompany,
 							u.firstName, 
 							u.lastName, 
 							u.email, 
-							GROUP_CONCAT(c.`name` separator ', ') 			AS WorksForCompany, 
+							GROUP_CONCAT(c2.`name` separator ', ') 			AS WorksForCompany, 
 							b.description 									AS BookingDescription, 
 							b.dateTimeCreated 								AS BookingWasCreatedOn, 
 							b.actualEndDateTime								AS BookingWasCompletedOn, 
@@ -2113,9 +2117,11 @@ try
 				LEFT JOIN 	`user` u 
 				ON 			u.userID = b.userID 
 				LEFT JOIN 	`employee` e 
-				ON 			e.UserID = u.userID 
+				ON 			e.UserID = b.userID 
 				LEFT JOIN 	`company` c 
-				ON 			c.CompanyID = e.CompanyID
+				ON 			c.CompanyID = b.CompanyID
+				LEFT JOIN 	`company` c2
+				ON 			c2.CompanyID = e.CompanyID
 				WHERE		b.`meetingRoomID` = :meetingRoomID
 				GROUP BY 	b.bookingID
 				ORDER BY 	UNIX_TIMESTAMP(b.startDateTime)
@@ -2136,15 +2142,11 @@ try
 							b.startDateTime 								AS StartTime,
 							b.endDateTime									AS EndTime, 
 							b.displayName 									AS BookedBy,
-							(	
-								SELECT 	`name` 
-								FROM 	`company` 
-								WHERE 	`companyID` = b.`companyID`
-							)												AS BookedForCompany,
+							c.`name` 										AS BookedForCompany,
 							u.firstName, 
 							u.lastName, 
 							u.email, 
-							GROUP_CONCAT(c.`name` separator ', ') 			AS WorksForCompany, 
+							GROUP_CONCAT(c2.`name` separator ', ') 			AS WorksForCompany, 
 							b.description 									AS BookingDescription, 
 							b.dateTimeCreated 								AS BookingWasCreatedOn, 
 							b.actualEndDateTime								AS BookingWasCompletedOn, 
@@ -2155,9 +2157,11 @@ try
 				LEFT JOIN 	`user` u 
 				ON 			u.userID = b.userID 
 				LEFT JOIN 	`employee` e 
-				ON 			e.UserID = u.userID 
+				ON 			e.UserID = b.userID 
 				LEFT JOIN 	`company` c 
-				ON 			c.CompanyID = e.CompanyID
+				ON 			c.CompanyID = b.CompanyID
+				LEFT JOIN 	`company` c2
+				ON 			c2.CompanyID = e.CompanyID				
 				GROUP BY 	b.bookingID
 				ORDER BY 	UNIX_TIMESTAMP(b.startDateTime)
 				ASC";
