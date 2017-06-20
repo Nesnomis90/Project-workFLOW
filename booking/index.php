@@ -6,6 +6,12 @@ session_start();
 include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/helpers.inc.php';
 include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/magicquotes.inc.php';
 
+// Make sure logout works properly and that we check if their login details are up-to-date
+if(isset($_SESSION['loggedIn'])){
+	$gotoPage = ".";
+	userIsLoggedIn();
+}
+
 /*
 	TO-DO:
 		Make log in work properly
@@ -1438,6 +1444,8 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR
 		
 	} else {
 		// Get information from database again on the selected booking
+		/* 	We don't allow regulars users to change the meeting room of the booking.
+			They can cancel their current and book another meeting room if they want to.
 		if(!isset($_SESSION['EditCreateBookingMeetingRoomsArray'])){
 			try
 			{
@@ -1472,7 +1480,7 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR
 				$pdo = null;
 				exit();		
 			}
-		}
+		}*/
 		
 		if(!isset($_SESSION['EditCreateBookingInfoArray'])){
 			try

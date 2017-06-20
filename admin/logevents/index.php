@@ -394,7 +394,7 @@ if($numberOfCheckboxesActivated > 0){
 			$s->execute();
 			
 			$result = $s->fetchAll(PDO::FETCH_ASSOC);
-			if(isset()){
+			if(isset($result)){
 				$rowNum = sizeOf($result);
 			} else {
 				$rowNum = 0;
