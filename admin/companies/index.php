@@ -180,18 +180,18 @@ function calculatePeriodInformation($pdo, $companyID, $BillingStart, $BillingEnd
 			// Let's calculate cost
 			if($hourPrice == 0 AND $minPrice == 0){
 				// The subscription has no valid overtime price set, should not occur
-				$bookingCostThisMonth = convertToCurrency($monthPrice) . "+" . 
+				$bookingCostThisMonth = convertToCurrency($monthPrice) . " + " . 
 										$actualTimeOverCreditsInMinutes . "m * cost (not set)";
 			} elseif($hourPrice != 0 AND $minPrice != 0){
 				// The subscription has two valid overtime price set, should not occur
-				$bookingCostThisMonth = convertToCurrency($monthPrice) . "+" . 
+				$bookingCostThisMonth = convertToCurrency($monthPrice) . " + " . 
 										$actualTimeOverCreditsInMinutes . "m * cost (not set)";
 			} elseif($hourPrice == 0 AND $minPrice != 0){
 				// The subscription charges by the minute, if over credits
 				$overFeeCostThisMonth = $minPrice * $actualTimeOverCreditsInMinutes;
 				$totalCost = $monthPrice+$overFeeCostThisMonth;
 				$displayOverFeeCostThisMonth = convertToCurrency($overFeeCostThisMonth);
-				$bookingCostThisMonth = convertToCurrency($monthPrice) . "+" . convertToCurrency($overFeeCostThisMonth);
+				$bookingCostThisMonth = convertToCurrency($monthPrice) . " + " . convertToCurrency($overFeeCostThisMonth);
 				$totalBookingCostThisMonth = convertToCurrency($totalCost);
 			} elseif($hourPrice != 0 AND $minPrice == 0){
 				// The subsription charges by the hour, if over credits
@@ -201,26 +201,21 @@ function calculatePeriodInformation($pdo, $companyID, $BillingStart, $BillingEnd
 				$overFeeCostThisMonth = $hourPrice * $hourAmountUsedInCalculation;
 				$displayOverFeeCostThisMonth = convertToCurrency($overFeeCostThisMonth);
 				$totalCost = $monthPrice+$overFeeCostThisMonth;
-				$bookingCostThisMonth = convertToCurrency($monthPrice) . "+" . convertToCurrency($overFeeCostThisMonth);
+				$bookingCostThisMonth = convertToCurrency($monthPrice) . " + " . convertToCurrency($overFeeCostThisMonth);
 				$totalBookingCostThisMonth = convertToCurrency($totalCost);
 			}
 			$companyMinuteCreditsRemaining = $companyMinuteCredits - $totalBookingTimeThisPeriod;
 			$overCreditsTimeUsed = $totalBookingTimeThisPeriod - $companyMinuteCredits;
 			$displayOverCreditsTimeUsed = convertMinutesToHoursAndMinutes($overCreditsTimeUsed);
 		} else {
-			$bookingCostThisMonth = convertToCurrency($monthPrice) . "+" . convertToCurrency(0);
+			$bookingCostThisMonth = convertToCurrency($monthPrice) . " + " . convertToCurrency(0);
 			$totalBookingCostThisMonth = convertToCurrency($monthPrice);				
 			$companyMinuteCreditsRemaining = $companyMinuteCredits - $totalBookingTimeThisPeriod;
 		}		
-	} elseif($monthPrice != 0) {
-		$bookingCostThisMonth = convertToCurrency($monthPrice) . "+" . convertToCurrency(0);
+	} else {
+		$bookingCostThisMonth = convertToCurrency($monthPrice) . " + " . convertToCurrency(0);
 		$displayOverFeeCostThisMonth = convertToCurrency(0);
 		$totalBookingCostThisMonth = convertToCurrency($monthPrice);
-		$companyMinuteCreditsRemaining = $companyMinuteCredits;
-	} else {
-		$bookingCostThisMonth = "N/A";
-		$displayOverFeeCostThisMonth = convertToCurrency(0);
-		$totalBookingCostThisMonth = convertToCurrency(0);
 		$companyMinuteCreditsRemaining = $companyMinuteCredits;
 	}
 	$displayCompanyCreditsRemaining = convertMinutesToHoursAndMinutes($companyMinuteCreditsRemaining);
@@ -240,6 +235,9 @@ function calculatePeriodInformation($pdo, $companyID, $BillingStart, $BillingEnd
 	}	
 	if(!isset($displayHourAmountUsedInCalculation)){
 		$displayHourAmountUsedInCalculation = "";
+	}
+	if(!isset($bookingHistory)){
+		$bookingHistory = array();
 	}
 	return array(	$bookingHistory, $displayCompanyCredits, $displayCompanyCreditsRemaining, $displayOverCreditsTimeUsed, 
 					$displayMonthPrice, $displayTotalBookingTimeThisPeriod, $displayOverFeeCostThisMonth, $overCreditsFee,
@@ -417,8 +415,13 @@ if (isset($_POST['history']) AND $_POST['history'] == "Next Period"){
 		$displayBillingEnd = convertDatetimeToFormat($BillingEnd , 'Y-m-d', DATE_DEFAULT_FORMAT_TO_DISPLAY);
 		$BillingPeriod = $displayBillingStart . " To " . $displayBillingEnd . ".";	
 		
-		$rightNow = FALSE;
-		
+		// rightNow decides if we use the companycreditshistory or the credits/companycredits information
+		if($NextPeriod){
+			$rightNow = FALSE;
+		} else {
+			$rightNow = TRUE;
+		}
+
 		list(	$bookingHistory, $displayCompanyCredits, $displayCompanyCreditsRemaining, $displayOverCreditsTimeUsed, 
 				$displayMonthPrice, $displayTotalBookingTimeThisPeriod, $displayOverFeeCostThisMonth, $overCreditsFee,
 				$hourAmountUsedInCalculation, $bookingCostThisMonth, $totalBookingCostThisMonth, $companyMinuteCreditsRemaining,
