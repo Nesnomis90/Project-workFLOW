@@ -15,8 +15,7 @@ if(isset($_SESSION['loggedIn'])){
 /*
 	TO-DO:
 		Make log in work properly
-		Make log out work properly
-		Make Edit booking work
+		Make Edit booking work (Fullført?) (needs testing)
 */
 
 // Function to clear sessions used to remember user inputs on refreshing the add booking form
@@ -48,7 +47,10 @@ function clearEditCreateBookingSessions(){
 	unset($_SESSION['EditCreateBookingSelectedNewUser']);
 	unset($_SESSION['EditCreateBookingSelectACompany']);
 	unset($_SESSION['EditCreateBookingDisplayCompanySelect']);
+	unset($_SESSION['EditCreateBookingLoggedInUserInformation']);
 	
+	unset($_SESSION["EditCreateBookingOriginalBookingID"]);
+
 	unset($_SESSION['cancelBookingOriginalValues']);
 }
 
@@ -405,7 +407,7 @@ if (	(isset($_POST['action']) and $_POST['action'] == 'Cancel') OR
 		$_SESSION['cancelBookingOriginalValues']['BookingStatus'] = $_POST['BookingStatus'];
 		$_SESSION['cancelBookingOriginalValues']['MeetingInfo'] = $_POST['MeetingInfo'];
 	}
-	
+
 	$bookingID = $_SESSION['cancelBookingOriginalValues']['BookingID'];
 	$bookingStatus = $_SESSION['cancelBookingOriginalValues']['BookingStatus'];
 	$bookingMeetingInfo = $_SESSION['cancelBookingOriginalValues']['MeetingInfo'];
@@ -660,6 +662,10 @@ if(isset($_POST['action']) AND $_POST['action'] == "confirmcode"){
 			}
 			if($_SESSION['confirmOrigins'] == "Cancel"){
 				$_SESSION['refreshCancelBooking'] = TRUE;
+				unset($_SESSION['confirmOrigins']);
+			}
+			if($_SESSION['confirmOrigins'] == "Edit Meeting"){
+				$_SESSION['refreshEditCreateBooking'] = TRUE;
 				unset($_SESSION['confirmOrigins']);
 			}
 			
@@ -1451,108 +1457,209 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR
 	// Check if the call was a form submit or a forced refresh
 	if(isset($_SESSION['refreshEditCreateBooking'])){
 		// Acknowledge that we have refreshed the page
-		unset($_SESSION['refreshEditCreateBooking']);	
-		
+		unset($_SESSION['refreshEditCreateBooking']);
 	} else {
-		// Get information from database again on the selected booking
-		/* 	We don't allow regulars users to change the meeting room of the booking.
-			They can cancel their current and book another meeting room if they want to.
-		if(!isset($_SESSION['EditCreateBookingMeetingRoomsArray'])){
-			try
-			{
-				include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
-				
-				// Get booking information
-				$pdo = connect_to_db();
-				// Get name and IDs for meeting rooms
-				$sql = 'SELECT 	`meetingRoomID`,
-								`name` 
-						FROM 	`meetingroom`';
-				$result = $pdo->query($sql);
-					
-				//Close connection
-				$pdo = null;
-				
-				// Get the rows of information from the query
-				// This will be used to create a dropdown list in HTML
-				foreach($result as $row){
-					$meetingroom[] = array(
-										'meetingRoomID' => $row['meetingRoomID'],
-										'meetingRoomName' => $row['name']
-										);
-				}		
-				
-				$_SESSION['EditCreateBookingMeetingRoomsArray'] = $meetingroom;
-			}
-			catch (PDOException $e)
-			{
-				$error = 'Error fetching meeting room details: ' . $e->getMessage();
-				include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
-				$pdo = null;
-				exit();		
-			}
-		}*/
-		
-		if(!isset($_SESSION['EditCreateBookingInfoArray'])){
-			try
-			{
-				include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
-				
-				// Get booking information
-				$pdo = connect_to_db();
-				$sql = "SELECT 		b.`bookingID`									AS TheBookingID,
-									b.`companyID`									AS TheCompanyID,
-									b.`meetingRoomID`								AS TheMeetingRoomID,
-									b.startDateTime 								AS StartTime, 
-									b.endDateTime 									AS EndTime, 
-									b.description 									AS BookingDescription,
-									b.displayName 									AS BookedBy,
-									(	
-										SELECT `name` 
-										FROM `company` 
-										WHERE `companyID` = TheCompanyID
-									)												AS BookedForCompany,
-									b.`cancellationCode`							AS CancellationCode,
-									m.`name` 										AS BookedRoomName,									
-									u.`userID`										AS TheUserID, 
-									u.`firstName`									AS UserFirstname,
-									u.`lastName`									AS UserLastname,
-									u.`email`										AS UserEmail,
-									u.`displayName` 								AS UserDefaultDisplayName,
-									u.`bookingDescription`							AS UserDefaultBookingDescription
-						FROM 		`booking` b 
-						LEFT JOIN 	`meetingroom` m 
-						ON 			b.meetingRoomID = m.meetingRoomID 
-						LEFT JOIN 	`company` c 
-						ON 			b.CompanyID = c.CompanyID
-						LEFT JOIN 	`user` u
-						ON 			b.`userID` = u.`userID`
-						WHERE 		b.`bookingID` = :BookingID
-						GROUP BY 	b.`bookingID`";
-				$s = $pdo->prepare($sql);
-				$s->bindValue(':BookingID', $_POST['id']);
-				$s->execute();
-								
-				//Close connection
-				$pdo = null;
-			}
-			catch (PDOException $e)
-			{
-				$error = 'Error fetching booking details: ' . $e->getMessage();
-				include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
-				$pdo = null;
-				exit();		
-			}
+		$_SESSION['EditCreateBookingOriginalBookingID'] = $_POST['id'];
+	}
+	// Get information from database again on the selected booking
+	/* 	We don't allow regulars users to change the meeting room of the booking.
+		They can cancel their current and book another meeting room if they want to.
+	if(!isset($_SESSION['EditCreateBookingMeetingRoomsArray'])){
+		try
+		{
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 			
-			// Create an array with the row information we retrieved
-			$_SESSION['EditCreateBookingInfoArray'] = $s->fetch(PDO::FETCH_ASSOC);
-			$_SESSION['EditCreateBookingOriginalInfoArray'] = $_SESSION['EditCreateBookingInfoArray'];
-		}	
+			// Get booking information
+			$pdo = connect_to_db();
+			// Get name and IDs for meeting rooms
+			$sql = 'SELECT 	`meetingRoomID`,
+							`name` 
+					FROM 	`meetingroom`';
+			$result = $pdo->query($sql);
+				
+			//Close connection
+			$pdo = null;
+			
+			// Get the rows of information from the query
+			// This will be used to create a dropdown list in HTML
+			foreach($result as $row){
+				$meetingroom[] = array(
+									'meetingRoomID' => $row['meetingRoomID'],
+									'meetingRoomName' => $row['name']
+									);
+			}		
+			
+			$_SESSION['EditCreateBookingMeetingRoomsArray'] = $meetingroom;
+		}
+		catch (PDOException $e)
+		{
+			$error = 'Error fetching meeting room details: ' . $e->getMessage();
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+			$pdo = null;
+			exit();		
+		}
+	}*/
+	$_SESSION['confirmOrigins'] = "Edit Meeting";
+	$SelectedUserID = checkIfLocalDeviceOrLoggedIn();
+	unset($_SESSION['confirmOrigins']);		
+	
+	$bookingID = $_SESSION['EditCreateBookingOriginalBookingID'];
+	
+	// Check if selected user ID is creator of booking or an admin
+	$continueEdit = FALSE;
+		// Check if the user is the creator of the booking	
+	try
+	{
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 		
+		$pdo = connect_to_db();
+		$sql = 'SELECT 		COUNT(*)		AS HitCount,
+							b.`userID`,
+							u.`email`		AS UserEmail,
+							u.`firstName`,
+							u.`lastName`
+				FROM		`booking` b
+				INNER JOIN 	`user` u
+				ON 			b.`userID` = u.`userID`
+				WHERE 		`bookingID` = :id
+				LIMIT 		1';
+		$s = $pdo->prepare($sql);
+		$s->bindValue(':id', $bookingID);
+		$s->execute();
+		$row = $s->fetch(PDO::FETCH_ASSOC);
+		$bookingCreatorUserID = $row['userID'];
+		$bookingCreatorUserEmail = $row['UserEmail'];
+		$bookingCreatorUserInfo = $row['lastName'] . ", " . $row['firstName'] . " - " . $row['UserEmail'];
+		$bookingCreatorUserFirstName = $row['firstName'];
+		$bookingCreatorUserLastName = $row['lastName'];
+		
+		if($row['HitCount'] > 0){
+			if($bookingCreatorUserID == $SelectedUserID){
+				$continueEdit = TRUE;
+			}
+		} 
+		
+		//close connection
+		$pdo = null;
+	}
+	catch (PDOException $e)
+	{
+		$error = 'Error checking if user is booking creator: ' . $e->getMessage();
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+		exit();
+	}
+	
+		// Check if the user is an admin
+		// Only needed if the the user isn't the creator of the booking
+	if($SelectedUserID != $bookingCreatorUserID) {
+		try
+		{
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+			
+			$pdo = connect_to_db();
+			$sql = 'SELECT 	a.`AccessName`,
+							u.`firstName`,
+							u.`lastName`
+					FROM	`user` u
+					JOIN	`accesslevel` a
+					ON 		u.`AccessID` = a.`AccessID`
+					WHERE 	u.`userID` = :userID
+					LIMIT	1';
+					
+			$s = $pdo->prepare($sql);
+			$s->bindValue(':userID', $SelectedUserID);
+			$s->execute();
+			$row = $s->fetch(PDO::FETCH_ASSOC);
+			if($row['AccessName'] == "Admin"){
+				$continueEdit = TRUE;
+			}
+			$userInformation = $row['lastName'] . ", " . $row['firstName'];
+			$_SESSION['EditCreateBookingLoggedInUserInformation'] = $userInformation;
+			
+			//close connection
+			$pdo = null;
+		}
+		catch (PDOException $e)
+		{
+			$error = 'Error checking if user is admin: ' . $e->getMessage();
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+			exit();
+		}		
+	} else {
+		$userInformation = $bookingCreatorUserLastName . ", " . $bookingCreatorUserFirstName;
+		$_SESSION['EditCreateBookingLoggedInUserInformation'] = $userInformation;
+	}
+
+	if($continueEdit === FALSE){
+		$_SESSION['normalBookingFeedback'] = "You cannot edit this booked meeting.";
+		if(isset($_GET['meetingroom'])){
+			$meetingRoomID = $_GET['meetingroom'];
+			$location = "http://$_SERVER[HTTP_HOST]/booking/?meetingroom=" . $meetingRoomID;
+		} else {
+			$location = '.';
+		}
+		header('Location: ' . $location);
+		exit();				
+	}
+	
+	if(!isset($_SESSION['EditCreateBookingInfoArray'])){
+		try
+		{
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+			
+			// Get booking information
+			$pdo = connect_to_db();
+			$sql = "SELECT 		b.`bookingID`									AS TheBookingID,
+								b.`companyID`									AS TheCompanyID,
+								b.`meetingRoomID`								AS TheMeetingRoomID,
+								b.startDateTime 								AS StartTime, 
+								b.endDateTime 									AS EndTime, 
+								b.description 									AS BookingDescription,
+								b.displayName 									AS BookedBy,
+								(	
+									SELECT `name` 
+									FROM `company` 
+									WHERE `companyID` = TheCompanyID
+								)												AS BookedForCompany,
+								b.`cancellationCode`							AS CancellationCode,
+								m.`name` 										AS BookedRoomName,									
+								u.`userID`										AS TheUserID, 
+								u.`firstName`									AS UserFirstname,
+								u.`lastName`									AS UserLastname,
+								u.`email`										AS UserEmail,
+								u.`displayName` 								AS UserDefaultDisplayName,
+								u.`bookingDescription`							AS UserDefaultBookingDescription
+					FROM 		`booking` b 
+					LEFT JOIN 	`meetingroom` m 
+					ON 			b.meetingRoomID = m.meetingRoomID 
+					LEFT JOIN 	`company` c 
+					ON 			b.CompanyID = c.CompanyID
+					LEFT JOIN 	`user` u
+					ON 			b.`userID` = u.`userID`
+					WHERE 		b.`bookingID` = :BookingID
+					GROUP BY 	b.`bookingID`";
+			$s = $pdo->prepare($sql);
+			$s->bindValue(':BookingID', $bookingID);
+			$s->execute();
+							
+			//Close connection
+			$pdo = null;
+		}
+		catch (PDOException $e)
+		{
+			$error = 'Error fetching booking details: ' . $e->getMessage();
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+			$pdo = null;
+			exit();		
+		}
+		
+		// Create an array with the row information we retrieved
+		$_SESSION['EditCreateBookingInfoArray'] = $s->fetch(PDO::FETCH_ASSOC);
+		$_SESSION['EditCreateBookingOriginalInfoArray'] = $_SESSION['EditCreateBookingInfoArray'];
 	}
 
 	// Set the correct information on form call
-	$SelectedUserID = $_SESSION['EditCreateBookingInfoArray']['TheUserID'];	
+	$UserIDInBooking = $_SESSION['EditCreateBookingInfoArray']['TheUserID'];	
 	
 		// Check if we need a company select for the booking
 	try
@@ -1572,7 +1679,7 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR
 				AND 	c.`isActive` = 1';
 			
 		$s = $pdo->prepare($sql);
-		$s->bindValue(':userID', $SelectedUserID);
+		$s->bindValue(':userID', $UserIDInBooking);
 		$s->execute();
 		
 		// Create an array with the row information we retrieved

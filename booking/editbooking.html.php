@@ -19,6 +19,10 @@
 		<?php endif; ?>
 		<form action="" method="post">
 			<div>
+				<label for="userInformation">Welcome </label>
+				<b><?php htmlout($_SESSION['EditCreateBookingLoggedInUserInformation']); ?></b>
+			</div>		
+			<div>
 				<label for="originalMeetingRoomName">Booked Meeting Room: </label>
 				<b><?php htmlout($originalMeetingRoomName); ?></b>
 			</div>
