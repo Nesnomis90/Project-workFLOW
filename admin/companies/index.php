@@ -149,6 +149,14 @@ function calculatePeriodInformation($pdo, $companyID, $BillingStart, $BillingEnd
 		$bookingTimeUsed =  convertTwoDateTimesToTimeDifferenceInMinutes($row['BookingStartedDatetime'], $row['BookingCompletedDatetime']);
 		$displayBookingTimeUsed = convertMinutesToHoursAndMinutes($bookingTimeUsed);
 		
+		// Check if time used is higher than minimum time for a booked meeting
+		if($bookingTimeUsed < MINIMUM_BOOKING_DURATION_IN_MINUTES_USED_IN_PRICE_CALCULATIONS){
+			$bookingTimeUsed = MINIMUM_BOOKING_DURATION_IN_MINUTES_USED_IN_PRICE_CALCULATIONS;
+			$displayBookingTimeUsedInPriceCalculations = convertMinutesToHoursAndMinutes($bookingTimeUsed);
+		} else {
+			$displayBookingTimeUsedInPriceCalculations = $displayBookingTimeUsed;
+		}
+		
 		$totalBookingTimeThisPeriod += $bookingTimeUsed;
 
 		if($row['UserLastname'] == NULL){
@@ -167,7 +175,8 @@ function calculatePeriodInformation($pdo, $companyID, $BillingStart, $BillingEnd
 									'BookingPeriod' => $bookingPeriod,
 									'UserInformation' => $userInformation,
 									'MeetingRoomName' => $meetingRoomName,
-									'BookingTimeUsed' => $displayBookingTimeUsed
+									'BookingTimeUsed' => $displayBookingTimeUsed,
+									'BookingTimeCharged' => $displayBookingTimeUsedInPriceCalculations
 									);
 	}
 	

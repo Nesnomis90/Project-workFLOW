@@ -50,6 +50,7 @@
 						Booked the meeting room: <b><?php htmlout($row['MeetingRoomName']); ?></b><br />
 						For the period of: <b><?php htmlout($row['BookingPeriod']); ?></b><br />
 						Using a total time of: <b><?php htmlout($row['BookingTimeUsed']); ?></b><br />
+						Time used in price calculation: <b><?php htmlout($row['BookingTimeCharged']); ?></b><br />
 				</fieldset>
 				<?php endforeach; ?>
 			<?php elseif($rightNow) : ?>
