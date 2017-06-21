@@ -341,7 +341,7 @@ function validateUserInputs($FeedbackSessionToUse, $editing){
 		
 		// We want to check if the booking is the correct minimum length
 			// Does not apply to booking with booking code (starts immediately until next/selected chunk
-		if(!$invalidInput){
+		if(!isset($_SESSION['AddCreateBookingStartImmediately']) AND !$invalidInput){
 			$invalidBookingLength = isBookingTimeDurationInvalid($startDateTime, $endDateTime);
 			if($invalidBookingLength AND !$usingBookingCode){
 				$_SESSION[$FeedbackSessionToUse] = "Your start time and end time needs to have at least a " . MINIMUM_BOOKING_TIME_IN_MINUTES . " minutes difference.";
@@ -927,13 +927,6 @@ if(	((isset($_POST['action']) AND $_POST['action'] == 'Create Meeting')) OR
 	}
 	
 	// Set the correct information
-	if(isset($_GET['meetingroom'])){
-		$_SESSION['AddCreateBookingInfoArray']['TheMeetingRoomID'] = $_GET['meetingroom'];
-	} elseif(isset($_POST['meetingRoomID'])) {
-		$_SESSION['AddCreateBookingInfoArray']['TheMeetingRoomID'] = $_POST['meetingRoomID'];
-	} else {
-		$_SESSION['AddCreateBookingInfoArray']['TheMeetingRoomID'] = "";
-	}
 	$row = $_SESSION['AddCreateBookingInfoArray'];
 	$original = $_SESSION['AddCreateBookingOriginalInfoArray'];
 
@@ -1410,12 +1403,10 @@ if(isset($_POST['add']) AND $_POST['add'] == "Start Booking Immediately"){
 	
 	$_SESSION['AddCreateBookingStartImmediately'] = TRUE;
 	
-	if($_SESSION['AddCreateBookingInfoArray']['StartTime'] >= $_SESSION['AddCreateBookingInfoArray']['EndTime']){
-		$newCorrectStartTime = correctDatetimeFormat($newStartTime);
-		$newEndTime = convertDatetimeToFormat(getNextValidBookingEndTime($newCorrectStartTime), 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
-		$_SESSION['AddCreateBookingInfoArray']['EndTime'] = $newEndTime;
-	}
-	
+	$newCorrectStartTime = correctDatetimeFormat($newStartTime);
+	$newEndTime = convertDatetimeToFormat(getNextValidBookingEndTime($newCorrectStartTime), 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
+	$_SESSION['AddCreateBookingInfoArray']['EndTime'] = $newEndTime;
+
 	$_SESSION['refreshAddCreateBooking'] = TRUE;
 	if(isset($_GET['meetingroom'])){
 		$meetingRoomID = $_GET['meetingroom'];
@@ -1428,7 +1419,7 @@ if(isset($_POST['add']) AND $_POST['add'] == "Start Booking Immediately"){
 	exit();	
 }
 
-// If user wants to book the meeting to start immediately.
+// If user wants to change the start time of the booking, after having set it to start immediately.
 if(isset($_POST['add']) AND $_POST['add'] == "Change Start Time"){
 	
 	// Let's remember what was selected if we do any changes before clicking "Select This User"
