@@ -818,6 +818,7 @@ function create_tables()
 						  `monthlyPrice` smallint(5) unsigned NOT NULL DEFAULT '0',
 						  `overCreditMinutePrice` float unsigned DEFAULT NULL,
 						  `overCreditHourPrice` smallint(5) unsigned DEFAULT NULL,
+						  `hasBeenBilled` tinyint(1) unsigned NOT NULL DEFAULT '0',
 						  PRIMARY KEY (`CompanyID`,`startDate`,`endDate`),
 						  CONSTRAINT `FK_CompanyID5` FOREIGN KEY (`CompanyID`) REFERENCES `company` (`CompanyID`) ON DELETE CASCADE ON UPDATE CASCADE
 						) ENGINE=InnoDB DEFAULT CHARSET=utf8");
