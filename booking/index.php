@@ -1034,7 +1034,6 @@ if (isset($_POST['add']) AND $_POST['add'] == "Add Booking")
 	
 	if(isset($_SESSION['AddCreateBookingStartImmediately']) AND $_SESSION['AddCreateBookingStartImmediately']){
 		$startDateTime = getDatetimeNow();
-		unset($_SESSION['AddCreateBookingStartImmediately']);
 	}
 	
 	// Check if the timeslot is taken for the selected meeting room
@@ -1106,6 +1105,8 @@ if (isset($_POST['add']) AND $_POST['add'] == "Add Booking")
 		header('Location: ' . $location);
 		exit();				
 	}
+	
+	unset($_SESSION['AddCreateBookingStartImmediately']);
 	
 	// Add the booking to the database
 	try
