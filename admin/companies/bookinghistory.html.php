@@ -73,7 +73,7 @@
 				<?php endif; ?>	
 				The company has an "over credits"-fee of: <b><?php htmlout($overCreditsFee); ?></b><br />
 				<?php if($hourAmountUsedInCalculation!="") : ?>
-					Giving an "over credits"-cost of: <b><?php htmlout($hourAmountUsedInCalculation."h"); ?></b>*<b><?php htmlout($overCreditsFee); ?></b> = <b><?php htmlout($displayOverFeeCostThisMonth); ?></b><br />
+					Giving an "over credits"-cost of: <b><?php htmlout($displayHourAmountUsedInCalculation); ?></b>*<b><?php htmlout($overCreditsFee); ?></b> = <b><?php htmlout($displayOverFeeCostThisMonth); ?></b><br />
 				<?php else : ?>
 					Giving an "over credits"-cost of: <b><?php htmlout($actualTimeOverCreditsInMinutes."m"); ?></b>*<b><?php htmlout($overCreditsFee); ?></b> = <b><?php htmlout($displayOverFeeCostThisMonth); ?></b><br />
 				<?php endif; ?>

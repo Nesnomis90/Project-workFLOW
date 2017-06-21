@@ -149,14 +149,20 @@ function calculatePeriodInformation($pdo, $companyID, $BillingStart, $BillingEnd
 		$bookingTimeUsed =  convertTwoDateTimesToTimeDifferenceInMinutes($row['BookingStartedDatetime'], $row['BookingCompletedDatetime']);
 		$displayBookingTimeUsed = convertMinutesToHoursAndMinutes($bookingTimeUsed);
 		
+		// Check if the meeting was long enough to even be counted
+		if($bookingTimeUsed < BOOKING_DURATION_IN_MINUTES_USED_BEFORE_INCLUDING_IN_PRICE_CALCULATIONS){
+			$bookingTimeUsed = 0;
+		}
+		
 		// Check if time used is higher than minimum time for a booked meeting
-		if($bookingTimeUsed < MINIMUM_BOOKING_DURATION_IN_MINUTES_USED_IN_PRICE_CALCULATIONS){
+		if(	$bookingTimeUsed < MINIMUM_BOOKING_DURATION_IN_MINUTES_USED_IN_PRICE_CALCULATIONS AND
+			$bookingTimeUsed != 0){
 			$bookingTimeUsed = MINIMUM_BOOKING_DURATION_IN_MINUTES_USED_IN_PRICE_CALCULATIONS;
 			$displayBookingTimeUsedInPriceCalculations = convertMinutesToHoursAndMinutes($bookingTimeUsed);
 		} else {
 			$displayBookingTimeUsedInPriceCalculations = $displayBookingTimeUsed;
-		}
-		
+		}			
+
 		$totalBookingTimeThisPeriod += $bookingTimeUsed;
 
 		if($row['UserLastname'] == NULL){
@@ -204,10 +210,31 @@ function calculatePeriodInformation($pdo, $companyID, $BillingStart, $BillingEnd
 				$totalBookingCostThisMonth = convertToCurrency($totalCost);
 			} elseif($hourPrice != 0 AND $minPrice == 0){
 				// The subsription charges by the hour, if over credits
-				// TO-DO: Round up/down? Break down into minutes? Currently rounding up.
-				$hourAmountUsedInCalculation = ceil($actualTimeOverCreditsInMinutes/60);
-				$displayHourAmountUsedInCalculation = $hourAmountUsedInCalculation . "h0m";
-				$overFeeCostThisMonth = $hourPrice * $hourAmountUsedInCalculation;
+				// Round up to closest hour/SPLIT_PRICE_PER_HOUR_INTO_THIS_MANY_PIECES.
+				if(SPLIT_PRICE_PER_HOUR_INTO_THIS_MANY_PIECES > 0){
+					$hourAmountUsedInCalculation = floor($actualTimeOverCreditsInMinutes/60);
+					$minutesRemaining = $actualTimeOverCreditsInMinutes - $hourAmountUsedInCalculation*60;
+					$split = SPLIT_PRICE_PER_HOUR_INTO_THIS_MANY_PIECES;
+					$slicedHourPrice = $hourPrice/$split;
+					$minuteSlice = 60/$split;
+					$nextMinuteAmount = ceil($minutesRemaining/$minuteSlice)*$minuteSlice;
+					if($nextMinuteAmount == 60){
+						$hourAmountUsedInCalculation += 1;
+						$minuteAmountUsedInCalculation = 0;
+						$overFeeCostMinute = 0;
+					} else {
+						$minuteAmountUsedInCalculation = $nextMinuteAmount;
+						$overFeeCostMinute = $slicedHourPrice * ($minuteAmountUsedInCalculation/$minuteSlice);
+					}
+					$displayHourAmountUsedInCalculation = $hourAmountUsedInCalculation . "h" . $minuteAmountUsedInCalculation . "m";
+					$overFeeCostHour = $hourPrice * $hourAmountUsedInCalculation;
+					$overFeeCostThisMonth = $overFeeCostHour + $overFeeCostMinute;
+				} else {
+					$hourAmountUsedInCalculation = ceil($actualTimeOverCreditsInMinutes/60);
+					$displayHourAmountUsedInCalculation = $hourAmountUsedInCalculation . "h0m";
+					$overFeeCostThisMonth = $hourPrice * $hourAmountUsedInCalculation;
+				}
+				
 				$displayOverFeeCostThisMonth = convertToCurrency($overFeeCostThisMonth);
 				$totalCost = $monthPrice+$overFeeCostThisMonth;
 				$bookingCostThisMonth = convertToCurrency($monthPrice) . " + " . convertToCurrency($overFeeCostThisMonth);
