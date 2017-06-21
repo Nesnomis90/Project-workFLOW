@@ -19,6 +19,18 @@
 				border-bottom: 1px solid #ddd;
 			}
 			
+			#bookingstable tr:nth-of-type(even) {background-color: #f2f2f2;}
+			#bookingstable tr:nth-of-type(odd) {background-color: white;}
+			
+			#bookingstable tr.LoggedInUserBooking {
+				padding: 8px;
+				text-align: left;
+				border-bottom: 1px solid #ddd;
+				background-color: #75E4D7;
+			}		
+
+			#bookingstable tr:hover {background-color: #DBEAE8;}
+			
 			#bookingstable th {
 				padding: 12px;
 				text-align: left;
@@ -32,10 +44,6 @@
 				text-align: left;
 				border: 1px solid #ddd;
 			}			
-			
-			#bookingstable tr:hover{background-color:#ddd;}
-			
-			#bookingstable tr:nth-child(even) {background-color: #f2f2f2;}
 			
 			#bookingstable caption {
 				padding: 8px;
@@ -55,7 +63,12 @@
 	<?php if(isset($_GET['cancellationcode'])) : ?>
 		<h1>Cancel Your Booking!</h1>
 	<?php elseif(isset($_SESSION['loggedIn']) AND $_SESSION['loggedIn']) : ?>
-		<h1>Booking Information Overview (For Logged In Users)</h1>	
+		<h1>Booking Information Overview</h1>
+		<?php if(isset($_SESSION['LoggedInUserName'])) : ?>
+			<h3>Logged in as <?php htmlout($_SESSION['LoggedInUserName']); ?>.</h3>
+		<?php else : ?>
+			<h3>Logged in</h3>
+		<?php endif; ?>
 		<form action="" method="post">
 			<div>
 				<input type="submit" name="action" value="Create Meeting">
@@ -84,7 +97,11 @@
 		<?php if(isset($bookingsActiveToday)) :?>					
 			<?php foreach ($bookingsActiveToday AS $booking): ?>
 				<form action="" method="post">				
-					<tr>
+					<?php if(isset($_SESSION['LoggedInUserID']) AND $_SESSION['LoggedInUserID'] == $booking['BookedUserID']) : ?>					
+						<tr class="LoggedInUserBooking">
+					<?php else : ?>
+						<tr>
+					<?php endif; ?>
 						<td><?php htmlout($booking['BookingStatus']);?></td>
 						<td><?php htmlout($booking['BookedRoomName']); ?></td>
 						<td><?php htmlout($booking['StartTime']); ?></td>
@@ -99,8 +116,16 @@
 						<td><?php htmlout($booking['BookedForCompany']); ?></td>
 						<td><?php htmlout($booking['BookingDescription']); ?></td>
 						<td><?php htmlout($booking['BookingWasCreatedOn']); ?></td>
-						<td><input type="submit" name="action" value="Edit"></td>							
-						<td><input type="submit" name="action" value="Cancel"></td>
+						<td>
+							<?php if(isset($_SESSION['LoggedInUserID']) AND $_SESSION['LoggedInUserID'] == $booking['BookedUserID']) : ?>
+								<input type="submit" name="action" value="Edit">
+							<?php endif; ?>
+						</td>							
+						<td>
+							<?php if(isset($_SESSION['LoggedInUserID']) AND $_SESSION['LoggedInUserID'] == $booking['BookedUserID']) : ?>
+								<input type="submit" name="action" value="Cancel">
+							<?php endif; ?>
+						</td>
 						<input type="hidden" name="id" value="<?php htmlout($booking['id']); ?>">
 						<input type="hidden" name="UserInfo" id="UserInfo"
 						value="<?php htmlout($booking['UserInfo']); ?>">
@@ -135,8 +160,12 @@
 				</tr>
 			<?php if(isset($bookingsFuture)) :?>		
 				<?php foreach ($bookingsFuture AS $booking): ?>
-					<form action="" method="post">					
+					<form action="" method="post">
+					<?php if(isset($_SESSION['LoggedInUserID']) AND $_SESSION['LoggedInUserID'] == $booking['BookedUserID']) : ?>					
+						<tr class="LoggedInUserBooking">
+					<?php else : ?>
 						<tr>
+					<?php endif; ?>
 							<td><?php htmlout($booking['BookingStatus']);?></td>
 							<td><?php htmlout($booking['BookedRoomName']); ?></td>
 							<td><?php htmlout($booking['StartTime']); ?></td>
@@ -145,8 +174,16 @@
 							<td><?php htmlout($booking['BookedForCompany']); ?></td>
 							<td><?php htmlout($booking['BookingDescription']); ?></td>
 							<td><?php htmlout($booking['BookingWasCreatedOn']); ?></td>
-							<td><input type="submit" name="action" value="Edit"></td>							
-							<td><input type="submit" name="action" value="Cancel"></td>
+							<td>
+								<?php if(isset($_SESSION['LoggedInUserID']) AND $_SESSION['LoggedInUserID'] == $booking['BookedUserID']) : ?>
+									<input type="submit" name="action" value="Edit">
+								<?php endif; ?>
+							</td>							
+							<td>
+								<?php if(isset($_SESSION['LoggedInUserID']) AND $_SESSION['LoggedInUserID'] == $booking['BookedUserID']) : ?>
+									<input type="submit" name="action" value="Cancel">
+								<?php endif; ?>
+							</td>
 							<input type="hidden" name="id" value="<?php htmlout($booking['id']); ?>">
 							<input type="hidden" name="UserInfo" id="UserInfo"
 							value="<?php htmlout($booking['UserInfo']); ?>">
@@ -164,8 +201,8 @@
 	<?php elseif(!isset($_SESSION['loggedIn'])) : ?>
 		<h1>Booking Information Overview</h1>
 		<?php if(!isset($_SESSION["DefaultMeetingRoomInfo"])) : ?>
-			<form action="" method="">
-				<input type="submit" name="action" value="Log In">
+			<form action="" method="post">
+				<input type="submit" name="login" value="Log In">
 			</form>
 		<?php endif; ?>
 		<form action="" method="post">

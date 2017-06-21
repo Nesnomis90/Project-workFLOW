@@ -46,10 +46,6 @@ SELECT 	COUNT(*)
 FROM 	information_schema.SCHEMATA
 WHERE	`SCHEMA_NAME` = 'test';
 
-SELECT COUNT(*)
-FROM DATABASES
-LIKE 'test';
-
 INSERT INTO `companycreditshistory`
 SET			`CompanyID` = :companyID,
 			`startDate` = :startDate,

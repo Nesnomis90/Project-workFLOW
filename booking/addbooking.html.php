@@ -56,10 +56,22 @@
 			</div>
 			<div>
 				<label for="startDateTime">Start Time: </label>
-				<input type="text" name="startDateTime" id="startDateTime" 
-				placeholder="date hh:mm:ss"
-				value="<?php htmlout($startDateTime); ?>">
-				<input type="submit" name="add" value="Increase Start By Minimum">
+				<?php if(isset($_SESSION['AddCreateBookingStartImmediately']) AND $_SESSION['AddCreateBookingStartImmediately']) : ?>
+					<input type="text" name="disabled" id="disabled" 
+					placeholder="date hh:mm:ss"
+					value="<?php htmlout($startDateTime); ?>"
+					disabled>
+					<input type="hidden" name="startDateTime" id="startDateTime" 
+					placeholder="date hh:mm:ss"
+					value="<?php htmlout($startDateTime); ?>">
+					<input type="submit" name="add" value="Change Start Time">
+				<?php else : ?>
+					<input type="text" name="startDateTime" id="startDateTime" 
+					placeholder="date hh:mm:ss"
+					value="<?php htmlout($startDateTime); ?>">
+					<input type="submit" name="add" value="Increase Start By Minimum">
+					<input type="submit" name="add" value="Start Booking Immediately">				
+				<?php endif; ?>
 			</div>
 			<div>
 				<label for="endDateTime">End Time: </label>

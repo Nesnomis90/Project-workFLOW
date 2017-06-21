@@ -111,14 +111,16 @@ function correctDateFormat($wrongDateString){
 	if (validateDatetimeWithFormat($wrongDateString, 'Y-m-d')){
 		$wrongDate = date_create_from_format('Y-m-d', $wrongDateString);
 		$correctDate = DATE_FORMAT($wrongDate,'Y-m-d');
+		return $correctDate;
 	}
 	
 	if (validateDatetimeWithFormat($wrongDateString, 'd-m-Y')){
 		$wrongDate = date_create_from_format('d-m-Y', $wrongDateString);
 		$correctDate = DATE_FORMAT($wrongDate,'Y-m-d');
+		return $correctDate;
 	}
 
-	return $correctDate;
+	return FALSE;
 }
 
 //	Function to change datetime format to be correct for datetime input in database
