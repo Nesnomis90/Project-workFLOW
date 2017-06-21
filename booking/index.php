@@ -30,10 +30,11 @@ function clearAddCreateBookingSessions(){
 	unset($_SESSION['AddCreateBookingSelectedACompany']);	
 	unset($_SESSION['AddCreateBookingDisplayCompanySelect']);
 	unset($_SESSION['AddCreateBookingCompanyArray']);
+	unset($_SESSION['AddCreateBookingStartImmediately']);
 	
 	unset($_SESSION['bookingCodeUserID']);
 	
-	unset($_SESSION['cancelBookingOriginalValues']);	
+	unset($_SESSION['cancelBookingOriginalValues']);
 }
 
 // Function to clear sessions used to remember user inputs on refreshing the edit booking form
@@ -293,7 +294,7 @@ function validateUserInputs($FeedbackSessionToUse, $editing){
 			$invalidInput = TRUE;
 		}
 	
-		if($startDateTime < $timeNow AND !$invalidInput){
+		if($startDateTime < $timeNow AND !$invalidInput AND !isset($_SESSION['AddCreateBookingStartImmediately'])){
 			// You can't book a meeting starting in the past.
 			
 			$_SESSION[$FeedbackSessionToUse] = "The start time you selected is already over. Select a new start time.";
@@ -319,27 +320,33 @@ function validateUserInputs($FeedbackSessionToUse, $editing){
 				$invalidInput = TRUE;
 			}
 		}
-	
+		
 		// We want to check if a booking is in the correct minute slice e.g. 15 minute increments.
 			// We check both start and end time for online/admin bookings
 			// Does not apply to booking with booking code (starts immediately until next/selected chunk
-		$invalidStartTime = isBookingDateTimeMinutesInvalid($startDateTime);
-		if($invalidStartTime AND !$usingBookingCode AND !$invalidInput){
-			$_SESSION[$FeedbackSessionToUse] = "Your start time has to be in a " . MINIMUM_BOOKING_TIME_IN_MINUTES . " minutes slice from hh:00.";
-			$invalidInput = TRUE;	
+		if(!isset($_SESSION['AddCreateBookingStartImmediately']) AND !$invalidInput){
+			$invalidStartTime = isBookingDateTimeMinutesInvalid($startDateTime);
+			if($invalidStartTime AND !$usingBookingCode){
+				$_SESSION[$FeedbackSessionToUse] = "Your start time has to be in a " . MINIMUM_BOOKING_TIME_IN_MINUTES . " minutes slice from hh:00.";
+				$invalidInput = TRUE;	
+			}			
 		}
-		$invalidEndTime = isBookingDateTimeMinutesInvalid($endDateTime);
-		if($invalidEndTime AND !$invalidInput){
-			$_SESSION[$FeedbackSessionToUse] = "Your end time has to be in a " . MINIMUM_BOOKING_TIME_IN_MINUTES . " minutes slice from hh:00.";
-			$invalidInput = TRUE;	
+		if(!$invalidInput){
+			$invalidEndTime = isBookingDateTimeMinutesInvalid($endDateTime);
+			if($invalidEndTime){
+				$_SESSION[$FeedbackSessionToUse] = "Your end time has to be in a " . MINIMUM_BOOKING_TIME_IN_MINUTES . " minutes slice from hh:00.";
+				$invalidInput = TRUE;	
+			}			
 		}
-	
+		
 		// We want to check if the booking is the correct minimum length
 			// Does not apply to booking with booking code (starts immediately until next/selected chunk
-		$invalidBookingLength = isBookingTimeDurationInvalid($startDateTime, $endDateTime);
-		if($invalidBookingLength AND !$usingBookingCode AND !$invalidInput){
-			$_SESSION[$FeedbackSessionToUse] = "Your start time and end time needs to have at least a " . MINIMUM_BOOKING_TIME_IN_MINUTES . " minutes difference.";
-			$invalidInput = TRUE;		
+		if(!$invalidInput){
+			$invalidBookingLength = isBookingTimeDurationInvalid($startDateTime, $endDateTime);
+			if($invalidBookingLength AND !$usingBookingCode){
+				$_SESSION[$FeedbackSessionToUse] = "Your start time and end time needs to have at least a " . MINIMUM_BOOKING_TIME_IN_MINUTES . " minutes difference.";
+				$invalidInput = TRUE;		
+			}		
 		}
 		
 		return array($invalidInput, $startDateTime, $endDateTime, $validatedBookingDescription, $validatedDisplayName, $validatedBookingCode);
@@ -351,6 +358,24 @@ function validateUserInputs($FeedbackSessionToUse, $editing){
 // Check if we're accessing from a local device
 // If so, set that meeting room's info as the default meeting room info
 checkIfLocalDevice();
+
+if ((isset($_POST['login']) and $_POST['login'] == 'Log In') OR
+	(isset($_SESSION['normalBookingTryingToLogIn']) AND $_SESSION['normalBookingTryingToLogIn'])){
+	
+	$_SESSION['normalBookingTryingToLogIn'] = TRUE;
+	$loggedIn = makeUserLogIn();
+	unset($_SESSION['normalBookingTryingToLogIn']);
+
+	if(isset($_GET['meetingroom'])){
+		$TheMeetingRoomID = $_GET['meetingroom'];
+		$location = "http://$_SERVER[HTTP_HOST]/booking/?meetingroom=" . $TheMeetingRoomID;		
+	} else {
+		$location = ".";
+	}
+
+	header("Location: $location");
+	exit();	
+}
 
 // If user wants to go back to the main page while in the confirm booking page
 if (isset($_POST['action']) and $_POST['action'] == 'Go Back'){
@@ -948,20 +973,20 @@ if(	((isset($_POST['action']) AND $_POST['action'] == 'Create Meeting')) OR
 	if(isset($_GET['meetingroom'])){
 		$selectedMeetingRoomID = $_GET['meetingroom'];
 	}
+	
 	if(isset($row['StartTime']) AND $row['StartTime'] != ""){
 		$startDateTime = $row['StartTime'];
 	} else {
-		$startDateTime = getDatetimeNow();
-		$startDateTime = convertDatetimeToFormat($startDateTime , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
+		$validBookingStartTime = getNextValidBookingStartTime();
+		$startDateTime = convertDatetimeToFormat($validBookingStartTime , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
 	}
-	
 	if(isset($row['EndTime']) AND $row['EndTime'] != ""){
 		$endDateTime = $row['EndTime'];
 	} else {
-		$endDateTime = getDatetimeNow();
-		$endDateTime = convertDatetimeToFormat($endDateTime , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
-	}
-	
+		$validBookingEndTime = getNextValidBookingEndTime(substr($validBookingStartTime,0,-3));
+		$endDateTime = convertDatetimeToFormat($validBookingEndTime , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
+	}	
+
 	if(isset($row['BookedBy'])){
 		$displayName = $row['BookedBy'];
 	} else {
@@ -1013,6 +1038,11 @@ if (isset($_POST['add']) AND $_POST['add'] == "Add Booking")
 	} else {
 		$meetingRoomID = $_POST['meetingRoomID'];
 	}	
+	
+	if(isset($_SESSION['AddCreateBookingStartImmediately']) AND $_SESSION['AddCreateBookingStartImmediately']){
+		$startDateTime = getDatetimeNow();
+		unset($_SESSION['AddCreateBookingStartImmediately']);
+	}
 	
 	// Check if the timeslot is taken for the selected meeting room
 	try
@@ -1366,6 +1396,67 @@ if(isset($_POST['add']) AND $_POST['add'] == "Get Default Booking Description"){
 	}
 	header('Location: ' . $location);
 	exit();	
+}
+
+// If user wants to book the meeting to start immediately.
+if(isset($_POST['add']) AND $_POST['add'] == "Start Booking Immediately"){
+	
+	// Let's remember what was selected if we do any changes before clicking "Select This User"
+	rememberAddCreateBookingInputs();
+ 
+	$correctStartTime = getDatetimeNow();
+	$newStartTime = convertDatetimeToFormat($correctStartTime, 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
+	$_SESSION['AddCreateBookingInfoArray']['StartTime'] = $newStartTime;
+	
+	$_SESSION['AddCreateBookingStartImmediately'] = TRUE;
+	
+	if($_SESSION['AddCreateBookingInfoArray']['StartTime'] >= $_SESSION['AddCreateBookingInfoArray']['EndTime']){
+		$newCorrectStartTime = correctDatetimeFormat($newStartTime);
+		$newEndTime = convertDatetimeToFormat(getNextValidBookingEndTime($newCorrectStartTime), 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
+		$_SESSION['AddCreateBookingInfoArray']['EndTime'] = $newEndTime;
+	}
+	
+	$_SESSION['refreshAddCreateBooking'] = TRUE;
+	if(isset($_GET['meetingroom'])){
+		$meetingRoomID = $_GET['meetingroom'];
+		$location = "http://$_SERVER[HTTP_HOST]/booking/?meetingroom=" . $meetingRoomID;
+	} else {
+		$meetingRoomID = $_POST['meetingRoomID'];
+		$location = '.';
+	}
+	header('Location: ' . $location);
+	exit();	
+}
+
+// If user wants to book the meeting to start immediately.
+if(isset($_POST['add']) AND $_POST['add'] == "Change Start Time"){
+	
+	// Let's remember what was selected if we do any changes before clicking "Select This User"
+	rememberAddCreateBookingInputs();
+	
+	$startTime = $_SESSION['AddCreateBookingInfoArray']['StartTime'];
+	$correctStartTime = correctDatetimeFormat($startTime);
+	$newStartTime = convertDatetimeToFormat(getNextValidBookingEndTime($correctStartTime), 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
+	$_SESSION['AddCreateBookingInfoArray']['StartTime'] = $newStartTime;
+	
+	unset($_SESSION['AddCreateBookingStartImmediately']);
+	
+	if($_SESSION['AddCreateBookingInfoArray']['StartTime'] >= $_SESSION['AddCreateBookingInfoArray']['EndTime']){
+		$newCorrectStartTime = correctDatetimeFormat($newStartTime);
+		$newEndTime = convertDatetimeToFormat(getNextValidBookingEndTime($newCorrectStartTime), 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
+		$_SESSION['AddCreateBookingInfoArray']['EndTime'] = $newEndTime;
+	}
+	
+	$_SESSION['refreshAddCreateBooking'] = TRUE;
+	if(isset($_GET['meetingroom'])){
+		$meetingRoomID = $_GET['meetingroom'];
+		$location = "http://$_SERVER[HTTP_HOST]/booking/?meetingroom=" . $meetingRoomID;
+	} else {
+		$meetingRoomID = $_POST['meetingRoomID'];
+		$location = '.';
+	}
+	header('Location: ' . $location);
+	exit();
 }
 
 // If user wants to increase the start timer by minimum allowed time (e.g. to the closest 15 min chunk)
@@ -2203,7 +2294,8 @@ try
 	include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 	$pdo = connect_to_db();
 	if(isset($_GET['meetingroom']) AND $_GET['meetingroom'] != NULL AND $_GET['meetingroom'] != ""){
-		$sql = "SELECT 		b.`bookingID`,
+		$sql = "SELECT 		b.`userID`										AS BookedUserID,
+							b.`bookingID`,
 							b.`companyID`,
 							m.`name` 										AS BookedRoomName, 
 							b.startDateTime 								AS StartTime,
@@ -2243,7 +2335,8 @@ try
 			$rowNum = 0;
 		}
 	} elseif(!isset($_GET['meetingroom'])){
-		$sql = "SELECT 		b.`bookingID`,
+		$sql = "SELECT 		b.`userID`										AS BookedUserID,
+							b.`bookingID`,
 							b.`companyID`,
 							m.`name` 										AS BookedRoomName, 
 							b.startDateTime 								AS StartTime,
@@ -2386,43 +2479,45 @@ foreach ($result as $row)
 					' to ' . $displayValidatedEndDate;
 	
 	if($status == "Active Today"){				
-		$bookingsActiveToday[] = array('id' => $row['bookingID'],
-							'BookingStatus' => $status,
-							'BookedRoomName' => $roomName,
-							'StartTime' => $displayValidatedStartDate,
-							'EndTime' => $displayValidatedEndDate,
-							'BookedBy' => $row['BookedBy'],
-							'BookedForCompany' => $row['BookedForCompany'],
-							'BookingDescription' => $row['BookingDescription'],
-							'firstName' => $firstname,
-							'lastName' => $lastname,
-							'email' => $email,
-							'WorksForCompany' => $worksForCompany,
-							'BookingWasCreatedOn' => $displayCreatedDateTime,
-							'BookingWasCompletedOn' => $displayCompletedDateTime,
-							'BookingWasCancelledOn' => $displayCancelledDateTime,	
-							'UserInfo' => $userinfo,
-							'MeetingInfo' => $meetinginfo
-						);
+		$bookingsActiveToday[] = array(	'id' => $row['bookingID'],
+										'BookingStatus' => $status,
+										'BookedRoomName' => $roomName,
+										'StartTime' => $displayValidatedStartDate,
+										'EndTime' => $displayValidatedEndDate,
+										'BookedBy' => $row['BookedBy'],
+										'BookedForCompany' => $row['BookedForCompany'],
+										'BookingDescription' => $row['BookingDescription'],
+										'firstName' => $firstname,
+										'lastName' => $lastname,
+										'email' => $email,
+										'WorksForCompany' => $worksForCompany,
+										'BookingWasCreatedOn' => $displayCreatedDateTime,
+										'BookingWasCompletedOn' => $displayCompletedDateTime,
+										'BookingWasCancelledOn' => $displayCancelledDateTime,
+										'BookedUserID' => $row['BookedUserID'],
+										'UserInfo' => $userinfo,
+										'MeetingInfo' => $meetinginfo
+									);
 	}	elseif($status == "Active") {
-		$bookingsFuture[] = array('id' => $row['bookingID'],
-							'BookingStatus' => $status,
-							'BookedRoomName' => $roomName,
-							'StartTime' => $displayValidatedStartDate,
-							'EndTime' => $displayValidatedEndDate,
-							'BookedBy' => $row['BookedBy'],
-							'BookedForCompany' => $row['BookedForCompany'],
-							'BookingDescription' => $row['BookingDescription'],
-							'firstName' => $firstname,
-							'lastName' => $lastname,
-							'email' => $email,
-							'WorksForCompany' => $worksForCompany,
-							'BookingWasCreatedOn' => $displayCreatedDateTime,
-							'BookingWasCompletedOn' => $displayCompletedDateTime,
-							'BookingWasCancelledOn' => $displayCancelledDateTime,	
-							'UserInfo' => $userinfo,
-							'MeetingInfo' => $meetinginfo
-						);		
+		$bookingsFuture[] = array(	'id' => $row['bookingID'],
+									'BookingStatus' => $status,
+									'BookedRoomName' => $roomName,
+									'StartTime' => $displayValidatedStartDate,
+									'EndTime' => $displayValidatedEndDate,
+									'BookedBy' => $row['BookedBy'],
+									'BookedForCompany' => $row['BookedForCompany'],
+									'BookingDescription' => $row['BookingDescription'],
+									'firstName' => $firstname,
+									'lastName' => $lastname,
+									'email' => $email,
+									'WorksForCompany' => $worksForCompany,
+									'BookingWasCreatedOn' => $displayCreatedDateTime,
+									'BookingWasCompletedOn' => $displayCompletedDateTime,
+									'BookingWasCancelledOn' => $displayCancelledDateTime,
+									'BookedUserID' => $row['BookedUserID'],									
+									'UserInfo' => $userinfo,
+									'MeetingInfo' => $meetinginfo
+								);
 	}
 }
 var_dump($_SESSION); // TO-DO: remove after testing is done

@@ -236,22 +236,28 @@ function validateUserInputs($FeedbackSessionToUse, $editing){
 	// We want to check if a booking is in the correct minute slice e.g. 15 minute increments.
 		// We check both start and end time for online/admin bookings
 	if(!$editing){
-		$invalidStartTime = isBookingDateTimeMinutesInvalid($startDateTime);
-		if($invalidStartTime AND !$invalidInput){
-			$_SESSION[$FeedbackSessionToUse] = "Your start time has to be in a " . MINIMUM_BOOKING_TIME_IN_MINUTES . " minutes slice from hh:00.";
-			$invalidInput = TRUE;	
+		if(!$invalidInput){
+			$invalidStartTime = isBookingDateTimeMinutesInvalid($startDateTime);
+			if($invalidStartTime){
+				$_SESSION[$FeedbackSessionToUse] = "Your start time has to be in a " . MINIMUM_BOOKING_TIME_IN_MINUTES . " minutes slice from hh:00.";
+				$invalidInput = TRUE;	
+			}
 		}
-		$invalidEndTime = isBookingDateTimeMinutesInvalid($endDateTime);
-		if($invalidEndTime AND !$invalidInput){
-			$_SESSION[$FeedbackSessionToUse] = "Your end time has to be in a " . MINIMUM_BOOKING_TIME_IN_MINUTES . " minutes slice from hh:00.";
-			$invalidInput = TRUE;	
+		if(!$invalidInput){
+			$invalidEndTime = isBookingDateTimeMinutesInvalid($endDateTime);
+			if($invalidEndTime){
+				$_SESSION[$FeedbackSessionToUse] = "Your end time has to be in a " . MINIMUM_BOOKING_TIME_IN_MINUTES . " minutes slice from hh:00.";
+				$invalidInput = TRUE;	
+			}
 		}
 		
 		// We want to check if the booking is the correct minimum length
-		$invalidBookingLength = isBookingTimeDurationInvalid($startDateTime, $endDateTime);
-		if($invalidBookingLength AND !$invalidInput){
-			$_SESSION[$FeedbackSessionToUse] = "Your start time and end time needs to have at least a " . MINIMUM_BOOKING_TIME_IN_MINUTES . " minutes difference.";
-			$invalidInput = TRUE;		
+		if(!$invalidInput){
+			$invalidBookingLength = isBookingTimeDurationInvalid($startDateTime, $endDateTime);
+			if($invalidBookingLength){
+				$_SESSION[$FeedbackSessionToUse] = "Your start time and end time needs to have at least a " . MINIMUM_BOOKING_TIME_IN_MINUTES . " minutes difference.";
+				$invalidInput = TRUE;		
+			}
 		}
 	}
 
