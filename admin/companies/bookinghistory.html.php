@@ -57,15 +57,17 @@
 				<b>There are no bookings completed so far this period.</b><br />
 			<?php else : ?>
 				<b>There were no bookings completed this period.</b><br />
-			<?php endif; ?>				
+			<?php endif; ?>
+			
 			<?php if($rightNow) : ?>
 				Producing a total booking time used so far this period: <b><?php htmlout($displayTotalBookingTimeThisPeriod); ?></b><br />
 			<?php else : ?>
 				Producing a total booking time used this period: <b><?php htmlout($displayTotalBookingTimeThisPeriod); ?></b><br />
 			<?php endif; ?>
+			
 			<?php if($companyMinuteCreditsRemaining < 0) : ?>
 				<?php if(!isset($periodHasBeenBilled) OR $periodHasBeenBilled == 0){
-					$color='red'; // TO-DO: Give more feedback that it has been billed
+					$color='red';
 				} elseif($periodHasBeenBilled == 1) {
 					$color='green';
 				} ?>
@@ -97,6 +99,22 @@
 				Resulting in the total cost so far this period of: <b><?php htmlout($bookingCostThisMonth); ?></b> = <span style="color:red"><b><?php htmlout($totalBookingCostThisMonth); ?></b></span><br />
 			<?php else : ?>
 				Resulting in the total cost this period of: <b><?php htmlout($bookingCostThisMonth); ?></b> = <span style="color:<?php htmlout($color); ?>"><b><?php htmlout($totalBookingCostThisMonth); ?></b></span><br />
+			<?php endif; ?>
+			<br /><h2>Billing Status:</h2>
+			<?php if(!isset($periodHasBeenBilled) OR $periodHasBeenBilled == 0) : ?>
+				This booking has <span style="color:red">NOT BEEN BILLED</span>.
+				<form action="" method="post">
+					<textarea name="billingDescription" rows="4" cols="50"></textarea>
+					<input type="hidden" name="nextPeriod" value="<?php htmlout($NextPeriod); ?>">
+					<input type="hidden" name="previousPeriod" value="<?php htmlout($PreviousPeriod); ?>">
+					<input type="hidden" name="billingStart" value="<?php htmlout($BillingStart); ?>">
+					<input type="hidden" name="billingEnd" value="<?php htmlout($BillingEnd); ?>">
+					<input type="submit" name="action" value="Set As Billed">
+				</form>
+			<?php elseif($periodHasBeenBilled == 1) : ?>
+				This booking has <span style="color:green">BEEN BILLED</span>.<br />
+				<label for="billingDescription">Billing Description: </label>
+				<textarea rows="4" cols="50" disabled><?php htmlout($billingDescription); ?></textarea>
 			<?php endif; ?>
 		<p><a href="..">Return to CMS home</a></p>
 	<?php include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/logout.inc.html.php'; ?>
