@@ -70,12 +70,13 @@
 				Producing a total booking time used this period: <b><?php htmlout($displayTotalBookingTimeThisPeriod); ?></b><br />
 			<?php endif; ?>
 			
+			<?php if(!isset($periodHasBeenBilled) OR $periodHasBeenBilled == 0){
+				$color='red';
+			} elseif($periodHasBeenBilled == 1) {
+				$color='green';
+			} ?>
+				
 			<?php if($companyMinuteCreditsRemaining < 0) : ?>
-				<?php if(!isset($periodHasBeenBilled) OR $periodHasBeenBilled == 0){
-					$color='red';
-				} elseif($periodHasBeenBilled == 1) {
-					$color='green';
-				} ?>
 				This is <span style="color:<?php htmlout($color); ?>"><b>MORE</b></span> than the credit given this period: <b><?php htmlout($displayCompanyCredits); ?></b><br />
 				The extra time used this period: <span style="color:<?php htmlout($color); ?>"><b><?php htmlout($displayOverCreditsTimeUsed); ?></b></span><br />
 				<?php if($hourAmountUsedInCalculation!="") : ?>
@@ -85,9 +86,9 @@
 				<?php endif; ?>	
 				The company has an "over credits"-fee of: <b><?php htmlout($overCreditsFee); ?></b><br />
 				<?php if($hourAmountUsedInCalculation!="") : ?>
-					Giving an "over credits"-cost of: <b><?php htmlout($displayHourAmountUsedInCalculation); ?></b>*<b><?php htmlout($overCreditsFee); ?></b> = <b><?php htmlout($displayOverFeeCostThisMonth); ?></b><br />
+					Giving an "over credits"-cost of: <b><?php htmlout($displayHourAmountUsedInCalculation); ?></b>*<b><?php htmlout($overCreditsFee); ?></b> = <span style="color:<?php htmlout($color); ?>"><b><?php htmlout($displayOverFeeCostThisMonth); ?></b></span><br />
 				<?php else : ?>
-					Giving an "over credits"-cost of: <b><?php htmlout($actualTimeOverCreditsInMinutes."m"); ?></b>*<b><?php htmlout($overCreditsFee); ?></b> = <b><?php htmlout($displayOverFeeCostThisMonth); ?></b><br />
+					Giving an "over credits"-cost of: <b><?php htmlout($actualTimeOverCreditsInMinutes."m"); ?></b>*<b><?php htmlout($overCreditsFee); ?></b> = <span style="color:<?php htmlout($color); ?>"><b><?php htmlout($displayOverFeeCostThisMonth); ?></b></span><br />
 				<?php endif; ?>
 			<?php elseif($companyMinuteCreditsRemaining == 0) : ?>
 				This is <span style="color:green"><b>EXACTLY</b></span> the credit given this period: <b><?php htmlout($displayCompanyCredits); ?></b><br />
@@ -99,14 +100,15 @@
 					Credits remaining at the end of the period: <b><?php htmlout($displayCompanyCreditsRemaining); ?></b><br />
 				<?php endif; ?>
 			<?php endif; ?>
-			This company has a monthly set subscription cost of: <b><?php htmlout($displayMonthPrice); ?></b><br />
+			This company has a monthly set subscription cost of: <span style="color:<?php htmlout($color); ?>"><b><?php htmlout($displayMonthPrice); ?></b></span><br />
 			<?php if($rightNow) : ?>
 				Resulting in the total cost so far this period of: <b><?php htmlout($bookingCostThisMonth); ?></b> = <span style="color:red"><b><?php htmlout($totalBookingCostThisMonth); ?></b></span><br />
 			<?php else : ?>
 				Resulting in the total cost this period of: <b><?php htmlout($bookingCostThisMonth); ?></b> = <span style="color:<?php htmlout($color); ?>"><b><?php htmlout($totalBookingCostThisMonth); ?></b></span><br />
 			<?php endif; ?>
-			<br /><h2>Billing Status:</h2>
+			<br />
 			<?php if(!$rightNow AND (!isset($periodHasBeenBilled) OR $periodHasBeenBilled == 0)) : ?>
+				<h2>Billing Status:</h2>
 				<form action="" method="post">
 					This booking has <span style="color:red">NOT BEEN BILLED</span>.
 					<input type="submit" name="history" value="Set As Billed"><br />
@@ -118,12 +120,13 @@
 					<input type="hidden" name="billingEnd" value="<?php htmlout($BillingEnd); ?>">
 				</form>
 			<?php elseif(!$rightNow AND $periodHasBeenBilled == 1) : ?>
+				<h2>Billing Status:</h2>
 				This booking has <span style="color:green">BEEN BILLED</span>.<br />
 				<label for="billingDescriptionDisabled">Billing Description: </label>
 				<textarea name="billingDescriptionDisabled" id="billingDescriptionDisabled" 
 				rows="4" cols="50" disabled><?php htmlout($billingDescription); ?></textarea>
 			<?php else : ?>
-				Period still in progress.
+				<h2>Billing Status: Period still in progress.</h2>
 			<?php endif; ?>
 		<p><a href="..">Return to CMS home</a></p>
 	<?php include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/logout.inc.html.php'; ?>
