@@ -136,9 +136,6 @@ function calculatePeriodInformation($pdo, $companyID, $BillingStart, $BillingEnd
 	$s->bindValue(':endDate', $BillingEnd);
 	$s->execute();
 	$result = $s->fetchAll(PDO::FETCH_ASSOC);
-		
-	//Close the connection
-	$pdo = null;	
 	
 	$totalBookingTimeThisPeriod = 0;
 	foreach($result as $row){
@@ -457,7 +454,7 @@ if (isset($_POST['history']) AND $_POST['history'] == "Set As Billed"){
 				$hourAmountUsedInCalculation, $bookingCostThisMonth, $totalBookingCostThisMonth, $companyMinuteCreditsRemaining,
 				$displayHourAmountUsedInCalculation, $actualTimeOverCreditsInMinutes, $periodHasBeenBilled, $billingDescription) 
 		= calculatePeriodInformation($pdo, $companyID, $BillingStart, $BillingEnd, $rightNow);
-
+		
 		// Update period as billed relevant information and admin inputs
 		
 			// Create the description to save for this period
@@ -479,7 +476,6 @@ if (isset($_POST['history']) AND $_POST['history'] == "Set As Billed"){
 		if(substr($billingDescriptionInformation,-1) != "."){
 			$billingDescriptionInformation . ".";
 		}
-		$pdo = connect_to_db();	
 		
 		$sql = "UPDATE 	`companycreditshistory`
 				SET		`hasBeenBilled` = 1,
@@ -578,6 +574,8 @@ if (isset($_POST['history']) AND $_POST['history'] == "Next Period"){
 				$hourAmountUsedInCalculation, $bookingCostThisMonth, $totalBookingCostThisMonth, $companyMinuteCreditsRemaining,
 				$displayHourAmountUsedInCalculation, $actualTimeOverCreditsInMinutes, $periodHasBeenBilled, $billingDescription) 
 		= calculatePeriodInformation($pdo, $companyID, $BillingStart, $BillingEnd, $rightNow);
+		
+		$pdo = NULL;
 	}
 	catch (PDOException $e)
 	{
@@ -658,6 +656,8 @@ if (	(isset($_POST['history']) AND $_POST['history'] == "Previous Period") OR
 				$hourAmountUsedInCalculation, $bookingCostThisMonth, $totalBookingCostThisMonth, $companyMinuteCreditsRemaining,
 				$displayHourAmountUsedInCalculation, $actualTimeOverCreditsInMinutes, $periodHasBeenBilled, $billingDescription) 
 		= calculatePeriodInformation($pdo, $companyID, $BillingStart, $BillingEnd, $rightNow);
+		
+		$pdo = NULL;
 	}
 	catch (PDOException $e)
 	{
@@ -680,6 +680,8 @@ if (	(isset($_GET['companyID']) AND isset($_GET['BillingStart']) AND isset($_GET
 	){
 		
 	// Save GET parameters then load a clean URL
+		// Link example IN: http://localhost/admin/companies/?companyID=2&BillingStart=2017-05-15&BillingEnd=2017-06-15
+		// Link out: http://localhost/admin/companies/
 	if(isset($_SESSION['refreshBookingHistoryFromLink'])){
 		list($companyID, $BillingStart, $BillingEnd) = $_SESSION['refreshBookingHistoryFromLink'];		
 		unset($_SESSION['refreshBookingHistoryFromLink']);
@@ -691,9 +693,6 @@ if (	(isset($_GET['companyID']) AND isset($_GET['BillingStart']) AND isset($_GET
 		header("Location: .");
 		exit();	
 	}
-		
-	// Link example: http://localhost/admin/companies/?companyID=2&BillingStart=2017-05-15&BillingEnd=2017-06-15
-
 
 	// Get booking history for the selected company
 	try
@@ -736,7 +735,7 @@ if (	(isset($_GET['companyID']) AND isset($_GET['BillingStart']) AND isset($_GET
 		
 		// Get current period as intervalNumber
 		if($BillingEnd != $lastBillingDate){
-			$currentIntervalNumber = convertTwoDateTimesToTimeDifferenceInMonths($BillingStart,$lastBillingDate);
+			$currentIntervalNumber = convertTwoDateTimesToTimeDifferenceInMonths($BillingEnd,$lastBillingDate);
 			$_SESSION['BookingHistoryIntervalNumber'] = $currentIntervalNumber;
 			$rightNow = FALSE;
 		} else {
@@ -760,7 +759,9 @@ if (	(isset($_GET['companyID']) AND isset($_GET['BillingStart']) AND isset($_GET
 				$displayMonthPrice, $displayTotalBookingTimeThisPeriod, $displayOverFeeCostThisMonth, $overCreditsFee,
 				$hourAmountUsedInCalculation, $bookingCostThisMonth, $totalBookingCostThisMonth, $companyMinuteCreditsRemaining,
 				$displayHourAmountUsedInCalculation, $actualTimeOverCreditsInMinutes, $periodHasBeenBilled, $billingDescription) 
-		= calculatePeriodInformation($pdo, $companyID, $BillingStart, $BillingEnd, $rightNow);	
+		= calculatePeriodInformation($pdo, $companyID, $BillingStart, $BillingEnd, $rightNow);
+		
+		$pdo = NULL;
 	}
 	catch (PDOException $e)
 	{
@@ -840,7 +841,9 @@ if ((isset($_POST['action']) AND $_POST['action'] == "Booking History") OR
 				$displayMonthPrice, $displayTotalBookingTimeThisPeriod, $displayOverFeeCostThisMonth, $overCreditsFee,
 				$hourAmountUsedInCalculation, $bookingCostThisMonth, $totalBookingCostThisMonth, $companyMinuteCreditsRemaining,
 				$displayHourAmountUsedInCalculation, $actualTimeOverCreditsInMinutes, $periodHasBeenBilled, $billingDescription) 
-		= calculatePeriodInformation($pdo, $companyID, $BillingStart, $BillingEnd, $rightNow);	
+		= calculatePeriodInformation($pdo, $companyID, $BillingStart, $BillingEnd, $rightNow);
+		
+		$pdo = NULL;
 	}
 	catch (PDOException $e)
 	{
