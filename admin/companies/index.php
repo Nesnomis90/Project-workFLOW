@@ -425,17 +425,7 @@ if (isset($_POST['history']) AND $_POST['history'] == "Set As Billed"){
 	$PreviousPeriod = $_POST['previousPeriod'];
 	$BillingStart = $_POST['billingStart'];
 	$BillingEnd = $_POST['billingEnd'];
-	
-	echo "<br />";
-	var_dump($NextPeriod);
-	echo "<br />";
-	var_dump($PreviousPeriod);
-	echo "<br />";
-	var_dump($BillingStart);
-	echo "<br />";
-	var_dump($BillingEnd);
-	echo "<br />";
-	
+
 	if(isset($_POST['billingDescription'])){
 		$billingDescriptionAdminAddition = trimExcessWhitespaceButLeaveLinefeed($_POST['billingDescription']);
 	}
@@ -684,10 +674,112 @@ if (	(isset($_POST['history']) AND $_POST['history'] == "Previous Period") OR
 	exit();	
 }
 
+// Redirect to the proper period and company when given a link
+if (	(isset($_GET['companyID']) AND isset($_GET['BillingStart']) AND isset($_GET['BillingEnd'])) OR
+		isset($_SESSION['refreshBookingHistoryFromLink'])
+	){
+		
+	// Save GET parameters then load a clean URL
+	if(isset($_SESSION['refreshBookingHistoryFromLink'])){
+		list($companyID, $BillingStart, $BillingEnd) = $_SESSION['refreshBookingHistoryFromLink'];		
+		unset($_SESSION['refreshBookingHistoryFromLink']);
+	} else {
+		$companyID = $_GET['companyID'];
+		$BillingStart = $_GET['BillingStart'];
+		$BillingEnd =  $_GET['BillingEnd'];
+		$_SESSION['refreshBookingHistoryFromLink'] = array($companyID, $BillingStart, $BillingEnd);
+		header("Location: .");
+		exit();	
+	}
+		
+	// Link example: http://localhost/admin/companies/?companyID=2&BillingStart=2017-05-15&BillingEnd=2017-06-15
+
+
+	// Get booking history for the selected company
+	try
+	{
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+		$pdo = connect_to_db();
+
+		// Get relevant company information
+		$sql = "SELECT 	`companyID`			AS CompanyID, 
+						`name`				AS CompanyName,
+						`dateTimeCreated`	AS CompanyDateTimeCreated,
+						`prevStartDate`		AS CompanyBillingDatePreviousStart,
+						`startDate`			AS CompanyBillingDateStart,
+						`endDate`			AS CompanyBillingDateEnd
+				FROM 	`company`
+				WHERE 	`companyID` = :CompanyID
+				LIMIT 	1";
+		$s = $pdo->prepare($sql);
+		$s->bindValue(':CompanyID', $companyID);
+		$s->execute();
+		$row = $s->fetch(PDO::FETCH_ASSOC);
+		$_SESSION['BookingHistoryCompanyInfo'] = $row;
+		
+		$dateTimeCreated = $row['CompanyDateTimeCreated'];
+		$displayDateTimeCreated = convertDatetimeToFormat($dateTimeCreated,'Y-m-d H:i:s', DATE_DEFAULT_FORMAT_TO_DISPLAY);
+		$lastBillingDate = $row['CompanyBillingDateEnd'];
+			
+		$_SESSION['BookingHistoryCompanyInfo']['CompanyDateTimeCreated'] = $displayDateTimeCreated;
+		
+		$CompanyName = $row['CompanyName'];
+	
+		// Format billing dates
+		$displayBillingStart = convertDatetimeToFormat($BillingStart , 'Y-m-d', DATE_DEFAULT_FORMAT_TO_DISPLAY);
+		$displayBillingEnd = convertDatetimeToFormat($BillingEnd , 'Y-m-d', DATE_DEFAULT_FORMAT_TO_DISPLAY);
+		$BillingPeriod = $displayBillingStart . " To " . $displayBillingEnd . ".";			
+		
+		// Get first period as intervalNumber
+		$firstPeriodIntervalNumber = convertTwoDateTimesToTimeDifferenceInMonths($dateTimeCreated,$lastBillingDate);
+		$_SESSION['BookingHistoryFirstPeriodIntervalNumber'] = $firstPeriodIntervalNumber;
+		
+		// Get current period as intervalNumber
+		if($BillingEnd != $lastBillingDate){
+			$currentIntervalNumber = convertTwoDateTimesToTimeDifferenceInMonths($BillingStart,$lastBillingDate);
+			$_SESSION['BookingHistoryIntervalNumber'] = $currentIntervalNumber;
+			$rightNow = FALSE;
+		} else {
+			$_SESSION['BookingHistoryIntervalNumber'] = 0;
+			$rightNow = TRUE;
+		}
+		
+		// Check if there are any periods before/after this
+		if($BillingEnd >= $lastBillingDate){
+			$NextPeriod = FALSE;
+		} else {
+			$NextPeriod = TRUE;
+		}
+		if($BillingStart <= $dateTimeCreated){
+			$PreviousPeriod = FALSE;
+		} else {
+			$PreviousPeriod = TRUE;
+		}
+	
+		list(	$bookingHistory, $displayCompanyCredits, $displayCompanyCreditsRemaining, $displayOverCreditsTimeUsed, 
+				$displayMonthPrice, $displayTotalBookingTimeThisPeriod, $displayOverFeeCostThisMonth, $overCreditsFee,
+				$hourAmountUsedInCalculation, $bookingCostThisMonth, $totalBookingCostThisMonth, $companyMinuteCreditsRemaining,
+				$displayHourAmountUsedInCalculation, $actualTimeOverCreditsInMinutes, $periodHasBeenBilled, $billingDescription) 
+		= calculatePeriodInformation($pdo, $companyID, $BillingStart, $BillingEnd, $rightNow);	
+	}
+	catch (PDOException $e)
+	{
+		$error = 'Error fetching company booking history: ' . $e->getMessage();
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+		$pdo = null;
+		exit();
+	}
+	
+	var_dump($_SESSION); // TO-DO: Remove after testing is over.
+
+	include_once 'bookinghistory.html.php';
+	exit();
+}
+
 // If admin wants to see the booking history of the selected company
 if ((isset($_POST['action']) AND $_POST['action'] == "Booking History") OR 
 	((isset($_POST['history']) AND $_POST['history'] == "Last Period"))){
-		//TO-DO: Do the same here as in "next period" for calculating cost
+		
 	if(isset($_SESSION['BookingHistoryCompanyInfo'])){
 		unset($_SESSION['BookingHistoryIntervalNumber']);
 		$companyID = $_SESSION['BookingHistoryCompanyInfo']['CompanyID'];
@@ -718,7 +810,7 @@ if ((isset($_POST['action']) AND $_POST['action'] == "Booking History") OR
 		$_SESSION['BookingHistoryCompanyInfo'] = $row;
 		
 		$dateTimeCreated = $row['CompanyDateTimeCreated'];
-		$displayDateTimeCreated = convertDatetimeToFormat($dateTimeCreated,'Y-m-d H:i:s',DATE_DEFAULT_FORMAT_TO_DISPLAY);
+		$displayDateTimeCreated = convertDatetimeToFormat($dateTimeCreated,'Y-m-d H:i:s', DATE_DEFAULT_FORMAT_TO_DISPLAY);
 		
 		$_SESSION['BookingHistoryCompanyInfo']['CompanyDateTimeCreated'] = $displayDateTimeCreated;
 		
@@ -1257,6 +1349,7 @@ try
 	$pdo = connect_to_db();
 	// Made it so the user doesn't have to be an employee anymore for the hours to count
 	// Only takes into account time spent and company the booking was booked for.
+	// TO-DO: REMOVE/FIX booking time calculations since they no longer accurately match what's in booking history!
 	$sql = "SELECT 		c.companyID 										AS CompID,
 						c.`name` 											AS CompanyName,
 						c.`dateTimeCreated`									AS DatetimeCreated,

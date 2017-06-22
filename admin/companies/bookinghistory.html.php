@@ -85,7 +85,6 @@
 				Producing a total booking time used this period: <b><?php htmlout($displayTotalBookingTimeThisPeriod); ?></b><br />
 			<?php endif; ?>
 		
-		
 			<?php if($companyMinuteCreditsRemaining < 0) : ?>
 				This is <span style="color:<?php htmlout($color); ?>"><b>MORE</b></span> than the credit given this period: <b><?php htmlout($displayCompanyCredits); ?></b><br />
 				The extra time used this period: <span style="color:<?php htmlout($color); ?>"><b><?php htmlout($displayOverCreditsTimeUsed); ?></b></span><br />
@@ -110,6 +109,7 @@
 					Credits remaining at the end of the period: <b><?php htmlout($displayCompanyCreditsRemaining); ?></b><br />
 				<?php endif; ?>
 			<?php endif; ?>
+			
 			This company has a monthly set subscription cost of: <span style="color:<?php htmlout($color); ?>"><b><?php htmlout($displayMonthPrice); ?></b></span><br />
 			<?php if($rightNow) : ?>
 				Resulting in the total cost so far this period of: <b><?php htmlout($bookingCostThisMonth); ?></b> = <span style="color:red"><b><?php htmlout($totalBookingCostThisMonth); ?></b></span><br />
