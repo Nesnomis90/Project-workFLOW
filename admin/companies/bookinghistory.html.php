@@ -9,6 +9,9 @@
 			#billingDescriptionDisabled {
 				vertical-align: top;
 			}
+			#billingDescription {
+				vertical-align: top;
+			}
 		</style>	
 		<title>Booking History</title>
 	</head>
@@ -63,19 +66,26 @@
 			<?php else : ?>
 				<b>There were no bookings completed this period.</b><br />
 			<?php endif; ?>
-			
-			<?php if($rightNow) : ?>
-				Producing a total booking time used so far this period: <b><?php htmlout($displayTotalBookingTimeThisPeriod); ?></b><br />
-			<?php else : ?>
-				Producing a total booking time used this period: <b><?php htmlout($displayTotalBookingTimeThisPeriod); ?></b><br />
-			<?php endif; ?>
-			
+
 			<?php if(!isset($periodHasBeenBilled) OR $periodHasBeenBilled == 0){
 				$color='red';
 			} elseif($periodHasBeenBilled == 1) {
 				$color='green';
 			} ?>
-				
+			
+			<?php if($rightNow) : ?>
+				<h2>Billing Status: Period still in progress.</h2>
+				Producing a total booking time used so far this period: <b><?php htmlout($displayTotalBookingTimeThisPeriod); ?></b><br />
+			<?php else : ?>
+				<?php if(!isset($periodHasBeenBilled) OR $periodHasBeenBilled == 0) : ?>
+					<h2>Billing Status: This booking has <span style="color:red">NOT BEEN BILLED</span>.</h2>
+				<?php elseif($periodHasBeenBilled == 1) : ?>
+					<h2>Billing Status: This booking has <span style="color:green">BEEN BILLED</span>.</h2><br />
+				<?php endif; ?>
+				Producing a total booking time used this period: <b><?php htmlout($displayTotalBookingTimeThisPeriod); ?></b><br />
+			<?php endif; ?>
+		
+		
 			<?php if($companyMinuteCreditsRemaining < 0) : ?>
 				This is <span style="color:<?php htmlout($color); ?>"><b>MORE</b></span> than the credit given this period: <b><?php htmlout($displayCompanyCredits); ?></b><br />
 				The extra time used this period: <span style="color:<?php htmlout($color); ?>"><b><?php htmlout($displayOverCreditsTimeUsed); ?></b></span><br />
@@ -108,25 +118,20 @@
 			<?php endif; ?>
 			<br />
 			<?php if(!$rightNow AND (!isset($periodHasBeenBilled) OR $periodHasBeenBilled == 0)) : ?>
-				<h2>Billing Status:</h2>
 				<form action="" method="post">
-					This booking has <span style="color:red">NOT BEEN BILLED</span>.
-					<input type="submit" name="history" value="Set As Billed"><br />
-					<textarea name="billingDescription" rows="4" cols="50"
+					<label for="billingDescription">Billing Description: </label>
+					<textarea name="billingDescription" id="billingDescription" rows="4" cols="50"
 					placeholder="Type in any additional information you'd like to see when viewing this period later."></textarea>
 					<input type="hidden" name="nextPeriod" value="<?php htmlout($NextPeriod); ?>">
 					<input type="hidden" name="previousPeriod" value="<?php htmlout($PreviousPeriod); ?>">
 					<input type="hidden" name="billingStart" value="<?php htmlout($BillingStart); ?>">
-					<input type="hidden" name="billingEnd" value="<?php htmlout($BillingEnd); ?>">
+					<input type="hidden" name="billingEnd" value="<?php htmlout($BillingEnd); ?>"><br />
+					<input type="submit" name="history" value="Set As Billed">
 				</form>
 			<?php elseif(!$rightNow AND $periodHasBeenBilled == 1) : ?>
-				<h2>Billing Status:</h2>
-				This booking has <span style="color:green">BEEN BILLED</span>.<br />
 				<label for="billingDescriptionDisabled">Billing Description: </label>
 				<textarea name="billingDescriptionDisabled" id="billingDescriptionDisabled" 
 				rows="4" cols="50" disabled><?php htmlout($billingDescription); ?></textarea>
-			<?php else : ?>
-				<h2>Billing Status: Period still in progress.</h2>
 			<?php endif; ?>
 		<p><a href="..">Return to CMS home</a></p>
 	<?php include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/logout.inc.html.php'; ?>
