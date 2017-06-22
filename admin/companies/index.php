@@ -7,6 +7,8 @@ include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/magicquotes.inc.php';
 
 unsetSessionsFromAdminUsers(); // TO-DO: Add sessions from other places too. Remove if it breaks multiple tabs
 
+// TO-DO: Add a booking history summation on unbilled periods!
+
 // CHECK IF USER TRYING TO ACCESS THIS IS IN FACT THE ADMIN!
 if (!isUserAdmin()){
 	exit();
@@ -59,7 +61,8 @@ function calculatePeriodInformation($pdo, $companyID, $BillingStart, $BillingEnd
 							`monthlyPrice`				AS CreditSubscriptionMonthlyPrice,
 							`overCreditMinutePrice`		AS CreditSubscriptionMinutePrice,
 							`overCreditHourPrice`		AS CreditSubscriptionHourPrice,
-							`hasBeenBilled`				AS PeriodHasBeenBilled
+							`hasBeenBilled`				AS PeriodHasBeenBilled,
+							`billingDescription`		AS BillingDescription
 				FROM 		`companycreditshistory`
 				WHERE 		`companyID` = :CompanyID
 				AND 		`startDate` = :startDate
@@ -70,8 +73,10 @@ function calculatePeriodInformation($pdo, $companyID, $BillingStart, $BillingEnd
 		$s->bindValue(':startDate', $BillingStart);
 		$s->bindValue(':endDate', $BillingEnd);
 		$s->execute();
-		$row = $s->fetch(PDO::FETCH_ASSOC);	
-		$periodHasBeenBilled = $row['PeriodHasBeenBilled'];		
+		$row = $s->fetch(PDO::FETCH_ASSOC);
+		
+		$periodHasBeenBilled = $row['PeriodHasBeenBilled'];
+		$billingDescription = $row['BillingDescription'];
 	}
 	// Get the credit information for the selected period (if we have it saved in companycreditshistory
 	
@@ -133,9 +138,6 @@ function calculatePeriodInformation($pdo, $companyID, $BillingStart, $BillingEnd
 	$s->bindValue(':endDate', $BillingEnd);
 	$s->execute();
 	$result = $s->fetchAll(PDO::FETCH_ASSOC);
-		
-	//Close the connection
-	$pdo = null;	
 	
 	$totalBookingTimeThisPeriod = 0;
 	foreach($result as $row){
@@ -149,7 +151,7 @@ function calculatePeriodInformation($pdo, $companyID, $BillingStart, $BillingEnd
 		// Calculate time used
 		$bookingTimeUsed =  convertTwoDateTimesToTimeDifferenceInMinutes($row['BookingStartedDatetime'], $row['BookingCompletedDatetime']);
 		$displayBookingTimeUsed = convertMinutesToHoursAndMinutes($bookingTimeUsed);
-		
+	
 		// Check if the meeting was long enough to even be counted
 		if($bookingTimeUsed < BOOKING_DURATION_IN_MINUTES_USED_BEFORE_INCLUDING_IN_PRICE_CALCULATIONS){
 			$bookingTimeUsed = 0;
@@ -198,10 +200,12 @@ function calculatePeriodInformation($pdo, $companyID, $BillingStart, $BillingEnd
 				// The subscription has no valid overtime price set, should not occur
 				$bookingCostThisMonth = convertToCurrency($monthPrice) . " + " . 
 										$actualTimeOverCreditsInMinutes . "m * cost (not set)";
+				$totalBookingCostThisMonth = "N/A";
 			} elseif($hourPrice != 0 AND $minPrice != 0){
 				// The subscription has two valid overtime price set, should not occur
 				$bookingCostThisMonth = convertToCurrency($monthPrice) . " + " . 
 										$actualTimeOverCreditsInMinutes . "m * cost (not set)";
+				$totalBookingCostThisMonth = "N/A";
 			} elseif($hourPrice == 0 AND $minPrice != 0){
 				// The subscription charges by the minute, if over credits
 				$overFeeCostThisMonth = $minPrice * $actualTimeOverCreditsInMinutes;
@@ -280,11 +284,14 @@ function calculatePeriodInformation($pdo, $companyID, $BillingStart, $BillingEnd
 	if(!isset($periodHasBeenBilled)){
 		$periodHasBeenBilled = 0;
 	}
+	if(!isset($billingDescription) OR $billingDescription == NULL){
+		$billingDescription = "";
+	}
 	
 	return array(	$bookingHistory, $displayCompanyCredits, $displayCompanyCreditsRemaining, $displayOverCreditsTimeUsed, 
 					$displayMonthPrice, $displayTotalBookingTimeThisPeriod, $displayOverFeeCostThisMonth, $overCreditsFee,
 					$hourAmountUsedInCalculation, $bookingCostThisMonth, $totalBookingCostThisMonth, $companyMinuteCreditsRemaining,
-					$displayHourAmountUsedInCalculation, $actualTimeOverCreditsInMinutes, $periodHasBeenBilled);
+					$displayHourAmountUsedInCalculation, $actualTimeOverCreditsInMinutes, $periodHasBeenBilled, $billingDescription);
 }
 
 // Function to check if user inputs for companies are correct
@@ -406,6 +413,106 @@ function validateUserInputs(){
 return array($invalidInput, $validatedCompanyName, $validatedCompanyDateToRemove);
 }
 
+// If admin wants to set a period as billed
+if (isset($_POST['history']) AND $_POST['history'] == "Set As Billed"){
+	
+	$companyID = $_SESSION['BookingHistoryCompanyInfo']['CompanyID'];
+	$CompanyName = $_SESSION['BookingHistoryCompanyInfo']['CompanyName'];
+	
+	// Remember information
+	$NextPeriod = $_POST['nextPeriod'];
+	$PreviousPeriod = $_POST['previousPeriod'];
+	$BillingStart = $_POST['billingStart'];
+	$BillingEnd = $_POST['billingEnd'];
+
+	if(isset($_POST['billingDescription'])){
+		$billingDescriptionAdminAddition = trimExcessWhitespaceButLeaveLinefeed($_POST['billingDescription']);
+	}
+	
+	if(!isset($billingDescriptionAdminAddition) OR $billingDescriptionAdminAddition == ""){
+		$billingDescriptionAdminAddition = "No additional information submitted";
+	}
+	
+	// Get booking history for the selected company
+	try
+	{
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+		$pdo = connect_to_db();	
+		
+		// Format billing dates
+		$displayBillingStart = convertDatetimeToFormat($BillingStart , 'Y-m-d', DATE_DEFAULT_FORMAT_TO_DISPLAY);
+		$displayBillingEnd = convertDatetimeToFormat($BillingEnd , 'Y-m-d', DATE_DEFAULT_FORMAT_TO_DISPLAY);
+		$BillingPeriod = $displayBillingStart . " To " . $displayBillingEnd . ".";	
+		
+		// rightNow decides if we use the companycreditshistory or the credits/companycredits information
+		if($NextPeriod){
+			$rightNow = FALSE;
+		} else {
+			$rightNow = TRUE;
+		}
+
+		list(	$bookingHistory, $displayCompanyCredits, $displayCompanyCreditsRemaining, $displayOverCreditsTimeUsed, 
+				$displayMonthPrice, $displayTotalBookingTimeThisPeriod, $displayOverFeeCostThisMonth, $overCreditsFee,
+				$hourAmountUsedInCalculation, $bookingCostThisMonth, $totalBookingCostThisMonth, $companyMinuteCreditsRemaining,
+				$displayHourAmountUsedInCalculation, $actualTimeOverCreditsInMinutes, $periodHasBeenBilled, $billingDescription) 
+		= calculatePeriodInformation($pdo, $companyID, $BillingStart, $BillingEnd, $rightNow);
+		
+		// Update period as billed relevant information and admin inputs
+		
+			// Create the description to save for this period
+		if($hourAmountUsedInCalculation!=""){
+			$timeUsedForCalculatingPrice = $displayHourAmountUsedInCalculation;
+		} else {
+			$timeUsedForCalculatingPrice = $actualTimeOverCreditsInMinutes . "m";
+		}
+		
+		$dateTimeNow = getDatetimeNow();
+		$displayDateTimeNow = convertDatetimeToFormat($dateTimeNow , 'Y-m-d H:i:s', DATE_DEFAULT_FORMAT_TO_DISPLAY);
+		$billingDescriptionInformation = 	"This period was 'Set As Billed' on " . $displayDateTimeNow .
+											" by the user " . $_SESSION['LoggedInUserName'] .
+											". At that time the company had produced a total booking time of: " . $displayTotalBookingTimeThisPeriod .
+											", with a credit given of: " . $displayCompanyCredits . " resulting in excess use of: " . $displayOverCreditsTimeUsed . 
+											" (billed as " . $timeUsedForCalculatingPrice . "). The montly fee was set as " . $displayMonthPrice . 
+											". Resulting in a total billing cost that period of " . $bookingCostThisMonth . " = " . $totalBookingCostThisMonth . 
+											". Additional information submitted by Admin: " . $billingDescriptionAdminAddition;
+		if(substr($billingDescriptionInformation,-1) != "."){
+			$billingDescriptionInformation . ".";
+		}
+		
+		$sql = "UPDATE 	`companycreditshistory`
+				SET		`hasBeenBilled` = 1,
+						`billingDescription` = :billingDescription
+				WHERE   `CompanyID` = :CompanyID
+				AND	    `startDate` = :startDate
+				AND		`endDate` = :endDate";
+		$s = $pdo->prepare($sql);
+		$s->bindValue(':CompanyID', $companyID);
+		$s->bindValue(':startDate', $BillingStart);
+		$s->bindValue(':endDate', $BillingEnd);
+		$s->bindValue(':billingDescription', $billingDescriptionInformation);
+		$s->execute();
+			
+		//Close the connection
+		$pdo = null;			
+	}
+	catch (PDOException $e)
+	{
+		$error = 'Error setting period as Billed: ' . $e->getMessage();
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+		$pdo = null;
+		exit();
+	}
+	// We've clearly billed it now, but the retrieved info hasn't seen that yet, so we update it.
+	$periodHasBeenBilled = 1;
+	$billingDescription = $billingDescriptionInformation;
+	$displayDateTimeCreated = $_SESSION['BookingHistoryCompanyInfo']['CompanyDateTimeCreated'];
+	
+	var_dump($_SESSION); // TO-DO: Remove after testing is over.
+	
+	include_once 'bookinghistory.html.php';
+	exit();	
+}
+
 // If admin wants to see the booking history of the period after the currently shown one
 if (isset($_POST['history']) AND $_POST['history'] == "Next Period"){
 	
@@ -467,8 +574,10 @@ if (isset($_POST['history']) AND $_POST['history'] == "Next Period"){
 		list(	$bookingHistory, $displayCompanyCredits, $displayCompanyCreditsRemaining, $displayOverCreditsTimeUsed, 
 				$displayMonthPrice, $displayTotalBookingTimeThisPeriod, $displayOverFeeCostThisMonth, $overCreditsFee,
 				$hourAmountUsedInCalculation, $bookingCostThisMonth, $totalBookingCostThisMonth, $companyMinuteCreditsRemaining,
-				$displayHourAmountUsedInCalculation, $actualTimeOverCreditsInMinutes, $periodHasBeenBilled) 
+				$displayHourAmountUsedInCalculation, $actualTimeOverCreditsInMinutes, $periodHasBeenBilled, $billingDescription) 
 		= calculatePeriodInformation($pdo, $companyID, $BillingStart, $BillingEnd, $rightNow);
+		
+		$pdo = NULL;
 	}
 	catch (PDOException $e)
 	{
@@ -547,8 +656,10 @@ if (	(isset($_POST['history']) AND $_POST['history'] == "Previous Period") OR
 		list(	$bookingHistory, $displayCompanyCredits, $displayCompanyCreditsRemaining, $displayOverCreditsTimeUsed, 
 				$displayMonthPrice, $displayTotalBookingTimeThisPeriod, $displayOverFeeCostThisMonth, $overCreditsFee,
 				$hourAmountUsedInCalculation, $bookingCostThisMonth, $totalBookingCostThisMonth, $companyMinuteCreditsRemaining,
-				$displayHourAmountUsedInCalculation, $actualTimeOverCreditsInMinutes, $periodHasBeenBilled) 
+				$displayHourAmountUsedInCalculation, $actualTimeOverCreditsInMinutes, $periodHasBeenBilled, $billingDescription) 
 		= calculatePeriodInformation($pdo, $companyID, $BillingStart, $BillingEnd, $rightNow);
+		
+		$pdo = NULL;
 	}
 	catch (PDOException $e)
 	{
@@ -565,10 +676,113 @@ if (	(isset($_POST['history']) AND $_POST['history'] == "Previous Period") OR
 	exit();	
 }
 
+// Redirect to the proper period and company when given a link
+if (	(isset($_GET['companyID']) AND isset($_GET['BillingStart']) AND isset($_GET['BillingEnd'])) OR
+		isset($_SESSION['refreshBookingHistoryFromLink'])
+	){
+		
+	// Save GET parameters then load a clean URL
+		// Link example IN: http://localhost/admin/companies/?companyID=2&BillingStart=2017-05-15&BillingEnd=2017-06-15
+		// Link out: http://localhost/admin/companies/
+	if(isset($_SESSION['refreshBookingHistoryFromLink'])){
+		list($companyID, $BillingStart, $BillingEnd) = $_SESSION['refreshBookingHistoryFromLink'];		
+		unset($_SESSION['refreshBookingHistoryFromLink']);
+	} else {
+		$companyID = $_GET['companyID'];
+		$BillingStart = $_GET['BillingStart'];
+		$BillingEnd =  $_GET['BillingEnd'];
+		$_SESSION['refreshBookingHistoryFromLink'] = array($companyID, $BillingStart, $BillingEnd);
+		header("Location: .");
+		exit();	
+	}
+
+	// Get booking history for the selected company
+	try
+	{
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+		$pdo = connect_to_db();
+
+		// Get relevant company information
+		$sql = "SELECT 	`companyID`			AS CompanyID, 
+						`name`				AS CompanyName,
+						`dateTimeCreated`	AS CompanyDateTimeCreated,
+						`prevStartDate`		AS CompanyBillingDatePreviousStart,
+						`startDate`			AS CompanyBillingDateStart,
+						`endDate`			AS CompanyBillingDateEnd
+				FROM 	`company`
+				WHERE 	`companyID` = :CompanyID
+				LIMIT 	1";
+		$s = $pdo->prepare($sql);
+		$s->bindValue(':CompanyID', $companyID);
+		$s->execute();
+		$row = $s->fetch(PDO::FETCH_ASSOC);
+		$_SESSION['BookingHistoryCompanyInfo'] = $row;
+		
+		$dateTimeCreated = $row['CompanyDateTimeCreated'];
+		$displayDateTimeCreated = convertDatetimeToFormat($dateTimeCreated,'Y-m-d H:i:s', DATE_DEFAULT_FORMAT_TO_DISPLAY);
+		$lastBillingDate = $row['CompanyBillingDateEnd'];
+			
+		$_SESSION['BookingHistoryCompanyInfo']['CompanyDateTimeCreated'] = $displayDateTimeCreated;
+		
+		$CompanyName = $row['CompanyName'];
+	
+		// Format billing dates
+		$displayBillingStart = convertDatetimeToFormat($BillingStart , 'Y-m-d', DATE_DEFAULT_FORMAT_TO_DISPLAY);
+		$displayBillingEnd = convertDatetimeToFormat($BillingEnd , 'Y-m-d', DATE_DEFAULT_FORMAT_TO_DISPLAY);
+		$BillingPeriod = $displayBillingStart . " To " . $displayBillingEnd . ".";			
+		
+		// Get first period as intervalNumber
+		$firstPeriodIntervalNumber = convertTwoDateTimesToTimeDifferenceInMonths($dateTimeCreated,$lastBillingDate);
+		$_SESSION['BookingHistoryFirstPeriodIntervalNumber'] = $firstPeriodIntervalNumber;
+		
+		// Get current period as intervalNumber
+		if($BillingEnd != $lastBillingDate){
+			$currentIntervalNumber = convertTwoDateTimesToTimeDifferenceInMonths($BillingEnd,$lastBillingDate);
+			$_SESSION['BookingHistoryIntervalNumber'] = $currentIntervalNumber;
+			$rightNow = FALSE;
+		} else {
+			$_SESSION['BookingHistoryIntervalNumber'] = 0;
+			$rightNow = TRUE;
+		}
+		
+		// Check if there are any periods before/after this
+		if($BillingEnd >= $lastBillingDate){
+			$NextPeriod = FALSE;
+		} else {
+			$NextPeriod = TRUE;
+		}
+		if($BillingStart <= $dateTimeCreated){
+			$PreviousPeriod = FALSE;
+		} else {
+			$PreviousPeriod = TRUE;
+		}
+	
+		list(	$bookingHistory, $displayCompanyCredits, $displayCompanyCreditsRemaining, $displayOverCreditsTimeUsed, 
+				$displayMonthPrice, $displayTotalBookingTimeThisPeriod, $displayOverFeeCostThisMonth, $overCreditsFee,
+				$hourAmountUsedInCalculation, $bookingCostThisMonth, $totalBookingCostThisMonth, $companyMinuteCreditsRemaining,
+				$displayHourAmountUsedInCalculation, $actualTimeOverCreditsInMinutes, $periodHasBeenBilled, $billingDescription) 
+		= calculatePeriodInformation($pdo, $companyID, $BillingStart, $BillingEnd, $rightNow);
+		
+		$pdo = NULL;
+	}
+	catch (PDOException $e)
+	{
+		$error = 'Error fetching company booking history: ' . $e->getMessage();
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+		$pdo = null;
+		exit();
+	}
+	
+	var_dump($_SESSION); // TO-DO: Remove after testing is over.
+
+	include_once 'bookinghistory.html.php';
+	exit();
+}
+
 // If admin wants to see the booking history of the selected company
 if ((isset($_POST['action']) AND $_POST['action'] == "Booking History") OR 
 	((isset($_POST['history']) AND $_POST['history'] == "Last Period"))){
-		//TO-DO: Do the same here as in "next period" for calculating cost
+		
 	if(isset($_SESSION['BookingHistoryCompanyInfo'])){
 		unset($_SESSION['BookingHistoryIntervalNumber']);
 		$companyID = $_SESSION['BookingHistoryCompanyInfo']['CompanyID'];
@@ -599,7 +813,7 @@ if ((isset($_POST['action']) AND $_POST['action'] == "Booking History") OR
 		$_SESSION['BookingHistoryCompanyInfo'] = $row;
 		
 		$dateTimeCreated = $row['CompanyDateTimeCreated'];
-		$displayDateTimeCreated = convertDatetimeToFormat($dateTimeCreated,'Y-m-d H:i:s',DATE_DEFAULT_FORMAT_TO_DISPLAY);
+		$displayDateTimeCreated = convertDatetimeToFormat($dateTimeCreated,'Y-m-d H:i:s', DATE_DEFAULT_FORMAT_TO_DISPLAY);
 		
 		$_SESSION['BookingHistoryCompanyInfo']['CompanyDateTimeCreated'] = $displayDateTimeCreated;
 		
@@ -628,8 +842,10 @@ if ((isset($_POST['action']) AND $_POST['action'] == "Booking History") OR
 		list(	$bookingHistory, $displayCompanyCredits, $displayCompanyCreditsRemaining, $displayOverCreditsTimeUsed, 
 				$displayMonthPrice, $displayTotalBookingTimeThisPeriod, $displayOverFeeCostThisMonth, $overCreditsFee,
 				$hourAmountUsedInCalculation, $bookingCostThisMonth, $totalBookingCostThisMonth, $companyMinuteCreditsRemaining,
-				$displayHourAmountUsedInCalculation, $actualTimeOverCreditsInMinutes, $periodHasBeenBilled) 
-		= calculatePeriodInformation($pdo, $companyID, $BillingStart, $BillingEnd, $rightNow);	
+				$displayHourAmountUsedInCalculation, $actualTimeOverCreditsInMinutes, $periodHasBeenBilled, $billingDescription) 
+		= calculatePeriodInformation($pdo, $companyID, $BillingStart, $BillingEnd, $rightNow);
+		
+		$pdo = NULL;
 	}
 	catch (PDOException $e)
 	{
@@ -1138,6 +1354,7 @@ try
 	$pdo = connect_to_db();
 	// Made it so the user doesn't have to be an employee anymore for the hours to count
 	// Only takes into account time spent and company the booking was booked for.
+	// TO-DO: REMOVE/FIX booking time calculations since they no longer accurately match what's in booking history!
 	$sql = "SELECT 		c.companyID 										AS CompID,
 						c.`name` 											AS CompanyName,
 						c.`dateTimeCreated`									AS DatetimeCreated,
