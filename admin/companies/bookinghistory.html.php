@@ -102,14 +102,15 @@
 			<?php endif; ?>
 			<br /><h2>Billing Status:</h2>
 			<?php if(!isset($periodHasBeenBilled) OR $periodHasBeenBilled == 0) : ?>
-				This booking has <span style="color:red">NOT BEEN BILLED</span>.
 				<form action="" method="post">
-					<textarea name="billingDescription" rows="4" cols="50"></textarea>
+					This booking has <span style="color:red">NOT BEEN BILLED</span>.
+					<input type="submit" name="action" value="Set As Billed"><br />
+					<textarea name="billingDescription" rows="4" cols="50"
+					placeholder="Type in any additional information you'd like to see when viewing this period later."></textarea>
 					<input type="hidden" name="nextPeriod" value="<?php htmlout($NextPeriod); ?>">
 					<input type="hidden" name="previousPeriod" value="<?php htmlout($PreviousPeriod); ?>">
 					<input type="hidden" name="billingStart" value="<?php htmlout($BillingStart); ?>">
 					<input type="hidden" name="billingEnd" value="<?php htmlout($BillingEnd); ?>">
-					<input type="submit" name="action" value="Set As Billed">
 				</form>
 			<?php elseif($periodHasBeenBilled == 1) : ?>
 				This booking has <span style="color:green">BEEN BILLED</span>.<br />

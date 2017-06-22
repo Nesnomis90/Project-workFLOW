@@ -53,7 +53,7 @@ function convertTwoDateTimesToTimeDifferenceInMinutes($startDateTime,$endDateTim
 	$timeDifferenceInHours = $timeDifference->h;
 	$timeDifferenceInDays = $timeDifference->d;
 	
-	$timeDifference = $timeDifferenceInDays*3600 + $timeDifferenceInHours*60 + $timeDifferenceInMinutes;
+	$timeDifference = $timeDifferenceInDays*1440 + $timeDifferenceInHours*60 + $timeDifferenceInMinutes;
 
 	return $timeDifference;
 }

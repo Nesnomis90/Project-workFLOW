@@ -155,12 +155,7 @@ function calculatePeriodInformation($pdo, $companyID, $BillingStart, $BillingEnd
 		// Calculate time used
 		$bookingTimeUsed =  convertTwoDateTimesToTimeDifferenceInMinutes($row['BookingStartedDatetime'], $row['BookingCompletedDatetime']);
 		$displayBookingTimeUsed = convertMinutesToHoursAndMinutes($bookingTimeUsed);
-		echo "<br />";
-		var_dump($bookingTimeUsed);
-		echo "<br />";
-		var_dump($displayBookingTimeUsed);
-		echo "<br />";		
-		
+	
 		// Check if the meeting was long enough to even be counted
 		if($bookingTimeUsed < BOOKING_DURATION_IN_MINUTES_USED_BEFORE_INCLUDING_IN_PRICE_CALCULATIONS){
 			$bookingTimeUsed = 0;
@@ -209,10 +204,12 @@ function calculatePeriodInformation($pdo, $companyID, $BillingStart, $BillingEnd
 				// The subscription has no valid overtime price set, should not occur
 				$bookingCostThisMonth = convertToCurrency($monthPrice) . " + " . 
 										$actualTimeOverCreditsInMinutes . "m * cost (not set)";
+				$totalBookingCostThisMonth = "N/A";
 			} elseif($hourPrice != 0 AND $minPrice != 0){
 				// The subscription has two valid overtime price set, should not occur
 				$bookingCostThisMonth = convertToCurrency($monthPrice) . " + " . 
 										$actualTimeOverCreditsInMinutes . "m * cost (not set)";
+				$totalBookingCostThisMonth = "N/A";
 			} elseif($hourPrice == 0 AND $minPrice != 0){
 				// The subscription charges by the minute, if over credits
 				$overFeeCostThisMonth = $minPrice * $actualTimeOverCreditsInMinutes;
