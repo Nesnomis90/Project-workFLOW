@@ -2396,25 +2396,8 @@ foreach ($result as $row)
 	$meetinginfo = $roomName . ' for the timeslot: ' . $displayValidatedStartDate . 
 					' to ' . $displayValidatedEndDate;
 
-
-	// Calculate meeting duration on completion
-	$timeDifferenceStartDate = new DateTime($startDateTime);
-	$timeDifferenceCompletionDate = new DateTime($completedDateTime);
-	$timeDifference = $timeDifferenceStartDate->diff($timeDifferenceCompletionDate);
-	$timeDifferenceInMinutes = $timeDifference->i;
-	$timeDifferenceInHours = $timeDifference->h;
-	$timeDifferenceInDays = $timeDifference->d;
-	
-	if($timeDifferenceInDays > 0){
-		$timeDifferenceInHours += $timeDifferenceInDays*24;
-	}
-	if($timeDifferenceInHours > 0){
-		$displayCompletedMeetingDuration = $timeDifferenceInHours . 'h' . $timeDifferenceInMinutes . 'm';
-	} else {
-		$displayCompletedMeetingDuration = $timeDifferenceInMinutes . 'm';
-	}
-	
-	// TO-DO: Replace code above with this and test if it works $displayCompletedMeetingDuration = convertDateTimesToTimeDifference($startDateTime, $completedDateTime);
+	$completedMeetingDurationInMinutes = convertTwoDateTimesToTimeDifferenceInMinutes($startDateTime, $completedDateTime);
+	$displayCompletedMeetingDuration = convertMinutesToHoursAndMinutes($completedMeetingDurationInMinutes);
 					
 	if($status == "Active Today"){				
 		$bookingsActiveToday[] = array('id' => $row['bookingID'],

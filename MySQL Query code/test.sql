@@ -55,14 +55,36 @@ SET			`CompanyID` = :companyID,
             `overCreditMinutePrice` = :overCreditMinutePrice,
             `overCreditHourPrice` = :overCreditHourPrice;
             
-SELECT 		c.`CompanyID`,
+SELECT 		c.`CompanyID`			AS TheCompanyID,
 			c.`startDate`,
 			c.`endDate`,
             cr.`minuteAmount`,
             cr.`monthlyPrice`,
             cr.`overCreditMinutePrice`,
             cr.`overCreditHourPrice`,
-            cc.`altMinuteAmount`
+            cc.`altMinuteAmount`,
+            (
+				SELECT (
+						BIG_SEC_TO_TIME(
+										SUM(
+											DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
+											)*86400 
+										+ 
+										SUM(
+											TIME_TO_SEC(b.`actualEndDateTime`) 
+											- 
+											TIME_TO_SEC(b.`startDateTime`)
+											) 
+										) 
+						) 
+				FROM 		`booking` b  
+				INNER JOIN 	`company` c 
+				ON 			b.`CompanyID` = c.`CompanyID` 
+				WHERE 		b.`CompanyID` = TheCompanyID
+				AND 		b.`actualEndDateTime`
+				BETWEEN		c.`startDate`
+				AND			c.`endDate`
+            )	AS BookingTimeThisPeriod
 FROM 		`company` c
 INNER JOIN 	`companycredits` cc
 ON 			cc.`CompanyID` = c.`CompanyID`
