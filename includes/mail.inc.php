@@ -14,13 +14,26 @@
 
 
 // Function that prepares an email to be sent
+// Takes in one or multiple emails.
 // Returns TRUE if prepared, FALSE if not prepared.
 // TO-DO: Untested with proper php.ini settings
 function sendEmail($toEmail, $subject, $message){
 	
-	// Check if email is valid email
-	if(validateUserEmail($toEmail)){
-		// valid email
+	// Check if the email(s) is(are) a valid email	
+	if(is_Array($toEmail)){
+		for($i=0; $i<sizeOf($toEmail); $i++){
+			if(validateUserEmail($toEmail[$i])){
+				$validEmail[] = $toEmail[$i];
+			}
+		}
+	} else {
+		if(validateUserEmail($toEmail)){
+			$validEmail[] = $toEmail;
+		}
+	}
+	
+	// Prepare email to be sent with valid email(s)
+	if(isset($validEmail) AND sizeOf($validEmail) > 0){
 			// If subject is left blank, set a default subject
 		if($subject == ""){
 			$subject = "Message from Meeting Flow booking service.";
@@ -30,19 +43,25 @@ function sendEmail($toEmail, $subject, $message){
 			// Use wordwrap() if lines are longer than 70 characters
 			$message = wordwrap($message,70);
 			
-			// Set a default FROM: header
-			$from = "FROM: Meeting Flow booking service <ouremail@ourhost.com>"; // TO-DO: Insert correct email
-			//$from = "FROM: ouremail@ourhost.com"; //TO-DO: use this if above doesn't work
-			
+			$ourEmail = 'ouremail@ourhost.com'; // To-DO: Change this to a valid created email account in cPanel
+			$toEmail = implode(', ', $validEmail);
+			// Set header information
+				//$from = 'From: "Meeting Flow booking service" <ouremail@ourhost.com>' . "\r\n";
+			$headers = 	'From: "Meeting Flow booking service" <' . $ourEmail . '>' . "\r\n" .
+						'BCC: ' . $toEmail . "\r\n"; // TO-DO: Insert correct email
+				//"From: " . $ourEmail; //TO-DO: use this (with $from instead of $header) if above doesn't work
+
 			// Prepare the email to be sent
-			return mail($toEmail, $subject, $message, $from);
-			
+			//return mail($toEmail, $subject, $message, $from); This version sends email to the users without hiding emails
+			return mail($ourEmail, $subject, $message, $headers); 	// This version sends email to ourselves and sends blind carbon copies (BCC) to the receivers
+																	// Effectively hiding receiver emails from showing up to other receivers.
+																	// TO-DO: if we don't want to send email to ourselves, set field to NULL	
 		} else {
 			// No message submitted, we can't send the email
 			return FALSE;
 		}
 	} else {
-		// Invalid email
+		// Invalid email(s)
 		return FALSE;
 	}
 }
@@ -59,6 +78,11 @@ function validateUserEmail($email){
 
 	Email verification links should only satisfy the requirement of verify email address ownership and should not provide the user with an authenticated session (e.g. the user must still authenticate as normal to access the application).
 	Email verification codes must expire after the first use or expire after 8 hours if not used.*/
+	
+	// To avoid email injection the emails can't have \n\r in them.
+	if(preg_match('/\r|\n/',$email)){ // TO-DO: Double check/test if this is correct
+		return FALSE;
+	}
 	
 	// Check for the presence of at least one @ symbol
 	if(strpos($email, '@') !== FALSE) {

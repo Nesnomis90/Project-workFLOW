@@ -8,6 +8,13 @@ function convertTimeToHoursAndMinutes($time){
 	return $timeHour . 'h' . $timeMinute . 'm';	
 }
 
+// Takes time xx:yy (x hours and y minutes) and returns minutes
+function convertTimeToMinutes($time){
+	$timeHour = substr($time,0,strpos($time,":"));
+	$timeMinute = substr($time,strpos($time,":")+1, 2);
+	return $timeHour*60 + $timeMinute;	
+}
+
 // Integer minute input to string output
 function convertMinutesToHoursAndMinutes($GivenInMinutes){
 	if($GivenInMinutes > 59){
@@ -15,7 +22,8 @@ function convertMinutesToHoursAndMinutes($GivenInMinutes){
 		$GivenInMinutes -= $GivenInHours*60;
 		$GivenInHoursAndMinutes = $GivenInHours . 'h' . $GivenInMinutes . 'm';
 	} elseif($GivenInMinutes > 0) {
-		$GivenInHoursAndMinutes = '0h' . $GivenInMinutes . 'm';
+		//$GivenInHoursAndMinutes = '0h' . $GivenInMinutes . 'm';
+		$GivenInHoursAndMinutes = $GivenInMinutes . 'm';
 	} else {
 		$GivenInHoursAndMinutes = 'None';
 	}	
@@ -41,7 +49,6 @@ function convertToCurrency($input){
 			$output = $input;
 		}			
 	}
-
 	return $output;
 }
 // Two datetimes to time difference in minutes
@@ -49,9 +56,14 @@ function convertTwoDateTimesToTimeDifferenceInMinutes($startDateTime,$endDateTim
 	$timeDifferenceStartDate = new DateTime($startDateTime);
 	$timeDifferenceCompletionDate = new DateTime($endDateTime);
 	$timeDifference = $timeDifferenceStartDate->diff($timeDifferenceCompletionDate);
+	$timeDifferenceInSeconds = $timeDifference->s;
 	$timeDifferenceInMinutes = $timeDifference->i;
 	$timeDifferenceInHours = $timeDifference->h;
 	$timeDifferenceInDays = $timeDifference->d;
+	
+	if($timeDifferenceInSeconds > 0){
+		$timeDifferenceInMinutes += 1;
+	}
 	
 	$timeDifference = $timeDifferenceInDays*1440 + $timeDifferenceInHours*60 + $timeDifferenceInMinutes;
 

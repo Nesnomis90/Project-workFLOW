@@ -71,7 +71,7 @@ function setDefaultSubscriptionIfCompanyHasNone(){
 // If there are any then we:
 //		Update the company credits history table with the current values
 //		Update the billing date periods
-// TO-DO: Also check if company went over credits and email admin?
+// 		Check if company went over booking credits and alert admin including links to the exact booking history
 function updateBillingDatesForCompanies(){
 	try
 	{
@@ -92,7 +92,7 @@ function updateBillingDatesForCompanies(){
 		
 		if($rowCount > 0) {
 			// There is information to update. Get needed values
-			$sql = "SELECT 		c.`CompanyID`				AS CompanyID,
+			$sql = "SELECT 		c.`CompanyID`				AS TheCompanyID,
 								c.`startDate`				AS StartDate,
 								c.`endDate`					AS EndDate,
 								cr.`minuteAmount`			AS CreditsGivenInMinutes,
@@ -100,6 +100,28 @@ function updateBillingDatesForCompanies(){
 								cr.`overCreditMinutePrice`	AS MinutePrice,
 								cr.`overCreditHourPrice`	AS HourPrice,
 								cc.`altMinuteAmount`		AS AlternativeAmount
+								(
+									SELECT (
+											BIG_SEC_TO_TIME(
+															SUM(
+																DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
+																)*86400 
+															+ 
+															SUM(
+																TIME_TO_SEC(b.`actualEndDateTime`) 
+																- 
+																TIME_TO_SEC(b.`startDateTime`)
+																) 
+															) 
+											) 
+									FROM 		`booking` b  
+									INNER JOIN 	`company` c 
+									ON 			b.`CompanyID` = c.`CompanyID` 
+									WHERE 		b.`CompanyID` = TheCompanyID
+									AND 		b.`actualEndDateTime`
+									BETWEEN		c.`startDate`
+									AND			c.`endDate`
+								)							AS BookingTimeThisPeriod								
 					FROM 		`company` c
 					INNER JOIN 	`companycredits` cc
 					ON 			cc.`CompanyID` = c.`CompanyID`
@@ -117,12 +139,23 @@ function updateBillingDatesForCompanies(){
 				} else {
 					$creditsGivenInMinutes = $insert['AlternativeAmount'];
 				}
-				$companyID = $insert['CompanyID'];
+				$companyID = $insert['TheCompanyID'];
 				$startDate = $insert['StartDate'];
 				$endDate = $insert['EndDate'];
 				$monthlyPrice = $insert['MonthlyPrice'];
 				$minutePrice = $insert['MinutePrice'];
 				$hourPrice = $insert['HourPrice'];
+				$bookingTimeUsedThisMonth = $insert['BookingTimeThisPeriod'];
+				$bookingTimeUsedThisMonthInMinutes = convertTimeToMinutes($bookingTimeUsedThisMonth);
+				
+				if($bookingTimeUsedThisMonthInMinutes > $creditsGivenInMinutes){
+					// Company went over credit this period
+					$companiesOverCredit[] = array(
+													'CompanyID' => $companyID,
+													'StartDate' => $startDate,
+													'EndDate' 	=> $endDate
+													);
+				}
 				
 				$pdo->exec("INSERT INTO `companycreditshistory`
 							SET			`CompanyID` = " . $companyID . ",
@@ -142,7 +175,67 @@ function updateBillingDatesForCompanies(){
 					AND		CURDATE() >= `endDate`";		
 			$pdo->exec($sql);
 			$success = $pdo->commit();
-			if(!$success){ // If commit failed we have to retry
+			if($success){
+				// Check if any of the companies went over credits and send an email to Admin that they did
+				if(isset($companiesOverCredit) AND sizeOf($companiesOverCredit) > 0){
+					// There were companies that went over credit
+					if(sizeOf($companiesOverCredit) == 1){
+						// One company went over
+						$emailSubject = "A company went over credit!";
+						$companyID = $companiesOverCredit[0]['CompanyID'];
+						$startDate = $companiesOverCredit[0]['StartDate'];
+						$endDate = $companiesOverCredit[0]['EndDate'];					
+
+						//Link example: http://localhost/admin/companies/?companyID=2&BillingStart=2017-05-15&BillingEnd=2017-06-15
+						$link = "http://$_SERVER[HTTP_HOST]/admin/companies/?CompanyID=" . $companyID . 
+								"&BillingStart=" . $startDate . "&BillingEnd=" . $endDate;
+							
+						$emailMessage = 
+						"Click the link below to see the details\n
+						Link: " . $link;		
+					} else {
+						// More than one company went over
+						$emailSubject = "Companies went over credit!";
+
+						$emailMessage = 
+						"Click the links below to see the details\n";
+						
+						foreach($companiesOverCredit AS Url){
+							$companyID = url['CompanyID'];
+							$startDate = url['StartDate'];
+							$endDate = url['EndDate'];
+							
+							$link = "http://$_SERVER[HTTP_HOST]/admin/companies/?CompanyID=" . $companyID . 
+									"&BillingStart=" . $startDate . "&BillingEnd=" . $endDate;
+
+							$emailMessage .= "Link: " . $link . "\n";
+						}
+					}
+					
+					// Get admin(s) emails
+					$sql = "SELECT 		u.`email`		AS Email
+							FROM 		`user` u
+							INNER JOIN 	`accesslevel` a
+							WHERE		a.`AccessID` = u.`AccessID`
+							AND			a.`AccessName` = 'Admin'"
+					$return = $pdo->query($sql);
+					$result = $return->fetchAll(PDO::FETCH_ASSOC);
+					
+					if(isset($result)){
+						foreach($result AS $Email){
+							$email[] = $Email['Email'];
+						}
+					}
+					
+					$mailResult = sendEmail($email, $emailSubject, $emailMessage);
+					
+					if(!$mailResult){
+						// TO-DO: What to do if the mail doesn't want to send?
+						// Store it somewhere and have another cron try to send emails?
+					}						
+				}
+			} else {
+				// If commit failed we have to retry
 				$pdo = null;
 				return FALSE;
 			}			
