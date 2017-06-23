@@ -43,15 +43,19 @@ function sendEmail($toEmail, $subject, $message){
 			// Use wordwrap() if lines are longer than 70 characters
 			$message = wordwrap($message,70);
 			
-			// Set a default FROM: header
-			$from = "FROM: Meeting Flow booking service <ouremail@ourhost.com>"; // TO-DO: Insert correct email
-			//$from = "FROM: ouremail@ourhost.com"; //TO-DO: use this if above doesn't work
-			
+			$ourEmail = 'ouremail@ourhost.com'; // To-DO: Change this
 			$toEmail = implode(', ', $validEmail);
-			
+			// Set header information
+				//$from = 'From: "Meeting Flow booking service" <ouremail@ourhost.com>' . "\r\n";
+			$headers = 	'From: "Meeting Flow booking service" <' . $ourEmail . '>' . "\r\n" .
+						'BCC: ' . $toEmail . "\r\n"; // TO-DO: Insert correct email
+				//"From: " . $ourEmail; //TO-DO: use this (with $from instead of $header) if above doesn't work
+
 			// Prepare the email to be sent
-			return mail($toEmail, $subject, $message, $from);
-			
+			//return mail($toEmail, $subject, $message, $from); This version sends email to the users without hiding emails
+			return mail($ourEmail, $subject, $message, $headers); 	// This version sends email to ourselves and sends blind carbon copies (BCC) to the receivers
+																	// Effectively hiding receiver emails from showing up to other receivers.
+																	// TO-DO: if we don't want to send email to ourselves, set field to NULL	
 		} else {
 			// No message submitted, we can't send the email
 			return FALSE;
