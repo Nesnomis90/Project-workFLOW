@@ -142,7 +142,11 @@ function updateBillingDatesForCompanies(){
 					AND		CURDATE() >= `endDate`";		
 			$pdo->exec($sql);
 			$success = $pdo->commit();
-			if(!$success){ // If commit failed we have to retry
+			if($success){
+				// Check if any of the companies went over credits and send an email to Admin that they did
+				// TO-DO:
+			} else {
+				// If commit failed we have to retry
 				$pdo = null;
 				return FALSE;
 			}			
