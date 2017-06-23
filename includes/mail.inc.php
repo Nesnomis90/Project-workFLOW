@@ -14,13 +14,26 @@
 
 
 // Function that prepares an email to be sent
+// Takes in one or multiple emails.
 // Returns TRUE if prepared, FALSE if not prepared.
 // TO-DO: Untested with proper php.ini settings
 function sendEmail($toEmail, $subject, $message){
 	
-	// Check if email is valid email
-	if(validateUserEmail($toEmail)){
-		// valid email
+	// Check if the email(s) is(are) a valid email	
+	if(is_Array($toEmail)){
+		for($i=0; $i<sizeOf($toEmail); $i++){
+			if(validateUserEmail($toEmail[$i])){
+				$validEmail[] = $toEmail[$i];
+			}
+		}
+	} else {
+		if(validateUserEmail($toEmail)){
+			$validEmail[] = $toEmail;
+		}
+	}
+	
+	// Prepare email to be sent with valid email(s)
+	if(isset($validEmail) AND sizeOf($validEmail) > 0){
 			// If subject is left blank, set a default subject
 		if($subject == ""){
 			$subject = "Message from Meeting Flow booking service.";
@@ -34,6 +47,8 @@ function sendEmail($toEmail, $subject, $message){
 			$from = "FROM: Meeting Flow booking service <ouremail@ourhost.com>"; // TO-DO: Insert correct email
 			//$from = "FROM: ouremail@ourhost.com"; //TO-DO: use this if above doesn't work
 			
+			$toEmail = implode(', ', $validEmail);
+			
 			// Prepare the email to be sent
 			return mail($toEmail, $subject, $message, $from);
 			
@@ -42,7 +57,7 @@ function sendEmail($toEmail, $subject, $message){
 			return FALSE;
 		}
 	} else {
-		// Invalid email
+		// Invalid email(s)
 		return FALSE;
 	}
 }

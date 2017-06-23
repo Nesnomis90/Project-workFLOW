@@ -2,6 +2,12 @@ USE test;
 SET NAMES utf8;
 USE meetingflow;
 
+SELECT 		u.`email`
+FROM 		`user` u
+INNER JOIN 	`accesslevel` a
+WHERE		a.`AccessID` = u.`AccessID`
+AND			a.`AccessName` = 'Admin';
+
 SELECT 		b.`bookingID`,
 			b.`companyID`,
 			m.`name` 										AS BookedRoomName, 
@@ -457,11 +463,6 @@ NOT IN		(
 				SELECT 	`CompanyID`
 				FROM 	`companycredits`
 			);
-
-UPDATE 	`company`
-SET		`startDate` = DATE(`dateTimeCreated`),
-		`endDate` = DATE(`dateTimeCreated`) + INTERVAL 1 MONTH
-WHERE 	`companyID` <> 0;
 
 UPDATE 	`company`
 SET		`prevStartDate` = `startDate`,

@@ -71,7 +71,7 @@ function setDefaultSubscriptionIfCompanyHasNone(){
 // If there are any then we:
 //		Update the company credits history table with the current values
 //		Update the billing date periods
-// TO-DO: Also check if company went over credits and email admin?
+// 		Check if company went over booking credits and alert admin including links to the exact booking history
 function updateBillingDatesForCompanies(){
 	try
 	{
@@ -213,7 +213,19 @@ function updateBillingDatesForCompanies(){
 					}
 					
 					// Get admin(s) emails
-					$email = ; //TO-DO: FIX	
+					$sql = "SELECT 		u.`email`		AS Email
+							FROM 		`user` u
+							INNER JOIN 	`accesslevel` a
+							WHERE		a.`AccessID` = u.`AccessID`
+							AND			a.`AccessName` = 'Admin'"
+					$return = $pdo->query($sql);
+					$result = $return->fetchAll(PDO::FETCH_ASSOC);
+					
+					if(isset($result)){
+						foreach($result AS $Email){
+							$email[] = $Email['Email'];
+						}
+					}
 					
 					$mailResult = sendEmail($email, $emailSubject, $emailMessage);
 					
