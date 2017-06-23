@@ -43,7 +43,7 @@ function sendEmail($toEmail, $subject, $message){
 			// Use wordwrap() if lines are longer than 70 characters
 			$message = wordwrap($message,70);
 			
-			$ourEmail = 'ouremail@ourhost.com'; // To-DO: Change this
+			$ourEmail = 'ouremail@ourhost.com'; // To-DO: Change this to a valid created email account in cPanel
 			$toEmail = implode(', ', $validEmail);
 			// Set header information
 				//$from = 'From: "Meeting Flow booking service" <ouremail@ourhost.com>' . "\r\n";
@@ -78,6 +78,11 @@ function validateUserEmail($email){
 
 	Email verification links should only satisfy the requirement of verify email address ownership and should not provide the user with an authenticated session (e.g. the user must still authenticate as normal to access the application).
 	Email verification codes must expire after the first use or expire after 8 hours if not used.*/
+	
+	// To avoid email injection the emails can't have \n\r in them.
+	if(preg_match('/\r|\n/',$email)){ // TO-DO: Double check/test if this is correct
+		return FALSE;
+	}
 	
 	// Check for the presence of at least one @ symbol
 	if(strpos($email, '@') !== FALSE) {
