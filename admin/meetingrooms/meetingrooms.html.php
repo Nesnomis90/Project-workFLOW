@@ -18,7 +18,10 @@
 				border-bottom: 1px solid #ddd;
 				
 			}
-			
+			#meetingroomstable tr:nth-of-type(even) {background-color: #f2f2f2;}
+			#meetingroomstable tr:nth-of-type(odd) {background-color: white;}			
+			#meetingroomstable tr:hover{background-color:#DBEAE8;}
+												
 			#meetingroomstable th {
 				padding: 12px;
 				text-align: left;
@@ -32,11 +35,7 @@
 				text-align: left;
 				border: 1px solid #ddd;
 			}			
-			
-			#meetingroomstable tr:hover{background-color:#ddd;}
-			
-			#meetingroomstable tr:nth-child(even) {background-color: #f2f2f2;}
-			
+
 			#meetingroomstable caption {
 				padding: 8px;
 				font-size: 300%;

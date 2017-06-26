@@ -25,17 +25,16 @@
 				text-align: left;
 				border-bottom: 1px solid #ddd;
 			}
-			
+			#usertable tr:nth-of-type(even) {background-color: #f2f2f2;}
+			#usertable tr:nth-of-type(odd) {background-color: white;}			
+			#usertable tr:hover{background-color:#DBEAE8;}
+						
 			#usertable td {
 				padding: 8px;
 				text-align: left;
 				border: 1px solid #ddd;
 			}
 
-			#usertable tr:hover{background-color:#ddd;}
-			
-			#usertable tr:nth-child(even) {background-color: #f2f2f2;}
-			
 			#usertable caption {
 				padding: 8px;
 				font-size: 300%;

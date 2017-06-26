@@ -25,17 +25,16 @@
 				text-align: left;
 				border-bottom: 1px solid #ddd;
 			}
-			
+			#roomequipmenttable tr:nth-of-type(even) {background-color: #f2f2f2;}
+			#roomequipmenttable tr:nth-of-type(odd) {background-color: white;}			
+			#roomequipmenttable tr:hover{background-color:#DBEAE8;}
+						
 			#roomequipmenttable td {
 				padding: 8px;
 				text-align: left;
 				border: 1px solid #ddd;
 			}
 
-			#roomequipmenttable tr:hover{background-color:#ddd;}
-			
-			#roomequipmenttable tr:nth-child(even) {background-color: #f2f2f2;}
-			
 			#roomequipmenttable caption {
 				padding: 8px;
 				font-size: 300%;

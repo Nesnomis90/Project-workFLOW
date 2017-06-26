@@ -26,15 +26,15 @@
 				border-bottom: 1px solid #ddd;
 			}
 			
+			#companiestable tr:nth-of-type(even) {background-color: #f2f2f2;}
+			#companiestable tr:nth-of-type(odd) {background-color: white;}			
+			#companiestable tr:hover{background-color:#DBEAE8;}	
+			
 			#companiestable td {
 				padding: 8px;
 				text-align: left;
 				border: 1px solid #ddd;
 			}
-
-			#companiestable tr:nth-child(even) {background-color: #f2f2f2;}
-			
-			#companiestable tr:hover{background-color:#ddd;}
 			
 			#companiestable caption {
 				padding: 8px;

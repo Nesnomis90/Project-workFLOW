@@ -17,7 +17,10 @@
 				text-align: left;
 				border-bottom: 1px solid #ddd;
 			}
-			
+			#logevent tr:nth-of-type(even) {background-color: #f2f2f2;}
+			#logevent tr:nth-of-type(odd) {background-color: white;}			
+			#logevent tr:hover{background-color:#DBEAE8;}
+									
 			#logevent th {
 				padding: 12px;
 				text-align: left;
@@ -30,11 +33,7 @@
 				padding: 8px;
 				text-align: left;
 				border: 1px solid #ddd;
-			}			
-			
-			#logevent tr:hover{background-color:#ddd;}
-			
-			#logevent tr:nth-child(even) {background-color: #f2f2f2;}
+			}
 			
 			#logevent caption {
 				padding: 8px;

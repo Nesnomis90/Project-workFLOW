@@ -1356,10 +1356,8 @@ try
 	$pdo = connect_to_db();
 	// Calculate booking time used for a company
 	// Only takes into account time spent and company the booking was booked for.
-	// TO-DO: REMOVE/FIX booking time calculations since they no longer accurately match what's in booking history!
-	
-	// Booking time is rounded for each booking, instead of summed up and then rounded.
-	// We therefore get the minimum time per booking in our equations
+		// Booking time is rounded for each booking, instead of summed up and then rounded.
+		// We therefore get the minimum time per booking for our equations
 	$minimumSecondsPerBooking = MINIMUM_BOOKING_DURATION_IN_MINUTES_USED_IN_PRICE_CALCULATIONS * 60; // e.g. 15min = 900s
 	$aboveThisManySecondsToCount = BOOKING_DURATION_IN_MINUTES_USED_BEFORE_INCLUDING_IN_PRICE_CALCULATIONS * 60; // E.g. 1min = 60s
 	

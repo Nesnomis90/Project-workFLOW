@@ -18,6 +18,10 @@
 				border-bottom: 1px solid #ddd;
 			}
 			
+			#bookingstable tr:nth-of-type(even) {background-color: #f2f2f2;}
+			#bookingstable tr:nth-of-type(odd) {background-color: white;}			
+			#bookingstable tr:hover{background-color:#DBEAE8;}
+			
 			#bookingstable th {
 				padding: 12px;
 				text-align: left;
@@ -31,10 +35,6 @@
 				text-align: left;
 				border: 1px solid #ddd;
 			}			
-			
-			#bookingstable tr:hover{background-color:#ddd;}
-			
-			#bookingstable tr:nth-child(even) {background-color: #f2f2f2;}
 			
 			#bookingstable caption {
 				padding: 8px;
@@ -105,8 +105,8 @@
 				<th>Cancel</th>
 				<th>Delete</th>
 			</tr>
-		<?php if(isset($bookingsActiveToday)) :?>						
-			<?php foreach ($bookingsActiveToday AS $booking): ?>
+		<?php if(isset($bookingsActiveToday)) : ?>						
+			<?php foreach ($bookingsActiveToday AS $booking) : ?>
 				<form action="" method="post">				
 					<tr>
 						<td><?php htmlout($booking['BookingStatus']);?></td>
@@ -148,7 +148,7 @@
 			<caption>Completed Bookings Today</caption>
 			<tr>
 				<th colspan="8">Booking information</th>
-				<th colspan="2">Completion Info</th>
+				<th colspan="3">Completion Info</th>
 				<th colspan="4">Connected user information</th>
 				<th colspan="3">Alter Booking</th>
 			</tr>				
@@ -161,8 +161,9 @@
 				<th>For Company</th>
 				<th>Description</th>
 				<th>Created At</th>
-				<th>Finished</th>
-				<th>Duration</th>
+				<th>Finished At</th>
+				<th>Actual Duration</th>
+				<th>Price Duration</th>
 				<th>First Name</th>
 				<th>Last Name</th>
 				<th>Email</th>
@@ -171,8 +172,8 @@
 				<th>Cancel</th>
 				<th>Delete</th>
 			</tr>
-		<?php if(isset($bookingsCompletedToday)) :?>						
-			<?php foreach ($bookingsCompletedToday AS $booking): ?>
+		<?php if(isset($bookingsCompletedToday)) : ?>						
+			<?php foreach ($bookingsCompletedToday AS $booking) : ?>
 				<form action="" method="post">				
 					<tr>
 						<td><?php htmlout($booking['BookingStatus']);?></td>
@@ -185,6 +186,7 @@
 						<td><?php htmlout($booking['BookingWasCreatedOn']); ?></td>
 						<td><?php htmlout($booking['BookingWasCompletedOn']); ?></td>
 						<td><?php htmlout($booking['CompletedMeetingDuration']); ?></td>
+						<td><?php htmlout($booking['CompletedMeetingDurationForPrice']); ?></td>
 						<td><?php htmlout($booking['firstName']); ?></td>
 						<td><?php htmlout($booking['lastName']); ?></td>
 						<td><?php htmlout($booking['email']); ?></td>
@@ -237,7 +239,7 @@
 				<th>Delete</th>
 			</tr>	
 		<?php if(isset($bookingsFuture)) : ?>						
-			<?php foreach ($bookingsFuture AS $booking): ?>
+			<?php foreach ($bookingsFuture AS $booking) : ?>
 				<form action="" method="post">				
 					<tr>
 						<td><?php htmlout($booking['BookingStatus']);?></td>
@@ -279,7 +281,7 @@
 			<caption>Completed Bookings</caption>
 			<tr>
 				<th colspan="8">Booking information</th>
-				<th colspan="2">Completion Dates</th>
+				<th colspan="3">Completion Info</th>
 				<th colspan="4">Connected user information</th>
 				<th colspan="3">Alter Booking</th>
 			</tr>				
@@ -292,8 +294,9 @@
 				<th>For Company</th>
 				<th>Description</th>
 				<th>Created At</th>
-				<th>Finished</th>
-				<th>Duration</th>
+				<th>Finished At</th>
+				<th>Actual Duration</th>
+				<th>Price Duration</th>
 				<th>First Name</th>
 				<th>Last Name</th>
 				<th>Email</th>
@@ -302,8 +305,8 @@
 				<th>Cancel</th>
 				<th>Delete</th>
 			</tr>	
-		<?php if(isset($bookingsCompleted)) :?>						
-			<?php foreach ($bookingsCompleted AS $booking): ?>
+		<?php if(isset($bookingsCompleted)) : ?>						
+			<?php foreach ($bookingsCompleted AS $booking) : ?>
 				<form action="" method="post">				
 					<tr>
 						<td><?php htmlout($booking['BookingStatus']);?></td>
@@ -316,6 +319,7 @@
 						<td><?php htmlout($booking['BookingWasCreatedOn']); ?></td>
 						<td><?php htmlout($booking['BookingWasCompletedOn']); ?></td>
 						<td><?php htmlout($booking['CompletedMeetingDuration']); ?></td>
+						<td><?php htmlout($booking['CompletedMeetingDurationForPrice']); ?></td>
 						<td><?php htmlout($booking['firstName']); ?></td>
 						<td><?php htmlout($booking['lastName']); ?></td>
 						<td><?php htmlout($booking['email']); ?></td>
@@ -369,8 +373,8 @@
 				<th>Cancel</th>
 				<th>Delete</th>
 			</tr>
-		<?php if(isset($bookingsCancelled)) :?>				
-			<?php foreach ($bookingsCancelled AS $booking): ?>
+		<?php if(isset($bookingsCancelled)) : ?>				
+			<?php foreach ($bookingsCancelled AS $booking) : ?>
 				<form action="" method="post">			
 					<tr>
 						<td><?php htmlout($booking['BookingStatus']);?></td>
@@ -409,7 +413,7 @@
 			<?php endforeach; ?>
 		<?php endif; ?>		
 		</table>
-	<?php if(isset($bookingsOther)) :?>		
+	<?php if(isset($bookingsOther)) : ?>		
 		<table id="bookingstable">
 			<caption>Other Bookings</caption>
 			<tr>
@@ -437,7 +441,7 @@
 				<th>Cancel</th>
 				<th>Delete</th>
 			</tr>			
-			<?php foreach ($bookingsOther AS $booking): ?>
+			<?php foreach ($bookingsOther AS $booking) : ?>
 				<form action="" method="post">			
 					<tr>
 						<td><?php htmlout($booking['BookingStatus']);?></td>

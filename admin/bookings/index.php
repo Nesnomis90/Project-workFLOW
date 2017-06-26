@@ -2398,7 +2398,14 @@ foreach ($result as $row)
 
 	$completedMeetingDurationInMinutes = convertTwoDateTimesToTimeDifferenceInMinutes($startDateTime, $completedDateTime);
 	$displayCompletedMeetingDuration = convertMinutesToHoursAndMinutes($completedMeetingDurationInMinutes);
-					
+	if($completedMeetingDurationInMinutes < BOOKING_DURATION_IN_MINUTES_USED_BEFORE_INCLUDING_IN_PRICE_CALCULATIONS){
+		$completedMeetingDurationForPrice = 0;
+	} elseif($completedMeetingDurationInMinutes < MINIMUM_BOOKING_DURATION_IN_MINUTES_USED_IN_PRICE_CALCULATIONS){
+		$completedMeetingDurationForPrice = MINIMUM_BOOKING_DURATION_IN_MINUTES_USED_IN_PRICE_CALCULATIONS;
+	} else {
+		$completedMeetingDurationForPrice = $completedMeetingDurationInMinutes;
+	}
+	$displayCompletedMeetingDurationForPrice = convertMinutesToHoursAndMinutes($completedMeetingDurationForPrice);
 	if($status == "Active Today"){				
 		$bookingsActiveToday[] = array('id' => $row['bookingID'],
 							'BookingStatus' => $status,
@@ -2425,6 +2432,7 @@ foreach ($result as $row)
 							'StartTime' => $displayValidatedStartDate,
 							'EndTime' => $displayValidatedEndDate,
 							'CompletedMeetingDuration' => $displayCompletedMeetingDuration,
+							'CompletedMeetingDurationForPrice' => $displayCompletedMeetingDurationForPrice,
 							'BookedBy' => $row['BookedBy'],
 							'BookedForCompany' => $row['BookedForCompany'],
 							'BookingDescription' => $row['BookingDescription'],
@@ -2464,6 +2472,7 @@ foreach ($result as $row)
 							'StartTime' => $displayValidatedStartDate,
 							'EndTime' => $displayValidatedEndDate,
 							'CompletedMeetingDuration' => $displayCompletedMeetingDuration,
+							'CompletedMeetingDurationForPrice' => $displayCompletedMeetingDurationForPrice,
 							'BookedBy' => $row['BookedBy'],
 							'BookedForCompany' => $row['BookedForCompany'],
 							'BookingDescription' => $row['BookingDescription'],

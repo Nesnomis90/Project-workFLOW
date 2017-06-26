@@ -25,16 +25,15 @@
 				text-align: left;
 				border-bottom: 1px solid #ddd;
 			}
-			
+			#companyemployeestable tr:nth-of-type(even) {background-color: #f2f2f2;}
+			#companyemployeestable tr:nth-of-type(odd) {background-color: white;}			
+			#companyemployeestable tr:hover{background-color:#DBEAE8;}
+						
 			#companyemployeestable td {
 				padding: 8px;
 				text-align: left;
 				border: 1px solid #ddd;
 			}
-
-			#companyemployeestable tr:hover{background-color:#ddd;}
-			
-			#companyemployeestable tr:nth-child(even) {background-color: #f2f2f2;}
 			
 			#companyemployeestable caption {
 				padding: 8px;
