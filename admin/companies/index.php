@@ -270,8 +270,8 @@ function calculatePeriodInformation($pdo, $companyID, $BillingStart, $BillingEnd
 		$hourAmountUsedInCalculation = "";
 	}			
 	if(!isset($displayOverCreditsTimeUsed)){
-		$displayOverCreditsTimeUsed = "";
-	}		
+		$displayOverCreditsTimeUsed = "None";
+	}
 	if(!isset($displayOverFeeCostThisMonth)){
 		$displayOverFeeCostThisMonth = "";
 	}	
@@ -462,19 +462,21 @@ if (isset($_POST['history']) AND $_POST['history'] == "Set As Billed"){
 			// Create the description to save for this period
 		if($hourAmountUsedInCalculation!=""){
 			$timeUsedForCalculatingPrice = $displayHourAmountUsedInCalculation;
-		} else {
+		} elseif($actualTimeOverCreditsInMinutes != "") {
 			$timeUsedForCalculatingPrice = $actualTimeOverCreditsInMinutes . "m";
+		} else {
+			$timeUsedForCalculatingPrice = "None";
 		}
 		
 		$dateTimeNow = getDatetimeNow();
 		$displayDateTimeNow = convertDatetimeToFormat($dateTimeNow , 'Y-m-d H:i:s', DATE_DEFAULT_FORMAT_TO_DISPLAY);
 		$billingDescriptionInformation = 	"This period was 'Set As Billed' on " . $displayDateTimeNow .
 											" by the user " . $_SESSION['LoggedInUserName'] .
-											".\n At that time the company had produced a total booking time of: " . $displayTotalBookingTimeThisPeriod .
+											".\nAt that time the company had produced a total booking time of: " . $displayTotalBookingTimeThisPeriod .
 											", with a credit given of: " . $displayCompanyCredits . " resulting in excess use of: " . $displayOverCreditsTimeUsed . 
-											" (billed as " . $timeUsedForCalculatingPrice . ").\n The montly fee was set as " . $displayMonthPrice . 
-											".\n Resulting in a total billing cost that period of " . $bookingCostThisMonth . " = " . $totalBookingCostThisMonth . 
-											".\n Additional information submitted by Admin: " . $billingDescriptionAdminAddition;
+											" (billed as " . $timeUsedForCalculatingPrice . ").\nThe montly fee was set as " . $displayMonthPrice . 
+											".\nResulting in a total billing cost that period of " . $bookingCostThisMonth . " = " . $totalBookingCostThisMonth . 
+											".\nAdditional information submitted by Admin:\n" . $billingDescriptionAdminAddition;
 		if(substr($billingDescriptionInformation,-1) != "."){
 			$billingDescriptionInformation . ".";
 		}
@@ -1366,7 +1368,13 @@ try
 						c.`dateTimeCreated`									AS DatetimeCreated,
 						c.`removeAtDate`									AS DeletionDate,
 						c.`isActive`										AS CompanyActivated,
-						COUNT(e.`companyID`)								AS NumberOfEmployees,
+						(
+							SELECT 	COUNT(c.`name`) 
+							FROM 	`company` c 
+							JOIN 	`employee` e 
+							ON 		c.CompanyID = e.CompanyID 
+							WHERE 	e.companyID = CompID
+						)													AS NumberOfEmployees,
 						(
 							SELECT (BIG_SEC_TO_TIME(SUM(
 													IF(
@@ -1521,7 +1529,7 @@ try
 						cr.`monthlyPrice`									AS CreditSubscriptionMonthlyPrice,
 						cr.`overCreditMinutePrice`							AS CreditSubscriptionMinutePrice,
 						cr.`overCreditHourPrice`							AS CreditSubscriptionHourPrice,
-						COUNT(cch.`CompanyID`)								AS CompanyCreditsHistoryPeriods,
+						COUNT(DISTINCT cch.`startDate`)						AS CompanyCreditsHistoryPeriods,
 						SUM(cch.`hasBeenBilled`)							AS CompanyCreditsHistoryPeriodsSetAsBilled
 			FROM 		`company` c
 			LEFT JOIN	`companycredits` cc
@@ -1530,9 +1538,7 @@ try
 			ON			cr.`CreditsID` = cc.`CreditsID`
 			LEFT JOIN 	`companycreditshistory` cch
 			ON 			cch.`CompanyID` = c.`CompanyID`
-			LEFT JOIN	`employee` e
-			ON 			c.CompanyID = e.CompanyID
-			GROUP BY 	c.`name`;";
+			GROUP BY 	c.`CompanyID`;";
 	$s = $pdo->prepare($sql);
 	$s->bindValue(':minimumSecondsPerBooking', $minimumSecondsPerBooking);
 	$s->bindValue(':aboveThisManySecondsToCount', $aboveThisManySecondsToCount);

@@ -69,7 +69,7 @@
 					<th>Company</th>
 					<th colspan="6">Booking Subscription</th>
 					<th colspan="4">Booking Time Used</th>
-					<th colspan="3">Billing Status</th>
+					<th colspan="3">Billing Status (Completed Periods)</th>
 					<th colspan="2">Dates</th>
 					<th colspan="2">Alter Company</th>
 				</tr>

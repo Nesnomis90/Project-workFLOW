@@ -45,7 +45,7 @@ SELECT 		c.companyID 										AS CompID,
 			c.`dateTimeCreated`									AS DatetimeCreated,
 			c.`removeAtDate`									AS DeletionDate,
 			c.`isActive`										AS CompanyActivated,
-			COUNT(e.`companyID`)								AS NumberOfEmployees, 
+			COUNT(DISTINCT e.`userID`)							AS NumberOfEmployees, 
 			(
 				SELECT (BIG_SEC_TO_TIME(SUM(
 										IF(
@@ -200,7 +200,7 @@ SELECT 		c.companyID 										AS CompID,
 			cr.`monthlyPrice`									AS CreditSubscriptionMonthlyPrice,
 			cr.`overCreditMinutePrice`							AS CreditSubscriptionMinutePrice,
 			cr.`overCreditHourPrice`							AS CreditSubscriptionHourPrice,
-			COUNT(cch.`CompanyID`)								AS CompanyCreditsHistoryPeriods,
+			COUNT(DISTINCT cch.`startDate`)						AS CompanyCreditsHistoryPeriods,
 			SUM(cch.`hasBeenBilled`)							AS CompanyCreditsHistoryPeriodsSetAsBilled            
 FROM 		`company` c
 LEFT JOIN	`companycredits` cc
@@ -211,7 +211,19 @@ LEFT JOIN 	`companycreditshistory` cch
 ON 			cch.`CompanyID` = c.`CompanyID`
 LEFT JOIN	`employee` e
 ON 			c.CompanyID = e.CompanyID 
-GROUP BY 	c.`name`;
+GROUP BY 	c.`CompanyID`;
+
+SELECT *, COUNT(cch.`CompanyID`) AS Blah
+FROM 		`company` c
+LEFT JOIN	`companycredits` cc
+ON			c.`CompanyID` = cc.`CompanyID`
+LEFT JOIN	`credits` cr
+ON			cr.`CreditsID` = cc.`CreditsID`
+LEFT JOIN 	`companycreditshistory` cch
+ON 			cch.`CompanyID` = c.`CompanyID`
+LEFT JOIN	`employee` e
+ON 			c.CompanyID = e.CompanyID 
+GROUP BY 	c.`CompanyID`;
 
 SELECT (BIG_SEC_TO_TIME(SUM(
 						IF(
