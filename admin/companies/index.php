@@ -1352,9 +1352,15 @@ try
 {
 	include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 	$pdo = connect_to_db();
-	// Made it so the user doesn't have to be an employee anymore for the hours to count
+	// Calculate booking time used for a company
 	// Only takes into account time spent and company the booking was booked for.
 	// TO-DO: REMOVE/FIX booking time calculations since they no longer accurately match what's in booking history!
+	
+	// Booking time is rounded for each booking, instead of summed up and then rounded.
+	// We therefore get the minimum time per booking in our equations
+	$minimumSecondsPerBooking = MINIMUM_BOOKING_DURATION_IN_MINUTES_USED_IN_PRICE_CALCULATIONS * 60; // e.g. 15min = 900s
+	$aboveThisManySecondsToCount = BOOKING_DURATION_IN_MINUTES_USED_BEFORE_INCLUDING_IN_PRICE_CALCULATIONS * 60; // E.g. 1min = 60s
+	
 	$sql = "SELECT 		c.companyID 										AS CompID,
 						c.`name` 											AS CompanyName,
 						c.`dateTimeCreated`									AS DatetimeCreated,
@@ -1368,67 +1374,109 @@ try
 							WHERE 	e.companyID = CompID
 						)													AS NumberOfEmployees, 
 						(
-							SELECT (
-									BIG_SEC_TO_TIME(
+							SELECT BIG_SEC_TO_TIME(
 													SUM(
-														DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
-														)*86400 
-													+ 
-													SUM(
-														TIME_TO_SEC(b.`actualEndDateTime`) 
-														- 
-														TIME_TO_SEC(b.`startDateTime`)
-														) 
-													) 
-									) 
-							FROM 		`booking` b  
-							INNER JOIN 	`company` c 
-							ON 			b.`CompanyID` = c.`CompanyID` 
-							WHERE 		b.`CompanyID` = CompID
-							AND 		b.`actualEndDateTime`
-							BETWEEN		c.`prevStartDate`
-							AND			c.`startDate`
+														IF(
+															BookingTimeInSeconds > :aboveThisManySecondsToCount,
+															IF(
+																BookingTimeInSeconds > :minimumSecondsPerBooking, 
+																BookingTimeInSeconds, 
+																:minimumSecondsPerBooking
+															),
+															0
+														)
+													)
+							)
+							FROM (
+								SELECT 	(
+										SUM(
+											DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
+											)*86400 
+										+ 
+										SUM(
+											TIME_TO_SEC(b.`actualEndDateTime`) 
+											- 
+											TIME_TO_SEC(b.`startDateTime`)
+											) 
+										) 	AS BookingTimeInSeconds
+								FROM 		`booking` b  
+								INNER JOIN 	`company` c 
+								ON 			b.`CompanyID` = c.`CompanyID` 
+								WHERE 		b.`CompanyID` = CompID
+								AND 		b.`actualEndDateTime`
+								BETWEEN		c.`prevStartDate`
+								AND			c.`startDate`
+								GROUP BY 	b.`bookingID`
+							) AS SummedBookingTime
 						)   												AS PreviousMonthCompanyWideBookingTimeUsed,           
 						(
-							SELECT (
-									BIG_SEC_TO_TIME(
+							SELECT BIG_SEC_TO_TIME(
 													SUM(
-														DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
-														)*86400 
-													+ 
-													SUM(
-														TIME_TO_SEC(b.`actualEndDateTime`) 
-														- 
-														TIME_TO_SEC(b.`startDateTime`)
-														) 
-													) 
-									) 
-							FROM 		`booking` b  
-							INNER JOIN 	`company` c 
-							ON 			b.`CompanyID` = c.`CompanyID` 
-							WHERE 		b.`CompanyID` = CompID
-							AND 		b.`actualEndDateTime`
-							BETWEEN		c.`startDate`
-							AND			c.`endDate`
-						)   												AS MonthlyCompanyWideBookingTimeUsed,
+														IF(
+															BookingTimeInSeconds > :aboveThisManySecondsToCount,
+															IF(
+																BookingTimeInSeconds > :minimumSecondsPerBooking, 
+																BookingTimeInSeconds, 
+																:minimumSecondsPerBooking
+															),
+															0
+														)
+													)
+							)
+							FROM (
+								SELECT 	(
+										SUM(
+											DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
+											)*86400 
+										+ 
+										SUM(
+											TIME_TO_SEC(b.`actualEndDateTime`) 
+											- 
+											TIME_TO_SEC(b.`startDateTime`)
+											) 
+										) 	AS BookingTimeInSeconds
+								FROM 		`booking` b  
+								INNER JOIN 	`company` c 
+								ON 			b.`CompanyID` = c.`CompanyID` 
+								WHERE 		b.`CompanyID` = CompID
+								AND 		b.`actualEndDateTime`
+								BETWEEN		c.`startDate`
+								AND			c.`endDate`
+								GROUP BY 	b.`bookingID`
+							) AS SummedBookingTime
+						)													AS MonthlyCompanyWideBookingTimeUsed,
 						(
-							SELECT (
-									BIG_SEC_TO_TIME(
+							SELECT BIG_SEC_TO_TIME(
 													SUM(
-														DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
-														)*86400 
-													+ 
-													SUM(
-														TIME_TO_SEC(b.`actualEndDateTime`) 
-														- 
-														TIME_TO_SEC(b.`startDateTime`)
-														) 
-													) 
-									)
-							FROM 		`booking` b 
-							INNER JOIN 	`company` c 
-							ON 			b.`CompanyID` = c.`CompanyID` 
-							WHERE 		b.`CompanyID` = CompID
+														IF(
+															BookingTimeInSeconds > :aboveThisManySecondsToCount,
+															IF(
+																BookingTimeInSeconds > :minimumSecondsPerBooking, 
+																BookingTimeInSeconds, 
+																:minimumSecondsPerBooking
+															),
+															0
+														)
+													)
+							)
+							FROM (
+								SELECT 	(
+										SUM(
+											DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
+											)*86400 
+										+ 
+										SUM(
+											TIME_TO_SEC(b.`actualEndDateTime`) 
+											- 
+											TIME_TO_SEC(b.`startDateTime`)
+											) 
+										) 	AS BookingTimeInSeconds						
+								FROM 		`booking` b 
+								INNER JOIN 	`company` c 
+								ON 			b.`CompanyID` = c.`CompanyID` 
+								WHERE 		b.`CompanyID` = CompID
+								GROUP BY 	b.`bookingID`
+							) SummedBookingTime
 						)   												AS TotalCompanyWideBookingTimeUsed,
 						cc.`altMinuteAmount`								AS CompanyAlternativeMinuteAmount,
 						cc.`lastModified`									AS CompanyCreditsLastModified,
@@ -1443,9 +1491,12 @@ try
 			LEFT JOIN	`credits` cr
 			ON			cr.`CreditsID` = cc.`CreditsID`
 			GROUP BY 	c.`name`";
-
-	$return = $pdo->query($sql);
-	$result = $return->fetchAll(PDO::FETCH_ASSOC);
+	$s = $pdo->prepare($sql);
+	$s->bindValue(':minimumSecondsPerBooking', $minimumSecondsPerBooking);
+	$s->bindValue(':aboveThisManySecondsToCount', $aboveThisManySecondsToCount);
+	$s->execute();
+	//$return = $pdo->query($sql);
+	$result = $s->fetchAll(PDO::FETCH_ASSOC);
 	if(isset($result)){
 		$rowNum = sizeOf($result);
 	} else {
@@ -1513,9 +1564,9 @@ foreach ($result as $row)
 		($minPrice != 0 AND $hourPrice != 0 )){
 		$overCreditsFee = "Not set";
 	} elseif($minPrice != 0 AND $hourPrice == 0) {
-		$overCreditsFee = $minPrice . "/m";
+		$overCreditsFee = convertToCurrency($minPrice) . "/m";
 	} elseif($minPrice == 0 AND $hourPrice != 0) {
-		$overCreditsFee = $hourPrice . "/h";
+		$overCreditsFee = convertToCurrency($hourPrice) . "/h";
 	}
 		// Calculate monthly cost (subscription + over credit charges)
 	if($MonthlyTimeUsed != "N/A"){
@@ -1615,7 +1666,7 @@ foreach ($result as $row)
 								'CreditSubscriptionName' => $row["CreditSubscriptionName"],
 								'CompanyCredits' => $displayCompanyCredits,
 								'CompanyCreditsRemaining' => $displayCompanyCreditsRemaining,
-								'CreditSubscriptionMonthlyPrice' => $monthPrice,
+								'CreditSubscriptionMonthlyPrice' => convertToCurrency($monthPrice),
 								'BookingCostPrevMonth' => $bookingCostPrevMonth,
 								'BookingCostThisMonth' => $bookingCostThisMonth,
 								'OverCreditsFee' => $overCreditsFee
