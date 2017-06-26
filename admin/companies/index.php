@@ -470,11 +470,11 @@ if (isset($_POST['history']) AND $_POST['history'] == "Set As Billed"){
 		$displayDateTimeNow = convertDatetimeToFormat($dateTimeNow , 'Y-m-d H:i:s', DATE_DEFAULT_FORMAT_TO_DISPLAY);
 		$billingDescriptionInformation = 	"This period was 'Set As Billed' on " . $displayDateTimeNow .
 											" by the user " . $_SESSION['LoggedInUserName'] .
-											". At that time the company had produced a total booking time of: " . $displayTotalBookingTimeThisPeriod .
+											".\n At that time the company had produced a total booking time of: " . $displayTotalBookingTimeThisPeriod .
 											", with a credit given of: " . $displayCompanyCredits . " resulting in excess use of: " . $displayOverCreditsTimeUsed . 
-											" (billed as " . $timeUsedForCalculatingPrice . "). The montly fee was set as " . $displayMonthPrice . 
-											". Resulting in a total billing cost that period of " . $bookingCostThisMonth . " = " . $totalBookingCostThisMonth . 
-											". Additional information submitted by Admin: " . $billingDescriptionAdminAddition;
+											" (billed as " . $timeUsedForCalculatingPrice . ").\n The montly fee was set as " . $displayMonthPrice . 
+											".\n Resulting in a total billing cost that period of " . $bookingCostThisMonth . " = " . $totalBookingCostThisMonth . 
+											".\n Additional information submitted by Admin: " . $billingDescriptionAdminAddition;
 		if(substr($billingDescriptionInformation,-1) != "."){
 			$billingDescriptionInformation . ".";
 		}
@@ -1366,13 +1366,7 @@ try
 						c.`dateTimeCreated`									AS DatetimeCreated,
 						c.`removeAtDate`									AS DeletionDate,
 						c.`isActive`										AS CompanyActivated,
-						(
-							SELECT 	COUNT(c.`name`) 
-							FROM 	`company` c 
-							JOIN 	`employee` e 
-							ON 		c.CompanyID = e.CompanyID 
-							WHERE 	e.companyID = CompID
-						)													AS NumberOfEmployees, 
+						COUNT(e.`companyID`)								AS NumberOfEmployees,
 						(
 							SELECT (BIG_SEC_TO_TIME(SUM(
 													IF(
@@ -1519,25 +1513,30 @@ try
 							INNER JOIN 	`company` c 
 							ON 			b.`CompanyID` = c.`CompanyID` 
 							WHERE 		b.`CompanyID` = CompID
-						)									AS TotalCompanyWideBookingTimeUsed,
+						)													AS TotalCompanyWideBookingTimeUsed,
 						cc.`altMinuteAmount`								AS CompanyAlternativeMinuteAmount,
 						cc.`lastModified`									AS CompanyCreditsLastModified,
 						cr.`name`											AS CreditSubscriptionName,
 						cr.`minuteAmount`									AS CreditSubscriptionMinuteAmount,
 						cr.`monthlyPrice`									AS CreditSubscriptionMonthlyPrice,
 						cr.`overCreditMinutePrice`							AS CreditSubscriptionMinutePrice,
-						cr.`overCreditHourPrice`							AS CreditSubscriptionHourPrice
+						cr.`overCreditHourPrice`							AS CreditSubscriptionHourPrice,
+						COUNT(cch.`CompanyID`)								AS CompanyCreditsHistoryPeriods,
+						SUM(cch.`hasBeenBilled`)							AS CompanyCreditsHistoryPeriodsSetAsBilled
 			FROM 		`company` c
 			LEFT JOIN	`companycredits` cc
 			ON			c.`CompanyID` = cc.`CompanyID`
 			LEFT JOIN	`credits` cr
 			ON			cr.`CreditsID` = cc.`CreditsID`
+			LEFT JOIN 	`companycreditshistory` cch
+			ON 			cch.`CompanyID` = c.`CompanyID`
+			LEFT JOIN	`employee` e
+			ON 			c.CompanyID = e.CompanyID
 			GROUP BY 	c.`name`;";
 	$s = $pdo->prepare($sql);
 	$s->bindValue(':minimumSecondsPerBooking', $minimumSecondsPerBooking);
 	$s->bindValue(':aboveThisManySecondsToCount', $aboveThisManySecondsToCount);
 	$s->execute();
-	//$return = $pdo->query($sql);
 	$result = $s->fetchAll(PDO::FETCH_ASSOC);
 	if(isset($result)){
 		$rowNum = sizeOf($result);
@@ -1571,13 +1570,7 @@ foreach ($result as $row)
 	} else {
 		$MonthlyTimeUsed = convertTimeToHoursAndMinutes($row['MonthlyCompanyWideBookingTimeUsed']);
 	}
-	
-	echo "<br />";
-	echo $row['MonthlyCompanyWideBookingTimeUsed'];
-	echo "<br />";
-	echo $MonthlyTimeUsed;
-	echo "<br />";	
-	
+
 	if($row['TotalCompanyWideBookingTimeUsed'] == null){
 		$TotalTimeUsed = 'N/A';
 	} else {
@@ -1616,90 +1609,42 @@ foreach ($result as $row)
 	} elseif($minPrice == 0 AND $hourPrice != 0) {
 		$overCreditsFee = convertToCurrency($hourPrice) . "/h";
 	}
-		// Calculate monthly cost (subscription + over credit charges)
+		// Calculate Company Credits Remaining
 	if($MonthlyTimeUsed != "N/A"){
 		$monthlyTimeHour = substr($MonthlyTimeUsed,0,strpos($MonthlyTimeUsed,"h"));
 		$monthlyTimeMinute = substr($MonthlyTimeUsed,strpos($MonthlyTimeUsed,"h")+1,-1);
 		$actualTimeUsedInMinutesThisMonth = $monthlyTimeHour*60 + $monthlyTimeMinute;
 		if($actualTimeUsedInMinutesThisMonth > $companyMinuteCredits){
-			// Company has used more booking time than credited. Let's calculate how far over they went
-			$actualTimeOverCreditsInMinutes = $actualTimeUsedInMinutesThisMonth - $companyMinuteCredits;
-		
-			// Let's calculate cost
-			if($hourPrice == 0 AND $minPrice == 0){
-				// The subscription has no valid overtime price set, should not occur
-				$bookingCostThisMonth = $monthPrice . "+" . $actualTimeOverCreditsInMinutes . "m * cost (not set)";
-			} elseif($hourPrice != 0 AND $minPrice != 0){
-				// The subscription has two valid overtime price set, should not occur
-				$bookingCostThisMonth = $monthPrice . "+" . $actualTimeOverCreditsInMinutes . "m * cost (not set)";
-			} elseif($hourPrice == 0 AND $minPrice != 0){
-				// The subscription charges by the minute, if over credits
-				$bookingCostThisMonth = $minPrice * $actualTimeOverCreditsInMinutes;
-				$bookingCostThisMonth = $monthPrice . "+" . $bookingCostThisMonth;
-			} elseif($hourPrice != 0 AND $minPrice == 0){
-				// The subsription charges by the hour, if over credits
-				// TO-DO: Round up/down? Break down into minutes? Currently rounding up.
-				$bookingCostThisMonth = $hourPrice * ceil($actualTimeOverCreditsInMinutes/60);
-				$bookingCostThisMonth = $monthPrice . "+" . $bookingCostThisMonth;
-			}
-			$companyMinuteCreditsRemaining = 0;
-			
+			$minusCompanyMinuteCreditsRemaining = $actualTimeUsedInMinutesThisMonth - $companyMinuteCredits;
+			$displayCompanyCreditsRemaining = "-" . convertMinutesToHoursAndMinutes($minusCompanyMinuteCreditsRemaining);
 		} else {
-			$bookingCostThisMonth = $monthPrice . "+0";
 			$companyMinuteCreditsRemaining = $companyMinuteCredits - $actualTimeUsedInMinutesThisMonth;
-		}		
-	} elseif($monthPrice != 0) {
-		$bookingCostThisMonth = $monthPrice . "+0";
-		$companyMinuteCreditsRemaining = $companyMinuteCredits;
+			$displayCompanyCreditsRemaining = convertMinutesToHoursAndMinutes($companyMinuteCreditsRemaining);
+		}	
 	} else {
-		$bookingCostThisMonth = "N/A";
 		$companyMinuteCreditsRemaining = $companyMinuteCredits;
+		$displayCompanyCreditsRemaining = convertMinutesToHoursAndMinutes($companyMinuteCreditsRemaining);
 	}
-		// Calculate cost for previous month (subscription + over credit charges)
-	// TO-DO: Change/fix calculations? This will be wrong if credits/hour rate etc changes from previous month
-	if($PrevMonthTimeUsed != "N/A"){
-		$prevMonthTimeHour = substr($MonthlyTimeUsed,0,strpos($MonthlyTimeUsed,"h"));
-		$prevMonthTimeMinute = substr($MonthlyTimeUsed,strpos($MonthlyTimeUsed,"h")+1,-1);		
-		$actualTimeUsedInMinutesPrevMonth = $prevMonthTimeHour*60 + $prevMonthTimeMinute;
-		if($actualTimeUsedInMinutesPrevMonth > $companyMinuteCredits){
-			// Company has used more booking time than credited. Let's calculate how far over they went
-			$actualTimeOverCreditsInMinutes = $actualTimeUsedInMinutesPrevMonth - $companyMinuteCredits;
-		
-			// Let's calculate cost
-			if($hourPrice == 0 AND $minPrice == 0){
-				// The subscription has no valid overtime price set, should not occur
-				$bookingCostPrevMonth = $monthPrice . "+" . $actualTimeOverCreditsInMinutes . "m * cost (not set)";
-			} elseif($hourPrice != 0 AND $minPrice != 0){
-				// The subscription has two valid overtime price set, should not occur
-				$bookingCostPrevMonth = $monthPrice . "+" . $actualTimeOverCreditsInMinutes . "m * cost (not set)";
-			} elseif($hourPrice == 0 AND $minPrice != 0){
-				// The subscription charges by the minute, if over credits
-				$bookingCostPrevMonth = $minPrice * $actualTimeOverCreditsInMinutes;
-				$bookingCostPrevMonth = $monthPrice . "+" . $bookingCostPrevMonth;
-			} elseif($hourPrice != 0 AND $minPrice == 0){
-				// The subsription charges by the hour, if over credits
-				// TO-DO: Round up/down? Break down into minutes? Currently rounding up.
-				$bookingCostPrevMonth = $hourPrice * ceil($actualTimeOverCreditsInMinutes/60);
-				$bookingCostPrevMonth = $monthPrice . "+" . $bookingCostPrevMonth;
-			}	
-		} else {
-			$bookingCostPrevMonth = $monthPrice . "+0";
-		}		
-	} elseif($monthPrice != 0) {
-		$bookingCostPrevMonth = $monthPrice . "+0";
-	} else {
-		$bookingCostPrevMonth = "N/A";
-	}	
-	
-		// Format company credits remaining to be displayed
-	$displayCompanyCreditsRemaining = convertMinutesToHoursAndMinutes($companyMinuteCreditsRemaining);	
-	
-	// Display dates
+
+		// Display dates
 	$dateCreated = $row['DatetimeCreated'];	
 	$dateToRemove = $row['DeletionDate'];
 	$isActive = ($row['CompanyActivated'] == 1);
 	$dateTimeCreatedToDisplay = convertDatetimeToFormat($dateCreated, 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
 	$dateToRemoveToDisplay = convertDatetimeToFormat($dateToRemove, 'Y-m-d', DATE_DEFAULT_FORMAT_TO_DISPLAY);	
+	
+		// Get Period Status information
+	if(isset($row['CompanyCreditsHistoryPeriods']) AND $row['CompanyCreditsHistoryPeriods'] != NULL){
+		$totalPeriods = $row['CompanyCreditsHistoryPeriods'];
+	} else {
+		$totalPeriods = 0;
+	}
+	if(isset($row['CompanyCreditsHistoryPeriodsSetAsBilled']) AND $row['CompanyCreditsHistoryPeriodsSetAsBilled'] != NULL){
+		$billedPeriods = $row['CompanyCreditsHistoryPeriodsSetAsBilled'];
+	} else {
+		$billedPeriods = 0;
+	}
+	$notBilledPeriods = $totalPeriods - $billedPeriods;
 	
 	if($isActive){
 		$companies[] = array(
@@ -1715,9 +1660,10 @@ foreach ($result as $row)
 								'CompanyCredits' => $displayCompanyCredits,
 								'CompanyCreditsRemaining' => $displayCompanyCreditsRemaining,
 								'CreditSubscriptionMonthlyPrice' => convertToCurrency($monthPrice),
-								'BookingCostPrevMonth' => $bookingCostPrevMonth,
-								'BookingCostThisMonth' => $bookingCostThisMonth,
-								'OverCreditsFee' => $overCreditsFee
+								'OverCreditsFee' => $overCreditsFee,
+								'TotalPeriods' => $totalPeriods,
+								'BilledPeriods' => $billedPeriods,
+								'NotBilledPeriods' => $notBilledPeriods
 							);
 	} elseif(!$isActive AND ($dateToRemove == "" OR $dateToRemove == NULL)) {
 		$unactivedcompanies[] = array(
