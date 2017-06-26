@@ -125,7 +125,7 @@
 				<?php endif; ?>
 			</div>
 		</form>
-		<table id = "logevent">
+		<table id="logevent">
 			<caption>Log Events</caption>
 			<tr>
 				<th>Date</th>
