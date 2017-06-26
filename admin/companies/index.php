@@ -270,8 +270,8 @@ function calculatePeriodInformation($pdo, $companyID, $BillingStart, $BillingEnd
 		$hourAmountUsedInCalculation = "";
 	}			
 	if(!isset($displayOverCreditsTimeUsed)){
-		$displayOverCreditsTimeUsed = "";
-	}		
+		$displayOverCreditsTimeUsed = "None";
+	}
 	if(!isset($displayOverFeeCostThisMonth)){
 		$displayOverFeeCostThisMonth = "";
 	}	
@@ -462,19 +462,21 @@ if (isset($_POST['history']) AND $_POST['history'] == "Set As Billed"){
 			// Create the description to save for this period
 		if($hourAmountUsedInCalculation!=""){
 			$timeUsedForCalculatingPrice = $displayHourAmountUsedInCalculation;
-		} else {
+		} elseif($actualTimeOverCreditsInMinutes != "") {
 			$timeUsedForCalculatingPrice = $actualTimeOverCreditsInMinutes . "m";
+		} else {
+			$timeUsedForCalculatingPrice = "None";
 		}
 		
 		$dateTimeNow = getDatetimeNow();
 		$displayDateTimeNow = convertDatetimeToFormat($dateTimeNow , 'Y-m-d H:i:s', DATE_DEFAULT_FORMAT_TO_DISPLAY);
 		$billingDescriptionInformation = 	"This period was 'Set As Billed' on " . $displayDateTimeNow .
 											" by the user " . $_SESSION['LoggedInUserName'] .
-											". At that time the company had produced a total booking time of: " . $displayTotalBookingTimeThisPeriod .
+											".\nAt that time the company had produced a total booking time of: " . $displayTotalBookingTimeThisPeriod .
 											", with a credit given of: " . $displayCompanyCredits . " resulting in excess use of: " . $displayOverCreditsTimeUsed . 
-											" (billed as " . $timeUsedForCalculatingPrice . "). The montly fee was set as " . $displayMonthPrice . 
-											". Resulting in a total billing cost that period of " . $bookingCostThisMonth . " = " . $totalBookingCostThisMonth . 
-											". Additional information submitted by Admin: " . $billingDescriptionAdminAddition;
+											" (billed as " . $timeUsedForCalculatingPrice . ").\nThe montly fee was set as " . $displayMonthPrice . 
+											".\nResulting in a total billing cost that period of " . $bookingCostThisMonth . " = " . $totalBookingCostThisMonth . 
+											".\nAdditional information submitted by Admin:\n" . $billingDescriptionAdminAddition;
 		if(substr($billingDescriptionInformation,-1) != "."){
 			$billingDescriptionInformation . ".";
 		}
@@ -1352,9 +1354,13 @@ try
 {
 	include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 	$pdo = connect_to_db();
-	// Made it so the user doesn't have to be an employee anymore for the hours to count
+	// Calculate booking time used for a company
 	// Only takes into account time spent and company the booking was booked for.
-	// TO-DO: REMOVE/FIX booking time calculations since they no longer accurately match what's in booking history!
+		// Booking time is rounded for each booking, instead of summed up and then rounded.
+		// We therefore get the minimum time per booking for our equations
+	$minimumSecondsPerBooking = MINIMUM_BOOKING_DURATION_IN_MINUTES_USED_IN_PRICE_CALCULATIONS * 60; // e.g. 15min = 900s
+	$aboveThisManySecondsToCount = BOOKING_DURATION_IN_MINUTES_USED_BEFORE_INCLUDING_IN_PRICE_CALCULATIONS * 60; // E.g. 1min = 60s
+	
 	$sql = "SELECT 		c.companyID 										AS CompID,
 						c.`name` 											AS CompanyName,
 						c.`dateTimeCreated`									AS DatetimeCreated,
@@ -1366,21 +1372,49 @@ try
 							JOIN 	`employee` e 
 							ON 		c.CompanyID = e.CompanyID 
 							WHERE 	e.companyID = CompID
-						)													AS NumberOfEmployees, 
+						)													AS NumberOfEmployees,
 						(
-							SELECT (
-									BIG_SEC_TO_TIME(
-													SUM(
-														DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
-														)*86400 
-													+ 
-													SUM(
-														TIME_TO_SEC(b.`actualEndDateTime`) 
-														- 
-														TIME_TO_SEC(b.`startDateTime`)
-														) 
-													) 
-									) 
+							SELECT (BIG_SEC_TO_TIME(SUM(
+													IF(
+														(
+															(
+																DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
+																)*86400 
+															+ 
+															(
+																TIME_TO_SEC(b.`actualEndDateTime`) 
+																- 
+																TIME_TO_SEC(b.`startDateTime`)
+																) 
+														) > :aboveThisManySecondsToCount,
+														IF(
+															(
+															(
+																DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
+																)*86400 
+															+ 
+															(
+																TIME_TO_SEC(b.`actualEndDateTime`) 
+																- 
+																TIME_TO_SEC(b.`startDateTime`)
+																) 
+														) > :minimumSecondsPerBooking, 
+															(
+															(
+																DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
+																)*86400 
+															+ 
+															(
+																TIME_TO_SEC(b.`actualEndDateTime`) 
+																- 
+																TIME_TO_SEC(b.`startDateTime`)
+																) 
+														), 
+															:minimumSecondsPerBooking
+														),
+														0
+													)
+							)))	AS BookingTimeUsed
 							FROM 		`booking` b  
 							INNER JOIN 	`company` c 
 							ON 			b.`CompanyID` = c.`CompanyID` 
@@ -1390,19 +1424,47 @@ try
 							AND			c.`startDate`
 						)   												AS PreviousMonthCompanyWideBookingTimeUsed,           
 						(
-							SELECT (
-									BIG_SEC_TO_TIME(
-													SUM(
-														DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
-														)*86400 
-													+ 
-													SUM(
-														TIME_TO_SEC(b.`actualEndDateTime`) 
-														- 
-														TIME_TO_SEC(b.`startDateTime`)
-														) 
-													) 
-									) 
+							SELECT (BIG_SEC_TO_TIME(SUM(
+													IF(
+														(
+															(
+																DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
+																)*86400 
+															+ 
+															(
+																TIME_TO_SEC(b.`actualEndDateTime`) 
+																- 
+																TIME_TO_SEC(b.`startDateTime`)
+																) 
+														) > :aboveThisManySecondsToCount,
+														IF(
+															(
+															(
+																DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
+																)*86400 
+															+ 
+															(
+																TIME_TO_SEC(b.`actualEndDateTime`) 
+																- 
+																TIME_TO_SEC(b.`startDateTime`)
+																) 
+														) > :minimumSecondsPerBooking, 
+															(
+															(
+																DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
+																)*86400 
+															+ 
+															(
+																TIME_TO_SEC(b.`actualEndDateTime`) 
+																- 
+																TIME_TO_SEC(b.`startDateTime`)
+																) 
+														), 
+															:minimumSecondsPerBooking
+														),
+														0
+													)
+							)))	AS BookingTimeUsed
 							FROM 		`booking` b  
 							INNER JOIN 	`company` c 
 							ON 			b.`CompanyID` = c.`CompanyID` 
@@ -1410,42 +1472,76 @@ try
 							AND 		b.`actualEndDateTime`
 							BETWEEN		c.`startDate`
 							AND			c.`endDate`
-						)   												AS MonthlyCompanyWideBookingTimeUsed,
+						)													AS MonthlyCompanyWideBookingTimeUsed,
 						(
-							SELECT (
-									BIG_SEC_TO_TIME(
-													SUM(
-														DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
-														)*86400 
-													+ 
-													SUM(
-														TIME_TO_SEC(b.`actualEndDateTime`) 
-														- 
-														TIME_TO_SEC(b.`startDateTime`)
-														) 
-													) 
-									)
-							FROM 		`booking` b 
+							SELECT (BIG_SEC_TO_TIME(SUM(
+													IF(
+														(
+															(
+																DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
+																)*86400 
+															+ 
+															(
+																TIME_TO_SEC(b.`actualEndDateTime`) 
+																- 
+																TIME_TO_SEC(b.`startDateTime`)
+																) 
+														) > :aboveThisManySecondsToCount,
+														IF(
+															(
+															(
+																DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
+																)*86400 
+															+ 
+															(
+																TIME_TO_SEC(b.`actualEndDateTime`) 
+																- 
+																TIME_TO_SEC(b.`startDateTime`)
+																) 
+														) > :minimumSecondsPerBooking, 
+															(
+															(
+																DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
+																)*86400 
+															+ 
+															(
+																TIME_TO_SEC(b.`actualEndDateTime`) 
+																- 
+																TIME_TO_SEC(b.`startDateTime`)
+																) 
+														), 
+															:minimumSecondsPerBooking
+														),
+														0
+													)
+							)))	AS BookingTimeUsed
+							FROM 		`booking` b  
 							INNER JOIN 	`company` c 
 							ON 			b.`CompanyID` = c.`CompanyID` 
 							WHERE 		b.`CompanyID` = CompID
-						)   												AS TotalCompanyWideBookingTimeUsed,
+						)													AS TotalCompanyWideBookingTimeUsed,
 						cc.`altMinuteAmount`								AS CompanyAlternativeMinuteAmount,
 						cc.`lastModified`									AS CompanyCreditsLastModified,
 						cr.`name`											AS CreditSubscriptionName,
 						cr.`minuteAmount`									AS CreditSubscriptionMinuteAmount,
 						cr.`monthlyPrice`									AS CreditSubscriptionMonthlyPrice,
 						cr.`overCreditMinutePrice`							AS CreditSubscriptionMinutePrice,
-						cr.`overCreditHourPrice`							AS CreditSubscriptionHourPrice
+						cr.`overCreditHourPrice`							AS CreditSubscriptionHourPrice,
+						COUNT(DISTINCT cch.`startDate`)						AS CompanyCreditsHistoryPeriods,
+						SUM(cch.`hasBeenBilled`)							AS CompanyCreditsHistoryPeriodsSetAsBilled
 			FROM 		`company` c
 			LEFT JOIN	`companycredits` cc
 			ON			c.`CompanyID` = cc.`CompanyID`
 			LEFT JOIN	`credits` cr
 			ON			cr.`CreditsID` = cc.`CreditsID`
-			GROUP BY 	c.`name`";
-
-	$return = $pdo->query($sql);
-	$result = $return->fetchAll(PDO::FETCH_ASSOC);
+			LEFT JOIN 	`companycreditshistory` cch
+			ON 			cch.`CompanyID` = c.`CompanyID`
+			GROUP BY 	c.`CompanyID`;";
+	$s = $pdo->prepare($sql);
+	$s->bindValue(':minimumSecondsPerBooking', $minimumSecondsPerBooking);
+	$s->bindValue(':aboveThisManySecondsToCount', $aboveThisManySecondsToCount);
+	$s->execute();
+	$result = $s->fetchAll(PDO::FETCH_ASSOC);
 	if(isset($result)){
 		$rowNum = sizeOf($result);
 	} else {
@@ -1472,13 +1568,13 @@ foreach ($result as $row)
 	} else {
 		$PrevMonthTimeUsed = convertTimeToHoursAndMinutes($row['PreviousMonthCompanyWideBookingTimeUsed']);
 	}	
-	
+
 	if($row['MonthlyCompanyWideBookingTimeUsed'] == null){
 		$MonthlyTimeUsed = 'N/A';
 	} else {
 		$MonthlyTimeUsed = convertTimeToHoursAndMinutes($row['MonthlyCompanyWideBookingTimeUsed']);
 	}
-	
+
 	if($row['TotalCompanyWideBookingTimeUsed'] == null){
 		$TotalTimeUsed = 'N/A';
 	} else {
@@ -1513,94 +1609,46 @@ foreach ($result as $row)
 		($minPrice != 0 AND $hourPrice != 0 )){
 		$overCreditsFee = "Not set";
 	} elseif($minPrice != 0 AND $hourPrice == 0) {
-		$overCreditsFee = $minPrice . "/m";
+		$overCreditsFee = convertToCurrency($minPrice) . "/m";
 	} elseif($minPrice == 0 AND $hourPrice != 0) {
-		$overCreditsFee = $hourPrice . "/h";
+		$overCreditsFee = convertToCurrency($hourPrice) . "/h";
 	}
-		// Calculate monthly cost (subscription + over credit charges)
+		// Calculate Company Credits Remaining
 	if($MonthlyTimeUsed != "N/A"){
 		$monthlyTimeHour = substr($MonthlyTimeUsed,0,strpos($MonthlyTimeUsed,"h"));
 		$monthlyTimeMinute = substr($MonthlyTimeUsed,strpos($MonthlyTimeUsed,"h")+1,-1);
 		$actualTimeUsedInMinutesThisMonth = $monthlyTimeHour*60 + $monthlyTimeMinute;
 		if($actualTimeUsedInMinutesThisMonth > $companyMinuteCredits){
-			// Company has used more booking time than credited. Let's calculate how far over they went
-			$actualTimeOverCreditsInMinutes = $actualTimeUsedInMinutesThisMonth - $companyMinuteCredits;
-		
-			// Let's calculate cost
-			if($hourPrice == 0 AND $minPrice == 0){
-				// The subscription has no valid overtime price set, should not occur
-				$bookingCostThisMonth = $monthPrice . "+" . $actualTimeOverCreditsInMinutes . "m * cost (not set)";
-			} elseif($hourPrice != 0 AND $minPrice != 0){
-				// The subscription has two valid overtime price set, should not occur
-				$bookingCostThisMonth = $monthPrice . "+" . $actualTimeOverCreditsInMinutes . "m * cost (not set)";
-			} elseif($hourPrice == 0 AND $minPrice != 0){
-				// The subscription charges by the minute, if over credits
-				$bookingCostThisMonth = $minPrice * $actualTimeOverCreditsInMinutes;
-				$bookingCostThisMonth = $monthPrice . "+" . $bookingCostThisMonth;
-			} elseif($hourPrice != 0 AND $minPrice == 0){
-				// The subsription charges by the hour, if over credits
-				// TO-DO: Round up/down? Break down into minutes? Currently rounding up.
-				$bookingCostThisMonth = $hourPrice * ceil($actualTimeOverCreditsInMinutes/60);
-				$bookingCostThisMonth = $monthPrice . "+" . $bookingCostThisMonth;
-			}
-			$companyMinuteCreditsRemaining = 0;
-			
+			$minusCompanyMinuteCreditsRemaining = $actualTimeUsedInMinutesThisMonth - $companyMinuteCredits;
+			$displayCompanyCreditsRemaining = "-" . convertMinutesToHoursAndMinutes($minusCompanyMinuteCreditsRemaining);
 		} else {
-			$bookingCostThisMonth = $monthPrice . "+0";
 			$companyMinuteCreditsRemaining = $companyMinuteCredits - $actualTimeUsedInMinutesThisMonth;
-		}		
-	} elseif($monthPrice != 0) {
-		$bookingCostThisMonth = $monthPrice . "+0";
-		$companyMinuteCreditsRemaining = $companyMinuteCredits;
+			$displayCompanyCreditsRemaining = convertMinutesToHoursAndMinutes($companyMinuteCreditsRemaining);
+		}	
 	} else {
-		$bookingCostThisMonth = "N/A";
 		$companyMinuteCreditsRemaining = $companyMinuteCredits;
+		$displayCompanyCreditsRemaining = convertMinutesToHoursAndMinutes($companyMinuteCreditsRemaining);
 	}
-		// Calculate cost for previous month (subscription + over credit charges)
-	// TO-DO: Change/fix calculations? This will be wrong if credits/hour rate etc changes from previous month
-	if($PrevMonthTimeUsed != "N/A"){
-		$prevMonthTimeHour = substr($MonthlyTimeUsed,0,strpos($MonthlyTimeUsed,"h"));
-		$prevMonthTimeMinute = substr($MonthlyTimeUsed,strpos($MonthlyTimeUsed,"h")+1,-1);		
-		$actualTimeUsedInMinutesPrevMonth = $prevMonthTimeHour*60 + $prevMonthTimeMinute;
-		if($actualTimeUsedInMinutesPrevMonth > $companyMinuteCredits){
-			// Company has used more booking time than credited. Let's calculate how far over they went
-			$actualTimeOverCreditsInMinutes = $actualTimeUsedInMinutesPrevMonth - $companyMinuteCredits;
-		
-			// Let's calculate cost
-			if($hourPrice == 0 AND $minPrice == 0){
-				// The subscription has no valid overtime price set, should not occur
-				$bookingCostPrevMonth = $monthPrice . "+" . $actualTimeOverCreditsInMinutes . "m * cost (not set)";
-			} elseif($hourPrice != 0 AND $minPrice != 0){
-				// The subscription has two valid overtime price set, should not occur
-				$bookingCostPrevMonth = $monthPrice . "+" . $actualTimeOverCreditsInMinutes . "m * cost (not set)";
-			} elseif($hourPrice == 0 AND $minPrice != 0){
-				// The subscription charges by the minute, if over credits
-				$bookingCostPrevMonth = $minPrice * $actualTimeOverCreditsInMinutes;
-				$bookingCostPrevMonth = $monthPrice . "+" . $bookingCostPrevMonth;
-			} elseif($hourPrice != 0 AND $minPrice == 0){
-				// The subsription charges by the hour, if over credits
-				// TO-DO: Round up/down? Break down into minutes? Currently rounding up.
-				$bookingCostPrevMonth = $hourPrice * ceil($actualTimeOverCreditsInMinutes/60);
-				$bookingCostPrevMonth = $monthPrice . "+" . $bookingCostPrevMonth;
-			}	
-		} else {
-			$bookingCostPrevMonth = $monthPrice . "+0";
-		}		
-	} elseif($monthPrice != 0) {
-		$bookingCostPrevMonth = $monthPrice . "+0";
-	} else {
-		$bookingCostPrevMonth = "N/A";
-	}	
-	
-		// Format company credits remaining to be displayed
-	$displayCompanyCreditsRemaining = convertMinutesToHoursAndMinutes($companyMinuteCreditsRemaining);	
-	
-	// Display dates
+
+		// Display dates
 	$dateCreated = $row['DatetimeCreated'];	
 	$dateToRemove = $row['DeletionDate'];
 	$isActive = ($row['CompanyActivated'] == 1);
 	$dateTimeCreatedToDisplay = convertDatetimeToFormat($dateCreated, 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
 	$dateToRemoveToDisplay = convertDatetimeToFormat($dateToRemove, 'Y-m-d', DATE_DEFAULT_FORMAT_TO_DISPLAY);	
+	
+		// Get Period Status information
+	if(isset($row['CompanyCreditsHistoryPeriods']) AND $row['CompanyCreditsHistoryPeriods'] != NULL){
+		$totalPeriods = $row['CompanyCreditsHistoryPeriods'];
+	} else {
+		$totalPeriods = 0;
+	}
+	if(isset($row['CompanyCreditsHistoryPeriodsSetAsBilled']) AND $row['CompanyCreditsHistoryPeriodsSetAsBilled'] != NULL){
+		$billedPeriods = $row['CompanyCreditsHistoryPeriodsSetAsBilled'];
+	} else {
+		$billedPeriods = 0;
+	}
+	$notBilledPeriods = $totalPeriods - $billedPeriods;
 	
 	if($isActive){
 		$companies[] = array(
@@ -1615,10 +1663,11 @@ foreach ($result as $row)
 								'CreditSubscriptionName' => $row["CreditSubscriptionName"],
 								'CompanyCredits' => $displayCompanyCredits,
 								'CompanyCreditsRemaining' => $displayCompanyCreditsRemaining,
-								'CreditSubscriptionMonthlyPrice' => $monthPrice,
-								'BookingCostPrevMonth' => $bookingCostPrevMonth,
-								'BookingCostThisMonth' => $bookingCostThisMonth,
-								'OverCreditsFee' => $overCreditsFee
+								'CreditSubscriptionMonthlyPrice' => convertToCurrency($monthPrice),
+								'OverCreditsFee' => $overCreditsFee,
+								'TotalPeriods' => $totalPeriods,
+								'BilledPeriods' => $billedPeriods,
+								'NotBilledPeriods' => $notBilledPeriods
 							);
 	} elseif(!$isActive AND ($dateToRemove == "" OR $dateToRemove == NULL)) {
 		$unactivedcompanies[] = array(

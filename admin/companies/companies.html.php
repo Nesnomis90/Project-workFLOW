@@ -26,15 +26,15 @@
 				border-bottom: 1px solid #ddd;
 			}
 			
+			#companiestable tr:nth-of-type(even) {background-color: #f2f2f2;}
+			#companiestable tr:nth-of-type(odd) {background-color: white;}			
+			#companiestable tr:hover{background-color:#DBEAE8;}	
+			
 			#companiestable td {
 				padding: 8px;
 				text-align: left;
 				border: 1px solid #ddd;
 			}
-
-			#companiestable tr:hover{background-color:#ddd;}
-			
-			#companiestable tr:nth-child(even) {background-color: #f2f2f2;}
 			
 			#companiestable caption {
 				padding: 8px;
@@ -69,7 +69,7 @@
 					<th>Company</th>
 					<th colspan="6">Booking Subscription</th>
 					<th colspan="4">Booking Time Used</th>
-					<th colspan="2">Billing Amount</th>
+					<th colspan="3">Billing Status (Completed Periods)</th>
 					<th colspan="2">Dates</th>
 					<th colspan="2">Alter Company</th>
 				</tr>
@@ -87,8 +87,9 @@
 					<th>This Month</th>
 					<th>All Time</th>
 					<th>History</th>
-					<th>Last Month (if same credit and fees)</th>
-					<th>This Month (so far)</th>
+					<th>Total Periods</th>
+					<th>Set As Billed</th>
+					<th>Not Set As Billed</th>
 					<th>Make Inactive At</th>
 					<th>Created At</th>
 					<th>Edit</th>
@@ -117,16 +118,29 @@
 							</form>								
 								<td><?php htmlout($company['CreditSubscriptionName']); ?></td>
 								<td><?php htmlout($company['CompanyCredits']); ?></td>
-								<td><?php htmlout($company['CompanyCreditsRemaining']); ?></td>
+								<td>
+									<?php if(substr($company['CompanyCreditsRemaining'],0,1) === "-") : ?>
+										<span style="color:red"><?php htmlout($company['CompanyCreditsRemaining']); ?></span>
+									<?php else : ?>
+										<span style="color:green"><?php htmlout($company['CompanyCreditsRemaining']); ?></span>
+									<?php endif; ?>
+								</td>
 								<td><?php htmlout($company['CreditSubscriptionMonthlyPrice']); ?></td>
 								<td><?php htmlout($company['OverCreditsFee']); ?></td>
 								<td><?php htmlout($company['PreviousMonthCompanyWideBookingTimeUsed']); ?></td>
 								<td><?php htmlout($company['MonthlyCompanyWideBookingTimeUsed']); ?></td>
 								<td><?php htmlout($company['TotalCompanyWideBookingTimeUsed']); ?></td>
 							<form action="" method="post">
-								<td><input type="submit" name="action" value="Booking History"></td>								
-								<td><?php htmlout($company['BookingCostPrevMonth']); ?></td>
-								<td><?php htmlout($company['BookingCostThisMonth']); ?></td>
+								<td><input type="submit" name="action" value="Booking History"></td>
+								<td><?php htmlout($company['TotalPeriods']); ?></td>
+								<td><?php htmlout($company['BilledPeriods']); ?></td>								
+								<td>
+									<?php if($company['NotBilledPeriods'] > 0) : ?>
+										<span style="color:red"><?php htmlout($company['NotBilledPeriods']); ?></span>
+									<?php else : ?>
+										<span style="color:green"><?php htmlout($company['NotBilledPeriods']); ?></span>
+									<?php endif; ?>
+								</td>								
 								<?php if($company['DeletionDate'] == null) :?>
 										<td>
 											<p>No Date Set</p>

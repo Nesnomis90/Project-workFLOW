@@ -25,16 +25,15 @@
 				text-align: left;
 				border-bottom: 1px solid #ddd;
 			}
+			#companycreditstable tr:nth-of-type(even) {background-color: #f2f2f2;}
+			#companycreditstable tr:nth-of-type(odd) {background-color: white;}			
+			#companycreditstable tr:hover{background-color:#DBEAE8;}
 			
 			#companycreditstable td {
 				padding: 8px;
 				text-align: left;
 				border: 1px solid #ddd;
-			}
-
-			#companycreditstable tr:hover{background-color:#ddd;}
-			
-			#companycreditstable tr:nth-child(even) {background-color: #f2f2f2;}
+			}		
 			
 			#companycreditstable caption {
 				padding: 8px;

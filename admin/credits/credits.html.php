@@ -25,6 +25,9 @@
 				text-align: left;
 				border-bottom: 1px solid #ddd;
 			}
+			#creditstable tr:nth-of-type(even) {background-color: #f2f2f2;}
+			#creditstable tr:nth-of-type(odd) {background-color: white;}			
+			#creditstable tr:hover{background-color:#DBEAE8;}
 			
 			#creditstable td {
 				padding: 8px;
@@ -36,11 +39,7 @@
 				padding: 8px;
 				text-align: center;
 				border: 1px solid #ddd;
-			}			
-
-			#creditstable tr:hover{background-color:#ddd;}
-			
-			#creditstable tr:nth-child(even) {background-color: #f2f2f2;}
+			}
 			
 			#creditstable caption {
 				padding: 8px;

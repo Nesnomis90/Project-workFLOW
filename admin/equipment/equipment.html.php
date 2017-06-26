@@ -25,16 +25,15 @@
 				text-align: left;
 				border-bottom: 1px solid #ddd;
 			}
-			
+			#equipmenttable tr:nth-of-type(even) {background-color: #f2f2f2;}
+			#equipmenttable tr:nth-of-type(odd) {background-color: white;}			
+			#equipmenttable tr:hover{background-color:#DBEAE8;}
+									
 			#equipmenttable td {
 				padding: 8px;
 				text-align: left;
 				border: 1px solid #ddd;
 			}
-
-			#equipmenttable tr:hover{background-color:#ddd;}
-			
-			#equipmenttable tr:nth-child(even) {background-color: #f2f2f2;}
 			
 			#equipmenttable caption {
 				padding: 8px;

@@ -91,6 +91,8 @@ function updateBillingDatesForCompanies(){
 		$rowCount = $return->fetchColumn();
 		
 		if($rowCount > 0) {
+			$minimumSecondsPerBooking = MINIMUM_BOOKING_DURATION_IN_MINUTES_USED_IN_PRICE_CALCULATIONS * 60; // e.g. 15min = 900s
+			$aboveThisManySecondsToCount = BOOKING_DURATION_IN_MINUTES_USED_BEFORE_INCLUDING_IN_PRICE_CALCULATIONS * 60; // E.g. 1min = 60s			
 			// There is information to update. Get needed values
 			$sql = "SELECT 		c.`CompanyID`				AS TheCompanyID,
 								c.`startDate`				AS StartDate,
@@ -101,23 +103,51 @@ function updateBillingDatesForCompanies(){
 								cr.`overCreditHourPrice`	AS HourPrice,
 								cc.`altMinuteAmount`		AS AlternativeAmount
 								(
-									SELECT (
-											BIG_SEC_TO_TIME(
-															SUM(
-																DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
-																)*86400 
-															+ 
-															SUM(
-																TIME_TO_SEC(b.`actualEndDateTime`) 
-																- 
-																TIME_TO_SEC(b.`startDateTime`)
-																) 
-															) 
-											) 
+									SELECT (BIG_SEC_TO_TIME(SUM(
+															IF(
+																(
+																	(
+																		DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
+																		)*86400 
+																	+ 
+																	(
+																		TIME_TO_SEC(b.`actualEndDateTime`) 
+																		- 
+																		TIME_TO_SEC(b.`startDateTime`)
+																		) 
+																) > :aboveThisManySecondsToCount,
+																IF(
+																	(
+																	(
+																		DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
+																		)*86400 
+																	+ 
+																	(
+																		TIME_TO_SEC(b.`actualEndDateTime`) 
+																		- 
+																		TIME_TO_SEC(b.`startDateTime`)
+																		) 
+																) > :minimumSecondsPerBooking, 
+																	(
+																	(
+																		DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
+																		)*86400 
+																	+ 
+																	(
+																		TIME_TO_SEC(b.`actualEndDateTime`) 
+																		- 
+																		TIME_TO_SEC(b.`startDateTime`)
+																		) 
+																), 
+																	:minimumSecondsPerBooking
+																),
+																0
+															)
+									)))	AS BookingTimeUsed
 									FROM 		`booking` b  
 									INNER JOIN 	`company` c 
 									ON 			b.`CompanyID` = c.`CompanyID` 
-									WHERE 		b.`CompanyID` = TheCompanyID
+									WHERE 		b.`CompanyID` = CompID
 									AND 		b.`actualEndDateTime`
 									BETWEEN		c.`startDate`
 									AND			c.`endDate`
@@ -129,9 +159,15 @@ function updateBillingDatesForCompanies(){
 					ON			cr.`CreditsID` = cc.`CreditsID`
 					WHERE 		c.`isActive` = 1
 					AND			CURDATE() >= c.`endDate`";
-			$return = $pdo->query($sql);
-			$result = $return->fetchAll(PDO::FETCH_ASSOC);
-		
+			$s = $pdo->prepare($sql);
+			$s->bindValue(':minimumSecondsPerBooking', $minimumSecondsPerBooking);
+			$s->bindValue(':aboveThisManySecondsToCount', $aboveThisManySecondsToCount);
+			$s->execute();
+			$result = $s->fetchAll(PDO::FETCH_ASSOC);
+
+			$dateTimeNow = getDatetimeNow();
+			$displayDateTimeNow = convertDatetimeToFormat($dateTimeNow , 'Y-m-d H:i:s', DATE_DEFAULT_FORMAT_TO_DISPLAY);
+			
 			$pdo->beginTransaction();
 			foreach($result AS $insert){
 				if($insert['AlternativeAmount'] == NULL){
@@ -147,7 +183,9 @@ function updateBillingDatesForCompanies(){
 				$hourPrice = $insert['HourPrice'];
 				$bookingTimeUsedThisMonth = $insert['BookingTimeThisPeriod'];
 				$bookingTimeUsedThisMonthInMinutes = convertTimeToMinutes($bookingTimeUsedThisMonth);
+				$displayTotalBookingTimeThisPeriod = convertTimeToHoursAndMinutes($bookingTimeUsedThisMonthInMinutes);
 				
+				$setAsBilled = FALSE;
 				if($bookingTimeUsedThisMonthInMinutes > $creditsGivenInMinutes){
 					// Company went over credit this period
 					$companiesOverCredit[] = array(
@@ -155,16 +193,28 @@ function updateBillingDatesForCompanies(){
 													'StartDate' => $startDate,
 													'EndDate' 	=> $endDate
 													);
+				} else {
+					if($monthlyPrice == 0 OR $monthlyPrice == NULL){
+						// Company had no fees to pay this month
+						$setAsBilled = TRUE;
+					}
 				}
-				
-				$pdo->exec("INSERT INTO `companycreditshistory`
-							SET			`CompanyID` = " . $companyID . ",
-										`startDate` = '" . $startDate . "',
-										`endDate` = '" . $endDate . "',
-										`minuteAmount` = " . $creditsGivenInMinutes . ",
-										`monthlyPrice` = " . $monthlyPrice . ",
-										`overCreditMinutePrice` = " . $minutePrice . ",
-										`overCreditHourPrice` = " . $hourPrice);
+				$sql = "INSERT INTO `companycreditshistory`
+						SET			`CompanyID` = " . $companyID . ",
+									`startDate` = '" . $startDate . "',
+									`endDate` = '" . $endDate . "',
+									`minuteAmount` = " . $creditsGivenInMinutes . ",
+									`monthlyPrice` = " . $monthlyPrice . ",
+									`overCreditMinutePrice` = " . $minutePrice . ",
+									`overCreditHourPrice` = " . $hourPrice;
+				if($setAsBilled){
+					$billingDescriptionInformation = 	"This period was 'Set As Billed' automatically at the end of the period due to there being no fees.\n" .
+														"At that time the company had produced a total booking time of: " . $displayTotalBookingTimeThisPeriod .
+														", with a credit given of: " . $displayCompanyCredits . " and a monthly fee of " . convertToCurrency(0) . ".";							
+					$sql .= ", 	`hasBeenBilled` = 1,
+								`billingDescription` = '" . $billingDescriptionInformation . "'";
+				}
+				$pdo->exec($sql);
 			}	
 		
 			$sql = "UPDATE 	`company`
