@@ -209,7 +209,7 @@ function updateBillingDatesForCompanies(){
 									`overCreditHourPrice` = " . $hourPrice;
 				if($setAsBilled){
 					$billingDescriptionInformation = 	"This period was 'Set As Billed' automatically at the end of the period due to there being no fees.\n" .
-														" At that time the company had produced a total booking time of: " . $displayTotalBookingTimeThisPeriod .
+														"At that time the company had produced a total booking time of: " . $displayTotalBookingTimeThisPeriod .
 														", with a credit given of: " . $displayCompanyCredits . " and a monthly fee of " . convertToCurrency(0) . ".";							
 					$sql .= ", 	`hasBeenBilled` = 1,
 								`billingDescription` = '" . $billingDescriptionInformation . "'";
