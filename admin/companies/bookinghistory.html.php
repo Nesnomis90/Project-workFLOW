@@ -51,24 +51,23 @@
 			<h2>For the company: <?php htmlout($CompanyName); ?></h2>
 			<?php if(isset($periodsSummmedUp)) : ?>
 				<h3>The company has <span style="color:red">NOT BILLED PERIODS</span>.</h3>
-				<fieldset><legend>Periods</legend>
+				<fieldset><legend>Not Billed Periods</legend>
 				<?php $totalCostForAllPeriodsSummedUp = 0; ?>
 				<?php foreach($periodsSummmedUp AS $period) : ?>
 					<fieldset><legend><?php htmlout($period['StartDate'] . " - " . $period['EndDate']); ?></legend>
-						Booking Time Charged: <b><?php htmlout($period['BookingTimeCharged']); ?></b><br />
 						Credits Given: <b><?php htmlout($period['CreditsGiven']); ?></b><br />
-						Excess Booking Time: <b><?php htmlout($period['CreditsGiven']); ?></b><br />
+						Booking Time Charged: <b><?php htmlout($period['BookingTimeCharged']); ?></b><br />
+						Excess Booking Time: <b><?php htmlout($period['OverCreditsTimeExact']); ?></b><br />
 						Excess Time Charged: <b><?php htmlout($period['OverCreditsTimeCharged']); ?></b><br />
-						Cost (Subscription + Time): <b><?php htmlout($period['bookingCostThisMonth']); ?></b><br />
-						Cost (Total): <b><?php htmlout($period['totalBookingCostThisMonth']); ?></b><br />
-						<?php $totalCostForAllPeriodsSummedUp += $period['totalCost']; ?>
+						Cost (Subscription + Excess Boooking Time): <b><?php htmlout($period['TotalBookingCostThisMonthAsParts']); ?></b><br />
+						Cost (Total): <b><span style="color:red"><?php htmlout($period['TotalBookingCostThisMonth']); ?></span></b><br />
+						<?php $totalCostForAllPeriodsSummedUp += $period['TotalBookingCostThisMonthJustNumber']; ?>
 					</fieldset>
 				<?php endforeach; ?>
-					Total Cost All Periods: <b><?php htmlout(converToCurrency($totalCostForAllPeriodsSummedUp)); ?></b><br />
+					Total Cost All Periods: <span style="color:red"><b><?php htmlout(convertToCurrency($totalCostForAllPeriodsSummedUp)); ?></span></b><br />
 				</fieldset>
 			<?php endif; ?>
 			<h3>First period starts at: <?php htmlout($displayDateTimeCreated); ?><h3>
-			<h3>Currently viewing the period: <?php htmlout($BillingPeriod); ?></h3>
 			
 			<?php if(!isset($periodHasBeenBilled) OR $periodHasBeenBilled == 0){
 				$color='red';
@@ -84,16 +83,19 @@
 				<h2>Billing Status: This booking has <span style="color:green">BEEN BILLED</span>.</h2><br />
 			<?php endif; ?>
 			
+			<?php $bookingNumberThisPeriod = 1; ?>
 			<?php if(isset($bookingHistory) AND !empty($bookingHistory)) : ?>
-				<?php foreach($bookingHistory AS $row) : ?>
-				<fieldset>
-						User: <b><?php htmlout($row['UserInformation']); ?></b><br />
-						Booked the meeting room: <b><?php htmlout($row['MeetingRoomName']); ?></b><br />
-						For the period of: <b><?php htmlout($row['BookingPeriod']); ?></b><br />
-						Using a total time of: <b><?php htmlout($row['BookingTimeUsed']); ?></b><br />
-						Time used in price calculation: <b><?php htmlout($row['BookingTimeCharged']); ?></b><br />
-				</fieldset>
-				<?php endforeach; ?>
+				<fieldset><legend>Completed Bookings during <?php htmlout($BillingPeriod); ?></legend>
+					<?php foreach($bookingHistory AS $row) : ?>
+						<fieldset><legend>Booking #<?php htmlout($bookingNumberThisPeriod); ?></legend>
+								User: <b><?php htmlout($row['UserInformation']); ?></b><br />
+								Booked the meeting room: <b><?php htmlout($row['MeetingRoomName']); ?></b><br />
+								For the period of: <b><?php htmlout($row['BookingPeriod']); ?></b><br />
+								Using a total time of: <b><?php htmlout($row['BookingTimeUsed']); ?></b><br />
+								Time used in price calculation: <b><?php htmlout($row['BookingTimeCharged']); ?></b><br />
+						</fieldset>
+						<?php $bookingNumberThisPeriod += 1; ?>
+					<?php endforeach; ?>
 			<?php elseif($rightNow) : ?>
 				<b>There are no bookings completed so far this period.</b><br />
 			<?php else : ?>
@@ -162,6 +164,7 @@
 				<textarea name="billingDescriptionDisabled" id="billingDescriptionDisabled" 
 				rows="4" cols="50" disabled><?php htmlout($billingDescription); ?></textarea>
 			<?php endif; ?>
+			</fieldset>
 		<p><a href="..">Return to CMS home</a></p>
 	<?php include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/logout.inc.html.php'; ?>
 	</body>

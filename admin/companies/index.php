@@ -193,13 +193,16 @@ function sumUpUnbilledPeriods($pdo, $companyID){
 			$totalBookingCostThisMonth = convertToCurrency($totalCost);
 		}		
 		
+		$displayStartDate = convertDatetimeToFormat($row['StartDate'], 'Y-m-d', DATE_DEFAULT_FORMAT_TO_DISPLAY);
+		$displayEndDate = convertDatetimeToFormat($row['EndDate'], 'Y-m-d', DATE_DEFAULT_FORMAT_TO_DISPLAY);
+		
 		$periodsSummmedUp[] = array(
-										'StartDate' => $row['StartDate'],
-										'EndDate' => $row['EndDate'],
-										'CreditsGiven' => $row['CreditsGiven'],
-										'BookingTimeCharged' => $row['BookingTimeCharged'],
-										'OverCreditsTimeExact' => $row['OverCreditsTimeExact'],
-										'OverCreditsTimeCharged' => $row['OverCreditsTimeCharged'],
+										'StartDate' => $displayStartDate,
+										'EndDate' => $displayEndDate,
+										'CreditsGiven' => convertTimeToHoursAndMinutes($row['CreditsGiven']),
+										'BookingTimeCharged' => convertTimeToHoursAndMinutes($row['BookingTimeCharged']),
+										'OverCreditsTimeExact' => convertTimeToHoursAndMinutes($row['OverCreditsTimeExact']),
+										'OverCreditsTimeCharged' => convertTimeToHoursAndMinutes($row['OverCreditsTimeCharged']),
 										'TotalBookingCostThisMonthAsParts' => $bookingCostThisMonth,
 										'TotalBookingCostThisMonth' => $totalBookingCostThisMonth,
 										'TotalBookingCostThisMonthJustNumber' => $totalCost
@@ -233,16 +236,6 @@ function calculatePeriodInformation($pdo, $companyID, $BillingStart, $BillingEnd
 		$s->bindValue(':CompanyID', $companyID);
 		$s->execute();
 		$row = $s->fetch(PDO::FETCH_ASSOC);
-		
-		// Sum up periods that are not set as billed
-		$periodsSummmedUp = sumUpUnbilledPeriods($pdo, $companyID);
-		if($periodsSummmedUp === FALSE){
-			// No periods not set as billed
-			echo "<br />";
-			echo "No Periods To Sum Up";
-			echo "<br />";
-			unset($periodsSummmedUp);
-		}
 	} else {
 		// Get the credit information for the selected period (if we have it saved in companycreditshistory
 		$sql = "SELECT 		`minuteAmount`				AS CreditSubscriptionMinuteAmount,
@@ -1091,6 +1084,19 @@ if ((isset($_POST['action']) AND $_POST['action'] == "Booking History") OR
 				$displayHourAmountUsedInCalculation, $actualTimeOverCreditsInMinutes, $periodHasBeenBilled, $billingDescription,
 				$displayTotalBookingTimeUsedInPriceCalculationsThisPeriod) 
 		= calculatePeriodInformation($pdo, $companyID, $BillingStart, $BillingEnd, $rightNow);
+		
+			// Sum up periods that are not set as billed
+		$periodsSummmedUp = sumUpUnbilledPeriods($pdo, $companyID);
+		echo "<br />";
+		var_dump($periodsSummmedUp);
+		echo "<br />";
+		if($periodsSummmedUp === FALSE){
+			// No periods not set as billed
+			echo "<br />";
+			echo "No Periods To Sum Up";
+			echo "<br />";
+			unset($periodsSummmedUp);
+		}
 		
 		$pdo = NULL;
 	}
