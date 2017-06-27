@@ -41,59 +41,60 @@ function sumUpUnbilledPeriods($pdo, $companyID){
 	$aboveThisManySecondsToCount = BOOKING_DURATION_IN_MINUTES_USED_BEFORE_INCLUDING_IN_PRICE_CALCULATIONS * 60; // e.g. 1min = 60s
 	$roundToClosestMinuteInSeconds = ROUND_SUMMED_BOOKING_TIME_CHARGED_FOR_PERIOD_TO_THIS_CLOSEST_MINUTE_AMOUNT * 60 // e.g. 15min = 900s
 		// Rounds to closest 15 minutes now (on finished summation per period)
-	$sql = "SELECT 	cch.`startDate`, 
-					cch.`endDate`, 
-					cch.`minuteAmount`,
-					cch.`monthlyPrice`,
-					cch.`overCreditMinutePrice`,
-					cch.`overCreditHourPrice`,
-					(SELECT BIG_SEC_TO_TIME(FLOOR(((IFNULL(SUM(
-						IF(
-							(
-								(
-									DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
-									)*86400 
-								+ 
-								(
-									TIME_TO_SEC(b.`actualEndDateTime`) 
-									- 
-									TIME_TO_SEC(b.`startDateTime`)
-									) 
-							) > :aboveThisManySecondsToCount,
+	$sql = "SELECT 	cch.`startDate`						AS StartDate,
+					cch.`endDate`						AS EndDate,
+					cch.`minuteAmount`					AS CreditSubscriptionMinuteAmount,
+					cch.`monthlyPrice`					AS CreditSubscriptionMonthlyPrice,
+					cch.`overCreditMinutePrice`			AS CreditSubscriptionMinutePrice,
+					cch.`overCreditHourPrice`			AS CreditSubscriptionHourPrice,
+					(
+						SELECT BIG_SEC_TO_TIME(FLOOR(((IFNULL(SUM(
 							IF(
 								(
-								(
-									DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
-									)*86400 
-								+ 
-								(
-									TIME_TO_SEC(b.`actualEndDateTime`) 
-									- 
-									TIME_TO_SEC(b.`startDateTime`)
-									) 
-							) > :minimumSecondsPerBooking, 
-								(
-								(
-									DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
-									)*86400 
-								+ 
-								(
-									TIME_TO_SEC(b.`actualEndDateTime`) 
-									- 
-									TIME_TO_SEC(b.`startDateTime`)
-									) 
-							), 
-								:minimumSecondsPerBooking
-							),
+									(
+										DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
+										)*86400 
+									+
+									(
+										TIME_TO_SEC(b.`actualEndDateTime`) 
+										- 
+										TIME_TO_SEC(b.`startDateTime`)
+										)
+								) > :aboveThisManySecondsToCount,
+								IF(
+									(
+										(
+											DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
+											)*86400 
+										+ 
+										(
+										TIME_TO_SEC(b.`actualEndDateTime`) 
+										- 
+										TIME_TO_SEC(b.`startDateTime`)
+										) 
+									) > :minimumSecondsPerBooking, 
+									(
+										(
+											DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
+											)*86400 
+										+ 
+										(
+										TIME_TO_SEC(b.`actualEndDateTime`) 
+										- 
+										TIME_TO_SEC(b.`startDateTime`)
+										) 
+									), 
+									:minimumSecondsPerBooking
+								),
 							0
 							)
-						),0))+450)/900)*900)
-					FROM 		`booking` b
-					WHERE 		b.`CompanyID` = :CompanyID
-					AND 		b.`actualEndDateTime`
-					BETWEEN		cch.`startDate`
-					AND			cch.`endDate`
-					)	AS BookingTimeCharged
+						),0))+(:roundToClosestMinuteInSeconds/2))/:roundToClosestMinuteInSeconds)*:roundToClosestMinuteInSeconds)
+						FROM 		`booking` b
+						WHERE 		b.`CompanyID` = :CompanyID
+						AND 		b.`actualEndDateTime`
+						BETWEEN		cch.`startDate`
+						AND			cch.`endDate`
+					)										AS BookingTimeCharged
 				FROM 		`companycreditshistory` cch
 				INNER JOIN	`companycredits` cc
 				ON 			cc.`CompanyID` = cch.`CompanyID`
@@ -118,6 +119,7 @@ function sumUpUnbilledPeriods($pdo, $companyID){
 function calculatePeriodInformation($pdo, $companyID, $BillingStart, $BillingEnd, $rightNow){
 	
 	if($rightNow === TRUE){
+		// Get the current credit information
 		$sql = "SELECT 		IFNULL(
 									cc.`altMinuteAmount`,
 									cr.`minuteAmount`)		AS CreditSubscriptionMinuteAmount,
@@ -134,6 +136,7 @@ function calculatePeriodInformation($pdo, $companyID, $BillingStart, $BillingEnd
 		$s->execute();
 		$row = $s->fetch(PDO::FETCH_ASSOC);					
 	} else {
+		// Get the credit information for the selected period (if we have it saved in companycreditshistory
 		$sql = "SELECT 		`minuteAmount`				AS CreditSubscriptionMinuteAmount,
 							`monthlyPrice`				AS CreditSubscriptionMonthlyPrice,
 							`overCreditMinutePrice`		AS CreditSubscriptionMinutePrice,
@@ -155,7 +158,7 @@ function calculatePeriodInformation($pdo, $companyID, $BillingStart, $BillingEnd
 		$periodHasBeenBilled = $row['PeriodHasBeenBilled'];
 		$billingDescription = $row['BillingDescription'];
 	}
-	// Get the credit information for the selected period (if we have it saved in companycreditshistory
+	
 	
 	// Get credits values
 	$companyMinuteCredits = $row['CreditSubscriptionMinuteAmount'];
