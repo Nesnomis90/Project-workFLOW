@@ -7,8 +7,6 @@ include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/magicquotes.inc.php';
 
 unsetSessionsFromAdminUsers(); // TO-DO: Add sessions from other places too. Remove if it breaks multiple tabs
 
-// TO-DO: Add a booking history summation on unbilled periods!
-
 // CHECK IF USER TRYING TO ACCESS THIS IS IN FACT THE ADMIN!
 if (!isUserAdmin()){
 	exit();
@@ -36,6 +34,88 @@ function clearEditCompanySessions(){
 	
 	unset($_SESSION['EditCompanyCompanyID']);
 }
+// Function to check if the company has unbilled periods and then sums them up and displays the total 
+function sumUpUnbilledPeriods($pdo, $companyID){
+	// TO-DO: Add a booking history summation on unbilled periods!
+		$sql = "SELECT 		`startDate`				AS StartDate,
+							`endDate`				AS EndDate
+				FROM 		`companycreditshistory`
+				WHERE 		`companyID` = :CompanyID
+				AND			`hasBeenBilled` = 0";
+		$s = $pdo->prepare($sql);
+		$s->bindValue(':CompanyID', $companyID);
+		$s->execute();
+		$result = $s->fetchAll(PDO::FETCH_ASSOC);
+
+		if(isset($result) AND sizeOf($result) > 0){
+			$sql = "SELECT (BIG_SEC_TO_TIME(SUM(
+								IF(
+									(
+										(
+											DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
+											)*86400 
+										+ 
+										(
+											TIME_TO_SEC(b.`actualEndDateTime`) 
+											- 
+											TIME_TO_SEC(b.`startDateTime`)
+											) 
+									) > :aboveThisManySecondsToCount,
+									IF(
+										(
+										(
+											DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
+											)*86400 
+										+ 
+										(
+											TIME_TO_SEC(b.`actualEndDateTime`) 
+											- 
+											TIME_TO_SEC(b.`startDateTime`)
+											) 
+									) > :minimumSecondsPerBooking, 
+										(
+										(
+											DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
+											)*86400 
+										+ 
+										(
+											TIME_TO_SEC(b.`actualEndDateTime`) 
+											- 
+											TIME_TO_SEC(b.`startDateTime`)
+											) 
+									), 
+										:minimumSecondsPerBooking
+									),
+									0
+								)
+							)))	AS BookingTimeUsed
+					FROM 		`booking` b
+					WHERE 		b.`CompanyID` = :CompanyID";
+
+			$first = TRUE;
+			foreach($result AS $row){
+				// Add the date periods we found
+				if($first){
+					$sql .= "	AND 		b.`actualEndDateTime`
+								BETWEEN		'" . $row['StartDate'] . "'
+								AND			'" . $row['EndDate'] . "'";
+					$first = FALSE;
+				} else {
+					$sql .= "	OR 			b.`actualEndDateTime`
+								BETWEEN		'" . $row['StartDate'] . "'
+								AND			'" . $row['EndDate'] . "'";
+				}
+			}
+			
+			$s = $pdo->prepare($sql);
+			$s->bindValue(':CompanyID', $companyID);
+			$s->bindValue(':minimumSecondsPerBooking', $minimumSecondsPerBooking);
+			$s->bindValue(':aboveThisManySecondsToCount', $aboveThisManySecondsToCount);
+			$s->execute();
+			$result = $s->fetchAll(PDO::FETCH_ASSOC);
+		}
+}
+
 
 // Function to calculate booking time used and the cost of that period for a company
 function calculatePeriodInformation($pdo, $companyID, $BillingStart, $BillingEnd, $rightNow){
@@ -600,7 +680,6 @@ if (isset($_POST['history']) AND $_POST['history'] == "Next Period"){
 // If admin wants to see the booking history of the period before the currently shown one
 if (	(isset($_POST['history']) AND $_POST['history'] == "Previous Period") OR 
 		(isset($_POST['history']) AND $_POST['history'] == "First Period")){
-	//TO-DO: Do the same here as in "next period" for calculating cost
 	// Set correct period based on what user clicked.
 	if(isset($_POST['history']) AND $_POST['history'] == "Previous Period"){
 		if(isset($_SESSION['BookingHistoryIntervalNumber'])){

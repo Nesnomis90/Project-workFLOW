@@ -77,10 +77,10 @@
 					<?php if($checkbox[2]) : ?>
 						<?php if($checkbox[3]) : ?>
 							<input type="checkbox" name="search[]" 
-							value="<?php htmlout($checkbox[0]); ?>" checked="checked"><?php htmlout($checkbox[1]); ?></br />
+							value="<?php htmlout($checkbox[0]); ?>" checked="checked"><?php htmlout($checkbox[1]); ?><br />
 						<?php else : ?>
 							<input type="checkbox" name="search[]" 
-							value="<?php htmlout($checkbox[0]); ?>"><?php htmlout($checkbox[1]); ?></br />
+							value="<?php htmlout($checkbox[0]); ?>"><?php htmlout($checkbox[1]); ?><br />
 						<?php endif; ?>
 					<?php else : ?>
 						<?php if($checkbox[3]) : ?>
