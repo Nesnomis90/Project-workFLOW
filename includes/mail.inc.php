@@ -80,7 +80,7 @@ function validateUserEmail($email){
 	Email verification codes must expire after the first use or expire after 8 hours if not used.*/
 	
 	// To avoid email injection the emails can't have \n\r in them.
-	if(preg_match('/\r|\n/',$email)){ // TO-DO: Double check/test if this is correct
+	if(preg_match('/\r|\n/',$email)){
 		return FALSE;
 	}
 	

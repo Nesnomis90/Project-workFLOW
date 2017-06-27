@@ -2,6 +2,187 @@ USE test;
 SET NAMES utf8;
 USE meetingflow;
 
+SELECT 		`startDate`				AS StartDate,
+			`endDate`				AS EndDate
+FROM 		`companycreditshistory`
+WHERE 		`companyID` = 2
+AND			`hasBeenBilled` = 0;
+
+SELECT 		(
+				BIG_SEC_TO_TIME(
+						(
+							DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
+							)*86400 
+						+ 
+						(
+							TIME_TO_SEC(b.`actualEndDateTime`) 
+							- 
+							TIME_TO_SEC(b.`startDateTime`)
+						)
+					)
+				)						AS BookingTimeUsed,
+			(
+				BIG_SEC_TO_TIME(
+					IF(
+						(
+							(
+								DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
+								)*86400 
+							+ 
+							(
+								TIME_TO_SEC(b.`actualEndDateTime`) 
+								- 
+								TIME_TO_SEC(b.`startDateTime`)
+							) 
+						) > 60,
+						IF(
+							(
+								(
+									DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
+									)*86400 
+								+ 
+								(
+									TIME_TO_SEC(b.`actualEndDateTime`) 
+									- 
+									TIME_TO_SEC(b.`startDateTime`)
+								) 
+							) > 900, 
+							(
+								(
+									DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
+									)*86400 
+								+ 
+								(
+									TIME_TO_SEC(b.`actualEndDateTime`) 
+									- 
+									TIME_TO_SEC(b.`startDateTime`)
+								) 
+							), 
+							900
+						),
+						0
+                    )
+				)
+            )						AS BookingTimeCharged,
+			b.`startDateTime`		AS BookingStartedDatetime,
+			b.`actualEndDateTime`	AS BookingCompletedDatetime,
+			u.`firstName`			AS UserFirstname,
+			u.`lastName`			AS UserLastname,
+			u.`email`				AS UserEmail,
+			m.`name`				AS MeetingRoomName
+FROM 		`booking` b
+INNER JOIN  `company` c
+ON 			c.`CompanyID` = b.`companyID`
+LEFT JOIN	`user` u
+ON 			u.`userID` = b.`userID`
+LEFT JOIN 	`meetingroom` m
+ON			m.`meetingRoomID` = b.`meetingRoomID`
+WHERE   	b.`CompanyID` = 2
+AND 		b.`actualEndDateTime` IS NOT NULL
+AND     	b.`dateTimeCancelled` IS NULL
+AND         b.`actualEndDateTime`
+BETWEEN	    '2017-03-15'
+AND			'2017-06-15';
+
+
+
+
+SELECT SEC_TO_TIME(
+					FLOOR(
+							(TIME_TO_SEC('16:36:00')+900)/1800
+					)*1800
+				);
+                
+SELECT		StartDate, 
+			EndDate,
+            CreditSubscriptionMonthlyPrice,
+            CreditSubscriptionMinutePrice,
+            CreditSubscriptionHourPrice,
+            BIG_SEC_TO_TIME(CreditsGivenInSeconds) 			AS CreditsGiven,
+			BIG_SEC_TO_TIME(BookingTimeChargedInSeconds) 	AS BookingTimeCharged,
+			BIG_SEC_TO_TIME(
+							IF(
+								(BookingTimeChargedInSeconds>CreditsGivenInSeconds),
+                                BookingTimeChargedInSeconds-CreditsGivenInSeconds, 
+                                0
+							)
+			)												AS OverCreditsTimeExact,
+            BIG_SEC_TO_TIME(
+							FLOOR(
+								(
+									(
+										IF(
+											(BookingTimeChargedInSeconds>CreditsGivenInSeconds),
+											BookingTimeChargedInSeconds-CreditsGivenInSeconds, 
+											0
+										)
+                                    )+450
+								)/900
+							)*900
+			)												AS OverCreditsTimeCharged
+FROM (
+		SELECT 	cch.`startDate` 							AS StartDate,
+				cch.`endDate`								AS EndDate,							 
+				cch.`minuteAmount`*60						AS CreditsGivenInSeconds,						
+				cch.`monthlyPrice`							AS CreditSubscriptionMonthlyPrice,
+				cch.`overCreditMinutePrice`					AS CreditSubscriptionMinutePrice,
+				cch.`overCreditHourPrice`					AS CreditSubscriptionHourPrice,
+			(SELECT FLOOR(((IFNULL(SUM(
+					IF(
+						(
+							(
+								DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
+								)*86400 
+							+ 
+							(
+								TIME_TO_SEC(b.`actualEndDateTime`) 
+								- 
+								TIME_TO_SEC(b.`startDateTime`)
+								) 
+						) > 60,
+						IF(
+							(
+							(
+								DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
+								)*86400 
+							+ 
+							(
+								TIME_TO_SEC(b.`actualEndDateTime`) 
+								- 
+								TIME_TO_SEC(b.`startDateTime`)
+								) 
+						) > 900, 
+							(
+							(
+								DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
+								)*86400 
+							+ 
+							(
+								TIME_TO_SEC(b.`actualEndDateTime`) 
+								- 
+								TIME_TO_SEC(b.`startDateTime`)
+								) 
+						), 
+							900
+						),
+						0
+					)
+				),0))+450)/900)*900
+			FROM 		`booking` b
+			WHERE 		b.`CompanyID` = 2
+			AND 		b.`actualEndDateTime`
+			BETWEEN		cch.`startDate`
+			AND			cch.`endDate`
+			)												AS BookingTimeChargedInSeconds
+		FROM 		`companycreditshistory` cch
+		INNER JOIN	`companycredits` cc
+		ON 			cc.`CompanyID` = cch.`CompanyID`
+		INNER JOIN 	`credits` cr
+		ON 			cr.`CreditsID` = cc.`CreditsID`
+		WHERE 		cch.`CompanyID` = 2
+		AND 		cch.`hasBeenBilled` = 0
+) 															AS PeriodInformation;
+
 SELECT BIG_SEC_TO_TIME(
 						SUM(
 							IF(
