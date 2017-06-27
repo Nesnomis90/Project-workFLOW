@@ -8,8 +8,8 @@ FROM 		`companycreditshistory`
 WHERE 		`companyID` = 2
 AND			`hasBeenBilled` = 0;
 
-
-SELECT 		(BIG_SEC_TO_TIME((
+SELECT 		(
+				BIG_SEC_TO_TIME(
 						(
 							DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
 							)*86400 
@@ -19,49 +19,51 @@ SELECT 		(BIG_SEC_TO_TIME((
 							- 
 							TIME_TO_SEC(b.`startDateTime`)
 						)
-				)
-			))						AS BookingTimeUsed,
-			(BIG_SEC_TO_TIME((
-				IF(
-					(
-						(
-							DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
-							)*86400 
-						+ 
-						(
-							TIME_TO_SEC(b.`actualEndDateTime`) 
-							- 
-							TIME_TO_SEC(b.`startDateTime`)
-						) 
-					) > 60,
+					)
+				)						AS BookingTimeUsed,
+			(
+				BIG_SEC_TO_TIME(
 					IF(
 						(
-						(
-							DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
-							)*86400 
-						+ 
-						(
-							TIME_TO_SEC(b.`actualEndDateTime`) 
-							- 
-							TIME_TO_SEC(b.`startDateTime`)
-						) 
-					) > 900, 
-						(
-						(
-							DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
-							)*86400 
-						+ 
-						(
-							TIME_TO_SEC(b.`actualEndDateTime`) 
-							- 
-							TIME_TO_SEC(b.`startDateTime`)
-						) 
-					), 
-						900
-					),
-					0
+							(
+								DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
+								)*86400 
+							+ 
+							(
+								TIME_TO_SEC(b.`actualEndDateTime`) 
+								- 
+								TIME_TO_SEC(b.`startDateTime`)
+							) 
+						) > 60,
+						IF(
+							(
+								(
+									DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
+									)*86400 
+								+ 
+								(
+									TIME_TO_SEC(b.`actualEndDateTime`) 
+									- 
+									TIME_TO_SEC(b.`startDateTime`)
+								) 
+							) > 900, 
+							(
+								(
+									DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
+									)*86400 
+								+ 
+								(
+									TIME_TO_SEC(b.`actualEndDateTime`) 
+									- 
+									TIME_TO_SEC(b.`startDateTime`)
+								) 
+							), 
+							900
+						),
+						0
+                    )
 				)
-			)))						AS BookingTimeCharged,
+            )						AS BookingTimeCharged,
 			b.`startDateTime`		AS BookingStartedDatetime,
 			b.`actualEndDateTime`	AS BookingCompletedDatetime,
 			u.`firstName`			AS UserFirstname,
@@ -87,70 +89,96 @@ AND			'2017-06-15';
 
 SELECT SEC_TO_TIME(
 					FLOOR(
-							(TIME_TO_SEC('16:21:30')+450)/900
-					)*900
+							(TIME_TO_SEC('16:36:00')+900)/1800
+					)*1800
 				);
-
-SELECT 	cch.`startDate`, 
-		cch.`endDate`, 
-		cch.`minuteAmount`,
-        cch.`monthlyPrice`,
-        cch.`overCreditMinutePrice`,
-        cch.`overCreditHourPrice`,
-	(SELECT BIG_SEC_TO_TIME(FLOOR(((IFNULL(SUM(
-			IF(
-				(
-					(
-						DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
-						)*86400 
-					+ 
-					(
-						TIME_TO_SEC(b.`actualEndDateTime`) 
-						- 
-						TIME_TO_SEC(b.`startDateTime`)
-						) 
-				) > 60,
-				IF(
-					(
-					(
-						DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
-						)*86400 
-					+ 
-					(
-						TIME_TO_SEC(b.`actualEndDateTime`) 
-						- 
-						TIME_TO_SEC(b.`startDateTime`)
-						) 
-				) > 900, 
-					(
-					(
-						DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
-						)*86400 
-					+ 
-					(
-						TIME_TO_SEC(b.`actualEndDateTime`) 
-						- 
-						TIME_TO_SEC(b.`startDateTime`)
-						) 
-				), 
-					900
-				),
-				0
-			)
-		),0))+450)/900)*900)
-    FROM 		`booking` b
-    WHERE 		b.`CompanyID` = 2
-	AND 		b.`actualEndDateTime`
-	BETWEEN		cch.`startDate`
-	AND			cch.`endDate`
-    )	AS BookingTimeCharged
-FROM 		`companycreditshistory` cch
-INNER JOIN	`companycredits` cc
-ON 			cc.`CompanyID` = cch.`CompanyID`
-INNER JOIN 	`credits` cr
-ON 			cr.`CreditsID` = cc.`CreditsID`
-WHERE 		cch.`CompanyID` = 2
-AND 		cch.`hasBeenBilled` = 0;
+                
+SELECT		StartDate, 
+			EndDate,
+            BIG_SEC_TO_TIME(CreditsGivenInSeconds) 			AS CreditsGiven,
+			BIG_SEC_TO_TIME(BookingTimeChargedInSeconds) 	AS BookingTimeCharged,
+			BIG_SEC_TO_TIME(
+							IF(
+								(BookingTimeChargedInSeconds>CreditsGivenInSeconds),
+                                BookingTimeChargedInSeconds-CreditsGivenInSeconds, 
+                                0
+							)
+			)												AS OverCreditsTimeExact,
+            BIG_SEC_TO_TIME(
+							FLOOR(
+								(
+									(
+										IF(
+											(BookingTimeChargedInSeconds>CreditsGivenInSeconds),
+											BookingTimeChargedInSeconds-CreditsGivenInSeconds, 
+											0
+										)
+                                    )+450
+								)/900
+							)*900
+			)												AS OverCreditsTimeCharged
+FROM (
+		SELECT 	cch.`startDate` 							AS StartDate,
+				cch.`endDate`								AS EndDate,							 
+				cch.`minuteAmount`*60						AS CreditsGivenInSeconds,						
+				cch.`monthlyPrice`							AS CreditSubscriptionMonthlyPrice,
+				cch.`overCreditMinutePrice`					AS CreditSubscriptionMinutePrice,
+				cch.`overCreditHourPrice`					AS CreditSubscriptionHourPrice,
+			(SELECT FLOOR(((IFNULL(SUM(
+					IF(
+						(
+							(
+								DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
+								)*86400 
+							+ 
+							(
+								TIME_TO_SEC(b.`actualEndDateTime`) 
+								- 
+								TIME_TO_SEC(b.`startDateTime`)
+								) 
+						) > 60,
+						IF(
+							(
+							(
+								DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
+								)*86400 
+							+ 
+							(
+								TIME_TO_SEC(b.`actualEndDateTime`) 
+								- 
+								TIME_TO_SEC(b.`startDateTime`)
+								) 
+						) > 900, 
+							(
+							(
+								DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
+								)*86400 
+							+ 
+							(
+								TIME_TO_SEC(b.`actualEndDateTime`) 
+								- 
+								TIME_TO_SEC(b.`startDateTime`)
+								) 
+						), 
+							900
+						),
+						0
+					)
+				),0))+450)/900)*900
+			FROM 		`booking` b
+			WHERE 		b.`CompanyID` = 2
+			AND 		b.`actualEndDateTime`
+			BETWEEN		cch.`startDate`
+			AND			cch.`endDate`
+			)												AS BookingTimeChargedInSeconds
+		FROM 		`companycreditshistory` cch
+		INNER JOIN	`companycredits` cc
+		ON 			cc.`CompanyID` = cch.`CompanyID`
+		INNER JOIN 	`credits` cr
+		ON 			cr.`CreditsID` = cc.`CreditsID`
+		WHERE 		cch.`CompanyID` = 2
+		AND 		cch.`hasBeenBilled` = 0
+) 															AS PeriodInformation;
 
 SELECT BIG_SEC_TO_TIME(
 						SUM(

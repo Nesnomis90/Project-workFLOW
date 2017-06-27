@@ -41,67 +41,95 @@ function sumUpUnbilledPeriods($pdo, $companyID){
 	$aboveThisManySecondsToCount = BOOKING_DURATION_IN_MINUTES_USED_BEFORE_INCLUDING_IN_PRICE_CALCULATIONS * 60; // e.g. 1min = 60s
 	$roundToClosestMinuteInSeconds = ROUND_SUMMED_BOOKING_TIME_CHARGED_FOR_PERIOD_TO_THIS_CLOSEST_MINUTE_AMOUNT * 60 // e.g. 15min = 900s
 		// Rounds to closest 15 minutes now (on finished summation per period)
-	$sql = "SELECT 	cch.`startDate`						AS StartDate,
-					cch.`endDate`						AS EndDate,
-					cch.`minuteAmount`					AS CreditSubscriptionMinuteAmount,
-					cch.`monthlyPrice`					AS CreditSubscriptionMonthlyPrice,
-					cch.`overCreditMinutePrice`			AS CreditSubscriptionMinutePrice,
-					cch.`overCreditHourPrice`			AS CreditSubscriptionHourPrice,
-					(
-						SELECT BIG_SEC_TO_TIME(FLOOR(((IFNULL(SUM(
-							IF(
-								(
-									(
-										DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
-										)*86400 
-									+
-									(
-										TIME_TO_SEC(b.`actualEndDateTime`) 
-										- 
-										TIME_TO_SEC(b.`startDateTime`)
+	$sql = "SELECT		StartDate, 
+						EndDate,
+						CreditSubscriptionMonthlyPrice,
+						CreditSubscriptionMinutePrice,
+						CreditSubscriptionHourPrice,
+						BIG_SEC_TO_TIME(CreditsGivenInSeconds) 				AS CreditsGiven,
+						BIG_SEC_TO_TIME(BookingTimeChargedInSeconds) 		AS BookingTimeCharged,
+						BIG_SEC_TO_TIME(
+										IF(
+											(BookingTimeChargedInSeconds>CreditsGivenInSeconds),
+											BookingTimeChargedInSeconds-CreditsGivenInSeconds, 
+											0
 										)
-								) > :aboveThisManySecondsToCount,
-								IF(
-									(
+						)													AS OverCreditsTimeExact,
+						BIG_SEC_TO_TIME(
+										FLOOR(
+											(
+												(
+													IF(
+														(BookingTimeChargedInSeconds>CreditsGivenInSeconds),
+														BookingTimeChargedInSeconds-CreditsGivenInSeconds, 
+														0
+													)
+												)+(:roundToClosestMinuteInSeconds/2)
+											)/:roundToClosestMinuteInSeconds
+										)*:roundToClosestMinuteInSeconds
+						)													AS OverCreditsTimeCharged
+			FROM (
+					SELECT 	cch.`startDate`									AS StartDate,
+							cch.`endDate`									AS EndDate,
+							cch.`minuteAmount`								AS CreditSubscriptionMinuteAmount,
+							cch.`monthlyPrice`								AS CreditSubscriptionMonthlyPrice,
+							cch.`overCreditMinutePrice`						AS CreditSubscriptionMinutePrice,
+							cch.`overCreditHourPrice`						AS CreditSubscriptionHourPrice,
+							(
+								SELECT BIG_SEC_TO_TIME(FLOOR(((IFNULL(SUM(
+									IF(
 										(
-											DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
-											)*86400 
-										+ 
-										(
-										TIME_TO_SEC(b.`actualEndDateTime`) 
-										- 
-										TIME_TO_SEC(b.`startDateTime`)
-										) 
-									) > :minimumSecondsPerBooking, 
-									(
-										(
-											DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
-											)*86400 
-										+ 
-										(
-										TIME_TO_SEC(b.`actualEndDateTime`) 
-										- 
-										TIME_TO_SEC(b.`startDateTime`)
-										) 
-									), 
-									:minimumSecondsPerBooking
-								),
-							0
-							)
-						),0))+(:roundToClosestMinuteInSeconds/2))/:roundToClosestMinuteInSeconds)*:roundToClosestMinuteInSeconds)
-						FROM 		`booking` b
-						WHERE 		b.`CompanyID` = :CompanyID
-						AND 		b.`actualEndDateTime`
-						BETWEEN		cch.`startDate`
-						AND			cch.`endDate`
-					)										AS BookingTimeCharged
-				FROM 		`companycreditshistory` cch
-				INNER JOIN	`companycredits` cc
-				ON 			cc.`CompanyID` = cch.`CompanyID`
-				INNER JOIN 	`credits` cr
-				ON 			cr.`CreditsID` = cc.`CreditsID`
-				WHERE 		cch.`CompanyID` = :CompanyID
-				AND 		cch.`hasBeenBilled` = 0";
+											(
+												DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
+												)*86400 
+											+
+											(
+												TIME_TO_SEC(b.`actualEndDateTime`) 
+												- 
+												TIME_TO_SEC(b.`startDateTime`)
+												)
+										) > :aboveThisManySecondsToCount,
+										IF(
+											(
+												(
+													DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
+													)*86400 
+												+ 
+												(
+												TIME_TO_SEC(b.`actualEndDateTime`) 
+												- 
+												TIME_TO_SEC(b.`startDateTime`)
+												) 
+											) > :minimumSecondsPerBooking, 
+											(
+												(
+													DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
+													)*86400 
+												+ 
+												(
+												TIME_TO_SEC(b.`actualEndDateTime`) 
+												- 
+												TIME_TO_SEC(b.`startDateTime`)
+												) 
+											), 
+											:minimumSecondsPerBooking
+										),
+									0)
+								),0))+(:roundToClosestMinuteInSeconds/2))/:roundToClosestMinuteInSeconds)*:roundToClosestMinuteInSeconds)
+								FROM 		`booking` b
+								WHERE 		b.`CompanyID` = :CompanyID
+								AND 		b.`actualEndDateTime`
+								BETWEEN		cch.`startDate`
+								AND			cch.`endDate`
+							)										AS BookingTimeCharged
+						FROM 		`companycreditshistory` cch
+						INNER JOIN	`companycredits` cc
+						ON 			cc.`CompanyID` = cch.`CompanyID`
+						INNER JOIN 	`credits` cr
+						ON 			cr.`CreditsID` = cc.`CreditsID`
+						WHERE 		cch.`CompanyID` = :CompanyID
+						AND 		cch.`hasBeenBilled` = 0
+			)													AS PeriodInformation";
 	$s = $pdo->prepare($sql);
 	$s->bindValue(':CompanyID', $companyID);
 	$s->bindValue(':minimumSecondsPerBooking', $minimumSecondsPerBooking);
@@ -111,7 +139,78 @@ function sumUpUnbilledPeriods($pdo, $companyID){
 	$result = $s->fetchAll(PDO::FETCH_ASSOC);
 	
 	foreach($result AS $row){
-		$periodsSummmedUp[]
+				// Get credits values
+		$companyMinuteCredits = $row['CreditSubscriptionMinuteAmount'];
+		if($companyMinuteCredits == NULL OR $companyMinuteCredits == ""){
+			$companyMinuteCredits = 0;
+		}
+		$monthPrice = $row["CreditSubscriptionMonthlyPrice"];
+		if($monthPrice == NULL OR $monthPrice == ""){
+			$monthPrice = 0;
+		}
+		$hourPrice = $row["CreditSubscriptionHourPrice"];
+		if($hourPrice == NULL OR $hourPrice == ""){
+			$hourPrice = 0;
+		}
+		$minPrice = $row["CreditSubscriptionMinutePrice"];
+		if($minPrice == NULL OR $minPrice == ""){
+			$minPrice = 0;
+		}
+		// Calculate price
+		$bookingTimeChargedInMinutes = convertTimeToMinutes($row['OverCreditsTimeCharged']);
+
+		if($hourPrice == 0 AND $minPrice == 0){
+			// The subscription has no valid overtime price set, should not occur
+			$bookingCostThisMonth = convertToCurrency($monthPrice) . " + " . 
+									$bookingTimeChargedInMinutes . "m * cost (not set)";
+			$totalBookingCostThisMonth = "N/A";
+		} elseif($hourPrice != 0 AND $minPrice != 0){
+			// The subscription has two valid overtime price set, should not occur
+			$bookingCostThisMonth = convertToCurrency($monthPrice) . " + " . 
+									$bookingTimeChargedInMinutes . "m * cost (not set)";
+			$totalBookingCostThisMonth = "N/A";
+		} elseif($hourPrice == 0 AND $minPrice != 0){
+			// The subscription charges by the minute, if over credits
+			$overFeeCostThisMonth = $minPrice * $bookingTimeChargedInMinutes;
+			$totalCost = $monthPrice+$overFeeCostThisMonth;
+			$displayOverFeeCostThisMonth = convertToCurrency($overFeeCostThisMonth);
+			$bookingCostThisMonth = convertToCurrency($monthPrice) . " + " . convertToCurrency($overFeeCostThisMonth);
+			$totalBookingCostThisMonth = convertToCurrency($totalCost);
+		} elseif($hourPrice != 0 AND $minPrice == 0){
+			// The subsription charges by the hour, if over credits
+			// Adapt hourprice into correct piece of our ROUND_SUMMED_BOOKING_TIME_CHARGED_FOR_PERIOD_TO_THIS_CLOSEST_MINUTE_AMOUNT (e.g. 15 min)
+			$splitPricePerHourIntoThisManyPieces = 60 / ROUND_SUMMED_BOOKING_TIME_CHARGED_FOR_PERIOD_TO_THIS_CLOSEST_MINUTE_AMOUNT;
+			if($splitPricePerHourIntoThisManyPieces > 0){
+				$numberOfMinuteSlices = $bookingTimeChargedInMinutes / ROUND_SUMMED_BOOKING_TIME_CHARGED_FOR_PERIOD_TO_THIS_CLOSEST_MINUTE_AMOUNT;
+				$slicedHourPrice = $hourPrice/$splitPricePerHourIntoThisManyPieces;
+				$overFeeCostThisMonth = $numberOfMinuteSlices * $slicedHourPrice;
+			} else {
+				$hourAmountUsedInCalculation = ceil($actualTimeOverCreditsInMinutes/60);
+				$displayHourAmountUsedInCalculation = $hourAmountUsedInCalculation . "h0m";
+				$overFeeCostThisMonth = $hourPrice * $hourAmountUsedInCalculation;
+			}
+			$displayOverFeeCostThisMonth = convertToCurrency($overFeeCostThisMonth);
+			$totalCost = $monthPrice+$overFeeCostThisMonth;
+			$bookingCostThisMonth = convertToCurrency($monthPrice) . " + " . convertToCurrency($overFeeCostThisMonth);
+			$totalBookingCostThisMonth = convertToCurrency($totalCost);
+		}		
+		
+		$periodsSummmedUp[] = array(
+										'StartDate' => $row['StartDate'],
+										'EndDate' => $row['EndDate'],
+										'CreditsGiven' => $row['CreditsGiven'],
+										'BookingTimeCharged' => $row['BookingTimeCharged'],
+										'OverCreditsTimeExact' => $row['OverCreditsTimeExact'],
+										'OverCreditsTimeCharged' => $row['OverCreditsTimeCharged'],
+										'TotalBookingCostThisMonthAsParts' => $bookingCostThisMonth,
+										'TotalBookingCostThisMonth' => $totalBookingCostThisMonth
+									);
+	}
+	
+	if(isset($periodsSummmedUp)){
+		return $periodsSummmedUp;
+	} else {
+		return array();
 	}
 }
 
@@ -192,61 +291,62 @@ function calculatePeriodInformation($pdo, $companyID, $BillingStart, $BillingEnd
 	}
 
 	//Get completed booking history from the current billing period
-	$sql = "SELECT 		(BIG_SEC_TO_TIME((
-
-									(
-										DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
-										)*86400 
-									+ 
-									(
-										TIME_TO_SEC(b.`actualEndDateTime`) 
-										- 
-										TIME_TO_SEC(b.`startDateTime`)
-									)
-
-							)
-						))						AS BookingTimeUsed,
-						(BIG_SEC_TO_TIME((
-							IF(
+	$sql = "SELECT 		(
+							BIG_SEC_TO_TIME(
 								(
-									(
-										DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
-										)*86400 
-									+ 
-									(
-										TIME_TO_SEC(b.`actualEndDateTime`) 
-										- 
-										TIME_TO_SEC(b.`startDateTime`)
-									) 
-								) > 60,
+									DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
+									)*86400 
+								+ 
+								(
+									TIME_TO_SEC(b.`actualEndDateTime`) 
+									- 
+									TIME_TO_SEC(b.`startDateTime`)
+								)
+							)
+						)						AS BookingTimeUsed,
+						(
+							BIG_SEC_TO_TIME(
 								IF(
 									(
-									(
-										DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
-										)*86400 
-									+ 
-									(
-										TIME_TO_SEC(b.`actualEndDateTime`) 
-										- 
-										TIME_TO_SEC(b.`startDateTime`)
-									) 
-								) > 900, 
-									(
-									(
-										DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
-										)*86400 
-									+ 
-									(
-										TIME_TO_SEC(b.`actualEndDateTime`) 
-										- 
-										TIME_TO_SEC(b.`startDateTime`)
-									) 
-								), 
-									900
-								),
-								0
+										(
+											DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
+											)*86400 
+										+ 
+										(
+											TIME_TO_SEC(b.`actualEndDateTime`) 
+											- 
+											TIME_TO_SEC(b.`startDateTime`)
+										) 
+									) > :aboveThisManySecondsToCount,
+									IF(
+										(
+											(
+												DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
+												)*86400 
+											+ 
+											(
+												TIME_TO_SEC(b.`actualEndDateTime`) 
+												- 
+												TIME_TO_SEC(b.`startDateTime`)
+											) 
+										) > :minimumSecondsPerBooking, 
+										(
+											(
+												DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
+												)*86400 
+											+ 
+											(
+												TIME_TO_SEC(b.`actualEndDateTime`) 
+												- 
+												TIME_TO_SEC(b.`startDateTime`)
+											) 
+										),
+										:minimumSecondsPerBooking
+									),
+									0
+								)
 							)
-						)))						AS BookingTimeCharged,
+						)						AS BookingTimeCharged,
 						b.`startDateTime`		AS BookingStartedDatetime,
 						b.`actualEndDateTime`	AS BookingCompletedDatetime,
 						u.`firstName`			AS UserFirstname,
@@ -266,11 +366,15 @@ function calculatePeriodInformation($pdo, $companyID, $BillingStart, $BillingEnd
 			AND         b.`actualEndDateTime`
 			BETWEEN	    :startDate
 			AND			:endDate";
-
+			
+	$minimumSecondsPerBooking = MINIMUM_BOOKING_DURATION_IN_MINUTES_USED_IN_PRICE_CALCULATIONS * 60; // e.g. 15min = 900s
+	$aboveThisManySecondsToCount = BOOKING_DURATION_IN_MINUTES_USED_BEFORE_INCLUDING_IN_PRICE_CALCULATIONS * 60; // e.g. 1min = 60s
 	$s = $pdo->prepare($sql);
 	$s->bindValue(':CompanyID', $companyID);
 	$s->bindValue(':startDate', $BillingStart);
 	$s->bindValue(':endDate', $BillingEnd);
+	$s->bindValue(':minimumSecondsPerBooking', $minimumSecondsPerBooking);
+	$s->bindValue(':aboveThisManySecondsToCount', $aboveThisManySecondsToCount);	
 	$s->execute();
 	$result = $s->fetchAll(PDO::FETCH_ASSOC);
 	
