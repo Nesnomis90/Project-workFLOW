@@ -49,6 +49,24 @@
 			</div>
 		</form>
 			<h2>For the company: <?php htmlout($CompanyName); ?></h2>
+			<?php if(isset($periodsSummmedUp)) : ?>
+				<h3>The company has <span style="color:red">NOT BILLED PERIODS</span>.</h3>
+				<fieldset><legend>Periods</legend>
+				<?php $totalCostForAllPeriodsSummedUp = 0; ?>
+				<?php foreach($periodsSummmedUp AS $period) : ?>
+					<fieldset><legend><?php htmlout($period['StartDate'] . " - " . $period['EndDate']); ?></legend>
+						Booking Time Charged: <b><?php htmlout($period['BookingTimeCharged']); ?></b><br />
+						Credits Given: <b><?php htmlout($period['CreditsGiven']); ?></b><br />
+						Excess Booking Time: <b><?php htmlout($period['CreditsGiven']); ?></b><br />
+						Excess Time Charged: <b><?php htmlout($period['OverCreditsTimeCharged']); ?></b><br />
+						Cost (Subscription + Time): <b><?php htmlout($period['bookingCostThisMonth']); ?></b><br />
+						Cost (Total): <b><?php htmlout($period['totalBookingCostThisMonth']); ?></b><br />
+						<?php $totalCostForAllPeriodsSummedUp += $period['totalCost']; ?>
+					</fieldset>
+				<?php endforeach; ?>
+					Total Cost All Periods: <b><?php htmlout(converToCurrency($totalCostForAllPeriodsSummedUp)); ?></b><br />
+				</fieldset>
+			<?php endif; ?>
 			<h3>First period starts at: <?php htmlout($displayDateTimeCreated); ?><h3>
 			<h3>Currently viewing the period: <?php htmlout($BillingPeriod); ?></h3>
 			
