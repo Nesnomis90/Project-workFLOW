@@ -95,6 +95,9 @@ SELECT SEC_TO_TIME(
                 
 SELECT		StartDate, 
 			EndDate,
+            CreditSubscriptionMonthlyPrice,
+            CreditSubscriptionMinutePrice,
+            CreditSubscriptionHourPrice,
             BIG_SEC_TO_TIME(CreditsGivenInSeconds) 			AS CreditsGiven,
 			BIG_SEC_TO_TIME(BookingTimeChargedInSeconds) 	AS BookingTimeCharged,
 			BIG_SEC_TO_TIME(
