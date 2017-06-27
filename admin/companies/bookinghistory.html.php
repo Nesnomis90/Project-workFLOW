@@ -51,6 +51,21 @@
 			<h2>For the company: <?php htmlout($CompanyName); ?></h2>
 			<h3>First period starts at: <?php htmlout($displayDateTimeCreated); ?><h3>
 			<h3>Currently viewing the period: <?php htmlout($BillingPeriod); ?></h3>
+			
+			<?php if(!isset($periodHasBeenBilled) OR $periodHasBeenBilled == 0){
+				$color='red';
+			} elseif($periodHasBeenBilled == 1) {
+				$color='green';
+			} ?>			
+			
+			<?php if($rightNow) : ?>
+				<h2>Billing Status: Period still in progress.</h2>
+			<?php elseif(!isset($periodHasBeenBilled) OR $periodHasBeenBilled == 0) : ?>
+				<h2>Billing Status: This booking has <span style="color:red">NOT BEEN BILLED</span>.</h2>
+			<?php elseif($periodHasBeenBilled == 1) : ?>
+				<h2>Billing Status: This booking has <span style="color:green">BEEN BILLED</span>.</h2><br />
+			<?php endif; ?>
+			
 			<?php if(isset($bookingHistory) AND !empty($bookingHistory)) : ?>
 				<?php foreach($bookingHistory AS $row) : ?>
 				<fieldset>
@@ -67,15 +82,10 @@
 				<b>There were no bookings completed this period.</b><br />
 			<?php endif; ?>
 
-			<?php if(!isset($periodHasBeenBilled) OR $periodHasBeenBilled == 0){
-				$color='red';
-			} elseif($periodHasBeenBilled == 1) {
-				$color='green';
-			} ?>
-			
 			<?php if($rightNow) : ?>
 				<h2>Billing Status: Period still in progress.</h2>
-				Producing a total booking time used so far this period: <b><?php htmlout($displayTotalBookingTimeThisPeriod); ?></b><br />
+				Producing a total of actual booking time used so far this period: <b><?php htmlout($displayTotalBookingTimeThisPeriod); ?></b><br />
+				The total booking time charged with after including minimum booking length: <b><?php htmlout($displayTotalBookingTimeUsedInPriceCalculationsThisPeriod); ?></b><br />
 			<?php else : ?>
 				<?php if(!isset($periodHasBeenBilled) OR $periodHasBeenBilled == 0) : ?>
 					<h2>Billing Status: This booking has <span style="color:red">NOT BEEN BILLED</span>.</h2>
@@ -83,6 +93,7 @@
 					<h2>Billing Status: This booking has <span style="color:green">BEEN BILLED</span>.</h2><br />
 				<?php endif; ?>
 				Producing a total booking time used this period: <b><?php htmlout($displayTotalBookingTimeThisPeriod); ?></b><br />
+				The total booking time charged with after including minimum booking length: <b><?php htmlout($displayTotalBookingTimeUsedInPriceCalculationsThisPeriod); ?></b><br />
 			<?php endif; ?>
 		
 			<?php if($companyMinuteCreditsRemaining < 0) : ?>
