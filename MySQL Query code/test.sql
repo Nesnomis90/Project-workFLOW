@@ -82,58 +82,75 @@ AND         b.`actualEndDateTime`
 BETWEEN	    '2017-03-15'
 AND			'2017-06-15';
 
-SELECT (BIG_SEC_TO_TIME(SUM(
-		IF(
-			(
-				(
-					DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
-					)*86400 
-				+ 
-				(
-					TIME_TO_SEC(b.`actualEndDateTime`) 
-					- 
-					TIME_TO_SEC(b.`startDateTime`)
-					) 
-			) > 60,
+
+
+
+SELECT SEC_TO_TIME(
+					FLOOR(
+							(TIME_TO_SEC('16:21:30')+450)/900
+					)*900
+				);
+
+SELECT 	cch.`startDate`, 
+		cch.`endDate`, 
+		cch.`minuteAmount`,
+        cch.`monthlyPrice`,
+        cch.`overCreditMinutePrice`,
+        cch.`overCreditHourPrice`,
+	(SELECT BIG_SEC_TO_TIME(FLOOR(((IFNULL(SUM(
 			IF(
 				(
-				(
-					DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
-					)*86400 
-				+ 
-				(
-					TIME_TO_SEC(b.`actualEndDateTime`) 
-					- 
-					TIME_TO_SEC(b.`startDateTime`)
-					) 
-			) > 900, 
-				(
-				(
-					DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
-					)*86400 
-				+ 
-				(
-					TIME_TO_SEC(b.`actualEndDateTime`) 
-					- 
-					TIME_TO_SEC(b.`startDateTime`)
-					) 
-			), 
-				900
-			),
-			0
-		)
-	)))	AS BookingTimeUsed
-FROM 		`booking` b
-WHERE 		b.`CompanyID` = 2
-AND 		((b.`actualEndDateTime`
-BETWEEN		'2017-03-15'
-AND			'2017-04-15')
-OR 			(b.`actualEndDateTime`
-BETWEEN		'2017-04-15'
-AND			'2017-05-15')
-OR			(b.`actualEndDateTime`
-BETWEEN		'2017-05-15'
-AND			'2017-06-15'));
+					(
+						DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
+						)*86400 
+					+ 
+					(
+						TIME_TO_SEC(b.`actualEndDateTime`) 
+						- 
+						TIME_TO_SEC(b.`startDateTime`)
+						) 
+				) > 60,
+				IF(
+					(
+					(
+						DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
+						)*86400 
+					+ 
+					(
+						TIME_TO_SEC(b.`actualEndDateTime`) 
+						- 
+						TIME_TO_SEC(b.`startDateTime`)
+						) 
+				) > 900, 
+					(
+					(
+						DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
+						)*86400 
+					+ 
+					(
+						TIME_TO_SEC(b.`actualEndDateTime`) 
+						- 
+						TIME_TO_SEC(b.`startDateTime`)
+						) 
+				), 
+					900
+				),
+				0
+			)
+		),0))+450)/900)*900)
+    FROM 		`booking` b
+    WHERE 		b.`CompanyID` = 2
+	AND 		b.`actualEndDateTime`
+	BETWEEN		cch.`startDate`
+	AND			cch.`endDate`
+    )	AS BookingTimeCharged
+FROM 		`companycreditshistory` cch
+INNER JOIN	`companycredits` cc
+ON 			cc.`CompanyID` = cch.`CompanyID`
+INNER JOIN 	`credits` cr
+ON 			cr.`CreditsID` = cc.`CreditsID`
+WHERE 		cch.`CompanyID` = 2
+AND 		cch.`hasBeenBilled` = 0;
 
 SELECT BIG_SEC_TO_TIME(
 						SUM(

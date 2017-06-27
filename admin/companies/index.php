@@ -36,88 +36,82 @@ function clearEditCompanySessions(){
 }
 // Function to check if the company has unbilled periods and then sums them up and displays the total 
 function sumUpUnbilledPeriods($pdo, $companyID){
-	// TO-DO: Add a booking history summation on unbilled periods!
-		$sql = "SELECT 		`startDate`				AS StartDate,
-							`endDate`				AS EndDate
-				FROM 		`companycreditshistory`
-				WHERE 		`companyID` = :CompanyID
-				AND			`hasBeenBilled` = 0";
-		$s = $pdo->prepare($sql);
-		$s->bindValue(':CompanyID', $companyID);
-		$s->execute();
-		$result = $s->fetchAll(PDO::FETCH_ASSOC);
 
-		if(isset($result) AND sizeOf($result) > 0){
-			$sql = "SELECT (BIG_SEC_TO_TIME(SUM(
-								IF(
-									(
-										(
-											DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
-											)*86400 
-										+ 
-										(
-											TIME_TO_SEC(b.`actualEndDateTime`) 
-											- 
-											TIME_TO_SEC(b.`startDateTime`)
-											) 
-									) > :aboveThisManySecondsToCount,
-									IF(
-										(
-										(
-											DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
-											)*86400 
-										+ 
-										(
-											TIME_TO_SEC(b.`actualEndDateTime`) 
-											- 
-											TIME_TO_SEC(b.`startDateTime`)
-											) 
-									) > :minimumSecondsPerBooking, 
-										(
-										(
-											DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
-											)*86400 
-										+ 
-										(
-											TIME_TO_SEC(b.`actualEndDateTime`) 
-											- 
-											TIME_TO_SEC(b.`startDateTime`)
-											) 
-									), 
-										:minimumSecondsPerBooking
-									),
-									0
-								)
-							)))	AS BookingTimeUsed
+	$minimumSecondsPerBooking = MINIMUM_BOOKING_DURATION_IN_MINUTES_USED_IN_PRICE_CALCULATIONS * 60; // e.g. 15min = 900s
+	$aboveThisManySecondsToCount = BOOKING_DURATION_IN_MINUTES_USED_BEFORE_INCLUDING_IN_PRICE_CALCULATIONS * 60; // e.g. 1min = 60s
+	$roundToClosestMinuteInSeconds = ROUND_SUMMED_BOOKING_TIME_CHARGED_FOR_PERIOD_TO_THIS_CLOSEST_MINUTE_AMOUNT * 60 // e.g. 15min = 900s
+		// Rounds to closest 15 minutes now (on finished summation per period)
+	$sql = "SELECT 	cch.`startDate`, 
+					cch.`endDate`, 
+					cch.`minuteAmount`,
+					cch.`monthlyPrice`,
+					cch.`overCreditMinutePrice`,
+					cch.`overCreditHourPrice`,
+					(SELECT BIG_SEC_TO_TIME(FLOOR(((IFNULL(SUM(
+						IF(
+							(
+								(
+									DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
+									)*86400 
+								+ 
+								(
+									TIME_TO_SEC(b.`actualEndDateTime`) 
+									- 
+									TIME_TO_SEC(b.`startDateTime`)
+									) 
+							) > :aboveThisManySecondsToCount,
+							IF(
+								(
+								(
+									DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
+									)*86400 
+								+ 
+								(
+									TIME_TO_SEC(b.`actualEndDateTime`) 
+									- 
+									TIME_TO_SEC(b.`startDateTime`)
+									) 
+							) > :minimumSecondsPerBooking, 
+								(
+								(
+									DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
+									)*86400 
+								+ 
+								(
+									TIME_TO_SEC(b.`actualEndDateTime`) 
+									- 
+									TIME_TO_SEC(b.`startDateTime`)
+									) 
+							), 
+								:minimumSecondsPerBooking
+							),
+							0
+							)
+						),0))+450)/900)*900)
 					FROM 		`booking` b
 					WHERE 		b.`CompanyID` = :CompanyID
-					AND (";
-
-			$first = TRUE;
-			foreach($result AS $row){
-				// Add the date periods we found
-				if($first){
-					$sql .= "				(b.`actualEndDateTime`
-								BETWEEN		'" . $row['StartDate'] . "'
-								AND			'" . $row['EndDate'] . "')";
-					$first = FALSE;
-				} else {
-					$sql .= "	OR 			(b.`actualEndDateTime`
-								BETWEEN		'" . $row['StartDate'] . "'
-								AND			'" . $row['EndDate'] . "')";
-				}
-				$sql .= ")";
-			}
-			// TO-DO: Booking summation with MySQL gives 0 min, our manual calculation gives 15 MIN. FIX THIS!
-			$minimumSecondsPerBooking = MINIMUM_BOOKING_DURATION_IN_MINUTES_USED_IN_PRICE_CALCULATIONS * 60; // e.g. 15min = 900s
-			$aboveThisManySecondsToCount = BOOKING_DURATION_IN_MINUTES_USED_BEFORE_INCLUDING_IN_PRICE_CALCULATIONS * 60; // E.g. 1min = 60s
-			$s = $pdo->prepare($sql);
-			$s->bindValue(':CompanyID', $companyID);
-			$s->bindValue(':minimumSecondsPerBooking', $minimumSecondsPerBooking);
-			$s->bindValue(':aboveThisManySecondsToCount', $aboveThisManySecondsToCount);
-			$s->execute();
-			$result = $s->fetchAll(PDO::FETCH_ASSOC);
-		}
+					AND 		b.`actualEndDateTime`
+					BETWEEN		cch.`startDate`
+					AND			cch.`endDate`
+					)	AS BookingTimeCharged
+				FROM 		`companycreditshistory` cch
+				INNER JOIN	`companycredits` cc
+				ON 			cc.`CompanyID` = cch.`CompanyID`
+				INNER JOIN 	`credits` cr
+				ON 			cr.`CreditsID` = cc.`CreditsID`
+				WHERE 		cch.`CompanyID` = :CompanyID
+				AND 		cch.`hasBeenBilled` = 0";
+	$s = $pdo->prepare($sql);
+	$s->bindValue(':CompanyID', $companyID);
+	$s->bindValue(':minimumSecondsPerBooking', $minimumSecondsPerBooking);
+	$s->bindValue(':aboveThisManySecondsToCount', $aboveThisManySecondsToCount);
+	$s->bindValue(':roundToClosestMinuteInSeconds', $roundToClosestMinuteInSeconds);
+	$s->execute();
+	$result = $s->fetchAll(PDO::FETCH_ASSOC);
+	
+	foreach($result AS $row){
+		$periodsSummmedUp[]
+	}
 }
 
 // Function to calculate booking time used and the cost of that period for a company
@@ -343,11 +337,12 @@ function calculatePeriodInformation($pdo, $companyID, $BillingStart, $BillingEnd
 				$totalBookingCostThisMonth = convertToCurrency($totalCost);
 			} elseif($hourPrice != 0 AND $minPrice == 0){
 				// The subsription charges by the hour, if over credits
-				// Round up to closest hour/SPLIT_PRICE_PER_HOUR_INTO_THIS_MANY_PIECES.
-				if(SPLIT_PRICE_PER_HOUR_INTO_THIS_MANY_PIECES > 0){
+				// Round up to closest ROUND_SUMMED_BOOKING_TIME_CHARGED_FOR_PERIOD_TO_THIS_CLOSEST_MINUTE_AMOUNT (e.g. 15 min)
+				$splitPricePerHourIntoThisManyPieces = 60 / ROUND_SUMMED_BOOKING_TIME_CHARGED_FOR_PERIOD_TO_THIS_CLOSEST_MINUTE_AMOUNT;
+				if($splitPricePerHourIntoThisManyPieces > 0){
 					$hourAmountUsedInCalculation = floor($actualTimeOverCreditsInMinutes/60);
 					$minutesRemaining = $actualTimeOverCreditsInMinutes - $hourAmountUsedInCalculation*60;
-					$split = SPLIT_PRICE_PER_HOUR_INTO_THIS_MANY_PIECES;
+					$split = $splitPricePerHourIntoThisManyPieces;
 					$slicedHourPrice = $hourPrice/$split;
 					$minuteSlice = 60/$split;
 					$nextMinuteAmount = ceil($minutesRemaining/$minuteSlice)*$minuteSlice;
