@@ -6,7 +6,6 @@ include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/magicquotes.inc.php';
 // This file is set to run minimum once a day (more often in case SQL connection fails?)
 
 // If, for some reason, a company does not have a subscription set. We set it to default.
-// TO-DO: Not extensively tested and probably super broken/bad
 function setDefaultSubscriptionIfCompanyHasNone(){
 	try
 	{
@@ -101,7 +100,7 @@ function updateBillingDatesForCompanies(){
 								cr.`monthlyPrice`			AS MonthlyPrice,
 								cr.`overCreditMinutePrice`	AS MinutePrice,
 								cr.`overCreditHourPrice`	AS HourPrice,
-								cc.`altMinuteAmount`		AS AlternativeAmount
+								cc.`altMinuteAmount`		AS AlternativeAmount,
 								(
 									SELECT (BIG_SEC_TO_TIME(SUM(
 															IF(
@@ -147,7 +146,7 @@ function updateBillingDatesForCompanies(){
 									FROM 		`booking` b  
 									INNER JOIN 	`company` c 
 									ON 			b.`CompanyID` = c.`CompanyID` 
-									WHERE 		b.`CompanyID` = CompID
+									WHERE 		b.`CompanyID` = TheCompanyID
 									AND 		b.`actualEndDateTime`
 									BETWEEN		c.`startDate`
 									AND			c.`endDate`
