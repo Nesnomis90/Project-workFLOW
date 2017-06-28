@@ -12,6 +12,16 @@
 			#billingDescription {
 				vertical-align: top;
 			}
+			#ChooseEarlierPeriod {
+				position: absolute;
+				left: 10px;
+				display: inline-block;
+			}
+			#ChooseLaterPeriod {
+				position: absolute;
+				right: 10px;
+				display: inline-block;
+			}
 		</style>	
 		<title>Booking History</title>
 	</head>
@@ -49,31 +59,28 @@
 		<?php elseif($periodHasBeenBilled == 1) : ?>
 			<h2>Billing Status: This booking has <span style="color:green">BEEN BILLED</span>.</h2><br />
 		<?php endif; ?>
-
 		<form action="" method="post">
 			<div id="ChooseEarlierPeriod">
 				<?php if(isset($PreviousPeriod) AND $PreviousPeriod) : ?>
-					<input type="submit" name="history" value="Previous Period">
-					<br />
 					<input type="submit" name="history" value="First Period">
+					<input type="submit" name="history" value="Previous Period">
 				<?php else : ?>
+					<input type="submit" name="disabled" value="First Period" disabled>				
 					<input type="submit" name="disabled" value="Previous Period" disabled>
-					<br />
-					<input type="submit" name="disabled" value="First Period" disabled>
 				<?php endif; ?>
 			</div>
 			<div id="ChooseLaterPeriod">
 				<?php if(isset($NextPeriod) AND $NextPeriod) : ?>
 					<input type="submit" name="history" value="Next Period">
-					<br />
 					<input type="submit" name="history" value="Last Period">
 				<?php else : ?>
 					<input type="submit" name="disabled" value="Next Period" disabled>
-					<br />
 					<input type="submit" name="disabled" value="Last Period" disabled>
-				<?php endif; ?>			
+				<?php endif; ?>				
 			</div>
-		</form>		
+		</form>
+		<br />
+		<br />
 		<?php if(!isset($periodHasBeenBilled) OR $periodHasBeenBilled == 0){
 			$color='red';
 		} elseif($periodHasBeenBilled == 1) {
