@@ -45,9 +45,15 @@
 	</head>
 	<body>
 		<h1>Manage Events</h1>
+		
+		<?php if(isset($_SESSION['EventsUserFeedback'])) : ?>
+			<p><b><?php htmlout($_SESSION['EventsUserFeedback']); ?></b></p>
+			<?php unset($_SESSION['EventsUserFeedback']); ?>
+		<?php endif; ?>	
+		
 		<form action="" method="post">				
 			<div>
-				<input type="submit" name="action" value="Create Booking">
+				<input type="submit" name="action" value="Create Event">
 			</div>
 			<div>
 			<?php if(isset($_SESSION['eventsEnableDelete']) AND $_SESSION['eventsEnableDelete']) : ?>
@@ -56,11 +62,12 @@
 				<input type="submit" name="action" value="Enable Delete">
 			<?php endif; ?>
 			</div>			
-		</form>	
+		</form>
+		
 		<table id="eventstable">
 			<caption>Scheduled Events</caption>
 			<tr>
-				<th colspan="7">Event information</th>
+				<th colspan="8">Event information</th>
 				<th colspan="3">Alter Event</th>
 			</tr>				
 			<tr>
@@ -71,7 +78,8 @@
 				<th>Event Name</th>
 				<th>Description</th>
 				<th>Created At</th>
-				<th>Edit</th>					
+				<th>Last Altered At<th>
+				<th>Edit</th>
 				<th>Cancel</th>
 				<th>Delete</th>
 			</tr>
@@ -86,6 +94,7 @@
 						<td style="white-space: pre-wrap;"><?php htmlout($event['EventName']); ?></td>
 						<td style="white-space: pre-wrap;"><?php htmlout($event['EventDescription']); ?></td>
 						<td><?php htmlout($event['EventWasCreatedOn']); ?></td>
+						<td><?php htmlout($event['EventWasLastAlteredOn']); ?></td>
 						<td><input type="submit" name="action" value="Edit"></td>							
 						<td><input type="submit" name="action" value="Cancel"></td>
 						<td>
@@ -95,7 +104,7 @@
 								<input type="submit" name="disabled" value="Delete" disabled>
 							<?php endif; ?>
 						</td>
-						<input type="hidden" name="id" value="<?php htmlout($event['EventID']); ?>">
+						<input type="hidden" name="EventID" value="<?php htmlout($event['EventID']); ?>">
 						<input type="hidden" name="EventInfo" id="EventInfo"
 						value="<?php htmlout($event['EventInfo']); ?>">
 						<input type="hidden" name="EventStatus" id="EventStatus"
@@ -104,7 +113,8 @@
 				</form>
 			<?php endforeach; ?>
 		<?php endif; ?>
-		</table>		
+		</table>
+		
 		<p><a href="..">Return to CMS home</a></p>
 	<?php include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/logout.inc.html.php'; ?>
 	</body>
