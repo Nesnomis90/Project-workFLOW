@@ -137,22 +137,9 @@ if (isset($_POST['action']) AND $_POST['action'] == "Enable Delete"){
 	$refreshEquipment = TRUE;
 }
 
-// If admin wants to be able to delete equipment that is currently being used in a room it needs to enabled first
-if (isset($_POST['action']) AND $_POST['action'] == "Enable Delete Used Equipment"){
-	$_SESSION['equipmentEnableDeleteUsedEquipment'] = TRUE;
-	$refreshEquipment = TRUE;
-}
-
-// If admin wants to be disable used equipment deletion
-if (isset($_POST['action']) AND $_POST['action'] == "Disable Delete Used Equipment"){
-	unset($_SESSION['equipmentEnableDeleteUsedEquipment']);
-	$refreshEquipment = TRUE;
-}
-
 // If admin wants to be disable equipment deletion
 if (isset($_POST['action']) AND $_POST['action'] == "Disable Delete"){
 	unset($_SESSION['equipmentEnableDelete']);
-	unset($_SESSION['equipmentEnableDeleteUsedEquipment']);
 	$refreshEquipment = TRUE;
 }
 

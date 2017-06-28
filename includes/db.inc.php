@@ -38,15 +38,15 @@ function create_db()
 		$output = 'Created database: ' . DB_NAME . '<br />';
 		
 		//	Add the creation to log event
-		$sqlLog = "	INSERT INTO `logevent`(`actionID`, `description`) 
+		$sqlLog = '	INSERT INTO `logevent`(`actionID`, `description`) 
 					VALUES 		(
 									(
 										SELECT 	`actionID` 
 										FROM 	`logaction` 
-										WHERE 	`name` = 'Database Created'
+										WHERE 	`name` = "Database Created"
 									), 
-								'Database " . DB_NAME . " was created automatically by the PHP script. This should only occur once, at the very start of the log event.'
-								)";
+								"Database ' . DB_NAME . ' was created automatically by the PHP script.\nThis should only occur once, at the very start of the log event."
+								)';
 		$logEventArray[] = $sqlLog;
 
 	} else {
@@ -278,15 +278,15 @@ function create_tables()
 			fillAccessLevel($conn);
 			
 			//	Add the creation to log event
-			$sqlLog = "	INSERT INTO `logevent`(`actionID`, `description`) 
+			$sqlLog = '	INSERT INTO `logevent`(`actionID`, `description`) 
 						VALUES 		(
 										(
 										SELECT 	`actionID` 
 										FROM 	`logaction` 
-										WHERE 	`name` = 'Table Created'
+										WHERE 	`name` = "Table Created"
 										), 
-									'The table $table was created automatically by the PHP script. This should only occur once, at the very start of the log events.'
-									)";
+									"The table ' . $table . ' was created automatically by the PHP script.\nThis should only occur once, at the very start of the log events."
+									)';
 			$logEventArray[] = $sqlLog;
 			
 			$totaltime = microtime(true) - $_SERVER["REQUEST_TIME_FLOAT"];
@@ -349,15 +349,15 @@ function create_tables()
 						) ENGINE=InnoDB DEFAULT CHARSET=utf8");
 						
 			//	Add the creation to log event
-			$sqlLog = "	INSERT INTO `logevent`(`actionID`, `description`) 
+			$sqlLog = '	INSERT INTO `logevent`(`actionID`, `description`) 
 						VALUES 		(
 										(
 										SELECT 	`actionID` 
 										FROM 	`logaction` 
-										WHERE 	`name` = 'Table Created'
+										WHERE 	`name` = "Table Created"
 										), 
-									'The table $table was created automatically by the PHP script. This should only occur once, at the very start of the log events.'
-									)";
+									"The table ' . $table . ' was created automatically by the PHP script.\nThis should only occur once, at the very start of the log events."
+									)';
 			$logEventArray[] = $sqlLog;						
 								
 			$totaltime = microtime(true) - $_SERVER["REQUEST_TIME_FLOAT"];
@@ -386,15 +386,15 @@ function create_tables()
 						) ENGINE=InnoDB DEFAULT CHARSET=utf8");
 						
 			//	Add the creation to log event
-			$sqlLog = "	INSERT INTO `logevent`(`actionID`, `description`) 
+			$sqlLog = '	INSERT INTO `logevent`(`actionID`, `description`) 
 						VALUES 		(
 										(
 										SELECT 	`actionID` 
 										FROM 	`logaction` 
-										WHERE 	`name` = 'Table Created'
+										WHERE 	`name` = "Table Created"
 										), 
-									'The table $table was created automatically by the PHP script. This should only occur once, at the very start of the log events.'
-									)";
+									"The table ' . $table . ' was created automatically by the PHP script.\nThis should only occur once, at the very start of the log events."
+									)';
 			$logEventArray[] = $sqlLog;						
 						
 			$totaltime = microtime(true) - $_SERVER["REQUEST_TIME_FLOAT"];
@@ -421,15 +421,15 @@ function create_tables()
 						) ENGINE=InnoDB DEFAULT CHARSET=utf8");
 						
 			//	Add the creation to log event
-			$sqlLog = "	INSERT INTO `logevent`(`actionID`, `description`) 
+			$sqlLog = '	INSERT INTO `logevent`(`actionID`, `description`) 
 						VALUES 		(
 										(
 										SELECT 	`actionID` 
 										FROM 	`logaction` 
-										WHERE 	`name` = 'Table Created'
+										WHERE 	`name` = "Table Created"
 										), 
-									'The table $table was created automatically by the PHP script. This should only occur once, at the very start of the log events.'
-									)";
+									"The table ' . $table . ' was created automatically by the PHP script.\nThis should only occur once, at the very start of the log events."
+									)';
 			$logEventArray[] = $sqlLog;						
 
 			$totaltime = microtime(true) - $_SERVER["REQUEST_TIME_FLOAT"];
@@ -471,15 +471,15 @@ function create_tables()
 						) ENGINE=InnoDB DEFAULT CHARSET=utf8");
 						
 			//	Add the creation to log event
-			$sqlLog = "	INSERT INTO `logevent`(`actionID`, `description`) 
+			$sqlLog = '	INSERT INTO `logevent`(`actionID`, `description`) 
 						VALUES 		(
 										(
 										SELECT 	`actionID` 
 										FROM 	`logaction` 
-										WHERE 	`name` = 'Table Created'
+										WHERE 	`name` = "Table Created"
 										), 
-									'The table $table was created automatically by the PHP script. This should only occur once, at the very start of the log events.'
-									)";
+									"The table ' . $table . ' was created automatically by the PHP script.\nThis should only occur once, at the very start of the log events."
+									)';
 			$logEventArray[] = $sqlLog;						
 
 			$totaltime = microtime(true) - $_SERVER["REQUEST_TIME_FLOAT"];
@@ -507,15 +507,15 @@ function create_tables()
 			fillCompanyPosition($conn);
 						
 			//	Add the creation to log event
-			$sqlLog = "	INSERT INTO `logevent`(`actionID`, `description`) 
+			$sqlLog = '	INSERT INTO `logevent`(`actionID`, `description`) 
 						VALUES 		(
 										(
 										SELECT 	`actionID` 
 										FROM 	`logaction` 
-										WHERE 	`name` = 'Table Created'
+										WHERE 	`name` = "Table Created"
 										), 
-									'The table $table was created automatically by the PHP script. This should only occur once, at the very start of the log events.'
-									)";
+									"The table ' . $table . ' was created automatically by the PHP script.\nThis should only occur once, at the very start of the log events."
+									)';
 			$logEventArray[] = $sqlLog;						
 
 			$totaltime = microtime(true) - $_SERVER["REQUEST_TIME_FLOAT"];
@@ -563,15 +563,15 @@ function create_tables()
 						) ENGINE=InnoDB DEFAULT CHARSET=utf8");
 						
 			//	Add the creation to log event
-			$sqlLog = "	INSERT INTO `logevent`(`actionID`, `description`) 
+			$sqlLog = '	INSERT INTO `logevent`(`actionID`, `description`) 
 						VALUES 		(
 										(
 										SELECT 	`actionID` 
 										FROM 	`logaction` 
-										WHERE 	`name` = 'Table Created'
+										WHERE 	`name` = "Table Created"
 										), 
-									'The table $table was created automatically by the PHP script. This should only occur once, at the very start of the log events.'
-									)";
+									"The table ' . $table . ' was created automatically by the PHP script.\nThis should only occur once, at the very start of the log events."
+									)';
 			$logEventArray[] = $sqlLog;						
 
 			$totaltime = microtime(true) - $_SERVER["REQUEST_TIME_FLOAT"];
@@ -597,15 +597,15 @@ function create_tables()
 						) ENGINE=InnoDB DEFAULT CHARSET=utf8");
 						
 			//	Add the creation to log event
-			$sqlLog = "	INSERT INTO `logevent`(`actionID`, `description`) 
+			$sqlLog = '	INSERT INTO `logevent`(`actionID`, `description`) 
 						VALUES 		(
 										(
 										SELECT 	`actionID` 
 										FROM 	`logaction` 
-										WHERE 	`name` = 'Table Created'
+										WHERE 	`name` = "Table Created"
 										), 
-									'The table $table was created automatically by the PHP script. This should only occur once, at the very start of the log events.'
-									)";
+									"The table ' . $table . ' was created automatically by the PHP script.\nThis should only occur once, at the very start of the log events."
+									)';
 			$logEventArray[] = $sqlLog;						
 
 			$totaltime = microtime(true) - $_SERVER["REQUEST_TIME_FLOAT"];
@@ -633,15 +633,15 @@ function create_tables()
 			fillLogAction($conn);
 						
 			//	Add the creation to log event
-			$sqlLog = "	INSERT INTO `logevent`(`actionID`, `description`) 
+			$sqlLog = '	INSERT INTO `logevent`(`actionID`, `description`) 
 						VALUES 		(
 										(
 										SELECT 	`actionID` 
 										FROM 	`logaction` 
-										WHERE 	`name` = 'Table Created'
+										WHERE 	`name` = "Table Created"
 										), 
-									'The table $table was created automatically by the PHP script. This should only occur once, at the very start of the log events.'
-									)";
+									"The table ' . $table . ' was created automatically by the PHP script.\nThis should only occur once, at the very start of the log events."
+									)';
 			$logEventArray[] = $sqlLog;						
 
 			$totaltime = microtime(true) - $_SERVER["REQUEST_TIME_FLOAT"];
@@ -674,6 +674,7 @@ function create_tables()
 			//Equipment in meeting rooms
 		$table = 'roomequipment';
 		//Check if table already exists
+			// ON DELETE RESTRICT is the same as not having an ON DELETE
 		if (!tableExists($conn, $table))
 		{
 			$conn->exec("CREATE TABLE IF NOT EXISTS `$table` (
@@ -683,20 +684,20 @@ function create_tables()
 						  `datetimeAdded` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
 						  PRIMARY KEY (`EquipmentID`,`MeetingRoomID`),
 						  KEY `FK_MeetingRoomID_idx` (`MeetingRoomID`),
-						  CONSTRAINT `FK_EquipmentID` FOREIGN KEY (`EquipmentID`) REFERENCES `equipment` (`EquipmentID`) ON DELETE CASCADE ON UPDATE CASCADE,
+						  CONSTRAINT `FK_EquipmentID` FOREIGN KEY (`EquipmentID`) REFERENCES `equipment` (`EquipmentID`) ON UPDATE CASCADE,
 						  CONSTRAINT `FK_MeetingRoomID2` FOREIGN KEY (`MeetingRoomID`) REFERENCES `meetingroom` (`meetingRoomID`) ON DELETE CASCADE ON UPDATE CASCADE
 						) ENGINE=InnoDB DEFAULT CHARSET=utf8");
 						
 			//	Add the creation to log event
-			$sqlLog = "	INSERT INTO `logevent`(`actionID`, `description`) 
+			$sqlLog = '	INSERT INTO `logevent`(`actionID`, `description`) 
 						VALUES 		(
 										(
 										SELECT 	`actionID` 
 										FROM 	`logaction` 
-										WHERE 	`name` = 'Table Created'
+										WHERE 	`name` = "Table Created"
 										), 
-									'The table $table was created automatically by the PHP script. This should only occur once, at the very start of the log events.'
-									)";			
+									"The table ' . $table . ' was created automatically by the PHP script.\nThis should only occur once, at the very start of the log events."
+									)';		
 			$logEventArray[] = $sqlLog;						
 
 			$totaltime = microtime(true) - $_SERVER["REQUEST_TIME_FLOAT"];
@@ -730,15 +731,15 @@ function create_tables()
 			fillCredits($conn);
 					
 			//	Add the creation to log event
-			$sqlLog = "	INSERT INTO `logevent`(`actionID`, `description`) 
+			$sqlLog = '	INSERT INTO `logevent`(`actionID`, `description`) 
 						VALUES 		(
 										(
 										SELECT 	`actionID` 
 										FROM 	`logaction` 
-										WHERE 	`name` = 'Table Created'
+										WHERE 	`name` = "Table Created"
 										), 
-									'The table $table was created automatically by the PHP script. This should only occur once, at the very start of the log events.'
-									)";			
+									"The table ' . $table . ' was created automatically by the PHP script.\nThis should only occur once, at the very start of the log events."
+									)';		
 			$logEventArray[] = $sqlLog;						
 
 			$totaltime = microtime(true) - $_SERVER["REQUEST_TIME_FLOAT"];
@@ -786,15 +787,15 @@ function create_tables()
 						) ENGINE=InnoDB DEFAULT CHARSET=utf8");
 						
 			//	Add the creation to log event
-			$sqlLog = "	INSERT INTO `logevent`(`actionID`, `description`) 
+			$sqlLog = '	INSERT INTO `logevent`(`actionID`, `description`) 
 						VALUES 		(
 										(
 										SELECT 	`actionID` 
 										FROM 	`logaction` 
-										WHERE 	`name` = 'Table Created'
+										WHERE 	`name` = "Table Created"
 										), 
-									'The table $table was created automatically by the PHP script. This should only occur once, at the very start of the log events.'
-									)";			
+									"The table ' . $table . ' was created automatically by the PHP script.\nThis should only occur once, at the very start of the log events."
+									)';		
 			$logEventArray[] = $sqlLog;						
 
 			$totaltime = microtime(true) - $_SERVER["REQUEST_TIME_FLOAT"];
@@ -825,15 +826,15 @@ function create_tables()
 						) ENGINE=InnoDB DEFAULT CHARSET=utf8");
 						
 			//	Add the creation to log event
-			$sqlLog = "	INSERT INTO `logevent`(`actionID`, `description`) 
+			$sqlLog = '	INSERT INTO `logevent`(`actionID`, `description`) 
 						VALUES 		(
 										(
 										SELECT 	`actionID` 
 										FROM 	`logaction` 
-										WHERE 	`name` = 'Table Created'
+										WHERE 	`name` = "Table Created"
 										), 
-									'The table $table was created automatically by the PHP script. This should only occur once, at the very start of the log events.'
-									)";			
+									"The table ' . $table . ' was created automatically by the PHP script.\nThis should only occur once, at the very start of the log events."
+									)';			
 			$logEventArray[] = $sqlLog;						
 
 			$totaltime = microtime(true) - $_SERVER["REQUEST_TIME_FLOAT"];
@@ -881,15 +882,15 @@ function create_tables()
 					) ENGINE=InnoDB DEFAULT CHARSET=utf8");
 												
 			//	Add the creation to log event
-			$sqlLog = "	INSERT INTO `logevent`(`actionID`, `description`) 
+			$sqlLog = '	INSERT INTO `logevent`(`actionID`, `description`) 
 						VALUES 		(
 										(
 										SELECT 	`actionID` 
 										FROM 	`logaction` 
-										WHERE 	`name` = 'Table Created'
+										WHERE 	`name` = "Table Created"
 										), 
-									'The table $table was created automatically by the PHP script. This should only occur once, at the very start of the log events.'
-									)";
+									"The table ' . $table . ' was created automatically by the PHP script.\nThis should only occur once, at the very start of the log events."
+									)';
 			$logEventArray[] = $sqlLog;						
 
 			$totaltime = microtime(true) - $_SERVER["REQUEST_TIME_FLOAT"];
