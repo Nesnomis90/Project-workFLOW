@@ -2239,7 +2239,7 @@ if(!isset($_GET['Meetingroom'])){
 	{
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 		$pdo = connect_to_db();
-		$sql = "SELECT 		b.`bookingID`,
+		$sql = 'SELECT 		b.`bookingID`,
 							b.`companyID`,
 							m.`name` 										AS BookedRoomName, 
 							b.startDateTime 								AS StartTime, 
@@ -2249,7 +2249,7 @@ if(!isset($_GET['Meetingroom'])){
 							u.firstName, 
 							u.lastName, 
 							u.email, 
-							GROUP_CONCAT(c2.`name` separator ', ') 			AS WorksForCompany, 
+							GROUP_CONCAT(CONCAT(c2.`name`, ".") separator "\n") 			AS WorksForCompany, 
 							b.description 									AS BookingDescription, 
 							b.dateTimeCreated 								AS BookingWasCreatedOn, 
 							b.actualEndDateTime								AS BookingWasCompletedOn, 
@@ -2268,7 +2268,7 @@ if(!isset($_GET['Meetingroom'])){
 				WHERE		c.`isActive` = 1
 				GROUP BY 	b.bookingID
 				ORDER BY 	b.bookingID
-				DESC";
+				DESC';
 		$result = $pdo->query($sql);
 
 		//Close the connection
@@ -2286,7 +2286,7 @@ if(!isset($_GET['Meetingroom'])){
 	{
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 		$pdo = connect_to_db();
-		$sql = "SELECT 		b.`bookingID`,
+		$sql = 'SELECT 		b.`bookingID`,
 							b.`companyID`,
 							m.`name` 										AS BookedRoomName, 
 							b.startDateTime 								AS StartTime, 
@@ -2296,7 +2296,7 @@ if(!isset($_GET['Meetingroom'])){
 							u.firstName, 
 							u.lastName, 
 							u.email, 
-							GROUP_CONCAT(c2.`name` separator ', ') 			AS WorksForCompany, 
+							GROUP_CONCAT(CONCAT(c2.`name`, ".") separator "\n")) 			AS WorksForCompany, 
 							b.description 									AS BookingDescription, 
 							b.dateTimeCreated 								AS BookingWasCreatedOn, 
 							b.actualEndDateTime								AS BookingWasCompletedOn, 
@@ -2316,7 +2316,7 @@ if(!isset($_GET['Meetingroom'])){
 				AND			b.`meetingRoomID` = :MeetingRoomID 
 				GROUP BY 	b.bookingID
 				ORDER BY 	b.bookingID
-				DESC";	
+				DESC';	
 		$s = $pdo->prepare($sql);
 		$s->bindValue(':MeetingRoomID', $_GET['Meetingroom']);
 		$s->execute();

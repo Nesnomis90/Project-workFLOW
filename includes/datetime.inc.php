@@ -87,7 +87,7 @@ function getDateNow() {
 }
 
 // Function to convert string to datetime in MySQL format
-// TO-DO: Just broken.
+// TO-DO: Just broken. But still, not broken...?
 function stringToDateTime($datetimeString, $format){
 	date_default_timezone_set(DATE_DEFAULT_TIMEZONE);
 	$d = date_create_from_format($format, $datetimeString);

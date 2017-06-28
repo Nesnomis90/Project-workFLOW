@@ -102,9 +102,9 @@
 							<td><?php htmlout($user['lastname']); ?></td>
 							<td><?php htmlout($user['email']); ?></td>
 							<td><?php htmlout($user['accessname']); ?></td>
-							<td><?php htmlout($user['displayname']); ?></td>
-							<td><?php htmlout($user['bookingdescription']); ?></td>
-							<td><?php htmlout($user['worksfor']); ?></td>
+							<td style="white-space: pre-wrap;"><?php htmlout($user['displayname']); ?></td>
+							<td style="white-space: pre-wrap;"><?php htmlout($user['bookingdescription']); ?></td>
+							<td style="white-space: pre-wrap;"><?php htmlout($user['worksfor']); ?></td>
 							<td><?php htmlout($user['datecreated']); ?></td>
 							<td><?php htmlout($user['lastactive']); ?></td>
 							<?php if($user['reduceaccess'] == null) :?>

@@ -1077,18 +1077,18 @@ try
 {
 	include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 	$pdo = connect_to_db();
-	$sql = "SELECT 		u.`userID`, 
+	$sql = 'SELECT 		u.`userID`, 
 						u.`firstname`, 
 						u.`lastname`, 
 						u.`email`,
 						a.`AccessName`,
 						u.`displayname`,
 						u.`bookingdescription`,
-						GROUP_CONCAT(CONCAT_WS(' in ', cp.`name`, c.`name`) separator ', ') 	AS WorksFor,
-						u.`create_time`								 							AS DateCreated,
+						GROUP_CONCAT(CONCAT_WS(" in ", cp.`name`, CONCAT(c.`name`,".")) separator "\n") 	AS WorksFor,
+						u.`create_time`								 										AS DateCreated,
 						u.`isActive`,
-						u.`lastActivity`							 							AS LastActive,
-						u.`reduceAccessAtDate`													AS ReduceAccessAtDate
+						u.`lastActivity`							 										AS LastActive,
+						u.`reduceAccessAtDate`																AS ReduceAccessAtDate
 			FROM 		`user` u 
 			LEFT JOIN 	`employee` e 
 			ON 			e.UserID = u.userID 
@@ -1100,7 +1100,7 @@ try
 			ON 			u.AccessID = a.AccessID
 			GROUP BY 	u.`userID`
 			ORDER BY 	u.`userID`
-			DESC";
+			DESC';
 	$return = $pdo->query($sql);
 	$result = $return->fetchAll(PDO::FETCH_ASSOC);
 	if(isset($result)){
