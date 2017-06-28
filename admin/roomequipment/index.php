@@ -76,7 +76,7 @@ if(isset($_POST['action']) AND $_POST['action'] == 'Remove'){
 		// from the meeting room.
 		$description = 'The equipment: ' . $_POST['EquipmentName'] . 
 		' was removed from the meeting room: ' . $_POST['MeetingRoomName'] . 
-		'. Removed by: ' . $_SESSION['LoggedInUserName'];
+		".\nRemoved by: " . $_SESSION['LoggedInUserName'];
 		
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 		
@@ -565,7 +565,7 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Confirm Room Equipment')
 		// to the meeting room.		
 		$logEventDescription = 'The equipment: ' . $equipmentinfo . 
 		' was added to the meeting room: ' . $meetingroominfo . 
-		' with the amount: ' . $_POST['EquipmentAmount'] . ". Added by: " .
+		' with the amount: ' . $_POST['EquipmentAmount'] . ".\nAdded by: " .
 		$_SESSION['LoggedInUserName'];
 		
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';

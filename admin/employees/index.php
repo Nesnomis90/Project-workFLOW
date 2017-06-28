@@ -78,7 +78,7 @@ if(isset($_POST['action']) AND $_POST['action'] == 'Remove'){
 		// from the company.
 		$logEventDescription = 'The user: ' . $_POST['UserName'] . 
 		' was removed from the company: ' . $_POST['CompanyName'] . 
-		'. Removed by: ' . $_SESSION['LoggedInUserName'];
+		".\nRemoved by: " . $_SESSION['LoggedInUserName'];
 		
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 		
@@ -591,7 +591,7 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Confirm Employee')
 		// to the company.
 		$logEventDescription = 'The user: ' . $userinfo . 
 		' was added to the company: ' . $companyinfo . 
-		' and was given the position: ' . $positioninfo . ". Added by : " .
+		' and was given the position: ' . $positioninfo . ".\nAdded by : " .
 		$_SESSION['LoggedInUserName'];
 		
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
