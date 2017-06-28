@@ -117,7 +117,7 @@
 					<?php endif; ?>
 				<?php else : ?>
 					<?php if(isset($company)) : ?>
-						<b>This user is only connected to one company: <?php htmlout($companyName); ?></b>
+						<b><?php htmlout($companyName); ?></b>
 					<?php else : ?>
 						<b>This user is not connected to a company.</b>
 					<?php endif; ?>

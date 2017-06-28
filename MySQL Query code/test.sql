@@ -2,6 +2,57 @@ USE test;
 SET NAMES utf8;
 USE meetingflow;
 
+SELECT 	COUNT(*),
+		`bookingID`,
+		`meetingRoomID`									AS TheMeetingRoomID, 
+		(
+			SELECT	`name`
+			FROM	`meetingroom`
+			WHERE	`meetingRoomID` = TheMeetingRoomID 
+		)												AS TheMeetingRoomName,
+		`startDateTime`,
+		`endDateTime`,
+		`actualEndDateTime`
+FROM	`booking`
+WHERE 	`cancellationCode` = 'aecffbf33f25291a7f3cdf3204622e6847514cdd1faa0362771c1863ce34025b'
+AND		`dateTimeCancelled` IS NULL
+LIMIT 	1;
+
+SELECT 	`userID`, 
+		`firstname`, 
+		`lastname`, 
+		`email`,
+		`displayname`,
+		`bookingdescription`
+FROM 	`user`
+WHERE 	`isActive` > 0
+AND		`userID`
+IN	(
+		SELECT 	DISTINCT `userID`
+        FROM 	`employee`
+	);
+
+SELECT 		u.`userID`, 
+			u.`firstname`, 
+			u.`lastname`, 
+			u.`email`,
+			u.`displayname`,
+			u.`bookingdescription`
+FROM 		`user` u
+INNER JOIN 	`employee` e
+ON 			u.`userID` = e.`UserID`
+WHERE 		`isActive` > 0
+GROUP BY 	u.`userID`;
+
+SELECT 	`userID`, 
+		`firstname`, 
+		`lastname`, 
+		`email`,
+		`displayname`,
+		`bookingdescription`
+FROM 	`user`
+WHERE 	`isActive` > 0;
+
 SELECT 		(
 				BIG_SEC_TO_TIME(
 						(

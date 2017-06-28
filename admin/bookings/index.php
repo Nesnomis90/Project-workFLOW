@@ -742,6 +742,7 @@ if((isset($_POST['edit']) AND $_POST['edit'] == "Change User") OR
 		try
 		{
 			$pdo = connect_to_db();
+			/* Old SQL with all users
 			$sql = "SELECT 	`userID`, 
 							`firstname`, 
 							`lastname`, 
@@ -750,7 +751,21 @@ if((isset($_POST['edit']) AND $_POST['edit'] == "Change User") OR
 							`bookingdescription`
 					FROM 	`user`
 					WHERE 	`isActive` > 0";
-		
+			*/
+			// New SQL that only gets users that are registered in a company (an employee)
+			$sql = "SELECT 	`userID`, 
+							`firstname`, 
+							`lastname`, 
+							`email`,
+							`displayname`,
+							`bookingdescription`
+					FROM 	`user`
+					WHERE 	`isActive` > 0
+					AND		`userID`
+					IN	(
+							SELECT 	DISTINCT `userID`
+							FROM 	`employee`
+						)";
 			if ($usersearchstring != ''){
 				$sqladd = " AND (`firstname` LIKE :search
 							OR `lastname` LIKE :search
@@ -1863,9 +1878,10 @@ if (isset($_POST['add']) AND $_POST['add'] == "Add booking")
 		}		
 		
 		// Save a description with information about the booking that was created
-		$logEventDescription = 'A booking was created for the meeting room: ' . $meetinginfo . 
-								', for the user: ' . $userinfo . " and company: " . $companyName . 
-								'. Booking was made by: ' . $_SESSION['LoggedInUserName'];
+		$logEventDescription =  "Meeting room: " . $MeetingRoomName . 
+								".\nTime Slot: " . $displayValidatedStartDate . " to " . $displayValidatedEndDate .
+								".\nFor the user: " . $userinfo . " and company: " . $companyName . 
+								".\nBooking was made by: " . $_SESSION['LoggedInUserName'] . ".";
 		
 		if(isset($_SESSION['lastBookingID'])){
 			$lastBookingID = $_SESSION['lastBookingID'];
@@ -1981,6 +1997,7 @@ if((isset($_POST['add']) AND $_POST['add'] == "Change User") OR
 		try
 		{
 			$pdo = connect_to_db();
+			/* Old SQL with all users
 			$sql = "SELECT 	`userID`, 
 							`firstname`, 
 							`lastname`, 
@@ -1989,6 +2006,21 @@ if((isset($_POST['add']) AND $_POST['add'] == "Change User") OR
 							`bookingdescription`
 					FROM 	`user`
 					WHERE 	`isActive` > 0";
+			*/
+			// New SQL that only gets users that are registered in a company (an employee)
+			$sql = "SELECT 	`userID`, 
+							`firstname`, 
+							`lastname`, 
+							`email`,
+							`displayname`,
+							`bookingdescription`
+					FROM 	`user`
+					WHERE 	`isActive` > 0
+					AND		`userID`
+					IN	(
+							SELECT 	DISTINCT `userID`
+							FROM 	`employee`
+						)";
 		
 			if ($usersearchstring != ''){
 				$sqladd = " AND (`firstname` LIKE :search
