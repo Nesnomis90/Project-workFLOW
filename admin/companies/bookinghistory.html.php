@@ -42,7 +42,6 @@
 			</fieldset>
 		<?php endif; ?>
 		
-		
 		<?php if($rightNow) : ?>
 			<h2>Billing Status: Period still in progress.</h2>
 		<?php elseif(!isset($periodHasBeenBilled) OR $periodHasBeenBilled == 0) : ?>
@@ -52,29 +51,27 @@
 		<?php endif; ?>
 
 		<form action="" method="post">
-			<div>
+			<div id="ChooseEarlierPeriod">
 				<?php if(isset($PreviousPeriod) AND $PreviousPeriod) : ?>
 					<input type="submit" name="history" value="Previous Period">
-				<?php else : ?>
-					<input type="submit" name="disabled" value="Previous Period" disabled>
-				<?php endif; ?>
-				<?php if(isset($NextPeriod) AND $NextPeriod) : ?>
-					<input type="submit" name="history" value="Next Period">
-				<?php else : ?>
-					<input type="submit" name="disabled" value="Next Period" disabled>
-				<?php endif; ?>
-			</div>
-			<div>
-				<?php if(isset($PreviousPeriod) AND $PreviousPeriod) : ?>
+					<br />
 					<input type="submit" name="history" value="First Period">
 				<?php else : ?>
+					<input type="submit" name="disabled" value="Previous Period" disabled>
+					<br />
 					<input type="submit" name="disabled" value="First Period" disabled>
 				<?php endif; ?>
+			</div>
+			<div id="ChooseLaterPeriod">
 				<?php if(isset($NextPeriod) AND $NextPeriod) : ?>
+					<input type="submit" name="history" value="Next Period">
+					<br />
 					<input type="submit" name="history" value="Last Period">
 				<?php else : ?>
+					<input type="submit" name="disabled" value="Next Period" disabled>
+					<br />
 					<input type="submit" name="disabled" value="Last Period" disabled>
-				<?php endif; ?>				
+				<?php endif; ?>			
 			</div>
 		</form>		
 		<?php if(!isset($periodHasBeenBilled) OR $periodHasBeenBilled == 0){
