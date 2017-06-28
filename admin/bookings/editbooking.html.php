@@ -71,15 +71,13 @@
 					<?php if(isset($users)) : ?>
 						<select name="userID" id="userID">
 							<?php foreach($users as $row): ?> 
-								<?php if($row['userID']==$SelectedUserID):?>
-									<option selected="selected" 
-											value="<?php htmlout($row['userID']); ?>">
-											<?php htmlout($row['userInformation']);?>
-									</option>
+								<?php if($row['userID'] == $SelectedUserID):?>
+									<option style="background-color:grey; color:white;" selected="selected" 
+									value="<?php htmlout($row['userID']); ?>">Last Selected: <?php htmlout($row['userInformation']);?></option>
+								<?php elseif($row['userID'] == $_SESSION['LoggedInUserID']) : ?>
+									<option style="background-color:grey; color:white;" value="<?php htmlout($row['userID']); ?>">You: <?php htmlout($row['userInformation']);?></option>									
 								<?php else : ?>
-									<option value="<?php htmlout($row['userID']); ?>">
-											<?php htmlout($row['userInformation']);?>
-									</option>
+									<option value="<?php htmlout($row['userID']); ?>"><?php htmlout($row['userInformation']);?></option>
 								<?php endif;?>
 							<?php endforeach; ?>
 						</select>

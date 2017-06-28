@@ -17,6 +17,9 @@
 			<p><b><?php htmlout($_SESSION['AddBookingError']); ?></b></p>
 			<?php unset($_SESSION['AddBookingError']); ?>
 		<?php endif; ?>
+		<?php if(isset($_SESSION['AddBookingUserCannotBookForSelf'])) : ?>
+			<b><span style="color:red">You can not book a meeting for yourself since you are not connected to a company.</span></b>
+		<?php endif; ?>
 		<form action="" method="post">
 			<div>
 				<label for="meetingRoomID">Meeting Room: </label>
@@ -55,15 +58,13 @@
 					<?php if(isset($users)) : ?>
 						<select name="userID" id="userID">
 							<?php foreach($users as $row): ?> 
-								<?php if($row['userID']==$SelectedUserID):?>
-									<option selected="selected" 
-											value="<?php htmlout($row['userID']); ?>">
-											<?php htmlout($row['userInformation']);?>
-									</option>
+								<?php if($row['userID'] == $SelectedUserID):?>
+									<option style="background-color:grey; color:white;" selected="selected" 
+									value="<?php htmlout($row['userID']); ?>">Last Selected: <?php htmlout($row['userInformation']);?></option>
+								<?php elseif($row['userID'] == $_SESSION['LoggedInUserID']) : ?>
+									<option style="background-color:grey; color:white;" value="<?php htmlout($row['userID']); ?>">You: <?php htmlout($row['userInformation']);?></option>									
 								<?php else : ?>
-									<option value="<?php htmlout($row['userID']); ?>">
-											<?php htmlout($row['userInformation']);?>
-									</option>
+									<option value="<?php htmlout($row['userID']); ?>"><?php htmlout($row['userInformation']);?></option>
 								<?php endif;?>
 							<?php endforeach; ?>
 						</select>
