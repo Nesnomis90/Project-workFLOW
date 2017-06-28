@@ -2,11 +2,82 @@ USE test;
 SET NAMES utf8;
 USE meetingflow;
 
-SELECT 		`startDate`				AS StartDate,
-			`endDate`				AS EndDate
-FROM 		`companycreditshistory`
-WHERE 		`companyID` = 2
-AND			`hasBeenBilled` = 0;
+SELECT	(
+			SELECT COUNT(*)
+			FROM	`employee`
+            WHERE 	`userID` = 16
+		) AS HitCount,
+		`bookingdescription`, 
+		`displayname`,
+		`firstName`,
+		`lastName`,
+		`email`
+FROM 	`user`
+WHERE 	`userID` = 16
+LIMIT 	1;
+
+SELECT	COUNT(e.`userID`),
+		`bookingdescription`, 
+		`displayname`,
+		`firstName`,
+		`lastName`,
+		`email`
+FROM 	`user` u
+JOIN 	`employee` e
+ON 		e.`userID` = u.`userID`
+WHERE 	u.`userID` = 16
+LIMIT 	1;
+
+SELECT 	COUNT(*),
+		`bookingID`,
+		`meetingRoomID`									AS TheMeetingRoomID, 
+		(
+			SELECT	`name`
+			FROM	`meetingroom`
+			WHERE	`meetingRoomID` = TheMeetingRoomID 
+		)												AS TheMeetingRoomName,
+		`startDateTime`,
+		`endDateTime`,
+		`actualEndDateTime`
+FROM	`booking`
+WHERE 	`cancellationCode` = 'aecffbf33f25291a7f3cdf3204622e6847514cdd1faa0362771c1863ce34025b'
+AND		`dateTimeCancelled` IS NULL
+LIMIT 	1;
+
+SELECT 	`userID`, 
+		`firstname`, 
+		`lastname`, 
+		`email`,
+		`displayname`,
+		`bookingdescription`
+FROM 	`user`
+WHERE 	`isActive` > 0
+AND		`userID`
+IN	(
+		SELECT 	DISTINCT `userID`
+        FROM 	`employee`
+	);
+
+SELECT 		u.`userID`, 
+			u.`firstname`, 
+			u.`lastname`, 
+			u.`email`,
+			u.`displayname`,
+			u.`bookingdescription`
+FROM 		`user` u
+INNER JOIN 	`employee` e
+ON 			u.`userID` = e.`UserID`
+WHERE 		`isActive` > 0
+GROUP BY 	u.`userID`;
+
+SELECT 	`userID`, 
+		`firstname`, 
+		`lastname`, 
+		`email`,
+		`displayname`,
+		`bookingdescription`
+FROM 	`user`
+WHERE 	`isActive` > 0;
 
 SELECT 		(
 				BIG_SEC_TO_TIME(
@@ -83,9 +154,6 @@ AND     	b.`dateTimeCancelled` IS NULL
 AND         b.`actualEndDateTime`
 BETWEEN	    '2017-03-15'
 AND			'2017-06-15';
-
-
-
 
 SELECT SEC_TO_TIME(
 					FLOOR(
@@ -2284,3 +2352,4 @@ SELECT * FROM `equipment` e JOIN `roomequipment` re JOIN `meetingroom` m WHERE m
 
 INSERT INTO `user`(`email`, `password`, `firstname`, `lastname`, `accessID`, `activationcode`) VALUES ('test15@test.com', '123test', 'testy15', 'mctester15', 4, 'ecd71870d1963316a97e3ac3408c9835ad8cf0f3c1bc703527c30265534f75ae');
 UPDATE  `company` SET  `prevStartDate` = `startDate`,   `startDate` = `endDate`,         `endDate` = (`startDate` + INTERVAL 1 MONTH) WHERE `companyID` <> 0 AND  CURDATE() > `endDate`
+SELECT   COUNT(*)     FROM   `company` c     INNER JOIN  `companycredits` cc     ON    cc.`CompanyID` = c.`CompanyID`     INNER JOIN  `credits` cr     ON   cr.`CreditsID` = cc.`CreditsID`     WHERE   c.`isActive` = 1     AND   CURDATE() >= c.`endDate` LIMIT 0, 1000

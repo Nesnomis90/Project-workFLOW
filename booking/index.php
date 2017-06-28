@@ -732,7 +732,86 @@ if(	((isset($_POST['action']) AND $_POST['action'] == 'Create Meeting')) OR
 	$_SESSION['confirmOrigins'] = "Create Meeting";
 	$SelectedUserID = checkIfLocalDeviceOrLoggedIn();
 	unset($_SESSION['confirmOrigins']);
-	
+
+	if(!isset($_SESSION['AddCreateBookingInfoArray'])){
+		try
+		{
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+			
+			// Get the logged in user's default booking information
+			$pdo = connect_to_db();
+			/* old SQL without company requirement restriction
+			$sql = 'SELECT	`bookingdescription`, 
+							`displayname`,
+							`firstName`,
+							`lastName`,
+							`email`
+					FROM 	`user`
+					WHERE 	`userID` = :userID
+					LIMIT 	1'; */
+			// New SQL where we require a company connection
+			$sql = "SELECT	(
+								SELECT COUNT(*)
+								FROM	`employee`
+								WHERE 	`userID` = :userID
+							) AS HitCount,
+							`bookingdescription`, 
+							`displayname`,
+							`firstName`,
+							`lastName`,
+							`email`
+					FROM 	`user`
+					WHERE 	`userID` = :userID
+					LIMIT 	1";	
+			$s = $pdo->prepare($sql);
+			$s->bindValue(':userID', $SelectedUserID);
+			$s->execute();
+			
+			// Create an array with the row information we retrieved
+			$result = $s->fetch(PDO::FETCH_ASSOC);
+			
+			if($result['HitCount'] == 0){
+				// User is not working in a company. We can't let them book
+				$_SESSION['normalBookingFeedback'] = "Only users connected to a company can book a meeting.";
+				header("Location: .");
+				exit();
+			}
+			// Set default booking display name and booking description
+			if($result['displayname']!=NULL){
+				$displayName = $result['displayname'];
+			} else {
+				$displayName = "";
+			}
+
+			if($result['bookingdescription']!=NULL){
+				$description = $result['bookingdescription'];
+			} else {
+				$description = "";
+			}
+			
+			if($result['firstName']!=NULL){
+				$firstname = $result['firstName'];
+			}		
+			
+			if($result['lastName']!=NULL){
+				$lastname = $result['lastName'];
+			}	
+			
+			if($result['email']!=NULL){
+				$email = $result['email'];
+			}					
+
+			//Close connection
+			$pdo = null;
+		}
+		catch (PDOException $e)
+		{
+			$error = 'Error fetching default user details: ' . $e->getMessage();
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+			$pdo = null;
+			exit();		
+		}	
+
 	// Get information from database on booking information user can choose between
 	if(!isset($_SESSION['AddCreateBookingMeetingRoomsArray'])){
 		try
@@ -769,66 +848,7 @@ if(	((isset($_POST['action']) AND $_POST['action'] == 'Create Meeting')) OR
 			exit();		
 		}
 	}
-
-	if(!isset($_SESSION['AddCreateBookingInfoArray'])){
-		try
-		{
-			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
-			
-			// Get the logged in user's default booking information
-			$pdo = connect_to_db();
-			$sql = 'SELECT	`bookingdescription`, 
-							`displayname`,
-							`firstName`,
-							`lastName`,
-							`email`
-					FROM 	`user`
-					WHERE 	`userID` = :userID
-					LIMIT 	1';
-				
-			$s = $pdo->prepare($sql);
-			$s->bindValue(':userID', $SelectedUserID);
-			$s->execute();
-			
-			// Create an array with the row information we retrieved
-			$result = $s->fetch(PDO::FETCH_ASSOC);
-				
-			// Set default booking display name and booking description
-			if($result['displayname']!=NULL){
-				$displayName = $result['displayname'];
-			} else {
-				$displayName = "";
-			}
-
-			if($result['bookingdescription']!=NULL){
-				$description = $result['bookingdescription'];
-			} else {
-				$description = "";
-			}
-			
-			if($result['firstName']!=NULL){
-				$firstname = $result['firstName'];
-			}		
-			
-			if($result['lastName']!=NULL){
-				$lastname = $result['lastName'];
-			}	
-			
-			if($result['email']!=NULL){
-				$email = $result['email'];
-			}					
-
-			//Close connection
-			$pdo = null;
-		}
-		catch (PDOException $e)
-		{
-			$error = 'Error fetching default user details: ' . $e->getMessage();
-			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
-			$pdo = null;
-			exit();		
-		}	
-	
+		
 		// Create an array with the row information we want to use	
 		$_SESSION['AddCreateBookingInfoArray'] = array(
 													'TheCompanyID' => '',
@@ -2090,33 +2110,39 @@ if (isset($_POST['edit']) AND $_POST['edit'] == "Reset"){
 // CANCELLATION CODE SNIPPET // START //
 
 // Cancels a booking from a submitted cancellation link
-if(isset($_GET['cancellationcode'])){
-	
-	$cancellationCode = $_GET['cancellationcode'];
-		
-	// Check if code is correct (64 chars)
-	if(strlen($cancellationCode)!=64){
-		$_SESSION['normalBookingFeedback'] = "The cancellation code that was submitted is not a valid code.";
+if(isset($_GET['cancellationcode']) OR isset($_SESSION['refreshWithCancellationCode'])){
+	if(isset($_GET['cancellationcode'])){
+		// Check if code is correct (64 chars)
+		if(strlen($_GET['cancellationcode'])!=64){
+			$_SESSION['normalBookingFeedback'] = "The cancellation code that was submitted is not a valid code.";
+			header("Location: .");
+			exit();
+		}
+		$_SESSION['refreshWithCancellationCode'] = $_GET['cancellationcode'];
 		header("Location: .");
-		exit();
+		exit();		
 	}
-		
+	
+	$cancellationCode = $_SESSION['refreshWithCancellationCode'];
+	unset($_SESSION['refreshWithCancellationCode']);
+
 	//	Check if the submitted code is in the database
 	try
 	{
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 		
 		$pdo = connect_to_db();
-		$sql = "SELECT 	`bookingID`,
+		$sql = "SELECT 	COUNT(*)										AS HitCount,
+						`bookingID`,
 						`meetingRoomID`									AS TheMeetingRoomID, 
 						(
 							SELECT	`name`
 							FROM	`meetingroom`
 							WHERE	`meetingRoomID` = TheMeetingRoomID 
 						)												AS TheMeetingRoomName,
-						`startDateTime`,
-						`endDateTime`,
-						`actualEndDateTime`
+						`startDateTime`									AS StartDateTime,
+						`endDateTime`									AS EndDateTime,
+						`actualEndDateTime`								AS ActualEndDateTime
 				FROM	`booking`
 				WHERE 	`cancellationCode` = :cancellationCode
 				AND		`dateTimeCancelled` IS NULL
@@ -2138,32 +2164,32 @@ if(isset($_GET['cancellationcode'])){
 
 	$result = $s->fetch(PDO::FETCH_ASSOC);
 	if(isset($result)){
-		$rowNum = sizeOf($result);
+		$rowNum = $result['HitCount'];
 	} else {
 		$rowNum = 0;
 	}
 	// Check if the select even found something
 	if($rowNum == 0){
 		// No match.
-		$_SESSION['normalBookingFeedback'] = "The cancellation code that was submitted is not a valid code.";
+		$_SESSION['normalBookingFeedback'] = "The cancellation code that was submitted did not match an active meeting.";
 		header("Location: .");
 		exit();
 	}
 	
 	$bookingID = $result['bookingID'];
 	$TheMeetingRoomName = $result['TheMeetingRoomName'];
-	$startDateTimeString = $result['startDateTime'];
-	$endDateTimeString = $result['endDateTime'];
-	$actualEndDateTimeString = $result['actualEndDateTime'];
+	$startDateTimeString = $result['StartDateTime'];
+	$endDateTimeString = $result['EndDateTime'];
+	$actualEndDateTimeString = $result['ActualEndDateTime'];
 	
-	$startDateTime = stringToDateTime($startDateTime, 'Y-m-d H:i:s');
-	$endDateTime = stringToDateTime($endDateTime, 'Y-m-d H:i:s');
+	$startDateTime = correctDatetimeFormat($startDateTimeString);
+	$endDateTime = correctDatetimeFormat($endDateTimeString);
 	
-	$displayValidatedStartDate = convertDatetimeToFormat($startDateTimeString , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
-	$displayValidatedEndDate = convertDatetimeToFormat($endDateTimeString, 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);	
+	$displayValidatedStartDate = convertDatetimeToFormat($startDateTime , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
+	$displayValidatedEndDate = convertDatetimeToFormat($endDateTime, 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);	
 	
 	// Check if the meeting has already ended
-	if($actualEndDateTimeString != "" AND $actualEndDateTimeString != NULL){
+	if($actualEndDateTimeString == "" OR $actualEndDateTimeString == NULL){
 		// Meeting has not ended already.
 		// Check if we're cancelling the booking or simply ending the booking early!
 		$timeNow = getDatetimeNow();
@@ -2174,7 +2200,7 @@ if(isset($_GET['cancellationcode'])){
 							`actualEndDateTime` = CURRENT_TIMESTAMP,
 							`cancellationCode` = NULL
 					WHERE 	`bookingID` = :bookingID";
-			$bookingFeedback = 	"The booking for " . $TheMeetingRoomName . ". Starting at: " . $displayValidatedStartDate . 
+			$bookingFeedback = 	"The booking for " . $TheMeetingRoomName . ".\nStarting at: " . $displayValidatedStartDate . 
 								" and ending at: " . $displayValidatedEndDate . " has been ended early by using the cancellation link.";
 			$logEventDescription = $bookingFeedback;
 		} elseif($timeNow < $startDateTime) {
@@ -2183,7 +2209,7 @@ if(isset($_GET['cancellationcode'])){
 					SET		`dateTimeCancelled` = CURRENT_TIMESTAMP,
 							`cancellationCode` = NULL
 					WHERE 	`bookingID` = :bookingID";	
-			$bookingFeedback = 	"The booking for " . $TheMeetingRoomName . ". Starting at: " . $displayValidatedStartDate . 
+			$bookingFeedback = 	"The booking for " . $TheMeetingRoomName . ".\nStarting at: " . $displayValidatedStartDate . 
 								" and ending at: " . $displayValidatedEndDate . " has been cancelled by using the cancellation link.";
 			$logEventDescription = $bookingFeedback;								
 		} elseif($timeNow > $endDateTime) {
@@ -2194,75 +2220,78 @@ if(isset($_GET['cancellationcode'])){
 							`cancellationCode` = NULL
 					WHERE 	`bookingID` = :bookingID";
 			$bookingFeedback = 		"The booked meeting has already ended.";
-			$logEventDescription = 	"The booking for " . $TheMeetingRoomName . ". Starting at: " . $displayValidatedStartDate . 
+			$logEventDescription = 	"The booking for " . $TheMeetingRoomName . ".\nStarting at: " . $displayValidatedStartDate . 
 									" and ending at: " . $displayValidatedEndDate . " was attempted to be cancelled with the " . 
 									"cancellation link, but the meeting should have already been completed." .
 									" The end date of the booking has been updated to have occured on the scheduled time.";			
 		}	
-	} else {
+	} elseif(isset($actualEndDateTimeString) AND $actualEndDateTimeString != "" AND $actualEndDateTimeString != NULL) {
 		// Meeting has already ended. So there's no reason to cancel it.
 		$bookingFeedback = 	"The booked meeting has already ended.";
 		$sql = "UPDATE 	`booking`
 				SET		`cancellationCode` = NULL
 				WHERE 	`bookingID` = :bookingID";
 		$bookingFeedback = 		"The booked meeting has already ended.";
-		$logEventDescription = 	"The booking for " . $TheMeetingRoomName . ". Starting at: " . $displayValidatedStartDate . 
+		$logEventDescription = 	"The booking for " . $TheMeetingRoomName . ".\nStarting at: " . $displayValidatedStartDate . 
 								" and ending at: " . $displayValidatedEndDate . " was attempted to be cancelled with the " . 
 								"cancellation link, but the meeting had already ended so it had no effect.";
+	} else {
+		$bookingFeedback = 		"Could not cancel the meeting.";
 	}
 	
-	// Update the booked meeting
-	try
-	{
-		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
-		
-		$pdo = connect_to_db();
-		$s = $pdo->prepare($sql);
-		$s->bindValue(':bookingID', $bookingID);
-		$s->execute();
-		
-		//Close the connection
-		$pdo = null;
-	}
-	catch(PDOException $e)
-	{
-		$error = 'Error updating booking: ' . $e->getMessage();
-		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
-		$pdo = null;
-		exit();
-	}	
-	
-	$_SESSION['normalBookingFeedback'] = $bookingFeedback;
+	if(isset($logEventDescription) AND isset($bookingID) AND $bookingID != NULL){
+		// Update the booked meeting
+		try
+		{
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+			
+			$pdo = connect_to_db();
+			$s = $pdo->prepare($sql);
+			$s->bindValue(':bookingID', $bookingID);
+			$s->execute();
+			
+			//Close the connection
+			$pdo = null;
+		}
+		catch(PDOException $e)
+		{
+			$error = 'Error updating booking: ' . $e->getMessage();
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+			$pdo = null;
+			exit();
+		}	
 										
-	// Add a log event about the updated booking
-	try
-	{
-		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
-		
-		$pdo = connect_to_db();
-		$sql = "INSERT INTO `logevent`
-				SET			`actionID` = 	(
-												SELECT `actionID` 
-												FROM `logaction`
-												WHERE `name` = 'Booking Cancelled'
-											),
-							`description` = :description,
-							`bookingID` = :bookingID";
-		$s = $pdo->prepare($sql);
-		$s->bindValue(':description', $logEventDescription);
-		$s->bindValue(':bookingID', $bookingID);
-		$s->execute();
-		
-		//Close the connection
-		$pdo = null;		
+		// Add a log event about the updated booking
+		try
+		{
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+			
+			$pdo = connect_to_db();
+			$sql = "INSERT INTO `logevent`
+					SET			`actionID` = 	(
+													SELECT `actionID` 
+													FROM `logaction`
+													WHERE `name` = 'Booking Cancelled'
+												),
+								`description` = :description,
+								`bookingID` = :bookingID";
+			$s = $pdo->prepare($sql);
+			$s->bindValue(':description', $logEventDescription);
+			$s->bindValue(':bookingID', $bookingID);
+			$s->execute();
+			
+			//Close the connection
+			$pdo = null;		
+		}
+		catch(PDOException $e)
+		{
+			$error = 'Error adding log event to database: ' . $e->getMessage();
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+			$pdo = null;
+			exit();
+		}
 	}
-	catch(PDOException $e)
-	{
-		$error = 'Error adding log event to database: ' . $e->getMessage();
-		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
-		$pdo = null;
-		exit();
-	}
+	$_SESSION['normalBookingFeedback'] = $bookingFeedback;
 }
 
 // CANCELLATION CODE SNIPPET // END //

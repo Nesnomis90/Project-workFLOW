@@ -56,14 +56,9 @@
 						<select name="companyID" id="companyID">
 							<?php foreach($company as $row): ?> 
 								<?php if($row['companyID']==$selectedCompanyID):?>
-									<option selected="selected" 
-											value="<?php htmlout($row['companyID']); ?>">
-											<?php htmlout($row['companyName']);?>
-									</option>
+									<option selected="selected" value="<?php htmlout($row['companyID']); ?>"><?php htmlout($row['companyName']);?></option>
 								<?php else : ?>
-									<option value="<?php htmlout($row['companyID']); ?>">
-											<?php htmlout($row['companyName']);?>
-									</option>
+									<option value="<?php htmlout($row['companyID']); ?>"><?php htmlout($row['companyName']);?></option>
 								<?php endif;?>
 							<?php endforeach; ?>
 						</select>

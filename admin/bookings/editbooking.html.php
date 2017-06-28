@@ -27,14 +27,9 @@
 				<select name="meetingRoomID" id="meetingRoomID">
 					<?php foreach($meetingroom as $row): ?> 
 						<?php if($row['meetingRoomID']==$selectedMeetingRoomID):?>
-							<option selected="selected" 
-									value="<?php htmlout($row['meetingRoomID']); ?>">
-									<?php htmlout($row['meetingRoomName']);?>
-							</option>
+							<option selected="selected" value="<?php htmlout($row['meetingRoomID']); ?>"><?php htmlout($row['meetingRoomName']);?></option>
 						<?php else : ?>
-							<option value="<?php htmlout($row['meetingRoomID']); ?>">
-									<?php htmlout($row['meetingRoomName']);?>
-							</option>
+							<option value="<?php htmlout($row['meetingRoomID']); ?>"><?php htmlout($row['meetingRoomName']);?></option>
 						<?php endif;?>
 					<?php endforeach; ?>
 				</select>				
@@ -71,15 +66,13 @@
 					<?php if(isset($users)) : ?>
 						<select name="userID" id="userID">
 							<?php foreach($users as $row): ?> 
-								<?php if($row['userID']==$SelectedUserID):?>
-									<option selected="selected" 
-											value="<?php htmlout($row['userID']); ?>">
-											<?php htmlout($row['userInformation']);?>
-									</option>
+								<?php if($row['userID'] == $SelectedUserID):?>
+									<option style="background-color:grey; color:white;" selected="selected" 
+									value="<?php htmlout($row['userID']); ?>">Last Selected: <?php htmlout($row['userInformation']);?></option>
+								<?php elseif($row['userID'] == $_SESSION['LoggedInUserID']) : ?>
+									<option style="background-color:grey; color:white;" value="<?php htmlout($row['userID']); ?>">You: <?php htmlout($row['userInformation']);?></option>									
 								<?php else : ?>
-									<option value="<?php htmlout($row['userID']); ?>">
-											<?php htmlout($row['userInformation']);?>
-									</option>
+									<option value="<?php htmlout($row['userID']); ?>"><?php htmlout($row['userInformation']);?></option>
 								<?php endif;?>
 							<?php endforeach; ?>
 						</select>
@@ -123,14 +116,9 @@
 						<select name="companyID" id="companyID">
 							<?php foreach($company as $row): ?> 
 								<?php if($row['companyID']==$selectedCompanyID):?>
-									<option selected="selected" 
-											value="<?php htmlout($row['companyID']); ?>">
-											<?php htmlout($row['companyName']);?>
-									</option>
+									<option selected="selected" value="<?php htmlout($row['companyID']); ?>"><?php htmlout($row['companyName']);?></option>
 								<?php else : ?>
-									<option value="<?php htmlout($row['companyID']); ?>">
-											<?php htmlout($row['companyName']);?>
-									</option>
+									<option value="<?php htmlout($row['companyID']); ?>"><?php htmlout($row['companyName']);?></option>
 								<?php endif;?>
 							<?php endforeach; ?>
 						</select>

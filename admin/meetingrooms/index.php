@@ -376,9 +376,9 @@ if ((isset($_POST['action']) AND $_POST['action'] == "Add Room"))
 		session_start();
 
 		// Save a description with information about the meeting room that was added
-		$logEventDescription = "The meeting room: " . $validatedMeetingRoomName . ", with capacity: " . 
-		$validatedMeetingRoomCapacity . " and description: " . $validatedMeetingRoomDescription . 
-		" was added by: " . $_SESSION['LoggedInUserName'];
+		$logEventDescription = "New meeting room: " . $validatedMeetingRoomName . ",\nwith capacity: " . 
+		$validatedMeetingRoomCapacity . "\nand description: " . $validatedMeetingRoomDescription . 
+		"\nwas added by: " . $_SESSION['LoggedInUserName'];
 		
 		if(isset($_SESSION['LastMeetingRoomID'])){
 			$lastMeetingRoomID = $_SESSION['LastMeetingRoomID'];

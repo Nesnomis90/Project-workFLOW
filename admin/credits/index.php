@@ -472,11 +472,11 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Confirm Credits')
 		$creditsMonthlyPrice = convertToCurrency($validatedCreditsMonthlyPrice);
 		
 	// Save a description with information about the Credits that was added
-		$description = "The Credits: " . $validatedCreditsName . " with description: " . 
-		$validatedCreditsDescription . ", and monthly credits given: " . $creditsGiven . 
-		", and monthly subscription price: " . $creditsMonthlyPrice . 
-		", and over credits fee: " . $creditsOverCreditsFee .
-		" was added by: " . $_SESSION['LoggedInUserName'];
+		$description = "New Credits: " . $validatedCreditsName . "\nwith description: " . 
+		$validatedCreditsDescription . ",\nand monthly credits given: " . $creditsGiven . 
+		",\nand monthly subscription price: " . $creditsMonthlyPrice . 
+		",\nand over credits fee: " . $creditsOverCreditsFee .
+		"\nwas added by: " . $_SESSION['LoggedInUserName'];
 		
 		if(isset($_SESSION['LastCreditsID'])){
 			$lastCreditsID = $_SESSION['LastCreditsID'];

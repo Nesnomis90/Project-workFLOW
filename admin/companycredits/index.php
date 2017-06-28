@@ -380,14 +380,14 @@ if (isset($_POST['edit']) AND $_POST['edit'] == 'Finish Edit')
 					}
 				}
 				$description = "The company: " . $original['CompanyName'] . " went from having the Credit: " . $original['CreditsName'] .
-								" and the alternative credits given: " . convertMinutesToHoursAndMinutes($original['CreditsAlternativeAmount']) . ". To having the Credit: " .
+								" and the alternative credits given: " . convertMinutesToHoursAndMinutes($original['CreditsAlternativeAmount']) . ".\nTo having the Credit: " .
 								$creditsName . " and the alternative credits given: " . convertMinutesToHoursAndMinutes($_SESSION['EditCompanyCreditsNewAlternativeAmount']) .
-								". This change was done by: " . $_SESSION['LoggedInUserName'];									
+								".\nThis change was done by: " . $_SESSION['LoggedInUserName'];									
 			} elseif(!$newCredits AND $newAltCredits){
 				$description = "The company: " . $original['CompanyName'] . " went from having the alternative credits given: " . 
-								convertMinutesToHoursAndMinutes($original['CreditsAlternativeAmount']) . ". To having the alternative credits given: " . 
-								convertMinutesToHoursAndMinutes($_SESSION['EditCompanyCreditsNewAlternativeAmount']) . ". Normally the company would get " . 
-								convertMinutesToHoursAndMinutes($original['CreditsGivenInMinutes']) . " from the assigned Credits. This change was done by: " . 
+								convertMinutesToHoursAndMinutes($original['CreditsAlternativeAmount']) . ".\nTo having the alternative credits given: " . 
+								convertMinutesToHoursAndMinutes($_SESSION['EditCompanyCreditsNewAlternativeAmount']) . ".\nNormally the company would get " . 
+								convertMinutesToHoursAndMinutes($original['CreditsGivenInMinutes']) . " from the assigned Credits.\nThis change was done by: " . 
 								$_SESSION['LoggedInUserName'];					
 			}
 	

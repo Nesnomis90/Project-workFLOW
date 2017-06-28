@@ -51,10 +51,12 @@
 		<?php else : ?>
 			<h1>Manage All Booked Meetings</h1>
 		<?php endif; ?>
+		
 		<?php if(isset($_SESSION['BookingUserFeedback'])) : ?>
 			<p><b><?php htmlout($_SESSION['BookingUserFeedback']); ?></b></p>
 			<?php unset($_SESSION['BookingUserFeedback']); ?>
-		<?php endif; ?>			
+		<?php endif; ?>
+		
 		<?php if(isset($_GET['Meetingroom'])) : ?>
 			<?php $goto = "http://$_SERVER[HTTP_HOST]/admin/meetingrooms"; ?>	
 			<div>
@@ -69,6 +71,7 @@
 				</form>
 			</div>		
 		<?php endif; ?>
+		
 		<form action="" method="post">				
 			<div>
 				<input type="submit" name="action" value="Create Booking">
@@ -81,6 +84,7 @@
 			<?php endif; ?>
 			</div>			
 		</form>
+		
 		<table id="bookingstable">
 			<caption>Active Bookings Today</caption>
 			<tr>
@@ -113,14 +117,14 @@
 						<td><?php htmlout($booking['BookedRoomName']); ?></td>
 						<td><?php htmlout($booking['StartTime']); ?></td>
 						<td><?php htmlout($booking['EndTime']); ?></td>
-						<td><?php htmlout($booking['BookedBy']); ?></td>
+						<td style="white-space: pre-wrap;"><?php htmlout($booking['BookedBy']); ?></td>
 						<td><?php htmlout($booking['BookedForCompany']); ?></td>
-						<td><?php htmlout($booking['BookingDescription']); ?></td>
+						<td style="white-space: pre-wrap;"><?php htmlout($booking['BookingDescription']); ?></td>
 						<td><?php htmlout($booking['BookingWasCreatedOn']); ?></td>
 						<td><?php htmlout($booking['firstName']); ?></td>
 						<td><?php htmlout($booking['lastName']); ?></td>
 						<td><?php htmlout($booking['email']); ?></td>
-						<td><?php htmlout($booking['WorksForCompany']); ?></td>
+						<td style="white-space: pre-wrap;"><?php htmlout($booking['WorksForCompany']); ?></td>
 						<td><input type="submit" name="action" value="Edit"></td>							
 						<td><input type="submit" name="action" value="Cancel"></td>
 						<td>
@@ -144,6 +148,7 @@
 			<?php endforeach; ?>
 		<?php endif; ?>
 		</table>
+		
 		<table id="bookingstable">
 			<caption>Completed Bookings Today</caption>
 			<tr>
@@ -180,9 +185,9 @@
 						<td><?php htmlout($booking['BookedRoomName']); ?></td>
 						<td><?php htmlout($booking['StartTime']); ?></td>
 						<td><?php htmlout($booking['EndTime']); ?></td>
-						<td><?php htmlout($booking['BookedBy']); ?></td>
+						<td style="white-space: pre-wrap;"><?php htmlout($booking['BookedBy']); ?></td>
 						<td><?php htmlout($booking['BookedForCompany']); ?></td>
-						<td><?php htmlout($booking['BookingDescription']); ?></td>
+						<td style="white-space: pre-wrap;"><?php htmlout($booking['BookingDescription']); ?></td>
 						<td><?php htmlout($booking['BookingWasCreatedOn']); ?></td>
 						<td><?php htmlout($booking['BookingWasCompletedOn']); ?></td>
 						<td><?php htmlout($booking['CompletedMeetingDuration']); ?></td>
@@ -190,7 +195,7 @@
 						<td><?php htmlout($booking['firstName']); ?></td>
 						<td><?php htmlout($booking['lastName']); ?></td>
 						<td><?php htmlout($booking['email']); ?></td>
-						<td><?php htmlout($booking['WorksForCompany']); ?></td>
+						<td style="white-space: pre-wrap;"><?php htmlout($booking['WorksForCompany']); ?></td>
 						<td><input type="submit" name="action" value="Edit"></td>							
 						<td><input type="submit" name="action" value="Cancel"></td>
 						<td>
@@ -213,7 +218,8 @@
 				</form>
 			<?php endforeach; ?>
 		<?php endif; ?>
-		</table>		
+		</table>
+		
 		<table id="bookingstable">
 			<caption>Future Bookings</caption>
 			<tr>
@@ -246,14 +252,14 @@
 						<td><?php htmlout($booking['BookedRoomName']); ?></td>
 						<td><?php htmlout($booking['StartTime']); ?></td>
 						<td><?php htmlout($booking['EndTime']); ?></td>
-						<td><?php htmlout($booking['BookedBy']); ?></td>
+						<td style="white-space: pre-wrap;"><?php htmlout($booking['BookedBy']); ?></td>
 						<td><?php htmlout($booking['BookedForCompany']); ?></td>
-						<td><?php htmlout($booking['BookingDescription']); ?></td>
+						<td style="white-space: pre-wrap;"><?php htmlout($booking['BookingDescription']); ?></td>
 						<td><?php htmlout($booking['BookingWasCreatedOn']); ?></td>
 						<td><?php htmlout($booking['firstName']); ?></td>
 						<td><?php htmlout($booking['lastName']); ?></td>
 						<td><?php htmlout($booking['email']); ?></td>
-						<td><?php htmlout($booking['WorksForCompany']); ?></td>
+						<td style="white-space: pre-wrap;"><?php htmlout($booking['WorksForCompany']); ?></td>
 						<td><input type="submit" name="action" value="Edit"></td>							
 						<td><input type="submit" name="action" value="Cancel"></td>
 						<td>
@@ -277,6 +283,7 @@
 			<?php endforeach; ?>
 		<?php endif; ?>
 		</table>
+		
 		<table id="bookingstable">
 			<caption>Completed Bookings</caption>
 			<tr>
@@ -313,9 +320,9 @@
 						<td><?php htmlout($booking['BookedRoomName']); ?></td>
 						<td><?php htmlout($booking['StartTime']); ?></td>
 						<td><?php htmlout($booking['EndTime']); ?></td>
-						<td><?php htmlout($booking['BookedBy']); ?></td>
+						<td style="white-space: pre-wrap;"><?php htmlout($booking['BookedBy']); ?></td>
 						<td><?php htmlout($booking['BookedForCompany']); ?></td>
-						<td><?php htmlout($booking['BookingDescription']); ?></td>
+						<td style="white-space: pre-wrap;"><?php htmlout($booking['BookingDescription']); ?></td>
 						<td><?php htmlout($booking['BookingWasCreatedOn']); ?></td>
 						<td><?php htmlout($booking['BookingWasCompletedOn']); ?></td>
 						<td><?php htmlout($booking['CompletedMeetingDuration']); ?></td>
@@ -323,7 +330,7 @@
 						<td><?php htmlout($booking['firstName']); ?></td>
 						<td><?php htmlout($booking['lastName']); ?></td>
 						<td><?php htmlout($booking['email']); ?></td>
-						<td><?php htmlout($booking['WorksForCompany']); ?></td>
+						<td style="white-space: pre-wrap;"><?php htmlout($booking['WorksForCompany']); ?></td>
 						<td><input type="submit" name="action" value="Edit"></td>							
 						<td><input type="submit" name="action" value="Cancel"></td>
 						<td>
@@ -346,7 +353,8 @@
 				</form>
 			<?php endforeach; ?>
 		<?php endif; ?>
-		</table>		
+		</table>
+		
 		<table id="bookingstable">
 			<caption>Bookings Cancelled</caption>
 			<tr>
@@ -381,15 +389,15 @@
 						<td><?php htmlout($booking['BookedRoomName']); ?></td>
 						<td><?php htmlout($booking['StartTime']); ?></td>
 						<td><?php htmlout($booking['EndTime']); ?></td>
-						<td><?php htmlout($booking['BookedBy']); ?></td>
+						<td style="white-space: pre-wrap;"><?php htmlout($booking['BookedBy']); ?></td>
 						<td><?php htmlout($booking['BookedForCompany']); ?></td>
-						<td><?php htmlout($booking['BookingDescription']); ?></td>
+						<td style="white-space: pre-wrap;"><?php htmlout($booking['BookingDescription']); ?></td>
 						<td><?php htmlout($booking['BookingWasCreatedOn']); ?></td>
 						<td><?php htmlout($booking['BookingWasCancelledOn']); ?></td>
 						<td><?php htmlout($booking['firstName']); ?></td>
 						<td><?php htmlout($booking['lastName']); ?></td>
 						<td><?php htmlout($booking['email']); ?></td>
-						<td><?php htmlout($booking['WorksForCompany']); ?></td>
+						<td style="white-space: pre-wrap;"><?php htmlout($booking['WorksForCompany']); ?></td>
 						<td><input type="submit" name="action" value="Edit"></td>							
 						<td><input type="submit" name="action" value="Cancel"></td>
 						<td>
@@ -413,7 +421,8 @@
 			<?php endforeach; ?>
 		<?php endif; ?>		
 		</table>
-	<?php if(isset($bookingsOther)) : ?>		
+		
+		<?php if(isset($bookingsOther)) : ?>		
 		<table id="bookingstable">
 			<caption>Other Bookings</caption>
 			<tr>
@@ -448,16 +457,16 @@
 						<td><?php htmlout($booking['BookedRoomName']); ?></td>
 						<td><?php htmlout($booking['StartTime']); ?></td>
 						<td><?php htmlout($booking['EndTime']); ?></td>
-						<td><?php htmlout($booking['BookedBy']); ?></td>
+						<td style="white-space: pre-wrap;"><?php htmlout($booking['BookedBy']); ?></td>
 						<td><?php htmlout($booking['BookedForCompany']); ?></td>
-						<td><?php htmlout($booking['BookingDescription']); ?></td>
+						<td style="white-space: pre-wrap;"><?php htmlout($booking['BookingDescription']); ?></td>
 						<td><?php htmlout($booking['BookingWasCreatedOn']); ?></td>
 						<td><?php htmlout($booking['BookingWasCompletedOn']); ?></td>
 						<td><?php htmlout($booking['BookingWasCancelledOn']); ?></td>
 						<td><?php htmlout($booking['firstName']); ?></td>
 						<td><?php htmlout($booking['lastName']); ?></td>
 						<td><?php htmlout($booking['email']); ?></td>
-						<td><?php htmlout($booking['WorksForCompany']); ?></td>
+						<td style="white-space: pre-wrap;"><?php htmlout($booking['WorksForCompany']); ?></td>
 						<td><input type="submit" name="action" value="Edit"></td>							
 						<td><input type="submit" name="action" value="Cancel"></td>
 						<td>
@@ -481,6 +490,7 @@
 			<?php endforeach; ?>
 		</table>
 		<?php endif; ?>
+		
 		<p><a href="..">Return to CMS home</a></p>
 	<?php include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/logout.inc.html.php'; ?>
 	</body>

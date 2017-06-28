@@ -471,7 +471,6 @@ function calculatePeriodInformation($pdo, $companyID, $BillingStart, $BillingEnd
 					$displayHourAmountUsedInCalculation = $hourAmountUsedInCalculation . "h0m";
 					$overFeeCostThisMonth = $hourPrice * $hourAmountUsedInCalculation;
 				}
-				
 				$displayOverFeeCostThisMonth = convertToCurrency($overFeeCostThisMonth);
 				$totalCost = $monthPrice+$overFeeCostThisMonth;
 				$bookingCostThisMonth = convertToCurrency($monthPrice) . " + " . convertToCurrency($overFeeCostThisMonth);

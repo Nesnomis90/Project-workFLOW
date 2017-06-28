@@ -102,9 +102,9 @@
 							<td><?php htmlout($user['lastname']); ?></td>
 							<td><?php htmlout($user['email']); ?></td>
 							<td><?php htmlout($user['accessname']); ?></td>
-							<td><?php htmlout($user['displayname']); ?></td>
-							<td><?php htmlout($user['bookingdescription']); ?></td>
-							<td><?php htmlout($user['worksfor']); ?></td>
+							<td style="white-space: pre-wrap;"><?php htmlout($user['displayname']); ?></td>
+							<td style="white-space: pre-wrap;"><?php htmlout($user['bookingdescription']); ?></td>
+							<td style="white-space: pre-wrap;"><?php htmlout($user['worksfor']); ?></td>
 							<td><?php htmlout($user['datecreated']); ?></td>
 							<td><?php htmlout($user['lastactive']); ?></td>
 							<?php if($user['reduceaccess'] == null) :?>
@@ -130,42 +130,44 @@
 					</form>
 				<?php endforeach; ?>
 			</table>
-			<table id="usertable">
-				<caption>Unactivated Users</caption>
-				<tr>
-					<th colspan="3">User Information</th>
-					<th>Website</th>
-					<th>Date</th>
-					<th>Alter User</th>
-				</tr>				
-				<tr>
-					<th>First Name</th>
-					<th>Last Name</th>
-					<th>Email</th>
-					<th>Access</th>
-					<th>Created</th>
-					<th>Delete</th>
-				</tr>
-				<?php foreach ($inactiveusers as $user): ?>
-				<form action="" method="post">
+			<?php if(isset($inactiveusers)) : ?>
+				<table id="usertable">
+					<caption>Unactivated Users</caption>
 					<tr>
-						<td><?php htmlout($user['firstname']); ?></td>
-						<td><?php htmlout($user['lastname']); ?></td>
-						<td><?php htmlout($user['email']); ?></td>
-						<td><?php htmlout($user['accessname']); ?></td>
-						<td><?php htmlout($user['datecreated']); ?></td>
-						<td>
-							<?php if(isset($_SESSION['usersEnableDelete']) AND $_SESSION['usersEnableDelete']) : ?>
-								<input type="submit" name="action" value="Delete">
-							<?php else : ?>
-								<input type="submit" name="disabled" value="Delete" disabled>
-							<?php endif; ?>
-						</td>
-						<input type="hidden" name="id" value="<?php echo $user['id']; ?>">
+						<th colspan="3">User Information</th>
+						<th>Website</th>
+						<th>Date</th>
+						<th>Alter User</th>
+					</tr>				
+					<tr>
+						<th>First Name</th>
+						<th>Last Name</th>
+						<th>Email</th>
+						<th>Access</th>
+						<th>Created</th>
+						<th>Delete</th>
 					</tr>
-				</form>
-				<?php endforeach; ?>
-			</table>
+					<?php foreach ($inactiveusers as $user): ?>
+					<form action="" method="post">
+						<tr>
+							<td><?php htmlout($user['firstname']); ?></td>
+							<td><?php htmlout($user['lastname']); ?></td>
+							<td><?php htmlout($user['email']); ?></td>
+							<td><?php htmlout($user['accessname']); ?></td>
+							<td><?php htmlout($user['datecreated']); ?></td>
+							<td>
+								<?php if(isset($_SESSION['usersEnableDelete']) AND $_SESSION['usersEnableDelete']) : ?>
+									<input type="submit" name="action" value="Delete">
+								<?php else : ?>
+									<input type="submit" name="disabled" value="Delete" disabled>
+								<?php endif; ?>
+							</td>
+							<input type="hidden" name="id" value="<?php echo $user['id']; ?>">
+						</tr>
+					</form>
+					<?php endforeach; ?>
+				</table>
+			<?php endif; ?>
 		<?php else : ?>
 			<tr><b>There are no users registered in the database.</b></tr>
 			<tr>
