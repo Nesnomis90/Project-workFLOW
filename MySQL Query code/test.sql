@@ -2,6 +2,32 @@ USE test;
 SET NAMES utf8;
 USE meetingflow;
 
+SELECT	(
+			SELECT COUNT(*)
+			FROM	`employee`
+            WHERE 	`userID` = 16
+		) AS HitCount,
+		`bookingdescription`, 
+		`displayname`,
+		`firstName`,
+		`lastName`,
+		`email`
+FROM 	`user`
+WHERE 	`userID` = 16
+LIMIT 	1;
+
+SELECT	COUNT(e.`userID`),
+		`bookingdescription`, 
+		`displayname`,
+		`firstName`,
+		`lastName`,
+		`email`
+FROM 	`user` u
+JOIN 	`employee` e
+ON 		e.`userID` = u.`userID`
+WHERE 	u.`userID` = 16
+LIMIT 	1;
+
 SELECT 	COUNT(*),
 		`bookingID`,
 		`meetingRoomID`									AS TheMeetingRoomID, 
