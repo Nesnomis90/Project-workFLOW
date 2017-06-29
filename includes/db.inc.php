@@ -857,9 +857,9 @@ function create_tables()
 						  `name` varchar(255) DEFAULT NULL,
 						  `description` text,
 						  `dateTimeCreated` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+						  `daysSelected` varchar(255) NOT NULL,
 						  `startDate` date NOT NULL,
 						  `lastDate` date NOT NULL,
-						  `repeatInfo` varchar(255) DEFAULT NULL,
 						  PRIMARY KEY (`EventID`)
 						) ENGINE=InnoDB DEFAULT CHARSET=utf8");
 						
