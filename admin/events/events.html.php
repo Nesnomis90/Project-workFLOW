@@ -67,7 +67,7 @@
 		<table id="eventstable">
 			<caption>Scheduled Events</caption>
 			<tr>
-				<th colspan="8">Event information</th>
+				<th colspan="7">Event information</th>
 				<th colspan="3">Alter Event</th>
 			</tr>				
 			<tr>
@@ -78,7 +78,6 @@
 				<th>Event Name</th>
 				<th>Description</th>
 				<th>Created At</th>
-				<th>Last Altered At<th>
 				<th>Edit</th>
 				<th>Cancel</th>
 				<th>Delete</th>
@@ -94,7 +93,6 @@
 						<td style="white-space: pre-wrap;"><?php htmlout($event['EventName']); ?></td>
 						<td style="white-space: pre-wrap;"><?php htmlout($event['EventDescription']); ?></td>
 						<td><?php htmlout($event['EventWasCreatedOn']); ?></td>
-						<td><?php htmlout($event['EventWasLastAlteredOn']); ?></td>
 						<td><input type="submit" name="action" value="Edit"></td>							
 						<td><input type="submit" name="action" value="Cancel"></td>
 						<td>

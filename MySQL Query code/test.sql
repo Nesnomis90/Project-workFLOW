@@ -2,6 +2,35 @@ USE test;
 SET NAMES utf8;
 USE meetingflow;
 
+SELECT	`EventID`			AS TheEventID,
+		`startTime`			AS StartTime,
+		`endTime`			AS EndTime,
+		`name`				AS EventName,
+		`description`		AS EventDescription,
+		`dateTimeCreated`	AS DateTimeCreated,
+		`lastDate`			AS LastDate,
+		`repeatInfo`		AS RepeatInfo,
+        (
+			SELECT 		GROUP_CONCAT(m.`name` separator ",\n")
+            FROM		`roomevent` rev
+            INNER JOIN 	`meetingroom` m
+            ON			rev.`meetingRoomID` = m.`meetingRoomID`
+            WHERE		rev.`EventID` = TheEventID
+        )					AS InTheseRooms
+FROM 	`event`;
+
+INSERT INTO `event`
+SET			`startTime` = CURRENT_TIME(),
+			`endTime` = CURRENT_TIME(),
+            `dateTimeCreated` = CURRENT_TIMESTAMP;
+
+INSERT INTO `roomevent`
+SET			`EventID` = 1,
+			`meetingRoomID` = 27,
+            `startDateTime` = CURRENT_TIMESTAMP,
+            `endDateTime` = CURRENT_TIMESTAMP;
+
+
 SELECT	(
 			SELECT COUNT(*)
 			FROM	`employee`
