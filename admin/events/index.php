@@ -24,6 +24,7 @@ try
 					`name`				AS EventName,
 					`description`		AS EventDescription,
 					`dateTimeCreated`	AS DateTimeCreated,
+					`startDate`			AS StartDate,
 					`lastDate`			AS LastDate,
 					`repeatInfo`		AS RepeatInfo,
 					(
@@ -32,7 +33,7 @@ try
 						INNER JOIN 	`meetingroom` m
 						ON			rev.`meetingRoomID` = m.`meetingRoomID`
 						WHERE		rev.`EventID` = TheEventID
-					)					AS InTheseRooms
+					)					AS UsedMeetingRooms
 			FROM 	`event`';
 	$return = $pdo->query($sql);
 	$result = $return->fetchAll(PDO::FETCH_ASSOC);
@@ -47,12 +48,66 @@ try
 }
 catch (PDOException $e)
 {
-	$error = 'Error fetching logevent: ' . $e->getMessage();
-	include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
-	 
+	$error = 'Error fetching events: ' . $e->getMessage();
+	include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php'; 
 	$pdo = null;
 	exit();
 }
+
+// Create the array we will go through to display information in HTML
+foreach ($result as $row)
+{
+	// Check if event is over or still active
+	$startDate = $row['StartDate'];
+	$lastDate = $row['LastDate'];
+	$dateNow = getDateNow();
+	$timeNow = getTimeNow();
+	$startTime = $row['StartTime'];
+	$endTime = $row['EndTime'];
+	
+	if($startDate == $lastDate){
+		// single event
+		if($dateNow > $lastDate AND $timeNow > $endTime){
+			$status = "Completed\n(Single Event)";
+		} else {
+			$status = "Active\n(Single Event)";
+		}
+	} elseif($lastDate > $startDate) {
+		// repeated event
+		if($dateNow > $lastDate AND $timeNow > $endTime){
+			$status = "Completed\n(Repeated Event)";
+		} else {
+			$status = "Active\n(Repeated Event)";
+		}		
+	}
+	
+	$repeatInfo = $row['RepeatInfo'];
+	if($repeatInfo == NULL OR $repeatInfo == ""){
+		$repeatInfo = "N/A";
+	}
+	
+	// Turn the datetime retrieved into a more displayable format
+	$dateCreated = $row['DateTimeCreated'];
+	$displayableDateCreated = convertDatetimeToFormat($dateCreated, 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
+	$displayableStartDate = convertDatetimeToFormat($startDate, 'Y-m-d', DATE_DEFAULT_FORMAT_TO_DISPLAY);
+	$displayableEndDate = convertDatetimeToFormat($lastDate, 'Y-m-d', DATE_DEFAULT_FORMAT_TO_DISPLAY);
+	$displayableStartTime = convertDatetimeToFormat($startTime, 'H:i:s', TIME_DEFAULT_FORMAT_TO_DISPLAY);
+	$displayableEndTime = convertDatetimeToFormat($endTime, 'H:i:s', TIME_DEFAULT_FORMAT_TO_DISPLAY);
+
+	$events[] = array(
+						'EventStatus' => $status,
+						'EventID' => $row['TheEventID'], 
+						'DateTimeCreated' => $displayableDateCreated, 
+						'EventName' => $row['EventName'], 
+						'EventDescription' => $row['EventDescription'], 
+						'UsedMeetingRooms' => $row['UsedMeetingRooms'],
+						'RepeatInfo' => $repeatInfo,
+						'StartTime' => $displayableStartTime,
+						'EndTime' => $displayableEndTime,
+						'StartDate' => $displayableStartDate,
+						'LastDate' => $displayableEndDate
+					);
+}	
 
 var_dump($_SESSION); // TO-DO: remove after testing is done
 

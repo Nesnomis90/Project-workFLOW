@@ -16,7 +16,7 @@ SELECT	`EventID`			AS TheEventID,
             INNER JOIN 	`meetingroom` m
             ON			rev.`meetingRoomID` = m.`meetingRoomID`
             WHERE		rev.`EventID` = TheEventID
-        )					AS InTheseRooms
+        )					AS UsedMeetingRooms
 FROM 	`event`;
 
 INSERT INTO `event`
@@ -29,7 +29,6 @@ SET			`EventID` = 1,
 			`meetingRoomID` = 27,
             `startDateTime` = CURRENT_TIMESTAMP,
             `endDateTime` = CURRENT_TIMESTAMP;
-
 
 SELECT	(
 			SELECT COUNT(*)

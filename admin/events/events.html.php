@@ -67,16 +67,19 @@
 		<table id="eventstable">
 			<caption>Scheduled Events</caption>
 			<tr>
-				<th colspan="7">Event information</th>
+				<th colspan="10">Event information</th>
 				<th colspan="3">Alter Event</th>
 			</tr>				
 			<tr>
 				<th>Status</th>
-				<th>Room Name</th>
-				<th>Start Time</th>
-				<th>End Time</th>
 				<th>Event Name</th>
 				<th>Description</th>
+				<th>Active in Room(s)</th>
+				<th>Repeat Info</th>				
+				<th>Start Time</th>
+				<th>End Time</th>
+				<th>First Date</th>
+				<th>Last Date</th>
 				<th>Created At</th>
 				<th>Edit</th>
 				<th>Cancel</th>
@@ -86,13 +89,16 @@
 			<?php foreach ($events AS $event) : ?>
 				<form action="" method="post">				
 					<tr>
-						<td><?php htmlout($event['EventStatus']);?></td>
-						<td><?php htmlout($event['EventRoomName']); ?></td>
-						<td><?php htmlout($event['StartTime']); ?></td>
-						<td><?php htmlout($event['EndTime']); ?></td>
+						<td style="white-space: pre-wrap;"><?php htmlout($event['EventStatus']); ?></td>
 						<td style="white-space: pre-wrap;"><?php htmlout($event['EventName']); ?></td>
 						<td style="white-space: pre-wrap;"><?php htmlout($event['EventDescription']); ?></td>
-						<td><?php htmlout($event['EventWasCreatedOn']); ?></td>
+						<td style="white-space: pre-wrap;"><?php htmlout($event['UsedMeetingRooms']); ?></td>
+						<td style="white-space: pre-wrap;"><?php htmlout($event['RepeatInfo']); ?></td>
+						<td><?php htmlout($event['StartTime']); ?></td>
+						<td><?php htmlout($event['EndTime']); ?></td>						
+						<td><?php htmlout($event['StartDate']); ?></td>
+						<td><?php htmlout($event['LastDate']); ?></td>
+						<td><?php htmlout($event['DateTimeCreated']); ?></td>
 						<td><input type="submit" name="action" value="Edit"></td>							
 						<td><input type="submit" name="action" value="Cancel"></td>
 						<td>

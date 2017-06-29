@@ -86,6 +86,15 @@ function getDateNow() {
 	return $datetimeNow->format('Y-m-d');	
 }
 
+// Function to get the current time
+function getTimeNow() {
+	// We use the same format as used in MySQL
+	// yyyy-mm-dd
+	date_default_timezone_set(DATE_DEFAULT_TIMEZONE);
+	$datetimeNow = new Datetime();
+	return $datetimeNow->format('H:i:s');	
+}
+
 // Function to convert string to datetime in MySQL format
 // TO-DO: Just broken. But still, not broken...?
 function stringToDateTime($datetimeString, $format){
