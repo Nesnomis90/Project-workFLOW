@@ -5,57 +5,24 @@
 <html lang="en">
 	<head>
 		<meta charset="utf-8">
-		<style>
-			#eventstable {
-				font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
-				border-collapse: collapse;
-				width: 100%;
-			}
-
-			#eventstable tr {
-				padding: 8px;
-				text-align: left;
-				border-bottom: 1px solid #ddd;
-			}
-			
-			#eventstable tr:nth-of-type(even) {background-color: #f2f2f2;}
-			#eventstable tr:nth-of-type(odd) {background-color: white;}			
-			#eventstable tr:hover{background-color:#DBEAE8;}
-			
-			#eventstable th {
-				padding: 12px;
-				text-align: left;
-				background-color: #4CAF50;
-				color: white;
-				border: 1px solid #ddd;
-			}
-
-			#eventstable td {
-				padding: 8px;
-				text-align: left;
-				border: 1px solid #ddd;
-			}			
-			
-			#eventstable caption {
-				padding: 8px;
-				font-size: 300%;
-			}
-		</style>
-		<title>Manage Events</title>
+		<link rel="stylesheet" type="text/css" href="/CSS/myCSS.css">
+		<title>Scheduled Events</title>
 	</head>
 	<body>
-		<h1>Manage Events</h1>
+		<h1>Scheduled Events</h1>
 		
+		<div id="feedback">
 		<?php if(isset($_SESSION['EventsUserFeedback'])) : ?>
-			<p><b><?php htmlout($_SESSION['EventsUserFeedback']); ?></b></p>
+			<b><?php htmlout($_SESSION['EventsUserFeedback']); ?></b>
 			<?php unset($_SESSION['EventsUserFeedback']); ?>
-		<?php endif; ?>	
+		<?php endif; ?>
+		</div>
 		
 		<form action="" method="post">				
-			<div>
+			<div style="position:absolute; left: 10px;">
 				<input type="submit" name="action" value="Create Event">
 			</div>
-			<div>
+			<div style="position: absolute; right: 10px;">
 			<?php if(isset($_SESSION['eventsEnableDelete']) AND $_SESSION['eventsEnableDelete']) : ?>
 				<input type="submit" name="action" value="Disable Delete">
 			<?php else : ?>
@@ -64,37 +31,41 @@
 			</div>			
 		</form>
 		
-		<table id="eventstable">
-			<caption>Scheduled Events</caption>
+		<table>
+			<caption>Active Events</caption>
 			<tr>
-				<th colspan="8">Event information</th>
+				<th colspan="10">Event information</th>
 				<th colspan="3">Alter Event</th>
 			</tr>				
 			<tr>
 				<th>Status</th>
-				<th>Room Name</th>
-				<th>Start Time</th>
-				<th>End Time</th>
 				<th>Event Name</th>
 				<th>Description</th>
+				<th>Meeting Room(s)</th>
+				<th>Day(s) Selected</th>				
+				<th>Start Time</th>
+				<th>End Time</th>
+				<th>First Date</th>
+				<th>Last Date</th>
 				<th>Created At</th>
-				<th>Last Altered At<th>
 				<th>Edit</th>
 				<th>Cancel</th>
 				<th>Delete</th>
 			</tr>
-		<?php if(isset($events)) : ?>						
-			<?php foreach ($events AS $event) : ?>
+		<?php if(isset($activeEvents)) : ?>						
+			<?php foreach ($activeEvents AS $event) : ?>
 				<form action="" method="post">				
 					<tr>
-						<td><?php htmlout($event['EventStatus']);?></td>
-						<td><?php htmlout($event['EventRoomName']); ?></td>
-						<td><?php htmlout($event['StartTime']); ?></td>
-						<td><?php htmlout($event['EndTime']); ?></td>
+						<td style="white-space: pre-wrap;"><?php htmlout($event['EventStatus']); ?></td>
 						<td style="white-space: pre-wrap;"><?php htmlout($event['EventName']); ?></td>
 						<td style="white-space: pre-wrap;"><?php htmlout($event['EventDescription']); ?></td>
-						<td><?php htmlout($event['EventWasCreatedOn']); ?></td>
-						<td><?php htmlout($event['EventWasLastAlteredOn']); ?></td>
+						<td style="white-space: pre-wrap;"><?php htmlout($event['UsedMeetingRooms']); ?></td>
+						<td style="white-space: pre-wrap;"><?php htmlout($event['DaysSelected']); ?></td>
+						<td><?php htmlout($event['StartTime']); ?></td>
+						<td><?php htmlout($event['EndTime']); ?></td>						
+						<td style="white-space: pre-wrap;"><?php htmlout($event['StartDate']); ?></td>
+						<td style="white-space: pre-wrap;"><?php htmlout($event['LastDate']); ?></td>	
+						<td><?php htmlout($event['DateTimeCreated']); ?></td>
 						<td><input type="submit" name="action" value="Edit"></td>							
 						<td><input type="submit" name="action" value="Cancel"></td>
 						<td>
@@ -112,6 +83,69 @@
 					</tr>
 				</form>
 			<?php endforeach; ?>
+		<?php else : ?>
+			<tr>
+				<td colspan="13"><b>There are no active events.</b></td>
+			</tr>
+		<?php endif; ?>
+		</table>
+		
+		<table>
+			<caption>Completed Events</caption>
+			<tr>
+				<th colspan="10">Event information</th>
+				<th colspan="3">Alter Event</th>
+			</tr>				
+			<tr>
+				<th>Status</th>
+				<th>Event Name</th>
+				<th>Description</th>
+				<th>Meeting Room(s)</th>
+				<th>Day(s) Selected</th>				
+				<th>Start Time</th>
+				<th>End Time</th>
+				<th>First Date</th>
+				<th>Last Date</th>
+				<th>Created At</th>
+				<th>Edit</th>
+				<th>Cancel</th>
+				<th>Delete</th>
+			</tr>
+		<?php if(isset($completedEvents)) : ?>						
+			<?php foreach ($completedEvents AS $event) : ?>
+				<form action="" method="post">				
+					<tr>
+						<td style="white-space: pre-wrap;"><?php htmlout($event['EventStatus']); ?></td>
+						<td style="white-space: pre-wrap;"><?php htmlout($event['EventName']); ?></td>
+						<td style="white-space: pre-wrap;"><?php htmlout($event['EventDescription']); ?></td>
+						<td style="white-space: pre-wrap;"><?php htmlout($event['UsedMeetingRooms']); ?></td>
+						<td style="white-space: pre-wrap;"><?php htmlout($event['DaysSelected']); ?></td>
+						<td><?php htmlout($event['StartTime']); ?></td>
+						<td><?php htmlout($event['EndTime']); ?></td>
+						<td style="white-space: pre-wrap;"><?php htmlout($event['StartDate']); ?></td>
+						<td style="white-space: pre-wrap;"><?php htmlout($event['LastDate']); ?></td>			
+						<td><?php htmlout($event['DateTimeCreated']); ?></td>
+						<td><input type="submit" name="action" value="Edit"></td>							
+						<td><input type="submit" name="action" value="Cancel"></td>
+						<td>
+							<?php if(isset($_SESSION['eventsEnableDelete']) AND $_SESSION['eventsEnableDelete']) : ?>
+								<input type="submit" name="action" value="Delete">
+							<?php else : ?>
+								<input type="submit" name="disabled" value="Delete" disabled>
+							<?php endif; ?>
+						</td>
+						<input type="hidden" name="EventID" value="<?php htmlout($event['EventID']); ?>">
+						<input type="hidden" name="EventInfo" id="EventInfo"
+						value="<?php htmlout($event['EventInfo']); ?>">
+						<input type="hidden" name="EventStatus" id="EventStatus"
+						value="<?php htmlout($event['EventStatus']); ?>">
+					</tr>
+				</form>
+			<?php endforeach; ?>
+		<?php else : ?>
+			<tr>
+				<td colspan="13"><b>There are no completed events.</b></td>
+			</tr>
 		<?php endif; ?>
 		</table>
 		

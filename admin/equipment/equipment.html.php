@@ -5,41 +5,7 @@
 <html lang="en">
 	<head>
 		<meta charset="utf-8">
-		<style>
-			#equipmenttable {
-				font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
-				border-collapse: collapse;
-				width: 100%;
-			}
-			
-			#equipmenttable th {
-				padding: 12px;
-				text-align: left;
-				background-color: #4CAF50;
-				color: white;
-				border: 1px solid #ddd;
-			}
-			
-			#equipmenttable tr {
-				padding: 8px;
-				text-align: left;
-				border-bottom: 1px solid #ddd;
-			}
-			#equipmenttable tr:nth-of-type(even) {background-color: #f2f2f2;}
-			#equipmenttable tr:nth-of-type(odd) {background-color: white;}			
-			#equipmenttable tr:hover{background-color:#DBEAE8;}
-									
-			#equipmenttable td {
-				padding: 8px;
-				text-align: left;
-				border: 1px solid #ddd;
-			}
-			
-			#equipmenttable caption {
-				padding: 8px;
-				font-size: 300%;
-			}
-		</style>
+		<link rel="stylesheet" type="text/css" href="/CSS/myCSS.css">
 		<title>Manage Meeting Room Equipment</title>
 	</head>
 	<body>

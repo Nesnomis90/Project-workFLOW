@@ -5,6 +5,7 @@
 	<head>
 		<meta charset="utf-8">
 		<title><?php htmlout($pageTitle); ?></title>
+		<link rel="stylesheet" type="text/css" href="/CSS/myCSS.css">
 	</head>
 	<body>
 		<h1><?php htmlout($pageTitle); ?></h1>

@@ -1,0 +1,121 @@
+/* 	
+	This is the CSS we use in our HTML
+	To include it we add this to our header
+	<link rel="stylesheet" type="text/css" href="/CSS/myCSS.css">
+	
+	Keep in mind that the sequence is important.
+	e.g. tr:hover is last because it should always overwrite.
+*/
+
+	/* CSS for all the textarea input START */
+textarea{
+	background-color: white;
+}
+
+textarea:hover{
+	background-color: #f2f2f2;
+}
+
+textarea:focus{
+	background-color: black;
+	color: white;
+}
+	/* CSS for all the textarea input END */
+
+	/* CSS for all the non-textfield input text START */
+input[type=text]{
+	background-color: white;
+}
+
+input[type=text]:hover{
+	background-color: #f2f2f2;
+}
+
+input[type=text]:focus{
+	background-color: black;
+	color: white;
+}
+	/* CSS for all the non-textfield input text END */
+	
+	/* CSS for all the number inputs START */
+input[type=number]{
+	background-color: white;
+}
+
+input[type=number]:hover{
+	background-color: #f2f2f2;
+}
+
+input[type=number]:focus{
+	background-color: black;
+	color: white;
+}
+	/* CSS for all the number inputs input text END */	
+
+	/* CSS for all the submit buttons START */
+input[type=submit]:hover{
+	background-color: #f2f2f2;
+}
+	/* CSS for all the submit buttons END */
+
+	/* CSS for all the fieldsets START */	
+fieldset {
+	position: relative;
+	display: inline-block; /* Only makes the formfield as wide as the content */
+}
+	/* CSS for all the fieldsets END */
+	
+	/* CSS for all the tables START */
+table {
+	font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
+	border-collapse: collapse;
+	width: 100%;
+}
+
+table tr {
+	padding: 8px;
+	text-align: left;
+	border-bottom: 1px solid #ddd;
+}
+table tr:nth-of-type(even) {background-color: #f2f2f2;}
+table tr:nth-of-type(odd) {background-color: white;}
+
+table tr.LoggedInUserBooking { /* Special CSS for viewing rows with this class*/
+	padding: 8px;
+	text-align: left;
+	border-bottom: 1px solid #ddd;
+	background-color: #75E4D7;
+}
+			
+table tr:hover{background-color:#DBEAE8;}
+						
+table th {
+	padding: 12px;
+	text-align: left;
+	background-color: #4CAF50;
+	color: white;
+	border: 1px solid #ddd;
+}
+
+table td {
+	padding: 8px;
+	text-align: left;
+	border: 1px solid #ddd;
+}
+
+table caption {
+	padding: 8px;
+	font-size: 300%;
+}
+	/* CSS for all the tables END */
+	
+	/* CSS used to warn the user error/feedback START*/
+#warning{
+	color: red;
+}
+	/* CSS used to warn the user error/feedback END*/
+	/* CSS used to make sure labels used with textfields look correct START*/
+#description {
+	vertical-align: top;
+}
+	/* CSS used to make sure labels used with textfields look correct END*/

@@ -845,6 +845,80 @@ function create_tables()
 			echo '<b>Table ' . $table. ' already exists</b>.<br />';
 		}		
 		
+			// Admin created events
+		$table = 'event';
+		//Check if table already exists
+		if (!tableExists($conn, $table))
+		{
+			$conn->exec("CREATE TABLE IF NOT EXISTS `$table` (
+						  `EventID` int(10) unsigned NOT NULL AUTO_INCREMENT,
+						  `startTime` time NOT NULL,
+						  `endTime` time NOT NULL,
+						  `name` varchar(255) DEFAULT NULL,
+						  `description` text,
+						  `dateTimeCreated` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+						  `daysSelected` varchar(255) NOT NULL,
+						  `startDate` date NOT NULL,
+						  `lastDate` date NOT NULL,
+						  PRIMARY KEY (`EventID`)
+						) ENGINE=InnoDB DEFAULT CHARSET=utf8");
+						
+			//	Add the creation to log event
+			$sqlLog = '	INSERT INTO `logevent`(`actionID`, `description`) 
+						VALUES 		(
+										(
+										SELECT 	`actionID` 
+										FROM 	`logaction` 
+										WHERE 	`name` = "Table Created"
+										), 
+									"The table ' . $table . ' was created automatically by the PHP script.\nThis should only occur once, at the very start of the log events."
+									)';			
+			$logEventArray[] = $sqlLog;						
+
+			$totaltime = microtime(true) - $_SERVER["REQUEST_TIME_FLOAT"];
+			$time = $totaltime - $prevtime;
+			$prevtime = $totaltime;
+			echo '<b>Execution time for creating table ' . $table. ':</b> ' . $time . 's<br />';		
+		} else { 
+			echo '<b>Table ' . $table. ' already exists</b>.<br />';
+		}
+		
+			// Actual event datetime overview per room
+		$table = 'roomevent';
+		//Check if table already exists
+		if (!tableExists($conn, $table))
+		{
+			$conn->exec("CREATE TABLE IF NOT EXISTS `$table` (
+						  `meetingRoomID` int(10) unsigned NOT NULL,
+						  `EventID` int(10) unsigned NOT NULL,
+						  `startDateTime` datetime NOT NULL,
+						  `endDateTime` datetime NOT NULL,
+						  PRIMARY KEY (`meetingRoomID`,`EventID`),
+						  KEY `FK_EventID_idx` (`EventID`),
+						  CONSTRAINT `FK_EventID` FOREIGN KEY (`EventID`) REFERENCES `event` (`EventID`) ON DELETE CASCADE ON UPDATE CASCADE,
+						  CONSTRAINT `FK_MeetingRoomID4` FOREIGN KEY (`meetingRoomID`) REFERENCES `meetingroom` (`meetingRoomID`) ON DELETE CASCADE ON UPDATE CASCADE
+						) ENGINE=InnoDB DEFAULT CHARSET=utf8");
+						
+			//	Add the creation to log event
+			$sqlLog = '	INSERT INTO `logevent`(`actionID`, `description`) 
+						VALUES 		(
+										(
+										SELECT 	`actionID` 
+										FROM 	`logaction` 
+										WHERE 	`name` = "Table Created"
+										), 
+									"The table ' . $table . ' was created automatically by the PHP script.\nThis should only occur once, at the very start of the log events."
+									)';			
+			$logEventArray[] = $sqlLog;						
+
+			$totaltime = microtime(true) - $_SERVER["REQUEST_TIME_FLOAT"];
+			$time = $totaltime - $prevtime;
+			$prevtime = $totaltime;
+			echo '<b>Execution time for creating table ' . $table. ':</b> ' . $time . 's<br />';		
+		} else { 
+			echo '<b>Table ' . $table. ' already exists</b>.<br />';
+		}		
+		
 			//Log Event
 		$table = 'logevent';
 		//Check if table already exists

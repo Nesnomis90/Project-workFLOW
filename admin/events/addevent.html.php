@@ -1,25 +1,43 @@
-<!-- This is the HTML form used for ADDING BOOKING information-->
+<!-- This is the HTML form used for ADDING EVENT information-->
 <?php include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/helpers.inc.php'; ?>
 <!DOCTYPE html>
 <html lang="en">
 	<head>
 		<meta charset="utf-8">
-		<link rel="stylesheet" type="text/css" href="/CSS/myCSS.css">
-		<title>Book A New Meeting</title>
+		<link rel="stylesheet" type="text/css" href="/CSS/myCSS.css">		
+		<title>Schedule A New Event</title>
 	</head>
 	<body>
-	
+		<h1>Schedule A New Event</h1>
+		
+		<div id="feedback">
+		<?php if(isset($_SESSION['AddEventError'])) : ?>
+			<b><?php htmlout($_SESSION['AddEventError']); ?></b>
+			<?php unset($_SESSION['AddEventError']); ?>
+		<?php endif; ?>
+		</div>
+<!--- TO-DO: Fix this. This is a copypaste mess right now --->
 		<form action="" method="post">
-		<fieldset><legend><b>Book A New Meeting</b></legend>
-			<?php if(isset($_SESSION['AddBookingError'])) : ?>
-				<b id="warning"><?php htmlout($_SESSION['AddBookingError']); ?></b>
-				<?php unset($_SESSION['AddBookingError']); ?>
-			<?php endif; ?>	
-			
-			<?php if(isset($_SESSION['AddBookingUserCannotBookForSelf'])) : ?>
-				<b id="warning">You can not book a meeting for yourself since you are not connected to a company.</b>
-			<?php endif; ?>	
-			
+			<div>
+				<label for="checkboxMeetingroom">Select the day(s) of the week the event is for: </label>
+			</div>
+			<div>
+				<input type="checkbox" name="meetingroomAll" value="All" <?php htmlout($checkAll); ?>>All<br />
+				<?php foreach($checkboxes AS $checkbox) : ?>
+					<?php //checkbox[0] is the meeting room ID ?>
+					<?php //checkbox[1] is the meeting room name ?>
+					<?php //checkbox[2] is if it should have a linefeed ?>
+					<?php //checkbox[3] is if it should be checked ?>
+					<?php if($checkbox[3]) : ?>
+						<input type="checkbox" name="meetingroom[]" 
+						value="<?php htmlout($checkbox[0]); ?>" checked="checked"><?php htmlout($checkbox[1]); ?>
+					<?php else : ?>
+						<input type="checkbox" name="meetingroom[]" 
+						value="<?php htmlout($checkbox[0]); ?>"><?php htmlout($checkbox[1]); ?>
+					<?php endif; ?>
+					<?php if($checkbox[2]): ?><br /><?php endif; ?>
+				<?php endforeach; ?>
+			<div>		
 			<div>
 				<label for="meetingRoomID">Meeting Room: </label>
 				<select name="meetingRoomID" id="meetingRoomID">
@@ -139,9 +157,7 @@
 					<input type="submit" name="add" value="Add booking">
 				<?php endif; ?>				
 			</div>
-		</fieldset>
 		</form>
-		
 	<p><a href="..">Return to CMS home</a></p>
 	<?php include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/logout.inc.html.php'; ?>
 	</body>

@@ -442,27 +442,25 @@ if($numberOfCheckboxesActivated > 0){
 	catch (PDOException $e)
 	{
 		$error = 'Error fetching logevent: ' . $e->getMessage();
-		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
-		 
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';	 
 		$pdo = null;
 		exit();
 	}
 	
 	// Create the array we will go through to display information in HTML
 	foreach ($result as $row)
-	{
-		
+	{	
 		// Turn the datetime retrieved into a more displayable format
 		$dateCreated = $row['LogDate'];
-		$displayableDateCreated = convertDatetimeToFormat($dateCreated, 'Y-m-d H:i:s', 'F jS Y H:i');
+		$displayableDateCreated = convertDatetimeToFormat($dateCreated, 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
 	
 		$log[] = array(
-			'id' => $row['logID'], 
-			'date' => $displayableDateCreated, 
-			'actionName' => $row['ActionName'], 
-			'actionDescription' => $row['ActionDescription'], 
-			'logDescription' => $row['LogDescription']
-			);
+						'id' => $row['logID'], 
+						'date' => $displayableDateCreated, 
+						'actionName' => $row['ActionName'], 
+						'actionDescription' => $row['ActionDescription'], 
+						'logDescription' => $row['LogDescription']
+					);
 	}	
 } else {
 	$rowNum = 0;

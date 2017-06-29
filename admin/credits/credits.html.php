@@ -5,47 +5,7 @@
 <html lang="en">
 	<head>
 		<meta charset="utf-8">
-		<style>
-			#creditstable {
-				font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
-				border-collapse: collapse;
-				width: 100%;
-			}
-			
-			#creditstable th {
-				padding: 12px;
-				text-align: left;
-				background-color: #4CAF50;
-				color: white;
-				border: 1px solid #ddd;
-			}
-			
-			#creditstable tr {
-				padding: 8px;
-				text-align: left;
-				border-bottom: 1px solid #ddd;
-			}
-			#creditstable tr:nth-of-type(even) {background-color: #f2f2f2;}
-			#creditstable tr:nth-of-type(odd) {background-color: white;}			
-			#creditstable tr:hover{background-color:#DBEAE8;}
-			
-			#creditstable td {
-				padding: 8px;
-				text-align: left;
-				border: 1px solid #ddd;
-			}
-			
-			#creditstable td.alignmid {
-				padding: 8px;
-				text-align: center;
-				border: 1px solid #ddd;
-			}
-			
-			#creditstable caption {
-				padding: 8px;
-				font-size: 300%;
-			}
-		</style>
+		<link rel="stylesheet" type="text/css" href="/CSS/myCSS.css">
 		<title>Manage Company Booking Credits</title>
 	</head>
 	<body>
