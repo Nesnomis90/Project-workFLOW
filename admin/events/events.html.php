@@ -74,8 +74,8 @@
 				<th>Status</th>
 				<th>Event Name</th>
 				<th>Description</th>
-				<th>Active in Room(s)</th>
-				<th>Repeat Info</th>				
+				<th>Meeting Room(s)</th>
+				<th>Day(s) Selected</th>				
 				<th>Start Time</th>
 				<th>End Time</th>
 				<th>First Date</th>
@@ -93,11 +93,11 @@
 						<td style="white-space: pre-wrap;"><?php htmlout($event['EventName']); ?></td>
 						<td style="white-space: pre-wrap;"><?php htmlout($event['EventDescription']); ?></td>
 						<td style="white-space: pre-wrap;"><?php htmlout($event['UsedMeetingRooms']); ?></td>
-						<td style="white-space: pre-wrap;"><?php htmlout($event['RepeatInfo']); ?></td>
+						<td style="white-space: pre-wrap;"><?php htmlout($event['DaysSelected']); ?></td>
 						<td><?php htmlout($event['StartTime']); ?></td>
 						<td><?php htmlout($event['EndTime']); ?></td>						
-						<td><?php htmlout($event['StartDate']); ?></td>
-						<td><?php htmlout($event['LastDate']); ?></td>
+						<td style="white-space: pre-wrap;"><?php htmlout($event['StartDate']); ?></td>
+						<td style="white-space: pre-wrap;"><?php htmlout($event['LastDate']); ?></td>	
 						<td><?php htmlout($event['DateTimeCreated']); ?></td>
 						<td><input type="submit" name="action" value="Edit"></td>							
 						<td><input type="submit" name="action" value="Cancel"></td>
@@ -133,8 +133,8 @@
 				<th>Status</th>
 				<th>Event Name</th>
 				<th>Description</th>
-				<th>Active in Room(s)</th>
-				<th>Repeat Info</th>				
+				<th>Meeting Room(s)</th>
+				<th>Day(s) Selected</th>				
 				<th>Start Time</th>
 				<th>End Time</th>
 				<th>First Date</th>
@@ -152,11 +152,11 @@
 						<td style="white-space: pre-wrap;"><?php htmlout($event['EventName']); ?></td>
 						<td style="white-space: pre-wrap;"><?php htmlout($event['EventDescription']); ?></td>
 						<td style="white-space: pre-wrap;"><?php htmlout($event['UsedMeetingRooms']); ?></td>
-						<td style="white-space: pre-wrap;"><?php htmlout($event['RepeatInfo']); ?></td>
+						<td style="white-space: pre-wrap;"><?php htmlout($event['DaysSelected']); ?></td>
 						<td><?php htmlout($event['StartTime']); ?></td>
-						<td><?php htmlout($event['EndTime']); ?></td>						
-						<td><?php htmlout($event['StartDate']); ?></td>
-						<td><?php htmlout($event['LastDate']); ?></td>
+						<td><?php htmlout($event['EndTime']); ?></td>
+						<td style="white-space: pre-wrap;"><?php htmlout($event['StartDate']); ?></td>
+						<td style="white-space: pre-wrap;"><?php htmlout($event['LastDate']); ?></td>			
 						<td><?php htmlout($event['DateTimeCreated']); ?></td>
 						<td><input type="submit" name="action" value="Edit"></td>							
 						<td><input type="submit" name="action" value="Cancel"></td>

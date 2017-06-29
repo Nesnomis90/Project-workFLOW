@@ -2,21 +2,24 @@ USE test;
 SET NAMES utf8;
 USE meetingflow;
 
-SELECT	`EventID`			AS TheEventID,
-		`startTime`			AS StartTime,
-		`endTime`			AS EndTime,
-		`name`				AS EventName,
-		`description`		AS EventDescription,
-		`dateTimeCreated`	AS DateTimeCreated,
-		`lastDate`			AS LastDate,
-		`repeatInfo`		AS RepeatInfo,
-        (
+SELECT	`EventID`				AS TheEventID,
+		`startTime`				AS StartTime,
+		`endTime`				AS EndTime,
+		`name`					AS EventName,
+		`description`			AS EventDescription,
+		`dateTimeCreated`		AS DateTimeCreated,
+		`startDate`				AS StartDate,
+		`lastDate`				AS LastDate,
+		WEEK(`startDate`,3)		AS WeekStart,
+		WEEK(`lastDate`,3)		AS WeekEnd,
+		`daysSelected`			AS DaysSelected,
+		(
 			SELECT 		GROUP_CONCAT(m.`name` separator ",\n")
-            FROM		`roomevent` rev
-            INNER JOIN 	`meetingroom` m
-            ON			rev.`meetingRoomID` = m.`meetingRoomID`
-            WHERE		rev.`EventID` = TheEventID
-        )					AS UsedMeetingRooms
+			FROM		`roomevent` rev
+			INNER JOIN 	`meetingroom` m
+			ON			rev.`meetingRoomID` = m.`meetingRoomID`
+			WHERE		rev.`EventID` = TheEventID
+		)						AS UsedMeetingRooms
 FROM 	`event`;
 
 INSERT INTO `event`

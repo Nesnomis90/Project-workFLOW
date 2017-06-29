@@ -26,7 +26,9 @@ try
 					`dateTimeCreated`	AS DateTimeCreated,
 					`startDate`			AS StartDate,
 					`lastDate`			AS LastDate,
-					`repeatInfo`		AS RepeatInfo,
+					WEEK(`startDate`,3)	AS WeekStart,
+					WEEK(`lastDate`,3)	AS WeekEnd,
+					`daysSelected`		AS DaysSelected,
 					(
 						SELECT 		GROUP_CONCAT(m.`name` separator ",\n")
 						FROM		`roomevent` rev
@@ -64,15 +66,17 @@ foreach ($result as $row)
 	$timeNow = getTimeNow();
 	$startTime = $row['StartTime'];
 	$endTime = $row['EndTime'];
+	$weekStart = $row['WeekStart'];
+	$weekEnd = $row['WeekEnd'];
 	
-	if($startDate == $lastDate){
+	if($weekStart == $weekEnd){
 		// single event
 		if($dateNow > $lastDate AND $timeNow > $endTime){
 			$status = "Completed\n(Single Event)";
 		} else {
 			$status = "Active\n(Single Event)";
 		}
-	} elseif($lastDate > $startDate) {
+	} elseif($weekEnd > $weekStart) {
 		// repeated event
 		if($dateNow > $lastDate AND $timeNow > $endTime){
 			$status = "Completed\n(Repeated Event)";
@@ -81,16 +85,13 @@ foreach ($result as $row)
 		}		
 	}
 	
-	$repeatInfo = $row['RepeatInfo'];
-	if($repeatInfo == NULL OR $repeatInfo == ""){
-		$repeatInfo = "N/A";
-	}
-	
 	// Turn the datetime retrieved into a more displayable format
 	$dateCreated = $row['DateTimeCreated'];
 	$displayableDateCreated = convertDatetimeToFormat($dateCreated, 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
 	$displayableStartDate = convertDatetimeToFormat($startDate, 'Y-m-d', DATE_DEFAULT_FORMAT_TO_DISPLAY);
+	$startDateWithWeekNumber = $displayableStartDate . "\nWeek #" . $weekStart;
 	$displayableEndDate = convertDatetimeToFormat($lastDate, 'Y-m-d', DATE_DEFAULT_FORMAT_TO_DISPLAY);
+	$endDateWithWeekNumber = $displayableEndDate . "\nWeek #" . $weekEnd;
 	$displayableStartTime = convertDatetimeToFormat($startTime, 'H:i:s', TIME_DEFAULT_FORMAT_TO_DISPLAY);
 	$displayableEndTime = convertDatetimeToFormat($endTime, 'H:i:s', TIME_DEFAULT_FORMAT_TO_DISPLAY);
 
@@ -102,11 +103,11 @@ foreach ($result as $row)
 							'EventName' => $row['EventName'], 
 							'EventDescription' => $row['EventDescription'], 
 							'UsedMeetingRooms' => $row['UsedMeetingRooms'],
-							'RepeatInfo' => $repeatInfo,
+							'DaysSelected' => $row['DaysSelected'],
 							'StartTime' => $displayableStartTime,
 							'EndTime' => $displayableEndTime,
-							'StartDate' => $displayableStartDate,
-							'LastDate' => $displayableEndDate
+							'StartDate' => $startDateWithWeekNumber,
+							'LastDate' => $endDateWithWeekNumber
 						);
 	} else {
 		$completedEvents[] = array(
@@ -116,11 +117,11 @@ foreach ($result as $row)
 							'EventName' => $row['EventName'], 
 							'EventDescription' => $row['EventDescription'], 
 							'UsedMeetingRooms' => $row['UsedMeetingRooms'],
-							'RepeatInfo' => $repeatInfo,
+							'DaysSelected' => $row['DaysSelected'],
 							'StartTime' => $displayableStartTime,
 							'EndTime' => $displayableEndTime,
-							'StartDate' => $displayableStartDate,
-							'LastDate' => $displayableEndDate
+							'StartDate' => $startDateWithWeekNumber,
+							'LastDate' => $endDateWithWeekNumber
 						);		
 	}
 }	
