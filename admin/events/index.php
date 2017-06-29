@@ -94,19 +94,35 @@ foreach ($result as $row)
 	$displayableStartTime = convertDatetimeToFormat($startTime, 'H:i:s', TIME_DEFAULT_FORMAT_TO_DISPLAY);
 	$displayableEndTime = convertDatetimeToFormat($endTime, 'H:i:s', TIME_DEFAULT_FORMAT_TO_DISPLAY);
 
-	$events[] = array(
-						'EventStatus' => $status,
-						'EventID' => $row['TheEventID'], 
-						'DateTimeCreated' => $displayableDateCreated, 
-						'EventName' => $row['EventName'], 
-						'EventDescription' => $row['EventDescription'], 
-						'UsedMeetingRooms' => $row['UsedMeetingRooms'],
-						'RepeatInfo' => $repeatInfo,
-						'StartTime' => $displayableStartTime,
-						'EndTime' => $displayableEndTime,
-						'StartDate' => $displayableStartDate,
-						'LastDate' => $displayableEndDate
-					);
+	if(substr($status,0,6) == "Active"){
+		$activeEvents[] = array(
+							'EventStatus' => $status,
+							'EventID' => $row['TheEventID'], 
+							'DateTimeCreated' => $displayableDateCreated, 
+							'EventName' => $row['EventName'], 
+							'EventDescription' => $row['EventDescription'], 
+							'UsedMeetingRooms' => $row['UsedMeetingRooms'],
+							'RepeatInfo' => $repeatInfo,
+							'StartTime' => $displayableStartTime,
+							'EndTime' => $displayableEndTime,
+							'StartDate' => $displayableStartDate,
+							'LastDate' => $displayableEndDate
+						);
+	} else {
+		$completedEvents[] = array(
+							'EventStatus' => $status,
+							'EventID' => $row['TheEventID'], 
+							'DateTimeCreated' => $displayableDateCreated, 
+							'EventName' => $row['EventName'], 
+							'EventDescription' => $row['EventDescription'], 
+							'UsedMeetingRooms' => $row['UsedMeetingRooms'],
+							'RepeatInfo' => $repeatInfo,
+							'StartTime' => $displayableStartTime,
+							'EndTime' => $displayableEndTime,
+							'StartDate' => $displayableStartDate,
+							'LastDate' => $displayableEndDate
+						);		
+	}
 }	
 
 var_dump($_SESSION); // TO-DO: remove after testing is done
