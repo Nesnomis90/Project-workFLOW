@@ -5,42 +5,7 @@
 <html lang="en">
 	<head>
 		<meta charset="utf-8">
-		<style>
-			#companiestable {
-				font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
-				border-collapse: collapse;
-				width: 100%;
-			}
-			
-			#companiestable th {
-				padding: 12px;
-				text-align: left;
-				background-color: #4CAF50;
-				color: white;
-				border: 1px solid #ddd;
-			}
-			
-			#companiestable tr {
-				padding: 8px;
-				text-align: left;
-				border-bottom: 1px solid #ddd;
-			}
-			
-			#companiestable tr:nth-of-type(even) {background-color: #f2f2f2;}
-			#companiestable tr:nth-of-type(odd) {background-color: white;}			
-			#companiestable tr:hover{background-color:#DBEAE8;}	
-			
-			#companiestable td {
-				padding: 8px;
-				text-align: left;
-				border: 1px solid #ddd;
-			}
-			
-			#companiestable caption {
-				padding: 8px;
-				font-size: 300%;
-			}
-		</style>
+		<link rel="stylesheet" type="text/css" href="/CSS/myCSS.css">
 		<title>Manage Companies</title>
 	</head>
 	<body>
@@ -62,7 +27,7 @@
 			<form action="" method="post">
 				<input type="submit" name="action" value="Create Company">
 			</form>
-			<table id="companiestable">
+			<table>
 				<caption>Registered Companies</caption>
 				<tr>
 					<th colspan="2">Employees</th>
@@ -171,7 +136,7 @@
 				<?php endif; ?>
 			</table>
 			<?php if(isset($unactivedcompanies)) : ?>
-				<table id="companiestable">
+				<table>
 					<caption>Unactivated New Companies</caption>
 					<tr>
 						<th>Company</th>
@@ -208,7 +173,7 @@
 				</table>
 			<?php endif; ?>
 			<?php if(isset($inactivecompanies)) : ?>
-				<table id="companiestable">
+				<table>
 					<caption>Inactive Old Companies</caption>
 					<tr>
 						<th>Company</th>

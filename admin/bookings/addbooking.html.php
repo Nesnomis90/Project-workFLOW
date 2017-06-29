@@ -9,8 +9,6 @@
 	</head>
 	<body>
 	
-
-
 		<form action="" method="post">
 		<fieldset><legend><b>Book A New Meeting</b></legend>
 			<?php if(isset($_SESSION['AddBookingError'])) : ?>

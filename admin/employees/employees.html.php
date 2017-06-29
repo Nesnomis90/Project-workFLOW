@@ -5,41 +5,7 @@
 <html lang="en">
 	<head>
 		<meta charset="utf-8">
-		<style>
-			#companyemployeestable {
-				font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
-				border-collapse: collapse;
-				width: 100%;
-			}
-			
-			#companyemployeestable th {
-				padding: 12px;
-				text-align: left;
-				background-color: #4CAF50;
-				color: white;
-				border: 1px solid #ddd;
-			}
-			
-			#companyemployeestable tr {
-				padding: 8px;
-				text-align: left;
-				border-bottom: 1px solid #ddd;
-			}
-			#companyemployeestable tr:nth-of-type(even) {background-color: #f2f2f2;}
-			#companyemployeestable tr:nth-of-type(odd) {background-color: white;}			
-			#companyemployeestable tr:hover{background-color:#DBEAE8;}
-						
-			#companyemployeestable td {
-				padding: 8px;
-				text-align: left;
-				border: 1px solid #ddd;
-			}
-			
-			#companyemployeestable caption {
-				padding: 8px;
-				font-size: 300%;
-			}
-		</style>
+		<link rel="stylesheet" type="text/css" href="/CSS/myCSS.css">
 		<title>Manage Company Employees</title>
 	</head>
 	<body>
@@ -70,7 +36,7 @@
 		<form action="" method="post">
 			<input type="submit" name="action" value="Add Employee">
 		</form>
-		<table id= "companyemployeestable">
+		<table>
 			<caption>Company Employees</caption>
 			<tr>
 				<th colspan="2">Company</th>

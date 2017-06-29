@@ -4,11 +4,7 @@
 <html lang="en">
 	<head>
 		<meta charset="utf-8">
-		<style>
-			#description {
-				vertical-align: top;
-			}
-		</style>		
+		<link rel="stylesheet" type="text/css" href="/CSS/myCSS.css">	
 		<title>Edit Booking</title>
 	</head>
 	<body>

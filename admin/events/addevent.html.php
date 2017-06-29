@@ -4,11 +4,7 @@
 <html lang="en">
 	<head>
 		<meta charset="utf-8">
-		<style>
-			#description {
-				vertical-align: top;
-			}
-		</style>			
+		<link rel="stylesheet" type="text/css" href="/CSS/myCSS.css">		
 		<title>Schedule A New Event</title>
 	</head>
 	<body>
@@ -20,7 +16,7 @@
 			<?php unset($_SESSION['AddEventError']); ?>
 		<?php endif; ?>
 		</div>
-
+<!--- TO-DO: Fix this. This is a copypaste mess right now --->
 		<form action="" method="post">
 			<div>
 				<label for="checkboxMeetingroom">Select the day(s) of the week the event is for: </label>
