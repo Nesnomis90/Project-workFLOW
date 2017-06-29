@@ -116,6 +116,10 @@
 					</tr>
 				</form>
 			<?php endforeach; ?>
+		<?php else : ?>
+			<tr>
+				<td colspan="13"><b>There are no registered events.</b></td>
+			</tr>
 		<?php endif; ?>
 		</table>
 		
