@@ -46,16 +46,18 @@
 	<body>
 		<h1>Scheduled Events</h1>
 		
+		<div id="feedback">
 		<?php if(isset($_SESSION['EventsUserFeedback'])) : ?>
-			<p><b><?php htmlout($_SESSION['EventsUserFeedback']); ?></b></p>
+			<b><?php htmlout($_SESSION['EventsUserFeedback']); ?></b>
 			<?php unset($_SESSION['EventsUserFeedback']); ?>
-		<?php endif; ?>	
+		<?php endif; ?>
+		</div>
 		
 		<form action="" method="post">				
-			<div>
+			<div style="position:absolute; left: 10px;">
 				<input type="submit" name="action" value="Create Event">
 			</div>
-			<div>
+			<div style="position: absolute; right: 10px;">
 			<?php if(isset($_SESSION['eventsEnableDelete']) AND $_SESSION['eventsEnableDelete']) : ?>
 				<input type="submit" name="action" value="Disable Delete">
 			<?php else : ?>
