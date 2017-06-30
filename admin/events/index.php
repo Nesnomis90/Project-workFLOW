@@ -11,12 +11,38 @@ if (!isUserAdmin()){
 	exit();
 }
 
+// Function to clear sessions used to remember user inputs on refreshing the add booking form
+function clearAddEventSessions(){
+	unset($_SESSION['AddEventRepeatSelected']);
+	unset($_SESSION['AddEventDaysSelected']);
+	unset($_SESSION['AddEventRoomChoiceSelected']);
+	unset($_SESSION['AddEventRoomsSelected']);
+}
+
 if(isset($_POST['action']) AND $_POST['action'] == "Create Event"){
 	
 	include_once 'addevent.html.php';
 	exit();
 }
 
+// If admin wants to leave the page and be directed back to the events page again
+if (isset($_POST['add']) AND $_POST['add'] == 'Cancel'){
+
+	$_SESSION['AddEventError'] = "You cancelled your new event.";
+}
+
+// Remove any unused variables from memory 
+// TO-DO: Change if this ruins having multiple tabs open etc.
+clearAddEventSessions();
+clearEditEventSessions();
+
+
+// EVENTS OVERVIEW CODE SNIPPET START //
+
+if(isset($refreshEvents) AND $refreshEvents) {
+	// TO-DO: Add code that should occur on a refresh
+	unset($refreshEvents);
+}
 
 // Get Event Data
 try

@@ -4,7 +4,7 @@
 	<link rel="stylesheet" type="text/css" href="/CSS/myCSS.css">
 	
 	Keep in mind that the sequence is important.
-	e.g. tr:hover is last because it should always overwrite.
+	e.g. tr:hover is last in the tr sequence because it should always overwrite.
 */
 
 	/* CSS for the body of the webpages START*/
@@ -110,25 +110,26 @@ table caption {
 .description {vertical-align: top;}
 	/* CSS used to make sure labels used with textfields look correct END*/
 	
-	/* CSS used to position DIVs START*/
+	/* CSS used to position DIVs START
+		TO-DO: These are badly implemented*/
+.bottomLeft {
+	position: absolute; 
+	left: 10px;
+	bottom: 10px;
+}	
 .bottomRight {
 	position: absolute; 
 	right: 10px; 
 	bottom: 10px;	
 }
-.bottomLeft {
+.left{
 	position: absolute; 
 	left: 10px;
-	bottom: 10px;
+	display: inline-block;
 }
 .right{
 	position: absolute; 
 	right: 10px;
-	display: inline-block;
-}
-.left{
-	position: absolute; 
-	left: 10px;
 	display: inline-block;
 }
 	/* CSS used to position DIVs END*/

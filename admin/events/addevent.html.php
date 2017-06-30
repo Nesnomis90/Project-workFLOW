@@ -17,27 +17,42 @@
 			</div>
 			
 			<form action="" method="post">
-				<div>
-					<label for="checkboxMeetingroom">Select the meeting room(s) the event should appear in: </label>
-				</div>
-				
-				<div>
-					<input type="checkbox" name="meetingroomAll" value="All" <?php htmlout($checkAll); ?>>All<br />
-					<?php foreach($checkboxes AS $checkbox) : ?>
-						<?php //checkbox[0] is the meeting room ID ?>
-						<?php //checkbox[1] is the meeting room name ?>
-						<?php //checkbox[2] is if it should have a linefeed ?>
-						<?php //checkbox[3] is if it should be checked ?>
-						<?php if($checkbox[3]) : ?>
-							<input type="checkbox" name="meetingroom[]" 
-							value="<?php htmlout($checkbox[0]); ?>" checked="checked"><?php htmlout($checkbox[1]); ?>
+				<fieldset><legend>Select the meeting room(s) for the event</legend>
+					<?php if(!isset($_SESSION['AddEventRoomChoiceSelected'])) : ?>
+						<input type="submit" name="add" value="Select A Single Room">
+						<input type="submit" name="add" value="Select Multiple Rooms">
+						<input type="submit" name="add" value="Select All Rooms">
+					<?php else : ?>
+						<input type="submit" name="add" value="Change Room Selection">
+					<?php endif; ?>
+					<?php if($_SESSION['AddEventRoomChoiceSelected'] == "Select Multiple Rooms") : ?>
+						<div>
+							<input type="checkbox" name="meetingroomAll" value="All" <?php htmlout($checkAll); ?>>All<br />
+							<?php foreach($checkboxes AS $checkbox) : ?>
+								<?php //checkbox[0] is the meeting room ID ?>
+								<?php //checkbox[1] is the meeting room name ?>
+								<?php //checkbox[2] is if it should have a linefeed ?>
+								<?php //checkbox[3] is if it should be checked ?>
+								<?php if($checkbox[3]) : ?>
+									<input type="checkbox" name="meetingroom[]" 
+									value="<?php htmlout($checkbox[0]); ?>" checked="checked"><?php htmlout($checkbox[1]); ?>
+								<?php else : ?>
+									<input type="checkbox" name="meetingroom[]" 
+									value="<?php htmlout($checkbox[0]); ?>"><?php htmlout($checkbox[1]); ?>
+								<?php endif; ?>
+								<?php if($checkbox[2]): ?><br /><?php endif; ?>
+							<?php endforeach; ?>
+						<div>
+					<?php elseif($_SESSION['AddEventRoomChoiceSelected'] == "Select A Single Room") : ?>
+						<?php if($_SESSION['AddEventRoomsSelected']) : ?>
+							Event will be scheduled for the room <?php htmlout($roomSelected); ?>
 						<?php else : ?>
-							<input type="checkbox" name="meetingroom[]" 
-							value="<?php htmlout($checkbox[0]); ?>"><?php htmlout($checkbox[1]); ?>
+							
 						<?php endif; ?>
-						<?php if($checkbox[2]): ?><br /><?php endif; ?>
-					<?php endforeach; ?>
-				<div>
+					<?php elseif($_SESSION['AddEventRoomChoiceSelected'] == "Select All Rooms") : ?>
+						Event will be scheduled for all rooms.
+					<?php endif; ?>
+				</fieldset>
 				
 				<div>
 					<label for="meetingRoomID">Meeting Room: </label>
@@ -86,7 +101,7 @@
 						<input type="checkbox" name="daysSelected[]" value="Friday">Friday<br />
 						<input type="checkbox" name="daysSelected[]" value="Saturday">Saturday<br />
 						<input type="checkbox" name="daysSelected[]" value="Sunday">Sunday
-						<?php if(isset($_SESSION['AddEventDaysSelected']) AND $_SESSION['AddEventDaysSelected']) : ?>
+						<?php if(isset($_SESSION['AddEventDaysSelected'])) : ?>
 							<input class="bottomRight" type="submit" name="add" value="Change Days">
 						<?php else : ?>
 							<input class="bottomRight" type="submit" name="add" value="Confirm Days">
@@ -95,22 +110,44 @@
 				</div>
 				
 				<div>
-					<label for="">Select if event should repeat: </label>
-					<input type="submit" name="add" value="Repeat">
+					<fieldset><legend>Select the weeks it should be active</legend>
+					<?php if(!isset($_SESSION['AddEventRepeatSelected'])) : ?>
+						<input type="submit" name="add" value="Repeat">
+					<?php else : ?>
+						<input type="submit" name="add" value="Confirm Date">
+					<?php endif; ?>
+					</fieldset>
 				</div>
 				
 				<div>
-					<input type="submit" name="add" value="Reset">
-					<input type="submit" name="add" value="Cancel">
-					<?php if(!isset($_SESSION['AddEventDaysSelected'])) : ?>
-						<input type="submit" name="disabled" value="Create Event" disabled>
-						<b>You need to select the day(s) you want before you can create the event.</b>
-					<?php elseif(isset($_SESSION['AddEventDaysSelected']) AND $_SESSION['AddEventDaysSelected'] == 0) : ?>
-						<input type="submit" name="disabled" value="Create Event" disabled>
-						<b>You need to select at least one day you want before you can create the event.</b>
-					<?php else : ?>
-						<input type="submit" name="add" value="Create Event">
-					<?php endif; ?>				
+					<label for="weekNumber"> </label>
+					<select name="weekNumber" id="weekNumber">
+						<?php foreach($weekNumber as $row): ?> 
+							<?php if($row['weekNumber'] == $selectedWeekNumber):?>
+								<option selected="selected" value="<?php htmlout($row['weekNumber']); ?>"><?php htmlout($row['weekDate']);?></option>
+							<?php else : ?>
+								<option value="<?php htmlout($row['weekNumber']); ?>"><?php htmlout($row['weekDate']);?></option>
+							<?php endif;?>
+						<?php endforeach; ?>						
+					</select>
+				</div>
+				
+				<div>
+					<div class="right">
+						<input type="submit" name="add" value="Reset">
+						<input type="submit" name="add" value="Cancel">
+					</div>
+					<div class="left">
+						<?php if(!isset($_SESSION['AddEventDaysSelected'])) : ?>
+							<input type="submit" name="disabled" value="Create Event" disabled>
+							<b>You need to select the day(s) you want before you can create the event.</b>
+						<?php elseif(isset($_SESSION['AddEventDaysSelected']) AND $_SESSION['AddEventDaysSelected'] == 0) : ?>
+							<input type="submit" name="disabled" value="Create Event" disabled>
+							<b>You need to select at least one day you want before you can create the event.</b>
+						<?php else : ?>
+							<input type="submit" name="add" value="Create Event">
+						<?php endif; ?>
+					</div>
 				</div>
 			</form>
 		</fieldset>
