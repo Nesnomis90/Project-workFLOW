@@ -25,7 +25,7 @@
 					<?php else : ?>
 						<input type="submit" name="add" value="Change Room Selection">
 					<?php endif; ?>
-					<?php if($_SESSION['AddEventRoomChoiceSelected'] == "Select Multiple Rooms") : ?>
+					<?php if(isset($_SESSION['AddEventRoomChoiceSelected']) AND $_SESSION['AddEventRoomChoiceSelected'] == "Select Multiple Rooms") : ?>
 						<div>
 							<input type="checkbox" name="meetingroomAll" value="All" <?php htmlout($checkAll); ?>>All<br />
 							<?php foreach($checkboxes AS $checkbox) : ?>
@@ -43,14 +43,14 @@
 								<?php if($checkbox[2]): ?><br /><?php endif; ?>
 							<?php endforeach; ?>
 						<div>
-					<?php elseif($_SESSION['AddEventRoomChoiceSelected'] == "Select A Single Room") : ?>
+					<?php elseif(isset($_SESSION['AddEventRoomChoiceSelected']) AND $_SESSION['AddEventRoomChoiceSelected'] == "Select A Single Room") : ?>
 						<?php if($_SESSION['AddEventRoomsSelected']) : ?>
-							Event will be scheduled for the room <?php htmlout($roomSelected); ?>
+							<div>Event will be scheduled for the room <?php htmlout($roomSelected); ?></div>
 						<?php else : ?>
 							
 						<?php endif; ?>
-					<?php elseif($_SESSION['AddEventRoomChoiceSelected'] == "Select All Rooms") : ?>
-						Event will be scheduled for all rooms.
+					<?php elseif(isset($_SESSION['AddEventRoomChoiceSelected']) AND $_SESSION['AddEventRoomChoiceSelected'] == "Select All Rooms") : ?>
+						<div>Event will be scheduled for all rooms.</div>
 					<?php endif; ?>
 				</fieldset>
 				
@@ -111,43 +111,47 @@
 				
 				<div>
 					<fieldset><legend>Select the weeks it should be active</legend>
-					<?php if(!isset($_SESSION['AddEventRepeatSelected'])) : ?>
-						<input type="submit" name="add" value="Repeat">
-					<?php else : ?>
-						<input type="submit" name="add" value="Confirm Date">
-					<?php endif; ?>
+						<div class="bottomRight">
+							<?php if(!isset($_SESSION['AddEventRepeatSelected'])) : ?>
+								<input type="submit" name="add" value="Repeat">
+							<?php else : ?>
+								<input type="submit" name="add" value="Confirm Date">
+							<?php endif; ?>
+						</div>
+					
+						<div>
+							<label for="weekNumber"> </label>
+							<select name="weekNumber" id="weekNumber">
+								<?php foreach($weekNumber as $row): ?> 
+									<?php if($row['weekNumber'] == $selectedWeekNumber):?>
+										<option selected="selected" value="<?php htmlout($row['weekNumber']); ?>"><?php htmlout($row['weekDate']);?></option>
+									<?php else : ?>
+										<option value="<?php htmlout($row['weekNumber']); ?>"><?php htmlout($row['weekDate']);?></option>
+									<?php endif;?>
+								<?php endforeach; ?>						
+							</select>
+						</div>
 					</fieldset>
 				</div>
-				
 				<div>
-					<label for="weekNumber"> </label>
-					<select name="weekNumber" id="weekNumber">
-						<?php foreach($weekNumber as $row): ?> 
-							<?php if($row['weekNumber'] == $selectedWeekNumber):?>
-								<option selected="selected" value="<?php htmlout($row['weekNumber']); ?>"><?php htmlout($row['weekDate']);?></option>
-							<?php else : ?>
-								<option value="<?php htmlout($row['weekNumber']); ?>"><?php htmlout($row['weekDate']);?></option>
-							<?php endif;?>
-						<?php endforeach; ?>						
-					</select>
+					<?php if(!isset($_SESSION['AddEventDaysSelected'])) : ?>
+						<b>You need to select the day(s) you want before you can create the event.</b>
+					<?php elseif(isset($_SESSION['AddEventDaysSelected']) AND $_SESSION['AddEventDaysSelected'] == 0) : ?>
+						<b>You need to select at least one day you want before you can create the event.</b>
+					<?php endif; ?>
 				</div>
-				
 				<div>
 					<div class="right">
 						<input type="submit" name="add" value="Reset">
 						<input type="submit" name="add" value="Cancel">
 					</div>
-					<div class="left">
-						<?php if(!isset($_SESSION['AddEventDaysSelected'])) : ?>
-							<input type="submit" name="disabled" value="Create Event" disabled>
-							<b>You need to select the day(s) you want before you can create the event.</b>
-						<?php elseif(isset($_SESSION['AddEventDaysSelected']) AND $_SESSION['AddEventDaysSelected'] == 0) : ?>
-							<input type="submit" name="disabled" value="Create Event" disabled>
-							<b>You need to select at least one day you want before you can create the event.</b>
-						<?php else : ?>
-							<input type="submit" name="add" value="Create Event">
-						<?php endif; ?>
-					</div>
+					<?php if(!isset($_SESSION['AddEventDaysSelected'])) : ?>
+						<div class="left"><input type="submit" name="disabled" value="Create Event" disabled></div>
+					<?php elseif(isset($_SESSION['AddEventDaysSelected']) AND $_SESSION['AddEventDaysSelected'] == 0) : ?>
+						<div class="left"><input type="submit" name="disabled" value="Create Event" disabled></div>
+					<?php else : ?>
+						<div class="left"><input type="submit" name="add" value="Create Event"></div>
+					<?php endif; ?>
 				</div>
 			</form>
 		</fieldset>
