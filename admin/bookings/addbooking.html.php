@@ -122,7 +122,7 @@
 				<input type="submit" name="add" value="Get Default Display Name">
 			</div>
 			<div>
-				<label for="description">Booking Description: </label>
+				<label class="description" for="description">Booking Description: </label>
 				<textarea rows="4" cols="50" name="description" id="description"><?php htmlout($description); ?></textarea>
 				<input type="submit" name="add" value="Get Default Booking Description"> 
 			</div>

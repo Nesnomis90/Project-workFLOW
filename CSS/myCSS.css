@@ -4,17 +4,18 @@
 	<link rel="stylesheet" type="text/css" href="/CSS/myCSS.css">
 	
 	Keep in mind that the sequence is important.
-	e.g. tr:hover is last because it should always overwrite.
+	e.g. tr:hover is last in the tr sequence because it should always overwrite.
 */
 
-	/* CSS for all the textarea input START */
-textarea{
-	background-color: white;
-}
+	/* CSS for the body of the webpages START*/
+body{
+}		
+	/* CSS for the body of the webpages END*/
 
-textarea:hover{
-	background-color: #f2f2f2;
-}
+	/* CSS for all the textarea input START */
+textarea{background-color: white;}
+
+textarea:hover{background-color: #f2f2f2;}
 
 textarea:focus{
 	background-color: black;
@@ -23,13 +24,9 @@ textarea:focus{
 	/* CSS for all the textarea input END */
 
 	/* CSS for all the non-textfield input text START */
-input[type=text]{
-	background-color: white;
-}
+input[type=text]{background-color: white;}
 
-input[type=text]:hover{
-	background-color: #f2f2f2;
-}
+input[type=text]:hover{background-color: #f2f2f2;}
 
 input[type=text]:focus{
 	background-color: black;
@@ -38,13 +35,9 @@ input[type=text]:focus{
 	/* CSS for all the non-textfield input text END */
 	
 	/* CSS for all the number inputs START */
-input[type=number]{
-	background-color: white;
-}
+input[type=number]{background-color: white;}
 
-input[type=number]:hover{
-	background-color: #f2f2f2;
-}
+input[type=number]:hover{background-color: #f2f2f2;}
 
 input[type=number]:focus{
 	background-color: black;
@@ -53,9 +46,8 @@ input[type=number]:focus{
 	/* CSS for all the number inputs input text END */	
 
 	/* CSS for all the submit buttons START */
-input[type=submit]:hover{
-	background-color: #f2f2f2;
-}
+input[type=submit]:hover{box-shadow: 2px 2px 2px #888888;}
+input[disabled]:hover{box-shadow: none;}
 	/* CSS for all the submit buttons END */
 
 	/* CSS for all the fieldsets START */	
@@ -109,13 +101,50 @@ table caption {
 }
 	/* CSS for all the tables END */
 	
+/*CSS CLASSES START*/
 	/* CSS used to warn the user error/feedback START*/
-#warning{
-	color: red;
-}
+.warning{color: red;}
 	/* CSS used to warn the user error/feedback END*/
+	
 	/* CSS used to make sure labels used with textfields look correct START*/
-#description {
-	vertical-align: top;
-}
+.description {vertical-align: top;}
 	/* CSS used to make sure labels used with textfields look correct END*/
+	
+	/* CSS used to position DIVs START
+		TO-DO: These are badly implemented
+	example: 	
+	<div class="container">
+		<div class="left"></div>
+		<div class="innerWrap">
+			<div class="right"></div>
+			<div class="middle"></div>
+		</div>
+	</div>
+	*/
+.container{
+	position: static;
+}
+.innerWrap{ /* For middle and right at once*/
+	overflow: hidden;
+}
+.bottomLeft {
+	position: absolute; 
+	left: 10px;
+	bottom: 10px;
+}	
+.bottomRight {
+	position: absolute; 
+	right: 10px; 
+	bottom: 10px;	
+}
+.left{
+	float: left;
+}
+.middle{
+	
+}
+.right{
+	float: right;
+}
+	/* CSS used to position DIVs END*/
+/*CSS CLASSES END*/

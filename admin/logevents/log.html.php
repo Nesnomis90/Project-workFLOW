@@ -12,10 +12,12 @@
 
 		<form action="" method="post">
 			<fieldset><legend>Manage Log Events</legend>
+			
 			<?php if(isset($_SESSION['LogEventUserFeedback'])) : ?>
-				<b id="warning"><?php htmlout($_SESSION['LogEventUserFeedback']); ?></b>
+				<b class="warning"><?php htmlout($_SESSION['LogEventUserFeedback']); ?></b>
 				<?php unset($_SESSION['LogEventUserFeedback']); ?>
-			<?php endif; ?>			
+			<?php endif; ?>	
+			
 			<div>
 				<fieldset><legend><b>Limit logs by amount: </b></legend>
 					<label for="logsToShow">Maximum log events to display: </label>
@@ -30,6 +32,7 @@
 					<?php endif; ?>
 				</fieldset>
 			</div>
+			
 			<div>
 				<fieldset><legend><b>Limit logs by category: </b></legend>
 					<input type="checkbox" name="searchAll" value="All" <?php htmlout($checkAll); ?>>All<br />
@@ -57,6 +60,8 @@
 						<?php endif; ?>
 					<?php endforeach; ?>
 				</fieldset>
+			</div>
+
 			<div>
 				<fieldset><legend><b>Limit logs displayed by date: </b></legend>
 					<?php if(isset($displayValidatedStartDate) AND isset($displayValidatedEndDate)) : ?>
@@ -81,17 +86,18 @@
 				</fieldset>
 			</div>
 			
-			<div>
+			<div class="bottomLeft">
 				<input type="submit" name="action" value="Refresh Logs">
 			</div>
 			
-			<div style="position: absolute; right: 10px; bottom: 10px;">
+			<div class="bottomRight">
 				<?php if(isset($_SESSION['logEventsEnableDelete']) AND $_SESSION['logEventsEnableDelete']) : ?>
 					<input type="submit" name="action" value="Disable Delete">
 				<?php else : ?>
 					<input type="submit" name="action" value="Enable Delete">
 				<?php endif; ?>
 			</div>
+
 			</fieldset>
 		</form>
 		

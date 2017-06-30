@@ -6,11 +6,6 @@
 	<head>
 		<meta charset="utf-8">
 		<link rel="stylesheet" type="text/css" href="/CSS/myCSS.css">
-		<style>
-			#CreditsDescription {
-				vertical-align: top;
-			}
-		</style>
 		<title><?php htmlout($pageTitle); ?></title>
 	</head>
 	<body>
@@ -47,7 +42,7 @@
 			</div>
 			<?php endif; ?>					
 			<div>
-				<label for="CreditsDescription">Set New Credits Description: </label>
+				<label class="description" for="CreditsDescription">Set New Credits Description: </label>
 				<?php if(	isset($_SESSION['EditCreditsOriginalInfo']) AND 
 							$_SESSION['EditCreditsOriginalInfo']['CreditsName'] == 'Default') : ?>
 					<input type="hidden" name="CreditsDescription" id="CreditsDescription"

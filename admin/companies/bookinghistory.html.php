@@ -5,37 +5,24 @@
 <html lang="en">
 	<head>
 		<meta charset="utf-8">
-		<link rel="stylesheet" type="text/css" href="/CSS/myCSS.css">
-		<style>
-			#billingDescriptionDisabled {
-				vertical-align: top;
-			}
-			#billingDescription {
-				vertical-align: top;
-			}
-			#ChooseEarlierPeriod {
-				position: absolute;
-				left: 10px;
-				display: inline-block;
-			}
-			#ChooseLaterPeriod {
-				position: absolute;
-				right: 10px;
-				display: inline-block;
-			}
-		</style>	
+		<link rel="stylesheet" type="text/css" href="/CSS/myCSS.css">	
 		<title>Booking History</title>
 	</head>
 	<body>
-		<div>
+		<div class="left">
 			<form action="" method="post">
 				<input type="submit" name="history" value="Return To Companies">
 			</form>
 		</div>
+		
 		<h1>Booking History</h1>
+		
 		<h2>For the company: <?php htmlout($CompanyName); ?> (Active Since: <?php htmlout($displayDateTimeCreated); ?>)</h2>
+		
 		<?php if(isset($periodsSummmedUp)) : ?>
+		
 			<h3>The company has <span style="color:red">NOT BILLED PERIODS</span>.</h3>
+			
 			<fieldset><legend><b>Not Billed Periods</b></legend>
 			<?php $totalCostForAllPeriodsSummedUp = 0; ?>
 			<?php foreach($periodsSummmedUp AS $period) : ?>
@@ -49,7 +36,9 @@
 					<?php $totalCostForAllPeriodsSummedUp += $period['TotalBookingCostThisMonthJustNumber']; ?>
 				</fieldset>
 			<?php endforeach; ?>
-				Total Cost All Periods: <span style="color:red"><b><?php htmlout(convertToCurrency($totalCostForAllPeriodsSummedUp)); ?></span></b><br />
+				<div>
+					Total Cost All Periods: <span style="color:red"><b><?php htmlout(convertToCurrency($totalCostForAllPeriodsSummedUp)); ?></span></b><br />
+				</div>
 			</fieldset>
 		<?php endif; ?>
 		
@@ -60,8 +49,9 @@
 		<?php elseif($periodHasBeenBilled == 1) : ?>
 			<h2>Billing Status: This booking has <span style="color:green">BEEN BILLED</span>.</h2><br />
 		<?php endif; ?>
+		
 		<form action="" method="post">
-			<div id="ChooseEarlierPeriod">
+			<div class="left">
 				<?php if(isset($PreviousPeriod) AND $PreviousPeriod) : ?>
 					<input type="submit" name="history" value="First Period">
 					<input type="submit" name="history" value="Previous Period">
@@ -70,7 +60,7 @@
 					<input type="submit" name="disabled" value="Previous Period" disabled>
 				<?php endif; ?>
 			</div>
-			<div id="ChooseLaterPeriod">
+			<div class="right">
 				<?php if(isset($NextPeriod) AND $NextPeriod) : ?>
 					<input type="submit" name="history" value="Next Period">
 					<input type="submit" name="history" value="Last Period">
@@ -80,6 +70,7 @@
 				<?php endif; ?>				
 			</div>
 		</form>
+		
 		<br />
 		<br />
 		<?php if(!isset($periodHasBeenBilled) OR $periodHasBeenBilled == 0){
@@ -155,7 +146,7 @@
 		<br />
 		<?php if(!$rightNow AND (!isset($periodHasBeenBilled) OR $periodHasBeenBilled == 0)) : ?>
 			<form action="" method="post">
-				<label for="billingDescription">Billing Description: </label>
+				<label class="description" for="billingDescription">Billing Description: </label>
 				<textarea name="billingDescription" id="billingDescription" rows="4" cols="50"
 				placeholder="Type in any additional information you'd like to see when viewing this period later."></textarea>
 				<input type="hidden" name="nextPeriod" value="<?php htmlout($NextPeriod); ?>">
@@ -165,7 +156,7 @@
 				<input type="submit" name="history" value="Set As Billed">
 			</form>
 		<?php elseif(!$rightNow AND $periodHasBeenBilled == 1) : ?>
-			<label for="billingDescriptionDisabled">Billing Description: </label>
+			<label class="description" for="billingDescriptionDisabled">Billing Description: </label>
 			<textarea name="billingDescriptionDisabled" id="billingDescriptionDisabled" 
 			rows="4" cols="50" disabled><?php htmlout($billingDescription); ?></textarea>
 		<?php endif; ?>

@@ -37,20 +37,20 @@
 			</div>		
 		<?php endif; ?>
 		
-		<form action="" method="post">				
-			<div>
+		<form action="" method="post">			
+			<div class="left">
 				<input type="submit" name="action" value="Create Booking">
 			</div>
-			<div>
+			<div class="right">
 			<?php if(isset($_SESSION['bookingsEnableDelete']) AND $_SESSION['bookingsEnableDelete']) : ?>
 				<input type="submit" name="action" value="Disable Delete">
 			<?php else : ?>
 				<input type="submit" name="action" value="Enable Delete">
 			<?php endif; ?>
-			</div>			
+			</div>		
 		</form>
 		
-		<table id="bookingstable">
+		<table>
 			<caption>Active Bookings Today</caption>
 			<tr>
 				<th colspan="8">Booking information</th>
@@ -114,7 +114,7 @@
 		<?php endif; ?>
 		</table>
 		
-		<table id="bookingstable">
+		<table>
 			<caption>Completed Bookings Today</caption>
 			<tr>
 				<th colspan="8">Booking information</th>
@@ -185,7 +185,7 @@
 		<?php endif; ?>
 		</table>
 		
-		<table id="bookingstable">
+		<table>
 			<caption>Future Bookings</caption>
 			<tr>
 				<th colspan="8">Booking information</th>
@@ -249,7 +249,7 @@
 		<?php endif; ?>
 		</table>
 		
-		<table id="bookingstable">
+		<table>
 			<caption>Completed Bookings</caption>
 			<tr>
 				<th colspan="8">Booking information</th>
@@ -320,7 +320,7 @@
 		<?php endif; ?>
 		</table>
 		
-		<table id="bookingstable">
+		<table>
 			<caption>Bookings Cancelled</caption>
 			<tr>
 				<th colspan="8">Booking information</th>
@@ -388,7 +388,7 @@
 		</table>
 		
 		<?php if(isset($bookingsOther)) : ?>		
-		<table id="bookingstable">
+		<table>
 			<caption>Other Bookings</caption>
 			<tr>
 				<th colspan="8">Booking information</th>

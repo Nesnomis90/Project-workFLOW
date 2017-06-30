@@ -4,11 +4,7 @@
 <html lang="en">
 	<head>
 		<meta charset="utf-8">
-		<style>
-			#description {
-				vertical-align: top;
-			}
-		</style>			
+		<link rel="stylesheet" type="text/css" href="/CSS/myCSS.css">
 		<title>Book A New Meeting</title>
 		<script src="/scripts/myFunctions.js"></script>		
 	</head>
@@ -113,7 +109,7 @@
 				<input type="submit" name="add" value="Get Default Display Name">
 			</div>
 			<div>
-				<label for="description">Booking Description: </label>
+				<label class="description" for="description">Booking Description: </label>
 				<textarea rows="4" cols="50" name="description" id="description"><?php htmlout($description); ?></textarea>
 				<input type="submit" name="add" value="Get Default Booking Description"> 
 			</div>

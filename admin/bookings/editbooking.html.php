@@ -162,7 +162,7 @@
 				</b>
 			</div>
 			<div>
-				<label for="description">Set New Booking Description: </label>
+				<label class="description" for="description">Set New Booking Description: </label>
 				<textarea rows="4" cols="50" name="description" id="description"><?php htmlout($description); ?></textarea>
 				<input type="submit" name="edit" value="Get Default Booking Description">
 			</div>

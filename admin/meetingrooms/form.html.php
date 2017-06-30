@@ -6,11 +6,6 @@
 	<head>
 		<meta charset="utf-8">
 		<link rel="stylesheet" type="text/css" href="/CSS/myCSS.css">
-		<style>
-			#MeetingRoomDescription {
-				vertical-align: top;
-			}
-		</style>
 		<title><?php htmlout($pageTitle); ?></title>
 	</head>
 	<body>
@@ -51,7 +46,7 @@
 			</div>
 			<?php endif; ?>			
 			<div>
-				<label for="MeetingRoomDescription">Set New Room Description: </label>
+				<label class="description" for="MeetingRoomDescription">Set New Room Description: </label>
 				<textarea rows="4" cols="50" name="MeetingRoomDescription" id="MeetingRoomDescription"
 				placeholder="Enter Room Description"><?php htmlout($meetingRoomDescription); ?></textarea>
 			</div>	

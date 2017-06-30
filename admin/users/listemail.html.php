@@ -6,12 +6,7 @@
 	<head>
 		<meta charset="utf-8">
 		<link rel="stylesheet" type="text/css" href="/CSS/myCSS.css">
-		<title>Manage Users</title>
-		<style>
-			#emailList {
-				vertical-align: top;
-			}
-		</style>			
+		<title>Manage Users</title>			
 	</head>
 	<body>
 		<h1>Email List</h1>
@@ -38,7 +33,7 @@
 			</form>
 		</div>
 		<div>
-			<label for="emailList">Copy Into Your Email Program:</label>
+			<label class="description" for="emailList">Copy Into Your Email Program:</label>
 			<textarea rows="4" cols="50" name="emailList" id="emailList"
 			disabled
 			placeholder="List of User Email"><?php htmlout($emailList); ?></textarea>

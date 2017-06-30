@@ -8,156 +8,182 @@
 		<title>Schedule A New Event</title>
 	</head>
 	<body>
-		<h1>Schedule A New Event</h1>
-		
-		<div id="feedback">
-		<?php if(isset($_SESSION['AddEventError'])) : ?>
-			<b><?php htmlout($_SESSION['AddEventError']); ?></b>
-			<?php unset($_SESSION['AddEventError']); ?>
-		<?php endif; ?>
-		</div>
-<!--- TO-DO: Fix this. This is a copypaste mess right now --->
-		<form action="" method="post">
-			<div>
-				<label for="checkboxMeetingroom">Select the day(s) of the week the event is for: </label>
+		<fieldset><legend><b>Schedule A New Event</b></legend>
+			<div class="warning">
+			<?php if(isset($_SESSION['AddEventError'])) : ?>
+				<b><?php htmlout($_SESSION['AddEventError']); ?></b>
+				<?php unset($_SESSION['AddEventError']); ?>
+			<?php endif; ?>
 			</div>
-			<div>
-				<input type="checkbox" name="meetingroomAll" value="All" <?php htmlout($checkAll); ?>>All<br />
-				<?php foreach($checkboxes AS $checkbox) : ?>
-					<?php //checkbox[0] is the meeting room ID ?>
-					<?php //checkbox[1] is the meeting room name ?>
-					<?php //checkbox[2] is if it should have a linefeed ?>
-					<?php //checkbox[3] is if it should be checked ?>
-					<?php if($checkbox[3]) : ?>
-						<input type="checkbox" name="meetingroom[]" 
-						value="<?php htmlout($checkbox[0]); ?>" checked="checked"><?php htmlout($checkbox[1]); ?>
-					<?php else : ?>
-						<input type="checkbox" name="meetingroom[]" 
-						value="<?php htmlout($checkbox[0]); ?>"><?php htmlout($checkbox[1]); ?>
-					<?php endif; ?>
-					<?php if($checkbox[2]): ?><br /><?php endif; ?>
-				<?php endforeach; ?>
-			<div>		
-			<div>
-				<label for="meetingRoomID">Meeting Room: </label>
-				<select name="meetingRoomID" id="meetingRoomID">
-					<?php foreach($meetingroom as $row): ?> 
-						<?php if($row['meetingRoomID']==$selectedMeetingRoomID):?>
-							<option selected="selected" value="<?php htmlout($row['meetingRoomID']); ?>"><?php htmlout($row['meetingRoomName']);?></option>
+			
+			<form action="" method="post">
+				<div>
+					<fieldset><legend>Select the meeting room(s) for the event</legend>
+						<?php if(!isset($_SESSION['AddEventRoomChoiceSelected'])) : ?>
+							<input type="submit" name="add" value="Select A Single Room">
+							<input type="submit" name="add" value="Select Multiple Rooms">
+							<input type="submit" name="add" value="Select All Rooms">
 						<?php else : ?>
-							<option value="<?php htmlout($row['meetingRoomID']); ?>"><?php htmlout($row['meetingRoomName']);?></option>
-						<?php endif;?>
-					<?php endforeach; ?>
-				</select>				
-			</div>
-			<div>
-				<label for="startDateTime">Start Time: </label>
-				<input type="text" name="startDateTime" id="startDateTime" 
-				placeholder="date hh:mm:ss"
-				value="<?php htmlout($startDateTime); ?>">
-				<input type="submit" name="add" value="Increase Start By Minimum">
-			</div>
-			<div>
-				<label for="endDateTime">End Time: </label>
-				<input type="text" name="endDateTime" id="endDateTime" 
-				placeholder="date hh:mm:ss"
-				value="<?php htmlout($endDateTime); ?>">
-				<input type="submit" name="add" value="Increase End By Minimum">
-			</div>
-			<div>
-				<label for="SelectedUser">User: </label>
-				<?php if(isset($_SESSION['AddBookingChangeUser']) AND $_SESSION['AddBookingChangeUser']) : ?>
-					<?php if(isset($users)) : ?>
-						<select name="userID" id="userID">
-							<?php foreach($users as $row): ?> 
-								<?php if($row['userID'] == $SelectedUserID):?>
-									<option style="background-color:grey; color:white;" selected="selected" 
-									value="<?php htmlout($row['userID']); ?>">Last Selected: <?php htmlout($row['userInformation']);?></option>
-								<?php elseif($row['userID'] == $_SESSION['LoggedInUserID']) : ?>
-									<option style="background-color:grey; color:white;" value="<?php htmlout($row['userID']); ?>">You: <?php htmlout($row['userInformation']);?></option>									
-								<?php else : ?>
-									<option value="<?php htmlout($row['userID']); ?>"><?php htmlout($row['userInformation']);?></option>
-								<?php endif;?>
-							<?php endforeach; ?>
-						</select>
-						<input type="submit" name="add" value="Select This User">
-					<?php else : ?>
-						<b>The search found 0 users.</b>
-					<?php endif; ?>
+							<input type="submit" name="add" value="Change Room Selection">
+						<?php endif; ?>
+						<?php if(isset($_SESSION['AddEventRoomChoiceSelected']) AND $_SESSION['AddEventRoomChoiceSelected'] == "Select Multiple Rooms") : ?>
+							<div>
+								<input type="checkbox" name="meetingroomAll" value="All" <?php htmlout($checkAll); ?>>All<br />
+								<?php foreach($checkboxes AS $checkbox) : ?>
+									<?php //checkbox[0] is the meeting room ID ?>
+									<?php //checkbox[1] is the meeting room name ?>
+									<?php //checkbox[2] is if it should have a linefeed ?>
+									<?php //checkbox[3] is if it should be checked ?>
+									<?php if($checkbox[3]) : ?>
+										<input type="checkbox" name="meetingroom[]" 
+										value="<?php htmlout($checkbox[0]); ?>" checked="checked"><?php htmlout($checkbox[1]); ?>
+									<?php else : ?>
+										<input type="checkbox" name="meetingroom[]" 
+										value="<?php htmlout($checkbox[0]); ?>"><?php htmlout($checkbox[1]); ?>
+									<?php endif; ?>
+									<?php if($checkbox[2]): ?><br /><?php endif; ?>
+								<?php endforeach; ?>
+							<div>
+						<?php elseif(isset($_SESSION['AddEventRoomChoiceSelected']) AND $_SESSION['AddEventRoomChoiceSelected'] == "Select A Single Room") : ?>
+							<?php if($_SESSION['AddEventRoomsSelected']) : ?>
+								<div>Event will be scheduled for the room <?php htmlout($roomSelected); ?></div>
+							<?php else : ?>
+								<div>
+									<label for="meetingRoomID">Meeting Room: </label>
+									<select name="meetingRoomID" id="meetingRoomID">
+										<?php foreach($meetingroom as $row): ?> 
+											<?php if($row['meetingRoomID'] == $selectedMeetingRoomID):?>
+												<option selected="selected" value="<?php htmlout($row['meetingRoomID']); ?>"><?php htmlout($row['meetingRoomName']);?></option>
+											<?php else : ?>
+												<option value="<?php htmlout($row['meetingRoomID']); ?>"><?php htmlout($row['meetingRoomName']);?></option>
+											<?php endif;?>
+										<?php endforeach; ?>
+									</select>				
+								</div>							
+							<?php endif; ?>
+						<?php elseif(isset($_SESSION['AddEventRoomChoiceSelected']) AND $_SESSION['AddEventRoomChoiceSelected'] == "Select All Rooms") : ?>
+							<div>Event will be scheduled for all rooms.</div>
+						<?php endif; ?>
+					</fieldset>
+				</div>
+				
+				<div>
+					<fieldset><legend>Event Details</legend>
+						<div>
+							<label for="startTime">Start Time: </label>
+							<input type="text" name="startTime" id="startTime" 
+							placeholder="hh:mm:ss"
+							value="<?php htmlout($startTime); ?>">
+						</div>
+						
+						<div>
+							<label for="endTime">End Time: </label>
+							<input type="text" name="endTime" id="endTime" 
+							placeholder="hh:mm:ss"
+							value="<?php htmlout($endTime); ?>">
+						</div>
+
+						<div>
+							<label for="eventName">Event Name: </label>
+							<input type="text" name="eventName" id="eventName" 
+							value="<?php htmlout($eventName); ?>">
+						</div>
+						
+						<div>
+							<label class="description" for="eventDescription">Event Description: </label>
+							<textarea rows="4" cols="50" name="eventDescription" id="eventDescription"><?php htmlout($eventDescription); ?></textarea>
+						</div>					
+					</fieldset>
+				</div>
+	<div class="container">
+		<div class="left"></div>
+		<div class="innerWrap">
+			<div class="right"></div>
+			<div class="middle"></div>
+		</div>
+	</div>
+				<div class="container">
+					<div class="left">
+						<fieldset><legend>Select the day(s) for the event</legend>
+							<input type="checkbox" name="daysSelected[]" value="Monday">Monday<br />
+							<input type="checkbox" name="daysSelected[]" value="Tuesday">Tuesday<br />
+							<input type="checkbox" name="daysSelected[]" value="Wednesday">Wednesday<br />
+							<input type="checkbox" name="daysSelected[]" value="Thursday">Thursday<br />
+							<input type="checkbox" name="daysSelected[]" value="Friday">Friday<br />
+							<input type="checkbox" name="daysSelected[]" value="Saturday">Saturday<br />
+							<input type="checkbox" name="daysSelected[]" value="Sunday">Sunday
+						</fieldset>
 					</div>
-					<div>
-						<label for="usersearchstring">Search for User:</label>
-						<input type="text" name="usersearchstring" 
-						value="<?php htmlout($usersearchstring); ?>">
-						<input type="submit" name="add" value="Search">
+					<div class="right">
+						<fieldset><legend>Select the week(s) it should be active</legend>
+							<div class="container">
+								<div class="left">
+									<?php if(!isset($_SESSION['AddEventWeekChoiceSelected'])) : ?>
+										<input type="submit" name="add" value="Select A Single Week">
+										<input type="submit" name="add" value="Select Multiple Weeks">
+										<input type="submit" name="add" value="Select All Weeks">
+									<?php else : ?>
+										<input type="submit" name="add" value="Change Week Selection">
+									<?php endif; ?>
+									
+									<?php if(isset($_SESSION['AddEventWeekChoiceSelected']) AND $_SESSION['AddEventWeekChoiceSelected'] == "Select Multiple Weeks") : ?>
+									
+									<?php elseif(isset($_SESSION['AddEventWeekChoiceSelected']) AND $_SESSION['AddEventWeekChoiceSelected'] == "Select A Single Weeks") : ?>
+										<div>
+											<label for="weekNumber">Select the one week: </label>
+											<select name="weekNumber" id="weekNumber">
+												<?php foreach($weekNumber as $row): ?> 
+													<?php if($row['weekNumber'] == $selectedWeekNumber):?>
+														<option selected="selected" value="<?php htmlout($row['weekNumber']); ?>"><?php htmlout($row['weekDate']);?></option>
+													<?php else : ?>
+														<option value="<?php htmlout($row['weekNumber']); ?>"><?php htmlout($row['weekDate']);?></option>
+													<?php endif;?>
+												<?php endforeach; ?>						
+											</select>
+										</div>						
+									<?php elseif(isset($_SESSION['AddEventWeekChoiceSelected']) AND $_SESSION['AddEventWeekChoiceSelected'] == "Select All Weeks") : ?>
+									
+									<?php endif; ?>
+								</div>
+							</div>
+							<div class="container">	
+								<div class="right">
+									<?php if(!isset($_SESSION['AddEventWeeksSelected'])) : ?>
+										<input type="submit" name="add" value="Confirm Weeks">
+									<?php else : ?>
+										<input type="submit" name="add" value="Change Weeks">
+									<?php endif; ?>
+								</div>
+							</div>
+						</fieldset>
+					</div>					
+				</div>
+				
+				<div class="container">
+					<div class="left">
+						<?php if(!isset($_SESSION['AddEventDaysSelected'])) : ?>
+							<b>You need to select the day(s) you want before you can create the event.</b>
+						<?php elseif(isset($_SESSION['AddEventDaysSelected']) AND $_SESSION['AddEventDaysSelected'] == 0) : ?>
+							<b>You need to select at least one day you want before you can create the event.</b>
+						<?php endif; ?>
 					</div>
-				<?php else : ?>
-					<?php if($_SESSION['LoggedInUserID'] == $SelectedUserID) : ?>
-						<b>You:  <?php htmlout($userInformation); ?> </b>
+				</div>
+				
+				<div class="container">
+					<?php if(!isset($_SESSION['AddEventDaysSelected'])) : ?>
+						<div class="left"><input type="submit" name="disabled" value="Create Event" disabled></div>
+					<?php elseif(isset($_SESSION['AddEventDaysSelected']) AND $_SESSION['AddEventDaysSelected'] == 0) : ?>
+						<div class="left"><input type="submit" name="disabled" value="Create Event" disabled></div>
 					<?php else : ?>
-						<b><?php htmlout($userInformation); ?> </b>
+						<div class="left"><input type="submit" name="add" value="Create Event"></div>
 					<?php endif; ?>
-						<input type="submit" name="add" value="Change User">
-						<input type="hidden" name="userID" id="userID"
-						value="<?php htmlout($SelectedUserID);?>">
-					</div>			
-				<?php endif; ?>
-			<div>
-				<label for="companyID">Company: </label>
-				<?php if(	isset($_SESSION['AddBookingDisplayCompanySelect']) AND 
-							$_SESSION['AddBookingDisplayCompanySelect']) : ?>
-					<?php if(!isset($_SESSION['AddBookingSelectedACompany'])) : ?>
-						<select name="companyID" id="companyID">
-							<?php foreach($company as $row): ?> 
-								<?php if($row['companyID']==$selectedCompanyID):?>
-									<option selected="selected" value="<?php htmlout($row['companyID']); ?>"><?php htmlout($row['companyName']);?></option>
-								<?php else : ?>
-									<option value="<?php htmlout($row['companyID']); ?>"><?php htmlout($row['companyName']);?></option>
-								<?php endif;?>
-							<?php endforeach; ?>
-						</select>
-						<input type="submit" name="add" value="Select This Company">
-					<?php else : ?>
-						<b><?php htmlout($companyName); ?></b>
-						<input type="hidden" name="companyID" id="companyID" 
-						value="<?php htmlout($companyID); ?>">
-						<input type="submit" name="add" value="Change Company">
-					<?php endif; ?>
-				<?php else : ?>
-					<?php if(isset($company)) : ?>
-						<b><?php htmlout($companyName); ?></b>
-					<?php else : ?>
-						<b>This user is not connected to a company.</b>
-					<?php endif; ?>
-					<input type="hidden" name="companyID" id="companyID" 
-					value="<?php htmlout($companyID); ?>">
-				<?php endif; ?>
-			</div>
-			<div>
-				<label for="displayName">Display Name: </label>
-				<input type="text" name="displayName" id="displayName" 
-				value="<?php htmlout($displayName); ?>">
-				<input type="submit" name="add" value="Get Default Display Name">
-			</div>
-			<div>
-				<label for="description">Booking Description: </label>
-				<textarea rows="4" cols="50" name="description" id="description"><?php htmlout($description); ?></textarea>
-				<input type="submit" name="add" value="Get Default Booking Description"> 
-			</div>
-			<div>
-				<input type="submit" name="add" value="Reset">
-				<input type="submit" name="add" value="Cancel">
-				<?php if(isset($_SESSION['AddBookingChangeUser']) AND $_SESSION['AddBookingChangeUser']) : ?>
-					<input type="submit" name="disabled" value="Add booking" disabled>
-					<b>You need to select the user you want before you can add the booking.</b>
-				<?php elseif(!isset($_SESSION['AddBookingSelectedACompany'])) : ?>
-					<input type="submit" name="disabled" value="Add booking" disabled>
-					<b>You need to select the company you want before you can add the booking.</b>
-				<?php else : ?>
-					<input type="submit" name="add" value="Add booking">
-				<?php endif; ?>				
-			</div>
-		</form>
+					<div class="right">
+						<input type="submit" name="add" value="Reset">
+						<input type="submit" name="add" value="Cancel">
+					</div>
+				</div>
+			</form>
+		</fieldset>
 	<p><a href="..">Return to CMS home</a></p>
 	<?php include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/logout.inc.html.php'; ?>
 	</body>
