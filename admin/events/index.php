@@ -13,7 +13,7 @@ if (!isUserAdmin()){
 
 // Function to clear sessions used to remember user inputs on refreshing the add booking form
 function clearAddEventSessions(){
-	unset($_SESSION['AddEventRepeatSelected']);
+	unset($_SESSION['AddEventWeeksSelected']);
 	unset($_SESSION['AddEventDaysSelected']);
 	unset($_SESSION['AddEventRoomChoiceSelected']);
 	unset($_SESSION['AddEventRoomsSelected']);

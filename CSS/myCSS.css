@@ -111,7 +111,22 @@ table caption {
 	/* CSS used to make sure labels used with textfields look correct END*/
 	
 	/* CSS used to position DIVs START
-		TO-DO: These are badly implemented*/
+		TO-DO: These are badly implemented
+	example: 	
+	<div class="container">
+		<div class="left"></div>
+		<div class="innerWrap">
+			<div class="right"></div>
+			<div class="middle"></div>
+		</div>
+	</div>
+	*/
+.container{
+	position: static;
+}
+.innerWrap{ /* For middle and right at once*/
+	overflow: hidden;
+}
 .bottomLeft {
 	position: absolute; 
 	left: 10px;
@@ -123,14 +138,13 @@ table caption {
 	bottom: 10px;	
 }
 .left{
-	position: absolute; 
-	left: 10px;
-	display: inline-block;
+	float: left;
+}
+.middle{
+	
 }
 .right{
-	position: absolute; 
-	right: 10px;
-	display: inline-block;
+	float: right;
 }
 	/* CSS used to position DIVs END*/
 /*CSS CLASSES END*/
