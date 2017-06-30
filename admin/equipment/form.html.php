@@ -6,11 +6,6 @@
 	<head>
 		<meta charset="utf-8">
 		<link rel="stylesheet" type="text/css" href="/CSS/myCSS.css">
-		<style>
-			#EquipmentDescription {
-				vertical-align: top;
-			}
-		</style>
 		<title><?php htmlout($pageTitle); ?></title>
 	</head>
 	<body>
@@ -39,7 +34,7 @@
 			</div>
 			<?php endif; ?>					
 			<div>
-				<label for="EquipmentDescription">Set New Equipment Description: </label>
+				<label class="description" for="EquipmentDescription">Set New Equipment Description: </label>
 					<textarea rows="4" cols="50" name="EquipmentDescription" id="EquipmentDescription"
 					placeholder="Enter Equipment Description"><?php htmlout($EquipmentDescription); ?></textarea>
 			</div>			

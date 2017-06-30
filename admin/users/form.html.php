@@ -4,12 +4,7 @@
 <html lang="en">
 	<head>
 		<meta charset="utf-8">
-		<link rel="stylesheet" type="text/css" href="/CSS/myCSS.css">
-		<style>
-			#bookingdescription {
-				vertical-align: top;
-			}
-		</style>		
+		<link rel="stylesheet" type="text/css" href="/CSS/myCSS.css">	
 		<title><?php htmlout($pageTitle); ?></title>
 	</head>
 	<body>
@@ -122,7 +117,7 @@
 				<?php endif; ?>	
 			</div>
 			<div>
-				<label for="bookingdescription">Set New Booking Description: </label>
+				<label class="description" for="bookingdescription">Set New Booking Description: </label>
 				<textarea rows="4" cols="50" name="bookingdescription" id="bookingdescription"
 				placeholder="Enter A Booking Description"><?php htmlout($bookingdescription); ?></textarea>
 			</div>

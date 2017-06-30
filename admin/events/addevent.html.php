@@ -87,6 +87,7 @@
 					<input type="checkbox" name="daysSelected[]" value="Friday">Friday<br />
 					<input type="checkbox" name="daysSelected[]" value="Saturday">Saturday<br />
 					<input type="checkbox" name="daysSelected[]" value="Sunday">Sunday
+					<input class="bottomRight" type="submit" name="add" value="Confirm Days">
 				</fieldset>
 			</div>
 			
@@ -98,14 +99,14 @@
 			<div>
 				<input type="submit" name="add" value="Reset">
 				<input type="submit" name="add" value="Cancel">
-				<?php if(isset($_SESSION['AddBookingChangeUser']) AND $_SESSION['AddBookingChangeUser']) : ?>
-					<input type="submit" name="disabled" value="Add booking" disabled>
-					<b>You need to select the user you want before you can add the booking.</b>
-				<?php elseif(!isset($_SESSION['AddBookingSelectedACompany'])) : ?>
-					<input type="submit" name="disabled" value="Add booking" disabled>
-					<b>You need to select the company you want before you can add the booking.</b>
+				<?php if(isset($_SESSION['AddEventChangeDays']) AND $_SESSION['AddEventChangeDays']) : ?>
+					<input type="submit" name="disabled" value="Create Event" disabled>
+					<b>You need to select the day(s) you want before you can create the event.</b>
+				<?php elseif(!isset($_SESSION['AddEventSelectedDays'])) : ?>
+					<input type="submit" name="disabled" value="Create Event" disabled>
+					<b>You need to select at least one day you want before you can create the event.</b>
 				<?php else : ?>
-					<input type="submit" name="add" value="Add booking">
+					<input type="submit" name="add" value="Create Event">
 				<?php endif; ?>				
 			</div>
 		</form>
