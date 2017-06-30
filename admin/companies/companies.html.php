@@ -28,7 +28,9 @@
 		
 		<?php if($rowNum>0) :?>
 			<form action="" method="post">
-				<input type="submit" name="action" value="Create Company">
+				<div class="left">
+					<input type="submit" name="action" value="Create Company">
+				</div>
 			</form>
 			<table>
 				<caption>Registered Companies</caption>
@@ -138,6 +140,7 @@
 					<tr><td colspan=7><b>There are no active companies</b></td></tr>
 				<?php endif; ?>
 			</table>
+			
 			<?php if(isset($unactivedcompanies)) : ?>
 				<table>
 					<caption>Unactivated New Companies</caption>
@@ -175,6 +178,7 @@
 					<?php endforeach; ?>
 				</table>
 			<?php endif; ?>
+			
 			<?php if(isset($inactivecompanies)) : ?>
 				<table>
 					<caption>Inactive Old Companies</caption>
@@ -218,7 +222,8 @@
 						</tr>
 					<?php endforeach; ?>
 				</table>
-			<?php endif; ?>			
+			<?php endif; ?>
+			
 		<?php else : ?>
 			<tr><b>There are no companies registered in the database.</b></tr>
 			<tr>

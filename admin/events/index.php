@@ -11,6 +11,13 @@ if (!isUserAdmin()){
 	exit();
 }
 
+if(isset($_POST['action']) AND $_POST['action'] == "Create Event"){
+	
+	include_once 'addevent.html.php';
+	exit();
+}
+
+
 // Get Event Data
 try
 {

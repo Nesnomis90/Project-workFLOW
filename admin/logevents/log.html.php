@@ -86,7 +86,7 @@
 				</fieldset>
 			</div>
 			
-			<div>
+			<div class="bottomLeft">
 				<input type="submit" name="action" value="Refresh Logs">
 			</div>
 			
