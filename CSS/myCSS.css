@@ -7,6 +7,11 @@
 	e.g. tr:hover is last because it should always overwrite.
 */
 
+	/* CSS for the body of the webpages START*/
+body{
+}		
+	/* CSS for the body of the webpages END*/
+
 	/* CSS for all the textarea input START */
 textarea{
 	background-color: white;
@@ -113,12 +118,25 @@ table caption {
 	/* CSS for all the tables END */
 	
 	/* CSS used to warn the user error/feedback START*/
-#warning{
+.warning{
 	color: red;
 }
 	/* CSS used to warn the user error/feedback END*/
+	
 	/* CSS used to make sure labels used with textfields look correct START*/
-#description {
+.description {
 	vertical-align: top;
 }
 	/* CSS used to make sure labels used with textfields look correct END*/
+	
+	/* CSS used to make enable/disable delete buttons anchored to the right START*/
+.bottomRight {
+	position: absolute; 
+	right: 10px; 
+	bottom: 10px;	
+}
+.right {
+	position: static; 
+	right: 10px;	
+}
+	/* CSS used to make enable/disable delete buttons anchored to the right END*/	

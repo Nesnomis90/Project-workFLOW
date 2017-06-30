@@ -10,12 +10,14 @@
 	</head>
 	<body>
 		<h1>Manage Companies</h1>
+		
 		<?php if(isset($_SESSION['CompanyUserFeedback'])) : ?>
 			<p><b><?php htmlout($_SESSION['CompanyUserFeedback']); ?></b></p>
 			<?php unset($_SESSION['CompanyUserFeedback']); ?>
 		<?php endif; ?>
+		
 		<form action="" method="post">
-			<div>
+			<div class="right">
 				<?php if(isset($_SESSION['companiesEnableDelete']) AND $_SESSION['companiesEnableDelete']) : ?>
 					<input type="submit" name="action" value="Disable Delete">
 				<?php else : ?>
@@ -23,6 +25,7 @@
 				<?php endif; ?>
 			</div>
 		</form>
+		
 		<?php if($rowNum>0) :?>
 			<form action="" method="post">
 				<input type="submit" name="action" value="Create Company">

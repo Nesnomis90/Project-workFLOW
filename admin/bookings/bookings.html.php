@@ -37,16 +37,18 @@
 			</div>		
 		<?php endif; ?>
 		
-		<form action="" method="post">				
+		<form action="" method="post">			
 			<div>
 				<input type="submit" name="action" value="Create Booking">
 			</div>
 			<div>
-			<?php if(isset($_SESSION['bookingsEnableDelete']) AND $_SESSION['bookingsEnableDelete']) : ?>
-				<input type="submit" name="action" value="Disable Delete">
-			<?php else : ?>
-				<input type="submit" name="action" value="Enable Delete">
-			<?php endif; ?>
+				<div class="right">
+				<?php if(isset($_SESSION['bookingsEnableDelete']) AND $_SESSION['bookingsEnableDelete']) : ?>
+					<input type="submit" name="action" value="Disable Delete">
+				<?php else : ?>
+					<input type="submit" name="action" value="Enable Delete">
+				<?php endif; ?>
+				</div>
 			</div>			
 		</form>
 		
