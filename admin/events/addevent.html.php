@@ -18,7 +18,12 @@
 			
 			<form action="" method="post">
 				<div>
-					<fieldset><legend>Select the meeting room(s) for the event</legend>
+					<fieldset>
+						<?php if(isset($_SESSION['AddEventRoomsSelected'])): ?>
+							<legend><b>Selected meeting room(s) for the event</b></legend>
+						<?php else: ?>
+							<legend>Select the meeting room(s) for the event</legend>
+						<?php endif; ?>
 						<?php if(!isset($_SESSION['AddEventRoomChoiceSelected'])) : ?>
 							<input type="submit" name="add" value="Select A Single Room">
 							<input type="submit" name="add" value="Select Multiple Rooms">
@@ -28,25 +33,37 @@
 						<?php endif; ?>
 						<?php if(isset($_SESSION['AddEventRoomChoiceSelected']) AND $_SESSION['AddEventRoomChoiceSelected'] == "Select Multiple Rooms") : ?>
 							<div>
-								<?php foreach($checkboxes AS $checkbox) : ?>
-									<?php //checkbox[0] is the meeting room ID ?>
-									<?php //checkbox[1] is the meeting room name ?>
-									<?php //checkbox[2] is if it should have a linefeed ?>
-									<?php //checkbox[3] is if it should be checked ?>
-									<?php if($checkbox[3]) : ?>
-										<label><input type="checkbox" name="meetingroom[]" 
-										value="<?php htmlout($checkbox[0]); ?>" checked="checked"><?php htmlout($checkbox[1]); ?></label>
-									<?php else : ?>
-										<label><input type="checkbox" name="meetingroom[]" 
-										value="<?php htmlout($checkbox[0]); ?>"><?php htmlout($checkbox[1]); ?></label>
-									<?php endif; ?>
-									<?php if($checkbox[2]): ?><br /><?php endif; ?>
-								<?php endforeach; ?>
-							<div>
-							<div>
 								<?php if(!isset($_SESSION['AddEventRoomsSelected'])) : ?>
+									<?php for($i = 0; $i < sizeOf($meetingroom); $i++) : ?>
+										<?php $meetingRoomSelected = FALSE; ?>
+										<?php for($j = 0; $j < sizeOf($roomsSelected); $j++) : ?>
+											<?php if($roomsSelected[$j] == $meetingroom[$i]['MeetingRoomID']) : ?>
+												<label><input type="checkbox" name="roomsSelected[]" checked="checked" value="<?php htmlout($meetingroom[$i]['MeetingRoomID']); ?>"><?php htmlout($meetingroom[$i]['MeetingRoomName']); ?></label>
+												<?php if(($i % 4) == 3) : ?><br /><?php endif; ?>
+												<?php $meetingRoomSelected = TRUE; break; ?>
+											<?php endif; ?>
+										<?php endfor; ?>
+										<?php if(!$meetingRoomSelected) : ?>
+											<label><input type="checkbox" name="roomsSelected[]" value="<?php htmlout($meetingroom[$i]['MeetingRoomID']); ?>"><?php htmlout($meetingroom[$i]['MeetingRoomName']); ?></label>
+											<?php if(($i % 4) == 3) : ?><br /><?php endif; ?>
+										<?php endif; ?>
+									<?php endfor; ?>
 									<input type="submit" name="add" value="Confirm Room(s)">
 								<?php else : ?>
+									<?php for($i = 0; $i < sizeOf($meetingroom); $i++) : ?>
+										<?php $meetingRoomSelected = FALSE; ?>
+										<?php for($j = 0; $j < sizeOf($roomsSelected); $j++) : ?>
+											<?php if($roomsSelected[$j] == $meetingroom[$i]['MeetingRoomID']) : ?>
+												<b>☑ <?php htmlout($meetingroom[$i]['MeetingRoomName']); ?></b>
+												<?php if(($i % 4) == 3) : ?><br /><?php endif; ?>
+												<?php $meetingRoomSelected = TRUE; break; ?>
+											<?php endif; ?>
+										<?php endfor; ?>
+										<?php if(!$meetingRoomSelected) : ?>
+											☐ <?php htmlout($meetingroom[$i]['MeetingRoomName']); ?>
+											<?php if(($i % 4) == 3) : ?><br /><?php endif; ?>
+										<?php endif; ?>
+									<?php endfor; ?>								
 									<b>Event will be scheduled for <?php htmlout($numberOfRoomsSelected); ?> rooms.</b>
 								<?php endif; ?>
 							</div>
@@ -105,8 +122,9 @@
 
 				<div class="container">
 					<div class="left">
-						<fieldset><legend>Select the day(s) for the event</legend>
+						<fieldset>
 							<?php if(!isset($_SESSION['AddEventDaysConfirmed'])) : ?>
+								<legend>Select the day(s) for the event</legend>
 								<?php for($i = 0; $i < sizeOf($daysOfTheWeek); $i++) : ?>
 									<?php $daySelected = FALSE; ?>
 									<?php for($j = 0; $j < sizeOf($daysSelected); $j++) : ?>
@@ -123,7 +141,7 @@
 								<?php endfor; ?>
 								<input type="submit" name="add" value="Confirm Day(s)">
 							<?php else : ?>
-								<b>Days Selected:</b><br />
+								<legend><b>Day(s) selected for the event</b></legend>
 								<?php for($i = 0; $i < sizeOf($daysOfTheWeek); $i++) : ?>
 									<?php $daySelected = FALSE; ?>
 									<?php for($j = 0; $j < sizeOf($daysSelected); $j++) : ?>

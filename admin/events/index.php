@@ -18,7 +18,6 @@ function clearAddEventSessions(){
 	unset($_SESSION['AddEventRoomChoiceSelected']);
 	unset($_SESSION['AddEventRoomsSelected']);
 	unset($_SESSION['AddEventInfoArray']);
-	unset($_SESSION['AddEventOriginalInfoArray']);
 	unset($_SESSION['AddEventMeetingRoomsArray']);
 	unset($_SESSION['AddEventDaysConfirmed']);
 }
@@ -39,7 +38,9 @@ function rememberAddEventInputs(){
 		if(isset($_POST['daysSelected'])){
 			$_SESSION['AddEventDaysSelected'] = $_POST['daysSelected'];
 		}
-		
+		if(isset($_POST['roomsSelected'])){
+			$_SESSION['AddEventRoomsSelected'] = $_POST['roomsSelected'];
+		}		
 		$_SESSION['AddEventInfoArray'] = $newValues;
 	}
 }
@@ -66,7 +67,6 @@ if(	(isset($_POST['action']) AND $_POST['action'] == "Create Event") OR
 													'startDate' => '',
 													'lastDate' => ''
 												);
-		$_SESSION['AddEventOriginalInfoArray'] = $_SESSION['AddEventInfoArray'];
 	}
 	
 	if(!isset($_SESSION['AddEventMeetingRoomsArray'])){
@@ -134,6 +134,12 @@ if(	(isset($_POST['action']) AND $_POST['action'] == "Create Event") OR
 	} else {
 		$daysSelected = array();
 	}
+	if(isset($_SESSION['AddEventRoomsSelected'])){
+		$roomsSelected = $_SESSION['AddEventRoomsSelected'];
+	} else {
+		$roomsSelected = array();
+	}	
+	
 	if(isset($_SESSION['AddEventMeetingRoomsArray'])){
 		$meetingroom = $_SESSION['AddEventMeetingRoomsArray'];
 	} else {
@@ -165,7 +171,7 @@ if(	(isset($_POST['action']) AND $_POST['action'] == "Create Event") OR
 // If admin wants to submit the created event
 if(isset($_POST['add']) AND $_POST['add'] == "Create Event"){
 	
-	$invalidInput = TRUE; // test
+	$invalidInput = TRUE; // TO-DO: Remove after input validation is implemented
 	// Validate user inputs
 		// TO-DO: Validate user inputs.	
 	if($invalidInput){
@@ -319,6 +325,13 @@ if(isset($_POST['add']) AND $_POST['add'] == "Change Room Selection"){
 	unset($_SESSION['AddEventRoomsSelected']);
 	unset($_SESSION['AddEventRoomChoiceSelected']);
 	rememberAddEventInputs();
+	$_SESSION['refreshAddEvent'] = TRUE;
+	header('Location: .');
+	exit();	
+}
+
+if(isset($_POST['add']) AND $_POST['add'] == 'Reset'){
+	clearAddEventSessions();
 	$_SESSION['refreshAddEvent'] = TRUE;
 	header('Location: .');
 	exit();	
