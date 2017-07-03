@@ -95,23 +95,24 @@
 						</div>					
 					</fieldset>
 				</div>
-	<div class="container">
-		<div class="left"></div>
-		<div class="innerWrap">
-			<div class="right"></div>
-			<div class="middle"></div>
-		</div>
-	</div>
+
 				<div class="container">
 					<div class="left">
 						<fieldset><legend>Select the day(s) for the event</legend>
-							<input type="checkbox" name="daysSelected[]" value="Monday">Monday<br />
-							<input type="checkbox" name="daysSelected[]" value="Tuesday">Tuesday<br />
-							<input type="checkbox" name="daysSelected[]" value="Wednesday">Wednesday<br />
-							<input type="checkbox" name="daysSelected[]" value="Thursday">Thursday<br />
-							<input type="checkbox" name="daysSelected[]" value="Friday">Friday<br />
-							<input type="checkbox" name="daysSelected[]" value="Saturday">Saturday<br />
-							<input type="checkbox" name="daysSelected[]" value="Sunday">Sunday
+							<?php for($i = 0; $i < sizeOf($daysOfTheWeek); $i++) : ?>
+								<?php $daySelected = FALSE; ?>
+								<?php for($j = 0; $j < sizeOf($daysSelected); $j++) : ?>
+									<?php if($daysSelected[$j] == $daysOfTheWeek[$i]) : ?>
+										<input type="checkbox" name="daysSelected[]" checked="checked" value="<?php htmlout($daysOfTheWeek[$i]); ?>"><?php htmlout($daysOfTheWeek[$i]); ?>
+										<?php if($daysOfTheWeek[$i] != "Sunday") : ?><br /><?php endif; ?>
+										<?php $daySelected = TRUE; break; ?>
+									<?php endif; ?>
+								<?php endfor; ?>
+								<?php if(!$daySelected) : ?>
+									<input type="checkbox" name="daysSelected[]" value="<?php htmlout($daysOfTheWeek[$i]); ?>"><?php htmlout($daysOfTheWeek[$i]); ?>
+									<?php if($daysOfTheWeek[$i] != "Sunday") : ?><br /><?php endif; ?>
+								<?php endif; ?>
+							<?php endfor; ?>
 						</fieldset>
 					</div>
 					<div class="right">

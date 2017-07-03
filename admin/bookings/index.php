@@ -90,7 +90,7 @@ function rememberAddBookingInputs(){
 			// The end time
 		$newValues['EndTime'] = trimExcessWhitespace($_POST['endDateTime']);
 		
-		$_SESSION['AddBookingInfoArray'] = $newValues;			
+		$_SESSION['AddBookingInfoArray'] = $newValues;
 	}
 }
 

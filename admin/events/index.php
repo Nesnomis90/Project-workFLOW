@@ -19,6 +19,26 @@ function clearAddEventSessions(){
 	unset($_SESSION['AddEventRoomsSelected']);
 	unset($_SESSION['AddEventInfoArray']);
 	unset($_SESSION['AddEventOriginalInfoArray']);
+	unset($_SESSION['AddEventMeetingRoomsArray']);
+}
+
+// Function to remember the user inputs in Add Event
+function rememberAddEventInputs(){
+	if(isset($_SESSION['AddEventInfoArray'])){
+		$newValues = $_SESSION['AddEventInfoArray'];
+		
+		$newValues['StartTime'] =  trimExcessWhitespace($_POST['startTime']);
+		$newValues['EndTime'] =  trimExcessWhitespace($_POST['endTime']);
+		$newValues['StartDate'] =  trimExcessWhitespace($_POST['startDate']);
+		$newValues['EndDate'] =  trimExcessWhitespace($_POST['endDate']);
+		
+		$newValues['EventName'] = trimExcessWhitespace($_POST['eventName']);
+		$newValues['EventDescription'] = trimExcessWhitespaceButLeaveLinefeed($_POST['eventDescription']);
+		
+		$newValues['DaysSelected'] = $_POST['daysSelected'];
+		
+		$_SESSION['AddEventInfoArray'] = $newValues;
+	}
 }
 
 // If admin wants to create a new event
@@ -26,13 +46,13 @@ if(	(isset($_POST['action']) AND $_POST['action'] == "Create Event") OR
 	(isset($_SESSION['refreshAddEvent']) AND $_SESSION['refreshAddEvent'])
 	){
 	
-	if(isset($_SESSION['refreshAddEvent']){
+	if(isset($_SESSION['refreshAddEvent'])){
 		// Acknowledge that we hav refreshed the page
-		unset(isset($_SESSION['refreshAddEvent']); 
+		unset($_SESSION['refreshAddEvent']); 
 	}
 	
 	if(!isset($_SESSION['AddEventInfoArray'])){
-		// Create an array with the row information we want to use	
+		// Create an array with the row information we want to use
 		$_SESSION['AddEventInfoArray'] = array(
 													'TheEventID' => '',
 													'StartTime' => '',
@@ -40,13 +60,79 @@ if(	(isset($_POST['action']) AND $_POST['action'] == "Create Event") OR
 													'EventName' => '',
 													'EventDescription' => '',
 													'BookedForCompany' => '',
-													'DaysSelected' => '',
 													'startDate' => '',
 													'lastDate' => ''
 												);
 		$_SESSION['AddEventOriginalInfoArray'] = $_SESSION['AddEventInfoArray'];
 	}
-
+	
+	if(!isset($_SESSION['AddEventMeetingRoomsArray'])){
+		try
+		{
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+			
+			$pdo = connect_to_db();
+			// Get name and IDs for meeting rooms
+			$sql = 'SELECT 	`meetingRoomID`,
+							`name` 
+					FROM 	`meetingroom`';
+			$result = $pdo->query($sql);
+				
+			//Close connection
+			$pdo = null;
+			
+			// Get the rows of information from the query
+			// This will be used to create a dropdown list in HTML
+			foreach($result as $row){
+				$meetingroom[] = array(
+									'MeetingRoomID' => $row['meetingRoomID'],
+									'MeetingRoomName' => $row['name']
+									);
+			}		
+			
+			$_SESSION['AddEventMeetingRoomsArray'] = $meetingroom;
+		}
+		catch (PDOException $e)
+		{
+			$error = 'Error fetching meeting room details: ' . $e->getMessage();
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+			$pdo = null;
+			exit();		
+		}	
+	}
+	
+	// Array for the days of the week
+	$daysOfTheWeek = array('Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday');
+	
+	// Set correct output
+	$row = $_SESSION['AddEventInfoArray'];
+	if(isset($row['StartTime'])){
+		$startTime = $row['StartTime'];
+	} else {
+		$startTime = "";
+	}
+	if(isset($row['EndTime'])){
+		$endTime = $row['EndTime'];
+	} else {
+		$endTime = "";
+	}
+	if(isset($row['EventName'])){
+		$eventName = $row['EventName'];
+	} else {
+		$eventName = "";
+	}
+	if(isset($row['EventDescription'])){
+		$eventDescription = $row['EventDescription'];
+	} else {
+		$eventDescription = "";
+	}
+	if(isset($_SESSION['AddEventDaysSelected'])){
+		$daysSelected = $_SESSION['AddEventDaysSelected'];
+	} else {
+		$daysSelected = array();
+	}
+	
+	var_dump($_SESSION); // TO-DO: remove after testing is done
 	
 	include_once 'addevent.html.php';
 	exit();
@@ -67,7 +153,7 @@ if(isset($_POST['add']) AND $_POST['add'] == "Create Event"){
 // If admin wants to leave the page and be directed back to the events page again
 if (isset($_POST['add']) AND $_POST['add'] == 'Cancel'){
 
-	$_SESSION['AddEventError'] = "You cancelled your new event.";
+	$_SESSION['EventsUserFeedback'] = "You cancelled your new event.";
 }
 
 // Remove any unused variables from memory 
