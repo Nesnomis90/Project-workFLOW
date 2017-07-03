@@ -20,6 +20,7 @@ function clearAddEventSessions(){
 	unset($_SESSION['AddEventInfoArray']);
 	unset($_SESSION['AddEventMeetingRoomsArray']);
 	unset($_SESSION['AddEventDaysConfirmed']);
+	unset($_SESSION['AddEventDetailsConfirmed']);
 }
 
 // Function to remember the user inputs in Add Event
@@ -256,7 +257,6 @@ if(isset($_POST['add']) AND $_POST['add'] == "Create Event"){
 if(isset($_POST['add']) AND $_POST['add'] == "Confirm Day(s)"){
 	
 	$_SESSION['AddEventDaysConfirmed'] = TRUE;
-	// TO-DO: disable checkboxes for days
 	rememberAddEventInputs();
 	$_SESSION['refreshAddEvent'] = TRUE;
 	header('Location: .');
@@ -266,7 +266,25 @@ if(isset($_POST['add']) AND $_POST['add'] == "Confirm Day(s)"){
 if(isset($_POST['add']) AND $_POST['add'] == "Change Day(s)"){
 	
 	unset($_SESSION['AddEventDaysConfirmed']);
-	// TO-DO: disable checkboxes for days
+	rememberAddEventInputs();
+	$_SESSION['refreshAddEvent'] = TRUE;
+	header('Location: .');
+	exit();	
+}
+
+if(isset($_POST['add']) AND $_POST['add'] == "Confirm Details"){
+	
+	// TO-DO: Validate values before letting it be confirmed.
+	$_SESSION['AddEventDetailsConfirmed'] = TRUE;
+	rememberAddEventInputs();
+	$_SESSION['refreshAddEvent'] = TRUE;
+	header('Location: .');
+	exit();	
+}
+
+if(isset($_POST['add']) AND $_POST['add'] == "Change Details"){
+	
+	unset($_SESSION['AddEventDetailsConfirmed']);
 	rememberAddEventInputs();
 	$_SESSION['refreshAddEvent'] = TRUE;
 	header('Location: .');

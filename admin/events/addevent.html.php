@@ -93,30 +93,61 @@
 				
 				<div>
 					<fieldset><legend>Event Details</legend>
-						<div>
-							<label for="startTime">Start Time: </label>
-							<input type="text" name="startTime" id="startTime" 
-							placeholder="hh:mm:ss"
-							value="<?php htmlout($startTime); ?>">
-						</div>
-						
-						<div>
-							<label for="endTime">End Time: </label>
-							<input type="text" name="endTime" id="endTime" 
-							placeholder="hh:mm:ss"
-							value="<?php htmlout($endTime); ?>">
-						</div>
+						<?php if(!isset($_SESSION['AddEventDetailsConfirmed'])) : ?>
+							<div>
+								<label for="startTime">Start Time: </label>
+								<input type="text" name="startTime" id="startTime" 
+								placeholder="hh:mm:ss"
+								value="<?php htmlout($startTime); ?>">
+							</div>
+							
+							<div>
+								<label for="endTime">End Time: </label>
+								<input type="text" name="endTime" id="endTime" 
+								placeholder="hh:mm:ss"
+								value="<?php htmlout($endTime); ?>">
+							</div>
 
-						<div>
-							<label for="eventName">Event Name: </label>
-							<input type="text" name="eventName" id="eventName" 
-							value="<?php htmlout($eventName); ?>">
-						</div>
-						
-						<div>
-							<label class="description" for="eventDescription">Event Description: </label>
-							<textarea rows="4" cols="50" name="eventDescription" id="eventDescription"><?php htmlout($eventDescription); ?></textarea>
-						</div>					
+							<div>
+								<label for="eventName">Event Name: </label>
+								<input type="text" name="eventName" id="eventName" 
+								value="<?php htmlout($eventName); ?>">
+							</div>
+							
+							<div>
+								<label class="description" for="eventDescription">Event Description: </label>
+								<textarea rows="4" cols="50" name="eventDescription" id="eventDescription"><?php htmlout($eventDescription); ?></textarea>
+							</div>
+							<input type="submit" name="add" value="Confirm Details">
+						<?php else : ?>
+							<div>
+								<label for="startTime">Start Time: </label>
+								<input type="text" name="disabled" placeholder="hh:mm:ss" disabled
+								value="<?php htmlout($startTime); ?>">
+							</div>
+							
+							<div>
+								<label for="endTime">End Time: </label>
+								<input type="text" name="disabled" placeholder="hh:mm:ss" disabled
+								value="<?php htmlout($endTime); ?>">
+							</div>
+
+							<div>
+								<label for="eventName">Event Name: </label>
+								<input type="text" name="disabled" disabled
+								value="<?php htmlout($eventName); ?>">
+							</div>
+							
+							<div>
+								<label class="description" for="eventDescription">Event Description: </label>
+								<textarea rows="4" cols="50" name="disabled" disabled><?php htmlout($eventDescription); ?></textarea>
+							</div>						
+							<input type="submit" name="add" value="Change Details">
+							<input type="hidden" name="startTime" value="<?php htmlout($startTime); ?>">
+							<input type="hidden" name="endTime" value="<?php htmlout($endTime); ?>">
+							<input type="hidden" name="eventName" value="<?php htmlout($eventName); ?>">
+							<input type="hidden" name="eventDescription" value="<?php htmlout($eventDescription); ?>">
+						<?php endif; ?>
 					</fieldset>
 				</div>
 
