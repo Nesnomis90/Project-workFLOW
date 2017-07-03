@@ -112,6 +112,7 @@ table caption {
 	
 	/* CSS used to position DIVs START
 		TO-DO: These are badly implemented
+		Should just replace this with bootstrap
 	example: 	
 	<div class="container">
 		<div class="left"></div>

@@ -17,11 +17,50 @@ function clearAddEventSessions(){
 	unset($_SESSION['AddEventDaysSelected']);
 	unset($_SESSION['AddEventRoomChoiceSelected']);
 	unset($_SESSION['AddEventRoomsSelected']);
+	unset($_SESSION['AddEventInfoArray']);
+	unset($_SESSION['AddEventOriginalInfoArray']);
 }
 
-if(isset($_POST['action']) AND $_POST['action'] == "Create Event"){
+// If admin wants to create a new event
+if(	(isset($_POST['action']) AND $_POST['action'] == "Create Event") OR
+	(isset($_SESSION['refreshAddEvent']) AND $_SESSION['refreshAddEvent'])
+	){
+	
+	if(isset($_SESSION['refreshAddEvent']){
+		// Acknowledge that we hav refreshed the page
+		unset(isset($_SESSION['refreshAddEvent']); 
+	}
+	
+	if(!isset($_SESSION['AddEventInfoArray'])){
+		// Create an array with the row information we want to use	
+		$_SESSION['AddEventInfoArray'] = array(
+													'TheEventID' => '',
+													'StartTime' => '',
+													'EndTime' => '',
+													'EventName' => '',
+													'EventDescription' => '',
+													'BookedForCompany' => '',
+													'DaysSelected' => '',
+													'startDate' => '',
+													'lastDate' => ''
+												);
+		$_SESSION['AddEventOriginalInfoArray'] = $_SESSION['AddEventInfoArray'];
+	}
+
 	
 	include_once 'addevent.html.php';
+	exit();
+}
+
+// If admin wants to submit the created event
+if(isset($_POST['add']) AND $_POST['add'] == "Create Event"){
+	
+	// TO-DO: Validate user inputs.
+	// TO-DO: Check if time is available
+	// TO-DO: Add Event to database
+	// TO-DO: Create log event?
+	
+	header("Location: .");
 	exit();
 }
 
@@ -34,7 +73,7 @@ if (isset($_POST['add']) AND $_POST['add'] == 'Cancel'){
 // Remove any unused variables from memory 
 // TO-DO: Change if this ruins having multiple tabs open etc.
 clearAddEventSessions();
-clearEditEventSessions();
+//clearEditEventSessions();
 
 
 // EVENTS OVERVIEW CODE SNIPPET START //
