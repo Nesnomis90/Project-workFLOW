@@ -108,6 +108,13 @@ if(	(isset($_POST['action']) AND $_POST['action'] == "Create Event") OR
 	// Array for the days of the week
 	$daysOfTheWeek = array('Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday');
 	
+	// Array for the remaining weeks this year
+		// TO-DO: test this and fix template for week part
+	$dateNow = getDateNow();
+	$lastDate = '2017-12-28';
+	$weeksOfTheYear = getWeekInfoBetweenTwoDateTimes($dateNow, $lastDate);
+	
+	
 	// Set correct output
 	$row = $_SESSION['AddEventInfoArray'];
 	if(isset($row['StartTime'])){
@@ -256,8 +263,14 @@ if(isset($_POST['add']) AND $_POST['add'] == "Create Event"){
 
 if(isset($_POST['add']) AND $_POST['add'] == "Confirm Day(s)"){
 	
-	$_SESSION['AddEventDaysConfirmed'] = TRUE;
 	rememberAddEventInputs();
+	
+	if(isset($_POST['daysSelected']) AND sizeOf($_POST['daysSelected']) > 0){
+		$_SESSION['AddEventDaysConfirmed'] = TRUE;
+	} else {
+		$_SESSION['AddEventError'] = "You need to select at least one day.";
+	}
+	
 	$_SESSION['refreshAddEvent'] = TRUE;
 	header('Location: .');
 	exit();	
@@ -325,7 +338,11 @@ if(isset($_POST['add']) AND $_POST['add'] == "Select All Rooms"){
 if(isset($_POST['add']) AND $_POST['add'] == "Confirm Room(s)"){
 	
 	if(isset($_POST['meetingroom'])){
-		$_SESSION['AddEventRoomsSelected'] = $_POST['meetingroom'];
+		if(sizeOf($_POST['meetingroom']) > 0){
+			$_SESSION['AddEventRoomsSelected'] = $_POST['meetingroom'];
+		} else {
+			$_SESSION['AddEventError'] = "You need to select at least one meeting room.";
+		}
 	}
 	if(isset($_POST['meetingRoomID'])){
 		$_SESSION['AddEventRoomsSelected'] = $_POST['meetingRoomID'];
