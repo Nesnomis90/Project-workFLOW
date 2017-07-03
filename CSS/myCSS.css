@@ -106,6 +106,13 @@ table caption {
 .warning{color: red;}
 	/* CSS used to warn the user error/feedback END*/
 	
+	/* CSS used to alter a selected item/text START*/
+.highlight{
+	color: green;
+	font-size: 120%;
+}
+	/* CSS used to alter a selected item/text END*/
+
 	/* CSS used to make sure labels used with textfields look correct START*/
 .description {vertical-align: top;}
 	/* CSS used to make sure labels used with textfields look correct END*/

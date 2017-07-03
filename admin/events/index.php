@@ -21,7 +21,6 @@ function clearAddEventSessions(){
 	unset($_SESSION['AddEventOriginalInfoArray']);
 	unset($_SESSION['AddEventMeetingRoomsArray']);
 	unset($_SESSION['AddEventDaysConfirmed']);
-	unset($_SESSION['AddEventMeetingRoomsSelected']);
 }
 
 // Function to remember the user inputs in Add Event
@@ -37,7 +36,9 @@ function rememberAddEventInputs(){
 		$newValues['EventName'] = trimExcessWhitespace($_POST['eventName']);
 		$newValues['EventDescription'] = trimExcessWhitespaceButLeaveLinefeed($_POST['eventDescription']);
 		
-		$_SESSION['AddEventDaysSelected'] = $_POST['daysSelected'];
+		if(isset($_POST['daysSelected'])){
+			$_SESSION['AddEventDaysSelected'] = $_POST['daysSelected'];
+		}
 		
 		$_SESSION['AddEventInfoArray'] = $newValues;
 	}
@@ -150,6 +151,8 @@ if(	(isset($_POST['action']) AND $_POST['action'] == "Create Event") OR
 			}
 		} elseif($_SESSION['AddEventRoomChoiceSelected'] == "Select Multiple Rooms"){
 			$numberOfRoomsSelected = sizeOf($_SESSION['AddEventRoomsSelected']);
+		} elseif($_SESSION['AddEventRoomChoiceSelected'] == "Select All Rooms"){
+			$numberOfRoomsSelected = sizeOf($meetingroom);
 		}
 	}
 	
@@ -287,6 +290,7 @@ if(isset($_POST['add']) AND $_POST['add'] == "Select Multiple Rooms"){
 	// All meeting rooms
 if(isset($_POST['add']) AND $_POST['add'] == "Select All Rooms"){
 	
+	$_SESSION['AddEventRoomsSelected'] = TRUE;
 	$_SESSION['AddEventRoomChoiceSelected'] = "Select All Rooms";
 	rememberAddEventInputs();
 	$_SESSION['refreshAddEvent'] = TRUE;
@@ -312,6 +316,7 @@ if(isset($_POST['add']) AND $_POST['add'] == "Confirm Room(s)"){
 // If adming wants to change the meeting room(s) selected decision
 if(isset($_POST['add']) AND $_POST['add'] == "Change Room Selection"){
 	
+	unset($_SESSION['AddEventRoomsSelected']);
 	unset($_SESSION['AddEventRoomChoiceSelected']);
 	rememberAddEventInputs();
 	$_SESSION['refreshAddEvent'] = TRUE;
