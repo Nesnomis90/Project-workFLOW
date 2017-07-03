@@ -103,13 +103,13 @@
 								<?php $daySelected = FALSE; ?>
 								<?php for($j = 0; $j < sizeOf($daysSelected); $j++) : ?>
 									<?php if($daysSelected[$j] == $daysOfTheWeek[$i]) : ?>
-										<input type="checkbox" name="daysSelected[]" checked="checked" value="<?php htmlout($daysOfTheWeek[$i]); ?>"><?php htmlout($daysOfTheWeek[$i]); ?>
+										<label><input type="checkbox" name="daysSelected[]" checked="checked" value="<?php htmlout($daysOfTheWeek[$i]); ?>"><?php htmlout($daysOfTheWeek[$i]); ?></label>
 										<?php if($daysOfTheWeek[$i] != "Sunday") : ?><br /><?php endif; ?>
 										<?php $daySelected = TRUE; break; ?>
 									<?php endif; ?>
 								<?php endfor; ?>
 								<?php if(!$daySelected) : ?>
-									<input type="checkbox" name="daysSelected[]" value="<?php htmlout($daysOfTheWeek[$i]); ?>"><?php htmlout($daysOfTheWeek[$i]); ?>
+									<label><input type="checkbox" name="daysSelected[]" value="<?php htmlout($daysOfTheWeek[$i]); ?>"><?php htmlout($daysOfTheWeek[$i]); ?></label>
 									<?php if($daysOfTheWeek[$i] != "Sunday") : ?><br /><?php endif; ?>
 								<?php endif; ?>
 							<?php endfor; ?>
