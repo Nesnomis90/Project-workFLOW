@@ -113,6 +113,11 @@
 									<?php if($daysOfTheWeek[$i] != "Sunday") : ?><br /><?php endif; ?>
 								<?php endif; ?>
 							<?php endfor; ?>
+							<?php if(!isset($_SESSION['AddEventDaysConfirmed'])) : ?>
+								<input type="submit" name="add" value="Confirm Day(s)">
+							<?php else : ?>
+								<input type="submit" name="add" value="Change Day(s)">
+							<?php endif; ?>
 						</fieldset>
 					</div>
 					<div class="right">
@@ -162,22 +167,24 @@
 				
 				<div class="container">
 					<div class="left">
-						<?php if(!isset($_SESSION['AddEventDaysSelected'])) : ?>
+						<?php if(!isset($_SESSION['AddEventDaysConfirmed'])) : ?>
 							<b>You need to select the day(s) you want before you can create the event.</b>
-						<?php elseif(isset($_SESSION['AddEventDaysSelected']) AND $_SESSION['AddEventDaysSelected'] == 0) : ?>
+						<?php elseif(sizeOf($daysSelected) == 0) : ?>
 							<b>You need to select at least one day you want before you can create the event.</b>
 						<?php endif; ?>
 					</div>
 				</div>
 				
 				<div class="container">
-					<?php if(!isset($_SESSION['AddEventDaysSelected'])) : ?>
-						<div class="left"><input type="submit" name="disabled" value="Create Event" disabled></div>
-					<?php elseif(isset($_SESSION['AddEventDaysSelected']) AND $_SESSION['AddEventDaysSelected'] == 0) : ?>
-						<div class="left"><input type="submit" name="disabled" value="Create Event" disabled></div>
-					<?php else : ?>
-						<div class="left"><input type="submit" name="add" value="Create Event"></div>
-					<?php endif; ?>
+					<div class="left">
+						<?php if(!isset($_SESSION['AddEventDaysConfirmed'])) : ?>
+							<input type="submit" name="disabled" value="Create Event" disabled>
+						<?php elseif(sizeOf($daysSelected) == 0) : ?>
+							<input type="submit" name="disabled" value="Create Event" disabled>
+						<?php else : ?>
+							<input type="submit" name="add" value="Create Event">
+						<?php endif; ?>
+					</div>
 					<div class="right">
 						<input type="submit" name="add" value="Reset">
 						<input type="submit" name="add" value="Cancel">

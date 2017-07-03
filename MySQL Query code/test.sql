@@ -2,6 +2,37 @@ USE test;
 SET NAMES utf8;
 USE meetingflow;
 
+SELECT 	COUNT(*)	AS HitCount
+FROM 	(
+			SELECT 		1
+			FROM 		`booking` b
+			LEFT JOIN	`roomevent` rev
+			ON 			rev.`MeetingRoomID` = b.`meetingRoomID`
+			WHERE 		b.`meetingRoomID` = :MeetingRoomID
+			AND			b.`dateTimeCancelled` IS NULL
+			AND			b.`actualEndDateTime` IS NULL
+			AND		
+			(		
+					(
+						b.`startDateTime` >= :StartTime AND 
+						b.`startDateTime` < :EndTime
+					) 
+			OR 		(
+						b.`endDateTime` > :StartTime AND 
+						b.`endDateTime` <= :EndTime
+					)
+			OR 		(
+						:EndTime > b.`startDateTime` AND 
+						:EndTime < b.`endDateTime`
+					)
+			OR 		(
+						:StartTime > b.`startDateTime` AND 
+						:StartTime < b.`endDateTime`
+					)
+			)
+			LIMIT 1
+		) AS BookingsFound;
+
 SELECT	`EventID`				AS TheEventID,
 		`startTime`				AS StartTime,
 		`endTime`				AS EndTime,

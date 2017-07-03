@@ -20,6 +20,7 @@ function clearAddEventSessions(){
 	unset($_SESSION['AddEventInfoArray']);
 	unset($_SESSION['AddEventOriginalInfoArray']);
 	unset($_SESSION['AddEventMeetingRoomsArray']);
+	unset($_SESSION['AddEventDaysConfirmed']);
 }
 
 // Function to remember the user inputs in Add Event
@@ -35,7 +36,7 @@ function rememberAddEventInputs(){
 		$newValues['EventName'] = trimExcessWhitespace($_POST['eventName']);
 		$newValues['EventDescription'] = trimExcessWhitespaceButLeaveLinefeed($_POST['eventDescription']);
 		
-		$newValues['DaysSelected'] = $_POST['daysSelected'];
+		$_SESSION['AddEventDaysSelected'] = $_POST['daysSelected'];
 		
 		$_SESSION['AddEventInfoArray'] = $newValues;
 	}
@@ -141,14 +142,110 @@ if(	(isset($_POST['action']) AND $_POST['action'] == "Create Event") OR
 // If admin wants to submit the created event
 if(isset($_POST['add']) AND $_POST['add'] == "Create Event"){
 	
-	// TO-DO: Validate user inputs.
-	// TO-DO: Check if time is available
+	$invalidInput = TRUE; // test
+	// Validate user inputs
+		// TO-DO: Validate user inputs.	
+	if($invalidInput){
+		rememberAddEventInputs();
+		$_SESSION['refreshAddEvent'] = TRUE;
+		header('Location: .');
+		exit();
+	}
+	
+	// Check if the timeslot(s) is taken for the selected meeting room(s)
+		// TO-DO: Get datetimes, also this requires a lot more work
+	try
+	{
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+		$pdo = connect_to_db();
+		$sql =	" 	SELECT 	COUNT(*)	AS HitCount
+					FROM 	(
+								SELECT 		1
+								FROM 		`booking` b
+								LEFT JOIN	`roomevent` rev
+								ON 			rev.`MeetingRoomID` = b.`meetingRoomID`
+								WHERE 		b.`meetingRoomID` = :MeetingRoomID
+								AND			b.`dateTimeCancelled` IS NULL
+								AND			b.`actualEndDateTime` IS NULL
+								AND		
+								(		
+										(
+											b.`startDateTime` >= :StartTime AND 
+											b.`startDateTime` < :EndTime
+										) 
+								OR 		(
+											b.`endDateTime` > :StartTime AND 
+											b.`endDateTime` <= :EndTime
+										)
+								OR 		(
+											:EndTime > b.`startDateTime` AND 
+											:EndTime < b.`endDateTime`
+										)
+								OR 		(
+											:StartTime > b.`startDateTime` AND 
+											:StartTime < b.`endDateTime`
+										)
+								)
+								LIMIT 1
+							) AS BookingsFound";
+		$s = $pdo->prepare($sql);
+		
+		$s->bindValue(':MeetingRoomID', $_POST['meetingRoomID']);
+		$s->bindValue(':StartTime', $startDateTime);
+		$s->bindValue(':EndTime', $endDateTime);
+		$s->execute();
+		$pdo = null;
+	}
+	catch(PDOException $e)
+	{
+		$error = 'Error checking if event time is available: ' . $e->getMessage();
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+		$pdo = null;
+		exit();
+	}
+
+	// Check if we got any hits, if so the timeslot is already taken
+	$row = $s->fetch(PDO::FETCH_ASSOC);		
+	if ($row['HitCount'] > 0){
+
+		// Timeslot was taken
+		rememberAddEventInputs();
+		// TO-DO: add information on what was taken and which meeting room.
+		$_SESSION['AddEventError'] = "The event couldn't be made. The timeslot is already taken for this meeting room.";
+		$_SESSION['refreshAddEvent'] = TRUE;	
+		header('Location: .');
+		exit();				
+	}
+	
 	// TO-DO: Add Event to database
 	// TO-DO: Create log event?
 	
 	header("Location: .");
 	exit();
 }
+
+if(isset($_POST['add']) AND $_POST['add'] == "Confirm Day(s)"){
+	
+	$_SESSION['AddEventDaysConfirmed'] = TRUE;
+	// TO-DO: disable checkboxes for days
+	rememberAddEventInputs();
+	$_SESSION['refreshAddEvent'] = TRUE;
+	header('Location: .');
+	exit();	
+}
+
+if(isset($_POST['add']) AND $_POST['add'] == "Change Day(s)"){
+	
+	unset($_SESSION['AddEventDaysConfirmed']);
+	// TO-DO: disable checkboxes for days
+	rememberAddEventInputs();
+	$_SESSION['refreshAddEvent'] = TRUE;
+	header('Location: .');
+	exit();	
+}
+
+
+
 
 // If admin wants to leave the page and be directed back to the events page again
 if (isset($_POST['add']) AND $_POST['add'] == 'Cancel'){
