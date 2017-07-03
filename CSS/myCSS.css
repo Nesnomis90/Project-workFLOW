@@ -21,6 +21,7 @@ textarea:focus{
 	background-color: black;
 	color: white;
 }
+textarea[disabled]{background-color: #EBEBE4;}
 	/* CSS for all the textarea input END */
 
 	/* CSS for all the non-textfield input text START */
@@ -32,6 +33,7 @@ input[type=text]:focus{
 	background-color: black;
 	color: white;
 }
+input[type=text][disabled]{background-color: #EBEBE4;}
 	/* CSS for all the non-textfield input text END */
 	
 	/* CSS for all the number inputs START */
@@ -43,11 +45,13 @@ input[type=number]:focus{
 	background-color: black;
 	color: white;
 }
+input[type=number][disabled]{background-color: #EBEBE4;}
+
 	/* CSS for all the number inputs input text END */	
 
 	/* CSS for all the submit buttons START */
 input[type=submit]:hover{box-shadow: 2px 2px 2px #888888;}
-input[disabled]:hover{box-shadow: none;}
+input[type=submit][disabled]:hover{box-shadow: none;}
 	/* CSS for all the submit buttons END */
 
 	/* CSS for all the fieldsets START */	
@@ -106,12 +110,20 @@ table caption {
 .warning{color: red;}
 	/* CSS used to warn the user error/feedback END*/
 	
+	/* CSS used to alter a selected item/text START*/
+.highlight{
+	color: green;
+	font-size: 120%;
+}
+	/* CSS used to alter a selected item/text END*/
+
 	/* CSS used to make sure labels used with textfields look correct START*/
 .description {vertical-align: top;}
 	/* CSS used to make sure labels used with textfields look correct END*/
 	
 	/* CSS used to position DIVs START
 		TO-DO: These are badly implemented
+		Should just replace this with bootstrap
 	example: 	
 	<div class="container">
 		<div class="left"></div>

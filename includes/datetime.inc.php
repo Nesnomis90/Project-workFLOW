@@ -1,6 +1,66 @@
 <?php
 require_once 'variables.inc.php';
 
+function getFirstWeekNumberFromYear($year){
+	/* 	Weeks start with Monday. Each week's year is the Gregorian year in which the Thursday falls. 
+		The first week of the year, hence, always contains 4 January.*/
+	$january4th = $year . '-01-04';
+	$firstWeek = date("W", strtotime($january4th));
+	return $firstWeek;
+}
+
+function getMaxWeekNumberFromYear($year){
+	/*	It has 28 December in it. Hence the earliest possible last week extends from Monday 22 December to Sunday 28 December,
+		the latest possible last week extends from Monday 28 December to Sunday 3 January (next gregorian year).*/
+	$december28th = $year . '-12-28';
+	$lastWeek = date("W", strtotime($december28th));
+	return $lastWeek;
+}
+
+function getWeekInfoFromWeekNumberAndYear($week,$year){
+	$date = new DateTime();
+	$startDate = $date->setISODate($year, $week, 1)->format('Y-m-d');
+	$endDate = $date->setISODate($year, $week, 7)->format('Y-m-d');
+	return array($startDate, $endDate);
+}
+// Function to get the week number and start/end date of the weeks between two datetimes
+function getWeekInfoBetweenTwoDateTimes($startDateTime, $endDateTime){
+	$firstWeek = date("W", strtotime($startDateTime));
+	$firstYear = date("Y",strtotime($startDateTime));
+	$lastWeek = date("W", strtotime($endDateTime));
+	$lastYear = date("Y",strtotime($endDateTime));
+	
+	$weeks = array();
+	
+	if($firstYear != $lastYear){
+		for($j=$firstYear; $j<=$lastYear; $j++){
+			if($j == $firstYear){
+				for($i=$firstWeek; $i<=getMaxWeekNumberFromYear($j); $i++){
+					list($startDate, $endDate) = getWeekInfoFromWeekNumberAndYear($i,$j);
+					$weeks[] = array($i, $startDate, $endDate);
+				}
+			} elseif($j != $firstYear AND $j != $lastYear){
+				for($i=1; $i<=getMaxWeekNumberFromYear($j); $i++){
+					list($startDate, $endDate) = getWeekInfoFromWeekNumberAndYear($i,$j);
+					$weeks[] = array($i, $startDate, $endDate);
+				}				
+			} elseif($j == $lastYear) {
+				for($i=1; $i<=$lastWeek; $i++){
+					list($startDate, $endDate) = getWeekInfoFromWeekNumberAndYear($i,$j);
+					$weeks[] = array($i, $startDate, $endDate);
+				}				
+			}
+		}
+	} else {
+		for($i=$firstWeek; $i<=$lastWeek; $i++){
+			list($startDate, $endDate) = getWeekInfoFromWeekNumberAndYear($i,$firstYear);
+			$weeks[] = array($i, $startDate, $endDate);
+		}		
+	}
+	
+	return $weeks;
+}
+
 // Function to check our set minimum booking time slices to get the next valid end time
 // We assume all possible booking slices are 1/5/10/15/30/60
 function getNextValidBookingStartTime(){

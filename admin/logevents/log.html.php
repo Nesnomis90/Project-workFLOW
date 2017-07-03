@@ -35,7 +35,7 @@
 			
 			<div>
 				<fieldset><legend><b>Limit logs by category: </b></legend>
-					<input type="checkbox" name="searchAll" value="All" <?php htmlout($checkAll); ?>>All<br />
+					<label><input type="checkbox" name="searchAll" value="All" <?php htmlout($checkAll); ?>>All</label><br />
 					<?php foreach($checkboxes AS $checkbox) : ?>
 						<?php //checkbox[0] is the log action name ?>
 						<?php //checkbox[1] is the text displayed ?>
@@ -43,19 +43,19 @@
 						<?php //checkbox[3] is if it should be checked ?>
 						<?php if($checkbox[2]) : ?>
 							<?php if($checkbox[3]) : ?>
-								<input type="checkbox" name="search[]" 
-								value="<?php htmlout($checkbox[0]); ?>" checked="checked"><?php htmlout($checkbox[1]); ?><br />
+								<label><input type="checkbox" name="search[]" 
+								value="<?php htmlout($checkbox[0]); ?>" checked="checked"><?php htmlout($checkbox[1]); ?></label><br />
 							<?php else : ?>
-								<input type="checkbox" name="search[]" 
-								value="<?php htmlout($checkbox[0]); ?>"><?php htmlout($checkbox[1]); ?><br />
+								<label><input type="checkbox" name="search[]" 
+								value="<?php htmlout($checkbox[0]); ?>"><?php htmlout($checkbox[1]); ?></label><br />
 							<?php endif; ?>
 						<?php else : ?>
 							<?php if($checkbox[3]) : ?>
-								<input type="checkbox" name="search[]" 
-								value="<?php htmlout($checkbox[0]); ?>" checked="checked"><?php htmlout($checkbox[1]); ?>
+								<label><input type="checkbox" name="search[]" 
+								value="<?php htmlout($checkbox[0]); ?>" checked="checked"><?php htmlout($checkbox[1]); ?></label>
 							<?php else : ?>
-								<input type="checkbox" name="search[]" 
-								value="<?php htmlout($checkbox[0]); ?>"><?php htmlout($checkbox[1]); ?>
+								<label><input type="checkbox" name="search[]" 
+								value="<?php htmlout($checkbox[0]); ?>"><?php htmlout($checkbox[1]); ?></label>
 							<?php endif; ?>						
 						<?php endif; ?>
 					<?php endforeach; ?>

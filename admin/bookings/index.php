@@ -90,7 +90,7 @@ function rememberAddBookingInputs(){
 			// The end time
 		$newValues['EndTime'] = trimExcessWhitespace($_POST['endDateTime']);
 		
-		$_SESSION['AddBookingInfoArray'] = $newValues;			
+		$_SESSION['AddBookingInfoArray'] = $newValues;
 	}
 }
 
@@ -1353,8 +1353,8 @@ if(isset($_POST['edit']) AND $_POST['edit'] == "Finish Edit")
 // If admin wants to add a booked meeting to the database
 // we load a new html form
 if (	(isset($_POST['action']) AND $_POST['action'] == "Create Booking") OR 
-		(isset($_SESSION['refreshAddBooking']) AND $_SESSION['refreshAddBooking']))
-{
+		(isset($_SESSION['refreshAddBooking']) AND $_SESSION['refreshAddBooking'])
+		){
 	
 	// Check if the call was a form submit or a forced refresh
 	if(isset($_SESSION['refreshAddBooking'])){
