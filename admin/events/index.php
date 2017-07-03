@@ -21,6 +21,7 @@ function clearAddEventSessions(){
 	unset($_SESSION['AddEventOriginalInfoArray']);
 	unset($_SESSION['AddEventMeetingRoomsArray']);
 	unset($_SESSION['AddEventDaysConfirmed']);
+	unset($_SESSION['AddEventMeetingRoomsSelected']);
 }
 
 // Function to remember the user inputs in Add Event
@@ -131,6 +132,25 @@ if(	(isset($_POST['action']) AND $_POST['action'] == "Create Event") OR
 		$daysSelected = $_SESSION['AddEventDaysSelected'];
 	} else {
 		$daysSelected = array();
+	}
+	if(isset($_SESSION['AddEventMeetingRoomsArray'])){
+		$meetingroom = $_SESSION['AddEventMeetingRoomsArray'];
+	} else {
+		$meetingroom = array();
+	}
+
+	// Give admin feedback on the roomname (if one) or the amount of rooms selected.
+	if(isset($_SESSION['AddEventRoomsSelected'])){
+		if($_SESSION['AddEventRoomChoiceSelected'] == "Select A Single Room"){
+			foreach($meetingroom AS $room){
+				if($room['MeetingRoomID'] == $_SESSION['AddEventRoomsSelected']){
+					 $roomSelected = $room['MeetingRoomName'];
+					 break;
+				}
+			}
+		} elseif($_SESSION['AddEventRoomChoiceSelected'] == "Select Multiple Rooms"){
+			$numberOfRoomsSelected = sizeOf($_SESSION['AddEventRoomsSelected']);
+		}
 	}
 	
 	var_dump($_SESSION); // TO-DO: remove after testing is done
@@ -245,7 +265,59 @@ if(isset($_POST['add']) AND $_POST['add'] == "Change Day(s)"){
 }
 
 
+// If admin wants to decide the amount of meeting rooms to select
+	// A single meeting room (dropdown list)
+if(isset($_POST['add']) AND $_POST['add'] == "Select A Single Room"){
+	
+	$_SESSION['AddEventRoomChoiceSelected'] = "Select A Single Room";
+	rememberAddEventInputs();
+	$_SESSION['refreshAddEvent'] = TRUE;
+	header('Location: .');
+	exit();	
+}
+	// Multiple meeting rooms (checkboxes)
+if(isset($_POST['add']) AND $_POST['add'] == "Select Multiple Rooms"){
+	
+	$_SESSION['AddEventRoomChoiceSelected'] = "Select Multiple Rooms";
+	rememberAddEventInputs();
+	$_SESSION['refreshAddEvent'] = TRUE;
+	header('Location: .');
+	exit();	
+}
+	// All meeting rooms
+if(isset($_POST['add']) AND $_POST['add'] == "Select All Rooms"){
+	
+	$_SESSION['AddEventRoomChoiceSelected'] = "Select All Rooms";
+	rememberAddEventInputs();
+	$_SESSION['refreshAddEvent'] = TRUE;
+	header('Location: .');
+	exit();	
+}
+	// To confirm room selection (a room/multiple rooms)
+if(isset($_POST['add']) AND $_POST['add'] == "Confirm Room(s)"){
+	
+	if(isset($_POST['meetingroom'])){
+		$_SESSION['AddEventRoomsSelected'] = $_POST['meetingroom'];
+	}
+	if(isset($_POST['meetingRoomID'])){
+		$_SESSION['AddEventRoomsSelected'] = $_POST['meetingRoomID'];
+	}
+	
+	rememberAddEventInputs();
+	$_SESSION['refreshAddEvent'] = TRUE;
+	header('Location: .');
+	exit();	
+}
 
+// If adming wants to change the meeting room(s) selected decision
+if(isset($_POST['add']) AND $_POST['add'] == "Change Room Selection"){
+	
+	unset($_SESSION['AddEventRoomChoiceSelected']);
+	rememberAddEventInputs();
+	$_SESSION['refreshAddEvent'] = TRUE;
+	header('Location: .');
+	exit();	
+}
 
 // If admin wants to leave the page and be directed back to the events page again
 if (isset($_POST['add']) AND $_POST['add'] == 'Cancel'){

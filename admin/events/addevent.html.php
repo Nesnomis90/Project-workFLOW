@@ -28,41 +28,47 @@
 						<?php endif; ?>
 						<?php if(isset($_SESSION['AddEventRoomChoiceSelected']) AND $_SESSION['AddEventRoomChoiceSelected'] == "Select Multiple Rooms") : ?>
 							<div>
-								<input type="checkbox" name="meetingroomAll" value="All" <?php htmlout($checkAll); ?>>All<br />
 								<?php foreach($checkboxes AS $checkbox) : ?>
 									<?php //checkbox[0] is the meeting room ID ?>
 									<?php //checkbox[1] is the meeting room name ?>
 									<?php //checkbox[2] is if it should have a linefeed ?>
 									<?php //checkbox[3] is if it should be checked ?>
 									<?php if($checkbox[3]) : ?>
-										<input type="checkbox" name="meetingroom[]" 
-										value="<?php htmlout($checkbox[0]); ?>" checked="checked"><?php htmlout($checkbox[1]); ?>
+										<label><input type="checkbox" name="meetingroom[]" 
+										value="<?php htmlout($checkbox[0]); ?>" checked="checked"><?php htmlout($checkbox[1]); ?></label>
 									<?php else : ?>
-										<input type="checkbox" name="meetingroom[]" 
-										value="<?php htmlout($checkbox[0]); ?>"><?php htmlout($checkbox[1]); ?>
+										<label><input type="checkbox" name="meetingroom[]" 
+										value="<?php htmlout($checkbox[0]); ?>"><?php htmlout($checkbox[1]); ?></label>
 									<?php endif; ?>
 									<?php if($checkbox[2]): ?><br /><?php endif; ?>
 								<?php endforeach; ?>
 							<div>
+							<div>
+								<?php if(!isset($_SESSION['AddEventRoomsSelected'])) : ?>
+									<input type="submit" name="add" value="Confirm Room(s)">
+								<?php else : ?>
+									<b>Event will be scheduled for <?php htmlout($numberOfRoomsSelected); ?> rooms.</b>
+								<?php endif; ?>
+							</div>
 						<?php elseif(isset($_SESSION['AddEventRoomChoiceSelected']) AND $_SESSION['AddEventRoomChoiceSelected'] == "Select A Single Room") : ?>
-							<?php if($_SESSION['AddEventRoomsSelected']) : ?>
-								<div>Event will be scheduled for the room <?php htmlout($roomSelected); ?></div>
+							<?php if(isset($_SESSION['AddEventRoomsSelected'])) : ?>
+								<div><b>Event will be scheduled for the room <?php htmlout($roomSelected); ?></b></div>
 							<?php else : ?>
 								<div>
 									<label for="meetingRoomID">Meeting Room: </label>
 									<select name="meetingRoomID" id="meetingRoomID">
 										<?php foreach($meetingroom as $row): ?> 
-											<?php if($row['meetingRoomID'] == $selectedMeetingRoomID):?>
-												<option selected="selected" value="<?php htmlout($row['meetingRoomID']); ?>"><?php htmlout($row['meetingRoomName']);?></option>
+											<?php if($row['MeetingRoomID'] == $selectedMeetingRoomID):?>
+												<option selected="selected" value="<?php htmlout($row['MeetingRoomID']); ?>"><?php htmlout($row['MeetingRoomName']);?></option>
 											<?php else : ?>
-												<option value="<?php htmlout($row['meetingRoomID']); ?>"><?php htmlout($row['meetingRoomName']);?></option>
+												<option value="<?php htmlout($row['MeetingRoomID']); ?>"><?php htmlout($row['MeetingRoomName']);?></option>
 											<?php endif;?>
 										<?php endforeach; ?>
 									</select>				
 								</div>							
 							<?php endif; ?>
 						<?php elseif(isset($_SESSION['AddEventRoomChoiceSelected']) AND $_SESSION['AddEventRoomChoiceSelected'] == "Select All Rooms") : ?>
-							<div>Event will be scheduled for all rooms.</div>
+							<div><b>Event will be scheduled for all rooms.</b></div>
 						<?php endif; ?>
 					</fieldset>
 				</div>
@@ -171,6 +177,12 @@
 							<b>You need to select the day(s) you want before you can create the event.</b>
 						<?php elseif(sizeOf($daysSelected) == 0) : ?>
 							<b>You need to select at least one day you want before you can create the event.</b>
+						<?php elseif(!isset($_SESSION['AddEventRoomChoiceSelected'])) : ?>
+							<b>You need to pick the meeting room selection type before you can create the event.</b>
+						<?php elseif($_SESSION['AddEventRoomChoiceSelected'] == "Select A Single Room" AND !isset($_SESSION['AddEventMeetingRoomsSelected'])) : ?>
+							<b>You need to select the meeting room before you can create the event.</b>
+						<?php elseif($_SESSION['AddEventRoomChoiceSelected'] == "Select Multiple Rooms" AND sizeOf($_SESSION['AddEventMeetingRoomsSelected']) == 0) : ?>
+							<b>You need to select at least one meeting room before you can create the event.</b>
 						<?php endif; ?>
 					</div>
 				</div>
@@ -180,6 +192,12 @@
 						<?php if(!isset($_SESSION['AddEventDaysConfirmed'])) : ?>
 							<input type="submit" name="disabled" value="Create Event" disabled>
 						<?php elseif(sizeOf($daysSelected) == 0) : ?>
+							<input type="submit" name="disabled" value="Create Event" disabled>
+						<?php elseif(!isset($_SESSION['AddEventRoomChoiceSelected'])) : ?>
+							<input type="submit" name="disabled" value="Create Event" disabled>
+						<?php elseif($_SESSION['AddEventRoomChoiceSelected'] == "Select A Single Room" AND !isset($_SESSION['AddEventMeetingRoomsSelected'])) : ?>
+							<input type="submit" name="disabled" value="Create Event" disabled>
+						<?php elseif($_SESSION['AddEventRoomChoiceSelected'] == "Select Multiple Rooms" AND sizeOf($_SESSION['AddEventMeetingRoomsSelected']) == 0) : ?>
 							<input type="submit" name="disabled" value="Create Event" disabled>
 						<?php else : ?>
 							<input type="submit" name="add" value="Create Event">
