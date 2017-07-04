@@ -21,6 +21,7 @@ function clearAddEventSessions(){
 	unset($_SESSION['AddEventMeetingRoomsArray']);
 	unset($_SESSION['AddEventDaysConfirmed']);
 	unset($_SESSION['AddEventDetailsConfirmed']);
+	unset($_SESSION['AddEventWeeksConfirmed']);
 }
 
 // Function to remember the user inputs in Add Event
@@ -41,6 +42,9 @@ function rememberAddEventInputs(){
 		}
 		if(isset($_POST['roomsSelected'])){
 			$_SESSION['AddEventRoomsSelected'] = $_POST['roomsSelected'];
+		}
+		if(isset($_POST['weeksSelected'])){
+			$_SESSION['AddEventWeeksSelected'] = $_POST['weeksSelected'];
 		}		
 		$_SESSION['AddEventInfoArray'] = $newValues;
 	}
@@ -112,7 +116,7 @@ if(	(isset($_POST['action']) AND $_POST['action'] == "Create Event") OR
 		// TO-DO: test this and fix template for week part
 	$dateNow = getDateNow();
 	$lastDate = '2017-12-28';
-	$weeksOfTheYear = getWeekInfoBetweenTwoDateTimes($dateNow, $lastDate);
+	$weeksOfTheYear = getWeekInfoBetweenTwoDateTimes($dateNow, $lastDate); //Returns week number, start date and end date
 	
 	
 	// Set correct output
@@ -142,6 +146,11 @@ if(	(isset($_POST['action']) AND $_POST['action'] == "Create Event") OR
 	} else {
 		$daysSelected = array();
 	}
+	if(isset($_SESSION['AddEventWeeksSelected'])){
+		$weeksSelected = $_SESSION['AddEventWeeksSelected'];
+	} else {
+		$weeksSelected = array();
+	}	
 	if(isset($_SESSION['AddEventRoomsSelected'])){
 		$roomsSelected = $_SESSION['AddEventRoomsSelected'];
 	} else {
@@ -258,6 +267,30 @@ if(isset($_POST['add']) AND $_POST['add'] == "Create Event"){
 	// TO-DO: Create log event?
 	
 	header("Location: .");
+	exit();
+}
+
+if(isset($_POST['add']) AND $_POST['add'] == "Confirm Week(s)"){
+	
+	rememberAddEventInputs();
+	
+	if(isset($_POST['weeksSelected']) AND sizeOf($_POST['weeksSelected']) > 0){
+		$_SESSION['AddEventWeeksConfirmed'] = TRUE;
+	} else {
+		$_SESSION['AddEventError'] = "You need to select at least one week.";
+	}
+	
+	$_SESSION['refreshAddEvent'] = TRUE;
+	header('Location: .');
+	exit();	
+}
+
+if(isset($_POST['add']) AND $_POST['add'] == "Change Week(s)"){
+	
+	unset($_SESSION['AddEventWeeksConfirmed']);
+	rememberAddEventInputs();
+	$_SESSION['refreshAddEvent'] = TRUE;
+	header('Location: .');
 	exit();
 }
 

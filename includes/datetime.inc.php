@@ -47,7 +47,7 @@ function getWeekInfoBetweenTwoDateTimes($startDateTime, $endDateTime){
 			} elseif($j == $lastYear) {
 				for($i=1; $i<=$lastWeek; $i++){
 					list($startDate, $endDate) = getWeekInfoFromWeekNumberAndYear($i,$j);
-					$weeks[] = array($i, $startDate, $endDate);
+					$weeks[] = array('WeekNumber' => $i, 'StartDate' => $startDate, 'EndDate' => $endDate);
 				}				
 			}
 		}
