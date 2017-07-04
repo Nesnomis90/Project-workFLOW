@@ -21,7 +21,10 @@ function clearAddEventSessions(){
 	unset($_SESSION['AddEventMeetingRoomsArray']);
 	unset($_SESSION['AddEventDaysConfirmed']);
 	unset($_SESSION['AddEventDetailsConfirmed']);
-}
+	unset($_SESSION['AddEventWeekChoiceSelected']);
+	unset($_SESSION['AddEventRoomSelectedButNotConfirmed']);
+	unset($_SESSION['AddEventWeekSelectedButNotConfirmed']);
+} 
 
 // Function to remember the user inputs in Add Event
 function rememberAddEventInputs(){
@@ -30,8 +33,12 @@ function rememberAddEventInputs(){
 		
 		$newValues['StartTime'] =  trimExcessWhitespace($_POST['startTime']);
 		$newValues['EndTime'] =  trimExcessWhitespace($_POST['endTime']);
+		/*
 		$newValues['StartDate'] =  trimExcessWhitespace($_POST['startDate']);
-		$newValues['EndDate'] =  trimExcessWhitespace($_POST['endDate']);
+		$newValues['EndDate'] =  trimExcessWhitespace($_POST['endDate']); 
+		
+		Not implemented 
+		*/
 		
 		$newValues['EventName'] = trimExcessWhitespace($_POST['eventName']);
 		$newValues['EventDescription'] = trimExcessWhitespaceButLeaveLinefeed($_POST['eventDescription']);
@@ -41,9 +48,135 @@ function rememberAddEventInputs(){
 		}
 		if(isset($_POST['roomsSelected'])){
 			$_SESSION['AddEventRoomsSelected'] = $_POST['roomsSelected'];
+		}
+		if(isset($_POST['meetingRoomID'])){
+			$_SESSION['AddEventRoomSelectedButNotConfirmed'] = $_POST['meetingRoomID'];
 		}		
+		if(isset($_POST['weeksSelected'])){
+			$_SESSION['AddEventWeeksSelected'] = $_POST['weeksSelected'];
+		}
+		if(isset($_POST['weekNumber'])){
+			$_SESSION['AddEventWeekSelectedButNotConfirmed'] = $_POST['weekNumber'];
+		}
+
 		$_SESSION['AddEventInfoArray'] = $newValues;
 	}
+}
+
+// Function to validate user inputs
+function validateUserInputs($FeedbackSessionToUse, $editing){
+	// Get user inputs
+	$invalidInput = FALSE;
+	
+	if(isset($_POST['startTime']) AND !$invalidInput){
+		$startTimeString = $_POST['startTime'];
+	} else {
+		$invalidInput = TRUE;
+		$_SESSION[$FeedbackSessionToUse] = "An event cannot be created without submitting a start time.";
+	}
+	if(isset($_POST['endTime']) AND !$invalidInput){
+		$endTimeString = $_POST['endTime'];
+	} else {
+		$invalidInput = TRUE;
+		$_SESSION[$FeedbackSessionToUse] = "An event cannot be created without submitting an end time.";
+	}
+	if(isset($_POST['eventName']) AND !$invalidInput){
+		$eventNameString = $_POST['eventName'];
+	} else {
+		$invalidInput = TRUE;
+		$_SESSION[$FeedbackSessionToUse] = "An event cannot be created without submitting a name.";
+	}
+	if(isset($_POST['eventDescription'])){ // Description can be null
+		$eventDescriptionString = $_POST['eventDescription'];
+	} else {
+		$eventDescriptionString = "";
+	}
+	
+	// Remove excess whitespace and prepare strings for validation
+	$validatedStartTime = trimExcessWhitespace($startTimeString);
+	$validatedEndTime = trimExcessWhitespace($endTimeString);
+	$validatedEventName = trimExcessWhitespaceButLeaveLinefeed($eventNameString);
+	$validatedEventDescription = trimExcessWhitespaceButLeaveLinefeed($eventDescriptionString);
+	
+	// Do actual input validation
+	if(validateDateTimeString($validatedStartTime) === FALSE AND !$invalidInput){
+		$invalidInput = TRUE;
+		$_SESSION[$FeedbackSessionToUse] = "Your submitted start time has illegal characters in it.";
+	}
+	if(validateDateTimeString($validatedEndTime) === FALSE AND !$invalidInput){
+		$invalidInput = TRUE;
+		$_SESSION[$FeedbackSessionToUse] = "Your submitted end time has illegal characters in it.";
+	}
+	if(validateString($validatedEventName) === FALSE AND !$invalidInput){
+		$invalidInput = TRUE;
+		$_SESSION[$FeedbackSessionToUse] = "Your submitted event name has illegal characters in it.";
+	}
+	if(validateString($validatedEventDescription) === FALSE AND !$invalidInput){
+		$invalidInput = TRUE;
+		$_SESSION[$FeedbackSessionToUse] = "Your submitted event description has illegal characters in it.";
+	}
+	
+	// Are values actually filled in?
+	if($validatedStartTime == "" AND $validatedEndTime == "" AND !$invalidInput){
+		
+		$_SESSION[$FeedbackSessionToUse] = "You need to fill in a start and an end time for your event.";	
+		$invalidInput = TRUE;
+	} elseif($validatedStartTime != "" AND $validatedEndTime == "" AND !$invalidInput) {
+		$_SESSION[$FeedbackSessionToUse] = "You need to fill in an end time for your event.";	
+		$invalidInput = TRUE;		
+	} elseif($validatedStartTime == "" AND $validatedEndTime != "" AND !$invalidInput){
+		$_SESSION[$FeedbackSessionToUse] = "You need to fill in a start time for your event.";	
+		$invalidInput = TRUE;		
+	}
+	if($validatedEventName == "" AND !$invalidInput){
+		$_SESSION[$FeedbackSessionToUse] = "You need to fill in a name for your event.";	
+		$invalidInput = TRUE;
+	}
+	/*	Not implemented
+	if($validatedEventDescription == "" AND !$invalidInput){
+		$_SESSION[$FeedbackSessionToUse] = "You need to fill in a description for your event.";	
+		$invalidInput = TRUE;
+	}
+	*/
+	
+	// Check if input length is allowed
+		// EventName
+	$invalidEventName = isLengthInvalidDisplayName($validatedEventName);
+	if($invalidEventName AND !$invalidInput){
+		$_SESSION[$FeedbackSessionToUse] = "The event name submitted is too long.";	
+		$invalidInput = TRUE;		
+	}	
+		// EventDescription
+	$invalidEventDescription = isLengthInvalidBookingDescription($validatedEventDescription);
+	if($invalidEventDescription AND !$invalidInput){
+		$_SESSION[$FeedbackSessionToUse] = "The event description submitted is too long.";	
+		$invalidInput = TRUE;		
+	}
+	
+	// Check if the time inputs we received are actually time
+	$startTime = correctTimeFormat($validatedStartTime);
+	$endTime = correctTimeFormat($validatedEndTime);
+	
+	if (isset($startTime) AND $startTime === FALSE AND !$invalidInput){
+		$_SESSION[$FeedbackSessionToUse] = "The start time you submitted did not have a correct format. Please try again.";
+		$invalidInput = TRUE;
+	}
+	if (isset($endTime) AND $endTime === FALSE AND !$invalidInput){
+		$_SESSION[$FeedbackSessionToUse] = "The end time you submitted did not have a correct format. Please try again.";
+		$invalidInput = TRUE;
+	}
+	
+	if($startTime > $endTime AND !$invalidInput){
+		// End time can't be before the start time
+		$_SESSION[$FeedbackSessionToUse] = "The start time can't be later than the end time. Please select a new start time or end time.";
+		$invalidInput = TRUE;
+	}
+	if($endTime == $startTime AND !$invalidInput){
+		$_SESSION[$FeedbackSessionToUse] = "You need to select an end time that is different from your start time.";	
+		$invalidInput = TRUE;				
+	}
+	
+	return array($invalidInput, $startTime, $endTime, $validatedEventName, $validatedEventDescription);
 }
 
 // If admin wants to create a new event
@@ -112,7 +245,7 @@ if(	(isset($_POST['action']) AND $_POST['action'] == "Create Event") OR
 		// TO-DO: test this and fix template for week part
 	$dateNow = getDateNow();
 	$lastDate = '2017-12-28';
-	$weeksOfTheYear = getWeekInfoBetweenTwoDateTimes($dateNow, $lastDate);
+	$weeksOfTheYear = getWeekInfoBetweenTwoDateTimes($dateNow, $lastDate); //Returns week number, start date and end date
 	
 	
 	// Set correct output
@@ -142,6 +275,11 @@ if(	(isset($_POST['action']) AND $_POST['action'] == "Create Event") OR
 	} else {
 		$daysSelected = array();
 	}
+	if(isset($_SESSION['AddEventWeeksSelected'])){
+		$weeksSelected = $_SESSION['AddEventWeeksSelected'];
+	} else {
+		$weeksSelected = array();
+	}	
 	if(isset($_SESSION['AddEventRoomsSelected'])){
 		$roomsSelected = $_SESSION['AddEventRoomsSelected'];
 	} else {
@@ -153,14 +291,26 @@ if(	(isset($_POST['action']) AND $_POST['action'] == "Create Event") OR
 	} else {
 		$meetingroom = array();
 	}
-
+	
+	if(isset($_SESSION['AddEventRoomSelectedButNotConfirmed'])){
+		$selectedMeetingRoomID = $_SESSION['AddEventRoomSelectedButNotConfirmed'];
+	} else {
+		$selectedMeetingRoomID = "";
+	}
+	
+	if(isset($_SESSION['AddEventWeekSelectedButNotConfirmed'])){
+		$selectedWeekNumber = $_SESSION['AddEventWeekSelectedButNotConfirmed'];
+	} else {
+		$selectedWeekNumber = "";
+	}
+	
 	// Give admin feedback on the roomname (if one) or the amount of rooms selected.
 	if(isset($_SESSION['AddEventRoomsSelected'])){
 		if($_SESSION['AddEventRoomChoiceSelected'] == "Select A Single Room"){
 			foreach($meetingroom AS $room){
 				if($room['MeetingRoomID'] == $_SESSION['AddEventRoomsSelected']){
-					 $roomSelected = $room['MeetingRoomName'];
-					 break;
+					$roomSelected = $room['MeetingRoomName'];
+					break;
 				}
 			}
 		} elseif($_SESSION['AddEventRoomChoiceSelected'] == "Select Multiple Rooms"){
@@ -169,6 +319,24 @@ if(	(isset($_POST['action']) AND $_POST['action'] == "Create Event") OR
 			$numberOfRoomsSelected = sizeOf($meetingroom);
 		}
 	}
+	
+	// Give admin feedback on the week info (if one) or the amount of weeks selected.
+	if(isset($_SESSION['AddEventWeeksSelected'])){
+		if($_SESSION['AddEventWeekChoiceSelected'] == "Select A Single Week"){
+			foreach($weeksOfTheYear AS $week){
+				if($week['WeekNumber'] == $_SESSION['AddEventWeeksSelected']){
+					$weekStart = convertDatetimeToFormat($week['StartDate'], 'Y-m-d', DATE_DEFAULT_FORMAT_TO_DISPLAY_WITHOUT_YEAR);
+					$weekEnd = convertDatetimeToFormat($week['EndDate'], 'Y-m-d', DATE_DEFAULT_FORMAT_TO_DISPLAY_WITHOUT_YEAR);
+					$weekSelected = $week['WeekNumber'] . ": " . $weekStart . "-" . $weekEnd;
+					break;
+				}
+			}
+		} elseif($_SESSION['AddEventWeekChoiceSelected'] == "Select Multiple Weeks"){
+			$numberOfWeeksSelected = sizeOf($_SESSION['AddEventWeeksSelected']);
+		} elseif($_SESSION['AddEventWeekChoiceSelected'] == "Select All Weeks"){
+			$numberOfWeeksSelected = sizeOf($weeksOfTheYear);
+		}
+	}	
 	
 	var_dump($_SESSION); // TO-DO: remove after testing is done
 	
@@ -179,15 +347,39 @@ if(	(isset($_POST['action']) AND $_POST['action'] == "Create Event") OR
 // If admin wants to submit the created event
 if(isset($_POST['add']) AND $_POST['add'] == "Create Event"){
 	
-	$invalidInput = TRUE; // TO-DO: Remove after input validation is implemented
-	// Validate user inputs
-		// TO-DO: Validate user inputs.	
+	// Get valid user inputs
+	list($invalidInput, $startTime, $endTime, $eventName, $eventDescription) = validateUserInputs('AddEventError', FALSE);
+	
 	if($invalidInput){
 		rememberAddEventInputs();
 		$_SESSION['refreshAddEvent'] = TRUE;
 		header('Location: .');
 		exit();
 	}
+
+	// TO-DO: 	Take the selected days, week number and times and turn into datetimes so we can check the database
+	// 			if the timeslots are available.
+	$weeksSelected = $_SESSION['AddEventWeeksSelected'];
+	$daysSelected = $_SESSION['AddEventDaysSelected'];
+	if(!is_array($weeksSelected)){
+		$weeksSelected = array($weeksSelected);
+	}
+	if(!is_array($daysSelected)){
+		$daysSelected = array($daysSelected);
+	}
+	$yearNow = date("Y"); // TO-DO: Change if we allow different years
+	for($i=0; $i < sizeOf($weeksSelected); $i++){
+		for($j=0; $j < sizeOf($daysSelected); $j++){
+			$startDateTime = getDateTimeFromTimeDayNameWeekNumberAndYear($startTime,$daysSelected[$j],$weeksSelected[$i],$yearNow);
+			$endDateTime =  getDateTimeFromTimeDayNameWeekNumberAndYear($endTime,$daysSelected[$j],$weeksSelected[$i],$yearNow);
+			$dateTimesToCheck[] = array('StartDateTime' => $startDateTime, 'EndDateTime' => $endDateTime);
+		}
+	}
+	
+	// Remove after done testing.
+	var_dump ($dateTimesToCheck);
+	exit();
+	// Remove after done testing 
 	
 	// Check if the timeslot(s) is taken for the selected meeting room(s)
 		// TO-DO: Get datetimes, also this requires a lot more work
@@ -261,6 +453,68 @@ if(isset($_POST['add']) AND $_POST['add'] == "Create Event"){
 	exit();
 }
 
+// If admin wants to decide the amount of weeks to select
+	// A single week (dropdown list)
+if(isset($_POST['add']) AND $_POST['add'] == "Select A Single Week"){
+	
+	$_SESSION['AddEventWeekChoiceSelected'] = "Select A Single Week";
+	rememberAddEventInputs();
+	$_SESSION['refreshAddEvent'] = TRUE;
+	header('Location: .');
+	exit();	
+}
+	// Multiple meeting rooms (checkboxes)
+if(isset($_POST['add']) AND $_POST['add'] == "Select Multiple Weeks"){
+	
+	$_SESSION['AddEventWeekChoiceSelected'] = "Select Multiple Weeks";
+	rememberAddEventInputs();
+	$_SESSION['refreshAddEvent'] = TRUE;
+	header('Location: .');
+	exit();	
+}
+	// All meeting rooms
+if(isset($_POST['add']) AND $_POST['add'] == "Select All Weeks"){
+	
+	$_SESSION['AddEventWeeksSelected'] = TRUE;
+	$_SESSION['AddEventWeekChoiceSelected'] = "Select All Weeks";
+	rememberAddEventInputs();
+	$_SESSION['refreshAddEvent'] = TRUE;
+	header('Location: .');
+	exit();	
+}
+
+if(isset($_POST['add']) AND $_POST['add'] == "Confirm Week(s)"){
+	
+	rememberAddEventInputs();
+
+	if(isset($_POST['weeksSelected'])){
+		if(sizeOf($_POST['weeksSelected']) > 0){
+			$_SESSION['AddEventWeeksSelected'] = $_POST['weeksSelected'];
+		} else {
+			$_SESSION['AddEventError'] = "You need to select at least one week.";
+		}
+	}
+
+	if(isset($_POST['weekNumber'])){
+		$_SESSION['AddEventWeeksSelected'] = $_POST['weekNumber'];
+	}
+	
+	$_SESSION['refreshAddEvent'] = TRUE;
+	header('Location: .');
+	exit();	
+}
+
+// If admin wants to change the week(s) selected decision
+if(isset($_POST['add']) AND $_POST['add'] == "Change Week Selection"){
+	
+	unset($_SESSION['AddEventWeeksSelected']);
+	unset($_SESSION['AddEventWeekChoiceSelected']);
+	rememberAddEventInputs();
+	$_SESSION['refreshAddEvent'] = TRUE;
+	header('Location: .');
+	exit();	
+}
+
 if(isset($_POST['add']) AND $_POST['add'] == "Confirm Day(s)"){
 	
 	rememberAddEventInputs();
@@ -287,8 +541,11 @@ if(isset($_POST['add']) AND $_POST['add'] == "Change Day(s)"){
 
 if(isset($_POST['add']) AND $_POST['add'] == "Confirm Details"){
 	
-	// TO-DO: Validate values before letting it be confirmed.
-	$_SESSION['AddEventDetailsConfirmed'] = TRUE;
+	list($invalidInput, $startTime, $endTime, $eventName, $eventDescription) = validateUserInputs('AddEventError', FALSE);
+	
+	if(!$invalidInput){
+		$_SESSION['AddEventDetailsConfirmed'] = TRUE;
+	}
 	rememberAddEventInputs();
 	$_SESSION['refreshAddEvent'] = TRUE;
 	header('Location: .');
@@ -354,7 +611,7 @@ if(isset($_POST['add']) AND $_POST['add'] == "Confirm Room(s)"){
 	exit();	
 }
 
-// If adming wants to change the meeting room(s) selected decision
+// If admin wants to change the meeting room(s) selected decision
 if(isset($_POST['add']) AND $_POST['add'] == "Change Room Selection"){
 	
 	unset($_SESSION['AddEventRoomsSelected']);

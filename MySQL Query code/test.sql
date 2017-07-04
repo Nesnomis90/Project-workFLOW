@@ -2,35 +2,98 @@ USE test;
 SET NAMES utf8;
 USE meetingflow;
 
+SELECT 		*
+FROM 		`booking` b
+WHERE 		b.`meetingRoomID` = 32
+AND			b.`dateTimeCancelled` IS NULL
+AND			b.`actualEndDateTime` IS NULL
+AND		
+(		
+		(
+			b.`startDateTime` >= '2017-08-04 12:00:00' AND 
+			b.`startDateTime` < '2017-08-04 23:59:59'
+		) 
+OR 		(
+			b.`endDateTime` > '2017-08-04 12:00:00' AND 
+			b.`endDateTime` <= '2017-08-04 23:59:59'
+		)
+OR 		(
+			'2017-08-04 23:59:59' > b.`startDateTime` AND 
+			'2017-08-04 23:59:59' < b.`endDateTime`
+		)
+OR 		(
+			'2017-08-04 12:00:00' > b.`startDateTime` AND 
+			'2017-08-04 12:00:00' < b.`endDateTime`
+		)
+);
+
+SELECT 		*
+FROM 		`roomevent` rev
+WHERE 		rev.`meetingRoomID` = 32
+AND	 	
+(
+		(
+			rev.`startDateTime` >= '2017-08-04 12:00:00' AND 
+			rev.`startDateTime` < '2017-08-04 23:59:59'
+		)                    
+OR 		(
+			rev.`endDateTime` > '2017-08-04 12:00:00' AND 
+			rev.`endDateTime` <= '2017-08-04 23:59:59'
+		)                    
+OR 		(
+			'2017-08-04 23:59:59' > rev.`startDateTime` AND 
+			'2017-08-04 23:59:59' < rev.`endDateTime`
+		)                   
+OR 		(
+			'2017-08-04 12:00:00' > rev.`startDateTime` AND 
+			'2017-08-04 12:00:00' < rev.`endDateTime`
+		)
+);
+
 SELECT 	COUNT(*)	AS HitCount
 FROM 	(
 			SELECT 		1
 			FROM 		`booking` b
 			LEFT JOIN	`roomevent` rev
 			ON 			rev.`MeetingRoomID` = b.`meetingRoomID`
-			WHERE 		b.`meetingRoomID` = :MeetingRoomID
+			WHERE 		b.`meetingRoomID` = 32
 			AND			b.`dateTimeCancelled` IS NULL
 			AND			b.`actualEndDateTime` IS NULL
 			AND		
 			(		
 					(
-						b.`startDateTime` >= :StartTime AND 
-						b.`startDateTime` < :EndTime
+						b.`startDateTime` >= '2017-08-04 12:00:00' AND 
+						b.`startDateTime` < '2017-08-04 23:59:59'
 					) 
 			OR 		(
-						b.`endDateTime` > :StartTime AND 
-						b.`endDateTime` <= :EndTime
+						b.`endDateTime` > '2017-08-04 12:00:00' AND 
+						b.`endDateTime` <= '2017-08-04 23:59:59'
 					)
 			OR 		(
-						:EndTime > b.`startDateTime` AND 
-						:EndTime < b.`endDateTime`
+						'2017-08-04 23:59:59' > b.`startDateTime` AND 
+						'2017-08-04 23:59:59' < b.`endDateTime`
 					)
 			OR 		(
-						:StartTime > b.`startDateTime` AND 
-						:StartTime < b.`endDateTime`
+						'2017-08-04 12:00:00' > b.`startDateTime` AND 
+						'2017-08-04 12:00:00' < b.`endDateTime`
+					)
+			OR 		(
+						rev.`startDateTime` >= '2017-08-04 12:00:00' AND 
+						rev.`startDateTime` < '2017-08-04 23:59:59'
+					)                    
+			OR 		(
+						rev.`endDateTime` > '2017-08-04 12:00:00' AND 
+						rev.`endDateTime` <= '2017-08-04 23:59:59'
+					)                    
+ 			OR 		(
+						'2017-08-04 23:59:59' > rev.`startDateTime` AND 
+						'2017-08-04 23:59:59' < rev.`endDateTime`
+					)                   
+			OR 		(
+						'2017-08-04 12:00:00' > rev.`startDateTime` AND 
+						'2017-08-04 12:00:00' < rev.`endDateTime`
 					)
 			)
-			LIMIT 1
 		) AS BookingsFound;
 
 SELECT	`EventID`				AS TheEventID,
@@ -54,15 +117,18 @@ SELECT	`EventID`				AS TheEventID,
 FROM 	`event`;
 
 INSERT INTO `event`
-SET			`startTime` = CURRENT_TIME(),
-			`endTime` = CURRENT_TIME(),
+SET			`startTime` = '23:45:01',
+			`endTime` = '23:59:59',
+            `startDate`= '2017-08-04',
+            `lastDate` = '2017-08-04',
+            `daysSelected` = 'Friday',
             `dateTimeCreated` = CURRENT_TIMESTAMP;
 
 INSERT INTO `roomevent`
-SET			`EventID` = 1,
-			`meetingRoomID` = 27,
-            `startDateTime` = CURRENT_TIMESTAMP,
-            `endDateTime` = CURRENT_TIMESTAMP;
+SET			`EventID` = 2,
+			`meetingRoomID` = 32,
+            `startDateTime` = '2017-08-04 23:45:01',
+            `endDateTime` = '2017-08-04 23:59:59';
 
 SELECT	(
 			SELECT COUNT(*)

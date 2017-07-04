@@ -1,6 +1,22 @@
 <?php
 require_once 'variables.inc.php';
 
+function getDateTimeFromTimeDayNameWeekNumberAndYear($time,$day,$week,$year){
+	$date = new DateTime();
+	switch(strtolower($day)) {
+		case "monday" : $dayNumber = 1; break;
+		case "tuesday" : $dayNumber = 2; break;
+		case "wednesday" : $dayNumber = 3; break;
+		case "thursday" : $dayNumber = 4; break;
+		case "friday" : $dayNumber = 5; break;
+		case "saturday" : $dayNumber = 6; break;
+		case "sunday" : $dayNumber = 7; break;
+	}
+	$dateTimePart = $date->setISODate($year,$week,$dayNumber)->format('Y-m-d');
+	$dateTime = $dateTimePart . " " . $time;
+	return $dateTime;
+}
+
 function getFirstWeekNumberFromYear($year){
 	/* 	Weeks start with Monday. Each week's year is the Gregorian year in which the Thursday falls. 
 		The first week of the year, hence, always contains 4 January.*/
@@ -37,24 +53,24 @@ function getWeekInfoBetweenTwoDateTimes($startDateTime, $endDateTime){
 			if($j == $firstYear){
 				for($i=$firstWeek; $i<=getMaxWeekNumberFromYear($j); $i++){
 					list($startDate, $endDate) = getWeekInfoFromWeekNumberAndYear($i,$j);
-					$weeks[] = array($i, $startDate, $endDate);
+					$weeks[] = array('WeekNumber' => $i, 'StartDate' => $startDate, 'EndDate' => $endDate);
 				}
 			} elseif($j != $firstYear AND $j != $lastYear){
 				for($i=1; $i<=getMaxWeekNumberFromYear($j); $i++){
 					list($startDate, $endDate) = getWeekInfoFromWeekNumberAndYear($i,$j);
-					$weeks[] = array($i, $startDate, $endDate);
+					$weeks[] = array('WeekNumber' => $i, 'StartDate' => $startDate, 'EndDate' => $endDate);
 				}				
 			} elseif($j == $lastYear) {
 				for($i=1; $i<=$lastWeek; $i++){
 					list($startDate, $endDate) = getWeekInfoFromWeekNumberAndYear($i,$j);
-					$weeks[] = array($i, $startDate, $endDate);
+					$weeks[] = array('WeekNumber' => $i, 'StartDate' => $startDate, 'EndDate' => $endDate);
 				}				
 			}
 		}
 	} else {
 		for($i=$firstWeek; $i<=$lastWeek; $i++){
 			list($startDate, $endDate) = getWeekInfoFromWeekNumberAndYear($i,$firstYear);
-			$weeks[] = array($i, $startDate, $endDate);
+			$weeks[] = array('WeekNumber' => $i, 'StartDate' => $startDate, 'EndDate' => $endDate);
 		}		
 	}
 	
@@ -191,6 +207,34 @@ function correctDateFormat($wrongDateString){
 	}
 
 	return FALSE;
+}
+
+// Function to change time format to be correct for time input in database
+function correctTimeFormat($wrongTimeString){
+	// Correct time format is
+	// H:i:s (15:35:33)
+	
+	date_default_timezone_set(DATE_DEFAULT_TIMEZONE);		
+	if (validateDatetimeWithFormat($wrongTimeString, 'H:i:s')){
+		$wrongTime = date_create_from_format('H:i:s', $wrongTimeString);
+		$correctTime = DATE_FORMAT($wrongTime,'H:i:s');
+		return $correctTime;
+	}
+	
+	if (validateDatetimeWithFormat($wrongTimeString, 'H:i')){
+		$wrongTime = date_create_from_format('H:i', $wrongTimeString);
+		$correctTime = DATE_FORMAT($wrongTime,'H:i:s');
+		return $correctTime;
+	}
+	
+	if (validateDatetimeWithFormat($wrongTimeString, 'H')){
+		$wrongTime = date_create_from_format('H', $wrongTimeString);
+		$correctTime = DATE_FORMAT($wrongTime,'H:i:s');
+		return $correctTime;
+	}	
+
+	return FALSE;	
+	
 }
 
 //	Function to change datetime format to be correct for datetime input in database
