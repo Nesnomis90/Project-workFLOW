@@ -193,6 +193,34 @@ function correctDateFormat($wrongDateString){
 	return FALSE;
 }
 
+// Function to change time format to be correct for time input in database
+function correctTimeFormat($wrongTimeString){
+	// Correct time format is
+	// H:i:s (15:35:33)
+	
+	date_default_timezone_set(DATE_DEFAULT_TIMEZONE);		
+	if (validateDatetimeWithFormat($wrongTimeString, 'H:i:s')){
+		$wrongTime = date_create_from_format('H:i:s', $wrongTimeString);
+		$correctTime = DATE_FORMAT($wrongTime,'H:i:s');
+		return $correctTime;
+	}
+	
+	if (validateDatetimeWithFormat($wrongTimeString, 'H:i')){
+		$wrongTime = date_create_from_format('H:i', $wrongTimeString);
+		$correctTime = DATE_FORMAT($wrongTime,'H:i:s');
+		return $correctTime;
+	}
+	
+	if (validateDatetimeWithFormat($wrongTimeString, 'H')){
+		$wrongTime = date_create_from_format('H', $wrongTimeString);
+		$correctTime = DATE_FORMAT($wrongTime,'H:i:s');
+		return $correctTime;
+	}	
+
+	return FALSE;	
+	
+}
+
 //	Function to change datetime format to be correct for datetime input in database
 //	We check for the datetimes we assume the user might submit
 function correctDatetimeFormat($wrongDatetimeString){

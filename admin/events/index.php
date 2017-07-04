@@ -127,9 +127,56 @@ function validateUserInputs($FeedbackSessionToUse, $editing){
 	} elseif($validatedStartTime == "" AND $validatedEndTime != "" AND !$invalidInput){
 		$_SESSION[$FeedbackSessionToUse] = "You need to fill in a start time for your event.";	
 		$invalidInput = TRUE;		
-	}	
+	}
+	if($validatedEventName == "" AND !$invalidInput){
+		$_SESSION[$FeedbackSessionToUse] = "You need to fill in a name for your event.";	
+		$invalidInput = TRUE;
+	}
+	/*	Not implemented
+	if($validatedEventDescription == "" AND !$invalidInput){
+		$_SESSION[$FeedbackSessionToUse] = "You need to fill in a description for your event.";	
+		$invalidInput = TRUE;
+	}
+	*/
 	
-return array($invalidInput, $startTime, $endTime, $eventName, $eventDescription);
+	// Check if input length is allowed
+		// EventName
+	$invalidEventName = isLengthInvalidDisplayName($validatedDisplayName);
+	if($invalidDisplayName AND !$invalidInput){
+		$_SESSION[$FeedbackSessionToUse] = "The event name submitted is too long.";	
+		$invalidInput = TRUE;		
+	}	
+		// EventDescription
+	$invalidEventDescription = isLengthInvalidBookingDescription($validatedBookingDescription);
+	if($invalidBookingDescription AND !$invalidInput){
+		$_SESSION[$FeedbackSessionToUse] = "The event description submitted is too long.";	
+		$invalidInput = TRUE;		
+	}
+	
+	// Check if the time inputs we received are actually time
+	$startTime = correctTimeFormat($validatedStartTime);
+	$endTime = correctTimeFormat($validatedEndTime);
+	
+	if (isset($startTime) AND $startTime === FALSE AND !$invalidInput){
+		$_SESSION[$FeedbackSessionToUse] = "The start time you submitted did not have a correct format. Please try again.";
+		$invalidInput = TRUE;
+	}
+	if (isset($endTime) AND $endTime === FALSE AND !$invalidInput){
+		$_SESSION[$FeedbackSessionToUse] = "The end time you submitted did not have a correct format. Please try again.";
+		$invalidInput = TRUE;
+	}
+	
+	if($startTime > $endTime AND !$invalidInput){
+		// End time can't be before the start time
+		$_SESSION[$FeedbackSessionToUse] = "The start time can't be later than the end time. Please select a new start time or end time.";
+		$invalidInput = TRUE;
+	}
+	if($endTime == $startTime AND !$invalidInput){
+		$_SESSION[$FeedbackSessionToUse] = "You need to select an end time that is different from your start time.";	
+		$invalidInput = TRUE;				
+	}
+	
+	return array($invalidInput, $startTime, $endTime, $eventName, $eventDescription);
 }
 
 // If admin wants to create a new event

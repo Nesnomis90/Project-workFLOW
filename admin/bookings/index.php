@@ -169,7 +169,7 @@ function validateUserInputs($FeedbackSessionToUse, $editing){
 	// Are values actually filled in?
 	if($validatedStartDateTime == "" AND $validatedEndDateTime == "" AND !$invalidInput){
 		
-		$_SESSION[$FeedbackSessionToUse] = "You need to fill in a start and end time for your booking.";	
+		$_SESSION[$FeedbackSessionToUse] = "You need to fill in a start and an end time for your booking.";	
 		$invalidInput = TRUE;
 	} elseif($validatedStartDateTime != "" AND $validatedEndDateTime == "" AND !$invalidInput) {
 		$_SESSION[$FeedbackSessionToUse] = "You need to fill in an end time for your booking.";	
