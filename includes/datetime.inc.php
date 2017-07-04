@@ -37,12 +37,12 @@ function getWeekInfoBetweenTwoDateTimes($startDateTime, $endDateTime){
 			if($j == $firstYear){
 				for($i=$firstWeek; $i<=getMaxWeekNumberFromYear($j); $i++){
 					list($startDate, $endDate) = getWeekInfoFromWeekNumberAndYear($i,$j);
-					$weeks[] = array($i, $startDate, $endDate);
+					$weeks[] = array('WeekNumber' => $i, 'StartDate' => $startDate, 'EndDate' => $endDate);
 				}
 			} elseif($j != $firstYear AND $j != $lastYear){
 				for($i=1; $i<=getMaxWeekNumberFromYear($j); $i++){
 					list($startDate, $endDate) = getWeekInfoFromWeekNumberAndYear($i,$j);
-					$weeks[] = array($i, $startDate, $endDate);
+					$weeks[] = array('WeekNumber' => $i, 'StartDate' => $startDate, 'EndDate' => $endDate);
 				}				
 			} elseif($j == $lastYear) {
 				for($i=1; $i<=$lastWeek; $i++){
@@ -54,7 +54,7 @@ function getWeekInfoBetweenTwoDateTimes($startDateTime, $endDateTime){
 	} else {
 		for($i=$firstWeek; $i<=$lastWeek; $i++){
 			list($startDate, $endDate) = getWeekInfoFromWeekNumberAndYear($i,$firstYear);
-			$weeks[] = array($i, $startDate, $endDate);
+			$weeks[] = array('WeekNumber' => $i, 'StartDate' => $startDate, 'EndDate' => $endDate);
 		}		
 	}
 	

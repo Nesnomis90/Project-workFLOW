@@ -21,8 +21,8 @@ function clearAddEventSessions(){
 	unset($_SESSION['AddEventMeetingRoomsArray']);
 	unset($_SESSION['AddEventDaysConfirmed']);
 	unset($_SESSION['AddEventDetailsConfirmed']);
-	unset($_SESSION['AddEventWeeksConfirmed']);
-}
+	unset($_SESSION['AddEventWeekChoiceSelected']);
+} 
 
 // Function to remember the user inputs in Add Event
 function rememberAddEventInputs(){
@@ -43,9 +43,16 @@ function rememberAddEventInputs(){
 		if(isset($_POST['roomsSelected'])){
 			$_SESSION['AddEventRoomsSelected'] = $_POST['roomsSelected'];
 		}
-		if(isset($_POST['weeksSelected'])){
-			$_SESSION['AddEventWeeksSelected'] = $_POST['weeksSelected'];
+		if(isset($_POST['meetingRoomID'])){
+			selectedMeetingRoomID = $_POST['meetingRoomID'];
 		}		
+		if(isset($_POST['weeksSelected'])){
+			$selectedWeekNumber = $_POST['weeksSelected'];
+		}
+		if(isset($_POST['weekNumber'])){
+			$_SESSION['AddEventWeeksSelected'] = $_POST['weekNumber'];
+		}
+
 		$_SESSION['AddEventInfoArray'] = $newValues;
 	}
 }
@@ -168,8 +175,8 @@ if(	(isset($_POST['action']) AND $_POST['action'] == "Create Event") OR
 		if($_SESSION['AddEventRoomChoiceSelected'] == "Select A Single Room"){
 			foreach($meetingroom AS $room){
 				if($room['MeetingRoomID'] == $_SESSION['AddEventRoomsSelected']){
-					 $roomSelected = $room['MeetingRoomName'];
-					 break;
+					$roomSelected = $room['MeetingRoomName'];
+					break;
 				}
 			}
 		} elseif($_SESSION['AddEventRoomChoiceSelected'] == "Select Multiple Rooms"){
@@ -178,6 +185,24 @@ if(	(isset($_POST['action']) AND $_POST['action'] == "Create Event") OR
 			$numberOfRoomsSelected = sizeOf($meetingroom);
 		}
 	}
+	
+	// Give admin feedback on the week info (if one) or the amount of weeks selected.
+	if(isset($_SESSION['AddEventWeeksSelected'])){
+		if($_SESSION['AddEventWeekChoiceSelected'] == "Select A Single Week"){
+			foreach($weeksOfTheYear AS $week){
+				if($week['WeekNumber'] == $_SESSION['AddEventWeeksSelected']){
+					$weekStart = convertDatetimeToFormat($week['StartDate'], 'Y-m-d', DATE_DEFAULT_FORMAT_TO_DISPLAY_WITHOUT_YEAR);
+					$weekEnd = convertDatetimeToFormat($week['EndDate'], 'Y-m-d', DATE_DEFAULT_FORMAT_TO_DISPLAY_WITHOUT_YEAR);
+					$weekSelected = $week['WeekNumber'] . ": " . $weekStart . "-" . $weekEnd;
+					break;
+				}
+			}
+		} elseif($_SESSION['AddEventWeekChoiceSelected'] == "Select Multiple Weeks"){
+			$numberOfWeeksSelected = sizeOf($_SESSION['AddEventWeeksSelected']);
+		} elseif($_SESSION['AddEventWeekChoiceSelected'] == "Select All Weeks"){
+			$numberOfWeeksSelected = sizeOf($weeksOfTheYear);
+		}
+	}	
 	
 	var_dump($_SESSION); // TO-DO: remove after testing is done
 	
@@ -270,14 +295,50 @@ if(isset($_POST['add']) AND $_POST['add'] == "Create Event"){
 	exit();
 }
 
+// If admin wants to decide the amount of weeks to select
+	// A single week (dropdown list)
+if(isset($_POST['add']) AND $_POST['add'] == "Select A Single Week"){
+	
+	$_SESSION['AddEventWeekChoiceSelected'] = "Select A Single Week";
+	rememberAddEventInputs();
+	$_SESSION['refreshAddEvent'] = TRUE;
+	header('Location: .');
+	exit();	
+}
+	// Multiple meeting rooms (checkboxes)
+if(isset($_POST['add']) AND $_POST['add'] == "Select Multiple Weeks"){
+	
+	$_SESSION['AddEventWeekChoiceSelected'] = "Select Multiple Weeks";
+	rememberAddEventInputs();
+	$_SESSION['refreshAddEvent'] = TRUE;
+	header('Location: .');
+	exit();	
+}
+	// All meeting rooms
+if(isset($_POST['add']) AND $_POST['add'] == "Select All Weeks"){
+	
+	$_SESSION['AddEventWeeksSelected'] = TRUE;
+	$_SESSION['AddEventWeekChoiceSelected'] = "Select All Weeks";
+	rememberAddEventInputs();
+	$_SESSION['refreshAddEvent'] = TRUE;
+	header('Location: .');
+	exit();	
+}
+
 if(isset($_POST['add']) AND $_POST['add'] == "Confirm Week(s)"){
 	
 	rememberAddEventInputs();
-	
-	if(isset($_POST['weeksSelected']) AND sizeOf($_POST['weeksSelected']) > 0){
-		$_SESSION['AddEventWeeksConfirmed'] = TRUE;
-	} else {
-		$_SESSION['AddEventError'] = "You need to select at least one week.";
+
+	if(isset($_POST['weeksSelected'])){
+		if(sizeOf($_POST['weeksSelected']) > 0){
+			$_SESSION['AddEventWeeksSelected'] = $_POST['weeksSelected'];
+		} else {
+			$_SESSION['AddEventError'] = "You need to select at least one week.";
+		}
+	}
+
+	if(isset($_POST['weekNumber'])){
+		$_SESSION['AddEventWeeksSelected'] = $_POST['weekNumber'];
 	}
 	
 	$_SESSION['refreshAddEvent'] = TRUE;
@@ -285,13 +346,15 @@ if(isset($_POST['add']) AND $_POST['add'] == "Confirm Week(s)"){
 	exit();	
 }
 
-if(isset($_POST['add']) AND $_POST['add'] == "Change Week(s)"){
+// If admin wants to change the week(s) selected decision
+if(isset($_POST['add']) AND $_POST['add'] == "Change Week Selection"){
 	
-	unset($_SESSION['AddEventWeeksConfirmed']);
+	unset($_SESSION['AddEventWeeksSelected']);
+	unset($_SESSION['AddEventWeekChoiceSelected']);
 	rememberAddEventInputs();
 	$_SESSION['refreshAddEvent'] = TRUE;
 	header('Location: .');
-	exit();
+	exit();	
 }
 
 if(isset($_POST['add']) AND $_POST['add'] == "Confirm Day(s)"){
@@ -387,7 +450,7 @@ if(isset($_POST['add']) AND $_POST['add'] == "Confirm Room(s)"){
 	exit();	
 }
 
-// If adming wants to change the meeting room(s) selected decision
+// If admin wants to change the meeting room(s) selected decision
 if(isset($_POST['add']) AND $_POST['add'] == "Change Room Selection"){
 	
 	unset($_SESSION['AddEventRoomsSelected']);

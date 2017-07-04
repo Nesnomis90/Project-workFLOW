@@ -204,52 +204,56 @@
 									<?php endif; ?>
 									
 									<?php if(isset($_SESSION['AddEventWeekChoiceSelected']) AND $_SESSION['AddEventWeekChoiceSelected'] == "Select Multiple Weeks") : ?>
-										<?php if(!isset($_SESSION['AddEventWeeksConfirmed'])) : ?>
+										<?php if(!isset($_SESSION['AddEventWeeksSelected'])) : ?>
 											<legend>Select the week(s) for the event</legend>
 											<?php $i = 0; ?>
 											<?php foreach($weeksOfTheYear AS $week) : ?>
+												<?php $weekStart = convertDatetimeToFormat($week['StartDate'], 'Y-m-d', DATE_DEFAULT_FORMAT_TO_DISPLAY_WITHOUT_YEAR); ?>
+												<?php $weekEnd = convertDatetimeToFormat($week['EndDate'], 'Y-m-d', DATE_DEFAULT_FORMAT_TO_DISPLAY_WITHOUT_YEAR); ?>						
 												<?php $weekSelected = FALSE; ?>
 												<?php for($j = 0; $j < sizeOf($weeksSelected); $j++) : ?>
 													<?php if($weeksSelected[$j] == $week['WeekNumber']) : ?>
-														<label><input type="checkbox" name="weeksSelected[]" checked="checked" value="<?php htmlout($week['WeekNumber']); ?>"><?php htmlout($week['StartDate'] . " - " . $week['EndDate']); ?></label>
+														<label><input type="checkbox" name="weeksSelected[]" checked="checked" value="<?php htmlout($week['WeekNumber']); ?>"><?php htmlout($week['WeekNumber'] . ": " . $weekStart . "-" . $weekEnd); ?></label>
 														<?php if($i % 4 == 3) : ?><br /><?php endif; ?>
 														<?php $weekSelected = TRUE; break; ?>
 													<?php endif; ?>
 												<?php endfor; ?>
 												<?php if(!$weekSelected) : ?>
-													<label><input type="checkbox" name="weeksSelected[]" value="<?php htmlout($week['WeekNumber']); ?>"><?php htmlout($week['StartDate'] . " - " . $week['EndDate']); ?></label>
+													<label><input type="checkbox" name="weeksSelected[]" value="<?php htmlout($week['WeekNumber']); ?>"><?php htmlout($week['WeekNumber'] . ": " . $weekStart . "-" . $weekEnd); ?></label>
 													<?php if($i % 4 == 3) : ?><br /><?php endif; ?>
 												<?php endif; ?>
 												<?php $i++; ?>
 											<?php endforeach; ?>
-											<input type="submit" name="add" value="Confirm Week(s)">
 										<?php else : ?>
 											<legend><b>Weeks(s) selected for the event</b></legend>
 											<?php foreach($weeksOfTheYear AS $week) : ?>
+												<?php $weekStart = convertDatetimeToFormat($week['StartDate'], 'Y-m-d', DATE_DEFAULT_FORMAT_TO_DISPLAY_WITHOUT_YEAR); ?>
+												<?php $weekEnd = convertDatetimeToFormat($week['EndDate'], 'Y-m-d', DATE_DEFAULT_FORMAT_TO_DISPLAY_WITHOUT_YEAR); ?>											
 												<?php $weekSelected = FALSE; ?>
 												<?php for($j = 0; $j < sizeOf($weeksSelected); $j++) : ?>
 													<?php if($weeksSelected[$j] == $week['WeekNumber']) : ?>
-														<b>☑ <?php htmlout($week['StartDate'] . " - " . $week['EndDate']); ?></b>
+														<b>☑ <?php htmlout($week['WeekNumber'] . ": " . $weekStart . "-" . $weekEnd); ?></b>
 														<?php if($i % 4 == 3) : ?><br /><?php endif; ?>
 														<?php $weekSelected = TRUE; break; ?>
 													<?php endif; ?>
 												<?php endfor; ?>
 												<?php if(!$weekSelected) : ?>
-													☐ <?php htmlout($week['StartDate'] . " - " . $week['EndDate']); ?>
+													☐ <?php htmlout($week['WeekNumber'] . ": " . $weekStart . "-" . $weekEnd); ?>
 													<?php if($i % 4 == 3) : ?><br /><?php endif; ?>
 												<?php endif; ?>
 											<?php endforeach; ?>
-											<input type="submit" name="add" value="Change Week(s)">
 										<?php endif; ?>									
-									<?php elseif(isset($_SESSION['AddEventWeekChoiceSelected']) AND $_SESSION['AddEventWeekChoiceSelected'] == "Select A Single Weeks") : ?>
+									<?php elseif(isset($_SESSION['AddEventWeekChoiceSelected']) AND $_SESSION['AddEventWeekChoiceSelected'] == "Select A Single Week") : ?>
 										<div>
 											<label for="weekNumber">Select the one week: </label>
 											<select name="weekNumber" id="weekNumber">
-												<?php foreach($weeksOfTheYear as $week): ?> 
-													<?php if($row['WeekNumber'] == $selectedWeekNumber):?>
-														<option selected="selected" value="<?php htmlout($row['WeekNumber']); ?>"><?php htmlout($row['StartDate'] . " - " . $row['EndDate']);?></option>
+												<?php foreach($weeksOfTheYear as $week): ?>
+													<?php $weekStart = convertDatetimeToFormat($week['StartDate'], 'Y-m-d', DATE_DEFAULT_FORMAT_TO_DISPLAY_WITHOUT_YEAR); ?>
+													<?php $weekEnd = convertDatetimeToFormat($week['EndDate'], 'Y-m-d', DATE_DEFAULT_FORMAT_TO_DISPLAY_WITHOUT_YEAR); ?>
+													<?php if($week['WeekNumber'] == $selectedWeekNumber):?>
+														<option selected="selected" value="<?php htmlout($week['WeekNumber']); ?>"><?php htmlout($week['WeekNumber'] . ": " . $weekStart . "-" . $weekEnd); ?></option>
 													<?php else : ?>
-														<option value="<?php htmlout($row['WeekNumber']); ?>"><?php htmlout($row['StartDate'] . " - " . $row['EndDate']);?></option>
+														<option value="<?php htmlout($week['WeekNumber']); ?>"><?php htmlout($week['WeekNumber'] . ": " . $weekStart . "-" . $weekEnd); ?></option>
 													<?php endif;?>
 												<?php endforeach; ?>						
 											</select>
@@ -261,10 +265,8 @@
 							</div>
 							<div class="container">	
 								<div class="right">
-									<?php if(!isset($_SESSION['AddEventWeeksSelected'])) : ?>
-										<input type="submit" name="add" value="Confirm Weeks">
-									<?php else : ?>
-										<input type="submit" name="add" value="Change Weeks">
+									<?php if(isset($_SESSION['AddEventWeekChoiceSelected']) AND !isset($_SESSION['AddEventWeeksSelected'])) : ?>
+										<input type="submit" name="add" value="Confirm Week(s)">
 									<?php endif; ?>
 								</div>
 							</div>
