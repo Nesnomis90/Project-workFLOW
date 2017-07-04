@@ -33,8 +33,12 @@ function rememberAddEventInputs(){
 		
 		$newValues['StartTime'] =  trimExcessWhitespace($_POST['startTime']);
 		$newValues['EndTime'] =  trimExcessWhitespace($_POST['endTime']);
+		/*
 		$newValues['StartDate'] =  trimExcessWhitespace($_POST['startDate']);
-		$newValues['EndDate'] =  trimExcessWhitespace($_POST['endDate']);
+		$newValues['EndDate'] =  trimExcessWhitespace($_POST['endDate']); 
+		
+		Not implemented 
+		*/
 		
 		$newValues['EventName'] = trimExcessWhitespace($_POST['eventName']);
 		$newValues['EventDescription'] = trimExcessWhitespaceButLeaveLinefeed($_POST['eventDescription']);
@@ -57,6 +61,75 @@ function rememberAddEventInputs(){
 
 		$_SESSION['AddEventInfoArray'] = $newValues;
 	}
+}
+
+// Function to validate user inputs
+function validateUserInputs($FeedbackSessionToUse, $editing){
+	// Get user inputs
+	$invalidInput = FALSE;
+	
+	if(isset($_POST['startTime']) AND !$invalidInput){
+		$startTimeString = $_POST['startTime'];
+	} else {
+		$invalidInput = TRUE;
+		$_SESSION[$FeedbackSessionToUse] = "An event cannot be created without submitting a start time.";
+	}
+	if(isset($_POST['endTime']) AND !$invalidInput){
+		$endTimeString = $_POST['endTime'];
+	} else {
+		$invalidInput = TRUE;
+		$_SESSION[$FeedbackSessionToUse] = "An event cannot be created without submitting an end time.";
+	}
+	if(isset($_POST['eventName']) AND !$invalidInput){
+		$eventNameString = $_POST['eventName'];
+	} else {
+		$invalidInput = TRUE;
+		$_SESSION[$FeedbackSessionToUse] = "An event cannot be created without submitting a name.";
+	}
+	if(isset($_POST['eventDescription'])){ // Description can be null
+		$eventDescriptionString = $_POST['eventDescription'];
+	} else {
+		$eventDescriptionString = "";
+	}
+	
+	// Remove excess whitespace and prepare strings for validation
+	$validatedStartTime = trimExcessWhitespace($startTimeString);
+	$validatedEndTime = trimExcessWhitespace($endTimeString);
+	$validatedEventName = trimExcessWhitespaceButLeaveLinefeed($eventNameString);
+	$validatedEventDescription = trimExcessWhitespaceButLeaveLinefeed($eventDescriptionString);
+	
+	// Do actual input validation
+	if(validateDateTimeString($validatedStartTime) === FALSE AND !$invalidInput){
+		$invalidInput = TRUE;
+		$_SESSION[$FeedbackSessionToUse] = "Your submitted start time has illegal characters in it.";
+	}
+	if(validateDateTimeString($validatedEndTime) === FALSE AND !$invalidInput){
+		$invalidInput = TRUE;
+		$_SESSION[$FeedbackSessionToUse] = "Your submitted end time has illegal characters in it.";
+	}
+	if(validateString($validatedEventName) === FALSE AND !$invalidInput){
+		$invalidInput = TRUE;
+		$_SESSION[$FeedbackSessionToUse] = "Your submitted event name has illegal characters in it.";
+	}
+	if(validateString($validatedEventDescription) === FALSE AND !$invalidInput){
+		$invalidInput = TRUE;
+		$_SESSION[$FeedbackSessionToUse] = "Your submitted event description has illegal characters in it.";
+	}
+	
+	// Are values actually filled in?
+	if($validatedStartTime == "" AND $validatedEndTime == "" AND !$invalidInput){
+		
+		$_SESSION[$FeedbackSessionToUse] = "You need to fill in a start and an end time for your event.";	
+		$invalidInput = TRUE;
+	} elseif($validatedStartTime != "" AND $validatedEndTime == "" AND !$invalidInput) {
+		$_SESSION[$FeedbackSessionToUse] = "You need to fill in an end time for your event.";	
+		$invalidInput = TRUE;		
+	} elseif($validatedStartTime == "" AND $validatedEndTime != "" AND !$invalidInput){
+		$_SESSION[$FeedbackSessionToUse] = "You need to fill in a start time for your event.";	
+		$invalidInput = TRUE;		
+	}	
+	
+return array($invalidInput, $startTime, $endTime, $eventName, $eventDescription);
 }
 
 // If admin wants to create a new event

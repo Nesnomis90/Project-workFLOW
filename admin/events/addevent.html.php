@@ -306,6 +306,8 @@
 							<b>You need to select the week before you can create the event.</b>
 						<?php elseif(isset($_SESSION['AddEventWeekChoiceSelected']) AND $_SESSION['AddEventWeekChoiceSelected'] == "Select Multiple Weeks" AND isset($_SESSION['AddEventWeeksSelected']) AND sizeOf($_SESSION['AddEventWeeksSelected']) == 0) : ?>
 							<b>You need to select at least one week before you can create the event.</b>
+						<?php elseif(!isset($_SESSION['AddEventDetailsConfirmed'])) : ?>
+							<b>You need to type in the event details before you can create the event.</b>
 						<?php endif; ?>
 					</div>
 				</div>
@@ -327,6 +329,8 @@
 						<?php elseif(isset($_SESSION['AddEventWeekChoiceSelected']) AND $_SESSION['AddEventWeekChoiceSelected'] == "Select A Single Week" AND !isset($_SESSION['AddEventWeeksSelected'])) : ?>
 							<input type="submit" name="disabled" value="Create Event" disabled>
 						<?php elseif(isset($_SESSION['AddEventWeekChoiceSelected']) AND $_SESSION['AddEventWeekChoiceSelected'] == "Select Multiple Weeks" AND isset($_SESSION['AddEventWeeksSelected']) AND sizeOf($_SESSION['AddEventWeeksSelected']) == 0) : ?>
+							<input type="submit" name="disabled" value="Create Event" disabled>
+						<?php elseif(!isset($_SESSION['AddEventDetailsConfirmed'])) : ?>
 							<input type="submit" name="disabled" value="Create Event" disabled>
 						<?php else : ?>
 							<input type="submit" name="add" value="Create Event">
