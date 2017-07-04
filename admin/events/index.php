@@ -347,27 +347,37 @@ if(	(isset($_POST['action']) AND $_POST['action'] == "Create Event") OR
 // If admin wants to submit the created event
 if(isset($_POST['add']) AND $_POST['add'] == "Create Event"){
 	
+	// Get valid user inputs
 	list($invalidInput, $startTime, $endTime, $eventName, $eventDescription) = validateUserInputs('AddEventError', FALSE);
-	// Validate user inputs
-		// TO-DO: Validate user inputs.	
+	
 	if($invalidInput){
 		rememberAddEventInputs();
 		$_SESSION['refreshAddEvent'] = TRUE;
 		header('Location: .');
 		exit();
 	}
-	echo "<br />";
-	echo $startTime;
-	echo "<br />";
-	echo $endTime;
-	echo "<br />";
-	echo $eventName;
-	echo "<br />";
-	echo $eventDescription;
-	echo "<br />";
+
+	// TO-DO: 	Take the selected days, week number and times and turn into datetimes so we can check the database
+	// 			if the timeslots are available.
+	$weeksSelected = $_SESSION['AddEventWeeksSelected'];
+	$daysSelected = $_SESSION['AddEventDaysSelected'];
+	if(!is_array($weeksSelected)){
+		$weeksSelected = array($weeksSelected);
+	}
+	if(!is_array($daysSelected)){
+		$daysSelected = array($daysSelected);
+	}
+	$yearNow = date("Y"); // TO-DO: Change if we allow different years
+	for($i=0; $i < sizeOf($weeksSelected); $i++){
+		for($j=0; $j < sizeOf($daysSelected); $j++){
+			$startDateTime = getDateTimeFromTimeDayNameWeekNumberAndYear($startTime,$daysSelected[$j],$weeksSelected[$i],$yearNow);
+			$endDateTime =  getDateTimeFromTimeDayNameWeekNumberAndYear($endTime,$daysSelected[$j],$weeksSelected[$i],$yearNow);
+			$dateTimesToCheck[] = array('StartDateTime' => $startDateTime, 'EndDateTime' => $endDateTime);
+		}
+	}
 	
 	// Remove after done testing.
-	echo "no invalidInputs";
+	var_dump ($dateTimesToCheck);
 	exit();
 	// Remove after done testing 
 	

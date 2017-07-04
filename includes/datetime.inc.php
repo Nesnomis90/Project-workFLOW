@@ -1,6 +1,22 @@
 <?php
 require_once 'variables.inc.php';
 
+function getDateTimeFromTimeDayNameWeekNumberAndYear($time,$day,$week,$year){
+	$date = new DateTime();
+	switch(strtolower($day)) {
+		case "monday" : $dayNumber = 1; break;
+		case "tuesday" : $dayNumber = 2; break;
+		case "wednesday" : $dayNumber = 3; break;
+		case "thursday" : $dayNumber = 4; break;
+		case "friday" : $dayNumber = 5; break;
+		case "saturday" : $dayNumber = 6; break;
+		case "sunday" : $dayNumber = 7; break;
+	}
+	$dateTimePart = $date->setISODate($year,$week,$dayNumber)->format('Y-m-d');
+	$dateTime = $dateTimePart . " " . $time;
+	return $dateTime;
+}
+
 function getFirstWeekNumberFromYear($year){
 	/* 	Weeks start with Monday. Each week's year is the Gregorian year in which the Thursday falls. 
 		The first week of the year, hence, always contains 4 January.*/
