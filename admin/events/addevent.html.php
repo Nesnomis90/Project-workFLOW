@@ -19,11 +19,14 @@
 			<form action="" method="post">
 				<div>
 					<fieldset>
-						<?php if(isset($_SESSION['AddEventRoomsSelected'])): ?>
-							<legend><b>Selected meeting room(s) for the event</b></legend>
-						<?php else: ?>
+						<?php if(!isset($_SESSION['AddEventRoomChoiceSelected'])) : ?>
+							<legend>Select the room selection type you want to use</legend>
+						<?php elseif(isset($_SESSION['AddEventRoomChoiceSelected']) AND !isset($_SESSION['AddEventRoomsSelected'])) : ?>
 							<legend>Select the meeting room(s) for the event</legend>
-						<?php endif; ?>
+						<?php elseif(isset($_SESSION['AddEventRoomChoiceSelected']) AND isset($_SESSION['AddEventRoomsSelected'])) : ?>
+							<legend><b>Selected meeting room(s) for the event</b></legend>
+						<?php endif; ?>	
+						
 						<?php if(!isset($_SESSION['AddEventRoomChoiceSelected'])) : ?>
 							<input type="submit" name="add" value="Select A Single Room">
 							<input type="submit" name="add" value="Select Multiple Rooms">
@@ -192,7 +195,14 @@
 						</fieldset>
 					</div>
 					<div class="right">
-						<fieldset><legend>Select the week(s) it should be active</legend>
+						<fieldset>
+						<?php if(!isset($_SESSION['AddEventWeekChoiceSelected'])) : ?>
+							<legend>Select the week selection type you want to use</legend>
+						<?php elseif(isset($_SESSION['AddEventWeekChoiceSelected']) AND !isset($_SESSION['AddEventWeeksSelected'])) : ?>
+							<legend>Select the week(s) for the event</legend>
+						<?php elseif(isset($_SESSION['AddEventWeekChoiceSelected']) AND isset($_SESSION['AddEventWeeksSelected'])) : ?>
+							<legend><b>Selected weeks(s) for the event</b></legend>
+						<?php endif; ?>
 							<div class="container">
 								<div class="left">
 									<?php if(!isset($_SESSION['AddEventWeekChoiceSelected'])) : ?>
@@ -204,8 +214,7 @@
 									<?php endif; ?>
 									
 									<?php if(isset($_SESSION['AddEventWeekChoiceSelected']) AND $_SESSION['AddEventWeekChoiceSelected'] == "Select Multiple Weeks") : ?>
-										<?php if(!isset($_SESSION['AddEventWeeksSelected'])) : ?>
-											<legend>Select the week(s) for the event</legend>
+										<?php if(!isset($_SESSION['AddEventWeeksSelected'])) : ?>	
 											<?php $i = 0; ?>
 											<?php foreach($weeksOfTheYear AS $week) : ?>
 												<?php $weekStart = convertDatetimeToFormat($week['StartDate'], 'Y-m-d', DATE_DEFAULT_FORMAT_TO_DISPLAY_WITHOUT_YEAR); ?>
@@ -225,7 +234,6 @@
 												<?php $i++; ?>
 											<?php endforeach; ?>
 										<?php else : ?>
-											<legend><b>Weeks(s) selected for the event</b></legend>
 											<?php $i = 0; ?>
 											<?php foreach($weeksOfTheYear AS $week) : ?>
 												<?php $weekStart = convertDatetimeToFormat($week['StartDate'], 'Y-m-d', DATE_DEFAULT_FORMAT_TO_DISPLAY_WITHOUT_YEAR); ?>
