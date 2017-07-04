@@ -22,6 +22,8 @@ function clearAddEventSessions(){
 	unset($_SESSION['AddEventDaysConfirmed']);
 	unset($_SESSION['AddEventDetailsConfirmed']);
 	unset($_SESSION['AddEventWeekChoiceSelected']);
+	unset($_SESSION['AddEventRoomSelectedButNotConfirmed']);
+	unset($_SESSION['AddEventWeekSelectedButNotConfirmed']);
 } 
 
 // Function to remember the user inputs in Add Event
@@ -44,13 +46,13 @@ function rememberAddEventInputs(){
 			$_SESSION['AddEventRoomsSelected'] = $_POST['roomsSelected'];
 		}
 		if(isset($_POST['meetingRoomID'])){
-			selectedMeetingRoomID = $_POST['meetingRoomID'];
+			$_SESSION['AddEventRoomSelectedButNotConfirmed'] = $_POST['meetingRoomID'];
 		}		
 		if(isset($_POST['weeksSelected'])){
-			$selectedWeekNumber = $_POST['weeksSelected'];
+			$_SESSION['AddEventWeeksSelected'] = $_POST['weeksSelected'];
 		}
 		if(isset($_POST['weekNumber'])){
-			$_SESSION['AddEventWeeksSelected'] = $_POST['weekNumber'];
+			$_SESSION['AddEventWeekSelectedButNotConfirmed'] = $_POST['weekNumber'];
 		}
 
 		$_SESSION['AddEventInfoArray'] = $newValues;
@@ -169,7 +171,19 @@ if(	(isset($_POST['action']) AND $_POST['action'] == "Create Event") OR
 	} else {
 		$meetingroom = array();
 	}
-
+	
+	if(isset($_SESSION['AddEventRoomSelectedButNotConfirmed'])){
+		$selectedMeetingRoomID = $_SESSION['AddEventRoomSelectedButNotConfirmed'];
+	} else {
+		$selectedMeetingRoomID = "";
+	}
+	
+	if(isset($_SESSION['AddEventWeekSelectedButNotConfirmed'])){
+		$selectedWeekNumber = $_SESSION['AddEventWeekSelectedButNotConfirmed'];
+	} else {
+		$selectedWeekNumber = "";
+	}
+	
 	// Give admin feedback on the roomname (if one) or the amount of rooms selected.
 	if(isset($_SESSION['AddEventRoomsSelected'])){
 		if($_SESSION['AddEventRoomChoiceSelected'] == "Select A Single Room"){
