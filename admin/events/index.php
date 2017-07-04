@@ -141,14 +141,14 @@ function validateUserInputs($FeedbackSessionToUse, $editing){
 	
 	// Check if input length is allowed
 		// EventName
-	$invalidEventName = isLengthInvalidDisplayName($validatedDisplayName);
-	if($invalidDisplayName AND !$invalidInput){
+	$invalidEventName = isLengthInvalidDisplayName($validatedEventName);
+	if($invalidEventName AND !$invalidInput){
 		$_SESSION[$FeedbackSessionToUse] = "The event name submitted is too long.";	
 		$invalidInput = TRUE;		
 	}	
 		// EventDescription
-	$invalidEventDescription = isLengthInvalidBookingDescription($validatedBookingDescription);
-	if($invalidBookingDescription AND !$invalidInput){
+	$invalidEventDescription = isLengthInvalidBookingDescription($validatedEventDescription);
+	if($invalidEventDescription AND !$invalidInput){
 		$_SESSION[$FeedbackSessionToUse] = "The event description submitted is too long.";	
 		$invalidInput = TRUE;		
 	}
@@ -176,7 +176,7 @@ function validateUserInputs($FeedbackSessionToUse, $editing){
 		$invalidInput = TRUE;				
 	}
 	
-	return array($invalidInput, $startTime, $endTime, $eventName, $eventDescription);
+	return array($invalidInput, $startTime, $endTime, $validatedEventName, $validatedEventDescription);
 }
 
 // If admin wants to create a new event
@@ -347,7 +347,7 @@ if(	(isset($_POST['action']) AND $_POST['action'] == "Create Event") OR
 // If admin wants to submit the created event
 if(isset($_POST['add']) AND $_POST['add'] == "Create Event"){
 	
-	$invalidInput = TRUE; // TO-DO: Remove after input validation is implemented
+	list($invalidInput, $startTime, $endTime, $eventName, $eventDescription) = validateUserInputs('AddEventError', FALSE);
 	// Validate user inputs
 		// TO-DO: Validate user inputs.	
 	if($invalidInput){
@@ -356,6 +356,20 @@ if(isset($_POST['add']) AND $_POST['add'] == "Create Event"){
 		header('Location: .');
 		exit();
 	}
+	echo "<br />";
+	echo $startTime;
+	echo "<br />";
+	echo $endTime;
+	echo "<br />";
+	echo $eventName;
+	echo "<br />";
+	echo $eventDescription;
+	echo "<br />";
+	
+	// Remove after done testing.
+	echo "no invalidInputs";
+	exit();
+	// Remove after done testing 
 	
 	// Check if the timeslot(s) is taken for the selected meeting room(s)
 		// TO-DO: Get datetimes, also this requires a lot more work
@@ -517,8 +531,11 @@ if(isset($_POST['add']) AND $_POST['add'] == "Change Day(s)"){
 
 if(isset($_POST['add']) AND $_POST['add'] == "Confirm Details"){
 	
-	// TO-DO: Validate values before letting it be confirmed.
-	$_SESSION['AddEventDetailsConfirmed'] = TRUE;
+	list($invalidInput, $startTime, $endTime, $eventName, $eventDescription) = validateUserInputs('AddEventError', FALSE);
+	
+	if(!$invalidInput){
+		$_SESSION['AddEventDetailsConfirmed'] = TRUE;
+	}
 	rememberAddEventInputs();
 	$_SESSION['refreshAddEvent'] = TRUE;
 	header('Location: .');

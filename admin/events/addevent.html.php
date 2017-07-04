@@ -100,14 +100,14 @@
 							<div>
 								<label for="startTime">Start Time: </label>
 								<input type="text" name="startTime" id="startTime" 
-								placeholder="hh:mm:ss"
+								placeholder="hh:mm (e.g. 13:30)"
 								value="<?php htmlout($startTime); ?>">
 							</div>
 							
 							<div>
 								<label for="endTime">End Time: </label>
 								<input type="text" name="endTime" id="endTime" 
-								placeholder="hh:mm:ss"
+								placeholder="hh:mm (e.g. 14:30)"
 								value="<?php htmlout($endTime); ?>">
 							</div>
 
