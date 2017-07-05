@@ -1,6 +1,26 @@
 <?php
 require_once 'variables.inc.php';
 
+// Function to convert a datetime to whatever datetime format we submit
+function convertDatetimeToFormat($oldDatetimeString, $oldformat, $format){
+	// Some useful formats to remember
+	// 'Y-m-d H:i:s' = 2017-03-03 12:15:33 (MySQL Datetime)
+	// 'Y-m-d' = 2017-03-03 (MySQL Date)
+	// 'd M Y H:i:s' = 3 March 2017 12:15:33
+	// 'F jS Y H:i' = March 3rd 2017 12:15
+	// 'H:i j F Y' = 12:15 3 March 2017
+	date_default_timezone_set(DATE_DEFAULT_TIMEZONE);
+	
+	if(validateDatetimeWithFormat($oldDatetimeString, $oldformat)){
+		$oldDatetime = date_create_from_format($oldformat, $oldDatetimeString);
+		$newDatetime= DATE_FORMAT($oldDatetime , $format);
+		
+		return $newDatetime;
+	} else {
+		return FALSE;
+	}
+}
+
 function getDateTimeFromTimeDayNameWeekNumberAndYear($time,$day,$week,$year){
 	$date = new DateTime();
 	switch(strtolower($day)) {
@@ -445,25 +465,5 @@ function correctDatetimeFormat($wrongDatetimeString){
 	
 	// If no valid hit, return FALSE
 	return FALSE;
-}
-
-// Function to convert a datetime to whatever datetime format we submit
-function convertDatetimeToFormat($oldDatetimeString, $oldformat, $format){
-	// Some useful formats to remember
-	// 'Y-m-d H:i:s' = 2017-03-03 12:15:33 (MySQL Datetime)
-	// 'Y-m-d' = 2017-03-03 (MySQL Date)
-	// 'd M Y H:i:s' = 3 March 2017 12:15:33
-	// 'F jS Y H:i' = March 3rd 2017 12:15
-	// 'H:i j F Y' = 12:15 3 March 2017
-	date_default_timezone_set(DATE_DEFAULT_TIMEZONE);
-	
-	if(validateDatetimeWithFormat($oldDatetimeString, $oldformat)){
-		$oldDatetime = date_create_from_format($oldformat, $oldDatetimeString);
-		$newDatetime= DATE_FORMAT($oldDatetime , $format);
-		
-		return $newDatetime;
-	} else {
-		return FALSE;
-	}
 }
 ?>

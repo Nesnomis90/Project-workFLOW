@@ -510,20 +510,31 @@ if(isset($_POST['add']) AND $_POST['add'] == "Create Event"){
 
 	try
 	{
+		
+		$firstDate = convertDatetimeToFormat($timeSlotAvailableInfo[0]['StartDateTime'], 'Y-m-d H:i:s', 'Y-m-d');
+		$lastDate = convertDatetimeToFormat(end($timeSlotAvailableInfo)['EndDateTime'], 'Y-m-d H:i:s', 'Y-m-d');
+		$daysSelected = implode( "\n", $daysSelected);
+		// Insert the new event base information
 		$sql = "INSERT INTO `event`
-				SET			`startTime` = :StartTime,
+				SET			`name` = :EventName,
+							`description` = :EventDescription,
+							`startTime` = :StartTime,
 							`endTime` = :EndTime,
 							`startDate`= :FirstDate,
 							`lastDate` = :LastDate,
 							`daysSelected` = :DaysSelected,
 							`dateTimeCreated` = CURRENT_TIMESTAMP";
 		$s = $pdo->prepare($sql);
-		$s->bindValue(':StartTime',);
-		$s->bindValue(':EndTime', );
-		$s->bindValue(':FirstDate', );
-		$s->bindValue(':LastDate', );
-		$s->bindValue(':DaysSelected', );	
-		$s->execute(); // TO-DO: get the eventID created by this and insert it into roomevent below.
+		$s->bindValue(':EventName', $eventName);
+		$s->bindValue(':EventDescription', $eventDescription);
+		$s->bindValue(':StartTime', $startTime);
+		$s->bindValue(':EndTime', $endTime);
+		$s->bindValue(':FirstDate', $firstDate);
+		$s->bindValue(':LastDate', $lastDate);
+		$s->bindValue(':DaysSelected',$daysSelected);	
+		$s->execute();
+		
+		$EventID = $pdo->lastInsertID();
 		
 		// Insert new events into database
 		$sql = "INSERT INTO `roomevent`
@@ -533,13 +544,12 @@ if(isset($_POST['add']) AND $_POST['add'] == "Create Event"){
 							`endDateTime` = :EndDateTime";
 		$pdo->beginTransaction();
 		$s = $pdo->prepare($sql);
-		
+		$s->bindValue(':EventID', $EventID);
 		foreach($timeSlotAvailableInfo AS $insert){
-			$s->bindValue(':EventID', );
 			$s->bindValue(':MeetingRoomID', $insert['MeetingRoomID']);
 			$s->bindValue(':StartDateTime', $insert['StartDateTime']);
 			$s->bindValue(':EndDateTime', $insert['EndDateTime']);
-			$pdo->exec($s);
+			$s->execute();
 		}
 		$pdo->commit();
 
@@ -567,8 +577,11 @@ if(isset($_POST['add']) AND $_POST['add'] == "Create Event"){
 		header('Location: .');
 		exit();				
 	}*/
-	
-	// TO-DO: Add Event to database
+
+	// TO-DO: Give feedback if any events couldn't be made
+	if(isset($timeSlotTakenInfo) AND sizeOf($timeSlotTakenInfo) > 0 ){
+		
+	}
 	// TO-DO: Create log event?
 	
 	header("Location: .");
@@ -791,7 +804,7 @@ try
 					WEEK(`lastDate`,3)	AS WeekEnd,
 					`daysSelected`		AS DaysSelected,
 					(
-						SELECT 		GROUP_CONCAT(m.`name` separator ",\n")
+						SELECT 		GROUP_CONCAT(DISTINCT m.`name` separator ",\n")
 						FROM		`roomevent` rev
 						INNER JOIN 	`meetingroom` m
 						ON			rev.`meetingRoomID` = m.`meetingRoomID`
