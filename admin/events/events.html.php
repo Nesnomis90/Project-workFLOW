@@ -13,7 +13,7 @@
 		
 		<div id="feedback">
 		<?php if(isset($_SESSION['EventsUserFeedback'])) : ?>
-			<b><?php htmlout($_SESSION['EventsUserFeedback']); ?></b>
+			<b id="feedback"><?php htmlout($_SESSION['EventsUserFeedback']); ?></b>
 			<?php unset($_SESSION['EventsUserFeedback']); ?>
 		<?php endif; ?>
 		</div>
