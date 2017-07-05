@@ -317,6 +317,12 @@ if(	(isset($_POST['action']) AND $_POST['action'] == "Create Event") OR
 			$numberOfRoomsSelected = sizeOf($_SESSION['AddEventRoomsSelected']);
 		} elseif($_SESSION['AddEventRoomChoiceSelected'] == "Select All Rooms"){
 			$numberOfRoomsSelected = sizeOf($meetingroom);
+			if($_SESSION['AddEventRoomsSelected'] === TRUE){
+				foreach($meetingroom AS $room){
+					$roomIDs[] = $room['MeetingRoomID'];
+				}
+				$_SESSION['AddEventRoomsSelected'] = $roomIDs;
+			}
 		}
 	}
 	
@@ -335,6 +341,12 @@ if(	(isset($_POST['action']) AND $_POST['action'] == "Create Event") OR
 			$numberOfWeeksSelected = sizeOf($_SESSION['AddEventWeeksSelected']);
 		} elseif($_SESSION['AddEventWeekChoiceSelected'] == "Select All Weeks"){
 			$numberOfWeeksSelected = sizeOf($weeksOfTheYear);
+			if($_SESSION['AddEventWeeksSelected'] === TRUE){
+				foreach($weeksOfTheYear AS $week){
+					$weekNumbers[] = $week['WeekNumber'];
+				}
+				$_SESSION['AddEventWeeksSelected'] = $weekNumbers;				
+			}
 		}
 	}	
 	
@@ -357,8 +369,7 @@ if(isset($_POST['add']) AND $_POST['add'] == "Create Event"){
 		exit();
 	}
 
-	// TO-DO: 	Take the selected days, week number and times and turn into datetimes so we can check the database
-	// 			if the timeslots are available.
+	// Turn all admin selections into datetimes
 	$weeksSelected = $_SESSION['AddEventWeeksSelected'];
 	$daysSelected = $_SESSION['AddEventDaysSelected'];
 	if(!is_array($weeksSelected)){
@@ -368,35 +379,38 @@ if(isset($_POST['add']) AND $_POST['add'] == "Create Event"){
 		$daysSelected = array($daysSelected);
 	}
 	$yearNow = date("Y"); // TO-DO: Change if we allow different years
+	$dateTimeNow = getDatetimeNow();
 	for($i=0; $i < sizeOf($weeksSelected); $i++){
 		for($j=0; $j < sizeOf($daysSelected); $j++){
 			$startDateTime = getDateTimeFromTimeDayNameWeekNumberAndYear($startTime,$daysSelected[$j],$weeksSelected[$i],$yearNow);
 			$endDateTime =  getDateTimeFromTimeDayNameWeekNumberAndYear($endTime,$daysSelected[$j],$weeksSelected[$i],$yearNow);
-			$dateTimesToCheck[] = array('StartDateTime' => $startDateTime, 'EndDateTime' => $endDateTime);
+			// Don't check if the datetime is in the past e.g. we selected a monday and it's already tuesday
+			if($startDateTime > $dateTimeNow ){
+				$dateTimesToCheck[] = array('StartDateTime' => $startDateTime, 'EndDateTime' => $endDateTime);
+			}
 		}
 	}
 	
-	// Remove after done testing.
-	var_dump ($dateTimesToCheck);
-	exit();
-	// Remove after done testing 
-	
 	// Check if the timeslot(s) is taken for the selected meeting room(s)
-		// TO-DO: Get datetimes, also this requires a lot more work
+		// What we want to achieve:
+		// 1. Compare all datetimes and meeting room IDs to see if they're "available"
+		// 2. Create event there if available
+		// 3. Save information on events that couldn't be made due to it not being "available"
 	try
 	{
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 		$pdo = connect_to_db();
-		$sql =	" 	SELECT 	COUNT(*)	AS HitCount
-					FROM 	(
-								SELECT 		1
-								FROM 		`booking` b
-								LEFT JOIN	`roomevent` rev
-								ON 			rev.`MeetingRoomID` = b.`meetingRoomID`
-								WHERE 		b.`meetingRoomID` = :MeetingRoomID
-								AND			b.`dateTimeCancelled` IS NULL
-								AND			b.`actualEndDateTime` IS NULL
-								AND		
+		
+		$sql =	" 	SELECT SUM(cnt)	AS HitCount
+					FROM 
+					(
+						(
+						SELECT 		COUNT(*) AS cnt
+						FROM 		`booking` b
+						WHERE 		b.`meetingRoomID` = :MeetingRoomID
+						AND			b.`dateTimeCancelled` IS NULL
+						AND			b.`actualEndDateTime` IS NULL
+						AND		
 								(		
 										(
 											b.`startDateTime` >= :StartTime AND 
@@ -415,15 +429,76 @@ if(isset($_POST['add']) AND $_POST['add'] == "Create Event"){
 											:StartTime < b.`endDateTime`
 										)
 								)
-								LIMIT 1
-							) AS BookingsFound";
+						LIMIT 1
+						)
+						UNION
+						(
+						SELECT 		COUNT(*) AS cnt
+						FROM 		`roomevent` rev
+						WHERE 		rev.`meetingRoomID` = :MeetingRoomID
+						AND	
+								(		
+										(
+											rev.`startDateTime` >= :StartTime AND 
+											rev.`startDateTime` < :EndTime
+										) 
+								OR 		(
+											rev.`endDateTime` > :StartTime AND 
+											rev.`endDateTime` <= :EndTime
+										)
+								OR 		(
+											:EndTime > rev.`startDateTime` AND 
+											:EndTime < rev.`endDateTime`
+										)
+								OR 		(
+											:StartTime > rev.`startDateTime` AND 
+											:StartTime < rev.`endDateTime`
+										)
+								)
+						LIMIT 1
+						)
+					) AS TimeSlotTaken";
 		$s = $pdo->prepare($sql);
 		
-		$s->bindValue(':MeetingRoomID', $_POST['meetingRoomID']);
-		$s->bindValue(':StartTime', $startDateTime);
-		$s->bindValue(':EndTime', $endDateTime);
-		$s->execute();
-		$pdo = null;
+		// We have to repeat this for every meeting room and every datetime.
+		$roomsSelected = $_SESSION['AddEventRoomsSelected'];
+		if(!is_array($roomsSelected)){
+			$roomsSelected = array($roomsSelected);
+		}
+			// Meeting rooms selected
+		$timeSlotTakenInfo = array();
+		$timeSlotAvailableInfo = array();
+		for($i=0; $i < sizeOf($roomsSelected); $i++){
+			$meetingRoomID = $roomsSelected[$i];
+				// Datetimes
+			foreach($dateTimesToCheck AS $dateTimes){		
+				$startDateTime = $dateTimes['StartDateTime'];
+				$endDateTime = $dateTimes['EndDateTime'];
+				$s->bindValue(':MeetingRoomID', $meetingRoomID);
+				$s->bindValue(':StartTime', $startDateTime);
+				$s->bindValue(':EndTime', $endDateTime);
+				$s->execute();
+
+				$row = $s->fetch(PDO::FETCH_ASSOC);
+				if ($row['HitCount'] > 0){
+					// Timeslot taken for that meeting room
+					$timeSlotTakenInfo[] = array(
+													'StartDateTime' => $startDateTime,
+													'EndDateTime' => $endDateTime,
+													'MeetingRoomID' => $meetingRoomID
+ 												);
+				} else {
+					// Timeslot NOT taken for that meeting room
+					$timeSlotAvailableInfo[] = array(
+													'StartDateTime' => $startDateTime,
+													'EndDateTime' => $endDateTime,
+													'MeetingRoomID' => $meetingRoomID
+ 												);
+				}
+			}
+		}
+
+		
 	}
 	catch(PDOException $e)
 	{
@@ -433,18 +508,65 @@ if(isset($_POST['add']) AND $_POST['add'] == "Create Event"){
 		exit();
 	}
 
+	try
+	{
+		$sql = "INSERT INTO `event`
+				SET			`startTime` = :StartTime,
+							`endTime` = :EndTime,
+							`startDate`= :FirstDate,
+							`lastDate` = :LastDate,
+							`daysSelected` = :DaysSelected,
+							`dateTimeCreated` = CURRENT_TIMESTAMP";
+		$s = $pdo->prepare($sql);
+		$s->bindValue(':StartTime',);
+		$s->bindValue(':EndTime', );
+		$s->bindValue(':FirstDate', );
+		$s->bindValue(':LastDate', );
+		$s->bindValue(':DaysSelected', );	
+		$s->execute(); // TO-DO: get the eventID created by this and insert it into roomevent below.
+		
+		// Insert new events into database
+		$sql = "INSERT INTO `roomevent`
+				SET			`EventID` = :EventID,
+							`meetingRoomID` = :MeetingRoomID,
+							`startDateTime` = :StartDateTime,
+							`endDateTime` = :EndDateTime";
+		$pdo->beginTransaction();
+		$s = $pdo->prepare($sql);
+		
+		foreach($timeSlotAvailableInfo AS $insert){
+			$s->bindValue(':EventID', );
+			$s->bindValue(':MeetingRoomID', $insert['MeetingRoomID']);
+			$s->bindValue(':StartDateTime', $insert['StartDateTime']);
+			$s->bindValue(':EndDateTime', $insert['EndDateTime']);
+			$pdo->exec($s);
+		}
+		$pdo->commit();
+
+		
+		$pdo = null;
+	}
+	catch(PDOException $e)
+	{
+		$error = 'Error scheduling new events: ' . $e->getMessage();
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+		$pdo->rollBack();
+		$pdo = null;
+		exit();
+	}
+	
 	// Check if we got any hits, if so the timeslot is already taken
+	/* Old method if we cancel all events when one isn't available. We want to create the ones we can.
 	$row = $s->fetch(PDO::FETCH_ASSOC);		
 	if ($row['HitCount'] > 0){
 
 		// Timeslot was taken
 		rememberAddEventInputs();
-		// TO-DO: add information on what was taken and which meeting room.
 		$_SESSION['AddEventError'] = "The event couldn't be made. The timeslot is already taken for this meeting room.";
 		$_SESSION['refreshAddEvent'] = TRUE;	
 		header('Location: .');
 		exit();				
-	}
+	}*/
 	
 	// TO-DO: Add Event to database
 	// TO-DO: Create log event?
@@ -497,6 +619,7 @@ if(isset($_POST['add']) AND $_POST['add'] == "Confirm Week(s)"){
 
 	if(isset($_POST['weekNumber'])){
 		$_SESSION['AddEventWeeksSelected'] = $_POST['weekNumber'];
+		unset($_SESSION['AddEventWeekSelectedButNotConfirmed']);
 	}
 	
 	$_SESSION['refreshAddEvent'] = TRUE;
@@ -603,6 +726,7 @@ if(isset($_POST['add']) AND $_POST['add'] == "Confirm Room(s)"){
 	}
 	if(isset($_POST['meetingRoomID'])){
 		$_SESSION['AddEventRoomsSelected'] = $_POST['meetingRoomID'];
+		unset($_SESSION['AddEventRoomSelectedButNotConfirmed']);
 	}
 	
 	rememberAddEventInputs();
