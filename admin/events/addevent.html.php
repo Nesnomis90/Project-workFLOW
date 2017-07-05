@@ -298,13 +298,13 @@
 							<b>You need to pick the meeting room selection type before you can create the event.</b>
 						<?php elseif(isset($_SESSION['AddEventRoomChoiceSelected']) AND $_SESSION['AddEventRoomChoiceSelected'] == "Select A Single Room" AND !isset($_SESSION['AddEventRoomsSelected'])) : ?>
 							<b>You need to select the meeting room before you can create the event.</b>
-						<?php elseif(isset($_SESSION['AddEventRoomChoiceSelected']) AND $_SESSION['AddEventRoomChoiceSelected'] == "Select Multiple Rooms" AND isset($_SESSION['AddEventRoomsSelected']) AND sizeOf($_SESSION['AddEventRoomsSelected']) == 0) : ?>
+						<?php elseif(isset($_SESSION['AddEventRoomChoiceSelected']) AND $_SESSION['AddEventRoomChoiceSelected'] == "Select Multiple Rooms" AND (!isset($_SESSION['AddEventRoomsSelected']) OR (isset($_SESSION['AddEventRoomsSelected']) AND sizeOf($_SESSION['AddEventRoomsSelected']) == 0))) : ?>
 							<b>You need to select at least one meeting room before you can create the event.</b>
 						<?php elseif(!isset($_SESSION['AddEventWeekChoiceSelected'])) : ?>
 							<b>You need to pick the week selection type before you can create the event.</b>
 						<?php elseif(isset($_SESSION['AddEventWeekChoiceSelected']) AND $_SESSION['AddEventWeekChoiceSelected'] == "Select A Single Week" AND !isset($_SESSION['AddEventWeeksSelected'])) : ?>
 							<b>You need to select the week before you can create the event.</b>
-						<?php elseif(isset($_SESSION['AddEventWeekChoiceSelected']) AND $_SESSION['AddEventWeekChoiceSelected'] == "Select Multiple Weeks" AND isset($_SESSION['AddEventWeeksSelected']) AND sizeOf($_SESSION['AddEventWeeksSelected']) == 0) : ?>
+						<?php elseif(isset($_SESSION['AddEventWeekChoiceSelected']) AND $_SESSION['AddEventWeekChoiceSelected'] == "Select Multiple Weeks" AND (!isset($_SESSION['AddEventWeeksSelected']) OR (isset($_SESSION['AddEventWeeksSelected']) AND sizeOf($_SESSION['AddEventWeeksSelected']) == 0))) : ?>
 							<b>You need to select at least one week before you can create the event.</b>
 						<?php elseif(!isset($_SESSION['AddEventDetailsConfirmed'])) : ?>
 							<b>You need to type in the event details before you can create the event.</b>
@@ -322,13 +322,13 @@
 							<input type="submit" name="disabled" value="Create Event" disabled>
 						<?php elseif(isset($_SESSION['AddEventRoomChoiceSelected']) AND $_SESSION['AddEventRoomChoiceSelected'] == "Select A Single Room" AND !isset($_SESSION['AddEventRoomsSelected'])) : ?>
 							<input type="submit" name="disabled" value="Create Event" disabled>
-						<?php elseif(isset($_SESSION['AddEventRoomChoiceSelected']) AND $_SESSION['AddEventRoomChoiceSelected'] == "Select Multiple Rooms" AND isset($_SESSION['AddEventRoomsSelected']) AND sizeOf($_SESSION['AddEventRoomsSelected']) == 0) : ?>
+						<?php elseif(isset($_SESSION['AddEventRoomChoiceSelected']) AND $_SESSION['AddEventRoomChoiceSelected'] == "Select Multiple Rooms" AND (!isset($_SESSION['AddEventRoomsSelected']) OR (isset($_SESSION['AddEventRoomsSelected']) AND sizeOf($_SESSION['AddEventRoomsSelected']) == 0))) : ?>
 							<input type="submit" name="disabled" value="Create Event" disabled>
 						<?php elseif(!isset($_SESSION['AddEventWeekChoiceSelected'])) : ?>
 							<input type="submit" name="disabled" value="Create Event" disabled>
 						<?php elseif(isset($_SESSION['AddEventWeekChoiceSelected']) AND $_SESSION['AddEventWeekChoiceSelected'] == "Select A Single Week" AND !isset($_SESSION['AddEventWeeksSelected'])) : ?>
 							<input type="submit" name="disabled" value="Create Event" disabled>
-						<?php elseif(isset($_SESSION['AddEventWeekChoiceSelected']) AND $_SESSION['AddEventWeekChoiceSelected'] == "Select Multiple Weeks" AND isset($_SESSION['AddEventWeeksSelected']) AND sizeOf($_SESSION['AddEventWeeksSelected']) == 0) : ?>
+						<?php elseif(isset($_SESSION['AddEventWeekChoiceSelected']) AND $_SESSION['AddEventWeekChoiceSelected'] == "Select Multiple Weeks" AND (!isset($_SESSION['AddEventWeeksSelected']) OR (isset($_SESSION['AddEventWeeksSelected']) AND sizeOf($_SESSION['AddEventWeeksSelected']) == 0))) : ?>
 							<input type="submit" name="disabled" value="Create Event" disabled>
 						<?php elseif(!isset($_SESSION['AddEventDetailsConfirmed'])) : ?>
 							<input type="submit" name="disabled" value="Create Event" disabled>

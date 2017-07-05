@@ -2,30 +2,58 @@ USE test;
 SET NAMES utf8;
 USE meetingflow;
 
-SELECT 		*
-FROM 		`booking` b
-WHERE 		b.`meetingRoomID` = 32
-AND			b.`dateTimeCancelled` IS NULL
-AND			b.`actualEndDateTime` IS NULL
-AND		
-(		
-		(
-			b.`startDateTime` >= '2017-08-04 12:00:00' AND 
-			b.`startDateTime` < '2017-08-04 23:59:59'
-		) 
-OR 		(
-			b.`endDateTime` > '2017-08-04 12:00:00' AND 
-			b.`endDateTime` <= '2017-08-04 23:59:59'
-		)
-OR 		(
-			'2017-08-04 23:59:59' > b.`startDateTime` AND 
-			'2017-08-04 23:59:59' < b.`endDateTime`
-		)
-OR 		(
-			'2017-08-04 12:00:00' > b.`startDateTime` AND 
-			'2017-08-04 12:00:00' < b.`endDateTime`
-		)
-);
+SELECT SUM(cnt)	AS HitCount
+FROM (
+	(SELECT 		COUNT(*) AS cnt
+	FROM 		`booking` b
+	WHERE 		b.`meetingRoomID` = 32
+	AND			b.`dateTimeCancelled` IS NULL
+	AND			b.`actualEndDateTime` IS NULL
+	AND		
+	(		
+			(
+				b.`startDateTime` >= '2017-08-04 12:00:00' AND 
+				b.`startDateTime` < '2017-08-04 23:59:59'
+			) 
+	OR 		(
+				b.`endDateTime` > '2017-08-04 12:00:00' AND 
+				b.`endDateTime` <= '2017-08-04 23:59:59'
+			)
+	OR 		(
+				'2017-08-04 23:59:59' > b.`startDateTime` AND 
+				'2017-08-04 23:59:59' < b.`endDateTime`
+			)
+	OR 		(
+				'2017-08-04 12:00:00' > b.`startDateTime` AND 
+				'2017-08-04 12:00:00' < b.`endDateTime`
+			)
+	)
+    LIMIT	1)
+	UNION
+	(SELECT 	COUNT(*) AS cnt
+	FROM 		`roomevent` rev
+	WHERE 		rev.`meetingRoomID` = 32
+	AND	 	
+	(
+			(
+				rev.`startDateTime` >= '2017-08-04 12:00:00' AND 
+				rev.`startDateTime` < '2017-08-04 23:59:59'
+			)                    
+	OR 		(
+				rev.`endDateTime` > '2017-08-04 12:00:00' AND 
+				rev.`endDateTime` <= '2017-08-04 23:59:59'
+			)                    
+	OR 		(
+				'2017-08-04 23:59:59' > rev.`startDateTime` AND 
+				'2017-08-04 23:59:59' < rev.`endDateTime`
+			)                   
+	OR 		(
+				'2017-08-04 12:00:00' > rev.`startDateTime` AND 
+				'2017-08-04 12:00:00' < rev.`endDateTime`
+			)
+	)
+    LIMIT 	1)
+) AS TimeSlotTaken;
 
 SELECT 		*
 FROM 		`roomevent` rev
@@ -108,7 +136,7 @@ SELECT	`EventID`				AS TheEventID,
 		WEEK(`lastDate`,3)		AS WeekEnd,
 		`daysSelected`			AS DaysSelected,
 		(
-			SELECT 		GROUP_CONCAT(m.`name` separator ",\n")
+			SELECT 		GROUP_CONCAT(DISTINCT m.`name` separator ",\n")
 			FROM		`roomevent` rev
 			INNER JOIN 	`meetingroom` m
 			ON			rev.`meetingRoomID` = m.`meetingRoomID`
