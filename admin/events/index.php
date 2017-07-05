@@ -510,50 +510,49 @@ if(isset($_POST['add']) AND $_POST['add'] == "Create Event"){
 
 	try
 	{
-		
-		$firstDate = convertDatetimeToFormat($timeSlotAvailableInfo[0]['StartDateTime'], 'Y-m-d H:i:s', 'Y-m-d');
-		$lastDate = convertDatetimeToFormat(end($timeSlotAvailableInfo)['EndDateTime'], 'Y-m-d H:i:s', 'Y-m-d');
-		$daysSelected = implode( "\n", $daysSelected);
-		// Insert the new event base information
-		$sql = "INSERT INTO `event`
-				SET			`name` = :EventName,
-							`description` = :EventDescription,
-							`startTime` = :StartTime,
-							`endTime` = :EndTime,
-							`startDate`= :FirstDate,
-							`lastDate` = :LastDate,
-							`daysSelected` = :DaysSelected,
-							`dateTimeCreated` = CURRENT_TIMESTAMP";
-		$s = $pdo->prepare($sql);
-		$s->bindValue(':EventName', $eventName);
-		$s->bindValue(':EventDescription', $eventDescription);
-		$s->bindValue(':StartTime', $startTime);
-		$s->bindValue(':EndTime', $endTime);
-		$s->bindValue(':FirstDate', $firstDate);
-		$s->bindValue(':LastDate', $lastDate);
-		$s->bindValue(':DaysSelected',$daysSelected);	
-		$s->execute();
-		
-		$EventID = $pdo->lastInsertID();
-		
-		// Insert new events into database
-		$sql = "INSERT INTO `roomevent`
-				SET			`EventID` = :EventID,
-							`meetingRoomID` = :MeetingRoomID,
-							`startDateTime` = :StartDateTime,
-							`endDateTime` = :EndDateTime";
-		$pdo->beginTransaction();
-		$s = $pdo->prepare($sql);
-		$s->bindValue(':EventID', $EventID);
-		foreach($timeSlotAvailableInfo AS $insert){
-			$s->bindValue(':MeetingRoomID', $insert['MeetingRoomID']);
-			$s->bindValue(':StartDateTime', $insert['StartDateTime']);
-			$s->bindValue(':EndDateTime', $insert['EndDateTime']);
+		if(isset($timeSlotAvailableInfo) AND sizeOf($timeSlotAvailableInfo) > 0){
+			$firstDate = convertDatetimeToFormat($timeSlotAvailableInfo[0]['StartDateTime'], 'Y-m-d H:i:s', 'Y-m-d');
+			$lastDate = convertDatetimeToFormat(end($timeSlotAvailableInfo)['EndDateTime'], 'Y-m-d H:i:s', 'Y-m-d');
+			$daysSelected = implode( "\n", $daysSelected);
+			// Insert the new event base information
+			$sql = "INSERT INTO `event`
+					SET			`name` = :EventName,
+								`description` = :EventDescription,
+								`startTime` = :StartTime,
+								`endTime` = :EndTime,
+								`startDate`= :FirstDate,
+								`lastDate` = :LastDate,
+								`daysSelected` = :DaysSelected,
+								`dateTimeCreated` = CURRENT_TIMESTAMP";
+			$s = $pdo->prepare($sql);
+			$s->bindValue(':EventName', $eventName);
+			$s->bindValue(':EventDescription', $eventDescription);
+			$s->bindValue(':StartTime', $startTime);
+			$s->bindValue(':EndTime', $endTime);
+			$s->bindValue(':FirstDate', $firstDate);
+			$s->bindValue(':LastDate', $lastDate);
+			$s->bindValue(':DaysSelected',$daysSelected);	
 			$s->execute();
+			
+			$EventID = $pdo->lastInsertID();
+			
+			// Insert new events into database
+			$sql = "INSERT INTO `roomevent`
+					SET			`EventID` = :EventID,
+								`meetingRoomID` = :MeetingRoomID,
+								`startDateTime` = :StartDateTime,
+								`endDateTime` = :EndDateTime";
+			$pdo->beginTransaction();
+			$s = $pdo->prepare($sql);
+			$s->bindValue(':EventID', $EventID);
+			foreach($timeSlotAvailableInfo AS $insert){
+				$s->bindValue(':MeetingRoomID', $insert['MeetingRoomID']);
+				$s->bindValue(':StartDateTime', $insert['StartDateTime']);
+				$s->bindValue(':EndDateTime', $insert['EndDateTime']);
+				$s->execute();
+			}
+			$pdo->commit();
 		}
-		$pdo->commit();
-
-		
 		$pdo = null;
 	}
 	catch(PDOException $e)
@@ -565,22 +564,45 @@ if(isset($_POST['add']) AND $_POST['add'] == "Create Event"){
 		exit();
 	}
 	
-	// Check if we got any hits, if so the timeslot is already taken
-	/* Old method if we cancel all events when one isn't available. We want to create the ones we can.
-	$row = $s->fetch(PDO::FETCH_ASSOC);		
-	if ($row['HitCount'] > 0){
-
-		// Timeslot was taken
-		rememberAddEventInputs();
-		$_SESSION['AddEventError'] = "The event couldn't be made. The timeslot is already taken for this meeting room.";
-		$_SESSION['refreshAddEvent'] = TRUE;	
-		header('Location: .');
-		exit();				
-	}*/
-
-	// TO-DO: Give feedback if any events couldn't be made
-	if(isset($timeSlotTakenInfo) AND sizeOf($timeSlotTakenInfo) > 0 ){
-		
+	// Display to admin the events that did not get created due to the timeslot being taken
+	if(isset($timeSlotAvailableInfo) AND sizeOf($timeSlotAvailableInfo) > 0){
+		if(isset($timeSlotTakenInfo) AND sizeOf($timeSlotTakenInfo) > 0 ){
+			// Get meeting room names from the IDs
+			$lastRoomID = "";
+			$roomName = "";
+			foreach($timeSlotTakenInfo AS $event){
+				$roomID = $event['MeetingRoomID'];
+				if($roomID != $lastRoomID){
+					foreach($_SESSION['AddEventMeetingRoomsArray'] AS $room){
+						if($room['MeetingRoomID'] == $roomID){
+							$roomName = $room['MeetingRoomName'];
+							break;
+						}
+					}
+				}
+				$timeSlotTakenInfoWithRoomNames[] = array(
+															'MeetingRoomName' => $roomName,
+															'StartDateTime' => $event['StartDateTime'],
+															'EndDateTime' => $event['EndDateTime']
+														);
+				$lastRoomID = $roomID;
+			}
+			
+			$_SESSION['EventsUserFeedback'] = 	"Could not add all the events to the schedule, due to the timeslot being occupied.\n" .
+												"In total " . sizeOf($timeSlotTakenInfo) . " events were not added.\n";
+												"The following dates and meeting rooms were already taken:";
+			
+			foreach($timeSlotTakenInfoWithRoomNames AS $event){
+				$_SESSION['EventsUserFeedback'] .= "\nMeeting Room: " . $event['MeetingRoomName'] . 
+													", Start Date: " . convertDatetimeToFormat($event['StartDateTime'], 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY) . 
+													", End Date: " . convertDatetimeToFormat($event['EndDateTime'], 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
+			}
+			$_SESSION['EventsUserFeedback'] .= ".";
+		} else {
+			$_SESSION['EventsUserFeedback'] = "Successfully added all events to the schedule.";
+		}
+	} else {
+		$_SESSION['EventsUserFeedback'] = "Could not add any events to the schedule, due to the timeslot being occupied for all of them.";
 	}
 	// TO-DO: Create log event?
 	

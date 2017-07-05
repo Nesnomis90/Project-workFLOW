@@ -136,7 +136,7 @@ SELECT	`EventID`				AS TheEventID,
 		WEEK(`lastDate`,3)		AS WeekEnd,
 		`daysSelected`			AS DaysSelected,
 		(
-			SELECT 		GROUP_CONCAT(m.`name` separator ",\n")
+			SELECT 		GROUP_CONCAT(DISTINCT m.`name` separator ",\n")
 			FROM		`roomevent` rev
 			INNER JOIN 	`meetingroom` m
 			ON			rev.`meetingRoomID` = m.`meetingRoomID`
