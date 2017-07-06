@@ -740,15 +740,7 @@ if(	((isset($_POST['action']) AND $_POST['action'] == 'Create Meeting')) OR
 			
 			// Get the logged in user's default booking information
 			$pdo = connect_to_db();
-			/* old SQL without company requirement restriction
-			$sql = 'SELECT	`bookingdescription`, 
-							`displayname`,
-							`firstName`,
-							`lastName`,
-							`email`
-					FROM 	`user`
-					WHERE 	`userID` = :userID
-					LIMIT 	1'; */
+
 			// New SQL where we require a company connection
 			$sql = "SELECT	(
 								SELECT COUNT(*)
@@ -1061,6 +1053,7 @@ if (isset($_POST['add']) AND $_POST['add'] == "Add Booking")
 	{
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 		$pdo = connect_to_db();
+		/* Old SQL without checking for events
 		$sql =	" 	SELECT 	COUNT(*)	AS HitCount
 					FROM 	(
 								SELECT 	1
@@ -1088,7 +1081,65 @@ if (isset($_POST['add']) AND $_POST['add'] == "Add Booking")
 										)
 								)
 								LIMIT 1
-							) AS BookingsFound";
+							) AS BookingsFound";*/
+							
+		$sql =	" 	SELECT SUM(cnt)	AS HitCount
+					FROM 
+					(
+						(
+						SELECT 		COUNT(*) AS cnt
+						FROM 		`booking` b
+						WHERE 		b.`meetingRoomID` = :MeetingRoomID
+						AND			b.`dateTimeCancelled` IS NULL
+						AND			b.`actualEndDateTime` IS NULL
+						AND		
+								(		
+										(
+											b.`startDateTime` >= :StartTime AND 
+											b.`startDateTime` < :EndTime
+										) 
+								OR 		(
+											b.`endDateTime` > :StartTime AND 
+											b.`endDateTime` <= :EndTime
+										)
+								OR 		(
+											:EndTime > b.`startDateTime` AND 
+											:EndTime < b.`endDateTime`
+										)
+								OR 		(
+											:StartTime > b.`startDateTime` AND 
+											:StartTime < b.`endDateTime`
+										)
+								)
+						LIMIT 1
+						)
+						UNION
+						(
+						SELECT 		COUNT(*) AS cnt
+						FROM 		`roomevent` rev
+						WHERE 		rev.`meetingRoomID` = :MeetingRoomID
+						AND	
+								(		
+										(
+											rev.`startDateTime` >= :StartTime AND 
+											rev.`startDateTime` < :EndTime
+										) 
+								OR 		(
+											rev.`endDateTime` > :StartTime AND 
+											rev.`endDateTime` <= :EndTime
+										)
+								OR 		(
+											:EndTime > rev.`startDateTime` AND 
+											:EndTime < rev.`endDateTime`
+										)
+								OR 		(
+											:StartTime > rev.`startDateTime` AND 
+											:StartTime < rev.`endDateTime`
+										)
+								)
+						LIMIT 1
+						)
+					) AS TimeSlotTaken";
 		$s = $pdo->prepare($sql);
 		
 		$s->bindValue(':MeetingRoomID', $meetingRoomID);
