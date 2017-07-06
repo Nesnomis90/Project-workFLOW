@@ -2,37 +2,6 @@ USE test;
 SET NAMES utf8;
 USE meetingflow;
 
-SELECT 		b.`bookingID`,
-			b.`companyID`,
-			m.`name` 										AS BookedRoomName, 
-			b.startDateTime 								AS StartTime, 
-			b.endDateTime									AS EndTime, 
-			b.displayName 									AS BookedBy,
-			c.`name` 										AS BookedForCompany,
-			u.firstName, 
-			u.lastName, 
-			u.email, 
-			GROUP_CONCAT(CONCAT(c2.`name`, ".") separator "\n") 			AS WorksForCompany, 
-			b.description 									AS BookingDescription, 
-			b.dateTimeCreated 								AS BookingWasCreatedOn, 
-			b.actualEndDateTime								AS BookingWasCompletedOn, 
-			b.dateTimeCancelled								AS BookingWasCancelledOn 
-FROM 		`booking` b 
-LEFT JOIN 	`meetingroom` m 
-ON 			b.meetingRoomID = m.meetingRoomID 
-LEFT JOIN 	`user` u 
-ON 			u.userID = b.userID 
-LEFT JOIN 	`employee` e 
-ON 			e.UserID = b.userID 
-LEFT JOIN 	`company` c 
-ON 			c.CompanyID = b.CompanyID
-LEFT JOIN 	`company` c2
-ON 			c2.CompanyID = e.CompanyID
-WHERE		c.`isActive` = 1
-GROUP BY 	b.bookingID
-ORDER BY 	b.bookingID
-DESC;
-
 SELECT 		b.`userID`										AS BookedUserID,
 			b.`bookingID`,
 			(

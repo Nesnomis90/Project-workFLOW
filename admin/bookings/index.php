@@ -1122,34 +1122,64 @@ if(isset($_POST['edit']) AND $_POST['edit'] == "Finish Edit")
 		{
 			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 			$pdo = connect_to_db();
-			$sql =	" 	SELECT 	COUNT(*)	AS HitCount
-						FROM 	(
-									SELECT 	1
-									FROM 	`booking`
-									WHERE 	`meetingRoomID` = :MeetingRoomID
-									AND		`dateTimeCancelled` IS NULL
-									AND		`actualEndDateTime` IS NULL
-									AND		
-									(		
+			$sql =	" 	SELECT SUM(cnt)	AS HitCount
+						FROM
+						(
+							(
+							SELECT 		COUNT(*) AS cnt
+							FROM 		`booking` b
+							WHERE 		b.`meetingRoomID` = :MeetingRoomID
+							AND			b.`dateTimeCancelled` IS NULL
+							AND			b.`actualEndDateTime` IS NULL
+							AND			b.`bookingID` != :BookingID
+							AND
+									(
 											(
-												`startDateTime` >= :StartTime AND 
-												`startDateTime` < :EndTime
+												b.`startDateTime` >= :StartTime AND 
+												b.`startDateTime` < :EndTime
 											) 
 									OR 		(
-												`endDateTime` > :StartTime AND 
-												`endDateTime` <= :EndTime
+												b.`endDateTime` > :StartTime AND 
+												b.`endDateTime` <= :EndTime
 											)
 									OR 		(
-												:EndTime > `startDateTime` AND 
-												:EndTime < `endDateTime`
+												:EndTime > b.`startDateTime` AND 
+												:EndTime < b.`endDateTime`
 											)
 									OR 		(
-												:StartTime > `startDateTime` AND 
-												:StartTime < `endDateTime`
+												:StartTime > b.`startDateTime` AND 
+												:StartTime < b.`endDateTime`
 											)
 									)
-									LIMIT 1
-								) AS BookingsFound";
+							LIMIT 1
+							)
+							UNION
+							(
+							SELECT 		COUNT(*) AS cnt
+							FROM 		`roomevent` rev
+							WHERE 		rev.`meetingRoomID` = :MeetingRoomID
+							AND
+									(
+											(
+												rev.`startDateTime` >= :StartTime AND 
+												rev.`startDateTime` < :EndTime
+											) 
+									OR 		(
+												rev.`endDateTime` > :StartTime AND 
+												rev.`endDateTime` <= :EndTime
+											)
+									OR 		(
+												:EndTime > rev.`startDateTime` AND 
+												:EndTime < rev.`endDateTime`
+											)
+									OR 		(
+												:StartTime > rev.`startDateTime` AND 
+												:StartTime < rev.`endDateTime`
+											)
+									)
+							LIMIT 1
+							)
+						) AS TimeSlotTaken";
 			$s = $pdo->prepare($sql);
 				
 			$s->bindValue(':MeetingRoomID', $_POST['meetingRoomID']);
@@ -1292,15 +1322,15 @@ if(isset($_POST['edit']) AND $_POST['edit'] == "Finish Edit")
 			$_SESSION['BookingUserFeedback'] .= " This is the email msg we're sending out: $emailMessage. Sent to email: $email."; // TO-DO: Remove after testing
 		
 			// Send information to old user that their meeting has been cancelled/transferred
-			// TO-DO: Make two emails here. One cancelled for old booking and one created for new booking.
 			$emailSubject = "Your meeting has been cancelled by an Admin!";
 			
 			$emailMessage = 
-			"Your booked meeting has been removed by an Admin!\n" .
-			"The meeting you booking for: \n" .
+			"Your booked meeting has been cancelled by an Admin!\n" .
+			"The meeting you had booked for: \n" .
 			"Meeting Room: " . $oldMeetingRoomName . ".\n" . 
 			"Start Time: " . $OldStartDate . ".\n" .
-			"End Time: " . $OldEndDate . ".\n\n";
+			"End Time: " . $OldEndDate . ".\n"
+			"Is no longer active.";
 			
 			$email = $originalValue['UserEmail'];
 		} else {
@@ -1763,6 +1793,64 @@ if (isset($_POST['add']) AND $_POST['add'] == "Add booking")
 	{
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 		$pdo = connect_to_db();
+		$sql =	" 	SELECT SUM(cnt)	AS HitCount
+					FROM 
+					(
+						(
+						SELECT 		COUNT(*) AS cnt
+						FROM 		`booking` b
+						WHERE 		b.`meetingRoomID` = :MeetingRoomID
+						AND			b.`dateTimeCancelled` IS NULL
+						AND			b.`actualEndDateTime` IS NULL
+						AND		
+								(		
+										(
+											b.`startDateTime` >= :StartTime AND 
+											b.`startDateTime` < :EndTime
+										) 
+								OR 		(
+											b.`endDateTime` > :StartTime AND 
+											b.`endDateTime` <= :EndTime
+										)
+								OR 		(
+											:EndTime > b.`startDateTime` AND 
+											:EndTime < b.`endDateTime`
+										)
+								OR 		(
+											:StartTime > b.`startDateTime` AND 
+											:StartTime < b.`endDateTime`
+										)
+								)
+						LIMIT 1
+						)
+						UNION
+						(
+						SELECT 		COUNT(*) AS cnt
+						FROM 		`roomevent` rev
+						WHERE 		rev.`meetingRoomID` = :MeetingRoomID
+						AND	
+								(		
+										(
+											rev.`startDateTime` >= :StartTime AND 
+											rev.`startDateTime` < :EndTime
+										) 
+								OR 		(
+											rev.`endDateTime` > :StartTime AND 
+											rev.`endDateTime` <= :EndTime
+										)
+								OR 		(
+											:EndTime > rev.`startDateTime` AND 
+											:EndTime < rev.`endDateTime`
+										)
+								OR 		(
+											:StartTime > rev.`startDateTime` AND 
+											:StartTime < rev.`endDateTime`
+										)
+								)
+						LIMIT 1
+						)
+					) AS TimeSlotTaken";
+		/* Old SQL without checking events
 		$sql =	" 	SELECT 	COUNT(*)	AS HitCount
 					FROM 	(
 								SELECT 	1
@@ -1790,7 +1878,7 @@ if (isset($_POST['add']) AND $_POST['add'] == "Add booking")
 										)
 								)
 								LIMIT 1
-							) AS BookingsFound";
+							) AS BookingsFound"; */
 		$s = $pdo->prepare($sql);
 		
 		$s->bindValue(':MeetingRoomID', $_POST['meetingRoomID']);
@@ -2316,38 +2404,7 @@ if(!isset($_GET['Meetingroom'])){
 							b.`dateTimeCancelled`							AS BookingWasCancelledOn 
 				FROM 		`booking` b
 				ORDER BY 	UNIX_TIMESTAMP(b.`startDateTime`)
-				ASC';		
-		/* OLD SQL query (heavy cost)
-		$sql = 'SELECT 		b.`bookingID`,
-							b.`companyID`,
-							m.`name` 										AS BookedRoomName, 
-							b.startDateTime 								AS StartTime, 
-							b.endDateTime									AS EndTime, 
-							b.displayName 									AS BookedBy,
-							c.`name` 										AS BookedForCompany,
-							u.firstName, 
-							u.lastName, 
-							u.email, 
-							GROUP_CONCAT(CONCAT(c2.`name`, ".") separator "\n") 			AS WorksForCompany, 
-							b.description 									AS BookingDescription, 
-							b.dateTimeCreated 								AS BookingWasCreatedOn, 
-							b.actualEndDateTime								AS BookingWasCompletedOn, 
-							b.dateTimeCancelled								AS BookingWasCancelledOn 
-				FROM 		`booking` b 
-				LEFT JOIN 	`meetingroom` m 
-				ON 			b.meetingRoomID = m.meetingRoomID 
-				LEFT JOIN 	`user` u 
-				ON 			u.userID = b.userID 
-				LEFT JOIN 	`employee` e 
-				ON 			e.UserID = b.userID 
-				LEFT JOIN 	`company` c 
-				ON 			c.CompanyID = b.CompanyID
-				LEFT JOIN 	`company` c2
-				ON 			c2.CompanyID = e.CompanyID
-				WHERE		c.`isActive` = 1
-				GROUP BY 	b.bookingID
-				ORDER BY 	b.bookingID
-				DESC';*/
+				ASC';
 		$result = $pdo->query($sql);
 
 		//Close the connection
