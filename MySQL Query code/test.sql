@@ -2,7 +2,178 @@ USE test;
 SET NAMES utf8;
 USE meetingflow;
 
-
+SELECT 		c.`companyID` 										AS CompID,
+			c.`name` 											AS CompanyName,
+			c.`dateTimeCreated`									AS DatetimeCreated,
+			c.`removeAtDate`									AS DeletionDate,
+			c.`isActive`										AS CompanyActivated,
+			(
+				SELECT 	COUNT(e.`CompanyID`)
+				FROM 	`employee` e
+				WHERE 	e.`companyID` = CompID
+			)													AS NumberOfEmployees, 
+			(
+				SELECT (BIG_SEC_TO_TIME(SUM(
+										IF(
+											(
+												(
+													DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
+													)*86400 
+												+ 
+												(
+													TIME_TO_SEC(b.`actualEndDateTime`) 
+													- 
+													TIME_TO_SEC(b.`startDateTime`)
+													) 
+											) > 60,
+											IF(
+												(
+												(
+													DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
+													)*86400 
+												+ 
+												(
+													TIME_TO_SEC(b.`actualEndDateTime`) 
+													- 
+													TIME_TO_SEC(b.`startDateTime`)
+													) 
+											) > 900, 
+												(
+												(
+													DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
+													)*86400 
+												+ 
+												(
+													TIME_TO_SEC(b.`actualEndDateTime`) 
+													- 
+													TIME_TO_SEC(b.`startDateTime`)
+													) 
+											), 
+												900
+											),
+											0
+										)
+				)))	AS BookingTimeUsed
+				FROM 		`booking` b  
+				INNER JOIN 	`company` c 
+				ON 			b.`CompanyID` = c.`CompanyID` 
+				WHERE 		b.`CompanyID` = CompID
+				AND 		b.`actualEndDateTime`
+				BETWEEN		c.`prevStartDate`
+				AND			c.`startDate`
+			)   												AS PreviousMonthCompanyWideBookingTimeUsed,           
+			(
+				SELECT (BIG_SEC_TO_TIME(SUM(
+										IF(
+											(
+												(
+													DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
+													)*86400 
+												+ 
+												(
+													TIME_TO_SEC(b.`actualEndDateTime`) 
+													- 
+													TIME_TO_SEC(b.`startDateTime`)
+													) 
+											) > 60,
+											IF(
+												(
+												(
+													DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
+													)*86400 
+												+ 
+												(
+													TIME_TO_SEC(b.`actualEndDateTime`) 
+													- 
+													TIME_TO_SEC(b.`startDateTime`)
+													) 
+											) > 900, 
+												(
+												(
+													DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
+													)*86400 
+												+ 
+												(
+													TIME_TO_SEC(b.`actualEndDateTime`) 
+													- 
+													TIME_TO_SEC(b.`startDateTime`)
+													) 
+											), 
+												900
+											),
+											0
+										)
+				)))	AS BookingTimeUsed
+				FROM 		`booking` b  
+				INNER JOIN 	`company` c 
+				ON 			b.`CompanyID` = c.`CompanyID` 
+				WHERE 		b.`CompanyID` = CompID
+				AND 		b.`actualEndDateTime`
+				BETWEEN		c.`startDate`
+				AND			c.`endDate`
+			)													AS MonthlyCompanyWideBookingTimeUsed,
+   						(
+				SELECT (BIG_SEC_TO_TIME(SUM(
+										IF(
+											(
+												(
+													DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
+													)*86400 
+												+ 
+												(
+													TIME_TO_SEC(b.`actualEndDateTime`) 
+													- 
+													TIME_TO_SEC(b.`startDateTime`)
+													) 
+											) > 60,
+											IF(
+												(
+												(
+													DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
+													)*86400 
+												+ 
+												(
+													TIME_TO_SEC(b.`actualEndDateTime`) 
+													- 
+													TIME_TO_SEC(b.`startDateTime`)
+													) 
+											) > 900, 
+												(
+												(
+													DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
+													)*86400 
+												+ 
+												(
+													TIME_TO_SEC(b.`actualEndDateTime`) 
+													- 
+													TIME_TO_SEC(b.`startDateTime`)
+													) 
+											), 
+												900
+											),
+											0
+										)
+				)))	AS BookingTimeUsed
+				FROM 		`booking` b
+				WHERE 		b.`CompanyID` = CompID
+			)													AS TotalCompanyWideBookingTimeUsed,
+			cc.`altMinuteAmount`								AS CompanyAlternativeMinuteAmount,
+			cc.`lastModified`									AS CompanyCreditsLastModified,
+			cr.`name`											AS CreditSubscriptionName,
+			cr.`minuteAmount`									AS CreditSubscriptionMinuteAmount,
+			cr.`monthlyPrice`									AS CreditSubscriptionMonthlyPrice,
+			cr.`overCreditMinutePrice`							AS CreditSubscriptionMinutePrice,
+			cr.`overCreditHourPrice`							AS CreditSubscriptionHourPrice,
+			COUNT(DISTINCT cch.`startDate`)						AS CompanyCreditsHistoryPeriods,
+			SUM(cch.`hasBeenBilled`)							AS CompanyCreditsHistoryPeriodsSetAsBilled            
+FROM 		`company` c
+LEFT JOIN	`companycredits` cc
+ON			c.`CompanyID` = cc.`CompanyID`
+LEFT JOIN	`credits` cr
+ON			cr.`CreditsID` = cc.`CreditsID`
+LEFT JOIN 	`companycreditshistory` cch
+ON 			cch.`CompanyID` = c.`CompanyID`
+GROUP BY 	c.`CompanyID`;
 
 SELECT 		(
 				BIG_SEC_TO_TIME(
@@ -567,183 +738,6 @@ INNER JOIN (
 WHERE b.`CompanyID` = 2
 GROUP BY b.`bookingID`;
 
-SELECT 		c.companyID 										AS CompID,
-			c.`name` 											AS CompanyName,
-			c.`dateTimeCreated`									AS DatetimeCreated,
-			c.`removeAtDate`									AS DeletionDate,
-			c.`isActive`										AS CompanyActivated,
-			(
-				SELECT 	COUNT(c.`name`) 
-				FROM 	`company` c 
-				JOIN 	`employee` e 
-				ON 		c.CompanyID = e.CompanyID 
-				WHERE 	e.companyID = CompID
-			)													AS NumberOfEmployees, 
-			(
-				SELECT (BIG_SEC_TO_TIME(SUM(
-										IF(
-											(
-												(
-													DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
-													)*86400 
-												+ 
-												(
-													TIME_TO_SEC(b.`actualEndDateTime`) 
-													- 
-													TIME_TO_SEC(b.`startDateTime`)
-													) 
-											) > 60,
-											IF(
-												(
-												(
-													DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
-													)*86400 
-												+ 
-												(
-													TIME_TO_SEC(b.`actualEndDateTime`) 
-													- 
-													TIME_TO_SEC(b.`startDateTime`)
-													) 
-											) > 900, 
-												(
-												(
-													DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
-													)*86400 
-												+ 
-												(
-													TIME_TO_SEC(b.`actualEndDateTime`) 
-													- 
-													TIME_TO_SEC(b.`startDateTime`)
-													) 
-											), 
-												900
-											),
-											0
-										)
-				)))	AS BookingTimeUsed
-				FROM 		`booking` b  
-				INNER JOIN 	`company` c 
-				ON 			b.`CompanyID` = c.`CompanyID` 
-				WHERE 		b.`CompanyID` = CompID
-				AND 		b.`actualEndDateTime`
-				BETWEEN		c.`prevStartDate`
-				AND			c.`startDate`
-			)   												AS PreviousMonthCompanyWideBookingTimeUsed,           
-			(
-				SELECT (BIG_SEC_TO_TIME(SUM(
-										IF(
-											(
-												(
-													DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
-													)*86400 
-												+ 
-												(
-													TIME_TO_SEC(b.`actualEndDateTime`) 
-													- 
-													TIME_TO_SEC(b.`startDateTime`)
-													) 
-											) > 60,
-											IF(
-												(
-												(
-													DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
-													)*86400 
-												+ 
-												(
-													TIME_TO_SEC(b.`actualEndDateTime`) 
-													- 
-													TIME_TO_SEC(b.`startDateTime`)
-													) 
-											) > 900, 
-												(
-												(
-													DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
-													)*86400 
-												+ 
-												(
-													TIME_TO_SEC(b.`actualEndDateTime`) 
-													- 
-													TIME_TO_SEC(b.`startDateTime`)
-													) 
-											), 
-												900
-											),
-											0
-										)
-				)))	AS BookingTimeUsed
-				FROM 		`booking` b  
-				INNER JOIN 	`company` c 
-				ON 			b.`CompanyID` = c.`CompanyID` 
-				WHERE 		b.`CompanyID` = CompID
-				AND 		b.`actualEndDateTime`
-				BETWEEN		c.`startDate`
-				AND			c.`endDate`
-			)													AS MonthlyCompanyWideBookingTimeUsed,
-   						(
-				SELECT (BIG_SEC_TO_TIME(SUM(
-										IF(
-											(
-												(
-													DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
-													)*86400 
-												+ 
-												(
-													TIME_TO_SEC(b.`actualEndDateTime`) 
-													- 
-													TIME_TO_SEC(b.`startDateTime`)
-													) 
-											) > 60,
-											IF(
-												(
-												(
-													DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
-													)*86400 
-												+ 
-												(
-													TIME_TO_SEC(b.`actualEndDateTime`) 
-													- 
-													TIME_TO_SEC(b.`startDateTime`)
-													) 
-											) > 900, 
-												(
-												(
-													DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
-													)*86400 
-												+ 
-												(
-													TIME_TO_SEC(b.`actualEndDateTime`) 
-													- 
-													TIME_TO_SEC(b.`startDateTime`)
-													) 
-											), 
-												900
-											),
-											0
-										)
-				)))	AS BookingTimeUsed
-				FROM 		`booking` b  
-				INNER JOIN 	`company` c 
-				ON 			b.`CompanyID` = c.`CompanyID` 
-				WHERE 		b.`CompanyID` = CompID
-			)													AS TotalCompanyWideBookingTimeUsed,
-			cc.`altMinuteAmount`								AS CompanyAlternativeMinuteAmount,
-			cc.`lastModified`									AS CompanyCreditsLastModified,
-			cr.`name`											AS CreditSubscriptionName,
-			cr.`minuteAmount`									AS CreditSubscriptionMinuteAmount,
-			cr.`monthlyPrice`									AS CreditSubscriptionMonthlyPrice,
-			cr.`overCreditMinutePrice`							AS CreditSubscriptionMinutePrice,
-			cr.`overCreditHourPrice`							AS CreditSubscriptionHourPrice,
-			COUNT(DISTINCT cch.`startDate`)						AS CompanyCreditsHistoryPeriods,
-			SUM(cch.`hasBeenBilled`)						AS CompanyCreditsHistoryPeriodsSetAsBilled            
-FROM 		`company` c
-LEFT JOIN	`companycredits` cc
-ON			c.`CompanyID` = cc.`CompanyID`
-LEFT JOIN	`credits` cr
-ON			cr.`CreditsID` = cc.`CreditsID`
-LEFT JOIN 	`companycreditshistory` cch
-ON 			cch.`CompanyID` = c.`CompanyID`
-GROUP BY 	c.`CompanyID`;
-
 SELECT *, COUNT(cch.`CompanyID`) AS Blah
 FROM 		`company` c
 LEFT JOIN	`companycredits` cc
@@ -944,35 +938,6 @@ INNER JOIN 	`credits` cr
 ON			cr.`CreditsID` = cc.`CreditsID`
 WHERE 		c.`isActive` = 1
 AND			CURDATE() > c.`endDate`;
-
-SELECT 	COUNT(*)	AS HitCount
-FROM 	(
- 			SELECT 	1
-			FROM 	`booking`
-			WHERE 	`meetingRoomID` = 21
-            AND		`dateTimeCancelled` IS NULL
-            AND		`actualEndDateTime` IS NULL
-            AND
-			(		
-					(
-						`startDateTime` > '2017-06-16 15:15:00' AND 
-						`startDateTime` < '2017-06-16 17:00:00'
-					) 
-			OR 		(
-						`endDateTime` > '2017-06-16 15:15:00' AND 
-						`endDateTime` < '2017-06-16 17:00:00'
-					)
-			OR 		(
-						'2017-06-16 17:00:00' > `startDateTime` AND 
-						'2017-06-16 17:00:00' < `endDateTime`
-					)
-			OR 		(
-						'2017-06-16 15:15:00' > `startDateTime` AND 
-						'2017-06-16 15:15:00' < `endDateTime`
-					)
-			)
-            LIMIT 1
-		) AS BookingsFound;
 
 SELECT  	m.`meetingRoomID`	AS TheMeetingRoomID, 
 			m.`name`			AS MeetingRoomName, 
@@ -1196,88 +1161,6 @@ DELETE FROM 	`credits`
 WHERE	`CreditsID` = 1
 AND		`name` != 'Default';
 
-SELECT 		c.`companyID` 										AS CompID,
-			c.`name` 											AS CompanyName,
-			c.`dateTimeCreated`									AS DatetimeCreated,
-			(
-				SELECT (
-						BIG_SEC_TO_TIME(
-										SUM(
-											DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
-											)*86400 
-										+ 
-										SUM(
-											TIME_TO_SEC(b.`actualEndDateTime`) 
-											- 
-											TIME_TO_SEC(b.`startDateTime`)
-											) 
-										) 
-						) 
-				FROM 		`booking` b  
-				INNER JOIN 	`company` c 
-				ON 			b.`CompanyID` = c.`CompanyID` 
-				WHERE 		b.`CompanyID` = CompID
-				AND 		b.`actualEndDateTime`
-				BETWEEN		c.`prevStartDate`
-				AND			c.`startDate`
-			)   												AS PreviousMonthCompanyWideBookingTimeUsed,           
-			(
-				SELECT (
-						BIG_SEC_TO_TIME(
-										SUM(
-											DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
-											)*86400 
-										+ 
-										SUM(
-											TIME_TO_SEC(b.`actualEndDateTime`) 
-											- 
-											TIME_TO_SEC(b.`startDateTime`)
-											) 
-										) 
-						) 
-				FROM 		`booking` b  
-				INNER JOIN 	`company` c 
-				ON 			b.`CompanyID` = c.`CompanyID` 
-				WHERE 		b.`CompanyID` = CompID
-				AND 		b.`actualEndDateTime`
-				BETWEEN		c.`startDate`
-				AND			c.`endDate`
-			)   												AS MonthlyCompanyWideBookingTimeUsed,
-			(
-				SELECT (
-						BIG_SEC_TO_TIME(
-										SUM(
-											DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
-											)*86400 
-										+ 
-										SUM(
-											TIME_TO_SEC(b.`actualEndDateTime`) 
-											- 
-											TIME_TO_SEC(b.`startDateTime`)
-											) 
-										) 
-						)
-				FROM 		`booking` b 
-				INNER JOIN 	`company` c 
-				ON 			b.`CompanyID` = c.`CompanyID` 
-				WHERE 		b.`CompanyID` = CompID
-			)   												AS TotalCompanyWideBookingTimeUsed,
-			cc.`altMinuteAmount`								AS CompanyAlternativeMinuteAmount,
-			cc.`lastModified`									AS CompanyCreditsLastModified,
-			cr.`name`											AS CreditSubscriptionName,
-			cr.`minuteAmount`									AS CreditSubscriptionMinuteAmount,
-			cr.`monthlyPrice`									AS CreditSubscriptionMonthlyPrice,
-			cr.`overCreditMinutePrice`							AS CreditSubscriptionMinutePrice,
-			cr.`overCreditHourPrice`							AS CreditSubscriptionHourPrice
-FROM 		`company` c
-LEFT JOIN	`companycredits` cc
-ON			c.`CompanyID` = cc.`CompanyID`
-LEFT JOIN	`credits` cr
-ON			cr.`CreditsID` = cc.`CreditsID`
-WHERE		c.`companyID` = 1
-GROUP BY 	c.`name`;
-
-
 INSERT INTO `companycredits`(`CompanyID`, `CreditsID`) VALUES (39,2),(18,2);
 
 SELECT 		COUNT(*)
@@ -1347,100 +1230,9 @@ BETWEEN `startDateTime`
 AND		`endDateTime`
 AND 	`bookingID` <> 0;
 
-
-SELECT 		c.companyID 										AS CompID,
-			c.`name` 											AS CompanyName,
-			c.`dateTimeCreated`									AS DatetimeCreated,
-			c.`removeAtDate`									AS DeletionDate,
-			c.`isActive`										AS CompanyActivated,
-			(
-				SELECT 	COUNT(c.`name`) 
-				FROM 	`company` c 
-				JOIN 	`employee` e 
-				ON 		c.CompanyID = e.CompanyID 
-				WHERE 	e.companyID = CompID
-			)													AS NumberOfEmployees, 
- 			(
-				SELECT (
-						BIG_SEC_TO_TIME(
-										SUM(
-											DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
-											)*86400 
-										+ 
-										SUM(
-											TIME_TO_SEC(b.`actualEndDateTime`) 
-											- 
-											TIME_TO_SEC(b.`startDateTime`)
-											) 
-										) 
-						) 
-				FROM 		`booking` b  
-				INNER JOIN 	`company` c 
-				ON 			b.`CompanyID` = c.`CompanyID` 
-				WHERE 		b.`CompanyID` = CompID
-				AND 		b.`actualEndDateTime`
-                BETWEEN		c.`prevStartDate`
-                AND			c.`startDate`
-			)   												AS PreviousMonthCompanyWideBookingTimeUsed,           
-			(
-				SELECT (
-						BIG_SEC_TO_TIME(
-										SUM(
-											DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
-											)*86400 
-										+ 
-										SUM(
-											TIME_TO_SEC(b.`actualEndDateTime`) 
-											- 
-											TIME_TO_SEC(b.`startDateTime`)
-											) 
-										) 
-						) 
-				FROM 		`booking` b  
-				INNER JOIN 	`company` c 
-				ON 			b.`CompanyID` = c.`CompanyID` 
-				WHERE 		b.`CompanyID` = CompID
-				AND 		b.`actualEndDateTime`
-                BETWEEN		c.`startDate`
-                AND			c.`endDate`
-			)   												AS MonthlyCompanyWideBookingTimeUsed,
-			(
-				SELECT (
-						BIG_SEC_TO_TIME(
-										SUM(
-											DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
-											)*86400 
-										+ 
-										SUM(
-											TIME_TO_SEC(b.`actualEndDateTime`) 
-											- 
-											TIME_TO_SEC(b.`startDateTime`)
-											) 
-										) 
-						)
-				FROM 		`booking` b 
-				INNER JOIN 	`company` c 
-				ON 			b.`CompanyID` = c.`CompanyID` 
-				WHERE 		b.`CompanyID` = CompID
-			)   												AS TotalCompanyWideBookingTimeUsed,
-            cc.`altMinuteAmount`								AS CompanyAlternativeMinuteAmount,
-            cc.`lastModified`									AS CompanyCreditsLastModified,
-            cr.`name`											AS CreditSubscriptionName,
-            cr.`minuteAmount`									AS CreditSubscriptionMinuteAmount,
-            cr.`monthlyPrice`									AS CreditSubscriptionMonthlyPrice,
-            cr.`overCreditMinutePrice`							AS CreditSubscriptionMinutePrice,
-            cr.`overCreditHourPrice`							AS CreditSubscriptionHourPrice
-FROM 		`company` c
-LEFT JOIN	`companycredits` cc
-ON			c.`CompanyID` = cc.`CompanyID`
-LEFT JOIN	`credits` cr
-ON			cr.`CreditsID` = cc.`CreditsID`
-GROUP BY 	c.`name`;
-
 INSERT INTO `companycredits`
 SET 		`CompanyID` = 21,
 			`CreditsID` = 2;
-
 
 INSERT INTO `companycredits`
 SET 		`CompanyID` = 1,
@@ -2472,21 +2264,11 @@ DELETE FROM `user` WHERE `userID` = 9;
 
 INSERT INTO `employee`(`companyID`, `userID`, `positionID`) VALUES (1,1,2);
 
-DELETE FROM `employee` WHERE `UserID` = 10 AND `companyID` = 1;
-
-SELECT * FROM `booking` ORDER BY `startDateTime` ASC;
-
 DELETE FROM `booking` WHERE `bookingID` <> 0 AND ((`actualEndDateTime` < CURDATE() - INTERVAL 30 DAY) OR  (`dateTimeCancelled` < CURDATE() - INTERVAL 30 DAY));
-
-DELETE FROM `booking` WHERE `bookingID` = 8;
 
 UPDATE `company` SET `removeAtDate` = DATE(CURRENT_TIMESTAMP) WHERE `CompanyID` = 9;
 
 DELETE FROM `company` WHERE `removeAtDate` IS NOT NULL AND `removeAtDate` < CURRENT_TIMESTAMP AND `CompanyID` <> 0;
-
-DELETE FROM `company` WHERE `CompanyID` = 8;
-
-DELETE FROM `user` WHERE userID = 15;
 
 UPDATE `accesslevel` SET `Description` = 'New description of the permission for the access level' WHERE `AccessID` = 6;
 

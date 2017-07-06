@@ -1619,11 +1619,9 @@ try
 						c.`removeAtDate`									AS DeletionDate,
 						c.`isActive`										AS CompanyActivated,
 						(
-							SELECT 	COUNT(c.`name`) 
-							FROM 	`company` c 
-							JOIN 	`employee` e 
-							ON 		c.CompanyID = e.CompanyID 
-							WHERE 	e.companyID = CompID
+							SELECT 	COUNT(e.`CompanyID`)
+							FROM 	`employee` e
+							WHERE 	e.`companyID` = CompID
 						)													AS NumberOfEmployees,
 						(
 							SELECT (BIG_SEC_TO_TIME(SUM(
@@ -1767,9 +1765,7 @@ try
 														0
 													)
 							)))	AS BookingTimeUsed
-							FROM 		`booking` b  
-							INNER JOIN 	`company` c 
-							ON 			b.`CompanyID` = c.`CompanyID` 
+							FROM 		`booking` b
 							WHERE 		b.`CompanyID` = CompID
 						)													AS TotalCompanyWideBookingTimeUsed,
 						cc.`altMinuteAmount`								AS CompanyAlternativeMinuteAmount,
