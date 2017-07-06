@@ -1850,35 +1850,6 @@ if (isset($_POST['add']) AND $_POST['add'] == "Add booking")
 						LIMIT 1
 						)
 					) AS TimeSlotTaken";
-		/* Old SQL without checking events
-		$sql =	" 	SELECT 	COUNT(*)	AS HitCount
-					FROM 	(
-								SELECT 	1
-								FROM 	`booking`
-								WHERE 	`meetingRoomID` = :MeetingRoomID
-								AND		`dateTimeCancelled` IS NULL
-								AND		`actualEndDateTime` IS NULL
-								AND		
-								(		
-										(
-											`startDateTime` >= :StartTime AND 
-											`startDateTime` < :EndTime
-										) 
-								OR 		(
-											`endDateTime` > :StartTime AND 
-											`endDateTime` <= :EndTime
-										)
-								OR 		(
-											:EndTime > `startDateTime` AND 
-											:EndTime < `endDateTime`
-										)
-								OR 		(
-											:StartTime > `startDateTime` AND 
-											:StartTime < `endDateTime`
-										)
-								)
-								LIMIT 1
-							) AS BookingsFound"; */
 		$s = $pdo->prepare($sql);
 		
 		$s->bindValue(':MeetingRoomID', $_POST['meetingRoomID']);

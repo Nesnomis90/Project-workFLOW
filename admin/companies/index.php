@@ -350,17 +350,19 @@ function calculatePeriodInformation($pdo, $companyID, $BillingStart, $BillingEnd
 						)						AS BookingTimeCharged,
 						b.`startDateTime`		AS BookingStartedDatetime,
 						b.`actualEndDateTime`	AS BookingCompletedDatetime,
-						u.`firstName`			AS UserFirstname,
-						u.`lastName`			AS UserLastname,
-						u.`email`				AS UserEmail,
-						m.`name`				AS MeetingRoomName
+						(
+							IF(b.`userID` IS NULL, NULL, (SELECT `firstName` FROM `user` WHERE `userID` = b.`userID`))
+						)						AS UserFirstname,
+						(
+							IF(b.`userID` IS NULL, NULL, (SELECT `lastName` FROM `user` WHERE `userID` = b.`userID`))
+						)						AS UserLastname,
+						(
+							IF(b.`userID` IS NULL, NULL, (SELECT `email` FROM `user` WHERE `userID` = b.`userID`))
+						)						AS UserEmail,
+						(
+							IF(b.`meetingRoomID` IS NULL, NULL, (SELECT `name` FROM `meetingroom` WHERE `meetingRoomID` = b.`meetingRoomID`))
+						) 						AS MeetingRoomName
 			FROM 		`booking` b
-			INNER JOIN  `company` c
-			ON 			c.`CompanyID` = b.`companyID`
-			LEFT JOIN	`user` u
-			ON 			u.`userID` = b.`userID`
-			LEFT JOIN 	`meetingroom` m
-			ON			m.`meetingRoomID` = b.`meetingRoomID`
 			WHERE   	b.`CompanyID` = :CompanyID
 			AND 		b.`actualEndDateTime` IS NOT NULL
 			AND     	b.`dateTimeCancelled` IS NULL

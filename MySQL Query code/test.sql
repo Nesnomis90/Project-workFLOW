@@ -2,6 +2,162 @@ USE test;
 SET NAMES utf8;
 USE meetingflow;
 
+
+
+SELECT 		(
+				BIG_SEC_TO_TIME(
+						(
+							DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
+							)*86400 
+						+ 
+						(
+							TIME_TO_SEC(b.`actualEndDateTime`) 
+							- 
+							TIME_TO_SEC(b.`startDateTime`)
+						)
+					)
+				)						AS BookingTimeUsed,
+			(
+				BIG_SEC_TO_TIME(
+					IF(
+						(
+							(
+								DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
+								)*86400 
+							+ 
+							(
+								TIME_TO_SEC(b.`actualEndDateTime`) 
+								- 
+								TIME_TO_SEC(b.`startDateTime`)
+							) 
+						) > 60,
+						IF(
+							(
+								(
+									DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
+									)*86400 
+								+ 
+								(
+									TIME_TO_SEC(b.`actualEndDateTime`) 
+									- 
+									TIME_TO_SEC(b.`startDateTime`)
+								) 
+							) > 900, 
+							(
+								(
+									DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
+									)*86400 
+								+ 
+								(
+									TIME_TO_SEC(b.`actualEndDateTime`) 
+									- 
+									TIME_TO_SEC(b.`startDateTime`)
+								) 
+							), 
+							900
+						),
+						0
+                    )
+				)
+            )						AS BookingTimeCharged,
+			b.`startDateTime`		AS BookingStartedDatetime,
+			b.`actualEndDateTime`	AS BookingCompletedDatetime,
+			(
+				IF(b.`userID` IS NULL, NULL, (SELECT `firstName` FROM `user` WHERE `userID` = b.`userID`))
+			)						AS UserFirstname,
+			(
+				IF(b.`userID` IS NULL, NULL, (SELECT `lastName` FROM `user` WHERE `userID` = b.`userID`))
+			)						AS UserLastname,
+			(
+				IF(b.`userID` IS NULL, NULL, (SELECT `email` FROM `user` WHERE `userID` = b.`userID`))
+			)						AS UserEmail,
+			(
+				IF(b.`meetingRoomID` IS NULL, NULL, (SELECT `name` FROM `meetingroom` WHERE `meetingRoomID` = b.`meetingRoomID`))
+			) 						AS MeetingRoomName
+FROM 		`booking` b
+WHERE   	b.`CompanyID` = 2
+AND 		b.`actualEndDateTime` IS NOT NULL
+AND     	b.`dateTimeCancelled` IS NULL
+AND         b.`actualEndDateTime`
+BETWEEN	    '2017-03-15'
+AND			'2017-06-15';
+
+SELECT 		(
+				BIG_SEC_TO_TIME(
+						(
+							DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
+							)*86400 
+						+ 
+						(
+							TIME_TO_SEC(b.`actualEndDateTime`) 
+							- 
+							TIME_TO_SEC(b.`startDateTime`)
+						)
+					)
+				)						AS BookingTimeUsed,
+			(
+				BIG_SEC_TO_TIME(
+					IF(
+						(
+							(
+								DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
+								)*86400 
+							+ 
+							(
+								TIME_TO_SEC(b.`actualEndDateTime`) 
+								- 
+								TIME_TO_SEC(b.`startDateTime`)
+							) 
+						) > 60,
+						IF(
+							(
+								(
+									DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
+									)*86400 
+								+ 
+								(
+									TIME_TO_SEC(b.`actualEndDateTime`) 
+									- 
+									TIME_TO_SEC(b.`startDateTime`)
+								) 
+							) > 900, 
+							(
+								(
+									DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
+									)*86400 
+								+ 
+								(
+									TIME_TO_SEC(b.`actualEndDateTime`) 
+									- 
+									TIME_TO_SEC(b.`startDateTime`)
+								) 
+							), 
+							900
+						),
+						0
+                    )
+				)
+            )						AS BookingTimeCharged,
+			b.`startDateTime`		AS BookingStartedDatetime,
+			b.`actualEndDateTime`	AS BookingCompletedDatetime,
+			u.`firstName`			AS UserFirstname,
+			u.`lastName`			AS UserLastname,
+			u.`email`				AS UserEmail,
+			m.`name`				AS MeetingRoomName
+FROM 		`booking` b
+INNER JOIN  `company` c
+ON 			c.`CompanyID` = b.`companyID`
+LEFT JOIN	`user` u
+ON 			u.`userID` = b.`userID`
+LEFT JOIN 	`meetingroom` m
+ON			m.`meetingRoomID` = b.`meetingRoomID`
+WHERE   	b.`CompanyID` = 2
+AND 		b.`actualEndDateTime` IS NOT NULL
+AND     	b.`dateTimeCancelled` IS NULL
+AND         b.`actualEndDateTime`
+BETWEEN	    '2017-03-15'
+AND			'2017-06-15';
+
 SELECT 		b.`userID`										AS BookedUserID,
 			b.`bookingID`,
 			(
@@ -276,82 +432,6 @@ SELECT 	`userID`,
 		`bookingdescription`
 FROM 	`user`
 WHERE 	`isActive` > 0;
-
-SELECT 		(
-				BIG_SEC_TO_TIME(
-						(
-							DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
-							)*86400 
-						+ 
-						(
-							TIME_TO_SEC(b.`actualEndDateTime`) 
-							- 
-							TIME_TO_SEC(b.`startDateTime`)
-						)
-					)
-				)						AS BookingTimeUsed,
-			(
-				BIG_SEC_TO_TIME(
-					IF(
-						(
-							(
-								DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
-								)*86400 
-							+ 
-							(
-								TIME_TO_SEC(b.`actualEndDateTime`) 
-								- 
-								TIME_TO_SEC(b.`startDateTime`)
-							) 
-						) > 60,
-						IF(
-							(
-								(
-									DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
-									)*86400 
-								+ 
-								(
-									TIME_TO_SEC(b.`actualEndDateTime`) 
-									- 
-									TIME_TO_SEC(b.`startDateTime`)
-								) 
-							) > 900, 
-							(
-								(
-									DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
-									)*86400 
-								+ 
-								(
-									TIME_TO_SEC(b.`actualEndDateTime`) 
-									- 
-									TIME_TO_SEC(b.`startDateTime`)
-								) 
-							), 
-							900
-						),
-						0
-                    )
-				)
-            )						AS BookingTimeCharged,
-			b.`startDateTime`		AS BookingStartedDatetime,
-			b.`actualEndDateTime`	AS BookingCompletedDatetime,
-			u.`firstName`			AS UserFirstname,
-			u.`lastName`			AS UserLastname,
-			u.`email`				AS UserEmail,
-			m.`name`				AS MeetingRoomName
-FROM 		`booking` b
-INNER JOIN  `company` c
-ON 			c.`CompanyID` = b.`companyID`
-LEFT JOIN	`user` u
-ON 			u.`userID` = b.`userID`
-LEFT JOIN 	`meetingroom` m
-ON			m.`meetingRoomID` = b.`meetingRoomID`
-WHERE   	b.`CompanyID` = 2
-AND 		b.`actualEndDateTime` IS NOT NULL
-AND     	b.`dateTimeCancelled` IS NULL
-AND         b.`actualEndDateTime`
-BETWEEN	    '2017-03-15'
-AND			'2017-06-15';
 
 SELECT SEC_TO_TIME(
 					FLOOR(
