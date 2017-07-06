@@ -179,6 +179,44 @@ function validateUserInputs($FeedbackSessionToUse, $editing){
 	return array($invalidInput, $startTime, $endTime, $validatedEventName, $validatedEventDescription);
 }
 
+// If admin wants to be able to delete events it needs to enabled first
+if (isset($_POST['action']) AND $_POST['action'] == "Enable Delete"){
+	$_SESSION['eventsEnableDelete'] = TRUE;
+	$refreshEvents = TRUE;
+}
+
+// If admin wants to be disable event deletion
+if (isset($_POST['action']) AND $_POST['action'] == "Disable Delete"){
+	unset($_SESSION['eventsEnableDelete']);
+	$refreshEvents = TRUE;
+}
+
+// If admin wants to delete the event (and all the linked schedules in roomevent)
+if(isset($_POST['action']) AND $_POST['action'] == "Delete"){
+	try
+	{
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+		
+		$pdo = connect_to_db();
+
+		$sql = 'DELETE FROM `event`
+				WHERE 		`eventID` = :EventID';
+		$s = $pdo->prepare($sql);
+		$s->bindValue(':EventID', $_POST['EventID']);
+		$s->execute();
+			
+		//Close connection
+		$pdo = null;
+	}
+	catch (PDOException $e)
+	{
+		$error = 'Error removing event: ' . $e->getMessage();
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+		$pdo = null;
+		exit();		
+	}	
+}
+
 // If admin wants to create a new event
 if(	(isset($_POST['action']) AND $_POST['action'] == "Create Event") OR
 	(isset($_SESSION['refreshAddEvent']) AND $_SESSION['refreshAddEvent'])
@@ -822,8 +860,6 @@ try
 					`dateTimeCreated`	AS DateTimeCreated,
 					`startDate`			AS StartDate,
 					`lastDate`			AS LastDate,
-					WEEK(`startDate`,3)	AS WeekStart,
-					WEEK(`lastDate`,3)	AS WeekEnd,
 					`daysSelected`		AS DaysSelected,
 					(
 						SELECT 		GROUP_CONCAT(DISTINCT m.`name` separator ",\n")
@@ -831,7 +867,19 @@ try
 						INNER JOIN 	`meetingroom` m
 						ON			rev.`meetingRoomID` = m.`meetingRoomID`
 						WHERE		rev.`EventID` = TheEventID
-					)					AS UsedMeetingRooms
+					)					AS UsedMeetingRooms,
+					(
+						SELECT 	COUNT(*)
+						FROM 	`meetingroom`
+					)					AS TotalMeetingRooms,
+					(
+						SELECT 	`startDateTime`
+						FROM 	`roomevent`
+						WHERE	`EventID` = TheEventID
+						AND 	`startDateTime` > CURRENT_TIMESTAMP
+						ORDER BY UNIX_TIMESTAMP(`startDateTime`) ASC
+						LIMIT 1
+					) 					AS NextStart
 			FROM 	`event`';
 	$return = $pdo->query($sql);
 	$result = $return->fetchAll(PDO::FETCH_ASSOC);
@@ -862,22 +910,42 @@ foreach ($result as $row)
 	$timeNow = getTimeNow();
 	$startTime = $row['StartTime'];
 	$endTime = $row['EndTime'];
-	$weekStart = $row['WeekStart'];
-	$weekEnd = $row['WeekEnd'];
+	$weekStart = date("W",strtotime($startDate));
+	$weekEnd = date("W",strtotime($lastDate));
+	$nextStart = $row['NextStart'];
+	
+	// Check if the event is a single day or multiple days
+	$daysSelected = $row['DaysSelected'];
+	$daysSelectedArray = explode("\n", $daysSelected);
+	$numberOfDaysSelected = sizeOf($daysSelectedArray);
+	
+	if($dateNow > $lastDate AND $timeNow > $endTime){
+		$completed = TRUE;
+	} else {
+		$completed = FALSE;
+	}
 	
 	if($weekStart == $weekEnd){
-		// single event
-		if($dateNow > $lastDate AND $timeNow > $endTime){
-			$status = "Completed\n(Single Event)";
+		// single week
+		if($numberOfDaysSelected > 1){
+			if($completed){
+				$status = "Completed\n(Single Week)";
+			} else {
+				$status = "Active\n(Single Week)";
+			}
 		} else {
-			$status = "Active\n(Single Event)";
+			if($completed){
+				$status = "Completed\n(Single Day)";
+			} else {
+				$status = "Active\n(Single Day)";
+			}			
 		}
 	} elseif($weekEnd > $weekStart) {
-		// repeated event
-		if($dateNow > $lastDate AND $timeNow > $endTime){
-			$status = "Completed\n(Repeated Event)";
+		// repeated weeks
+		if($completed){
+			$status = "Completed\n(Multiple Weeks)";
 		} else {
-			$status = "Active\n(Repeated Event)";
+			$status = "Active\n(Multiple Weeks)";
 		}		
 	}
 	
@@ -890,35 +958,48 @@ foreach ($result as $row)
 	$endDateWithWeekNumber = $displayableEndDate . "\nWeek #" . $weekEnd;
 	$displayableStartTime = convertDatetimeToFormat($startTime, 'H:i:s', TIME_DEFAULT_FORMAT_TO_DISPLAY);
 	$displayableEndTime = convertDatetimeToFormat($endTime, 'H:i:s', TIME_DEFAULT_FORMAT_TO_DISPLAY);
-
-	if(substr($status,0,6) == "Active"){
-		$activeEvents[] = array(
-							'EventStatus' => $status,
-							'EventID' => $row['TheEventID'], 
-							'DateTimeCreated' => $displayableDateCreated, 
-							'EventName' => $row['EventName'], 
-							'EventDescription' => $row['EventDescription'], 
-							'UsedMeetingRooms' => $row['UsedMeetingRooms'],
-							'DaysSelected' => $row['DaysSelected'],
-							'StartTime' => $displayableStartTime,
-							'EndTime' => $displayableEndTime,
-							'StartDate' => $startDateWithWeekNumber,
-							'LastDate' => $endDateWithWeekNumber
-						);
+	$displayableNextStart = convertDatetimeToFormat($nextStart, 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
+	
+	// Check if we should list individual meeting rooms or just mention that all have been selected
+	$totalMeetingRooms = $row['TotalMeetingRooms'];
+	$meetingRoomsUsed = $row['UsedMeetingRooms'];
+	$usedMeetingRoomsArray = explode(",", $meetingRoomsUsed);
+	$numberOfUsedMeetingRooms = sizeOf($usedMeetingRoomsArray);
+	if($numberOfUsedMeetingRooms == $totalMeetingRooms){
+		$usedMeetingRooms = "All " . $numberOfUsedMeetingRooms . " Rooms";
 	} else {
+		$usedMeetingRooms = $meetingRoomsUsed;
+	}
+
+	if($completed){
 		$completedEvents[] = array(
 							'EventStatus' => $status,
 							'EventID' => $row['TheEventID'], 
 							'DateTimeCreated' => $displayableDateCreated, 
 							'EventName' => $row['EventName'], 
 							'EventDescription' => $row['EventDescription'], 
-							'UsedMeetingRooms' => $row['UsedMeetingRooms'],
-							'DaysSelected' => $row['DaysSelected'],
+							'UsedMeetingRooms' => $usedMeetingRooms,
+							'DaysSelected' => $daysSelected,
 							'StartTime' => $displayableStartTime,
 							'EndTime' => $displayableEndTime,
 							'StartDate' => $startDateWithWeekNumber,
 							'LastDate' => $endDateWithWeekNumber
-						);		
+						);
+	} else {
+		$activeEvents[] = array(
+							'EventStatus' => $status,
+							'EventID' => $row['TheEventID'], 
+							'DateTimeCreated' => $displayableDateCreated, 
+							'EventName' => $row['EventName'], 
+							'EventDescription' => $row['EventDescription'],
+							'UsedMeetingRooms' => $usedMeetingRooms,
+							'DaysSelected' => $daysSelected,
+							'StartTime' => $displayableStartTime,
+							'EndTime' => $displayableEndTime,
+							'StartDate' => $startDateWithWeekNumber,
+							'LastDate' => $endDateWithWeekNumber,
+							'NextStart' => $displayableNextStart
+						);
 	}
 }	
 

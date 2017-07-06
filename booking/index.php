@@ -740,15 +740,7 @@ if(	((isset($_POST['action']) AND $_POST['action'] == 'Create Meeting')) OR
 			
 			// Get the logged in user's default booking information
 			$pdo = connect_to_db();
-			/* old SQL without company requirement restriction
-			$sql = 'SELECT	`bookingdescription`, 
-							`displayname`,
-							`firstName`,
-							`lastName`,
-							`email`
-					FROM 	`user`
-					WHERE 	`userID` = :userID
-					LIMIT 	1'; */
+
 			// New SQL where we require a company connection
 			$sql = "SELECT	(
 								SELECT COUNT(*)
@@ -1060,35 +1052,64 @@ if (isset($_POST['add']) AND $_POST['add'] == "Add Booking")
 	try
 	{
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
-		$pdo = connect_to_db();
-		$sql =	" 	SELECT 	COUNT(*)	AS HitCount
-					FROM 	(
-								SELECT 	1
-								FROM 	`booking`
-								WHERE 	`meetingRoomID` = :MeetingRoomID
-								AND		`dateTimeCancelled` IS NULL
-								AND		`actualEndDateTime` IS NULL
-								AND		
+		$pdo = connect_to_db();					
+		$sql =	" 	SELECT SUM(cnt)	AS HitCount
+					FROM 
+					(
+						(
+						SELECT 		COUNT(*) AS cnt
+						FROM 		`booking` b
+						WHERE 		b.`meetingRoomID` = :MeetingRoomID
+						AND			b.`dateTimeCancelled` IS NULL
+						AND			b.`actualEndDateTime` IS NULL
+						AND		
 								(		
 										(
-											`startDateTime` >= :StartTime AND 
-											`startDateTime` < :EndTime
+											b.`startDateTime` >= :StartTime AND 
+											b.`startDateTime` < :EndTime
 										) 
 								OR 		(
-											`endDateTime` > :StartTime AND 
-											`endDateTime` <= :EndTime
+											b.`endDateTime` > :StartTime AND 
+											b.`endDateTime` <= :EndTime
 										)
 								OR 		(
-											:EndTime > `startDateTime` AND 
-											:EndTime < `endDateTime`
+											:EndTime > b.`startDateTime` AND 
+											:EndTime < b.`endDateTime`
 										)
 								OR 		(
-											:StartTime > `startDateTime` AND 
-											:StartTime < `endDateTime`
+											:StartTime > b.`startDateTime` AND 
+											:StartTime < b.`endDateTime`
 										)
 								)
-								LIMIT 1
-							) AS BookingsFound";
+						LIMIT 1
+						)
+						UNION
+						(
+						SELECT 		COUNT(*) AS cnt
+						FROM 		`roomevent` rev
+						WHERE 		rev.`meetingRoomID` = :MeetingRoomID
+						AND	
+								(		
+										(
+											rev.`startDateTime` >= :StartTime AND 
+											rev.`startDateTime` < :EndTime
+										) 
+								OR 		(
+											rev.`endDateTime` > :StartTime AND 
+											rev.`endDateTime` <= :EndTime
+										)
+								OR 		(
+											:EndTime > rev.`startDateTime` AND 
+											:EndTime < rev.`endDateTime`
+										)
+								OR 		(
+											:StartTime > rev.`startDateTime` AND 
+											:StartTime < rev.`endDateTime`
+										)
+								)
+						LIMIT 1
+						)
+					) AS TimeSlotTaken";
 		$s = $pdo->prepare($sql);
 		
 		$s->bindValue(':MeetingRoomID', $meetingRoomID);
@@ -2315,37 +2336,47 @@ try
 	include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 	$pdo = connect_to_db();
 	if(isset($_GET['meetingroom']) AND $_GET['meetingroom'] != NULL AND $_GET['meetingroom'] != ""){
-		$sql = "SELECT 		b.`userID`										AS BookedUserID,
+		$sql = 'SELECT 		b.`userID`										AS BookedUserID,
 							b.`bookingID`,
-							b.`companyID`,
-							m.`name` 										AS BookedRoomName, 
-							b.startDateTime 								AS StartTime,
-							b.endDateTime									AS EndTime, 
-							b.displayName 									AS BookedBy,
-							c.`name` 										AS BookedForCompany,
-							u.firstName, 
-							u.lastName, 
-							u.email, 
-							GROUP_CONCAT(c2.`name` separator ', ') 			AS WorksForCompany, 
-							b.description 									AS BookingDescription, 
-							b.dateTimeCreated 								AS BookingWasCreatedOn, 
-							b.actualEndDateTime								AS BookingWasCompletedOn, 
-							b.dateTimeCancelled								AS BookingWasCancelledOn 
-				FROM 		`booking` b 
-				LEFT JOIN 	`meetingroom` m 
-				ON 			b.meetingRoomID = m.meetingRoomID 
-				LEFT JOIN 	`user` u 
-				ON 			u.userID = b.userID 
-				LEFT JOIN 	`employee` e 
-				ON 			e.UserID = b.userID 
-				LEFT JOIN 	`company` c 
-				ON 			c.CompanyID = b.CompanyID
-				LEFT JOIN 	`company` c2
-				ON 			c2.CompanyID = e.CompanyID
+							(
+								IF(b.`meetingRoomID` IS NULL, NULL, (SELECT `name` FROM `meetingroom` WHERE `meetingRoomID` = b.`meetingRoomID`))
+							)        										AS BookedRoomName,
+							b.`startDateTime`								AS StartTime,
+							b.`endDateTime`									AS EndTime, 
+							b.`displayName` 								AS BookedBy,
+							(
+								IF(b.`companyID` IS NULL, NULL, (SELECT `name` FROM `company` WHERE `companyID` = b.`companyID`))
+							)        										AS BookedForCompany,										
+							(
+								IF(b.`userID` IS NULL, NULL, (SELECT `firstName` FROM `user` WHERE `userID` = b.`userID`))
+							) 												AS firstName,
+							(
+								IF(b.`userID` IS NULL, NULL, (SELECT `lastName` FROM `user` WHERE `userID` = b.`userID`))
+							) 												AS lastName,
+							(
+								IF(b.`userID` IS NULL, NULL, (SELECT `email` FROM `user` WHERE `userID` = b.`userID`))
+							) 												AS email,
+							(
+								IF(b.`userID` IS NULL, NULL,
+									(
+										SELECT 		GROUP_CONCAT(c.`name` separator ",\n")
+										FROM 		`company` c
+										INNER JOIN `employee` e
+										ON 			e.`CompanyID` = c.`CompanyID`
+										WHERE  		e.`userID` = b.`userID`
+										AND			c.`isActive` = 1
+										GROUP BY 	e.`userID`
+									)
+								)
+							)												AS WorksForCompany,		 
+							b.`description`									AS BookingDescription, 
+							b.`dateTimeCreated`								AS BookingWasCreatedOn, 
+							b.`actualEndDateTime`							AS BookingWasCompletedOn, 
+							b.`dateTimeCancelled`							AS BookingWasCancelledOn 
+				FROM 		`booking` b
 				WHERE		b.`meetingRoomID` = :meetingRoomID
-				GROUP BY 	b.bookingID
-				ORDER BY 	UNIX_TIMESTAMP(b.startDateTime)
-				ASC";
+				ORDER BY 	UNIX_TIMESTAMP(b.`startDateTime`)
+				ASC';
 		$s = $pdo->prepare($sql);
 		$s->bindValue(':meetingRoomID', $_GET['meetingroom']);
 		$s->execute();
@@ -2356,36 +2387,46 @@ try
 			$rowNum = 0;
 		}
 	} elseif(!isset($_GET['meetingroom'])){
-		$sql = "SELECT 		b.`userID`										AS BookedUserID,
+		$sql = 'SELECT 		b.`userID`										AS BookedUserID,
 							b.`bookingID`,
-							b.`companyID`,
-							m.`name` 										AS BookedRoomName, 
-							b.startDateTime 								AS StartTime,
-							b.endDateTime									AS EndTime, 
-							b.displayName 									AS BookedBy,
-							c.`name` 										AS BookedForCompany,
-							u.firstName, 
-							u.lastName, 
-							u.email, 
-							GROUP_CONCAT(c2.`name` separator ', ') 			AS WorksForCompany, 
-							b.description 									AS BookingDescription, 
-							b.dateTimeCreated 								AS BookingWasCreatedOn, 
-							b.actualEndDateTime								AS BookingWasCompletedOn, 
-							b.dateTimeCancelled								AS BookingWasCancelledOn 
-				FROM 		`booking` b 
-				LEFT JOIN 	`meetingroom` m 
-				ON 			b.meetingRoomID = m.meetingRoomID 
-				LEFT JOIN 	`user` u 
-				ON 			u.userID = b.userID 
-				LEFT JOIN 	`employee` e 
-				ON 			e.UserID = b.userID 
-				LEFT JOIN 	`company` c 
-				ON 			c.CompanyID = b.CompanyID
-				LEFT JOIN 	`company` c2
-				ON 			c2.CompanyID = e.CompanyID				
-				GROUP BY 	b.bookingID
-				ORDER BY 	UNIX_TIMESTAMP(b.startDateTime)
-				ASC";
+							(
+								IF(b.`meetingRoomID` IS NULL, NULL, (SELECT `name` FROM `meetingroom` WHERE `meetingRoomID` = b.`meetingRoomID`))
+							)        										AS BookedRoomName,
+							b.`startDateTime`								AS StartTime,
+							b.`endDateTime`									AS EndTime, 
+							b.`displayName` 								AS BookedBy,
+							(
+								IF(b.`companyID` IS NULL, NULL, (SELECT `name` FROM `company` WHERE `companyID` = b.`companyID`))
+							)        										AS BookedForCompany,										
+							(
+								IF(b.`userID` IS NULL, NULL, (SELECT `firstName` FROM `user` WHERE `userID` = b.`userID`))
+							) 												AS firstName,
+							(
+								IF(b.`userID` IS NULL, NULL, (SELECT `lastName` FROM `user` WHERE `userID` = b.`userID`))
+							) 												AS lastName,
+							(
+								IF(b.`userID` IS NULL, NULL, (SELECT `email` FROM `user` WHERE `userID` = b.`userID`))
+							) 												AS email,
+							(
+								IF(b.`userID` IS NULL, NULL,
+									(
+										SELECT 		GROUP_CONCAT(c.`name` separator ",\n")
+										FROM 		`company` c
+										INNER JOIN `employee` e
+										ON 			e.`CompanyID` = c.`CompanyID`
+										WHERE  		e.`userID` = b.`userID`
+										AND			c.`isActive` = 1
+										GROUP BY 	e.`userID`
+									)
+								)
+							)												AS WorksForCompany,		 
+							b.`description`									AS BookingDescription, 
+							b.`dateTimeCreated`								AS BookingWasCreatedOn, 
+							b.`actualEndDateTime`							AS BookingWasCompletedOn, 
+							b.`dateTimeCancelled`							AS BookingWasCancelledOn 
+				FROM 		`booking` b
+				ORDER BY 	UNIX_TIMESTAMP(b.`startDateTime`)
+				ASC';
 		$return = $pdo->query($sql);
 		$result = $return->fetchAll(PDO::FETCH_ASSOC);
 		if(isset($result)){

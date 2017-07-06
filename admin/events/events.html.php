@@ -34,40 +34,38 @@
 		<table>
 			<caption>Active Events</caption>
 			<tr>
-				<th colspan="10">Event information</th>
+				<th colspan="11">Event information</th>
 				<th colspan="3">Alter Event</th>
-			</tr>				
+			</tr>
 			<tr>
 				<th>Status</th>
+				<th>Next Start</th>
 				<th>Event Name</th>
 				<th>Description</th>
 				<th>Meeting Room(s)</th>
-				<th>Day(s) Selected</th>				
+				<th>Day(s) Selected</th>
 				<th>Start Time</th>
 				<th>End Time</th>
 				<th>First Date</th>
 				<th>Last Date</th>
 				<th>Created At</th>
-				<th>Edit</th>
-				<th>Cancel</th>
 				<th>Delete</th>
 			</tr>
-		<?php if(isset($activeEvents)) : ?>						
+		<?php if(isset($activeEvents)) : ?>
 			<?php foreach ($activeEvents AS $event) : ?>
-				<form action="" method="post">				
+				<form action="" method="post">
 					<tr>
 						<td style="white-space: pre-wrap;"><?php htmlout($event['EventStatus']); ?></td>
+						<td><?php htmlout($event['NextStart']); ?></td>
 						<td style="white-space: pre-wrap;"><?php htmlout($event['EventName']); ?></td>
 						<td style="white-space: pre-wrap;"><?php htmlout($event['EventDescription']); ?></td>
 						<td style="white-space: pre-wrap;"><?php htmlout($event['UsedMeetingRooms']); ?></td>
 						<td style="white-space: pre-wrap;"><?php htmlout($event['DaysSelected']); ?></td>
 						<td><?php htmlout($event['StartTime']); ?></td>
-						<td><?php htmlout($event['EndTime']); ?></td>						
+						<td><?php htmlout($event['EndTime']); ?></td>
 						<td style="white-space: pre-wrap;"><?php htmlout($event['StartDate']); ?></td>
-						<td style="white-space: pre-wrap;"><?php htmlout($event['LastDate']); ?></td>	
+						<td style="white-space: pre-wrap;"><?php htmlout($event['LastDate']); ?></td>
 						<td><?php htmlout($event['DateTimeCreated']); ?></td>
-						<td><input type="submit" name="action" value="Edit"></td>							
-						<td><input type="submit" name="action" value="Cancel"></td>
 						<td>
 							<?php if(isset($_SESSION['eventsEnableDelete']) AND $_SESSION['eventsEnableDelete']) : ?>
 								<input type="submit" name="action" value="Delete">
@@ -125,8 +123,6 @@
 						<td style="white-space: pre-wrap;"><?php htmlout($event['StartDate']); ?></td>
 						<td style="white-space: pre-wrap;"><?php htmlout($event['LastDate']); ?></td>			
 						<td><?php htmlout($event['DateTimeCreated']); ?></td>
-						<td><input type="submit" name="action" value="Edit"></td>							
-						<td><input type="submit" name="action" value="Cancel"></td>
 						<td>
 							<?php if(isset($_SESSION['eventsEnableDelete']) AND $_SESSION['eventsEnableDelete']) : ?>
 								<input type="submit" name="action" value="Delete">
