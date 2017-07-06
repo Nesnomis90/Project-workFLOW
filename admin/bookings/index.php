@@ -299,6 +299,7 @@ if (isset($_POST['action']) and $_POST['action'] == 'Delete')
 	{
 		$error = 'Error getting booked meeting to delete: ' . $e->getMessage();
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+		$pdo = null;
 		exit();
 	}
 	
