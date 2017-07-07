@@ -1077,28 +1077,31 @@ try
 {
 	include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 	$pdo = connect_to_db();
-	$sql = 'SELECT 		u.`userID`, 
-						u.`firstname`, 
-						u.`lastname`, 
+	$sql = 'SELECT 		u.`userID`,
+						u.`firstname`,
+						u.`lastname`,
 						u.`email`,
 						a.`AccessName`,
 						u.`displayname`,
 						u.`bookingdescription`,
-						GROUP_CONCAT(CONCAT_WS(" in ", cp.`name`, CONCAT(c.`name`,".")) separator "\n") 	AS WorksFor,
+						(
+							SELECT 		GROUP_CONCAT(CONCAT_WS(" in ", cp.`name`, CONCAT(c.`name`,".")) separator "\n")
+							FROM 		`company` c
+							INNER JOIN 	`employee` e
+							ON 			e.`CompanyID` = c.`CompanyID`
+							INNER JOIN 	`companyposition` cp
+							ON 			cp.`PositionID` = e.`PositionID`
+							WHERE  		e.`userID` = u.`userID`
+							AND			c.`isActive` = 1
+							GROUP BY 	e.`userID`
+						)																					AS WorksFor,
 						u.`create_time`								 										AS DateCreated,
 						u.`isActive`,
 						u.`lastActivity`							 										AS LastActive,
 						u.`reduceAccessAtDate`																AS ReduceAccessAtDate
-			FROM 		`user` u 
-			LEFT JOIN 	`employee` e 
-			ON 			e.UserID = u.userID 
-			LEFT JOIN 	`company` c 
-			ON 			e.CompanyID = c.CompanyID 
-			LEFT JOIN 	`companyposition` cp 
-			ON 			cp.PositionID = e.PositionID
-			LEFT JOIN 	`accesslevel` a
-			ON 			u.AccessID = a.AccessID
-			GROUP BY 	u.`userID`
+			FROM 		`user` u
+			INNER JOIN	`accesslevel` a
+			ON 			u.`AccessID` = a.`AccessID`
 			ORDER BY 	u.`userID`
 			DESC';
 	$return = $pdo->query($sql);

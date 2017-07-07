@@ -618,7 +618,7 @@ function validateUserInputs(){
 				$sql = 'SELECT 	COUNT(*)
 						FROM 	`company`
 						WHERE 	`name` = :CompanyName
-						LIMIT 1';
+						LIMIT 	1';
 				$s = $pdo->prepare($sql);
 				$s->bindValue(':CompanyName', $validatedCompanyName);
 				$s->execute();
@@ -1088,14 +1088,8 @@ if ((isset($_POST['action']) AND $_POST['action'] == "Booking History") OR
 		
 			// Sum up periods that are not set as billed
 		$periodsSummmedUp = sumUpUnbilledPeriods($pdo, $companyID);
-		echo "<br />";
-		var_dump($periodsSummmedUp);
-		echo "<br />";
 		if($periodsSummmedUp === FALSE){
 			// No periods not set as billed
-			echo "<br />";
-			echo "No Periods To Sum Up";
-			echo "<br />";
 			unset($periodsSummmedUp);
 		}
 		

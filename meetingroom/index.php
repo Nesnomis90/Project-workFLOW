@@ -175,12 +175,13 @@ if(isset($_GET['meetingroom'])){
 							m.`capacity`		AS MeetingRoomCapacity, 
 							m.`description`		AS MeetingRoomDescription, 
 							m.`location`		AS MeetingRoomLocation,
-							COUNT(re.`amount`)	AS MeetingRoomEquipmentAmount
+							(
+								SELECT 	COUNT(*)
+								FROM 	`roomequipment` re
+								WHERE 	re.`MeetingRoomID` = TheMeetingRoomID
+							)					AS MeetingRoomEquipmentAmount
 				FROM 		`meetingroom` m
-				LEFT JOIN 	`roomequipment` re
-				ON 			re.`meetingRoomID` = m.`meetingRoomID`
 				WHERE		m.`meetingRoomID` = :meetingRoomID
-				GROUP BY 	m.`meetingRoomID`
 				LIMIT 		1';
 		$s = $pdo->prepare($sql);
 		$s->bindValue(':meetingRoomID', $_GET['meetingroom']);
@@ -208,11 +209,12 @@ if(isset($_GET['meetingroom'])){
 							m.`capacity`		AS MeetingRoomCapacity, 
 							m.`description`		AS MeetingRoomDescription, 
 							m.`location`		AS MeetingRoomLocation,
-							COUNT(re.`amount`)	AS MeetingRoomEquipmentAmount
-				FROM 		`meetingroom` m
-				LEFT JOIN 	`roomequipment` re
-				ON 			re.`meetingRoomID` = m.`meetingRoomID`
-				GROUP BY 	m.`meetingRoomID`';
+							(
+								SELECT 	COUNT(*)
+								FROM 	`roomequipment` re
+								WHERE 	re.`MeetingRoomID` = TheMeetingRoomID
+							)					AS MeetingRoomEquipmentAmount
+				FROM 		`meetingroom` m';
 		$result = $pdo->query($sql);
 
 		//Close the connection

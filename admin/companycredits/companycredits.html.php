@@ -68,8 +68,8 @@
 							<td><?php htmlout($row['DateTimeLastModified']); ?></td>
 							<td><?php htmlout($row['DateTimeAdded']); ?></td>
 							<td><input type="submit" name="action" value="Edit"></td>
-							<input type="hidden" name="CompanyID" value="<?php echo $row['TheCompanyID']; ?>">
-							<input type="hidden" name="CreditsID" value="<?php echo $row['CreditsID']; ?>">
+							<input type="hidden" name="CompanyID" value="<?php htmlout($row['TheCompanyID']); ?>">
+							<input type="hidden" name="CreditsID" value="<?php htmlout($row['CreditsID']); ?>">
 						</tr>
 					</form>
 				<?php endforeach; ?>

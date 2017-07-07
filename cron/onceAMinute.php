@@ -44,9 +44,21 @@ function alertUserThatMeetingIsAboutToStart(){
 		// That we haven't already alerted/sent email to
 		// Only try to alert a user up to 1 minute until meeting starts (in theory they should instantly get alerted)
 		// Only try to alert a user if the booking was made longer than MINIMUM_TIME_PASSED_IN_MINUTES_AFTER_CREATING_BOOKING_BEFORE_SENDING_EMAIL minutes ago
-		$sql = "SELECT 	m.`name`					AS MeetingRoomName,
-						c.`name`					AS CompanyName,
-						u.`email`					AS UserEmail,
+		$sql = "SELECT 	(
+							SELECT 	`name`
+							FROM 	`meetingroom`
+							WHERE 	`meetingRoomID` = b.`meetingRoomID`
+						)							AS MeetingRoomName,			
+						(
+							SELECT 	`name`
+							FROM 	`company`
+							WHERE 	`companyID` = b.`companyID`
+						)							AS CompanyName,
+						(
+							SELECT 	`email`
+							FROM 	`user`
+							WHERE 	`userID` = b.`userID`
+						)							AS UserEmail,
 						b.`bookingID`				AS TheBookingID,
 						b.`dateTimeCreated`			AS DateCreated,
 						b.`startDateTime`			AS StartDate,
@@ -55,12 +67,6 @@ function alertUserThatMeetingIsAboutToStart(){
 						b.`description`				AS BookingDescription,
 						b.`cancellationCode`		AS CancelCode
 				FROM	`booking` b
-				JOIN 	`meetingroom` m
-				ON 		b.`meetingRoomID` = m.`meetingRoomID`
-				JOIN	`company` c
-				ON 		c.`companyID` = b.`companyID`
-				JOIN	`user` u
-				ON		u.`userID` = b.`userID`
 				WHERE 	DATE_SUB(b.`startDateTime`, INTERVAL :bufferMinutes MINUTE) < CURRENT_TIMESTAMP
 				AND		DATE_SUB(b.`startDateTime`, INTERVAL 1 MINUTE) > CURRENT_TIMESTAMP
 				AND 	b.`dateTimeCancelled` IS NULL

@@ -42,13 +42,13 @@
 			<?php if($button == 'Edit Room') : ?>
 			<div>
 				<label for="OriginalMeetingRoomDescription">Original Meeting Room Description: </label>
-				<b><?php htmlout($originalMeetingRoomDescription); ?></b>
+				<b style="white-space: pre-wrap;"><?php htmlout($originalMeetingRoomDescription); ?></b>
 			</div>
 			<?php endif; ?>			
 			<div>
 				<label class="description" for="MeetingRoomDescription">Set New Room Description: </label>
 				<textarea rows="4" cols="50" name="MeetingRoomDescription" id="MeetingRoomDescription"
-				placeholder="Enter Room Description"><?php htmlout($meetingRoomDescription); ?></textarea>
+				placeholder="Enter Room Description" style="white-space: pre-wrap;"><?php htmlout($meetingRoomDescription); ?></textarea>
 			</div>	
 			<?php if($button == 'Edit Room') : ?>
 			<div>
@@ -77,6 +77,6 @@
 			</div>
 		</form>
 	<p><a href="..">Return to CMS home</a></p>
-	<?php include '../logout.inc.html.php'; ?>
+	<?php include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/logout.inc.html.php'; ?>
 	</body>
 </html>

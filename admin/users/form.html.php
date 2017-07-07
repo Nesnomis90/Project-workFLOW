@@ -111,7 +111,7 @@
 			<div>
 				<label for="originalBookingDescription">Original Booking Description: </label>
 				<?php if($originalBookingDescription != "") : ?>
-					<b><?php htmlout($originalBookingDescription); ?></b>
+					<b style="white-space: pre-wrap;"><?php htmlout($originalBookingDescription); ?></b>
 				<?php else: ?>
 					<b>This User Has No Booking Description.</b>
 				<?php endif; ?>	
@@ -119,7 +119,7 @@
 			<div>
 				<label class="description" for="bookingdescription">Set New Booking Description: </label>
 				<textarea rows="4" cols="50" name="bookingdescription" id="bookingdescription"
-				placeholder="Enter A Booking Description"><?php htmlout($bookingdescription); ?></textarea>
+				placeholder="Enter A Booking Description" style="white-space: pre-wrap;"><?php htmlout($bookingdescription); ?></textarea>
 			</div>
 			<div>
 				<label for="originalDateToRemove">Original Date to Reduce Access:</label>

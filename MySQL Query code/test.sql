@@ -1,6 +1,381 @@
 USE test;
 SET NAMES utf8;
 USE meetingflow;
+SHOW WARNINGS;
+
+SELECT  	m.`meetingRoomID`	AS TheMeetingRoomID, 
+			m.`name`			AS MeetingRoomName, 
+			m.`capacity`		AS MeetingRoomCapacity, 
+			m.`description`		AS MeetingRoomDescription, 
+			m.`location`		AS MeetingRoomLocation,
+			(
+				SELECT 	COUNT(*)
+                FROM 	`roomequipment` re
+                WHERE 	re.`MeetingRoomID` = TheMeetingRoomID
+			)					AS MeetingRoomEquipmentAmount,
+			(
+				SELECT 	COUNT(b.`bookingID`)
+				FROM	`booking` b
+				WHERE  	b.`meetingRoomID` = TheMeetingRoomID
+				AND 	b.`endDateTime` > current_timestamp
+				AND 	b.`dateTimeCancelled` IS NULL
+				AND 	b.`actualEndDateTime` IS NULL
+			)					AS MeetingRoomActiveBookings,
+			(
+				SELECT 	COUNT(b.`bookingID`)
+				FROM	`booking` b
+				WHERE  	b.`meetingRoomID` = TheMeetingRoomID
+				AND 	b.`actualEndDateTime` < current_timestamp
+				AND 	b.`dateTimeCancelled` IS NULL
+			)					AS MeetingRoomCompletedBookings,
+			(
+				SELECT 	COUNT(b.`bookingID`)
+				FROM	`booking` b
+				WHERE  	b.`meetingRoomID` = TheMeetingRoomID
+				AND 	b.`dateTimeCancelled` < current_timestamp
+				AND 	b.`actualEndDateTime` IS NULL
+			)					AS MeetingRoomCancelledBookings						
+FROM 		`meetingroom` m;
+
+SELECT  	m.`meetingRoomID`	AS TheMeetingRoomID, 
+			m.`name`			AS MeetingRoomName, 
+			m.`capacity`		AS MeetingRoomCapacity, 
+			m.`description`		AS MeetingRoomDescription, 
+			m.`location`		AS MeetingRoomLocation,
+			COUNT(re.`amount`)	AS MeetingRoomEquipmentAmount,
+			(
+				SELECT 	COUNT(b.`bookingID`)
+				FROM	`booking` b
+				WHERE  	b.`meetingRoomID` = TheMeetingRoomID
+				AND 	b.`endDateTime` > current_timestamp
+				AND 	b.`dateTimeCancelled` IS NULL
+				AND 	b.`actualEndDateTime` IS NULL
+			)					AS MeetingRoomActiveBookings,
+			(
+				SELECT 	COUNT(b.`bookingID`)
+				FROM	`booking` b
+				WHERE  	b.`meetingRoomID` = TheMeetingRoomID
+				AND 	b.`actualEndDateTime` < current_timestamp
+				AND 	b.`dateTimeCancelled` IS NULL
+			)					AS MeetingRoomCompletedBookings,
+			(
+				SELECT 	COUNT(b.`bookingID`)
+				FROM	`booking` b
+				WHERE  	b.`meetingRoomID` = TheMeetingRoomID
+				AND 	b.`dateTimeCancelled` < current_timestamp
+				AND 	b.`actualEndDateTime` IS NULL
+			)					AS MeetingRoomCancelledBookings						
+FROM 		`meetingroom` m
+LEFT JOIN 	`roomequipment` re
+ON 			re.`meetingRoomID` = m.`meetingRoomID`			
+GROUP BY 	m.`meetingRoomID`;
+
+SELECT 		e.`EquipmentID`									AS TheEquipmentID,
+			e.`name`										AS EquipmentName,
+			e.`description`									AS EquipmentDescription,
+			e.`datetimeAdded`								AS DateTimeAdded,
+			UNIX_TIMESTAMP(e.`datetimeAdded`)				AS OrderByDate,
+			(
+				SELECT 		GROUP_CONCAT(m.`name` separator ",\n")
+                FROM 		`meetingroom` m
+                INNER JOIN 	`roomequipment` re
+                ON 			m.`meetingRoomID` = re.`meetingRoomID`
+                WHERE		re.`equipmentID` = TheEquipmentID
+                GROUP BY	re.`equipmentID`
+            )												AS EquipmentIsInTheseRooms
+FROM 		`equipment` e
+ORDER BY	OrderByDate
+DESC;
+
+SELECT 		e.`EquipmentID`									AS TheEquipmentID,
+			e.`name`										AS EquipmentName,
+			e.`description`									AS EquipmentDescription,
+			e.`datetimeAdded`								AS DateTimeAdded,
+			UNIX_TIMESTAMP(e.`datetimeAdded`)				AS OrderByDate,
+			GROUP_CONCAT(m.`name` separator ', ')			AS EquipmentIsInTheseRooms
+FROM 		`equipment` e
+LEFT JOIN 	`roomequipment` re
+ON 			e.`EquipmentID` = re.`EquipmentID`
+LEFT JOIN 	`meetingroom` m
+ON 			m.`meetingRoomID` = re.`meetingRoomID`
+GROUP BY 	e.`EquipmentID`
+ORDER BY	OrderByDate
+DESC;
+
+SELECT 		cr.`CreditsID`									AS TheCreditsID,
+			cr.`name`										AS CreditsName,
+			cr.`description`								AS CreditsDescription,
+			cr.`minuteAmount`								AS CreditsGivenInMinutes,
+			cr.`monthlyPrice`								AS CreditsMonthlyPrice,
+			cr.`overCreditMinutePrice`						AS CreditsMinutePrice,
+			cr.`overCreditHourPrice`						AS CreditsHourPrice,
+			cr.`lastModified`								AS CreditsLastModified,
+			cr.`datetimeAdded`								AS DateTimeAdded,
+			UNIX_TIMESTAMP(cr.`datetimeAdded`)				AS OrderByDate,
+			(
+				SELECT 	COUNT(cc.`CreditsID`)
+                FROM 	`companycredits` cc
+                WHERE 	cc.`CreditsID` = TheCreditsID
+            )												AS CreditsIsUsedByThisManyCompanies
+FROM 		`credits` cr
+ORDER BY	OrderByDate
+DESC;
+
+SELECT 		cr.`CreditsID`									AS TheCreditsID,
+			cr.`name`										AS CreditsName,
+			cr.`description`								AS CreditsDescription,
+			cr.`minuteAmount`								AS CreditsGivenInMinutes,
+			cr.`monthlyPrice`								AS CreditsMonthlyPrice,
+			cr.`overCreditMinutePrice`						AS CreditsMinutePrice,
+			cr.`overCreditHourPrice`						AS CreditsHourPrice,
+			cr.`lastModified`								AS CreditsLastModified,
+			cr.`datetimeAdded`								AS DateTimeAdded,
+			UNIX_TIMESTAMP(cr.`datetimeAdded`)				AS OrderByDate,
+			COUNT(cc.`CreditsID`)							AS CreditsIsUsedByThisManyCompanies
+FROM 		`credits` cr
+LEFT JOIN 	`companycredits` cc
+ON 			cr.`CreditsID` = cc.`CreditsID`
+GROUP BY 	cr.`CreditsID`
+ORDER BY	OrderByDate
+DESC;
+
+SELECT 	(
+			SELECT 	`name`
+			FROM 	`meetingroom`
+			WHERE 	`meetingRoomID` = b.`meetingRoomID`
+        )							AS MeetingRoomName,			
+		(
+			SELECT 	`name`
+			FROM 	`company`
+			WHERE 	`companyID` = b.`companyID`
+        )							AS CompanyName,
+ 		(
+			SELECT 	`email`
+			FROM 	`user`
+			WHERE 	`userID` = b.`userID`
+        )							AS UserEmail,
+		b.`bookingID`				AS TheBookingID,
+		b.`dateTimeCreated`			AS DateCreated,
+		b.`startDateTime`			AS StartDate,
+		b.`endDateTime`				AS EndDate,
+		b.`displayName`				AS DisplayName,
+		b.`description`				AS BookingDescription,
+		b.`cancellationCode`		AS CancelCode
+FROM	`booking` b
+WHERE 	DATE_SUB(b.`startDateTime`, INTERVAL 30 MINUTE) < CURRENT_TIMESTAMP
+AND		DATE_SUB(b.`startDateTime`, INTERVAL 1 MINUTE) > CURRENT_TIMESTAMP
+AND 	b.`dateTimeCancelled` IS NULL
+AND 	b.`actualEndDateTime` IS NULL
+AND		b.`cancellationCode` IS NOT NULL
+AND 	DATE_ADD(b.`dateTimeCreated`, INTERVAL 0 MINUTE) < CURRENT_TIMESTAMP
+AND		b.`emailSent` = 0
+AND		b.`bookingID` <> 0;
+
+SELECT 	m.`name`					AS MeetingRoomName,
+		c.`name`					AS CompanyName,
+		u.`email`					AS UserEmail,
+		b.`bookingID`				AS TheBookingID,
+		b.`dateTimeCreated`			AS DateCreated,
+		b.`startDateTime`			AS StartDate,
+		b.`endDateTime`				AS EndDate,
+		b.`displayName`				AS DisplayName,
+		b.`description`				AS BookingDescription,
+		b.`cancellationCode`		AS CancelCode
+FROM	`booking` b
+JOIN 	`meetingroom` m
+ON 		b.`meetingRoomID` = m.`meetingRoomID`
+JOIN	`company` c
+ON 		c.`companyID` = b.`companyID`
+JOIN	`user` u
+ON		u.`userID` = b.`userID`
+WHERE 	DATE_SUB(b.`startDateTime`, INTERVAL 30 MINUTE) < CURRENT_TIMESTAMP
+AND		DATE_SUB(b.`startDateTime`, INTERVAL 1 MINUTE) > CURRENT_TIMESTAMP
+AND 	b.`dateTimeCancelled` IS NULL
+AND 	b.`actualEndDateTime` IS NULL
+AND		b.`cancellationCode` IS NOT NULL
+AND 	DATE_ADD(b.`dateTimeCreated`, INTERVAL 0 MINUTE) < CURRENT_TIMESTAMP
+AND		b.`emailSent` = 0
+AND		b.`bookingID` <> 0;
+
+SELECT 		b.`bookingID`									AS TheBookingID,
+			b.`companyID`									AS TheCompanyID,
+			b.`meetingRoomID`								AS TheMeetingRoomID,
+			b.`startDateTime` 								AS StartTime, 
+			b.`endDateTime` 								AS EndTime, 
+			b.`description` 								AS BookingDescription,
+			b.`displayName` 								AS BookedBy,
+            b.`userID`										AS TheUserID,
+			b.`cancellationCode`							AS CancellationCode,
+            IF(b.`companyID` IS NULL, NULL, 
+				(	
+					SELECT `name` 
+					FROM `company` 
+					WHERE `companyID` = TheCompanyID
+				)
+            )												AS BookedForCompany,
+            IF(b.`meetingRoomID` IS NULL, NULL,
+				(
+					SELECT 	`name`
+					FROM 	`meetingroom`
+					WHERE 	`meetingRoomID` = TheMeetingRoomID
+				)
+            ) 												AS BookedRoomName,
+            IF(b.`userID` IS NULL, NULL, 
+				(
+					SELECT 	`firstName`
+					FROM 	`user`
+					WHERE 	`userID` = TheUserID
+				)
+            )												AS UserFirstname,
+			IF(b.`userID` IS NULL, NULL,
+				(
+					SELECT 	`lastName`
+					FROM 	`user`
+					WHERE 	`userID` = TheUserID
+				)
+            )												AS UserLastname,
+            IF(b.`userID` IS NULL, NULL,
+				(
+					SELECT 	`email`
+					FROM 	`user`
+					WHERE 	`userID` = TheUserID
+				)
+            )												AS UserEmail,
+            IF(b.`userID` IS NULL, NULL,
+				(
+					SELECT 	`email`
+					FROM 	`user`
+					WHERE 	`userID` = TheUserID
+				)
+            )												AS UserEmail,
+            IF(b.`userID` IS NULL, NULL,
+				(
+					SELECT 	`displayName`
+					FROM 	`user`
+					WHERE 	`userID` = TheUserID
+				)
+            )												AS UserDefaultDisplayName,
+            IF(b.`userID` IS NULL, NULL,
+				(
+					SELECT 	`bookingDescription`
+					FROM 	`user`
+					WHERE 	`userID` = TheUserID
+				)
+            )												AS UserDefaultBookingDescription
+FROM 		`booking` b
+WHERE		b.`bookingID` = 135
+LIMIT 		1;
+
+SELECT 		b.`bookingID`									AS TheBookingID,
+			b.`companyID`									AS TheCompanyID,
+			b.`meetingRoomID`								AS TheMeetingRoomID,
+			b.`startDateTime` 								AS StartTime, 
+			b.`endDateTime` 								AS EndTime, 
+			b.`description` 								AS BookingDescription,
+			b.`displayName` 								AS BookedBy,
+			(	
+				SELECT `name` 
+				FROM `company` 
+				WHERE `companyID` = TheCompanyID
+			)												AS BookedForCompany,
+			b.`cancellationCode`							AS CancellationCode,
+			(
+				SELECT 	`name`
+                FROM 	`meetingroom`
+                WHERE 	`meetingRoomID` = TheMeetingRoomID
+            ) 												AS BookedRoomName,									
+			u.`userID`										AS TheUserID, 
+			u.`firstName`									AS UserFirstname,
+			u.`lastName`									AS UserLastname,
+			u.`email`										AS UserEmail,
+			u.`displayName` 								AS UserDefaultDisplayName,
+			u.`bookingDescription`							AS UserDefaultBookingDescription
+FROM 		`booking` b
+LEFT JOIN 	`user` u
+ON 			b.`userID` = u.`userID`
+GROUP BY 	b.`bookingID`;
+
+SELECT 		b.`bookingID`									AS TheBookingID,
+			b.`companyID`									AS TheCompanyID,
+			b.`meetingRoomID`								AS TheMeetingRoomID,
+			b.startDateTime 								AS StartTime, 
+			b.endDateTime 									AS EndTime, 
+			b.description 									AS BookingDescription,
+			b.displayName 									AS BookedBy,
+			(	
+				SELECT `name` 
+				FROM `company` 
+				WHERE `companyID` = TheCompanyID
+			)												AS BookedForCompany,
+			b.`cancellationCode`							AS CancellationCode,
+			m.`name` 										AS BookedRoomName,									
+			u.`userID`										AS TheUserID, 
+			u.`firstName`									AS UserFirstname,
+			u.`lastName`									AS UserLastname,
+			u.`email`										AS UserEmail,
+			u.`displayName` 								AS UserDefaultDisplayName,
+			u.`bookingDescription`							AS UserDefaultBookingDescription
+FROM 		`booking` b 
+LEFT JOIN 	`meetingroom` m 
+ON 			b.meetingRoomID = m.meetingRoomID 
+LEFT JOIN 	`company` c 
+ON 			b.CompanyID = c.CompanyID
+LEFT JOIN 	`user` u
+ON 			b.`userID` = u.`userID`
+GROUP BY 	b.`bookingID`;
+
+SELECT 		u.`userID`, 
+			u.`firstname`, 
+			u.`lastname`, 
+			u.`email`,
+			a.`AccessName`,
+			u.`displayname`,
+			u.`bookingdescription`,
+			(
+				SELECT 		GROUP_CONCAT(CONCAT_WS(" in ", cp.`name`, CONCAT(c.`name`,".")) separator "\n")
+				FROM 		`company` c
+				INNER JOIN 	`employee` e
+				ON 			e.`CompanyID` = c.`CompanyID`
+                INNER JOIN 	`companyposition` cp
+                ON 			cp.`PositionID` = e.`PositionID`
+				WHERE  		e.`userID` = u.`userID`
+				AND			c.`isActive` = 1
+				GROUP BY 	e.`userID`
+            )																					AS WorksFor,
+			u.`create_time`								 										AS DateCreated,
+			u.`isActive`,
+			u.`lastActivity`							 										AS LastActive,
+			u.`reduceAccessAtDate`																AS ReduceAccessAtDate
+FROM 		`user` u
+INNER JOIN	`accesslevel` a
+ON 			u.`AccessID` = a.`AccessID`
+ORDER BY 	u.`userID`
+DESC;
+
+SELECT 		u.`userID`, 
+			u.`firstname`, 
+			u.`lastname`, 
+			u.`email`,
+			a.`AccessName`,
+			u.`displayname`,
+			u.`bookingdescription`,
+			GROUP_CONCAT(CONCAT_WS(" in ", cp.`name`, CONCAT(c.`name`,".")) separator "\n") 	AS WorksFor,
+			u.`create_time`								 										AS DateCreated,
+			u.`isActive`,
+			u.`lastActivity`							 										AS LastActive,
+			u.`reduceAccessAtDate`																AS ReduceAccessAtDate
+FROM 		`user` u 
+LEFT JOIN 	`employee` e 
+ON 			e.UserID = u.userID 
+LEFT JOIN 	`company` c 
+ON 			e.CompanyID = c.CompanyID 
+LEFT JOIN 	`companyposition` cp 
+ON 			cp.PositionID = e.PositionID
+LEFT JOIN 	`accesslevel` a
+ON 			u.AccessID = a.AccessID
+GROUP BY 	u.`userID`
+ORDER BY 	u.`userID`
+DESC;
 
 SELECT	`EventID`			AS TheEventID,
 		`startTime`			AS StartTime,

@@ -35,7 +35,7 @@
 		<div>
 			<label class="description" for="emailList">Copy Into Your Email Program:</label>
 			<textarea rows="4" cols="50" name="emailList" id="emailList"
-			disabled
+			disabled style="white-space: pre-wrap;"
 			placeholder="List of User Email"><?php htmlout($emailList); ?></textarea>
 		</div>
 		<div>
