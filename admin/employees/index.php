@@ -228,10 +228,11 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Add Employee') OR
 					// If we're NOT looking at a specific company already
 					$sql = 'SELECT 	`companyID` AS CompanyID,
 									`name`		AS CompanyName
-							FROM 	`company`';
+							FROM 	`company`
+							WHERE	`isActive` = 1';
 							
 					if ($companysearchstring != ''){
-						$sqladd = " WHERE `name` LIKE :search";
+						$sqladd = " AND `name` LIKE :search";
 						$sql = $sql . $sqladd;	
 						
 						$finalcompanysearchstring = '%' . $companysearchstring . '%';
@@ -270,6 +271,7 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Add Employee') OR
 									`name`		AS CompanyName
 							FROM 	`company`
 							WHERE 	`companyID` = :CompanyID
+							AND		`isActive` = 1
 							LIMIT 	1';
 					$s = $pdo->prepare($sql);
 					$s->bindValue(':CompanyID', $_GET['Company']);
@@ -339,10 +341,9 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Add Employee') OR
 				// This will be used to create a dropdown list in HTML
 				foreach($result as $row){
 					$users[] = array(
-											'UserID' => $row['UserID'],
-											'UserIdentifier' => $row['lastname'] . ', ' .
-											$row['firstname'] . ' - ' . $row['email']
-											);
+										'UserID' => $row['UserID'],
+										'UserIdentifier' => $row['lastname'] . ', ' . $row['firstname'] . ' - ' . $row['email']
+									);
 				}
 				if(isset($users)){
 					$_SESSION['AddEmployeeUsersArray'] = $users;

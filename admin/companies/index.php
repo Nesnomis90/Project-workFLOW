@@ -618,7 +618,7 @@ function validateUserInputs(){
 				$sql = 'SELECT 	COUNT(*)
 						FROM 	`company`
 						WHERE 	`name` = :CompanyName
-						LIMIT 1';
+						LIMIT 	1';
 				$s = $pdo->prepare($sql);
 				$s->bindValue(':CompanyName', $validatedCompanyName);
 				$s->execute();
