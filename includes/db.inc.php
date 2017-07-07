@@ -893,7 +893,7 @@ function create_tables()
 						  `EventID` int(10) unsigned NOT NULL,
 						  `startDateTime` datetime NOT NULL,
 						  `endDateTime` datetime NOT NULL,
-						  PRIMARY KEY (`meetingRoomID`,`EventID`),
+						  PRIMARY KEY (`meetingRoomID`,`EventID`,`startDateTime`,`endDateTime`),
 						  KEY `FK_EventID_idx` (`EventID`),
 						  CONSTRAINT `FK_EventID` FOREIGN KEY (`EventID`) REFERENCES `event` (`EventID`) ON DELETE CASCADE ON UPDATE CASCADE,
 						  CONSTRAINT `FK_MeetingRoomID4` FOREIGN KEY (`meetingRoomID`) REFERENCES `meetingroom` (`meetingRoomID`) ON DELETE CASCADE ON UPDATE CASCADE
