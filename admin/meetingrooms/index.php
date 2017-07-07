@@ -654,7 +654,11 @@ try
 						m.`capacity`		AS MeetingRoomCapacity, 
 						m.`description`		AS MeetingRoomDescription, 
 						m.`location`		AS MeetingRoomLocation,
-						COUNT(re.`amount`)	AS MeetingRoomEquipmentAmount,
+						(
+							SELECT 	COUNT(*)
+							FROM 	`roomequipment` re
+							WHERE 	re.`MeetingRoomID` = TheMeetingRoomID
+						)					AS MeetingRoomEquipmentAmount,
 						(
 							SELECT 	COUNT(b.`bookingID`)
 							FROM	`booking` b
@@ -677,10 +681,7 @@ try
 							AND 	b.`dateTimeCancelled` < current_timestamp
 							AND 	b.`actualEndDateTime` IS NULL
 						)					AS MeetingRoomCancelledBookings						
-			FROM 		`meetingroom` m
-			LEFT JOIN 	`roomequipment` re
-			ON 			re.`meetingRoomID` = m.`meetingRoomID`			
-			GROUP BY 	m.`meetingRoomID`';
+			FROM 		`meetingroom` m';
 	$return = $pdo->query($sql);
 	$result = $return->fetchAll(PDO::FETCH_ASSOC);
 	if(isset($result)){

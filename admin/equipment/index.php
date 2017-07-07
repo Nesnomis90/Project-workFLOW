@@ -534,7 +534,23 @@ try
 	include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 
 	$pdo = connect_to_db();
-	
+	$sql = 'SELECT 		e.`EquipmentID`									AS TheEquipmentID,
+						e.`name`										AS EquipmentName,
+						e.`description`									AS EquipmentDescription,
+						e.`datetimeAdded`								AS DateTimeAdded,
+						UNIX_TIMESTAMP(e.`datetimeAdded`)				AS OrderByDate,
+						(
+							SELECT 		GROUP_CONCAT(m.`name` separator ",\n")
+							FROM 		`meetingroom` m
+							INNER JOIN 	`roomequipment` re
+							ON 			m.`meetingRoomID` = re.`meetingRoomID`
+							WHERE		re.`equipmentID` = TheEquipmentID
+							GROUP BY	re.`equipmentID`
+						)												AS EquipmentIsInTheseRooms
+			FROM 		`equipment` e
+			ORDER BY	OrderByDate
+			DESC';
+	/* old sql query
 	$sql = "SELECT 		e.`EquipmentID`									AS TheEquipmentID,
 						e.`name`										AS EquipmentName,
 						e.`description`									AS EquipmentDescription,
@@ -548,7 +564,7 @@ try
 			ON 			m.`meetingRoomID` = re.`meetingRoomID`
 			GROUP BY 	e.`EquipmentID`
 			ORDER BY	OrderByDate
-			DESC";
+			DESC"; */
 			
 	$return = $pdo->query($sql);
 	$result = $return->fetchAll(PDO::FETCH_ASSOC);

@@ -824,11 +824,12 @@ try
 						cr.`lastModified`								AS CreditsLastModified,
 						cr.`datetimeAdded`								AS DateTimeAdded,
 						UNIX_TIMESTAMP(cr.`datetimeAdded`)				AS OrderByDate,
-						COUNT(cc.`CreditsID`)							AS CreditsIsUsedByThisManyCompanies
+						(
+							SELECT 	COUNT(cc.`CreditsID`)
+							FROM 	`companycredits` cc
+							WHERE 	cc.`CreditsID` = TheCreditsID
+						)												AS CreditsIsUsedByThisManyCompanies
 			FROM 		`credits` cr
-			LEFT JOIN 	`companycredits` cc
-			ON 			cr.`CreditsID` = cc.`CreditsID`
-			GROUP BY 	cr.`CreditsID`
 			ORDER BY	OrderByDate
 			DESC";
 			

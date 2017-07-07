@@ -3,7 +3,141 @@ SET NAMES utf8;
 USE meetingflow;
 SHOW WARNINGS;
 
+SELECT  	m.`meetingRoomID`	AS TheMeetingRoomID, 
+			m.`name`			AS MeetingRoomName, 
+			m.`capacity`		AS MeetingRoomCapacity, 
+			m.`description`		AS MeetingRoomDescription, 
+			m.`location`		AS MeetingRoomLocation,
+			(
+				SELECT 	COUNT(*)
+                FROM 	`roomequipment` re
+                WHERE 	re.`MeetingRoomID` = TheMeetingRoomID
+			)					AS MeetingRoomEquipmentAmount,
+			(
+				SELECT 	COUNT(b.`bookingID`)
+				FROM	`booking` b
+				WHERE  	b.`meetingRoomID` = TheMeetingRoomID
+				AND 	b.`endDateTime` > current_timestamp
+				AND 	b.`dateTimeCancelled` IS NULL
+				AND 	b.`actualEndDateTime` IS NULL
+			)					AS MeetingRoomActiveBookings,
+			(
+				SELECT 	COUNT(b.`bookingID`)
+				FROM	`booking` b
+				WHERE  	b.`meetingRoomID` = TheMeetingRoomID
+				AND 	b.`actualEndDateTime` < current_timestamp
+				AND 	b.`dateTimeCancelled` IS NULL
+			)					AS MeetingRoomCompletedBookings,
+			(
+				SELECT 	COUNT(b.`bookingID`)
+				FROM	`booking` b
+				WHERE  	b.`meetingRoomID` = TheMeetingRoomID
+				AND 	b.`dateTimeCancelled` < current_timestamp
+				AND 	b.`actualEndDateTime` IS NULL
+			)					AS MeetingRoomCancelledBookings						
+FROM 		`meetingroom` m;
 
+SELECT  	m.`meetingRoomID`	AS TheMeetingRoomID, 
+			m.`name`			AS MeetingRoomName, 
+			m.`capacity`		AS MeetingRoomCapacity, 
+			m.`description`		AS MeetingRoomDescription, 
+			m.`location`		AS MeetingRoomLocation,
+			COUNT(re.`amount`)	AS MeetingRoomEquipmentAmount,
+			(
+				SELECT 	COUNT(b.`bookingID`)
+				FROM	`booking` b
+				WHERE  	b.`meetingRoomID` = TheMeetingRoomID
+				AND 	b.`endDateTime` > current_timestamp
+				AND 	b.`dateTimeCancelled` IS NULL
+				AND 	b.`actualEndDateTime` IS NULL
+			)					AS MeetingRoomActiveBookings,
+			(
+				SELECT 	COUNT(b.`bookingID`)
+				FROM	`booking` b
+				WHERE  	b.`meetingRoomID` = TheMeetingRoomID
+				AND 	b.`actualEndDateTime` < current_timestamp
+				AND 	b.`dateTimeCancelled` IS NULL
+			)					AS MeetingRoomCompletedBookings,
+			(
+				SELECT 	COUNT(b.`bookingID`)
+				FROM	`booking` b
+				WHERE  	b.`meetingRoomID` = TheMeetingRoomID
+				AND 	b.`dateTimeCancelled` < current_timestamp
+				AND 	b.`actualEndDateTime` IS NULL
+			)					AS MeetingRoomCancelledBookings						
+FROM 		`meetingroom` m
+LEFT JOIN 	`roomequipment` re
+ON 			re.`meetingRoomID` = m.`meetingRoomID`			
+GROUP BY 	m.`meetingRoomID`;
+
+SELECT 		e.`EquipmentID`									AS TheEquipmentID,
+			e.`name`										AS EquipmentName,
+			e.`description`									AS EquipmentDescription,
+			e.`datetimeAdded`								AS DateTimeAdded,
+			UNIX_TIMESTAMP(e.`datetimeAdded`)				AS OrderByDate,
+			(
+				SELECT 		GROUP_CONCAT(m.`name` separator ",\n")
+                FROM 		`meetingroom` m
+                INNER JOIN 	`roomequipment` re
+                ON 			m.`meetingRoomID` = re.`meetingRoomID`
+                WHERE		re.`equipmentID` = TheEquipmentID
+                GROUP BY	re.`equipmentID`
+            )												AS EquipmentIsInTheseRooms
+FROM 		`equipment` e
+ORDER BY	OrderByDate
+DESC;
+
+SELECT 		e.`EquipmentID`									AS TheEquipmentID,
+			e.`name`										AS EquipmentName,
+			e.`description`									AS EquipmentDescription,
+			e.`datetimeAdded`								AS DateTimeAdded,
+			UNIX_TIMESTAMP(e.`datetimeAdded`)				AS OrderByDate,
+			GROUP_CONCAT(m.`name` separator ', ')			AS EquipmentIsInTheseRooms
+FROM 		`equipment` e
+LEFT JOIN 	`roomequipment` re
+ON 			e.`EquipmentID` = re.`EquipmentID`
+LEFT JOIN 	`meetingroom` m
+ON 			m.`meetingRoomID` = re.`meetingRoomID`
+GROUP BY 	e.`EquipmentID`
+ORDER BY	OrderByDate
+DESC;
+
+SELECT 		cr.`CreditsID`									AS TheCreditsID,
+			cr.`name`										AS CreditsName,
+			cr.`description`								AS CreditsDescription,
+			cr.`minuteAmount`								AS CreditsGivenInMinutes,
+			cr.`monthlyPrice`								AS CreditsMonthlyPrice,
+			cr.`overCreditMinutePrice`						AS CreditsMinutePrice,
+			cr.`overCreditHourPrice`						AS CreditsHourPrice,
+			cr.`lastModified`								AS CreditsLastModified,
+			cr.`datetimeAdded`								AS DateTimeAdded,
+			UNIX_TIMESTAMP(cr.`datetimeAdded`)				AS OrderByDate,
+			(
+				SELECT 	COUNT(cc.`CreditsID`)
+                FROM 	`companycredits` cc
+                WHERE 	cc.`CreditsID` = TheCreditsID
+            )												AS CreditsIsUsedByThisManyCompanies
+FROM 		`credits` cr
+ORDER BY	OrderByDate
+DESC;
+
+SELECT 		cr.`CreditsID`									AS TheCreditsID,
+			cr.`name`										AS CreditsName,
+			cr.`description`								AS CreditsDescription,
+			cr.`minuteAmount`								AS CreditsGivenInMinutes,
+			cr.`monthlyPrice`								AS CreditsMonthlyPrice,
+			cr.`overCreditMinutePrice`						AS CreditsMinutePrice,
+			cr.`overCreditHourPrice`						AS CreditsHourPrice,
+			cr.`lastModified`								AS CreditsLastModified,
+			cr.`datetimeAdded`								AS DateTimeAdded,
+			UNIX_TIMESTAMP(cr.`datetimeAdded`)				AS OrderByDate,
+			COUNT(cc.`CreditsID`)							AS CreditsIsUsedByThisManyCompanies
+FROM 		`credits` cr
+LEFT JOIN 	`companycredits` cc
+ON 			cr.`CreditsID` = cc.`CreditsID`
+GROUP BY 	cr.`CreditsID`
+ORDER BY	OrderByDate
+DESC;
 
 SELECT 	(
 			SELECT 	`name`

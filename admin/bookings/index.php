@@ -513,32 +513,71 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR
 				$sql = "SELECT 		b.`bookingID`									AS TheBookingID,
 									b.`companyID`									AS TheCompanyID,
 									b.`meetingRoomID`								AS TheMeetingRoomID,
-									b.startDateTime 								AS StartTime, 
-									b.endDateTime 									AS EndTime, 
-									b.description 									AS BookingDescription,
-									b.displayName 									AS BookedBy,
-									(	
-										SELECT `name` 
-										FROM `company` 
-										WHERE `companyID` = TheCompanyID
-									)												AS BookedForCompany,
+									b.`startDateTime` 								AS StartTime, 
+									b.`endDateTime` 								AS EndTime, 
+									b.`description` 								AS BookingDescription,
+									b.`displayName` 								AS BookedBy,
+									b.`userID`										AS TheUserID,
 									b.`cancellationCode`							AS CancellationCode,
-									m.`name` 										AS BookedRoomName,									
-									u.`userID`										AS TheUserID, 
-									u.`firstName`									AS UserFirstname,
-									u.`lastName`									AS UserLastname,
-									u.`email`										AS UserEmail,
-									u.`displayName` 								AS UserDefaultDisplayName,
-									u.`bookingDescription`							AS UserDefaultBookingDescription
-						FROM 		`booking` b 
-						LEFT JOIN 	`meetingroom` m 
-						ON 			b.meetingRoomID = m.meetingRoomID 
-						LEFT JOIN 	`company` c 
-						ON 			b.CompanyID = c.CompanyID
-						LEFT JOIN 	`user` u
-						ON 			b.`userID` = u.`userID`
-						WHERE 		b.`bookingID` = :BookingID
-						GROUP BY 	b.`bookingID`";
+									IF(b.`companyID` IS NULL, NULL, 
+										(	
+											SELECT `name` 
+											FROM `company` 
+											WHERE `companyID` = TheCompanyID
+										)
+									)												AS BookedForCompany,
+									IF(b.`meetingRoomID` IS NULL, NULL,
+										(
+											SELECT 	`name`
+											FROM 	`meetingroom`
+											WHERE 	`meetingRoomID` = TheMeetingRoomID
+										)
+									) 												AS BookedRoomName,
+									IF(b.`userID` IS NULL, NULL, 
+										(
+											SELECT 	`firstName`
+											FROM 	`user`
+											WHERE 	`userID` = TheUserID
+										)
+									)												AS UserFirstname,
+									IF(b.`userID` IS NULL, NULL,
+										(
+											SELECT 	`lastName`
+											FROM 	`user`
+											WHERE 	`userID` = TheUserID
+										)
+									)												AS UserLastname,
+									IF(b.`userID` IS NULL, NULL,
+										(
+											SELECT 	`email`
+											FROM 	`user`
+											WHERE 	`userID` = TheUserID
+										)
+									)												AS UserEmail,
+									IF(b.`userID` IS NULL, NULL,
+										(
+											SELECT 	`email`
+											FROM 	`user`
+											WHERE 	`userID` = TheUserID
+										)
+									)												AS UserEmail,
+									IF(b.`userID` IS NULL, NULL,
+										(
+											SELECT 	`displayName`
+											FROM 	`user`
+											WHERE 	`userID` = TheUserID
+										)
+									)												AS UserDefaultDisplayName,
+									IF(b.`userID` IS NULL, NULL,
+										(
+											SELECT 	`bookingDescription`
+											FROM 	`user`
+											WHERE 	`userID` = TheUserID
+										)
+									)												AS UserDefaultBookingDescription
+						FROM 		`booking` b
+						WHERE		b.`bookingID` = :BookingID
+						LIMIT 		1";
 				$s = $pdo->prepare($sql);
 				$s->bindValue(':BookingID', $_POST['id']);
 				$s->execute();
