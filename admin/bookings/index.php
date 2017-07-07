@@ -1369,7 +1369,7 @@ if(isset($_POST['edit']) AND $_POST['edit'] == "Finish Edit")
 			"The meeting you had booked for: \n" .
 			"Meeting Room: " . $oldMeetingRoomName . ".\n" . 
 			"Start Time: " . $OldStartDate . ".\n" .
-			"End Time: " . $OldEndDate . ".\n"
+			"End Time: " . $OldEndDate . ".\n" .
 			"Is no longer active.";
 			
 			$email = $originalValue['UserEmail'];

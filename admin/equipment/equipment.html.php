@@ -43,8 +43,8 @@
 					<form action="" method="post">
 						<tr>
 							<td><?php htmlout($row['EquipmentName']); ?></td>
-							<td><?php htmlout($row['EquipmentDescription']); ?></td>
-							<td><?php htmlout($row['EquipmentIsInTheseRooms']); ?></td>
+							<td style="white-space: pre-wrap;"><?php htmlout($row['EquipmentDescription']); ?></td>
+							<td style="white-space: pre-wrap;"><?php htmlout($row['EquipmentIsInTheseRooms']); ?></td>
 							<td><?php htmlout($row['DateTimeAdded']); ?></td>
 							<td><input type="submit" name="action" value="Edit"></td>
 							<td>

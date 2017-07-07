@@ -61,7 +61,7 @@
 								<?php htmlout($row['EquipmentName']); ?>
 								<input type="hidden" name="EquipmentName" value="<?php htmlout($row['EquipmentName']); ?>">
 							</td>
-							<td><?php htmlout($row['EquipmentDescription']); ?></td>
+							<td style="white-space: pre-wrap;"><?php htmlout($row['EquipmentDescription']); ?></td>
 							<td><?php htmlout($row['EquipmentAmount']); ?></td>
 							<td>
 								<?php htmlout($row['MeetingRoomName']); ?>
