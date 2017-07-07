@@ -94,7 +94,7 @@
 							</td>
 							<input type="hidden" name="MeetingRoomName" id="MeetingRoomName"
 							value="<?php htmlout($room['MeetingRoomName']); ?>">							
-							<input type="hidden" name="MeetingRoomID" value="<?php echo $room['MeetingRoomID']; ?>">
+							<input type="hidden" name="MeetingRoomID" value="<?php htmlout($room['MeetingRoomID']); ?>">
 						</form>							
 					</tr>
 				<?php endforeach; ?>

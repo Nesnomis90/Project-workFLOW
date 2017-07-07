@@ -132,7 +132,7 @@
 										<input type="submit" name="disabled" value="Delete" disabled>
 									<?php endif; ?>
 								</td>
-								<input type="hidden" name="id" value="<?php echo $row['id']; ?>">
+								<input type="hidden" name="id" value="<?php htmlout($row['id']); ?>">
 							</tr>
 						</form>
 					<?php endforeach; ?>

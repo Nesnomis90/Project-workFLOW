@@ -8,7 +8,7 @@
   </head>  
   <body>  
     <p>  
-      <?php echo $error; ?>  
+      <?php htmlout($error); ?>  
     </p>  
   </body>  
 </html>

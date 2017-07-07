@@ -76,8 +76,8 @@
 									<input type="submit" name="disabled" value="Remove" disabled>
 								<?php endif; ?>
 							</td>
-							<input type="hidden" name="EquipmentID" value="<?php echo $row['TheEquipmentID']; ?>">
-							<input type="hidden" name="MeetingRoomID" value="<?php echo $row['MeetingRoomID']; ?>">
+							<input type="hidden" name="EquipmentID" value="<?php htmlout($row['TheEquipmentID']); ?>">
+							<input type="hidden" name="MeetingRoomID" value="<?php htmlout($row['MeetingRoomID']); ?>">
 						</tr>
 					</form>
 				<?php endforeach; ?>

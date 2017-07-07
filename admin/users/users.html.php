@@ -89,7 +89,7 @@
 									<input type="submit" name="disabled" value="Delete" disabled>
 								<?php endif; ?>
 							</td>
-							<input type="hidden" name="id" value="<?php echo $user['id']; ?>">
+							<input type="hidden" name="id" value="<?php htmlout($user['id']); ?>">
 							<input type="hidden" name="UserInfo" id="UserInfo"
 							value="<?php htmlout($user['UserInfo']); ?>">
 						</tr>
@@ -128,7 +128,7 @@
 									<input type="submit" name="disabled" value="Delete" disabled>
 								<?php endif; ?>
 							</td>
-							<input type="hidden" name="id" value="<?php echo $user['id']; ?>">
+							<input type="hidden" name="id" value="<?php htmlout($user['id']); ?>">
 						</tr>
 					</form>
 					<?php endforeach; ?>

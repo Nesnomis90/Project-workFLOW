@@ -113,10 +113,8 @@ function userIsLoggedIn()
 	if($isLoggedIn === TRUE){
 		updateUserActivity();
 		return TRUE;
-	} elseif($isLoggedIn === FALSE) {
+	} else($isLoggedIn === FALSE){
 		return FALSE;
-	} else {
-		echo "no return value";
 	}
 }
 

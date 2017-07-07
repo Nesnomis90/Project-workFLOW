@@ -60,7 +60,7 @@
 							</td>
 							<input type="hidden" id="EquipmentName" name="EquipmentName"
 							value="<?php htmlout($row['EquipmentName']); ?>">
-							<input type="hidden" name="EquipmentID" value="<?php echo $row['TheEquipmentID']; ?>">
+							<input type="hidden" name="EquipmentID" value="<?php htmlout($row['TheEquipmentID']); ?>">
 						</tr>
 					</form>
 				<?php endforeach; ?>
