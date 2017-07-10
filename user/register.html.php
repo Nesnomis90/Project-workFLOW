@@ -1,0 +1,65 @@
+<!-- This is the HTML form used for users to register an account-->
+<?php include_once $_SERVER['DOCUMENT_ROOT'] .
+ '/includes/helpers.inc.php'; ?>
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<link rel="stylesheet" type="text/css" href="/CSS/myCSS.css">
+		<script src="/scripts/myFunctions.js"></script>		
+		<title>Register Account</title>
+	</head>
+	<body>
+		<?php include_once $_SERVER['DOCUMENT_ROOT'] .'/includes/topnav.html.php'; ?>
+
+		<?php if(!isset($_SESSION['loggedIn'])) : ?>
+			<h1>Register Account</h1>
+			<div class="feedback">
+				<?php if(isset($_SESSION['registerUserFeedback'])) : ?>
+					<b><?php htmlout($_SESSION['registerUserFeedback']); ?></b>
+					<?php unset($_SESSION['registerUserFeedback']); ?>
+				<?php endif; ?>				
+			</div>
+			<div>
+				<form action="" method="post">
+					<fieldset><legend>Enter your login information</legend>
+						<div>
+							<label for="firstname">First Name: </label>
+							<input type="text" name="firstName" placeholder="Enter your first/given name"
+							value="<?php htmlout($firstName); ?>">
+						</div>
+						<div>
+							<label for="lastname">Last Name: </label>
+							<input type="text" name="firstName" placeholder="Enter your last/family name"
+							value="<?php htmlout($lastName); ?>">
+						</div>
+						<div>
+							<label for="email">Email: </label>
+							<input type="text" name="email" placeholder="Enter your email"
+							value="<?php htmlout($email); ?>"><span style="color: red">*</span>
+						</div>
+						<div>
+							<label for="password1">Password: </label>
+							<input type="password" name="password1" placeholder="Set your password"
+							value="<?php htmlout($password1); ?>">
+						</div>
+						<div>
+							<label for="password2">Password: </label>
+							<input type="password" name="password2" placeholder="Repeat your password"
+							value="<?php htmlout($password2); ?>">
+						</div>
+						<div>
+							<input type="hidden" name="register" value="Register Account">
+							<input type="submit" value="Register Account">
+						</div>
+						<div>
+							<span style="color: red">*</span>You will be sent a confirmation link that has to be accessed to activate the account.
+						</div>
+					</fieldset>
+				</form>
+			</div>
+		<?php else : ?>
+			<h1>You're already logged into a registered account.</h1>
+		<?php endif; ?>
+	</body>
+</html>
