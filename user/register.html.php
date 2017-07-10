@@ -73,10 +73,6 @@
 								<input type="password" name="password1" placeholder="Set your password"
 								value="<?php htmlout($password1); ?>">							
 							<?php endif; ?>
-						</div>
-						<div class="right">
-							<input type="hidden" name="register" value="Register Account">
-							<input type="submit" value="Register Account">
 						</div>						
 						<div>
 							<label for="password2">Password: </label>
@@ -87,9 +83,13 @@
 								<input type="password" name="password2" placeholder="Repeat your password"
 								value="<?php htmlout($password2); ?>">							
 							<?php endif; ?>
-						</div>						
+						</div>
 						<div>
-							<span style="color: red">*</span>You will be sent a confirmation link that has to be accessed to activate the account.
+							<input type="hidden" name="register" value="Register Account">
+							<input type="submit" value="Register Account">
+						</div>						
+						<div class="Left">
+							<span style="color: red">*</span><span>You will be sent a confirmation link that has to be accessed to activate the account.</span>
 						</div>
 					</fieldset>
 				</form>

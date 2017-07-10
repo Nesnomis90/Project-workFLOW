@@ -6,24 +6,32 @@
 		<meta charset="utf-8">
 		<link rel="stylesheet" type="text/css" href="/CSS/myCSS.css">
 		<title>Book A New Meeting</title>
-		<script src="/scripts/myFunctions.js"></script>		
+		<script src="/scripts/myFunctions.js"></script>
+		<style>
+			label{
+				width: 140px;
+			}
+		</style>
 	</head>
 	<body onload="startTime()">
 	<div id="ClockPlacement">
 		<b id="Clock"></b>
 	</div>
 		<h1>Book A New Meeting</h1>
+		<div class="left">
 		<?php if(isset($_SESSION['AddCreateBookingError'])) : ?>
-			<p><b><?php htmlout($_SESSION['AddCreateBookingError']); ?></b></p>
+			<span><b><?php htmlout($_SESSION['AddCreateBookingError']); ?></b></span>
 			<?php unset($_SESSION['AddCreateBookingError']); ?>
 		<?php endif; ?>
+		</div>
+		
 		<form action="" method="post">
-			<div>
+			<div class="left">
 				<label for="userInformation">Welcome </label>
 				<?php $firstName = $_SESSION["AddCreateBookingOriginalInfoArray"]["UserFirstname"]; ?>
 				<?php $lastName = $_SESSION["AddCreateBookingOriginalInfoArray"]["UserLastname"]; ?>
 				<?php $userInformation = $lastName . ", " . $firstName; ?>
-				<b><?php htmlout($userInformation); ?></b>
+				<span><b><?php htmlout($userInformation); ?></b></span>
 			</div>
 			<div>
 				<label for="meetingRoomID">Meeting Room: </label>
@@ -108,17 +116,17 @@
 				value="<?php htmlout($displayName); ?>">
 				<input type="submit" name="add" value="Get Default Display Name">
 			</div>
-			<div>
+			<div class="left">
 				<label class="description" for="description">Booking Description: </label>
 				<textarea rows="4" cols="50" name="description" id="description"><?php htmlout($description); ?></textarea>
 				<input type="submit" name="add" value="Get Default Booking Description"> 
 			</div>
-			<div>
+			<div class="left">
 				<input type="submit" name="add" value="Reset">
 				<input type="submit" name="add" value="Cancel">
 				<?php if(!isset($_SESSION['AddCreateBookingSelectedACompany'])) : ?>
 					<input type="submit" name="disabled" value="Add Booking" disabled>
-					<b>You need to select the company you want before you can add the booking.</b>
+					<span><b>You need to select the company you want before you can add the booking.</b></span>
 				<?php else : ?>
 					<input type="submit" name="add" value="Add Booking">
 				<?php endif; ?>				

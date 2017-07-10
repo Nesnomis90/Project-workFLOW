@@ -6,6 +6,7 @@ session_start();
 include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/helpers.inc.php';
 include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/magicquotes.inc.php';
 
+unsetSessionsFromAdminUsers(); // TO-DO: Add more or remove
 // TO-DO: Add a "Set new password" after user activates their account with the link?
 // or just have them do it after they log in themselves...
 

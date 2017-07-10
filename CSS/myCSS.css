@@ -63,7 +63,31 @@ input[type=number][disabled]{background-color: #EBEBE4;}
 input[type=submit]:hover{box-shadow: 2px 2px 2px #888888;}
 input[type=submit][disabled]:hover{box-shadow: none;}
 	/* CSS for all the submit buttons END */
+input{
+	display: inline-block;
+	float: left;
+}
+textarea{
+	display: inline-block;
+	float: left;	
+}
+label{
+    display: inline-block;
+    float: left;
+    clear: left;
+    width: 80px;
+    text-align: left;
+}
 
+select{
+    display: inline-block;
+    float: left;	
+}
+
+span{
+	display:inline-block;
+	float: left;
+}
 	/* CSS for all the fieldsets START */	
 fieldset {
 	position: relative;
@@ -114,6 +138,9 @@ table caption {
 	font-size: 300%;
 }
 	/* CSS for all the tables END */
+	
+	/* CSS for all divs START */
+	/* CSS for all divs END */
 	
 /*CSS CLASSES START*/
 .fillOut{
@@ -171,6 +198,7 @@ table caption {
 	bottom: 10px;	
 }
 .left{
+	clear: both;
 	float: left;
 }
 .middle{
