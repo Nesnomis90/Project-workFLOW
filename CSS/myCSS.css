@@ -34,6 +34,16 @@ input[type=text]:focus{
 	color: white;
 }
 input[type=text][disabled]{background-color: #EBEBE4;}
+
+input[type=password]{background-color: white;}
+
+input[type=password]:hover{background-color: #f2f2f2;}
+
+input[type=password]:focus{
+	background-color: black;
+	color: white;
+}
+input[type=password][disabled]{background-color: #EBEBE4;}
 	/* CSS for all the non-textfield input text END */
 	
 	/* CSS for all the number inputs START */
@@ -53,7 +63,31 @@ input[type=number][disabled]{background-color: #EBEBE4;}
 input[type=submit]:hover{box-shadow: 2px 2px 2px #888888;}
 input[type=submit][disabled]:hover{box-shadow: none;}
 	/* CSS for all the submit buttons END */
+input{
+	display: inline-block;
+	float: left;
+}
+textarea{
+	display: inline-block;
+	float: left;	
+}
+label{
+    display: inline-block;
+    float: left;
+    clear: left;
+    width: 80px;
+    text-align: left;
+}
 
+select{
+    display: inline-block;
+    float: left;	
+}
+
+span{
+	display:inline-block;
+	float: left;
+}
 	/* CSS for all the fieldsets START */	
 fieldset {
 	position: relative;
@@ -105,9 +139,22 @@ table caption {
 }
 	/* CSS for all the tables END */
 	
+	/* CSS for all divs START */
+	/* CSS for all divs END */
+	
 /*CSS CLASSES START*/
-.feedback{white-space: pre-wrap;}
+.fillOut{
+	border-style: groove;
+	border-width: 2px;
+	border-bottom-color: red;
+}
+
 	/* CSS used to warn the user error/feedback START*/
+.feedback{
+	white-space: pre-wrap;
+	font-size: 120%;
+}	
+	
 .warning{color: red;}
 	/* CSS used to warn the user error/feedback END*/
 	
@@ -151,6 +198,7 @@ table caption {
 	bottom: 10px;	
 }
 .left{
+	clear: both;
 	float: left;
 }
 .middle{
@@ -160,4 +208,34 @@ table caption {
 	float: right;
 }
 	/* CSS used to position DIVs END*/
+	
+	/* CSS used to fix NAV positions START*/
+.topnav ul{
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    background-color: #333;
+}
+
+.topnav li{
+	float:left;
+}
+
+.topnav li a {
+    display: block;
+    color: white;
+    text-align: center;
+    padding: 14px 16px;
+    text-decoration: none;
+}
+
+.topnav li a:hover:not(.active) {
+    background-color: #111;
+}
+
+.topnav .active {
+    background-color: #4CAF50;
+}
+	/* CSS used to fix NAV positions END*/
 /*CSS CLASSES END*/

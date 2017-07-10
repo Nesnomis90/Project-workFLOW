@@ -57,15 +57,15 @@
 				</div>
 			<?php elseif($action == 'editform') : ?>
 				<div>
-					<label for="password">Set New Password:</label>
+					<label for="password">Password:</label>
 					<input type="password" name="password" id="password"
-					placeholder="Enter New Password"
+					placeholder="Set New Password"
 					value="<?php htmlout($password);?>">
 				</div>
 				<div>
-					<label for="confirmpassword">Repeat Password:</label>
+					<label for="confirmpassword">Password:</label>
 					<input type="password" name="confirmpassword" id="confirmpassword"
-					placeholder="Enter New Password"
+					placeholder="Repeat New Password"
 					value="<?php htmlout($confirmpassword);?>">
 				</div>
 			<?php endif; ?>

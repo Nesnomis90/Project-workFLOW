@@ -10,6 +10,7 @@
 		<script src="/scripts/myFunctions.js"></script>		
 	</head>
 	<body onload="startTime()">
+		<?php include_once $_SERVER['DOCUMENT_ROOT'] .'/includes/topnav.html.php'; ?>
 	
 		<div id="ClockPlacement">
 			<b id="Clock"></b>

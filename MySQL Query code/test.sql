@@ -3,6 +3,16 @@ SET NAMES utf8;
 USE meetingflow;
 SHOW WARNINGS;
 
+INSERT INTO `user`(`firstname`, `lastname`, `password`, `activationcode`, `email`, `accessID`)
+SELECT	'la',
+		'da', 
+        'b79fefe5115d86a696c1c880195591d644a6f6c21e22200b4b7ea0e52700a1e1', 
+        'b79fefe5115d86a696c1c880195591d644a6f6c21e22200b4b7ea0e52700a1e1', 
+        'la@da', 
+        `accessID`
+FROM 	`accesslevel`
+WHERE	`AccessName` = 'Normal User';
+
 SELECT  	m.`meetingRoomID`	AS TheMeetingRoomID, 
 			m.`name`			AS MeetingRoomName, 
 			m.`capacity`		AS MeetingRoomCapacity, 

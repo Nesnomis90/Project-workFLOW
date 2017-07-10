@@ -59,7 +59,7 @@ function validateUserInputs($FeedbackSessionToUse){
 	if(isset($_POST['firstname'])){
 		$firstname = $_POST['firstname'];
 		$firstname = trim($firstname);
-	} else {
+	} elseif(!$invalidInput) {
 		$_SESSION[$FeedbackSessionToUse] = "A user cannot be created without submitting a first name.";
 		$invalidInput = TRUE;
 	}	
@@ -67,7 +67,7 @@ function validateUserInputs($FeedbackSessionToUse){
 	if(isset($_POST['lastname'])){
 		$lastname = $_POST['lastname'];
 		$lastname = trim($lastname);
-	} else {
+	} elseif(!$invalidInput) {
 		$_SESSION[$FeedbackSessionToUse] = "A user cannot be created without submitting a last name.";
 		$invalidInput = TRUE;
 	}		
@@ -75,7 +75,7 @@ function validateUserInputs($FeedbackSessionToUse){
 	if(isset($_POST['email'])){
 		$email = $_POST['email'];
 		$email = trim($email);
-	} else {
+	} elseif(!$invalidInput) {
 		$_SESSION[$FeedbackSessionToUse] = "A user cannot be created without submitting an email.";
 		$invalidInput = TRUE;
 	}
@@ -554,9 +554,9 @@ if (isset($_GET['addform']) AND isset($_POST['action']) AND $_POST['action'] == 
 		$pdo = connect_to_db();
 		$sql = "INSERT INTO `logevent` 
 				SET			`actionID` = 	(
-												SELECT `actionID` 
-												FROM `logaction`
-												WHERE `name` = 'Account Created'
+												SELECT 	`actionID` 
+												FROM 	`logaction`
+												WHERE 	`name` = 'Account Created'
 											),
 							`UserID` = :UserID,
 							`description` = :description";
@@ -583,8 +583,7 @@ if (isset($_GET['addform']) AND isset($_POST['action']) AND $_POST['action'] == 
 	$emailSubject = "Account Activation Link";
 	
 	$emailMessage = 
-	"Your account has been created.\n" .
-	"Your registered Email: " . $email . ".\n" . 
+	"Your account has been created.\n" . 
 	"Your generated Password: " . $generatedPassword . ".\n" .
 	"For security reasons you should set a new password after you've logged in.\n\n" .
 	"Before you can log in you need to activate your account.\n" .
