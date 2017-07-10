@@ -81,10 +81,10 @@
 						<div>
 							<label for="password2">Password: </label>
 							<?php if($firstName != "" AND $lastName != "" AND $email != "" AND !isset($invalidEmail)) : ?>
-								<input class="fillOut" type="password" name="password2" placeholder="Set your password"
+								<input class="fillOut" type="password" name="password2" placeholder="Repeat your password"
 								value="<?php htmlout($password2); ?>">
 							<?php else : ?>
-								<input type="password" name="password2" placeholder="Set your password"
+								<input type="password" name="password2" placeholder="Repeat your password"
 								value="<?php htmlout($password2); ?>">							
 							<?php endif; ?>
 						</div>						

@@ -38,22 +38,10 @@ function validateUserInputs($FeedbackSessionToUse){
 		$_SESSION[$FeedbackSessionToUse] = "An account cannot be created without submitting an email.";
 		$invalidInput = TRUE;
 	}
-		//Password
-	if(isset($_POST['password1']) AND isset($_POST['password2']) AND !$invalidInput){
-		$password1 = $_POST['password1'];
-		$password2 = $_POST['password2'];
-		
-		$minimumPasswordLength = MINIMUM_PASSWORD_LENGTH;
-		if($password1 == "" OR $password2 == ""){
-			$_SESSION[$FeedbackSessionToUse] = "You need to fill in your password twice to avoid typing a wrong password.";
-			$invalidInput = TRUE;
-		} elseif($password1 != $password2) {
-			$_SESSION[$FeedbackSessionToUse] = "The two passwords you submitted did not match. Try again.";
-			$invalidInput = TRUE;			
-		} elseif($password1 == $password2 AND (strlen(utf8_decode($password)) < $minimumPasswordLength)){
-			$_SESSION[$FeedbackSessionToUse] = "The submitted password is not long enough. You are required to make it at least $minimumPasswordLength characters long.";
-			$invalidInput = TRUE;			
-		}
+
+
+	elseif(isset($_POST['password'])){
+		$password = $_POST['password'];
 	}
 	
 		// Display Name (edit only)
@@ -155,6 +143,29 @@ return array($invalidInput, $email, $validatedFirstname, $validatedLastname, $va
 if(isset($_POST['register']) AND $_POST['register'] == "Register Account"){
 	// Input validation
 	list($invalidInput, $email, $validatedFirstname, $validatedLastname, $validatedBookingDescription, $validatedDisplayName) = validateUserInputs('registerUserWarning');	
+
+		//Password
+	if(isset($_POST['password1']) AND isset($_POST['password2']) AND !$invalidInput){
+		$password1 = $_POST['password1'];
+		$password2 = $_POST['password2'];
+		
+		$minimumPasswordLength = MINIMUM_PASSWORD_LENGTH;
+		if($password1 == "" AND $password2 == ""){
+			$_SESSION["registerUserWarning"] = "You need to fill in your password.";
+			$invalidInput = TRUE;			
+		} elseif($password1 == "" OR $password2 == ""){
+			$_SESSION["registerUserWarning"] = "You need to fill in your password twice to avoid typing a wrong password.";
+			$invalidInput = TRUE;
+		} elseif($password1 != $password2) {
+			$_SESSION["registerUserWarning"] = "The two passwords you submitted did not match. Try again.";
+			$invalidInput = TRUE;			
+		} elseif($password1 == $password2 AND (strlen(utf8_decode($password1)) < $minimumPasswordLength)){
+			$_SESSION["registerUserWarning"] = "The submitted password is not long enough. You are required to make it at least $minimumPasswordLength characters long.";
+			$invalidInput = TRUE;			
+		}
+		
+		$password = $password1;
+	}
 	
 	if($invalidInput){
 		$_SESSION['registerUserFirstName'] = $validatedFirstname;
@@ -165,8 +176,118 @@ if(isset($_POST['register']) AND $_POST['register'] == "Register Account"){
 		exit();
 	}
 
-	$_SESSION['registerUserFeedback'] = "Your account has been successfully created.\nA confirmation link has been sent to your email.";
+	// The email has NOT been used before and all inputs are valid, so we can create the new user!
+	try
+	{
+		// Add the user to the database
+		
+		//Generate activation code
+		$activationcode = generateActivationCode();
+		
+		// Hash the user generated password
+		$hashedPassword = hashPassword($password);
+		
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+		
+		$pdo = connect_to_db();
+		$sql = 'INSERT INTO `user`(`firstname`, `lastname`, `password`, `activationcode`, `email`, `accessID`) 
+				SELECT		:firstname,
+							:lastname,
+							:password,
+							:activationcode,
+							:email,
+							`accessID`
+				FROM 		`accesslevel`
+				WHERE		`AccessName` = "Normal User"';
+		$s = $pdo->prepare($sql);
+		$s->bindValue(':firstname', $validatedFirstname);
+		$s->bindValue(':lastname', $validatedLastname);
+		$s->bindValue(':password', $hashedPassword);
+		$s->bindValue(':activationcode', $activationcode);
+		$s->bindValue(':email', $email);
+		$s->execute();
+		
+		unset($_SESSION['lastUserID']);
+		$_SESSION['lastUserID'] = $pdo->lastInsertId();
+		
+		//Close the connection
+		$pdo = null;
+	}
+	catch (PDOException $e)
+	{
+		$error = 'Error registering account: ' . $e->getMessage();
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+		$pdo = null;
+		exit();
+	}
+
+	// Add a log event that a user has been created
+	try
+	{
+		// Save a description with information about the user that was added
+		
+		$description = "N/A";
+		$userinfo = $validatedLastname . ', ' . $validatedFirstname . ' - ' . $email;
+		if(isset($_SESSION['LoggedInUserName'])){
+			$description = "An account for: " . $userinfo . " was registered by: " . $_SESSION['LoggedInUserName'];
+		} else {
+			$description = "An account was registered for " . $userinfo;
+		}
+		
+		if(isset($_SESSION['lastUserID'])){
+			$lastUserID = $_SESSION['lastUserID'];
+			unset($_SESSION['lastUserID']);				
+		}
+
+		
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+		
+		$pdo = connect_to_db();
+		$sql = "INSERT INTO `logevent` 
+				SET			`actionID` = 	(
+												SELECT 	`actionID` 
+												FROM 	`logaction`
+												WHERE 	`name` = 'Account Created'
+											),
+							`UserID` = :UserID,
+							`description` = :description";
+		$s = $pdo->prepare($sql);
+		$s->bindValue(':description', $description);
+		$s->bindValue(':UserID', $lastUserID);
+		$s->execute();
+		
+		//Close the connection
+		$pdo = null;		
+	}
+	catch(PDOException $e)
+	{
+		$error = 'Error adding log event to database: ' . $e->getMessage();
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+		$pdo = null;
+		exit();
+	}	
 	
+	// Send user an email with the activation code
+		// TO-DO: This is UNTESTED since we don't have php.ini set up to actually send email
+	$emailSubject = "Account Activation Link";
+	
+	$emailMessage = 
+	"Your account has been created.\n" .
+	"Before you can log in you need to activate your account.\n" .
+	"If the account isn't activated within 8 hours, it is removed.\n" .
+	"Click this link to activate your account: " . $_SERVER['HTTP_HOST'] . 
+	"/user/?activateaccount=" . $activationcode;
+	
+	$mailResult = sendEmail($email, $emailSubject, $emailMessage);
+	
+	if(!$mailResult){
+		$_SESSION['registerUserFeedback'] .= " [WARNING] System failed to send Email to user.";
+	}
+	
+	$_SESSION['registerUserFeedback'] .= "this is the email msg we're sending out: $emailMessage. Sent to: $email."; // TO-DO: Remove after testing	
+	
+	// End of register account 
+	$_SESSION['registerUserFeedback'] = "Your account has been successfully created.\nA confirmation link has been sent to your email.";
 	
 	$firstName = "";
 	$lastName = "";

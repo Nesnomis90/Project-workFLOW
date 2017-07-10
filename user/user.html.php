@@ -5,9 +5,12 @@
 <html lang="en">
 	<head>
 		<meta charset="utf-8">
+		<link rel="stylesheet" type="text/css" href="/CSS/myCSS.css">
+		<script src="/scripts/myFunctions.js"></script>			
 		<title>User Information</title>
 	</head>
 	<body>
+		<?php include_once $_SERVER['DOCUMENT_ROOT'] .'/includes/topnav.html.php'; ?>
 		<h1>User Information</h1>
 		<?php if(isset($_SESSION['normalUserFeedback'])) : ?>
 			<p><b><?php htmlout($_SESSION['normalUserFeedback']); ?></b></p>
