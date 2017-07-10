@@ -18,7 +18,7 @@ function validateUserInputs($FeedbackSessionToUse){
 	if(isset($_POST['firstname'])){
 		$firstname = $_POST['firstname'];
 		$firstname = trim($firstname);
-	} else {
+	} elseif(!$invalidInput) {
 		$_SESSION[$FeedbackSessionToUse] = "An account cannot be created without submitting a first name.";
 		$invalidInput = TRUE;
 	}	
@@ -26,7 +26,7 @@ function validateUserInputs($FeedbackSessionToUse){
 	if(isset($_POST['lastname'])){
 		$lastname = $_POST['lastname'];
 		$lastname = trim($lastname);
-	} else {
+	} elseif(!$invalidInput) {
 		$_SESSION[$FeedbackSessionToUse] = "An account cannot be created without submitting a last name.";
 		$invalidInput = TRUE;
 	}		
@@ -34,10 +34,28 @@ function validateUserInputs($FeedbackSessionToUse){
 	if(isset($_POST['email'])){
 		$email = $_POST['email'];
 		$email = trim($email);
-	} else {
+	} elseif(!$invalidInput) {
 		$_SESSION[$FeedbackSessionToUse] = "An account cannot be created without submitting an email.";
 		$invalidInput = TRUE;
 	}
+		//Password
+	if(isset($_POST['password1']) AND isset($_POST['password2']) AND !$invalidInput){
+		$password1 = $_POST['password1'];
+		$password2 = $_POST['password2'];
+		
+		$minimumPasswordLength = MINIMUM_PASSWORD_LENGTH;
+		if($password1 == "" OR $password2 == ""){
+			$_SESSION[$FeedbackSessionToUse] = "You need to fill in your password twice to avoid typing a wrong password.";
+			$invalidInput = TRUE;
+		} elseif($password1 != $password2) {
+			$_SESSION[$FeedbackSessionToUse] = "The two passwords you submitted did not match. Try again.";
+			$invalidInput = TRUE;			
+		} elseif($password1 == $password2 AND (strlen(utf8_decode($password)) < $minimumPasswordLength)){
+			$_SESSION[$FeedbackSessionToUse] = "The submitted password is not long enough. You are required to make it at least $minimumPasswordLength characters long.";
+			$invalidInput = TRUE;			
+		}
+	}
+	
 		// Display Name (edit only)
 	if(isset($_POST['displayname'])){
 		$displayNameString = $_POST['displayname'];
@@ -136,7 +154,7 @@ return array($invalidInput, $email, $validatedFirstname, $validatedLastname, $va
 // If user wants to submit the registration details and create the account
 if(isset($_POST['register']) AND $_POST['register'] == "Register Account"){
 	// Input validation
-	list($invalidInput, $email, $validatedFirstname, $validatedLastname, $validatedBookingDescription, $validatedDisplayName) = validateUserInputs('registerUserFeedback');	
+	list($invalidInput, $email, $validatedFirstname, $validatedLastname, $validatedBookingDescription, $validatedDisplayName) = validateUserInputs('registerUserWarning');	
 	
 	if($invalidInput){
 		$_SESSION['registerUserFirstName'] = $validatedFirstname;
@@ -146,16 +164,33 @@ if(isset($_POST['register']) AND $_POST['register'] == "Register Account"){
 		header("Location: .");
 		exit();
 	}
-	
+
 	$_SESSION['registerUserFeedback'] = "Your account has been successfully created.\nA confirmation link has been sent to your email.";
 	
-	$_SESSION['refreshRegisterUser'] = TRUE;
+	
+	$firstName = "";
+	$lastName = "";
+	$email = "";
+	$password1 = "";
+	$password2 = "";
+	
+	var_dump($_SESSION); // TO-DO: Remove after testing
+	
+	include_once 'register.html.php';
+	exit();
 }
 
 // Code to execute when a user wants to register an account 
 if(isset($_GET['register']) OR (isset($_SESSION['refreshRegisterUser']) AND $_SESSION['refreshRegisterUser'])){
 
+	if(isset($_SESSION['refreshRegisterUser']) AND $_SESSION['refreshRegisterUser']){
+		$refreshedRegister = TRUE;
+		unset($_SESSION['refreshRegisterUser']);
+	}
 	
+	if(isset($_SESSION['registerUserWarning']) AND strpos(strtolower($_SESSION['registerUserWarning']), 'email') !== FALSE){
+		$invalidEmail = TRUE;
+	}
 	// Set correct startvalues
 	if(isset($_SESSION['registerUserFirstName'])){
 		$firstName = $_SESSION['registerUserFirstName'];

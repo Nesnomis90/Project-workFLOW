@@ -59,7 +59,7 @@ function validateUserInputs($FeedbackSessionToUse){
 	if(isset($_POST['firstname'])){
 		$firstname = $_POST['firstname'];
 		$firstname = trim($firstname);
-	} else {
+	} elseif(!$invalidInput) {
 		$_SESSION[$FeedbackSessionToUse] = "A user cannot be created without submitting a first name.";
 		$invalidInput = TRUE;
 	}	
@@ -67,7 +67,7 @@ function validateUserInputs($FeedbackSessionToUse){
 	if(isset($_POST['lastname'])){
 		$lastname = $_POST['lastname'];
 		$lastname = trim($lastname);
-	} else {
+	} elseif(!$invalidInput) {
 		$_SESSION[$FeedbackSessionToUse] = "A user cannot be created without submitting a last name.";
 		$invalidInput = TRUE;
 	}		
@@ -75,7 +75,7 @@ function validateUserInputs($FeedbackSessionToUse){
 	if(isset($_POST['email'])){
 		$email = $_POST['email'];
 		$email = trim($email);
-	} else {
+	} elseif(!$invalidInput) {
 		$_SESSION[$FeedbackSessionToUse] = "A user cannot be created without submitting an email.";
 		$invalidInput = TRUE;
 	}

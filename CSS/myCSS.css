@@ -34,6 +34,16 @@ input[type=text]:focus{
 	color: white;
 }
 input[type=text][disabled]{background-color: #EBEBE4;}
+
+input[type=password]{background-color: white;}
+
+input[type=password]:hover{background-color: #f2f2f2;}
+
+input[type=password]:focus{
+	background-color: black;
+	color: white;
+}
+input[type=password][disabled]{background-color: #EBEBE4;}
 	/* CSS for all the non-textfield input text END */
 	
 	/* CSS for all the number inputs START */
@@ -106,8 +116,18 @@ table caption {
 	/* CSS for all the tables END */
 	
 /*CSS CLASSES START*/
-.feedback{white-space: pre-wrap;}
+.fillOut{
+	border-style: groove;
+	border-width: 2px;
+	border-bottom-color: red;
+}
+
 	/* CSS used to warn the user error/feedback START*/
+.feedback{
+	white-space: pre-wrap;
+	font-size: 120%;
+}	
+	
 .warning{color: red;}
 	/* CSS used to warn the user error/feedback END*/
 	
