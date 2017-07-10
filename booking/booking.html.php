@@ -11,6 +11,7 @@
 	</head>
 	<body onload="startTime()">
 	
+		<?php include_once $_SERVER['DOCUMENT_ROOT'] .'/includes/logoutfornav.inc.php'; ?>
 		<?php include_once $_SERVER['DOCUMENT_ROOT'] .'/includes/topnav.html.php'; ?>
 	
 		<div id="ClockPlacement">
