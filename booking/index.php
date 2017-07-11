@@ -358,7 +358,7 @@ function validateUserInputs($FeedbackSessionToUse, $editing){
 // Check if we're accessing from a local device
 // If so, set that meeting room's info as the default meeting room info
 checkIfLocalDevice();
-
+/*
 if ((isset($_POST['login']) and $_POST['login'] == 'Log In') OR
 	(isset($_SESSION['normalBookingTryingToLogIn']) AND $_SESSION['normalBookingTryingToLogIn'])){
 	
@@ -375,7 +375,7 @@ if ((isset($_POST['login']) and $_POST['login'] == 'Log In') OR
 
 	header("Location: $location");
 	exit();	
-}
+}*/
 
 // If user wants to go back to the main page while in the confirm booking page
 if (isset($_POST['action']) and $_POST['action'] == 'Go Back'){
