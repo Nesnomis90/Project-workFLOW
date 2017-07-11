@@ -25,10 +25,11 @@
 		<?php if(isset($_SESSION['DefaultMeetingRoomInfo']) AND !isset($defaultMeetingRoomFeedback)) : ?>
 			<div class="left">
 				<form action="" method="post">
-					<label for="defaultMeetingRoomName">The Default Meeting Room For This Device: </label>
-					<b><?php htmlout($_SESSION['DefaultMeetingRoomInfo']['TheMeetingRoomName']); ?></b>			
-					<input type="submit" name="action" 
-					value="Change Default Room"><span style="color:red">* Requires Admin Access</span>	
+					<label style="width: 295px;" for="defaultMeetingRoomName">The Default Meeting Room For This Device: </label>
+					<span><b><?php htmlout($_SESSION['DefaultMeetingRoomInfo']['TheMeetingRoomName']); ?></b></span>
+					<div class="left">
+						<input type="submit" name="action" value="Change Default Room"><span style="color:red">* Requires Admin Access</span>
+					</div>
 				</form>
 			</div>
 		<?php else : ?>
@@ -40,36 +41,41 @@
 			<div>
 		<?php endif; ?>
 		
-		<h1>Meeting Room</h1>
+		<div class="left"><h1>Meeting Room</h1></div>
 		
-		<form action="" method="post">
-			<?php if(isset($_SESSION['DefaultMeetingRoomInfo'])) : ?>
-			<?php $default = $_SESSION['DefaultMeetingRoomInfo']; ?>
-				<?php if((!isset($_GET['meetingroom'])) OR
-						(isset($_GET['meetingroom']) AND $_GET['meetingroom'] != $default['TheMeetingRoomID'])) : ?>
-					<input type="submit" name="action" value="Select Default Room">
-				<?php else : ?>
-					<input type="submit" name="action" value="Show All Rooms">
-				<?php endif; ?>			
-			<?php endif; ?>
-			<input type="submit" name="action" value="Refresh">
-			<b>Last Refresh: <?php htmlout(getDatetimeNowInDisplayFormat()); ?></b>
-		</form>
+		<div class="left">
+			<form action="" method="post">
+				<?php if(isset($_SESSION['DefaultMeetingRoomInfo'])) : ?>
+				<?php $default = $_SESSION['DefaultMeetingRoomInfo']; ?>
+					<?php if((!isset($_GET['meetingroom'])) OR
+							(isset($_GET['meetingroom']) AND $_GET['meetingroom'] != $default['TheMeetingRoomID'])) : ?>
+						<input type="submit" name="action" value="Select Default Room">
+					<?php else : ?>
+						<input type="submit" name="action" value="Show All Rooms">
+					<?php endif; ?>			
+				<?php endif; ?>
+				<input type="submit" name="action" value="Refresh">
+				<span><b>Last Refresh: <?php htmlout(getDatetimeNowInDisplayFormat()); ?></b></span>
+			</form>
+		</div>
+		
 		<?php if(isset($_SESSION['MeetingRoomAllUsersFeedback'])) : ?>
-			<div><b><?php htmlout($_SESSION['MeetingRoomAllUsersFeedback']); ?></b></div>
+			<div class="left"><b><?php htmlout($_SESSION['MeetingRoomAllUsersFeedback']); ?></b></div>
 			<?php unset($_SESSION['MeetingRoomAllUsersFeedback']); ?>
 		<?php endif; ?>
+		
 		<?php if(isset($defaultMeetingRoomFeedback)) : ?>
-			<div><b><?php htmlout($defaultMeetingRoomFeedback); ?></b></div>
+			<div class="left"><b><?php htmlout($defaultMeetingRoomFeedback); ?></b></div>
 		<?php endif; ?>
+		
 		<?php if(isset($_GET['meetingroom']) AND $_GET['meetingroom'] != NULL AND $_GET['meetingroom'] != "") : ?>
 			<?php if(isset($meetingrooms)) : ?>
 				<?php if(isset($default) AND $_GET['meetingroom'] == $default['TheMeetingRoomID']) : ?>
-					<h2>Viewing Default Room For Device</h2>
+					<div class="left"><h2>Viewing Default Room For Device</h2></div>
 				<?php elseif(isset($default) AND $_GET['meetingroom'] != $default['TheMeetingRoomID']) : ?>
-					<h2>Viewing Non-Default Room For Device</h2>
+					<div class="left"><h2>Viewing Non-Default Room For Device</h2></div>
 				<?php elseif(!isset($default)) : ?>
-					<h2>Viewing Selected Meeting Room</h2>
+					<div class="left"><h2>Viewing Selected Meeting Room</h2></div>
 				<?php endif; ?>			
 				<?php foreach ($meetingrooms as $room): ?>
 					<form action="" method="post">
@@ -94,10 +100,10 @@
 					</form>
 				<?php endforeach; ?>	
 			<?php else : ?>
-				<h2>This isn't a valid meeting room.</h2>
+				<div class="left"><h2>This isn't a valid meeting room.</h2></div>
 			<?php endif; ?>				
 		<?php elseif(!isset($_GET['meetingroom'])) : ?>
-			<div>
+			<div class="left">
 				<form action="" method="post">
 					<label style="width: 160px;" for="maxRoomsToDisplay">Max Rooms Displayed: </label>
 					<input type="number" name="logsToShow" min="1" max="<?php htmlout($totalMeetingRooms); ?>"
@@ -110,36 +116,38 @@
 				</form>
 			</div>		
 			<?php if(isset($meetingrooms)) :?>
-				<h2>Available Meeting Rooms:</h2>
+				<div class="left"><h2>Available Meeting Rooms:</h2></div>
 				<?php foreach ($meetingrooms as $room): ?>
 					<?php if(!isset($i)){$i = 0;}; ?>
 					<?php if($i < $maxRoomsToShow) : ?>
-						<form action="" method="post">
-							<fieldset>
-								<legend><b><?php htmlout($room['MeetingRoomName']); ?></b></legend>
-								<input type="hidden" name="MeetingRoomName" id="MeetingRoomName"
-								value="<?php htmlout($room['MeetingRoomName']); ?>">
-								<div>
-									<label for="MeetingRoomCapacity">Capacity: </label>
-									<?php htmlout($room['MeetingRoomCapacity']); ?>
-								</div>
-								<div>
-									<label for="MeetingRoomDescription">Description: </label>
-									<?php htmlout($room['MeetingRoomDescription']); ?>
-								</div>
-								<div>
-									<label for="MeetingRoomLocation">Location: </label>
-									<?php htmlout($room['MeetingRoomLocation']); ?>
-								</div>
-								<div><input type="submit" name="action" value="Booking Information"></div>
-								<input type="hidden" name="MeetingRoomID" value="<?php htmlout($room['MeetingRoomID']); ?>">
-							</fieldset>
-						</form>
+						<div class="left">
+							<form action="" method="post">
+								<fieldset>
+									<legend><b><?php htmlout($room['MeetingRoomName']); ?></b></legend>
+									<input type="hidden" name="MeetingRoomName" id="MeetingRoomName"
+									value="<?php htmlout($room['MeetingRoomName']); ?>">
+									<div>
+										<label for="MeetingRoomCapacity">Capacity: </label>
+										<?php htmlout($room['MeetingRoomCapacity']); ?>
+									</div>
+									<div>
+										<label for="MeetingRoomDescription">Description: </label>
+										<?php htmlout($room['MeetingRoomDescription']); ?>
+									</div>
+									<div>
+										<label for="MeetingRoomLocation">Location: </label>
+										<?php htmlout($room['MeetingRoomLocation']); ?>
+									</div>
+									<div><input type="submit" name="action" value="Booking Information"></div>
+									<input type="hidden" name="MeetingRoomID" value="<?php htmlout($room['MeetingRoomID']); ?>">
+								</fieldset>
+							</form>
+						</div>
 					<?php $i++; ?>
 					<?php endif; ?>
 				<?php endforeach; ?>
 			<?php else : ?>
-				<h2>There are no meeting rooms.</h2>
+				<div class="left"><h2>There are no meeting rooms.</h2></div>
 			<?php endif; ?>
 		<?php endif; ?>
 
