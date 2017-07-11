@@ -649,7 +649,7 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR
 				$_SESSION['EditBookingDisplayCompanySelect'] = TRUE;
 			} elseif(sizeOf($company) == 1) {
 				// User is in ONE company
-				
+				unset($_SESSION['EditBookingSelectACompany']);
 				unset($_SESSION['EditBookingDisplayCompanySelect']);
 				$_SESSION['EditBookingInfoArray']['TheCompanyID'] = $company[0]['companyID'];
 				$_SESSION['EditBookingInfoArray']['BookedForCompany'] = $company[0]['companyName'];

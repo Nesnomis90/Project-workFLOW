@@ -141,7 +141,8 @@ if (isset($_POST['action']) and $_POST['action'] == 'Refresh'){
 if(isset($_POST['action']) AND $_POST['action'] == "Booking Information"){
 
 	$TheMeetingRoomID = $_POST['MeetingRoomID'];
-	$location = "http://$_SERVER[HTTP_HOST]/booking/?meetingroom=" . $TheMeetingRoomID;
+	$name = $_POST['MeetingRoomName'];
+	$location = "http://$_SERVER[HTTP_HOST]/booking/?meetingroom=" . $TheMeetingRoomID . "&name=" . $name;
 	header("Location: $location");
 	exit();
 }

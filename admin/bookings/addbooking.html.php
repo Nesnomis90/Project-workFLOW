@@ -6,18 +6,23 @@
 		<meta charset="utf-8">
 		<link rel="stylesheet" type="text/css" href="/CSS/myCSS.css">
 		<title>Book A New Meeting</title>
+		<style>
+			label {
+				width: 140px;
+			}
+		</style>
 	</head>
 	<body>
 	
 		<form action="" method="post">
 		<fieldset><legend><b>Book A New Meeting</b></legend>
 			<?php if(isset($_SESSION['AddBookingError'])) : ?>
-				<b id="warning"><?php htmlout($_SESSION['AddBookingError']); ?></b>
+				<b class="warning"><?php htmlout($_SESSION['AddBookingError']); ?></b>
 				<?php unset($_SESSION['AddBookingError']); ?>
 			<?php endif; ?>	
 			
 			<?php if(isset($_SESSION['AddBookingUserCannotBookForSelf'])) : ?>
-				<b id="warning">You can not book a meeting for yourself since you are not connected to a company.</b>
+				<b class="warning">You can not book a meeting for yourself since you are not connected to a company.</b>
 			<?php endif; ?>	
 			
 			<div>
@@ -75,9 +80,9 @@
 					</div>
 				<?php else : ?>
 					<?php if($_SESSION['LoggedInUserID'] == $SelectedUserID) : ?>
-						<b>You:  <?php htmlout($userInformation); ?> </b>
+						<span><b>You:  <?php htmlout($userInformation); ?></b></span>
 					<?php else : ?>
-						<b><?php htmlout($userInformation); ?> </b>
+						<span><b><?php htmlout($userInformation); ?> </b></span>
 					<?php endif; ?>
 						<input type="submit" name="add" value="Change User">
 						<input type="hidden" name="userID" id="userID"
@@ -100,16 +105,16 @@
 						</select>
 						<input type="submit" name="add" value="Select This Company">
 					<?php else : ?>
-						<b><?php htmlout($companyName); ?></b>
+						<span><b><?php htmlout($companyName); ?></b></span>
 						<input type="hidden" name="companyID" id="companyID" 
 						value="<?php htmlout($companyID); ?>">
 						<input type="submit" name="add" value="Change Company">
 					<?php endif; ?>
 				<?php else : ?>
 					<?php if(isset($company)) : ?>
-						<b><?php htmlout($companyName); ?></b>
+						<span><b><?php htmlout($companyName); ?></b></span>
 					<?php else : ?>
-						<b>This user is not connected to a company.</b>
+						<span><b>This user is not connected to a company.</b></span>
 					<?php endif; ?>
 					<input type="hidden" name="companyID" id="companyID" 
 					value="<?php htmlout($companyID); ?>">
@@ -126,15 +131,15 @@
 				<textarea rows="4" cols="50" name="description" id="description"><?php htmlout($description); ?></textarea>
 				<input type="submit" name="add" value="Get Default Booking Description"> 
 			</div>
-			<div>
+			<div class="left">
 				<input type="submit" name="add" value="Reset">
 				<input type="submit" name="add" value="Cancel">
 				<?php if(isset($_SESSION['AddBookingChangeUser']) AND $_SESSION['AddBookingChangeUser']) : ?>
 					<input type="submit" name="disabled" value="Add booking" disabled>
-					<b>You need to select the user you want before you can add the booking.</b>
+					<span><b>You need to select the user you want before you can add the booking.</b></span>
 				<?php elseif(!isset($_SESSION['AddBookingSelectedACompany'])) : ?>
 					<input type="submit" name="disabled" value="Add booking" disabled>
-					<b>You need to select the company you want before you can add the booking.</b>
+					<span><b>You need to select the company you want before you can add the booking.</b></span>
 				<?php else : ?>
 					<input type="submit" name="add" value="Add booking">
 				<?php endif; ?>				

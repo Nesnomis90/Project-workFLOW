@@ -6,13 +6,22 @@
 		<meta charset="utf-8">
 		<title><?php htmlout($pageTitle); ?></title>
 		<link rel="stylesheet" type="text/css" href="/CSS/myCSS.css">
+		<style>
+			label {
+				width: 180px;
+			}
+		</style>
 	</head>
 	<body>
 		<h1><?php htmlout($pageTitle); ?></h1>
-		<?php if(isset($_SESSION['AddCompanyError'])) : ?>
-			<p><b><?php htmlout($_SESSION['AddCompanyError']); ?></b></p>
-			<?php unset($_SESSION['AddCompanyError']); ?>
-		<?php endif; ?>		
+		
+		<div>
+			<?php if(isset($_SESSION['AddCompanyError'])) : ?>
+				<span><b class="feedback"><?php htmlout($_SESSION['AddCompanyError']); ?></b></span>
+				<?php unset($_SESSION['AddCompanyError']); ?>
+			<?php endif; ?>
+		</div>
+		
 		<form action="" method="post">
 			<?php if(isset($originalCompanyName)) : ?>
 				<div>
@@ -30,9 +39,9 @@
 				<div>
 					<label for="originalDateToRemove">Original Date to Remove:</label>
 					<?php if(isset($originalDateToDisplay) AND $originalDateToDisplay != "") : ?>
-						<b><?php htmlout($originalDateToDisplay); ?></b>	
+						<span><b><?php htmlout($originalDateToDisplay); ?></b></span>
 					<?php else : ?>
-						<b>No date has been Set</b>
+						<span><b>No date has been Set</b></span>
 					<?php endif; ?>
 				</div>
 				<div>
@@ -41,11 +50,9 @@
 					value="<?php htmlout($DateToRemove); ?>">
 				</div>
 			<?php endif; ?>
-			<div>
+			<div class="left">
 				<input type="hidden" name="id" value="<?php htmlout($id); ?>">
 				<input type="submit" name="action" value="<?php htmlout($button); ?>">
-			</div>
-			<div>
 				<?php if($button == 'Edit Company') : ?>
 					<input type="submit" name="edit" value="Reset">
 					<input type="submit" name="edit" value="Cancel">
@@ -54,7 +61,9 @@
 				<?php endif; ?>
 			</div>
 		</form>
-	<p><a href="..">Return to CMS home</a></p>
-	<?php include '../logout.inc.html.php'; ?>
+		
+	<div class="left"><a href="..">Return to CMS home</a></div>
+	
+	<?php include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/logout.inc.html.php'; ?>
 	</body>
 </html>

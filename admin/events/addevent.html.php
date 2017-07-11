@@ -6,14 +6,26 @@
 		<meta charset="utf-8">
 		<link rel="stylesheet" type="text/css" href="/CSS/myCSS.css">		
 		<title>Schedule A New Event</title>
+		<style>
+			label {
+				width: 140px;
+			}
+			.week {
+				width: 300px;
+			}
+			.room {
+				width: 300px;
+			}			
+		</style>
 	</head>
 	<body>
 		<fieldset><legend><b>Schedule A New Event</b></legend>
+		
 			<div class="warning">
-			<?php if(isset($_SESSION['AddEventError'])) : ?>
-				<b><?php htmlout($_SESSION['AddEventError']); ?></b>
-				<?php unset($_SESSION['AddEventError']); ?>
-			<?php endif; ?>
+				<?php if(isset($_SESSION['AddEventError'])) : ?>
+					<span><b class="feedback"><?php htmlout($_SESSION['AddEventError']); ?></b></span>
+					<?php unset($_SESSION['AddEventError']); ?>
+				<?php endif; ?>
 			</div>
 			
 			<form action="" method="post">
@@ -34,20 +46,21 @@
 						<?php else : ?>
 							<input type="submit" name="add" value="Change Room Selection">
 						<?php endif; ?>
+
 						<?php if(isset($_SESSION['AddEventRoomChoiceSelected']) AND $_SESSION['AddEventRoomChoiceSelected'] == "Select Multiple Rooms") : ?>
-							<div>
+							<div class="left">
 								<?php if(!isset($_SESSION['AddEventRoomsSelected'])) : ?>
 									<?php for($i = 0; $i < sizeOf($meetingroom); $i++) : ?>
 										<?php $meetingRoomSelected = FALSE; ?>
 										<?php for($j = 0; $j < sizeOf($roomsSelected); $j++) : ?>
 											<?php if($roomsSelected[$j] == $meetingroom[$i]['MeetingRoomID']) : ?>
-												<label><input type="checkbox" name="roomsSelected[]" checked="checked" value="<?php htmlout($meetingroom[$i]['MeetingRoomID']); ?>"><?php htmlout($meetingroom[$i]['MeetingRoomName']); ?></label>
+												<label class="room"><input type="checkbox" name="roomsSelected[]" checked="checked" value="<?php htmlout($meetingroom[$i]['MeetingRoomID']); ?>"><?php htmlout($meetingroom[$i]['MeetingRoomName']); ?></label>
 												<?php if(($i % 4) == 3) : ?><br /><?php endif; ?>
 												<?php $meetingRoomSelected = TRUE; break; ?>
 											<?php endif; ?>
 										<?php endfor; ?>
 										<?php if(!$meetingRoomSelected) : ?>
-											<label><input type="checkbox" name="roomsSelected[]" value="<?php htmlout($meetingroom[$i]['MeetingRoomID']); ?>"><?php htmlout($meetingroom[$i]['MeetingRoomName']); ?></label>
+											<label class="room"><input type="checkbox" name="roomsSelected[]" value="<?php htmlout($meetingroom[$i]['MeetingRoomID']); ?>"><?php htmlout($meetingroom[$i]['MeetingRoomName']); ?></label>
 											<?php if(($i % 4) == 3) : ?><br /><?php endif; ?>
 										<?php endif; ?>
 									<?php endfor; ?>
@@ -67,12 +80,12 @@
 											<?php if(($i % 4) == 3) : ?><br /><?php endif; ?>
 										<?php endif; ?>
 									<?php endfor; ?>								
-									<b>Event will be scheduled for <?php htmlout($numberOfRoomsSelected); ?> rooms.</b>
+									<span><b>Event will be scheduled for <?php htmlout($numberOfRoomsSelected); ?> rooms.</b></span>
 								<?php endif; ?>
 							</div>
 						<?php elseif(isset($_SESSION['AddEventRoomChoiceSelected']) AND $_SESSION['AddEventRoomChoiceSelected'] == "Select A Single Room") : ?>
 							<?php if(isset($_SESSION['AddEventRoomsSelected'])) : ?>
-								<div><b>Event will be scheduled for the room <?php htmlout($roomSelected); ?></b></div>
+								<div class="left"><b>Event will be scheduled for the room <?php htmlout($roomSelected); ?></b></div>
 							<?php else : ?>
 								<div>
 									<label for="meetingRoomID">Meeting Room: </label>
@@ -89,7 +102,7 @@
 								</div>							
 							<?php endif; ?>
 						<?php elseif(isset($_SESSION['AddEventRoomChoiceSelected']) AND $_SESSION['AddEventRoomChoiceSelected'] == "Select All Rooms") : ?>
-							<div><b>Event will be scheduled for all rooms (Total of <?php htmlout($numberOfRoomsSelected); ?> rooms).</b></div>
+							<div class="left"><b>Event will be scheduled for all rooms (Total of <?php htmlout($numberOfRoomsSelected); ?> rooms).</b></div>
 						<?php endif; ?>
 					</fieldset>
 				</div>
@@ -159,6 +172,7 @@
 						<fieldset>
 							<?php if(!isset($_SESSION['AddEventDaysConfirmed'])) : ?>
 								<legend>Select the day(s) for the event</legend>
+								<div class="left">
 								<?php for($i = 0; $i < sizeOf($daysOfTheWeek); $i++) : ?>
 									<?php $daySelected = FALSE; ?>
 									<?php for($j = 0; $j < sizeOf($daysSelected); $j++) : ?>
@@ -173,9 +187,13 @@
 										<?php if($daysOfTheWeek[$i] != "Sunday") : ?><br /><?php endif; ?>
 									<?php endif; ?>
 								<?php endfor; ?>
-								<input type="submit" name="add" value="Confirm Day(s)">
+								</div>
+								<div class="right">
+									<input type="submit" name="add" value="Confirm Day(s)">
+								</div>
 							<?php else : ?>
 								<legend><b>Day(s) selected for the event</b></legend>
+								<div class="left">
 								<?php for($i = 0; $i < sizeOf($daysOfTheWeek); $i++) : ?>
 									<?php $daySelected = FALSE; ?>
 									<?php for($j = 0; $j < sizeOf($daysSelected); $j++) : ?>
@@ -190,7 +208,10 @@
 										<?php if($daysOfTheWeek[$i] != "Sunday") : ?><br /><?php endif; ?>
 									<?php endif; ?>
 								<?php endfor; ?>
-								<input type="submit" name="add" value="Change Day(s)">
+								</div>
+								<div class="right">
+									<input type="submit" name="add" value="Change Day(s)">
+								</div>
 							<?php endif; ?>
 						</fieldset>
 					</div>
@@ -222,13 +243,13 @@
 												<?php $weekSelected = FALSE; ?>
 												<?php for($j = 0; $j < sizeOf($weeksSelected); $j++) : ?>
 													<?php if($weeksSelected[$j] == $week['WeekNumber']) : ?>
-														<label><input type="checkbox" name="weeksSelected[]" checked="checked" value="<?php htmlout($week['WeekNumber']); ?>"><?php htmlout($week['WeekNumber'] . ": " . $weekStart . "-" . $weekEnd); ?></label>
+														<label class="week"><input type="checkbox" name="weeksSelected[]" checked="checked" value="<?php htmlout($week['WeekNumber']); ?>"><?php htmlout($week['WeekNumber'] . ": " . $weekStart . "-" . $weekEnd); ?></label>
 														<?php if($i % 4 == 3) : ?><br /><?php endif; ?>
 														<?php $weekSelected = TRUE; break; ?>
 													<?php endif; ?>
 												<?php endfor; ?>
 												<?php if(!$weekSelected) : ?>
-													<label><input type="checkbox" name="weeksSelected[]" value="<?php htmlout($week['WeekNumber']); ?>"><?php htmlout($week['WeekNumber'] . ": " . $weekStart . "-" . $weekEnd); ?></label>
+													<label class="week"><input type="checkbox" name="weeksSelected[]" value="<?php htmlout($week['WeekNumber']); ?>"><?php htmlout($week['WeekNumber'] . ": " . $weekStart . "-" . $weekEnd); ?></label>
 													<?php if($i % 4 == 3) : ?><br /><?php endif; ?>
 												<?php endif; ?>
 												<?php $i++; ?>
@@ -255,7 +276,7 @@
 										<?php endif; ?>									
 									<?php elseif(isset($_SESSION['AddEventWeekChoiceSelected']) AND $_SESSION['AddEventWeekChoiceSelected'] == "Select A Single Week") : ?>
 										<?php if(isset($_SESSION['AddEventWeeksSelected'])) : ?>
-											<div><b>Event will be scheduled for the week <?php htmlout($weekSelected); ?></b></div>
+											<div class="left"><b>Event will be scheduled for the week <?php htmlout($weekSelected); ?></b></div>
 										<?php else : ?>
 											<div>
 												<label for="weekNumber">Select the one week: </label>
@@ -273,7 +294,7 @@
 											</div>
 										<?php endif; ?>
 									<?php elseif(isset($_SESSION['AddEventWeekChoiceSelected']) AND $_SESSION['AddEventWeekChoiceSelected'] == "Select All Weeks") : ?>
-										<div><b>Event will be scheduled for all the remaining weeks this year (Total of <?php htmlout($numberOfWeeksSelected); ?> weeks).</b></div>
+										<div class="left"><b>Event will be scheduled for all the remaining weeks this year (Total of <?php htmlout($numberOfWeeksSelected); ?> weeks).</b></div>
 									<?php endif; ?>
 								</div>
 							</div>
@@ -291,23 +312,23 @@
 				<div class="container">
 					<div class="left">
 						<?php if(!isset($_SESSION['AddEventDaysConfirmed'])) : ?>
-							<b>You need to select the day(s) you want before you can create the event.</b>
+							<span><b>You need to select the day(s) you want before you can create the event.</b></span>
 						<?php elseif(sizeOf($daysSelected) == 0) : ?>
-							<b>You need to select at least one day you want before you can create the event.</b>
+							<span><b>You need to select at least one day you want before you can create the event.</b></span>
 						<?php elseif(!isset($_SESSION['AddEventRoomChoiceSelected'])) : ?>
-							<b>You need to pick the meeting room selection type before you can create the event.</b>
+							<span><b>You need to pick the meeting room selection type before you can create the event.</b></span>
 						<?php elseif(isset($_SESSION['AddEventRoomChoiceSelected']) AND $_SESSION['AddEventRoomChoiceSelected'] == "Select A Single Room" AND !isset($_SESSION['AddEventRoomsSelected'])) : ?>
-							<b>You need to select the meeting room before you can create the event.</b>
+							<span><b>You need to select the meeting room before you can create the event.</b></span>
 						<?php elseif(isset($_SESSION['AddEventRoomChoiceSelected']) AND $_SESSION['AddEventRoomChoiceSelected'] == "Select Multiple Rooms" AND (!isset($_SESSION['AddEventRoomsSelected']) OR (isset($_SESSION['AddEventRoomsSelected']) AND sizeOf($_SESSION['AddEventRoomsSelected']) == 0))) : ?>
-							<b>You need to select at least one meeting room before you can create the event.</b>
+							<span><b>You need to select at least one meeting room before you can create the event.</b></span>
 						<?php elseif(!isset($_SESSION['AddEventWeekChoiceSelected'])) : ?>
-							<b>You need to pick the week selection type before you can create the event.</b>
+							<span><b>You need to pick the week selection type before you can create the event.</b></span>
 						<?php elseif(isset($_SESSION['AddEventWeekChoiceSelected']) AND $_SESSION['AddEventWeekChoiceSelected'] == "Select A Single Week" AND !isset($_SESSION['AddEventWeeksSelected'])) : ?>
-							<b>You need to select the week before you can create the event.</b>
+							<span><b>You need to select the week before you can create the event.</b></span>
 						<?php elseif(isset($_SESSION['AddEventWeekChoiceSelected']) AND $_SESSION['AddEventWeekChoiceSelected'] == "Select Multiple Weeks" AND (!isset($_SESSION['AddEventWeeksSelected']) OR (isset($_SESSION['AddEventWeeksSelected']) AND sizeOf($_SESSION['AddEventWeeksSelected']) == 0))) : ?>
-							<b>You need to select at least one week before you can create the event.</b>
+							<span><b>You need to select at least one week before you can create the event.</b></span>
 						<?php elseif(!isset($_SESSION['AddEventDetailsConfirmed'])) : ?>
-							<b>You need to type in the event details before you can create the event.</b>
+							<span><b>You need to type in the event details before you can create the event.</b></span>
 						<?php endif; ?>
 					</div>
 				</div>

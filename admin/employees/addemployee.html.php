@@ -6,17 +6,29 @@
 		<meta charset="utf-8">
 		<link rel="stylesheet" type="text/css" href="/CSS/myCSS.css">
 		<title>Add Employee</title>
+		<style>
+			label {
+				width: 120px;
+			}
+		</style>		
 	</head>
 	<body>
 		<h1>Add Employee</h1>
-		<?php if(isset($_SESSION['AddEmployeeError'])) :?>
-				<p><b><?php htmlout($_SESSION['AddEmployeeError']); ?></b></p>
-			<?php unset($_SESSION['AddEmployeeError']); ?>
-		<?php endif; ?>
-		<?php if(isset($_SESSION['AddEmployeeSearchResult'])) :?>
-				<p><b><?php htmlout($_SESSION['AddEmployeeSearchResult']); ?></b></p>
-			<?php unset($_SESSION['AddEmployeeSearchResult']); ?>
-		<?php endif; ?>		
+		
+		<div class="left">
+			<?php if(isset($_SESSION['AddEmployeeError'])) :?>
+					<span><b class="feedback"><?php htmlout($_SESSION['AddEmployeeError']); ?></b></span>
+				<?php unset($_SESSION['AddEmployeeError']); ?>
+			<?php endif; ?>
+		</div>
+		
+		<div class="left">
+			<?php if(isset($_SESSION['AddEmployeeSearchResult'])) :?>
+					<span><b class="feedback"><?php htmlout($_SESSION['AddEmployeeSearchResult']); ?></b></span>
+				<?php unset($_SESSION['AddEmployeeSearchResult']); ?>
+			<?php endif; ?>
+		</div>
+		
 		<form action="" method="post">
 			<div>
 				<label for="CompanyID">Company name:</label>
@@ -84,15 +96,14 @@
 					<?php endforeach; ?>
 				</select>
 			</div>
-			<div>
+			<div class="left">
 				<input type="submit" name="action" value="Search">
 				<input type="submit" name="action" value="Confirm Employee">
 				<input type="submit" name="action" value="Cancel">
 			</div>
-			<div>
-				<input type="reset">
-			</div>
 		</form>
-	<p><a href="..">Return to CMS home</a></p>
+		
+	<div class="left"><a href="..">Return to CMS home</a></div>
+	
 	</body>
 </html>

@@ -359,24 +359,6 @@ function validateUserInputs($FeedbackSessionToUse, $editing){
 // If so, set that meeting room's info as the default meeting room info
 checkIfLocalDevice();
 
-if ((isset($_POST['login']) and $_POST['login'] == 'Log In') OR
-	(isset($_SESSION['normalBookingTryingToLogIn']) AND $_SESSION['normalBookingTryingToLogIn'])){
-	
-	$_SESSION['normalBookingTryingToLogIn'] = TRUE;
-	$loggedIn = makeUserLogIn();
-	unset($_SESSION['normalBookingTryingToLogIn']);
-
-	if(isset($_GET['meetingroom'])){
-		$TheMeetingRoomID = $_GET['meetingroom'];
-		$location = "http://$_SERVER[HTTP_HOST]/booking/?meetingroom=" . $TheMeetingRoomID;		
-	} else {
-		$location = ".";
-	}
-
-	header("Location: $location");
-	exit();	
-}
-
 // If user wants to go back to the main page while in the confirm booking page
 if (isset($_POST['action']) and $_POST['action'] == 'Go Back'){
 	
@@ -412,7 +394,11 @@ if (isset($_POST['action']) and $_POST['action'] == 'Refresh'){
 	
 	if(isset($_GET['meetingroom'])){
 		$TheMeetingRoomID = $_GET['meetingroom'];
-		$location = "http://$_SERVER[HTTP_HOST]/booking/?meetingroom=" . $TheMeetingRoomID;		
+		$location = "http://$_SERVER[HTTP_HOST]/booking/?meetingroom=" . $TheMeetingRoomID;
+		if(isset($_GET['name'])){
+			$name = $_GET['name'];
+			$location .= "&name=" . $name;	
+		}		
 	} else {
 		$location = ".";
 	}
@@ -2410,11 +2396,11 @@ try
 								)
 							)												AS WorksForCompany,		 
 							b.`description`									AS BookingDescription, 
-							b.`dateTimeCreated`								AS BookingWasCreatedOn, 
-							b.`actualEndDateTime`							AS BookingWasCompletedOn, 
-							b.`dateTimeCancelled`							AS BookingWasCancelledOn 
+							b.`dateTimeCreated`								AS BookingWasCreatedOn
 				FROM 		`booking` b
 				WHERE		b.`meetingRoomID` = :meetingRoomID
+				AND			b.`dateTimeCancelled` IS NULL
+				AND 		b.`actualEndDateTime` IS NULL
 				ORDER BY 	UNIX_TIMESTAMP(b.`startDateTime`)
 				ASC';
 		$s = $pdo->prepare($sql);
@@ -2461,10 +2447,10 @@ try
 								)
 							)												AS WorksForCompany,		 
 							b.`description`									AS BookingDescription, 
-							b.`dateTimeCreated`								AS BookingWasCreatedOn, 
-							b.`actualEndDateTime`							AS BookingWasCompletedOn, 
-							b.`dateTimeCancelled`							AS BookingWasCancelledOn 
+							b.`dateTimeCreated`								AS BookingWasCreatedOn
 				FROM 		`booking` b
+				WHERE		b.`dateTimeCancelled` IS NULL
+				AND 		b.`actualEndDateTime` IS NULL
 				ORDER BY 	UNIX_TIMESTAMP(b.`startDateTime`)
 				ASC';
 		$return = $pdo->query($sql);
@@ -2492,60 +2478,15 @@ foreach ($result as $row)
 	$datetimeNow = getDatetimeNow();
 	$startDateTime = $row['StartTime'];	
 	$endDateTime = $row['EndTime'];
-	$completedDateTime = $row['BookingWasCompletedOn'];
 	$dateOnlyNow = convertDatetimeToFormat($datetimeNow, 'Y-m-d H:i:s', 'Y-m-d');
-	$dateOnlyCompleted = convertDatetimeToFormat($completedDateTime,'Y-m-d H:i:s','Y-m-d');
 	$dateOnlyStart = convertDatetimeToFormat($startDateTime,'Y-m-d H:i:s','Y-m-d');
-	$cancelledDateTime = $row['BookingWasCancelledOn'];
 	$createdDateTime = $row['BookingWasCreatedOn'];	
 	
-	// Describe the status of the booking based on what info is stored in the database
-	// If not finished and not cancelled = active
-	// If meeting time has passed and finished time has updated (and not been cancelled) = completed
-	// If cancelled = cancelled
-	// If meeting time has passed and finished time has NOT updated (and not been cancelled) = Ended without updating
-	// If none of the above = Unknown
-	if(			$completedDateTime == null AND $cancelledDateTime == null AND 
-				$datetimeNow < $endDateTime AND $dateOnlyNow != $dateOnlyStart) {
+	// Check if booking is for today or for the future
+	if($datetimeNow < $endDateTime AND $dateOnlyNow != $dateOnlyStart) {
 		$status = 'Active';
-		// Valid status
-	} elseif(	$completedDateTime == null AND $cancelledDateTime == null AND 
-				$datetimeNow < $endDateTime AND $dateOnlyNow == $dateOnlyStart){
+	} elseif($datetimeNow < $endDateTime AND $dateOnlyNow == $dateOnlyStart){
 		$status = 'Active Today';
-		// Valid status		
-	} elseif(	$completedDateTime != null AND $cancelledDateTime == null AND 
-				$dateOnlyNow != $dateOnlyCompleted){
-		$status = 'Completed';
-		// Valid status
-	} elseif(	$completedDateTime != null AND $cancelledDateTime == null AND 
-				$dateOnlyNow == $dateOnlyCompleted){
-		$status = 'Completed Today';
-		// Valid status
-	} elseif(	$completedDateTime == null AND $cancelledDateTime != null AND
-				$startDateTime > $cancelledDateTime){
-		$status = 'Cancelled';
-		// Valid status
-	} elseif(	$completedDateTime != null AND $cancelledDateTime != null AND
-				$completedDateTime >= $cancelledDateTime ){
-		$status = 'Ended Early';
-		// Valid status?
-	} elseif(	$completedDateTime == null AND $cancelledDateTime != null AND
-				$endDateTime < $cancelledDateTime AND 
-				$startDateTime > $cancelledDateTime){
-		$status = 'Ended Early';
-		// Valid status?
-	} elseif(	$completedDateTime != null AND $cancelledDateTime != null AND
-				$completedDateTime < $cancelledDateTime ){
-		$status = 'Cancelled after Completion';
-		// This should not be allowed to happen eventually
-	} elseif(	$completedDateTime == null AND $cancelledDateTime == null AND 
-				$datetimeNow > $endDateTime){
-		$status = 'Ended without updating database';
-		// This should never occur
-	} elseif(	$completedDateTime == null AND $cancelledDateTime != null AND 
-				$endDateTime < $cancelledDateTime){
-		$status = 'Cancelled after meeting should have been Completed';
-		// This should not be allowed to happen eventually
 	} else {
 		$status = 'Unknown';
 		// This should never occur
@@ -2572,9 +2513,7 @@ foreach ($result as $row)
 		$worksForCompany = "N/A";
 	}
 	$displayValidatedStartDate = convertDatetimeToFormat($startDateTime , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
-	$displayValidatedEndDate = convertDatetimeToFormat($endDateTime, 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
-	$displayCompletedDateTime = convertDatetimeToFormat($completedDateTime, 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
-	$displayCancelledDateTime = convertDatetimeToFormat($cancelledDateTime, 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);	
+	$displayValidatedEndDate = convertDatetimeToFormat($endDateTime, 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);	
 	$displayCreatedDateTime = convertDatetimeToFormat($createdDateTime, 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
 	
 	$meetinginfo = $roomName . ' for the timeslot: ' . $displayValidatedStartDate . 
@@ -2594,8 +2533,6 @@ foreach ($result as $row)
 										'email' => $email,
 										'WorksForCompany' => $worksForCompany,
 										'BookingWasCreatedOn' => $displayCreatedDateTime,
-										'BookingWasCompletedOn' => $displayCompletedDateTime,
-										'BookingWasCancelledOn' => $displayCancelledDateTime,
 										'BookedUserID' => $row['BookedUserID'],
 										'UserInfo' => $userinfo,
 										'MeetingInfo' => $meetinginfo
@@ -2614,8 +2551,6 @@ foreach ($result as $row)
 									'email' => $email,
 									'WorksForCompany' => $worksForCompany,
 									'BookingWasCreatedOn' => $displayCreatedDateTime,
-									'BookingWasCompletedOn' => $displayCompletedDateTime,
-									'BookingWasCancelledOn' => $displayCancelledDateTime,
 									'BookedUserID' => $row['BookedUserID'],									
 									'UserInfo' => $userinfo,
 									'MeetingInfo' => $meetinginfo

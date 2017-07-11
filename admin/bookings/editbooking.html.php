@@ -6,17 +6,26 @@
 		<meta charset="utf-8">
 		<link rel="stylesheet" type="text/css" href="/CSS/myCSS.css">	
 		<title>Edit Booking</title>
+		<style>
+			label {
+				width: 200px;
+			}
+		</style>
 	</head>
 	<body>
 		<h1>Edit Booking</h1>
-		<?php if(isset($_SESSION['EditBookingError'])) : ?>
-			<p><b><?php htmlout($_SESSION['EditBookingError']); ?></b></p>
-			<?php unset($_SESSION['EditBookingError']); ?>
-		<?php endif; ?>
+		
+		<div>
+			<?php if(isset($_SESSION['EditBookingError'])) : ?>
+				<span><b class="feedback"><?php htmlout($_SESSION['EditBookingError']); ?></b></span>
+				<?php unset($_SESSION['EditBookingError']); ?>
+			<?php endif; ?>
+		</div>
+		
 		<form action="" method="post">
 			<div>
 				<label for="originalMeetingRoomName">Booked Meeting Room: </label>
-				<b><?php htmlout($originalMeetingRoomName); ?></b>
+				<span><b><?php htmlout($originalMeetingRoomName); ?></b></span>
 			</div>
 			<div>
 				<label for="meetingRoomID">Set New Meeting Room: </label>
@@ -32,7 +41,7 @@
 			</div>
 			<div>
 				<label for="originalStartDateTime">Booked Start Time: </label>
-				<b><?php htmlout($originalStartDateTime); ?></b>
+				<span><b><?php htmlout($originalStartDateTime); ?></b></span>
 			</div>
 			<div>
 				<label for="startDateTime">Set New Start Time: </label>				
@@ -43,7 +52,7 @@
 			</div>
 			<div>	
 				<label for="originalEndDateTime">Booked End Time: </label>
-				<b><?php htmlout($originalEndDateTime); ?></b>
+				<span><b><?php htmlout($originalEndDateTime); ?></b></span>
 			</div>
 			<div>
 				<label for="endDateTime">Set New End Time: </label>
@@ -54,7 +63,7 @@
 			</div>
 			<div>
 				<label for="originalSelectedUser">Booked For User: </label>
-				<b><?php htmlout($originalUserInformation); ?></b>
+				<span><b><?php htmlout($originalUserInformation); ?></b></span>
 			</div>
 			<div>
 				<label for="SelectedUser">Set New User: </label>
@@ -74,7 +83,7 @@
 						</select>
 						<input type="submit" name="edit" value="Select This User">
 					<?php else : ?>
-						<b>The search found 0 users.</b>
+						<span><b>The search found 0 users.</b></span>
 					<?php endif; ?>
 					</div>
 					<div>
@@ -84,13 +93,13 @@
 						<input type="submit" name="edit" value="Search">
 					</div>
 				<?php elseif(isset($SelectedUserID) AND $SelectedUserID != NULL AND $SelectedUserID != "") : ?>
-						<b><?php htmlout($userInformation); ?> </b>
+						<span><b><?php htmlout($userInformation); ?> </b></span>
 						<input type="submit" name="edit" value="Change User">
 						<input type="hidden" name="userID" id="userID"
 						value="<?php htmlout($SelectedUserID);?>">
 					</div>
 				<?php else : ?>
-						<b>N/A - Deleted</b>
+						<span><b>N/A - Deleted</b></span>
 						<input type="submit" name="edit" value="Change User">
 						<input type="hidden" name="userID" id="userID"
 						value="">			
@@ -99,9 +108,9 @@
 			<div>
 				<label for="originalCompanyInBooking">Booked for Company: </label>
 				<?php if(isset($originalCompanyName)) :?>
-					<b><?php htmlout($originalCompanyName); ?></b>
+					<span><b><?php htmlout($originalCompanyName); ?></b></span>
 				<?php else : ?>
-					<b>This booking had no company assigned.</b>
+					<span><b>This booking had no company assigned.</b></span>
 				<?php endif; ?>
 			</div>
 			<div>
@@ -120,16 +129,16 @@
 						</select>
 						<input type="submit" name="edit" value="Select This Company">
 					<?php else : ?>
-						<b><?php htmlout($companyName); ?></b>
+						<span><b><?php htmlout($companyName); ?></b></span>
 						<input type="hidden" name="companyID" id="companyID" 
 						value="<?php htmlout($companyID); ?>">
 						<input type="submit" name="edit" value="Change Company">
 					<?php endif; ?>
 				<?php else : ?>
 					<?php if(isset($company)) : ?>
-						<b>This user is only connected to one company: <?php htmlout($companyName); ?></b>
+						<span><b>This user is only connected to one company: <?php htmlout($companyName); ?></b></span>
 					<?php else : ?>
-						<b>This user is not connected to a company.</b>
+						<span><b>This user is not connected to a company.</b></span>
 					<?php endif; ?>
 					<input type="hidden" name="companyID" id="companyID" 
 					value="<?php htmlout($companyID); ?>">
@@ -137,13 +146,13 @@
 			</div>
 			<div>
 				<label for="originalDisplayName">Booked Display Name: </label>
-				<b>
+				<span><b>
 					<?php if($originalDisplayName == "") : ?>
-						<b>This booking has no Display Name set.</b>
+						This booking has no Display Name set.
 					<?php else : ?>
 						<?php htmlout($originalDisplayName); ?>
 					<?php endif; ?>
-				</b>
+				</b></span>
 			</div>
 			<div>
 				<label for="displayName">Set New Display Name: </label>
@@ -153,20 +162,20 @@
 			</div>
 			<div>
 				<label for="originalBookingDescription">Booked Description: </label>
-				<b>
+				<span><b>
 					<?php if($originalBookingDescription == "") : ?>
-						<b>This booking has no Booking Description set.</b>
+						This booking has no Booking Description set.
 					<?php else : ?>
 						<?php htmlout($originalBookingDescription); ?>
 					<?php endif; ?>
-				</b>
+				</b></span>
 			</div>
 			<div>
 				<label class="description" for="description">Set New Booking Description: </label>
 				<textarea rows="4" cols="50" name="description" id="description"><?php htmlout($description); ?></textarea>
 				<input type="submit" name="edit" value="Get Default Booking Description">
 			</div>
-			<div>
+			<div class="left">
 				<input type="hidden" name="bookingID" id="bookingID" 
 				value="<?php htmlout($bookingID); ?>">
 				<input type="submit" name="edit" value="Reset">
@@ -174,16 +183,17 @@
 				<?php if(	(isset($_SESSION['EditBookingChangeUser']) AND $_SESSION['EditBookingChangeUser']) OR 
 							($SelectedUserID == "" OR $SelectedUserID == NULL OR !isset($SelectedUserID))) : ?>
 					<input type="submit" name="disabled" value="Finish Edit" disabled>
-					<b>You need to select the user you want before you can finish editing.</b>
+					<span><b>You need to select the user you want before you can finish editing.</b></span>
 				<?php elseif(isset($_SESSION['EditBookingSelectACompany'])) : ?>
 					<input type="submit" name="disabled" value="Finish Edit" disabled>
-					<b>You need to select the company you want before you can finish editing.</b>				
+					<span><b>You need to select the company you want before you can finish editing.</b></span>			
 				<?php else : ?>
 					<input type="submit" name="edit" value="Finish Edit">
 				<?php endif; ?>
 			</div>
 		</form>
-	<p><a href="..">Return to CMS home</a></p>
+		
+	<div class="left"><a href="..">Return to CMS home</a></div>
 	<?php include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/logout.inc.html.php'; ?>
 	</body>
 </html>

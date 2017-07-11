@@ -7,19 +7,28 @@
 		<meta charset="utf-8">
 		<link rel="stylesheet" type="text/css" href="/CSS/myCSS.css">
 		<title><?php htmlout($pageTitle); ?></title>
+		<style>
+			label {
+				width: 320px;
+			}
+		</style>		
 	</head>
 	<body>
 		<h1><?php htmlout($pageTitle); ?></h1>
-		<?php if(isset($_SESSION['EditCreditsError'])) :?>
-			<p><b><?php htmlout($_SESSION['EditCreditsError']); ?></b></p>
-			<?php unset($_SESSION['EditCreditsError']); ?>
-		<?php endif; ?>
+		
+		<div>
+			<?php if(isset($_SESSION['EditCreditsError'])) :?>
+				<span><b class="feedback"><?php htmlout($_SESSION['EditCreditsError']); ?></b></span>
+				<?php unset($_SESSION['EditCreditsError']); ?>
+			<?php endif; ?>
+		</div>
+		
 		<form action="" method="post">
 			<?php if($button == 'Edit Credits') : ?>
-			<div>
-				<label for="OriginalCreditsName">Original Credits Name: </label>
-				<b><?php htmlout($originalCreditsName); ?></b>
-			</div>
+				<div>
+					<label for="OriginalCreditsName">Original Credits Name: </label>
+					<span><b><?php htmlout($originalCreditsName); ?></b></span>
+				</div>
 			<?php endif; ?>		
 			<div>
 				<label for="CreditsName">Set New Credits Name: </label>
@@ -35,12 +44,14 @@
 					value="<?php htmlout($CreditsName); ?>">		
 				<?php endif; ?>
 			</div>
+			
 			<?php if($button == 'Edit Credits') : ?>
-			<div>
-				<label for="OriginalCreditsDescription">Original Credits Description: </label>
-				<b><?php htmlout($originalCreditsDescription); ?></b>
-			</div>
-			<?php endif; ?>					
+				<div>
+					<label for="OriginalCreditsDescription">Original Credits Description: </label>
+					<span><b><?php htmlout($originalCreditsDescription); ?></b></span>
+				</div>
+			<?php endif; ?>
+			
 			<div>
 				<label class="description" for="CreditsDescription">Set New Credits Description: </label>
 				<?php if(	isset($_SESSION['EditCreditsOriginalInfo']) AND 
@@ -54,12 +65,14 @@
 					placeholder="Enter Credits Description"><?php htmlout($CreditsDescription); ?></textarea>
 				<?php endif; ?>
 			</div>
+			
 			<?php if($button == 'Edit Credits') : ?>
-			<div>
-				<label for="OriginalCreditsAmount">Original Credits Amount: </label>
-				<b><?php htmlout($originalCreditsAmount); ?></b>
-			</div>
-			<?php endif; ?>					
+				<div>
+					<label for="OriginalCreditsAmount">Original Credits Amount: </label>
+					<span><b><?php htmlout($originalCreditsAmount); ?></b></span>
+				</div>
+			<?php endif; ?>
+			
 			<div>
 				<label for="CreditsAmount">Set New Credits Amount: </label>
 				<input type="number" name="CreditsAmount" id="CreditsAmount" 
@@ -67,57 +80,67 @@
 				placeholder="Minutes"
 				value="<?php htmlout($CreditsAmount); ?>">
 			</div>
+			
 			<?php if($button == 'Edit Credits') : ?>
-			<div>
-				<label for="OriginalCreditsMonthlyPrice">Original Monthly Subscription Price: </label>
-				<b><?php htmlout($originalCreditsMonthlyPrice); ?></b>
-			</div>
-			<?php endif; ?>					
+				<div>
+					<label for="OriginalCreditsMonthlyPrice">Original Monthly Subscription Price: </label>
+					<span><b><?php htmlout($originalCreditsMonthlyPrice); ?></b></span>
+				</div>
+			<?php endif; ?>
+
 			<div>
 				<label for="CreditsMonthlyPrice">Set New Monthly Subscription Price: </label>
 				<input type="number" name="CreditsMonthlyPrice" id="CreditsMonthlyPrice" 
 				min="0" max="65535"
 				value="<?php htmlout($CreditsMonthlyPrice); ?>">
 			</div>
+			
 			<?php if($button == 'Edit Credits') : ?>
-			<div>
-				<label for="OriginalCreditsHourPrice">Original Over Credits Fee (Charged per hour): </label>
-				<b><?php htmlout($originalCreditsHourPrice); ?></b>
-			</div>
-			<?php endif; ?>					
+				<div>
+					<label for="OriginalCreditsHourPrice">Original Over Credits Fee (Charged per hour): </label>
+					<span><b><?php htmlout($originalCreditsHourPrice); ?></b></span>
+				</div>
+			<?php endif; ?>
+			
 			<div>
 				<label for="CreditsHourPrice">Set New Over Credits Fee (Charged per hour): </label>
 				<input type="number" name="CreditsHourPrice" id="CreditsHourPrice" 
-				min="0" max="65535"
-				value="<?php htmlout($CreditsHourPrice); ?>">
+				min="0" max="65535" placeholder="e.g. 150"
+				value="<?php htmlout($CreditsHourPrice); ?>"><span style="color: red;">*</span>
 			</div>
+			
 			<?php if($button == 'Edit Credits') : ?>
-			<div>
-				<label for="OriginalCreditsMinutePrice">Original Over Credits Fee (Charged per minute): </label>
-				<b><?php htmlout($originalCreditsMinutePrice); ?></b>
-			</div>
-			<?php endif; ?>					
+				<div>
+					<label for="OriginalCreditsMinutePrice">Original Over Credits Fee (Charged per minute): </label>
+					<span><b><?php htmlout($originalCreditsMinutePrice); ?></b></span>
+				</div>
+			<?php endif; ?>
+			
 			<div>
 				<label for="CreditsMinutePrice">Set New Over Credits Fee (Charged per minute): </label>
 				<input type="text" name="CreditsMinutePrice" id="CreditsMinutePrice" 
 				placeholder="e.g. 2.50"
-				value="<?php htmlout($CreditsMinutePrice); ?>">
-			</div>				
-			<div>
+				value="<?php htmlout($CreditsMinutePrice); ?>"><span style="color: red;">*</span>
+			</div>			
+			<div class="left">
 				<input type="hidden" name="CreditsID" value="<?php htmlout($CreditsID); ?>">
 				<input type="submit" name="action" value="<?php htmlout($button); ?>">
+				<span style="color: red;">* Select which method to use.</span>
 			</div>
-			<div>
-			<?php if($button == 'Confirm Credits') : ?>
-				<input type="submit" name="add" value="Reset">
-				<input type="submit" name="add" value="Cancel">
-			<?php elseif($button == 'Edit Credits') : ?>
-				<input type="submit" name="edit" value="Reset">
-				<input type="submit" name="edit" value="Cancel">				
-			<?php endif; ?>
+			
+			<div class="left">
+				<?php if($button == 'Confirm Credits') : ?>
+					<input type="submit" name="add" value="Reset">
+					<input type="submit" name="add" value="Cancel">
+				<?php elseif($button == 'Edit Credits') : ?>
+					<input type="submit" name="edit" value="Reset">
+					<input type="submit" name="edit" value="Cancel">				
+				<?php endif; ?>
 			</div>
 		</form>
-	<p><a href="..">Return to CMS home</a></p>
-	<?php include '../logout.inc.html.php'; ?>
+
+	<div class="left"><a href="..">Return to CMS home</a></div>
+	
+	<?php include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/logout.inc.html.php'; ?>
 	</body>
 </html>

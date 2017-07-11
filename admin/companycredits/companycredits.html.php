@@ -10,10 +10,12 @@
 	</head>
 	<body>
 		<h1>Manage Credits for Companies</h1>
+		
 		<?php if(isset($_SESSION['CompanyCreditsUserFeedback'])) : ?>
-			<p><b><?php htmlout($_SESSION['CompanyCreditsUserFeedback']); ?></b></p>
+			<span><b class="feedback"><?php htmlout($_SESSION['CompanyCreditsUserFeedback']); ?></b></span>
 			<?php unset($_SESSION['CompanyCreditsUserFeedback']); ?>
-		<?php endif; ?>						
+		<?php endif; ?>
+		
 		<?php $goto = "http://$_SERVER[HTTP_HOST]/admin/companies/"; ?>
 		<?php if(isset($_GET['Company'])) :?>
 			<form action="<?php htmlout($goto); ?>" method="post">
@@ -24,6 +26,7 @@
 				<input type="submit" value="Get All Company Credits">
 			</form>
 		<?php endif; ?>
+		
 		<?php if($rowNum>0) :?>
 			<table id="companycreditstable">
 				<caption>Company Credits</caption>
@@ -79,7 +82,9 @@
 		<?php else : ?>
 			<tr><b>There are no credits for any companies registered in the database. This should only occur if there are no companies registered.</b></tr>
 		<?php endif; ?>
-		<p><a href="..">Return to CMS home</a></p>
+		
+	<div class="left"><a href="..">Return to CMS home</a></div>
+		
 	<?php include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/logout.inc.html.php'; ?>
 	</body>
 </html>

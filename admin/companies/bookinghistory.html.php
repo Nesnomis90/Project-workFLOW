@@ -7,6 +7,11 @@
 		<meta charset="utf-8">
 		<link rel="stylesheet" type="text/css" href="/CSS/myCSS.css">	
 		<title>Booking History</title>
+		<style>
+			label {
+				width: 140px;
+			}
+		</style>
 	</head>
 	<body>
 		<div class="left">
@@ -21,23 +26,23 @@
 		
 		<?php if(isset($periodsSummmedUp)) : ?>
 		
-			<h3>The company has <span style="color:red">NOT BILLED PERIODS</span>.</h3>
+			<h3>The company has <b style="color:red">NOT BILLED PERIODS</b>.</h3>
 			
 			<fieldset><legend><b>Not Billed Periods</b></legend>
 			<?php $totalCostForAllPeriodsSummedUp = 0; ?>
 			<?php foreach($periodsSummmedUp AS $period) : ?>
 				<fieldset><legend><b><?php htmlout($period['StartDate'] . " - " . $period['EndDate']); ?></b></legend>
-					Credits Given: <b><?php htmlout($period['CreditsGiven']); ?></b><br />
-					Booking Time Charged: <b><?php htmlout($period['BookingTimeCharged']); ?></b><br />
-					Excess Booking Time: <b><?php htmlout($period['OverCreditsTimeExact']); ?></b><br />
-					Excess Time Charged: <b><?php htmlout($period['OverCreditsTimeCharged']); ?></b><br />
-					Cost (Subscription + Excess Booking Time): <b><?php htmlout($period['TotalBookingCostThisMonthAsParts']); ?></b><br />
-					Cost (Total): <b><span style="color:red"><?php htmlout($period['TotalBookingCostThisMonth']); ?></span></b><br />
+					<span>Credits Given: <b><?php htmlout($period['CreditsGiven']); ?></b></span><br />
+					<span>Booking Time Charged: <b><?php htmlout($period['BookingTimeCharged']); ?></b></span><br />
+					<span>Excess Booking Time: <b><?php htmlout($period['OverCreditsTimeExact']); ?></b></span><br />
+					<span>Excess Time Charged: <b><?php htmlout($period['OverCreditsTimeCharged']); ?></b></span><br />
+					<span>Cost (Subscription + Excess Booking Time): <b><?php htmlout($period['TotalBookingCostThisMonthAsParts']); ?></b></span><br />
+					<span>Cost (Total): <b style="color:red"><?php htmlout($period['TotalBookingCostThisMonth']); ?></b></span>
 					<?php $totalCostForAllPeriodsSummedUp += $period['TotalBookingCostThisMonthJustNumber']; ?>
 				</fieldset>
 			<?php endforeach; ?>
 				<div>
-					Total Cost All Periods: <span style="color:red"><b><?php htmlout(convertToCurrency($totalCostForAllPeriodsSummedUp)); ?></span></b><br />
+					<span>Total Cost All Periods: <b style="color:red"><?php htmlout(convertToCurrency($totalCostForAllPeriodsSummedUp)); ?></b></span>
 				</div>
 			</fieldset>
 		<?php endif; ?>
@@ -45,9 +50,9 @@
 		<?php if($rightNow) : ?>
 			<h2>Billing Status: Period still in progress.</h2>
 		<?php elseif(!isset($periodHasBeenBilled) OR $periodHasBeenBilled == 0) : ?>
-			<h2>Billing Status: This booking has <span style="color:red">NOT BEEN BILLED</span>.</h2>
+			<h2>Billing Status: This booking has <b style="color:red">NOT BEEN BILLED</b>.</h2>
 		<?php elseif($periodHasBeenBilled == 1) : ?>
-			<h2>Billing Status: This booking has <span style="color:green">BEEN BILLED</span>.</h2><br />
+			<h2>Billing Status: This booking has <b style="color:green">BEEN BILLED</b>.</h2><br />
 		<?php endif; ?>
 		
 		<form action="" method="post">
@@ -70,80 +75,81 @@
 				<?php endif; ?>				
 			</div>
 		</form>
-		
-		<br />
-		<br />
-		<?php if(!isset($periodHasBeenBilled) OR $periodHasBeenBilled == 0){
-			$color='red';
-		} elseif($periodHasBeenBilled == 1) {
-			$color='green';
-		} ?>
-		
-		<?php $bookingNumberThisPeriod = 1; ?>
-		<?php if(isset($bookingHistory) AND !empty($bookingHistory)) : ?>
-			<fieldset><legend>Completed Bookings during <b><?php htmlout($BillingPeriod); ?></b></legend>
-				<?php foreach($bookingHistory AS $row) : ?>
-					<fieldset><legend><b>Booking #<?php htmlout($bookingNumberThisPeriod); ?></b></legend>
-							User: <b><?php htmlout($row['UserInformation']); ?></b><br />
-							Booked the meeting room: <b><?php htmlout($row['MeetingRoomName']); ?></b><br />
-							For the period of: <b><?php htmlout($row['BookingPeriod']); ?></b><br />
-							Using a total time of: <b><?php htmlout($row['BookingTimeUsed']); ?></b><br />
-							Time used in price calculation: <b><?php htmlout($row['BookingTimeCharged']); ?></b><br />
-					</fieldset>
-					<?php $bookingNumberThisPeriod += 1; ?>
-				<?php endforeach; ?>
-		<?php elseif($rightNow) : ?>
-			<b>There are no bookings completed so far this period.</b><br />
-		<?php else : ?>
-			<b>There were no bookings completed this period.</b><br />
-		<?php endif; ?>
 
-		<?php if($rightNow) : ?>
-			<h2>Billing Status: Period still in progress.</h2>
-			Producing a total of actual booking time used so far this period: <b><?php htmlout($displayTotalBookingTimeThisPeriod); ?></b><br />
-			The total booking time charged with after including minimum booking length: <b><?php htmlout($displayTotalBookingTimeUsedInPriceCalculationsThisPeriod); ?></b><br />
-		<?php else : ?>
-			<?php if(!isset($periodHasBeenBilled) OR $periodHasBeenBilled == 0) : ?>
-				<h2>Billing Status: This booking has <span style="color:red">NOT BEEN BILLED</span>.</h2>
-			<?php elseif($periodHasBeenBilled == 1) : ?>
-				<h2>Billing Status: This booking has <span style="color:green">BEEN BILLED</span>.</h2><br />
-			<?php endif; ?>
-			Producing a total booking time used this period: <b><?php htmlout($displayTotalBookingTimeThisPeriod); ?></b><br />
-			The total booking time charged with after including minimum booking length: <b><?php htmlout($displayTotalBookingTimeUsedInPriceCalculationsThisPeriod); ?></b><br />
-		<?php endif; ?>
-	
-		<?php if($companyMinuteCreditsRemaining < 0) : ?>
-			This is <span style="color:<?php htmlout($color); ?>"><b>MORE</b></span> than the credit given this period: <b><?php htmlout($displayCompanyCredits); ?></b><br />
-			The extra time used this period: <span style="color:<?php htmlout($color); ?>"><b><?php htmlout($displayOverCreditsTimeUsed); ?></b></span><br />
-			<?php if($hourAmountUsedInCalculation!="") : ?>
-				Time used for calculating price: <b><?php htmlout($displayHourAmountUsedInCalculation); ?></b><br />
+		<div class="left">
+			<?php if(!isset($periodHasBeenBilled) OR $periodHasBeenBilled == 0){
+				$color='red';
+			} elseif($periodHasBeenBilled == 1) {
+				$color='green';
+			} ?>
+			
+			<?php $bookingNumberThisPeriod = 1; ?>
+			<?php if(isset($bookingHistory) AND !empty($bookingHistory)) : ?>
+				<fieldset><legend>Completed Bookings during <b><?php htmlout($BillingPeriod); ?></b></legend>
+					<?php foreach($bookingHistory AS $row) : ?>
+						<fieldset><legend><b>Booking #<?php htmlout($bookingNumberThisPeriod); ?></b></legend>
+								User: <b><?php htmlout($row['UserInformation']); ?></b><br />
+								Booked the meeting room: <b><?php htmlout($row['MeetingRoomName']); ?></b><br />
+								For the period of: <b><?php htmlout($row['BookingPeriod']); ?></b><br />
+								Using a total time of: <b><?php htmlout($row['BookingTimeUsed']); ?></b><br />
+								Time used in price calculation: <b><?php htmlout($row['BookingTimeCharged']); ?></b><br />
+						</fieldset>
+						<?php $bookingNumberThisPeriod += 1; ?>
+					<?php endforeach; ?>
+			<?php elseif($rightNow) : ?>
+				<span><b>There are no bookings completed so far this period.</b></span>
 			<?php else : ?>
-				Time used for calculating price: <b><?php htmlout($actualTimeOverCreditsInMinutes."m"); ?></b><br />
-			<?php endif; ?>	
-			The company has an "over credits"-fee of: <b><?php htmlout($overCreditsFee); ?></b><br />
-			<?php if($hourAmountUsedInCalculation!="") : ?>
-				Giving an "over credits"-cost of: <b><?php htmlout($displayHourAmountUsedInCalculation); ?></b>*<b><?php htmlout($overCreditsFee); ?></b> = <span style="color:<?php htmlout($color); ?>"><b><?php htmlout($displayOverFeeCostThisMonth); ?></b></span><br />
-			<?php else : ?>
-				Giving an "over credits"-cost of: <b><?php htmlout($actualTimeOverCreditsInMinutes."m"); ?></b>*<b><?php htmlout($overCreditsFee); ?></b> = <span style="color:<?php htmlout($color); ?>"><b><?php htmlout($displayOverFeeCostThisMonth); ?></b></span><br />
+				<span><b>There were no bookings completed this period.</b></span>
 			<?php endif; ?>
-		<?php elseif($companyMinuteCreditsRemaining == 0) : ?>
-			This is <span style="color:green"><b>EXACTLY</b></span> the credit given this period: <b><?php htmlout($displayCompanyCredits); ?></b><br />
-		<?php else : ?>
-			This is <span style="color:green"><b>LESS</b></span> than the credit given this period: <b><?php htmlout($displayCompanyCredits); ?></b><br />
+
 			<?php if($rightNow) : ?>
-				Credits remaining this period: <b><?php htmlout($displayCompanyCreditsRemaining); ?></b><br />
+				<h2>Billing Status: Period still in progress.</h2>
+				
+				<span>Producing a total of actual booking time used so far this period: <b><?php htmlout($displayTotalBookingTimeThisPeriod); ?></b></span><br />
+				<span>The total booking time charged with after including minimum booking length: <b><?php htmlout($displayTotalBookingTimeUsedInPriceCalculationsThisPeriod); ?></b></span><br />
 			<?php else : ?>
-				Credits remaining at the end of the period: <b><?php htmlout($displayCompanyCreditsRemaining); ?></b><br />
+				<?php if(!isset($periodHasBeenBilled) OR $periodHasBeenBilled == 0) : ?>
+					<h2>Billing Status: This booking has <b style="color:red">NOT BEEN BILLED</b>.</h2>
+				<?php elseif($periodHasBeenBilled == 1) : ?>
+					<h2>Billing Status: This booking has <b style="color:green">BEEN BILLED</b>.</h2><br />
+				<?php endif; ?>
+				<span>Producing a total booking time used this period: <b><?php htmlout($displayTotalBookingTimeThisPeriod); ?></b></span><br />
+				<span>The total booking time charged with after including minimum booking length: <b><?php htmlout($displayTotalBookingTimeUsedInPriceCalculationsThisPeriod); ?></b></span><br />
 			<?php endif; ?>
-		<?php endif; ?>
 		
-		This company has a monthly set subscription cost of: <span style="color:<?php htmlout($color); ?>"><b><?php htmlout($displayMonthPrice); ?></b></span><br />
-		<?php if($rightNow) : ?>
-			Resulting in the total cost so far this period of: <b><?php htmlout($bookingCostThisMonth); ?></b> = <span style="color:red"><b><?php htmlout($totalBookingCostThisMonth); ?></b></span><br />
-		<?php else : ?>
-			Resulting in the total cost this period of: <b><?php htmlout($bookingCostThisMonth); ?></b> = <span style="color:<?php htmlout($color); ?>"><b><?php htmlout($totalBookingCostThisMonth); ?></b></span><br />
-		<?php endif; ?>
-		<br />
+			<?php if($companyMinuteCreditsRemaining < 0) : ?>
+				<span>This is <b style="color:<?php htmlout($color); ?>">MORE</b> than the credit given this period: <b><?php htmlout($displayCompanyCredits); ?></b></span><br />
+				<span>The extra time used this period: <b style="color:<?php htmlout($color); ?>"><?php htmlout($displayOverCreditsTimeUsed); ?></b></span><br />
+				<?php if($hourAmountUsedInCalculation!="") : ?>
+					<span>Time used for calculating price: <b><?php htmlout($displayHourAmountUsedInCalculation); ?></b></span><br />
+				<?php else : ?>
+					<span>Time used for calculating price: <b><?php htmlout($actualTimeOverCreditsInMinutes."m"); ?></b></span><br />
+				<?php endif; ?>	
+				<span>The company has an "over credits"-fee of: <b><?php htmlout($overCreditsFee); ?></b></span><br />
+				<?php if($hourAmountUsedInCalculation!="") : ?>
+					<span>Giving an "over credits"-cost of: <b><?php htmlout($displayHourAmountUsedInCalculation); ?></b>*<b><?php htmlout($overCreditsFee); ?></b> = <b style="color:<?php htmlout($color); ?>"><?php htmlout($displayOverFeeCostThisMonth); ?></b></span><br />
+				<?php else : ?>
+					<span>Giving an "over credits"-cost of: <b><?php htmlout($actualTimeOverCreditsInMinutes."m"); ?></b>*<b><?php htmlout($overCreditsFee); ?></b> = <b style="color:<?php htmlout($color); ?>"><?php htmlout($displayOverFeeCostThisMonth); ?></b></span><br />
+				<?php endif; ?>
+			<?php elseif($companyMinuteCreditsRemaining == 0) : ?>
+				<span>This is <b style="color:green">EXACTLY</b> the credit given this period: <b><?php htmlout($displayCompanyCredits); ?></b></span><br />
+			<?php else : ?>
+				<span>This is <b style="color:green">LESS</b> than the credit given this period: <b><?php htmlout($displayCompanyCredits); ?></b></span><br />
+				<?php if($rightNow) : ?>
+					<span>Credits remaining this period: <b><?php htmlout($displayCompanyCreditsRemaining); ?></b></span><br />
+				<?php else : ?>
+					<span>Credits remaining at the end of the period: <b><?php htmlout($displayCompanyCreditsRemaining); ?></b></span><br />
+				<?php endif; ?>
+			<?php endif; ?>
+			
+			<span>This company has a monthly set subscription cost of: <b style="color:<?php htmlout($color); ?>"><?php htmlout($displayMonthPrice); ?></b></span><br />
+			<?php if($rightNow) : ?>
+				<span>Resulting in the total cost so far this period of: <b><?php htmlout($bookingCostThisMonth); ?></b> = <b style="color:<?php htmlout($color); ?>"><?php htmlout($totalBookingCostThisMonth); ?></b></span>
+			<?php else : ?>
+				<span>Resulting in the total cost this period of: <b><?php htmlout($bookingCostThisMonth); ?></b> = <b style="color:<?php htmlout($color); ?>"><?php htmlout($totalBookingCostThisMonth); ?></b></span>
+			<?php endif; ?>
+		</div>
+		
 		<?php if(!$rightNow AND (!isset($periodHasBeenBilled) OR $periodHasBeenBilled == 0)) : ?>
 			<form action="" method="post">
 				<label class="description" for="billingDescription">Billing Description: </label>
@@ -161,7 +167,9 @@
 			rows="4" cols="50" disabled><?php htmlout($billingDescription); ?></textarea>
 		<?php endif; ?>
 		</fieldset>
-		<p><a href="..">Return to CMS home</a></p>
+
+	<div class="left"><a href="..">Return to CMS home</a></div>
+		
 	<?php include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/logout.inc.html.php'; ?>
 	</body>
 </html>		

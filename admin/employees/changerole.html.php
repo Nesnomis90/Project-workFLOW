@@ -6,6 +6,11 @@
 		<meta charset="utf-8">
 		<link rel="stylesheet" type="text/css" href="/CSS/myCSS.css">
 		<title>Change Employee Role</title>
+		<style>
+			label {
+				width: 120px;
+			}
+		</style>
 	</head>
 	<body>
 		<h1>Change Employee Role</h1>
@@ -46,7 +51,9 @@
 				<input type="submit" name="action" value="Cancel">
 			</div>
 		</form>
-	<p><a href="..">Return to CMS home</a></p>
-	<?php include '../logout.inc.html.php'; ?>
+		
+	<div class="left"><a href="..">Return to CMS home</a></div>
+	
+	<?php include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/logout.inc.html.php'; ?>
 	</body>
 </html>

@@ -4,21 +4,17 @@
 <!DOCTYPE html>
 <html lang="en">
 	<head>
-		<meta charset="utf-8" HTTP-EQUIV="refresh" CONTENT="<?php htmlout(SECONDS_BEFORE_REFRESHING_BOOKING_PAGE); ?>"> <!-- Refreshes every 30 sec -->
+		<meta charset="utf-8" HTTP-EQUIV="refresh" CONTENT="<?php htmlout(SECONDS_BEFORE_REFRESHING_BOOKING_PAGE); ?>"> <!-- Refreshes every x sec -->
 		<title>Booking Information</title>
 		<link rel="stylesheet" type="text/css" href="/CSS/myCSS.css">
 		<script src="/scripts/myFunctions.js"></script>		
 	</head>
 	<body onload="startTime()">
 		<?php include_once $_SERVER['DOCUMENT_ROOT'] .'/includes/topnav.html.php'; ?>
-	
-		<div id="ClockPlacement">
-			<b id="Clock"></b>
-		</div>
 		
 		<div id="feedback">
 		<?php if(isset($_SESSION['normalBookingFeedback'])) : ?>
-			<b><?php htmlout($_SESSION['normalBookingFeedback']); ?></b>
+			<span><b id="feedback"><?php htmlout($_SESSION['normalBookingFeedback']); ?></b></span>
 			<?php unset($_SESSION['normalBookingFeedback']); ?>
 		<?php endif; ?>
 		</div>
@@ -35,12 +31,22 @@
 			<?php endif; ?>
 			
 			<form action="" method="post">
-				<div>
+				<div class="left">
 					<input type="submit" name="action" value="Create Meeting">
 					<input type="submit" name="action" value="Refresh">
-					<b>Last Refresh: <?php htmlout(getDatetimeNowInDisplayFormat()); ?></b>
-				</div>		
+					<span><b>Last Refresh: <?php htmlout(getDatetimeNowInDisplayFormat()); ?></b></span>
+				</div>
 			</form>
+
+			<?php if(isset($_GET['meetingroom']) AND isset($_GET['name'])) : ?>
+				<div class="left">
+					<span><b>Currently viewing bookings for the meeting room named: <?php htmlout($_GET['name']); ?></b></span>
+				</div>
+			<?php elseif(isset($_GET['meetingroom']) AND !isset($_GET['name'])) : ?>
+				<div class="left">
+					<span><b>Currently viewing bookings from a single room</b></span>
+				</div>			
+			<?php endif; ?>
 			
 			<table>
 				<caption>Active Bookings Today</caption>
@@ -277,9 +283,7 @@
 			<?php endif; ?>
 			</form>		
 		<?php endif; ?>
-		
-		<?php if(isset($_SESSION['loggedIn'])) : ?>
-			<?php include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/logout.inc.html.php'; ?>
-		<?php endif; ?>
+
+		<?php include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/logout.inc.html.php'; ?>
 	</body>
 </html>
