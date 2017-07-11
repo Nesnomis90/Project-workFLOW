@@ -35,12 +35,18 @@
 			<?php endif; ?>
 			
 			<form action="" method="post">
-				<div>
+				<div class="left">
 					<input type="submit" name="action" value="Create Meeting">
 					<input type="submit" name="action" value="Refresh">
 					<b>Last Refresh: <?php htmlout(getDatetimeNowInDisplayFormat()); ?></b>
-				</div>		
+				</div>
 			</form>
+
+			<?php if(isset($_GET['meetingroom'])) : ?>
+				<div>
+					<b>Currently viewing bookings for the meeting room named: <?php htmlout($roomName); ?></b>
+				</div>
+			<?php endif; ?>
 			
 			<table>
 				<caption>Active Bookings Today</caption>
@@ -277,9 +283,7 @@
 			<?php endif; ?>
 			</form>		
 		<?php endif; ?>
-		
-		<?php if(isset($_SESSION['loggedIn'])) : ?>
-			<?php include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/logout.inc.html.php'; ?>
-		<?php endif; ?>
+
+		<?php include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/logout.inc.html.php'; ?>
 	</body>
 </html>

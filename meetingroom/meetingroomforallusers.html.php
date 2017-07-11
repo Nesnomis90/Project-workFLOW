@@ -7,15 +7,21 @@
 		<meta charset="utf-8" HTTP-EQUIV="refresh" CONTENT="<?php htmlout(SECONDS_BEFORE_REFRESHING_MEETINGROOM_PAGE); ?>"> <!-- Refreshes every 30 sec -->
 		<title>Meeting Room</title>
 		<link rel="stylesheet" type="text/css" href="/CSS/myCSS.css">
-		<script src="/scripts/myFunctions.js"></script>		
+		<script src="/scripts/myFunctions.js"></script>
+		<style>
+			label {
+				width: 85px;
+			}
+		</style>
 	</head>
 	<body onload="startTime()">
 	
-	<?php include_once $_SERVER['DOCUMENT_ROOT'] .'/includes/topnav.html.php'; ?>
+		<?php include_once $_SERVER['DOCUMENT_ROOT'] .'/includes/topnav.html.php'; ?>
 	
-	<div id="ClockPlacement">
-		<b id="Clock"></b>
-	</div>
+		<div id="ClockPlacement">
+			<b id="Clock"></b>
+		</div>
+	
 		<?php if(isset($_SESSION['DefaultMeetingRoomInfo']) AND !isset($defaultMeetingRoomFeedback)) : ?>
 			<div>
 			<form action="" method="post">
@@ -90,12 +96,14 @@
 		<?php elseif(!isset($_GET['meetingroom'])) : ?>
 			<div>
 				<form action="" method="post">
-					<label for="maxRoomsToDisplay">Max Rooms Displayed: </label>
+					<label style="width: 160px;" for="maxRoomsToDisplay">Max Rooms Displayed: </label>
 					<input type="number" name="logsToShow" min="1" max="<?php htmlout($totalMeetingRooms); ?>"
 					value="<?php htmlout($roomDisplayLimit); ?>">
 					<b>/<?php htmlout($totalMeetingRooms); ?></b>
-					<input type="submit" name="action" value="Set New Max">
-					<input type="hidden" name="oldDisplayLimit" value="<?php htmlout($maxRoomsToShow); ?>">
+					<div class="left">
+						<input type="submit" name="action" value="Set New Max">
+						<input type="hidden" name="oldDisplayLimit" value="<?php htmlout($maxRoomsToShow); ?>">
+					</div>
 				</form>
 			</div>		
 			<?php if(isset($meetingrooms)) :?>
@@ -131,8 +139,7 @@
 				<h2>There are no meeting rooms.</h2>
 			<?php endif; ?>
 		<?php endif; ?>
-	<?php if(isset($_SESSION['loggedIn'])) : ?>
+
 		<?php include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/logout.inc.html.php'; ?>
-	<?php endif; ?>
 	</body>
 </html>
