@@ -227,7 +227,7 @@ table caption {
 	float:left;
 }
 
-.topnav li a {
+.topnav li a,li b {
     display: block;
     color: white;
     text-align: center;

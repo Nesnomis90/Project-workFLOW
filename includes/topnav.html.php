@@ -12,7 +12,7 @@ function getLocationWeCameFrom(){
 		if(isset($_GET['name'])){
 			$name = $_GET['name'];
 			$location .= "&name=" . $name;	
-		}		
+		}
 	}
 
 	return $location;
@@ -62,6 +62,7 @@ if(isset($_GET['meetingroom'])){
 			<li><a href="#home">Home</a></li>
 			<li><a href="/meetingroom">Room Status</a></li>
 			<li><a href="/booking">Book Meeting</a></li>
+			<li><b id="Clock"></b></li>
 			<?php if(!isset($_SESSION['loggedIn']) AND !isset($_SESSION["DefaultMeetingRoomInfo"])) : ?>
 				<li style="float:right"><a href="/user/?register">Register</a></li>
 				<li style="float:right"><a href="<?php htmlout($loginForNav); ?>">Log In</a></li>

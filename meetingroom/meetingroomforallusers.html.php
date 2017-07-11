@@ -18,10 +18,6 @@
 	
 		<?php include_once $_SERVER['DOCUMENT_ROOT'] .'/includes/topnav.html.php'; ?>
 	
-		<div id="ClockPlacement">
-			<b id="Clock"></b>
-		</div>
-	
 		<?php if(isset($_SESSION['DefaultMeetingRoomInfo']) AND !isset($defaultMeetingRoomFeedback)) : ?>
 			<div class="left">
 				<form action="" method="post">
