@@ -8,9 +8,13 @@ function getLocationWeCameFrom(){
 	
 	if(isset($_GET['meetingroom'])){
 		$TheMeetingRoomID = $_GET['meetingroom'];
-		$location .= "?meetingroom=" . $TheMeetingRoomID;		
+		$location .= "?meetingroom=" . $TheMeetingRoomID;
+		if(isset($_GET['name'])){
+			$name = $_GET['name'];
+			$location .= "&name=" . $name;	
+		}		
 	}
-		
+
 	return $location;
 }
 
@@ -44,7 +48,12 @@ $logoutForNav = "?logoutForNav";
 if(isset($_GET['meetingroom'])){
 	$TheMeetingRoomID = $_GET['meetingroom'];
 	$loginForNav .= "&meetingroom=" . $TheMeetingRoomID;
-	$logoutForNav .= "&meetingroom=" . $TheMeetingRoomID;	
+	$logoutForNav .= "&meetingroom=" . $TheMeetingRoomID;
+		if(isset($_GET['name'])){
+			$name = $_GET['name'];
+			$loginForNav .= "&name=" . $name;
+			$logoutForNav .= "&name=" . $name;
+		}	
 }
 ?>
 <?php if(!isset($_SESSION['DefaultMeetingRoomInfo'])) : ?>

@@ -42,10 +42,14 @@
 				</div>
 			</form>
 
-			<?php if(isset($_GET['meetingroom'])) : ?>
-				<div>
-					<b>Currently viewing bookings for the meeting room named: <?php htmlout($roomName); ?></b>
+			<?php if(isset($_GET['meetingroom']) AND isset($_GET['name'])) : ?>
+				<div class="left">
+					<b>Currently viewing bookings for the meeting room named: <?php htmlout($_GET['name']); ?></b>
 				</div>
+			<?php elseif(isset($_GET['meetingroom']) AND !isset($_GET['name'])) : ?>
+				<div class="left">
+					<b>Currently viewing bookings from a single room</b>
+				</div>			
 			<?php endif; ?>
 			
 			<table>

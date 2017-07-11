@@ -394,7 +394,11 @@ if (isset($_POST['action']) and $_POST['action'] == 'Refresh'){
 	
 	if(isset($_GET['meetingroom'])){
 		$TheMeetingRoomID = $_GET['meetingroom'];
-		$location = "http://$_SERVER[HTTP_HOST]/booking/?meetingroom=" . $TheMeetingRoomID;		
+		$location = "http://$_SERVER[HTTP_HOST]/booking/?meetingroom=" . $TheMeetingRoomID;
+		if(isset($_GET['name'])){
+			$name = $_GET['name'];
+			$location .= "&name=" . $name;	
+		}		
 	} else {
 		$location = ".";
 	}

@@ -70,9 +70,7 @@
 				<?php foreach ($meetingrooms as $room): ?>
 					<form action="" method="post">
 						<fieldset>
-							<legend><?php htmlout($room['MeetingRoomName']); ?></legend>
-							<input type="hidden" name="MeetingRoomName" id="MeetingRoomName"
-							value="<?php htmlout($room['MeetingRoomName']); ?>">
+							<legend><b><?php htmlout($room['MeetingRoomName']); ?></b></legend>
 							<div>
 								<label for="MeetingRoomCapacity">Capacity: </label>
 								<?php htmlout($room['MeetingRoomCapacity']); ?>
@@ -86,6 +84,7 @@
 								<?php htmlout($room['MeetingRoomLocation']); ?>
 							</div>
 							<div><input type="submit" name="action" value="Booking Information"></div>
+							<input type="hidden" name="MeetingRoomName" id="MeetingRoomName" value="<?php htmlout($room['MeetingRoomName']); ?>">
 							<input type="hidden" name="MeetingRoomID" value="<?php htmlout($room['MeetingRoomID']); ?>">
 						</fieldset>
 					</form>
@@ -113,7 +112,7 @@
 					<?php if($i < $maxRoomsToShow) : ?>
 						<form action="" method="post">
 							<fieldset>
-								<legend><?php htmlout($room['MeetingRoomName']); ?></legend>
+								<legend><b><?php htmlout($room['MeetingRoomName']); ?></b></legend>
 								<input type="hidden" name="MeetingRoomName" id="MeetingRoomName"
 								value="<?php htmlout($room['MeetingRoomName']); ?>">
 								<div>
