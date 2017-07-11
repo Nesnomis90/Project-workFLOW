@@ -77,19 +77,19 @@
 					<form action="" method="post">
 						<fieldset>
 							<legend><b><?php htmlout($room['MeetingRoomName']); ?></b></legend>
-							<div>
+							<div class="left">
 								<label for="MeetingRoomCapacity">Capacity: </label>
-								<?php htmlout($room['MeetingRoomCapacity']); ?>
+								<span><?php htmlout($room['MeetingRoomCapacity']); ?></span>
 							</div>
-							<div>
+							<div class="left">
 								<label for="MeetingRoomDescription">Description: </label>
-								<?php htmlout($room['MeetingRoomDescription']); ?>
+								<span><?php htmlout($room['MeetingRoomDescription']); ?></span>
 							</div>
-							<div>
+							<div class="left">
 								<label for="MeetingRoomLocation">Location: </label>
-								<?php htmlout($room['MeetingRoomLocation']); ?>
+								<span><?php htmlout($room['MeetingRoomLocation']); ?></span>
 							</div>
-							<div><input type="submit" name="action" value="Booking Information"></div>
+							<div class="left"><input type="submit" name="action" value="Booking Information"></div>
 							<input type="hidden" name="MeetingRoomName" id="MeetingRoomName" value="<?php htmlout($room['MeetingRoomName']); ?>">
 							<input type="hidden" name="MeetingRoomID" value="<?php htmlout($room['MeetingRoomID']); ?>">
 						</fieldset>
