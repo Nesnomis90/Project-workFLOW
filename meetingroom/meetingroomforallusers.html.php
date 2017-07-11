@@ -56,12 +56,12 @@
 		</div>
 		
 		<?php if(isset($_SESSION['MeetingRoomAllUsersFeedback'])) : ?>
-			<div class="left"><b><?php htmlout($_SESSION['MeetingRoomAllUsersFeedback']); ?></b></div>
+			<div class="left"><b class="feedback"><?php htmlout($_SESSION['MeetingRoomAllUsersFeedback']); ?></b></div>
 			<?php unset($_SESSION['MeetingRoomAllUsersFeedback']); ?>
 		<?php endif; ?>
 		
 		<?php if(isset($defaultMeetingRoomFeedback)) : ?>
-			<div class="left"><b><?php htmlout($defaultMeetingRoomFeedback); ?></b></div>
+			<div class="left"><b class="feedback"><?php htmlout($defaultMeetingRoomFeedback); ?></b></div>
 		<?php endif; ?>
 		
 		<?php if(isset($_GET['meetingroom']) AND $_GET['meetingroom'] != NULL AND $_GET['meetingroom'] != "") : ?>

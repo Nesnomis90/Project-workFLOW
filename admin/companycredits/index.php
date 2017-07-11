@@ -450,40 +450,37 @@ if(isset($_GET['Company'])){
 
 		$pdo = connect_to_db();
 		
-		$sql = "SELECT 		c.`CompanyID`									AS TheCompanyID,
-							c.`name`										AS CompanyName,
-							c.`startDate`									AS CompanyBillingMonthStart,
-							c.`endDate`										AS CompanyBillingMonthEnd,
-							cr.`CreditsID`									AS CreditsID,
-							cr.`name`										AS CreditsName,
-							cr.`description`								AS CreditsDescription,
-							cr.`minuteAmount`								AS CreditsGivenInMinutes,
-							cr.`monthlyPrice`								AS CreditsMonthlyPrice,
-							cr.`overCreditMinutePrice`						AS CreditsMinutePrice,
-							cr.`overCreditHourPrice`						AS CreditsHourPrice,
-							cc.`altMinuteAmount`							AS CreditsAlternativeAmount,
-							cc.`datetimeAdded` 								AS DateTimeAdded,
-							cc.`lastModified`								AS DateTimeLastModified
-				FROM 		`company` c
-				JOIN 		`companycredits` cc
-				ON 			c.`CompanyID` = cc.`CompanyID`
-				JOIN 		`credits` cr
-				ON 			cr.`CreditsID` = cc.`CreditsID`
-				WHERE 		c.`isActive` > 0
-				AND			c.`CompanyID` = :CompanyID
-				LIMIT 		1";
-				
+		$sql = 'SELECT 			c.`CompanyID`									AS TheCompanyID,
+								c.`name`										AS CompanyName,
+								c.`startDate`									AS CompanyBillingMonthStart,
+								c.`endDate`										AS CompanyBillingMonthEnd,
+								cr.`CreditsID`									AS CreditsID,
+								cr.`name`										AS CreditsName,
+								cr.`description`								AS CreditsDescription,
+								cr.`minuteAmount`								AS CreditsGivenInMinutes,
+								cr.`monthlyPrice`								AS CreditsMonthlyPrice,
+								cr.`overCreditMinutePrice`						AS CreditsMinutePrice,
+								cr.`overCreditHourPrice`						AS CreditsHourPrice,
+								cc.`altMinuteAmount`							AS CreditsAlternativeAmount,
+								cc.`datetimeAdded` 								AS DateTimeAdded,
+								cc.`lastModified`								AS DateTimeLastModified
+				FROM 			`company` c
+				INNER JOIN 		`companycredits` cc
+				ON 				c.`CompanyID` = cc.`CompanyID`
+				INNER JOIN 		`credits` cr
+				ON 				cr.`CreditsID` = cc.`CreditsID`
+				WHERE 			c.`CompanyID` = :CompanyID
+				AND				c.`isActive` > 0
+				LIMIT 			1';
 		$s = $pdo->prepare($sql);
 		$s->bindValue(':CompanyID', $_GET['Company']);
 		$s->execute();
-		
-		$return = $pdo->query($sql);
-		$result = $return->fetchAll(PDO::FETCH_ASSOC);
+
+		$result = $s->fetchAll(PDO::FETCH_ASSOC);
 		$rowNum = sizeOf($result);
 		
 		//close connection
 		$pdo = null;
-			
 	}
 	catch (PDOException $e)
 	{
@@ -501,27 +498,27 @@ if(!isset($_GET['Company'])){
 
 		$pdo = connect_to_db();
 		
-		$sql = "SELECT 		c.`CompanyID`									AS TheCompanyID,
-							c.`name`										AS CompanyName,
-							c.`startDate`									AS CompanyBillingMonthStart,
-							c.`endDate`										AS CompanyBillingMonthEnd,
-							cr.`CreditsID`									AS CreditsID,
-							cr.`name`										AS CreditsName,
-							cr.`description`								AS CreditsDescription,
-							cr.`minuteAmount`								AS CreditsGivenInMinutes,
-							cr.`monthlyPrice`								AS CreditsMonthlyPrice,
-							cr.`overCreditMinutePrice`						AS CreditsMinutePrice,
-							cr.`overCreditHourPrice`						AS CreditsHourPrice,
-							cc.`altMinuteAmount`							AS CreditsAlternativeAmount,
-							cc.`datetimeAdded` 								AS DateTimeAdded,
-							cc.`lastModified`								AS DateTimeLastModified
-				FROM 		`company` c
-				JOIN 		`companycredits` cc
-				ON 			c.`CompanyID` = cc.`CompanyID`
-				JOIN 		`credits` cr
-				ON 			cr.`CreditsID` = cc.`CreditsID`
-				WHERE 		c.`isActive` > 0
-				ORDER BY	UNIX_TIMESTAMP(cc.`datetimeAdded`)
+		$sql = "SELECT 			c.`CompanyID`									AS TheCompanyID,
+								c.`name`										AS CompanyName,
+								c.`startDate`									AS CompanyBillingMonthStart,
+								c.`endDate`										AS CompanyBillingMonthEnd,
+								cr.`CreditsID`									AS CreditsID,
+								cr.`name`										AS CreditsName,
+								cr.`description`								AS CreditsDescription,
+								cr.`minuteAmount`								AS CreditsGivenInMinutes,
+								cr.`monthlyPrice`								AS CreditsMonthlyPrice,
+								cr.`overCreditMinutePrice`						AS CreditsMinutePrice,
+								cr.`overCreditHourPrice`						AS CreditsHourPrice,
+								cc.`altMinuteAmount`							AS CreditsAlternativeAmount,
+								cc.`datetimeAdded` 								AS DateTimeAdded,
+								cc.`lastModified`								AS DateTimeLastModified
+				FROM 			`company` c
+				INNER JOIN 		`companycredits` cc
+				ON 				c.`CompanyID` = cc.`CompanyID`
+				INNER JOIN 		`credits` cr
+				ON 				cr.`CreditsID` = cc.`CreditsID`
+				WHERE 			c.`isActive` > 0
+				ORDER BY		UNIX_TIMESTAMP(cc.`datetimeAdded`)
 				DESC";
 				
 		$return = $pdo->query($sql);
@@ -534,7 +531,7 @@ if(!isset($_GET['Company'])){
 	}
 	catch (PDOException $e)
 	{
-		$error = 'Error getting company credit information: ' . $e->getMessage();
+		$error = 'Error getting company credits information: ' . $e->getMessage();
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
 		exit();
 	}

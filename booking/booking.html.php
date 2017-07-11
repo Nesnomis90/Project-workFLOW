@@ -4,7 +4,7 @@
 <!DOCTYPE html>
 <html lang="en">
 	<head>
-		<meta charset="utf-8" HTTP-EQUIV="refresh" CONTENT="<?php htmlout(SECONDS_BEFORE_REFRESHING_BOOKING_PAGE); ?>"> <!-- Refreshes every 30 sec -->
+		<meta charset="utf-8" HTTP-EQUIV="refresh" CONTENT="<?php htmlout(SECONDS_BEFORE_REFRESHING_BOOKING_PAGE); ?>"> <!-- Refreshes every x sec -->
 		<title>Booking Information</title>
 		<link rel="stylesheet" type="text/css" href="/CSS/myCSS.css">
 		<script src="/scripts/myFunctions.js"></script>		
@@ -14,7 +14,7 @@
 		
 		<div id="feedback">
 		<?php if(isset($_SESSION['normalBookingFeedback'])) : ?>
-			<b><?php htmlout($_SESSION['normalBookingFeedback']); ?></b>
+			<span><b id="feedback"><?php htmlout($_SESSION['normalBookingFeedback']); ?></b></span>
 			<?php unset($_SESSION['normalBookingFeedback']); ?>
 		<?php endif; ?>
 		</div>
@@ -34,17 +34,17 @@
 				<div class="left">
 					<input type="submit" name="action" value="Create Meeting">
 					<input type="submit" name="action" value="Refresh">
-					<b>Last Refresh: <?php htmlout(getDatetimeNowInDisplayFormat()); ?></b>
+					<span><b>Last Refresh: <?php htmlout(getDatetimeNowInDisplayFormat()); ?></b></span>
 				</div>
 			</form>
 
 			<?php if(isset($_GET['meetingroom']) AND isset($_GET['name'])) : ?>
 				<div class="left">
-					<b>Currently viewing bookings for the meeting room named: <?php htmlout($_GET['name']); ?></b>
+					<span><b>Currently viewing bookings for the meeting room named: <?php htmlout($_GET['name']); ?></b></span>
 				</div>
 			<?php elseif(isset($_GET['meetingroom']) AND !isset($_GET['name'])) : ?>
 				<div class="left">
-					<b>Currently viewing bookings from a single room</b>
+					<span><b>Currently viewing bookings from a single room</b></span>
 				</div>			
 			<?php endif; ?>
 			

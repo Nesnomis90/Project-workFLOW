@@ -1,7 +1,6 @@
 <?php
 session_start();
 function getLocationWeCameFrom(){
-	
 	$pathWeCameFrom = $_SERVER['PHP_SELF'];
 	$pathWithoutPHPFile = substr($pathWeCameFrom, 0, strrpos($pathWeCameFrom,'/'));	
 	$location = "Location: " . $pathWithoutPHPFile;
@@ -19,7 +18,6 @@ function getLocationWeCameFrom(){
 }
 
 if(isset($_GET['loginForNav'])){
-	
 	$loggedIn = makeUserLogIn();
 	
 	// Refresh page without get parameters

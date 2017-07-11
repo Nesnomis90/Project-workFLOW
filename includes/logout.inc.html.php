@@ -1,6 +1,6 @@
 <?php if(isset($_SESSION['loggedIn'])) : ?>
 	<form action="" method="post">
-		<div>
+		<div class="left">
 			<input type="hidden" name="action" value="logout">
 			<?php if(isset($gotoPage)) : ?>
 				<input type="hidden" name="goto" value="<?php htmlout($gotoPage); ?>">

@@ -10,13 +10,14 @@
 	</head>
 	<body>
 		<h1>Log In</h1>
+		
 		<div class="left">
 			<b>Please log in to view the page that you requested</b>
 		</div>
 		
 		<div class="left">
 		<?php if (isset($_SESSION['loginError'])): ?>
-			<span class="warning"><b><?php htmlout($_SESSION['loginError']); ?></b></span>
+			<span><b class="warning"><?php htmlout($_SESSION['loginError']); ?></b></span>
 			<?php unset($_SESSION['loginError']); ?>
 		<?php endif; ?>
 		</div>

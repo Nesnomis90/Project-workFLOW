@@ -17,10 +17,12 @@
 			<h1>Manage All Booked Meetings</h1>
 		<?php endif; ?>
 		
-		<?php if(isset($_SESSION['BookingUserFeedback'])) : ?>
-			<p><b><?php htmlout($_SESSION['BookingUserFeedback']); ?></b></p>
-			<?php unset($_SESSION['BookingUserFeedback']); ?>
-		<?php endif; ?>
+		<div>
+			<?php if(isset($_SESSION['BookingUserFeedback'])) : ?>
+				<span><b class="feedback"><?php htmlout($_SESSION['BookingUserFeedback']); ?></b></span>
+				<?php unset($_SESSION['BookingUserFeedback']); ?>
+			<?php endif; ?>
+		</div>
 		
 		<?php if(isset($_GET['Meetingroom'])) : ?>
 			<?php $goto = "http://$_SERVER[HTTP_HOST]/admin/meetingrooms"; ?>	

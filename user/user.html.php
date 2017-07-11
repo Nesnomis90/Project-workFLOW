@@ -15,13 +15,14 @@
 		<h1>User Information</h1>
 		
 		<?php if(isset($_SESSION['normalUserFeedback'])) : ?>
-			<p><b><?php htmlout($_SESSION['normalUserFeedback']); ?></b></p>
+			<span><b class="feedback"><?php htmlout($_SESSION['normalUserFeedback']); ?></b></span>
 			<?php unset($_SESSION['normalUserFeedback']); ?>
 		<?php endif; ?>
 
 		<?php if(isset($_SESSION['loggedIn']) : ?>
 			
 		<?php endif; ?>
+		
 		<?php include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/logout.inc.html.php'; ?>
 	</body>
 </html>
