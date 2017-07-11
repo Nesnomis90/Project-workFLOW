@@ -11,7 +11,11 @@
 body{
 }		
 	/* CSS for the body of the webpages END*/
+	
+	/* CSS for the headings of the webpages START*/
 
+	/* CSS for the headings of the webpages END*/
+	
 	/* CSS for all the textarea input START */
 textarea{background-color: white;}
 
@@ -143,11 +147,6 @@ table caption {
 	/* CSS for all divs END */
 	
 /*CSS CLASSES START*/
-.fillOut{
-	border-style: groove;
-	border-width: 2px;
-	border-bottom-color: red;
-}
 
 	/* CSS used to warn the user error/feedback START*/
 .feedback{
@@ -156,6 +155,12 @@ table caption {
 }	
 	
 .warning{color: red;}
+
+.fillOut{
+	border-style: groove;
+	border-width: 2px;
+	border-bottom-color: red;
+}
 	/* CSS used to warn the user error/feedback END*/
 	
 	/* CSS used to alter a selected item/text START*/

@@ -23,21 +23,25 @@
 		</div>
 	
 		<?php if(isset($_SESSION['DefaultMeetingRoomInfo']) AND !isset($defaultMeetingRoomFeedback)) : ?>
-			<div>
-			<form action="" method="post">
-				<label for="defaultMeetingRoomName">The Default Meeting Room For This Device: </label>
-				<b><?php htmlout($_SESSION['DefaultMeetingRoomInfo']['TheMeetingRoomName']); ?></b>			
-				<input type="submit" name="action" 
-				value="Change Default Room"><span style="color:red">* Requires Admin Access</span>	
-			</form>
+			<div class="left">
+				<form action="" method="post">
+					<label for="defaultMeetingRoomName">The Default Meeting Room For This Device: </label>
+					<b><?php htmlout($_SESSION['DefaultMeetingRoomInfo']['TheMeetingRoomName']); ?></b>			
+					<input type="submit" name="action" 
+					value="Change Default Room"><span style="color:red">* Requires Admin Access</span>	
+				</form>
 			</div>
 		<?php else : ?>
-			<form action="" method="post">
-				<input type="submit" name="action" 
-				value="Set Default Room"><span style="color:red">* Requires Admin Access</span>
-			</form>
+			<div class="left">
+				<form action="" method="post">
+					<input type="submit" name="action" 
+					value="Set Default Room"><span style="color:red">* Requires Admin Access</span>
+				</form>
+			<div>
 		<?php endif; ?>
+		
 		<h1>Meeting Room</h1>
+		
 		<form action="" method="post">
 			<?php if(isset($_SESSION['DefaultMeetingRoomInfo'])) : ?>
 			<?php $default = $_SESSION['DefaultMeetingRoomInfo']; ?>
