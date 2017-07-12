@@ -64,5 +64,7 @@
 		</div>
 		
 		<div class="left"><a href="..">Return to CMS home</a></div>
+		
+		<?php include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/logout.inc.html.php'; ?>
 	</body>
 </html>

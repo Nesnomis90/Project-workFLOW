@@ -212,7 +212,6 @@ return array($invalidInput, $email, $validatedFirstname, $validatedLastname, $va
 // If admin wants to return to users from the email-list
 if (isset($_POST['action']) AND $_POST['action'] == "Return To Users"){
 	unset($_SESSION['UserEmailListSeparatorSelected']);
-	// Load user list webpage with updated database
 	header('Location: .');
 	exit();
 }
