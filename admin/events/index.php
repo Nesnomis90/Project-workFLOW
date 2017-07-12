@@ -702,10 +702,11 @@ if(isset($_POST['add']) AND $_POST['add'] == "Confirm Week(s)"){
 
 // If admin wants to change the week(s) selected decision
 if(isset($_POST['add']) AND $_POST['add'] == "Change Week Selection"){
+
+	rememberAddEventInputs();
 	
 	unset($_SESSION['AddEventWeeksSelected']);
 	unset($_SESSION['AddEventWeekChoiceSelected']);
-	rememberAddEventInputs();
 	$_SESSION['refreshAddEvent'] = TRUE;
 	header('Location: .');
 	exit();	
@@ -728,8 +729,9 @@ if(isset($_POST['add']) AND $_POST['add'] == "Confirm Day(s)"){
 
 if(isset($_POST['add']) AND $_POST['add'] == "Change Day(s)"){
 	
-	unset($_SESSION['AddEventDaysConfirmed']);
 	rememberAddEventInputs();
+	
+	unset($_SESSION['AddEventDaysConfirmed']);	
 	$_SESSION['refreshAddEvent'] = TRUE;
 	header('Location: .');
 	exit();	
@@ -749,9 +751,10 @@ if(isset($_POST['add']) AND $_POST['add'] == "Confirm Details"){
 }
 
 if(isset($_POST['add']) AND $_POST['add'] == "Change Details"){
+
+	rememberAddEventInputs();
 	
 	unset($_SESSION['AddEventDetailsConfirmed']);
-	rememberAddEventInputs();
 	$_SESSION['refreshAddEvent'] = TRUE;
 	header('Location: .');
 	exit();	
@@ -810,10 +813,11 @@ if(isset($_POST['add']) AND $_POST['add'] == "Confirm Room(s)"){
 
 // If admin wants to change the meeting room(s) selected decision
 if(isset($_POST['add']) AND $_POST['add'] == "Change Room Selection"){
+
+	rememberAddEventInputs();
 	
 	unset($_SESSION['AddEventRoomsSelected']);
 	unset($_SESSION['AddEventRoomChoiceSelected']);
-	rememberAddEventInputs();
 	$_SESSION['refreshAddEvent'] = TRUE;
 	header('Location: .');
 	exit();	
@@ -946,7 +950,7 @@ foreach ($result as $row)
 			$status = "Completed\n(Multiple Weeks)";
 		} else {
 			$status = "Active\n(Multiple Weeks)";
-		}		
+		}
 	}
 	
 	// Turn the datetime retrieved into a more displayable format
@@ -1001,7 +1005,7 @@ foreach ($result as $row)
 							'NextStart' => $displayableNextStart
 						);
 	}
-}	
+}
 
 var_dump($_SESSION); // TO-DO: remove after testing is done
 

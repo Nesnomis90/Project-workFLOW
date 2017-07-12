@@ -11,10 +11,14 @@
 				width: 140px;
 			}
 			.week {
-				width: 300px;
+				width: 270px;
 			}
 			.room {
-				width: 300px;
+				width: 200px;
+			}
+			.checkboxlabel{
+				float: none;
+				clear: none;
 			}			
 		</style>
 	</head>
@@ -54,13 +58,13 @@
 										<?php $meetingRoomSelected = FALSE; ?>
 										<?php for($j = 0; $j < sizeOf($roomsSelected); $j++) : ?>
 											<?php if($roomsSelected[$j] == $meetingroom[$i]['MeetingRoomID']) : ?>
-												<label class="room"><input type="checkbox" name="roomsSelected[]" checked="checked" value="<?php htmlout($meetingroom[$i]['MeetingRoomID']); ?>"><?php htmlout($meetingroom[$i]['MeetingRoomName']); ?></label>
+												<label class="checkboxlabel room"><input type="checkbox" name="roomsSelected[]" checked="checked" value="<?php htmlout($meetingroom[$i]['MeetingRoomID']); ?>"><?php htmlout($meetingroom[$i]['MeetingRoomName']); ?></label>
 												<?php if(($i % 4) == 3) : ?><br /><?php endif; ?>
 												<?php $meetingRoomSelected = TRUE; break; ?>
 											<?php endif; ?>
 										<?php endfor; ?>
 										<?php if(!$meetingRoomSelected) : ?>
-											<label class="room"><input type="checkbox" name="roomsSelected[]" value="<?php htmlout($meetingroom[$i]['MeetingRoomID']); ?>"><?php htmlout($meetingroom[$i]['MeetingRoomName']); ?></label>
+											<label class="checkboxlabel room"><input type="checkbox" name="roomsSelected[]" value="<?php htmlout($meetingroom[$i]['MeetingRoomID']); ?>"><?php htmlout($meetingroom[$i]['MeetingRoomName']); ?></label>
 											<?php if(($i % 4) == 3) : ?><br /><?php endif; ?>
 										<?php endif; ?>
 									<?php endfor; ?>
@@ -70,13 +74,13 @@
 										<?php $meetingRoomSelected = FALSE; ?>
 										<?php for($j = 0; $j < sizeOf($roomsSelected); $j++) : ?>
 											<?php if($roomsSelected[$j] == $meetingroom[$i]['MeetingRoomID']) : ?>
-												<b>☑ <?php htmlout($meetingroom[$i]['MeetingRoomName']); ?></b>
+												<label class="checkboxlabel room"><b>☑ <?php htmlout($meetingroom[$i]['MeetingRoomName']); ?></b></label>
 												<?php if(($i % 4) == 3) : ?><br /><?php endif; ?>
 												<?php $meetingRoomSelected = TRUE; break; ?>
 											<?php endif; ?>
 										<?php endfor; ?>
 										<?php if(!$meetingRoomSelected) : ?>
-											☐ <?php htmlout($meetingroom[$i]['MeetingRoomName']); ?>
+											<label class="checkboxlabel room">☐ <?php htmlout($meetingroom[$i]['MeetingRoomName']); ?></label>
 											<?php if(($i % 4) == 3) : ?><br /><?php endif; ?>
 										<?php endif; ?>
 									<?php endfor; ?>								
@@ -225,54 +229,51 @@
 							<legend><b>Selected weeks(s) for the event</b></legend>
 						<?php endif; ?>
 							<div class="container">
-								<div class="left">
-									<?php if(!isset($_SESSION['AddEventWeekChoiceSelected'])) : ?>
-										<input type="submit" name="add" value="Select A Single Week">
-										<input type="submit" name="add" value="Select Multiple Weeks">
-										<input type="submit" name="add" value="Select All Weeks">
-									<?php else : ?>
-										<input type="submit" name="add" value="Change Week Selection">
-									<?php endif; ?>
-									
+								<div class="left">	
 									<?php if(isset($_SESSION['AddEventWeekChoiceSelected']) AND $_SESSION['AddEventWeekChoiceSelected'] == "Select Multiple Weeks") : ?>
 										<?php if(!isset($_SESSION['AddEventWeeksSelected'])) : ?>	
-											<?php $i = 0; ?>
-											<?php foreach($weeksOfTheYear AS $week) : ?>
-												<?php $weekStart = convertDatetimeToFormat($week['StartDate'], 'Y-m-d', DATE_DEFAULT_FORMAT_TO_DISPLAY_WITHOUT_YEAR); ?>
-												<?php $weekEnd = convertDatetimeToFormat($week['EndDate'], 'Y-m-d', DATE_DEFAULT_FORMAT_TO_DISPLAY_WITHOUT_YEAR); ?>						
-												<?php $weekSelected = FALSE; ?>
-												<?php for($j = 0; $j < sizeOf($weeksSelected); $j++) : ?>
-													<?php if($weeksSelected[$j] == $week['WeekNumber']) : ?>
-														<label class="week"><input type="checkbox" name="weeksSelected[]" checked="checked" value="<?php htmlout($week['WeekNumber']); ?>"><?php htmlout($week['WeekNumber'] . ": " . $weekStart . "-" . $weekEnd); ?></label>
+											<div class="left">
+												<?php $i = 0; ?>
+												<?php foreach($weeksOfTheYear AS $week) : ?>
+													<?php $weekStart = convertDatetimeToFormat($week['StartDate'], 'Y-m-d', DATE_DEFAULT_FORMAT_TO_DISPLAY_WITHOUT_YEAR); ?>
+													<?php $weekEnd = convertDatetimeToFormat($week['EndDate'], 'Y-m-d', DATE_DEFAULT_FORMAT_TO_DISPLAY_WITHOUT_YEAR); ?>						
+													<?php $weekSelected = FALSE; ?>
+													<?php for($j = 0; $j < sizeOf($weeksSelected); $j++) : ?>
+														<?php if($weeksSelected[$j] == $week['WeekNumber']) : ?>
+															<label class="checkboxlabel week"><input type="checkbox" name="weeksSelected[]" checked="checked" value="<?php htmlout($week['WeekNumber']); ?>"><?php htmlout($week['WeekNumber'] . ": " . $weekStart . "-" . $weekEnd); ?></label>
+															<?php if($i % 4 == 3) : ?><br /><?php endif; ?>
+															<?php $weekSelected = TRUE; break; ?>
+														<?php endif; ?>
+													<?php endfor; ?>
+													<?php if(!$weekSelected) : ?>
+														<label class="checkboxlabel week"><input type="checkbox" name="weeksSelected[]" value="<?php htmlout($week['WeekNumber']); ?>"><?php htmlout($week['WeekNumber'] . ": " . $weekStart . "-" . $weekEnd); ?></label>
 														<?php if($i % 4 == 3) : ?><br /><?php endif; ?>
-														<?php $weekSelected = TRUE; break; ?>
 													<?php endif; ?>
-												<?php endfor; ?>
-												<?php if(!$weekSelected) : ?>
-													<label class="week"><input type="checkbox" name="weeksSelected[]" value="<?php htmlout($week['WeekNumber']); ?>"><?php htmlout($week['WeekNumber'] . ": " . $weekStart . "-" . $weekEnd); ?></label>
-													<?php if($i % 4 == 3) : ?><br /><?php endif; ?>
-												<?php endif; ?>
-												<?php $i++; ?>
-											<?php endforeach; ?>
+													<?php $i++; ?>
+												<?php endforeach; ?>
+											</div>
 										<?php else : ?>
-											<?php $i = 0; ?>
-											<?php foreach($weeksOfTheYear AS $week) : ?>
-												<?php $weekStart = convertDatetimeToFormat($week['StartDate'], 'Y-m-d', DATE_DEFAULT_FORMAT_TO_DISPLAY_WITHOUT_YEAR); ?>
-												<?php $weekEnd = convertDatetimeToFormat($week['EndDate'], 'Y-m-d', DATE_DEFAULT_FORMAT_TO_DISPLAY_WITHOUT_YEAR); ?>											
-												<?php $weekSelected = FALSE; ?>
-												<?php for($j = 0; $j < sizeOf($weeksSelected); $j++) : ?>
-													<?php if($weeksSelected[$j] == $week['WeekNumber']) : ?>
-														<b>☑ <?php htmlout($week['WeekNumber'] . ": " . $weekStart . "-" . $weekEnd); ?></b>
+											<div class="left">
+												<?php $i = 0; ?>
+												<?php foreach($weeksOfTheYear AS $week) : ?>
+													<?php $weekStart = convertDatetimeToFormat($week['StartDate'], 'Y-m-d', DATE_DEFAULT_FORMAT_TO_DISPLAY_WITHOUT_YEAR); ?>
+													<?php $weekEnd = convertDatetimeToFormat($week['EndDate'], 'Y-m-d', DATE_DEFAULT_FORMAT_TO_DISPLAY_WITHOUT_YEAR); ?>											
+													<?php $weekSelected = FALSE; ?>
+													<?php for($j = 0; $j < sizeOf($weeksSelected); $j++) : ?>
+														<?php if($weeksSelected[$j] == $week['WeekNumber']) : ?>
+															<label class="checkboxlabel week"><b>☑ <?php htmlout($week['WeekNumber'] . ": " . $weekStart . "-" . $weekEnd); ?></b></label>
+															<?php if($i % 4 == 3) : ?><br /><?php endif; ?>
+															<?php $weekSelected = TRUE; break; ?>
+														<?php endif; ?>
+													<?php endfor; ?>
+													<?php if(!$weekSelected) : ?>
+														<label class="checkboxlabel week">☐ <?php htmlout($week['WeekNumber'] . ": " . $weekStart . "-" . $weekEnd); ?></label>
 														<?php if($i % 4 == 3) : ?><br /><?php endif; ?>
-														<?php $weekSelected = TRUE; break; ?>
 													<?php endif; ?>
-												<?php endfor; ?>
-												<?php if(!$weekSelected) : ?>
-													☐ <?php htmlout($week['WeekNumber'] . ": " . $weekStart . "-" . $weekEnd); ?>
-													<?php if($i % 4 == 3) : ?><br /><?php endif; ?>
-												<?php endif; ?>
-												<?php $i++; ?>
-											<?php endforeach; ?>
+													<?php $i++; ?>
+												<?php endforeach; ?>
+											</div>
+											<div class="left"><span><b>Event will be scheduled for <?php htmlout(sizeOf($weeksSelected)); ?> weeks.</b></span></div>
 										<?php endif; ?>									
 									<?php elseif(isset($_SESSION['AddEventWeekChoiceSelected']) AND $_SESSION['AddEventWeekChoiceSelected'] == "Select A Single Week") : ?>
 										<?php if(isset($_SESSION['AddEventWeeksSelected'])) : ?>
@@ -296,6 +297,17 @@
 									<?php elseif(isset($_SESSION['AddEventWeekChoiceSelected']) AND $_SESSION['AddEventWeekChoiceSelected'] == "Select All Weeks") : ?>
 										<div class="left"><b>Event will be scheduled for all the remaining weeks this year (Total of <?php htmlout($numberOfWeeksSelected); ?> weeks).</b></div>
 									<?php endif; ?>
+									
+									<div class="left">
+										<?php if(!isset($_SESSION['AddEventWeekChoiceSelected'])) : ?>
+											<input type="submit" name="add" value="Select A Single Week">
+											<input type="submit" name="add" value="Select Multiple Weeks">
+											<input type="submit" name="add" value="Select All Weeks">
+										<?php else : ?>
+											<input type="submit" name="add" value="Change Week Selection">
+										<?php endif; ?>
+									</div>
+									
 								</div>
 							</div>
 							<div class="container">	
