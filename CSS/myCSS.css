@@ -7,9 +7,7 @@
 	e.g. tr:hover is last in the tr sequence because it should always overwrite.
 */
 
-	/* CSS for the body of the webpages START*/
-body{
-}		
+	/* CSS for the body of the webpages START*/	
 	/* CSS for the body of the webpages END*/
 	
 	/* CSS for the headings of the webpages START*/
@@ -87,6 +85,8 @@ select{
     display: inline-block;
     float: left;	
 }
+
+select:hover{background-color: #f2f2f2;}
 
 span{
 	display:inline-block;

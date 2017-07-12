@@ -218,16 +218,23 @@ if (isset($_POST['action']) AND $_POST['action'] == "Return To Users"){
 }
 
 // If admin wants to get a list of easily copied emails from the users that is being displayed
-if (	(isset($_POST['action']) AND $_POST['action'] == "Get Emails") OR 
+if (	(isset($_GET['getEmails'])) OR 
 		isset($_SESSION['refreshUserEmailList']) AND $_SESSION['refreshUserEmailList']){
 
-		if(isset($_SESSION['refreshUserEmailList'])){
+		if(isset($_GET['getEmails'])){
+			$_SESSION['refreshUserEmailList'] = TRUE;
+			header("Location: .");
+			exit();
+		}
+		
+		if(isset($_SESSION['refreshUserEmailList']) AND !isset($_GET['getEmails'])){
 			unset($_SESSION['refreshUserEmailList']);
 		}
 		
 	$separatorChar = ",";
 	$_SESSION['UserEmailListSeparatorSelected'] = TRUE;
 	$emailList = implode($separatorChar,$_SESSION['UserEmailsToBeDisplayed']);
+	
 	var_dump($_SESSION);	// TO-DO: Remove when done testing
 	
 	include_once 'listemail.html.php';
@@ -620,10 +627,12 @@ if (isset($_POST['add']) AND $_POST['add'] == "Reset"){
 	exit();		
 }
 
-// If admin wants to leave the page and be directed back to the booking page again
+// If admin wants to leave the page and be directed back to the user page again
 if (isset($_POST['add']) AND $_POST['add'] == 'Cancel'){
 
-	$_SESSION['BookingUserFeedback'] = "You cancelled your user creation.";
+	$_SESSION['UserManagementFeedbackMessage'] = "You cancelled your user creation.";
+	header("Location: /admin/users");
+	exit();
 }
 
 // if admin wants to edit user information
@@ -1020,10 +1029,12 @@ if (isset($_POST['edit']) AND $_POST['edit'] == "Reset"){
 	exit();		
 }
 
-// If admin wants to leave the page and be directed back to the booking page again
+// If admin wants to leave the page and be directed back to the user page again
 if (isset($_POST['edit']) AND $_POST['edit'] == 'Cancel'){
 
-	$_SESSION['BookingUserFeedback'] = "You cancelled your user editing.";
+	$_SESSION['UserManagementFeedbackMessage'] = "You cancelled your user editing.";
+	header("Location: /admin/users");
+	exit();
 }
 
 // if admin wants to cancel the date to reduce access
