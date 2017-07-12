@@ -351,10 +351,13 @@ if(	(isset($_POST['action']) AND $_POST['action'] == "Create Event") OR
 					break;
 				}
 			}
+			$roomsSelectedFeedback = "Event will be scheduled for the room named: $roomSelected.";
 		} elseif($_SESSION['AddEventRoomChoiceSelected'] == "Select Multiple Rooms"){
 			$numberOfRoomsSelected = sizeOf($_SESSION['AddEventRoomsSelected']);
+			$roomsSelectedFeedback = "Event will be scheduled for $numberOfRoomsSelected room(s).";
 		} elseif($_SESSION['AddEventRoomChoiceSelected'] == "Select All Rooms"){
 			$numberOfRoomsSelected = sizeOf($meetingroom);
+			$roomsSelectedFeedback = "Event will be scheduled for all rooms (Total of $numberOfRoomsSelected rooms).";
 			if($_SESSION['AddEventRoomsSelected'] === TRUE){
 				foreach($meetingroom AS $room){
 					$roomIDs[] = $room['MeetingRoomID'];
@@ -375,10 +378,13 @@ if(	(isset($_POST['action']) AND $_POST['action'] == "Create Event") OR
 					break;
 				}
 			}
+			$weeksSelectedFeedback = "Event will be scheduled for the week $weekSelected.";
 		} elseif($_SESSION['AddEventWeekChoiceSelected'] == "Select Multiple Weeks"){
 			$numberOfWeeksSelected = sizeOf($_SESSION['AddEventWeeksSelected']);
+			$weeksSelectedFeedback = "Event will be scheduled for $numberOfWeeksSelected weeks.";
 		} elseif($_SESSION['AddEventWeekChoiceSelected'] == "Select All Weeks"){
 			$numberOfWeeksSelected = sizeOf($weeksOfTheYear);
+			$weeksSelectedFeedback = "Event will be scheduled for all the remaining weeks this year (Total of $numberOfWeeksSelected weeks).";
 			if($_SESSION['AddEventWeeksSelected'] === TRUE){
 				foreach($weeksOfTheYear AS $week){
 					$weekNumbers[] = $week['WeekNumber'];
@@ -386,10 +392,10 @@ if(	(isset($_POST['action']) AND $_POST['action'] == "Create Event") OR
 				$_SESSION['AddEventWeeksSelected'] = $weekNumbers;				
 			}
 		}
-	}	
-	
+	}
+
 	var_dump($_SESSION); // TO-DO: remove after testing is done
-	
+
 	include_once 'addevent.html.php';
 	exit();
 }
