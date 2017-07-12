@@ -91,13 +91,13 @@ function validateUserInputs($FeedbackSessionToUse, $editing){
 	} else {
 		$eventDescriptionString = "";
 	}
-	
+
 	// Remove excess whitespace and prepare strings for validation
 	$validatedStartTime = trimExcessWhitespace($startTimeString);
 	$validatedEndTime = trimExcessWhitespace($endTimeString);
 	$validatedEventName = trimExcessWhitespaceButLeaveLinefeed($eventNameString);
 	$validatedEventDescription = trimExcessWhitespaceButLeaveLinefeed($eventDescriptionString);
-	
+
 	// Do actual input validation
 	if(validateDateTimeString($validatedStartTime) === FALSE AND !$invalidInput){
 		$invalidInput = TRUE;
@@ -351,10 +351,13 @@ if(	(isset($_POST['action']) AND $_POST['action'] == "Create Event") OR
 					break;
 				}
 			}
+			$roomsSelectedFeedback = "Event will be scheduled for the room named: $roomSelected.";
 		} elseif($_SESSION['AddEventRoomChoiceSelected'] == "Select Multiple Rooms"){
 			$numberOfRoomsSelected = sizeOf($_SESSION['AddEventRoomsSelected']);
+			$roomsSelectedFeedback = "Event will be scheduled for $numberOfRoomsSelected room(s).";
 		} elseif($_SESSION['AddEventRoomChoiceSelected'] == "Select All Rooms"){
 			$numberOfRoomsSelected = sizeOf($meetingroom);
+			$roomsSelectedFeedback = "Event will be scheduled for all rooms (Total of $numberOfRoomsSelected rooms).";
 			if($_SESSION['AddEventRoomsSelected'] === TRUE){
 				foreach($meetingroom AS $room){
 					$roomIDs[] = $room['MeetingRoomID'];
@@ -375,10 +378,13 @@ if(	(isset($_POST['action']) AND $_POST['action'] == "Create Event") OR
 					break;
 				}
 			}
+			$weeksSelectedFeedback = "Event will be scheduled for the week $weekSelected.";
 		} elseif($_SESSION['AddEventWeekChoiceSelected'] == "Select Multiple Weeks"){
 			$numberOfWeeksSelected = sizeOf($_SESSION['AddEventWeeksSelected']);
+			$weeksSelectedFeedback = "Event will be scheduled for $numberOfWeeksSelected weeks.";
 		} elseif($_SESSION['AddEventWeekChoiceSelected'] == "Select All Weeks"){
 			$numberOfWeeksSelected = sizeOf($weeksOfTheYear);
+			$weeksSelectedFeedback = "Event will be scheduled for all the remaining weeks this year (Total of $numberOfWeeksSelected weeks).";
 			if($_SESSION['AddEventWeeksSelected'] === TRUE){
 				foreach($weeksOfTheYear AS $week){
 					$weekNumbers[] = $week['WeekNumber'];
@@ -386,10 +392,10 @@ if(	(isset($_POST['action']) AND $_POST['action'] == "Create Event") OR
 				$_SESSION['AddEventWeeksSelected'] = $weekNumbers;				
 			}
 		}
-	}	
-	
+	}
+
 	var_dump($_SESSION); // TO-DO: remove after testing is done
-	
+
 	include_once 'addevent.html.php';
 	exit();
 }
@@ -702,10 +708,11 @@ if(isset($_POST['add']) AND $_POST['add'] == "Confirm Week(s)"){
 
 // If admin wants to change the week(s) selected decision
 if(isset($_POST['add']) AND $_POST['add'] == "Change Week Selection"){
+
+	rememberAddEventInputs();
 	
 	unset($_SESSION['AddEventWeeksSelected']);
 	unset($_SESSION['AddEventWeekChoiceSelected']);
-	rememberAddEventInputs();
 	$_SESSION['refreshAddEvent'] = TRUE;
 	header('Location: .');
 	exit();	
@@ -728,8 +735,9 @@ if(isset($_POST['add']) AND $_POST['add'] == "Confirm Day(s)"){
 
 if(isset($_POST['add']) AND $_POST['add'] == "Change Day(s)"){
 	
-	unset($_SESSION['AddEventDaysConfirmed']);
 	rememberAddEventInputs();
+	
+	unset($_SESSION['AddEventDaysConfirmed']);	
 	$_SESSION['refreshAddEvent'] = TRUE;
 	header('Location: .');
 	exit();	
@@ -743,15 +751,17 @@ if(isset($_POST['add']) AND $_POST['add'] == "Confirm Details"){
 		$_SESSION['AddEventDetailsConfirmed'] = TRUE;
 	}
 	rememberAddEventInputs();
+	
 	$_SESSION['refreshAddEvent'] = TRUE;
 	header('Location: .');
 	exit();	
 }
 
 if(isset($_POST['add']) AND $_POST['add'] == "Change Details"){
+
+	rememberAddEventInputs();
 	
 	unset($_SESSION['AddEventDetailsConfirmed']);
-	rememberAddEventInputs();
 	$_SESSION['refreshAddEvent'] = TRUE;
 	header('Location: .');
 	exit();	
@@ -810,10 +820,11 @@ if(isset($_POST['add']) AND $_POST['add'] == "Confirm Room(s)"){
 
 // If admin wants to change the meeting room(s) selected decision
 if(isset($_POST['add']) AND $_POST['add'] == "Change Room Selection"){
+
+	rememberAddEventInputs();
 	
 	unset($_SESSION['AddEventRoomsSelected']);
 	unset($_SESSION['AddEventRoomChoiceSelected']);
-	rememberAddEventInputs();
 	$_SESSION['refreshAddEvent'] = TRUE;
 	header('Location: .');
 	exit();	
@@ -913,18 +924,18 @@ foreach ($result as $row)
 	$weekStart = date("W",strtotime($startDate));
 	$weekEnd = date("W",strtotime($lastDate));
 	$nextStart = $row['NextStart'];
-	
+
 	// Check if the event is a single day or multiple days
 	$daysSelected = $row['DaysSelected'];
 	$daysSelectedArray = explode("\n", $daysSelected);
 	$numberOfDaysSelected = sizeOf($daysSelectedArray);
-	
+
 	if($dateNow > $lastDate AND $timeNow > $endTime){
 		$completed = TRUE;
 	} else {
 		$completed = FALSE;
 	}
-	
+
 	if($weekStart == $weekEnd){
 		// single week
 		if($numberOfDaysSelected > 1){
@@ -938,7 +949,7 @@ foreach ($result as $row)
 				$status = "Completed\n(Single Day)";
 			} else {
 				$status = "Active\n(Single Day)";
-			}			
+			}
 		}
 	} elseif($weekEnd > $weekStart) {
 		// repeated weeks
@@ -946,9 +957,9 @@ foreach ($result as $row)
 			$status = "Completed\n(Multiple Weeks)";
 		} else {
 			$status = "Active\n(Multiple Weeks)";
-		}		
+		}
 	}
-	
+
 	// Turn the datetime retrieved into a more displayable format
 	$dateCreated = $row['DateTimeCreated'];
 	$displayableDateCreated = convertDatetimeToFormat($dateCreated, 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
@@ -959,7 +970,7 @@ foreach ($result as $row)
 	$displayableStartTime = convertDatetimeToFormat($startTime, 'H:i:s', TIME_DEFAULT_FORMAT_TO_DISPLAY);
 	$displayableEndTime = convertDatetimeToFormat($endTime, 'H:i:s', TIME_DEFAULT_FORMAT_TO_DISPLAY);
 	$displayableNextStart = convertDatetimeToFormat($nextStart, 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
-	
+
 	// Check if we should list individual meeting rooms or just mention that all have been selected
 	$totalMeetingRooms = $row['TotalMeetingRooms'];
 	$meetingRoomsUsed = $row['UsedMeetingRooms'];
@@ -1001,7 +1012,7 @@ foreach ($result as $row)
 							'NextStart' => $displayableNextStart
 						);
 	}
-}	
+}
 
 var_dump($_SESSION); // TO-DO: remove after testing is done
 

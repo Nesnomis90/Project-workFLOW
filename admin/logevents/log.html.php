@@ -7,16 +7,28 @@
 		<meta charset="utf-8">
 		<link rel="stylesheet" type="text/css" href="/CSS/myCSS.css">
 		<title>System Log</title>
+		<style>
+			label {
+				width: 220px;
+			}
+			.checkboxlabel{
+				float: none;
+				clear: none;
+				width: auto;
+			}
+		</style>
 	</head>
 	<body>
 
 		<form action="" method="post">
 			<fieldset><legend>Manage Log Events</legend>
 			
-			<?php if(isset($_SESSION['LogEventUserFeedback'])) : ?>
-				<b class="warning"><?php htmlout($_SESSION['LogEventUserFeedback']); ?></b>
-				<?php unset($_SESSION['LogEventUserFeedback']); ?>
-			<?php endif; ?>	
+			<div>
+				<?php if(isset($_SESSION['LogEventUserFeedback'])) : ?>
+					<span><b class="feedback"><?php htmlout($_SESSION['LogEventUserFeedback']); ?></b></span>
+					<?php unset($_SESSION['LogEventUserFeedback']); ?>
+				<?php endif; ?>	
+			</div>
 			
 			<div>
 				<fieldset><legend><b>Limit logs by amount: </b></legend>
@@ -26,16 +38,16 @@
 					<input type="submit" name="action" value="Set New Maximum"><br />
 					<label for="currentLogsDisplayed">Logs currently being displayed: </label>
 					<?php if (isset($rowNum)) : ?>
-						<b><?php htmlout($rowNum); ?></b>
+						<span><b><?php htmlout($rowNum); ?></b></span>
 					<?php else : ?>
-						<b>N/A</b>
+						<span><b>N/A</b></span>
 					<?php endif; ?>
 				</fieldset>
 			</div>
 			
 			<div>
 				<fieldset><legend><b>Limit logs by category: </b></legend>
-					<label><input type="checkbox" name="searchAll" value="All" <?php htmlout($checkAll); ?>>All</label><br />
+					<label class="checkboxlabel"><input type="checkbox" name="searchAll" value="All" <?php htmlout($checkAll); ?>>All</label><br />
 					<?php foreach($checkboxes AS $checkbox) : ?>
 						<?php //checkbox[0] is the log action name ?>
 						<?php //checkbox[1] is the text displayed ?>
@@ -43,18 +55,18 @@
 						<?php //checkbox[3] is if it should be checked ?>
 						<?php if($checkbox[2]) : ?>
 							<?php if($checkbox[3]) : ?>
-								<label><input type="checkbox" name="search[]" 
+								<label class="checkboxlabel"><input type="checkbox" name="search[]" 
 								value="<?php htmlout($checkbox[0]); ?>" checked="checked"><?php htmlout($checkbox[1]); ?></label><br />
 							<?php else : ?>
-								<label><input type="checkbox" name="search[]" 
+								<label class="checkboxlabel"><input type="checkbox" name="search[]" 
 								value="<?php htmlout($checkbox[0]); ?>"><?php htmlout($checkbox[1]); ?></label><br />
 							<?php endif; ?>
 						<?php else : ?>
 							<?php if($checkbox[3]) : ?>
-								<label><input type="checkbox" name="search[]" 
+								<label class="checkboxlabel"><input type="checkbox" name="search[]" 
 								value="<?php htmlout($checkbox[0]); ?>" checked="checked"><?php htmlout($checkbox[1]); ?></label>
 							<?php else : ?>
-								<label><input type="checkbox" name="search[]" 
+								<label class="checkboxlabel"><input type="checkbox" name="search[]" 
 								value="<?php htmlout($checkbox[0]); ?>"><?php htmlout($checkbox[1]); ?></label>
 							<?php endif; ?>						
 						<?php endif; ?>
@@ -64,19 +76,21 @@
 
 			<div>
 				<fieldset><legend><b>Limit logs displayed by date: </b></legend>
+				
 					<?php if(isset($displayValidatedStartDate) AND isset($displayValidatedEndDate)) : ?>
-						<b>Currently displaying logs from <?php htmlout($displayValidatedStartDate); ?> to <?php htmlout($displayValidatedEndDate); ?>.</b>
+						<span><b>Currently displaying logs from <?php htmlout($displayValidatedStartDate); ?> to <?php htmlout($displayValidatedEndDate); ?>.</b>
 					<?php elseif(isset($displayValidatedStartDate) AND !isset($displayValidatedEndDate)) : ?>
-						<b>Currently displaying logs from <?php htmlout($displayValidatedStartDate); ?> to today.</b>
+						<span><b>Currently displaying logs from <?php htmlout($displayValidatedStartDate); ?> to today.</b></span>
 					<?php elseif(!isset($displayValidatedStartDate) AND isset($displayValidatedEndDate)) : ?>
-						<b>Currently displaying logs from the beginning up to <?php htmlout($displayValidatedEndDate); ?>.</b>
+						<span><b>Currently displaying logs from the beginning up to <?php htmlout($displayValidatedEndDate); ?>.</b></span>
 					<?php else : ?>
 						<?php if($invalidInput AND !$noCheckedCheckboxes) : ?>
-							<b>Currently not displaying any logs due to an incorrect date being submitted.</b>
+							<span><b>Currently not displaying any logs due to an incorrect date being submitted.</b></span>
 						<?php else : ?>
-							<b>Currently displaying logs from the beginning up to today.</b>
+							<span><b>Currently displaying logs from the beginning up to today.</b></span>
 						<?php endif; ?>
 					<?php endif; ?> <br />
+					
 					<label for="filterStartDate">Earliest date to display logs from: </label>
 					<input type="text" name="filterStartDate" 
 					value="<?php htmlout($validatedStartDate); ?>"><br />
@@ -86,11 +100,11 @@
 				</fieldset>
 			</div>
 			
-			<div class="bottomLeft">
+			<div class="left">
 				<input type="submit" name="action" value="Refresh Logs">
 			</div>
 			
-			<div class="bottomRight">
+			<div class="right">
 				<?php if(isset($_SESSION['logEventsEnableDelete']) AND $_SESSION['logEventsEnableDelete']) : ?>
 					<input type="submit" name="action" value="Disable Delete">
 				<?php else : ?>

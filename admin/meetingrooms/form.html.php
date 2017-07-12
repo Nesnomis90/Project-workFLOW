@@ -7,76 +7,97 @@
 		<meta charset="utf-8">
 		<link rel="stylesheet" type="text/css" href="/CSS/myCSS.css">
 		<title><?php htmlout($pageTitle); ?></title>
+		<style>
+			label {
+				width: 190px;
+			}
+		</style>
 	</head>
 	<body>
 		<h1><?php htmlout($pageTitle); ?></h1>
-		<?php if(isset($_SESSION['AddMeetingRoomError'])) : ?>
-			<p><b><?php htmlout($_SESSION['AddMeetingRoomError']); ?></b></p>
-			<?php unset($_SESSION['AddMeetingRoomError']); ?>
-		<?php endif; ?>
+		
+		<div class="left">
+			<?php if(isset($_SESSION['AddMeetingRoomError'])) : ?>
+				<span><b><?php htmlout($_SESSION['AddMeetingRoomError']); ?></b></span>
+				<?php unset($_SESSION['AddMeetingRoomError']); ?>
+			<?php endif; ?>
+		</div>
+		
 		<form action="" method="post">
 			<?php if($button == 'Edit Room') : ?>
-			<div>
-				<label for="OriginalMeetingRoomName">Original Meeting Room Name: </label>
-				<b><?php htmlout($originalMeetingRoomName); ?></b>
-			</div>
+				<div>
+					<label for="OriginalMeetingRoomName">Original Room Name: </label>
+					<span><b><?php htmlout($originalMeetingRoomName); ?></b></span>
+				</div>
 			<?php endif; ?>
+			
 			<div>
 				<label for="MeetingRoomName">Set New Room Name: </label>
 				<input type="text" name="MeetingRoomName" id="MeetingRoomName"
 				placeholder="Enter Room Name" 
 				value="<?php htmlout($meetingRoomName); ?>">
 			</div>
+			
 			<?php if($button == 'Edit Room') : ?>
-			<div>
-				<label for="OriginalMeetingRoomCapacity">Original Meeting Room Capacity: </label>
-				<b><?php htmlout($originalMeetingRoomCapacity); ?></b>
-			</div>
-			<?php endif; ?>			
+				<div>
+					<label for="OriginalMeetingRoomCapacity">Original Room Capacity: </label>
+					<span><b><?php htmlout($originalMeetingRoomCapacity); ?></b></span>
+				</div>
+			<?php endif; ?>
+			
 			<div>
 				<label for="MeetingRoomCapacity">Set New Capacity: </label>
 				<input type="number" name="MeetingRoomCapacity" id="MeetingRoomCapacity"
 				min="1" max="255"				
 				value="<?php htmlout($meetingRoomCapacity); ?>">
 			</div>
+			
 			<?php if($button == 'Edit Room') : ?>
-			<div>
-				<label for="OriginalMeetingRoomDescription">Original Meeting Room Description: </label>
-				<b style="white-space: pre-wrap;"><?php htmlout($originalMeetingRoomDescription); ?></b>
-			</div>
-			<?php endif; ?>			
+				<div>
+					<label for="OriginalMeetingRoomDescription">Original Room Description: </label>
+					<span><b style="white-space: pre-wrap;"><?php htmlout($originalMeetingRoomDescription); ?></b></span>
+				</div>
+			<?php endif; ?>
+			
 			<div>
 				<label class="description" for="MeetingRoomDescription">Set New Room Description: </label>
 				<textarea rows="4" cols="50" name="MeetingRoomDescription" id="MeetingRoomDescription"
 				placeholder="Enter Room Description" style="white-space: pre-wrap;"><?php htmlout($meetingRoomDescription); ?></textarea>
-			</div>	
-			<?php if($button == 'Edit Room') : ?>
-			<div>
-				<label for="OriginalMeetingRoomLocation">Original Meeting Room Location: </label>
-				<b><?php htmlout($originalMeetingRoomLocation); ?></b>
 			</div>
-			<?php endif; ?>			
+			
+			<?php if($button == 'Edit Room') : ?>
+				<div>
+					<label for="OriginalMeetingRoomLocation">Original Room Location: </label>
+					<?php if($originalMeetingRoomLocation == "") : ?>
+						<span><b>This room has no location set.</b></span>
+					<?php else : ?>
+						<span><b><?php htmlout($originalMeetingRoomLocation); ?></b></span>
+					<?php endif; ?>
+				</div>
+			<?php endif; ?>
+			
 			<div>
 				<label for="MeetingRoomLocation">Set New Location: </label> 
 				<input type="text" name="MeetingRoomLocation" id="MeetingRoomLocation" 
 				placeholder="Enter Location" 
 				value="<?php htmlout($meetingRoomLocation); ?>">
 			</div>
-			<div>
+			
+			<div class="left">
 				<input type="hidden" name="MeetingRoomID" value="<?php htmlout($meetingRoomID); ?>">
 				<input type="submit" name="action" value="<?php htmlout($button); ?>">
-			</div>
-			<div>
-			<?php if($button == 'Edit Room') : ?>
-				<input type="submit" name="edit" value="Reset">
-				<input type="submit" name="edit" value="Cancel">
-			<?php elseif($button == 'Add Room') : ?>
-				<input type="submit" name="add" value="Reset">
-				<input type="submit" name="add" value="Cancel">			
-			<?php endif; ?>
+				<?php if($button == 'Edit Room') : ?>
+					<input type="submit" name="edit" value="Reset">
+					<input type="submit" name="edit" value="Cancel">
+				<?php elseif($button == 'Add Room') : ?>
+					<input type="submit" name="add" value="Reset">
+					<input type="submit" name="add" value="Cancel">			
+				<?php endif; ?>
 			</div>
 		</form>
-	<p><a href="..">Return to CMS home</a></p>
+		
+	<div class="left"><a href="..">Return to CMS home</a></div>
+	
 	<?php include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/logout.inc.html.php'; ?>
 	</body>
 </html>

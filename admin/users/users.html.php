@@ -7,37 +7,39 @@
 		<meta charset="utf-8">
 		<link rel="stylesheet" type="text/css" href="/CSS/myCSS.css">
 		<title>Manage Users</title>
+		<style>
+			label {
+				width: auto;
+			}
+		</style>
 	</head>
 	<body>
 		<h1>Manage Users</h1>
-		<?php if(isset($_SESSION['UserManagementFeedbackMessage'])) : ?>
-			<p><b><?php htmlout($_SESSION['UserManagementFeedbackMessage']); ?></b></p>
-			<?php unset($_SESSION['UserManagementFeedbackMessage']); ?>
-		<?php endif; ?>
-		<form action="" method="post">
-			<div>
+		
+		<div class="left">
+			<?php if(isset($_SESSION['UserManagementFeedbackMessage'])) : ?>
+				<span><b class="feedback"><?php htmlout($_SESSION['UserManagementFeedbackMessage']); ?></b></span>
+				<?php unset($_SESSION['UserManagementFeedbackMessage']); ?>
+			<?php endif; ?>
+		</div>
+
+		<div class="left">
+			<form action="?add" method="post">
+				<input type="submit" name="action" value="Create User">
+			</form>
+		</div>
+		<div class="right">
+			<form action="" method="post">
 				<?php if(isset($_SESSION['usersEnableDelete']) AND $_SESSION['usersEnableDelete']) : ?>
 					<input type="submit" name="action" value="Disable Delete">
 				<?php else : ?>
 					<input type="submit" name="action" value="Enable Delete">
 				<?php endif; ?>
-			</div>
-		</form>
-		<?php if(isset($_SESSION['UserEmailsToBeDisplayed'])) : ?>
-			<form action="" method="post">
-				<div>
-					<label>Get All Visible Emails (<?php htmlout(sizeOf($_SESSION['UserEmailsToBeDisplayed'])); ?>) In List Form To Copy: </label>
-					<input type="submit" name="action" value="Get Emails">
-				</div>
 			</form>
-		<?php endif; ?>
+		</div>		
+		
 		<?php if($rowNum>0) :?>
-			<form action="?add" method="post">
-				<div>
-					<input type="submit" name="action" value="Create User">
-				</div>
-			</form>
-			<table id="usertable">
+			<table>
 				<caption>Activated Users</caption>
 				<tr>
 					<th colspan="3">User Information</th>
@@ -50,7 +52,7 @@
 				<tr>
 					<th>First Name</th>
 					<th>Last Name</th>
-					<th>Email</th>
+					<th>Email <a style="color: white" href="?getEmails">(Click to Export)</a></th>
 					<th>Access</th>
 					<th>Name</th>
 					<th>Description</th>
@@ -96,8 +98,9 @@
 					</form>
 				<?php endforeach; ?>
 			</table>
+			
 			<?php if(isset($inactiveusers)) : ?>
-				<table id="usertable">
+				<table>
 					<caption>Unactivated Users</caption>
 					<tr>
 						<th colspan="3">User Information</th>
@@ -134,17 +137,13 @@
 					<?php endforeach; ?>
 				</table>
 			<?php endif; ?>
+			
 		<?php else : ?>
 			<tr><b>There are no users registered in the database.</b></tr>
-			<tr>
-				<form action="?add" method="post">
-					<div>
-						<input type="submit" name="action" value="Create User">
-					</div>
-				</form>
-			</tr>
 		<?php endif; ?>
-		<p><a href="..">Return to CMS home</a></p>
+		
+	<div class="left"><a href="..">Return to CMS home</a></div>
+		
 	<?php include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/logout.inc.html.php'; ?>
 	</body>
 </html>

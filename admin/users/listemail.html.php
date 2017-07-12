@@ -6,49 +6,65 @@
 	<head>
 		<meta charset="utf-8">
 		<link rel="stylesheet" type="text/css" href="/CSS/myCSS.css">
-		<title>Manage Users</title>			
+		<title>Manage Users</title>
+		<style>
+			label {
+				width: 300px;
+			}
+		</style>
 	</head>
 	<body>
 		<h1>Email List</h1>
-		<?php if(isset($_SESSION['UserEmailListError'])) : ?>
-			<h2><?php htmlout($_SESSION['UserEmailListError']); ?></h2>
-			<?php unset($_SESSION['UserEmailListError']); ?>
-		<?php endif; ?>
+		
+		<div class="left">
+			<?php if(isset($_SESSION['UserEmailListError'])) : ?>
+				<span><b class="feedback"><?php htmlout($_SESSION['UserEmailListError']); ?></b></span>
+				<?php unset($_SESSION['UserEmailListError']); ?>
+			<?php endif; ?>
+		</div>
+		
 		<div>
 			<form action="" method="post">
 				<?php if(	isset($_SESSION['UserEmailListSeparatorSelected']) AND
 							$_SESSION['UserEmailListSeparatorSelected']) : ?>
-					<label for="separatorchar">The character selected to separate emails with: </label>
-					<input type="text" name="separatorchardisabled" id="separatorchardisabled"
+					<label for="separatorchar">The current character to separate emails with: </label>
+					<input style="width: 20px; text-align: center;" type="text" name="separatorchardisabled" id="separatorchardisabled"
 					disabled
 					value="<?php htmlout($separatorChar); ?>">						
 					<input type="submit" name="action" value="Change Separator Char">
 				<?php else : ?>
-					<label for="separatorchar">Set the character you want to separate emails with: </label>
-					<input type="text" name="separatorchar" id="separatorchar"
-					placeholder="e.g. , or ;"
+					<label for="separatorchar">Set new character to separate emails with: </label>
+					<input style="width: 40px;"type="text" name="separatorchar" id="separatorchar"
+					placeholder="e.g. ;"
 					value="<?php htmlout($separatorChar); ?>">
 					<input type="submit" name="action" value="Select Separator Char">		
 				<?php endif; ?>
 			</form>
 		</div>
+		
 		<div>
 			<label class="description" for="emailList">Copy Into Your Email Program:</label>
 			<textarea rows="4" cols="50" name="emailList" id="emailList"
 			disabled style="white-space: pre-wrap;"
 			placeholder="List of User Email"><?php htmlout($emailList); ?></textarea>
 		</div>
+		
 		<div>
-			<label>Tip: On WINDOWS - Click inside box once. Press Ctrl+A then CTRL+C to copy everything. Paste into your Email program with Ctrl+V.</label>
+			<span>Tip: On WINDOWS - Click inside box once. Press Ctrl+A then CTRL+C to copy everything. Paste into your Email program with Ctrl+V.</span>
 		</div>
+		
 		<div>
-			<label>Tip: On MAC - Click inside box once. Press Command-A then Command-C to copy everything. Paste into your Email program with Command-V.</label>
+			<span>Tip: On MAC - Click inside box once. Press Command-A then Command-C to copy everything. Paste into your Email program with Command-V.</span>
 		</div>
-		<div>
+		
+		<div class="left">
 			<form action="" method="post">
 				<input type="submit" name="action" value="Return To Users">
 			</form>
 		</div>
-		<p><a href="..">Return to CMS home</a></p>
+		
+		<div class="left"><a href="..">Return to CMS home</a></div>
+		
+		<?php include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/logout.inc.html.php'; ?>
 	</body>
 </html>

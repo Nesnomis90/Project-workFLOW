@@ -180,7 +180,7 @@ function trimExcessWhitespaceButLeaveLinefeed($oldString){
 	// Inner preg replaces takes all white space before and after a line feed and turns it into a single line feed
 	// Outer preg replaces takes all excess spaces and tabs between words on a line and replaces with a single space
 	// trim removes excess spaces before/after
-	return trim(preg_replace('/[ \t]+/', ' ', preg_replace('/\s*\R+\s*/', "\n", $oldString)));
+	return trim(preg_replace('/[ \t]+/', ' ', preg_replace('/\s*\R+\s*/u', "\n", $oldString)));
 }
 
 // Function that (hopefully) removes excess white space, line feeds etc.
