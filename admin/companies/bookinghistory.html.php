@@ -120,17 +120,9 @@
 			<?php if($companyMinuteCreditsRemaining < 0) : ?>
 				<span>This is <b style="color:<?php htmlout($color); ?>">MORE</b> than the credit given this period: <b><?php htmlout($displayCompanyCredits); ?></b></span><br />
 				<span>The extra time used this period: <b style="color:<?php htmlout($color); ?>"><?php htmlout($displayOverCreditsTimeUsed); ?></b></span><br />
-				<?php if($hourAmountUsedInCalculation!="") : ?>
-					<span>Time used for calculating price: <b><?php htmlout($displayHourAmountUsedInCalculation); ?></b></span><br />
-				<?php else : ?>
-					<span>Time used for calculating price: <b><?php htmlout($actualTimeOverCreditsInMinutes."m"); ?></b></span><br />
-				<?php endif; ?>	
+				<span>Time used for calculating price: <b><?php htmlout($displayTotalBookingTimeChargedWithAfterCredits); ?></b></span><br />
 				<span>The company has an "over credits"-fee of: <b><?php htmlout($overCreditsFee); ?></b></span><br />
-				<?php if($hourAmountUsedInCalculation!="") : ?>
-					<span>Giving an "over credits"-cost of: <b><?php htmlout($displayHourAmountUsedInCalculation); ?></b>*<b><?php htmlout($overCreditsFee); ?></b> = <b style="color:<?php htmlout($color); ?>"><?php htmlout($displayOverFeeCostThisMonth); ?></b></span><br />
-				<?php else : ?>
-					<span>Giving an "over credits"-cost of: <b><?php htmlout($actualTimeOverCreditsInMinutes."m"); ?></b>*<b><?php htmlout($overCreditsFee); ?></b> = <b style="color:<?php htmlout($color); ?>"><?php htmlout($displayOverFeeCostThisMonth); ?></b></span><br />
-				<?php endif; ?>
+				<span>Giving an "over credits"-cost of: <b><?php htmlout($displayTotalBookingTimeChargedWithAfterCredits); ?></b>*<b><?php htmlout($overCreditsFee); ?></b> = <b style="color:<?php htmlout($color); ?>"><?php htmlout($displayOverFeeCostThisMonth); ?></b></span><br />
 			<?php elseif($companyMinuteCreditsRemaining == 0) : ?>
 				<span>This is <b style="color:green">EXACTLY</b> the credit given this period: <b><?php htmlout($displayCompanyCredits); ?></b></span><br />
 			<?php else : ?>
