@@ -39,7 +39,7 @@ function sumUpUnbilledPeriods($pdo, $companyID){
 
 	$minimumSecondsPerBooking = MINIMUM_BOOKING_DURATION_IN_MINUTES_USED_IN_PRICE_CALCULATIONS * 60; // e.g. 15min = 900s
 	$aboveThisManySecondsToCount = BOOKING_DURATION_IN_MINUTES_USED_BEFORE_INCLUDING_IN_PRICE_CALCULATIONS * 60; // e.g. 1min = 60s
-	$roundToClosestMinuteInSeconds = ROUND_SUMMED_BOOKING_TIME_CHARGED_FOR_PERIOD_TO_THIS_CLOSEST_MINUTE_AMOUNT * 60; // e.g. 15min = 900s
+	$roundDownToTheClosestMinuteNumberInSeconds = ROUND_SUMMED_BOOKING_TIME_CHARGED_FOR_PERIOD_DOWN_TO_THIS_CLOSEST_MINUTE_AMOUNT * 60; // e.g. 15min = 900s
 		// Rounds to closest 15 minutes now (on finished summation per period)
 	$sql = "SELECT		StartDate, 
 						EndDate,
@@ -59,15 +59,13 @@ function sumUpUnbilledPeriods($pdo, $companyID){
 						BIG_SEC_TO_TIME(
 										FLOOR(
 											(
-												(
-													IF(
-														(BookingTimeChargedInSeconds>CreditsGivenInSeconds),
-														BookingTimeChargedInSeconds-CreditsGivenInSeconds, 
-														0
-													)
-												)+(:roundToClosestMinuteInSeconds/2)
-											)/:roundToClosestMinuteInSeconds
-										)*:roundToClosestMinuteInSeconds
+												IF(
+													(BookingTimeChargedInSeconds>CreditsGivenInSeconds),
+													BookingTimeChargedInSeconds-CreditsGivenInSeconds, 
+													0
+												)
+											)/:roundDownToTheClosestMinuteNumberInSeconds
+										)*:roundDownToTheClosestMinuteNumberInSeconds
 						)													AS OverCreditsTimeCharged
 			FROM (
 					SELECT 	cch.`startDate`									AS StartDate,
@@ -77,7 +75,7 @@ function sumUpUnbilledPeriods($pdo, $companyID){
 							cch.`overCreditMinutePrice`						AS CreditSubscriptionMinutePrice,
 							cch.`overCreditHourPrice`						AS CreditSubscriptionHourPrice,
 							(
-								SELECT FLOOR(((IFNULL(SUM(
+								SELECT FLOOR((IFNULL(SUM(
 									IF(
 										(
 											(
@@ -116,7 +114,7 @@ function sumUpUnbilledPeriods($pdo, $companyID){
 											:minimumSecondsPerBooking
 										),
 									0)
-								),0))+(:roundToClosestMinuteInSeconds/2))/:roundToClosestMinuteInSeconds)*:roundToClosestMinuteInSeconds
+								),0))/:roundDownToTheClosestMinuteNumberInSeconds)*:roundDownToTheClosestMinuteNumberInSeconds
 								FROM 		`booking` b
 								WHERE 		b.`CompanyID` = :CompanyID
 								AND 		b.`actualEndDateTime`
@@ -135,7 +133,7 @@ function sumUpUnbilledPeriods($pdo, $companyID){
 	$s->bindValue(':CompanyID', $companyID);
 	$s->bindValue(':minimumSecondsPerBooking', $minimumSecondsPerBooking);
 	$s->bindValue(':aboveThisManySecondsToCount', $aboveThisManySecondsToCount);
-	$s->bindValue(':roundToClosestMinuteInSeconds', $roundToClosestMinuteInSeconds);
+	$s->bindValue(':roundDownToTheClosestMinuteNumberInSeconds', $roundDownToTheClosestMinuteNumberInSeconds);
 	$s->execute();
 	$result = $s->fetchAll(PDO::FETCH_ASSOC);
 	
@@ -178,10 +176,10 @@ function sumUpUnbilledPeriods($pdo, $companyID){
 			$totalBookingCostThisMonth = convertToCurrency($totalCost);
 		} elseif($hourPrice != 0 AND $minPrice == 0){
 			// The subscription charges by the hour, if over credits
-			// Adapt hourprice into correct piece of our ROUND_SUMMED_BOOKING_TIME_CHARGED_FOR_PERIOD_TO_THIS_CLOSEST_MINUTE_AMOUNT (e.g. 15 min)
-			$splitPricePerHourIntoThisManyPieces = 60 / ROUND_SUMMED_BOOKING_TIME_CHARGED_FOR_PERIOD_TO_THIS_CLOSEST_MINUTE_AMOUNT;
+			// Adapt hourprice into correct piece of our ROUND_SUMMED_BOOKING_TIME_CHARGED_FOR_PERIOD_DOWN_TO_THIS_CLOSEST_MINUTE_AMOUNT (e.g. 15 min)
+			$splitPricePerHourIntoThisManyPieces = 60 / ROUND_SUMMED_BOOKING_TIME_CHARGED_FOR_PERIOD_DOWN_TO_THIS_CLOSEST_MINUTE_AMOUNT;
 			if($splitPricePerHourIntoThisManyPieces > 0){
-				$numberOfMinuteSlices = $bookingTimeChargedInMinutes / ROUND_SUMMED_BOOKING_TIME_CHARGED_FOR_PERIOD_TO_THIS_CLOSEST_MINUTE_AMOUNT;
+				$numberOfMinuteSlices = $bookingTimeChargedInMinutes / ROUND_SUMMED_BOOKING_TIME_CHARGED_FOR_PERIOD_DOWN_TO_THIS_CLOSEST_MINUTE_AMOUNT;
 				$slicedHourPrice = $hourPrice/$splitPricePerHourIntoThisManyPieces;
 				$overFeeCostThisMonth = $numberOfMinuteSlices * $slicedHourPrice;
 			} else {
