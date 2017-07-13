@@ -3,6 +3,11 @@ SET NAMES utf8;
 USE meetingflow;
 SHOW WARNINGS;
 
+SELECT 	`meetingRoomID`	AS MeetingRoomID,
+		`name` 			AS MeetingRoomName
+FROM 	`meetingroom`
+WHERE 	`name` LIKE '%å%';
+
 SELECT 		b.`userID`										AS BookedUserID,
 			b.`bookingID`,
 			(
@@ -1086,13 +1091,11 @@ SELECT		StartDate,
             BIG_SEC_TO_TIME(
 							FLOOR(
 								(
-									(
-										IF(
-											(BookingTimeChargedInSeconds>CreditsGivenInSeconds),
-											BookingTimeChargedInSeconds-CreditsGivenInSeconds, 
-											0
-										)
-                                    )+450
+									IF(
+										(BookingTimeChargedInSeconds>CreditsGivenInSeconds),
+										BookingTimeChargedInSeconds-CreditsGivenInSeconds, 
+										0
+									)
 								)/900
 							)*900
 			)												AS OverCreditsTimeCharged
@@ -1103,7 +1106,7 @@ FROM (
 				cch.`monthlyPrice`							AS CreditSubscriptionMonthlyPrice,
 				cch.`overCreditMinutePrice`					AS CreditSubscriptionMinutePrice,
 				cch.`overCreditHourPrice`					AS CreditSubscriptionHourPrice,
-			(SELECT FLOOR(((IFNULL(SUM(
+			(SELECT (IFNULL(SUM(
 					IF(
 						(
 							(
@@ -1143,7 +1146,7 @@ FROM (
 						),
 						0
 					)
-				),0))+450)/900)*900
+				),0))
 			FROM 		`booking` b
 			WHERE 		b.`CompanyID` = 2
 			AND 		b.`actualEndDateTime`
