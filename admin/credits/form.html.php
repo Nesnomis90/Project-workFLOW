@@ -9,14 +9,14 @@
 		<title><?php htmlout($pageTitle); ?></title>
 		<style>
 			label {
-				width: 320px;
+				width: 250px;
 			}
 		</style>		
 	</head>
 	<body>
 		<h1><?php htmlout($pageTitle); ?></h1>
 		
-		<div>
+		<div class="left">
 			<?php if(isset($_SESSION['EditCreditsError'])) :?>
 				<span><b class="feedback"><?php htmlout($_SESSION['EditCreditsError']); ?></b></span>
 				<?php unset($_SESSION['EditCreditsError']); ?>
@@ -77,8 +77,8 @@
 				<label for="CreditsAmount">Set New Credits Amount: </label>
 				<input type="number" name="CreditsAmount" id="CreditsAmount" 
 				min="0" max="65535"
-				placeholder="Minutes"
-				value="<?php htmlout($CreditsAmount); ?>">
+				placeholder="e.g. 90"
+				value="<?php htmlout($CreditsAmount); ?>"><span style="color: red;">*given in minutes</span>
 			</div>
 			
 			<?php if($button == 'Edit Credits') : ?>
@@ -91,44 +91,27 @@
 			<div>
 				<label for="CreditsMonthlyPrice">Set New Monthly Subscription Price: </label>
 				<input type="number" name="CreditsMonthlyPrice" id="CreditsMonthlyPrice" 
-				min="0" max="65535"
+				min="0" max="<?php htmlout(MAXIMUM_FLOAT_NUMBER); ?>" step="<?php htmlout(SET_CURRENCY_STEP_PRECISION); ?>" placeholder="e.g. 2150.50"
 				value="<?php htmlout($CreditsMonthlyPrice); ?>">
 			</div>
 			
 			<?php if($button == 'Edit Credits') : ?>
 				<div>
-					<label for="OriginalCreditsHourPrice">Original Over Credits Fee (Charged per hour): </label>
+					<label for="OriginalCreditsHourPrice">Original Over Credits Fee (per hour): </label>
 					<span><b><?php htmlout($originalCreditsHourPrice); ?></b></span>
 				</div>
 			<?php endif; ?>
 			
 			<div>
-				<label for="CreditsHourPrice">Set New Over Credits Fee (Charged per hour): </label>
+				<label for="CreditsHourPrice">Set New Over Credits Fee (per hour): </label>
 				<input type="number" name="CreditsHourPrice" id="CreditsHourPrice" 
-				min="0" max="65535" placeholder="e.g. 150"
-				value="<?php htmlout($CreditsHourPrice); ?>"><span style="color: red;">*</span>
+				min="0" max="<?php htmlout(MAXIMUM_FLOAT_NUMBER); ?>" step="<?php htmlout(SET_CURRENCY_STEP_PRECISION); ?>" placeholder="e.g. 150.50"
+				value="<?php htmlout($CreditsHourPrice); ?>">
 			</div>
 			
-			<?php if($button == 'Edit Credits') : ?>
-				<div>
-					<label for="OriginalCreditsMinutePrice">Original Over Credits Fee (Charged per minute): </label>
-					<span><b><?php htmlout($originalCreditsMinutePrice); ?></b></span>
-				</div>
-			<?php endif; ?>
-			
-			<div>
-				<label for="CreditsMinutePrice">Set New Over Credits Fee (Charged per minute): </label>
-				<input type="text" name="CreditsMinutePrice" id="CreditsMinutePrice" 
-				placeholder="e.g. 2.50"
-				value="<?php htmlout($CreditsMinutePrice); ?>"><span style="color: red;">*</span>
-			</div>			
 			<div class="left">
 				<input type="hidden" name="CreditsID" value="<?php htmlout($CreditsID); ?>">
 				<input type="submit" name="action" value="<?php htmlout($button); ?>">
-				<span style="color: red;">* Select which method to use.</span>
-			</div>
-			
-			<div class="left">
 				<?php if($button == 'Confirm Credits') : ?>
 					<input type="submit" name="add" value="Reset">
 					<input type="submit" name="add" value="Cancel">

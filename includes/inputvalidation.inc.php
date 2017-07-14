@@ -73,7 +73,7 @@ function isNumberInvalidMeetingRoomCapacity($capacityNumber){
 	// Has to be between 0 and 255
 	// In practice the meeting room needs at least room for 1 person.
 	
-	$maxNumber = 255;	// To-do: change if needed
+	$maxNumber = MAXIMUM_UNSIGNED_TINYINT_NUMBER;
 	$minNumber = 1;
 	if($capacityNumber < $minNumber OR $capacityNumber > $maxNumber){
 		return TRUE;
@@ -86,7 +86,7 @@ function isNumberInvalidMeetingRoomCapacity($capacityNumber){
 function isNumberInvalidCreditsAmount($creditsAmount){
 	// Has to be between 0 and 65535 (minutes)
 	
-	$maxNumber = 65535;	// To-do: change if needed
+	$maxNumber = MAXIMUM_UNSIGNED_SMALLINT_NUMBER;	// To-do: change if needed
 	$minNumber = 0;
 	if($creditsAmount < $minNumber OR $creditsAmount > $maxNumber){
 		return TRUE;
@@ -97,9 +97,10 @@ function isNumberInvalidCreditsAmount($creditsAmount){
 	// Credits Hour Price
 // Returns TRUE on invalid, FALSE on valid
 function isNumberInvalidCreditsHourPrice($creditsHourPrice){
-	// Has to be between 0 and 65535
+	// Is a float so it has a large range
+	// In practice we only need from 0 to some big number
 	
-	$maxNumber = 65535;	// To-do: change if needed
+	$maxNumber = MAXIMUM_FLOAT_NUMBER;
 	$minNumber = 0;
 	if($creditsHourPrice < $minNumber OR $creditsHourPrice > $maxNumber){
 		return TRUE;
@@ -107,26 +108,13 @@ function isNumberInvalidCreditsHourPrice($creditsHourPrice){
 	return FALSE;
 }
 
-	// Credits Minute Price
-// Returns TRUE on invalid, FALSE on valid
-function isNumberInvalidCreditsMinutePrice($creditsMinutePrice){
-	// Is a float so it has a large range
-	// In practice we only need from 0 to some big number
-	
-	$maxNumber = 65535;	// To-do: change if needed
-	$minNumber = 0;
-	if($creditsMinutePrice < $minNumber OR $creditsMinutePrice > $maxNumber){
-		return TRUE;
-	}
-	return FALSE;	
-}
-
 	// Credits Monthly Subscription Price
 // Returns TRUE on invalid, FALSE on valid
 function isNumberInvalidCreditsMonthlyPrice($creditsMonthlyPrice){
-	// Has to be between 0 and 65535
+	// Is a float so it has a large range
+	// In practice we only need from 0 to some big number
 	
-	$maxNumber = 65535;	// To-do: change if needed
+	$maxNumber = MAXIMUM_FLOAT_NUMBER;
 	$minNumber = 0;
 	if($creditsMonthlyPrice < $minNumber OR $creditsMonthlyPrice > $maxNumber){
 		return TRUE;
@@ -220,7 +208,6 @@ function validateString($oldString){
 		// and symbols like ´ (when not used as an accent)
 		// For currency symbols add \p{Sc}
 		// For math symbols add \p{Sm}
-		// TO-DO: change because it probably isn't good
 		
 	if (preg_match('/^[ -~\p{L}\p{M}\r\n]*$/u', $oldString)) {
 		return TRUE;

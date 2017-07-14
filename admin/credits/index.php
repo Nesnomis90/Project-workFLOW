@@ -27,7 +27,6 @@ function clearEditCreditsSessions(){
 	unset($_SESSION['EditCreditsDescription']);
 	unset($_SESSION['EditCreditsAmount']);
 	unset($_SESSION['EditCreditsMonthlyPrice']);
-	unset($_SESSION['EditCreditsMinutePrice']);
 	unset($_SESSION['EditCreditsHourPrice']);
 	
 	unset($_SESSION['EditCreditsCreditsID']);
@@ -65,28 +64,15 @@ function validateUserInputs(){
 	if(isset($_POST['CreditsHourPrice']) AND !$invalidInput){
 		$creditsHourPrice = trim($_POST['CreditsHourPrice']);
 	} else {
-		$creditsHourPrice = ""; 
-		// TO-DO: Change if needed
-		// Can be either hour price or minute price, so can be not set
-		/*$invalidInput = TRUE;
-		$_SESSION['EditCreditsError'] = "A credits cannot be added without a hourly over credits fee!";*/
+		$invalidInput = TRUE;
+		$_SESSION['EditCreditsError'] = "A credits cannot be added without a hourly over credits fee!";
 	}
-	if(isset($_POST['CreditsMinutePrice']) AND !$invalidInput){
-		$creditsMinutePrice = trim($_POST['CreditsMinutePrice']);
-	} else {
-		$creditsMinutePrice = ""; 
-		// TO-DO: Change if needed
-		// Can be either hour price or minute price, so can be not set
-		/*$invalidInput = TRUE;
-		$_SESSION['EditCreditsError'] = "A credits cannot be added without a minute by minute over credits fee!";*/
-	}
-	
+
 	// Remove excess whitespace and prepare strings for validation
 	$validatedCreditsName = trimExcessWhitespace($creditsName);
 	$validatedCreditsDescription = trimExcessWhitespaceButLeaveLinefeed($creditsDescription);
 	$validatedCreditsAmount = trimAllWhitespace($creditsAmount);
 	$validatedCreditsHourPrice = trimAllWhitespace($creditsHourPrice);
-	$validatedCreditsMinutePrice = trimAllWhitespace($creditsMinutePrice);
 	$validatedCreditsMonthlyPrice = trimAllWhitespace($creditsMonthlyPrice);
 	
 	// Are values actually filled in?
@@ -106,14 +92,10 @@ function validateUserInputs(){
 		$_SESSION['EditCreditsError'] = "You need to fill in a monthly subscription price for your credits.";	
 		$invalidInput = TRUE;
 	}	
-	if($validatedCreditsHourPrice == "" AND $validatedCreditsMinutePrice == "" AND !$invalidInput){
-		$_SESSION['EditCreditsError'] = "You need to fill in an hourly or minute by minute over credits fee for your credits.";	
-		$invalidInput = TRUE;		
-	}
-	if($validatedCreditsHourPrice != "" AND $validatedCreditsMinutePrice != "" AND !$invalidInput){
-		$_SESSION['EditCreditsError'] = "You cannot fill in both an hourly and a minute by minute over credits fee for your credits.";	
-		$invalidInput = TRUE;		
-	}		
+	if($validatedCreditsHourPrice == "" AND !$invalidInput){
+		$_SESSION['EditCreditsError'] = "You need to fill in an over credits fee (per hour) for your credits.";	
+		$invalidInput = TRUE;
+	}	
 	
 	// Do actual input validation
 	if(validateString($validatedCreditsName) === FALSE AND !$invalidInput){
@@ -129,20 +111,12 @@ function validateUserInputs(){
 		$_SESSION['EditCreditsError'] = "Your submitted credits amount has illegal characters in it.";
 	}
 	if($validatedCreditsHourPrice != ""){
-		// TO-DO: Make hour rate a float, just in case?
-		if(validateIntegerNumber($validatedCreditsHourPrice) === FALSE AND !$invalidInput){
+		if(validateFloatNumber($validatedCreditsHourPrice) === FALSE AND !$invalidInput){
 			$invalidInput = TRUE;
 			$_SESSION['EditCreditsError'] = "Your submitted hourly over credits fee has illegal characters in it.";
 		}		
 	}
-	if($validatedCreditsMinutePrice != ""){
-		if(validateFloatNumber($validatedCreditsMinutePrice) === FALSE AND !$invalidInput){
-			$invalidInput = TRUE;
-			$_SESSION['EditCreditsError'] = "Your submitted minute by minute over credits fee has illegal characters in it.";
-		}
-	}
-	// TO-DO: Make float?
-	if(validateIntegerNumber($validatedCreditsMonthlyPrice) === FALSE AND !$invalidInput){
+	if(validateFloatNumber($validatedCreditsMonthlyPrice) === FALSE AND !$invalidInput){
 		$invalidInput = TRUE;
 		$_SESSION['EditCreditsError'] = "Your submitted monthly subscription price has illegal characters in it.";
 	}	
@@ -172,12 +146,6 @@ function validateUserInputs(){
 	$invalidCreditsHourPrice = isNumberInvalidCreditsHourPrice($validatedCreditsHourPrice);
 	if($invalidCreditsHourPrice AND !$invalidInput){
 		$_SESSION['EditCreditsError'] = "The hourly over credits fee submitted is too big.";	
-		$invalidInput = TRUE;
-	}
-		// Credits Minute Price
-	$invalidCreditsMinutePrice = isNumberInvalidCreditsMinutePrice($validatedCreditsMinutePrice);
-	if($invalidCreditsMinutePrice AND !$invalidInput){
-		$_SESSION['EditCreditsError'] = "The minute by minute over credits fee submitted is too big.";	
 		$invalidInput = TRUE;
 	}
 		// Credits Monthly Price
@@ -231,7 +199,7 @@ function validateUserInputs(){
 		}
 	}
 
-return array($invalidInput, $validatedCreditsDescription, $validatedCreditsName, $validatedCreditsAmount, $validatedCreditsHourPrice, $validatedCreditsMinutePrice, $validatedCreditsMonthlyPrice);
+return array($invalidInput, $validatedCreditsDescription, $validatedCreditsName, $validatedCreditsAmount, $validatedCreditsHourPrice, $validatedCreditsMonthlyPrice);
 }
 
 // If admin wants to be able to delete credits it needs to enabled first
@@ -342,10 +310,9 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Add Credits') OR
 	$pageTitle = 'New Credits';
 	$CreditsName = '';
 	$CreditsDescription = '';
-	$CreditsAmount = 0;
+	$CreditsAmount = '';
 	$CreditsHourPrice = '';
-	$CreditsMinutePrice = '';
-	$CreditsMonthlyPrice = 0;
+	$CreditsMonthlyPrice = '';
 	$CreditsID = '';
 	$button = 'Confirm Credits';
 	
@@ -368,10 +335,6 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Add Credits') OR
 	if(isset($_SESSION['AddCreditsMonthlyPrice'])){
 		$CreditsMonthlyPrice = $_SESSION['AddCreditsMonthlyPrice'];
 		unset($_SESSION['AddCreditsMonthlyPrice']);
-	}		
-	if(isset($_SESSION['AddCreditsMinutePrice'])){
-		$CreditsMinutePrice = $_SESSION['AddCreditsMinutePrice'];
-		unset($_SESSION['AddCreditsMinutePrice']);
 	}
 	
 	var_dump($_SESSION); // TO-DO: remove after testing is done
@@ -385,7 +348,7 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Add Credits') OR
 if (isset($_POST['action']) AND $_POST['action'] == 'Confirm Credits')
 {
 	// Validate user inputs
-	list($invalidInput, $validatedCreditsDescription, $validatedCreditsName, $validatedCreditsAmount, $validatedCreditsHourPrice, $validatedCreditsMinutePrice, $validatedCreditsMonthlyPrice) = validateUserInputs();
+	list($invalidInput, $validatedCreditsDescription, $validatedCreditsName, $validatedCreditsAmount, $validatedCreditsHourPrice, $validatedCreditsMonthlyPrice) = validateUserInputs();
 	
 	// Refresh form on invalid
 	if($invalidInput){
@@ -396,18 +359,12 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Confirm Credits')
 		$_SESSION['AddCreditsAmount'] = $validatedCreditsAmount;
 		$_SESSION['AddCreditsMonthlyPrice'] = $validatedCreditsMonthlyPrice;
 		$_SESSION['AddCreditsHourPrice'] = $validatedCreditsHourPrice;
-		$_SESSION['AddCreditsMinutePrice'] = $validatedCreditsMinutePrice;
 		
 		$_SESSION['refreshAddCredits'] = TRUE;
 		header('Location: .');
 		exit();			
 	}
-	if($validatedCreditsMinutePrice == ""){
-		$validatedCreditsMinutePrice = NULL;
-	}
-	if($validatedCreditsHourPrice == ""){
-		$validatedCreditsHourPrice = NULL;
-	}	
+
 	// Add the Credits to the database
 	try
 	{		
@@ -418,14 +375,12 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Confirm Credits')
 							`description` = :CreditsDescription,
 							`minuteAmount` = :CreditsAmount,
 							`monthlyPrice` = :CreditsMonthlyPrice,
-							`overCreditMinutePrice` = :CreditsMinutePrice,
 							`overCreditHourPrice` = :CreditsHourPrice';
 		$s = $pdo->prepare($sql);
 		$s->bindValue(':CreditsName', $validatedCreditsName);
 		$s->bindValue(':CreditsDescription', $validatedCreditsDescription);
 		$s->bindValue(':CreditsAmount', $validatedCreditsAmount);
 		$s->bindValue(':CreditsMonthlyPrice', $validatedCreditsMonthlyPrice);
-		$s->bindValue(':CreditsMinutePrice', $validatedCreditsMinutePrice);
 		$s->bindValue(':CreditsHourPrice', $validatedCreditsHourPrice);
 		$s->execute();
 	
@@ -461,9 +416,7 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Confirm Credits')
 		}
 		
 		// Format what over fee rate we're using (hourly or minute by minute)
-		if($validatedCreditsMinutePrice != NULL){
-			$creditsOverCreditsFee = convertToCurrency($validatedCreditsMinutePrice) . '/min';
-		} elseif($validatedCreditsHourPrice != NULL) {
+		if($validatedCreditsHourPrice != NULL) {
 			$creditsOverCreditsFee = convertToCurrency($validatedCreditsHourPrice) . '/hour';
 		} else {
 			$creditsOverCreditsFee = "Error, not set.";
@@ -484,7 +437,7 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Confirm Credits')
 		}
 		
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
-		// TO-DO: Add credit amount etc.
+
 		$pdo = connect_to_db();
 		$sql = "INSERT INTO `logevent` 
 				SET			`actionID` = 	(
@@ -570,12 +523,6 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR
 		} else {
 			$CreditsMonthlyPrice = 0;
 		}	
-		if(isset($_SESSION['EditCreditsMinutePrice'])){
-			$CreditsMinutePrice = $_SESSION['EditCreditsMinutePrice'];
-			unset($_SESSION['EditCreditsMinutePrice']);
-		} else {
-			$CreditsMinutePrice = '';
-		}
 		if(isset($_SESSION['EditCreditsHourPrice'])){
 			$CreditsHourPrice = $_SESSION['EditCreditsHourPrice'];
 			unset($_SESSION['EditCreditsHourPrice']);
@@ -598,7 +545,6 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR
 								`description`					AS CreditsDescription,
 								`minuteAmount`					AS CreditsGivenInMinutes,
 								`monthlyPrice`					AS CreditsMonthlyPrice,
-								`overCreditMinutePrice`			AS CreditsMinutePrice,
 								`overCreditHourPrice`			AS CreditsHourPrice
 					FROM 		`credits`
 					WHERE		`CreditsID` = :CreditsID";
@@ -617,7 +563,6 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR
 			$CreditsDescription = $row['CreditsDescription'];
 			$CreditsAmount = $row['CreditsGivenInMinutes'];
 			$CreditsMonthlyPrice = $row['CreditsMonthlyPrice'];
-			$CreditsMinutePrice = $row['CreditsMinutePrice'];
 			$CreditsHourPrice = $row['CreditsHourPrice'];
 			
 			$_SESSION['EditCreditsCreditsID'] = $CreditsID;
@@ -644,7 +589,6 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR
 	$originalCreditsDescription = $original['CreditsDescription'];
 	$originalCreditsAmount = $original['CreditsGivenInMinutes'];
 	$originalCreditsMonthlyPrice = $original['CreditsMonthlyPrice'];
-	$originalCreditsMinutePrice = $original['CreditsMinutePrice'];
 	$originalCreditsHourPrice = $original['CreditsHourPrice'];
 	
 	var_dump($_SESSION); // TO-DO: remove after testing is done
@@ -658,7 +602,7 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR
 if (isset($_POST['action']) AND $_POST['action'] == 'Edit Credits')
 {
 	// Validate user inputs
-	list($invalidInput, $validatedCreditsDescription, $validatedCreditsName, $validatedCreditsAmount, $validatedCreditsHourPrice, $validatedCreditsMinutePrice, $validatedCreditsMonthlyPrice) = validateUserInputs();
+	list($invalidInput, $validatedCreditsDescription, $validatedCreditsName, $validatedCreditsAmount, $validatedCreditsHourPrice, $validatedCreditsMonthlyPrice) = validateUserInputs();
 
 	// Make sure we don't try to change the name of the Credits named 'Default'
 	// Or try to change the description
@@ -685,7 +629,6 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Edit Credits')
 		$_SESSION['EditCreditsName'] = $validatedCreditsName;
 		$_SESSION['EditCreditsAmount'] = $validatedCreditsAmount;
 		$_SESSION['EditCreditsMonthlyPrice'] = $validatedCreditsMonthlyPrice;
-		$_SESSION['EditCreditsMinutePrice'] = $validatedCreditsMinutePrice;
 		$_SESSION['EditCreditsHourPrice'] = $validatedCreditsHourPrice;
 		
 		$_SESSION['refreshEditCredits'] = TRUE;
@@ -711,22 +654,12 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Edit Credits')
 		if($original['CreditsMonthlyPrice'] != $validatedCreditsMonthlyPrice){
 			$numberOfChanges++;
 		}
-		if($original['CreditsMinutePrice'] != $validatedCreditsMinutePrice){
-			$numberOfChanges++;
-		}
 		if($original['CreditsHourPrice'] != $validatedCreditsHourPrice){
 			$numberOfChanges++;
 		}
 		unset($original);
 	}
-	
-	if($validatedCreditsHourPrice == 0){
-		$validatedCreditsHourPrice = NULL;
-	}
-	if($validatedCreditsMinutePrice == 0){
-		$validatedCreditsMinutePrice = NULL;
-	}
-	
+
 	if($numberOfChanges > 0){
 		// Some changes were made, let's update!
 		try
@@ -738,7 +671,6 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Edit Credits')
 							`description` = :CreditsDescription,
 							`minuteAmount` = :CreditsGivenInMinutes,
 							`monthlyPrice` = :CreditsMonthlyPrice,
-							`overCreditMinutePrice`	= :CreditsMinutePrice,
 							`overCreditHourPrice` = :CreditsHourPrice,
 							`lastModified` = CURRENT_TIMESTAMP
 					WHERE 	CreditsID = :id';
@@ -748,7 +680,6 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Edit Credits')
 			$s->bindValue(':CreditsDescription', $validatedCreditsDescription);
 			$s->bindValue(':CreditsGivenInMinutes', $validatedCreditsAmount);
 			$s->bindValue(':CreditsMonthlyPrice', $validatedCreditsMonthlyPrice);
-			$s->bindValue(':CreditsMinutePrice', $validatedCreditsMinutePrice);
 			$s->bindValue(':CreditsHourPrice', $validatedCreditsHourPrice);
 			$s->execute();
 															
@@ -783,7 +714,6 @@ if(isset($_POST['edit']) AND $_POST['edit'] == 'Reset'){
 	$_SESSION['EditCreditsDescription'] = $original['CreditsDescription'];
 	$_SESSION['EditCreditsAmount'] = $original['CreditsGivenInMinutes'];
 	$_SESSION['EditCreditsMonthlyPrice'] = $original['CreditsMonthlyPrice'];
-	$_SESSION['EditCreditsMinutePrice'] = $original['CreditsMinutePrice'];
 	$_SESSION['EditCreditsHourPrice'] = $original['CreditsHourPrice'];
 	unset($original);
 	
@@ -819,7 +749,6 @@ try
 						cr.`description`								AS CreditsDescription,
 						cr.`minuteAmount`								AS CreditsGivenInMinutes,
 						cr.`monthlyPrice`								AS CreditsMonthlyPrice,
-						cr.`overCreditMinutePrice`						AS CreditsMinutePrice,
 						cr.`overCreditHourPrice`						AS CreditsHourPrice,
 						cr.`lastModified`								AS CreditsLastModified,
 						cr.`datetimeAdded`								AS DateTimeAdded,
@@ -873,11 +802,8 @@ foreach($result AS $row){
 	}
 	
 	// Format what over fee rate we're using (hourly or minute by minute)
-	$creditsMinutePrice = $row['CreditsMinutePrice'];
 	$creditsHourPrice = $row['CreditsHourPrice'];
-	if($creditsMinutePrice != NULL){
-		$creditsOverCreditsFee = convertToCurrency($creditsMinutePrice) . '/min';
-	} elseif($creditsHourPrice != NULL) {
+	if($creditsHourPrice != NULL){
 		$creditsOverCreditsFee = convertToCurrency($creditsHourPrice) . '/hour';
 	} else {
 		$creditsOverCreditsFee = "Error, not set.";

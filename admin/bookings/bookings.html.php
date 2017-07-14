@@ -110,6 +110,8 @@
 						value="<?php htmlout($booking['BookingStatus']); ?>">
 						<input type="hidden" name="Email" id="Email"
 						value="<?php htmlout($booking['email']); ?>">
+						<input type="hidden" name="sendEmail" id="sendEmail"
+						value="<?php htmlout($booking['sendEmail']); ?>">
 					</tr>
 				</form>
 			<?php endforeach; ?>
@@ -310,6 +312,7 @@
 						<input type="hidden" name="id" value="<?php htmlout($booking['id']); ?>">
 						<input type="hidden" name="UserInfo" id="UserInfo"
 						value="<?php htmlout($booking['UserInfo']); ?>">
+						<input type="hidden" name="UserID" value="<?php htmlout($booking['BookedUserID']); ?>">
 						<input type="hidden" name="MeetingInfo" id="MeetingInfo"
 						value="<?php htmlout($booking['MeetingInfo']); ?>">
 						<input type="hidden" name="BookingStatus" id="BookingStatus"

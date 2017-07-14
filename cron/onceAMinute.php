@@ -15,7 +15,8 @@ function updateCompletedBookings(){
 		$pdo = connect_to_db();
 		$sql = "UPDATE 	`booking`
 				SET		`actualEndDateTime` = `endDateTime`,
-						`cancellationCode` = NULL
+						`cancellationCode` = NULL,
+						`emailSent` = 1
 				WHERE 	CURRENT_TIMESTAMP > `endDateTime`
 				AND 	`actualEndDateTime` IS NULL
 				AND 	`dateTimeCancelled` IS NULL
@@ -42,39 +43,38 @@ function alertUserThatMeetingIsAboutToStart(){
 		$pdo = connect_to_db();
 		// Get all upcoming meetings that are TIME_LEFT_IN_MINUTES_UNTIL_MEETING_STARTS_BEFORE_SENDING_EMAIL minutes away from starting.
 		// That we haven't already alerted/sent email to
+		// And only for the users who want to receive emails
 		// Only try to alert a user up to 1 minute until meeting starts (in theory they should instantly get alerted)
 		// Only try to alert a user if the booking was made longer than MINIMUM_TIME_PASSED_IN_MINUTES_AFTER_CREATING_BOOKING_BEFORE_SENDING_EMAIL minutes ago
-		$sql = "SELECT 	(
-							SELECT 	`name`
-							FROM 	`meetingroom`
-							WHERE 	`meetingRoomID` = b.`meetingRoomID`
-						)							AS MeetingRoomName,			
-						(
-							SELECT 	`name`
-							FROM 	`company`
-							WHERE 	`companyID` = b.`companyID`
-						)							AS CompanyName,
-						(
-							SELECT 	`email`
-							FROM 	`user`
-							WHERE 	`userID` = b.`userID`
-						)							AS UserEmail,
-						b.`bookingID`				AS TheBookingID,
-						b.`dateTimeCreated`			AS DateCreated,
-						b.`startDateTime`			AS StartDate,
-						b.`endDateTime`				AS EndDate,
-						b.`displayName`				AS DisplayName,
-						b.`description`				AS BookingDescription,
-						b.`cancellationCode`		AS CancelCode
-				FROM	`booking` b
-				WHERE 	DATE_SUB(b.`startDateTime`, INTERVAL :bufferMinutes MINUTE) < CURRENT_TIMESTAMP
-				AND		DATE_SUB(b.`startDateTime`, INTERVAL 1 MINUTE) > CURRENT_TIMESTAMP
-				AND 	b.`dateTimeCancelled` IS NULL
-				AND 	b.`actualEndDateTime` IS NULL
-				AND		b.`cancellationCode` IS NOT NULL
-				AND 	DATE_ADD(b.`dateTimeCreated`, INTERVAL :waitMinutes MINUTE) < CURRENT_TIMESTAMP
-				AND		b.`emailSent` = 0
-				AND		b.`bookingID` <> 0";		
+		$sql = "SELECT 		(
+								SELECT 	`name`
+								FROM 	`meetingroom`
+								WHERE 	`meetingRoomID` = b.`meetingRoomID`
+							)							AS MeetingRoomName,			
+							(
+								SELECT 	`name`
+								FROM 	`company`
+								WHERE 	`companyID` = b.`companyID`
+							)							AS CompanyName,
+							u.`email`					AS UserEmail,
+							b.`bookingID`				AS TheBookingID,
+							b.`dateTimeCreated`			AS DateCreated,
+							b.`startDateTime`			AS StartDate,
+							b.`endDateTime`				AS EndDate,
+							b.`displayName`				AS DisplayName,
+							b.`description`				AS BookingDescription,
+							b.`cancellationCode`		AS CancelCode
+				FROM		`booking` b
+				INNER JOIN `user` u
+				WHERE 		DATE_SUB(b.`startDateTime`, INTERVAL :bufferMinutes MINUTE) < CURRENT_TIMESTAMP
+				AND			DATE_SUB(b.`startDateTime`, INTERVAL 1 MINUTE) > CURRENT_TIMESTAMP
+				AND 		b.`dateTimeCancelled` IS NULL
+				AND 		b.`actualEndDateTime` IS NULL
+				AND			b.`cancellationCode` IS NOT NULL
+				AND 		DATE_ADD(b.`dateTimeCreated`, INTERVAL :waitMinutes MINUTE) < CURRENT_TIMESTAMP
+				AND			b.`emailSent` = 0
+				AND			u.`sendEmail` = 1
+				AND			b.`bookingID` <> 0";		
 		$s = $pdo->preare($sql);
 		$s->bindValue(':bufferMinutes', TIME_LEFT_IN_MINUTES_UNTIL_MEETING_STARTS_BEFORE_SENDING_EMAIL)
 		$s->bindValue(':waitMinutes', MINIMUM_TIME_PASSED_IN_MINUTES_AFTER_CREATING_BOOKING_BEFORE_SENDING_EMAIL)

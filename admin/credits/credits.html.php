@@ -10,12 +10,16 @@
 	</head>
 	<body>
 		<h1>Manage Company Booking Credits</h1>
-		<?php if(isset($_SESSION['CreditsUserFeedback'])) : ?>
-			<p><b><?php htmlout($_SESSION['CreditsUserFeedback']); ?></b></p>
-			<?php unset($_SESSION['CreditsUserFeedback']); ?>
-		<?php endif; ?>
+		
+		<div class="left">
+			<?php if(isset($_SESSION['CreditsUserFeedback'])) : ?>
+				<span class="feedback"><b><?php htmlout($_SESSION['CreditsUserFeedback']); ?></b></span>
+				<?php unset($_SESSION['CreditsUserFeedback']); ?>
+			<?php endif; ?>
+		</div>
+		
 		<form action="" method="post">
-			<div>
+			<div class="right">
 				<?php if(isset($_SESSION['creditsEnableDelete']) AND $_SESSION['creditsEnableDelete']) : ?>
 					<input type="submit" name="action" value="Disable Delete">
 					<?php if(isset($_SESSION['creditsEnableDeleteUsedCredits']) AND $_SESSION['creditsEnableDeleteUsedCredits']) : ?>
@@ -28,8 +32,10 @@
 				<?php endif; ?>
 			</div>
 		<?php if($rowNum>0) :?>
-			<input type="submit" name="action" value="Add Credits">
-			<table id="creditstable">
+			<div class="left">
+				<input type="submit" name="action" value="Add Credits">
+			</div>
+			<table>
 				<caption>Available Credits</caption>
 				<tr>
 					<th colspan="6">Credits</th>
@@ -39,7 +45,7 @@
 				<tr>
 					<th>Name</th>
 					<th>Description</th>
-					<th>Monthly Free Booking Time</th>
+					<th>Monthly Given Booking Time</th>
 					<th>Monthly Subscription Cost</th>
 					<th>Over Credits Fee</th>
 					<th>Active for # Companies</th>
@@ -92,7 +98,9 @@
 			<tr><input type="submit" name="action" value="Add Credits"></tr>
 		<?php endif; ?>
 		</form>
-		<p><a href="..">Return to CMS home</a></p>
+		
+	<div class="left"><a href="..">Return to CMS home</a></div>
+	
 	<?php include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/logout.inc.html.php'; ?>
 	</body>
 </html>

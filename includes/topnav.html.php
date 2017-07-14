@@ -54,19 +54,21 @@ if(isset($_GET['meetingroom'])){
 		}	
 }
 ?>
-<?php if(!isset($_SESSION['DefaultMeetingRoomInfo'])) : ?>
-	<div class="topnav">
-		<ul>
-			<li><a href="#home">Home</a></li>
-			<li><a href="/meetingroom">Room Status</a></li>
-			<li><a href="/booking">Book Meeting</a></li>
-			<li><b id="Clock"></b></li>
-			<?php if(!isset($_SESSION['loggedIn']) AND !isset($_SESSION["DefaultMeetingRoomInfo"])) : ?>
-				<li style="float:right"><a href="/user/?register">Register</a></li>
-				<li style="float:right"><a href="<?php htmlout($loginForNav); ?>">Log In</a></li>
-			<?php else : ?>
-				<li style="float:right"><a href="<?php htmlout($logoutForNav); ?>">Log Out</a></li>
-			<?php endif; ?>
-		</ul>
-	</div>
-<?php endif; ?>
+<div class="topnav">
+	<ul>
+		<?php if(!isset($_SESSION["DefaultMeetingRoomInfo"])) : ?>
+		<li><a href="#home">Home</a></li>
+		<?php else : ?>
+		<li><a href="/booking/?meetingroom=<?php htmlout($_SESSION["DefaultMeetingRoomInfo"]["TheMeetingRoomID"]); ?>">Home</a></li>
+		<?php endif; ?>
+		<li><a href="/meetingroom">Meeting Rooms</a></li>
+		<li><a href="/booking">Booked Meetings</a></li>
+		<li><b id="Clock"></b></li>
+		<?php if(!isset($_SESSION['loggedIn']) AND !isset($_SESSION["DefaultMeetingRoomInfo"])) : ?>
+			<li style="float:right"><a href="/user/?register">Register</a></li>
+			<li style="float:right"><a href="<?php htmlout($loginForNav); ?>">Log In</a></li>
+		<?php elseif(isset($_SESSION['loggedIn'])) : ?>
+			<li style="float:right"><a href="<?php htmlout($logoutForNav); ?>">Log Out</a></li>
+		<?php endif; ?>
+	</ul>
+</div>

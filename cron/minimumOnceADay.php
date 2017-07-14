@@ -98,7 +98,6 @@ function updateBillingDatesForCompanies(){
 								c.`endDate`					AS EndDate,
 								cr.`minuteAmount`			AS CreditsGivenInMinutes,
 								cr.`monthlyPrice`			AS MonthlyPrice,
-								cr.`overCreditMinutePrice`	AS MinutePrice,
 								cr.`overCreditHourPrice`	AS HourPrice,
 								cc.`altMinuteAmount`		AS AlternativeAmount,
 								(
@@ -178,7 +177,6 @@ function updateBillingDatesForCompanies(){
 				$startDate = $insert['StartDate'];
 				$endDate = $insert['EndDate'];
 				$monthlyPrice = $insert['MonthlyPrice'];
-				$minutePrice = $insert['MinutePrice'];
 				$hourPrice = $insert['HourPrice'];
 				$bookingTimeUsedThisMonth = $insert['BookingTimeThisPeriod'];
 				$bookingTimeUsedThisMonthInMinutes = convertTimeToMinutes($bookingTimeUsedThisMonth);
@@ -204,7 +202,6 @@ function updateBillingDatesForCompanies(){
 									`endDate` = '" . $endDate . "',
 									`minuteAmount` = " . $creditsGivenInMinutes . ",
 									`monthlyPrice` = " . $monthlyPrice . ",
-									`overCreditMinutePrice` = " . $minutePrice . ",
 									`overCreditHourPrice` = " . $hourPrice;
 				if($setAsBilled){
 					$billingDescriptionInformation = 	"This period was 'Set As Billed' automatically at the end of the period due to there being no fees.\n" .
@@ -266,7 +263,8 @@ function updateBillingDatesForCompanies(){
 							FROM 		`user` u
 							INNER JOIN 	`accesslevel` a
 							WHERE		a.`AccessID` = u.`AccessID`
-							AND			a.`AccessName` = 'Admin'"
+							AND			a.`AccessName` = 'Admin'
+							AND			u.`sendAdminEmail` = 1"
 					$return = $pdo->query($sql);
 					$result = $return->fetchAll(PDO::FETCH_ASSOC);
 					
@@ -276,12 +274,15 @@ function updateBillingDatesForCompanies(){
 						}
 					}
 					
-					$mailResult = sendEmail($email, $emailSubject, $emailMessage);
-					
-					if(!$mailResult){
-						// TO-DO: What to do if the mail doesn't want to send?
-						// Store it somewhere and have another cron try to send emails?
-					}						
+					// Only try to send out email if there are any admins that have set they want them
+					if(isset($email)){
+						$mailResult = sendEmail($email, $emailSubject, $emailMessage);
+						
+						if(!$mailResult){
+							// TO-DO: FIX-ME: What to do if the mail doesn't want to send?
+							// Store it somewhere and have another cron try to send emails?
+						}
+					}					
 				}
 			} else {
 				// If commit failed we have to retry
