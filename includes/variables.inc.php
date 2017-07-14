@@ -51,4 +51,9 @@ define('SECONDS_BEFORE_REFRESHING_ADMIN_PAGES', 15);
 // Length variables
 define('MINIMUM_PASSWORD_LENGTH', 6);
 define('BOOKING_CODE_LENGTH', 6);
+
+// Numbers we use
+define('MAXIMUM_FLOAT_NUMBER', 65535);
+define('MAXIMUM_UNSIGNED_SMALLINT_NUMBER', 65535); // unsigned SMALLINT max number for MYSQL is 65535
+define('MAXIMUM_UNSIGNED_TINYINT_NUMBER', 255);	// unsigned TINYINT max number for MYSQL is 255
 ?>

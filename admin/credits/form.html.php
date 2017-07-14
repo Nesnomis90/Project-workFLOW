@@ -8,21 +8,15 @@
 		<link rel="stylesheet" type="text/css" href="/CSS/myCSS.css">
 		<title><?php htmlout($pageTitle); ?></title>
 		<style>
-			<?php if($button == 'Edit Credits') : ?>
-			label {
-				width: 320px;
-			}
-			<?php else : ?>
 			label {
 				width: 250px;
-			}				
-			<?php endif; ?>
+			}
 		</style>		
 	</head>
 	<body>
 		<h1><?php htmlout($pageTitle); ?></h1>
 		
-		<div>
+		<div class="left">
 			<?php if(isset($_SESSION['EditCreditsError'])) :?>
 				<span><b class="feedback"><?php htmlout($_SESSION['EditCreditsError']); ?></b></span>
 				<?php unset($_SESSION['EditCreditsError']); ?>
@@ -97,7 +91,7 @@
 			<div>
 				<label for="CreditsMonthlyPrice">Set New Monthly Subscription Price: </label>
 				<input type="number" name="CreditsMonthlyPrice" id="CreditsMonthlyPrice" 
-				min="0" max="2147483647" step="<?php htmlout(SET_CURRENCY_STEP_PRECISION); ?>" placeholder="e.g. 2150.50"
+				min="0" max="<?php htmlout(MAXIMUM_FLOAT_NUMBER); ?>" step="<?php htmlout(SET_CURRENCY_STEP_PRECISION); ?>" placeholder="e.g. 2150.50"
 				value="<?php htmlout($CreditsMonthlyPrice); ?>">
 			</div>
 			
@@ -111,7 +105,7 @@
 			<div>
 				<label for="CreditsHourPrice">Set New Over Credits Fee (per hour): </label>
 				<input type="number" name="CreditsHourPrice" id="CreditsHourPrice" 
-				min="0" max="2147483647" step="<?php htmlout(SET_CURRENCY_STEP_PRECISION); ?>" placeholder="e.g. 150.50"
+				min="0" max="<?php htmlout(MAXIMUM_FLOAT_NUMBER); ?>" step="<?php htmlout(SET_CURRENCY_STEP_PRECISION); ?>" placeholder="e.g. 150.50"
 				value="<?php htmlout($CreditsHourPrice); ?>">
 			</div>
 			

@@ -32,7 +32,9 @@
 				<?php endif; ?>
 			</div>
 		<?php if($rowNum>0) :?>
-			<input type="submit" name="action" value="Add Credits">
+			<div class="left">
+				<input type="submit" name="action" value="Add Credits">
+			</div>
 			<table>
 				<caption>Available Credits</caption>
 				<tr>
