@@ -96,24 +96,28 @@ function rememberAddBookingInputs(){
 
 // This is used on cancel and delete.
 function emailUserOnCancelledBooking(){
-	if(isset($_POST['sendEmail']) AND $_POST['sendEmail'] == 1){
-		$emailSubject = "Your meeting has been cancelled!";
+	if(isset($_POST['UserID']) AND $_POST['UserID'] != $_SESSION['LoggedInUserID']){
+		if(isset($_POST['sendEmail']) AND $_POST['sendEmail'] == 1){
+			$emailSubject = "Your meeting has been cancelled!";
 
-		$emailMessage = 
-		"A booked meeting has been cancelled by an Admin!\n" .
-		"The meeting was booked for the room " . $_POST['MeetingInfo'];
+			$emailMessage = 
+			"A booked meeting has been cancelled by an Admin!\n" .
+			"The meeting was booked for the room " . $_POST['MeetingInfo'];
+			
+			$email = $_POST['Email'];
+			
+			$mailResult = sendEmail($email, $emailSubject, $emailMessage);
+			
+			if(!$mailResult){
+				$_SESSION['BookingUserFeedback'] .= "\n\n[WARNING] System failed to send Email to user.";
+			}
 		
-		$email = $_POST['Email'];
-		
-		$mailResult = sendEmail($email, $emailSubject, $emailMessage);
-		
-		if(!$mailResult){
-			$_SESSION['BookingUserFeedback'] .= "\n\n[WARNING] System failed to send Email to user.";
+			$_SESSION['BookingUserFeedback'] .= "\nThis is the email msg we're sending out:\n$emailMessage.\nSent to email: $email."; // TO-DO: Remove after testing
+		} elseif(isset($_POST['sendEmail']) AND $_POST['sendEmail'] == 0) {
+			$_SESSION['BookingUserFeedback'] .= "\nUser does not want to be sent Email.";
 		}
-	
-		$_SESSION['BookingUserFeedback'] .= "\nThis is the email msg we're sending out:\n$emailMessage.\nSent to email: $email."; // TO-DO: Remove after testing
-	} elseif(isset($_POST['sendEmail']) AND $_POST['sendEmail'] == 0) {
-		$_SESSION['BookingUserFeedback'] .= "\nUser does not want to be sent Email.";
+	} else {
+		$_SESSION['BookingUserFeedback'] .= "\nDid not send an email because you cancelled your own meeting.";
 	}
 }
 
@@ -1321,7 +1325,7 @@ if(isset($_POST['edit']) AND $_POST['edit'] == "Finish Edit")
 	
 	// Send email to the user (if altered by someone else) that their booking has been changed
 		// TO-DO: This is UNTESTED since we don't have php.ini set up to actually send email
-	if($_POST['userID'] != $_SESSION['LoggedInUserID']){ // TO-DO: fix this. Sends email to the user that edits
+	if($_SESSION['EditBookingInfoArray']['sendEmail'] == 1 OR $originalValue['sendEmail'] == 1){
 		
 		// date display formatting
 		$NewStartDate = convertDatetimeToFormat($startDateTime, 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
@@ -1437,9 +1441,6 @@ if(isset($_POST['edit']) AND $_POST['edit'] == "Finish Edit")
 
 
 // EDIT CODE SNIPPET END //
-
-
-
 
 
 

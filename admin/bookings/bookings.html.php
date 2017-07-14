@@ -312,6 +312,7 @@
 						<input type="hidden" name="id" value="<?php htmlout($booking['id']); ?>">
 						<input type="hidden" name="UserInfo" id="UserInfo"
 						value="<?php htmlout($booking['UserInfo']); ?>">
+						<input type="hidden" name="UserID" value="<?php htmlout($booking['BookedUserID']); ?>">
 						<input type="hidden" name="MeetingInfo" id="MeetingInfo"
 						value="<?php htmlout($booking['MeetingInfo']); ?>">
 						<input type="hidden" name="BookingStatus" id="BookingStatus"
