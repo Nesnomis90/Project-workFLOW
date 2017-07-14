@@ -11,6 +11,12 @@
 			label {
 				width: 140px;
 			}
+			.period {
+				width: 210px;
+			}
+			.notBilled {
+				width: 300px;
+			}
 		</style>
 	</head>
 	<body>
@@ -32,17 +38,17 @@
 			<?php $totalCostForAllPeriodsSummedUp = 0; ?>
 			<?php foreach($periodsSummmedUp AS $period) : ?>
 				<fieldset><legend><b><?php htmlout($period['StartDate'] . " - " . $period['EndDate']); ?></b></legend>
-					<span>Credits Given: <b><?php htmlout($period['CreditsGiven']); ?></b></span><br />
-					<span>Booking Time Charged: <b><?php htmlout($period['BookingTimeCharged']); ?></b></span><br />
-					<span>Excess Booking Time: <b><?php htmlout($period['OverCreditsTimeExact']); ?></b></span><br />
-					<span>Excess Time Charged: <b><?php htmlout($period['OverCreditsTimeCharged']); ?></b></span><br />
-					<span>Cost (Subscription + Excess Booking Time): <b><?php htmlout($period['TotalBookingCostThisMonthAsParts']); ?></b></span><br />
-					<span>Cost (Total): <b style="color:red"><?php htmlout($period['TotalBookingCostThisMonth']); ?></b></span>
+					<label class="notBilled">Credits Given:</label><span><b><?php htmlout($period['CreditsGiven']); ?></b></span>
+					<label class="notBilled">Booking Time Charged:</label><span><b><?php htmlout($period['BookingTimeCharged']); ?></b></span>
+					<label class="notBilled">Excess Booking Time:</label><span><b><?php htmlout($period['OverCreditsTimeExact']); ?></b></span>
+					<label class="notBilled">Excess Time Charged:</label><span><b><?php htmlout($period['OverCreditsTimeCharged']); ?></b></span>
+					<label class="notBilled">Cost (Subscription + Excess Booking Time):</label><span><b><?php htmlout($period['TotalBookingCostThisMonthAsParts']); ?></b></span>
+					<label class="notBilled">Cost (Total):</label><span><b style="color:red"><?php htmlout($period['TotalBookingCostThisMonth']); ?></b></span>
 					<?php $totalCostForAllPeriodsSummedUp += $period['TotalBookingCostThisMonthJustNumber']; ?>
 				</fieldset>
 			<?php endforeach; ?>
-				<div>
-					<span>Total Cost All Periods: <b style="color:red"><?php htmlout(convertToCurrency($totalCostForAllPeriodsSummedUp)); ?></b></span>
+				<div style="position: relative; left: 15px;">
+					<label class="notBilled">Total Cost All Periods:</label><span><b style="color:red"><?php htmlout(convertToCurrency($totalCostForAllPeriodsSummedUp)); ?></b></span>
 				</div>
 			</fieldset>
 		<?php endif; ?>
@@ -88,11 +94,11 @@
 				<fieldset><legend>Completed Bookings during <b><?php htmlout($BillingPeriod); ?></b></legend>
 					<?php foreach($bookingHistory AS $row) : ?>
 						<fieldset><legend><b>Booking #<?php htmlout($bookingNumberThisPeriod); ?></b></legend>
-								<label>User:</label><span><b><?php htmlout($row['UserInformation']); ?></b></span>
-								<label>Booked the meeting room:</label><span><b><?php htmlout($row['MeetingRoomName']); ?></b></span>
-								<label>For the period of:</label><span><b><?php htmlout($row['BookingPeriod']); ?></b></span>
-								<label>Using a total time of:</label><span><b><?php htmlout($row['BookingTimeUsed']); ?></b></span>
-								<label>Time used in price calculation:</label><span><b><?php htmlout($row['BookingTimeCharged']); ?></b></span>
+								<label class="period">User:</label><span><b><?php htmlout($row['UserInformation']); ?></b></span>
+								<label class="period">Booked the meeting room:</label><span><b><?php htmlout($row['MeetingRoomName']); ?></b></span>
+								<label class="period">For the period of:</label><span><b><?php htmlout($row['BookingPeriod']); ?></b></span>
+								<label class="period">Using a total time of:</label><span><b><?php htmlout($row['BookingTimeUsed']); ?></b></span>
+								<label class="period">Time used in price calculation:</label><span><b><?php htmlout($row['BookingTimeCharged']); ?></b></span>
 						</fieldset>
 						<?php $bookingNumberThisPeriod += 1; ?>
 					<?php endforeach; ?>

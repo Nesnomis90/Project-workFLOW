@@ -198,6 +198,37 @@ GROUP BY 	cr.`CreditsID`
 ORDER BY	OrderByDate
 DESC;
 
+SELECT 		(
+				SELECT 	`name`
+				FROM 	`meetingroom`
+				WHERE 	`meetingRoomID` = b.`meetingRoomID`
+			)							AS MeetingRoomName,			
+			(
+				SELECT 	`name`
+				FROM 	`company`
+				WHERE 	`companyID` = b.`companyID`
+			)							AS CompanyName,
+			u.`email`					AS UserEmail,
+			b.`bookingID`				AS TheBookingID,
+			b.`dateTimeCreated`			AS DateCreated,
+			b.`startDateTime`			AS StartDate,
+			b.`endDateTime`				AS EndDate,
+			b.`displayName`				AS DisplayName,
+			b.`description`				AS BookingDescription,
+			b.`cancellationCode`		AS CancelCode
+FROM		`booking` b
+INNER JOIN `user` u
+ON 			b.`userID` = u.`userID`
+WHERE 		DATE_SUB(b.`startDateTime`, INTERVAL 30 MINUTE) < CURRENT_TIMESTAMP
+AND			DATE_SUB(b.`startDateTime`, INTERVAL 1 MINUTE) > CURRENT_TIMESTAMP
+AND 		b.`dateTimeCancelled` IS NULL
+AND 		b.`actualEndDateTime` IS NULL
+AND			b.`cancellationCode` IS NOT NULL
+AND 		DATE_ADD(b.`dateTimeCreated`, INTERVAL 0 MINUTE) < CURRENT_TIMESTAMP
+AND			b.`emailSent` = 0
+AND			u.`sendEmail` = 1
+AND			b.`bookingID` <> 0;
+
 SELECT 	(
 			SELECT 	`name`
 			FROM 	`meetingroom`

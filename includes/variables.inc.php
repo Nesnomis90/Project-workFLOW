@@ -33,6 +33,7 @@ define('DATE_DEFAULT_TIMEZONE', 'Europe/Oslo');
 define('SET_CURRENCY', 'NOK');
 define('SET_CURRENCY_SYMBOL', '');
 define('SET_CURRENCY_DECIMAL_PRECISION', '2');
+define('SET_CURRENCY_STEP_PRECISION', '0.01');
 
 // Timing variables
 	// variables used to validate code, handle events (minutes)
