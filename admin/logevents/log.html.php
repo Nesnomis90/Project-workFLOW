@@ -23,19 +23,19 @@
 		<form action="" method="post">
 			<fieldset><legend>Manage Log Events</legend>
 			
-			<div>
+			<div class="left">
 				<?php if(isset($_SESSION['LogEventUserFeedback'])) : ?>
 					<span><b class="feedback"><?php htmlout($_SESSION['LogEventUserFeedback']); ?></b></span>
 					<?php unset($_SESSION['LogEventUserFeedback']); ?>
 				<?php endif; ?>	
 			</div>
 			
-			<div>
+			<div class="left">
 				<fieldset><legend><b>Limit logs by amount: </b></legend>
 					<label for="logsToShow">Maximum log events to display: </label>
 					<input type="number" name="logsToShow" min="10" max="1000"
 					value="<?php htmlout($logLimit); ?>">
-					<input type="submit" name="action" value="Set New Maximum"><br />
+					<input type="submit" name="action" value="Set New Maximum">
 					<label for="currentLogsDisplayed">Logs currently being displayed: </label>
 					<?php if (isset($rowNum)) : ?>
 						<span><b><?php htmlout($rowNum); ?></b></span>
@@ -45,7 +45,7 @@
 				</fieldset>
 			</div>
 			
-			<div>
+			<div class="left">
 				<fieldset><legend><b>Limit logs by category: </b></legend>
 					<label class="checkboxlabel"><input type="checkbox" name="searchAll" value="All" <?php htmlout($checkAll); ?>>All</label><br />
 					<?php foreach($checkboxes AS $checkbox) : ?>
@@ -74,7 +74,7 @@
 				</fieldset>
 			</div>
 
-			<div>
+			<div class="left">
 				<fieldset><legend><b>Limit logs displayed by date: </b></legend>
 				
 					<?php if(isset($displayValidatedStartDate) AND isset($displayValidatedEndDate)) : ?>
@@ -93,7 +93,7 @@
 					
 					<label for="filterStartDate">Earliest date to display logs from: </label>
 					<input type="text" name="filterStartDate" 
-					value="<?php htmlout($validatedStartDate); ?>"><br />
+					value="<?php htmlout($validatedStartDate); ?>">
 					<label for="filterEndDate">Latest date to display logs from: </label>
 					<input type="text" name="filterEndDate"
 					value="<?php htmlout($validatedEndDate); ?>">
@@ -162,7 +162,8 @@
 			<?php endif; ?>
 		</table>
 		
-	<p><a href="..">Return to CMS home</a></p>
+	<div class="left"><a href="..">Return to CMS home</a></div>
+	
 	<?php include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/logout.inc.html.php'; ?>
 	</body>
 </html>
