@@ -1314,7 +1314,7 @@ if (isset($_POST['add']) AND $_POST['add'] == "Add Booking")
 		}
 		
 		$_SESSION['normalBookingFeedback'] .= "\nThis is the email msg we're sending out:\n$emailMessage.\nSent to email: $email."; // TO-DO: Remove after testing	
-	} elseif($info['sendEmail'] == 0)){
+	} elseif($info['sendEmail'] == 0){
 		$_SESSION['normalBookingFeedback'] .= "\nUser did not want to get sent Emails.";
 	}
 	// Booking a new meeting is done. Reset all connected sessions.

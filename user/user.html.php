@@ -7,7 +7,12 @@
 		<meta charset="utf-8">
 		<link rel="stylesheet" type="text/css" href="/CSS/myCSS.css">
 		<script src="/scripts/myFunctions.js"></script>	
-		<?php if(isset($_SESSION['loggedIn']) : ?>
+		<style>
+			label {
+				width: 210px;
+			}
+		</style>
+		<?php if(isset($_SESSION['loggedIn'])) : ?>
 			<title>Your User Information</title>
 		<?php else : ?>
 			<title>User Information</title>
@@ -16,7 +21,7 @@
 	<body>
 		<?php include_once $_SERVER['DOCUMENT_ROOT'] .'/includes/topnav.html.php'; ?>
 		
-		<?php if(isset($_SESSION['loggedIn']) : ?>
+		<?php if(isset($_SESSION['loggedIn'])) : ?>
 			<h1>Your User Information</h1>
 		<?php else : ?>
 			<h1>User Information</h1>
@@ -29,7 +34,7 @@
 			<?php endif; ?>
 		</div>
 
-		<?php if(isset($_SESSION['loggedIn']) : ?>
+		<?php if(isset($_SESSION['loggedIn'])) : ?>
 			<div class="left">
 				<fieldset><legend>Your User Information</legend>
 					<div>
@@ -52,15 +57,24 @@
 						<label>Default Booking Description: </label>
 						<span><?php htmlout($originalBookingDescription); ?></span>
 					</div>
-					<?php if(): ?>
+					<?php if(isset($userCanHaveABookingCode)) : ?>
 						<div>
 							<label>Booking Code: </label>
 							<span><?php htmlout($bookingCodeStatus); ?></span>
-							<?php if(!isset()) : ?>
+							<?php if(isset($userHasABookingCode) AND !isset($showBookingCode)) : ?>
 								<a href="?revealCode">(Click to see your code)</a>
-							<?php else() : ?>
-								
+							<?php elseif(isset($userHasABookingCode) AND isset($showBookingCode)) : ?>
+								<span><b><?php htmlout($showBookingCode); ?></b></span>
 							<?php endif; ?>
+						</div>
+						<div>
+							<?php if(isset($userHasABookingCode)) : ?>
+								<label>Set Your Booking Code: </label>
+							<?php else : ?>
+								<label>Set A New Booking Code: </label>
+							<?php endif; ?>
+							<input type="number" name="bookingCode" min="1" max="<?php htmlout(pow(10,BOOKING_CODE_LENGTH)-1); ?>"
+							value="<?php htmlout($bookingCode); ?>">
 						</div>
 					<?php endif; ?>
 				</fieldset>
