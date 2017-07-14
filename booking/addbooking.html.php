@@ -13,12 +13,9 @@
 			}
 		</style>
 	</head>
-	<body onload="startTime()">
-	
-		<div id="ClockPlacement">
-			<b id="Clock"></b>
-		</div>
-
+	<body>
+		<?php include_once $_SERVER['DOCUMENT_ROOT'] .'/includes/topnav.html.php'; ?>
+		
 		<h1>Book A New Meeting</h1>
 		
 		<div class="left">

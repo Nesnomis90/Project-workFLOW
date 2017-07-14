@@ -12,24 +12,24 @@
 	<body onload="startTime()">
 		<?php include_once $_SERVER['DOCUMENT_ROOT'] .'/includes/topnav.html.php'; ?>
 		
-		<div id="feedback">
-		<?php if(isset($_SESSION['normalBookingFeedback'])) : ?>
-			<span><b id="feedback"><?php htmlout($_SESSION['normalBookingFeedback']); ?></b></span>
-			<?php unset($_SESSION['normalBookingFeedback']); ?>
-		<?php endif; ?>
+		<div class="left">
+			<?php if(isset($_SESSION['normalBookingFeedback'])) : ?>
+				<span><b class="feedback"><?php htmlout($_SESSION['normalBookingFeedback']); ?></b></span>
+				<?php unset($_SESSION['normalBookingFeedback']); ?>
+			<?php endif; ?>
 		</div>
-		
+
 		<?php if(isset($_GET['cancellationcode'])) : ?>
 			<h1>Cancel Your Booking!</h1>
 		<?php elseif(isset($_SESSION['loggedIn']) AND $_SESSION['loggedIn']) : ?>
 			<h1>Booking Information Overview</h1>
-			
+
 			<?php if(isset($_SESSION['LoggedInUserName'])) : ?>
 				<h3>Logged in as <?php htmlout($_SESSION['LoggedInUserName']); ?>.</h3>
 			<?php else : ?>
 				<h3>Logged in</h3>
 			<?php endif; ?>
-			
+
 			<form action="" method="post">
 				<div class="left">
 					<input type="submit" name="action" value="Create Meeting">

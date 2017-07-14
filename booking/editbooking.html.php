@@ -8,42 +8,55 @@
 		<title>Edit Booking</title>
 	</head>
 	<body>
+	
+		<?php include_once $_SERVER['DOCUMENT_ROOT'] .'/includes/topnav.html.php'; ?>
+		
 		<h1>Edit Booking</h1>
-		<?php if(isset($_SESSION['EditCreateBookingError'])) : ?>
-			<p><b><?php htmlout($_SESSION['EditCreateBookingError']); ?></b></p>
-			<?php unset($_SESSION['EditCreateBookingError']); ?>
-		<?php endif; ?>
+		
+		<div class="left">
+			<?php if(isset($_SESSION['EditCreateBookingError'])) : ?>
+				<span><b class="feedback"><?php htmlout($_SESSION['EditCreateBookingError']); ?></b></span>
+				<?php unset($_SESSION['EditCreateBookingError']); ?>
+			<?php endif; ?>
+		</div>
+		
 		<form action="" method="post">
 			<div>
 				<label for="userInformation">Welcome </label>
-				<b><?php htmlout($_SESSION['EditCreateBookingLoggedInUserInformation']); ?></b>
-			</div>		
+				<span><b><?php htmlout($_SESSION['EditCreateBookingLoggedInUserInformation']); ?></b></span>
+			</div>
+			
 			<div>
 				<label for="originalMeetingRoomName">Booked Meeting Room: </label>
-				<b><?php htmlout($originalMeetingRoomName); ?></b>
+				<b><?php htmlout($originalMeetingRoomName); ?></b></span>
 			</div>
+
 			<div>
 				<label for="originalStartDateTime">Booked Start Time: </label>
-				<b><?php htmlout($originalStartDateTime); ?></b>
+				<span><b><?php htmlout($originalStartDateTime); ?></b></span>
 				<input type="hidden" name="startDateTime" value="<?php htmlout($originalStartDateTime); ?>">
 			</div>
+
 			<div>	
 				<label for="originalEndDateTime">Booked End Time: </label>
-				<b><?php htmlout($originalEndDateTime); ?></b>
+				<span><b><?php htmlout($originalEndDateTime); ?></b></span>
 				<input type="hidden" name="endDateTime" value="<?php htmlout($originalEndDateTime); ?>">
 			</div>
+
 			<div>
 				<label for="originalSelectedUser">Booked For User: </label>
-				<b><?php htmlout($originalUserInformation); ?></b>
+				<span><b><?php htmlout($originalUserInformation); ?></b></span>
 			</div>
+
 			<div>
 				<label for="originalCompanyInBooking">Booked for Company: </label>
 				<?php if(isset($originalCompanyName)) :?>
-					<b><?php htmlout($originalCompanyName); ?></b>
+					<span><b><?php htmlout($originalCompanyName); ?></b></span>
 				<?php else : ?>
-					<b>This booking had no company assigned.</b>
+					<span><b>This booking had no company assigned.</b></span>
 				<?php endif; ?>
 			</div>
+
 			<div>
 				<label for="companyID">Set New Company: </label>
 				<?php if(	isset($_SESSION['EditCreateBookingDisplayCompanySelect']) AND 
@@ -60,16 +73,16 @@
 						</select>
 						<input type="submit" name="edit" value="Select This Company">
 					<?php else : ?>
-						<b><?php htmlout($companyName); ?></b>
+						<span><b><?php htmlout($companyName); ?></b></span>
 						<input type="hidden" name="companyID" id="companyID" 
 						value="<?php htmlout($companyID); ?>">
 						<input type="submit" name="edit" value="Change Company">
 					<?php endif; ?>
 				<?php else : ?>
 					<?php if(isset($company)) : ?>
-						<b>You are only connected to one company: <?php htmlout($companyName); ?></b>
+						<span><b>You are only connected to one company: <?php htmlout($companyName); ?></b></span>
 					<?php else : ?>
-						<b>You are not connected with a company.</b>
+						<span><b>You are not connected with a company.</b></span>
 					<?php endif; ?>
 					<input type="hidden" name="companyID" id="companyID" 
 					value="<?php htmlout($companyID); ?>">
@@ -77,13 +90,13 @@
 			</div>
 			<div>
 				<label for="originalDisplayName">Booked Display Name: </label>
-				<b>
+				<span><b>
 					<?php if($originalDisplayName == "") : ?>
-						<b>This booking has no Display Name set.</b>
+						This booking has no Display Name set.
 					<?php else : ?>
 						<?php htmlout($originalDisplayName); ?>
 					<?php endif; ?>
-				</b>
+				</b></span>
 			</div>
 			<div>
 				<label for="displayName">Set New Display Name: </label>
@@ -93,13 +106,13 @@
 			</div>
 			<div>
 				<label for="originalBookingDescription">Booked Description: </label>
-				<b>
+				<span><b>
 					<?php if($originalBookingDescription == "") : ?>
-						<b>This booking has no Booking Description set.</b>
+						This booking has no Booking Description set.
 					<?php else : ?>
 						<?php htmlout($originalBookingDescription); ?>
 					<?php endif; ?>
-				</b>
+				</b></span>
 			</div>
 			<div>
 				<label class="description" for="description">Set New Booking Description: </label>
@@ -113,7 +126,7 @@
 				<input type="submit" name="edit" value="Go Back">
 				<?php if(isset($_SESSION['EditCreateBookingSelectACompany'])) : ?>
 					<input type="submit" name="disabled" value="Finish Edit" disabled>
-					<b>You need to select the company you want before you can finish editing.</b>				
+					<span><b>You need to select the company you want before you can finish editing.</b></span>			
 				<?php else : ?>
 					<input type="submit" name="edit" value="Finish Edit">
 				<?php endif; ?>

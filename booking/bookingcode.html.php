@@ -14,6 +14,8 @@
 		</style>
 	</head>
 	<body>
+		<?php include_once $_SERVER['DOCUMENT_ROOT'] .'/includes/topnav.html.php'; ?>
+	
 		<h1>Confirm your identity with your Booking Code!</h1>
 		
 		<div class="left">
