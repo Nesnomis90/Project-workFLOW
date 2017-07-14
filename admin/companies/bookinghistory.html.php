@@ -49,9 +49,9 @@
 		
 		<?php if($rightNow) : ?>
 			<h2>Billing Status: Period still in progress.</h2>
-		<?php elseif(!isset($periodHasBeenBilled) OR $periodHasBeenBilled == 0) : ?>
+		<?php elseif(isset($bookingHistory) AND sizeOf($bookingHistory) > 1 AND (!isset($periodHasBeenBilled) OR $periodHasBeenBilled == 0)) : ?>
 			<h2>Billing Status: This booking has <b style="color:red">NOT BEEN BILLED</b>.</h2>
-		<?php elseif($periodHasBeenBilled == 1) : ?>
+		<?php elseif(isset($bookingHistory) AND sizeOf($bookingHistory) > 1 AND isset($periodHasBeenBilled) AND $periodHasBeenBilled == 1) : ?>
 			<h2>Billing Status: This booking has <b style="color:green">BEEN BILLED</b>.</h2><br />
 		<?php endif; ?>
 		
@@ -88,18 +88,18 @@
 				<fieldset><legend>Completed Bookings during <b><?php htmlout($BillingPeriod); ?></b></legend>
 					<?php foreach($bookingHistory AS $row) : ?>
 						<fieldset><legend><b>Booking #<?php htmlout($bookingNumberThisPeriod); ?></b></legend>
-								User: <b><?php htmlout($row['UserInformation']); ?></b><br />
-								Booked the meeting room: <b><?php htmlout($row['MeetingRoomName']); ?></b><br />
-								For the period of: <b><?php htmlout($row['BookingPeriod']); ?></b><br />
-								Using a total time of: <b><?php htmlout($row['BookingTimeUsed']); ?></b><br />
-								Time used in price calculation: <b><?php htmlout($row['BookingTimeCharged']); ?></b><br />
+								<label>User:</label><span><b><?php htmlout($row['UserInformation']); ?></b></span>
+								<label>Booked the meeting room:</label><span><b><?php htmlout($row['MeetingRoomName']); ?></b></span>
+								<label>For the period of:</label><span><b><?php htmlout($row['BookingPeriod']); ?></b></span>
+								<label>Using a total time of:</label><span><b><?php htmlout($row['BookingTimeUsed']); ?></b></span>
+								<label>Time used in price calculation:</label><span><b><?php htmlout($row['BookingTimeCharged']); ?></b></span>
 						</fieldset>
 						<?php $bookingNumberThisPeriod += 1; ?>
 					<?php endforeach; ?>
 			<?php elseif($rightNow) : ?>
 				<span><b>There are no bookings completed so far this period.</b></span>
 			<?php else : ?>
-				<span><b>There were no bookings completed this period.</b></span>
+				<span><b>There were no bookings completed this period (<?php htmlout($BillingPeriod); ?>).</b></span>
 			<?php endif; ?>
 
 			<?php if($rightNow) : ?>
@@ -108,9 +108,9 @@
 				<span>Producing a total of actual booking time used so far this period: <b><?php htmlout($displayTotalBookingTimeThisPeriod); ?></b></span><br />
 				<span>The total booking time charged with after including minimum booking length: <b><?php htmlout($displayTotalBookingTimeUsedInPriceCalculationsThisPeriod); ?></b></span><br />
 			<?php else : ?>
-				<?php if(!isset($periodHasBeenBilled) OR $periodHasBeenBilled == 0) : ?>
+				<?php if(!isset($periodHasBeenBilled) OR (isset($periodHasBeenBilled) AND $periodHasBeenBilled == 0)) : ?>
 					<h2>Billing Status: This booking has <b style="color:red">NOT BEEN BILLED</b>.</h2>
-				<?php elseif($periodHasBeenBilled == 1) : ?>
+				<?php elseif(isset($periodHasBeenBilled) AND $periodHasBeenBilled == 1) : ?>
 					<h2>Billing Status: This booking has <b style="color:green">BEEN BILLED</b>.</h2><br />
 				<?php endif; ?>
 				<span>Producing a total booking time used this period: <b><?php htmlout($displayTotalBookingTimeThisPeriod); ?></b></span><br />

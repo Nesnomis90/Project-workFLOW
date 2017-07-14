@@ -41,7 +41,7 @@ function sumUpUnbilledPeriods($pdo, $companyID){
 	$aboveThisManySecondsToCount = BOOKING_DURATION_IN_MINUTES_USED_BEFORE_INCLUDING_IN_PRICE_CALCULATIONS * 60; // e.g. 1min = 60s
 	$roundDownToTheClosestMinuteNumberInSeconds = ROUND_SUMMED_BOOKING_TIME_CHARGED_FOR_PERIOD_DOWN_TO_THIS_CLOSEST_MINUTE_AMOUNT * 60; // e.g. 15min = 900s
 	if(isset($roundDownToTheClosestMinuteNumberInSeconds) AND $roundDownToTheClosestMinuteNumberInSeconds != 0){
-			// Rounds down to the closest 15 minutes now (on finished summation per period)
+			// Rounds down to the closest 15 minutes (on finished summation per period)
 		$sql = "SELECT		StartDate, 
 							EndDate,
 							CreditSubscriptionMonthlyPrice,
@@ -481,6 +481,7 @@ function calculatePeriodInformation($pdo, $companyID, $BillingStart, $BillingEnd
 			$actualTimeOverCreditsInMinutes = $totalBookingTimeUsedInPriceCalculations - $companyMinuteCredits;
 		
 			// Let's calculate cost
+				// Check if user has set that price should be rounded down to x minutes (e.g. down to closest 15 minute)
 			$selectedMinuteAmount = ROUND_SUMMED_BOOKING_TIME_CHARGED_FOR_PERIOD_DOWN_TO_THIS_CLOSEST_MINUTE_AMOUNT;
 			if(isset($selectedMinuteAmount) AND $selectedMinuteAmount != 0){
 				// Adapt hourprice into correct piece of our ROUND_SUMMED_BOOKING_TIME_CHARGED_FOR_PERIOD_DOWN_TO_THIS_CLOSEST_MINUTE_AMOUNT (e.g. 15 min)
@@ -529,6 +530,9 @@ function calculatePeriodInformation($pdo, $companyID, $BillingStart, $BillingEnd
 	}
 	if(!isset($displayOverFeeCostThisMonth)){
 		$displayOverFeeCostThisMonth = "";
+	}
+	if(!isset($displayTotalBookingTimeChargedWithAfterCredits)){
+		$displayTotalBookingTimeChargedWithAfterCredits = "N/A";
 	}
 	if(!isset($bookingHistory)){
 		$bookingHistory = array();
@@ -831,6 +835,13 @@ if (isset($_POST['history']) AND $_POST['history'] == "Next Period"){
 				$periodHasBeenBilled, $billingDescription, $displayTotalBookingTimeUsedInPriceCalculationsThisPeriod, 
 				$displayTotalBookingTimeChargedWithAfterCredits)
 		= calculatePeriodInformation($pdo, $companyID, $BillingStart, $BillingEnd, $rightNow);
+
+		// Sum up periods that are not set as billed
+		$periodsSummmedUp = sumUpUnbilledPeriods($pdo, $companyID);
+		if($periodsSummmedUp === FALSE){
+			// No periods not set as billed
+			unset($periodsSummmedUp);
+		}
 		
 		$pdo = NULL;
 	}
@@ -913,7 +924,14 @@ if (	(isset($_POST['history']) AND $_POST['history'] == "Previous Period") OR
 				$periodHasBeenBilled, $billingDescription, $displayTotalBookingTimeUsedInPriceCalculationsThisPeriod, 
 				$displayTotalBookingTimeChargedWithAfterCredits)
 		= calculatePeriodInformation($pdo, $companyID, $BillingStart, $BillingEnd, $rightNow);
-		
+	
+		// Sum up periods that are not set as billed
+		$periodsSummmedUp = sumUpUnbilledPeriods($pdo, $companyID);
+		if($periodsSummmedUp === FALSE){
+			// No periods not set as billed
+			unset($periodsSummmedUp);
+		}
+	
 		$pdo = NULL;
 	}
 	catch (PDOException $e)
