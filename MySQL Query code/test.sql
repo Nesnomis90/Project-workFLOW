@@ -333,11 +333,11 @@ SELECT 		b.`bookingID`									AS TheBookingID,
             )												AS UserEmail,
             IF(b.`userID` IS NULL, NULL,
 				(
-					SELECT 	`email`
+					SELECT 	`sendEmail`
 					FROM 	`user`
 					WHERE 	`userID` = TheUserID
 				)
-            )												AS UserEmail,
+            )												AS sendEmail,
             IF(b.`userID` IS NULL, NULL,
 				(
 					SELECT 	`displayName`
