@@ -14,7 +14,7 @@
 			.checkboxlabel{
 				float: none;
 				clear: none;
-				width: auto;
+				width: 200px;
 			}
 		</style>
 	</head>
