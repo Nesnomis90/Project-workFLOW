@@ -108,12 +108,12 @@ function emailUserOnCancelledBooking(){
 		$mailResult = sendEmail($email, $emailSubject, $emailMessage);
 		
 		if(!$mailResult){
-			$_SESSION['BookingUserFeedback'] .= " [WARNING] System failed to send Email to user.";
+			$_SESSION['BookingUserFeedback'] .= "\n\n[WARNING] System failed to send Email to user.";
 		}
 	
-		$_SESSION['BookingUserFeedback'] .= " This is the email msg we're sending out: $emailMessage. Sent to email: $email."; // TO-DO: Remove after testing
+		$_SESSION['BookingUserFeedback'] .= "\nThis is the email msg we're sending out:\n$emailMessage.\nSent to email: $email."; // TO-DO: Remove after testing
 	} elseif(isset($_POST['sendEmail']) AND $_POST['sendEmail'] == 0) {
-		$_SESSION['BookingUserFeedback'] .= " User does not want to be sent Email.";
+		$_SESSION['BookingUserFeedback'] .= "\nUser does not want to be sent Email.";
 	}
 }
 
@@ -685,6 +685,7 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR
 				$row['UserLastname'] = $user['lastName'];
 				$row['UserFirstname'] = $user['firstName'];
 				$row['UserEmail'] = $user['email'];
+				$row['sendEmail'] = $user['sendEmail'];
 				
 				$_SESSION['EditBookingDefaultDisplayNameForNewUser'] = $user['displayName'];
 				$_SESSION['EditBookingDefaultBookingDescriptionForNewUser'] = $user['bookingDescription'];
@@ -1320,7 +1321,7 @@ if(isset($_POST['edit']) AND $_POST['edit'] == "Finish Edit")
 	
 	// Send email to the user (if altered by someone else) that their booking has been changed
 		// TO-DO: This is UNTESTED since we don't have php.ini set up to actually send email
-	if($_POST['userID'] != $_SESSION['LoggedInUserID']){
+	if($_POST['userID'] != $_SESSION['LoggedInUserID']){ // TO-DO: fix this. Sends email to the user that edits
 		
 		// date display formatting
 		$NewStartDate = convertDatetimeToFormat($startDateTime, 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
@@ -1341,7 +1342,7 @@ if(isset($_POST['edit']) AND $_POST['edit'] == "Finish Edit")
 		} else {
 			$newMeetingRoomName = $oldMeetingRoomName;
 		}
-'sendEmail' => $row['sendEmail']
+
 		// Email information	
 		if($newUser){
 			
@@ -1364,13 +1365,11 @@ if(isset($_POST['edit']) AND $_POST['edit'] == "Finish Edit")
 				$mailResult = sendEmail($email, $emailSubject, $emailMessage);
 				
 				if(!$mailResult){
-					$_SESSION['BookingUserFeedback'] .= " [WARNING] System failed to send Email to user.";
+					$_SESSION['BookingUserFeedback'] .= "\n\n[WARNING] System failed to send Email to user.";
 				}
 				
-				$_SESSION['BookingUserFeedback'] .= " This is the email msg we're sending out: $emailMessage. Sent to email: $email."; // TO-DO: Remove after testing				
+				$_SESSION['BookingUserFeedback'] .= "\nThis is the email msg we're sending out:\n$emailMessage.\nSent to email: $email."; // TO-DO: Remove after testing				
 			}
-
-			
 
 			if($originalValue['sendEmail'] == 1){
 				// Send information to old user that their meeting has been cancelled/transferred
@@ -1382,19 +1381,19 @@ if(isset($_POST['edit']) AND $_POST['edit'] == "Finish Edit")
 				"Meeting Room: " . $oldMeetingRoomName . ".\n" . 
 				"Start Time: " . $OldStartDate . ".\n" .
 				"End Time: " . $OldEndDate . ".\n" .
-				"Is no longer active.";
+				"Is no longer active";
 				
 				$email = $originalValue['UserEmail'];
 				
 				$mailResult = sendEmail($email, $emailSubject, $emailMessage);
 				
 				if(!$mailResult){
-					$_SESSION['BookingUserFeedback'] .= " [WARNING] System failed to send Email to user.";
+					$_SESSION['BookingUserFeedback'] .= "\n\n[WARNING] System failed to send Email to user.";
 				}
 				
-				$_SESSION['BookingUserFeedback'] .= " This is the email msg we're sending out: $emailMessage. Sent to email: $email."; // TO-DO: Remove after testing				
+				$_SESSION['BookingUserFeedback'] .= "\nThis is the email msg we're sending out:\n$emailMessage.\nSent to email: $email."; // TO-DO: Remove after testing				
 			} else {
-				$_SESSION['BookingUserFeedback'] .= "User does not want to be sent an Email.";
+				$_SESSION['BookingUserFeedback'] .= "\nUser does not want to be sent an Email.";
 			}
 		} else {
 			if($originalValue['sendEmail'] == 1){
@@ -1419,16 +1418,14 @@ if(isset($_POST['edit']) AND $_POST['edit'] == "Finish Edit")
 				$mailResult = sendEmail($email, $emailSubject, $emailMessage);
 				
 				if(!$mailResult){
-					$_SESSION['BookingUserFeedback'] .= " [WARNING] System failed to send Email to user.";
+					$_SESSION['BookingUserFeedback'] .= "\n\n[WARNING] System failed to send Email to user.";
 				}
 				
-				$_SESSION['BookingUserFeedback'] .= " This is the email msg we're sending out: $emailMessage. Sent to email: $email."; // TO-DO: Remove after testing	
+				$_SESSION['BookingUserFeedback'] .= "\nThis is the email msg we're sending out:\n$emailMessage.\nSent to email: $email."; // TO-DO: Remove after testing	
 			} else {	
-				$_SESSION['BookingUserFeedback'] .= "User does not want to be sent an Email.";
+				$_SESSION['BookingUserFeedback'] .= "\nUser does not want to be sent an Email.";
 			}
 		}
-		
-		
 	}
 	
 	clearEditBookingSessions();
@@ -1504,7 +1501,8 @@ if (	(isset($_POST['action']) AND $_POST['action'] == "Create Booking") OR
 								`displayname`,
 								`firstName`,
 								`lastName`,
-								`email`
+								`email`,
+								`sendEmail`
 						FROM 	`user`
 						WHERE 	`userID` = :userID
 						LIMIT 	1";
@@ -1541,6 +1539,9 @@ if (	(isset($_POST['action']) AND $_POST['action'] == "Create Booking") OR
 					if($result['email']!=NULL){
 						$email = $result['email'];
 					}
+					if($result['sendEmail']!=NULL){
+						$sendEmail = $result['sendEmail'];
+					}
 				}
 	
 				//Close connection
@@ -1568,14 +1569,16 @@ if (	(isset($_POST['action']) AND $_POST['action'] == "Create Booking") OR
 														'UserLastname' => '',
 														'UserEmail' => '',
 														'UserDefaultDisplayName' => '',
-														'UserDefaultBookingDescription' => ''
+														'UserDefaultBookingDescription' => '',
+														'sendEmail' => ''
 													);
 			if(!$notInACompany){
 				$_SESSION['AddBookingInfoArray']['UserDefaultBookingDescription'] = $description;
 				$_SESSION['AddBookingInfoArray']['UserDefaultDisplayName'] = $displayName;
 				$_SESSION['AddBookingInfoArray']['UserFirstname'] = $firstname;	
 				$_SESSION['AddBookingInfoArray']['UserLastname'] = $lastname;	
-				$_SESSION['AddBookingInfoArray']['UserEmail'] = $email;	
+				$_SESSION['AddBookingInfoArray']['UserEmail'] = $email;
+				$_SESSION['AddBookingInfoArray']['sendEmail'] = $sendEmail;	
 				$_SESSION['AddBookingInfoArray']['TheUserID'] = $_SESSION['LoggedInUserID'];
 			}
 			
@@ -1712,6 +1715,7 @@ if (	(isset($_POST['action']) AND $_POST['action'] == "Create Booking") OR
 				$row['UserLastname'] = $user['lastName'];
 				$row['UserFirstname'] = $user['firstName'];
 				$row['UserEmail'] = $user['email'];
+				$row['sendEmail'] = $user['sendEmail'];
 
 				$_SESSION['AddBookingDefaultDisplayNameForNewUser'] = $user['displayName'];
 				$_SESSION['AddBookingDefaultBookingDescriptionForNewUser'] = $user['bookingDescription'];
@@ -2088,43 +2092,47 @@ if (isset($_POST['add']) AND $_POST['add'] == "Add booking")
 	
 	//Send email with booking information and cancellation code to the user who the booking is for.
 		// TO-DO: This is UNTESTED since we don't have php.ini set up to actually send email	
-	if($_POST['userID'] == $_SESSION['LoggedInUserID']){
-		// Admin booked a meeting for him/herself
-		$emailSubject = "New Booking Information!";
+	if($_SESSION['AddBookingInfoArray']['sendEmail'] == 1){
+		if($_POST['userID'] == $_SESSION['LoggedInUserID']){
+			// Admin booked a meeting for him/herself
+			$emailSubject = "New Booking Information!";
+			
+			$emailMessage = 
+			"Your meeting has been successfully booked!\n" . 
+			"The meeting has been set to: \n" .
+			"Meeting Room: " . $MeetingRoomName . ".\n" . 
+			"Start Time: " . $displayValidatedStartDate . ".\n" .
+			"End Time: " . $displayValidatedEndDate . ".\n\n" .
+			"If you wish to cancel your meeting, or just end it early, you can easily do so by clicking the link given below.\n" .
+			"Click this link to cancel your booked meeting: " . $_SERVER['HTTP_HOST'] . 
+			"/booking/?cancellationcode=" . $cancellationCode;		
+		} else {
+			// Admin booked a meeting for someone else
+			$emailSubject = "You have been assigned a booked meeting!";
+
+			$emailMessage = 
+			"A booked meeting has been assigned to you by an Admin!\n" .
+			"The meeting has been set to: \n" .
+			"Meeting Room: " . $MeetingRoomName . ".\n" . 
+			"Start Time: " . $displayValidatedStartDate . ".\n" .
+			"End Time: " . $displayValidatedEndDate . ".\n\n" .
+			"If you wish to cancel this meeting, or just end it early, you can easily do so by clicking the link given below.\n" .
+			"Click this link to cancel your booked meeting: " . $_SERVER['HTTP_HOST'] . 
+			"/booking/?cancellationcode=" . $cancellationCode;		
+		}
+
+		$email = $_SESSION['AddBookingInfoArray']['UserEmail'];
 		
-		$emailMessage = 
-		"Your meeting has been successfully booked!\n" . 
-		"The meeting has been set to: \n" .
-		"Meeting Room: " . $MeetingRoomName . ".\n" . 
-		"Start Time: " . $displayValidatedStartDate . ".\n" .
-		"End Time: " . $displayValidatedEndDate . ".\n\n" .
-		"If you wish to cancel your meeting, or just end it early, you can easily do so by clicking the link given below.\n" .
-		"Click this link to cancel your booked meeting: " . $_SERVER['HTTP_HOST'] . 
-		"/booking/?cancellationcode=" . $cancellationCode;		
-	} else {
-		// Admin booked a meeting for someone else
-		$emailSubject = "You have been assigned a booked meeting!";
-
-		$emailMessage = 
-		"A booked meeting has been assigned to you by an Admin!\n" .
-		"The meeting has been set to: \n" .
-		"Meeting Room: " . $MeetingRoomName . ".\n" . 
-		"Start Time: " . $displayValidatedStartDate . ".\n" .
-		"End Time: " . $displayValidatedEndDate . ".\n\n" .
-		"If you wish to cancel this meeting, or just end it early, you can easily do so by clicking the link given below.\n" .
-		"Click this link to cancel your booked meeting: " . $_SERVER['HTTP_HOST'] . 
-		"/booking/?cancellationcode=" . $cancellationCode;		
+		$mailResult = sendEmail($email, $emailSubject, $emailMessage);
+		
+		if(!$mailResult){
+			$_SESSION['BookingUserFeedback'] .= "\n\n[WARNING] System failed to send Email to user.";
+		}
+		
+		$_SESSION['BookingUserFeedback'] .= "\nThis is the email msg we're sending out:\n$emailMessage.\nSent to email: $email."; // TO-DO: Remove after testing
+	} elseif($_SESSION['AddBookingInfoArray']['sendEmail'] == 0){
+		$_SESSION['BookingUserFeedback'] .= " \nUser does not want to get sent Emails.";
 	}
-
-	$email = $_SESSION['AddBookingInfoArray']['UserEmail'];
-	
-	$mailResult = sendEmail($email, $emailSubject, $emailMessage);
-	
-	if(!$mailResult){
-		$_SESSION['BookingUserFeedback'] .= " [WARNING] System failed to send Email to user.";
-	}
-	
-	$_SESSION['BookingUserFeedback'] .= "this is the email msg we're sending out: $emailMessage. Sent to email: $email."; // TO-DO: Remove after testing	
 	
 	// Booking a new meeting is done. Reset all connected sessions.
 	clearAddBookingSessions();
