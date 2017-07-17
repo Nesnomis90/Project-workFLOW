@@ -466,6 +466,10 @@ if(isset($_GET['activateaccount'])){
 	}	
 }
 
+if(isset($_POST['action']) AND $_POST['action'] == "Reset"){
+	$_SESSION['normalUserEditInfoArray'] = $_SESSION['normalUserOriginalInfoArray'];
+}
+
 if(isset($_SESSION['loggedIn']) AND isset($_SESSION['LoggedInUserID'])){
 	// Get User information if user is logged in
 	$userID = $_SESSION['LoggedInUserID'];
@@ -522,12 +526,13 @@ if(isset($_SESSION['loggedIn']) AND isset($_SESSION['LoggedInUserID'])){
 	$originalEmail = $result['Email'];
 	$originalDisplayName = $result['DisplayName'];
 	$originalBookingDescription = $result['BookingDescription'];
+	$originalSendEmail = $result['SendEmail'];
+	$originalSendAdminEmail = $result['SendAdminEmail'];
 	
 	$accessName = $result['AccessName'];
 	$accessDescription = $result['AccessDescription'];
 	$bookingCode = $result['BookingCode'];
-	$sendEmail = $result['SendEmail'];
-	$sendAdminEmail = $result['SendAdminEmail'];
+	
 	if($accessName != "Normal User"){
 		$userCanHaveABookingCode = TRUE;
 		
@@ -538,6 +543,10 @@ if(isset($_SESSION['loggedIn']) AND isset($_SESSION['LoggedInUserID'])){
 			$bookingCodeStatus = "You have not set a booking code.";
 		}
 	}
+} else {
+	unset($_SESSION['normalUserOriginalInfoArray']);
+	unset($_SESSION['normalUserEditInfoArray']);
+	unset($_SESSION['normalUserEditMode']);
 }
 
 if(isset($_POST['action']) AND $_POST['action'] == "Show Code"){
@@ -548,8 +557,118 @@ if( (isset($_POST['action']) AND $_POST['action'] == "Confirm Change") OR
 	(isset($_SESSION['refreshNormalUserEdit']) AND $_SESSION['refreshNormalUserEdit'])
 ){
 	// Do input validation
+	$invalidInput = FALSE;
 	
-	if(isset($_POST['confirmPassword']) AND !empty($_POST['confirmPassword'])){
+	// Get user inputs
+		//Firstname
+	if(isset($_POST['firstName'])){
+		$firstname = $_POST['firstName'];
+		$firstname = trim($firstname);
+	} elseif(!$invalidInput) {
+		$_SESSION['normalUserFeedback'] = "Your account needs to have a first name.";
+		$invalidInput = TRUE;
+	}	
+		//Lastname
+	if(isset($_POST['lastName'])){
+		$lastname = $_POST['lastName'];
+		$lastname = trim($lastname);
+	} elseif(!$invalidInput) {
+		$_SESSION['normalUserFeedback'] = "Your account needs to have a last name.";
+		$invalidInput = TRUE;
+	}		
+		//Email
+	if(isset($_POST['email'])){
+		$email = $_POST['email'];
+		$email = trim($email);
+	} elseif(!$invalidInput) {
+		$_SESSION['normalUserFeedback'] = "Your account needs to have an email.";
+		$invalidInput = TRUE;
+	}
+		// Display Name
+	if(isset($_POST['displayName'])){
+		$displayNameString = $_POST['displayName'];
+	} else {
+		$displayNameString = '';
+	}
+		// Booking Description
+	if(isset($_POST['bookingDescription'])){
+		$bookingDescriptionString = $_POST['bookingDescription'];
+	} else {
+		$bookingDescriptionString = '';
+	}
+
+	// Remove excess whitespace and prepare strings for validation
+	$validatedFirstname = trimExcessWhitespace($firstname);
+	$validatedLastname = trimExcessWhitespace($lastname);
+	$validatedDisplayName = trimExcessWhitespaceButLeaveLinefeed($displayNameString);
+	$validatedBookingDescription = trimExcessWhitespaceButLeaveLinefeed($bookingDescriptionString);
+	
+	// Do actual input validation
+		// First Name
+	if(validateNames($validatedFirstname) === FALSE AND !$invalidInput){
+		$_SESSION['normalUserFeedback'] = "The first name submitted contains illegal characters.";
+		$invalidInput = TRUE;		
+	}
+	if(strlen($validatedFirstname) < 1 AND !$invalidInput){
+		$_SESSION['normalUserFeedback'] = "You need to submit a first name.";
+		$invalidInput = TRUE;	
+	}	
+		// Last Name
+	if(validateNames($validatedLastname) === FALSE AND !$invalidInput){
+		$_SESSION['normalUserFeedback'] = "The last name submitted contains illegal characters.";
+		$invalidInput = TRUE;			
+	}
+	if(strlen($validatedLastname) < 1 AND !$invalidInput){
+		$_SESSION['normalUserFeedback'] = "You need to submit a last name.";
+		$invalidInput = TRUE;	
+	}	
+		// Email
+	if(strlen($email) < 1 AND !$invalidInput){
+		$_SESSION['normalUserFeedback'] = "You need to submit an email.";
+		$invalidInput = TRUE;
+	}	
+	if(!validateUserEmail($email) AND !$invalidInput){
+		$_SESSION['normalUserFeedback'] = "The email submitted is not a valid email.";
+		$invalidInput = TRUE;
+	}	
+	if(strlen($email) < 3 AND !$invalidInput){
+		$_SESSION['normalUserFeedback'] = "You need to submit an actual email.";
+		$invalidInput = TRUE;
+	}
+	
+		// Display Name
+	if(validateString($validatedDisplayName) === FALSE AND !$invalidInput){
+		$invalidInput = TRUE;
+		$_SESSION['normalUserFeedback'] = "Your submitted display name has illegal characters in it.";
+	}
+	$invalidDisplayName = isLengthInvalidDisplayName($validatedDisplayName);
+	if($invalidDisplayName AND !$invalidInput){
+		$_SESSION['normalUserFeedback'] = "The displayName submitted is too long.";	
+		$invalidInput = TRUE;		
+	}		
+		// Booking Description
+	if(validateString($validatedBookingDescription) === FALSE AND !$invalidInput){
+		$_SESSION['normalUserFeedback'] = "Your submitted booking description has illegal characters in it.";
+		$invalidInput = TRUE;
+	}	
+	$invalidBookingDescription = isLengthInvalidBookingDescription($validatedBookingDescription);
+	if($invalidBookingDescription AND !$invalidInput){
+		$_SESSION['normalUserFeedback'] = "The booking description submitted is too long.";	
+		$invalidInput = TRUE;		
+	}
+	
+	// Check if the submitted email has already been used
+	$originalEmail = $_SESSION['normalUserOriginalInfoArray']['Email'];
+	// no need to check if our own email exists in the database
+	if($email != $originalEmail AND !$invalidInput){
+		if (databaseContainsEmail($email)){
+			// The email has been used before. So we can't create a new user with this info.
+			$_SESSION['normalUserFeedback'] = "The new email you've set is already connected to an account.";
+			$invalidInput = TRUE;	
+		}				
+	}
+
+	if(isset($_POST['confirmPassword']) AND !empty($_POST['confirmPassword']) AND !$invalidInput){
 		$password = $_POST['confirmPassword'];
 		$hashedPassword = hashPassword($password);
 		if($hashedPassword == $result['HashedPassword']){
@@ -558,13 +677,20 @@ if( (isset($_POST['action']) AND $_POST['action'] == "Confirm Change") OR
 				
 			}
 			unset($_SESSION['normalUserEditMode']);
+			unset($_SESSION['normalUserEditInfoArray']);
 		} else {
 			$_SESSION['normalUserFeedback'] = "The Password you submitted was incorrect.";
 		}
-	} elseif(isset($_POST['confirmPassword']) AND empty($_POST['confirmPassword'])){
+	} elseif(isset($_POST['confirmPassword']) AND empty($_POST['confirmPassword']) AND !$invalidInput){
 		$_SESSION['normalUserFeedback'] = "You need to type in your password before you can make any changes.";
 	}
 	
+	$_SESSION['normalUserEditInfoArray']['FirstName'] = $validatedFirstname;
+	$_SESSION['normalUserEditInfoArray']['LastName'] = $validatedLastname;
+	$_SESSION['normalUserEditInfoArray']['DisplayName'] = $validatedDisplayName;
+	$_SESSION['normalUserEditInfoArray']['BookingDescription'] = $validatedBookingDescription;
+	$_SESSION['normalUserEditInfoArray']['Email'] = $email;
+	$_SESSION['normalUserEditInfoArray']['SendEmail'] = $_POST['sendEmail'];
 }
 
 if(isset($_POST['action']) AND $_POST['action'] == "Change Information"){
@@ -582,8 +708,12 @@ if(isset($_SESSION['normalUserEditMode'])){
 	$email = $edit['Email'];
 	$displayName = $edit['DisplayName'];
 	$bookingDescription = $edit['BookingDescription'];
+	$sendEmail = $edit['SendEmail'];
 	
 }
+
+var_dump($_SESSION); // TO-DO: Remove after done testing
+
 // Load the html template
 include_once 'user.html.php';
 ?>

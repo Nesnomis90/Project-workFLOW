@@ -42,7 +42,7 @@
 							<label>First Name: </label>
 							<span><?php htmlout($originalFirstName); ?></span>
 						</div>
-						<?php if($editMode) : ?>
+						<?php if(isset($editMode)) : ?>
 							<div>
 								<label>Set New First Name: </label>
 								<input type="text" name="firstName" value="<?php htmlout($firstName); ?>">
@@ -53,7 +53,7 @@
 							<label>Last Name: </label>
 							<span><?php htmlout($originalLastName); ?></span>
 						</div>
-						<?php if($editMode) : ?>
+						<?php if(isset($editMode)) : ?>
 							<div>
 								<label>Set New Last Name: </label>
 								<input type="text" name="lastName" value="<?php htmlout($lastName); ?>">
@@ -64,7 +64,7 @@
 							<label>Email: </label>
 							<span><?php htmlout($originalEmail); ?></span>
 						</div>
-						<?php if($editMode) : ?>
+						<?php if(isset($editMode)) : ?>
 							<div>
 								<label>Set New Email: </label>
 								<input type="text" name="email" value="<?php htmlout($email); ?>">
@@ -75,7 +75,7 @@
 							<label>Default Display Name: </label>
 							<span><?php htmlout($originalDisplayName); ?></span>
 						</div>
-						<?php if($editMode) : ?>
+						<?php if(isset($editMode)) : ?>
 							<div>
 								<label>Set New Display Name: </label>
 								<input type="text" name="displayName" value="<?php htmlout($displayName); ?>">
@@ -86,13 +86,36 @@
 							<label>Default Booking Description: </label>
 							<span style="white-space: pre-wrap;"><?php htmlout($originalBookingDescription); ?></span>
 						</div>
-						<?php if($editMode) : ?>
+						<?php if(isset($editMode)) : ?>
 							<div>
 								<label>Set New Booking Description: </label>
 								<textarea rows="4" cols="50" name="bookingDescription" style="white-space: pre-wrap;"><?php htmlout($bookingDescription); ?></textarea>
 							</div>
 						<?php endif; ?>
 						
+						<div>
+							<label>Email Alert Status: </label>
+							<?php if($originalSendEmail == 1) : ?>
+								<span><b>Send Me Email Alerts.</b></span>
+							<?php elseif($originalSendEmail == 0) : ?>
+								<span><b>Don't Send Me Email Alerts.</b></span>
+							<?php endif; ?>
+						</div>
+						<?php if(isset($editMode)) : ?>
+							<div>
+								<label>Change Email Alert Status: </label>
+								<select name="sendEmail">
+									<?php if($sendEmail == 1) : ?>
+										<option selected="selected" value="1"><b>Send Me Email Alerts.</b></option>
+										<option value="0"><b>Don't Send Me Email Alerts.</b></option>
+									<?php elseif($sendEmail == 0) : ?>
+										<option value="1"><b>Send Me Email Alerts.</b></option>
+										<option selected="selected" value="0"><b>Don't Send Me Email Alerts.</b></option>										
+									<?php endif; ?>
+								</select>
+							</div>
+						<?php endif; ?>						
+
 						<?php if(isset($userCanHaveABookingCode)) : ?>
 							<div>
 								<label>Booking Code: </label>
@@ -106,7 +129,7 @@
 								<?php endif; ?>
 							</div>
 							
-							<?php if($editMode) : ?>
+							<?php if(isset($editMode)) : ?>
 								<div>
 									<?php if(!isset($userHasABookingCode)) : ?>
 										<label>Set Your Booking Code: </label>
@@ -120,9 +143,12 @@
 						<?php endif; ?>
 						
 						<div class="left">
-							<?php if($editMode) : ?>
+							<?php if(isset($editMode)) : ?>
 								<label>Confirm With Your Password: </label><input type="password" name="confirmPassword" value="">
-								<input type="submit" name="action" value="Confirm Change">
+								<div class="left">
+									<input type="submit" name="action" value="Reset">
+									<input type="submit" name="action" value="Confirm Change">
+								</div>
 							<?php else : ?>
 								<input type="submit" name="action" value="Change Information">
 							<?php endif; ?>
