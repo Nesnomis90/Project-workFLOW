@@ -466,6 +466,47 @@ if(isset($_GET['activateaccount'])){
 	}	
 }
 
+if(isset($_SESSION['loggedIn']) AND isset($_SESSION['LoggedInUserID'])){
+	// Get User information if user is logged in
+	$userID = $_SESSION['LoggedInUserID'];
+	try
+	{
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+		
+		$pdo = connect_to_db();
+		$sql = "SELECT 		u.`email`				AS Email,
+							u.`firstName`			AS FirstName,
+							u.`lastName`			AS LastName,
+							u.`displayName`			AS DisplayName,
+							u.`bookingDescription`	AS BookingDescription,
+							u.`bookingCode`			AS BookingCode,
+							u.`create_time`			AS DateTimeCreated,
+							u.`lastActivity`		AS LastActive,
+							u.`sendEmail`			AS SendEmail,
+							u.`sendAdminEmail`		AS SendAdminEmail,
+							a.`AccessName`			AS AccessName,
+							a.`Description` 		AS AccessDescription
+				FROM		`user` u
+				INNER JOIN	`accesslevel` a
+				WHERE 		`userID` = :userID
+				AND			`isActive` = 1
+				LIMIT 		1";
+		$s = $pdo->prepare($sql);
+		$s->bindValue(':userID', $userID);
+		$s->execute();
+		
+		//Close the connection
+		$pdo = null;
+	}
+	catch(PDOException $e)
+	{
+		$error = 'Error getting user information: ' . $e->getMessage();
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+		$pdo = null;
+		exit();
+	}
+}
+
 // Load the html template
 include_once 'user.html.php';
 ?>
