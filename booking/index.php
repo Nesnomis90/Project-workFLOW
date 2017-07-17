@@ -212,7 +212,7 @@ function validateUserInputs($FeedbackSessionToUse, $editing){
 	$validatedDisplayName = trimExcessWhitespaceButLeaveLinefeed($displayNameString);
 	$validatedBookingDescription = trimExcessWhitespaceButLeaveLinefeed($bookingDescriptionString);
 	if($usingBookingCode){
-		$validatedBookingCode = trimExcessWhitespace($bookingCode);
+		$validatedBookingCode = trimAllWhitespace($bookingCode);
 	} else {
 		$validatedBookingCode = "";
 	}
@@ -637,9 +637,9 @@ if(isset($_POST['action']) AND $_POST['action'] == "confirmcode"){
 		exit();
 	}
 	
-	list($invalidBookingCode,$bookingCode) = isNumberInvalidBookingCode($validatedBookingCode);
+	$invalidBookingCode = isNumberInvalidBookingCode($validatedBookingCode);
 	if($invalidBookingCode === TRUE){
-		$_SESSION['confirmBookingCodeError'] = "The booking code you submitted (" . $bookingCode .") is an invalid code.";
+		$_SESSION['confirmBookingCodeError'] = "The booking code you submitted is an invalid code.";
 		$bookingCode = "";
 		var_dump($_SESSION); // TO-DO: remove after testing is done
 		include_once 'bookingcode.html.php';

@@ -348,7 +348,6 @@ function databaseContainsEmail($email)
 }
 
 // Function to check if the booking code submitted already is being used
-// TO-DO: UNTESTED
 function databaseContainsBookingCode($rawBookingCode)
 {
 	$hashedBookingCode = hashBookingCode($rawBookingCode);

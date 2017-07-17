@@ -137,14 +137,16 @@
 										<label>Set A New Booking Code: </label>
 									<?php endif; ?>
 									<input type="number" name="bookingCode" min="1" max="<?php htmlout((10 ** BOOKING_CODE_LENGTH)-1); ?>"
-									placeholder="<?php htmlout(BOOKING_CODE_LENGTH . " digits"); ?>" value="<?php htmlout($bookingCode); ?>">
+									placeholder="<?php htmlout(BOOKING_CODE_LENGTH . " digits"); ?>" value="">
 								</div>
 							<?php endif; ?>
 						<?php endif; ?>
 						
 						<div class="left">
 							<?php if(isset($editMode)) : ?>
-								<label>Confirm With Your Password: </label><input type="password" name="confirmPassword" value="">
+								<label>Set New Password: </label><input type="password" name="password1" value="">
+								<label>Repeat New Password: </label><input type="password" name="password2" value="">
+								<label>Confirm With Your Password: </label><input type="password" name="confirmPassword" value=""><span style="color: red;">* Required for any change</span>
 								<div class="left">
 									<input type="submit" name="action" value="Reset">
 									<input type="submit" name="action" value="Confirm Change">

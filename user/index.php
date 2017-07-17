@@ -553,14 +553,12 @@ if(isset($_POST['action']) AND $_POST['action'] == "Show Code"){
 	$showBookingCode = revealBookingCode($bookingCode);
 }
 
-if( (isset($_POST['action']) AND $_POST['action'] == "Confirm Change") OR 
-	(isset($_SESSION['refreshNormalUserEdit']) AND $_SESSION['refreshNormalUserEdit'])
-){
+if(isset($_POST['action']) AND $_POST['action'] == "Confirm Change"){
 	// Do input validation
 	$invalidInput = FALSE;
 	
 	// Get user inputs
-		//Firstname
+		// Firstname
 	if(isset($_POST['firstName'])){
 		$firstname = $_POST['firstName'];
 		$firstname = trim($firstname);
@@ -568,7 +566,7 @@ if( (isset($_POST['action']) AND $_POST['action'] == "Confirm Change") OR
 		$_SESSION['normalUserFeedback'] = "Your account needs to have a first name.";
 		$invalidInput = TRUE;
 	}	
-		//Lastname
+		// Lastname
 	if(isset($_POST['lastName'])){
 		$lastname = $_POST['lastName'];
 		$lastname = trim($lastname);
@@ -576,7 +574,7 @@ if( (isset($_POST['action']) AND $_POST['action'] == "Confirm Change") OR
 		$_SESSION['normalUserFeedback'] = "Your account needs to have a last name.";
 		$invalidInput = TRUE;
 	}		
-		//Email
+		// Email
 	if(isset($_POST['email'])){
 		$email = $_POST['email'];
 		$email = trim($email);
@@ -596,12 +594,19 @@ if( (isset($_POST['action']) AND $_POST['action'] == "Confirm Change") OR
 	} else {
 		$bookingDescriptionString = '';
 	}
+		// Booking Code
+	if(isset($_POST['bookingCode']) AND !empty($_POST['bookingCode'])){
+		$bookingCode = $_POST['bookingCode'];
+	}
 
 	// Remove excess whitespace and prepare strings for validation
 	$validatedFirstname = trimExcessWhitespace($firstname);
 	$validatedLastname = trimExcessWhitespace($lastname);
 	$validatedDisplayName = trimExcessWhitespaceButLeaveLinefeed($displayNameString);
 	$validatedBookingDescription = trimExcessWhitespaceButLeaveLinefeed($bookingDescriptionString);
+	if(isset($bookingCode)){
+		$validatedBookingCode = trimAllWhitespace($bookingCode);
+	}
 	
 	// Do actual input validation
 		// First Name
@@ -656,6 +661,22 @@ if( (isset($_POST['action']) AND $_POST['action'] == "Confirm Change") OR
 		$_SESSION['normalUserFeedback'] = "The booking description submitted is too long.";	
 		$invalidInput = TRUE;		
 	}
+		// Booking Code
+	if(validateIntegerNumber($validatedBookingCode) === FALSE AND !$invalidInput){
+		$invalidInput = TRUE;
+		$_SESSION['normalUserFeedback'] = "Your submitted booking code has illegal characters in it.";		
+	}
+		// Check if booking code is a legit format (correct amount of digits)
+	if(isNumberInvalidBookingCode($validatedBookingCode) === TRUE AND !$invalidInput){
+		$invalidInput = TRUE;
+		$_SESSION['normalUserFeedback'] = "The booking code you selected is not valid.";		
+	}
+	
+	// Check if booking code submitted already exists
+	if(databaseContainsBookingCode($validatedBookingCode) === TRUE AND !$invalidInput){
+		$_SESSION['normalUserFeedback'] = "The booking code you selected is not valid.";	
+		$invalidInput = TRUE;
+	}
 	
 	// Check if the submitted email has already been used
 	$originalEmail = $_SESSION['normalUserOriginalInfoArray']['Email'];
@@ -668,29 +689,112 @@ if( (isset($_POST['action']) AND $_POST['action'] == "Confirm Change") OR
 		}				
 	}
 
+	$changePassword = FALSE;
+	
+	// Check if user is trying to set a new password
+	// And if so, check if both fields are filled in and match each other
+	if(isset($_POST['password1'])){
+		$password1 = $_POST['password1'];
+	} 
+	if(isset($_POST['password2'])){
+		$password2 = $_POST['password2'];
+	}
+	$minimumPasswordLength = MINIMUM_PASSWORD_LENGTH;
+	if(($password1 != '' OR $password2 != '') AND !$invalidInput){
+			
+		if($password1 == $password2){
+			// Both passwords match, hopefully that means it's the correct password the user wanted to submit
+
+				if(strlen(utf8_decode($password1)) < $minimumPasswordLength){
+					$_SESSION['normalUserFeedback'] = "The submitted password is not long enough. You are required to make it at least $minimumPasswordLength characters long.";
+					$invalidInput = TRUE;			
+				} else {
+					// Both passwords were the same. They were not empty and they were longer than the minimum requirement
+					$changePassword = TRUE;			
+				}
+		} else {
+			$_SESSION['normalUserFeedback'] = "Your new Password and Repeat Password did not match.";
+			$invalidInput = TRUE;
+		}
+	} else {
+		// Password was empty. Not a big deal since it's not required
+		// Just means we won't change it!
+	}	
+
+	if(isset($_SESSION['normalUserEditInfoArray'])){
+		$_SESSION['normalUserEditInfoArray']['FirstName'] = $validatedFirstname;
+		$_SESSION['normalUserEditInfoArray']['LastName'] = $validatedLastname;
+		$_SESSION['normalUserEditInfoArray']['DisplayName'] = $validatedDisplayName;
+		$_SESSION['normalUserEditInfoArray']['BookingDescription'] = $validatedBookingDescription;
+		$_SESSION['normalUserEditInfoArray']['Email'] = $email;
+		$_SESSION['normalUserEditInfoArray']['SendEmail'] = $_POST['sendEmail'];
+		if(isset($validatedBookingCode)){
+			$_SESSION['normalUserEditInfoArray']['BookingCode'] = hashBookingCode($validatedBookingCode);
+		}
+	}
+
 	if(isset($_POST['confirmPassword']) AND !empty($_POST['confirmPassword']) AND !$invalidInput){
 		$password = $_POST['confirmPassword'];
 		$hashedPassword = hashPassword($password);
 		if($hashedPassword == $result['HashedPassword']){
 			if($_SESSION['normalUserEditInfoArray'] != $_SESSION['normalUserOriginalInfoArray']){
 				// Save changes to database
-				
+				if($changePassword){
+					// Change password
+					$hashedNewPassword = hashPassword($password1);
+				} else {
+					$hashedNewPassword = $_SESSION['normalUserOriginalInfoArray']['HashedPassword'];
+				}
+
+				$new = $_SESSION['normalUserEditInfoArray'];
+				try
+				{
+					include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+					
+					$pdo = connect_to_db();
+					$sql = 'UPDATE 	`user` 
+							SET		`firstName` = :firstname,
+									`lastName` = :lastname,
+									`email` = :email,
+									`password` = :password,
+									`displayName` = :displayname,
+									`bookingDescription` = :bookingdescription,
+									`sendEmail` = :sendEmail,
+									`bookingCode` = :bookingCode
+							WHERE 	userID = :userID';
+							
+					$s = $pdo->prepare($sql);
+					$s->bindValue(':userID', $_SESSION['LoggedInUserID']);
+					$s->bindValue(':firstname', $new['FirstName']);
+					$s->bindValue(':lastname', $new['LastName']);
+					$s->bindValue(':email', $new['Email']);
+					$s->bindValue(':password', $hashedNewPassword);
+					$s->bindValue(':displayname', $new['DisplayName']);
+					$s->bindValue(':bookingdescription', $new['BookingDescription']);
+					$s->bindValue(':sendEmail', $new['SendEmail']);
+					$s->bindValue(':bookingCode', $new['BookingCode']);
+					$s->execute();
+						
+					// Close the connection
+					$pdo = Null;
+				}
+				catch (PDOException $e)
+				{
+					$error = 'Error updating submitted user: ' . $e->getMessage();
+					include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+					$pdo = null;
+					exit();
+				}				
 			}
 			unset($_SESSION['normalUserEditMode']);
 			unset($_SESSION['normalUserEditInfoArray']);
+			unset($_SESSION['normalUserOriginalInfoArray']);
 		} else {
 			$_SESSION['normalUserFeedback'] = "The Password you submitted was incorrect.";
 		}
 	} elseif(isset($_POST['confirmPassword']) AND empty($_POST['confirmPassword']) AND !$invalidInput){
 		$_SESSION['normalUserFeedback'] = "You need to type in your password before you can make any changes.";
 	}
-	
-	$_SESSION['normalUserEditInfoArray']['FirstName'] = $validatedFirstname;
-	$_SESSION['normalUserEditInfoArray']['LastName'] = $validatedLastname;
-	$_SESSION['normalUserEditInfoArray']['DisplayName'] = $validatedDisplayName;
-	$_SESSION['normalUserEditInfoArray']['BookingDescription'] = $validatedBookingDescription;
-	$_SESSION['normalUserEditInfoArray']['Email'] = $email;
-	$_SESSION['normalUserEditInfoArray']['SendEmail'] = $_POST['sendEmail'];
 }
 
 if(isset($_POST['action']) AND $_POST['action'] == "Change Information"){
@@ -709,7 +813,6 @@ if(isset($_SESSION['normalUserEditMode'])){
 	$displayName = $edit['DisplayName'];
 	$bookingDescription = $edit['BookingDescription'];
 	$sendEmail = $edit['SendEmail'];
-	
 }
 
 var_dump($_SESSION); // TO-DO: Remove after done testing
