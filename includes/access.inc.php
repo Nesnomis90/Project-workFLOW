@@ -348,7 +348,6 @@ function databaseContainsEmail($email)
 }
 
 // Function to check if the booking code submitted already is being used
-// TO-DO: UNTESTED
 function databaseContainsBookingCode($rawBookingCode)
 {
 	$hashedBookingCode = hashBookingCode($rawBookingCode);
@@ -444,61 +443,20 @@ function getUserInfoFromBookingCode($rawBookingCode)
 
 // Function to "return" the raw booking code value to a user who has forgotten their own
 // returns FALSE if not found.
-// TO-DO: UNTESTED
-function revealBookingCode($userID){
+function revealBookingCode($bookingCode){
 	// Since the booking code has been salted and hashed, we have to repeat the process
 	// We can only do this by "brute forcing", but we know the possible values we can have
 	// For 7+ digits a for loop will take over 10 seconds to loop through all combinations
 	// For 6 digits a for loop will take up to 1.4s loop through all combinations
-	// TO-DO: Limit booking code to 6 digits?
-	
-	// First we need to get the hashed booking code for the logged in user
-	try
-	{
-		include_once 'db.inc.php';
-		$pdo = connect_to_db();
-		$sql = "SELECT 	`bookingCode`
-				FROM 	`user`
-				WHERE 	`userID` = :UserID
-				AND		`isActive` > 0
-				AND 	`bookingCode` IS NOT NULL
-				LIMIT 	1";
-		$s = $pdo->prepare($sql);
-		$s->bindValue(':UserID', $userID);
-		$s->execute();
-		
-		$pdo = null;			
-	}
-	catch(PDOException $e)
-	{
-		$error = 'Error fetching booking code from database.';
-		include_once 'error.html.php';
-		$pdo = null;
-		exit();				
-	}
-	
-	// Get the user's hashed booking code
-	$result = $s->fetch(PDO::FETCH_ASSOC);
-	if(isset($result)){
-		$rowNum = sizeOf($result);
-	} else {
-		$rowNum = 0;
-	}
-	// Check if the select even found something
-	if($rowNum == 0){
-		return FALSE;
-	}
-	$hashedBookingCode = $result['bookingCode'];
-	
-	$maxNumber = pow(10,BOOKING_CODE_LENGTH);
+
+	$maxNumber = 10 ** BOOKING_CODE_LENGTH;
 	
 	// Loop through possible combinations and hash them
-	// TO-DO: Add some sleep to reduce CPU load?
 	for($i=0; $i<$maxNumber; $i++){
 		
 		$viableHashedBookingCode = hashBookingCode($i);
 		
-		if($viableHashedBookingCode == $hashedBookingCode){
+		if($viableHashedBookingCode == $bookingCode){
 			// We found a match!
 			$actualBookingCode = $i;
 			return $actualBookingCode;

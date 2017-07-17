@@ -3,6 +3,30 @@ SET NAMES utf8;
 USE meetingflow;
 SHOW WARNINGS;
 
+SELECT 		u.`email`				AS Email,
+			u.`firstName`			AS FirstName,
+			u.`lastName`			AS LastName,
+			u.`displayName`			AS DisplayName,
+			u.`bookingDescription`	AS BookingDescription,
+			u.`bookingCode`			AS BookingCode,
+			IF(
+				u.`lastCodeUpdate` IS NULL,
+                DATE_ADD(u.`lastCodeUpdate`, INTERVAL 30 DAY),
+                NULL
+			)						AS NextBookingCodeChange,
+			u.`create_time`			AS DateTimeCreated,
+            u.`lastActivity`		AS LastActive,
+			u.`sendEmail`			AS SendEmail,
+			u.`sendAdminEmail`		AS SendAdminEmail,
+			u.`password`			AS HashedPassword,
+			a.`AccessName`			AS AccessName,
+			a.`Description` 		AS AccessDescription
+FROM		`user` u
+INNER JOIN	`accesslevel` a
+WHERE 		`userID` = 2
+AND			`isActive` = 1
+LIMIT 		1;
+
 SELECT 	`meetingRoomID`	AS MeetingRoomID,
 		`name` 			AS MeetingRoomName
 FROM 	`meetingroom`

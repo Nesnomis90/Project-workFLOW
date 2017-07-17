@@ -150,8 +150,8 @@ function validateUserInputs($FeedbackSessionToUse){
 	}		
 		// Booking Description
 	if(validateString($validatedBookingDescription) === FALSE AND !$invalidInput){
-		$invalidInput = TRUE;
 		$_SESSION[$FeedbackSessionToUse] = "Your submitted booking description has illegal characters in it.";
+		$invalidInput = TRUE;
 	}	
 	$invalidBookingDescription = isLengthInvalidBookingDescription($validatedBookingDescription);
 	if($invalidBookingDescription AND !$invalidInput){
@@ -160,8 +160,8 @@ function validateUserInputs($FeedbackSessionToUse){
 	}	
 		// Reduce Access At Date
 	if(validateDateTimeString($validatedReduceAccessAtDate) === FALSE AND !$invalidInput){
-		$invalidInput = TRUE;
 		$_SESSION[$FeedbackSessionToUse] = "Your submitted date has illegal characters in it.";
+		$invalidInput = TRUE;
 	}
 
 	// Check if the dateTime input we received are actually datetime
