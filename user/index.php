@@ -485,6 +485,11 @@ if(isset($_SESSION['loggedIn']) AND isset($_SESSION['LoggedInUserID'])){
 								u.`displayName`			AS DisplayName,
 								u.`bookingDescription`	AS BookingDescription,
 								u.`bookingCode`			AS BookingCode,
+								IF(
+									u.`lastCodeUpdate` IS NOT NULL,
+									DATE_ADD(u.`lastCodeUpdate`, INTERVAL 30 DAY),
+									NULL
+								)						AS NextBookingCodeChange,
 								u.`create_time`			AS DateTimeCreated,
 								u.`lastActivity`		AS LastActive,
 								u.`sendEmail`			AS SendEmail,
@@ -520,6 +525,17 @@ if(isset($_SESSION['loggedIn']) AND isset($_SESSION['LoggedInUserID'])){
 
 	$lastActive = convertDatetimeToFormat($result['LastActive'], 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY_WITH_SECONDS);
 	$dateCreated = convertDatetimeToFormat($result['DateTimeCreated'], 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY_WITH_SECONDS);
+	$nextBookingCodeChange = $result['NextBookingCodeChange'];
+	if($nextBookingCodeChange !== NULL){
+		$dateNow = getDateNow();
+		if($dateNow > $nextBookingCodeChange){
+			$canSetNewCode = TRUE;
+		} else {
+			$displayNextBookingCodeChange = convertDatetimeToFormat($nextBookingCodeChange, 'Y-m-d', DATE_DEFAULT_FORMAT_TO_DISPLAY);
+		}
+	} else {
+		$canSetNewCode = TRUE;
+	}
 	
 	$originalFirstName = $result['FirstName'];
 	$originalLastName = $result['LastName'];
@@ -732,6 +748,7 @@ if(isset($_POST['action']) AND $_POST['action'] == "Confirm Change"){
 		$_SESSION['normalUserEditInfoArray']['SendEmail'] = $_POST['sendEmail'];
 		if(isset($validatedBookingCode)){
 			$_SESSION['normalUserEditInfoArray']['BookingCode'] = hashBookingCode($validatedBookingCode);
+			$_SESSION['normalUserEditInfoArray']['NextBookingCodeChange'] = getDatetimeNow();
 		}
 	}
 
@@ -762,7 +779,9 @@ if(isset($_POST['action']) AND $_POST['action'] == "Confirm Change"){
 									`displayName` = :displayname,
 									`bookingDescription` = :bookingdescription,
 									`sendEmail` = :sendEmail,
-									`bookingCode` = :bookingCode
+									`bookingCode` = :bookingCode,
+									`lastCodeUpdate` = :LastCodeUpdate,
+									`lastActivity` = CURRENT_TIMESTAMP
 							WHERE 	userID = :userID';
 							
 					$s = $pdo->prepare($sql);
@@ -775,6 +794,7 @@ if(isset($_POST['action']) AND $_POST['action'] == "Confirm Change"){
 					$s->bindValue(':bookingdescription', $new['BookingDescription']);
 					$s->bindValue(':sendEmail', $new['SendEmail']);
 					$s->bindValue(':bookingCode', $new['BookingCode']);
+					$s->bindValue(':LastCodeUpdate', $new['NextBookingCodeChange']);
 					$s->execute();
 						
 					// Close the connection

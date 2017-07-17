@@ -136,8 +136,12 @@
 									<?php else : ?>
 										<label>Set A New Booking Code: </label>
 									<?php endif; ?>
-									<input type="number" name="bookingCode" min="1" max="<?php htmlout((10 ** BOOKING_CODE_LENGTH)-1); ?>"
-									placeholder="<?php htmlout(BOOKING_CODE_LENGTH . " digits"); ?>" value="">
+									<?php if(isset($canSetNewCode)) : ?>
+										<input type="number" name="bookingCode" min="1" max="<?php htmlout((10 ** BOOKING_CODE_LENGTH)-1); ?>"
+										placeholder="<?php htmlout(BOOKING_CODE_LENGTH . " digits"); ?>" value="">
+									<?php else : ?>
+										<span><b>You can not set a new booking code before <?php htmlout($displayNextBookingCodeChange); ?></b></span>
+									<?php endif; ?>
 								</div>
 							<?php endif; ?>
 						<?php endif; ?>
