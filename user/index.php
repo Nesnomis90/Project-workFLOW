@@ -469,45 +469,51 @@ if(isset($_GET['activateaccount'])){
 if(isset($_SESSION['loggedIn']) AND isset($_SESSION['LoggedInUserID'])){
 	// Get User information if user is logged in
 	$userID = $_SESSION['LoggedInUserID'];
-	try
-	{
-		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
-		
-		$pdo = connect_to_db();
-		$sql = "SELECT 		u.`email`				AS Email,
-							u.`firstName`			AS FirstName,
-							u.`lastName`			AS LastName,
-							u.`displayName`			AS DisplayName,
-							u.`bookingDescription`	AS BookingDescription,
-							u.`bookingCode`			AS BookingCode,
-							u.`create_time`			AS DateTimeCreated,
-							u.`lastActivity`		AS LastActive,
-							u.`sendEmail`			AS SendEmail,
-							u.`sendAdminEmail`		AS SendAdminEmail,
-							a.`AccessName`			AS AccessName,
-							a.`Description` 		AS AccessDescription
-				FROM		`user` u
-				INNER JOIN	`accesslevel` a
-				WHERE 		`userID` = :userID
-				AND			`isActive` = 1
-				LIMIT 		1";
-		$s = $pdo->prepare($sql);
-		$s->bindValue(':userID', $userID);
-		$s->execute();
-		
-		$result = $s->fetch(PDO::FETCH_ASSOC);
-		
-		//Close the connection
-		$pdo = null;
+	if(!isset($_SESSION['normalUserOriginalInfoArray'])){
+		try
+		{
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+			
+			$pdo = connect_to_db();
+			$sql = "SELECT 		u.`email`				AS Email,
+								u.`firstName`			AS FirstName,
+								u.`lastName`			AS LastName,
+								u.`displayName`			AS DisplayName,
+								u.`bookingDescription`	AS BookingDescription,
+								u.`bookingCode`			AS BookingCode,
+								u.`create_time`			AS DateTimeCreated,
+								u.`lastActivity`		AS LastActive,
+								u.`sendEmail`			AS SendEmail,
+								u.`sendAdminEmail`		AS SendAdminEmail,
+								u.`password`			AS HashedPassword,
+								a.`AccessName`			AS AccessName,
+								a.`Description` 		AS AccessDescription
+					FROM		`user` u
+					INNER JOIN	`accesslevel` a
+					WHERE 		`userID` = :userID
+					AND			`isActive` = 1
+					LIMIT 		1";
+			$s = $pdo->prepare($sql);
+			$s->bindValue(':userID', $userID);
+			$s->execute();
+			
+			$result = $s->fetch(PDO::FETCH_ASSOC);
+			$_SESSION['normalUserOriginalInfoArray'] = $result;
+			
+			//Close the connection
+			$pdo = null;
+		}
+		catch(PDOException $e)
+		{
+			$error = 'Error getting user information: ' . $e->getMessage();
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+			$pdo = null;
+			exit();
+		}
+	} else {
+		$result = $_SESSION['normalUserOriginalInfoArray'];
 	}
-	catch(PDOException $e)
-	{
-		$error = 'Error getting user information: ' . $e->getMessage();
-		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
-		$pdo = null;
-		exit();
-	}
-	
+
 	$lastActive = convertDatetimeToFormat($result['LastActive'], 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY_WITH_SECONDS);
 	$dateCreated = convertDatetimeToFormat($result['DateTimeCreated'], 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY_WITH_SECONDS);
 	
@@ -534,8 +540,49 @@ if(isset($_SESSION['loggedIn']) AND isset($_SESSION['LoggedInUserID'])){
 	}
 }
 
-if(isset($_GET['revealCode'])){
+if(isset($_POST['action']) AND $_POST['action'] == "Show Code"){
 	$showBookingCode = revealBookingCode($bookingCode);
+}
+
+if( (isset($_POST['action']) AND $_POST['action'] == "Confirm Change") OR 
+	(isset($_SESSION['refreshNormalUserEdit']) AND $_SESSION['refreshNormalUserEdit'])
+){
+	// Do input validation
+	
+	if(isset($_POST['confirmPassword']) AND !empty($_POST['confirmPassword'])){
+		$password = $_POST['confirmPassword'];
+		$hashedPassword = hashPassword($password);
+		if($hashedPassword == $result['HashedPassword']){
+			if($_SESSION['normalUserEditInfoArray'] != $_SESSION['normalUserOriginalInfoArray']){
+				// Save changes to database
+				
+			}
+			unset($_SESSION['normalUserEditMode']);
+		} else {
+			$_SESSION['normalUserFeedback'] = "The Password you submitted was incorrect.";
+		}
+	} elseif(isset($_POST['confirmPassword']) AND empty($_POST['confirmPassword'])){
+		$_SESSION['normalUserFeedback'] = "You need to type in your password before you can make any changes.";
+	}
+	
+}
+
+if(isset($_POST['action']) AND $_POST['action'] == "Change Information"){
+	$_SESSION['normalUserEditMode'] = TRUE;
+}
+
+if(isset($_SESSION['normalUserEditMode'])){
+	$editMode = TRUE;
+	if(!isset($_SESSION['normalUserEditInfoArray'])){
+		$_SESSION['normalUserEditInfoArray'] = $_SESSION['normalUserOriginalInfoArray'];
+	}
+	$edit = $_SESSION['normalUserEditInfoArray'];
+	$firstName = $edit['FirstName'];
+	$lastName = $edit['LastName'];
+	$email = $edit['Email'];
+	$displayName = $edit['DisplayName'];
+	$bookingDescription = $edit['BookingDescription'];
+	
 }
 // Load the html template
 include_once 'user.html.php';

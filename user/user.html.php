@@ -37,51 +37,97 @@
 		<?php if(isset($_SESSION['loggedIn']) AND isset($_SESSION['LoggedInUserID'])) : ?>
 			<div class="left">
 				<fieldset><legend>Your User Information</legend>
-					<div>
-						<label>First Name: </label>
-						<span><?php htmlout($originalFirstName); ?></span>
-					</div>
-					<div>
-						<label>Last Name: </label>
-						<span><?php htmlout($originalLastName); ?></span>
-					</div>
-					<div>
-						<label>Email: </label>
-						<span><?php htmlout($originalEmail); ?></span>
-					</div>
-					<div>
-						<label>Default Display Name: </label>
-						<span><?php htmlout($originalDisplayName); ?></span>
-					</div>
-					<div>
-						<label>Default Booking Description: </label>
-						<span><?php htmlout($originalBookingDescription); ?></span>
-					</div>
-					<?php if(isset($userCanHaveABookingCode)) : ?>
+					<form action="" method="post">
 						<div>
-							<label>Booking Code: </label>
-							<span><?php htmlout($bookingCodeStatus); ?></span>
-							<?php if(isset($userHasABookingCode) AND !isset($showBookingCode)) : ?>
-								<label>Reveal Code: </label><span><a href="?revealCode">(Click to see your code)</a></span>
-							<?php elseif(isset($userHasABookingCode) AND isset($showBookingCode) AND $showBookingCode) : ?>
-								<label>Reveal Code: </label><span><b><?php htmlout($showBookingCode); ?></b></span>
-							<?php elseif(isset($userHasABookingCode) AND isset($showBookingCode) AND $showBookingCode == FALSE) : ?>
-								<label>Reveal Code: </label><span><b>Could not retrieve code.</b></span>
-							<?php endif; ?>
+							<label>First Name: </label>
+							<span><?php htmlout($originalFirstName); ?></span>
 						</div>
+						<?php if($editMode) : ?>
+							<div>
+								<label>Set New First Name: </label>
+								<input type="text" name="firstName" value="<?php htmlout($firstName); ?>">
+							</div>
+						<?php endif; ?>
+
 						<div>
-							<?php if(!isset($userHasABookingCode)) : ?>
-								<label>Set Your Booking Code: </label>
+							<label>Last Name: </label>
+							<span><?php htmlout($originalLastName); ?></span>
+						</div>
+						<?php if($editMode) : ?>
+							<div>
+								<label>Set New Last Name: </label>
+								<input type="text" name="lastName" value="<?php htmlout($lastName); ?>">
+							</div>
+						<?php endif; ?>
+
+						<div>
+							<label>Email: </label>
+							<span><?php htmlout($originalEmail); ?></span>
+						</div>
+						<?php if($editMode) : ?>
+							<div>
+								<label>Set New Email: </label>
+								<input type="text" name="email" value="<?php htmlout($email); ?>">
+							</div>
+						<?php endif; ?>
+
+						<div>
+							<label>Default Display Name: </label>
+							<span><?php htmlout($originalDisplayName); ?></span>
+						</div>
+						<?php if($editMode) : ?>
+							<div>
+								<label>Set New Display Name: </label>
+								<input type="text" name="displayName" value="<?php htmlout($displayName); ?>">
+							</div>
+						<?php endif; ?>
+
+						<div>
+							<label>Default Booking Description: </label>
+							<span style="white-space: pre-wrap;"><?php htmlout($originalBookingDescription); ?></span>
+						</div>
+						<?php if($editMode) : ?>
+							<div>
+								<label>Set New Booking Description: </label>
+								<textarea rows="4" cols="50" name="bookingDescription" style="white-space: pre-wrap;"><?php htmlout($bookingDescription); ?></textarea>
+							</div>
+						<?php endif; ?>
+						
+						<?php if(isset($userCanHaveABookingCode)) : ?>
+							<div>
+								<label>Booking Code: </label>
+								<span><?php htmlout($bookingCodeStatus); ?></span>
+								<?php if(isset($userHasABookingCode) AND !isset($showBookingCode)) : ?>
+									<label>Reveal Code: </label><input type="submit" name="action" value="Show Code">
+								<?php elseif(isset($userHasABookingCode) AND isset($showBookingCode) AND $showBookingCode) : ?>
+									<label>Reveal Code: </label><span><b><?php htmlout($showBookingCode); ?></b></span>
+								<?php elseif(isset($userHasABookingCode) AND isset($showBookingCode) AND $showBookingCode == FALSE) : ?>
+									<label>Reveal Code: </label><span><b>Could not retrieve code.</b></span>
+								<?php endif; ?>
+							</div>
+							
+							<?php if($editMode) : ?>
+								<div>
+									<?php if(!isset($userHasABookingCode)) : ?>
+										<label>Set Your Booking Code: </label>
+									<?php else : ?>
+										<label>Set A New Booking Code: </label>
+									<?php endif; ?>
+									<input type="number" name="bookingCode" min="1" max="<?php htmlout((10 ** BOOKING_CODE_LENGTH)-1); ?>"
+									placeholder="<?php htmlout(BOOKING_CODE_LENGTH . " digits"); ?>" value="<?php htmlout($bookingCode); ?>">
+								</div>
+							<?php endif; ?>
+						<?php endif; ?>
+						
+						<div class="left">
+							<?php if($editMode) : ?>
+								<label>Confirm With Your Password: </label><input type="password" name="confirmPassword" value="">
+								<input type="submit" name="action" value="Confirm Change">
 							<?php else : ?>
-								<label>Set A New Booking Code: </label>
+								<input type="submit" name="action" value="Change Information">
 							<?php endif; ?>
-							<input type="number" name="bookingCode" min="1" max="<?php htmlout((10 ** BOOKING_CODE_LENGTH)-1); ?>"
-							placeholder="<?php htmlout(BOOKING_CODE_LENGTH . " digits"); ?>" value="<?php htmlout($bookingCode); ?>">
 						</div>
-					<?php endif; ?>
-					<div class="left">
-						<input type="submit" name="action" value="Change Information">
-					</div>
+					</form>
 				</fieldset>
 			</div>
 		<?php endif; ?>

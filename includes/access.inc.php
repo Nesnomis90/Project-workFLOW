@@ -444,7 +444,6 @@ function getUserInfoFromBookingCode($rawBookingCode)
 
 // Function to "return" the raw booking code value to a user who has forgotten their own
 // returns FALSE if not found.
-// TO-DO: UNTESTED
 function revealBookingCode($bookingCode){
 	// Since the booking code has been salted and hashed, we have to repeat the process
 	// We can only do this by "brute forcing", but we know the possible values we can have
@@ -454,7 +453,6 @@ function revealBookingCode($bookingCode){
 	$maxNumber = 10 ** BOOKING_CODE_LENGTH;
 	
 	// Loop through possible combinations and hash them
-	// TO-DO: Add some sleep to reduce CPU load?
 	for($i=0; $i<$maxNumber; $i++){
 		
 		$viableHashedBookingCode = hashBookingCode($i);
