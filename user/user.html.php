@@ -63,8 +63,10 @@
 							<span><?php htmlout($bookingCodeStatus); ?></span>
 							<?php if(isset($userHasABookingCode) AND !isset($showBookingCode)) : ?>
 								<label>Reveal Code: </label><span><a href="?revealCode">(Click to see your code)</a></span>
-							<?php elseif(isset($userHasABookingCode) AND isset($showBookingCode)) : ?>
-								<span><b><?php htmlout($showBookingCode); ?></b></span>
+							<?php elseif(isset($userHasABookingCode) AND isset($showBookingCode) AND $showBookingCode) : ?>
+								<label>Reveal Code: </label><span><b><?php htmlout($showBookingCode); ?></b></span>
+							<?php elseif(isset($userHasABookingCode) AND isset($showBookingCode) AND $showBookingCode == FALSE) : ?>
+								<label>Reveal Code: </label><span><b>Could not retrieve code.</b></span>
 							<?php endif; ?>
 						</div>
 						<div>

@@ -533,6 +533,10 @@ if(isset($_SESSION['loggedIn']) AND isset($_SESSION['LoggedInUserID'])){
 		}
 	}
 }
+
+if(isset($_GET['revealCode'])){
+	$showBookingCode = revealBookingCode($bookingCode);
+}
 // Load the html template
 include_once 'user.html.php';
 ?>
