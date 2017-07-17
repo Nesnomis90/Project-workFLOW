@@ -531,12 +531,12 @@ if(isset($_SESSION['loggedIn']) AND isset($_SESSION['LoggedInUserID'])){
 	
 	$accessName = $result['AccessName'];
 	$accessDescription = $result['AccessDescription'];
-	$bookingCode = $result['BookingCode'];
+	$originalBookingCode = $result['BookingCode'];
 	
 	if($accessName != "Normal User"){
 		$userCanHaveABookingCode = TRUE;
 		
-		if($bookingCode !== NULL){
+		if($originalBookingCode !== NULL){
 			$userHasABookingCode = TRUE;
 			$bookingCodeStatus = "You have an active booking code.";
 		} else {
@@ -550,7 +550,7 @@ if(isset($_SESSION['loggedIn']) AND isset($_SESSION['LoggedInUserID'])){
 }
 
 if(isset($_POST['action']) AND $_POST['action'] == "Show Code"){
-	$showBookingCode = revealBookingCode($bookingCode);
+	$showBookingCode = revealBookingCode($originalBookingCode);
 }
 
 if(isset($_POST['action']) AND $_POST['action'] == "Confirm Change"){
@@ -661,21 +661,23 @@ if(isset($_POST['action']) AND $_POST['action'] == "Confirm Change"){
 		$_SESSION['normalUserFeedback'] = "The booking description submitted is too long.";	
 		$invalidInput = TRUE;		
 	}
-		// Booking Code
-	if(validateIntegerNumber($validatedBookingCode) === FALSE AND !$invalidInput){
-		$invalidInput = TRUE;
-		$_SESSION['normalUserFeedback'] = "Your submitted booking code has illegal characters in it.";		
-	}
-		// Check if booking code is a legit format (correct amount of digits)
-	if(isNumberInvalidBookingCode($validatedBookingCode) === TRUE AND !$invalidInput){
-		$invalidInput = TRUE;
-		$_SESSION['normalUserFeedback'] = "The booking code you selected is not valid.";		
-	}
-	
-	// Check if booking code submitted already exists
-	if(databaseContainsBookingCode($validatedBookingCode) === TRUE AND !$invalidInput){
-		$_SESSION['normalUserFeedback'] = "The booking code you selected is not valid.";	
-		$invalidInput = TRUE;
+	if(isset($validatedBookingCode)){
+			// Booking Code
+		if(validateIntegerNumber($validatedBookingCode) === FALSE AND !$invalidInput){
+			$invalidInput = TRUE;
+			$_SESSION['normalUserFeedback'] = "Your submitted booking code has illegal characters in it.";		
+		}
+			// Check if booking code is a legit format (correct amount of digits)
+		if(isNumberInvalidBookingCode($validatedBookingCode) === TRUE AND !$invalidInput){
+			$invalidInput = TRUE;
+			$_SESSION['normalUserFeedback'] = "The booking code you selected is not valid.";		
+		}
+		
+		// Check if booking code submitted already exists
+		if(databaseContainsBookingCode($validatedBookingCode) === TRUE AND !$invalidInput){
+			$_SESSION['normalUserFeedback'] = "The booking code you selected is not valid.";	
+			$invalidInput = TRUE;
+		}
 	}
 	
 	// Check if the submitted email has already been used
