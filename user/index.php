@@ -495,6 +495,8 @@ if(isset($_SESSION['loggedIn']) AND isset($_SESSION['LoggedInUserID'])){
 		$s->bindValue(':userID', $userID);
 		$s->execute();
 		
+		$result = $s->fetch(PDO::FETCH_ASSOC);
+		
 		//Close the connection
 		$pdo = null;
 	}
@@ -505,8 +507,29 @@ if(isset($_SESSION['loggedIn']) AND isset($_SESSION['LoggedInUserID'])){
 		$pdo = null;
 		exit();
 	}
+	
+	$lastActive = convertDatetimeToFormat($row['LastActive'], 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY_WITH_SECONDS);
+	$dateCreated = convertDatetimeToFormat($row['DateTimeCreated'], 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY_WITH_SECONDS);
+	
+	$originalFirstName = $row['FirstName'];
+	$originalLastName = $row['LastName'];
+	$originalEmail = $row['Email'];
+	$originalDisplayName = $row['DisplayName'];
+	$originalBookingDescription = $row['BookingDescription'];
+	
+	$accessName = $row['AccessName'];
+	$accessDescription = $row['AccessDescription'];
+	$bookingCode = $row['BookingCode'];
+	$sendEmail = $row['SendEmail'];
+	$sendAdminEmail = $row['SendAdminEmail'];
+	if($accessName != "Normal User"){
+		$userCanHaveABookingCode = TRUE;
+		
+		if($bookingCode !== NULL){
+			$userHasABookingCode = TRUE;
+		}
+	}
 }
-
 // Load the html template
 include_once 'user.html.php';
 ?>

@@ -73,7 +73,7 @@
 							<?php else : ?>
 								<label>Set A New Booking Code: </label>
 							<?php endif; ?>
-							<input type="number" name="bookingCode" min="1" max="<?php htmlout(pow(10,BOOKING_CODE_LENGTH)-1); ?>"
+							<input type="number" name="bookingCode" min="1" max="<?php htmlout((10 ** BOOKING_CODE_LENGTH)-1); ?>"
 							value="<?php htmlout($bookingCode); ?>">
 						</div>
 					<?php endif; ?>
