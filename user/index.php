@@ -508,25 +508,28 @@ if(isset($_SESSION['loggedIn']) AND isset($_SESSION['LoggedInUserID'])){
 		exit();
 	}
 	
-	$lastActive = convertDatetimeToFormat($row['LastActive'], 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY_WITH_SECONDS);
-	$dateCreated = convertDatetimeToFormat($row['DateTimeCreated'], 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY_WITH_SECONDS);
+	$lastActive = convertDatetimeToFormat($result['LastActive'], 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY_WITH_SECONDS);
+	$dateCreated = convertDatetimeToFormat($result['DateTimeCreated'], 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY_WITH_SECONDS);
 	
-	$originalFirstName = $row['FirstName'];
-	$originalLastName = $row['LastName'];
-	$originalEmail = $row['Email'];
-	$originalDisplayName = $row['DisplayName'];
-	$originalBookingDescription = $row['BookingDescription'];
+	$originalFirstName = $result['FirstName'];
+	$originalLastName = $result['LastName'];
+	$originalEmail = $result['Email'];
+	$originalDisplayName = $result['DisplayName'];
+	$originalBookingDescription = $result['BookingDescription'];
 	
-	$accessName = $row['AccessName'];
-	$accessDescription = $row['AccessDescription'];
-	$bookingCode = $row['BookingCode'];
-	$sendEmail = $row['SendEmail'];
-	$sendAdminEmail = $row['SendAdminEmail'];
+	$accessName = $result['AccessName'];
+	$accessDescription = $result['AccessDescription'];
+	$bookingCode = $result['BookingCode'];
+	$sendEmail = $result['SendEmail'];
+	$sendAdminEmail = $result['SendAdminEmail'];
 	if($accessName != "Normal User"){
 		$userCanHaveABookingCode = TRUE;
 		
 		if($bookingCode !== NULL){
 			$userHasABookingCode = TRUE;
+			$bookingCodeStatus = "You have an active booking code.";
+		} else {
+			$bookingCodeStatus = "You have not set a booking code.";
 		}
 	}
 }

@@ -34,7 +34,7 @@
 			<?php endif; ?>
 		</div>
 
-		<?php if(isset($_SESSION['loggedIn'])) : ?>
+		<?php if(isset($_SESSION['loggedIn']) AND isset($_SESSION['LoggedInUserID'])) : ?>
 			<div class="left">
 				<fieldset><legend>Your User Information</legend>
 					<div>
@@ -62,25 +62,26 @@
 							<label>Booking Code: </label>
 							<span><?php htmlout($bookingCodeStatus); ?></span>
 							<?php if(isset($userHasABookingCode) AND !isset($showBookingCode)) : ?>
-								<a href="?revealCode">(Click to see your code)</a>
+								<label>Reveal Code: </label><span><a href="?revealCode">(Click to see your code)</a></span>
 							<?php elseif(isset($userHasABookingCode) AND isset($showBookingCode)) : ?>
 								<span><b><?php htmlout($showBookingCode); ?></b></span>
 							<?php endif; ?>
 						</div>
 						<div>
-							<?php if(isset($userHasABookingCode)) : ?>
+							<?php if(!isset($userHasABookingCode)) : ?>
 								<label>Set Your Booking Code: </label>
 							<?php else : ?>
 								<label>Set A New Booking Code: </label>
 							<?php endif; ?>
 							<input type="number" name="bookingCode" min="1" max="<?php htmlout((10 ** BOOKING_CODE_LENGTH)-1); ?>"
-							value="<?php htmlout($bookingCode); ?>">
+							placeholder="<?php htmlout(BOOKING_CODE_LENGTH . " digits"); ?>" value="<?php htmlout($bookingCode); ?>">
 						</div>
 					<?php endif; ?>
+					<div class="left">
+						<input type="submit" name="action" value="Change Information">
+					</div>
 				</fieldset>
 			</div>
 		<?php endif; ?>
-
-		<?php include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/logout.inc.html.php'; ?>
 	</body>
 </html>
