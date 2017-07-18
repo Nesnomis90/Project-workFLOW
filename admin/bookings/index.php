@@ -59,6 +59,8 @@ function rememberEditBookingInputs(){
 		$newValues['BookedBy'] = trimExcessWhitespace($_POST['displayName']);
 			// The booking description
 		$newValues['BookingDescription'] = trimExcessWhitespaceButLeaveLinefeed($_POST['description']);
+			// The admin note
+		$newValues['AdminNote'] = trimExcessWhitespaceButLeaveLinefeed($_POST['adminNote']);
 			// The start time
 		$newValues['StartTime'] = trimExcessWhitespace($_POST['startDateTime']);
 			// The end time
@@ -85,6 +87,8 @@ function rememberAddBookingInputs(){
 		$newValues['BookedBy'] = trimExcessWhitespace($_POST['displayName']);
 			// The booking description
 		$newValues['BookingDescription'] = trimExcessWhitespaceButLeaveLinefeed($_POST['description']);
+			// The admin note
+		$newValues['AdminNote'] = trimExcessWhitespaceButLeaveLinefeed($_POST['adminNote']);
 			// The start time
 		$newValues['StartTime'] = trimExcessWhitespace($_POST['startDateTime']);
 			// The end time
@@ -149,12 +153,18 @@ function validateUserInputs($FeedbackSessionToUse, $editing){
 	} else {
 		$bookingDescriptionString = '';
 	}
+	if(isSet($_POST['adminNote'])){
+		$adminNoteString = $_POST['adminNote'];
+	} else {
+		$adminNoteString = '';
+	}	
 	
 	// Remove excess whitespace and prepare strings for validation
 	$validatedStartDateTime = trimExcessWhitespace($startDateTimeString);
 	$validatedEndDateTime = trimExcessWhitespace($endDateTimeString);
 	$validatedDisplayName = trimExcessWhitespaceButLeaveLinefeed($displayNameString);
-	$validatedBookingDescription = trimExcessWhitespaceButLeaveLinefeed($bookingDescriptionString);	
+	$validatedBookingDescription = trimExcessWhitespaceButLeaveLinefeed($bookingDescriptionString);
+	$validatedAdminNote = trimExcessWhitespaceButLeaveLinefeed($adminNoteString);
 	
 	// Do actual input validation
 	if(validateDateTimeString($validatedStartDateTime) === FALSE AND !$invalidInput){
@@ -172,6 +182,10 @@ function validateUserInputs($FeedbackSessionToUse, $editing){
 	if(validateString($validatedBookingDescription) === FALSE AND !$invalidInput){
 		$invalidInput = TRUE;
 		$_SESSION[$FeedbackSessionToUse] = "Your submitted booking description has illegal characters in it.";
+	}
+	if(validateString($validatedAdminNote) === FALSE AND !$invalidInput){
+		$invalidInput = TRUE;
+		$_SESSION[$FeedbackSessionToUse] = "Your submitted admin note has illegal characters in it.";
 	}
 	
 	// Are values actually filled in?
@@ -200,7 +214,13 @@ function validateUserInputs($FeedbackSessionToUse, $editing){
 		$_SESSION[$FeedbackSessionToUse] = "The booking description submitted is too long.";	
 		$invalidInput = TRUE;		
 	}
-	
+		// AdminNote
+	$invalidAdminNote = isLengthInvalidBookingDescription($validatedAdminNote);
+	if($invalidAdminNote AND !$invalidInput){
+		$_SESSION[$FeedbackSessionToUse] = "The admin note submitted is too long.";	
+		$invalidInput = TRUE;		
+	}	
+
 	// Check if the dateTime inputs we received are actually datetimes
 	$startDateTime = correctDatetimeFormat($validatedStartDateTime);
 	$endDateTime = correctDatetimeFormat($validatedEndDateTime);
@@ -270,7 +290,7 @@ function validateUserInputs($FeedbackSessionToUse, $editing){
 		}
 	}
 
-	return array($invalidInput, $startDateTime, $endDateTime, $validatedBookingDescription, $validatedDisplayName);
+	return array($invalidInput, $startDateTime, $endDateTime, $validatedBookingDescription, $validatedDisplayName, $validatedAdminNote);
 }
 
 // If admin wants to be able to delete bookings it needs to enabled first
@@ -527,6 +547,7 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Edit') OR
 									b.`displayName` 								AS BookedBy,
 									b.`userID`										AS TheUserID,
 									b.`cancellationCode`							AS CancellationCode,
+									b.`adminNote`									AS AdminNote,
 									IF(b.`companyID` IS NULL, NULL, 
 										(	
 											SELECT `name` 
@@ -731,6 +752,11 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Edit') OR
 	}
 	$displayName = $row['BookedBy'];
 	$description = $row['BookingDescription'];
+	if($row['AdminNote'] === NULL){
+		$adminNote = "";
+	} else {
+		$adminNote = $row['AdminNote'];
+	}
 	$userInformation = $row['UserLastname'] . ', ' . $row['UserFirstname'] . ' - ' . $row['UserEmail'];
 		// Original values	
 	$originalStartDateTime = $original['StartTime'];
@@ -750,6 +776,11 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Edit') OR
 	}
 	$originalDisplayName = $original['BookedBy'];
 	$originalBookingDescription = $original['BookingDescription'];
+	if($original['AdminNote'] === NULL){
+		$originalAdminNote = "";
+	} else {
+		$originalAdminNote = $original['AdminNote'];
+	}
 	$originalUserInformation = 	$original['UserLastname'] . ', ' . $original['UserFirstname'] . 
 								' - ' . $original['UserEmail'];
 	if(!isSet($originalUserInformation) OR $originalUserInformation == NULL OR $originalUserInformation == ",  - "){
@@ -1053,7 +1084,7 @@ if(isSet($_POST['edit']) AND $_POST['edit'] == "Finish Edit")
 {
 
 	// Validate user inputs
-	list($invalidInput, $startDateTime, $endDateTime, $bknDscrptn, $dspname) = validateUserInputs('EditBookingError', TRUE);
+	list($invalidInput, $startDateTime, $endDateTime, $bknDscrptn, $dspname, $validatedAdminNote) = validateUserInputs('EditBookingError', TRUE);
 
 	// We want to check if a booking is in the correct minute slice e.g. 15 minute increments.
 		// We check both start and end time for online/admin bookings
@@ -1136,7 +1167,14 @@ if(isSet($_POST['edit']) AND $_POST['edit'] == "Finish Edit")
 		$numberOfChanges++;
 		$newUser = TRUE;
 	}	
-
+	if($validatedAdminNote == ""){
+		$validatedAdminNote = NULL;
+	}
+	if($validatedAdminNote != $originalValue['AdminNote']){
+		$numberOfChanges++;
+		$newUser = TRUE;
+	}
+	
 	if($numberOfChanges == 0){
 		// There were no changes made. Go back to booking overview
 		$_SESSION['BookingUserFeedback'] = "No changes were made to the booking.";
@@ -1295,6 +1333,7 @@ if(isSet($_POST['edit']) AND $_POST['edit'] == "Finish Edit")
 						`endDateTime` = :endDateTime,
 						`displayName` = :displayName,
 						`description` = :description,
+						`adminNote`	= :adminNote,
 						`cancellationCode` = :cancellationCode
 				WHERE	`bookingID` = :BookingID";
 		$s = $pdo->prepare($sql);
@@ -1307,6 +1346,7 @@ if(isSet($_POST['edit']) AND $_POST['edit'] == "Finish Edit")
 		$s->bindValue(':endDateTime', $endDateTime);
 		$s->bindValue(':displayName', $dspname);
 		$s->bindValue(':description', $bknDscrptn);
+		$s->bindValue(':adminNote', $validatedAdminNote);
 		$s->bindValue(':cancellationCode', $cancellationCode);
 	
 		$s->execute();
@@ -1563,6 +1603,7 @@ if (	(isSet($_POST['action']) AND $_POST['action'] == "Create Booking") OR
 														'StartTime' => '',
 														'EndTime' => '',
 														'BookingDescription' => '',
+														'AdminNote' => '',
 														'BookedBy' => '',
 														'BookedForCompany' => '',
 														'TheUserID' => '',
@@ -1788,6 +1829,11 @@ if (	(isSet($_POST['action']) AND $_POST['action'] == "Create Booking") OR
 	} else {
 		$description = '';
 	}
+	if(isSet($row['AdminNote'])){
+		$adminNote = $row['AdminNote'];
+	} else {
+		$adminNote = '';
+	}	
 	
 	$userInformation = $row['UserLastname'] . ', ' . $row['UserFirstname'] . ' - ' . $row['UserEmail'];	
 
@@ -1846,7 +1892,7 @@ if(isSet($_POST['add']) AND $_POST['add'] == "Increase End By Minimum"){
 if (isSet($_POST['add']) AND $_POST['add'] == "Add booking")
 {
 	// Validate user inputs
-	list($invalidInput, $startDateTime, $endDateTime, $bknDscrptn, $dspname) = validateUserInputs('AddBookingError', FALSE);
+	list($invalidInput, $startDateTime, $endDateTime, $bknDscrptn, $dspname, $validatedAdminNote) = validateUserInputs('AddBookingError', FALSE);
 					
 	// handle feedback process on invalid input values
 	if($invalidInput){
@@ -1967,6 +2013,9 @@ if (isSet($_POST['add']) AND $_POST['add'] == "Add booking")
 			$companyID = NULL;
 		}
 	
+		if($validatedAdminNote == ''){
+			$validatedAdminNote = NULL;
+		}
 		//Generate cancellation code
 		$cancellationCode = generateCancellationCode();
 		
@@ -1981,6 +2030,7 @@ if (isSet($_POST['add']) AND $_POST['add'] == "Add booking")
 							`startDateTime` = :startDateTime,
 							`endDateTime` = :endDateTime,
 							`description` = :description,
+							`adminNote` = :adminNote,
 							`cancellationCode` = :cancellationCode';
 
 		$s = $pdo->prepare($sql);
@@ -1992,6 +2042,7 @@ if (isSet($_POST['add']) AND $_POST['add'] == "Add booking")
 		$s->bindValue(':startDateTime', $startDateTime);
 		$s->bindValue(':endDateTime', $endDateTime);
 		$s->bindValue(':description', $bknDscrptn);
+		$s->bindValue(':adminNote', $validatedAdminNote);
 		$s->bindValue(':cancellationCode', $cancellationCode);
 		$s->execute();
 
@@ -2447,7 +2498,8 @@ if(!isSet($_GET['Meetingroom'])){
 									)
 								)
 							)												AS WorksForCompany,		 
-							b.`description`									AS BookingDescription, 
+							b.`description`									AS BookingDescription,
+							b.`adminNote`									AS AdminNote,
 							b.`dateTimeCreated`								AS BookingWasCreatedOn, 
 							b.`actualEndDateTime`							AS BookingWasCompletedOn, 
 							b.`dateTimeCancelled`							AS BookingWasCancelledOn 
@@ -2507,7 +2559,8 @@ if(!isSet($_GET['Meetingroom'])){
 									)
 								)
 							)												AS WorksForCompany,		 
-							b.`description`									AS BookingDescription, 
+							b.`description`									AS BookingDescription,
+							b.`adminNote`									AS AdminNote,							
 							b.`dateTimeCreated`								AS BookingWasCreatedOn, 
 							b.`actualEndDateTime`							AS BookingWasCompletedOn, 
 							b.`dateTimeCancelled`							AS BookingWasCancelledOn 
@@ -2603,6 +2656,10 @@ foreach ($result as $row)
 	$email = $row['email'];
 	$userinfo = $lastname . ', ' . $firstname . ' - ' . $row['email'];
 	$worksForCompany = $row['WorksForCompany'];
+	$adminNote = $row['AdminNote'];
+	if(!isSet($adminNote) OR $adminNote == NULL){
+		$adminNote = "";
+	}
 	if(!isSet($roomName) OR $roomName == NULL OR $roomName == ""){
 		$roomName = "N/A - Deleted";
 	}
@@ -2617,6 +2674,7 @@ foreach ($result as $row)
 	if(!isSet($worksForCompany) OR $worksForCompany == NULL OR $worksForCompany == ""){
 		$worksForCompany = "N/A";
 	}
+	
 	$displayValidatedStartDate = convertDatetimeToFormat($startDateTime , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
 	$displayValidatedEndDate = convertDatetimeToFormat($endDateTime, 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
 	$displayCompletedDateTime = convertDatetimeToFormat($completedDateTime, 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
@@ -2645,6 +2703,7 @@ foreach ($result as $row)
 							'BookedBy' => $row['BookedBy'],
 							'BookedForCompany' => $row['BookedForCompany'],
 							'BookingDescription' => $row['BookingDescription'],
+							'AdminNote' => $adminNote,
 							'firstName' => $firstname,
 							'lastName' => $lastname,
 							'email' => $email,
@@ -2666,6 +2725,7 @@ foreach ($result as $row)
 							'BookedBy' => $row['BookedBy'],
 							'BookedForCompany' => $row['BookedForCompany'],
 							'BookingDescription' => $row['BookingDescription'],
+							'AdminNote' => $adminNote,
 							'firstName' => $firstname,
 							'lastName' => $lastname,
 							'email' => $email,
@@ -2685,6 +2745,7 @@ foreach ($result as $row)
 							'BookedBy' => $row['BookedBy'],
 							'BookedForCompany' => $row['BookedForCompany'],
 							'BookingDescription' => $row['BookingDescription'],
+							'AdminNote' => $adminNote,
 							'firstName' => $firstname,
 							'lastName' => $lastname,
 							'email' => $email,
@@ -2706,6 +2767,7 @@ foreach ($result as $row)
 							'BookedBy' => $row['BookedBy'],
 							'BookedForCompany' => $row['BookedForCompany'],
 							'BookingDescription' => $row['BookingDescription'],
+							'AdminNote' => $adminNote,
 							'firstName' => $firstname,
 							'lastName' => $lastname,
 							'email' => $email,
@@ -2725,6 +2787,7 @@ foreach ($result as $row)
 							'BookedBy' => $row['BookedBy'],
 							'BookedForCompany' => $row['BookedForCompany'],
 							'BookingDescription' => $row['BookingDescription'],
+							'AdminNote' => $adminNote,
 							'firstName' => $firstname,
 							'lastName' => $lastname,
 							'email' => $email,
@@ -2744,6 +2807,7 @@ foreach ($result as $row)
 							'BookedBy' => $row['BookedBy'],
 							'BookedForCompany' => $row['BookedForCompany'],
 							'BookingDescription' => $row['BookingDescription'],
+							'AdminNote' => $adminNote,
 							'firstName' => $firstname,
 							'lastName' => $lastname,
 							'email' => $email,

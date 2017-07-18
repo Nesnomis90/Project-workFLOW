@@ -55,7 +55,7 @@
 		<table>
 			<caption>Active Bookings Today</caption>
 			<tr>
-				<th colspan="8">Booking information</th>
+				<th colspan="9">Booking information</th>
 				<th colspan="4">Connected user information</th>
 				<th colspan="3">Alter Booking</th>
 			</tr>				
@@ -67,6 +67,7 @@
 				<th>Display Name</th>
 				<th>For Company</th>
 				<th>Description</th>
+				<th>Admin Note</th>
 				<th>Created At</th>
 				<th>First Name</th>
 				<th>Last Name</th>
@@ -87,6 +88,7 @@
 						<td style="white-space: pre-wrap;"><?php htmlout($booking['BookedBy']); ?></td>
 						<td><?php htmlout($booking['BookedForCompany']); ?></td>
 						<td style="white-space: pre-wrap;"><?php htmlout($booking['BookingDescription']); ?></td>
+						<td style="white-space: pre-wrap;"><?php htmlout($booking['AdminNote']); ?></td>
 						<td><?php htmlout($booking['BookingWasCreatedOn']); ?></td>
 						<td><?php htmlout($booking['firstName']); ?></td>
 						<td><?php htmlout($booking['lastName']); ?></td>
@@ -121,7 +123,7 @@
 		<table>
 			<caption>Completed Bookings Today</caption>
 			<tr>
-				<th colspan="8">Booking information</th>
+				<th colspan="9">Booking information</th>
 				<th colspan="3">Completion Info</th>
 				<th colspan="4">Connected user information</th>
 				<th colspan="3">Alter Booking</th>
@@ -134,6 +136,7 @@
 				<th>Display Name</th>
 				<th>For Company</th>
 				<th>Description</th>
+				<th>Admin Note</th>
 				<th>Created At</th>
 				<th>Finished At</th>
 				<th>Actual Duration</th>
@@ -157,6 +160,7 @@
 						<td style="white-space: pre-wrap;"><?php htmlout($booking['BookedBy']); ?></td>
 						<td><?php htmlout($booking['BookedForCompany']); ?></td>
 						<td style="white-space: pre-wrap;"><?php htmlout($booking['BookingDescription']); ?></td>
+						<td style="white-space: pre-wrap;"><?php htmlout($booking['AdminNote']); ?></td>
 						<td><?php htmlout($booking['BookingWasCreatedOn']); ?></td>
 						<td><?php htmlout($booking['BookingWasCompletedOn']); ?></td>
 						<td><?php htmlout($booking['CompletedMeetingDuration']); ?></td>
@@ -192,7 +196,7 @@
 		<table>
 			<caption>Future Bookings</caption>
 			<tr>
-				<th colspan="8">Booking information</th>
+				<th colspan="9">Booking information</th>
 				<th colspan="4">Connected user information</th>
 				<th colspan="3">Alter Booking</th>
 			</tr>				
@@ -204,6 +208,7 @@
 				<th>Display Name</th>
 				<th>For Company</th>
 				<th>Description</th>
+				<th>Admin Note</th>
 				<th>Created At</th>
 				<th>First Name</th>
 				<th>Last Name</th>
@@ -224,6 +229,7 @@
 						<td style="white-space: pre-wrap;"><?php htmlout($booking['BookedBy']); ?></td>
 						<td><?php htmlout($booking['BookedForCompany']); ?></td>
 						<td style="white-space: pre-wrap;"><?php htmlout($booking['BookingDescription']); ?></td>
+						<td style="white-space: pre-wrap;"><?php htmlout($booking['AdminNote']); ?></td>
 						<td><?php htmlout($booking['BookingWasCreatedOn']); ?></td>
 						<td><?php htmlout($booking['firstName']); ?></td>
 						<td><?php htmlout($booking['lastName']); ?></td>
@@ -256,7 +262,7 @@
 		<table>
 			<caption>Completed Bookings</caption>
 			<tr>
-				<th colspan="8">Booking information</th>
+				<th colspan="9">Booking information</th>
 				<th colspan="3">Completion Info</th>
 				<th colspan="4">Connected user information</th>
 				<th colspan="3">Alter Booking</th>
@@ -269,6 +275,7 @@
 				<th>Display Name</th>
 				<th>For Company</th>
 				<th>Description</th>
+				<th>Admin Note</th>
 				<th>Created At</th>
 				<th>Finished At</th>
 				<th>Actual Duration</th>
@@ -292,6 +299,7 @@
 						<td style="white-space: pre-wrap;"><?php htmlout($booking['BookedBy']); ?></td>
 						<td><?php htmlout($booking['BookedForCompany']); ?></td>
 						<td style="white-space: pre-wrap;"><?php htmlout($booking['BookingDescription']); ?></td>
+						<td style="white-space: pre-wrap;"><?php htmlout($booking['AdminNote']); ?></td>
 						<td><?php htmlout($booking['BookingWasCreatedOn']); ?></td>
 						<td><?php htmlout($booking['BookingWasCompletedOn']); ?></td>
 						<td><?php htmlout($booking['CompletedMeetingDuration']); ?></td>
@@ -328,7 +336,7 @@
 		<table>
 			<caption>Bookings Cancelled</caption>
 			<tr>
-				<th colspan="8">Booking information</th>
+				<th colspan="9">Booking information</th>
 				<th>Completion Date</th>
 				<th colspan="4">Connected user information</th>
 				<th colspan="3">Alter Booking</th>
@@ -341,6 +349,7 @@
 				<th>Display Name</th>
 				<th>For Company</th>
 				<th>Description</th>
+				<th>Admin Note</th>
 				<th>Created At</th>
 				<th>Cancelled</th>
 				<th>First Name</th>
@@ -362,6 +371,7 @@
 						<td style="white-space: pre-wrap;"><?php htmlout($booking['BookedBy']); ?></td>
 						<td><?php htmlout($booking['BookedForCompany']); ?></td>
 						<td style="white-space: pre-wrap;"><?php htmlout($booking['BookingDescription']); ?></td>
+						<td style="white-space: pre-wrap;"><?php htmlout($booking['AdminNote']); ?></td>
 						<td><?php htmlout($booking['BookingWasCreatedOn']); ?></td>
 						<td><?php htmlout($booking['BookingWasCancelledOn']); ?></td>
 						<td><?php htmlout($booking['firstName']); ?></td>
@@ -396,7 +406,7 @@
 		<table>
 			<caption>Other Bookings</caption>
 			<tr>
-				<th colspan="8">Booking information</th>
+				<th colspan="9">Booking information</th>
 				<th colspan="2">Completion Info</th>
 				<th colspan="4">Connected user information</th>
 				<th colspan="3">Alter Booking</th>
@@ -409,6 +419,7 @@
 				<th>Display Name</th>
 				<th>For Company</th>
 				<th>Description</th>
+				<th>Admin Note</th>
 				<th>Created At</th>
 				<th>Finished</th>
 				<th>Cancelled</th>
@@ -430,6 +441,7 @@
 						<td style="white-space: pre-wrap;"><?php htmlout($booking['BookedBy']); ?></td>
 						<td><?php htmlout($booking['BookedForCompany']); ?></td>
 						<td style="white-space: pre-wrap;"><?php htmlout($booking['BookingDescription']); ?></td>
+						<td style="white-space: pre-wrap;"><?php htmlout($booking['AdminNote']); ?></td>
 						<td><?php htmlout($booking['BookingWasCreatedOn']); ?></td>
 						<td><?php htmlout($booking['BookingWasCompletedOn']); ?></td>
 						<td><?php htmlout($booking['BookingWasCancelledOn']); ?></td>
@@ -461,7 +473,8 @@
 		</table>
 		<?php endif; ?>
 		
-		<p><a href="..">Return to CMS home</a></p>
+	<div class="left"><a href="..">Return to CMS home</a></div>
+
 	<?php include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/logout.inc.html.php'; ?>
 	</body>
 </html>
