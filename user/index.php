@@ -472,24 +472,27 @@ if(isSet($_POST['action']) AND $_POST['action'] == "Cancel"){
 if(isSet($_SESSION['loggedIn']) AND isSet($_SESSION['LoggedInUserID'])){
 	// Get User information if user is logged in
 	$userID = $_SESSION['LoggedInUserID'];
+	if(isSet($_SESSION['normalUserOriginalInfoArray']) AND $_SESSION['normalUserOriginalInfoArray']['UserID'] != $userID){
+		unset($_SESSION['normalUserOriginalInfoArray']);
+	}
 	if(!isSet($_SESSION['normalUserOriginalInfoArray'])){
 		try
 		{
 			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 			
 			$pdo = connect_to_db();
-			$sql = "SELECT 		u.`email`				AS Email,
+			$sql = "SELECT 		u.`userID`				AS UserID,
+								u.`email`				AS Email,
 								u.`firstName`			AS FirstName,
 								u.`lastName`			AS LastName,
 								u.`displayName`			AS DisplayName,
 								u.`bookingDescription`	AS BookingDescription,
 								u.`bookingCode`			AS BookingCode,
 								u.`lastCodeUpdate`		AS LastCodeUpdate,
-								IF(
-									u.`lastCodeUpdate` IS NOT NULL,
-									DATE_ADD(u.`lastCodeUpdate`, INTERVAL 30 DAY),
-									NULL
-								)						AS NextBookingCodeChange,
+								DATE_ADD(
+											u.`lastCodeUpdate`,
+											INTERVAL 30 DAY
+										) 				AS NextBookingCodeChange,
 								u.`create_time`			AS DateTimeCreated,
 								u.`lastActivity`		AS LastActive,
 								u.`sendEmail`			AS SendEmail,
@@ -500,8 +503,8 @@ if(isSet($_SESSION['loggedIn']) AND isSet($_SESSION['LoggedInUserID'])){
 					FROM		`user` u
 					INNER JOIN	`accesslevel` a
 					ON			a.`AccessID` = u.`AccessID`
-					WHERE 		`userID` = :userID
-					AND			`isActive` = 1
+					WHERE 		u.`userID` = :userID
+					AND			u.`isActive` = 1
 					LIMIT 		1";
 			$s = $pdo->prepare($sql);
 			$s->bindValue(':userID', $userID);
@@ -526,9 +529,11 @@ if(isSet($_SESSION['loggedIn']) AND isSet($_SESSION['LoggedInUserID'])){
 
 	$lastActive = convertDatetimeToFormat($result['LastActive'], 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY_WITH_SECONDS);
 	$dateCreated = convertDatetimeToFormat($result['DateTimeCreated'], 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY_WITH_SECONDS);
-	$nextBookingCodeChange = $result['NextBookingCodeChange'];
-	if($nextBookingCodeChange !== NULL){
+	$lastCodeUpdateDate = $result['LastCodeUpdate'];
+
+	if($lastCodeUpdateDate !== NULL){
 		$dateNow = getDateNow();
+		$nextBookingCodeChange = $result['NextBookingCodeChange'];		
 		if($dateNow > $nextBookingCodeChange){
 			$canSetNewCode = TRUE;
 		} else {
@@ -537,7 +542,7 @@ if(isSet($_SESSION['loggedIn']) AND isSet($_SESSION['LoggedInUserID'])){
 	} else {
 		$canSetNewCode = TRUE;
 	}
-	
+
 	$originalFirstName = $result['FirstName'];
 	$originalLastName = $result['LastName'];
 	$originalEmail = $result['Email'];
@@ -545,14 +550,14 @@ if(isSet($_SESSION['loggedIn']) AND isSet($_SESSION['LoggedInUserID'])){
 	$originalBookingDescription = $result['BookingDescription'];
 	$originalSendEmail = $result['SendEmail'];
 	$originalSendAdminEmail = $result['SendAdminEmail'];
-	
+
 	$accessName = $result['AccessName'];
 	$accessDescription = $result['AccessDescription'];
 	$originalBookingCode = $result['BookingCode'];
-	
+
 	if($accessName != "Normal User"){
 		$userCanHaveABookingCode = TRUE;
-		
+
 		if($originalBookingCode !== NULL){
 			$userHasABookingCode = TRUE;
 			$bookingCodeStatus = "You have an active booking code.";
@@ -568,7 +573,7 @@ if(isSet($_SESSION['loggedIn']) AND isSet($_SESSION['LoggedInUserID'])){
 
 if(isSet($_POST['action']) AND $_POST['action'] == "Show Code"){
 	$showBookingCode = revealBookingCode($originalBookingCode);
-	
+
 	if(isSet($_SESSION['normalUserEditInfoArray']) AND isSet($_SESSION['normalUserEditMode'])){
 		$_SESSION['normalUserEditInfoArray']['FirstName'] = trimExcessWhitespace($_POST['firstName']);
 		$_SESSION['normalUserEditInfoArray']['LastName'] = trimExcessWhitespace($_POST['lastName']);
@@ -824,6 +829,8 @@ if(isSet($_POST['action']) AND $_POST['action'] == "Confirm Change"){
 					$pdo = null;
 					exit();
 				}				
+			} else {
+				$_SESSION['normalUserFeedback'] = "No changes were made.";
 			}
 			unset($_SESSION['normalUserEditMode']);
 			unset($_SESSION['normalUserEditInfoArray']);
