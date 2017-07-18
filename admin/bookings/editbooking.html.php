@@ -28,44 +28,50 @@
 				<span><b><?php htmlout($originalMeetingRoomName); ?></b></span>
 			</div>
 
-			<div>
-				<label for="meetingRoomID">Set New Meeting Room: </label>
-				<select name="meetingRoomID" id="meetingRoomID">
-					<?php foreach($meetingroom as $row): ?> 
-						<?php if($row['meetingRoomID']==$selectedMeetingRoomID):?>
-							<option selected="selected" value="<?php htmlout($row['meetingRoomID']); ?>"><?php htmlout($row['meetingRoomName']);?></option>
-						<?php else : ?>
-							<option value="<?php htmlout($row['meetingRoomID']); ?>"><?php htmlout($row['meetingRoomName']);?></option>
-						<?php endif;?>
-					<?php endforeach; ?>
-				</select>				
-			</div>
+			<?php if(!isSet($bookingHasBeenCompleted)) : ?>
+				<div>
+					<label for="meetingRoomID">Set New Meeting Room: </label>
+					<select name="meetingRoomID" id="meetingRoomID">
+						<?php foreach($meetingroom as $row): ?> 
+							<?php if($row['meetingRoomID']==$selectedMeetingRoomID):?>
+								<option selected="selected" value="<?php htmlout($row['meetingRoomID']); ?>"><?php htmlout($row['meetingRoomName']);?></option>
+							<?php else : ?>
+								<option value="<?php htmlout($row['meetingRoomID']); ?>"><?php htmlout($row['meetingRoomName']);?></option>
+							<?php endif;?>
+						<?php endforeach; ?>
+					</select>				
+				</div>
+			<?php endif; ?>
 
 			<div>
 				<label for="originalStartDateTime">Booked Start Time: </label>
 				<span><b><?php htmlout($originalStartDateTime); ?></b></span>
 			</div>
 
-			<div>
-				<label for="startDateTime">Set New Start Time: </label>				
-				<input type="text" name="startDateTime" id="startDateTime" 
-				placeholder="date hh:mm:ss"
-				value="<?php htmlout($startDateTime); ?>">
-				<input type="submit" name="edit" value="Increase Start By Minimum">
-			</div>
+			<?php if(!isSet($bookingHasBeenCompleted)) : ?>
+				<div>
+					<label for="startDateTime">Set New Start Time: </label>				
+					<input type="text" name="startDateTime" id="startDateTime" 
+					placeholder="date hh:mm:ss"
+					value="<?php htmlout($startDateTime); ?>">
+					<input type="submit" name="edit" value="Increase Start By Minimum">
+				</div>
+			<?php endif; ?>
 
 			<div>	
 				<label for="originalEndDateTime">Booked End Time: </label>
 				<span><b><?php htmlout($originalEndDateTime); ?></b></span>
 			</div>
 
-			<div>
-				<label for="endDateTime">Set New End Time: </label>
-				<input type="text" name="endDateTime" id="endDateTime" 
-				placeholder="date hh:mm:ss" 
-				value="<?php htmlout($endDateTime); ?>">
-				<input type="submit" name="edit" value="Increase End By Minimum">
-			</div>
+			<?php if(!isSet($bookingHasBeenCompleted)) : ?>
+				<div>
+					<label for="endDateTime">Set New End Time: </label>
+					<input type="text" name="endDateTime" id="endDateTime" 
+					placeholder="date hh:mm:ss" 
+					value="<?php htmlout($endDateTime); ?>">
+					<input type="submit" name="edit" value="Increase End By Minimum">
+				</div>
+			<?php endif; ?>
 
 			<div>
 				<label for="originalSelectedUser">Booked For User: </label>
