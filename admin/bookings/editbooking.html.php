@@ -13,20 +13,21 @@
 		</style>
 	</head>
 	<body>
-		<h1>Edit Booking</h1>
-		
-		<div>
-			<?php if(isSet($_SESSION['EditBookingError'])) : ?>
-				<span><b class="feedback"><?php htmlout($_SESSION['EditBookingError']); ?></b></span>
-				<?php unset($_SESSION['EditBookingError']); ?>
-			<?php endif; ?>
-		</div>
-		
+
 		<form action="" method="post">
+		<fieldset><legend><b>Edit Booking</b></legend>
+			<div class="left">
+				<?php if(isSet($_SESSION['EditBookingError'])) : ?>
+					<span><b class="feedback"><?php htmlout($_SESSION['EditBookingError']); ?></b></span>
+					<?php unset($_SESSION['EditBookingError']); ?>
+				<?php endif; ?>
+			</div>
+
 			<div>
 				<label for="originalMeetingRoomName">Booked Meeting Room: </label>
 				<span><b><?php htmlout($originalMeetingRoomName); ?></b></span>
 			</div>
+
 			<div>
 				<label for="meetingRoomID">Set New Meeting Room: </label>
 				<select name="meetingRoomID" id="meetingRoomID">
@@ -39,10 +40,12 @@
 					<?php endforeach; ?>
 				</select>				
 			</div>
+
 			<div>
 				<label for="originalStartDateTime">Booked Start Time: </label>
 				<span><b><?php htmlout($originalStartDateTime); ?></b></span>
 			</div>
+
 			<div>
 				<label for="startDateTime">Set New Start Time: </label>				
 				<input type="text" name="startDateTime" id="startDateTime" 
@@ -50,10 +53,12 @@
 				value="<?php htmlout($startDateTime); ?>">
 				<input type="submit" name="edit" value="Increase Start By Minimum">
 			</div>
+
 			<div>	
 				<label for="originalEndDateTime">Booked End Time: </label>
 				<span><b><?php htmlout($originalEndDateTime); ?></b></span>
 			</div>
+
 			<div>
 				<label for="endDateTime">Set New End Time: </label>
 				<input type="text" name="endDateTime" id="endDateTime" 
@@ -61,10 +66,12 @@
 				value="<?php htmlout($endDateTime); ?>">
 				<input type="submit" name="edit" value="Increase End By Minimum">
 			</div>
+
 			<div>
 				<label for="originalSelectedUser">Booked For User: </label>
 				<span><b><?php htmlout($originalUserInformation); ?></b></span>
 			</div>
+
 			<div>
 				<label for="SelectedUser">Set New User: </label>
 				<?php if(isSet($_SESSION['EditBookingChangeUser']) AND $_SESSION['EditBookingChangeUser']) :?>
@@ -105,6 +112,7 @@
 						value="">			
 					</div>
 				<?php endif; ?>
+
 			<div>
 				<label for="originalCompanyInBooking">Booked for Company: </label>
 				<?php if(isSet($originalCompanyName)) :?>
@@ -113,6 +121,7 @@
 					<span><b>This booking had no company assigned.</b></span>
 				<?php endif; ?>
 			</div>
+
 			<div>
 				<label for="companyID">Set New Company: </label>
 				<?php if(	isSet($_SESSION['EditBookingDisplayCompanySelect']) AND 
@@ -144,37 +153,59 @@
 					value="<?php htmlout($companyID); ?>">
 				<?php endif; ?>
 			</div>
+
 			<div>
 				<label for="originalDisplayName">Booked Display Name: </label>
 				<span><b>
 					<?php if($originalDisplayName == "") : ?>
-						This booking has no Display Name set.
+						<span><b>This booking has no Display Name set.</b></span>
 					<?php else : ?>
-						<?php htmlout($originalDisplayName); ?>
+						<span><?php htmlout($originalDisplayName); ?></span>
 					<?php endif; ?>
 				</b></span>
 			</div>
+
 			<div>
 				<label for="displayName">Set New Display Name: </label>
 				<input type="text" name="displayName" id="displayName" 
 				value="<?php htmlout($displayName); ?>">
 				<input type="submit" name="edit" value="Get Default Display Name">
 			</div>
+
 			<div>
 				<label for="originalBookingDescription">Booked Description: </label>
 				<span><b>
 					<?php if($originalBookingDescription == "") : ?>
-						This booking has no Booking Description set.
+						<span><b>This booking has no Booking Description set.</b></span>
 					<?php else : ?>
-						<?php htmlout($originalBookingDescription); ?>
+						<span><?php htmlout($originalBookingDescription); ?></span>
 					<?php endif; ?>
 				</b></span>
 			</div>
+
 			<div>
 				<label class="description" for="description">Set New Booking Description: </label>
 				<textarea rows="4" cols="50" name="description" id="description"><?php htmlout($description); ?></textarea>
 				<input type="submit" name="edit" value="Get Default Booking Description">
 			</div>
+
+			<div>
+				<label for="originalAdminNote">Admin Note: </label>
+				<span><b>
+					<?php if($originalAdminNote == "") : ?>
+						<span><b>This booking has no Admin Note set.</b></span>
+					<?php else : ?>
+						<span><?php htmlout($originalAdminNote); ?></span>
+					<?php endif; ?>
+				</b></span>
+			</div>
+
+			<div>
+				<label class="description" for="adminNote">Set New Admin Note: </label>
+				<textarea rows="4" cols="50" name="adminNote"
+				placeholder="Type in any additional information that only admin can see. This will highlighted during the billing period."><?php htmlout($adminNote); ?></textarea>
+			</div>
+
 			<div class="left">
 				<input type="hidden" name="bookingID" id="bookingID" 
 				value="<?php htmlout($bookingID); ?>">
@@ -191,9 +222,11 @@
 					<input type="submit" name="edit" value="Finish Edit">
 				<?php endif; ?>
 			</div>
+		</fieldset>
 		</form>
 		
 	<div class="left"><a href="..">Return to CMS home</a></div>
+
 	<?php include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/logout.inc.html.php'; ?>
 	</body>
 </html>

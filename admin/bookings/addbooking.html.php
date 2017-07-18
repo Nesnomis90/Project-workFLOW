@@ -146,7 +146,7 @@
 			<div>
 				<label class="description" for="adminNote">Admin Note: </label>
 				<textarea rows="4" cols="50" name="adminNote"
-				placeholder="Type in any information you want to show up during billing period."><?php htmlout($adminNote); ?></textarea>
+				placeholder="Type in any additional information that only admin can see. This will highlighted during the billing period."><?php htmlout($adminNote); ?></textarea>
 			</div>
 
 			<div class="left">
