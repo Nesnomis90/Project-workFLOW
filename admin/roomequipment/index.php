@@ -30,19 +30,19 @@ function clearEditRoomEquipmentSessions(){
 }
 
 // If admin wants to be able to remove equipment from a room it needs to enabled first
-if (isset($_POST['action']) AND $_POST['action'] == "Enable Remove"){
+if (isSet($_POST['action']) AND $_POST['action'] == "Enable Remove"){
 	$_SESSION['roomequipmentEnableDelete'] = TRUE;
 	$refreshRoomEquipment = TRUE;
 }
 
 // If admin wants to be disable room equipment deletion
-if (isset($_POST['action']) AND $_POST['action'] == "Disable Remove"){
+if (isSet($_POST['action']) AND $_POST['action'] == "Disable Remove"){
 	unset($_SESSION['roomequipmentEnableDelete']);
 	$refreshRoomEquipment = TRUE;
 }
 
 // If admin wants to remove equipment from a room
-if(isset($_POST['action']) AND $_POST['action'] == 'Remove'){
+if(isSet($_POST['action']) AND $_POST['action'] == 'Remove'){
 	// Remove room equipment connection from database
 	try
 	{
@@ -108,7 +108,7 @@ if(isset($_POST['action']) AND $_POST['action'] == 'Remove'){
 	}	
 	
 	//	Go to the room equipment main page with the appropriate values
-	if(isset($_GET['Meetingroom'])){	
+	if(isSet($_GET['Meetingroom'])){	
 		// Refresh RoomEquipment for the specific meeting room again
 		$TheMeetingRoomID = $_GET['Meetingroom'];
 		$location = "http://$_SERVER[HTTP_HOST]/admin/roomequipment/?Meetingroom=" . $TheMeetingRoomID;
@@ -122,7 +122,7 @@ if(isset($_POST['action']) AND $_POST['action'] == 'Remove'){
 }
 
 // Admin clicked the search button, trying to limit the shown equipment and meeting rooms
-if(isset($_POST['action']) AND $_POST['action'] == 'Search'){
+if(isSet($_POST['action']) AND $_POST['action'] == 'Search'){
 	// We are doing a new search, so we need to get new meeting room and equipment arrays
 	unset($_SESSION['AddRoomEquipmentEquipmentArray']);	
 	unset($_SESSION['AddRoomEquipmentMeetingRoomArray']);
@@ -137,7 +137,7 @@ if(isset($_POST['action']) AND $_POST['action'] == 'Search'){
 	
 	// If we are looking at a specific meeting room, let's refresh info about
 	// that meeting room again.
-	if(isset($_GET['Meetingroom'])){	
+	if(isSet($_GET['Meetingroom'])){	
 
 		// Refresh RoomEquipment for the specific meeting room again
 		$TheMeetingRoomID = $_GET['Meetingroom'];
@@ -158,8 +158,8 @@ if(isset($_POST['action']) AND $_POST['action'] == 'Search'){
 
 // 	If admin wants to update the database by adding equipment to a meeting room
 // 	we load a new html form
-if ((isset($_POST['action']) AND $_POST['action'] == 'Add Room Equipment') OR 
-	(isset($_SESSION['refreshAddRoomEquipment']) AND $_SESSION['refreshAddRoomEquipment']))
+if ((isSet($_POST['action']) AND $_POST['action'] == 'Add Room Equipment') OR 
+	(isSet($_SESSION['refreshAddRoomEquipment']) AND $_SESSION['refreshAddRoomEquipment']))
 {	
 
 	// Set initial values
@@ -168,42 +168,42 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Add Room Equipment') OR
 	$EquipmentAmount = 1;
 
 	// Check if the call was a form submit or a forced refresh
-	if(isset($_SESSION['refreshAddRoomEquipment']) AND $_SESSION['refreshAddRoomEquipment']){
+	if(isSet($_SESSION['refreshAddRoomEquipment']) AND $_SESSION['refreshAddRoomEquipment']){
 		// Acknowledge that we have refreshed the page
 		unset($_SESSION['refreshAddRoomEquipment']);
 		
 		// Display the 'error' that made us refresh
-		if(isset($_SESSION['AddRoomEquipmentError'])){
+		if(isSet($_SESSION['AddRoomEquipmentError'])){
 			$AddRoomEquipmentError = $_SESSION['AddRoomEquipmentError'];
 			unset($_SESSION['AddRoomEquipmentError']);
 		}
 		
 		// Set the meeting room string that was searched before refreshing
-		if(isset($_SESSION['AddRoomEquipmentMeetingRoomSearch'])){
+		if(isSet($_SESSION['AddRoomEquipmentMeetingRoomSearch'])){
 			$meetingroomsearchstring = $_SESSION['AddRoomEquipmentMeetingRoomSearch'];
 			unset($_SESSION['AddRoomEquipmentMeetingRoomSearch']);
 		}
 
 		// Set the equipment string that was searched before refreshing
-		if(isset($_SESSION['AddRoomEquipmentEquipmentSearch'])){
+		if(isSet($_SESSION['AddRoomEquipmentEquipmentSearch'])){
 			$equipmentsearchstring = $_SESSION['AddRoomEquipmentEquipmentSearch'];
 			unset($_SESSION['AddRoomEquipmentEquipmentSearch']);
 		}
 		
 		// Set what meeting room was selected before refreshing
-		if(isset($_SESSION['AddRoomEquipmentSelectedMeetingRoom'])){
+		if(isSet($_SESSION['AddRoomEquipmentSelectedMeetingRoom'])){
 			$selectedMeetingRoomID = $_SESSION['AddRoomEquipmentSelectedMeetingRoom'];
 			unset($_SESSION['AddRoomEquipmentSelectedMeetingRoom']);
 		}
 		
 		// Set what equipment was selected before refreshing
-		if(isset($_SESSION['AddRoomEquipmentSelectedEquipment'])){
+		if(isSet($_SESSION['AddRoomEquipmentSelectedEquipment'])){
 			$selectedEquipmentID = $_SESSION['AddRoomEquipmentSelectedEquipment'];
 			unset($_SESSION['AddRoomEquipmentSelectedEquipment']);
 		}	
 		
 		// Set the equipment amount that was selected before refreshing
-		if(isset($_SESSION['AddRoomEquipmentSelectedEquipmentAmount'])){
+		if(isSet($_SESSION['AddRoomEquipmentSelectedEquipmentAmount'])){
 			$EquipmentAmount = $_SESSION['AddRoomEquipmentSelectedEquipmentAmount'];
 			unset($_SESSION['AddRoomEquipmentSelectedEquipmentAmount']);
 		}		
@@ -211,8 +211,8 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Add Room Equipment') OR
 	
 	// Get info about equipment and rooms from the database
 	// if we don't already have them saved in a session array
-	if(	!isset($_SESSION['AddRoomEquipmentMeetingRoomArray']) OR 
-		!isset($_SESSION['AddRoomEquipmentEquipmentArray'])){
+	if(	!isSet($_SESSION['AddRoomEquipmentMeetingRoomArray']) OR 
+		!isSet($_SESSION['AddRoomEquipmentEquipmentArray'])){
 		
 		try
 		{
@@ -222,10 +222,10 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Add Room Equipment') OR
 			
 				//Meeting Rooms
 			// Only get info if we haven't gotten it before
-			if(!isset($_SESSION['AddRoomEquipmentMeetingRoomArray'])){
+			if(!isSet($_SESSION['AddRoomEquipmentMeetingRoomArray'])){
 				// We don't have info about meeting rooms saved. Let's get it
 				
-				if(!isset($_GET['Meetingroom'])){
+				if(!isSet($_GET['Meetingroom'])){
 					// If we're NOT looking at a specific meetingroom already
 					$sql = 'SELECT 	`meetingRoomID`	AS MeetingRoomID,
 									`name` 			AS MeetingRoomName
@@ -265,7 +265,7 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Add Room Equipment') OR
 					$s->execute();
 					$meetingrooms = $s->fetch(PDO::FETCH_ASSOC);
 				}
-				if(isset($meetingrooms)){
+				if(isSet($meetingrooms)){
 					$_SESSION['AddRoomEquipmentMeetingRoomArray'] = $meetingrooms;
 					$meetingRoomsFound = sizeOf($meetingrooms);
 				} else {
@@ -273,7 +273,7 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Add Room Equipment') OR
 					$meetingRoomsFound = 0;
 				}	
 				
-				if(isset($_SESSION['AddRoomEquipmentShowSearchResults']) AND $_SESSION['AddRoomEquipmentShowSearchResults']){
+				if(isSet($_SESSION['AddRoomEquipmentShowSearchResults']) AND $_SESSION['AddRoomEquipmentShowSearchResults']){
 					$_SESSION['AddRoomEquipmentSearchResult'] = "The search result found $meetingRoomsFound meeting rooms";
 				}	
 			} else {
@@ -281,7 +281,7 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Add Room Equipment') OR
 			}	
 				// Equipment
 			// Only get info if we haven't gotten it before
-			if(!isset($_SESSION['AddRoomEquipmentEquipmentArray'])){
+			if(!isSet($_SESSION['AddRoomEquipmentEquipmentArray'])){
 				// We don't have info about equipment saved. Let's get it
 		
 				$sql = 'SELECT 	`EquipmentID`,
@@ -311,15 +311,15 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Add Room Equipment') OR
 											'EquipmentName' => $row['EquipmentName']
 											);
 				}
-				if(isset($equipment)){
+				if(isSet($equipment)){
 					$_SESSION['AddRoomEquipmentEquipmentArray'] = $equipment;
 					$equipmentFound = sizeOf($equipment);
 				} else {
 					$_SESSION['AddRoomEquipmentEquipmentArray'] = array();
 					$equipmentFound = 0;
 				}
-				if(isset($_SESSION['AddRoomEquipmentShowSearchResults']) AND $_SESSION['AddRoomEquipmentShowSearchResults']){
-					if(isset($_SESSION['AddRoomEquipmentSearchResult'])){
+				if(isSet($_SESSION['AddRoomEquipmentShowSearchResults']) AND $_SESSION['AddRoomEquipmentShowSearchResults']){
+					if(isSet($_SESSION['AddRoomEquipmentSearchResult'])){
 						$_SESSION['AddRoomEquipmentSearchResult'] .= " and $equipmentFound equipment";
 					} else {
 						$_SESSION['AddRoomEquipmentSearchResult'] = "The search result found $equipmentFound equipment";
@@ -345,7 +345,7 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Add Room Equipment') OR
 		$equipment = $_SESSION['AddRoomEquipmentEquipmentArray'];
 	}
 
-	if(isset($_SESSION['AddRoomEquipmentSearchResult'])){
+	if(isSet($_SESSION['AddRoomEquipmentSearchResult'])){
 		$_SESSION['AddRoomEquipmentSearchResult'] .= ".";
 	}
 	unset($_SESSION['AddRoomEquipmentShowSearchResults']);
@@ -358,11 +358,11 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Add Room Equipment') OR
 }
 
 // When admin has added the needed information and wants to add equipment in a meeting room
-if (isset($_POST['action']) AND $_POST['action'] == 'Confirm Room Equipment')
+if (isSet($_POST['action']) AND $_POST['action'] == 'Confirm Room Equipment')
 {
 	
 	// If we're looking at a specific meetingroom
-	if(isset($_GET['Meetingroom'])){
+	if(isSet($_GET['Meetingroom'])){
 		$MeetingRoomID = $_GET['Meetingroom'];
 	} else {
 		$MeetingRoomID = $_POST['MeetingRoomID'];
@@ -414,7 +414,7 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Confirm Room Equipment')
 		$_SESSION['AddRoomEquipmentMeetingRoomSearch'] = trimExcessWhitespace($_POST['meetingroomsearchstring']);
 		$_SESSION['AddRoomEquipmentEquipmentSearch'] = trimExcessWhitespace($_POST['equipmentsearchstring']);
 		
-		if(isset($_GET['Meetingroom'])){	
+		if(isSet($_GET['Meetingroom'])){	
 			// We were looking at a specific meeting room. Let's go back to info about that meetingroom
 			$TheMeetingRoomID = $_GET['Meetingroom'];
 			$location = "http://$_SERVER[HTTP_HOST]/admin/roomequipment/?Meetingroom=" . $TheMeetingRoomID;
@@ -458,7 +458,7 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Confirm Room Equipment')
 			$_SESSION['refreshAddRoomEquipment'] = TRUE;
 			$_SESSION['AddRoomEquipmentError'] = "The selected equipment is already in the selected meeting room!";
 			
-			if(isset($_GET['Meetingroom'])){
+			if(isSet($_GET['Meetingroom'])){
 				
 				$_SESSION['AddRoomEquipmentSelectedMeetingRoom'] = $_GET['Meetingroom'];
 				
@@ -536,7 +536,7 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Confirm Room Equipment')
 		$equipmentinfo = 'N/A';
 		
 		// Get selected meeting room name
-		if(isset($_SESSION['AddRoomEquipmentMeetingRoomArray'])){
+		if(isSet($_SESSION['AddRoomEquipmentMeetingRoomArray'])){
 			if($_SESSION['AddRoomEquipmentMeetingRoomArray'][0] == $MeetingRoomID){
 				$meetingroominfo = $_SESSION['AddRoomEquipmentMeetingRoomArray']['MeetingRoomName'];
 			} else {
@@ -551,7 +551,7 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Confirm Room Equipment')
 		}
 		
 		// Get selected equipment name
-		if(isset($_SESSION['AddRoomEquipmentEquipmentArray'])){
+		if(isSet($_SESSION['AddRoomEquipmentEquipmentArray'])){
 			foreach($_SESSION['AddRoomEquipmentEquipmentArray'] AS $row){
 				if($row['EquipmentID'] == $_POST['EquipmentID']){
 					$equipmentinfo = $row['EquipmentName'];
@@ -599,7 +599,7 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Confirm Room Equipment')
 	
 	// If we are looking at a specific meeting room, let's refresh info about
 	// that meeting room again.
-	if(isset($_GET['Meetingroom'])){
+	if(isSet($_GET['Meetingroom'])){
 		// Refresh RoomEquipment for the specific meeting room again
 		$TheMeetingRoomID = $_GET['Meetingroom'];
 		$location = "http://$_SERVER[HTTP_HOST]/admin/roomequipment/?Meetingroom=" . $TheMeetingRoomID;
@@ -616,7 +616,7 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Confirm Room Equipment')
 
 // if admin wants to change the amount of an equipment in a room
 // we load a new html form
-if (isset($_POST['action']) AND $_POST['action'] == 'Change Amount')
+if (isSet($_POST['action']) AND $_POST['action'] == 'Change Amount')
 {
 	// Get information from database again on the selected room equipment
 	try
@@ -676,14 +676,14 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Change Amount')
 }
 
 // Perform the actual database update of the edited information
-if (isset($_POST['action']) AND $_POST['action'] == 'Confirm Amount')
+if (isSet($_POST['action']) AND $_POST['action'] == 'Confirm Amount')
 {
 	// Check if there were any changes made
 	$NumberOfChanges = 0;
 	// TO-DO: validate equipment amount
 	$selectedRoomEquipmentAmount = $_POST['EquipmentAmount'];
 	
-	if(	isset($_SESSION['EditRoomEquipmentOriginalEquipmentAmount']) AND 
+	if(	isSet($_SESSION['EditRoomEquipmentOriginalEquipmentAmount']) AND 
 		$_SESSION['EditRoomEquipmentOriginalEquipmentAmount'] != $selectedRoomEquipmentAmount){
 		$NumberOfChanges++;
 	}	
@@ -723,7 +723,7 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Confirm Amount')
 	
 	clearEditRoomEquipmentSessions();
 	
-	if(isset($_GET['Meetingroom'])){	
+	if(isSet($_GET['Meetingroom'])){	
 		// Refresh RoomEquipment for the specific meeting room again
 		$TheMeetingRoomID = $_GET['Meetingroom'];
 		$location = "http://$_SERVER[HTTP_HOST]/admin/roomequipment/?Meetingroom=" . $TheMeetingRoomID;
@@ -737,7 +737,7 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Confirm Amount')
 }
 
 // If admin wants to null values while adding
-if (isset($_POST['add']) AND $_POST['add'] == "Reset"){
+if (isSet($_POST['add']) AND $_POST['add'] == "Reset"){
 
 	clearAddRoomEquipmentSessions();
 	
@@ -747,18 +747,18 @@ if (isset($_POST['add']) AND $_POST['add'] == "Reset"){
 }
 
 // If the user clicks any cancel buttons he'll be directed back to the roomequipment page again
-if (isset($_POST['add']) AND $_POST['add'] == 'Cancel'){
+if (isSet($_POST['add']) AND $_POST['add'] == 'Cancel'){
 	$_SESSION['RoomEquipmentUserFeedback'] = "You cancelled your meeting room and equipment connection creation.";
 	$refreshRoomEquipment = TRUE;
 }
 
 // If the user clicks any cancel buttons he'll be directed back to the roomequipment page again
-if (isset($_POST['edit']) AND $_POST['edit'] == 'Cancel'){
+if (isSet($_POST['edit']) AND $_POST['edit'] == 'Cancel'){
 	$_SESSION['RoomEquipmentUserFeedback'] = "You cancelled your meeting room and equipment connection editing.";
 	$refreshRoomEquipment = TRUE;
 }
 
-if(isset($refreshRoomEquipment) AND $refreshRoomEquipment){
+if(isSet($refreshRoomEquipment) AND $refreshRoomEquipment){
 	// TO-DO: Add code that should occur on a refresh
 	unset($refreshRoomEquipment);
 }
@@ -768,7 +768,7 @@ clearAddRoomEquipmentSessions();
 clearEditRoomEquipmentSessions();
 
 // Get only information from the specific meetingroom
-if(isset($_GET['Meetingroom'])){
+if(isSet($_GET['Meetingroom'])){
 	
 	try
 	{
@@ -797,7 +797,7 @@ if(isset($_GET['Meetingroom'])){
 		$s->execute();
 		
 		$result = $s->fetchAll(PDO::FETCH_ASSOC);
-		if(isset($result)){
+		if(isSet($result)){
 			$rowNum = sizeOf($result);
 		} else {
 			$rowNum = 0;
@@ -815,7 +815,7 @@ if(isset($_GET['Meetingroom'])){
 }
 
 // Get information from all meeting rooms
-if(!isset($_GET['Meetingroom'])){
+if(!isSet($_GET['Meetingroom'])){
 	try
 	{
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
@@ -840,7 +840,7 @@ if(!isset($_GET['Meetingroom'])){
 				
 		$return = $pdo->query($sql);
 		$result = $return->fetchAll(PDO::FETCH_ASSOC);
-		if(isset($result)){
+		if(isSet($result)){
 			$rowNum = sizeOf($result);
 		} else {
 			$rowNum = 0;

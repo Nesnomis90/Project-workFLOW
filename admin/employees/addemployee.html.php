@@ -16,14 +16,14 @@
 		<h1>Add Employee</h1>
 		
 		<div class="left">
-			<?php if(isset($_SESSION['AddEmployeeError'])) :?>
+			<?php if(isSet($_SESSION['AddEmployeeError'])) :?>
 					<span><b class="feedback"><?php htmlout($_SESSION['AddEmployeeError']); ?></b></span>
 				<?php unset($_SESSION['AddEmployeeError']); ?>
 			<?php endif; ?>
 		</div>
 		
 		<div class="left">
-			<?php if(isset($_SESSION['AddEmployeeSearchResult'])) :?>
+			<?php if(isSet($_SESSION['AddEmployeeSearchResult'])) :?>
 					<span><b class="feedback"><?php htmlout($_SESSION['AddEmployeeSearchResult']); ?></b></span>
 				<?php unset($_SESSION['AddEmployeeSearchResult']); ?>
 			<?php endif; ?>
@@ -32,11 +32,11 @@
 		<form action="" method="post">
 			<div>
 				<label for="CompanyID">Company name:</label>
-				<?php if(!isset($_GET['Company'])) : ?>
+				<?php if(!isSet($_GET['Company'])) : ?>
 					<select name="CompanyID" id="CompanyID">
 						<option value="">Select a Company</option>
 						<?php foreach($companies as $row): ?> 
-							<?php if (isset($selectedCompanyID) AND $selectedCompanyID == $row['CompanyID']) : ?>
+							<?php if (isSet($selectedCompanyID) AND $selectedCompanyID == $row['CompanyID']) : ?>
 								<option selected="selected" value="<?php htmlout($row['CompanyID']); ?>">
 										<?php htmlout($row['CompanyName']);?>
 								</option>
@@ -51,7 +51,7 @@
 					<b><?php htmlout($companies['CompanyName']); ?></b>
 				<?php endif; ?>
 			</div>
-			<?php if(!isset($_GET['Company'])) :?>
+			<?php if(!isSet($_GET['Company'])) :?>
 				<div>
 					<label for="companysearchstring">Search for Company:</label>
 					<input type="text" name="companysearchstring" 
@@ -63,7 +63,7 @@
 				<select name="UserID" id="UserID">
 					<option value="">Select a User</option>
 					<?php foreach($users as $row): ?>
-						<?php if (isset($selectedUserID) AND $selectedUserID == $row['UserID']) : ?>
+						<?php if (isSet($selectedUserID) AND $selectedUserID == $row['UserID']) : ?>
 							<option selected="selected" value="<?php htmlout($row['UserID']); ?>">
 									<?php htmlout($row['UserIdentifier']);?>>
 							</option>
@@ -84,7 +84,7 @@
 				<label for="PositionID">Select Role:</label>
 				<select name="PositionID" id="PositionID">
 					<?php foreach($companyposition as $row): ?>
-						<?php if (isset($selectedPositionID) AND $selectedPositionID == $row['PositionID']) : ?>
+						<?php if (isSet($selectedPositionID) AND $selectedPositionID == $row['PositionID']) : ?>
 							<option selected="selected" value="<?php htmlout($row['PositionID']); ?>">
 									<?php htmlout($row['CompanyPositionName']);?>
 							</option>

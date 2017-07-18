@@ -10,15 +10,15 @@
 	</head>
 	<body>
 		<h1>Manage Meeting Rooms</h1>
-		<?php if(isset($_SESSION['MeetingRoomUserFeedback'])) : ?>
+		<?php if(isSet($_SESSION['MeetingRoomUserFeedback'])) : ?>
 			<p><b><?php htmlout($_SESSION['MeetingRoomUserFeedback']); ?></b></p>
 			<?php unset($_SESSION['MeetingRoomUserFeedback']); ?>
 		<?php endif; ?>	
 		<form action="" method="post">
 			<div>
-				<?php if(isset($_SESSION['meetingroomsEnableDelete']) AND $_SESSION['meetingroomsEnableDelete']) : ?>
+				<?php if(isSet($_SESSION['meetingroomsEnableDelete']) AND $_SESSION['meetingroomsEnableDelete']) : ?>
 					<input type="submit" name="action" value="Disable Delete">
-					<?php if(isset($_SESSION['meetingroomsEnableDeleteUsedMeetingRoom']) AND $_SESSION['meetingroomsEnableDeleteUsedMeetingRoom']) : ?>
+					<?php if(isSet($_SESSION['meetingroomsEnableDeleteUsedMeetingRoom']) AND $_SESSION['meetingroomsEnableDeleteUsedMeetingRoom']) : ?>
 						<input type="submit" name="action" value="Disable Delete Used Meeting Room">
 					<?php else : ?>
 						<input type="submit" name="action" value="Enable Delete Used Meeting Room">
@@ -77,12 +77,12 @@
 						<form action="" method="post">							
 							<td><input type="submit" name="action" value="Edit"></td>
 							<td>
-								<?php if(isset($_SESSION['meetingroomsEnableDelete']) AND $_SESSION['meetingroomsEnableDelete'] AND
+								<?php if(isSet($_SESSION['meetingroomsEnableDelete']) AND $_SESSION['meetingroomsEnableDelete'] AND
 										$room['MeetingRoomActiveBookings'] == 0) : ?>
 									<input type="submit" name="action" value="Delete">
-								<?php elseif(isset($_SESSION['meetingroomsEnableDelete']) AND $_SESSION['meetingroomsEnableDelete'] AND
+								<?php elseif(isSet($_SESSION['meetingroomsEnableDelete']) AND $_SESSION['meetingroomsEnableDelete'] AND
 										$room['MeetingRoomActiveBookings'] > 0) : ?>
-									<?php if(isset($_SESSION['meetingroomsEnableDeleteUsedMeetingRoom']) AND $_SESSION['meetingroomsEnableDeleteUsedMeetingRoom']) : ?>
+									<?php if(isSet($_SESSION['meetingroomsEnableDeleteUsedMeetingRoom']) AND $_SESSION['meetingroomsEnableDeleteUsedMeetingRoom']) : ?>
 										<input type="submit" name="action" value="Delete">
 									<?php else : ?>
 										<b>Not Enabled</b>

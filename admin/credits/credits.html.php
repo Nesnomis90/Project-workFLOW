@@ -12,7 +12,7 @@
 		<h1>Manage Company Booking Credits</h1>
 		
 		<div class="left">
-			<?php if(isset($_SESSION['CreditsUserFeedback'])) : ?>
+			<?php if(isSet($_SESSION['CreditsUserFeedback'])) : ?>
 				<span class="feedback"><b><?php htmlout($_SESSION['CreditsUserFeedback']); ?></b></span>
 				<?php unset($_SESSION['CreditsUserFeedback']); ?>
 			<?php endif; ?>
@@ -20,9 +20,9 @@
 		
 		<form action="" method="post">
 			<div class="right">
-				<?php if(isset($_SESSION['creditsEnableDelete']) AND $_SESSION['creditsEnableDelete']) : ?>
+				<?php if(isSet($_SESSION['creditsEnableDelete']) AND $_SESSION['creditsEnableDelete']) : ?>
 					<input type="submit" name="action" value="Disable Delete">
-					<?php if(isset($_SESSION['creditsEnableDeleteUsedCredits']) AND $_SESSION['creditsEnableDeleteUsedCredits']) : ?>
+					<?php if(isSet($_SESSION['creditsEnableDeleteUsedCredits']) AND $_SESSION['creditsEnableDeleteUsedCredits']) : ?>
 						<input type="submit" name="action" value="Disable Delete Used Credits">
 					<?php else : ?>
 						<input type="submit" name="action" value="Enable Delete Used Credits">
@@ -70,12 +70,12 @@
 								<?php if($row['CreditsName'] == 'Default') : ?>
 									<b>N/A</b>
 								<?php else : ?>
-									<?php if(isset($_SESSION['creditsEnableDelete']) AND $_SESSION['creditsEnableDelete'] AND
+									<?php if(isSet($_SESSION['creditsEnableDelete']) AND $_SESSION['creditsEnableDelete'] AND
 											$row['CreditsIsUsedByThisManyCompanies'] == 0) : ?>
 										<input type="submit" name="action" value="Delete">
-									<?php elseif(isset($_SESSION['creditsEnableDelete']) AND $_SESSION['creditsEnableDelete'] AND
+									<?php elseif(isSet($_SESSION['creditsEnableDelete']) AND $_SESSION['creditsEnableDelete'] AND
 											$row['CreditsIsUsedByThisManyCompanies'] != 0) : ?>
-										<?php if(isset($_SESSION['creditsEnableDeleteUsedCredits']) AND $_SESSION['creditsEnableDeleteUsedCredits']) : ?>
+										<?php if(isSet($_SESSION['creditsEnableDeleteUsedCredits']) AND $_SESSION['creditsEnableDeleteUsedCredits']) : ?>
 											<input type="submit" name="action" value="Delete">
 										<?php else : ?>
 											<b>Not Enabled</b>

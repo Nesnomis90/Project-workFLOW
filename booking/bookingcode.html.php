@@ -19,7 +19,7 @@
 		<h1>Confirm your identity with your Booking Code!</h1>
 		
 		<div class="left">
-			<?php if(isset($_SESSION['confirmBookingCodeError'])) : ?>
+			<?php if(isSet($_SESSION['confirmBookingCodeError'])) : ?>
 				<?php htmlout($_SESSION['confirmBookingCodeError']); ?>
 				<?php unset($_SESSION['confirmBookingCodeError']); ?>
 			<?php endif; ?>

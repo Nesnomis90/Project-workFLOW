@@ -30,7 +30,7 @@
 		
 		<h2>For the company: <?php htmlout($CompanyName); ?> (Active Since: <?php htmlout($displayDateTimeCreated); ?>)</h2>
 		
-		<?php if(isset($periodsSummmedUp)) : ?>
+		<?php if(isSet($periodsSummmedUp)) : ?>
 		
 			<h3>The company has <b style="color:red">NOT BILLED PERIODS</b>.</h3>
 			
@@ -47,7 +47,7 @@
 					<?php $totalCostForAllPeriodsSummedUp += $period['TotalBookingCostThisMonthJustNumber']; ?>
 				</fieldset>
 			<?php endforeach; ?>
-				<div style="position: relative; left: 15px;">
+				<div class="fieldsetIndentReplication">
 					<label class="notBilled">Total Cost All Periods:</label><span><b style="color:red"><?php htmlout(convertToCurrency($totalCostForAllPeriodsSummedUp)); ?></b></span>
 				</div>
 			</fieldset>
@@ -55,15 +55,15 @@
 		
 		<?php if($rightNow) : ?>
 			<h2>Billing Status: Period still in progress.</h2>
-		<?php elseif(isset($bookingHistory) AND sizeOf($bookingHistory) > 1 AND (!isset($periodHasBeenBilled) OR $periodHasBeenBilled == 0)) : ?>
+		<?php elseif(isSet($bookingHistory) AND sizeOf($bookingHistory) > 1 AND (!isSet($periodHasBeenBilled) OR $periodHasBeenBilled == 0)) : ?>
 			<h2>Billing Status: This booking has <b style="color:red">NOT BEEN BILLED</b>.</h2>
-		<?php elseif(isset($bookingHistory) AND sizeOf($bookingHistory) > 1 AND isset($periodHasBeenBilled) AND $periodHasBeenBilled == 1) : ?>
+		<?php elseif(isSet($bookingHistory) AND sizeOf($bookingHistory) > 1 AND isSet($periodHasBeenBilled) AND $periodHasBeenBilled == 1) : ?>
 			<h2>Billing Status: This booking has <b style="color:green">BEEN BILLED</b>.</h2><br />
 		<?php endif; ?>
 		
 		<form action="" method="post">
 			<div class="left">
-				<?php if(isset($PreviousPeriod) AND $PreviousPeriod) : ?>
+				<?php if(isSet($PreviousPeriod) AND $PreviousPeriod) : ?>
 					<input type="submit" name="history" value="First Period">
 					<input type="submit" name="history" value="Previous Period">
 				<?php else : ?>
@@ -72,7 +72,7 @@
 				<?php endif; ?>
 			</div>
 			<div class="right">
-				<?php if(isset($NextPeriod) AND $NextPeriod) : ?>
+				<?php if(isSet($NextPeriod) AND $NextPeriod) : ?>
 					<input type="submit" name="history" value="Next Period">
 					<input type="submit" name="history" value="Last Period">
 				<?php else : ?>
@@ -83,14 +83,14 @@
 		</form>
 
 		<div class="left">
-			<?php if(!isset($periodHasBeenBilled) OR $periodHasBeenBilled == 0){
+			<?php if(!isSet($periodHasBeenBilled) OR $periodHasBeenBilled == 0){
 				$color='red';
 			} elseif($periodHasBeenBilled == 1) {
 				$color='green';
 			} ?>
 			
 			<?php $bookingNumberThisPeriod = 1; ?>
-			<?php if(isset($bookingHistory) AND !empty($bookingHistory)) : ?>
+			<?php if(isSet($bookingHistory) AND !empty($bookingHistory)) : ?>
 				<fieldset><legend>Completed Bookings during <b><?php htmlout($BillingPeriod); ?></b></legend>
 					<?php foreach($bookingHistory AS $row) : ?>
 						<fieldset><legend><b>Booking #<?php htmlout($bookingNumberThisPeriod); ?></b></legend>
@@ -99,6 +99,9 @@
 								<label class="period">For the period of:</label><span><b><?php htmlout($row['BookingPeriod']); ?></b></span>
 								<label class="period">Using a total time of:</label><span><b><?php htmlout($row['BookingTimeUsed']); ?></b></span>
 								<label class="period">Time used in price calculation:</label><span><b><?php htmlout($row['BookingTimeCharged']); ?></b></span>
+								<?php if(isSet($row['AdminNote']) AND $row['AdminNote'] != "") : ?>
+									<label class="period" style="color: red;">Admin Note:</label><span style="color:red;"><b><?php htmlout($row['AdminNote']); ?></b></span>
+								<?php endif; ?>
 						</fieldset>
 						<?php $bookingNumberThisPeriod += 1; ?>
 					<?php endforeach; ?>
@@ -114,9 +117,9 @@
 				<span>Producing a total of actual booking time used so far this period: <b><?php htmlout($displayTotalBookingTimeThisPeriod); ?></b></span><br />
 				<span>The total booking time charged with after including minimum booking length: <b><?php htmlout($displayTotalBookingTimeUsedInPriceCalculationsThisPeriod); ?></b></span><br />
 			<?php else : ?>
-				<?php if(!isset($periodHasBeenBilled) OR (isset($periodHasBeenBilled) AND $periodHasBeenBilled == 0)) : ?>
+				<?php if(!isSet($periodHasBeenBilled) OR (isSet($periodHasBeenBilled) AND $periodHasBeenBilled == 0)) : ?>
 					<h2>Billing Status: This booking has <b style="color:red">NOT BEEN BILLED</b>.</h2>
-				<?php elseif(isset($periodHasBeenBilled) AND $periodHasBeenBilled == 1) : ?>
+				<?php elseif(isSet($periodHasBeenBilled) AND $periodHasBeenBilled == 1) : ?>
 					<h2>Billing Status: This booking has <b style="color:green">BEEN BILLED</b>.</h2><br />
 				<?php endif; ?>
 				<span>Producing a total booking time used this period: <b><?php htmlout($displayTotalBookingTimeThisPeriod); ?></b></span><br />
@@ -148,7 +151,7 @@
 			<?php endif; ?>
 		</div>
 		
-		<?php if(!$rightNow AND (!isset($periodHasBeenBilled) OR $periodHasBeenBilled == 0)) : ?>
+		<?php if(!$rightNow AND (!isSet($periodHasBeenBilled) OR $periodHasBeenBilled == 0)) : ?>
 			<form action="" method="post">
 				<label class="description" for="billingDescription">Billing Description: </label>
 				<textarea name="billingDescription" id="billingDescription" rows="4" cols="50"

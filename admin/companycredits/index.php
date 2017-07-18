@@ -25,10 +25,10 @@ function clearEditCompanyCreditsSessions(){
 
 // if admin wants to change credits info for the selected company
 // we load a new html form
-if (	isset($_POST['action']) AND $_POST['action'] == 'Edit' OR
-		isset($_SESSION['refreshEditCompanyCredits']) AND $_SESSION['refreshEditCompanyCredits'])
+if (	isSet($_POST['action']) AND $_POST['action'] == 'Edit' OR
+		isSet($_SESSION['refreshEditCompanyCredits']) AND $_SESSION['refreshEditCompanyCredits'])
 {
-	if(isset($_SESSION['refreshEditCompanyCredits']) AND $_SESSION['refreshEditCompanyCredits']){
+	if(isSet($_SESSION['refreshEditCompanyCredits']) AND $_SESSION['refreshEditCompanyCredits']){
 		// Acknowledge that we have refreshEditCompanyCredits
 		unset($_SESSION['refreshEditCompanyCredits']);
 		
@@ -171,13 +171,13 @@ if (	isset($_POST['action']) AND $_POST['action'] == 'Edit' OR
 	exit();
 }
 
-if(isset($_POST['edit']) AND $_POST['edit'] == 'Set Original Amount'){
+if(isSet($_POST['edit']) AND $_POST['edit'] == 'Set Original Amount'){
 	
 	$_SESSION['EditCompanyCreditsNewAlternativeAmount'] = $_SESSION['EditCompanyCreditsOriginalInfo']['CreditsAlternativeAmount'];
 	
 	$_SESSION['refreshEditCompanyCredits'] = TRUE;
 	
-	if(isset($_GET['Company'])){	
+	if(isSet($_GET['Company'])){	
 		// Refresh CompanyCredits for the specific company again
 		$TheCompanyID = $_GET['Company'];
 		$location = "http://$_SERVER[HTTP_HOST]/admin/companycredits/?Company=" . $TheCompanyID;
@@ -188,7 +188,7 @@ if(isset($_POST['edit']) AND $_POST['edit'] == 'Set Original Amount'){
 	exit();	
 }
 
-if(isset($_POST['edit']) AND $_POST['edit'] == 'Select Amount'){
+if(isSet($_POST['edit']) AND $_POST['edit'] == 'Select Amount'){
 	$invalidInput = FALSE;
 	
 	$newAlternativeCreditsAmount = trimAllWhitespace($_POST['CreditsAlternativeCreditsAmount']);
@@ -210,7 +210,7 @@ if(isset($_POST['edit']) AND $_POST['edit'] == 'Select Amount'){
 	
 	$_SESSION['refreshEditCompanyCredits'] = TRUE;
 	
-	if(isset($_GET['Company'])){	
+	if(isSet($_GET['Company'])){	
 		// Refresh CompanyCredits for the specific company again
 		$TheCompanyID = $_GET['Company'];
 		$location = "http://$_SERVER[HTTP_HOST]/admin/companycredits/?Company=" . $TheCompanyID;
@@ -221,12 +221,12 @@ if(isset($_POST['edit']) AND $_POST['edit'] == 'Select Amount'){
 	exit();	
 }
 
-if(isset($_POST['edit']) AND $_POST['edit'] == 'Change Amount'){
+if(isSet($_POST['edit']) AND $_POST['edit'] == 'Change Amount'){
 	$_SESSION['EditCompanyCreditsChangeAlternativeCreditsAmount'] = TRUE;
 	
 	$_SESSION['refreshEditCompanyCredits'] = TRUE;
 	
-	if(isset($_GET['Company'])){	
+	if(isSet($_GET['Company'])){	
 		// Refresh CompanyCredits for the specific company again
 		$TheCompanyID = $_GET['Company'];
 		$location = "http://$_SERVER[HTTP_HOST]/admin/companycredits/?Company=" . $TheCompanyID;
@@ -237,7 +237,7 @@ if(isset($_POST['edit']) AND $_POST['edit'] == 'Change Amount'){
 	exit();	
 }
 
-if(isset($_POST['edit']) AND $_POST['edit'] == 'Select Credits'){
+if(isSet($_POST['edit']) AND $_POST['edit'] == 'Select Credits'){
 	
 	// Make admin have to confirm alternative amount when changing credits
 	if(	$_POST['CreditsID'] != $_SESSION['EditCompanyCreditsOriginalInfo']['CreditsID'] AND
@@ -253,7 +253,7 @@ if(isset($_POST['edit']) AND $_POST['edit'] == 'Select Credits'){
 	
 	$_SESSION['refreshEditCompanyCredits'] = TRUE;
 	
-	if(isset($_GET['Company'])){	
+	if(isSet($_GET['Company'])){	
 		// Refresh CompanyCredits for the specific company again
 		$TheCompanyID = $_GET['Company'];
 		$location = "http://$_SERVER[HTTP_HOST]/admin/companycredits/?Company=" . $TheCompanyID;
@@ -264,7 +264,7 @@ if(isset($_POST['edit']) AND $_POST['edit'] == 'Select Credits'){
 	exit();	
 }
 
-if(isset($_POST['edit']) AND $_POST['edit'] == 'Change Credits'){
+if(isSet($_POST['edit']) AND $_POST['edit'] == 'Change Credits'){
 	
 	$_SESSION['EditCompanyCreditsPreviouslySelectedCreditsID'] = $_SESSION['EditCompanyCreditsSelectedCreditsID'];
 	
@@ -272,7 +272,7 @@ if(isset($_POST['edit']) AND $_POST['edit'] == 'Change Credits'){
 	unset($_SESSION['EditCompanyCreditsChangeAlternativeCreditsAmount']);
 	$_SESSION['refreshEditCompanyCredits'] = TRUE;
 	
-	if(isset($_GET['Company'])){	
+	if(isSet($_GET['Company'])){	
 		// Refresh CompanyCredits for the specific company again
 		$TheCompanyID = $_GET['Company'];
 		$location = "http://$_SERVER[HTTP_HOST]/admin/companycredits/?Company=" . $TheCompanyID;
@@ -283,7 +283,7 @@ if(isset($_POST['edit']) AND $_POST['edit'] == 'Change Credits'){
 	exit();	
 }
 
-if(isset($_POST['edit']) AND $_POST['edit'] == 'Reset'){
+if(isSet($_POST['edit']) AND $_POST['edit'] == 'Reset'){
 	
 	unset($_SESSION['EditCompanyCreditsChangeCredits']);
 	unset($_SESSION['EditCompanyCreditsChangeAlternativeCreditsAmount']);
@@ -295,7 +295,7 @@ if(isset($_POST['edit']) AND $_POST['edit'] == 'Reset'){
 	$_SESSION['EditCompanyCreditsNewAlternativeAmount'] = $original['CreditsAlternativeAmount'];
 	
 	$_SESSION['refreshEditCompanyCredits'] = TRUE;
-	if(isset($_GET['Company'])){	
+	if(isSet($_GET['Company'])){	
 		// Refresh CompanyCredits for the specific company again
 		$TheCompanyID = $_GET['Company'];
 		$location = "http://$_SERVER[HTTP_HOST]/admin/companycredits/?Company=" . $TheCompanyID;
@@ -307,12 +307,12 @@ if(isset($_POST['edit']) AND $_POST['edit'] == 'Reset'){
 }
 
 // If the user clicks any cancel buttons he'll be directed back to the employees page again
-if (isset($_POST['edit']) AND $_POST['edit'] == 'Cancel'){
+if (isSet($_POST['edit']) AND $_POST['edit'] == 'Cancel'){
 	$_SESSION['CompanyCreditsUserFeedback'] = "You cancelled your company credits editing.";
 }
 
 // Perform the actual database update of the edited information
-if (isset($_POST['edit']) AND $_POST['edit'] == 'Finish Edit')
+if (isSet($_POST['edit']) AND $_POST['edit'] == 'Finish Edit')
 {
 	// Check if there were any changes made
 	$NumberOfChanges = 0;
@@ -421,7 +421,7 @@ if (isset($_POST['edit']) AND $_POST['edit'] == 'Finish Edit')
 
 	clearEditCompanyCreditsSessions();
 	
-	if(isset($_GET['Company'])){	
+	if(isSet($_GET['Company'])){	
 		// Refresh CompanyCredits for the specific company again
 		$TheCompanyID = $_GET['Company'];
 		$location = "http://$_SERVER[HTTP_HOST]/admin/companycredits/?Company=" . $TheCompanyID;
@@ -434,7 +434,7 @@ if (isset($_POST['edit']) AND $_POST['edit'] == 'Finish Edit')
 	exit();	
 }
 
-if(isset($refreshCompanyCredits) AND $refreshCompanyCredits){
+if(isSet($refreshCompanyCredits) AND $refreshCompanyCredits){
 	// TO-DO: Add code that should occur on a refresh
 	unset($refreshCompanyCredits);
 }
@@ -443,7 +443,7 @@ if(isset($refreshCompanyCredits) AND $refreshCompanyCredits){
 clearEditCompanyCreditsSessions();
 
 // Get only information from the specific company
-if(isset($_GET['Company'])){	
+if(isSet($_GET['Company'])){	
 	try
 	{
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
@@ -491,7 +491,7 @@ if(isset($_GET['Company'])){
 }
 
 // Get all companies and their credits
-if(!isset($_GET['Company'])){
+if(!isSet($_GET['Company'])){
 	try
 	{
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';

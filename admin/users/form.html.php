@@ -22,7 +22,7 @@
 		<h1><?php htmlout($pageTitle); ?></h1>
 		
 		<div class="left">
-			<?php if (isset($_SESSION['AddNewUserError'])) :?>
+			<?php if (isSet($_SESSION['AddNewUserError'])) :?>
 				<span><b><?php htmlout($_SESSION['AddNewUserError']);?></b></span> 
 				<?php unset($_SESSION['AddNewUserError']); ?>
 			<?php endif; ?>
@@ -150,7 +150,7 @@
 				
 				<div>
 					<label for="originalDateToRemove">Original Date to Reduce Access:</label>
-					<?php if(isset($originalDateToDisplay) AND $originalDateToDisplay != "") : ?>
+					<?php if(isSet($originalDateToDisplay) AND $originalDateToDisplay != "") : ?>
 						<span><b><?php htmlout($originalDateToDisplay); ?></b></span>
 					<?php else : ?>
 						<span><b>No date has been Set</b></span>

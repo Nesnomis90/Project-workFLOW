@@ -17,7 +17,7 @@
 		<h1><?php htmlout($pageTitle); ?></h1>
 		
 		<div class="left">
-			<?php if(isset($_SESSION['EditCreditsError'])) :?>
+			<?php if(isSet($_SESSION['EditCreditsError'])) :?>
 				<span><b class="feedback"><?php htmlout($_SESSION['EditCreditsError']); ?></b></span>
 				<?php unset($_SESSION['EditCreditsError']); ?>
 			<?php endif; ?>
@@ -32,7 +32,7 @@
 			<?php endif; ?>		
 			<div>
 				<label for="CreditsName">Set New Credits Name: </label>
-				<?php if(	isset($_SESSION['EditCreditsOriginalInfo']) AND 
+				<?php if(	isSet($_SESSION['EditCreditsOriginalInfo']) AND 
 							$_SESSION['EditCreditsOriginalInfo']['CreditsName'] == 'Default') : ?>
 					<input type="hidden" name="CreditsName" id="CreditsName"
 					value="<?php htmlout($CreditsName); ?>">
@@ -54,7 +54,7 @@
 			
 			<div>
 				<label class="description" for="CreditsDescription">Set New Credits Description: </label>
-				<?php if(	isset($_SESSION['EditCreditsOriginalInfo']) AND 
+				<?php if(	isSet($_SESSION['EditCreditsOriginalInfo']) AND 
 							$_SESSION['EditCreditsOriginalInfo']['CreditsName'] == 'Default') : ?>
 					<input type="hidden" name="CreditsDescription" id="CreditsDescription"
 					value="<?php htmlout($CreditsDescription); ?>">

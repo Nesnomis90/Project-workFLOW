@@ -28,7 +28,7 @@ function clearAddEventSessions(){
 
 // Function to remember the user inputs in Add Event
 function rememberAddEventInputs(){
-	if(isset($_SESSION['AddEventInfoArray'])){
+	if(isSet($_SESSION['AddEventInfoArray'])){
 		$newValues = $_SESSION['AddEventInfoArray'];
 		
 		$newValues['StartTime'] =  trimExcessWhitespace($_POST['startTime']);
@@ -43,19 +43,19 @@ function rememberAddEventInputs(){
 		$newValues['EventName'] = trimExcessWhitespace($_POST['eventName']);
 		$newValues['EventDescription'] = trimExcessWhitespaceButLeaveLinefeed($_POST['eventDescription']);
 		
-		if(isset($_POST['daysSelected'])){
+		if(isSet($_POST['daysSelected'])){
 			$_SESSION['AddEventDaysSelected'] = $_POST['daysSelected'];
 		}
-		if(isset($_POST['roomsSelected'])){
+		if(isSet($_POST['roomsSelected'])){
 			$_SESSION['AddEventRoomsSelected'] = $_POST['roomsSelected'];
 		}
-		if(isset($_POST['meetingRoomID'])){
+		if(isSet($_POST['meetingRoomID'])){
 			$_SESSION['AddEventRoomSelectedButNotConfirmed'] = $_POST['meetingRoomID'];
 		}		
-		if(isset($_POST['weeksSelected'])){
+		if(isSet($_POST['weeksSelected'])){
 			$_SESSION['AddEventWeeksSelected'] = $_POST['weeksSelected'];
 		}
-		if(isset($_POST['weekNumber'])){
+		if(isSet($_POST['weekNumber'])){
 			$_SESSION['AddEventWeekSelectedButNotConfirmed'] = $_POST['weekNumber'];
 		}
 
@@ -68,25 +68,25 @@ function validateUserInputs($FeedbackSessionToUse, $editing){
 	// Get user inputs
 	$invalidInput = FALSE;
 	
-	if(isset($_POST['startTime']) AND !$invalidInput){
+	if(isSet($_POST['startTime']) AND !$invalidInput){
 		$startTimeString = $_POST['startTime'];
 	} else {
 		$invalidInput = TRUE;
 		$_SESSION[$FeedbackSessionToUse] = "An event cannot be created without submitting a start time.";
 	}
-	if(isset($_POST['endTime']) AND !$invalidInput){
+	if(isSet($_POST['endTime']) AND !$invalidInput){
 		$endTimeString = $_POST['endTime'];
 	} else {
 		$invalidInput = TRUE;
 		$_SESSION[$FeedbackSessionToUse] = "An event cannot be created without submitting an end time.";
 	}
-	if(isset($_POST['eventName']) AND !$invalidInput){
+	if(isSet($_POST['eventName']) AND !$invalidInput){
 		$eventNameString = $_POST['eventName'];
 	} else {
 		$invalidInput = TRUE;
 		$_SESSION[$FeedbackSessionToUse] = "An event cannot be created without submitting a name.";
 	}
-	if(isset($_POST['eventDescription'])){ // Description can be null
+	if(isSet($_POST['eventDescription'])){ // Description can be null
 		$eventDescriptionString = $_POST['eventDescription'];
 	} else {
 		$eventDescriptionString = "";
@@ -157,11 +157,11 @@ function validateUserInputs($FeedbackSessionToUse, $editing){
 	$startTime = correctTimeFormat($validatedStartTime);
 	$endTime = correctTimeFormat($validatedEndTime);
 	
-	if (isset($startTime) AND $startTime === FALSE AND !$invalidInput){
+	if (isSet($startTime) AND $startTime === FALSE AND !$invalidInput){
 		$_SESSION[$FeedbackSessionToUse] = "The start time you submitted did not have a correct format. Please try again.";
 		$invalidInput = TRUE;
 	}
-	if (isset($endTime) AND $endTime === FALSE AND !$invalidInput){
+	if (isSet($endTime) AND $endTime === FALSE AND !$invalidInput){
 		$_SESSION[$FeedbackSessionToUse] = "The end time you submitted did not have a correct format. Please try again.";
 		$invalidInput = TRUE;
 	}
@@ -180,19 +180,19 @@ function validateUserInputs($FeedbackSessionToUse, $editing){
 }
 
 // If admin wants to be able to delete events it needs to enabled first
-if (isset($_POST['action']) AND $_POST['action'] == "Enable Delete"){
+if (isSet($_POST['action']) AND $_POST['action'] == "Enable Delete"){
 	$_SESSION['eventsEnableDelete'] = TRUE;
 	$refreshEvents = TRUE;
 }
 
 // If admin wants to be disable event deletion
-if (isset($_POST['action']) AND $_POST['action'] == "Disable Delete"){
+if (isSet($_POST['action']) AND $_POST['action'] == "Disable Delete"){
 	unset($_SESSION['eventsEnableDelete']);
 	$refreshEvents = TRUE;
 }
 
 // If admin wants to delete the event (and all the linked schedules in roomevent)
-if(isset($_POST['action']) AND $_POST['action'] == "Delete"){
+if(isSet($_POST['action']) AND $_POST['action'] == "Delete"){
 	try
 	{
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
@@ -218,16 +218,16 @@ if(isset($_POST['action']) AND $_POST['action'] == "Delete"){
 }
 
 // If admin wants to create a new event
-if(	(isset($_POST['action']) AND $_POST['action'] == "Create Event") OR
-	(isset($_SESSION['refreshAddEvent']) AND $_SESSION['refreshAddEvent'])
+if(	(isSet($_POST['action']) AND $_POST['action'] == "Create Event") OR
+	(isSet($_SESSION['refreshAddEvent']) AND $_SESSION['refreshAddEvent'])
 	){
 	
-	if(isset($_SESSION['refreshAddEvent'])){
+	if(isSet($_SESSION['refreshAddEvent'])){
 		// Acknowledge that we hav refreshed the page
 		unset($_SESSION['refreshAddEvent']); 
 	}
 	
-	if(!isset($_SESSION['AddEventInfoArray'])){
+	if(!isSet($_SESSION['AddEventInfoArray'])){
 		// Create an array with the row information we want to use
 		$_SESSION['AddEventInfoArray'] = array(
 													'TheEventID' => '',
@@ -241,7 +241,7 @@ if(	(isset($_POST['action']) AND $_POST['action'] == "Create Event") OR
 												);
 	}
 	
-	if(!isset($_SESSION['AddEventMeetingRoomsArray'])){
+	if(!isSet($_SESSION['AddEventMeetingRoomsArray'])){
 		try
 		{
 			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
@@ -288,62 +288,62 @@ if(	(isset($_POST['action']) AND $_POST['action'] == "Create Event") OR
 	
 	// Set correct output
 	$row = $_SESSION['AddEventInfoArray'];
-	if(isset($row['StartTime'])){
+	if(isSet($row['StartTime'])){
 		$startTime = $row['StartTime'];
 	} else {
 		$startTime = "";
 	}
-	if(isset($row['EndTime'])){
+	if(isSet($row['EndTime'])){
 		$endTime = $row['EndTime'];
 	} else {
 		$endTime = "";
 	}
-	if(isset($row['EventName'])){
+	if(isSet($row['EventName'])){
 		$eventName = $row['EventName'];
 	} else {
 		$eventName = "";
 	}
-	if(isset($row['EventDescription'])){
+	if(isSet($row['EventDescription'])){
 		$eventDescription = $row['EventDescription'];
 	} else {
 		$eventDescription = "";
 	}
-	if(isset($_SESSION['AddEventDaysSelected'])){
+	if(isSet($_SESSION['AddEventDaysSelected'])){
 		$daysSelected = $_SESSION['AddEventDaysSelected'];
 	} else {
 		$daysSelected = array();
 	}
-	if(isset($_SESSION['AddEventWeeksSelected'])){
+	if(isSet($_SESSION['AddEventWeeksSelected'])){
 		$weeksSelected = $_SESSION['AddEventWeeksSelected'];
 	} else {
 		$weeksSelected = array();
 	}	
-	if(isset($_SESSION['AddEventRoomsSelected'])){
+	if(isSet($_SESSION['AddEventRoomsSelected'])){
 		$roomsSelected = $_SESSION['AddEventRoomsSelected'];
 	} else {
 		$roomsSelected = array();
 	}	
 	
-	if(isset($_SESSION['AddEventMeetingRoomsArray'])){
+	if(isSet($_SESSION['AddEventMeetingRoomsArray'])){
 		$meetingroom = $_SESSION['AddEventMeetingRoomsArray'];
 	} else {
 		$meetingroom = array();
 	}
 	
-	if(isset($_SESSION['AddEventRoomSelectedButNotConfirmed'])){
+	if(isSet($_SESSION['AddEventRoomSelectedButNotConfirmed'])){
 		$selectedMeetingRoomID = $_SESSION['AddEventRoomSelectedButNotConfirmed'];
 	} else {
 		$selectedMeetingRoomID = "";
 	}
 	
-	if(isset($_SESSION['AddEventWeekSelectedButNotConfirmed'])){
+	if(isSet($_SESSION['AddEventWeekSelectedButNotConfirmed'])){
 		$selectedWeekNumber = $_SESSION['AddEventWeekSelectedButNotConfirmed'];
 	} else {
 		$selectedWeekNumber = "";
 	}
 	
 	// Give admin feedback on the roomname (if one) or the amount of rooms selected.
-	if(isset($_SESSION['AddEventRoomsSelected'])){
+	if(isSet($_SESSION['AddEventRoomsSelected'])){
 		if($_SESSION['AddEventRoomChoiceSelected'] == "Select A Single Room"){
 			foreach($meetingroom AS $room){
 				if($room['MeetingRoomID'] == $_SESSION['AddEventRoomsSelected']){
@@ -368,7 +368,7 @@ if(	(isset($_POST['action']) AND $_POST['action'] == "Create Event") OR
 	}
 	
 	// Give admin feedback on the week info (if one) or the amount of weeks selected.
-	if(isset($_SESSION['AddEventWeeksSelected'])){
+	if(isSet($_SESSION['AddEventWeeksSelected'])){
 		if($_SESSION['AddEventWeekChoiceSelected'] == "Select A Single Week"){
 			foreach($weeksOfTheYear AS $week){
 				if($week['WeekNumber'] == $_SESSION['AddEventWeeksSelected']){
@@ -401,7 +401,7 @@ if(	(isset($_POST['action']) AND $_POST['action'] == "Create Event") OR
 }
 
 // If admin wants to submit the created event
-if(isset($_POST['add']) AND $_POST['add'] == "Create Event"){
+if(isSet($_POST['add']) AND $_POST['add'] == "Create Event"){
 	
 	// Get valid user inputs
 	list($invalidInput, $startTime, $endTime, $eventName, $eventDescription) = validateUserInputs('AddEventError', FALSE);
@@ -554,7 +554,7 @@ if(isset($_POST['add']) AND $_POST['add'] == "Create Event"){
 
 	try
 	{
-		if(isset($timeSlotAvailableInfo) AND sizeOf($timeSlotAvailableInfo) > 0){
+		if(isSet($timeSlotAvailableInfo) AND sizeOf($timeSlotAvailableInfo) > 0){
 			$firstDate = convertDatetimeToFormat($timeSlotAvailableInfo[0]['StartDateTime'], 'Y-m-d H:i:s', 'Y-m-d');
 			$lastDate = convertDatetimeToFormat(end($timeSlotAvailableInfo)['EndDateTime'], 'Y-m-d H:i:s', 'Y-m-d');
 			$daysSelected = implode( "\n", $daysSelected);
@@ -609,8 +609,8 @@ if(isset($_POST['add']) AND $_POST['add'] == "Create Event"){
 	}
 	
 	// Display to admin the events that did not get created due to the timeslot being taken
-	if(isset($timeSlotAvailableInfo) AND sizeOf($timeSlotAvailableInfo) > 0){
-		if(isset($timeSlotTakenInfo) AND sizeOf($timeSlotTakenInfo) > 0 ){
+	if(isSet($timeSlotAvailableInfo) AND sizeOf($timeSlotAvailableInfo) > 0){
+		if(isSet($timeSlotTakenInfo) AND sizeOf($timeSlotTakenInfo) > 0 ){
 			// Get meeting room names from the IDs
 			$lastRoomID = "";
 			$roomName = "";
@@ -656,7 +656,7 @@ if(isset($_POST['add']) AND $_POST['add'] == "Create Event"){
 
 // If admin wants to decide the amount of weeks to select
 	// A single week (dropdown list)
-if(isset($_POST['add']) AND $_POST['add'] == "Select A Single Week"){
+if(isSet($_POST['add']) AND $_POST['add'] == "Select A Single Week"){
 	
 	$_SESSION['AddEventWeekChoiceSelected'] = "Select A Single Week";
 	rememberAddEventInputs();
@@ -665,7 +665,7 @@ if(isset($_POST['add']) AND $_POST['add'] == "Select A Single Week"){
 	exit();	
 }
 	// Multiple meeting rooms (checkboxes)
-if(isset($_POST['add']) AND $_POST['add'] == "Select Multiple Weeks"){
+if(isSet($_POST['add']) AND $_POST['add'] == "Select Multiple Weeks"){
 	
 	$_SESSION['AddEventWeekChoiceSelected'] = "Select Multiple Weeks";
 	rememberAddEventInputs();
@@ -674,7 +674,7 @@ if(isset($_POST['add']) AND $_POST['add'] == "Select Multiple Weeks"){
 	exit();	
 }
 	// All meeting rooms
-if(isset($_POST['add']) AND $_POST['add'] == "Select All Weeks"){
+if(isSet($_POST['add']) AND $_POST['add'] == "Select All Weeks"){
 	
 	$_SESSION['AddEventWeeksSelected'] = TRUE;
 	$_SESSION['AddEventWeekChoiceSelected'] = "Select All Weeks";
@@ -684,11 +684,11 @@ if(isset($_POST['add']) AND $_POST['add'] == "Select All Weeks"){
 	exit();	
 }
 
-if(isset($_POST['add']) AND $_POST['add'] == "Confirm Week(s)"){
+if(isSet($_POST['add']) AND $_POST['add'] == "Confirm Week(s)"){
 	
 	rememberAddEventInputs();
 
-	if(isset($_POST['weeksSelected'])){
+	if(isSet($_POST['weeksSelected'])){
 		if(sizeOf($_POST['weeksSelected']) > 0){
 			$_SESSION['AddEventWeeksSelected'] = $_POST['weeksSelected'];
 		} else {
@@ -696,7 +696,7 @@ if(isset($_POST['add']) AND $_POST['add'] == "Confirm Week(s)"){
 		}
 	}
 
-	if(isset($_POST['weekNumber'])){
+	if(isSet($_POST['weekNumber'])){
 		$_SESSION['AddEventWeeksSelected'] = $_POST['weekNumber'];
 		unset($_SESSION['AddEventWeekSelectedButNotConfirmed']);
 	}
@@ -707,7 +707,7 @@ if(isset($_POST['add']) AND $_POST['add'] == "Confirm Week(s)"){
 }
 
 // If admin wants to change the week(s) selected decision
-if(isset($_POST['add']) AND $_POST['add'] == "Change Week Selection"){
+if(isSet($_POST['add']) AND $_POST['add'] == "Change Week Selection"){
 
 	rememberAddEventInputs();
 	
@@ -718,11 +718,11 @@ if(isset($_POST['add']) AND $_POST['add'] == "Change Week Selection"){
 	exit();	
 }
 
-if(isset($_POST['add']) AND $_POST['add'] == "Confirm Day(s)"){
+if(isSet($_POST['add']) AND $_POST['add'] == "Confirm Day(s)"){
 	
 	rememberAddEventInputs();
 	
-	if(isset($_POST['daysSelected']) AND sizeOf($_POST['daysSelected']) > 0){
+	if(isSet($_POST['daysSelected']) AND sizeOf($_POST['daysSelected']) > 0){
 		$_SESSION['AddEventDaysConfirmed'] = TRUE;
 	} else {
 		$_SESSION['AddEventError'] = "You need to select at least one day.";
@@ -733,7 +733,7 @@ if(isset($_POST['add']) AND $_POST['add'] == "Confirm Day(s)"){
 	exit();	
 }
 
-if(isset($_POST['add']) AND $_POST['add'] == "Change Day(s)"){
+if(isSet($_POST['add']) AND $_POST['add'] == "Change Day(s)"){
 	
 	rememberAddEventInputs();
 	
@@ -743,7 +743,7 @@ if(isset($_POST['add']) AND $_POST['add'] == "Change Day(s)"){
 	exit();	
 }
 
-if(isset($_POST['add']) AND $_POST['add'] == "Confirm Details"){
+if(isSet($_POST['add']) AND $_POST['add'] == "Confirm Details"){
 	
 	list($invalidInput, $startTime, $endTime, $eventName, $eventDescription) = validateUserInputs('AddEventError', FALSE);
 	
@@ -757,7 +757,7 @@ if(isset($_POST['add']) AND $_POST['add'] == "Confirm Details"){
 	exit();	
 }
 
-if(isset($_POST['add']) AND $_POST['add'] == "Change Details"){
+if(isSet($_POST['add']) AND $_POST['add'] == "Change Details"){
 
 	rememberAddEventInputs();
 	
@@ -770,7 +770,7 @@ if(isset($_POST['add']) AND $_POST['add'] == "Change Details"){
 
 // If admin wants to decide the amount of meeting rooms to select
 	// A single meeting room (dropdown list)
-if(isset($_POST['add']) AND $_POST['add'] == "Select A Single Room"){
+if(isSet($_POST['add']) AND $_POST['add'] == "Select A Single Room"){
 	
 	$_SESSION['AddEventRoomChoiceSelected'] = "Select A Single Room";
 	rememberAddEventInputs();
@@ -779,7 +779,7 @@ if(isset($_POST['add']) AND $_POST['add'] == "Select A Single Room"){
 	exit();	
 }
 	// Multiple meeting rooms (checkboxes)
-if(isset($_POST['add']) AND $_POST['add'] == "Select Multiple Rooms"){
+if(isSet($_POST['add']) AND $_POST['add'] == "Select Multiple Rooms"){
 	
 	$_SESSION['AddEventRoomChoiceSelected'] = "Select Multiple Rooms";
 	rememberAddEventInputs();
@@ -788,7 +788,7 @@ if(isset($_POST['add']) AND $_POST['add'] == "Select Multiple Rooms"){
 	exit();	
 }
 	// All meeting rooms
-if(isset($_POST['add']) AND $_POST['add'] == "Select All Rooms"){
+if(isSet($_POST['add']) AND $_POST['add'] == "Select All Rooms"){
 	
 	$_SESSION['AddEventRoomsSelected'] = TRUE;
 	$_SESSION['AddEventRoomChoiceSelected'] = "Select All Rooms";
@@ -798,16 +798,16 @@ if(isset($_POST['add']) AND $_POST['add'] == "Select All Rooms"){
 	exit();	
 }
 	// To confirm room selection (a room/multiple rooms)
-if(isset($_POST['add']) AND $_POST['add'] == "Confirm Room(s)"){
+if(isSet($_POST['add']) AND $_POST['add'] == "Confirm Room(s)"){
 	
-	if(isset($_POST['meetingroom'])){
+	if(isSet($_POST['meetingroom'])){
 		if(sizeOf($_POST['meetingroom']) > 0){
 			$_SESSION['AddEventRoomsSelected'] = $_POST['meetingroom'];
 		} else {
 			$_SESSION['AddEventError'] = "You need to select at least one meeting room.";
 		}
 	}
-	if(isset($_POST['meetingRoomID'])){
+	if(isSet($_POST['meetingRoomID'])){
 		$_SESSION['AddEventRoomsSelected'] = $_POST['meetingRoomID'];
 		unset($_SESSION['AddEventRoomSelectedButNotConfirmed']);
 	}
@@ -819,7 +819,7 @@ if(isset($_POST['add']) AND $_POST['add'] == "Confirm Room(s)"){
 }
 
 // If admin wants to change the meeting room(s) selected decision
-if(isset($_POST['add']) AND $_POST['add'] == "Change Room Selection"){
+if(isSet($_POST['add']) AND $_POST['add'] == "Change Room Selection"){
 
 	rememberAddEventInputs();
 	
@@ -830,7 +830,7 @@ if(isset($_POST['add']) AND $_POST['add'] == "Change Room Selection"){
 	exit();	
 }
 
-if(isset($_POST['add']) AND $_POST['add'] == 'Reset'){
+if(isSet($_POST['add']) AND $_POST['add'] == 'Reset'){
 	clearAddEventSessions();
 	$_SESSION['refreshAddEvent'] = TRUE;
 	header('Location: .');
@@ -838,7 +838,7 @@ if(isset($_POST['add']) AND $_POST['add'] == 'Reset'){
 }
 
 // If admin wants to leave the page and be directed back to the events page again
-if (isset($_POST['add']) AND $_POST['add'] == 'Cancel'){
+if (isSet($_POST['add']) AND $_POST['add'] == 'Cancel'){
 
 	$_SESSION['EventsUserFeedback'] = "You cancelled your new event.";
 }
@@ -851,7 +851,7 @@ clearAddEventSessions();
 
 // EVENTS OVERVIEW CODE SNIPPET START //
 
-if(isset($refreshEvents) AND $refreshEvents) {
+if(isSet($refreshEvents) AND $refreshEvents) {
 	// TO-DO: Add code that should occur on a refresh
 	unset($refreshEvents);
 }
@@ -894,7 +894,7 @@ try
 			FROM 	`event`';
 	$return = $pdo->query($sql);
 	$result = $return->fetchAll(PDO::FETCH_ASSOC);
-	if(isset($result)){
+	if(isSet($result)){
 		$rowNum = sizeOf($result);
 	} else {
 		$rowNum = 0;

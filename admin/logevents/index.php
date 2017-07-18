@@ -38,12 +38,12 @@ $checkboxes = array(
 					);		
 
 // If admin wants to be able to delete logs it needs to enabled first
-if (isset($_POST['action']) AND $_POST['action'] == "Enable Delete"){
+if (isSet($_POST['action']) AND $_POST['action'] == "Enable Delete"){
 	
-	if(isset($_POST['searchAll'])){
+	if(isSet($_POST['searchAll'])){
 		$_SESSION['LogEventsSearchAllCheckmarks'] = $_POST['searchAll'];
 	}
-	if(isset($_POST['search'])){
+	if(isSet($_POST['search'])){
 		$_SESSION['LogEventsSearchCheckmarks'] = $_POST['search'];
 	}	
 	
@@ -54,7 +54,7 @@ if (isset($_POST['action']) AND $_POST['action'] == "Enable Delete"){
 }
 
 // If admin wants to be disable log deletion
-if (isset($_POST['action']) AND $_POST['action'] == "Disable Delete"){
+if (isSet($_POST['action']) AND $_POST['action'] == "Disable Delete"){
 	
 	unset($_SESSION['LogEventsLogLimitSet']);
 	unset($_SESSION['LogEventsSearchCheckmarks']);
@@ -65,7 +65,7 @@ if (isset($_POST['action']) AND $_POST['action'] == "Disable Delete"){
 }
 
 // To delete the log event selected by the user
-if (isset($_POST['action']) AND $_POST['action'] == "Delete"){
+if (isSet($_POST['action']) AND $_POST['action'] == "Delete"){
 	// Delete is on a seperate form from the checkboxes,
 	// so it won't be remembered unless we use sessions
 	try
@@ -101,12 +101,12 @@ if (isset($_POST['action']) AND $_POST['action'] == "Delete"){
 				
 // If admin wants to change what type of logs to display
 // or the max amount of logs
-if ((isset($_POST['action']) AND $_POST['action'] == "Refresh Logs") OR 
-	(isset($_POST['action']) AND $_POST['action'] == "Set New Maximum") OR 
-	(isset($_SESSION['refreshLogEvents']) AND $_SESSION['refreshLogEvents'])){
+if ((isSet($_POST['action']) AND $_POST['action'] == "Refresh Logs") OR 
+	(isSet($_POST['action']) AND $_POST['action'] == "Set New Maximum") OR 
+	(isSet($_SESSION['refreshLogEvents']) AND $_SESSION['refreshLogEvents'])){
 	
-	if ((isset($_POST['action']) AND $_POST['action'] == "Refresh Logs") OR 
-		(isset($_POST['action']) AND $_POST['action'] == "Set New Maximum")){
+	if ((isSet($_POST['action']) AND $_POST['action'] == "Refresh Logs") OR 
+		(isSet($_POST['action']) AND $_POST['action'] == "Set New Maximum")){
 		unset($_SESSION['logEventsEnableDelete']); // TO-DO: make all buttons disable delete so we can remember variables on enable delete.
 	}
 	
@@ -114,9 +114,9 @@ if ((isset($_POST['action']) AND $_POST['action'] == "Refresh Logs") OR
 	$minimumLogLimit = 10;
 	$maximumLogLimit = 1000;
 	
-	if(isset($_POST['logsToShow'])){
+	if(isSet($_POST['logsToShow'])){
 		$newLogLimit = $_POST['logsToShow'];
-	} elseif(isset($_SESSION['LogEventsLogLimitSet'])) {
+	} elseif(isSet($_SESSION['LogEventsLogLimitSet'])) {
 		$newLogLimit = $_SESSION['LogEventsLogLimitSet'];
 	}
 
@@ -127,24 +127,24 @@ if ((isset($_POST['action']) AND $_POST['action'] == "Refresh Logs") OR
 		$newLogLimit = $maximumLogLimit;
 	}
 
-	if(isset($_POST['searchAll'])){
+	if(isSet($_POST['searchAll'])){
 		$searchAll = $_POST['searchAll'];
-	} elseif(isset($_SESSION['LogEventsSearchAllCheckmarks'])){
+	} elseif(isSet($_SESSION['LogEventsSearchAllCheckmarks'])){
 		$searchAll = $_SESSION['LogEventsSearchAllCheckmarks'];
 	}
 	
-	if(isset($_POST['search'])){
+	if(isSet($_POST['search'])){
 		$search = $_POST['search'];
-	} elseif(isset($_SESSION['LogEventsSearchCheckmarks'])){
+	} elseif(isSet($_SESSION['LogEventsSearchCheckmarks'])){
 		$search = $_SESSION['LogEventsSearchCheckmarks'];
 	}	
 	
-	if(isset($searchAll)){
+	if(isSet($searchAll)){
 		$numberOfCheckboxesActivated = 1;
 	} else {
 		$numberOfCheckboxesActivated = 0;
 		
-		if(isset($search) AND !empty($search)) {
+		if(isSet($search) AND !empty($search)) {
 			// The user has checked some checkmarks
 			
 				// Let's check how many are activated
@@ -174,7 +174,7 @@ if ((isset($_POST['action']) AND $_POST['action'] == "Refresh Logs") OR
 		}		
 	}
 	
-	if(isset($logDeleted) AND $logDeleted){
+	if(isSet($logDeleted) AND $logDeleted){
 		unset($_SESSION['LogEventsLogLimitSet']);
 		unset($_SESSION['LogEventsSearchAllCheckmarks']);
 		unset($_SESSION['LogEventsSearchCheckmarks']);
@@ -182,35 +182,35 @@ if ((isset($_POST['action']) AND $_POST['action'] == "Refresh Logs") OR
 	}
 }
 
-if(!isset($numberOfCheckboxesActivated)){
+if(!isSet($numberOfCheckboxesActivated)){
 	// Default 
 	$numberOfCheckboxesActivated = 1;
 }
 
 // Fix the amount of logs to display
-if (isset($newLogLimit)){
+if (isSet($newLogLimit)){
 	$logLimit = $newLogLimit;
 } else {
-	if(isset($_POST['logsToShow'])){
+	if(isSet($_POST['logsToShow'])){
 		$logLimit = $_POST['logsToShow'];
-	} elseif(isset($_SESSION['LogEventsLogLimitSet'])) {
+	} elseif(isSet($_SESSION['LogEventsLogLimitSet'])) {
 		$logLimit = $_SESSION['LogEventsLogLimitSet'];
 	} else {
 		$logLimit = 10;
 	}
 }
 
-if(!isset($search) AND isset($_POST['search'])){
+if(!isSet($search) AND isSet($_POST['search'])){
 	$search = $_POST['search'];
 }
-if(!isset($searchAll) AND isset($_POST['searchAll'])){
+if(!isSet($searchAll) AND isSet($_POST['searchAll'])){
 	$searchAll = $_POST['searchAll'];
 }
 
 // We handle when the checkbox "All" should be checked.
-if (isset($search) AND !empty($search) AND !isset($searchAll)){
+if (isSet($search) AND !empty($search) AND !isSet($searchAll)){
 	$checkAll = "";
-} elseif(!isset($search) AND !isset($searchAll)){
+} elseif(!isSet($search) AND !isSet($searchAll)){
 	$checkAll = "";
 } else {
 	$checkAll = 'checked="checked"';
@@ -220,13 +220,13 @@ if (isset($search) AND !empty($search) AND !isset($searchAll)){
 $invalidInput = FALSE;
 
 // Get user inputs
-if (!isset($_POST['filterStartDate'])){
+if (!isSet($_POST['filterStartDate'])){
 	$filterStartDate = '';
 } else {
 	$filterStartDate = trim($_POST['filterStartDate']);
 }
 
-if (!isset($_POST['filterEndDate'])){
+if (!isSet($_POST['filterEndDate'])){
 	$filterEndDate = '';
 } else {
 	$filterEndDate = trim($_POST['filterEndDate']);	
@@ -254,11 +254,11 @@ if($validatedEndDate != ""){
 	$endDateTime = correctDatetimeFormat($validatedEndDate);
 }
 
-if (isset($startDateTime) AND $startDateTime === FALSE AND !$invalidInput){
+if (isSet($startDateTime) AND $startDateTime === FALSE AND !$invalidInput){
 	$_SESSION['LogEventUserFeedback'] = "The start date you submitted did not have a correct format. Please try again.";
 	$invalidInput = TRUE;
 }
-if (isset($endDateTime) AND $endDateTime === FALSE AND !$invalidInput){
+if (isSet($endDateTime) AND $endDateTime === FALSE AND !$invalidInput){
 	$_SESSION['LogEventUserFeedback'] = "The end date you submitted did not have a correct format. Please try again.";
 	$invalidInput = TRUE;
 }
@@ -276,22 +276,22 @@ if($validatedStartDate != "" AND $validatedEndDate != ""){
 }
 
 // Convert datetime to a more display friendly format
-if(isset($startDateTime) AND $startDateTime !== FALSE){
+if(isSet($startDateTime) AND $startDateTime !== FALSE){
 	$displayValidatedStartDate = convertDatetimeToFormat($startDateTime , 'Y-m-d H:i:s', 'F jS Y H:i');	
 }
-if(isset($endDateTime) AND $endDateTime !== FALSE){
+if(isSet($endDateTime) AND $endDateTime !== FALSE){
 	$displayValidatedEndDate = convertDatetimeToFormat($endDateTime, 'Y-m-d H:i:s', 'F jS Y H:i');	
 }
 
 // Check if admin has even checked any boxes yet, if not just give a warning
 $noCheckedCheckboxes = FALSE;
-if (!isset($search) AND !isset($searchAll) AND !$invalidInput AND !isset($_SESSION['refreshLogEvents'])){
+if (!isSet($search) AND !isSet($searchAll) AND !$invalidInput AND !isSet($_SESSION['refreshLogEvents'])){
 	$_SESSION['LogEventUserFeedback'] = "You need to select at least one category of log events with the checkboxes.";
 	$invalidInput = TRUE;
 	$noCheckedCheckboxes = TRUE;
 }
 
-if(isset($_SESSION['refreshLogEvents']) AND $_SESSION['refreshLogEvents']){
+if(isSet($_SESSION['refreshLogEvents']) AND $_SESSION['refreshLogEvents']){
 	unset($_SESSION['refreshLogEvents']);
 }
 
@@ -304,34 +304,34 @@ if($invalidInput){
 	exit();
 }
 
-if(!isset($sqlAdd)){
+if(!isSet($sqlAdd)){
 	// We've not added any additional SQL code yet
-	if(	isset($startDateTime) AND $startDateTime !== FALSE AND
-		isset($endDateTime) AND $endDateTime !== FALSE){
+	if(	isSet($startDateTime) AND $startDateTime !== FALSE AND
+		isSet($endDateTime) AND $endDateTime !== FALSE){
 		// Both dates are filled out. Use BETWEEN for MySQL
 		$sqlAddDates = ' WHERE (l.`logDateTime` BETWEEN :filterStartDate AND :filterEndDate) ';
 		$useBothDates = TRUE;
-	} elseif(!isset($startDateTime) AND isset($endDateTime) AND $endDateTime !== FALSE){
+	} elseif(!isSet($startDateTime) AND isSet($endDateTime) AND $endDateTime !== FALSE){
 		// Only end date is filled out. Use less than
 		$sqlAddDates = ' WHERE (l.`logDateTime` < :filterEndDate) ';
 		$useEndDate = TRUE;
-	} elseif(isset($startDateTime) AND $startDateTime !== FALSE AND !isset($endDateTime)){
+	} elseif(isSet($startDateTime) AND $startDateTime !== FALSE AND !isSet($endDateTime)){
 		// Only start date is filled out. Use greater than
 		$sqlAddDates = ' WHERE (l.`logDateTime` > :filterStartDate) ';
 		$useStartDate = TRUE;
 	}
 } else {
 	// We've already altered the sql code earlier, which means we've already started a "WHERE"-segment
-	if(	isset($startDateTime) AND $startDateTime !== FALSE AND
-		isset($endDateTime) AND $endDateTime !== FALSE){
+	if(	isSet($startDateTime) AND $startDateTime !== FALSE AND
+		isSet($endDateTime) AND $endDateTime !== FALSE){
 		// Both dates are filled out. Use BETWEEN for MySQL
 		$sqlAddDates = ' AND (l.`logDateTime` BETWEEN :filterStartDate AND :filterEndDate) ';
 		$useBothDates = TRUE;
-	} elseif(!isset($startDateTime) AND isset($endDateTime) AND $endDateTime !== FALSE){
+	} elseif(!isSet($startDateTime) AND isSet($endDateTime) AND $endDateTime !== FALSE){
 		// Only end date is filled out. Use less than
 		$sqlAddDates = ' AND (l.`logDateTime` < :filterEndDate) ';
 		$useEndDate = TRUE;
-	} elseif(isset($startDateTime) AND $startDateTime !== FALSE AND !isset($endDateTime)){
+	} elseif(isSet($startDateTime) AND $startDateTime !== FALSE AND !isSet($endDateTime)){
 		// Only start date is filled out. Use greater than
 		$sqlAddDates = ' AND (l.`logDateTime` > :filterStartDate) ';
 		$useStartDate = TRUE;
@@ -351,9 +351,9 @@ if($numberOfCheckboxesActivated > 0){
 		$pdo = connect_to_db();
 		
 		//Retrieve log data from database
-		if (isset($sqlAddDates)){
+		if (isSet($sqlAddDates)){
 			// We want to filter by date, we need to use a prepared statement
-			if (isset($sqlAdd)){
+			if (isSet($sqlAdd)){
 			$sql = 'SELECT 		l.logID, 
 								l.logDateTime								AS LogDate, 
 								la.`name` 									AS ActionName, 
@@ -380,28 +380,28 @@ if($numberOfCheckboxesActivated > 0){
 			}
 			
 			$s = $pdo->prepare($sql);
-			if (isset($useBothDates) AND $useBothDates){
+			if (isSet($useBothDates) AND $useBothDates){
 				$s->bindValue(':filterStartDate', $startDateTime);
 				$s->bindValue(':filterEndDate', $endDateTime);			
 			}
-			if (isset($useStartDate) AND $useStartDate){
+			if (isSet($useStartDate) AND $useStartDate){
 				$s->bindValue(':filterStartDate', $startDateTime);			
 			}			
-			if (isset($useEndDate) AND $useEndDate){
+			if (isSet($useEndDate) AND $useEndDate){
 				$s->bindValue(':filterEndDate', $endDateTime);			
 			}	
 			
 			$s->execute();
 			
 			$result = $s->fetchAll(PDO::FETCH_ASSOC);
-			if(isset($result)){
+			if(isSet($result)){
 				$rowNum = sizeOf($result);
 			} else {
 				$rowNum = 0;
 			}
 		} else {
 			// We don't want to filter by date, we just use a standard query
-			if (isset($sqlAdd)){
+			if (isSet($sqlAdd)){
 			$sql = 'SELECT 		l.logID, 
 								l.logDateTime 								AS LogDate, 
 								la.`name` 									AS ActionName, 
@@ -429,7 +429,7 @@ if($numberOfCheckboxesActivated > 0){
 			
 			$return = $pdo->query($sql);
 			$result = $return->fetchAll(PDO::FETCH_ASSOC);
-			if(isset($result)){
+			if(isSet($result)){
 				$rowNum = sizeOf($result);
 			} else {
 				$rowNum = 0;

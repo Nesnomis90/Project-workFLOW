@@ -17,7 +17,7 @@
 		<h1><?php htmlout($pageTitle); ?></h1>
 		
 		<div class="left">
-			<?php if(isset($_SESSION['AddMeetingRoomError'])) : ?>
+			<?php if(isSet($_SESSION['AddMeetingRoomError'])) : ?>
 				<span><b><?php htmlout($_SESSION['AddMeetingRoomError']); ?></b></span>
 				<?php unset($_SESSION['AddMeetingRoomError']); ?>
 			<?php endif; ?>

@@ -56,7 +56,7 @@ function validateUserInputs($FeedbackSessionToUse){
 	
 	// Get user inputs
 		//Firstname
-	if(isset($_POST['firstname'])){
+	if(isSet($_POST['firstname'])){
 		$firstname = $_POST['firstname'];
 		$firstname = trim($firstname);
 	} elseif(!$invalidInput) {
@@ -64,7 +64,7 @@ function validateUserInputs($FeedbackSessionToUse){
 		$invalidInput = TRUE;
 	}	
 		//Lastname
-	if(isset($_POST['lastname'])){
+	if(isSet($_POST['lastname'])){
 		$lastname = $_POST['lastname'];
 		$lastname = trim($lastname);
 	} elseif(!$invalidInput) {
@@ -72,7 +72,7 @@ function validateUserInputs($FeedbackSessionToUse){
 		$invalidInput = TRUE;
 	}		
 		//Email
-	if(isset($_POST['email'])){
+	if(isSet($_POST['email'])){
 		$email = $_POST['email'];
 		$email = trim($email);
 	} elseif(!$invalidInput) {
@@ -80,19 +80,19 @@ function validateUserInputs($FeedbackSessionToUse){
 		$invalidInput = TRUE;
 	}
 		// Display Name (edit only)
-	if(isset($_POST['displayname'])){
+	if(isSet($_POST['displayname'])){
 		$displayNameString = $_POST['displayname'];
 	} else {
 		$displayNameString = '';
 	}
 		// Booking Description (edit only)
-	if(isset($_POST['bookingdescription'])){
+	if(isSet($_POST['bookingdescription'])){
 		$bookingDescriptionString = $_POST['bookingdescription'];
 	} else {
 		$bookingDescriptionString = '';
 	}
 		// Reduce Access At Date (edit only)
-	if(isset($_POST['ReduceAccessAtDate'])){
+	if(isSet($_POST['ReduceAccessAtDate'])){
 		$reduceAccessAtDate = $_POST['ReduceAccessAtDate'];
 	} else {
 		$reduceAccessAtDate = '';
@@ -170,11 +170,11 @@ function validateUserInputs($FeedbackSessionToUse){
 		
 		$correctFormatIfValid = correctDatetimeFormat($validatedReduceAccessAtDate);
 
-		if (isset($correctFormatIfValid) AND $correctFormatIfValid === FALSE AND !$invalidInput){
+		if (isSet($correctFormatIfValid) AND $correctFormatIfValid === FALSE AND !$invalidInput){
 			$_SESSION[$FeedbackSessionToUse] = "The date you submitted did not have a correct format. Please try again.";
 			$invalidInput = TRUE;
 		}
-		if(isset($correctFormatIfValid) AND $correctFormatIfValid !== FALSE){
+		if(isSet($correctFormatIfValid) AND $correctFormatIfValid !== FALSE){
 			$correctFormatIfValid = convertDatetimeToFormat($correctFormatIfValid,'Y-m-d H:i:s', 'Y-m-d');
 			
 			// Check if the (now valid) datetime we received is a future date or not
@@ -189,7 +189,7 @@ function validateUserInputs($FeedbackSessionToUse){
 	}
 	
 	// Check if the submitted email has already been used
-	if(isset($_SESSION['EditUserOriginaEmail'])){
+	if(isSet($_SESSION['EditUserOriginaEmail'])){
 		$originalEmail = $_SESSION['EditUserOriginaEmail'];
 		// no need to check if our own email exists in the database
 		if($email!=$originalEmail){
@@ -210,23 +210,23 @@ return array($invalidInput, $email, $validatedFirstname, $validatedLastname, $va
 }
 
 // If admin wants to return to users from the email-list
-if (isset($_POST['action']) AND $_POST['action'] == "Return To Users"){
+if (isSet($_POST['action']) AND $_POST['action'] == "Return To Users"){
 	unset($_SESSION['UserEmailListSeparatorSelected']);
 	header('Location: .');
 	exit();
 }
 
 // If admin wants to get a list of easily copied emails from the users that is being displayed
-if (	(isset($_GET['getEmails'])) OR 
-		isset($_SESSION['refreshUserEmailList']) AND $_SESSION['refreshUserEmailList']){
+if (	(isSet($_GET['getEmails'])) OR 
+		isSet($_SESSION['refreshUserEmailList']) AND $_SESSION['refreshUserEmailList']){
 
-		if(isset($_GET['getEmails'])){
+		if(isSet($_GET['getEmails'])){
 			$_SESSION['refreshUserEmailList'] = TRUE;
 			header("Location: .");
 			exit();
 		}
 		
-		if(isset($_SESSION['refreshUserEmailList']) AND !isset($_GET['getEmails'])){
+		if(isSet($_SESSION['refreshUserEmailList']) AND !isSet($_GET['getEmails'])){
 			unset($_SESSION['refreshUserEmailList']);
 		}
 		
@@ -241,7 +241,7 @@ if (	(isset($_GET['getEmails'])) OR
 }
 
 // If admin wants to change email separator from the default ","
-if (isset($_POST['action']) AND $_POST['action'] == "Change Separator Char"){
+if (isSet($_POST['action']) AND $_POST['action'] == "Change Separator Char"){
 	
 	unset($_SESSION['UserEmailListSeparatorSelected']);
 	$separatorChar = "";
@@ -254,7 +254,7 @@ if (isset($_POST['action']) AND $_POST['action'] == "Change Separator Char"){
 }
 
 // If admin wants to set the newly selected character as the new email separator
-if (isset($_POST['action']) AND $_POST['action'] == "Select Separator Char"){
+if (isSet($_POST['action']) AND $_POST['action'] == "Select Separator Char"){
 	
 	$separatorChar = trim($_POST['separatorchar']);
 	$invalidInput = FALSE;
@@ -286,20 +286,20 @@ if (isset($_POST['action']) AND $_POST['action'] == "Select Separator Char"){
 
 
 // If admin wants to be able to delete users it needs to enabled first
-if (isset($_POST['action']) AND $_POST['action'] == "Enable Delete"){
+if (isSet($_POST['action']) AND $_POST['action'] == "Enable Delete"){
 	$_SESSION['usersEnableDelete'] = TRUE;
 	$refreshUsers = TRUE;
 }
 
 // If admin wants to be disable user deletion
-if (isset($_POST['action']) AND $_POST['action'] == "Disable Delete"){
+if (isSet($_POST['action']) AND $_POST['action'] == "Disable Delete"){
 	unset($_SESSION['usersEnableDelete']);
 	$refreshUsers = TRUE;
 }
 
 
 // If admin wants to remove a user from the database
-if (isset($_POST['action']) and $_POST['action'] == 'Delete')
+if (isSet($_POST['action']) and $_POST['action'] == 'Delete')
 {
 	include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 
@@ -331,7 +331,7 @@ if (isset($_POST['action']) and $_POST['action'] == 'Delete')
 		// Save a description with information about the user that was removed
 		
 		$description = "N/A";
-		if(isset($_POST['UserInfo'])){
+		if(isSet($_POST['UserInfo'])){
 			$description = 'The User: ' . $_POST['UserInfo'] . 
 			' was deleted by: ' . $_SESSION['LoggedInUserName'];
 		} else {
@@ -370,12 +370,12 @@ if (isset($_POST['action']) and $_POST['action'] == 'Delete')
  
 // If admin wants to add a user to the database
 // we load a new html form
-if (isset($_GET['add']) OR (isset($_SESSION['refreshAddUser']) AND $_SESSION['refreshAddUser']))
+if (isSet($_GET['add']) OR (isSet($_SESSION['refreshAddUser']) AND $_SESSION['refreshAddUser']))
 {	
 	unset($_SESSION['UserEmailsToBeDisplayed']);
 
 	// Check if the call was /?add/ or a forced refresh
-	if(isset($_SESSION['refreshAddUser']) AND $_SESSION['refreshAddUser']){
+	if(isSet($_SESSION['refreshAddUser']) AND $_SESSION['refreshAddUser']){
 		// Acknowledge that we have refreshed the form
 		unset($_SESSION['refreshAddUser']);
 		
@@ -444,19 +444,19 @@ if (isset($_GET['add']) OR (isset($_SESSION['refreshAddUser']) AND $_SESSION['re
 	$bookingdescription = '';	
 	
 	// If we refreshed and want to keep the same values
-	if(isset($_SESSION['AddNewUserFirstname'])){
+	if(isSet($_SESSION['AddNewUserFirstname'])){
 		$firstname = $_SESSION['AddNewUserFirstname'];
 		unset($_SESSION['AddNewUserFirstname']);		
 	}
-	if(isset($_SESSION['AddNewUserLastname'])){
+	if(isSet($_SESSION['AddNewUserLastname'])){
 		$lastname = $_SESSION['AddNewUserLastname'];
 		unset($_SESSION['AddNewUserLastname']);		
 	}	
-	if(isset($_SESSION['AddNewUserEmail'])){
+	if(isSet($_SESSION['AddNewUserEmail'])){
 		$email = $_SESSION['AddNewUserEmail'];
 		unset($_SESSION['AddNewUserEmail']);		
 	}	
-	if(isset($_SESSION['AddNewUserSelectedAccess'])){
+	if(isSet($_SESSION['AddNewUserSelectedAccess'])){
 		$accessID = $_SESSION['AddNewUserSelectedAccess'];
 		unset($_SESSION['AddNewUserSelectedAccess']);		
 	} else {
@@ -471,7 +471,7 @@ if (isset($_GET['add']) OR (isset($_SESSION['refreshAddUser']) AND $_SESSION['re
 }
 
 // When admin has added the needed information and wants to add the user
-if (isset($_GET['addform']) AND isset($_POST['action']) AND $_POST['action'] == 'Add User')
+if (isSet($_GET['addform']) AND isSet($_POST['action']) AND $_POST['action'] == 'Add User')
 {
 	// Validate user inputs
 	list($invalidInput, $email, $validatedFirstname, $validatedLastname, $validatedBookingDescription, $validatedDisplayName, $validatedReduceAccessAtDate) = validateUserInputs('AddNewUserError');	
@@ -543,13 +543,13 @@ if (isset($_GET['addform']) AND isset($_POST['action']) AND $_POST['action'] == 
 		
 		$description = "N/A";
 		$userinfo = $validatedLastname . ', ' . $validatedFirstname . ' - ' . $email;
-		if(isset($_SESSION['LoggedInUserName'])){
+		if(isSet($_SESSION['LoggedInUserName'])){
 			$description = "An account for: " . $userinfo . " was created by: " . $_SESSION['LoggedInUserName'];
 		} else {
 			$description = "An account was created for " . $userinfo;
 		}
 		
-		if(isset($_SESSION['lastUserID'])){
+		if(isSet($_SESSION['lastUserID'])){
 			$lastUserID = $_SESSION['lastUserID'];
 			unset($_SESSION['lastUserID']);				
 		}
@@ -614,7 +614,7 @@ if (isset($_GET['addform']) AND isset($_POST['action']) AND $_POST['action'] == 
 }
 
 // If admin wants to null values while adding
-if (isset($_POST['add']) AND $_POST['add'] == "Reset"){
+if (isSet($_POST['add']) AND $_POST['add'] == "Reset"){
 
 	$_SESSION['AddNewUserFirstname'] = "";
 	$_SESSION['AddNewUserLastname'] = "";
@@ -627,7 +627,7 @@ if (isset($_POST['add']) AND $_POST['add'] == "Reset"){
 }
 
 // If admin wants to leave the page and be directed back to the user page again
-if (isset($_POST['add']) AND $_POST['add'] == 'Cancel'){
+if (isSet($_POST['add']) AND $_POST['add'] == 'Cancel'){
 
 	$_SESSION['UserManagementFeedbackMessage'] = "You cancelled your user creation.";
 	header("Location: /admin/users");
@@ -636,13 +636,13 @@ if (isset($_POST['add']) AND $_POST['add'] == 'Cancel'){
 
 // if admin wants to edit user information
 // we load a new html form
-if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR 
-(isset($_SESSION['refreshEditUser'])) AND $_SESSION['refreshEditUser'])
+if ((isSet($_POST['action']) AND $_POST['action'] == 'Edit') OR 
+(isSet($_SESSION['refreshEditUser'])) AND $_SESSION['refreshEditUser'])
 {
 	unset($_SESSION['UserEmailsToBeDisplayed']);
 	
 		// Check if the call was edit button or a forced refresh
-	if(isset($_SESSION['refreshEditUser']) AND $_SESSION['refreshEditUser']){
+	if(isSet($_SESSION['refreshEditUser']) AND $_SESSION['refreshEditUser']){
 		// Acknowledge that we have refreshed the form
 		unset($_SESSION['refreshEditUser']);
 	
@@ -731,7 +731,7 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR
 		$bookingdescription = $row['bookingdescription'];
 		$reduceAccessAtDate = $row['reduceAccessAtDate'];
 	
-		if(!isset($reduceAccessAtDate)){
+		if(!isSet($reduceAccessAtDate)){
 			$reduceAccessAtDate = '';
 		}
 	
@@ -751,7 +751,7 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR
 	// Display original values
 	$originalDateToDisplay = convertDatetimeToFormat($_SESSION['EditUserOriginaReduceAccessAtDate'] , 'Y-m-d', DATE_DEFAULT_FORMAT_TO_DISPLAY);
 
-	if(isset($_SESSION['EditUserChangedReduceAccessAtDate'])){
+	if(isSet($_SESSION['EditUserChangedReduceAccessAtDate'])){
 		$reduceAccessAtDate = $_SESSION['EditUserChangedReduceAccessAtDate'];
 	} else {
 		$reduceAccessAtDate = $originalDateToDisplay;
@@ -779,7 +779,7 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR
 }
 
 // Perform the actual database update of the edited information
-if (isset($_GET['editform'])AND isset($_POST['action']) AND $_POST['action'] == 'Edit User')
+if (isSet($_GET['editform'])AND isSet($_POST['action']) AND $_POST['action'] == 'Edit User')
 {
 		// Validate user inputs
 	list($invalidInput, $email, $validatedFirstname, $validatedLastname, $validatedBookingDescription, $validatedDisplayName, $validatedReduceAccessAtDate) = validateUserInputs('AddNewUserError');
@@ -791,10 +791,10 @@ if (isset($_GET['editform'])AND isset($_POST['action']) AND $_POST['action'] == 
 	
 	// Check if user is trying to set a new password
 	// And if so, check if both fields are filled in and match each other
-	if(isset($_POST['password'])){
+	if(isSet($_POST['password'])){
 		$password = $_POST['password'];
 	} 
-	if(isset($_POST['confirmpassword'])){
+	if(isSet($_POST['confirmpassword'])){
 		$confirmPassword = $_POST['confirmpassword'];
 	}
 	$minimumPasswordLength = MINIMUM_PASSWORD_LENGTH;
@@ -836,43 +836,43 @@ if (isset($_GET['editform'])AND isset($_POST['action']) AND $_POST['action'] == 
 	}
 		
 		// Check against the values we retrieved before loading the page
-	if ( isset($_SESSION['EditUserOriginalFirstName']) AND 
+	if ( isSet($_SESSION['EditUserOriginalFirstName']) AND 
 	$validatedFirstname != $_SESSION['EditUserOriginalFirstName'])
 	{
 		$NumberOfChanges++;
 		unset($_SESSION['EditUserOriginalFirstName']);
 	}
-	if ( isset($_SESSION['EditUserOriginalLastName']) AND 
+	if ( isSet($_SESSION['EditUserOriginalLastName']) AND 
 	$validatedLastname != $_SESSION['EditUserOriginalLastName'])
 	{
 		$NumberOfChanges++;
 		unset($_SESSION['EditUserOriginalLastName']);
 	}
-	if ( isset($_SESSION['EditUserOriginaEmail']) AND 
+	if ( isSet($_SESSION['EditUserOriginaEmail']) AND 
 	$email != $_SESSION['EditUserOriginaEmail'])
 	{
 		$NumberOfChanges++;
 		unset($_SESSION['EditUserOriginaEmail']);
 	}
-	if ( isset($_SESSION['EditUserOriginaAccessID']) AND 
+	if ( isSet($_SESSION['EditUserOriginaAccessID']) AND 
 	$_POST['accessID'] != $_SESSION['EditUserOriginaAccessID'])
 	{
 		$NumberOfChanges++;
 		unset($_SESSION['EditUserOriginaAccessID']);
 	}
-	if ( isset($_SESSION['EditUserOriginaDisplayName']) AND 
+	if ( isSet($_SESSION['EditUserOriginaDisplayName']) AND 
 	$validatedDisplayName != $_SESSION['EditUserOriginaDisplayName'])
 	{
 		$NumberOfChanges++;
 		unset($_SESSION['EditUserOriginaDisplayName']);
 	}	
-	if ( isset($_SESSION['EditUserOriginaBookingDescription']) AND 
+	if ( isSet($_SESSION['EditUserOriginaBookingDescription']) AND 
 	$validatedBookingDescription != $_SESSION['EditUserOriginaBookingDescription'])
 	{
 		$NumberOfChanges++;
 		unset($_SESSION['EditUserOriginaBookingDescription']);
 	}
-	if ( isset($_SESSION['EditUserOriginaReduceAccessAtDate']) AND 
+	if ( isSet($_SESSION['EditUserOriginaReduceAccessAtDate']) AND 
 	$validatedReduceAccessAtDate != $_SESSION['EditUserOriginaReduceAccessAtDate'])
 	{
 		$changedReduceAccessAtDate = TRUE;
@@ -1013,7 +1013,7 @@ if (isset($_GET['editform'])AND isset($_POST['action']) AND $_POST['action'] == 
 }
 
 // If admin wants to change the values back to the original values while editing
-if (isset($_POST['edit']) AND $_POST['edit'] == "Reset"){
+if (isSet($_POST['edit']) AND $_POST['edit'] == "Reset"){
 
 	$_SESSION['EditUserChangedFirstname'] = $_SESSION['EditUserOriginalFirstName'];
 	$_SESSION['EditUserChangedLastname'] = $_SESSION['EditUserOriginalLastName'];
@@ -1029,7 +1029,7 @@ if (isset($_POST['edit']) AND $_POST['edit'] == "Reset"){
 }
 
 // If admin wants to leave the page and be directed back to the user page again
-if (isset($_POST['edit']) AND $_POST['edit'] == 'Cancel'){
+if (isSet($_POST['edit']) AND $_POST['edit'] == 'Cancel'){
 
 	$_SESSION['UserManagementFeedbackMessage'] = "You cancelled your user editing.";
 	header("Location: /admin/users");
@@ -1037,7 +1037,7 @@ if (isset($_POST['edit']) AND $_POST['edit'] == 'Cancel'){
 }
 
 // if admin wants to cancel the date to reduce access
-if (isset($_POST['action']) AND $_POST['action'] == 'Cancel Date')
+if (isSet($_POST['action']) AND $_POST['action'] == 'Cancel Date')
 {
 	// Update selected user by making date to reduce access null	
 	try
@@ -1072,7 +1072,7 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Cancel Date')
 
 // End of user input code snippets
 
-if (isset($refreshUsers) AND $refreshUsers){
+if (isSet($refreshUsers) AND $refreshUsers){
 	// TO-DO: Add code that should occur on a refresh
 	unset($refreshUsers);
 }
@@ -1115,7 +1115,7 @@ try
 			DESC';
 	$return = $pdo->query($sql);
 	$result = $return->fetchAll(PDO::FETCH_ASSOC);
-	if(isset($result)){
+	if(isSet($result)){
 		$rowNum = sizeOf($result);
 	} else {
 		$rowNum = 0;
@@ -1176,7 +1176,7 @@ foreach ($result as $row)
 	}
 	
 }
-if(isset($email)){
+if(isSet($email)){
 	$_SESSION['UserEmailsToBeDisplayed'] = $email;
 }
 

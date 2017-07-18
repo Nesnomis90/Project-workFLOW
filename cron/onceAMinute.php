@@ -81,7 +81,7 @@ function alertUserThatMeetingIsAboutToStart(){
 		$s->execute();
 		
 		$result = $s->fetchAll(PDO::FETCH_ASSOC);
-		if(isset($result)){
+		if(isSet($result)){
 			$rowNum = sizeOf($result);
 		} else {
 			$rowNum  = 0;

@@ -12,7 +12,7 @@
 		<h1>Scheduled Events</h1>
 		
 		<div id="feedback">
-		<?php if(isset($_SESSION['EventsUserFeedback'])) : ?>
+		<?php if(isSet($_SESSION['EventsUserFeedback'])) : ?>
 			<b id="feedback"><?php htmlout($_SESSION['EventsUserFeedback']); ?></b>
 			<?php unset($_SESSION['EventsUserFeedback']); ?>
 		<?php endif; ?>
@@ -23,7 +23,7 @@
 				<input type="submit" name="action" value="Create Event">
 			</div>
 			<div style="position: absolute; right: 10px;">
-			<?php if(isset($_SESSION['eventsEnableDelete']) AND $_SESSION['eventsEnableDelete']) : ?>
+			<?php if(isSet($_SESSION['eventsEnableDelete']) AND $_SESSION['eventsEnableDelete']) : ?>
 				<input type="submit" name="action" value="Disable Delete">
 			<?php else : ?>
 				<input type="submit" name="action" value="Enable Delete">
@@ -51,7 +51,7 @@
 				<th>Created At</th>
 				<th>Delete</th>
 			</tr>
-		<?php if(isset($activeEvents)) : ?>
+		<?php if(isSet($activeEvents)) : ?>
 			<?php foreach ($activeEvents AS $event) : ?>
 				<form action="" method="post">
 					<tr>
@@ -67,7 +67,7 @@
 						<td style="white-space: pre-wrap;"><?php htmlout($event['LastDate']); ?></td>
 						<td><?php htmlout($event['DateTimeCreated']); ?></td>
 						<td>
-							<?php if(isset($_SESSION['eventsEnableDelete']) AND $_SESSION['eventsEnableDelete']) : ?>
+							<?php if(isSet($_SESSION['eventsEnableDelete']) AND $_SESSION['eventsEnableDelete']) : ?>
 								<input type="submit" name="action" value="Delete">
 							<?php else : ?>
 								<input type="submit" name="disabled" value="Delete" disabled>
@@ -109,7 +109,7 @@
 				<th>Cancel</th>
 				<th>Delete</th>
 			</tr>
-		<?php if(isset($completedEvents)) : ?>						
+		<?php if(isSet($completedEvents)) : ?>						
 			<?php foreach ($completedEvents AS $event) : ?>
 				<form action="" method="post">				
 					<tr>
@@ -124,7 +124,7 @@
 						<td style="white-space: pre-wrap;"><?php htmlout($event['LastDate']); ?></td>			
 						<td><?php htmlout($event['DateTimeCreated']); ?></td>
 						<td>
-							<?php if(isset($_SESSION['eventsEnableDelete']) AND $_SESSION['eventsEnableDelete']) : ?>
+							<?php if(isSet($_SESSION['eventsEnableDelete']) AND $_SESSION['eventsEnableDelete']) : ?>
 								<input type="submit" name="action" value="Delete">
 							<?php else : ?>
 								<input type="submit" name="disabled" value="Delete" disabled>

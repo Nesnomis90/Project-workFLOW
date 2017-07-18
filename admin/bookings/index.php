@@ -44,11 +44,11 @@ function clearEditBookingSessions(){
 
 // Function to remember the user inputs in Edit Booking
 function rememberEditBookingInputs(){
-	if(isset($_SESSION['EditBookingInfoArray'])){
+	if(isSet($_SESSION['EditBookingInfoArray'])){
 		$newValues = $_SESSION['EditBookingInfoArray'];
 
 			// The user selected, if the booking is for another user
-		if(isset($_POST['userID'])){
+		if(isSet($_POST['userID'])){
 			$newValues['TheUserID'] = $_POST['userID'];
 		}
 			// The meeting room selected
@@ -59,10 +59,16 @@ function rememberEditBookingInputs(){
 		$newValues['BookedBy'] = trimExcessWhitespace($_POST['displayName']);
 			// The booking description
 		$newValues['BookingDescription'] = trimExcessWhitespaceButLeaveLinefeed($_POST['description']);
+			// The admin note
+		$newValues['AdminNote'] = trimExcessWhitespaceButLeaveLinefeed($_POST['adminNote']);
 			// The start time
-		$newValues['StartTime'] = trimExcessWhitespace($_POST['startDateTime']);
+		if(isSet($_POST['startDateTime'])){
+			$newValues['StartTime'] = trimExcessWhitespace($_POST['startDateTime']);
+		}
 			// The end time
-		$newValues['EndTime'] = trimExcessWhitespace($_POST['endDateTime']);
+		if(isSet($_POST['endDateTime'])){
+			$newValues['EndTime'] = trimExcessWhitespace($_POST['endDateTime']);
+		}
 		
 		$_SESSION['EditBookingInfoArray'] = $newValues;			
 	}
@@ -70,11 +76,11 @@ function rememberEditBookingInputs(){
 
 // Function to remember the user inputs in Add Booking
 function rememberAddBookingInputs(){
-	if(isset($_SESSION['AddBookingInfoArray'])){
+	if(isSet($_SESSION['AddBookingInfoArray'])){
 		$newValues = $_SESSION['AddBookingInfoArray'];
 
 			// The user selected, if the booking is for another user
-		if(isset($_POST['userID'])){
+		if(isSet($_POST['userID'])){
 			$newValues['TheUserID'] = $_POST['userID'];
 		}
 			// The meeting room selected
@@ -85,6 +91,8 @@ function rememberAddBookingInputs(){
 		$newValues['BookedBy'] = trimExcessWhitespace($_POST['displayName']);
 			// The booking description
 		$newValues['BookingDescription'] = trimExcessWhitespaceButLeaveLinefeed($_POST['description']);
+			// The admin note
+		$newValues['AdminNote'] = trimExcessWhitespaceButLeaveLinefeed($_POST['adminNote']);
 			// The start time
 		$newValues['StartTime'] = trimExcessWhitespace($_POST['startDateTime']);
 			// The end time
@@ -96,8 +104,8 @@ function rememberAddBookingInputs(){
 
 // This is used on cancel and delete.
 function emailUserOnCancelledBooking(){
-	if(isset($_POST['UserID']) AND $_POST['UserID'] != $_SESSION['LoggedInUserID']){
-		if(isset($_POST['sendEmail']) AND $_POST['sendEmail'] == 1){
+	if(isSet($_POST['UserID']) AND $_POST['UserID'] != $_SESSION['LoggedInUserID']){
+		if(isSet($_POST['sendEmail']) AND $_POST['sendEmail'] == 1){
 			$emailSubject = "Your meeting has been cancelled!";
 
 			$emailMessage = 
@@ -113,7 +121,7 @@ function emailUserOnCancelledBooking(){
 			}
 		
 			$_SESSION['BookingUserFeedback'] .= "\nThis is the email msg we're sending out:\n$emailMessage.\nSent to email: $email."; // TO-DO: Remove after testing
-		} elseif(isset($_POST['sendEmail']) AND $_POST['sendEmail'] == 0) {
+		} elseif(isSet($_POST['sendEmail']) AND $_POST['sendEmail'] == 0) {
 			$_SESSION['BookingUserFeedback'] .= "\nUser does not want to be sent Email.";
 		}
 	} else {
@@ -122,48 +130,60 @@ function emailUserOnCancelledBooking(){
 }
 
 // Function to validate user inputs
-function validateUserInputs($FeedbackSessionToUse, $editing){
+function validateUserInputs($FeedbackSessionToUse, $editing, $bookingCompleted){
 	// Get user inputs
 	$invalidInput = FALSE;
-	
-	if(isset($_POST['startDateTime']) AND !$invalidInput){
-		$startDateTimeString = $_POST['startDateTime'];
-	} else {
-		$invalidInput = TRUE;
-		$_SESSION[$FeedbackSessionToUse] = "A booking cannot be finished without submitting a start time.";
+
+	if(!$bookingCompleted){
+		if(isSet($_POST['startDateTime']) AND !$invalidInput){
+			$startDateTimeString = $_POST['startDateTime'];
+		} else {
+			$invalidInput = TRUE;
+			$_SESSION[$FeedbackSessionToUse] = "A booking cannot be finished without submitting a start time.";
+		}
+		if(isSet($_POST['endDateTime']) AND !$invalidInput){
+			$endDateTimeString = $_POST['endDateTime'];
+		} else {
+			$invalidInput = TRUE;
+			$_SESSION[$FeedbackSessionToUse] = "A booking cannot be finished without submitting an end time.";
+		}
 	}
-	if(isset($_POST['endDateTime']) AND !$invalidInput){
-		$endDateTimeString = $_POST['endDateTime'];
-	} else {
-		$invalidInput = TRUE;
-		$_SESSION[$FeedbackSessionToUse] = "A booking cannot be finished without submitting an end time.";
-	}
 	
-	if(isset($_POST['displayName'])){
+	if(isSet($_POST['displayName'])){
 		$displayNameString = $_POST['displayName'];
 	} else {
 		$displayNameString = '';
 	}
-	if(isset($_POST['description'])){
+	if(isSet($_POST['description'])){
 		$bookingDescriptionString = $_POST['description'];
 	} else {
 		$bookingDescriptionString = '';
 	}
+	if(isSet($_POST['adminNote'])){
+		$adminNoteString = $_POST['adminNote'];
+	} else {
+		$adminNoteString = '';
+	}	
 	
 	// Remove excess whitespace and prepare strings for validation
-	$validatedStartDateTime = trimExcessWhitespace($startDateTimeString);
-	$validatedEndDateTime = trimExcessWhitespace($endDateTimeString);
+	if(!$bookingCompleted){	
+		$validatedStartDateTime = trimExcessWhitespace($startDateTimeString);
+		$validatedEndDateTime = trimExcessWhitespace($endDateTimeString);
+	}
 	$validatedDisplayName = trimExcessWhitespaceButLeaveLinefeed($displayNameString);
-	$validatedBookingDescription = trimExcessWhitespaceButLeaveLinefeed($bookingDescriptionString);	
+	$validatedBookingDescription = trimExcessWhitespaceButLeaveLinefeed($bookingDescriptionString);
+	$validatedAdminNote = trimExcessWhitespaceButLeaveLinefeed($adminNoteString);
 	
 	// Do actual input validation
-	if(validateDateTimeString($validatedStartDateTime) === FALSE AND !$invalidInput){
-		$invalidInput = TRUE;
-		$_SESSION[$FeedbackSessionToUse] = "Your submitted start time has illegal characters in it.";
-	}
-	if(validateDateTimeString($validatedEndDateTime) === FALSE AND !$invalidInput){
-		$invalidInput = TRUE;
-		$_SESSION[$FeedbackSessionToUse] = "Your submitted end time has illegal characters in it.";
+	if(!$bookingCompleted){
+		if(validateDateTimeString($validatedStartDateTime) === FALSE AND !$invalidInput){
+			$invalidInput = TRUE;
+			$_SESSION[$FeedbackSessionToUse] = "Your submitted start time has illegal characters in it.";
+		}
+		if(validateDateTimeString($validatedEndDateTime) === FALSE AND !$invalidInput){
+			$invalidInput = TRUE;
+			$_SESSION[$FeedbackSessionToUse] = "Your submitted end time has illegal characters in it.";
+		}
 	}
 	if(validateString($validatedDisplayName) === FALSE AND !$invalidInput){
 		$invalidInput = TRUE;
@@ -173,18 +193,24 @@ function validateUserInputs($FeedbackSessionToUse, $editing){
 		$invalidInput = TRUE;
 		$_SESSION[$FeedbackSessionToUse] = "Your submitted booking description has illegal characters in it.";
 	}
+	if(validateString($validatedAdminNote) === FALSE AND !$invalidInput){
+		$invalidInput = TRUE;
+		$_SESSION[$FeedbackSessionToUse] = "Your submitted admin note has illegal characters in it.";
+	}
 	
 	// Are values actually filled in?
-	if($validatedStartDateTime == "" AND $validatedEndDateTime == "" AND !$invalidInput){
-		
-		$_SESSION[$FeedbackSessionToUse] = "You need to fill in a start and an end time for your booking.";	
-		$invalidInput = TRUE;
-	} elseif($validatedStartDateTime != "" AND $validatedEndDateTime == "" AND !$invalidInput) {
-		$_SESSION[$FeedbackSessionToUse] = "You need to fill in an end time for your booking.";	
-		$invalidInput = TRUE;		
-	} elseif($validatedStartDateTime == "" AND $validatedEndDateTime != "" AND !$invalidInput){
-		$_SESSION[$FeedbackSessionToUse] = "You need to fill in a start time for your booking.";	
-		$invalidInput = TRUE;		
+	if(!$bookingCompleted){
+		if($validatedStartDateTime == "" AND $validatedEndDateTime == "" AND !$invalidInput){
+			
+			$_SESSION[$FeedbackSessionToUse] = "You need to fill in a start and an end time for your booking.";	
+			$invalidInput = TRUE;
+		} elseif($validatedStartDateTime != "" AND $validatedEndDateTime == "" AND !$invalidInput) {
+			$_SESSION[$FeedbackSessionToUse] = "You need to fill in an end time for your booking.";	
+			$invalidInput = TRUE;		
+		} elseif($validatedStartDateTime == "" AND $validatedEndDateTime != "" AND !$invalidInput){
+			$_SESSION[$FeedbackSessionToUse] = "You need to fill in a start time for your booking.";	
+			$invalidInput = TRUE;		
+		}
 	}
 	
 	// Check if input length is allowed
@@ -200,93 +226,105 @@ function validateUserInputs($FeedbackSessionToUse, $editing){
 		$_SESSION[$FeedbackSessionToUse] = "The booking description submitted is too long.";	
 		$invalidInput = TRUE;		
 	}
-	
+		// AdminNote
+	$invalidAdminNote = isLengthInvalidBookingDescription($validatedAdminNote);
+	if($invalidAdminNote AND !$invalidInput){
+		$_SESSION[$FeedbackSessionToUse] = "The admin note submitted is too long.";	
+		$invalidInput = TRUE;		
+	}	
+
 	// Check if the dateTime inputs we received are actually datetimes
-	$startDateTime = correctDatetimeFormat($validatedStartDateTime);
-	$endDateTime = correctDatetimeFormat($validatedEndDateTime);
+	if(!$bookingCompleted){
+		$startDateTime = correctDatetimeFormat($validatedStartDateTime);
+		$endDateTime = correctDatetimeFormat($validatedEndDateTime);
 
-	if (isset($startDateTime) AND $startDateTime === FALSE AND !$invalidInput){
-		$_SESSION[$FeedbackSessionToUse] = "The start date you submitted did not have a correct format. Please try again.";
-		$invalidInput = TRUE;
-	}
-	if (isset($endDateTime) AND $endDateTime === FALSE AND !$invalidInput){
-		$_SESSION[$FeedbackSessionToUse] = "The end date you submitted did not have a correct format. Please try again.";
-		$invalidInput = TRUE;
-	}	
-	
-	$timeNow = getDatetimeNow();
-	
-	if($startDateTime > $endDateTime AND !$invalidInput){
-		// End time can't be before the start time
-		
-		$_SESSION[$FeedbackSessionToUse] = "The start time can't be later than the end time. Please select a new start time or end time.";
-		$invalidInput = TRUE;
-	}
-	
-	if($startDateTime < $timeNow AND !$invalidInput){
-		// You can't book a meeting starting in the past.
-		
-		$_SESSION[$FeedbackSessionToUse] = "The start time you selected is already over. Select a new start time.";
-		$invalidInput = TRUE;
-	}
-	
-	if($endDateTime < $timeNow AND !$invalidInput){
-		// You can't book a meeting ending in the past.
-		
-		$_SESSION[$FeedbackSessionToUse] = "The end time you selected is already over. Select a new end time.";
-		$invalidInput = TRUE;	
-	}	
-	
-	if($endDateTime == $startDateTime AND !$invalidInput){
-		$_SESSION[$FeedbackSessionToUse] = "You need to select an end time that is different from your start time.";	
-		$invalidInput = TRUE;				
-	} 
-
-	// We want to check if a booking is in the correct minute slice e.g. 15 minute increments.
-		// We check both start and end time for online/admin bookings
-	if(!$editing){
-		if(!$invalidInput){
-			$invalidStartTime = isBookingDateTimeMinutesInvalid($startDateTime);
-			if($invalidStartTime){
-				$_SESSION[$FeedbackSessionToUse] = "Your start time has to be in a " . MINIMUM_BOOKING_TIME_IN_MINUTES . " minutes slice from hh:00.";
-				$invalidInput = TRUE;	
-			}
+		if (isSet($startDateTime) AND $startDateTime === FALSE AND !$invalidInput){
+			$_SESSION[$FeedbackSessionToUse] = "The start date you submitted did not have a correct format. Please try again.";
+			$invalidInput = TRUE;
 		}
-		if(!$invalidInput){
-			$invalidEndTime = isBookingDateTimeMinutesInvalid($endDateTime);
-			if($invalidEndTime){
-				$_SESSION[$FeedbackSessionToUse] = "Your end time has to be in a " . MINIMUM_BOOKING_TIME_IN_MINUTES . " minutes slice from hh:00.";
-				$invalidInput = TRUE;	
-			}
+		if (isSet($endDateTime) AND $endDateTime === FALSE AND !$invalidInput){
+			$_SESSION[$FeedbackSessionToUse] = "The end date you submitted did not have a correct format. Please try again.";
+			$invalidInput = TRUE;
+		}	
+		
+		$timeNow = getDatetimeNow();
+		
+		if($startDateTime > $endDateTime AND !$invalidInput){
+			// End time can't be before the start time
+			
+			$_SESSION[$FeedbackSessionToUse] = "The start time can't be later than the end time. Please select a new start time or end time.";
+			$invalidInput = TRUE;
 		}
 		
-		// We want to check if the booking is the correct minimum length
-		if(!$invalidInput){
-			$invalidBookingLength = isBookingTimeDurationInvalid($startDateTime, $endDateTime);
-			if($invalidBookingLength){
-				$_SESSION[$FeedbackSessionToUse] = "Your start time and end time needs to have at least a " . MINIMUM_BOOKING_TIME_IN_MINUTES . " minutes difference.";
-				$invalidInput = TRUE;		
+		if($startDateTime < $timeNow AND !$invalidInput){
+			// You can't book a meeting starting in the past.
+			
+			$_SESSION[$FeedbackSessionToUse] = "The start time you selected is already over. Select a new start time.";
+			$invalidInput = TRUE;
+		}
+		
+		if($endDateTime < $timeNow AND !$invalidInput){
+			// You can't book a meeting ending in the past.
+			
+			$_SESSION[$FeedbackSessionToUse] = "The end time you selected is already over. Select a new end time.";
+			$invalidInput = TRUE;	
+		}	
+		
+		if($endDateTime == $startDateTime AND !$invalidInput){
+			$_SESSION[$FeedbackSessionToUse] = "You need to select an end time that is different from your start time.";	
+			$invalidInput = TRUE;				
+		} 
+	
+		// We want to check if a booking is in the correct minute slice e.g. 15 minute increments.
+			// We check both start and end time for online/admin bookings
+		if(!$editing){
+			if(!$invalidInput){
+				$invalidStartTime = isBookingDateTimeMinutesInvalid($startDateTime);
+				if($invalidStartTime){
+					$_SESSION[$FeedbackSessionToUse] = "Your start time has to be in a " . MINIMUM_BOOKING_TIME_IN_MINUTES . " minutes slice from hh:00.";
+					$invalidInput = TRUE;	
+				}
+			}
+			if(!$invalidInput){
+				$invalidEndTime = isBookingDateTimeMinutesInvalid($endDateTime);
+				if($invalidEndTime){
+					$_SESSION[$FeedbackSessionToUse] = "Your end time has to be in a " . MINIMUM_BOOKING_TIME_IN_MINUTES . " minutes slice from hh:00.";
+					$invalidInput = TRUE;	
+				}
+			}
+			
+			// We want to check if the booking is the correct minimum length
+			if(!$invalidInput){
+				$invalidBookingLength = isBookingTimeDurationInvalid($startDateTime, $endDateTime);
+				if($invalidBookingLength){
+					$_SESSION[$FeedbackSessionToUse] = "Your start time and end time needs to have at least a " . MINIMUM_BOOKING_TIME_IN_MINUTES . " minutes difference.";
+					$invalidInput = TRUE;		
+				}
 			}
 		}
 	}
-
-	return array($invalidInput, $startDateTime, $endDateTime, $validatedBookingDescription, $validatedDisplayName);
+	
+	if($bookingCompleted){
+		$startDateTime = NULL;
+		$endDateTime = NULL;
+	}
+	return array($invalidInput, $startDateTime, $endDateTime, $validatedBookingDescription, $validatedDisplayName, $validatedAdminNote);
 }
 
 // If admin wants to be able to delete bookings it needs to enabled first
-if (isset($_POST['action']) AND $_POST['action'] == "Enable Delete"){
+if (isSet($_POST['action']) AND $_POST['action'] == "Enable Delete"){
 	$_SESSION['bookingsEnableDelete'] = TRUE;
 	$refreshBookings = TRUE;
 }
 
 // If admin wants to be disable booking deletion
-if (isset($_POST['action']) AND $_POST['action'] == "Disable Delete"){
+if (isSet($_POST['action']) AND $_POST['action'] == "Disable Delete"){
 	unset($_SESSION['bookingsEnableDelete']);
 	$refreshBookings = TRUE;
 }
 
 // If admin wants to remove a booked meeting from the database
-if (isset($_POST['action']) and $_POST['action'] == 'Delete')
+if (isSet($_POST['action']) and $_POST['action'] == 'Delete')
 {
 	// Delete selected booked meeting from database
 	try
@@ -318,7 +356,7 @@ if (isset($_POST['action']) and $_POST['action'] == 'Delete')
 	{
 		// Save a description with information about the booking that was removed
 		$logEventDescription = "N/A";
-		if(isset($_POST['UserInfo']) AND isset($_POST['MeetingInfo'])){
+		if(isSet($_POST['UserInfo']) AND isSet($_POST['MeetingInfo'])){
 			$logEventDescription = 'The booking made for ' . $_POST['UserInfo'] . ' for the meeting room ' .
 			$_POST['MeetingInfo'] . ' was deleted by: ' . $_SESSION['LoggedInUserName'];
 		} else {
@@ -351,7 +389,7 @@ if (isset($_POST['action']) and $_POST['action'] == 'Delete')
 	}	
 
 	// Check if the meeting that was removed still was active, if so
-	if(isset($_POST['BookingStatus']) AND $_POST['BookingStatus'] == 'Active'){
+	if(isSet($_POST['BookingStatus']) AND $_POST['BookingStatus'] == 'Active'){
 		// Send email to user that meeting has been cancelled
 		emailUserOnCancelledBooking();
 	}
@@ -362,10 +400,10 @@ if (isset($_POST['action']) and $_POST['action'] == 'Delete')
 }
 
 // If admin wants to cancel a scheduled booked meeting (instead of deleting)
-if (isset($_POST['action']) and $_POST['action'] == 'Cancel')
+if (isSet($_POST['action']) and $_POST['action'] == 'Cancel')
 {
 	// Only cancel if booking is currently active
-	if(	isset($_POST['BookingStatus']) AND  
+	if(	isSet($_POST['BookingStatus']) AND  
 		($_POST['BookingStatus'] == 'Active' OR $_POST['BookingStatus'] == 'Active Today')){	
 		// Update cancellation date for selected booked meeting in database
 		try
@@ -400,7 +438,7 @@ if (isset($_POST['action']) and $_POST['action'] == 'Cancel')
 		{
 			// Save a description with information about the booking that was cancelled
 			$logEventDescription = "N/A";
-			if(isset($_POST['UserInfo']) AND isset($_POST['MeetingInfo'])){
+			if(isSet($_POST['UserInfo']) AND isSet($_POST['MeetingInfo'])){
 				$logEventDescription = 'The booking made for ' . $_POST['UserInfo'] . ' for the meeting room ' .
 				$_POST['MeetingInfo'] . ' was cancelled by: ' . $_SESSION['LoggedInUserName'];
 			} else {
@@ -449,24 +487,24 @@ if (isset($_POST['action']) and $_POST['action'] == 'Cancel')
 
 
 // if admin wants to edit a booking, we load a new html form
-if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR
-	(isset($_SESSION['refreshEditBooking']) AND $_SESSION['refreshEditBooking']))
+if ((isSet($_POST['action']) AND $_POST['action'] == 'Edit') OR
+	(isSet($_SESSION['refreshEditBooking']) AND $_SESSION['refreshEditBooking']))
 {
 	// Check if the call was a form submit or a forced refresh
-	if(isset($_SESSION['refreshEditBooking'])){
+	if(isSet($_SESSION['refreshEditBooking'])){
 		// Acknowledge that we have refreshed the page
 		unset($_SESSION['refreshEditBooking']);	
 		
 		// Set the information back to what it was before the refresh
 				// The user search string
-		if(isset($_SESSION['EditBookingUserSearch'])){
+		if(isSet($_SESSION['EditBookingUserSearch'])){
 			$usersearchstring = $_SESSION['EditBookingUserSearch'];
 			unset($_SESSION['EditBookingUserSearch']);
 		} else {
 			$usersearchstring = "";
 		}
 				// The user dropdown select options
-		if(isset($_SESSION['EditBookingUsersArray'])){
+		if(isSet($_SESSION['EditBookingUsersArray'])){
 			$users = $_SESSION['EditBookingUsersArray'];
 					
 		}
@@ -475,7 +513,7 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR
 		
 	} else {
 		// Get information from database again on the selected booking
-		if(!isset($_SESSION['EditBookingMeetingRoomsArray'])){
+		if(!isSet($_SESSION['EditBookingMeetingRoomsArray'])){
 			try
 			{
 				include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
@@ -511,7 +549,7 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR
 			}
 		}
 		
-		if(!isset($_SESSION['EditBookingInfoArray'])){
+		if(!isSet($_SESSION['EditBookingInfoArray'])){
 			try
 			{
 				include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
@@ -527,6 +565,12 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR
 									b.`displayName` 								AS BookedBy,
 									b.`userID`										AS TheUserID,
 									b.`cancellationCode`							AS CancellationCode,
+									b.`adminNote`									AS AdminNote,
+									(
+										(b.`dateTimeCancelled` IS NOT NULL) 
+										OR
+										(b.`actualEndDateTime` IS NOT NULL)
+									)												AS BookingCompleted,
 									IF(b.`companyID` IS NULL, NULL, 
 										(	
 											SELECT `name` 
@@ -650,7 +694,7 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR
 		// We only need to allow the user a company dropdown selector if they
 		// are connected to more than 1 company.
 		// If not we just store the companyID in a hidden form field
-		if(isset($company)){
+		if(isSet($company)){
 			if (sizeOf($company)>1){
 				// User is in multiple companies
 				
@@ -682,7 +726,7 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR
 	$row = $_SESSION['EditBookingInfoArray'];
 	$original = $_SESSION['EditBookingOriginalInfoArray'];
 		// Changed user
-	if(isset($_SESSION['EditBookingSelectedNewUser'])){
+	if(isSet($_SESSION['EditBookingSelectedNewUser'])){
 		
 		foreach($users AS $user){
 			if($user['userID'] == $row['TheUserID']){
@@ -702,7 +746,7 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR
 	}
 	
 	// Changed company
-	if(isset($company)){
+	if(isSet($company)){
 		foreach($company AS $cmp){
 			if($cmp['companyID'] == $row['TheCompanyID']){
 				$row['BookedForCompany'] = $cmp['companyName'];
@@ -731,6 +775,11 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR
 	}
 	$displayName = $row['BookedBy'];
 	$description = $row['BookingDescription'];
+	if($row['AdminNote'] === NULL){
+		$adminNote = "";
+	} else {
+		$adminNote = $row['AdminNote'];
+	}
 	$userInformation = $row['UserLastname'] . ', ' . $row['UserFirstname'] . ' - ' . $row['UserEmail'];
 		// Original values	
 	$originalStartDateTime = $original['StartTime'];
@@ -745,17 +794,25 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR
 		$originalCompanyName = $original['BookedForCompany'];
 	}
 	$originalMeetingRoomName = $original['BookedRoomName'];
-	if(!isset($originalMeetingRoomName) OR $originalMeetingRoomName == NULL OR $originalMeetingRoomName == ""){
+	if(!isSet($originalMeetingRoomName) OR $originalMeetingRoomName == NULL OR $originalMeetingRoomName == ""){
 		$originalMeetingRoomName = "N/A - Deleted";	
 	}
 	$originalDisplayName = $original['BookedBy'];
 	$originalBookingDescription = $original['BookingDescription'];
+	if($original['AdminNote'] === NULL){
+		$originalAdminNote = "";
+	} else {
+		$originalAdminNote = $original['AdminNote'];
+	}
 	$originalUserInformation = 	$original['UserLastname'] . ', ' . $original['UserFirstname'] . 
 								' - ' . $original['UserEmail'];
-	if(!isset($originalUserInformation) OR $originalUserInformation == NULL OR $originalUserInformation == ",  - "){
+	if(!isSet($originalUserInformation) OR $originalUserInformation == NULL OR $originalUserInformation == ",  - "){
 		$originalUserInformation = "N/A - Deleted";	
 	}	
 	
+	if($original['BookingCompleted'] == 1){
+		$bookingHasBeenCompleted = TRUE;
+	}
 	var_dump($_SESSION); // TO-DO: remove after testing is done
 	
 	// Change to the actual form we want to use
@@ -765,10 +822,10 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR
 
 // Admin wants to change the user the booking is reserved for
 // We need to get a list of all active users
-if((isset($_POST['edit']) AND $_POST['edit'] == "Change User") OR 
-	(isset($_SESSION['refreshEditBookingChangeUser'])) AND $_SESSION['refreshEditBookingChangeUser']){
+if((isSet($_POST['edit']) AND $_POST['edit'] == "Change User") OR 
+	(isSet($_SESSION['refreshEditBookingChangeUser'])) AND $_SESSION['refreshEditBookingChangeUser']){
 	
-	if(isset($_SESSION['refreshEditBookingChangeUser']) AND $_SESSION['refreshEditBookingChangeUser']){
+	if(isSet($_SESSION['refreshEditBookingChangeUser']) AND $_SESSION['refreshEditBookingChangeUser']){
 		// Confirm that we have refreshed
 		unset($_SESSION['refreshEditBookingChangeUser']);
 	}	
@@ -777,17 +834,17 @@ if((isset($_POST['edit']) AND $_POST['edit'] == "Change User") OR
 	unset($_SESSION['EditBookingUsersArray']);	
 	
 	// Let's remember what was selected if we do any changes before clicking "change user"
-	if(isset($_POST['edit']) AND $_POST['edit'] == "Change User"){
+	if(isSet($_POST['edit']) AND $_POST['edit'] == "Change User"){
 		rememberEditBookingInputs();
 	}
 
 	$usersearchstring = "";
 	
-	if(isset($_SESSION['EditBookingUserSearch'])){
+	if(isSet($_SESSION['EditBookingUserSearch'])){
 		$usersearchstring = $_SESSION['EditBookingUserSearch'];
 	}	
 	
-	if(!isset($_SESSION['EditBookingUsersArray'])){
+	if(!isSet($_SESSION['EditBookingUsersArray'])){
 		// Get all active users and their default booking information
 		try
 		{
@@ -871,7 +928,7 @@ if((isset($_POST['edit']) AND $_POST['edit'] == "Change User") OR
 }
 
 // Admin wants to increase the start timer by minimum allowed time (e.g. 15 min)
-if(isset($_POST['edit']) AND $_POST['edit'] == "Increase Start By Minimum"){
+if(isSet($_POST['edit']) AND $_POST['edit'] == "Increase Start By Minimum"){
 	
 	// Let's remember what was selected if we do any changes before clicking "Select This User"
 	rememberEditBookingInputs();
@@ -892,7 +949,7 @@ if(isset($_POST['edit']) AND $_POST['edit'] == "Increase Start By Minimum"){
 }
 
 // Admin wants to increase the end timer by minimum allowed time (e.g. 15 min)
-if(isset($_POST['edit']) AND $_POST['edit'] == "Increase End By Minimum"){
+if(isSet($_POST['edit']) AND $_POST['edit'] == "Increase End By Minimum"){
 	
 	// Let's remember what was selected if we do any changes before clicking "Select This User"
 	rememberEditBookingInputs();
@@ -907,7 +964,7 @@ if(isset($_POST['edit']) AND $_POST['edit'] == "Increase End By Minimum"){
 }
 
 // Admin confirms what user he wants the booking to be for.
-if(isset($_POST['edit']) AND $_POST['edit'] == "Select This User"){
+if(isSet($_POST['edit']) AND $_POST['edit'] == "Select This User"){
 	
 	// We haven't set the company if we are changing the user.
 	$_SESSION['EditBookingSelectACompany'] = TRUE;
@@ -927,7 +984,7 @@ if(isset($_POST['edit']) AND $_POST['edit'] == "Select This User"){
 }
 
 //	Admin wants to change the company the booking is for (after having already selected it)
-if(isset($_POST['edit']) AND $_POST['edit'] == "Change Company"){
+if(isSet($_POST['edit']) AND $_POST['edit'] == "Change Company"){
 	
 	// We want to select a company again
 	$_SESSION['EditBookingSelectACompany'] = TRUE;
@@ -942,7 +999,7 @@ if(isset($_POST['edit']) AND $_POST['edit'] == "Change Company"){
 }
 
 // Admin confirms what company he wants the booking to be for.
-if(isset($_POST['edit']) AND $_POST['edit'] == "Select This Company"){
+if(isSet($_POST['edit']) AND $_POST['edit'] == "Select This Company"){
 
 	// Remember that we've selected a new company
 	unset($_SESSION['EditBookingSelectACompany']);
@@ -956,7 +1013,7 @@ if(isset($_POST['edit']) AND $_POST['edit'] == "Select This Company"){
 }
 
 // If admin is editing a booking and wants to limit the users shown by searching
-if(isset($_SESSION['EditBookingChangeUser']) AND isset($_POST['edit']) AND $_POST['edit'] == "Search"){
+if(isSet($_SESSION['EditBookingChangeUser']) AND isSet($_POST['edit']) AND $_POST['edit'] == "Search"){
 	
 	// Let's remember what was selected and searched for
 		// The user search string
@@ -971,10 +1028,10 @@ if(isset($_SESSION['EditBookingChangeUser']) AND isset($_POST['edit']) AND $_POS
 }
 
 // If admin wants to get the default values for the user's display name
-if(isset($_POST['edit']) AND $_POST['edit'] == "Get Default Display Name"){
+if(isSet($_POST['edit']) AND $_POST['edit'] == "Get Default Display Name"){
 	  
 	$displayName = $_SESSION['EditBookingDefaultDisplayNameForNewUser'];
-	if(isset($_SESSION['EditBookingInfoArray'])){
+	if(isSet($_SESSION['EditBookingInfoArray'])){
 		
 		rememberEditBookingInputs();
 
@@ -1001,10 +1058,10 @@ if(isset($_POST['edit']) AND $_POST['edit'] == "Get Default Display Name"){
 }
 
 // If admin wants to get the default values for the user's booking description
-if(isset($_POST['edit']) AND $_POST['edit'] == "Get Default Booking Description"){
+if(isSet($_POST['edit']) AND $_POST['edit'] == "Get Default Booking Description"){
 	
 	$bookingDescription = $_SESSION['EditBookingDefaultBookingDescriptionForNewUser'];
-	if(isset($_SESSION['EditBookingInfoArray'])){
+	if(isSet($_SESSION['EditBookingInfoArray'])){
 		
 		rememberEditBookingInputs();
 
@@ -1032,7 +1089,7 @@ if(isset($_POST['edit']) AND $_POST['edit'] == "Get Default Booking Description"
 }
 
 // If admin wants to change the values back to the original values while editing
-if (isset($_POST['edit']) AND $_POST['edit'] == "Reset"){
+if (isSet($_POST['edit']) AND $_POST['edit'] == "Reset"){
 
 	$_SESSION['EditBookingInfoArray'] = $_SESSION['EditBookingOriginalInfoArray'];
 	
@@ -1042,51 +1099,59 @@ if (isset($_POST['edit']) AND $_POST['edit'] == "Reset"){
 }
 
 // If admin wants to leave the page and be directed back to the booking page again
-if (isset($_POST['edit']) AND $_POST['edit'] == 'Cancel'){
+if (isSet($_POST['edit']) AND $_POST['edit'] == 'Cancel'){
 
 	$_SESSION['BookingUserFeedback'] = "You cancelled your booking editing.";
 }
 
 
 // If admin wants to update the booking information after editing
-if(isset($_POST['edit']) AND $_POST['edit'] == "Finish Edit")
+if(isSet($_POST['edit']) AND $_POST['edit'] == "Finish Edit")
 {
+	$originalValue = $_SESSION['EditBookingOriginalInfoArray'];
+	
+	if($originalValue['BookingCompleted'] == 1){
+		$bookingCompleted = TRUE;
+	} else {
+		$bookingCompleted = FALSE;
+	}
 
 	// Validate user inputs
-	list($invalidInput, $startDateTime, $endDateTime, $bknDscrptn, $dspname) = validateUserInputs('EditBookingError', TRUE);
+	list($invalidInput, $startDateTime, $endDateTime, $bknDscrptn, $dspname, $validatedAdminNote) = validateUserInputs('EditBookingError', TRUE, $bookingCompleted);
 
 	// We want to check if a booking is in the correct minute slice e.g. 15 minute increments.
 		// We check both start and end time for online/admin bookings
 		// We do this for editing only if the times have changed from their original values.
-	$originalValue = $_SESSION['EditBookingOriginalInfoArray'];
-	$compareStartDate = convertDatetimeToFormat($startDateTime, 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
-	$compareEndDate = convertDatetimeToFormat($endDateTime, 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
-	$originalStartDateTime = $originalValue['StartTime'];
-	$compareOriginalStartDate = convertDatetimeToFormat($originalStartDateTime, 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
-	$originalEndDateTime = $originalValue['EndTime'];
-	$compareOriginalEndDate = convertDatetimeToFormat($originalEndDateTime, 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
-	if($compareStartDate != $compareOriginalStartDate AND !$invalidInput){
-		$invalidStartTime = isBookingDateTimeMinutesInvalid($startDateTime);
-		if($invalidStartTime AND !$invalidInput){
-			$_SESSION['EditBookingError'] = "Your start time has to be in a " . MINIMUM_BOOKING_TIME_IN_MINUTES . " minutes slice from hh:00.";
-			$invalidInput = TRUE;	
+	if(!$bookingCompleted){
+		$compareStartDate = convertDatetimeToFormat($startDateTime, 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
+		$compareEndDate = convertDatetimeToFormat($endDateTime, 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
+		$originalStartDateTime = $originalValue['StartTime'];
+		$compareOriginalStartDate = convertDatetimeToFormat($originalStartDateTime, 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
+		$originalEndDateTime = $originalValue['EndTime'];
+		$compareOriginalEndDate = convertDatetimeToFormat($originalEndDateTime, 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
+		if($compareStartDate != $compareOriginalStartDate AND !$invalidInput){
+			$invalidStartTime = isBookingDateTimeMinutesInvalid($startDateTime);
+			if($invalidStartTime AND !$invalidInput){
+				$_SESSION['EditBookingError'] = "Your start time has to be in a " . MINIMUM_BOOKING_TIME_IN_MINUTES . " minutes slice from hh:00.";
+				$invalidInput = TRUE;	
+			}
 		}
-	}
-	if($compareEndDate != $compareOriginalEndDate AND !$invalidInput){	
-		$invalidEndTime = isBookingDateTimeMinutesInvalid($endDateTime);
-		if($invalidEndTime AND !$invalidInput){
-			$_SESSION['EditBookingError'] = "Your end time has to be in a " . MINIMUM_BOOKING_TIME_IN_MINUTES . " minutes slice from hh:00.";
-			$invalidInput = TRUE;	
+		if($compareEndDate != $compareOriginalEndDate AND !$invalidInput){	
+			$invalidEndTime = isBookingDateTimeMinutesInvalid($endDateTime);
+			if($invalidEndTime AND !$invalidInput){
+				$_SESSION['EditBookingError'] = "Your end time has to be in a " . MINIMUM_BOOKING_TIME_IN_MINUTES . " minutes slice from hh:00.";
+				$invalidInput = TRUE;	
+			}
 		}
-	}
-	if( (($compareStartDate != $compareOriginalStartDate) OR
-		($compareEndDate != $compareOriginalEndDate)) AND
-		!$invalidInput){
-		// We want to check if the booking is the correct minimum length
-		$invalidBookingLength = isBookingTimeDurationInvalid($startDateTime, $endDateTime);
-		if($invalidBookingLength AND !$invalidInput){
-			$_SESSION['EditBookingError'] = "Your start time and end time needs to have at least a " . MINIMUM_BOOKING_TIME_IN_MINUTES . " minutes difference.";
-			$invalidInput = TRUE;		
+		if( (($compareStartDate != $compareOriginalStartDate) OR
+			($compareEndDate != $compareOriginalEndDate)) AND
+			!$invalidInput){
+			// We want to check if the booking is the correct minimum length
+			$invalidBookingLength = isBookingTimeDurationInvalid($startDateTime, $endDateTime);
+			if($invalidBookingLength AND !$invalidInput){
+				$_SESSION['EditBookingError'] = "Your start time and end time needs to have at least a " . MINIMUM_BOOKING_TIME_IN_MINUTES . " minutes difference.";
+				$invalidInput = TRUE;		
+			}
 		}
 	}
 	
@@ -1094,7 +1159,7 @@ if(isset($_POST['edit']) AND $_POST['edit'] == "Finish Edit")
 		
 		rememberEditBookingInputs();
 		// Refresh.
-		if(isset($_SESSION['EditBookingChangeUser']) AND $_SESSION['EditBookingChangeUser']){
+		if(isSet($_SESSION['EditBookingChangeUser']) AND $_SESSION['EditBookingChangeUser']){
 			$_SESSION['refreshEditBookingChangeUser'] = TRUE;				
 		} else {
 			$_SESSION['refreshEditBooking'] = TRUE;	
@@ -1111,14 +1176,17 @@ if(isset($_POST['edit']) AND $_POST['edit'] == "Finish Edit")
 	$newEndTime = FALSE;
 	$newUser = FALSE;
 	
-	if($compareStartDate != $compareOriginalStartDate){
-		$numberOfChanges++;
-		$newStartTime = TRUE;
+	if(!$bookingCompleted){
+		if($compareStartDate != $compareOriginalStartDate){
+			$numberOfChanges++;
+			$newStartTime = TRUE;
+		}
+		if($compareEndDate != $compareOriginalEndDate){
+			$numberOfChanges++;
+			$newEndTime = TRUE;
+		}
 	}
-	if($compareEndDate != $compareOriginalEndDate){
-		$numberOfChanges++;
-		$newEndTime = TRUE;
-	}	
+
 	if($_POST['companyID'] != $originalValue['TheCompanyID']){
 		$numberOfChanges++;
 	}
@@ -1132,11 +1200,18 @@ if(isset($_POST['edit']) AND $_POST['edit'] == "Finish Edit")
 		$numberOfChanges++;
 		$newMeetingRoom = TRUE;
 	}
-	if(isset($_POST['userID']) AND $_POST['userID'] != $originalValue['TheUserID']){
+	if(isSet($_POST['userID']) AND $_POST['userID'] != $originalValue['TheUserID']){
 		$numberOfChanges++;
 		$newUser = TRUE;
 	}	
-
+	if($validatedAdminNote == ""){
+		$validatedAdminNote = NULL;
+	}
+	if($validatedAdminNote != $originalValue['AdminNote']){
+		$numberOfChanges++;
+		$newUser = TRUE;
+	}
+	
 	if($numberOfChanges == 0){
 		// There were no changes made. Go back to booking overview
 		$_SESSION['BookingUserFeedback'] = "No changes were made to the booking.";
@@ -1153,122 +1228,127 @@ if(isset($_POST['edit']) AND $_POST['edit'] == "Finish Edit")
 	$oldStartTime = $originalValue['StartTime'];
 	$oldEndTime = $originalValue['EndTime'];
 	
-		// If we set the start time earlier than before or
-		// If we set the start time later than the previous end time
-	if( ($newStartTime AND $startDateTime < $oldStartTime) OR 
-		($newStartTime AND $startDateTime >= $oldEndTime)){
-		$checkIfTimeslotIsAvailable = TRUE;
-	}
-		// If we set the end time later than before or
-		// If we set the end time earlier than the previous start time
-	if( ($newEndTime AND $endDateTime > $oldEndTime) OR 
-		($newEndTime AND $endDateTime <= $oldStartTime)){
-		$checkIfTimeslotIsAvailable = TRUE;
-	}
-	
-	// Check if the timeslot is taken for the selected meeting room
-	// and ignore our own booking since it's the one we're editing
-	if($checkIfTimeslotIsAvailable){
-		try
-		{
-			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
-			$pdo = connect_to_db();
-			$sql =	" 	SELECT SUM(cnt)	AS HitCount
-						FROM
-						(
-							(
-							SELECT 		COUNT(*) AS cnt
-							FROM 		`booking` b
-							WHERE 		b.`meetingRoomID` = :MeetingRoomID
-							AND			b.`dateTimeCancelled` IS NULL
-							AND			b.`actualEndDateTime` IS NULL
-							AND			b.`bookingID` != :BookingID
-							AND
-									(
-											(
-												b.`startDateTime` >= :StartTime AND 
-												b.`startDateTime` < :EndTime
-											) 
-									OR 		(
-												b.`endDateTime` > :StartTime AND 
-												b.`endDateTime` <= :EndTime
-											)
-									OR 		(
-												:EndTime > b.`startDateTime` AND 
-												:EndTime < b.`endDateTime`
-											)
-									OR 		(
-												:StartTime > b.`startDateTime` AND 
-												:StartTime < b.`endDateTime`
-											)
-									)
-							LIMIT 1
-							)
-							UNION
-							(
-							SELECT 		COUNT(*) AS cnt
-							FROM 		`roomevent` rev
-							WHERE 		rev.`meetingRoomID` = :MeetingRoomID
-							AND
-									(
-											(
-												rev.`startDateTime` >= :StartTime AND 
-												rev.`startDateTime` < :EndTime
-											) 
-									OR 		(
-												rev.`endDateTime` > :StartTime AND 
-												rev.`endDateTime` <= :EndTime
-											)
-									OR 		(
-												:EndTime > rev.`startDateTime` AND 
-												:EndTime < rev.`endDateTime`
-											)
-									OR 		(
-												:StartTime > rev.`startDateTime` AND 
-												:StartTime < rev.`endDateTime`
-											)
-									)
-							LIMIT 1
-							)
-						) AS TimeSlotTaken";
-			$s = $pdo->prepare($sql);
-				
-			$s->bindValue(':MeetingRoomID', $_POST['meetingRoomID']);
-			$s->bindValue(':StartTime', $startDateTime);
-			$s->bindValue(':EndTime', $endDateTime);
-			$s->bindValue(':BookingID', $_POST['bookingID']);
-			$s->execute();
-			$pdo = null;
+	if(!$bookingCompleted){
+			// If we set the start time earlier than before or
+			// If we set the start time later than the previous end time
+		if( ($newStartTime AND $startDateTime < $oldStartTime) OR 
+			($newStartTime AND $startDateTime >= $oldEndTime)){
+			$checkIfTimeslotIsAvailable = TRUE;
 		}
-		catch(PDOException $e)
-		{
-			$error = 'Error checking if booking time is available: ' . $e->getMessage();
-			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
-			$pdo = null;
-			exit();
+			// If we set the end time later than before or
+			// If we set the end time earlier than the previous start time
+		if( ($newEndTime AND $endDateTime > $oldEndTime) OR 
+			($newEndTime AND $endDateTime <= $oldStartTime)){
+			$checkIfTimeslotIsAvailable = TRUE;
 		}
-
-		// Check if we got any hits, if so the timeslot is already taken
-		$row = $s->fetch(PDO::FETCH_ASSOC);		
-		if ($row['HitCount'] > 0){
-	
-			// Timeslot was taken
-			rememberEditBookingInputs();
-			
-			$_SESSION['EditBookingError'] = "The booking couldn't be made. The timeslot is already taken for this meeting room.";
-			
-			if(isset($_SESSION['EditBookingChangeUser']) AND $_SESSION['EditBookingChangeUser']){
-				$_SESSION['refreshEditBookingChangeUser'] = TRUE;				
-			} else {
-				$_SESSION['refreshEditBooking'] = TRUE;	
+		
+		// Check if the timeslot is taken for the selected meeting room
+		// and ignore our own booking since it's the one we're editing
+		if($checkIfTimeslotIsAvailable){
+			try
+			{
+				include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+				$pdo = connect_to_db();
+				$sql =	" 	SELECT SUM(cnt)	AS HitCount
+							FROM
+							(
+								(
+								SELECT 		COUNT(*) AS cnt
+								FROM 		`booking` b
+								WHERE 		b.`meetingRoomID` = :MeetingRoomID
+								AND			b.`dateTimeCancelled` IS NULL
+								AND			b.`actualEndDateTime` IS NULL
+								AND			b.`bookingID` != :BookingID
+								AND
+										(
+												(
+													b.`startDateTime` >= :StartTime AND 
+													b.`startDateTime` < :EndTime
+												) 
+										OR 		(
+													b.`endDateTime` > :StartTime AND 
+													b.`endDateTime` <= :EndTime
+												)
+										OR 		(
+													:EndTime > b.`startDateTime` AND 
+													:EndTime < b.`endDateTime`
+												)
+										OR 		(
+													:StartTime > b.`startDateTime` AND 
+													:StartTime < b.`endDateTime`
+												)
+										)
+								LIMIT 1
+								)
+								UNION
+								(
+								SELECT 		COUNT(*) AS cnt
+								FROM 		`roomevent` rev
+								WHERE 		rev.`meetingRoomID` = :MeetingRoomID
+								AND
+										(
+												(
+													rev.`startDateTime` >= :StartTime AND 
+													rev.`startDateTime` < :EndTime
+												) 
+										OR 		(
+													rev.`endDateTime` > :StartTime AND 
+													rev.`endDateTime` <= :EndTime
+												)
+										OR 		(
+													:EndTime > rev.`startDateTime` AND 
+													:EndTime < rev.`endDateTime`
+												)
+										OR 		(
+													:StartTime > rev.`startDateTime` AND 
+													:StartTime < rev.`endDateTime`
+												)
+										)
+								LIMIT 1
+								)
+							) AS TimeSlotTaken";
+				$s = $pdo->prepare($sql);
+					
+				$s->bindValue(':MeetingRoomID', $_POST['meetingRoomID']);
+				$s->bindValue(':StartTime', $startDateTime);
+				$s->bindValue(':EndTime', $endDateTime);
+				$s->bindValue(':BookingID', $_POST['bookingID']);
+				$s->execute();
+				$pdo = null;
 			}
-			header('Location: .');
-			exit();				
+			catch(PDOException $e)
+			{
+				$error = 'Error checking if booking time is available: ' . $e->getMessage();
+				include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+				$pdo = null;
+				exit();
+			}
+
+			// Check if we got any hits, if so the timeslot is already taken
+			$row = $s->fetch(PDO::FETCH_ASSOC);		
+			if ($row['HitCount'] > 0){
+		
+				// Timeslot was taken
+				rememberEditBookingInputs();
+				
+				$_SESSION['EditBookingError'] = "The booking couldn't be made. The timeslot is already taken for this meeting room.";
+				
+				if(isSet($_SESSION['EditBookingChangeUser']) AND $_SESSION['EditBookingChangeUser']){
+					$_SESSION['refreshEditBookingChangeUser'] = TRUE;				
+				} else {
+					$_SESSION['refreshEditBooking'] = TRUE;	
+				}
+				header('Location: .');
+				exit();				
+			}
 		}
+	} else {
+		$startDateTime = $oldStartTime;
+		$endDateTime = $oldEndTime;
 	}
-	
+
 	// Set correct companyID
-	if(	isset($_POST['companyID']) AND $_POST['companyID'] != NULL AND 
+	if(	isSet($_POST['companyID']) AND $_POST['companyID'] != NULL AND 
 		$_POST['companyID'] != ''){
 		$companyID = $_POST['companyID'];
 	} else {
@@ -1295,6 +1375,7 @@ if(isset($_POST['edit']) AND $_POST['edit'] == "Finish Edit")
 						`endDateTime` = :endDateTime,
 						`displayName` = :displayName,
 						`description` = :description,
+						`adminNote`	= :adminNote,
 						`cancellationCode` = :cancellationCode
 				WHERE	`bookingID` = :BookingID";
 		$s = $pdo->prepare($sql);
@@ -1307,6 +1388,7 @@ if(isset($_POST['edit']) AND $_POST['edit'] == "Finish Edit")
 		$s->bindValue(':endDateTime', $endDateTime);
 		$s->bindValue(':displayName', $dspname);
 		$s->bindValue(':description', $bknDscrptn);
+		$s->bindValue(':adminNote', $validatedAdminNote);
 		$s->bindValue(':cancellationCode', $cancellationCode);
 	
 		$s->execute();
@@ -1325,113 +1407,114 @@ if(isset($_POST['edit']) AND $_POST['edit'] == "Finish Edit")
 	
 	// Send email to the user (if altered by someone else) that their booking has been changed
 		// TO-DO: This is UNTESTED since we don't have php.ini set up to actually send email
-	if($_SESSION['EditBookingInfoArray']['sendEmail'] == 1 OR $originalValue['sendEmail'] == 1){
-		
-		// date display formatting
-		$NewStartDate = convertDatetimeToFormat($startDateTime, 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
-		$NewEndDate = convertDatetimeToFormat($endDateTime, 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
-		$OldStartDate = convertDatetimeToFormat($oldStartTime, 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
-		$OldEndDate = convertDatetimeToFormat($oldEndTime, 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
-		
-		// Meeting room name(s)
-		$oldMeetingRoomName = $originalValue['BookedRoomName'];		
-		if($newMeetingRoom){
-			// Get meeting room name
-			foreach ($_SESSION['EditBookingMeetingRoomsArray'] AS $room){
-				if($room['meetingRoomID'] == $_POST['meetingRoomID']){
-					$newMeetingRoomName = $room['meetingRoomName'];
-					break;
-				}
-			}
-		} else {
-			$newMeetingRoomName = $oldMeetingRoomName;
-		}
-
-		// Email information	
-		if($newUser){
+	if(!$bookingCompleted){
+		if($_SESSION['EditBookingInfoArray']['sendEmail'] == 1 OR $originalValue['sendEmail'] == 1){
 			
-			if($_SESSION['EditBookingInfoArray']['sendEmail'] == 1){
-				// Send information to new user about meeting
-				$emailSubject = "You have been assigned a booked meeting!";
-		
-				$emailMessage = 
-				"A booked meeting has been assigned to you by an Admin!\n" .
-				"The meeting has been set to: \n" .
-				"Meeting Room: " . $newMeetingRoomName . ".\n" . 
-				"Start Time: " . $NewStartDate . ".\n" .
-				"End Time: " . $NewEndDate . ".\n\n" .	
-				"If you wish to cancel this meeting, or just end it early, you can easily do so by clicking the link given below.\n" .
-				"Click this link to cancel your booked meeting: " . $_SERVER['HTTP_HOST'] . 
-				"/booking/?cancellationcode=" . $cancellationCode;
-				
-				$email = $_SESSION['EditBookingInfoArray']['UserEmail'];
-				
-				$mailResult = sendEmail($email, $emailSubject, $emailMessage);
-				
-				if(!$mailResult){
-					$_SESSION['BookingUserFeedback'] .= "\n\n[WARNING] System failed to send Email to user.";
+			// date display formatting
+			$NewStartDate = convertDatetimeToFormat($startDateTime, 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
+			$NewEndDate = convertDatetimeToFormat($endDateTime, 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
+			$OldStartDate = convertDatetimeToFormat($oldStartTime, 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
+			$OldEndDate = convertDatetimeToFormat($oldEndTime, 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
+			
+			// Meeting room name(s)
+			$oldMeetingRoomName = $originalValue['BookedRoomName'];		
+			if($newMeetingRoom){
+				// Get meeting room name
+				foreach ($_SESSION['EditBookingMeetingRoomsArray'] AS $room){
+					if($room['meetingRoomID'] == $_POST['meetingRoomID']){
+						$newMeetingRoomName = $room['meetingRoomName'];
+						break;
+					}
 				}
-				
-				$_SESSION['BookingUserFeedback'] .= "\nThis is the email msg we're sending out:\n$emailMessage.\nSent to email: $email."; // TO-DO: Remove after testing				
-			}
-
-			if($originalValue['sendEmail'] == 1){
-				// Send information to old user that their meeting has been cancelled/transferred
-				$emailSubject = "Your meeting has been cancelled by an Admin!";
-				
-				$emailMessage = 
-				"Your booked meeting has been cancelled by an Admin!\n" .
-				"The meeting you had booked for: \n" .
-				"Meeting Room: " . $oldMeetingRoomName . ".\n" . 
-				"Start Time: " . $OldStartDate . ".\n" .
-				"End Time: " . $OldEndDate . ".\n" .
-				"Is no longer active";
-				
-				$email = $originalValue['UserEmail'];
-				
-				$mailResult = sendEmail($email, $emailSubject, $emailMessage);
-				
-				if(!$mailResult){
-					$_SESSION['BookingUserFeedback'] .= "\n\n[WARNING] System failed to send Email to user.";
-				}
-				
-				$_SESSION['BookingUserFeedback'] .= "\nThis is the email msg we're sending out:\n$emailMessage.\nSent to email: $email."; // TO-DO: Remove after testing				
 			} else {
-				$_SESSION['BookingUserFeedback'] .= "\nUser does not want to be sent an Email.";
+				$newMeetingRoomName = $oldMeetingRoomName;
 			}
-		} else {
-			if($originalValue['sendEmail'] == 1){
-				$emailSubject = "Booking Information Has Changed!";
-				
-				$emailMessage = 
-				"Your booked meeting has been altered by an Admin!\n" .
-				"Your new booking has been set to: \n" .
-				"Meeting Room: " . $newMeetingRoomName . ".\n" . 
-				"Start Time: " . $NewStartDate . ".\n" .
-				"End Time: " . $NewEndDate . ".\n\n" .				
-				"Your original booking was for: \n" .
-				"Meeting Room: " . $oldMeetingRoomName . ".\n" . 
-				"Start Time: " . $OldStartDate . ".\n" .
-				"End Time: " . $OldEndDate . ".\n\n" .
-				"If you wish to cancel your meeting, or just end it early, you can easily do so by clicking the link given below.\n" .
-				"Click this link to cancel your booked meeting: " . $_SERVER['HTTP_HOST'] . 
-				"/booking/?cancellationcode=" . $cancellationCode;	
 
-				$email = $originalValue['UserEmail'];
+			// Email information	
+			if($newUser){
 				
-				$mailResult = sendEmail($email, $emailSubject, $emailMessage);
-				
-				if(!$mailResult){
-					$_SESSION['BookingUserFeedback'] .= "\n\n[WARNING] System failed to send Email to user.";
+				if($_SESSION['EditBookingInfoArray']['sendEmail'] == 1){
+					// Send information to new user about meeting
+					$emailSubject = "You have been assigned a booked meeting!";
+			
+					$emailMessage = 
+					"A booked meeting has been assigned to you by an Admin!\n" .
+					"The meeting has been set to: \n" .
+					"Meeting Room: " . $newMeetingRoomName . ".\n" . 
+					"Start Time: " . $NewStartDate . ".\n" .
+					"End Time: " . $NewEndDate . ".\n\n" .	
+					"If you wish to cancel this meeting, or just end it early, you can easily do so by clicking the link given below.\n" .
+					"Click this link to cancel your booked meeting: " . $_SERVER['HTTP_HOST'] . 
+					"/booking/?cancellationcode=" . $cancellationCode;
+					
+					$email = $_SESSION['EditBookingInfoArray']['UserEmail'];
+					
+					$mailResult = sendEmail($email, $emailSubject, $emailMessage);
+					
+					if(!$mailResult){
+						$_SESSION['BookingUserFeedback'] .= "\n\n[WARNING] System failed to send Email to user.";
+					}
+					
+					$_SESSION['BookingUserFeedback'] .= "\nThis is the email msg we're sending out:\n$emailMessage.\nSent to email: $email."; // TO-DO: Remove after testing				
 				}
-				
-				$_SESSION['BookingUserFeedback'] .= "\nThis is the email msg we're sending out:\n$emailMessage.\nSent to email: $email."; // TO-DO: Remove after testing	
-			} else {	
-				$_SESSION['BookingUserFeedback'] .= "\nUser does not want to be sent an Email.";
+
+				if($originalValue['sendEmail'] == 1){
+					// Send information to old user that their meeting has been cancelled/transferred
+					$emailSubject = "Your meeting has been cancelled by an Admin!";
+					
+					$emailMessage = 
+					"Your booked meeting has been cancelled by an Admin!\n" .
+					"The meeting you had booked for: \n" .
+					"Meeting Room: " . $oldMeetingRoomName . ".\n" . 
+					"Start Time: " . $OldStartDate . ".\n" .
+					"End Time: " . $OldEndDate . ".\n" .
+					"Is no longer active";
+					
+					$email = $originalValue['UserEmail'];
+					
+					$mailResult = sendEmail($email, $emailSubject, $emailMessage);
+					
+					if(!$mailResult){
+						$_SESSION['BookingUserFeedback'] .= "\n\n[WARNING] System failed to send Email to user.";
+					}
+					
+					$_SESSION['BookingUserFeedback'] .= "\nThis is the email msg we're sending out:\n$emailMessage.\nSent to email: $email."; // TO-DO: Remove after testing				
+				} else {
+					$_SESSION['BookingUserFeedback'] .= "\nUser does not want to be sent an Email.";
+				}
+			} else {
+				if($originalValue['sendEmail'] == 1){
+					$emailSubject = "Booking Information Has Changed!";
+					
+					$emailMessage = 
+					"Your booked meeting has been altered by an Admin!\n" .
+					"Your new booking has been set to: \n" .
+					"Meeting Room: " . $newMeetingRoomName . ".\n" . 
+					"Start Time: " . $NewStartDate . ".\n" .
+					"End Time: " . $NewEndDate . ".\n\n" .				
+					"Your original booking was for: \n" .
+					"Meeting Room: " . $oldMeetingRoomName . ".\n" . 
+					"Start Time: " . $OldStartDate . ".\n" .
+					"End Time: " . $OldEndDate . ".\n\n" .
+					"If you wish to cancel your meeting, or just end it early, you can easily do so by clicking the link given below.\n" .
+					"Click this link to cancel your booked meeting: " . $_SERVER['HTTP_HOST'] . 
+					"/booking/?cancellationcode=" . $cancellationCode;	
+
+					$email = $originalValue['UserEmail'];
+					
+					$mailResult = sendEmail($email, $emailSubject, $emailMessage);
+					
+					if(!$mailResult){
+						$_SESSION['BookingUserFeedback'] .= "\n\n[WARNING] System failed to send Email to user.";
+					}
+					
+					$_SESSION['BookingUserFeedback'] .= "\nThis is the email msg we're sending out:\n$emailMessage.\nSent to email: $email."; // TO-DO: Remove after testing	
+				} else {	
+					$_SESSION['BookingUserFeedback'] .= "\nUser does not want to be sent an Email.";
+				}
 			}
 		}
 	}
-	
 	clearEditBookingSessions();
 	
 	// Load booking history list webpage with the updated booking information
@@ -1449,25 +1532,25 @@ if(isset($_POST['edit']) AND $_POST['edit'] == "Finish Edit")
 
 // If admin wants to add a booked meeting to the database
 // we load a new html form
-if (	(isset($_POST['action']) AND $_POST['action'] == "Create Booking") OR 
-		(isset($_SESSION['refreshAddBooking']) AND $_SESSION['refreshAddBooking'])
+if (	(isSet($_POST['action']) AND $_POST['action'] == "Create Booking") OR 
+		(isSet($_SESSION['refreshAddBooking']) AND $_SESSION['refreshAddBooking'])
 		){
 	
 	// Check if the call was a form submit or a forced refresh
-	if(isset($_SESSION['refreshAddBooking'])){
+	if(isSet($_SESSION['refreshAddBooking'])){
 		// Acknowledge that we have refreshed the page
 		unset($_SESSION['refreshAddBooking']);	
 		
 		// Set the information back to what it was before the refresh
 				// The user search string
-		if(isset($_SESSION['AddBookingUserSearch'])){
+		if(isSet($_SESSION['AddBookingUserSearch'])){
 			$usersearchstring = $_SESSION['AddBookingUserSearch'];
 			unset($_SESSION['AddBookingUserSearch']);
 		} else {
 			$usersearchstring = "";
 		}
 				// The user dropdown select options
-		if(isset($_SESSION['AddBookingUsersArray'])){
+		if(isSet($_SESSION['AddBookingUsersArray'])){
 			$users = $_SESSION['AddBookingUsersArray'];
 					
 		}
@@ -1476,7 +1559,7 @@ if (	(isset($_POST['action']) AND $_POST['action'] == "Create Booking") OR
 	
 	} else {
 		// Get information from database on booking information user can choose between
-		if(!isset($_SESSION['AddBookingInfoArray'])){
+		if(!isSet($_SESSION['AddBookingInfoArray'])){
 			try
 			{
 				include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
@@ -1563,6 +1646,7 @@ if (	(isset($_POST['action']) AND $_POST['action'] == "Create Booking") OR
 														'StartTime' => '',
 														'EndTime' => '',
 														'BookingDescription' => '',
+														'AdminNote' => '',
 														'BookedBy' => '',
 														'BookedForCompany' => '',
 														'TheUserID' => '',
@@ -1591,7 +1675,7 @@ if (	(isset($_POST['action']) AND $_POST['action'] == "Create Booking") OR
 		$users = Null;
 		$SelectedUserID = $_SESSION['AddBookingInfoArray']['TheUserID'];
 		
-		if(!isset($_SESSION['AddBookingMeetingRoomsArray'])){
+		if(!isSet($_SESSION['AddBookingMeetingRoomsArray'])){
 			try
 			{
 				include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
@@ -1629,7 +1713,7 @@ if (	(isset($_POST['action']) AND $_POST['action'] == "Create Booking") OR
 	}
 
 		// Check if we need a company select for the booking
-	if(isset($SelectedUserID) AND $SelectedUserID != ""){
+	if(isSet($SelectedUserID) AND $SelectedUserID != ""){
 		try
 		{		
 			// We want the companies the user works for to decide if we need to
@@ -1666,7 +1750,7 @@ if (	(isset($_POST['action']) AND $_POST['action'] == "Create Booking") OR
 			// We only need to allow the user a company dropdown selector if they
 			// are connected to more than 1 company.
 			// If not we just store the companyID in a hidden form field
-			if(isset($company)){
+			if(isSet($company)){
 				if (sizeOf($company)>1){
 					// User is in multiple companies
 					
@@ -1709,7 +1793,7 @@ if (	(isset($_POST['action']) AND $_POST['action'] == "Create Booking") OR
 	$row = $_SESSION['AddBookingInfoArray'];
 	$original = $_SESSION['AddBookingOriginalInfoArray'];
 		// Changed user
-	if(isset($_SESSION['AddBookingSelectedNewUser'])){
+	if(isSet($_SESSION['AddBookingSelectedNewUser'])){
 		
 		foreach($users AS $user){
 			if($user['userID'] == $row['TheUserID']){
@@ -1730,10 +1814,10 @@ if (	(isset($_POST['action']) AND $_POST['action'] == "Create Booking") OR
 
 		// Altered inputs
 
-	if(isset($row['TheCompanyID'])){
+	if(isSet($row['TheCompanyID'])){
 		
 			// Changed company?
-		if(isset($company)){
+		if(isSet($company)){
 			foreach($company AS $cmp){
 				if($cmp['companyID'] == $row['TheCompanyID']){
 					$row['BookedForCompany'] = $cmp['companyName'];
@@ -1749,7 +1833,7 @@ if (	(isset($_POST['action']) AND $_POST['action'] == "Create Booking") OR
 		$companyID = '';	
 	}
 
-	if(isset($row['BookedForCompany'])){
+	if(isSet($row['BookedForCompany'])){
 		$companyName = $row['BookedForCompany'];
 	} else {
 		$companyName = '';
@@ -1757,37 +1841,42 @@ if (	(isset($_POST['action']) AND $_POST['action'] == "Create Booking") OR
 	
 	//	userID has been set earlier
 	$meetingroom = $_SESSION['AddBookingMeetingRoomsArray'];
-	if(isset($row['TheMeetingRoomID'])){
+	if(isSet($row['TheMeetingRoomID'])){
 		$selectedMeetingRoomID = $row['TheMeetingRoomID'];
 	} else {
 		$selectedMeetingRoomID = '';
 	}
 	
-	if(isset($row['StartTime']) AND $row['StartTime'] != ""){
+	if(isSet($row['StartTime']) AND $row['StartTime'] != ""){
 		$startDateTime = $row['StartTime'];
 	} else {
 		$validBookingStartTime = getNextValidBookingStartTime();
 		$startDateTime = convertDatetimeToFormat($validBookingStartTime , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
 	}
 	
-	if(isset($row['EndTime']) AND $row['EndTime'] != ""){
+	if(isSet($row['EndTime']) AND $row['EndTime'] != ""){
 		$endDateTime = $row['EndTime'];
 	} else {
 		$validBookingEndTime = getNextValidBookingEndTime(substr($validBookingStartTime,0,-3));
 		$endDateTime = convertDatetimeToFormat($validBookingEndTime , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
 	}
 	
-	if(isset($row['BookedBy'])){
+	if(isSet($row['BookedBy'])){
 		$displayName = $row['BookedBy'];
 	} else {
 		$displayName = '';
 	}
 	
-	if(isset($row['BookingDescription'])){
+	if(isSet($row['BookingDescription'])){
 		$description = $row['BookingDescription'];
 	} else {
 		$description = '';
 	}
+	if(isSet($row['AdminNote'])){
+		$adminNote = $row['AdminNote'];
+	} else {
+		$adminNote = '';
+	}	
 	
 	$userInformation = $row['UserLastname'] . ', ' . $row['UserFirstname'] . ' - ' . $row['UserEmail'];	
 
@@ -1796,7 +1885,7 @@ if (	(isset($_POST['action']) AND $_POST['action'] == "Create Booking") OR
 	var_dump($_SESSION); // TO-DO: remove after testing is done
 	
 	// Change form
-	if(isset($notInACompany) AND $notInACompany){
+	if(isSet($notInACompany) AND $notInACompany){
 		$_SESSION['refreshAddBookingChangeUser'] = TRUE;
 		header("Location: .");
 		exit();
@@ -1807,7 +1896,7 @@ if (	(isset($_POST['action']) AND $_POST['action'] == "Create Booking") OR
 }
 
 // Admin wants to increase the start timer by minimum allowed time (e.g. 15 min)
-if(isset($_POST['add']) AND $_POST['add'] == "Increase Start By Minimum"){
+if(isSet($_POST['add']) AND $_POST['add'] == "Increase Start By Minimum"){
 	
 	// Let's remember what was selected if we do any changes before clicking "Select This User"
 	rememberAddBookingInputs();
@@ -1828,7 +1917,7 @@ if(isset($_POST['add']) AND $_POST['add'] == "Increase Start By Minimum"){
 }
 
 // Admin wants to increase the end timer by minimum allowed time (e.g. 15 min)
-if(isset($_POST['add']) AND $_POST['add'] == "Increase End By Minimum"){
+if(isSet($_POST['add']) AND $_POST['add'] == "Increase End By Minimum"){
 	
 	// Let's remember what was selected if we do any changes before clicking "Select This User"
 	rememberAddBookingInputs();
@@ -1843,17 +1932,17 @@ if(isset($_POST['add']) AND $_POST['add'] == "Increase End By Minimum"){
 }
 
 // When admin has added the needed information and wants to add the booking
-if (isset($_POST['add']) AND $_POST['add'] == "Add booking")
+if (isSet($_POST['add']) AND $_POST['add'] == "Add booking")
 {
 	// Validate user inputs
-	list($invalidInput, $startDateTime, $endDateTime, $bknDscrptn, $dspname) = validateUserInputs('AddBookingError', FALSE);
+	list($invalidInput, $startDateTime, $endDateTime, $bknDscrptn, $dspname, $validatedAdminNote) = validateUserInputs('AddBookingError', FALSE, FALSE);
 					
 	// handle feedback process on invalid input values
 	if($invalidInput){
 		
 		rememberAddBookingInputs();
 		// Refresh.
-		if(isset($_SESSION['AddBookingChangeUser']) AND $_SESSION['AddBookingChangeUser']){
+		if(isSet($_SESSION['AddBookingChangeUser']) AND $_SESSION['AddBookingChangeUser']){
 			$_SESSION['refreshAddBookingChangeUser'] = TRUE;				
 		} else {
 			$_SESSION['refreshAddBooking'] = TRUE;	
@@ -1948,7 +2037,7 @@ if (isset($_POST['add']) AND $_POST['add'] == "Add booking")
 		rememberAddBookingInputs();
 		
 		$_SESSION['AddBookingError'] = "The booking couldn't be made. The timeslot is already taken for this meeting room.";
-		if(isset($_SESSION['AddBookingChangeUser']) AND $_SESSION['AddBookingChangeUser']){
+		if(isSet($_SESSION['AddBookingChangeUser']) AND $_SESSION['AddBookingChangeUser']){
 			$_SESSION['refreshAddBookingChangeUser'] = TRUE;				
 		} else {
 			$_SESSION['refreshAddBooking'] = TRUE;	
@@ -1960,13 +2049,16 @@ if (isset($_POST['add']) AND $_POST['add'] == "Add booking")
 	// Add the booking to the database
 	try
 	{	
-		if(	isset($_POST['companyID']) AND $_POST['companyID'] != NULL AND 
+		if(	isSet($_POST['companyID']) AND $_POST['companyID'] != NULL AND 
 			$_POST['companyID'] != ''){
 			$companyID = $_POST['companyID'];
 		} else {
 			$companyID = NULL;
 		}
 	
+		if($validatedAdminNote == ''){
+			$validatedAdminNote = NULL;
+		}
 		//Generate cancellation code
 		$cancellationCode = generateCancellationCode();
 		
@@ -1981,6 +2073,7 @@ if (isset($_POST['add']) AND $_POST['add'] == "Add booking")
 							`startDateTime` = :startDateTime,
 							`endDateTime` = :endDateTime,
 							`description` = :description,
+							`adminNote` = :adminNote,
 							`cancellationCode` = :cancellationCode';
 
 		$s = $pdo->prepare($sql);
@@ -1992,6 +2085,7 @@ if (isset($_POST['add']) AND $_POST['add'] == "Add booking")
 		$s->bindValue(':startDateTime', $startDateTime);
 		$s->bindValue(':endDateTime', $endDateTime);
 		$s->bindValue(':description', $bknDscrptn);
+		$s->bindValue(':adminNote', $validatedAdminNote);
 		$s->bindValue(':cancellationCode', $cancellationCode);
 		$s->execute();
 
@@ -2033,13 +2127,13 @@ if (isset($_POST['add']) AND $_POST['add'] == "Add booking")
 		// Get user information
 		$userinfo = 'N/A';
 		$info = $_SESSION['AddBookingInfoArray']; 
-		if(isset($info['UserLastname'])){
+		if(isSet($info['UserLastname'])){
 			$userinfo = $info['UserLastname'] . ', ' . $info['UserFirstname'] . ' - ' . $info['UserEmail'];
 		}
 		
 		// Get company name
 		$companyName = 'N/A';
-		if(isset($companyID)){
+		if(isSet($companyID)){
 			foreach($_SESSION['AddBookingCompanyArray'] AS $company){
 				if($companyID == $company['companyID']){
 					$companyName = $company['companyName'];
@@ -2054,7 +2148,7 @@ if (isset($_POST['add']) AND $_POST['add'] == "Add booking")
 								".\nFor the user: " . $userinfo . " and company: " . $companyName . 
 								".\nBooking was made by: " . $_SESSION['LoggedInUserName'] . ".";
 		
-		if(isset($_SESSION['lastBookingID'])){
+		if(isSet($_SESSION['lastBookingID'])){
 			$lastBookingID = $_SESSION['lastBookingID'];
 			unset($_SESSION['lastBookingID']);				
 		}
@@ -2145,10 +2239,10 @@ if (isset($_POST['add']) AND $_POST['add'] == "Add booking")
 
 // Admin wants to change the user the booking is for
 // We need to get a list of all active users
-if((isset($_POST['add']) AND $_POST['add'] == "Change User") OR 
-	(isset($_SESSION['refreshAddBookingChangeUser'])) AND $_SESSION['refreshAddBookingChangeUser']){
+if((isSet($_POST['add']) AND $_POST['add'] == "Change User") OR 
+	(isSet($_SESSION['refreshAddBookingChangeUser'])) AND $_SESSION['refreshAddBookingChangeUser']){
 	
-	if(isset($_SESSION['refreshAddBookingChangeUser']) AND $_SESSION['refreshAddBookingChangeUser']){
+	if(isSet($_SESSION['refreshAddBookingChangeUser']) AND $_SESSION['refreshAddBookingChangeUser']){
 		// Confirm that we have refreshed
 		unset($_SESSION['refreshAddBookingChangeUser']);
 	}	
@@ -2157,17 +2251,17 @@ if((isset($_POST['add']) AND $_POST['add'] == "Change User") OR
 	unset($_SESSION['AddBookingUsersArray']);	
 	
 	// Let's remember what was selected if we do any changes before clicking "change user"
-	if(isset($_POST['add']) AND $_POST['add'] == "Change User"){
+	if(isSet($_POST['add']) AND $_POST['add'] == "Change User"){
 		rememberAddBookingInputs();
 	}
 
 	$usersearchstring = "";
 	
-	if(isset($_SESSION['AddBookingUserSearch'])){
+	if(isSet($_SESSION['AddBookingUserSearch'])){
 		$usersearchstring = $_SESSION['AddBookingUserSearch'];
 	}	
 	
-	if(!isset($_SESSION['AddBookingUsersArray'])){
+	if(!isSet($_SESSION['AddBookingUsersArray'])){
 		// Get all active users and their default booking information
 		try
 		{
@@ -2250,7 +2344,7 @@ if((isset($_POST['add']) AND $_POST['add'] == "Change User") OR
 }
 
 // Admin confirms what user he wants the booking to be for.
-if(isset($_POST['add']) AND $_POST['add'] == "Select This User"){
+if(isSet($_POST['add']) AND $_POST['add'] == "Select This User"){
 	
 	// We haven't set the company if we are changing the user.
 	unset($_SESSION['AddBookingSelectedACompany']);
@@ -2270,7 +2364,7 @@ if(isset($_POST['add']) AND $_POST['add'] == "Select This User"){
 }
 
 //	Admin wants to change the company the booking is for (after having already selected it)
-if(isset($_POST['add']) AND $_POST['add'] == "Change Company"){
+if(isSet($_POST['add']) AND $_POST['add'] == "Change Company"){
 	
 	// We want to select a company again
 	unset($_SESSION['AddBookingSelectedACompany']);
@@ -2284,7 +2378,7 @@ if(isset($_POST['add']) AND $_POST['add'] == "Change Company"){
 }
 
 // Admin confirms what company he wants the booking to be for.
-if(isset($_POST['add']) AND $_POST['add'] == "Select This Company"){
+if(isSet($_POST['add']) AND $_POST['add'] == "Select This Company"){
 
 	// Remember that we've selected a new company
 	$_SESSION['AddBookingSelectedACompany'] = TRUE;
@@ -2298,10 +2392,10 @@ if(isset($_POST['add']) AND $_POST['add'] == "Select This Company"){
 }
 
 // If admin wants to get the default values for the user's display name
-if(isset($_POST['add']) AND $_POST['add'] == "Get Default Display Name"){
+if(isSet($_POST['add']) AND $_POST['add'] == "Get Default Display Name"){
 	  
 	$displayName = $_SESSION['AddBookingDefaultDisplayNameForNewUser'];
-	if(isset($_SESSION['AddBookingInfoArray'])){
+	if(isSet($_SESSION['AddBookingInfoArray'])){
 		rememberAddBookingInputs();
 
 		if($displayName != ""){
@@ -2328,10 +2422,10 @@ if(isset($_POST['add']) AND $_POST['add'] == "Get Default Display Name"){
 }
 
 // If admin wants to get the default values for the user's booking description
-if(isset($_POST['add']) AND $_POST['add'] == "Get Default Booking Description"){
+if(isSet($_POST['add']) AND $_POST['add'] == "Get Default Booking Description"){
 	
 	$bookingDescription = $_SESSION['AddBookingDefaultBookingDescriptionForNewUser'];
-	if(isset($_SESSION['AddBookingInfoArray'])){
+	if(isSet($_SESSION['AddBookingInfoArray'])){
 		
 		rememberAddBookingInputs();
 
@@ -2357,7 +2451,7 @@ if(isset($_POST['add']) AND $_POST['add'] == "Get Default Booking Description"){
 }
 
 // If admin is adding a booking and wants to limit the users shown by searching
-if(isset($_SESSION['AddBookingChangeUser']) AND isset($_POST['add']) AND $_POST['add'] == "Search"){
+if(isSet($_SESSION['AddBookingChangeUser']) AND isSet($_POST['add']) AND $_POST['add'] == "Search"){
 	
 	// Let's remember what was selected and searched for
 		// The user search string
@@ -2372,7 +2466,7 @@ if(isset($_SESSION['AddBookingChangeUser']) AND isset($_POST['add']) AND $_POST[
 }
 
 // If admin wants to change the values back to the original values
-if (isset($_POST['add']) AND $_POST['add'] == "Reset"){
+if (isSet($_POST['add']) AND $_POST['add'] == "Reset"){
 
 	$_SESSION['AddBookingInfoArray'] = $_SESSION['AddBookingOriginalInfoArray'];
 	unset($_SESSION['AddBookingSelectedACompany']);
@@ -2385,7 +2479,7 @@ if (isset($_POST['add']) AND $_POST['add'] == "Reset"){
 }
 
 // If admin wants to leave the page and be directed back to the booking page again
-if (isset($_POST['add']) AND $_POST['add'] == 'Cancel'){
+if (isSet($_POST['add']) AND $_POST['add'] == 'Cancel'){
 
 	$_SESSION['BookingUserFeedback'] = "You cancelled your new booking.";
 }
@@ -2403,13 +2497,13 @@ clearEditBookingSessions();
 
 // BOOKING OVERVIEW CODE SNIPPET START //
 
-if(isset($refreshBookings) AND $refreshBookings) {
+if(isSet($refreshBookings) AND $refreshBookings) {
 	// TO-DO: Add code that should occur on a refresh
 	unset($refreshBookings);
 }
 
 // Display booked meetings history list
-if(!isset($_GET['Meetingroom'])){
+if(!isSet($_GET['Meetingroom'])){
 	try
 	{
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
@@ -2447,7 +2541,8 @@ if(!isset($_GET['Meetingroom'])){
 									)
 								)
 							)												AS WorksForCompany,		 
-							b.`description`									AS BookingDescription, 
+							b.`description`									AS BookingDescription,
+							b.`adminNote`									AS AdminNote,
 							b.`dateTimeCreated`								AS BookingWasCreatedOn, 
 							b.`actualEndDateTime`							AS BookingWasCompletedOn, 
 							b.`dateTimeCancelled`							AS BookingWasCancelledOn 
@@ -2466,7 +2561,7 @@ if(!isset($_GET['Meetingroom'])){
 		$pdo = null;
 		exit();
 	}
-} elseif(isset($_GET['Meetingroom']) AND $_GET['Meetingroom'] != NULL AND $_GET['Meetingroom'] != "") {
+} elseif(isSet($_GET['Meetingroom']) AND $_GET['Meetingroom'] != NULL AND $_GET['Meetingroom'] != "") {
 	try
 	{
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
@@ -2507,7 +2602,8 @@ if(!isset($_GET['Meetingroom'])){
 									)
 								)
 							)												AS WorksForCompany,		 
-							b.`description`									AS BookingDescription, 
+							b.`description`									AS BookingDescription,
+							b.`adminNote`									AS AdminNote,							
 							b.`dateTimeCreated`								AS BookingWasCreatedOn, 
 							b.`actualEndDateTime`							AS BookingWasCompletedOn, 
 							b.`dateTimeCancelled`							AS BookingWasCancelledOn 
@@ -2603,20 +2699,25 @@ foreach ($result as $row)
 	$email = $row['email'];
 	$userinfo = $lastname . ', ' . $firstname . ' - ' . $row['email'];
 	$worksForCompany = $row['WorksForCompany'];
-	if(!isset($roomName) OR $roomName == NULL OR $roomName == ""){
+	$adminNote = $row['AdminNote'];
+	if(!isSet($adminNote) OR $adminNote == NULL){
+		$adminNote = "";
+	}
+	if(!isSet($roomName) OR $roomName == NULL OR $roomName == ""){
 		$roomName = "N/A - Deleted";
 	}
-	if(!isset($userinfo) OR $userinfo == NULL OR $userinfo == ",  - "){
+	if(!isSet($userinfo) OR $userinfo == NULL OR $userinfo == ",  - "){
 		$userinfo = "N/A - Deleted";	
 	}
-	if(!isset($email) OR $email == NULL OR $email == ""){
+	if(!isSet($email) OR $email == NULL OR $email == ""){
 		$firstname = "N/A - Deleted";
 		$lastname = "N/A - Deleted";
 		$email = "N/A - Deleted";		
 	}
-	if(!isset($worksForCompany) OR $worksForCompany == NULL OR $worksForCompany == ""){
+	if(!isSet($worksForCompany) OR $worksForCompany == NULL OR $worksForCompany == ""){
 		$worksForCompany = "N/A";
 	}
+	
 	$displayValidatedStartDate = convertDatetimeToFormat($startDateTime , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
 	$displayValidatedEndDate = convertDatetimeToFormat($endDateTime, 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
 	$displayCompletedDateTime = convertDatetimeToFormat($completedDateTime, 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
@@ -2645,6 +2746,7 @@ foreach ($result as $row)
 							'BookedBy' => $row['BookedBy'],
 							'BookedForCompany' => $row['BookedForCompany'],
 							'BookingDescription' => $row['BookingDescription'],
+							'AdminNote' => $adminNote,
 							'firstName' => $firstname,
 							'lastName' => $lastname,
 							'email' => $email,
@@ -2666,6 +2768,7 @@ foreach ($result as $row)
 							'BookedBy' => $row['BookedBy'],
 							'BookedForCompany' => $row['BookedForCompany'],
 							'BookingDescription' => $row['BookingDescription'],
+							'AdminNote' => $adminNote,
 							'firstName' => $firstname,
 							'lastName' => $lastname,
 							'email' => $email,
@@ -2685,6 +2788,7 @@ foreach ($result as $row)
 							'BookedBy' => $row['BookedBy'],
 							'BookedForCompany' => $row['BookedForCompany'],
 							'BookingDescription' => $row['BookingDescription'],
+							'AdminNote' => $adminNote,
 							'firstName' => $firstname,
 							'lastName' => $lastname,
 							'email' => $email,
@@ -2706,6 +2810,7 @@ foreach ($result as $row)
 							'BookedBy' => $row['BookedBy'],
 							'BookedForCompany' => $row['BookedForCompany'],
 							'BookingDescription' => $row['BookingDescription'],
+							'AdminNote' => $adminNote,
 							'firstName' => $firstname,
 							'lastName' => $lastname,
 							'email' => $email,
@@ -2725,6 +2830,7 @@ foreach ($result as $row)
 							'BookedBy' => $row['BookedBy'],
 							'BookedForCompany' => $row['BookedForCompany'],
 							'BookingDescription' => $row['BookingDescription'],
+							'AdminNote' => $adminNote,
 							'firstName' => $firstname,
 							'lastName' => $lastname,
 							'email' => $email,
@@ -2744,6 +2850,7 @@ foreach ($result as $row)
 							'BookedBy' => $row['BookedBy'],
 							'BookedForCompany' => $row['BookedForCompany'],
 							'BookingDescription' => $row['BookingDescription'],
+							'AdminNote' => $adminNote,
 							'firstName' => $firstname,
 							'lastName' => $lastname,
 							'email' => $email,
@@ -2756,7 +2863,7 @@ foreach ($result as $row)
 						);
 	}
 }
-if(isset($displayRoomNameForTitle) AND ($displayRoomNameForTitle == NULL OR $displayRoomNameForTitle == "N/A - Deleted")){
+if(isSet($displayRoomNameForTitle) AND ($displayRoomNameForTitle == NULL OR $displayRoomNameForTitle == "N/A - Deleted")){
 	unset($displayRoomNameForTitle);
 }
 // BOOKING OVERVIEW CODE SNIPPET END //

@@ -14,7 +14,7 @@
 		<h1>Edit Booking</h1>
 		
 		<div class="left">
-			<?php if(isset($_SESSION['EditCreateBookingError'])) : ?>
+			<?php if(isSet($_SESSION['EditCreateBookingError'])) : ?>
 				<span><b class="feedback"><?php htmlout($_SESSION['EditCreateBookingError']); ?></b></span>
 				<?php unset($_SESSION['EditCreateBookingError']); ?>
 			<?php endif; ?>
@@ -50,7 +50,7 @@
 
 			<div>
 				<label for="originalCompanyInBooking">Booked for Company: </label>
-				<?php if(isset($originalCompanyName)) :?>
+				<?php if(isSet($originalCompanyName)) :?>
 					<span><b><?php htmlout($originalCompanyName); ?></b></span>
 				<?php else : ?>
 					<span><b>This booking had no company assigned.</b></span>
@@ -59,9 +59,9 @@
 
 			<div>
 				<label for="companyID">Set New Company: </label>
-				<?php if(	isset($_SESSION['EditCreateBookingDisplayCompanySelect']) AND 
+				<?php if(	isSet($_SESSION['EditCreateBookingDisplayCompanySelect']) AND 
 							$_SESSION['EditCreateBookingDisplayCompanySelect']) : ?>
-					<?php if(isset($_SESSION['EditCreateBookingSelectACompany'])) : ?>
+					<?php if(isSet($_SESSION['EditCreateBookingSelectACompany'])) : ?>
 						<select name="companyID" id="companyID">
 							<?php foreach($company as $row): ?> 
 								<?php if($row['companyID']==$selectedCompanyID):?>
@@ -79,7 +79,7 @@
 						<input type="submit" name="edit" value="Change Company">
 					<?php endif; ?>
 				<?php else : ?>
-					<?php if(isset($company)) : ?>
+					<?php if(isSet($company)) : ?>
 						<span><b>You are only connected to one company: <?php htmlout($companyName); ?></b></span>
 					<?php else : ?>
 						<span><b>You are not connected with a company.</b></span>
@@ -124,7 +124,7 @@
 				value="<?php htmlout($bookingID); ?>">
 				<input type="submit" name="edit" value="Reset">
 				<input type="submit" name="edit" value="Go Back">
-				<?php if(isset($_SESSION['EditCreateBookingSelectACompany'])) : ?>
+				<?php if(isSet($_SESSION['EditCreateBookingSelectACompany'])) : ?>
 					<input type="submit" name="disabled" value="Finish Edit" disabled>
 					<span><b>You need to select the company you want before you can finish editing.</b></span>			
 				<?php else : ?>

@@ -242,5 +242,10 @@ table caption {
 .topnav .active {
     background-color: #4CAF50;
 }
+
+.fieldsetIndentReplication {
+	position: relative;
+	left: 15px;
+}
 	/* CSS used to fix NAV positions END*/
 /*CSS CLASSES END*/

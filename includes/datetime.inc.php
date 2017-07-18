@@ -310,7 +310,7 @@ function correctDatetimeFormat($wrongDatetimeString){
 	
 	$datePartWithNoSpacesOrLeadingZeros = $datePartWithoutLeadingZeros;
 	
-	if(!isset($timePart)){
+	if(!isSet($timePart)){
 		$timePart = "";
 	}
 	$wrongDatetimeString = $datePartWithNoSpacesOrLeadingZeros . $timePart;

@@ -5,10 +5,10 @@ function getLocationWeCameFrom(){
 	$pathWithoutPHPFile = substr($pathWeCameFrom, 0, strrpos($pathWeCameFrom,'/'));	
 	$location = "Location: " . $pathWithoutPHPFile;
 	
-	if(isset($_GET['meetingroom'])){
+	if(isSet($_GET['meetingroom'])){
 		$TheMeetingRoomID = $_GET['meetingroom'];
 		$location .= "?meetingroom=" . $TheMeetingRoomID;
-		if(isset($_GET['name'])){
+		if(isSet($_GET['name'])){
 			$name = $_GET['name'];
 			$location .= "&name=" . $name;	
 		}
@@ -17,7 +17,7 @@ function getLocationWeCameFrom(){
 	return $location;
 }
 
-if(isset($_GET['loginForNav'])){
+if(isSet($_GET['loginForNav'])){
 	$loggedIn = makeUserLogIn();
 	
 	// Refresh page without get parameters
@@ -26,7 +26,7 @@ if(isset($_GET['loginForNav'])){
 	exit();	
 }
 
-if(isset($_GET['logoutForNav'])){
+if(isSet($_GET['logoutForNav'])){
 	// Same stuff we do on logout in access
 		unset($_SESSION['loggedIn']);
 		unset($_SESSION['email']);
@@ -43,11 +43,11 @@ if(isset($_GET['logoutForNav'])){
 // Set the correct query links in href
 $loginForNav = "?loginForNav";
 $logoutForNav = "?logoutForNav";
-if(isset($_GET['meetingroom'])){
+if(isSet($_GET['meetingroom'])){
 	$TheMeetingRoomID = $_GET['meetingroom'];
 	$loginForNav .= "&meetingroom=" . $TheMeetingRoomID;
 	$logoutForNav .= "&meetingroom=" . $TheMeetingRoomID;
-		if(isset($_GET['name'])){
+		if(isSet($_GET['name'])){
 			$name = $_GET['name'];
 			$loginForNav .= "&name=" . $name;
 			$logoutForNav .= "&name=" . $name;
@@ -56,7 +56,7 @@ if(isset($_GET['meetingroom'])){
 ?>
 <div class="topnav">
 	<ul>
-		<?php if(!isset($_SESSION["DefaultMeetingRoomInfo"])) : ?>
+		<?php if(!isSet($_SESSION["DefaultMeetingRoomInfo"])) : ?>
 		<li><a href="#home">Home</a></li>
 		<?php else : ?>
 		<li><a href="/booking/?meetingroom=<?php htmlout($_SESSION["DefaultMeetingRoomInfo"]["TheMeetingRoomID"]); ?>">Home</a></li>
@@ -64,10 +64,10 @@ if(isset($_GET['meetingroom'])){
 		<li><a href="/meetingroom">Meeting Rooms</a></li>
 		<li><a href="/booking">Booked Meetings</a></li>
 		<li><b id="Clock"></b></li>
-		<?php if(!isset($_SESSION['loggedIn']) AND !isset($_SESSION["DefaultMeetingRoomInfo"])) : ?>
+		<?php if(!isSet($_SESSION['loggedIn']) AND !isSet($_SESSION["DefaultMeetingRoomInfo"])) : ?>
 			<li style="float:right"><a href="/user/?register">Register</a></li>
 			<li style="float:right"><a href="<?php htmlout($loginForNav); ?>">Log In</a></li>
-		<?php elseif(isset($_SESSION['loggedIn'])) : ?>
+		<?php elseif(isSet($_SESSION['loggedIn'])) : ?>
 			<li style="float:right"><a href="<?php htmlout($logoutForNav); ?>">Log Out</a></li>
 		<?php endif; ?>
 	</ul>

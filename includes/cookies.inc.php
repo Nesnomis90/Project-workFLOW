@@ -24,13 +24,13 @@ function deleteMeetingRoomCookies(){
 
 // Function used in meetingroom and booking pages for all users to check if we're on a local device
 function checkIfLocalDevice(){
-	if(isset($_COOKIE[MEETINGROOM_NAME]) AND isset($_COOKIE[MEETINGROOM_IDCODE]))
+	if(isSet($_COOKIE[MEETINGROOM_NAME]) AND isSet($_COOKIE[MEETINGROOM_IDCODE]))
 	{
 		// There are local meeting room identifiers set in cookies. Check if they are valid
 		$meetingRoomName = $_COOKIE[MEETINGROOM_NAME];
 		$meetingRoomIDCode = $_COOKIE[MEETINGROOM_IDCODE];
 		
-		if(!isset($_SESSION['OriginalCookieMeetingRoomName']) AND !isset($_SESSION['OriginalCookieMeetingRoomIDCode'])){
+		if(!isSet($_SESSION['OriginalCookieMeetingRoomName']) AND !isSet($_SESSION['OriginalCookieMeetingRoomIDCode'])){
 			$validMeetingRoom = databaseContainsMeetingRoomWithIDCode($meetingRoomName, $meetingRoomIDCode);
 			if ($validMeetingRoom === TRUE){
 				// Cookies are correctly identifying a meeting room
@@ -38,7 +38,7 @@ function checkIfLocalDevice(){
 				$_SESSION['OriginalCookieMeetingRoomName'] = $meetingRoomName;
 				$_SESSION['OriginalCookieMeetingRoomIDCode'] = $meetingRoomIDCode;
 				
-				if(!isset($_SESSION['DefaultMeetingRoomInfo'])){
+				if(!isSet($_SESSION['DefaultMeetingRoomInfo'])){
 					try
 					{
 						include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';

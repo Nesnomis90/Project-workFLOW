@@ -3,17 +3,94 @@ SET NAMES utf8;
 USE meetingflow;
 SHOW WARNINGS;
 
+SELECT 		b.`bookingID`									AS TheBookingID,
+									b.`companyID`									AS TheCompanyID,
+									b.`meetingRoomID`								AS TheMeetingRoomID,
+									b.`startDateTime` 								AS StartTime, 
+									b.`endDateTime` 								AS EndTime, 
+									b.`description` 								AS BookingDescription,
+									b.`displayName` 								AS BookedBy,
+									b.`userID`										AS TheUserID,
+									b.`cancellationCode`							AS CancellationCode,
+									b.`adminNote`									AS AdminNote,
+                                    b.`dateTimeCancelled`,
+                                    b.`actualEndDateTime`,
+									(
+										(b.`dateTimeCancelled` IS NOT NULL) 
+										OR
+										(b.`actualEndDateTime` IS NOT NULL)
+									)												AS BookingCompleted,
+									IF(b.`companyID` IS NULL, NULL, 
+										(	
+											SELECT `name` 
+											FROM `company` 
+											WHERE `companyID` = TheCompanyID
+										)
+									)												AS BookedForCompany,
+									IF(b.`meetingRoomID` IS NULL, NULL,
+										(
+											SELECT 	`name`
+											FROM 	`meetingroom`
+											WHERE 	`meetingRoomID` = TheMeetingRoomID
+										)
+									) 												AS BookedRoomName,
+									IF(b.`userID` IS NULL, NULL, 
+										(
+											SELECT 	`firstName`
+											FROM 	`user`
+											WHERE 	`userID` = TheUserID
+										)
+									)												AS UserFirstname,
+									IF(b.`userID` IS NULL, NULL,
+										(
+											SELECT 	`lastName`
+											FROM 	`user`
+											WHERE 	`userID` = TheUserID
+										)
+									)												AS UserLastname,
+									IF(b.`userID` IS NULL, NULL,
+										(
+											SELECT 	`email`
+											FROM 	`user`
+											WHERE 	`userID` = TheUserID
+										)
+									)												AS UserEmail,
+									IF(b.`userID` IS NULL, NULL,
+										(
+											SELECT 	`sendEmail`
+											FROM 	`user`
+											WHERE 	`userID` = TheUserID
+										)
+									)												AS sendEmail,
+									IF(b.`userID` IS NULL, NULL,
+										(
+											SELECT 	`displayName`
+											FROM 	`user`
+											WHERE 	`userID` = TheUserID
+										)
+									)												AS UserDefaultDisplayName,
+									IF(b.`userID` IS NULL, NULL,
+										(
+											SELECT 	`bookingDescription`
+											FROM 	`user`
+											WHERE 	`userID` = TheUserID
+										)
+									)												AS UserDefaultBookingDescription
+						FROM 		`booking` b
+						WHERE		b.`bookingID` = 169
+						LIMIT 		1;
+
 SELECT 		u.`email`				AS Email,
 			u.`firstName`			AS FirstName,
 			u.`lastName`			AS LastName,
 			u.`displayName`			AS DisplayName,
 			u.`bookingDescription`	AS BookingDescription,
 			u.`bookingCode`			AS BookingCode,
-			IF(
-				u.`lastCodeUpdate` IS NULL,
-                DATE_ADD(u.`lastCodeUpdate`, INTERVAL 30 DAY),
-                NULL
-			)						AS NextBookingCodeChange,
+            u.`lastCodeUpdate` 		AS LastCodeUpdate,
+			DATE_ADD(
+						u.`lastCodeUpdate`,
+                        INTERVAL 30 DAY
+					)				AS NextBookingCodeChange,
 			u.`create_time`			AS DateTimeCreated,
             u.`lastActivity`		AS LastActive,
 			u.`sendEmail`			AS SendEmail,
@@ -23,6 +100,7 @@ SELECT 		u.`email`				AS Email,
 			a.`Description` 		AS AccessDescription
 FROM		`user` u
 INNER JOIN	`accesslevel` a
+ON 			u.`AccessID` = a.`AccessID`
 WHERE 		`userID` = 2
 AND			`isActive` = 1
 LIMIT 		1;

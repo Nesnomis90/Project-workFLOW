@@ -16,15 +16,19 @@
 	
 		<form action="" method="post">
 		<fieldset><legend><b>Book A New Meeting</b></legend>
-			<?php if(isset($_SESSION['AddBookingError'])) : ?>
-				<b class="warning"><?php htmlout($_SESSION['AddBookingError']); ?></b>
-				<?php unset($_SESSION['AddBookingError']); ?>
-			<?php endif; ?>	
-			
-			<?php if(isset($_SESSION['AddBookingUserCannotBookForSelf'])) : ?>
-				<b class="warning">You can not book a meeting for yourself since you are not connected to a company.</b>
-			<?php endif; ?>	
-			
+			<div class="left">
+				<?php if(isSet($_SESSION['AddBookingError'])) : ?>
+					<span><b class="warning"><?php htmlout($_SESSION['AddBookingError']); ?></b></span>
+					<?php unset($_SESSION['AddBookingError']); ?>
+				<?php endif; ?>	
+			</div>
+
+			<div class="left">
+				<?php if(isSet($_SESSION['AddBookingUserCannotBookForSelf'])) : ?>
+					<span><b class="feedback">You can not book a meeting for yourself since you are not connected to a company.</b></span>
+				<?php endif; ?>	
+			</div>
+
 			<div>
 				<label for="meetingRoomID">Meeting Room: </label>
 				<select name="meetingRoomID" id="meetingRoomID">
@@ -37,6 +41,7 @@
 					<?php endforeach; ?>
 				</select>				
 			</div>
+
 			<div>
 				<label for="startDateTime">Start Time: </label>
 				<input type="text" name="startDateTime" id="startDateTime" 
@@ -44,6 +49,7 @@
 				value="<?php htmlout($startDateTime); ?>">
 				<input type="submit" name="add" value="Increase Start By Minimum">
 			</div>
+
 			<div>
 				<label for="endDateTime">End Time: </label>
 				<input type="text" name="endDateTime" id="endDateTime" 
@@ -51,10 +57,11 @@
 				value="<?php htmlout($endDateTime); ?>">
 				<input type="submit" name="add" value="Increase End By Minimum">
 			</div>
+
 			<div>
 				<label for="SelectedUser">User: </label>
-				<?php if(isset($_SESSION['AddBookingChangeUser']) AND $_SESSION['AddBookingChangeUser']) : ?>
-					<?php if(isset($users)) : ?>
+				<?php if(isSet($_SESSION['AddBookingChangeUser']) AND $_SESSION['AddBookingChangeUser']) : ?>
+					<?php if(isSet($users)) : ?>
 						<select name="userID" id="userID">
 							<?php foreach($users as $row): ?> 
 								<?php if($row['userID'] == $SelectedUserID):?>
@@ -69,7 +76,7 @@
 						</select>
 						<input type="submit" name="add" value="Select This User">
 					<?php else : ?>
-						<b>The search found 0 users.</b>
+						<span><b>The search found 0 users.</b></span>
 					<?php endif; ?>
 					</div>
 					<div>
@@ -89,11 +96,12 @@
 						value="<?php htmlout($SelectedUserID);?>">
 					</div>			
 				<?php endif; ?>
+
 			<div>
 				<label for="companyID">Company: </label>
-				<?php if(	isset($_SESSION['AddBookingDisplayCompanySelect']) AND 
+				<?php if(	isSet($_SESSION['AddBookingDisplayCompanySelect']) AND 
 							$_SESSION['AddBookingDisplayCompanySelect']) : ?>
-					<?php if(!isset($_SESSION['AddBookingSelectedACompany'])) : ?>
+					<?php if(!isSet($_SESSION['AddBookingSelectedACompany'])) : ?>
 						<select name="companyID" id="companyID">
 							<?php foreach($company as $row): ?> 
 								<?php if($row['companyID']==$selectedCompanyID):?>
@@ -111,7 +119,7 @@
 						<input type="submit" name="add" value="Change Company">
 					<?php endif; ?>
 				<?php else : ?>
-					<?php if(isset($company)) : ?>
+					<?php if(isSet($company)) : ?>
 						<span><b><?php htmlout($companyName); ?></b></span>
 					<?php else : ?>
 						<span><b>This user is not connected to a company.</b></span>
@@ -120,24 +128,34 @@
 					value="<?php htmlout($companyID); ?>">
 				<?php endif; ?>
 			</div>
+
 			<div>
 				<label for="displayName">Display Name: </label>
 				<input type="text" name="displayName" id="displayName" 
 				value="<?php htmlout($displayName); ?>">
 				<input type="submit" name="add" value="Get Default Display Name">
 			</div>
+
 			<div>
 				<label class="description" for="description">Booking Description: </label>
-				<textarea rows="4" cols="50" name="description" id="description"><?php htmlout($description); ?></textarea>
+				<textarea rows="4" cols="50" name="description"
+				placeholder="The description logged in users will see about the meeting."><?php htmlout($description); ?></textarea>
 				<input type="submit" name="add" value="Get Default Booking Description"> 
 			</div>
+
+			<div>
+				<label class="description" for="adminNote">Admin Note: </label>
+				<textarea rows="4" cols="50" name="adminNote"
+				placeholder="Type in any additional information that only admin can see. This will highlighted during the billing period."><?php htmlout($adminNote); ?></textarea>
+			</div>
+
 			<div class="left">
 				<input type="submit" name="add" value="Reset">
 				<input type="submit" name="add" value="Cancel">
-				<?php if(isset($_SESSION['AddBookingChangeUser']) AND $_SESSION['AddBookingChangeUser']) : ?>
+				<?php if(isSet($_SESSION['AddBookingChangeUser']) AND $_SESSION['AddBookingChangeUser']) : ?>
 					<input type="submit" name="disabled" value="Add booking" disabled>
 					<span><b>You need to select the user you want before you can add the booking.</b></span>
-				<?php elseif(!isset($_SESSION['AddBookingSelectedACompany'])) : ?>
+				<?php elseif(!isSet($_SESSION['AddBookingSelectedACompany'])) : ?>
 					<input type="submit" name="disabled" value="Add booking" disabled>
 					<span><b>You need to select the company you want before you can add the booking.</b></span>
 				<?php else : ?>
@@ -147,7 +165,8 @@
 		</fieldset>
 		</form>
 		
-	<p><a href="..">Return to CMS home</a></p>
+	<div class="left"><a href="..">Return to CMS home</a></div>
+	
 	<?php include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/logout.inc.html.php'; ?>
 	</body>
 </html>

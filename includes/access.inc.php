@@ -77,7 +77,7 @@ function databaseContainsMeetingRoomWithIDCode($name, $cookieIdCode){
 // Updates the timestamp of when the user was last active
 function updateUserActivity()
 {
-	if(isset($_SESSION['LoggedInUserID'])){
+	if(isSet($_SESSION['LoggedInUserID'])){
 		// If a user logs in, or does something while logged in, we'll use this to update the database
 		// to indicate when they last used the website
 		try
@@ -122,16 +122,16 @@ function userIsLoggedIn()
 function checkIfUserIsLoggedIn()
 {
 	// If user is trying to log in
-	if (isset($_POST['action']) and $_POST['action'] == 'login')
+	if (isSet($_POST['action']) and $_POST['action'] == 'login')
 	{
-		if(isset($_POST['email']) AND $_POST['email'] != ""){
+		if(isSet($_POST['email']) AND $_POST['email'] != ""){
 			// Remember email if it's filled in. Retyping an email is the most annoying thing in the world.
 			$email = trim($_POST['email']);
 			$_SESSION['loginEmailSubmitted'] = $email;
 		}
 		// Check if user has filled in the necessary information
-		if (!isset($_POST['email']) or $_POST['email'] == '' or
-		!isset($_POST['password']) or $_POST['password'] == '')
+		if (!isSet($_POST['email']) or $_POST['email'] == '' or
+		!isSet($_POST['password']) or $_POST['password'] == '')
 		{
 			// User didn't fill in enough info
 			// Save a custom error message for the user
@@ -145,19 +145,19 @@ function checkIfUserIsLoggedIn()
 		if (databaseContainsUser($email, $password))
 		{
 			// Correct log in info! Update the session data to know we're logged in
-			if(!isset($_SESSION['loggedIn'])){
+			if(!isSet($_SESSION['loggedIn'])){
 				$_SESSION['loggedIn'] = TRUE;
 			}
-			if(!isset($_SESSION['email'])){
+			if(!isSet($_SESSION['email'])){
 				$_SESSION['email'] = $email;
 			}
-			if(!isset($_SESSION['password'])){
+			if(!isSet($_SESSION['password'])){
 				$_SESSION['password'] = $password;
 			}
-			if(!isset($_SESSION['LoggedInUserID'])){
+			if(!isSet($_SESSION['LoggedInUserID'])){
 				$_SESSION['LoggedInUserID'] = $_SESSION['DatabaseContainsUserID'];
 			}
-			if(!isset($_SESSION['LoggedInUserName'])){
+			if(!isSet($_SESSION['LoggedInUserName'])){
 				$_SESSION['LoggedInUserName'] = $_SESSION['DatabaseContainsUserName']; 
 			}
 			
@@ -188,7 +188,7 @@ function checkIfUserIsLoggedIn()
 		}
 	}
 	// If user wants to log out
-	if (isset($_POST['action']) and $_POST['action'] == 'logout')
+	if (isSet($_POST['action']) and $_POST['action'] == 'logout')
 	{
 		unset($_SESSION['loggedIn']);
 		unset($_SESSION['email']);
@@ -207,7 +207,7 @@ function checkIfUserIsLoggedIn()
 	// is loaded again. But is more secure than just checking for the 
 	// loggedIn = true session variable in the case that user info
 	// has been altered while someone is already logged in with old data
-	if (isset($_SESSION['loggedIn']))
+	if (isSet($_SESSION['loggedIn']))
 	{
 		return databaseContainsUser($_SESSION['email'],
 		$_SESSION['password']);
@@ -251,11 +251,11 @@ function databaseContainsUser($email, $password)
 	// If we got a hit, then the user info was correct
 	if ($row[0] > 0)
 	{
-		if(!isset($_SESSION['LoggedInUserID'])){
+		if(!isSet($_SESSION['LoggedInUserID'])){
 			$_SESSION['DatabaseContainsUserID'] = $row['userID'];
 		}
 		
-		if(!isset($_SESSION['LoggedInUserName'])){
+		if(!isSet($_SESSION['LoggedInUserName'])){
 			$_SESSION['DatabaseContainsUserName'] = $row['lastname'] . ", " . $row['firstname'];
 		}
 		return TRUE;
@@ -524,7 +524,7 @@ function isUserInHouseUser(){
 function isUserCompanyOwner(){
 	session_start();
 	
-	if(!isset($_SESSION['LoggedInUserIsOwnerInTheseCompanies'])){
+	if(!isSet($_SESSION['LoggedInUserIsOwnerInTheseCompanies'])){
 		// Check if user is a company owner
 		try
 		{

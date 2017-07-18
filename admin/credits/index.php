@@ -37,31 +37,31 @@ function validateUserInputs(){
 	$invalidInput = FALSE;
 	
 	// Get user inputs
-	if(isset($_POST['CreditsName']) AND !$invalidInput){
+	if(isSet($_POST['CreditsName']) AND !$invalidInput){
 		$creditsName = trim($_POST['CreditsName']);
 	} else {
 		$invalidInput = TRUE;
 		$_SESSION['EditCreditsError'] = "A credits cannot be added without a name!";
 	}
-	if(isset($_POST['CreditsDescription']) AND !$invalidInput){
+	if(isSet($_POST['CreditsDescription']) AND !$invalidInput){
 		$creditsDescription = trim($_POST['CreditsDescription']);
 	} else {
 		$invalidInput = TRUE;
 		$_SESSION['EditCreditsError'] = "A credits cannot be added without a description!";
 	}
-	if(isset($_POST['CreditsAmount']) AND !$invalidInput){
+	if(isSet($_POST['CreditsAmount']) AND !$invalidInput){
 		$creditsAmount = trim($_POST['CreditsAmount']);
 	} else {
 		$invalidInput = TRUE;
 		$_SESSION['EditCreditsError'] = "A credits cannot be added without a monthly given amount!";
 	}
-	if(isset($_POST['CreditsMonthlyPrice']) AND !$invalidInput){
+	if(isSet($_POST['CreditsMonthlyPrice']) AND !$invalidInput){
 		$creditsMonthlyPrice = trim($_POST['CreditsMonthlyPrice']);
 	} else {
 		$invalidInput = TRUE;
 		$_SESSION['EditCreditsError'] = "A credits cannot be added without a monthly subscription price!";
 	}
-	if(isset($_POST['CreditsHourPrice']) AND !$invalidInput){
+	if(isSet($_POST['CreditsHourPrice']) AND !$invalidInput){
 		$creditsHourPrice = trim($_POST['CreditsHourPrice']);
 	} else {
 		$invalidInput = TRUE;
@@ -157,7 +157,7 @@ function validateUserInputs(){
 	
 	// Check if the credits already exists (based on name).
 	$nameChanged = TRUE;
-	if(isset($_SESSION['EditCreditsOriginalInfo'])){
+	if(isSet($_SESSION['EditCreditsOriginalInfo'])){
 		$originalCreditsName = strtolower($_SESSION['EditCreditsOriginalInfo']['CreditsName']);
 		$newCreditsName = strtolower($validatedCreditsName);		
 
@@ -203,36 +203,36 @@ return array($invalidInput, $validatedCreditsDescription, $validatedCreditsName,
 }
 
 // If admin wants to be able to delete credits it needs to enabled first
-if (isset($_POST['action']) AND $_POST['action'] == "Enable Delete"){
+if (isSet($_POST['action']) AND $_POST['action'] == "Enable Delete"){
 	$_SESSION['creditsEnableDelete'] = TRUE;
 	$refreshCredits = TRUE;
 }
 
 // If admin wants to be able to delete credits that is currently being used in a room it needs to enabled first
-if (isset($_POST['action']) AND $_POST['action'] == "Enable Delete Used Credits"){
+if (isSet($_POST['action']) AND $_POST['action'] == "Enable Delete Used Credits"){
 	$_SESSION['creditsEnableDeleteUsedCredits'] = TRUE;
 	$refreshCredits = TRUE;
 }
 
 // If admin wants to be disable used credits deletion
-if (isset($_POST['action']) AND $_POST['action'] == "Disable Delete Used Credits"){
+if (isSet($_POST['action']) AND $_POST['action'] == "Disable Delete Used Credits"){
 	unset($_SESSION['creditsEnableDeleteUsedCredits']);
 	$refreshCredits = TRUE;
 }
 
 // If admin wants to be disable credits deletion
-if (isset($_POST['action']) AND $_POST['action'] == "Disable Delete"){
+if (isSet($_POST['action']) AND $_POST['action'] == "Disable Delete"){
 	unset($_SESSION['creditsEnableDelete']);
 	unset($_SESSION['creditsEnableDeleteUsedCredits']);
 	$refreshCredits = TRUE;
 }
 
 // If admin wants to delete no longer wanted Credits
-if(isset($_POST['action']) AND $_POST['action'] == 'Delete'){
+if(isSet($_POST['action']) AND $_POST['action'] == 'Delete'){
 	// We have one Credits that's should always be in the table and never deleted
 	// This one is called 'Default'
 	
-	if(isset($_POST['CreditsName']) AND $_POST['CreditsName'] == 'Default'){
+	if(isSet($_POST['CreditsName']) AND $_POST['CreditsName'] == 'Default'){
 		// We can't delete this one.
 		$_SESSION['CreditsUserFeedback'] = "This Credits cannot be deleted. It is the default given Credits to all new companies.";
 	} else {
@@ -300,8 +300,8 @@ if(isset($_POST['action']) AND $_POST['action'] == 'Delete'){
 
 // If admin wants to add Credits to the database
 // we load a new html form
-if ((isset($_POST['action']) AND $_POST['action'] == 'Add Credits') OR
-	(isset($_SESSION['refreshAddCredits']) AND $_SESSION['refreshAddCredits']))
+if ((isSet($_POST['action']) AND $_POST['action'] == 'Add Credits') OR
+	(isSet($_SESSION['refreshAddCredits']) AND $_SESSION['refreshAddCredits']))
 {
 	// Confirm we've refreshed
 	unset($_SESSION['refreshAddCredits']);
@@ -316,23 +316,23 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Add Credits') OR
 	$CreditsID = '';
 	$button = 'Confirm Credits';
 	
-	if(isset($_SESSION['AddCreditsDescription'])){
+	if(isSet($_SESSION['AddCreditsDescription'])){
 		$CreditsDescription = $_SESSION['AddCreditsDescription'];
 		unset($_SESSION['AddCreditsDescription']);
 	}
-	if(isset($_SESSION['AddCreditsName'])){
+	if(isSet($_SESSION['AddCreditsName'])){
 		$CreditsName = $_SESSION['AddCreditsName'];
 		unset($_SESSION['AddCreditsName']);
 	}
-	if(isset($_SESSION['AddCreditsAmount'])){
+	if(isSet($_SESSION['AddCreditsAmount'])){
 		$CreditsAmount = $_SESSION['AddCreditsAmount'];
 		unset($_SESSION['AddCreditsAmount']);
 	}	
-	if(isset($_SESSION['AddCreditsHourPrice'])){
+	if(isSet($_SESSION['AddCreditsHourPrice'])){
 		$CreditsHourPrice = $_SESSION['AddCreditsHourPrice'];
 		unset($_SESSION['AddCreditsHourPrice']);
 	}
-	if(isset($_SESSION['AddCreditsMonthlyPrice'])){
+	if(isSet($_SESSION['AddCreditsMonthlyPrice'])){
 		$CreditsMonthlyPrice = $_SESSION['AddCreditsMonthlyPrice'];
 		unset($_SESSION['AddCreditsMonthlyPrice']);
 	}
@@ -345,7 +345,7 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Add Credits') OR
 }
 
 // When admin has added the needed information and wants to add the Credits
-if (isset($_POST['action']) AND $_POST['action'] == 'Confirm Credits')
+if (isSet($_POST['action']) AND $_POST['action'] == 'Confirm Credits')
 {
 	// Validate user inputs
 	list($invalidInput, $validatedCreditsDescription, $validatedCreditsName, $validatedCreditsAmount, $validatedCreditsHourPrice, $validatedCreditsMonthlyPrice) = validateUserInputs();
@@ -431,7 +431,7 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Confirm Credits')
 		",\nand over credits fee: " . $creditsOverCreditsFee .
 		"\nwas added by: " . $_SESSION['LoggedInUserName'];
 		
-		if(isset($_SESSION['LastCreditsID'])){
+		if(isSet($_SESSION['LastCreditsID'])){
 			$lastCreditsID = $_SESSION['LastCreditsID'];
 			unset($_SESSION['LastCreditsID']);
 		}
@@ -471,7 +471,7 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Confirm Credits')
 }
 
 // If admin wants to null values while adding
-if(isset($_POST['add']) AND $_POST['add'] == 'Reset'){
+if(isSet($_POST['add']) AND $_POST['add'] == 'Reset'){
 	
 	$_SESSION['AddCreditsDescription'] = "";
 	$_SESSION['AddCreditsName'] = "";
@@ -482,54 +482,54 @@ if(isset($_POST['add']) AND $_POST['add'] == 'Reset'){
 }
 
 // If the admin wants to leave the page and go back to the Credits overview again
-if (isset($_POST['add']) AND $_POST['add'] == 'Cancel'){
+if (isSet($_POST['add']) AND $_POST['add'] == 'Cancel'){
 	$_SESSION['CreditsUserFeedback'] = "You cancelled your Credits creation.";
 	$refreshCredits = TRUE;
 }
 
 // if admin wants to edit Credits information
 // we load a new html form
-if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR
-	(isset($_SESSION['refreshEditCredits']) AND $_SESSION['refreshEditCredits']))
+if ((isSet($_POST['action']) AND $_POST['action'] == 'Edit') OR
+	(isSet($_SESSION['refreshEditCredits']) AND $_SESSION['refreshEditCredits']))
 {
 	
 	// Check if we're activated by a user or by a forced refresh
-	if(isset($_SESSION['refreshEditCredits']) AND $_SESSION['refreshEditCredits']){
+	if(isSet($_SESSION['refreshEditCredits']) AND $_SESSION['refreshEditCredits']){
 		//Confirm we've refreshed
 		unset($_SESSION['refreshEditCredits']);	
 		
 		// Get values we had before refresh
-		if(isset($_SESSION['EditCreditsDescription'])){
+		if(isSet($_SESSION['EditCreditsDescription'])){
 			$CreditsDescription = $_SESSION['EditCreditsDescription'];
 			unset($_SESSION['EditCreditsDescription']);
 		} else {
 			$CreditsDescription = '';
 		}		
-		if(isset($_SESSION['EditCreditsName'])){
+		if(isSet($_SESSION['EditCreditsName'])){
 			$CreditsName = $_SESSION['EditCreditsName'];
 			unset($_SESSION['EditCreditsName']);
 		} else {
 			$CreditsName = '';
 		}
-		if(isset($_SESSION['EditCreditsAmount'])){
+		if(isSet($_SESSION['EditCreditsAmount'])){
 			$CreditsAmount = $_SESSION['EditCreditsAmount'];
 			unset($_SESSION['EditCreditsAmount']);
 		} else {
 			$CreditsAmount = 0;
 		}
-		if(isset($_SESSION['EditCreditsMonthlyPrice'])){
+		if(isSet($_SESSION['EditCreditsMonthlyPrice'])){
 			$CreditsMonthlyPrice = $_SESSION['EditCreditsMonthlyPrice'];
 			unset($_SESSION['EditCreditsMonthlyPrice']);
 		} else {
 			$CreditsMonthlyPrice = 0;
 		}	
-		if(isset($_SESSION['EditCreditsHourPrice'])){
+		if(isSet($_SESSION['EditCreditsHourPrice'])){
 			$CreditsHourPrice = $_SESSION['EditCreditsHourPrice'];
 			unset($_SESSION['EditCreditsHourPrice']);
 		} else {
 			$CreditsHourPrice = '';
 		}			
-		if(isset($_SESSION['EditCreditsCreditsID'])){
+		if(isSet($_SESSION['EditCreditsCreditsID'])){
 			$CreditsID = $_SESSION['EditCreditsCreditsID'];
 		}
 	} else {
@@ -599,14 +599,14 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR
 }
 
 // Perform the actual database update of the edited information
-if (isset($_POST['action']) AND $_POST['action'] == 'Edit Credits')
+if (isSet($_POST['action']) AND $_POST['action'] == 'Edit Credits')
 {
 	// Validate user inputs
 	list($invalidInput, $validatedCreditsDescription, $validatedCreditsName, $validatedCreditsAmount, $validatedCreditsHourPrice, $validatedCreditsMonthlyPrice) = validateUserInputs();
 
 	// Make sure we don't try to change the name of the Credits named 'Default'
 	// Or try to change the description
-	if(isset($_SESSION['EditCreditsOriginalInfo']) AND !$invalidInput){
+	if(isSet($_SESSION['EditCreditsOriginalInfo']) AND !$invalidInput){
 		if(	$_SESSION['EditCreditsOriginalInfo']['CreditsName'] == 'Default' AND
 			$validatedCreditsName != 'Default'){
 			$invalidInput = TRUE;
@@ -638,7 +638,7 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Edit Credits')
 	
 	// Check if values have actually changed
 	$numberOfChanges = 0;
-	if(isset($_SESSION['EditCreditsOriginalInfo'])){
+	if(isSet($_SESSION['EditCreditsOriginalInfo'])){
 		$original = $_SESSION['EditCreditsOriginalInfo'];
 		unset($_SESSION['EditCreditsOriginalInfo']);
 		
@@ -707,7 +707,7 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Edit Credits')
 }
 
 // If admin wants to get original values while editing
-if(isset($_POST['edit']) AND $_POST['edit'] == 'Reset'){
+if(isSet($_POST['edit']) AND $_POST['edit'] == 'Reset'){
 	
 	$original = $_SESSION['EditCreditsOriginalInfo'];
 	$_SESSION['EditCreditsName'] = $original['CreditsName'];
@@ -723,12 +723,12 @@ if(isset($_POST['edit']) AND $_POST['edit'] == 'Reset'){
 }
 
 // If the admin wants to leave the page and go back to the Credits overview again
-if (isset($_POST['edit']) AND $_POST['edit'] == 'Cancel'){
+if (isSet($_POST['edit']) AND $_POST['edit'] == 'Cancel'){
 	$_SESSION['CreditsUserFeedback'] = "You cancelled your Credits editing.";
 	$refreshCredits = TRUE;
 }
 
-if(isset($refreshCredits) AND $refreshCredits) {
+if(isSet($refreshCredits) AND $refreshCredits) {
 	// TO-DO: Add code that should occur on a refresh
 	unset($refreshCredits);
 }
@@ -764,7 +764,7 @@ try
 			
 	$return = $pdo->query($sql);
 	$result = $return->fetchAll(PDO::FETCH_ASSOC);
-	if(isset($result)){
+	if(isSet($result)){
 		$rowNum = sizeOf($result);
 	} else {
 		$rowNum = 0;

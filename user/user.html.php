@@ -12,7 +12,7 @@
 				width: 210px;
 			}
 		</style>
-		<?php if(isset($_SESSION['loggedIn'])) : ?>
+		<?php if(isSet($_SESSION['loggedIn'])) : ?>
 			<title>Your User Information</title>
 		<?php else : ?>
 			<title>User Information</title>
@@ -21,144 +21,186 @@
 	<body>
 		<?php include_once $_SERVER['DOCUMENT_ROOT'] .'/includes/topnav.html.php'; ?>
 		
-		<?php if(isset($_SESSION['loggedIn'])) : ?>
-			<h1>Your User Information</h1>
+		<?php if(isSet($_SESSION['loggedIn'])) : ?>
+			<h1>Your Account Information</h1>
 		<?php else : ?>
-			<h1>User Information</h1>
+			<h1>Account Information</h1>
 		<?php endif; ?>
 		
 		<div class="left">
-			<?php if(isset($_SESSION['normalUserFeedback'])) : ?>
+			<?php if(isSet($_SESSION['normalUserFeedback'])) : ?>
 				<span><b class="feedback"><?php htmlout($_SESSION['normalUserFeedback']); ?></b></span>
 				<?php unset($_SESSION['normalUserFeedback']); ?>
 			<?php endif; ?>
 		</div>
 
-		<?php if(isset($_SESSION['loggedIn']) AND isset($_SESSION['LoggedInUserID'])) : ?>
+		<?php if(isSet($_SESSION['loggedIn']) AND isSet($_SESSION['LoggedInUserID'])) : ?>
 			<div class="left">
-				<fieldset><legend>Your User Information</legend>
+				<fieldset>
 					<form action="" method="post">
-						<div>
-							<label>First Name: </label>
-							<span><?php htmlout($originalFirstName); ?></span>
-						</div>
-						<?php if(isset($editMode)) : ?>
+						<fieldset class="left"><legend>User Information:</legend>
 							<div>
-								<label>Set New First Name: </label>
-								<input type="text" name="firstName" value="<?php htmlout($firstName); ?>">
+								<label>First Name: </label>
+								<span><?php htmlout($originalFirstName); ?></span>
 							</div>
-						<?php endif; ?>
-
-						<div>
-							<label>Last Name: </label>
-							<span><?php htmlout($originalLastName); ?></span>
-						</div>
-						<?php if(isset($editMode)) : ?>
-							<div>
-								<label>Set New Last Name: </label>
-								<input type="text" name="lastName" value="<?php htmlout($lastName); ?>">
-							</div>
-						<?php endif; ?>
-
-						<div>
-							<label>Email: </label>
-							<span><?php htmlout($originalEmail); ?></span>
-						</div>
-						<?php if(isset($editMode)) : ?>
-							<div>
-								<label>Set New Email: </label>
-								<input type="text" name="email" value="<?php htmlout($email); ?>">
-							</div>
-						<?php endif; ?>
-
-						<div>
-							<label>Default Display Name: </label>
-							<span><?php htmlout($originalDisplayName); ?></span>
-						</div>
-						<?php if(isset($editMode)) : ?>
-							<div>
-								<label>Set New Display Name: </label>
-								<input type="text" name="displayName" value="<?php htmlout($displayName); ?>">
-							</div>
-						<?php endif; ?>
-
-						<div>
-							<label>Default Booking Description: </label>
-							<span style="white-space: pre-wrap;"><?php htmlout($originalBookingDescription); ?></span>
-						</div>
-						<?php if(isset($editMode)) : ?>
-							<div>
-								<label>Set New Booking Description: </label>
-								<textarea rows="4" cols="50" name="bookingDescription" style="white-space: pre-wrap;"><?php htmlout($bookingDescription); ?></textarea>
-							</div>
-						<?php endif; ?>
-						
-						<div>
-							<label>Email Alert Status: </label>
-							<?php if($originalSendEmail == 1) : ?>
-								<span><b>Send Me Email Alerts.</b></span>
-							<?php elseif($originalSendEmail == 0) : ?>
-								<span><b>Don't Send Me Email Alerts.</b></span>
+							<?php if(isSet($editMode)) : ?>
+								<div>
+									<label>Change First Name: </label>
+									<input type="text" name="firstName" value="<?php htmlout($firstName); ?>">
+								</div>
 							<?php endif; ?>
-						</div>
-						<?php if(isset($editMode)) : ?>
-							<div>
-								<label>Change Email Alert Status: </label>
-								<select name="sendEmail">
-									<?php if($sendEmail == 1) : ?>
-										<option selected="selected" value="1"><b>Send Me Email Alerts.</b></option>
-										<option value="0"><b>Don't Send Me Email Alerts.</b></option>
-									<?php elseif($sendEmail == 0) : ?>
-										<option value="1"><b>Send Me Email Alerts.</b></option>
-										<option selected="selected" value="0"><b>Don't Send Me Email Alerts.</b></option>										
-									<?php endif; ?>
-								</select>
-							</div>
-						<?php endif; ?>						
 
-						<?php if(isset($userCanHaveABookingCode)) : ?>
 							<div>
-								<label>Booking Code: </label>
-								<span><?php htmlout($bookingCodeStatus); ?></span>
-								<?php if(isset($userHasABookingCode) AND !isset($showBookingCode)) : ?>
-									<label>Reveal Code: </label><input type="submit" name="action" value="Show Code">
-								<?php elseif(isset($userHasABookingCode) AND isset($showBookingCode) AND $showBookingCode) : ?>
-									<label>Reveal Code: </label><span><b><?php htmlout($showBookingCode); ?></b></span>
-								<?php elseif(isset($userHasABookingCode) AND isset($showBookingCode) AND $showBookingCode == FALSE) : ?>
-									<label>Reveal Code: </label><span><b>Could not retrieve code.</b></span>
+								<label>Last Name: </label>
+								<span><?php htmlout($originalLastName); ?></span>
+							</div>
+							<?php if(isSet($editMode)) : ?>
+								<div>
+									<label>Change Last Name: </label>
+									<input type="text" name="lastName" value="<?php htmlout($lastName); ?>">
+								</div>
+							<?php endif; ?>
+
+							<div>
+								<label>Email: </label>
+								<span><?php htmlout($originalEmail); ?></span>
+							</div>
+							<?php if(isSet($editMode)) : ?>
+								<div>
+									<label>Change Email: </label>
+									<input type="text" name="email" value="<?php htmlout($email); ?>">
+								</div>
+							<?php endif; ?>
+
+							<div>
+								<label>Default Display Name: </label>
+								<span style="white-space: pre-wrap;"><?php htmlout($originalDisplayName); ?></span>
+							</div>
+							<?php if(isSet($editMode)) : ?>
+								<div>
+									<label>Change Display Name: </label>
+									<input type="text" name="displayName" value="<?php htmlout($displayName); ?>">
+								</div>
+							<?php endif; ?>
+
+							<div>
+								<label>Default Booking Description: </label>
+								<span style="white-space: pre-wrap;"><?php htmlout($originalBookingDescription); ?></span>
+							</div>
+							<?php if(isSet($editMode)) : ?>
+								<div>
+									<label>Change Booking Description: </label>
+									<textarea rows="4" cols="50" name="bookingDescription" style="white-space: pre-wrap;"><?php htmlout($bookingDescription); ?></textarea>
+								</div>
+							<?php endif; ?>
+						</fieldset>
+
+						<fieldset class="left"><legend>Account Information: </legend>
+							<div>
+								<label>Account Status: </label>
+								<span><?php htmlout($accessName); ?></span>
+							</div>
+
+							<div>
+								<label>Status Description: </label>
+								<span style="white-space: pre-wrap;"><?php htmlout($accessDescription); ?></span>
+							</div>
+
+							<div>
+								<label>Email Alert Status: </label>
+								<?php if($originalSendEmail == 1) : ?>
+									<span><b>Send Me Email Alerts</b></span>
+								<?php elseif($originalSendEmail == 0) : ?>
+									<span><b>Don't Send Me Email Alerts</b></span>
 								<?php endif; ?>
 							</div>
-							
-							<?php if(isset($editMode)) : ?>
+
+							<?php if(isSet($editMode)) : ?>
 								<div>
-									<?php if(!isset($userHasABookingCode)) : ?>
-										<label>Set Your Booking Code: </label>
-									<?php else : ?>
-										<label>Set A New Booking Code: </label>
-									<?php endif; ?>
-									<?php if(isset($canSetNewCode)) : ?>
-										<input type="number" name="bookingCode" min="1" max="<?php htmlout((10 ** BOOKING_CODE_LENGTH)-1); ?>"
-										placeholder="<?php htmlout(BOOKING_CODE_LENGTH . " digits"); ?>" value="">
-									<?php else : ?>
-										<span><b>You can not set a new booking code before <?php htmlout($displayNextBookingCodeChange); ?></b></span>
-									<?php endif; ?>
+									<label>Change Email Alert Status: </label>
+									<select name="sendEmail">
+										<?php if($sendEmail == 1) : ?>
+											<option selected="selected" value="1"><b>Send Me Email Alerts</b></option>
+											<option value="0"><b>Don't Send Me Email Alerts</b></option>
+										<?php elseif($sendEmail == 0) : ?>
+											<option value="1"><b>Send Me Email Alerts</b></option>
+											<option selected="selected" value="0"><b>Don't Send Me Email Alerts</b></option>										
+										<?php endif; ?>
+									</select>
 								</div>
 							<?php endif; ?>
-						<?php endif; ?>
-						
-						<div class="left">
-							<?php if(isset($editMode)) : ?>
-								<label>Set New Password: </label><input type="password" name="password1" value="">
-								<label>Repeat New Password: </label><input type="password" name="password2" value="">
-								<label>Confirm With Your Password: </label><input type="password" name="confirmPassword" value=""><span style="color: red;">* Required for any change</span>
-								<div class="left">
-									<input type="submit" name="action" value="Reset">
-									<input type="submit" name="action" value="Confirm Change">
+
+							<?php if($accessName == "Admin") : ?>
+								<div>
+									<label>Admin Alert Status: </label>
+									<?php if($originalSendAdminEmail == 1) : ?>
+										<span><b>Send Me Admin Email Alerts</b></span>
+									<?php elseif($originalSendAdminEmail == 0) : ?>
+										<span><b>Don't Send Me Admin Email Alerts</b></span>
+									<?php endif; ?>
 								</div>
-							<?php else : ?>
-								<input type="submit" name="action" value="Change Information">
+
+								<?php if(isSet($editMode)) : ?>
+									<div>
+										<label>Change Admin Alert Status: </label>
+										<select name="sendAdminEmail">
+											<?php if($sendAdminEmail == 1) : ?>
+												<option selected="selected" value="1"><b>Send Me Admin Email Alerts</b></option>
+												<option value="0"><b>Don't Send Me Admin Email Alerts</b></option>
+											<?php elseif($sendAdminEmail == 0) : ?>
+												<option value="1"><b>Send Me Admin Email Alerts</b></option>
+												<option selected="selected" value="0"><b>Don't Send Me Admin Email Alerts</b></option>										
+											<?php endif; ?>
+										</select>
+									</div>
+								<?php endif; ?>							
 							<?php endif; ?>
-						</div>
+
+							<?php if(isSet($userCanHaveABookingCode)) : ?>
+								<div>
+									<label>Booking Code: </label>
+									<span><?php htmlout($bookingCodeStatus); ?></span>
+									<?php if(isSet($userHasABookingCode) AND !isSet($showBookingCode)) : ?>
+										<label>Reveal Code: </label><input type="submit" name="action" value="Show Code">
+									<?php elseif(isSet($userHasABookingCode) AND isSet($showBookingCode) AND $showBookingCode) : ?>
+										<label>Reveal Code: </label><span><b><?php htmlout($showBookingCode); ?></b></span>
+									<?php elseif(isSet($userHasABookingCode) AND isSet($showBookingCode) AND $showBookingCode == FALSE) : ?>
+										<label>Reveal Code: </label><span><b>Could not retrieve code.</b></span>
+									<?php endif; ?>
+								</div>
+								
+								<?php if(isSet($editMode)) : ?>
+									<div>
+										<?php if(!isSet($userHasABookingCode)) : ?>
+											<label>Set Your Booking Code: </label>
+										<?php else : ?>
+											<label>Set A New Booking Code: </label>
+										<?php endif; ?>
+										<?php if(isSet($canSetNewCode)) : ?>
+											<input type="number" name="bookingCode" min="1" max="<?php htmlout((10 ** BOOKING_CODE_LENGTH)-1); ?>"
+											placeholder="<?php htmlout(BOOKING_CODE_LENGTH . " digits"); ?>" value="">
+										<?php else : ?>
+											<span><b>You can not set a new booking code before <?php htmlout($displayNextBookingCodeChange); ?></b></span>
+										<?php endif; ?>
+									</div>
+								<?php endif; ?>
+							<?php endif; ?>	
+							
+							<div class="left">
+								<?php if(isSet($editMode)) : ?>
+									<label>Set New Password: </label><input type="password" name="password1" value="">
+									<label>Repeat New Password: </label><input type="password" name="password2" value="">
+									<label>Confirm With Your Password: </label><input type="password" name="confirmPassword" value=""><span style="color: red;">* Required for any change</span>
+									<div class="left">
+										<input type="submit" name="action" value="Confirm Change">
+										<input type="submit" name="action" value="Reset">
+										<input type="submit" name="action" value="Cancel">
+									</div>
+								<?php else : ?>
+									<input type="submit" name="action" value="Change Information">
+								<?php endif; ?>
+							</div>
+						</fieldset>
 					</form>
 				</fieldset>
 			</div>

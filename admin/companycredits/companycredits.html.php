@@ -11,13 +11,13 @@
 	<body>
 		<h1>Manage Credits for Companies</h1>
 		
-		<?php if(isset($_SESSION['CompanyCreditsUserFeedback'])) : ?>
+		<?php if(isSet($_SESSION['CompanyCreditsUserFeedback'])) : ?>
 			<span><b class="feedback"><?php htmlout($_SESSION['CompanyCreditsUserFeedback']); ?></b></span>
 			<?php unset($_SESSION['CompanyCreditsUserFeedback']); ?>
 		<?php endif; ?>
 		
 		<?php $goto = "http://$_SERVER[HTTP_HOST]/admin/companies/"; ?>
-		<?php if(isset($_GET['Company'])) :?>
+		<?php if(isSet($_GET['Company'])) :?>
 			<form action="<?php htmlout($goto); ?>" method="post">
 				<input type="submit" value="Return to Companies">
 			</form>
@@ -77,7 +77,7 @@
 					</form>
 				<?php endforeach; ?>
 			</table>
-		<?php elseif(isset($_GET['Company'])) : ?>
+		<?php elseif(isSet($_GET['Company'])) : ?>
 			<tr><b>The company ID submitted does not belong to a registered company.</b></tr>
 		<?php else : ?>
 			<tr><b>There are no credits for any companies registered in the database. This should only occur if there are no companies registered.</b></tr>

@@ -10,12 +10,12 @@
 	</head>
 	<body>
 		<h1>Manage Company Employees</h1>
-		<?php if(isset($_SESSION['EmployeeUserFeedback'])) : ?>
+		<?php if(isSet($_SESSION['EmployeeUserFeedback'])) : ?>
 			<p><b><?php htmlout($_SESSION['EmployeeUserFeedback']); ?></b></p>
 			<?php unset($_SESSION['EmployeeUserFeedback']); ?>
 		<?php endif; ?>			
 		<?php $goto = "http://$_SERVER[HTTP_HOST]/admin/companies/"; ?>
-		<?php if(isset($_GET['Company'])) :?>
+		<?php if(isSet($_GET['Company'])) :?>
 			<form action="<?php htmlout($goto); ?>" method="post">
 				<input type="submit" value="Return to Companies">
 			</form>
@@ -26,7 +26,7 @@
 		<?php endif; ?>
 		<form action="" method="post">
 			<div>
-				<?php if(isset($_SESSION['employeesEnableDelete']) AND $_SESSION['employeesEnableDelete']) : ?>
+				<?php if(isSet($_SESSION['employeesEnableDelete']) AND $_SESSION['employeesEnableDelete']) : ?>
 					<input type="submit" name="action" value="Disable Remove">
 				<?php else : ?>
 					<input type="submit" name="action" value="Enable Remove">
@@ -59,8 +59,8 @@
 				<th>Remove</th>
 			</tr>
 			<?php if($rowNum>0) :?>
-				<?php if(isset($_GET['Company']) AND 
-						(isset($deletedEmployees) OR isset($removedEmployees))) : ?>
+				<?php if(isSet($_GET['Company']) AND 
+						(isSet($deletedEmployees) OR isSet($removedEmployees))) : ?>
 				<tr>
 					<td colspan="11"><b>The Following Are Currently Employed Users</b></td>
 				</tr>
@@ -82,7 +82,7 @@
 							<td><?php htmlout($employee['StartDateTime']); ?></td>
 							<td><input type="submit" name="action" value="Change Role"></td>
 							<td>
-								<?php if(isset($_SESSION['employeesEnableDelete']) AND $_SESSION['employeesEnableDelete']) : ?>
+								<?php if(isSet($_SESSION['employeesEnableDelete']) AND $_SESSION['employeesEnableDelete']) : ?>
 									<input type="submit" name="action" value="Remove">
 								<?php else : ?>
 									<input type="submit" name="disabled" value="Remove" disabled>
@@ -102,7 +102,7 @@
 					</form>
 				</tr>
 			<?php endif; ?>	
-				<?php if(isset($removedEmployees)) : ?>
+				<?php if(isSet($removedEmployees)) : ?>
 					<tr>
 						<td colspan="11"><b>The Following Are Previously Employed Users</b></td>
 					</tr>
@@ -120,7 +120,7 @@
 						</tr>
 					<?php endforeach; ?>
 				<?php endif; ?>
-				<?php if(isset($deletedEmployees)) : ?>
+				<?php if(isSet($deletedEmployees)) : ?>
 					<tr>
 						<td colspan="11"><b>The Following Is A Summation Of Deleted Users</b></td>
 					</tr>
