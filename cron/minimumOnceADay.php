@@ -238,12 +238,12 @@ function updateBillingDatesForCompanies(){
 							
 						$emailMessage = 
 						"Click the link below to see the details\n
-						Link: " . $link;		
+						Link: " . $link;
 					} else {
 						// More than one company went over
 						$emailSubject = "Companies went over credit!";
 
-						$emailMessage = 
+						$emailMessage =
 						"Click the links below to see the details\n";
 						
 						foreach($companiesOverCredit AS Url){
@@ -262,8 +262,8 @@ function updateBillingDatesForCompanies(){
 					$sql = "SELECT 		u.`email`		AS Email
 							FROM 		`user` u
 							INNER JOIN 	`accesslevel` a
-							WHERE		a.`AccessID` = u.`AccessID`
-							AND			a.`AccessName` = 'Admin'
+							ON			a.`AccessID` = u.`AccessID`
+							WHERE		a.`AccessName` = 'Admin'
 							AND			u.`sendAdminEmail` = 1"
 					$return = $pdo->query($sql);
 					$result = $return->fetchAll(PDO::FETCH_ASSOC);

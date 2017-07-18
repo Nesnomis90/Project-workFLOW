@@ -9,11 +9,11 @@ SELECT 		u.`email`				AS Email,
 			u.`displayName`			AS DisplayName,
 			u.`bookingDescription`	AS BookingDescription,
 			u.`bookingCode`			AS BookingCode,
-			IF(
-				u.`lastCodeUpdate` IS NULL,
-                DATE_ADD(u.`lastCodeUpdate`, INTERVAL 30 DAY),
-                NULL
-			)						AS NextBookingCodeChange,
+            u.`lastCodeUpdate` 		AS LastCodeUpdate,
+			DATE_ADD(
+						u.`lastCodeUpdate`,
+                        INTERVAL 30 DAY
+					)				AS NextBookingCodeChange,
 			u.`create_time`			AS DateTimeCreated,
             u.`lastActivity`		AS LastActive,
 			u.`sendEmail`			AS SendEmail,
@@ -23,6 +23,7 @@ SELECT 		u.`email`				AS Email,
 			a.`Description` 		AS AccessDescription
 FROM		`user` u
 INNER JOIN	`accesslevel` a
+ON 			u.`AccessID` = a.`AccessID`
 WHERE 		`userID` = 2
 AND			`isActive` = 1
 LIMIT 		1;

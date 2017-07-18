@@ -37,6 +37,14 @@ function unsetSessionsFromAdminUsers(){
 	unset($_SESSION['EditUserAccessList']);	
 }
 
+// Remove all sessions used by all users in user management
+function unsetSessionsFromUserManagement(){
+	unset($_SESSION['normalUserOriginalInfoArray']);
+	unset($_SESSION['normalUserEditInfoArray']);
+	unset($_SESSION['normalUserEditMode']);
+}
+
+
 // Removes all stored info e.g. logs out user
 function destroySession(){
 	session_start();
