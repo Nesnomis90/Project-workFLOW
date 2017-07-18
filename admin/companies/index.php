@@ -401,6 +401,7 @@ function calculatePeriodInformation($pdo, $companyID, $BillingStart, $BillingEnd
 						)						AS BookingTimeCharged,
 						b.`startDateTime`		AS BookingStartedDatetime,
 						b.`actualEndDateTime`	AS BookingCompletedDatetime,
+						b.`adminNote`			AS AdminNote,
 						(
 							IF(b.`userID` IS NULL, NULL, (SELECT `firstName` FROM `user` WHERE `userID` = b.`userID`))
 						)						AS UserFirstname,
@@ -456,19 +457,25 @@ function calculatePeriodInformation($pdo, $companyID, $BillingStart, $BillingEnd
 		} else {
 			$userInformation = $row['UserLastname'] . ", " . $row['UserFirstname'] . " - " . $row['UserEmail'];
 		}
-		
+
 		if($row['MeetingRoomName'] == NULL){
 			$meetingRoomName = "<deleted room>";
 		} else {
 			$meetingRoomName = $row['MeetingRoomName'];
 		}
-		
+
+		if($row['AdminNote'] == NULL){
+			$adminNote = "";
+		} else {
+			$adminNote = $row['AdminNote'];
+		}		
 		$bookingHistory[] = array(
 									'BookingPeriod' => $bookingPeriod,
 									'UserInformation' => $userInformation,
 									'MeetingRoomName' => $meetingRoomName,
 									'BookingTimeUsed' => $displayBookingTimeUsed,
-									'BookingTimeCharged' => $displayBookingTimeUsedInPriceCalculations
+									'BookingTimeCharged' => $displayBookingTimeUsedInPriceCalculations,
+									'AdminNote' => $adminNote
 									);
 	}
 	
