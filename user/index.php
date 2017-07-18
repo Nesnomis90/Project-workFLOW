@@ -469,6 +469,11 @@ if(isset($_GET['activateaccount'])){
 if(isset($_POST['action']) AND $_POST['action'] == "Reset"){
 	$_SESSION['normalUserEditInfoArray'] = $_SESSION['normalUserOriginalInfoArray'];
 }
+if(isset($_POST['action']) AND $_POST['action'] == "Cancel"){
+	unset($_SESSION['normalUserOriginalInfoArray']);
+	unset($_SESSION['normalUserEditInfoArray']);
+	unset($_SESSION['normalUserEditMode']);
+}
 
 if(isset($_SESSION['loggedIn']) AND isset($_SESSION['LoggedInUserID'])){
 	// Get User information if user is logged in
@@ -485,6 +490,7 @@ if(isset($_SESSION['loggedIn']) AND isset($_SESSION['LoggedInUserID'])){
 								u.`displayName`			AS DisplayName,
 								u.`bookingDescription`	AS BookingDescription,
 								u.`bookingCode`			AS BookingCode,
+								u.`lastCodeUpdate`		AS LastCodeUpdate,
 								IF(
 									u.`lastCodeUpdate` IS NOT NULL,
 									DATE_ADD(u.`lastCodeUpdate`, INTERVAL 30 DAY),
@@ -567,6 +573,15 @@ if(isset($_SESSION['loggedIn']) AND isset($_SESSION['LoggedInUserID'])){
 
 if(isset($_POST['action']) AND $_POST['action'] == "Show Code"){
 	$showBookingCode = revealBookingCode($originalBookingCode);
+	
+	if(isset($_SESSION['normalUserEditInfoArray']) AND isset($_SESSION['normalUserEditMode'])){
+		$_SESSION['normalUserEditInfoArray']['FirstName'] = trimExcessWhitespace($_POST['firstName']);
+		$_SESSION['normalUserEditInfoArray']['LastName'] = trimExcessWhitespace($_POST['lastName']);
+		$_SESSION['normalUserEditInfoArray']['DisplayName'] = trimExcessWhitespace($_POST['displayName']);
+		$_SESSION['normalUserEditInfoArray']['BookingDescription'] = trimExcessWhitespaceButLeaveLinefeed($_POST['bookingDescription']);
+		$_SESSION['normalUserEditInfoArray']['Email'] = $_POST['email'];
+		$_SESSION['normalUserEditInfoArray']['SendEmail'] = $_POST['sendEmail'];
+	}
 }
 
 if(isset($_POST['action']) AND $_POST['action'] == "Confirm Change"){
@@ -748,7 +763,7 @@ if(isset($_POST['action']) AND $_POST['action'] == "Confirm Change"){
 		$_SESSION['normalUserEditInfoArray']['SendEmail'] = $_POST['sendEmail'];
 		if(isset($validatedBookingCode)){
 			$_SESSION['normalUserEditInfoArray']['BookingCode'] = hashBookingCode($validatedBookingCode);
-			$_SESSION['normalUserEditInfoArray']['NextBookingCodeChange'] = getDatetimeNow();
+			$_SESSION['normalUserEditInfoArray']['LastCodeUpdate'] = getDatetimeNow();
 		}
 	}
 
@@ -764,7 +779,6 @@ if(isset($_POST['action']) AND $_POST['action'] == "Confirm Change"){
 				} else {
 					$hashedNewPassword = $_SESSION['normalUserOriginalInfoArray']['HashedPassword'];
 				}
-
 				$new = $_SESSION['normalUserEditInfoArray'];
 				try
 				{
@@ -794,7 +808,7 @@ if(isset($_POST['action']) AND $_POST['action'] == "Confirm Change"){
 					$s->bindValue(':bookingdescription', $new['BookingDescription']);
 					$s->bindValue(':sendEmail', $new['SendEmail']);
 					$s->bindValue(':bookingCode', $new['BookingCode']);
-					$s->bindValue(':LastCodeUpdate', $new['NextBookingCodeChange']);
+					$s->bindValue(':LastCodeUpdate', $new['LastCodeUpdate']);
 					$s->execute();
 						
 					// Close the connection
@@ -811,6 +825,9 @@ if(isset($_POST['action']) AND $_POST['action'] == "Confirm Change"){
 			unset($_SESSION['normalUserEditMode']);
 			unset($_SESSION['normalUserEditInfoArray']);
 			unset($_SESSION['normalUserOriginalInfoArray']);
+			
+			header("Location: .");
+			exit();
 		} else {
 			$_SESSION['normalUserFeedback'] = "The Password you submitted was incorrect.";
 		}

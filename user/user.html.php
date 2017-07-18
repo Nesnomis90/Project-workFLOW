@@ -73,7 +73,7 @@
 
 						<div>
 							<label>Default Display Name: </label>
-							<span><?php htmlout($originalDisplayName); ?></span>
+							<span style="white-space: pre-wrap;"><?php htmlout($originalDisplayName); ?></span>
 						</div>
 						<?php if(isset($editMode)) : ?>
 							<div>
@@ -96,9 +96,9 @@
 						<div>
 							<label>Email Alert Status: </label>
 							<?php if($originalSendEmail == 1) : ?>
-								<span><b>Send Me Email Alerts.</b></span>
+								<span><b>Send Me Email Alerts</b></span>
 							<?php elseif($originalSendEmail == 0) : ?>
-								<span><b>Don't Send Me Email Alerts.</b></span>
+								<span><b>Don't Send Me Email Alerts</b></span>
 							<?php endif; ?>
 						</div>
 						<?php if(isset($editMode)) : ?>
@@ -106,11 +106,11 @@
 								<label>Change Email Alert Status: </label>
 								<select name="sendEmail">
 									<?php if($sendEmail == 1) : ?>
-										<option selected="selected" value="1"><b>Send Me Email Alerts.</b></option>
-										<option value="0"><b>Don't Send Me Email Alerts.</b></option>
+										<option selected="selected" value="1"><b>Send Me Email Alerts</b></option>
+										<option value="0"><b>Don't Send Me Email Alerts</b></option>
 									<?php elseif($sendEmail == 0) : ?>
-										<option value="1"><b>Send Me Email Alerts.</b></option>
-										<option selected="selected" value="0"><b>Don't Send Me Email Alerts.</b></option>										
+										<option value="1"><b>Send Me Email Alerts</b></option>
+										<option selected="selected" value="0"><b>Don't Send Me Email Alerts</b></option>										
 									<?php endif; ?>
 								</select>
 							</div>
@@ -152,8 +152,9 @@
 								<label>Repeat New Password: </label><input type="password" name="password2" value="">
 								<label>Confirm With Your Password: </label><input type="password" name="confirmPassword" value=""><span style="color: red;">* Required for any change</span>
 								<div class="left">
-									<input type="submit" name="action" value="Reset">
 									<input type="submit" name="action" value="Confirm Change">
+									<input type="submit" name="action" value="Reset">
+									<input type="submit" name="action" value="Cancel">
 								</div>
 							<?php else : ?>
 								<input type="submit" name="action" value="Change Information">

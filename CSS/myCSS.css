@@ -243,4 +243,13 @@ table caption {
     background-color: #4CAF50;
 }
 	/* CSS used to fix NAV positions END*/
+	
+	/* CSS used to make disabled input display like regular text START */
+.displayDisabled {
+	background-color: white;
+	white-space: pre-wrap;
+	color: black;
+	border: none;
+}
+	/* CSS used to make disabled input display like regular text END */
 /*CSS CLASSES END*/
