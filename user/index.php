@@ -40,11 +40,6 @@ function validateUserInputs($FeedbackSessionToUse){
 		$invalidInput = TRUE;
 	}
 
-
-	elseif(isSet($_POST['password'])){
-		$password = $_POST['password'];
-	}
-	
 		// Display Name (edit only)
 	if(isSet($_POST['displayname'])){
 		$displayNameString = $_POST['displayname'];
@@ -63,7 +58,6 @@ function validateUserInputs($FeedbackSessionToUse){
 	$validatedLastname = trimExcessWhitespace($lastname);
 	$validatedDisplayName = trimExcessWhitespaceButLeaveLinefeed($displayNameString);
 	$validatedBookingDescription = trimExcessWhitespaceButLeaveLinefeed($bookingDescriptionString);
-	$validatedReduceAccessAtDate = trimExcessWhitespace($reduceAccessAtDate);
 	
 	// Do actual input validation
 		// First Name
@@ -137,7 +131,7 @@ function validateUserInputs($FeedbackSessionToUse){
 			$invalidInput = TRUE;	
 		}			
 	}
-return array($invalidInput, $email, $validatedFirstname, $validatedLastname, $validatedBookingDescription, $validatedDisplayName, $validatedReduceAccessAtDate);	
+return array($invalidInput, $email, $validatedFirstname, $validatedLastname, $validatedBookingDescription, $validatedDisplayName);	
 }
 
 // If user wants to submit the registration details and create the account
@@ -282,13 +276,13 @@ if(isSet($_POST['register']) AND $_POST['register'] == "Register Account"){
 	$mailResult = sendEmail($email, $emailSubject, $emailMessage);
 	
 	if(!$mailResult){
-		$_SESSION['registerUserFeedback'] .= " [WARNING] System failed to send Email to user.";
+		$_SESSION['registerUserFeedback'] .= "\n[WARNING] System failed to send Email to user.";
 	}
 	
-	$_SESSION['registerUserFeedback'] .= "this is the email msg we're sending out: $emailMessage. Sent to: $email."; // TO-DO: Remove after testing	
+	$_SESSION['registerUserFeedback'] .= "\nThis is the email msg we're sending out:\n$emailMessage.\nSent to: $email."; // TO-DO: Remove after testing	
 	
 	// End of register account 
-	$_SESSION['registerUserFeedback'] = "Your account has been successfully created.\nA confirmation link has been sent to your email.";
+	$_SESSION['registerUserFeedback'] .= "\nYour account has been successfully created.\nA confirmation link has been sent to your email.";
 	
 	$firstName = "";
 	$lastName = "";
@@ -505,6 +499,7 @@ if(isSet($_SESSION['loggedIn']) AND isSet($_SESSION['LoggedInUserID'])){
 								a.`Description` 		AS AccessDescription
 					FROM		`user` u
 					INNER JOIN	`accesslevel` a
+					ON			a.`AccessID` = u.`AccessID`
 					WHERE 		`userID` = :userID
 					AND			`isActive` = 1
 					LIMIT 		1";
