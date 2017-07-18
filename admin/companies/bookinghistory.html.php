@@ -47,7 +47,7 @@
 					<?php $totalCostForAllPeriodsSummedUp += $period['TotalBookingCostThisMonthJustNumber']; ?>
 				</fieldset>
 			<?php endforeach; ?>
-				<div style="position: relative; left: 15px;">
+				<div class="fieldsetIndentReplication">
 					<label class="notBilled">Total Cost All Periods:</label><span><b style="color:red"><?php htmlout(convertToCurrency($totalCostForAllPeriodsSummedUp)); ?></b></span>
 				</div>
 			</fieldset>

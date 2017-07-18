@@ -290,7 +290,6 @@ function calculatePeriodInformation($pdo, $companyID, $BillingStart, $BillingEnd
 									cc.`altMinuteAmount`,
 									cr.`minuteAmount`)		AS CreditSubscriptionMinuteAmount,
 							cr.`monthlyPrice`				AS CreditSubscriptionMonthlyPrice,
-							cr.`overCreditMinutePrice`		AS CreditSubscriptionMinutePrice,
 							cr.`overCreditHourPrice`		AS CreditSubscriptionHourPrice
 				FROM 		`companycredits` cc
 				INNER JOIN 	`credits` cr
@@ -305,7 +304,6 @@ function calculatePeriodInformation($pdo, $companyID, $BillingStart, $BillingEnd
 		// Get the credit information for the selected period (if we have it saved in companycreditshistory
 		$sql = "SELECT 		`minuteAmount`				AS CreditSubscriptionMinuteAmount,
 							`monthlyPrice`				AS CreditSubscriptionMonthlyPrice,
-							`overCreditMinutePrice`		AS CreditSubscriptionMinutePrice,
 							`overCreditHourPrice`		AS CreditSubscriptionHourPrice,
 							`hasBeenBilled`				AS PeriodHasBeenBilled,
 							`billingDescription`		AS BillingDescription

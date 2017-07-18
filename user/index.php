@@ -581,6 +581,9 @@ if(isSet($_POST['action']) AND $_POST['action'] == "Show Code"){
 		$_SESSION['normalUserEditInfoArray']['BookingDescription'] = trimExcessWhitespaceButLeaveLinefeed($_POST['bookingDescription']);
 		$_SESSION['normalUserEditInfoArray']['Email'] = $_POST['email'];
 		$_SESSION['normalUserEditInfoArray']['SendEmail'] = $_POST['sendEmail'];
+		if(isSet($_POST['sendAdminEmail'])){
+			$_SESSION['normalUserEditInfoArray']['SendAdminEmail'] = $_POST['sendAdminEmail'];
+		}		
 	}
 }
 
@@ -761,6 +764,9 @@ if(isSet($_POST['action']) AND $_POST['action'] == "Confirm Change"){
 		$_SESSION['normalUserEditInfoArray']['BookingDescription'] = $validatedBookingDescription;
 		$_SESSION['normalUserEditInfoArray']['Email'] = $email;
 		$_SESSION['normalUserEditInfoArray']['SendEmail'] = $_POST['sendEmail'];
+		if(isSet($_POST['sendAdminEmail'])){
+			$_SESSION['normalUserEditInfoArray']['SendAdminEmail'] = $_POST['sendAdminEmail'];
+		}
 		if(isSet($validatedBookingCode)){
 			$_SESSION['normalUserEditInfoArray']['BookingCode'] = hashBookingCode($validatedBookingCode);
 			$_SESSION['normalUserEditInfoArray']['LastCodeUpdate'] = getDatetimeNow();
@@ -793,6 +799,7 @@ if(isSet($_POST['action']) AND $_POST['action'] == "Confirm Change"){
 									`displayName` = :displayname,
 									`bookingDescription` = :bookingdescription,
 									`sendEmail` = :sendEmail,
+									`sendAdminEmail` = :sendAdminEmail,
 									`bookingCode` = :bookingCode,
 									`lastCodeUpdate` = :LastCodeUpdate,
 									`lastActivity` = CURRENT_TIMESTAMP
@@ -807,6 +814,7 @@ if(isSet($_POST['action']) AND $_POST['action'] == "Confirm Change"){
 					$s->bindValue(':displayname', $new['DisplayName']);
 					$s->bindValue(':bookingdescription', $new['BookingDescription']);
 					$s->bindValue(':sendEmail', $new['SendEmail']);
+					$s->bindValue(':sendAdminEmail', $new['SendAdminEmail']);
 					$s->bindValue(':bookingCode', $new['BookingCode']);
 					$s->bindValue(':LastCodeUpdate', $new['LastCodeUpdate']);
 					$s->execute();
@@ -852,6 +860,7 @@ if(isSet($_SESSION['normalUserEditMode'])){
 	$displayName = $edit['DisplayName'];
 	$bookingDescription = $edit['BookingDescription'];
 	$sendEmail = $edit['SendEmail'];
+	$sendAdminEmail = $edit['SendAdminEmail'];
 }
 
 var_dump($_SESSION); // TO-DO: Remove after done testing
