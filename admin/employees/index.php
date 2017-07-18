@@ -32,19 +32,19 @@ function clearEditEmployeeSessions(){
 }
 
 // If admin wants to be able to delete companies it needs to enabled first
-if (isset($_POST['action']) AND $_POST['action'] == "Enable Remove"){
+if (isSet($_POST['action']) AND $_POST['action'] == "Enable Remove"){
 	$_SESSION['employeesEnableDelete'] = TRUE;
 	$refreshEmployees = TRUE;
 }
 
 // If admin wants to be disable company deletion
-if (isset($_POST['action']) AND $_POST['action'] == "Disable Remove"){
+if (isSet($_POST['action']) AND $_POST['action'] == "Disable Remove"){
 	unset($_SESSION['employeesEnableDelete']);
 	$refreshEmployees = TRUE;
 }
 
 // If admin wants to remove an employee from the selected company
-if(isset($_POST['action']) AND $_POST['action'] == 'Remove'){
+if(isSet($_POST['action']) AND $_POST['action'] == 'Remove'){
 	// Remove employee connection in database
 	try
 	{
@@ -112,7 +112,7 @@ if(isset($_POST['action']) AND $_POST['action'] == 'Remove'){
 	}		
 	
 	//	Go to the employee main page with the appropriate values
-	if(isset($_GET['Company'])){	
+	if(isSet($_GET['Company'])){	
 		// Refresh employee for the specific company again
 		$TheCompanyID = $_GET['Company'];
 		$location = "http://$_SERVER[HTTP_HOST]/admin/employees/?Company=" . $TheCompanyID;
@@ -125,7 +125,7 @@ if(isset($_POST['action']) AND $_POST['action'] == 'Remove'){
 	}
 }
 // Admin clicked the search button, trying to limit the shown company and user lists
-if(isset($_POST['action']) AND $_POST['action'] == 'Search'){
+if(isSet($_POST['action']) AND $_POST['action'] == 'Search'){
 	// Forget the old array values we have saved
 	unset($_SESSION['AddEmployeeCompaniesArray']);
 	unset($_SESSION['AddEmployeeUsersArray']);
@@ -135,7 +135,7 @@ if(isset($_POST['action']) AND $_POST['action'] == 'Search'){
 	
 	// If we are looking at a specific company, let's refresh info about
 	// that company again.
-	if(isset($_GET['Company'])){	
+	if(isSet($_GET['Company'])){	
 		$_SESSION['AddEmployeeUserSearch'] = trimExcessWhitespace($_POST['usersearchstring']);
 		$_SESSION['AddEmployeeSelectedUserID'] = $_POST['UserID'];
 		$_SESSION['AddEmployeeSelectedPositionID'] = $_POST['PositionID'];
@@ -164,44 +164,44 @@ if(isset($_POST['action']) AND $_POST['action'] == 'Search'){
 
 // 	If admin wants to add an employee to a company in the database
 // 	we load a new html form
-if ((isset($_POST['action']) AND $_POST['action'] == 'Add Employee') OR 
-	(isset($_SESSION['refreshAddEmployee']) AND $_SESSION['refreshAddEmployee']))
+if ((isSet($_POST['action']) AND $_POST['action'] == 'Add Employee') OR 
+	(isSet($_SESSION['refreshAddEmployee']) AND $_SESSION['refreshAddEmployee']))
 {	
 
 	$companysearchstring = '';			
 	$usersearchstring = '';
 
 	// Check if the call was a form submit or a forced refresh
-	if(isset($_SESSION['refreshAddEmployee']) AND $_SESSION['refreshAddEmployee']){
+	if(isSet($_SESSION['refreshAddEmployee']) AND $_SESSION['refreshAddEmployee']){
 		// Acknowledge that we have refreshed the page
 		unset($_SESSION['refreshAddEmployee']);
 		
 		// Remember the company string that was searched before refreshing
-		if(isset($_SESSION['AddEmployeeCompanySearch'])){
+		if(isSet($_SESSION['AddEmployeeCompanySearch'])){
 			$companysearchstring = $_SESSION['AddEmployeeCompanySearch'];
 			unset($_SESSION['AddEmployeeCompanySearch']);
 		}
 		
 		// Remember the user string that was searched before refreshing
-		if(isset($_SESSION['AddEmployeeUserSearch'])){
+		if(isSet($_SESSION['AddEmployeeUserSearch'])){
 			$usersearchstring = $_SESSION['AddEmployeeUserSearch'];
 			unset($_SESSION['AddEmployeeUserSearch']);
 		}
 		
 		// Remember what company was selected before refreshing
-		if(isset($_SESSION['AddEmployeeSelectedCompanyID'])){
+		if(isSet($_SESSION['AddEmployeeSelectedCompanyID'])){
 			$selectedCompanyID = $_SESSION['AddEmployeeSelectedCompanyID'];
 			unset($_SESSION['AddEmployeeSelectedCompanyID']);
 		}
 		
 		// Remember what user was selected before refreshing
-		if(isset($_SESSION['AddEmployeeSelectedUserID'])){
+		if(isSet($_SESSION['AddEmployeeSelectedUserID'])){
 			$selectedUserID = $_SESSION['AddEmployeeSelectedUserID'];
 			unset($_SESSION['AddEmployeeSelectedUserID']);
 		}	
 
 		// Remember what company position was selected before refreshing
-		if(isset($_SESSION['AddEmployeeSelectedPositionID'])){
+		if(isSet($_SESSION['AddEmployeeSelectedPositionID'])){
 			$selectedPositionID = $_SESSION['AddEmployeeSelectedPositionID'];
 			unset($_SESSION['AddEmployeeSelectedPositionID']);
 		}		
@@ -209,9 +209,9 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Add Employee') OR
 
 	// Get info about company position, users and companies from the database
 	// if we don't already have them saved in a session array
-	if(	!isset($_SESSION['AddEmployeeCompaniesArray']) OR 
-		!isset($_SESSION['AddEmployeeUsersArray']) OR
-		!isset($_SESSION['AddEmployeeCompanyPositionArray'])){	
+	if(	!isSet($_SESSION['AddEmployeeCompaniesArray']) OR 
+		!isSet($_SESSION['AddEmployeeUsersArray']) OR
+		!isSet($_SESSION['AddEmployeeCompanyPositionArray'])){	
 	
 		try
 		{	
@@ -221,10 +221,10 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Add Employee') OR
 			
 				//Companies	
 			// Only get info if we haven't gotten it before
-			if(!isset($_SESSION['AddEmployeeCompaniesArray'])){
+			if(!isSet($_SESSION['AddEmployeeCompaniesArray'])){
 				// We don't have info about companies saved. Let's get it
 				
-				if(!isset($_GET['Company'])){
+				if(!isSet($_GET['Company'])){
 					// If we're NOT looking at a specific company already
 					$sql = 'SELECT 	`companyID` AS CompanyID,
 									`name`		AS CompanyName
@@ -255,14 +255,14 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Add Employee') OR
 												);
 					}
 					
-					if(isset($companies)){
+					if(isSet($companies)){
 						$_SESSION['AddEmployeeCompaniesArray'] = $companies;
 						$companiesFound = sizeOf($companies);
 					} else {
 						$_SESSION['AddEmployeeCompaniesArray'] = array();
 						$companiesFound = 0;
 					}
-					if(isset($_SESSION['AddEmployeeShowSearchResults']) AND $_SESSION['AddEmployeeShowSearchResults']){
+					if(isSet($_SESSION['AddEmployeeShowSearchResults']) AND $_SESSION['AddEmployeeShowSearchResults']){
 						$_SESSION['AddEmployeeSearchResult'] = "The search result found $companiesFound companies.";
 					}					
 						
@@ -284,7 +284,7 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Add Employee') OR
 			
 				// Company Positions
 			//Only get info if we haven't gotten it before
-			if(!isset($_SESSION['AddEmployeeCompanyPositionArray'])){
+			if(!isSet($_SESSION['AddEmployeeCompanyPositionArray'])){
 				// We don't have info about company position saved. Let's get it
 				
 				$sql = 'SELECT 	`PositionID`,
@@ -310,7 +310,7 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Add Employee') OR
 		
 				//	Users - Only active ones
 			// Only get info if we haven't gotten it before
-			if(!isset($_SESSION['AddEmployeeUsersArray'])){
+			if(!isSet($_SESSION['AddEmployeeUsersArray'])){
 				// We don't have info about users saved. Let's get it
 				
 				$sql = "SELECT 	`userID` 	AS UserID,
@@ -345,15 +345,15 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Add Employee') OR
 										'UserIdentifier' => $row['lastname'] . ', ' . $row['firstname'] . ' - ' . $row['email']
 									);
 				}
-				if(isset($users)){
+				if(isSet($users)){
 					$_SESSION['AddEmployeeUsersArray'] = $users;
 					$usersFound = sizeOf($users);
 				} else {
 					$_SESSION['AddEmployeeUsersArray'] = array();
 					$usersFound = 0;
 				}
-				if(isset($_SESSION['AddEmployeeShowSearchResults']) AND $_SESSION['AddEmployeeShowSearchResults']){
-					if(isset($_SESSION['AddEmployeeSearchResult'])){
+				if(isSet($_SESSION['AddEmployeeShowSearchResults']) AND $_SESSION['AddEmployeeShowSearchResults']){
+					if(isSet($_SESSION['AddEmployeeSearchResult'])){
 					$_SESSION['AddEmployeeSearchResult'] .= " and $usersFound users";
 					} else {
 						$_SESSION['AddEmployeeSearchResult'] = "The search result found $usersFound users";
@@ -382,7 +382,7 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Add Employee') OR
 	}
 
 
-	if(isset($_SESSION['AddEmployeeSearchResult'])){
+	if(isSet($_SESSION['AddEmployeeSearchResult'])){
 		$_SESSION['AddEmployeeSearchResult'] .= ".";
 	}
 	unset($_SESSION['AddEmployeeShowSearchResults']);
@@ -395,10 +395,10 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Add Employee') OR
 }
 
 // When admin has added the needed information and wants to add an employee connection
-if (isset($_POST['action']) AND $_POST['action'] == 'Confirm Employee')
+if (isSet($_POST['action']) AND $_POST['action'] == 'Confirm Employee')
 {
 	// If we're looking at a specific company
-	if(isset($_GET['Company'])){
+	if(isSet($_GET['Company'])){
 		$CompanyID = $_GET['Company'];
 	} else {
 		$CompanyID = $_POST['CompanyID'];
@@ -432,7 +432,7 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Confirm Employee')
 		$_SESSION['AddEmployeeCompanySearch'] = trimExcessWhitespace($companySearchString);
 		$_SESSION['AddEmployeeUserSearch'] = trimExcessWhitespace($userSearchString);	
 		
-		if(isset($_GET['Company'])){	
+		if(isSet($_GET['Company'])){	
 			// We were looking at a specific company. Let's go back to info about that company
 			$TheCompanyID = $_GET['Company'];
 			$location = "http://$_SERVER[HTTP_HOST]/admin/employees/?Company=" . $TheCompanyID;
@@ -473,7 +473,7 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Confirm Employee')
 			$_SESSION['refreshAddEmployee'] = TRUE;
 			$_SESSION['AddEmployeeUserSearch'] = trimExcessWhitespace($_POST['usersearchstring']);
 			
-			if(isset($_GET['Company'])){	
+			if(isSet($_GET['Company'])){	
 				// Refresh AddEmployee for the specific company again
 				$TheCompanyID = $_GET['Company'];
 				$location = "http://$_SERVER[HTTP_HOST]/admin/employees/?Company=" . $TheCompanyID;
@@ -551,7 +551,7 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Confirm Employee')
 		$positioninfo = 'N/A';
 		
 		// Get selected user info
-		if(isset($_SESSION['AddEmployeeUsersArray'])){
+		if(isSet($_SESSION['AddEmployeeUsersArray'])){
 			foreach($_SESSION['AddEmployeeUsersArray'] AS $row){
 				if($row['UserID'] == $_POST['UserID']){
 					$userinfo = $row['UserIdentifier'];
@@ -562,7 +562,7 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Confirm Employee')
 		}
 		
 		// Get selected company name
-		if(isset($_SESSION['AddEmployeeCompaniesArray'])){
+		if(isSet($_SESSION['AddEmployeeCompaniesArray'])){
 			if($CompanyID == $_SESSION['AddEmployeeCompaniesArray'][0]){
 				$companyinfo = $_SESSION['AddEmployeeCompaniesArray']['CompanyName'];
 			} else {
@@ -577,7 +577,7 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Confirm Employee')
 		}
 		
 		// Get selected position name
-		if(isset($_SESSION['AddEmployeeCompanyPositionArray'])){
+		if(isSet($_SESSION['AddEmployeeCompanyPositionArray'])){
 			foreach($_SESSION['AddEmployeeCompanyPositionArray'] AS $row){
 				if($row['PositionID'] == $_POST['PositionID']){
 					$positioninfo = $row['CompanyPositionName'];
@@ -628,7 +628,7 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Confirm Employee')
 	
 	// If we are looking at a specific company, let's refresh info about
 	// that company again.
-	if(isset($_GET['Company'])){
+	if(isSet($_GET['Company'])){
 		$TheCompanyID = $_GET['Company'];
 		$location = "http://$_SERVER[HTTP_HOST]/admin/employees/?Company=" . $TheCompanyID;
 		header("Location: $location");
@@ -642,7 +642,7 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Confirm Employee')
 
 // if admin wants to change the company role for a user
 // we load a new html form
-if (isset($_POST['action']) AND $_POST['action'] == 'Change Role')
+if (isSet($_POST['action']) AND $_POST['action'] == 'Change Role')
 {
 	// Get information from database again on the selected employee
 	try
@@ -720,13 +720,13 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Change Role')
 }
 
 // Perform the actual database update of the edited information
-if (isset($_POST['action']) AND $_POST['action'] == 'Confirm Role')
+if (isSet($_POST['action']) AND $_POST['action'] == 'Confirm Role')
 {
 	// Check if anything actually changed
 	$theSelectedPositionID = $_POST['PositionID'];
 	$NumberOfChanges = 0;
 	
-	if(	isset($_SESSION['EditEmployeeOriginalPositionID']) AND 
+	if(	isSet($_SESSION['EditEmployeeOriginalPositionID']) AND 
 		$_SESSION['EditEmployeeOriginalPositionID'] != $theSelectedPositionID){
 		$NumberOfChanges++;
 	}
@@ -768,7 +768,7 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Confirm Role')
 	
 	// If we are looking at a specific company, let's refresh info about
 	// that company again.
-	if(isset($_GET['Company'])){	
+	if(isSet($_GET['Company'])){	
 		$TheCompanyID = $_GET['Company'];
 		$location = "http://$_SERVER[HTTP_HOST]/admin/employees/?Company=" . $TheCompanyID;
 		header("Location: $location");
@@ -781,11 +781,11 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Confirm Role')
 }
 
 // If the user clicks any cancel buttons he'll be directed back to the employees page again
-if (isset($_POST['action']) AND $_POST['action'] == 'Cancel'){
+if (isSet($_POST['action']) AND $_POST['action'] == 'Cancel'){
 	$_SESSION['EmployeeUserFeedback'] = "Cancel button clicked. Taking you back to /admin/employees/!";
 }
 
-if(isset($refreshEmployees) AND $refreshEmployees){
+if(isSet($refreshEmployees) AND $refreshEmployees){
 	// TO-DO: Add code that should occur on a refresh
 	unset($refreshEmployees);
 }
@@ -795,7 +795,7 @@ clearAddEmployeeSessions();
 clearEditEmployeeSessions();
 
 // Get only information from the specific company
-if(isset($_GET['Company'])){
+if(isSet($_GET['Company'])){
 	try
 	{
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
@@ -992,7 +992,7 @@ if(isset($_GET['Company'])){
 		$s->execute();
 		
 		$result = $s->fetchAll(PDO::FETCH_ASSOC);
-		if(isset($result)){
+		if(isSet($result)){
 			$rowNum = sizeOf($result);
 		} else {
 			$rowNum = 0;
@@ -1176,7 +1176,7 @@ if(isset($_GET['Company'])){
 		$s->execute();
 		
 		$removedEmployeesResult = $s->fetchAll(PDO::FETCH_ASSOC);
-		if(isset($removedEmployeesResult)){
+		if(isSet($removedEmployeesResult)){
 			$removedEmployeesResultRowNum = sizeOf($removedEmployeesResult);
 		} else {
 			$removedEmployeesResultRowNum = 0;
@@ -1342,7 +1342,7 @@ if(isset($_GET['Company'])){
 		$s->execute();
 
 		$deletedUsersResult = $s->fetchAll(PDO::FETCH_ASSOC);
-		if(isset($deletedUsersResult)){
+		if(isSet($deletedUsersResult)){
 			$deletedUsersResultRowNum = sizeOf($deletedUsersResult);
 		} else {
 			$deletedUsersResultRowNum = 0;
@@ -1459,7 +1459,7 @@ if(isset($_GET['Company'])){
 }
 
 // Get information from all companies
-if(!isset($_GET['Company'])){
+if(!isSet($_GET['Company'])){
 	try
 	{
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
@@ -1656,7 +1656,7 @@ if(!isset($_GET['Company'])){
 		$s->bindValue(':aboveThisManySecondsToCount', $aboveThisManySecondsToCount);
 		$s->execute();
 		$result = $s->fetchAll(PDO::FETCH_ASSOC);
-		if(isset($result)){
+		if(isSet($result)){
 			$rowNum = sizeOf($result);
 		} else {
 			$rowNum = 0;

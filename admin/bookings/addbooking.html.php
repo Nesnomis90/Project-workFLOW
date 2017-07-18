@@ -16,12 +16,12 @@
 	
 		<form action="" method="post">
 		<fieldset><legend><b>Book A New Meeting</b></legend>
-			<?php if(isset($_SESSION['AddBookingError'])) : ?>
+			<?php if(isSet($_SESSION['AddBookingError'])) : ?>
 				<b class="warning"><?php htmlout($_SESSION['AddBookingError']); ?></b>
 				<?php unset($_SESSION['AddBookingError']); ?>
 			<?php endif; ?>	
 			
-			<?php if(isset($_SESSION['AddBookingUserCannotBookForSelf'])) : ?>
+			<?php if(isSet($_SESSION['AddBookingUserCannotBookForSelf'])) : ?>
 				<b class="warning">You can not book a meeting for yourself since you are not connected to a company.</b>
 			<?php endif; ?>	
 			
@@ -53,8 +53,8 @@
 			</div>
 			<div>
 				<label for="SelectedUser">User: </label>
-				<?php if(isset($_SESSION['AddBookingChangeUser']) AND $_SESSION['AddBookingChangeUser']) : ?>
-					<?php if(isset($users)) : ?>
+				<?php if(isSet($_SESSION['AddBookingChangeUser']) AND $_SESSION['AddBookingChangeUser']) : ?>
+					<?php if(isSet($users)) : ?>
 						<select name="userID" id="userID">
 							<?php foreach($users as $row): ?> 
 								<?php if($row['userID'] == $SelectedUserID):?>
@@ -91,9 +91,9 @@
 				<?php endif; ?>
 			<div>
 				<label for="companyID">Company: </label>
-				<?php if(	isset($_SESSION['AddBookingDisplayCompanySelect']) AND 
+				<?php if(	isSet($_SESSION['AddBookingDisplayCompanySelect']) AND 
 							$_SESSION['AddBookingDisplayCompanySelect']) : ?>
-					<?php if(!isset($_SESSION['AddBookingSelectedACompany'])) : ?>
+					<?php if(!isSet($_SESSION['AddBookingSelectedACompany'])) : ?>
 						<select name="companyID" id="companyID">
 							<?php foreach($company as $row): ?> 
 								<?php if($row['companyID']==$selectedCompanyID):?>
@@ -111,7 +111,7 @@
 						<input type="submit" name="add" value="Change Company">
 					<?php endif; ?>
 				<?php else : ?>
-					<?php if(isset($company)) : ?>
+					<?php if(isSet($company)) : ?>
 						<span><b><?php htmlout($companyName); ?></b></span>
 					<?php else : ?>
 						<span><b>This user is not connected to a company.</b></span>
@@ -134,10 +134,10 @@
 			<div class="left">
 				<input type="submit" name="add" value="Reset">
 				<input type="submit" name="add" value="Cancel">
-				<?php if(isset($_SESSION['AddBookingChangeUser']) AND $_SESSION['AddBookingChangeUser']) : ?>
+				<?php if(isSet($_SESSION['AddBookingChangeUser']) AND $_SESSION['AddBookingChangeUser']) : ?>
 					<input type="submit" name="disabled" value="Add booking" disabled>
 					<span><b>You need to select the user you want before you can add the booking.</b></span>
-				<?php elseif(!isset($_SESSION['AddBookingSelectedACompany'])) : ?>
+				<?php elseif(!isSet($_SESSION['AddBookingSelectedACompany'])) : ?>
 					<input type="submit" name="disabled" value="Add booking" disabled>
 					<span><b>You need to select the company you want before you can add the booking.</b></span>
 				<?php else : ?>

@@ -32,13 +32,13 @@ function validateUserInputs(){
 	$invalidInput = FALSE;
 	
 	// Get user inputs
-	if(isset($_POST['EquipmentName']) AND !$invalidInput){
+	if(isSet($_POST['EquipmentName']) AND !$invalidInput){
 		$equipmentName = trim($_POST['EquipmentName']);
 	} else {
 		$invalidInput = TRUE;
 		$_SESSION['AddEquipmentError'] = "An equipment cannot be added without a name!";
 	}
-	if(isset($_POST['EquipmentDescription']) AND !$invalidInput){
+	if(isSet($_POST['EquipmentDescription']) AND !$invalidInput){
 		$equipmentDescription = trim($_POST['EquipmentDescription']);
 	} else {
 		$invalidInput = TRUE;
@@ -86,7 +86,7 @@ function validateUserInputs(){
 
 	// Check if the equipment already exists (based on name).
 	$nameChanged = TRUE;
-	if(isset($_SESSION['EditEquipmentOriginalInfo'])){
+	if(isSet($_SESSION['EditEquipmentOriginalInfo'])){
 		$originalEquipmentName = strtolower($_SESSION['EditEquipmentOriginalInfo']['EquipmentName']);
 		$newEquipmentName = strtolower($validatedEquipmentName);	
 
@@ -132,19 +132,19 @@ return array($invalidInput, $validatedEquipmentDescription, $validatedEquipmentN
 }
 
 // If admin wants to be able to delete equipment it needs to enabled first
-if (isset($_POST['action']) AND $_POST['action'] == "Enable Delete"){
+if (isSet($_POST['action']) AND $_POST['action'] == "Enable Delete"){
 	$_SESSION['equipmentEnableDelete'] = TRUE;
 	$refreshEquipment = TRUE;
 }
 
 // If admin wants to be disable equipment deletion
-if (isset($_POST['action']) AND $_POST['action'] == "Disable Delete"){
+if (isSet($_POST['action']) AND $_POST['action'] == "Disable Delete"){
 	unset($_SESSION['equipmentEnableDelete']);
 	$refreshEquipment = TRUE;
 }
 
 // If admin wants to delete no longer wanted equipment
-if(isset($_POST['action']) AND $_POST['action'] == 'Delete'){
+if(isSet($_POST['action']) AND $_POST['action'] == 'Delete'){
 	// Delete equipment from database
 	try
 	{
@@ -207,8 +207,8 @@ if(isset($_POST['action']) AND $_POST['action'] == 'Delete'){
 
 // If admin wants to add equipment to the database
 // we load a new html form
-if ((isset($_POST['action']) AND $_POST['action'] == 'Add Equipment') OR
-	(isset($_SESSION['refreshAddEquipment']) AND $_SESSION['refreshAddEquipment']))
+if ((isSet($_POST['action']) AND $_POST['action'] == 'Add Equipment') OR
+	(isSet($_SESSION['refreshAddEquipment']) AND $_SESSION['refreshAddEquipment']))
 {
 	// Confirm we've refreshed
 	unset($_SESSION['refreshAddEquipment']);
@@ -220,12 +220,12 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Add Equipment') OR
 	$EquipmentID = '';
 	$button = 'Confirm Equipment';
 	
-	if(isset($_SESSION['AddEquipmentDescription'])){
+	if(isSet($_SESSION['AddEquipmentDescription'])){
 		$EquipmentDescription = $_SESSION['AddEquipmentDescription'];
 		unset($_SESSION['AddEquipmentDescription']);
 	}
 	
-	if(isset($_SESSION['AddEquipmentName'])){
+	if(isSet($_SESSION['AddEquipmentName'])){
 		$EquipmentName = $_SESSION['AddEquipmentName'];
 		unset($_SESSION['AddEquipmentName']);
 	}
@@ -238,7 +238,7 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Add Equipment') OR
 }
 
 // When admin has added the needed information and wants to add the equipment
-if (isset($_POST['action']) AND $_POST['action'] == 'Confirm Equipment')
+if (isSet($_POST['action']) AND $_POST['action'] == 'Confirm Equipment')
 {
 	// Validate user inputs
 	list($invalidInput, $validatedEquipmentDescription, $validatedEquipmentName) = validateUserInputs();
@@ -291,7 +291,7 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Confirm Equipment')
 		$description = "The equipment: " . $validatedEquipmentName . ", with description: " . 
 		$validatedEquipmentDescription . " was added by: " . $_SESSION['LoggedInUserName'];
 		
-		if(isset($_SESSION['LastEquipmentID'])){
+		if(isSet($_SESSION['LastEquipmentID'])){
 			$lastEquipmentID = $_SESSION['LastEquipmentID'];
 			unset($_SESSION['LastEquipmentID']);
 		}
@@ -331,7 +331,7 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Confirm Equipment')
 }
 
 // If admin wants to null values while adding
-if(isset($_POST['add']) AND $_POST['add'] == 'Reset'){
+if(isSet($_POST['add']) AND $_POST['add'] == 'Reset'){
 	
 	$_SESSION['AddEquipmentDescription'] = "";
 	$_SESSION['AddEquipmentName'] = "";
@@ -342,7 +342,7 @@ if(isset($_POST['add']) AND $_POST['add'] == 'Reset'){
 }
 
 // If the admin wants to leave the page and go back to the equipment overview again
-if (isset($_POST['add']) AND $_POST['add'] == 'Cancel'){
+if (isSet($_POST['add']) AND $_POST['add'] == 'Cancel'){
 	$_SESSION['EquipmentUserFeedback'] = "You cancelled your equipment creation.";
 	$refreshEquipment = TRUE;
 }
@@ -350,29 +350,29 @@ if (isset($_POST['add']) AND $_POST['add'] == 'Cancel'){
 
 // if admin wants to edit equipment information
 // we load a new html form
-if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR
-	(isset($_SESSION['refreshEditEquipment']) AND $_SESSION['refreshEditEquipment']))
+if ((isSet($_POST['action']) AND $_POST['action'] == 'Edit') OR
+	(isSet($_SESSION['refreshEditEquipment']) AND $_SESSION['refreshEditEquipment']))
 {
 	
 	// Check if we're activated by a user or by a forced refresh
-	if(isset($_SESSION['refreshEditEquipment']) AND $_SESSION['refreshEditEquipment']){
+	if(isSet($_SESSION['refreshEditEquipment']) AND $_SESSION['refreshEditEquipment']){
 		//Confirm we've refreshed
 		unset($_SESSION['refreshEditEquipment']);	
 		
 		// Get values we had before refresh
-		if(isset($_SESSION['EditEquipmentDescription'])){
+		if(isSet($_SESSION['EditEquipmentDescription'])){
 			$EquipmentDescription = $_SESSION['EditEquipmentDescription'];
 			unset($_SESSION['EditEquipmentDescription']);
 		} else {
 			$EquipmentDescription = '';
 		}		
-		if(isset($_SESSION['EditEquipmentName'])){
+		if(isSet($_SESSION['EditEquipmentName'])){
 			$EquipmentName = $_SESSION['EditEquipmentName'];
 			unset($_SESSION['EditEquipmentName']);
 		} else {
 			$EquipmentName = '';
 		}		
-		if(isset($_SESSION['EditEquipmentEquipmentID'])){
+		if(isSet($_SESSION['EditEquipmentEquipmentID'])){
 			$EquipmentID = $_SESSION['EditEquipmentEquipmentID'];
 		}
 	} else {
@@ -431,7 +431,7 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR
 }
 
 // Perform the actual database update of the edited information
-if (isset($_POST['action']) AND $_POST['action'] == 'Edit Equipment')
+if (isSet($_POST['action']) AND $_POST['action'] == 'Edit Equipment')
 {
 	// Validate user inputs
 	list($invalidInput, $validatedEquipmentDescription, $validatedEquipmentName) = validateUserInputs();
@@ -450,7 +450,7 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Edit Equipment')
 	
 	// Check if values have actually changed
 	$numberOfChanges = 0;
-	if(isset($_SESSION['EditEquipmentOriginalInfo'])){
+	if(isSet($_SESSION['EditEquipmentOriginalInfo'])){
 		$original = $_SESSION['EditEquipmentOriginalInfo'];
 		unset($_SESSION['EditEquipmentOriginalInfo']);
 		
@@ -503,7 +503,7 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Edit Equipment')
 }
 
 // If admin wants to get original values while editing
-if(isset($_POST['edit']) AND $_POST['edit'] == 'Reset'){
+if(isSet($_POST['edit']) AND $_POST['edit'] == 'Reset'){
 
 	$_SESSION['EditEquipmentName'] = $_SESSION['EditEquipmentOriginalInfo']['EquipmentName'];
 	$_SESSION['EditEquipmentDescription'] = $_SESSION['EditEquipmentOriginalInfo']['EquipmentDescription'];
@@ -514,12 +514,12 @@ if(isset($_POST['edit']) AND $_POST['edit'] == 'Reset'){
 }
 
 // If the admin wants to leave the page and go back to the equipment overview again
-if (isset($_POST['edit']) AND $_POST['edit'] == 'Cancel'){
+if (isSet($_POST['edit']) AND $_POST['edit'] == 'Cancel'){
 	$_SESSION['EquipmentUserFeedback'] = "You cancelled your equipment editing.";
 	$refreshEquipment = TRUE;
 }
 
-if(isset($refreshEquipment) AND $refreshEquipment) {
+if(isSet($refreshEquipment) AND $refreshEquipment) {
 	// TO-DO: Add code that should occur on a refresh
 	unset($refreshEquipment);
 }
@@ -568,7 +568,7 @@ try
 			
 	$return = $pdo->query($sql);
 	$result = $return->fetchAll(PDO::FETCH_ASSOC);
-	if(isset($result)){
+	if(isSet($result)){
 		$rowNum = sizeOf($result);
 	} else {
 		$rowNum = 0;

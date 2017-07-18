@@ -10,13 +10,13 @@
 	</head>
 	<body>
 		<h1>Manage Meeting Room Equipment</h1>
-		<?php if(isset($_SESSION['EquipmentUserFeedback'])) : ?>
+		<?php if(isSet($_SESSION['EquipmentUserFeedback'])) : ?>
 			<p><b><?php htmlout($_SESSION['EquipmentUserFeedback']); ?></b></p>
 			<?php unset($_SESSION['EquipmentUserFeedback']); ?>
 		<?php endif; ?>
 		<form action="" method="post">
 			<div>
-				<?php if(isset($_SESSION['equipmentEnableDelete']) AND $_SESSION['equipmentEnableDelete']) : ?>
+				<?php if(isSet($_SESSION['equipmentEnableDelete']) AND $_SESSION['equipmentEnableDelete']) : ?>
 					<input type="submit" name="action" value="Disable Delete">
 				<?php else : ?>
 					<input type="submit" name="action" value="Enable Delete">
@@ -48,10 +48,10 @@
 							<td><?php htmlout($row['DateTimeAdded']); ?></td>
 							<td><input type="submit" name="action" value="Edit"></td>
 							<td>
-								<?php if(isset($_SESSION['equipmentEnableDelete']) AND $_SESSION['equipmentEnableDelete'] AND
+								<?php if(isSet($_SESSION['equipmentEnableDelete']) AND $_SESSION['equipmentEnableDelete'] AND
 										$row['EquipmentIsInTheseRooms'] == "") : ?>
 									<input type="submit" name="action" value="Delete">
-								<?php elseif(isset($_SESSION['equipmentEnableDelete']) AND $_SESSION['equipmentEnableDelete'] AND
+								<?php elseif(isSet($_SESSION['equipmentEnableDelete']) AND $_SESSION['equipmentEnableDelete'] AND
 										$row['EquipmentIsInTheseRooms'] != "") : ?>
 									<b>Not enabled due to it being used in a room.</b>								
 								<?php else : ?>

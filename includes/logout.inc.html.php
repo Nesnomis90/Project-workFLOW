@@ -1,8 +1,8 @@
-<?php if(isset($_SESSION['loggedIn'])) : ?>
+<?php if(isSet($_SESSION['loggedIn'])) : ?>
 	<form action="" method="post">
 		<div class="left">
 			<input type="hidden" name="action" value="logout">
-			<?php if(isset($gotoPage)) : ?>
+			<?php if(isSet($gotoPage)) : ?>
 				<input type="hidden" name="goto" value="<?php htmlout($gotoPage); ?>">
 			<?php else : ?>
 				<input type="hidden" name="goto" value="/admin/">

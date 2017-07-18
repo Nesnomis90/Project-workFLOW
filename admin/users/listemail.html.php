@@ -17,7 +17,7 @@
 		<h1>Email List</h1>
 		
 		<div class="left">
-			<?php if(isset($_SESSION['UserEmailListError'])) : ?>
+			<?php if(isSet($_SESSION['UserEmailListError'])) : ?>
 				<span><b class="feedback"><?php htmlout($_SESSION['UserEmailListError']); ?></b></span>
 				<?php unset($_SESSION['UserEmailListError']); ?>
 			<?php endif; ?>
@@ -25,7 +25,7 @@
 		
 		<div>
 			<form action="" method="post">
-				<?php if(	isset($_SESSION['UserEmailListSeparatorSelected']) AND
+				<?php if(	isSet($_SESSION['UserEmailListSeparatorSelected']) AND
 							$_SESSION['UserEmailListSeparatorSelected']) : ?>
 					<label for="separatorchar">The current character to separate emails with: </label>
 					<input style="width: 20px; text-align: center;" type="text" name="separatorchardisabled" id="separatorchardisabled"

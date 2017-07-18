@@ -10,12 +10,12 @@
 	</head>
 	<body>
 		<h1>Manage Equipment in Meeting Rooms</h1>
-		<?php if(isset($_SESSION['RoomEquipmentUserFeedback'])) : ?>
+		<?php if(isSet($_SESSION['RoomEquipmentUserFeedback'])) : ?>
 			<p><b><?php htmlout($_SESSION['RoomEquipmentUserFeedback']); ?></b></p>
 			<?php unset($_SESSION['RoomEquipmentUserFeedback']); ?>
 		<?php endif; ?>						
 		<?php $goto = "http://$_SERVER[HTTP_HOST]/admin/meetingrooms/"; ?>
-		<?php if(isset($_GET['Meetingroom'])) :?>
+		<?php if(isSet($_GET['Meetingroom'])) :?>
 			<form action="<?php htmlout($goto); ?>" method="post">
 				<input type="submit" value="Return to Meeting Rooms">
 			</form>
@@ -26,7 +26,7 @@
 		<?php endif; ?>		
 		<form action="" method="post">
 			<div>
-				<?php if(isset($_SESSION['roomequipmentEnableDelete']) AND $_SESSION['roomequipmentEnableDelete']) : ?>
+				<?php if(isSet($_SESSION['roomequipmentEnableDelete']) AND $_SESSION['roomequipmentEnableDelete']) : ?>
 					<input type="submit" name="action" value="Disable Remove">
 				<?php else : ?>
 					<input type="submit" name="action" value="Enable Remove">
@@ -70,7 +70,7 @@
 							<td><?php htmlout($row['DateTimeAdded']); ?></td>
 							<td><input type="submit" name="action" value="Change Amount"></td>
 							<td>
-								<?php if(isset($_SESSION['roomequipmentEnableDelete']) AND $_SESSION['roomequipmentEnableDelete']) : ?>
+								<?php if(isSet($_SESSION['roomequipmentEnableDelete']) AND $_SESSION['roomequipmentEnableDelete']) : ?>
 									<input type="submit" name="action" value="Remove">
 								<?php else : ?>
 									<input type="submit" name="disabled" value="Remove" disabled>

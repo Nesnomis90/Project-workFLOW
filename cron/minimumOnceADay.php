@@ -223,7 +223,7 @@ function updateBillingDatesForCompanies(){
 			$success = $pdo->commit();
 			if($success){
 				// Check if any of the companies went over credits and send an email to Admin that they did
-				if(isset($companiesOverCredit) AND sizeOf($companiesOverCredit) > 0){
+				if(isSet($companiesOverCredit) AND sizeOf($companiesOverCredit) > 0){
 					// There were companies that went over credit
 					if(sizeOf($companiesOverCredit) == 1){
 						// One company went over
@@ -268,14 +268,14 @@ function updateBillingDatesForCompanies(){
 					$return = $pdo->query($sql);
 					$result = $return->fetchAll(PDO::FETCH_ASSOC);
 					
-					if(isset($result)){
+					if(isSet($result)){
 						foreach($result AS $Email){
 							$email[] = $Email['Email'];
 						}
 					}
 					
 					// Only try to send out email if there are any admins that have set they want them
-					if(isset($email)){
+					if(isSet($email)){
 						$mailResult = sendEmail($email, $emailSubject, $emailMessage);
 						
 						if(!$mailResult){

@@ -18,7 +18,7 @@
 	
 		<?php include_once $_SERVER['DOCUMENT_ROOT'] .'/includes/topnav.html.php'; ?>
 	
-		<?php if(isset($_SESSION['DefaultMeetingRoomInfo']) AND !isset($defaultMeetingRoomFeedback)) : ?>
+		<?php if(isSet($_SESSION['DefaultMeetingRoomInfo']) AND !isSet($defaultMeetingRoomFeedback)) : ?>
 			<div class="left">
 				<form action="" method="post">
 					<label style="width: 295px;" for="defaultMeetingRoomName">The Default Meeting Room For This Device: </label>
@@ -41,10 +41,10 @@
 		
 		<div class="left">
 			<form action="" method="post">
-				<?php if(isset($_SESSION['DefaultMeetingRoomInfo'])) : ?>
+				<?php if(isSet($_SESSION['DefaultMeetingRoomInfo'])) : ?>
 				<?php $default = $_SESSION['DefaultMeetingRoomInfo']; ?>
-					<?php if((!isset($_GET['meetingroom'])) OR
-							(isset($_GET['meetingroom']) AND $_GET['meetingroom'] != $default['TheMeetingRoomID'])) : ?>
+					<?php if((!isSet($_GET['meetingroom'])) OR
+							(isSet($_GET['meetingroom']) AND $_GET['meetingroom'] != $default['TheMeetingRoomID'])) : ?>
 						<input type="submit" name="action" value="Select Default Room">
 					<?php else : ?>
 						<input type="submit" name="action" value="Show All Rooms">
@@ -55,22 +55,22 @@
 			</form>
 		</div>
 		
-		<?php if(isset($_SESSION['MeetingRoomAllUsersFeedback'])) : ?>
+		<?php if(isSet($_SESSION['MeetingRoomAllUsersFeedback'])) : ?>
 			<div class="left"><b class="feedback"><?php htmlout($_SESSION['MeetingRoomAllUsersFeedback']); ?></b></div>
 			<?php unset($_SESSION['MeetingRoomAllUsersFeedback']); ?>
 		<?php endif; ?>
 		
-		<?php if(isset($defaultMeetingRoomFeedback)) : ?>
+		<?php if(isSet($defaultMeetingRoomFeedback)) : ?>
 			<div class="left"><b class="feedback"><?php htmlout($defaultMeetingRoomFeedback); ?></b></div>
 		<?php endif; ?>
 		
-		<?php if(isset($_GET['meetingroom']) AND $_GET['meetingroom'] != NULL AND $_GET['meetingroom'] != "") : ?>
-			<?php if(isset($meetingrooms)) : ?>
-				<?php if(isset($default) AND $_GET['meetingroom'] == $default['TheMeetingRoomID']) : ?>
+		<?php if(isSet($_GET['meetingroom']) AND $_GET['meetingroom'] != NULL AND $_GET['meetingroom'] != "") : ?>
+			<?php if(isSet($meetingrooms)) : ?>
+				<?php if(isSet($default) AND $_GET['meetingroom'] == $default['TheMeetingRoomID']) : ?>
 					<div class="left"><h2>Viewing Default Room For Device</h2></div>
-				<?php elseif(isset($default) AND $_GET['meetingroom'] != $default['TheMeetingRoomID']) : ?>
+				<?php elseif(isSet($default) AND $_GET['meetingroom'] != $default['TheMeetingRoomID']) : ?>
 					<div class="left"><h2>Viewing Non-Default Room For Device</h2></div>
-				<?php elseif(!isset($default)) : ?>
+				<?php elseif(!isSet($default)) : ?>
 					<div class="left"><h2>Viewing Selected Meeting Room</h2></div>
 				<?php endif; ?>			
 				<?php foreach ($meetingrooms as $room): ?>
@@ -98,7 +98,7 @@
 			<?php else : ?>
 				<div class="left"><h2>This isn't a valid meeting room.</h2></div>
 			<?php endif; ?>				
-		<?php elseif(!isset($_GET['meetingroom'])) : ?>
+		<?php elseif(!isSet($_GET['meetingroom'])) : ?>
 			<div class="left">
 				<form action="" method="post">
 					<label style="width: 160px;" for="maxRoomsToDisplay">Max Rooms Displayed: </label>
@@ -111,10 +111,10 @@
 					</div>
 				</form>
 			</div>		
-			<?php if(isset($meetingrooms)) :?>
+			<?php if(isSet($meetingrooms)) :?>
 				<div class="left"><h2>Available Meeting Rooms:</h2></div>
 				<?php foreach ($meetingrooms as $room): ?>
-					<?php if(!isset($i)){$i = 0;}; ?>
+					<?php if(!isSet($i)){$i = 0;}; ?>
 					<?php if($i < $maxRoomsToShow) : ?>
 						<div class="left">
 							<form action="" method="post">

@@ -17,7 +17,7 @@
 		<h1><?php htmlout($pageTitle); ?></h1>
 		
 		<div>
-			<?php if(isset($_SESSION['AddEquipmentError'])) :?>
+			<?php if(isSet($_SESSION['AddEquipmentError'])) :?>
 				<span><b class="feedback"><?php htmlout($_SESSION['AddEquipmentError']); ?></b></span>
 				<?php unset($_SESSION['AddEquipmentError']); ?>
 			<?php endif; ?>

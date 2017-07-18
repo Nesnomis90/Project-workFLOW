@@ -37,25 +37,25 @@ function validateUserInputs(){
 	$invalidInput = FALSE;
 	
 	// Get user inputs
-	if(isset($_POST['MeetingRoomName']) AND !$invalidInput){
+	if(isSet($_POST['MeetingRoomName']) AND !$invalidInput){
 		$meetingRoomName = trim($_POST['MeetingRoomName']);
 	} else {
 		$invalidInput = TRUE;
 		$_SESSION['AddMeetingRoomError'] = "A meeting room cannot be added without a name!";
 	}
-	if(isset($_POST['MeetingRoomDescription']) AND !$invalidInput){
+	if(isSet($_POST['MeetingRoomDescription']) AND !$invalidInput){
 		$meetingRoomDescription = trim($_POST['MeetingRoomDescription']);
 	} else {
 		$invalidInput = TRUE;
 		$_SESSION['AddMeetingRoomError'] = "A meeting room cannot be added without a description!";
 	}
-	if(isset($_POST['MeetingRoomCapacity']) AND !$invalidInput){
+	if(isSet($_POST['MeetingRoomCapacity']) AND !$invalidInput){
 		$meetingRoomCapacity = trim($_POST['MeetingRoomCapacity']);
 	} else {
 		$invalidInput = TRUE;
 		$_SESSION['AddMeetingRoomError'] = "A meeting room cannot be added without setting a room capacity!";
 	}
-	if(isset($_POST['MeetingRoomLocation']) AND !$invalidInput){
+	if(isSet($_POST['MeetingRoomLocation']) AND !$invalidInput){
 		$meetingRoomLocation = trim($_POST['MeetingRoomLocation']);
 	} else {
 		//$invalidInput = TRUE;
@@ -134,7 +134,7 @@ function validateUserInputs(){
 	
 	// Check if the meeting room already exists (based on name).
 		// only if we have changed the name (edit only)
-	if(isset($_SESSION['EditMeetingRoomOriginalInfo'])){
+	if(isSet($_SESSION['EditMeetingRoomOriginalInfo'])){
 		$originalMeetingRoomName = strtolower($_SESSION['EditMeetingRoomOriginalInfo']['MeetingRoomName']);
 		$newMeetingRoomName = strtolower($validatedMeetingRoomName);
 	
@@ -179,32 +179,32 @@ return array($invalidInput, $validatedMeetingRoomDescription, $validatedMeetingR
 }
 
 // If admin wants to be able to delete bookings it needs to enabled first
-if (isset($_POST['action']) AND $_POST['action'] == "Enable Delete"){
+if (isSet($_POST['action']) AND $_POST['action'] == "Enable Delete"){
 	$_SESSION['meetingroomsEnableDelete'] = TRUE;
 	$refreshMeetingRooms = TRUE;
 }
 
 // If admin wants to be disable booking deletion
-if (isset($_POST['action']) AND $_POST['action'] == "Disable Delete"){
+if (isSet($_POST['action']) AND $_POST['action'] == "Disable Delete"){
 	unset($_SESSION['meetingroomsEnableDelete']);
 	unset($_SESSION['meetingroomsEnableDeleteUsedMeetingRoom']);
 	$refreshMeetingRooms = TRUE;
 }
 
 // If admin wants to be able to delete a meeting room that is currently being used in a booking
-if (isset($_POST['action']) AND $_POST['action'] == "Enable Delete Used Meeting Room"){
+if (isSet($_POST['action']) AND $_POST['action'] == "Enable Delete Used Meeting Room"){
 	$_SESSION['meetingroomsEnableDeleteUsedMeetingRoom'] = TRUE;
 	$refreshMeetingRooms = TRUE;
 }
 
 // If admin wants to be disable used meeting room delete
-if (isset($_POST['action']) AND $_POST['action'] == "Disable Delete Used Meeting Room"){
+if (isSet($_POST['action']) AND $_POST['action'] == "Disable Delete Used Meeting Room"){
 	unset($_SESSION['meetingroomsEnableDeleteUsedMeetingRoom']);
 	$refreshMeetingRooms = TRUE;
 }
 
 // If admin wants to remove a meeting room from the database
-if (isset($_POST['action']) and $_POST['action'] == 'Delete')
+if (isSet($_POST['action']) and $_POST['action'] == 'Delete')
 {
 	// Delete selected meeting room from database
 	try
@@ -268,11 +268,11 @@ if (isset($_POST['action']) and $_POST['action'] == 'Delete')
 
 // If admin wants to add a meeting room to the database
 // we load a new html form
-if ((isset($_POST['action']) AND $_POST['action'] == "Create Meeting Room") OR 
-	(isset($_SESSION['refreshAddMeetingRoom']) AND $_SESSION['refreshAddMeetingRoom']))
+if ((isSet($_POST['action']) AND $_POST['action'] == "Create Meeting Room") OR 
+	(isSet($_SESSION['refreshAddMeetingRoom']) AND $_SESSION['refreshAddMeetingRoom']))
 {
 	// Check if the call was /?add/ or a forced refresh
-	if(isset($_SESSION['refreshAddMeetingRoom']) AND $_SESSION['refreshAddMeetingRoom']){
+	if(isSet($_SESSION['refreshAddMeetingRoom']) AND $_SESSION['refreshAddMeetingRoom']){
 		// Acknowledge that we have refreshed the form
 		unset($_SESSION['refreshAddMeetingRoom']);
 	}
@@ -284,19 +284,19 @@ if ((isset($_POST['action']) AND $_POST['action'] == "Create Meeting Room") OR
 	$meetingRoomLocation = '';
 
 	// If we refreshed and want to keep the same values
-	if(isset($_SESSION['AddMeetingRoomName'])){
+	if(isSet($_SESSION['AddMeetingRoomName'])){
 		$meetingRoomName = $_SESSION['AddMeetingRoomName'];
 		unset($_SESSION['AddMeetingRoomName']);
 	}
-	if(isset($_SESSION['AddMeetingRoomCapacity'])){
+	if(isSet($_SESSION['AddMeetingRoomCapacity'])){
 		$meetingRoomCapacity = $_SESSION['AddMeetingRoomCapacity'];
 		unset($_SESSION['AddMeetingRoomCapacity']);
 	}
-	if(isset($_SESSION['AddMeetingRoomDescription'])){
+	if(isSet($_SESSION['AddMeetingRoomDescription'])){
 		$meetingRoomDescription = $_SESSION['AddMeetingRoomDescription'];
 		unset($_SESSION['AddMeetingRoomDescription']);
 	}	
-	if(isset($_SESSION['AddMeetingRoomLocation'])){
+	if(isSet($_SESSION['AddMeetingRoomLocation'])){
 		$meetingRoomLocation = $_SESSION['AddMeetingRoomLocation'];
 		unset($_SESSION['AddMeetingRoomLocation']);
 	}		
@@ -312,7 +312,7 @@ if ((isset($_POST['action']) AND $_POST['action'] == "Create Meeting Room") OR
 }
 
 // When admin has added the needed information and wants to add the meeting room
-if ((isset($_POST['action']) AND $_POST['action'] == "Add Room"))
+if ((isSet($_POST['action']) AND $_POST['action'] == "Add Room"))
 {
 	// Validate user inputs
 	list($invalidInput, $validatedMeetingRoomDescription, $validatedMeetingRoomName, $validatedMeetingRoomCapacity, $validatedMeetingRoomLocation) = validateUserInputs();
@@ -380,7 +380,7 @@ if ((isset($_POST['action']) AND $_POST['action'] == "Add Room"))
 		$validatedMeetingRoomCapacity . "\nand description: " . $validatedMeetingRoomDescription . 
 		"\nwas added by: " . $_SESSION['LoggedInUserName'];
 		
-		if(isset($_SESSION['LastMeetingRoomID'])){
+		if(isSet($_SESSION['LastMeetingRoomID'])){
 			$lastMeetingRoomID = $_SESSION['LastMeetingRoomID'];
 			unset($_SESSION['LastMeetingRoomID']);
 		}
@@ -421,7 +421,7 @@ if ((isset($_POST['action']) AND $_POST['action'] == "Add Room"))
 }
 
 // If admin wants to null values while adding
-if(isset($_POST['add']) AND $_POST['add'] == 'Reset'){
+if(isSet($_POST['add']) AND $_POST['add'] == 'Reset'){
 
 	unset($_SESSION['AddMeetingRoomName']);
 	unset($_SESSION['AddMeetingRoomCapacity']);
@@ -434,7 +434,7 @@ if(isset($_POST['add']) AND $_POST['add'] == 'Reset'){
 }
 
 // If admin wants to leave the page and be directed back to the meeting room page again
-if(isset($_POST['add']) AND $_POST['add'] == 'Cancel'){
+if(isSet($_POST['add']) AND $_POST['add'] == 'Cancel'){
 	$_SESSION['MeetingRoomUserFeedback'] = "You cancelled your meeting room creation.";	
 	$refreshMeetingRooms = TRUE;
 }
@@ -442,32 +442,32 @@ if(isset($_POST['add']) AND $_POST['add'] == 'Cancel'){
 
 // if admin wants to edit meeting room information
 // we load a new html form
-if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR 
-	(isset($_SESSION['refreshEditMeetingRoom']) AND $_SESSION['refreshEditMeetingRoom']))
+if ((isSet($_POST['action']) AND $_POST['action'] == 'Edit') OR 
+	(isSet($_SESSION['refreshEditMeetingRoom']) AND $_SESSION['refreshEditMeetingRoom']))
 {
 	// Check if we're activated by a user or by a forced refresh	
-	if(isset($_SESSION['refreshEditMeetingRoom']) AND $_SESSION['refreshEditMeetingRoom']){
+	if(isSet($_SESSION['refreshEditMeetingRoom']) AND $_SESSION['refreshEditMeetingRoom']){
 		// Acknowledge that we have refreshed
 		unset($_SESSION['refreshEditMeetingRoom']);
 		
 		// Get values we had before refresh
-		if(isset($_SESSION['EditMeetingRoomName'])){
+		if(isSet($_SESSION['EditMeetingRoomName'])){
 			$meetingRoomName = $_SESSION['EditMeetingRoomName'];
 			unset($_SESSION['EditMeetingRoomName']);			
 		}
-		if(isset($_SESSION['EditMeetingRoomCapacity'])){
+		if(isSet($_SESSION['EditMeetingRoomCapacity'])){
 			$meetingRoomCapacity = $_SESSION['EditMeetingRoomCapacity'];
 			unset($_SESSION['EditMeetingRoomCapacity']);			
 		}
-		if(isset($_SESSION['EditMeetingRoomDescription'])){
+		if(isSet($_SESSION['EditMeetingRoomDescription'])){
 			$meetingRoomDescription = $_SESSION['EditMeetingRoomDescription'];
 			unset($_SESSION['EditMeetingRoomDescription']);			
 		}
-		if(isset($_SESSION['EditMeetingRoomLocation'])){
+		if(isSet($_SESSION['EditMeetingRoomLocation'])){
 			$meetingRoomLocation = $_SESSION['EditMeetingRoomLocation'];
 			unset($_SESSION['EditMeetingRoomLocation']);
 		}
-		if(isset($_SESSION['EditMeetingRoomMeetingRoomID'])){
+		if(isSet($_SESSION['EditMeetingRoomMeetingRoomID'])){
 			$meetingRoomID = $_SESSION['EditMeetingRoomMeetingRoomID'];
 		}	
 	} else {
@@ -532,7 +532,7 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR
 }
 
 // Perform the actual database update of the edited information
-if (isset($_POST['action']) AND $_POST['action'] == "Edit Room")
+if (isSet($_POST['action']) AND $_POST['action'] == "Edit Room")
 {
 	// Validate user inputs
 	list($invalidInput, $validatedMeetingRoomDescription, $validatedMeetingRoomName, $validatedMeetingRoomCapacity, $validatedMeetingRoomLocation) = validateUserInputs();
@@ -554,7 +554,7 @@ if (isset($_POST['action']) AND $_POST['action'] == "Edit Room")
 	// Check if any values were actually changed
 	$NumberOfChanges = 0;	
 	
-	if(isset($_SESSION['EditMeetingRoomOriginalInfo'])){
+	if(isSet($_SESSION['EditMeetingRoomOriginalInfo'])){
 		$original = $_SESSION['EditMeetingRoomOriginalInfo'];
 		unset($_SESSION['EditMeetingRoomOriginalInfo']);
 		
@@ -617,7 +617,7 @@ if (isset($_POST['action']) AND $_POST['action'] == "Edit Room")
 }
 
 // If admin wants to null values while adding
-if(isset($_POST['edit']) AND $_POST['edit'] == 'Reset'){
+if(isSet($_POST['edit']) AND $_POST['edit'] == 'Reset'){
 
 	$_SESSION['EditMeetingRoomDescription'] = $_SESSION['EditMeetingRoomOriginalInfo']['MeetingRoomDescription'];
 	$_SESSION['EditMeetingRoomName'] = $_SESSION['EditMeetingRoomOriginalInfo']['MeetingRoomName'];
@@ -630,12 +630,12 @@ if(isset($_POST['edit']) AND $_POST['edit'] == 'Reset'){
 }
 
 // If admin wants to leave the page and be directed back to the meeting room page again
-if(isset($_POST['edit']) AND $_POST['edit'] == 'Cancel'){
+if(isSet($_POST['edit']) AND $_POST['edit'] == 'Cancel'){
 	$_SESSION['MeetingRoomUserFeedback'] = "You cancelled your meeting room editing.";	
 	$refreshMeetingRooms = TRUE;
 }
 
-if (isset($refreshMeetingRooms) AND $refreshMeetingRooms) {
+if (isSet($refreshMeetingRooms) AND $refreshMeetingRooms) {
 	//TO-DO: Add code that should occur on a refresh
 	unset($refreshMeetingRooms);
 }
@@ -684,7 +684,7 @@ try
 			FROM 		`meetingroom` m';
 	$return = $pdo->query($sql);
 	$result = $return->fetchAll(PDO::FETCH_ASSOC);
-	if(isset($result)){
+	if(isSet($result)){
 		$rowNum = sizeOf($result);
 	} else {
 		$rowNum = 0;

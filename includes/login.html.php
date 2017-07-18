@@ -16,7 +16,7 @@
 		</div>
 		
 		<div class="left">
-		<?php if (isset($_SESSION['loginError'])): ?>
+		<?php if (isSet($_SESSION['loginError'])): ?>
 			<span><b class="warning"><?php htmlout($_SESSION['loginError']); ?></b></span>
 			<?php unset($_SESSION['loginError']); ?>
 		<?php endif; ?>
@@ -25,7 +25,7 @@
 		<div>
 			<form action="" method="post">
 				<div>
-					<?php if(!isset($_SESSION['loginEmailSubmitted'])){
+					<?php if(!isSet($_SESSION['loginEmailSubmitted'])){
 						$email = "";
 					} else {
 						$email = $_SESSION['loginEmailSubmitted'];

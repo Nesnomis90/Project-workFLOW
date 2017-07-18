@@ -7,7 +7,7 @@ include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/helpers.inc.php';
 include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/magicquotes.inc.php';
 
 // Make sure logout works properly and that we check if their login details are up-to-date
-if(isset($_SESSION['loggedIn'])){
+if(isSet($_SESSION['loggedIn'])){
 	$gotoPage = ".";
 	userIsLoggedIn();
 }
@@ -21,9 +21,9 @@ if(isset($_SESSION['loggedIn'])){
 // ADMIN INTERACTIONS // START //
 
 // If Admin wants to set a meeting room as the default room on a local device
-if(	(isset($_POST['action']) AND $_POST['action'] == "Set Default Room") OR 
-	(isset($_POST['action']) AND $_POST['action'] == "Change Default Room") OR
-	(isset($_SESSION['SetDefaultRoom']) AND $_SESSION['SetDefaultRoom'])){
+if(	(isSet($_POST['action']) AND $_POST['action'] == "Set Default Room") OR 
+	(isSet($_POST['action']) AND $_POST['action'] == "Change Default Room") OR
+	(isSet($_SESSION['SetDefaultRoom']) AND $_SESSION['SetDefaultRoom'])){
 		
 	$_SESSION['SetDefaultRoom'] = TRUE;
 		// CHECK IF USER TRYING TO ACCESS THIS IS IN FACT THE ADMIN!
@@ -45,7 +45,7 @@ if(	(isset($_POST['action']) AND $_POST['action'] == "Set Default Room") OR
 				FROM 		`meetingroom`';
 		$return = $pdo->query($sql);
 		$result = $return->fetchAll(PDO::FETCH_ASSOC);
-		if(isset($result)){
+		if(isSet($result)){
 			$rowNum = sizeOf($result);
 		} else {
 			$rowNum = 0;
@@ -78,14 +78,14 @@ if(	(isset($_POST['action']) AND $_POST['action'] == "Set Default Room") OR
 }
 
 // If Admin has chosen a default meeting room from the available meeting rooms
-if(isset($_POST['action']) AND $_POST['action'] == "Set As Default"){
+if(isSet($_POST['action']) AND $_POST['action'] == "Set As Default"){
 		// CHECK IF USER TRYING TO ACCESS THIS IS IN FACT THE ADMIN!
 	if (!isUserAdmin()){
 		exit();
 	}
 	
 		// Set the proper cookies for the meeting room and logout the Admin.
-	if(isset($_POST['MeetingRoomName']) AND isset($_POST['MeetingRoomIDCode'])){
+	if(isSet($_POST['MeetingRoomName']) AND isSet($_POST['MeetingRoomIDCode'])){
 		$meetingRoomName = $_POST['MeetingRoomName'];
 		
 		setNewMeetingRoomCookies($meetingRoomName, $_POST['MeetingRoomIDCode']);
@@ -107,7 +107,7 @@ checkIfLocalDevice();
 // NON-ADMIN INTERACTIONS // START //
 
 // Updates/Sets the default page when user wants it
-if(isset($_POST['action']) AND $_POST['action'] == "Select Default Room"){
+if(isSet($_POST['action']) AND $_POST['action'] == "Select Default Room"){
 
 	$TheMeetingRoomID = $_SESSION["DefaultMeetingRoomInfo"]["TheMeetingRoomID"];
 	$location = "http://$_SERVER[HTTP_HOST]/meetingroom/?meetingroom=" . $TheMeetingRoomID;
@@ -116,7 +116,7 @@ if(isset($_POST['action']) AND $_POST['action'] == "Select Default Room"){
 }
 
 // Shows all meeting rooms again when already looking at single room
-if(isset($_POST['action']) AND $_POST['action'] == "Show All Rooms"){
+if(isSet($_POST['action']) AND $_POST['action'] == "Show All Rooms"){
 
 	$location = "http://$_SERVER[HTTP_HOST]/meetingroom/";
 	header("Location: $location");
@@ -124,9 +124,9 @@ if(isset($_POST['action']) AND $_POST['action'] == "Show All Rooms"){
 }
 
 // If user wants to refresh the page to get the most up-to-date information
-if (isset($_POST['action']) and $_POST['action'] == 'Refresh'){
+if (isSet($_POST['action']) and $_POST['action'] == 'Refresh'){
 	
-	if(isset($_GET['meetingroom'])){
+	if(isSet($_GET['meetingroom'])){
 		$TheMeetingRoomID = $_GET['meetingroom'];
 		$location = "http://$_SERVER[HTTP_HOST]/meetingroom/?meetingroom=" . $TheMeetingRoomID;		
 	} else {
@@ -138,7 +138,7 @@ if (isset($_POST['action']) and $_POST['action'] == 'Refresh'){
 }
 
 // Redirect to booking when a room has been selected
-if(isset($_POST['action']) AND $_POST['action'] == "Booking Information"){
+if(isSet($_POST['action']) AND $_POST['action'] == "Booking Information"){
 
 	$TheMeetingRoomID = $_POST['MeetingRoomID'];
 	$name = $_POST['MeetingRoomName'];
@@ -147,7 +147,7 @@ if(isset($_POST['action']) AND $_POST['action'] == "Booking Information"){
 	exit();
 }
 
-if(isset($_POST['action']) AND $_POST['action'] == "Set New Max"){
+if(isSet($_POST['action']) AND $_POST['action'] == "Set New Max"){
 	
 	// Validate user input
 	$roomDisplayLimitString = trimExcessWhiteSpace($_POST['logsToShow']);
@@ -165,7 +165,7 @@ if(isset($_POST['action']) AND $_POST['action'] == "Set New Max"){
 	}
 }
 
-if(isset($_GET['meetingroom'])){
+if(isSet($_GET['meetingroom'])){
 	// Display selected meeting room
 	try
 	{
@@ -199,7 +199,7 @@ if(isset($_GET['meetingroom'])){
 		$pdo = null;
 		exit();
 	}	
-} elseif(!isset($_GET['meetingroom'])){
+} elseif(!isSet($_GET['meetingroom'])){
 	// Display meeting rooms
 	try
 	{
@@ -243,16 +243,16 @@ foreach ($result as $row)
 
 $totalMeetingRooms = sizeOf($meetingrooms);
 
-if(!isset($_GET['meetingroom'])){
+if(!isSet($_GET['meetingroom'])){
 	// Sets default values
-	if(!isset($maxRoomsToShow)){
+	if(!isSet($maxRoomsToShow)){
 		if($totalMeetingRooms < 10){
 			$maxRoomsToShow = $totalMeetingRooms;
 		} else {
 			$maxRoomsToShow = 10;	
 		}
 	}
-	if(!isset($roomDisplayLimit)){
+	if(!isSet($roomDisplayLimit)){
 		$roomDisplayLimit = $maxRoomsToShow;
 	}		
 }

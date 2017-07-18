@@ -40,7 +40,7 @@ function sumUpUnbilledPeriods($pdo, $companyID){
 	$minimumSecondsPerBooking = MINIMUM_BOOKING_DURATION_IN_MINUTES_USED_IN_PRICE_CALCULATIONS * 60; // e.g. 15min = 900s
 	$aboveThisManySecondsToCount = BOOKING_DURATION_IN_MINUTES_USED_BEFORE_INCLUDING_IN_PRICE_CALCULATIONS * 60; // e.g. 1min = 60s
 	$roundDownToTheClosestMinuteNumberInSeconds = ROUND_SUMMED_BOOKING_TIME_CHARGED_FOR_PERIOD_DOWN_TO_THIS_CLOSEST_MINUTE_AMOUNT * 60; // e.g. 15min = 900s
-	if(isset($roundDownToTheClosestMinuteNumberInSeconds) AND $roundDownToTheClosestMinuteNumberInSeconds != 0){
+	if(isSet($roundDownToTheClosestMinuteNumberInSeconds) AND $roundDownToTheClosestMinuteNumberInSeconds != 0){
 			// Rounds down to the closest 15 minutes (on finished summation per period)
 		$sql = "SELECT		StartDate, 
 							EndDate,
@@ -241,7 +241,7 @@ function sumUpUnbilledPeriods($pdo, $companyID){
 		
 		// Calculate price
 		$bookingTimeChargedInMinutes = convertTimeToMinutes($row['OverCreditsTimeCharged']);
-		if(isset($roundDownToTheClosestMinuteNumberInSeconds) AND $roundDownToTheClosestMinuteNumberInSeconds != 0){
+		if(isSet($roundDownToTheClosestMinuteNumberInSeconds) AND $roundDownToTheClosestMinuteNumberInSeconds != 0){
 			// Adapt hourprice into correct piece of our ROUND_SUMMED_BOOKING_TIME_CHARGED_FOR_PERIOD_DOWN_TO_THIS_CLOSEST_MINUTE_AMOUNT (e.g. 15 min)
 			$splitPricePerHourIntoThisManyPieces = 60 / ROUND_SUMMED_BOOKING_TIME_CHARGED_FOR_PERIOD_DOWN_TO_THIS_CLOSEST_MINUTE_AMOUNT;
 				// Rounds down
@@ -274,7 +274,7 @@ function sumUpUnbilledPeriods($pdo, $companyID){
 									);
 	}
 
-	if(isset($periodsSummmedUp)){
+	if(isSet($periodsSummmedUp)){
 		return $periodsSummmedUp;
 	} else {
 		return FALSE;
@@ -483,7 +483,7 @@ function calculatePeriodInformation($pdo, $companyID, $BillingStart, $BillingEnd
 			// Let's calculate cost
 				// Check if user has set that price should be rounded down to x minutes (e.g. down to closest 15 minute)
 			$selectedMinuteAmount = ROUND_SUMMED_BOOKING_TIME_CHARGED_FOR_PERIOD_DOWN_TO_THIS_CLOSEST_MINUTE_AMOUNT;
-			if(isset($selectedMinuteAmount) AND $selectedMinuteAmount != 0){
+			if(isSet($selectedMinuteAmount) AND $selectedMinuteAmount != 0){
 				// Adapt hourprice into correct piece of our ROUND_SUMMED_BOOKING_TIME_CHARGED_FOR_PERIOD_DOWN_TO_THIS_CLOSEST_MINUTE_AMOUNT (e.g. 15 min)
 				$splitPricePerHourIntoThisManyPieces = 60 / $selectedMinuteAmount;
 					// Rounds down
@@ -522,25 +522,25 @@ function calculatePeriodInformation($pdo, $companyID, $BillingStart, $BillingEnd
 	$displayTotalBookingTimeUsedInPriceCalculationsThisPeriod = convertMinutesToHoursAndMinutes($totalBookingTimeUsedInPriceCalculations);
 	$displayTotalBookingTimeChargedWithAfterCredits = convertMinutesToHoursAndMinutes($roundedDownTimeOverCreditsInMinutes);
 	
-	if(!isset($actualTimeOverCreditsInMinutes)){
+	if(!isSet($actualTimeOverCreditsInMinutes)){
 		$actualTimeOverCreditsInMinutes = "";
 	}				
-	if(!isset($displayOverCreditsTimeUsed)){
+	if(!isSet($displayOverCreditsTimeUsed)){
 		$displayOverCreditsTimeUsed = "None";
 	}
-	if(!isset($displayOverFeeCostThisMonth)){
+	if(!isSet($displayOverFeeCostThisMonth)){
 		$displayOverFeeCostThisMonth = "";
 	}
-	if(!isset($displayTotalBookingTimeChargedWithAfterCredits)){
+	if(!isSet($displayTotalBookingTimeChargedWithAfterCredits)){
 		$displayTotalBookingTimeChargedWithAfterCredits = "N/A";
 	}
-	if(!isset($bookingHistory)){
+	if(!isSet($bookingHistory)){
 		$bookingHistory = array();
 	}
-	if(!isset($periodHasBeenBilled)){
+	if(!isSet($periodHasBeenBilled)){
 		$periodHasBeenBilled = 0;
 	}
-	if(!isset($billingDescription) OR $billingDescription == NULL){
+	if(!isSet($billingDescription) OR $billingDescription == NULL){
 		$billingDescription = "";
 	}
 	
@@ -556,13 +556,13 @@ function validateUserInputs(){
 	$invalidInput = FALSE;
 
 	// Get user inputs
-	if(isset($_POST['CompanyName'])){
+	if(isSet($_POST['CompanyName'])){
 		$companyName = trim($_POST['CompanyName']);
 	} else {
 		$invalidInput = TRUE;
 		$_SESSION['AddCompanyError'] = "Company cannot be created without a name!";
 	}
-	if(isset($_POST['DateToRemove'])){
+	if(isSet($_POST['DateToRemove'])){
 		$dateToRemove = trim($_POST['DateToRemove']);
 	} else {
 		$dateToRemove = ""; //This doesn't have to be set
@@ -603,11 +603,11 @@ function validateUserInputs(){
 		
 		$correctFormatIfValid = correctDatetimeFormat($validatedCompanyDateToRemove);
 
-		if (isset($correctFormatIfValid) AND $correctFormatIfValid === FALSE AND !$invalidInput){
+		if (isSet($correctFormatIfValid) AND $correctFormatIfValid === FALSE AND !$invalidInput){
 			$_SESSION['AddCompanyError'] = "The date you submitted did not have a correct format. Please try again.";
 			$invalidInput = TRUE;
 		}
-		if(isset($correctFormatIfValid) AND $correctFormatIfValid !== FALSE){
+		if(isSet($correctFormatIfValid) AND $correctFormatIfValid !== FALSE){
 			$correctFormatIfValid = convertDatetimeToFormat($correctFormatIfValid,'Y-m-d H:i:s', 'Y-m-d');
 			
 			// Check if the (now valid) datetime we received is a future date or not
@@ -623,11 +623,11 @@ function validateUserInputs(){
 
 	// Check if the company already exists (based on name).
 		// only if have changed the name (edit only)
-	if(isset($_SESSION['EditCompanyOriginalName'])){
+	if(isSet($_SESSION['EditCompanyOriginalName'])){
 		$originalCompanyName = strtolower($_SESSION['EditCompanyOriginalName']);
 		$newCompanyName = strtolower($validatedCompanyName);
 
-		if(isset($_SESSION['EditCompanyOriginalName']) AND $originalCompanyName == $newCompanyName){
+		if(isSet($_SESSION['EditCompanyOriginalName']) AND $originalCompanyName == $newCompanyName){
 			// Do nothing, since we haven't changed the name we're editing
 		} elseif(!$invalidInput) {
 			// Check if new name is taken
@@ -671,7 +671,7 @@ return array($invalidInput, $validatedCompanyName, $validatedCompanyDateToRemove
 }
 
 // If admin wants to set a period as billed
-if (isset($_POST['history']) AND $_POST['history'] == "Set As Billed"){
+if (isSet($_POST['history']) AND $_POST['history'] == "Set As Billed"){
 	
 	$companyID = $_SESSION['BookingHistoryCompanyInfo']['CompanyID'];
 	$CompanyName = $_SESSION['BookingHistoryCompanyInfo']['CompanyName'];
@@ -682,11 +682,11 @@ if (isset($_POST['history']) AND $_POST['history'] == "Set As Billed"){
 	$BillingStart = $_POST['billingStart'];
 	$BillingEnd = $_POST['billingEnd'];
 
-	if(isset($_POST['billingDescription'])){
+	if(isSet($_POST['billingDescription'])){
 		$billingDescriptionAdminAddition = trimExcessWhitespaceButLeaveLinefeed($_POST['billingDescription']);
 	}
 	
-	if(!isset($billingDescriptionAdminAddition) OR $billingDescriptionAdminAddition == ""){
+	if(!isSet($billingDescriptionAdminAddition) OR $billingDescriptionAdminAddition == ""){
 		$billingDescriptionAdminAddition = "No additional information submitted";
 	}
 	
@@ -772,9 +772,9 @@ if (isset($_POST['history']) AND $_POST['history'] == "Set As Billed"){
 }
 
 // If admin wants to see the booking history of the period after the currently shown one
-if (isset($_POST['history']) AND $_POST['history'] == "Next Period"){
+if (isSet($_POST['history']) AND $_POST['history'] == "Next Period"){
 	
-	if(isset($_SESSION['BookingHistoryIntervalNumber'])){
+	if(isSet($_SESSION['BookingHistoryIntervalNumber'])){
 		$intervalNumber = $_SESSION['BookingHistoryIntervalNumber'] - 1;
 	} else {
 		$intervalNumber = -1;
@@ -862,17 +862,17 @@ if (isset($_POST['history']) AND $_POST['history'] == "Next Period"){
 }
 
 // If admin wants to see the booking history of the period before the currently shown one
-if (	(isset($_POST['history']) AND $_POST['history'] == "Previous Period") OR 
-		(isset($_POST['history']) AND $_POST['history'] == "First Period")){
+if (	(isSet($_POST['history']) AND $_POST['history'] == "Previous Period") OR 
+		(isSet($_POST['history']) AND $_POST['history'] == "First Period")){
 	// Set correct period based on what user clicked.
-	if(isset($_POST['history']) AND $_POST['history'] == "Previous Period"){
-		if(isset($_SESSION['BookingHistoryIntervalNumber'])){
+	if(isSet($_POST['history']) AND $_POST['history'] == "Previous Period"){
+		if(isSet($_SESSION['BookingHistoryIntervalNumber'])){
 			$intervalNumber = $_SESSION['BookingHistoryIntervalNumber'] + 1;
 		} else {
 			$intervalNumber = 1;
 		}
 		$_SESSION['BookingHistoryIntervalNumber'] = $intervalNumber;		
-	} elseif(isset($_POST['history']) AND $_POST['history'] == "First Period"){
+	} elseif(isSet($_POST['history']) AND $_POST['history'] == "First Period"){
 		$_SESSION['BookingHistoryIntervalNumber'] = $_SESSION['BookingHistoryFirstPeriodIntervalNumber'];
 		$intervalNumber = $_SESSION['BookingHistoryIntervalNumber'];
 	}
@@ -950,14 +950,14 @@ if (	(isset($_POST['history']) AND $_POST['history'] == "Previous Period") OR
 }
 
 // Redirect to the proper period and company when given a link
-if (	(isset($_GET['companyID']) AND isset($_GET['BillingStart']) AND isset($_GET['BillingEnd'])) OR
-		isset($_SESSION['refreshBookingHistoryFromLink'])
+if (	(isSet($_GET['companyID']) AND isSet($_GET['BillingStart']) AND isSet($_GET['BillingEnd'])) OR
+		isSet($_SESSION['refreshBookingHistoryFromLink'])
 	){
 		
 	// Save GET parameters then load a clean URL
 		// Link example IN: http://localhost/admin/companies/?companyID=2&BillingStart=2017-05-15&BillingEnd=2017-06-15
 		// Link out: http://localhost/admin/companies/
-	if(isset($_SESSION['refreshBookingHistoryFromLink'])){
+	if(isSet($_SESSION['refreshBookingHistoryFromLink'])){
 		list($companyID, $BillingStart, $BillingEnd) = $_SESSION['refreshBookingHistoryFromLink'];		
 		unset($_SESSION['refreshBookingHistoryFromLink']);
 	} else {
@@ -1054,10 +1054,10 @@ if (	(isset($_GET['companyID']) AND isset($_GET['BillingStart']) AND isset($_GET
 }
 
 // If admin wants to see the booking history of the selected company
-if ((isset($_POST['action']) AND $_POST['action'] == "Booking History") OR 
-	((isset($_POST['history']) AND $_POST['history'] == "Last Period"))){
+if ((isSet($_POST['action']) AND $_POST['action'] == "Booking History") OR 
+	((isSet($_POST['history']) AND $_POST['history'] == "Last Period"))){
 		
-	if(isset($_SESSION['BookingHistoryCompanyInfo'])){
+	if(isSet($_SESSION['BookingHistoryCompanyInfo'])){
 		unset($_SESSION['BookingHistoryIntervalNumber']);
 		$companyID = $_SESSION['BookingHistoryCompanyInfo']['CompanyID'];
 	} else {
@@ -1144,19 +1144,19 @@ if ((isset($_POST['action']) AND $_POST['action'] == "Booking History") OR
 }
 
 // If admin wants to be able to delete companies it needs to enabled first
-if (isset($_POST['action']) AND $_POST['action'] == "Enable Delete"){
+if (isSet($_POST['action']) AND $_POST['action'] == "Enable Delete"){
 	$_SESSION['companiesEnableDelete'] = TRUE;
 	$refreshcompanies = TRUE;
 }
 
 // If admin wants to be disable company deletion
-if (isset($_POST['action']) AND $_POST['action'] == "Disable Delete"){
+if (isSet($_POST['action']) AND $_POST['action'] == "Disable Delete"){
 	unset($_SESSION['companiesEnableDelete']);
 	$refreshcompanies = TRUE;
 }
 
 // If admin wants to activate a registered company
-if (isset($_POST['action']) AND $_POST['action'] == 'Activate') {	
+if (isSet($_POST['action']) AND $_POST['action'] == 'Activate') {	
 	// Update selected company in database to be active
 	try
 	{
@@ -1182,7 +1182,7 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Activate') {
 }
 
 // If admin wants to remove a company from the database
-if (isset($_POST['action']) and $_POST['action'] == 'Delete')
+if (isSet($_POST['action']) and $_POST['action'] == 'Delete')
 {
 	// Delete selected company from database
 	try
@@ -1246,11 +1246,11 @@ if (isset($_POST['action']) and $_POST['action'] == 'Delete')
 
 // If admin wants to add a company to the database
 // we load a new html form
-if ((isset($_POST['action']) AND $_POST['action'] == 'Create Company') OR 
-	(isset($_SESSION['refreshAddCompany']) AND $_SESSION['refreshAddCompany']))
+if ((isSet($_POST['action']) AND $_POST['action'] == 'Create Company') OR 
+	(isSet($_SESSION['refreshAddCompany']) AND $_SESSION['refreshAddCompany']))
 {	
 	// Check if it was a user input or a forced refresh
-	if(isset($_SESSION['refreshAddCompany']) AND $_SESSION['refreshAddCompany']){
+	if(isSet($_SESSION['refreshAddCompany']) AND $_SESSION['refreshAddCompany']){
 		//	Ackowledge that we have refreshed
 		unset($_SESSION['refreshAddCompany']);
 	}
@@ -1263,7 +1263,7 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Create Company') OR
 	$button = 'Add Company';	
 	$id = '';
 	
-	if(isset($_SESSION['AddCompanyCompanyName'])){
+	if(isSet($_SESSION['AddCompanyCompanyName'])){
 		$CompanyName = $_SESSION['AddCompanyCompanyName'];
 		unset($_SESSION['AddCompanyCompanyName']);
 	}
@@ -1283,22 +1283,22 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Create Company') OR
 
 // if admin wants to edit company information
 // we load a new html form
-if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR 
-	(isset($_SESSION['refreshEditCompany']) AND $_SESSION['refreshEditCompany']))
+if ((isSet($_POST['action']) AND $_POST['action'] == 'Edit') OR 
+	(isSet($_SESSION['refreshEditCompany']) AND $_SESSION['refreshEditCompany']))
 {
 	// Check if it was a user input or a forced refresh
-	if(isset($_SESSION['refreshEditCompany']) AND $_SESSION['refreshEditCompany']){
+	if(isSet($_SESSION['refreshEditCompany']) AND $_SESSION['refreshEditCompany']){
 		//	Acknowledge that we have refreshed
 		unset($_SESSION['refreshEditCompany']);
 		
 		// Get values we had before the refresh
-		if(isset($_SESSION['EditCompanyChangedName'])){
+		if(isSet($_SESSION['EditCompanyChangedName'])){
 			$CompanyName = $_SESSION['EditCompanyChangedName'];
 		} else {
 			$CompanyName = '';
 		}
 			
-		if(isset($_SESSION['EditCompanyCompanyID'])){
+		if(isSet($_SESSION['EditCompanyCompanyID'])){
 			$id = $_SESSION['EditCompanyCompanyID'];
 		}
 	} else {
@@ -1336,7 +1336,7 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR
 		$DateToRemove = $row['removeAtDate'];
 		$id = $row['companyID'];
 		
-		if(!isset($DateToRemove) OR $DateToRemove == NULL){
+		if(!isSet($DateToRemove) OR $DateToRemove == NULL){
 			$DateToRemove = '';
 		}
 		$_SESSION['EditCompanyOriginalName'] = $CompanyName;
@@ -1347,7 +1347,7 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR
 	$originalCompanyName = $_SESSION['EditCompanyOriginalName'];
 	$originalDateToDisplay = convertDatetimeToFormat($_SESSION['EditCompanyOriginalRemoveDate'] , 'Y-m-d', DATE_DEFAULT_FORMAT_TO_DISPLAY);
 
-	if(isset($_SESSION['EditCompanyChangedRemoveDate'])){
+	if(isSet($_SESSION['EditCompanyChangedRemoveDate'])){
 		$DateToRemove = $_SESSION['EditCompanyChangedRemoveDate'];
 	} else {
 		$DateToRemove = $originalDateToDisplay;
@@ -1370,7 +1370,7 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Edit') OR
 }
 
 // When admin has added the needed information and wants to add the company
-if (isset($_POST['action']) AND $_POST['action'] == 'Add Company')
+if (isSet($_POST['action']) AND $_POST['action'] == 'Add Company')
 {
 	list($invalidInput, $validatedCompanyName, $validatedCompanyDateToRemove) = validateUserInputs();
 
@@ -1444,7 +1444,7 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Add Company')
 		// Add a log event that a company was added
 	try
 	{
-		if(isset($_SESSION['LastCompanyID'])){
+		if(isSet($_SESSION['LastCompanyID'])){
 			$LastCompanyID = $_SESSION['LastCompanyID'];
 			unset($_SESSION['LastCompanyID']);
 		}
@@ -1486,7 +1486,7 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Add Company')
 }
 
 // Perform the actual database update of the edited information
-if ((isset($_POST['action']) AND $_POST['action'] == 'Edit Company'))
+if ((isSet($_POST['action']) AND $_POST['action'] == 'Edit Company'))
 {
 	list($invalidInput, $validatedCompanyName, $validatedCompanyDateToRemove) = validateUserInputs();
 	
@@ -1503,12 +1503,12 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Edit Company'))
 	// Check if there has been any changes
 	$NumberOfChanges = 0;
 	
-	if(	isset($_SESSION['EditCompanyOriginalName']) AND 
+	if(	isSet($_SESSION['EditCompanyOriginalName']) AND 
 		$_SESSION['EditCompanyOriginalName'] != $validatedCompanyName){
 		$NumberOfChanges++;
 	}
 	
-	if(	isset($_SESSION['EditCompanyOriginalRemoveDate']) AND 
+	if(	isSet($_SESSION['EditCompanyOriginalRemoveDate']) AND 
 		$_SESSION['EditCompanyOriginalRemoveDate'] != $validatedCompanyDateToRemove){
 		$NumberOfChanges++;
 	}
@@ -1561,7 +1561,7 @@ if ((isset($_POST['action']) AND $_POST['action'] == 'Edit Company'))
 }
 
 // if admin wants to cancel the date to remove
-if (isset($_POST['action']) AND $_POST['action'] == 'Cancel Date')
+if (isSet($_POST['action']) AND $_POST['action'] == 'Cancel Date')
 {
 	// Update selected company by making date to remove null	
 	try
@@ -1594,7 +1594,7 @@ if (isset($_POST['action']) AND $_POST['action'] == 'Cancel Date')
 	exit();
 }
 
-if(isset($_POST['edit']) AND $_POST['edit'] == 'Reset'){	
+if(isSet($_POST['edit']) AND $_POST['edit'] == 'Reset'){	
 	$_SESSION['EditCompanyChangedName'] = $_SESSION['EditCompanyOriginalName'];
 	$_SESSION['EditCompanyChangedRemoveDate'] = $_SESSION['EditCompanyOriginalRemoveDate'];
 	
@@ -1603,22 +1603,22 @@ if(isset($_POST['edit']) AND $_POST['edit'] == 'Reset'){
 	exit();	
 }
 
-if(isset($_POST['edit']) AND $_POST['edit'] == 'Cancel'){
+if(isSet($_POST['edit']) AND $_POST['edit'] == 'Cancel'){
 	$refreshcompanies = TRUE;
 	$_SESSION['CompanyUserFeedback'] = "You cancelled your company editing.";
 }
 
-if(isset($_POST['add']) AND $_POST['add'] == 'Cancel'){
+if(isSet($_POST['add']) AND $_POST['add'] == 'Cancel'){
 	$refreshcompanies = TRUE;
 	$_SESSION['CompanyUserFeedback'] = "You cancelled your company creation.";
 }
 
-if(isset($_POST['history']) AND $_POST['history'] == 'Return To Companies'){
+if(isSet($_POST['history']) AND $_POST['history'] == 'Return To Companies'){
 	$refreshcompanies = TRUE;
 	clearBookingHistorySessions();
 }
 
-if(isset($refreshcompanies) AND $refreshcompanies) {
+if(isSet($refreshcompanies) AND $refreshcompanies) {
 	// TO-DO: Add code that should occur on a refresh
 	unset($refreshcompanies);
 }
@@ -1817,7 +1817,7 @@ try
 	$s->bindValue(':aboveThisManySecondsToCount', $aboveThisManySecondsToCount);
 	$s->execute();
 	$result = $s->fetchAll(PDO::FETCH_ASSOC);
-	if(isset($result)){
+	if(isSet($result)){
 		$rowNum = sizeOf($result);
 	} else {
 		$rowNum = 0;
@@ -1902,12 +1902,12 @@ foreach ($result as $row)
 	$dateToRemoveToDisplay = convertDatetimeToFormat($dateToRemove, 'Y-m-d', DATE_DEFAULT_FORMAT_TO_DISPLAY);	
 	
 		// Get Period Status information
-	if(isset($row['CompanyCreditsHistoryPeriods']) AND $row['CompanyCreditsHistoryPeriods'] != NULL){
+	if(isSet($row['CompanyCreditsHistoryPeriods']) AND $row['CompanyCreditsHistoryPeriods'] != NULL){
 		$totalPeriods = $row['CompanyCreditsHistoryPeriods'];
 	} else {
 		$totalPeriods = 0;
 	}
-	if(isset($row['CompanyCreditsHistoryPeriodsSetAsBilled']) AND $row['CompanyCreditsHistoryPeriodsSetAsBilled'] != NULL){
+	if(isSet($row['CompanyCreditsHistoryPeriodsSetAsBilled']) AND $row['CompanyCreditsHistoryPeriodsSetAsBilled'] != NULL){
 		$billedPeriods = $row['CompanyCreditsHistoryPeriodsSetAsBilled'];
 	} else {
 		$billedPeriods = 0;

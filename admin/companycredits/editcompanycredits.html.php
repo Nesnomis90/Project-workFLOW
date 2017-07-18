@@ -16,7 +16,7 @@
 		<h1>Edit Company Credits</h1>
 		
 		<div>
-			<?php if(isset($_SESSION['EditCompanyCreditsError'])) : ?>
+			<?php if(isSet($_SESSION['EditCompanyCreditsError'])) : ?>
 				<span><b class="feedback"><?php htmlout($_SESSION['EditCompanyCreditsError']); ?></b></span>
 				<?php unset($_SESSION['EditCompanyCreditsError']); ?>
 			<?php endif; ?>
@@ -36,7 +36,7 @@
 				<span><b><?php htmlout($originalCreditsName); ?></b></span>
 			</div>
 			<div>			
-			<?php if(isset($_SESSION['EditCompanyCreditsChangeCredits']) AND $_SESSION['EditCompanyCreditsChangeCredits']) : ?>
+			<?php if(isSet($_SESSION['EditCompanyCreditsChangeCredits']) AND $_SESSION['EditCompanyCreditsChangeCredits']) : ?>
 				<label for="CreditsID">Set New Credits: </label>
 				<select name="CreditsID" id="CreditsID">
 					<?php foreach($credits as $row): ?> 
@@ -73,7 +73,7 @@
 				<span><b><?php htmlout($originalCreditsAlternativeCreditsAmount); ?></b></span>	
 			</div>
 			<div>
-			<?php if(	isset($_SESSION['EditCompanyCreditsChangeAlternativeCreditsAmount']) AND 
+			<?php if(	isSet($_SESSION['EditCompanyCreditsChangeAlternativeCreditsAmount']) AND 
 						$_SESSION['EditCompanyCreditsChangeAlternativeCreditsAmount']) : ?>
 				<label for="CreditsAlternativeCreditsAmount">Set New Alt. Credits Given: </label>
 				<input type="number" name="CreditsAlternativeCreditsAmount" min="0" max="65535"
@@ -81,7 +81,7 @@
 				<input type="submit" name="edit" value="Set Original Amount">
 				<input type="submit" name="edit" value="Select Amount">
 				<span style="color: red;">* specified in minutes.</span> 
-			<?php elseif(!isset($_SESSION['EditCompanyCreditsChangeCredits'])) : ?>
+			<?php elseif(!isSet($_SESSION['EditCompanyCreditsChangeCredits'])) : ?>
 				<?php if($CreditsAlternativeCreditsAmount == 0) : ?>
 					<label for="CreditsAlternativeCreditsAmount">Using Default Credits Given: </label>
 					<span><b><?php htmlout($creditsGivenInHTML); ?></b></span>
@@ -98,10 +98,10 @@
 				value="<?php htmlout($CompanyID); ?>">
 				<input type="submit" name="edit" value="Reset">
 				<input type="submit" name="edit" value="Cancel">
-				<?php if(isset($_SESSION['EditCompanyCreditsChangeCredits']) AND $_SESSION['EditCompanyCreditsChangeCredits']) : ?>
+				<?php if(isSet($_SESSION['EditCompanyCreditsChangeCredits']) AND $_SESSION['EditCompanyCreditsChangeCredits']) : ?>
 					<input type="submit" name="disabled" value="Finish Edit" disabled>
 					<span><b>You need to select the credits you want before you can finish editing.</b></span>
-				<?php elseif(	isset($_SESSION['EditCompanyCreditsChangeAlternativeCreditsAmount']) AND 
+				<?php elseif(	isSet($_SESSION['EditCompanyCreditsChangeAlternativeCreditsAmount']) AND 
 								$_SESSION['EditCompanyCreditsChangeAlternativeCreditsAmount']) : ?>
 					<input type="submit" name="disabled" value="Finish Edit" disabled>
 					<span><b>You need to select the alternative Credits given before you can finish editing.</b></span>		

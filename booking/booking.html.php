@@ -13,18 +13,18 @@
 		<?php include_once $_SERVER['DOCUMENT_ROOT'] .'/includes/topnav.html.php'; ?>
 		
 		<div class="left">
-			<?php if(isset($_SESSION['normalBookingFeedback'])) : ?>
+			<?php if(isSet($_SESSION['normalBookingFeedback'])) : ?>
 				<span><b class="feedback"><?php htmlout($_SESSION['normalBookingFeedback']); ?></b></span>
 				<?php unset($_SESSION['normalBookingFeedback']); ?>
 			<?php endif; ?>
 		</div>
 
-		<?php if(isset($_GET['cancellationcode'])) : ?>
+		<?php if(isSet($_GET['cancellationcode'])) : ?>
 			<h1>Cancel Your Booking!</h1>
-		<?php elseif(isset($_SESSION['loggedIn']) AND $_SESSION['loggedIn']) : ?>
+		<?php elseif(isSet($_SESSION['loggedIn']) AND $_SESSION['loggedIn']) : ?>
 			<h1>Booking Information Overview</h1>
 
-			<?php if(isset($_SESSION['LoggedInUserName'])) : ?>
+			<?php if(isSet($_SESSION['LoggedInUserName'])) : ?>
 				<h3>Logged in as <?php htmlout($_SESSION['LoggedInUserName']); ?>.</h3>
 			<?php else : ?>
 				<h3>Logged in</h3>
@@ -38,11 +38,11 @@
 				</div>
 			</form>
 
-			<?php if(isset($_GET['meetingroom']) AND isset($_GET['name'])) : ?>
+			<?php if(isSet($_GET['meetingroom']) AND isSet($_GET['name'])) : ?>
 				<div class="left">
 					<span><b>Currently viewing bookings for the meeting room named: <?php htmlout($_GET['name']); ?></b></span>
 				</div>
-			<?php elseif(isset($_GET['meetingroom']) AND !isset($_GET['name'])) : ?>
+			<?php elseif(isSet($_GET['meetingroom']) AND !isSet($_GET['name'])) : ?>
 				<div class="left">
 					<span><b>Currently viewing bookings from a single room</b></span>
 				</div>			
@@ -66,10 +66,10 @@
 					<th>Edit</th>			
 					<th>Cancel</th>
 				</tr>
-			<?php if(isset($bookingsActiveToday)) :?>					
+			<?php if(isSet($bookingsActiveToday)) :?>					
 				<?php foreach ($bookingsActiveToday AS $booking): ?>
 					<form action="" method="post">				
-						<?php if(isset($_SESSION['LoggedInUserID']) AND $_SESSION['LoggedInUserID'] == $booking['BookedUserID']) : ?>					
+						<?php if(isSet($_SESSION['LoggedInUserID']) AND $_SESSION['LoggedInUserID'] == $booking['BookedUserID']) : ?>					
 							<tr class="LoggedInUserBooking">
 						<?php else : ?>
 							<tr>
@@ -89,12 +89,12 @@
 							<td><?php htmlout($booking['BookingDescription']); ?></td>
 							<td><?php htmlout($booking['BookingWasCreatedOn']); ?></td>
 							<td>
-								<?php if(isset($_SESSION['LoggedInUserID']) AND $_SESSION['LoggedInUserID'] == $booking['BookedUserID']) : ?>
+								<?php if(isSet($_SESSION['LoggedInUserID']) AND $_SESSION['LoggedInUserID'] == $booking['BookedUserID']) : ?>
 									<input type="submit" name="action" value="Edit">
 								<?php endif; ?>
 							</td>							
 							<td>
-								<?php if(isset($_SESSION['LoggedInUserID']) AND $_SESSION['LoggedInUserID'] == $booking['BookedUserID']) : ?>
+								<?php if(isSet($_SESSION['LoggedInUserID']) AND $_SESSION['LoggedInUserID'] == $booking['BookedUserID']) : ?>
 									<input type="submit" name="action" value="Cancel">
 								<?php endif; ?>
 							</td>
@@ -132,10 +132,10 @@
 						<th>Edit</th>			
 						<th>Cancel</th>
 					</tr>
-				<?php if(isset($bookingsFuture)) :?>		
+				<?php if(isSet($bookingsFuture)) :?>		
 					<?php foreach ($bookingsFuture AS $booking): ?>
 						<form action="" method="post">
-						<?php if(isset($_SESSION['LoggedInUserID']) AND $_SESSION['LoggedInUserID'] == $booking['BookedUserID']) : ?>					
+						<?php if(isSet($_SESSION['LoggedInUserID']) AND $_SESSION['LoggedInUserID'] == $booking['BookedUserID']) : ?>					
 							<tr class="LoggedInUserBooking">
 						<?php else : ?>
 							<tr>
@@ -149,12 +149,12 @@
 								<td><?php htmlout($booking['BookingDescription']); ?></td>
 								<td><?php htmlout($booking['BookingWasCreatedOn']); ?></td>
 								<td>
-									<?php if(isset($_SESSION['LoggedInUserID']) AND $_SESSION['LoggedInUserID'] == $booking['BookedUserID']) : ?>
+									<?php if(isSet($_SESSION['LoggedInUserID']) AND $_SESSION['LoggedInUserID'] == $booking['BookedUserID']) : ?>
 										<input type="submit" name="action" value="Edit">
 									<?php endif; ?>
 								</td>							
 								<td>
-									<?php if(isset($_SESSION['LoggedInUserID']) AND $_SESSION['LoggedInUserID'] == $booking['BookedUserID']) : ?>
+									<?php if(isSet($_SESSION['LoggedInUserID']) AND $_SESSION['LoggedInUserID'] == $booking['BookedUserID']) : ?>
 										<input type="submit" name="action" value="Cancel">
 									<?php endif; ?>
 								</td>
@@ -174,10 +174,10 @@
 					<?php endforeach; ?>
 				<?php endif; ?>	
 				</table>
-		<?php elseif(!isset($_SESSION['loggedIn'])) : ?>
+		<?php elseif(!isSet($_SESSION['loggedIn'])) : ?>
 			<h1>Booking Information Overview</h1>
 			
-			<?php if(!isset($_SESSION["DefaultMeetingRoomInfo"])) : ?>
+			<?php if(!isSet($_SESSION["DefaultMeetingRoomInfo"])) : ?>
 				<form action="" method="post">
 					<input type="submit" name="login" value="Log In">
 				</form>
@@ -185,7 +185,7 @@
 			
 			<form action="" method="post">
 				<div>
-					<?php if(isset($_SESSION["DefaultMeetingRoomInfo"])) : ?>
+					<?php if(isSet($_SESSION["DefaultMeetingRoomInfo"])) : ?>
 						<input type="submit" name="action" value="Create Meeting">
 					<?php endif; ?>
 					<input type="submit" name="action" value="Refresh">
@@ -207,7 +207,7 @@
 					<th>Edit</th>			
 					<th>Cancel</th>
 				</tr>
-			<?php if(isset($bookingsActiveToday)) :?>				
+			<?php if(isSet($bookingsActiveToday)) :?>				
 				<?php foreach ($bookingsActiveToday AS $booking): ?>
 					<form action="" method="post">
 						<tr>
@@ -222,12 +222,12 @@
 								<?php endif; ?>
 							</td>
 							<td>
-								<?php if(isset($_SESSION["DefaultMeetingRoomInfo"])) : ?>
+								<?php if(isSet($_SESSION["DefaultMeetingRoomInfo"])) : ?>
 									<input type="submit" name="action" value="Edit">
 								<?php endif; ?>
 							</td>							
 							<td>
-								<?php if(isset($_SESSION["DefaultMeetingRoomInfo"])) : ?>
+								<?php if(isSet($_SESSION["DefaultMeetingRoomInfo"])) : ?>
 									<input type="submit" name="action" value="Cancel">
 								<?php endif; ?>
 							</td>
@@ -256,7 +256,7 @@
 					<th>Edit</th>			
 					<th>Cancel</th>
 				</tr>
-			<?php if(isset($bookingsFuture)) :?>		
+			<?php if(isSet($bookingsFuture)) :?>		
 				<?php foreach ($bookingsFuture AS $booking): ?>
 					<form action="" method="post">			
 						<tr>
@@ -265,12 +265,12 @@
 							<td><?php htmlout($booking['StartTime']); ?></td>
 							<td><?php htmlout($booking['EndTime']); ?></td>
 							<td>
-								<?php if(isset($_SESSION["DefaultMeetingRoomInfo"])) : ?>
+								<?php if(isSet($_SESSION["DefaultMeetingRoomInfo"])) : ?>
 									<input type="submit" name="action" value="Edit">
 								<?php endif; ?>
 							</td>							
 							<td>
-								<?php if(isset($_SESSION["DefaultMeetingRoomInfo"])) : ?>
+								<?php if(isSet($_SESSION["DefaultMeetingRoomInfo"])) : ?>
 									<input type="submit" name="action" value="Cancel">
 								<?php endif; ?>
 							</td>

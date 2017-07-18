@@ -16,13 +16,13 @@
 		<h1>Add Room Equipment</h1>
 		
 		<div class="left">
-			<?php if(isset($AddRoomEquipmentError)) : ?>
+			<?php if(isSet($AddRoomEquipmentError)) : ?>
 				<span><b class="feedback"><?php htmlout($AddRoomEquipmentError); ?> </b></span>
 			<?php endif; ?>
 		</div>
 		
 		<div class="left">
-			<?php if(isset($_SESSION['AddRoomEquipmentSearchResult'])) : ?>
+			<?php if(isSet($_SESSION['AddRoomEquipmentSearchResult'])) : ?>
 				<span><b class="feedback"><?php htmlout($_SESSION['AddRoomEquipmentSearchResult']); ?></b></span>
 				<?php unset($_SESSION['AddRoomEquipmentSearchResult']); ?>
 			<?php endif; ?>	
@@ -31,11 +31,11 @@
 		<form action="" method="post">
 			<div>
 				<label for="MeetingRoomID">Meeting Room Name:</label>
-				<?php if(!isset($_GET['Meetingroom'])) : ?>
+				<?php if(!isSet($_GET['Meetingroom'])) : ?>
 					<select name="MeetingRoomID" id="MeetingRoomID">
 						<option value="">Select a Meeting Room</option>
 						<?php foreach($meetingrooms as $row): ?> 
-							<?php if (isset($selectedMeetingRoomID) AND $selectedMeetingRoomID == $row['MeetingRoomID']) : ?>
+							<?php if (isSet($selectedMeetingRoomID) AND $selectedMeetingRoomID == $row['MeetingRoomID']) : ?>
 								<option selected="selected" value="<?php htmlout($row['MeetingRoomID']); ?>">
 										<?php htmlout($row['MeetingRoomName']);?>
 								</option>
@@ -51,7 +51,7 @@
 				<?php endif; ?>					
 			</div>
 			
-			<?php if(!isset($_GET['Meetingroom'])) :?>			
+			<?php if(!isSet($_GET['Meetingroom'])) :?>			
 				<div>
 					<label for="meetingroomsearchstring">Search for Meeting Room:</label>
 					<input type="text" name="meetingroomsearchstring" 
@@ -65,7 +65,7 @@
 				<select name="EquipmentID" id="EquipmentID">
 					<option value="">Select Equipment</option>
 					<?php foreach($equipment as $row): ?> 
-						<?php if (isset($selectedEquipmentID) AND $selectedEquipmentID == $row['EquipmentID']) : ?>
+						<?php if (isSet($selectedEquipmentID) AND $selectedEquipmentID == $row['EquipmentID']) : ?>
 							<option selected="selected" value="<?php htmlout($row['EquipmentID']); ?>">
 									<?php htmlout($row['EquipmentName']);?>
 							</option>

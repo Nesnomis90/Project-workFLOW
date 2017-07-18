@@ -16,14 +16,14 @@
 		<h1><?php htmlout($pageTitle); ?></h1>
 		
 		<div>
-			<?php if(isset($_SESSION['AddCompanyError'])) : ?>
+			<?php if(isSet($_SESSION['AddCompanyError'])) : ?>
 				<span><b class="feedback"><?php htmlout($_SESSION['AddCompanyError']); ?></b></span>
 				<?php unset($_SESSION['AddCompanyError']); ?>
 			<?php endif; ?>
 		</div>
 		
 		<form action="" method="post">
-			<?php if(isset($originalCompanyName)) : ?>
+			<?php if(isSet($originalCompanyName)) : ?>
 				<div>
 					<label for="originalCompanyName">Original Company Name:</label>
 					<b><?php htmlout($originalCompanyName); ?></b>	
@@ -38,7 +38,7 @@
 			<?php if ($ShowDateToRemove) :?>
 				<div>
 					<label for="originalDateToRemove">Original Date to Remove:</label>
-					<?php if(isset($originalDateToDisplay) AND $originalDateToDisplay != "") : ?>
+					<?php if(isSet($originalDateToDisplay) AND $originalDateToDisplay != "") : ?>
 						<span><b><?php htmlout($originalDateToDisplay); ?></b></span>
 					<?php else : ?>
 						<span><b>No date has been Set</b></span>

@@ -16,7 +16,7 @@ function validateUserInputs($FeedbackSessionToUse){
 	
 	// Get user inputs
 		//Firstname
-	if(isset($_POST['firstname'])){
+	if(isSet($_POST['firstname'])){
 		$firstname = $_POST['firstname'];
 		$firstname = trim($firstname);
 	} elseif(!$invalidInput) {
@@ -24,7 +24,7 @@ function validateUserInputs($FeedbackSessionToUse){
 		$invalidInput = TRUE;
 	}	
 		//Lastname
-	if(isset($_POST['lastname'])){
+	if(isSet($_POST['lastname'])){
 		$lastname = $_POST['lastname'];
 		$lastname = trim($lastname);
 	} elseif(!$invalidInput) {
@@ -32,7 +32,7 @@ function validateUserInputs($FeedbackSessionToUse){
 		$invalidInput = TRUE;
 	}		
 		//Email
-	if(isset($_POST['email'])){
+	if(isSet($_POST['email'])){
 		$email = $_POST['email'];
 		$email = trim($email);
 	} elseif(!$invalidInput) {
@@ -41,18 +41,18 @@ function validateUserInputs($FeedbackSessionToUse){
 	}
 
 
-	elseif(isset($_POST['password'])){
+	elseif(isSet($_POST['password'])){
 		$password = $_POST['password'];
 	}
 	
 		// Display Name (edit only)
-	if(isset($_POST['displayname'])){
+	if(isSet($_POST['displayname'])){
 		$displayNameString = $_POST['displayname'];
 	} else {
 		$displayNameString = '';
 	}
 		// Booking Description (edit only)
-	if(isset($_POST['bookingdescription'])){
+	if(isSet($_POST['bookingdescription'])){
 		$bookingDescriptionString = $_POST['bookingdescription'];
 	} else {
 		$bookingDescriptionString = '';
@@ -120,7 +120,7 @@ function validateUserInputs($FeedbackSessionToUse){
 	}
 	
 	// Check if the submitted email has already been used
-	if(isset($_SESSION['EditNormalUserOriginaEmail'])){
+	if(isSet($_SESSION['EditNormalUserOriginaEmail'])){
 		$originalEmail = $_SESSION['EditNormalUserOriginaEmail'];
 		// no need to check if our own email exists in the database
 		if($email!=$originalEmail){
@@ -141,12 +141,12 @@ return array($invalidInput, $email, $validatedFirstname, $validatedLastname, $va
 }
 
 // If user wants to submit the registration details and create the account
-if(isset($_POST['register']) AND $_POST['register'] == "Register Account"){
+if(isSet($_POST['register']) AND $_POST['register'] == "Register Account"){
 	// Input validation
 	list($invalidInput, $email, $validatedFirstname, $validatedLastname, $validatedBookingDescription, $validatedDisplayName) = validateUserInputs('registerUserWarning');	
 
 		//Password
-	if(isset($_POST['password1']) AND isset($_POST['password2']) AND !$invalidInput){
+	if(isSet($_POST['password1']) AND isSet($_POST['password2']) AND !$invalidInput){
 		$password1 = $_POST['password1'];
 		$password2 = $_POST['password2'];
 		
@@ -229,13 +229,13 @@ if(isset($_POST['register']) AND $_POST['register'] == "Register Account"){
 		
 		$description = "N/A";
 		$userinfo = $validatedLastname . ', ' . $validatedFirstname . ' - ' . $email;
-		if(isset($_SESSION['LoggedInUserName'])){
+		if(isSet($_SESSION['LoggedInUserName'])){
 			$description = "An account for: " . $userinfo . " was registered by: " . $_SESSION['LoggedInUserName'];
 		} else {
 			$description = "An account was registered for " . $userinfo;
 		}
 		
-		if(isset($_SESSION['lastUserID'])){
+		if(isSet($_SESSION['lastUserID'])){
 			$lastUserID = $_SESSION['lastUserID'];
 			unset($_SESSION['lastUserID']);				
 		}
@@ -303,30 +303,30 @@ if(isset($_POST['register']) AND $_POST['register'] == "Register Account"){
 }
 
 // Code to execute when a user wants to register an account 
-if(isset($_GET['register']) OR (isset($_SESSION['refreshRegisterUser']) AND $_SESSION['refreshRegisterUser'])){
+if(isSet($_GET['register']) OR (isSet($_SESSION['refreshRegisterUser']) AND $_SESSION['refreshRegisterUser'])){
 
-	if(isset($_SESSION['refreshRegisterUser']) AND $_SESSION['refreshRegisterUser']){
+	if(isSet($_SESSION['refreshRegisterUser']) AND $_SESSION['refreshRegisterUser']){
 		$refreshedRegister = TRUE;
 		unset($_SESSION['refreshRegisterUser']);
 	}
 	
-	if(isset($_SESSION['registerUserWarning']) AND strpos(strtolower($_SESSION['registerUserWarning']), 'email') !== FALSE){
+	if(isSet($_SESSION['registerUserWarning']) AND strpos(strtolower($_SESSION['registerUserWarning']), 'email') !== FALSE){
 		$invalidEmail = TRUE;
 	}
 	// Set correct startvalues
-	if(isset($_SESSION['registerUserFirstName'])){
+	if(isSet($_SESSION['registerUserFirstName'])){
 		$firstName = $_SESSION['registerUserFirstName'];
 		unset($_SESSION['registerUserFirstName']);
 	} else {
 		$firstName = "";
 	}
-	if(isset($_SESSION['registerUserLastName'])){
+	if(isSet($_SESSION['registerUserLastName'])){
 		$lastName = $_SESSION['registerUserLastName'];
 		unset($_SESSION['registerUserLastName']);
 	} else {
 		$lastName = "";
 	}
-	if(isset($_SESSION['registerUserEmail'])){
+	if(isSet($_SESSION['registerUserEmail'])){
 		$email = $_SESSION['registerUserEmail'];
 		unset($_SESSION['registerUserEmail']);
 	} else {
@@ -342,7 +342,7 @@ if(isset($_GET['register']) OR (isset($_SESSION['refreshRegisterUser']) AND $_SE
 }
 
 // Code to execute to activate an account from activation link
-if(isset($_GET['activateaccount'])){
+if(isSet($_GET['activateaccount'])){
 	
 	$activationCode = $_GET['activateaccount'];
 		
@@ -385,7 +385,7 @@ if(isset($_GET['activateaccount'])){
 	
 	// Check if the select even found something
 	$result = $s->fetch(PDO::FETCH_ASSOC);
-	if(isset($result)){
+	if(isSet($result)){
 		$rowNum = sizeOf($result);
 	} else {
 		$rowNum = 0;
@@ -466,19 +466,19 @@ if(isset($_GET['activateaccount'])){
 	}	
 }
 
-if(isset($_POST['action']) AND $_POST['action'] == "Reset"){
+if(isSet($_POST['action']) AND $_POST['action'] == "Reset"){
 	$_SESSION['normalUserEditInfoArray'] = $_SESSION['normalUserOriginalInfoArray'];
 }
-if(isset($_POST['action']) AND $_POST['action'] == "Cancel"){
+if(isSet($_POST['action']) AND $_POST['action'] == "Cancel"){
 	unset($_SESSION['normalUserOriginalInfoArray']);
 	unset($_SESSION['normalUserEditInfoArray']);
 	unset($_SESSION['normalUserEditMode']);
 }
 
-if(isset($_SESSION['loggedIn']) AND isset($_SESSION['LoggedInUserID'])){
+if(isSet($_SESSION['loggedIn']) AND isSet($_SESSION['LoggedInUserID'])){
 	// Get User information if user is logged in
 	$userID = $_SESSION['LoggedInUserID'];
-	if(!isset($_SESSION['normalUserOriginalInfoArray'])){
+	if(!isSet($_SESSION['normalUserOriginalInfoArray'])){
 		try
 		{
 			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
@@ -571,10 +571,10 @@ if(isset($_SESSION['loggedIn']) AND isset($_SESSION['LoggedInUserID'])){
 	unset($_SESSION['normalUserEditMode']);
 }
 
-if(isset($_POST['action']) AND $_POST['action'] == "Show Code"){
+if(isSet($_POST['action']) AND $_POST['action'] == "Show Code"){
 	$showBookingCode = revealBookingCode($originalBookingCode);
 	
-	if(isset($_SESSION['normalUserEditInfoArray']) AND isset($_SESSION['normalUserEditMode'])){
+	if(isSet($_SESSION['normalUserEditInfoArray']) AND isSet($_SESSION['normalUserEditMode'])){
 		$_SESSION['normalUserEditInfoArray']['FirstName'] = trimExcessWhitespace($_POST['firstName']);
 		$_SESSION['normalUserEditInfoArray']['LastName'] = trimExcessWhitespace($_POST['lastName']);
 		$_SESSION['normalUserEditInfoArray']['DisplayName'] = trimExcessWhitespace($_POST['displayName']);
@@ -584,13 +584,13 @@ if(isset($_POST['action']) AND $_POST['action'] == "Show Code"){
 	}
 }
 
-if(isset($_POST['action']) AND $_POST['action'] == "Confirm Change"){
+if(isSet($_POST['action']) AND $_POST['action'] == "Confirm Change"){
 	// Do input validation
 	$invalidInput = FALSE;
 	
 	// Get user inputs
 		// Firstname
-	if(isset($_POST['firstName'])){
+	if(isSet($_POST['firstName'])){
 		$firstname = $_POST['firstName'];
 		$firstname = trim($firstname);
 	} elseif(!$invalidInput) {
@@ -598,7 +598,7 @@ if(isset($_POST['action']) AND $_POST['action'] == "Confirm Change"){
 		$invalidInput = TRUE;
 	}	
 		// Lastname
-	if(isset($_POST['lastName'])){
+	if(isSet($_POST['lastName'])){
 		$lastname = $_POST['lastName'];
 		$lastname = trim($lastname);
 	} elseif(!$invalidInput) {
@@ -606,7 +606,7 @@ if(isset($_POST['action']) AND $_POST['action'] == "Confirm Change"){
 		$invalidInput = TRUE;
 	}		
 		// Email
-	if(isset($_POST['email'])){
+	if(isSet($_POST['email'])){
 		$email = $_POST['email'];
 		$email = trim($email);
 	} elseif(!$invalidInput) {
@@ -614,19 +614,19 @@ if(isset($_POST['action']) AND $_POST['action'] == "Confirm Change"){
 		$invalidInput = TRUE;
 	}
 		// Display Name
-	if(isset($_POST['displayName'])){
+	if(isSet($_POST['displayName'])){
 		$displayNameString = $_POST['displayName'];
 	} else {
 		$displayNameString = '';
 	}
 		// Booking Description
-	if(isset($_POST['bookingDescription'])){
+	if(isSet($_POST['bookingDescription'])){
 		$bookingDescriptionString = $_POST['bookingDescription'];
 	} else {
 		$bookingDescriptionString = '';
 	}
 		// Booking Code
-	if(isset($_POST['bookingCode']) AND !empty($_POST['bookingCode'])){
+	if(isSet($_POST['bookingCode']) AND !empty($_POST['bookingCode'])){
 		$bookingCode = $_POST['bookingCode'];
 	}
 
@@ -635,7 +635,7 @@ if(isset($_POST['action']) AND $_POST['action'] == "Confirm Change"){
 	$validatedLastname = trimExcessWhitespace($lastname);
 	$validatedDisplayName = trimExcessWhitespaceButLeaveLinefeed($displayNameString);
 	$validatedBookingDescription = trimExcessWhitespaceButLeaveLinefeed($bookingDescriptionString);
-	if(isset($bookingCode)){
+	if(isSet($bookingCode)){
 		$validatedBookingCode = trimAllWhitespace($bookingCode);
 	}
 	
@@ -692,7 +692,7 @@ if(isset($_POST['action']) AND $_POST['action'] == "Confirm Change"){
 		$_SESSION['normalUserFeedback'] = "The booking description submitted is too long.";	
 		$invalidInput = TRUE;		
 	}
-	if(isset($validatedBookingCode)){
+	if(isSet($validatedBookingCode)){
 			// Booking Code
 		if(validateIntegerNumber($validatedBookingCode) === FALSE AND !$invalidInput){
 			$invalidInput = TRUE;
@@ -726,10 +726,10 @@ if(isset($_POST['action']) AND $_POST['action'] == "Confirm Change"){
 	
 	// Check if user is trying to set a new password
 	// And if so, check if both fields are filled in and match each other
-	if(isset($_POST['password1'])){
+	if(isSet($_POST['password1'])){
 		$password1 = $_POST['password1'];
 	} 
-	if(isset($_POST['password2'])){
+	if(isSet($_POST['password2'])){
 		$password2 = $_POST['password2'];
 	}
 	$minimumPasswordLength = MINIMUM_PASSWORD_LENGTH;
@@ -754,20 +754,20 @@ if(isset($_POST['action']) AND $_POST['action'] == "Confirm Change"){
 		// Just means we won't change it!
 	}	
 
-	if(isset($_SESSION['normalUserEditInfoArray'])){
+	if(isSet($_SESSION['normalUserEditInfoArray'])){
 		$_SESSION['normalUserEditInfoArray']['FirstName'] = $validatedFirstname;
 		$_SESSION['normalUserEditInfoArray']['LastName'] = $validatedLastname;
 		$_SESSION['normalUserEditInfoArray']['DisplayName'] = $validatedDisplayName;
 		$_SESSION['normalUserEditInfoArray']['BookingDescription'] = $validatedBookingDescription;
 		$_SESSION['normalUserEditInfoArray']['Email'] = $email;
 		$_SESSION['normalUserEditInfoArray']['SendEmail'] = $_POST['sendEmail'];
-		if(isset($validatedBookingCode)){
+		if(isSet($validatedBookingCode)){
 			$_SESSION['normalUserEditInfoArray']['BookingCode'] = hashBookingCode($validatedBookingCode);
 			$_SESSION['normalUserEditInfoArray']['LastCodeUpdate'] = getDatetimeNow();
 		}
 	}
 
-	if(isset($_POST['confirmPassword']) AND !empty($_POST['confirmPassword']) AND !$invalidInput){
+	if(isSet($_POST['confirmPassword']) AND !empty($_POST['confirmPassword']) AND !$invalidInput){
 		$password = $_POST['confirmPassword'];
 		$hashedPassword = hashPassword($password);
 		if($hashedPassword == $result['HashedPassword']){
@@ -831,18 +831,18 @@ if(isset($_POST['action']) AND $_POST['action'] == "Confirm Change"){
 		} else {
 			$_SESSION['normalUserFeedback'] = "The Password you submitted was incorrect.";
 		}
-	} elseif(isset($_POST['confirmPassword']) AND empty($_POST['confirmPassword']) AND !$invalidInput){
+	} elseif(isSet($_POST['confirmPassword']) AND empty($_POST['confirmPassword']) AND !$invalidInput){
 		$_SESSION['normalUserFeedback'] = "You need to type in your password before you can make any changes.";
 	}
 }
 
-if(isset($_POST['action']) AND $_POST['action'] == "Change Information"){
+if(isSet($_POST['action']) AND $_POST['action'] == "Change Information"){
 	$_SESSION['normalUserEditMode'] = TRUE;
 }
 
-if(isset($_SESSION['normalUserEditMode'])){
+if(isSet($_SESSION['normalUserEditMode'])){
 	$editMode = TRUE;
-	if(!isset($_SESSION['normalUserEditInfoArray'])){
+	if(!isSet($_SESSION['normalUserEditInfoArray'])){
 		$_SESSION['normalUserEditInfoArray'] = $_SESSION['normalUserOriginalInfoArray'];
 	}
 	$edit = $_SESSION['normalUserEditInfoArray'];

@@ -16,7 +16,7 @@
 		<h1>Edit Booking</h1>
 		
 		<div>
-			<?php if(isset($_SESSION['EditBookingError'])) : ?>
+			<?php if(isSet($_SESSION['EditBookingError'])) : ?>
 				<span><b class="feedback"><?php htmlout($_SESSION['EditBookingError']); ?></b></span>
 				<?php unset($_SESSION['EditBookingError']); ?>
 			<?php endif; ?>
@@ -67,8 +67,8 @@
 			</div>
 			<div>
 				<label for="SelectedUser">Set New User: </label>
-				<?php if(isset($_SESSION['EditBookingChangeUser']) AND $_SESSION['EditBookingChangeUser']) :?>
-					<?php if(isset($users)) : ?>
+				<?php if(isSet($_SESSION['EditBookingChangeUser']) AND $_SESSION['EditBookingChangeUser']) :?>
+					<?php if(isSet($users)) : ?>
 						<select name="userID" id="userID">
 							<?php foreach($users as $row): ?> 
 								<?php if($row['userID'] == $SelectedUserID):?>
@@ -92,7 +92,7 @@
 						value="<?php htmlout($usersearchstring); ?>">
 						<input type="submit" name="edit" value="Search">
 					</div>
-				<?php elseif(isset($SelectedUserID) AND $SelectedUserID != NULL AND $SelectedUserID != "") : ?>
+				<?php elseif(isSet($SelectedUserID) AND $SelectedUserID != NULL AND $SelectedUserID != "") : ?>
 						<span><b><?php htmlout($userInformation); ?> </b></span>
 						<input type="submit" name="edit" value="Change User">
 						<input type="hidden" name="userID" id="userID"
@@ -107,7 +107,7 @@
 				<?php endif; ?>
 			<div>
 				<label for="originalCompanyInBooking">Booked for Company: </label>
-				<?php if(isset($originalCompanyName)) :?>
+				<?php if(isSet($originalCompanyName)) :?>
 					<span><b><?php htmlout($originalCompanyName); ?></b></span>
 				<?php else : ?>
 					<span><b>This booking had no company assigned.</b></span>
@@ -115,9 +115,9 @@
 			</div>
 			<div>
 				<label for="companyID">Set New Company: </label>
-				<?php if(	isset($_SESSION['EditBookingDisplayCompanySelect']) AND 
+				<?php if(	isSet($_SESSION['EditBookingDisplayCompanySelect']) AND 
 							$_SESSION['EditBookingDisplayCompanySelect']) : ?>
-					<?php if(isset($_SESSION['EditBookingSelectACompany'])) : ?>
+					<?php if(isSet($_SESSION['EditBookingSelectACompany'])) : ?>
 						<select name="companyID" id="companyID">
 							<?php foreach($company as $row): ?> 
 								<?php if($row['companyID']==$selectedCompanyID):?>
@@ -135,7 +135,7 @@
 						<input type="submit" name="edit" value="Change Company">
 					<?php endif; ?>
 				<?php else : ?>
-					<?php if(isset($company)) : ?>
+					<?php if(isSet($company)) : ?>
 						<span><b>This user is only connected to one company: <?php htmlout($companyName); ?></b></span>
 					<?php else : ?>
 						<span><b>This user is not connected to a company.</b></span>
@@ -180,11 +180,11 @@
 				value="<?php htmlout($bookingID); ?>">
 				<input type="submit" name="edit" value="Reset">
 				<input type="submit" name="edit" value="Cancel">
-				<?php if(	(isset($_SESSION['EditBookingChangeUser']) AND $_SESSION['EditBookingChangeUser']) OR 
-							($SelectedUserID == "" OR $SelectedUserID == NULL OR !isset($SelectedUserID))) : ?>
+				<?php if(	(isSet($_SESSION['EditBookingChangeUser']) AND $_SESSION['EditBookingChangeUser']) OR 
+							($SelectedUserID == "" OR $SelectedUserID == NULL OR !isSet($SelectedUserID))) : ?>
 					<input type="submit" name="disabled" value="Finish Edit" disabled>
 					<span><b>You need to select the user you want before you can finish editing.</b></span>
-				<?php elseif(isset($_SESSION['EditBookingSelectACompany'])) : ?>
+				<?php elseif(isSet($_SESSION['EditBookingSelectACompany'])) : ?>
 					<input type="submit" name="disabled" value="Finish Edit" disabled>
 					<span><b>You need to select the company you want before you can finish editing.</b></span>			
 				<?php else : ?>

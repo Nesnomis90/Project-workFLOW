@@ -17,7 +17,7 @@
 		<h1>Manage Users</h1>
 		
 		<div class="left">
-			<?php if(isset($_SESSION['UserManagementFeedbackMessage'])) : ?>
+			<?php if(isSet($_SESSION['UserManagementFeedbackMessage'])) : ?>
 				<span><b class="feedback"><?php htmlout($_SESSION['UserManagementFeedbackMessage']); ?></b></span>
 				<?php unset($_SESSION['UserManagementFeedbackMessage']); ?>
 			<?php endif; ?>
@@ -30,7 +30,7 @@
 		</div>
 		<div class="right">
 			<form action="" method="post">
-				<?php if(isset($_SESSION['usersEnableDelete']) AND $_SESSION['usersEnableDelete']) : ?>
+				<?php if(isSet($_SESSION['usersEnableDelete']) AND $_SESSION['usersEnableDelete']) : ?>
 					<input type="submit" name="action" value="Disable Delete">
 				<?php else : ?>
 					<input type="submit" name="action" value="Enable Delete">
@@ -85,7 +85,7 @@
 							<?php endif; ?>
 							<td><input type="submit" name="action" value="Edit"></td>
 							<td>
-								<?php if(isset($_SESSION['usersEnableDelete']) AND $_SESSION['usersEnableDelete']) : ?>
+								<?php if(isSet($_SESSION['usersEnableDelete']) AND $_SESSION['usersEnableDelete']) : ?>
 									<input type="submit" name="action" value="Delete">
 								<?php else : ?>
 									<input type="submit" name="disabled" value="Delete" disabled>
@@ -99,7 +99,7 @@
 				<?php endforeach; ?>
 			</table>
 			
-			<?php if(isset($inactiveusers)) : ?>
+			<?php if(isSet($inactiveusers)) : ?>
 				<table>
 					<caption>Unactivated Users</caption>
 					<tr>
@@ -125,7 +125,7 @@
 							<td><?php htmlout($user['accessname']); ?></td>
 							<td><?php htmlout($user['datecreated']); ?></td>
 							<td>
-								<?php if(isset($_SESSION['usersEnableDelete']) AND $_SESSION['usersEnableDelete']) : ?>
+								<?php if(isSet($_SESSION['usersEnableDelete']) AND $_SESSION['usersEnableDelete']) : ?>
 									<input type="submit" name="action" value="Delete">
 								<?php else : ?>
 									<input type="submit" name="disabled" value="Delete" disabled>

@@ -11,14 +11,14 @@
 	<body>
 		<h1>Manage Companies</h1>
 		
-		<?php if(isset($_SESSION['CompanyUserFeedback'])) : ?>
+		<?php if(isSet($_SESSION['CompanyUserFeedback'])) : ?>
 			<p><b><?php htmlout($_SESSION['CompanyUserFeedback']); ?></b></p>
 			<?php unset($_SESSION['CompanyUserFeedback']); ?>
 		<?php endif; ?>
 		
 		<form action="" method="post">
 			<div class="right">
-				<?php if(isset($_SESSION['companiesEnableDelete']) AND $_SESSION['companiesEnableDelete']) : ?>
+				<?php if(isSet($_SESSION['companiesEnableDelete']) AND $_SESSION['companiesEnableDelete']) : ?>
 					<input type="submit" name="action" value="Disable Delete">
 				<?php else : ?>
 					<input type="submit" name="action" value="Enable Delete">
@@ -65,7 +65,7 @@
 					<th>Edit</th>
 					<th>Delete</th>
 				</tr>
-				<?php if (isset($companies)) : ?>
+				<?php if (isSet($companies)) : ?>
 					<?php foreach ($companies as $company): ?>
 						<tr>
 							<?php $goto = "http://$_SERVER[HTTP_HOST]/admin/employees/?Company=" . $company['id'];?>
@@ -124,7 +124,7 @@
 								<td><?php htmlout($company['DatetimeCreated']); ?></td>							
 								<td><input type="submit" name="action" value="Edit"></td>
 								<td>
-									<?php if(isset($_SESSION['companiesEnableDelete']) AND $_SESSION['companiesEnableDelete']) : ?>
+									<?php if(isSet($_SESSION['companiesEnableDelete']) AND $_SESSION['companiesEnableDelete']) : ?>
 										<input type="submit" name="action" value="Delete">
 									<?php else : ?>
 										<input type="submit" name="disabled" value="Delete" disabled>
@@ -141,7 +141,7 @@
 				<?php endif; ?>
 			</table>
 			
-			<?php if(isset($unactivedcompanies)) : ?>
+			<?php if(isSet($unactivedcompanies)) : ?>
 				<table>
 					<caption>Unactivated New Companies</caption>
 					<tr>
@@ -166,7 +166,7 @@
 								<td><?php htmlout($company['DatetimeCreated']); ?></td>							
 								<td><input type="submit" name="action" value="Activate"></td>
 								<td>
-									<?php if(isset($_SESSION['companiesEnableDelete']) AND $_SESSION['companiesEnableDelete']) : ?>
+									<?php if(isSet($_SESSION['companiesEnableDelete']) AND $_SESSION['companiesEnableDelete']) : ?>
 										<input type="submit" name="action" value="Delete">
 									<?php else : ?>
 										<input type="submit" name="disabled" value="Delete" disabled>
@@ -179,7 +179,7 @@
 				</table>
 			<?php endif; ?>
 			
-			<?php if(isset($inactivecompanies)) : ?>
+			<?php if(isSet($inactivecompanies)) : ?>
 				<table>
 					<caption>Inactive Old Companies</caption>
 					<tr>
@@ -211,7 +211,7 @@
 								<td><?php htmlout($company['DeletionDate']); ?></td>
 								<td><input type="submit" name="action" value="Activate"></td>
 								<td>
-									<?php if(isset($_SESSION['companiesEnableDelete']) AND $_SESSION['companiesEnableDelete']) : ?>
+									<?php if(isSet($_SESSION['companiesEnableDelete']) AND $_SESSION['companiesEnableDelete']) : ?>
 										<input type="submit" name="action" value="Delete">
 									<?php else : ?>
 										<input type="submit" name="disabled" value="Delete" disabled>

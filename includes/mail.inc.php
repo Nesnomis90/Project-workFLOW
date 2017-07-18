@@ -33,7 +33,7 @@ function sendEmail($toEmail, $subject, $message){
 	}
 	
 	// Prepare email to be sent with valid email(s)
-	if(isset($validEmail) AND sizeOf($validEmail) > 0){
+	if(isSet($validEmail) AND sizeOf($validEmail) > 0){
 			// If subject is left blank, set a default subject
 		if($subject == ""){
 			$subject = "Message from Meeting Flow booking service.";
