@@ -648,7 +648,7 @@ if(isSet($_POST['action']) AND $_POST['action'] == "confirmcode"){
 	// Limit the amount of tries the session has to guess a booking code.
 	if(isSet($_SESSION['bookingCodeGuesses']) AND (sizeOf($_SESSION['bookingCodeGuesses']) >= MAXIMUM_BOOKING_CODE_GUESSES)){
 		
-		$startDateTime = end($_SESSION['bookingCodeGuesses']);
+		$startDateTime = $_SESSION['bookingCodeGuesses'][0];
 		
 		$timeDifference = convertTwoDateTimesToTimeDifferenceInMinutes($startDateTime, $dateTimeNow);
 		$timeRemaining = floor(BOOKING_CODE_WRONG_GUESS_TIMEOUT_IN_MINUTES - $timeDifference);
