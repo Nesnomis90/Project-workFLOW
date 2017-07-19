@@ -45,7 +45,7 @@
 			<?php elseif(isSet($_GET['meetingroom']) AND !isSet($_GET['name'])) : ?>
 				<div class="left">
 					<span><b>Currently viewing bookings from a single room</b></span>
-				</div>			
+				</div>
 			<?php endif; ?>
 			
 			<table>
@@ -53,7 +53,7 @@
 				<tr>
 					<th colspan="8">Booking information</th>
 					<th colspan="2">Alter Booking</th>
-				</tr>				
+				</tr>
 				<tr>
 					<th>Status</th>
 					<th>Room Name</th>
