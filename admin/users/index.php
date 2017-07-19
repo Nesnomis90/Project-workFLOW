@@ -343,9 +343,9 @@ if (isSet($_POST['action']) and $_POST['action'] == 'Delete')
 		$pdo = connect_to_db();
 		$sql = "INSERT INTO `logevent` 
 				SET			`actionID` = 	(
-												SELECT `actionID` 
-												FROM `logaction`
-												WHERE `name` = 'Account Removed'
+												SELECT 	`actionID` 
+												FROM 	`logaction`
+												WHERE 	`name` = 'Account Removed'
 											),
 							`description` = :description";
 		$s = $pdo->prepare($sql);

@@ -121,7 +121,7 @@ function fillCredits($pdo){
 								`description` = 'Set by default for all new companies.',
 								`minuteAmount` = 0,
 								`monthlyPrice` = 0,
-								`overCreditHourPrice` = 200");
+								`overCreditHourPrice` = 0");
 		
 		// Commit the transaction
 		$pdo->commit();
@@ -142,7 +142,7 @@ function fillAccessLevel($pdo){
 	{
 		//Insert the needed values.
 		$pdo->beginTransaction();
-		$pdo->exec("INSERT INTO `accesslevel`(`AccessName`, `Description`) VALUES ('Admin', 'Has full access to all website pages, company information and user information.')");
+		$pdo->exec("INSERT INTO `accesslevel`(`AccessName`, `Description`) VALUES ('Admin', 'Full access to all website pages, company information and user information.')");
 		$pdo->exec("INSERT INTO `accesslevel`(`AccessName`, `Description`) VALUES ('In-House User', 'Can book meeting rooms with a booking code.')");
 		$pdo->exec("INSERT INTO `accesslevel`(`AccessName`, `Description`) VALUES ('Normal User', 'Can browse meeting room schedules, with limited information, and request a booking.')");
 		
