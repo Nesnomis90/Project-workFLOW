@@ -31,6 +31,8 @@ $checkboxes = array(
 						array('Employee Removed', 				'Employee Removed', 		TRUE, 			FALSE),
 						array('Equipment Added', 				'Equipment Added', 			FALSE,			FALSE),
 						array('Equipment Removed', 				'Equipment Removed', 		TRUE, 			FALSE),
+						array('Event Created', 					'Event Created', 			FALSE,			FALSE),
+						array('Event Removed', 					'Event Removed', 			TRUE, 			FALSE),						
 						array('Meeting Room Added', 			'Meeting Room Added', 		FALSE, 			FALSE),
 						array('Meeting Room Removed', 			'Meeting Room Removed', 	TRUE, 			FALSE),
 						array('Room Equipment Added',			'Room Equipment Added',		FALSE, 			FALSE),
