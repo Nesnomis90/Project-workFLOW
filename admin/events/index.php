@@ -225,8 +225,8 @@ if(isSet($_POST['action']) AND $_POST['action'] == "Delete"){
 
 		$description = "N/A";
 		if(isSet($_POST['EventInfo'])){
-			$description = "The Event with the following details:\n" . $_POST['EventInfo'] . 
-			"\nwas deleted by: " . $_SESSION['LoggedInUserName'];
+			$description = "An event with these details was removed:\n" . $_POST['EventInfo'] . 
+			"\nIt was deleted by: " . $_SESSION['LoggedInUserName'];
 		} else {
 			$description = 'An event was deleted by: ' . $_SESSION['LoggedInUserName'];
 		}
@@ -597,7 +597,7 @@ if(isSet($_POST['add']) AND $_POST['add'] == "Create Event"){
 		if(isSet($timeSlotAvailableInfo) AND sizeOf($timeSlotAvailableInfo) > 0){
 			$firstDate = convertDatetimeToFormat($timeSlotAvailableInfo[0]['StartDateTime'], 'Y-m-d H:i:s', 'Y-m-d');
 			$lastDate = convertDatetimeToFormat(end($timeSlotAvailableInfo)['EndDateTime'], 'Y-m-d H:i:s', 'Y-m-d');
-			$daysSelected = implode("\n", $daysSelected);
+			$daysSelectedWithLineFeed = implode("\n", $daysSelected);
 			// Insert the new event base information
 			$sql = "INSERT INTO `event`
 					SET			`name` = :EventName,
@@ -615,7 +615,7 @@ if(isSet($_POST['add']) AND $_POST['add'] == "Create Event"){
 			$s->bindValue(':EndTime', $endTime);
 			$s->bindValue(':FirstDate', $firstDate);
 			$s->bindValue(':LastDate', $lastDate);
-			$s->bindValue(':DaysSelected',$daysSelected);	
+			$s->bindValue(':DaysSelected',$daysSelectedWithLineFeed);	
 			$s->execute();
 			
 			$EventID = $pdo->lastInsertID();
@@ -690,13 +690,15 @@ if(isSet($_POST['add']) AND $_POST['add'] == "Create Event"){
 		try
 		{
 			// Save a description with information about the event that was added
-
+			$daysSelectedWithComma = implode(", ", $daysSelected);
 			$displayableStartDate = convertDatetimeToFormat($firstDate, 'Y-m-d', DATE_DEFAULT_FORMAT_TO_DISPLAY);
-			$displayableEndDate = convertDatetimeToFormat($lastDate, 'Y-m-d', DATE_DEFAULT_FORMAT_TO_DISPLAY);;			
+			$displayableEndDate = convertDatetimeToFormat($lastDate, 'Y-m-d', DATE_DEFAULT_FORMAT_TO_DISPLAY);
+			$displayableStartTime = convertDatetimeToFormat($startTime, 'H:i:s', TIME_DEFAULT_FORMAT_TO_DISPLAY);
+			$displayableEndTime = convertDatetimeToFormat($endTime, 'H:i:s', TIME_DEFAULT_FORMAT_TO_DISPLAY);			
 			$description = "N/A";
-			$eventInfo = "Name: $eventName\nDescription: $eventDescription\nStartTime: $startTime\nEnd Time: $endTime\nStart Date: $displayableStartDate\nEnd Date: $displayableEndDate\nDays Selected: $daysSelected.";
+			$eventInfo = "Name: $eventName\nDescription: $eventDescription\nStart Time: $displayableStartTime\nEnd Time: $displayableEndTime\nStart Date: $displayableStartDate\nEnd Date: $displayableEndDate\nDay(s) Selected: $daysSelectedWithComma.";
 			if(isSet($_SESSION['LoggedInUserName'])){
-				$description = "An event was created with these details:\n" . $eventInfo . "\nIt was created by: " . $_SESSION['LoggedInUserName'];
+				$description = "An event was created with these details:\n" . $eventInfo . "\nIt was created by: " . $_SESSION['LoggedInUserName'] . ".";
 			} else {
 				$description = "An event was created with these details:\n" . $eventInfo;
 			}
@@ -1010,6 +1012,7 @@ foreach ($result as $row)
 	// Check if the event is a single day or multiple days
 	$daysSelected = $row['DaysSelected'];
 	$daysSelectedArray = explode("\n", $daysSelected);
+	$daysSelectedWithComma = implode(", ", $daysSelectedArray);
 	$numberOfDaysSelected = sizeOf($daysSelectedArray);
 
 	if($dateNow > $lastDate AND $timeNow > $endTime){
@@ -1052,12 +1055,13 @@ foreach ($result as $row)
 	$displayableStartTime = convertDatetimeToFormat($startTime, 'H:i:s', TIME_DEFAULT_FORMAT_TO_DISPLAY);
 	$displayableEndTime = convertDatetimeToFormat($endTime, 'H:i:s', TIME_DEFAULT_FORMAT_TO_DISPLAY);
 	$displayableNextStart = convertDatetimeToFormat($nextStart, 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
-
+	
 	// Check if we should list individual meeting rooms or just mention that all have been selected
 	$totalMeetingRooms = $row['TotalMeetingRooms'];
 	$meetingRoomsUsed = $row['UsedMeetingRooms'];
-	$usedMeetingRoomsArray = explode(",", $meetingRoomsUsed);
+	$usedMeetingRoomsArray = explode(",\n", $meetingRoomsUsed);
 	$numberOfUsedMeetingRooms = sizeOf($usedMeetingRoomsArray);
+	$meetingRoomsUsedWithComma = implode(", ", $usedMeetingRoomsArray);
 	if($numberOfUsedMeetingRooms == $totalMeetingRooms){
 		$usedMeetingRooms = "All " . $numberOfUsedMeetingRooms . " Rooms";
 	} else {
@@ -1065,7 +1069,7 @@ foreach ($result as $row)
 	}
 	$eventName = $row['EventName'];
 	$eventDescription = $row['EventDescription'];
-	$eventInfo = "Name: $eventName\nDescription: $eventDescription\nStartTime: $displayableStartTime\nEnd Time: $displayableEndTime\nStart Date: $displayableStartDate\nEnd Date: $displayableEndDate\nDays Selected: $daysSelected\n Rooms Used: $meetingRoomsUsed.";
+	$eventInfo = "Name: $eventName\nDescription: $eventDescription\nStart Time: $displayableStartTime\nEnd Time: $displayableEndTime\nStart Date: $displayableStartDate\nEnd Date: $displayableEndDate\nDay(s) Selected: $daysSelectedWithComma\nRoom(s) Used: $meetingRoomsUsedWithComma.";
 
 	if($completed){
 		$completedEvents[] = array(
