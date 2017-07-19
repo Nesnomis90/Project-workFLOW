@@ -688,11 +688,13 @@ if(isSet($_POST['add']) AND $_POST['add'] == "Create Event"){
 		
 		// Add a log event that an event has been created
 		try
-		{ //TO-DO: adjust the event info here to use correct variables
+		{
 			// Save a description with information about the event that was added
 
+			$displayableStartDate = convertDatetimeToFormat($firstDate, 'Y-m-d', DATE_DEFAULT_FORMAT_TO_DISPLAY);
+			$displayableEndDate = convertDatetimeToFormat($lastDate, 'Y-m-d', DATE_DEFAULT_FORMAT_TO_DISPLAY);;			
 			$description = "N/A";
-			$eventInfo = "Name: $eventName\nDescription: $eventDescription\nStartTime: $displayableStartTime\nEnd Time: $displayableEndTime\nStart Date: $displayableStartDate\nEnd Date: $displayableEndDate\nDays Selected: $daysSelected\n Rooms Used: $meetingRoomsUsed.";
+			$eventInfo = "Name: $eventName\nDescription: $eventDescription\nStartTime: $startTime\nEnd Time: $endTime\nStart Date: $displayableStartDate\nEnd Date: $displayableEndDate\nDays Selected: $daysSelected.";
 			if(isSet($_SESSION['LoggedInUserName'])){
 				$description = "An event was created with these details:\n" . $eventInfo . "\nIt was created by: " . $_SESSION['LoggedInUserName'];
 			} else {
@@ -700,7 +702,7 @@ if(isSet($_POST['add']) AND $_POST['add'] == "Create Event"){
 			}
 
 			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
-			
+
 			$pdo = connect_to_db();
 			$sql = "INSERT INTO `logevent` 
 					SET			`actionID` = 	(
@@ -714,7 +716,7 @@ if(isSet($_POST['add']) AND $_POST['add'] == "Create Event"){
 			$s->bindValue(':description', $description);
 			$s->bindValue(':EventID', $EventID);
 			$s->execute();
-			
+
 			//Close the connection
 			$pdo = null;		
 		}
@@ -725,7 +727,7 @@ if(isSet($_POST['add']) AND $_POST['add'] == "Create Event"){
 			$pdo = null;
 			exit();
 		}
-		
+
 	} else {
 		$_SESSION['EventsUserFeedback'] = "Could not add any events to the schedule, due to the timeslot being occupied for all of them.";
 	}
