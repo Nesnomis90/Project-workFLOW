@@ -15,29 +15,30 @@
 	</head>
 	<body>
 		<?php include_once $_SERVER['DOCUMENT_ROOT'] .'/includes/topnav.html.php'; ?>
-	
-		<h1>Confirm your identity with your Booking Code!</h1>
-		
-		<div class="left">
-			<?php if(isSet($_SESSION['confirmBookingCodeError'])) : ?>
-				<?php htmlout($_SESSION['confirmBookingCodeError']); ?>
-				<?php unset($_SESSION['confirmBookingCodeError']); ?>
-			<?php endif; ?>
-		</div>
-		
-		<div class="left">
-			<form action="" method="post">
-				<label for="bookingCode">Submit your booking code: </label>
-				<input type="number" name="bookingCode" min="1" max="<?php htmlout(pow(10,BOOKING_CODE_LENGTH)-1); ?>"
-				placeholder="<?php htmlout(BOOKING_CODE_LENGTH); ?> digits" value="<?php htmlout($bookingCode); ?>">
-				<input type="hidden" name="action" value="confirmcode">
-				<input type="submit" value="Confirm Code">
-			</form>
-		</div>
-		<div class="left">
-			<form action="" method="Post">
-				<input type="submit" name="action" value="Go Back">
-			</form>
-		</div>
+
+		<fieldset><legend>Confirm your identity with your Booking Code:</legend>
+			<div class="left">
+				<?php if(isSet($_SESSION['confirmBookingCodeError'])) : ?>
+					<span class="feedback"><?php htmlout($_SESSION['confirmBookingCodeError']); ?></span>
+					<?php unset($_SESSION['confirmBookingCodeError']); ?>
+				<?php endif; ?>
+			</div>
+
+			<div class="left">
+				<form action="" method="post">
+					<label for="bookingCode">Submit your booking code: </label>
+					<input type="password" name="bookingCode" maxlength="<?php htmlout(BOOKING_CODE_LENGTH); ?>"
+					placeholder="<?php htmlout(BOOKING_CODE_LENGTH); ?> digits"
+					value="">
+					<input type="hidden" name="action" value="confirmcode">
+					<input type="submit" value="Confirm Code">
+				</form>
+			</div>
+			<div class="left">
+				<form action="" method="Post">
+					<input type="submit" name="action" value="Go Back">
+				</form>
+			</div>
+		</fieldset>
 	</body>
 </html>

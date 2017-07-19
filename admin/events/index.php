@@ -214,6 +214,46 @@ if(isSet($_POST['action']) AND $_POST['action'] == "Delete"){
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
 		$pdo = null;
 		exit();		
+	}
+
+	$_SESSION['EventsUserFeedback'] = "Event Successfully Removed.";
+	
+	// Add a log event that the event was removed
+	try
+	{
+		// Save a description with information about the event that was removed
+
+		$description = "N/A";
+		if(isSet($_POST['EventInfo'])){
+			$description = "An event with these details was removed:\n" . $_POST['EventInfo'] . 
+			"\nIt was deleted by: " . $_SESSION['LoggedInUserName'];
+		} else {
+			$description = 'An event was deleted by: ' . $_SESSION['LoggedInUserName'];
+		}
+		
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+		
+		$pdo = connect_to_db();
+		$sql = "INSERT INTO `logevent` 
+				SET			`actionID` = 	(
+												SELECT 	`actionID` 
+												FROM 	`logaction`
+												WHERE 	`name` = 'Event Removed'
+											),
+							`description` = :description";
+		$s = $pdo->prepare($sql);
+		$s->bindValue(':description', $description);
+		$s->execute();
+		
+		//Close the connection
+		$pdo = null;		
+	}
+	catch(PDOException $e)
+	{
+		$error = 'Error adding log event to database: ' . $e->getMessage();
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+		$pdo = null;
+		exit();
 	}	
 }
 
@@ -557,7 +597,7 @@ if(isSet($_POST['add']) AND $_POST['add'] == "Create Event"){
 		if(isSet($timeSlotAvailableInfo) AND sizeOf($timeSlotAvailableInfo) > 0){
 			$firstDate = convertDatetimeToFormat($timeSlotAvailableInfo[0]['StartDateTime'], 'Y-m-d H:i:s', 'Y-m-d');
 			$lastDate = convertDatetimeToFormat(end($timeSlotAvailableInfo)['EndDateTime'], 'Y-m-d H:i:s', 'Y-m-d');
-			$daysSelected = implode( "\n", $daysSelected);
+			$daysSelectedWithLineFeed = implode("\n", $daysSelected);
 			// Insert the new event base information
 			$sql = "INSERT INTO `event`
 					SET			`name` = :EventName,
@@ -575,7 +615,7 @@ if(isSet($_POST['add']) AND $_POST['add'] == "Create Event"){
 			$s->bindValue(':EndTime', $endTime);
 			$s->bindValue(':FirstDate', $firstDate);
 			$s->bindValue(':LastDate', $lastDate);
-			$s->bindValue(':DaysSelected',$daysSelected);	
+			$s->bindValue(':DaysSelected',$daysSelectedWithLineFeed);	
 			$s->execute();
 			
 			$EventID = $pdo->lastInsertID();
@@ -645,11 +685,55 @@ if(isSet($_POST['add']) AND $_POST['add'] == "Create Event"){
 		} else {
 			$_SESSION['EventsUserFeedback'] = "Successfully added all events to the schedule.";
 		}
+		
+		// Add a log event that an event has been created
+		try
+		{
+			// Save a description with information about the event that was added
+			$daysSelectedWithComma = implode(", ", $daysSelected);
+			$displayableStartDate = convertDatetimeToFormat($firstDate, 'Y-m-d', DATE_DEFAULT_FORMAT_TO_DISPLAY);
+			$displayableEndDate = convertDatetimeToFormat($lastDate, 'Y-m-d', DATE_DEFAULT_FORMAT_TO_DISPLAY);
+			$displayableStartTime = convertDatetimeToFormat($startTime, 'H:i:s', TIME_DEFAULT_FORMAT_TO_DISPLAY);
+			$displayableEndTime = convertDatetimeToFormat($endTime, 'H:i:s', TIME_DEFAULT_FORMAT_TO_DISPLAY);			
+			$description = "N/A";
+			$eventInfo = "Name: $eventName\nDescription: $eventDescription\nStart Time: $displayableStartTime\nEnd Time: $displayableEndTime\nStart Date: $displayableStartDate\nEnd Date: $displayableEndDate\nDay(s) Selected: $daysSelectedWithComma.";
+			if(isSet($_SESSION['LoggedInUserName'])){
+				$description = "An event was created with these details:\n" . $eventInfo . "\nIt was created by: " . $_SESSION['LoggedInUserName'] . ".";
+			} else {
+				$description = "An event was created with these details:\n" . $eventInfo;
+			}
+
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+
+			$pdo = connect_to_db();
+			$sql = "INSERT INTO `logevent` 
+					SET			`actionID` = 	(
+													SELECT 	`actionID` 
+													FROM 	`logaction`
+													WHERE 	`name` = 'Event Created'
+												),
+								`EventID` = :EventID,
+								`description` = :description";
+			$s = $pdo->prepare($sql);
+			$s->bindValue(':description', $description);
+			$s->bindValue(':EventID', $EventID);
+			$s->execute();
+
+			//Close the connection
+			$pdo = null;		
+		}
+		catch(PDOException $e)
+		{
+			$error = 'Error adding log event to database: ' . $e->getMessage();
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+			$pdo = null;
+			exit();
+		}
+
 	} else {
 		$_SESSION['EventsUserFeedback'] = "Could not add any events to the schedule, due to the timeslot being occupied for all of them.";
 	}
-	// TO-DO: Create log event?
-	
+
 	header("Location: .");
 	exit();
 }
@@ -928,6 +1012,7 @@ foreach ($result as $row)
 	// Check if the event is a single day or multiple days
 	$daysSelected = $row['DaysSelected'];
 	$daysSelectedArray = explode("\n", $daysSelected);
+	$daysSelectedWithComma = implode(", ", $daysSelectedArray);
 	$numberOfDaysSelected = sizeOf($daysSelectedArray);
 
 	if($dateNow > $lastDate AND $timeNow > $endTime){
@@ -970,25 +1055,30 @@ foreach ($result as $row)
 	$displayableStartTime = convertDatetimeToFormat($startTime, 'H:i:s', TIME_DEFAULT_FORMAT_TO_DISPLAY);
 	$displayableEndTime = convertDatetimeToFormat($endTime, 'H:i:s', TIME_DEFAULT_FORMAT_TO_DISPLAY);
 	$displayableNextStart = convertDatetimeToFormat($nextStart, 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
-
+	
 	// Check if we should list individual meeting rooms or just mention that all have been selected
 	$totalMeetingRooms = $row['TotalMeetingRooms'];
 	$meetingRoomsUsed = $row['UsedMeetingRooms'];
-	$usedMeetingRoomsArray = explode(",", $meetingRoomsUsed);
+	$usedMeetingRoomsArray = explode(",\n", $meetingRoomsUsed);
 	$numberOfUsedMeetingRooms = sizeOf($usedMeetingRoomsArray);
+	$meetingRoomsUsedWithComma = implode(", ", $usedMeetingRoomsArray);
 	if($numberOfUsedMeetingRooms == $totalMeetingRooms){
 		$usedMeetingRooms = "All " . $numberOfUsedMeetingRooms . " Rooms";
 	} else {
 		$usedMeetingRooms = $meetingRoomsUsed;
 	}
+	$eventName = $row['EventName'];
+	$eventDescription = $row['EventDescription'];
+	$eventInfo = "Name: $eventName\nDescription: $eventDescription\nStart Time: $displayableStartTime\nEnd Time: $displayableEndTime\nStart Date: $displayableStartDate\nEnd Date: $displayableEndDate\nDay(s) Selected: $daysSelectedWithComma\nRoom(s) Used: $meetingRoomsUsedWithComma.";
 
 	if($completed){
 		$completedEvents[] = array(
 							'EventStatus' => $status,
+							'EventInfo' => $eventInfo,
 							'EventID' => $row['TheEventID'], 
 							'DateTimeCreated' => $displayableDateCreated, 
-							'EventName' => $row['EventName'], 
-							'EventDescription' => $row['EventDescription'], 
+							'EventName' => $eventName, 
+							'EventDescription' => $eventDescription, 
 							'UsedMeetingRooms' => $usedMeetingRooms,
 							'DaysSelected' => $daysSelected,
 							'StartTime' => $displayableStartTime,
@@ -999,10 +1089,11 @@ foreach ($result as $row)
 	} else {
 		$activeEvents[] = array(
 							'EventStatus' => $status,
+							'EventInfo' => $eventInfo,
 							'EventID' => $row['TheEventID'], 
 							'DateTimeCreated' => $displayableDateCreated, 
-							'EventName' => $row['EventName'], 
-							'EventDescription' => $row['EventDescription'],
+							'EventName' => $eventName, 
+							'EventDescription' => $eventDescription,
 							'UsedMeetingRooms' => $usedMeetingRooms,
 							'DaysSelected' => $daysSelected,
 							'StartTime' => $displayableStartTime,

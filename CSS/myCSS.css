@@ -83,7 +83,7 @@ label{
 
 select{
     display: inline-block;
-    float: left;	
+    float: left;
 }
 
 select:hover{background-color: #f2f2f2;}

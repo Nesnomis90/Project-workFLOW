@@ -626,11 +626,46 @@ if (	(isSet($_POST['action']) and $_POST['action'] == 'Cancel') OR
 
 // Handles booking code check
 if(isSet($_POST['action']) AND $_POST['action'] == "confirmcode"){
+
+	// Check if any of the old guesses are old enough to remove
+	if(isSet($_SESSION['bookingCodeGuesses'])){
+		$dateTimeNow = getDatetimeNow();
+		$newArray = array();
+		for($i=0; $i < sizeOf($_SESSION['bookingCodeGuesses']); $i++){
+			$startDateTime = $_SESSION['bookingCodeGuesses'][$i];
+			
+			$timeDifference = convertTwoDateTimesToTimeDifferenceInMinutes($startDateTime, $dateTimeNow);		
+			if($timeDifference < BOOKING_CODE_WRONG_GUESS_TIMEOUT_IN_MINUTES){
+				$newArray[] = $_SESSION['bookingCodeGuesses'][$i];
+			}
+		}
+		if(sizeOf($newArray) > 0){
+			$_SESSION['bookingCodeGuesses'] = $newArray;
+		} else {
+			unset($_SESSION['bookingCodeGuesses']);
+		}
+	}
+	// Limit the amount of tries the session has to guess a booking code.
+	if(isSet($_SESSION['bookingCodeGuesses']) AND (sizeOf($_SESSION['bookingCodeGuesses']) >= MAXIMUM_BOOKING_CODE_GUESSES)){
+		
+		$startDateTime = $_SESSION['bookingCodeGuesses'][0];
+		
+		$timeDifference = convertTwoDateTimesToTimeDifferenceInMinutes($startDateTime, $dateTimeNow);
+		$timeRemaining = floor(BOOKING_CODE_WRONG_GUESS_TIMEOUT_IN_MINUTES - $timeDifference);
+		if($timeRemaining > 0){
+			$_SESSION['confirmBookingCodeError'] = "You have inserted an incorrect booking code too many times.\nYou can try again in $timeRemaining minute(s).";
+		} else {
+			$_SESSION['confirmBookingCodeError'] = "You have inserted an incorrect booking code too many times.\nYou can try again in less than a minute.";
+		}
+		
+		var_dump($_SESSION); // TO-DO: remove after testing is done
+		include_once 'bookingcode.html.php';
+		exit();		
+	}
 	
 	$bookingCode = trim($_POST['bookingCode']);
 	$validatedBookingCode = trimAllWhitespace($bookingCode);
 	if(validateIntegerNumber($validatedBookingCode) !== TRUE){
-		$bookingCode = "";
 		$_SESSION['confirmBookingCodeError'] = "The booking code you submitted had non-numbers in it.";
 		var_dump($_SESSION); // TO-DO: remove after testing is done
 		include_once 'bookingcode.html.php';
@@ -640,14 +675,13 @@ if(isSet($_POST['action']) AND $_POST['action'] == "confirmcode"){
 	$invalidBookingCode = isNumberInvalidBookingCode($validatedBookingCode);
 	if($invalidBookingCode === TRUE){
 		$_SESSION['confirmBookingCodeError'] = "The booking code you submitted is an invalid code.";
-		$bookingCode = "";
 		var_dump($_SESSION); // TO-DO: remove after testing is done
 		include_once 'bookingcode.html.php';
 		exit();	
 	}
 	
 	$hashedBookingCode = hashBookingCode($validatedBookingCode);
-	
+
 	// Code is a valid digit. Check if it matches with a user in our database
 	try
 	{
@@ -698,8 +732,9 @@ if(isSet($_POST['action']) AND $_POST['action'] == "confirmcode"){
 			header('Location: ' . $location);
 			exit();						
 		} else {
-			$_SESSION['confirmBookingCodeError'] = "The booking code you submitted (" . $bookingCode .") is an incorrect code.";
-			$bookingCode = "";
+			// Remember last datetime we guessed wrong
+			$_SESSION['bookingCodeGuesses'][] = getDatetimeNow();
+			$_SESSION['confirmBookingCodeError'] = "The booking code you submitted is an incorrect code.";
 		
 			var_dump($_SESSION); // TO-DO: Remove after testing
 			
