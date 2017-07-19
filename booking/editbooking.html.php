@@ -6,6 +6,11 @@
 		<meta charset="utf-8">		
 		<link rel="stylesheet" type="text/css" href="/CSS/myCSS.css">
 		<title>Edit Booking</title>
+		<style>
+			label{
+				width: 200px;
+			}
+		</style>		
 	</head>
 	<body>
 	
@@ -28,7 +33,7 @@
 			
 			<div>
 				<label for="originalMeetingRoomName">Booked Meeting Room: </label>
-				<b><?php htmlout($originalMeetingRoomName); ?></b></span>
+				<span><b><?php htmlout($originalMeetingRoomName); ?></b></span>
 			</div>
 
 			<div>
@@ -88,6 +93,7 @@
 					value="<?php htmlout($companyID); ?>">
 				<?php endif; ?>
 			</div>
+
 			<div>
 				<label for="originalDisplayName">Booked Display Name: </label>
 				<span><b>
@@ -98,12 +104,14 @@
 					<?php endif; ?>
 				</b></span>
 			</div>
+
 			<div>
 				<label for="displayName">Set New Display Name: </label>
 				<input type="text" name="displayName" id="displayName" 
 				value="<?php htmlout($displayName); ?>">
 				<input type="submit" name="edit" value="Get Default Display Name">
 			</div>
+
 			<div>
 				<label for="originalBookingDescription">Booked Description: </label>
 				<span><b>
@@ -114,12 +122,14 @@
 					<?php endif; ?>
 				</b></span>
 			</div>
+
 			<div>
 				<label class="description" for="description">Set New Booking Description: </label>
 				<textarea rows="4" cols="50" name="description" id="description"><?php htmlout($description); ?></textarea>
 				<input type="submit" name="edit" value="Get Default Booking Description">
 			</div>
-			<div>
+
+			<div class="left">
 				<input type="hidden" name="bookingID" id="bookingID" 
 				value="<?php htmlout($bookingID); ?>">
 				<input type="submit" name="edit" value="Reset">

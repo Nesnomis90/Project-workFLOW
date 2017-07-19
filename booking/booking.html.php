@@ -176,13 +176,7 @@
 				</table>
 		<?php elseif(!isSet($_SESSION['loggedIn'])) : ?>
 			<h1>Booking Information Overview</h1>
-			
-			<?php if(!isSet($_SESSION["DefaultMeetingRoomInfo"])) : ?>
-				<form action="" method="post">
-					<input type="submit" name="login" value="Log In">
-				</form>
-			<?php endif; ?>
-			
+
 			<form action="" method="post">
 				<div>
 					<?php if(isSet($_SESSION["DefaultMeetingRoomInfo"])) : ?>
