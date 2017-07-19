@@ -19,11 +19,11 @@
 		<fieldset><legend>Confirm your identity with your Booking Code:</legend>
 			<div class="left">
 				<?php if(isSet($_SESSION['confirmBookingCodeError'])) : ?>
-					<?php htmlout($_SESSION['confirmBookingCodeError']); ?>
+					<span class="feedback"><?php htmlout($_SESSION['confirmBookingCodeError']); ?></span>
 					<?php unset($_SESSION['confirmBookingCodeError']); ?>
 				<?php endif; ?>
 			</div>
-			
+
 			<div class="left">
 				<form action="" method="post">
 					<label for="bookingCode">Submit your booking code: </label>
