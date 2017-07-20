@@ -44,6 +44,40 @@ SELECT 	*
 FROM	`booking`
 WHERE	`userID` = 28;
 
+SELECT 		b.`userID`										AS BookedUserID,
+			b.`bookingID`,
+			(
+				IF(b.`meetingRoomID` IS NULL, NULL, (SELECT `name` FROM `meetingroom` WHERE `meetingRoomID` = b.`meetingRoomID`))
+			)        										AS BookedRoomName,
+			b.`startDateTime`								AS StartTime,
+			b.`endDateTime`									AS EndTime, 
+			b.`displayName` 								AS BookedBy,
+			(
+				IF(b.`companyID` IS NULL, NULL, (SELECT `name` FROM `company` WHERE `companyID` = b.`companyID`))
+			)        										AS BookedForCompany,										
+			u.`firstName` 									AS firstName,
+			u.`lastName`									AS lastName,
+			u.`email` 										AS email,
+			(
+				SELECT 		GROUP_CONCAT(c.`name` separator ",\n")
+				FROM 		`company` c
+				INNER JOIN 	`employee` e
+				ON 			e.`CompanyID` = c.`CompanyID`
+				WHERE  		e.`userID` = b.`userID`
+				AND			c.`isActive` = 1
+				GROUP BY 	e.`userID`
+			)												AS WorksForCompany,		 
+			b.`description`									AS BookingDescription,
+			b.`dateTimeCreated`								AS BookingWasCreatedOn, 
+			b.`actualEndDateTime`							AS BookingWasCompletedOn, 
+			b.`dateTimeCancelled`							AS BookingWasCancelledOn 
+FROM 		`booking` b
+INNER JOIN 	`user` u
+ON 			u.`UserID` = b.`UserID`
+WHERE		b.`UserID` = 28
+ORDER BY 	UNIX_TIMESTAMP(b.`startDateTime`)
+ASC;
+
 SELECT 		u.`email`				AS Email,
 			u.`firstName`			AS FirstName,
 			u.`lastName`			AS LastName,
