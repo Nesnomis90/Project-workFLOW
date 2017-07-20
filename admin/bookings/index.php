@@ -409,18 +409,18 @@ if (isSet($_POST['action']) and $_POST['action'] == 'Cancel')
 		try
 		{
 			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
-			
+
 			$pdo = connect_to_db();
 			$sql = 'UPDATE 	`booking` 
 					SET 	`dateTimeCancelled` = CURRENT_TIMESTAMP,
-							`cancellationCode` = NULL				
+							`cancellationCode` = NULL
 					WHERE 	`bookingID` = :id
 					AND		`dateTimeCancelled` IS NULL
 					AND		`actualEndDateTime` IS NULL';
 			$s = $pdo->prepare($sql);
 			$s->bindValue(':id', $_POST['id']);
 			$s->execute();
-			
+
 			//close connection
 			$pdo = null;
 		}
@@ -430,9 +430,9 @@ if (isSet($_POST['action']) and $_POST['action'] == 'Cancel')
 			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
 			exit();
 		}
-		
+
 		$_SESSION['BookingUserFeedback'] .= "Successfully cancelled the booking";
-		
+
 			// Add a log event that a booking was cancelled
 		try
 		{
@@ -444,7 +444,7 @@ if (isSet($_POST['action']) and $_POST['action'] == 'Cancel')
 			} else {
 				$logEventDescription = 'A booking was cancelled by: ' . $_SESSION['LoggedInUserName'];
 			}
-			
+
 			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 			
 			$pdo = connect_to_db();
@@ -458,7 +458,7 @@ if (isSet($_POST['action']) and $_POST['action'] == 'Cancel')
 			$s = $pdo->prepare($sql);
 			$s->bindValue(':description', $logEventDescription);
 			$s->execute();
-			
+
 			//Close the connection
 			$pdo = null;		
 		}
@@ -2697,7 +2697,7 @@ foreach ($result as $row)
 	$firstname = $row['firstName'];
 	$lastname = $row['lastName'];
 	$email = $row['email'];
-	$userinfo = $lastname . ', ' . $firstname . ' - ' . $row['email'];
+	$userinfo = $lastname . ', ' . $firstname . ' - ' . $email;
 	$worksForCompany = $row['WorksForCompany'];
 	$adminNote = $row['AdminNote'];
 	if(!isSet($adminNote) OR $adminNote == NULL){
@@ -2738,129 +2738,129 @@ foreach ($result as $row)
 	}
 	$displayCompletedMeetingDurationForPrice = convertMinutesToHoursAndMinutes($completedMeetingDurationForPrice);
 	if($status == "Active Today"){				
-		$bookingsActiveToday[] = array('id' => $row['bookingID'],
-							'BookingStatus' => $status,
-							'BookedRoomName' => $roomName,
-							'StartTime' => $displayValidatedStartDate,
-							'EndTime' => $displayValidatedEndDate,
-							'BookedBy' => $row['BookedBy'],
-							'BookedForCompany' => $row['BookedForCompany'],
-							'BookingDescription' => $row['BookingDescription'],
-							'AdminNote' => $adminNote,
-							'firstName' => $firstname,
-							'lastName' => $lastname,
-							'email' => $email,
-							'WorksForCompany' => $worksForCompany,
-							'BookingWasCreatedOn' => $displayCreatedDateTime,
-							'BookingWasCompletedOn' => $displayCompletedDateTime,
-							'BookingWasCancelledOn' => $displayCancelledDateTime,	
-							'UserInfo' => $userinfo,
-							'MeetingInfo' => $meetinginfo
-						);
+		$bookingsActiveToday[] = array(	'id' => $row['bookingID'],
+										'BookingStatus' => $status,
+										'BookedRoomName' => $roomName,
+										'StartTime' => $displayValidatedStartDate,
+										'EndTime' => $displayValidatedEndDate,
+										'BookedBy' => $row['BookedBy'],
+										'BookedForCompany' => $row['BookedForCompany'],
+										'BookingDescription' => $row['BookingDescription'],
+										'AdminNote' => $adminNote,
+										'firstName' => $firstname,
+										'lastName' => $lastname,
+										'email' => $email,
+										'WorksForCompany' => $worksForCompany,
+										'BookingWasCreatedOn' => $displayCreatedDateTime,
+										'BookingWasCompletedOn' => $displayCompletedDateTime,
+										'BookingWasCancelledOn' => $displayCancelledDateTime,	
+										'UserInfo' => $userinfo,
+										'MeetingInfo' => $meetinginfo
+									);
 	}	elseif($status == "Completed Today") {
-		$bookingsCompletedToday[] = array('id' => $row['bookingID'],
-							'BookingStatus' => $status,
-							'BookedRoomName' => $roomName,
-							'StartTime' => $displayValidatedStartDate,
-							'EndTime' => $displayValidatedEndDate,
-							'CompletedMeetingDuration' => $displayCompletedMeetingDuration,
-							'CompletedMeetingDurationForPrice' => $displayCompletedMeetingDurationForPrice,
-							'BookedBy' => $row['BookedBy'],
-							'BookedForCompany' => $row['BookedForCompany'],
-							'BookingDescription' => $row['BookingDescription'],
-							'AdminNote' => $adminNote,
-							'firstName' => $firstname,
-							'lastName' => $lastname,
-							'email' => $email,
-							'WorksForCompany' => $worksForCompany,
-							'BookingWasCreatedOn' => $displayCreatedDateTime,
-							'BookingWasCompletedOn' => $displayCompletedDateTime,
-							'BookingWasCancelledOn' => $displayCancelledDateTime,	
-							'UserInfo' => $userinfo,
-							'MeetingInfo' => $meetinginfo
-						);		
+		$bookingsCompletedToday[] = array(	'id' => $row['bookingID'],
+											'BookingStatus' => $status,
+											'BookedRoomName' => $roomName,
+											'StartTime' => $displayValidatedStartDate,
+											'EndTime' => $displayValidatedEndDate,
+											'CompletedMeetingDuration' => $displayCompletedMeetingDuration,
+											'CompletedMeetingDurationForPrice' => $displayCompletedMeetingDurationForPrice,
+											'BookedBy' => $row['BookedBy'],
+											'BookedForCompany' => $row['BookedForCompany'],
+											'BookingDescription' => $row['BookingDescription'],
+											'AdminNote' => $adminNote,
+											'firstName' => $firstname,
+											'lastName' => $lastname,
+											'email' => $email,
+											'WorksForCompany' => $worksForCompany,
+											'BookingWasCreatedOn' => $displayCreatedDateTime,
+											'BookingWasCompletedOn' => $displayCompletedDateTime,
+											'BookingWasCancelledOn' => $displayCancelledDateTime,	
+											'UserInfo' => $userinfo,
+											'MeetingInfo' => $meetinginfo
+										);		
 	}	elseif($status == "Active"){				
-		$bookingsFuture[] = array('id' => $row['bookingID'],
-							'BookingStatus' => $status,
-							'BookedRoomName' => $roomName,
-							'StartTime' => $displayValidatedStartDate,
-							'EndTime' => $displayValidatedEndDate,
-							'BookedBy' => $row['BookedBy'],
-							'BookedForCompany' => $row['BookedForCompany'],
-							'BookingDescription' => $row['BookingDescription'],
-							'AdminNote' => $adminNote,
-							'firstName' => $firstname,
-							'lastName' => $lastname,
-							'email' => $email,
-							'WorksForCompany' => $worksForCompany,
-							'BookingWasCreatedOn' => $displayCreatedDateTime,
-							'BookingWasCompletedOn' => $displayCompletedDateTime,
-							'BookingWasCancelledOn' => $displayCancelledDateTime,	
-							'UserInfo' => $userinfo,
-							'MeetingInfo' => $meetinginfo
-						);
+		$bookingsFuture[] = array(	'id' => $row['bookingID'],
+									'BookingStatus' => $status,
+									'BookedRoomName' => $roomName,
+									'StartTime' => $displayValidatedStartDate,
+									'EndTime' => $displayValidatedEndDate,
+									'BookedBy' => $row['BookedBy'],
+									'BookedForCompany' => $row['BookedForCompany'],
+									'BookingDescription' => $row['BookingDescription'],
+									'AdminNote' => $adminNote,
+									'firstName' => $firstname,
+									'lastName' => $lastname,
+									'email' => $email,
+									'WorksForCompany' => $worksForCompany,
+									'BookingWasCreatedOn' => $displayCreatedDateTime,
+									'BookingWasCompletedOn' => $displayCompletedDateTime,
+									'BookingWasCancelledOn' => $displayCancelledDateTime,	
+									'UserInfo' => $userinfo,
+									'MeetingInfo' => $meetinginfo
+								);
 	}	elseif($status == "Completed"){				
-		$bookingsCompleted[] = array('id' => $row['bookingID'],
-							'BookingStatus' => $status,
-							'BookedRoomName' => $roomName,
-							'StartTime' => $displayValidatedStartDate,
-							'EndTime' => $displayValidatedEndDate,
-							'CompletedMeetingDuration' => $displayCompletedMeetingDuration,
-							'CompletedMeetingDurationForPrice' => $displayCompletedMeetingDurationForPrice,
-							'BookedBy' => $row['BookedBy'],
-							'BookedForCompany' => $row['BookedForCompany'],
-							'BookingDescription' => $row['BookingDescription'],
-							'AdminNote' => $adminNote,
-							'firstName' => $firstname,
-							'lastName' => $lastname,
-							'email' => $email,
-							'WorksForCompany' => $worksForCompany,
-							'BookingWasCreatedOn' => $displayCreatedDateTime,
-							'BookingWasCompletedOn' => $displayCompletedDateTime,
-							'BookingWasCancelledOn' => $displayCancelledDateTime,	
-							'UserInfo' => $userinfo,
-							'MeetingInfo' => $meetinginfo
-						);
+		$bookingsCompleted[] = array(	'id' => $row['bookingID'],
+										'BookingStatus' => $status,
+										'BookedRoomName' => $roomName,
+										'StartTime' => $displayValidatedStartDate,
+										'EndTime' => $displayValidatedEndDate,
+										'CompletedMeetingDuration' => $displayCompletedMeetingDuration,
+										'CompletedMeetingDurationForPrice' => $displayCompletedMeetingDurationForPrice,
+										'BookedBy' => $row['BookedBy'],
+										'BookedForCompany' => $row['BookedForCompany'],
+										'BookingDescription' => $row['BookingDescription'],
+										'AdminNote' => $adminNote,
+										'firstName' => $firstname,
+										'lastName' => $lastname,
+										'email' => $email,
+										'WorksForCompany' => $worksForCompany,
+										'BookingWasCreatedOn' => $displayCreatedDateTime,
+										'BookingWasCompletedOn' => $displayCompletedDateTime,
+										'BookingWasCancelledOn' => $displayCancelledDateTime,	
+										'UserInfo' => $userinfo,
+										'MeetingInfo' => $meetinginfo
+									);
 	}	elseif($status == "Cancelled"){
-		$bookingsCancelled[] = array('id' => $row['bookingID'],
-							'BookingStatus' => $status,
-							'BookedRoomName' => $roomName,
-							'StartTime' => $displayValidatedStartDate,
-							'EndTime' => $displayValidatedEndDate,
-							'BookedBy' => $row['BookedBy'],
-							'BookedForCompany' => $row['BookedForCompany'],
-							'BookingDescription' => $row['BookingDescription'],
-							'AdminNote' => $adminNote,
-							'firstName' => $firstname,
-							'lastName' => $lastname,
-							'email' => $email,
-							'WorksForCompany' => $worksForCompany,
-							'BookingWasCreatedOn' => $displayCreatedDateTime,
-							'BookingWasCompletedOn' => $displayCompletedDateTime,
-							'BookingWasCancelledOn' => $displayCancelledDateTime,	
-							'UserInfo' => $userinfo,
-							'MeetingInfo' => $meetinginfo
-						);		
+		$bookingsCancelled[] = array(	'id' => $row['bookingID'],
+										'BookingStatus' => $status,
+										'BookedRoomName' => $roomName,
+										'StartTime' => $displayValidatedStartDate,
+										'EndTime' => $displayValidatedEndDate,
+										'BookedBy' => $row['BookedBy'],
+										'BookedForCompany' => $row['BookedForCompany'],
+										'BookingDescription' => $row['BookingDescription'],
+										'AdminNote' => $adminNote,
+										'firstName' => $firstname,
+										'lastName' => $lastname,
+										'email' => $email,
+										'WorksForCompany' => $worksForCompany,
+										'BookingWasCreatedOn' => $displayCreatedDateTime,
+										'BookingWasCompletedOn' => $displayCompletedDateTime,
+										'BookingWasCancelledOn' => $displayCancelledDateTime,	
+										'UserInfo' => $userinfo,
+										'MeetingInfo' => $meetinginfo
+									);		
 	}	else {				
-		$bookingsOther[] = array('id' => $row['bookingID'],
-							'BookingStatus' => $status,
-							'BookedRoomName' => $roomName,
-							'StartTime' => $displayValidatedStartDate,
-							'EndTime' => $displayValidatedEndDate,
-							'BookedBy' => $row['BookedBy'],
-							'BookedForCompany' => $row['BookedForCompany'],
-							'BookingDescription' => $row['BookingDescription'],
-							'AdminNote' => $adminNote,
-							'firstName' => $firstname,
-							'lastName' => $lastname,
-							'email' => $email,
-							'WorksForCompany' => $worksForCompany,
-							'BookingWasCreatedOn' => $displayCreatedDateTime,
-							'BookingWasCompletedOn' => $displayCompletedDateTime,
-							'BookingWasCancelledOn' => $displayCancelledDateTime,	
-							'UserInfo' => $userinfo,
-							'MeetingInfo' => $meetinginfo
-						);
+		$bookingsOther[] = array(	'id' => $row['bookingID'],
+									'BookingStatus' => $status,
+									'BookedRoomName' => $roomName,
+									'StartTime' => $displayValidatedStartDate,
+									'EndTime' => $displayValidatedEndDate,
+									'BookedBy' => $row['BookedBy'],
+									'BookedForCompany' => $row['BookedForCompany'],
+									'BookingDescription' => $row['BookingDescription'],
+									'AdminNote' => $adminNote,
+									'firstName' => $firstname,
+									'lastName' => $lastname,
+									'email' => $email,
+									'WorksForCompany' => $worksForCompany,
+									'BookingWasCreatedOn' => $displayCreatedDateTime,
+									'BookingWasCompletedOn' => $displayCompletedDateTime,
+									'BookingWasCancelledOn' => $displayCancelledDateTime,	
+									'UserInfo' => $userinfo,
+									'MeetingInfo' => $meetinginfo
+								);
 	}
 }
 if(isSet($displayRoomNameForTitle) AND ($displayRoomNameForTitle == NULL OR $displayRoomNameForTitle == "N/A - Deleted")){

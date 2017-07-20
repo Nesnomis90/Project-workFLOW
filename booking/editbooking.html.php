@@ -13,7 +13,6 @@
 		</style>		
 	</head>
 	<body>
-	
 		<?php include_once $_SERVER['DOCUMENT_ROOT'] .'/includes/topnav.html.php'; ?>
 
 		<fieldset><legend>Edit Booking</legend>
@@ -23,13 +22,13 @@
 					<?php unset($_SESSION['EditCreateBookingError']); ?>
 				<?php endif; ?>
 			</div>
-			
+
 			<form action="" method="post">
 				<div>
 					<label for="userInformation">Welcome </label>
 					<span><b><?php htmlout($_SESSION['EditCreateBookingLoggedInUserInformation']); ?></b></span>
 				</div>
-				
+
 				<div>
 					<label for="originalMeetingRoomName">Booked Meeting Room: </label>
 					<span><b><?php htmlout($originalMeetingRoomName); ?></b></span>

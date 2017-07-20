@@ -3,6 +3,81 @@ SET NAMES utf8;
 USE meetingflow;
 SHOW WARNINGS;
 
+UPDATE 	`company`
+SET		`prevStartDate` = `startDate`,
+		`startDate` = `endDate`,
+        `endDate` = (`startDate` + INTERVAL 1 MONTH)
+WHERE	`companyID` <> 0
+AND		CURDATE() > `endDate`;
+
+UPDATE 	`user`
+SET 	`AccessID` = ( 
+						SELECT 	`AccessID`
+						FROM 	`accesslevel`
+						WHERE 	`AccessName` = 'Normal User'
+						LIMIT 	1
+					),
+		`bookingCode` = NULL,
+        `reduceAccessAtDate` = NULL
+WHERE 	DATE(CURRENT_TIMESTAMP) >= `reduceAccessAtDate`
+AND 	`isActive` = 1
+AND		`userID` <> 0;
+
+UPDATE 	`booking`
+SET		`actualEndDateTime` = `endDateTime`,
+		`cancellationCode` = NULL
+WHERE 	CURRENT_TIMESTAMP > `endDateTime`
+AND 	`actualEndDateTime` IS NULL
+AND 	`dateTimeCancelled` IS NULL
+AND		`bookingID` <> 0;
+
+UPDATE 	`booking`
+SET 	`actualEndDateTime` = `dateTimeCancelled`,
+		`cancellationCode` = NULL
+WHERE 	`actualEndDateTime` IS NULL
+AND		`dateTimeCancelled`
+BETWEEN `startDateTime`
+AND		`endDateTime`
+AND 	`bookingID` <> 0;
+
+SELECT 	*
+FROM	`booking`
+WHERE	`userID` = 28;
+
+SELECT 		b.`userID`										AS BookedUserID,
+			b.`bookingID`,
+			(
+				IF(b.`meetingRoomID` IS NULL, NULL, (SELECT `name` FROM `meetingroom` WHERE `meetingRoomID` = b.`meetingRoomID`))
+			)        										AS BookedRoomName,
+			b.`startDateTime`								AS StartTime,
+			b.`endDateTime`									AS EndTime, 
+			b.`displayName` 								AS BookedBy,
+			(
+				IF(b.`companyID` IS NULL, NULL, (SELECT `name` FROM `company` WHERE `companyID` = b.`companyID`))
+			)        										AS BookedForCompany,										
+			u.`firstName` 									AS firstName,
+			u.`lastName`									AS lastName,
+			u.`email` 										AS email,
+			(
+				SELECT 		GROUP_CONCAT(c.`name` separator ",\n")
+				FROM 		`company` c
+				INNER JOIN 	`employee` e
+				ON 			e.`CompanyID` = c.`CompanyID`
+				WHERE  		e.`userID` = b.`userID`
+				AND			c.`isActive` = 1
+				GROUP BY 	e.`userID`
+			)												AS WorksForCompany,		 
+			b.`description`									AS BookingDescription,
+			b.`dateTimeCreated`								AS BookingWasCreatedOn, 
+			b.`actualEndDateTime`							AS BookingWasCompletedOn, 
+			b.`dateTimeCancelled`							AS BookingWasCancelledOn 
+FROM 		`booking` b
+INNER JOIN 	`user` u
+ON 			u.`UserID` = b.`UserID`
+WHERE		b.`UserID` = 28
+ORDER BY 	UNIX_TIMESTAMP(b.`startDateTime`)
+ASC;
+
 SELECT 		u.`email`				AS Email,
 			u.`firstName`			AS FirstName,
 			u.`lastName`			AS LastName,
@@ -20,11 +95,45 @@ SELECT 		u.`email`				AS Email,
 			u.`sendAdminEmail`		AS SendAdminEmail,
 			u.`password`			AS HashedPassword,
 			a.`AccessName`			AS AccessName,
-			a.`Description` 		AS AccessDescription
+			a.`Description` 		AS AccessDescription,
+            (
+				SELECT 	COUNT(*)
+                FROM	`booking`
+				WHERE	`userID` = 28
+            )						AS TotalBookedMeetings,
+            (
+				SELECT 	COUNT(*)
+                FROM	`booking`
+				WHERE	`userID` = 28
+                AND 	`actualEndDateTime` IS NULL
+                AND 	`dateTimeCancelled` IS NULL
+                AND 	`endDateTime` > CURRENT_TIMESTAMP
+            )						AS ActiveBookedMeetings,
+            (
+				SELECT 	COUNT(*)
+                FROM	`booking`
+				WHERE	`userID` = 28
+                AND 	(
+							`actualEndDateTime` IS NOT NULL
+						OR
+							(
+										`actualEndDateTime` IS NULL
+								AND 	`dateTimeCancelled` IS NULL
+								AND 	`endDateTime` <= CURRENT_TIMESTAMP
+                            )
+                        )
+            )						AS CompletedBookedMeetings,
+            (
+				SELECT 	COUNT(*)
+                FROM	`booking`
+				WHERE	`userID` = 28
+                AND 	`actualEndDateTime` IS NULL
+                AND 	`dateTimeCancelled` IS NOT NULL
+            )						AS CancelledBookedMeetings
 FROM		`user` u
 INNER JOIN	`accesslevel` a
 ON 			u.`AccessID` = a.`AccessID`
-WHERE 		`userID` = 2
+WHERE 		`userID` = 28
 AND			`isActive` = 1
 LIMIT 		1;
 
@@ -1710,43 +1819,6 @@ NOT IN		(
 				SELECT 	`CompanyID`
 				FROM 	`companycredits`
 			);
-
-UPDATE 	`company`
-SET		`prevStartDate` = `startDate`,
-		`startDate` = `endDate`,
-        `endDate` = (`startDate` + INTERVAL 1 MONTH)
-WHERE	`companyID` <> 0
-AND		CURDATE() > `endDate`;
-
-UPDATE 	`user`
-SET 	`AccessID` = ( 
-						SELECT 	`AccessID`
-						FROM 	`accesslevel`
-						WHERE 	`AccessName` = 'Normal User'
-						LIMIT 	1
-					),
-		`bookingCode` = NULL,
-        `reduceAccessAtDate` = NULL
-WHERE 	DATE(CURRENT_TIMESTAMP) >= `reduceAccessAtDate`
-AND 	`isActive` = 1
-AND		`userID` <> 0;
-
-UPDATE 	`booking`
-SET		`actualEndDateTime` = `endDateTime`,
-		`cancellationCode` = NULL
-WHERE 	CURRENT_TIMESTAMP > `endDateTime`
-AND 	`actualEndDateTime` IS NULL
-AND 	`dateTimeCancelled` IS NULL
-AND		`bookingID` <> 0;
-
-UPDATE 	`booking`
-SET 	`actualEndDateTime` = `dateTimeCancelled`,
-		`cancellationCode` = NULL
-WHERE 	`actualEndDateTime` IS NULL
-AND		`dateTimeCancelled`
-BETWEEN `startDateTime`
-AND		`endDateTime`
-AND 	`bookingID` <> 0;
 
 INSERT INTO `companycredits`
 SET 		`CompanyID` = 21,
