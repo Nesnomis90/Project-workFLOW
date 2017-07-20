@@ -24,7 +24,7 @@
 			<table>
 				<caption>Your booking history</caption>
 				<tr>
-					<th colspan="8">Booking information</th>
+					<th colspan="9">Booking information</th>
 					<th colspan="2">Alter Booking</th>
 				</tr>				
 				<tr>
@@ -35,6 +35,15 @@
 					<th>Display Name</th>
 					<th>For Company</th>
 					<th>Description</th>
+					<?php if(isSet($_GET['totalBooking'])) : ?>
+						<th>Ended At</th>
+					<?php elseif(isSet($_GET['completedBooking'])) : ?>
+						<th>Completed At</th>
+					<?php elseif(isSet($_GET['cancelledBooking'])) : ?>
+						<th>Cancelled At</th>
+					<?php elseif(isSet($_GET['activeBooking'])) : ?>
+						<th></th>
+					<?php endif; ?>
 					<th>Created At</th>
 					<th>Edit</th>					
 					<th>Cancel</th>
@@ -50,6 +59,19 @@
 							<td style="white-space: pre-wrap;"><?php htmlout($booking['BookedBy']); ?></td>
 							<td><?php htmlout($booking['BookedForCompany']); ?></td>
 							<td style="white-space: pre-wrap;"><?php htmlout($booking['BookingDescription']); ?></td>
+							<?php if(isSet($_GET['totalBooking'])) : ?>
+								<td><?php if($booking['BookingWasCompletedOn'] != NULL){ 
+									htmlout($booking['BookingWasCompletedOn']); 
+								} elseif($booking['BookingWasCancelledOn'] != NULL){
+									htmlout($booking['BookingWasCancelledOn']);
+								}; ?></td>
+							<?php elseif(isSet($_GET['completedBooking'])) : ?>
+								<td><?php htmlout($booking['BookingWasCompletedOn']); ?></td>
+							<?php elseif(isSet($_GET['cancelledBooking'])) : ?>
+								<td><?php htmlout($booking['BookingWasCancelledOn']); ?></td>
+							<?php elseif(isSet($_GET['activeBooking'])) : ?>
+								<td></td>
+							<?php endif; ?>							
 							<td><?php htmlout($booking['BookingWasCreatedOn']); ?></td>
 							<td><input type="submit" name="action" value="Edit"></td>							
 							<td><input type="submit" name="action" value="Cancel"></td>
