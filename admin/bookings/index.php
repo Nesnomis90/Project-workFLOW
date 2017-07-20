@@ -409,18 +409,18 @@ if (isSet($_POST['action']) and $_POST['action'] == 'Cancel')
 		try
 		{
 			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
-			
+
 			$pdo = connect_to_db();
 			$sql = 'UPDATE 	`booking` 
 					SET 	`dateTimeCancelled` = CURRENT_TIMESTAMP,
-							`cancellationCode` = NULL				
+							`cancellationCode` = NULL
 					WHERE 	`bookingID` = :id
 					AND		`dateTimeCancelled` IS NULL
 					AND		`actualEndDateTime` IS NULL';
 			$s = $pdo->prepare($sql);
 			$s->bindValue(':id', $_POST['id']);
 			$s->execute();
-			
+
 			//close connection
 			$pdo = null;
 		}
@@ -430,9 +430,9 @@ if (isSet($_POST['action']) and $_POST['action'] == 'Cancel')
 			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
 			exit();
 		}
-		
+
 		$_SESSION['BookingUserFeedback'] .= "Successfully cancelled the booking";
-		
+
 			// Add a log event that a booking was cancelled
 		try
 		{
@@ -444,7 +444,7 @@ if (isSet($_POST['action']) and $_POST['action'] == 'Cancel')
 			} else {
 				$logEventDescription = 'A booking was cancelled by: ' . $_SESSION['LoggedInUserName'];
 			}
-			
+
 			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 			
 			$pdo = connect_to_db();
@@ -458,7 +458,7 @@ if (isSet($_POST['action']) and $_POST['action'] == 'Cancel')
 			$s = $pdo->prepare($sql);
 			$s->bindValue(':description', $logEventDescription);
 			$s->execute();
-			
+
 			//Close the connection
 			$pdo = null;		
 		}
