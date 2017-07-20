@@ -8,6 +8,24 @@ include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/magicquotes.inc.php';
 
 unsetSessionsFromAdminUsers(); // TO-DO: Add more or remove
 
+function getLocationWeCameFromInUserBooking(){
+	$pathWeCameFrom = $_SERVER['PHP_SELF'];
+	$pathWithoutPHPFile = substr($pathWeCameFrom, 0, strrpos($pathWeCameFrom,'/'));	
+	$location = "Location: " . $pathWithoutPHPFile;
+	
+	if(isSet($_GET['totalBooking'])){
+		$location .= "?totalBooking";
+	} elseif(isSet($_GET['completedBooking'])){
+		$location .= "?completedBooking";
+	} elseif(isSet($_GET['cancelledBooking'])){
+		$location .= "?cancelledBooking";
+	}  elseif(isSet($_GET['activeBooking'])){
+		$location .= "?activeBooking";
+	}
+
+	return $location;
+}
+
 // Function to validate user inputs
 function validateUserInputs($FeedbackSessionToUse){
 	$invalidInput = FALSE;
@@ -458,6 +476,89 @@ if(isSet($_GET['activateaccount'])){
 	}	
 }
 
+// If admin wants to cancel a scheduled booked meeting (instead of deleting)
+if (isSet($_POST['booking']) and $_POST['booking'] == 'Cancel')
+{
+	// Only cancel if booking is currently active
+	if(	isSet($_POST['BookingStatus']) AND  
+		($_POST['BookingStatus'] == 'Active' OR $_POST['BookingStatus'] == 'Active Today')){	
+		// Update cancellation date for selected booked meeting in database
+		try
+		{
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+			
+			$pdo = connect_to_db();
+			$sql = 'UPDATE 	`booking` 
+					SET 	`dateTimeCancelled` = CURRENT_TIMESTAMP,
+							`cancellationCode` = NULL				
+					WHERE 	`bookingID` = :id
+					AND		`dateTimeCancelled` IS NULL
+					AND		`actualEndDateTime` IS NULL';
+			$s = $pdo->prepare($sql);
+			$s->bindValue(':id', $_POST['id']);
+			$s->execute();
+			
+			//close connection
+			$pdo = null;
+		}
+		catch (PDOException $e)
+		{
+			$error = 'Error updating selected booked meeting to be cancelled: ' . $e->getMessage();
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+			exit();
+		}
+		
+		$_SESSION['normalUserBookingFeedback'] .= "Successfully cancelled the booking";
+		
+			// Add a log event that a booking was cancelled
+		try
+		{
+			// Save a description with information about the booking that was cancelled
+			$logEventDescription = "N/A";
+			if(isSet($_POST['MeetingInfo'])){
+				$logEventDescription = 'The user: ' . $_SESSION['LoggedInUserName'] . ' cancelled their own booking for the meeting room ' . $_POST['MeetingInfo'];
+			} else {
+				$logEventDescription = 'The user: ' . $_SESSION['LoggedInUserName'] . ' cancelled their own booking.';
+			}
+			
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+			
+			$pdo = connect_to_db();
+			$sql = "INSERT INTO `logevent` 
+					SET			`actionID` = 	(
+													SELECT 	`actionID` 
+													FROM 	`logaction`
+													WHERE 	`name` = 'Booking Cancelled'
+												),
+								`description` = :description";
+			$s = $pdo->prepare($sql);
+			$s->bindValue(':description', $logEventDescription);
+			$s->execute();
+			
+			//Close the connection
+			$pdo = null;		
+		}
+		catch(PDOException $e)
+		{
+			$error = 'Error adding log event to database: ' . $e->getMessage();
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+			$pdo = null;
+			exit();
+		}
+		unset($_SESSION['normalUserOriginalInfoArray']);
+	} else {
+		// Booking was not active, so no need to cancel it.
+		$_SESSION['normalUserBookingFeedback'] = "Meeting has already been completed. Did not cancel it.";
+	}
+	
+	// Load booked meetings list webpage with updated database
+	
+	$location = getLocationWeCameFromInUserBooking();
+	
+	header($location);
+	exit();	
+}
+
 // if user wants to see the details of their booking history
 if(	(isSet($_SESSION['loggedIn']) AND isSet($_SESSION['LoggedInUserID']) AND 
 	(isSet($_GET['totalBooking']) OR isSet($_GET['activeBooking']) OR isSet($_GET['completedBooking']) OR isSet($_GET['cancelledBooking'])))
@@ -639,7 +740,7 @@ if(	(isSet($_SESSION['loggedIn']) AND isSet($_SESSION['LoggedInUserID']) AND
 										'BookingWasCancelledOn' => $displayCancelledDateTime,
 										'MeetingInfo' => $meetinginfo
 									);
-		}	elseif($status == "Completed" AND (isSet($_GET['completedBooking']) OR isSet($_GET['totalBooking']))){				
+		}	elseif(($status == "Completed" OR $status == "Ended Early") AND (isSet($_GET['completedBooking']) OR isSet($_GET['totalBooking']))){				
 			$bookingsCompleted[] = array(	'id' => $row['bookingID'],
 											'BookingStatus' => $status,
 											'BookedRoomName' => $roomName,

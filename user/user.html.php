@@ -129,7 +129,7 @@
 							<?php if(isSet($userCanHaveABookingCode)) : ?>
 								<div>
 									<label>Booking Code: </label>
-									<span><?php htmlout($bookingCodeStatus); ?></span>
+									<span><b><?php htmlout($bookingCodeStatus); ?></b></span>
 									<?php if(isSet($userHasABookingCode) AND !isSet($showBookingCode)) : ?>
 										<label>Reveal Code: </label><input type="submit" name="action" value="Show Code">
 									<?php elseif(isSet($userHasABookingCode) AND isSet($showBookingCode) AND $showBookingCode) : ?>
