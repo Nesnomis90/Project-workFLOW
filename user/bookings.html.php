@@ -27,7 +27,7 @@
 					<tr>
 						<th colspan="8">Booking information</th>
 						<th colspan="2">Alter Booking</th>
-					</tr>				
+					</tr>
 					<tr>
 						<th>Status</th>
 						<th>Room Name</th>
@@ -37,12 +37,12 @@
 						<th>For Company</th>
 						<th>Description</th>
 						<th>Created At</th>
-						<th>Edit</th>					
+						<th>Edit</th>
 						<th>Cancel</th>
 					</tr>
 					<?php if(isSet($bookingsActiveToday)) : ?>
 						<?php foreach ($bookingsActiveToday AS $booking) : ?>
-							<form action="" method="post">				
+							<form action="" method="post">
 								<tr>
 									<td><?php htmlout($booking['BookingStatus']);?></td>
 									<td><?php htmlout($booking['BookedRoomName']); ?></td>
@@ -66,16 +66,16 @@
 						<tr><td colspan="10"><b>There are no more active bookings today.</b></td></tr>
 					<?php endif; ?>
 				</table>
-			<?php endif; ?>			
+			<?php endif; ?>
 
-			<?php if(isSet($bookingsCompletedToday)) : ?>			
+			<?php if(isSet($bookingsCompletedToday)) : ?>
 				<table>
 					<caption>Completed Bookings Today</caption>
 					<tr>
 						<th colspan="8">Booking information</th>
 						<th colspan="3">Completion Info</th>
 						<th>Alter Booking</th>
-					</tr>				
+					</tr>
 					<tr>
 						<th>Status</th>
 						<th>Room Name</th>
@@ -89,9 +89,9 @@
 						<th>Actual Duration</th>
 						<th>Price Duration</th>
 						<th>Edit</th>
-					</tr>		
+					</tr>
 					<?php foreach ($bookingsCompletedToday AS $booking) : ?>
-						<form action="" method="post">				
+						<form action="" method="post">
 							<tr>
 								<td><?php htmlout($booking['BookingStatus']);?></td>
 								<td><?php htmlout($booking['BookedRoomName']); ?></td>
@@ -127,7 +127,7 @@
 					<tr>
 						<th colspan="8">Booking information</th>
 						<th colspan="2">Alter Booking</th>
-					</tr>				
+					</tr>
 					<tr>
 						<th>Status</th>
 						<th>Room Name</th>
@@ -137,12 +137,12 @@
 						<th>For Company</th>
 						<th>Description</th>
 						<th>Created At</th>
-						<th>Edit</th>					
+						<th>Edit</th>
 						<th>Cancel</th>
 					</tr>
 					<?php if(isSet($bookingsFuture)) : ?>
 						<?php foreach ($bookingsFuture AS $booking) : ?>
-							<form action="" method="post">				
+							<form action="" method="post">
 								<tr>
 									<td><?php htmlout($booking['BookingStatus']);?></td>
 									<td><?php htmlout($booking['BookedRoomName']); ?></td>
@@ -152,7 +152,7 @@
 									<td><?php htmlout($booking['BookedForCompany']); ?></td>
 									<td style="white-space: pre-wrap;"><?php htmlout($booking['BookingDescription']); ?></td>
 									<td><?php htmlout($booking['BookingWasCreatedOn']); ?></td>
-									<td><input type="submit" name="booking" value="Edit"></td>							
+									<td><input type="submit" name="booking" value="Edit"></td>
 									<td><input type="submit" name="booking" value="Cancel"></td>
 									<input type="hidden" name="id" value="<?php htmlout($booking['id']); ?>">
 									<input type="hidden" name="MeetingInfo" id="MeetingInfo"
@@ -167,7 +167,7 @@
 					<?php else : ?>
 						<tr><td colspan="10"><b>There are no more future bookings.</b></td></tr>
 					<?php endif; ?>
-				</table>				
+				</table>
 			<?php endif; ?>
 
 			<?php if(isSet($bookingsCompleted)) : ?>
@@ -177,7 +177,7 @@
 						<th colspan="8">Booking information</th>
 						<th colspan="3">Completion Info</th>
 						<th>Alter Booking</th>
-					</tr>				
+					</tr>
 					<tr>
 						<th>Status</th>
 						<th>Room Name</th>
@@ -193,7 +193,7 @@
 						<th>Edit</th>
 					</tr>			
 					<?php foreach ($bookingsCompleted AS $booking) : ?>
-						<form action="" method="post">				
+						<form action="" method="post">
 							<tr>
 								<td><?php htmlout($booking['BookingStatus']);?></td>
 								<td><?php htmlout($booking['BookedRoomName']); ?></td>
@@ -206,7 +206,7 @@
 								<td><?php htmlout($booking['BookingWasCompletedOn']); ?></td>
 								<td><?php htmlout($booking['CompletedMeetingDuration']); ?></td>
 								<td><?php htmlout($booking['CompletedMeetingDurationForPrice']); ?></td>
-								<td><input type="submit" name="booking" value="Edit"></td>							
+								<td><input type="submit" name="booking" value="Edit"></td>
 								<input type="hidden" name="id" value="<?php htmlout($booking['id']); ?>">
 								<input type="hidden" name="UserID" value="<?php htmlout($booking['BookedUserID']); ?>">
 								<input type="hidden" name="MeetingInfo" id="MeetingInfo"
@@ -225,7 +225,7 @@
 					<tr>
 						<th colspan="8">Booking information</th>
 						<th>Completion Date</th>
-					</tr>				
+					</tr>
 					<tr>
 						<th>Status</th>
 						<th>Room Name</th>
@@ -236,9 +236,9 @@
 						<th>Description</th>
 						<th>Created At</th>
 						<th>Cancelled</th>
-					</tr>				
+					</tr>
 					<?php foreach ($bookingsCancelled AS $booking) : ?>
-						<form action="" method="post">			
+						<form action="" method="post">
 							<tr>
 								<td><?php htmlout($booking['BookingStatus']);?></td>
 								<td><?php htmlout($booking['BookedRoomName']); ?></td>
@@ -282,7 +282,7 @@
 						<th>Cancelled</th>
 					</tr>
 					<?php foreach ($bookingsOther AS $booking) : ?>
-						<form action="" method="post">			
+						<form action="" method="post">
 							<tr>
 								<td><?php htmlout($booking['BookingStatus']);?></td>
 								<td><?php htmlout($booking['BookedRoomName']); ?></td>
