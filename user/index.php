@@ -7,8 +7,6 @@ include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/helpers.inc.php';
 include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/magicquotes.inc.php';
 
 unsetSessionsFromAdminUsers(); // TO-DO: Add more or remove
-// TO-DO: Add a "Set new password" after user activates their account with the link?
-// or just have them do it after they log in themselves...
 
 // Function to validate user inputs
 function validateUserInputs($FeedbackSessionToUse){
@@ -499,7 +497,41 @@ if(isSet($_SESSION['loggedIn']) AND isSet($_SESSION['LoggedInUserID'])){
 								u.`sendAdminEmail`		AS SendAdminEmail,
 								u.`password`			AS HashedPassword,
 								a.`AccessName`			AS AccessName,
-								a.`Description` 		AS AccessDescription
+								a.`Description` 		AS AccessDescription,
+								(
+									SELECT 	COUNT(*)
+									FROM	`booking`
+									WHERE	`userID` = :userID
+								)						AS TotalBookedMeetings,
+								(
+									SELECT 	COUNT(*)
+									FROM	`booking`
+									WHERE	`userID` = :userID
+									AND 	`actualEndDateTime` IS NULL
+									AND 	`dateTimeCancelled` IS NULL
+									AND 	`endDateTime` > CURRENT_TIMESTAMP
+								)						AS ActiveBookedMeetings,
+								(
+									SELECT 	COUNT(*)
+									FROM	`booking`
+									WHERE	`userID` = :userID
+									AND 	(
+												`actualEndDateTime` IS NOT NULL
+											OR
+												(
+															`actualEndDateTime` IS NULL
+													AND 	`dateTimeCancelled` IS NULL
+													AND 	`endDateTime` <= CURRENT_TIMESTAMP
+												)
+											)
+								)						AS CompletedBookedMeetings,
+								(
+									SELECT 	COUNT(*)
+									FROM	`booking`
+									WHERE	`userID` = :userID
+									AND 	`actualEndDateTime` IS NULL
+									AND 	`dateTimeCancelled` IS NOT NULL
+								)						AS CancelledBookedMeetings
 					FROM		`user` u
 					INNER JOIN	`accesslevel` a
 					ON			a.`AccessID` = u.`AccessID`
@@ -551,6 +583,11 @@ if(isSet($_SESSION['loggedIn']) AND isSet($_SESSION['LoggedInUserID'])){
 	$originalSendEmail = $result['SendEmail'];
 	$originalSendAdminEmail = $result['SendAdminEmail'];
 
+	$numberOfTotalBookedMeetings = $result['TotalBookedMeetings'];
+	$numberOfActiveBookedMeetings = $result['ActiveBookedMeetings'];
+	$numberOfCompletedBookedMeetings = $result['CompletedBookedMeetings'];
+	$numberOfCancelledBookedMeetings = $result['CancelledBookedMeetings'];
+	
 	$accessName = $result['AccessName'];
 	$accessDescription = $result['AccessDescription'];
 	$originalBookingCode = $result['BookingCode'];
@@ -718,7 +755,7 @@ if(isSet($_POST['action']) AND $_POST['action'] == "Confirm Change"){
 	$originalEmail = $_SESSION['normalUserOriginalInfoArray']['Email'];
 	// no need to check if our own email exists in the database
 	if($email != $originalEmail AND !$invalidInput){
-		if (databaseContainsEmail($email)){
+		if(databaseContainsEmail($email)){
 			// The email has been used before. So we can't create a new user with this info.
 			$_SESSION['normalUserFeedback'] = "The new email you've set is already connected to an account.";
 			$invalidInput = TRUE;	
@@ -726,12 +763,12 @@ if(isSet($_POST['action']) AND $_POST['action'] == "Confirm Change"){
 	}
 
 	$changePassword = FALSE;
-	
+
 	// Check if user is trying to set a new password
 	// And if so, check if both fields are filled in and match each other
 	if(isSet($_POST['password1'])){
 		$password1 = $_POST['password1'];
-	} 
+	}
 	if(isSet($_POST['password2'])){
 		$password2 = $_POST['password2'];
 	}

@@ -19,7 +19,7 @@
 		<fieldset><legend>Confirm your identity with your Booking Code:</legend>
 			<div class="left">
 				<?php if(isSet($_SESSION['confirmBookingCodeError'])) : ?>
-					<span class="feedback"><?php htmlout($_SESSION['confirmBookingCodeError']); ?></span>
+					<span class="warning"><?php htmlout($_SESSION['confirmBookingCodeError']); ?></span>
 					<?php unset($_SESSION['confirmBookingCodeError']); ?>
 				<?php endif; ?>
 			</div>
