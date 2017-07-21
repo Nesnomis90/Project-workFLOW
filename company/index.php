@@ -16,8 +16,6 @@ unsetSessionsFromAdminUsers(); // TO-DO: Add more or remove
 
 /*
 //variables to implement
-$selectedCompanyToDisplayID; //int
-$selectedCompanyName; //string
 $selectedCompanyToJoinID;//int
 
 // values to retrieve
