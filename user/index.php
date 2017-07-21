@@ -6,13 +6,19 @@ session_start();
 include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/helpers.inc.php';
 include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/magicquotes.inc.php';
 
+// Make sure logout works properly and that we check if their login details are up-to-date
+if(isSet($_SESSION['loggedIn'])){
+	$gotoPage = ".";
+	userIsLoggedIn();
+}
+
 unsetSessionsFromAdminUsers(); // TO-DO: Add more or remove
 
 function getLocationWeCameFromInUserBooking(){
 	$pathWeCameFrom = $_SERVER['PHP_SELF'];
 	$pathWithoutPHPFile = substr($pathWeCameFrom, 0, strrpos($pathWeCameFrom,'/'));	
 	$location = "Location: " . $pathWithoutPHPFile;
-	
+
 	if(isSet($_GET['totalBooking'])){
 		$location .= "?totalBooking";
 	} elseif(isSet($_GET['completedBooking'])){

@@ -13,7 +13,7 @@
 			}
 		</style>
 	</head>
-	<body>
+	<body onload="startTime()">
 		<?php include_once $_SERVER['DOCUMENT_ROOT'] .'/includes/topnav.html.php'; ?>
 
 		<fieldset><legend>Book A New Meeting</legend>

@@ -1921,16 +1921,16 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Edit') OR
 			unset($_SESSION['EditCreateBookingDisplayCompanySelect']);
 			$_SESSION['EditCreateBookingInfoArray']['TheCompanyID'] = "";
 			$_SESSION['EditCreateBookingInfoArray']['BookedForCompany'] = "";
-		}		
+		}
 	}
 	catch(PDOException $e)
 	{
 		$error = 'Error fetching user details: ' . $e->getMessage();
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
 		$pdo = null;
-		exit();					
+		exit();
 	}
-	
+
 	// Set the correct information
 	$row = $_SESSION['EditCreateBookingInfoArray'];
 	$original = $_SESSION['EditCreateBookingOriginalInfoArray'];
@@ -1944,7 +1944,7 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Edit') OR
 			}
 		}			
 	}
-	
+
 		// Edited inputs
 	$bookingID = $row['TheBookingID'];
 	$companyName = $row['BookedForCompany'];

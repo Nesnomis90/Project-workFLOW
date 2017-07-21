@@ -18,7 +18,7 @@
 			<title>User Information</title>
 		<?php endif; ?>
 	</head>
-	<body>
+	<body onload="startTime()">
 		<?php include_once $_SERVER['DOCUMENT_ROOT'] .'/includes/topnav.html.php'; ?>
 		
 		<?php if(isSet($_SESSION['loggedIn'])) : ?>

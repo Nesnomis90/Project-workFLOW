@@ -57,18 +57,23 @@ if(isSet($_GET['meetingroom'])){
 <div class="topnav">
 	<ul>
 		<?php if(!isSet($_SESSION["DefaultMeetingRoomInfo"])) : ?>
-		<li><a href="#home">Home</a></li>
+			<li><a href="#home">Home</a></li>
 		<?php else : ?>
-		<li><a href="/booking/?meetingroom=<?php htmlout($_SESSION["DefaultMeetingRoomInfo"]["TheMeetingRoomID"]); ?>">Home</a></li>
+			<li><a href="/booking/?meetingroom=<?php htmlout($_SESSION["DefaultMeetingRoomInfo"]["TheMeetingRoomID"]); ?>">Home</a></li>
 		<?php endif; ?>
+		
 		<li><a href="/meetingroom">Meeting Rooms</a></li>
 		<li><a href="/booking">Booked Meetings</a></li>
+		
 		<li><b id="Clock"></b></li>
+		
 		<?php if(!isSet($_SESSION['loggedIn']) AND !isSet($_SESSION["DefaultMeetingRoomInfo"])) : ?>
-			<li style="float:right"><a href="/user/?register">Register</a></li>
-			<li style="float:right"><a href="<?php htmlout($loginForNav); ?>">Log In</a></li>
+			<li style="float:right;"><a href="/user/?register">Register</a></li>
+			<li style="float:right;"><a href="<?php htmlout($loginForNav); ?>">Log In</a></li>
 		<?php elseif(isSet($_SESSION['loggedIn'])) : ?>
-			<li style="float:right"><a href="<?php htmlout($logoutForNav); ?>">Log Out</a></li>
+			<li style="float:right;"><a href="<?php htmlout($logoutForNav); ?>">Log Out</a></li>
+			<li style="float:right;"><a href="/user">My Account</a></li>
+			<li style="float:right;"><a href="/company">My Company</a></li>
 		<?php endif; ?>
 	</ul>
 </div>
