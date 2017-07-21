@@ -21,16 +21,16 @@
 		<?php endif; ?>
 	</head>
 	<body onload="startTime()">
-		<fieldset>
+		<fieldset class="left">
 			<form action="" method="post">
 				<?php if($numberOfCompanies > 1) : ?>
 					<legend>Manage Companies</legend>
 
 					<div class="left">
 						<label>Select The Company To Look At:</label>
-						<select name="companySelect">
-							<?php foreach($companies AS $company) : ?>
-								<?php if($company['CompanyID'] == $selectedCompanyID) : ?>
+						<select name="selectedCompanyToDisplay">
+							<?php foreach($companiesUserWorksFor AS $company) : ?>
+								<?php if($company['CompanyID'] == $selectedCompanyToDisplayID) : ?>
 									<option selected="selected" value="<?php htmlout($company['CompanyID']); ?>"><?php htmlout($company['CompanyName']); ?></option>
 								<?php else : ?>
 									<option value="<?php htmlout($company['CompanyID']); ?>"><?php htmlout($company['CompanyName']); ?></option>
@@ -53,6 +53,25 @@
 				<?php elseif($numberOfCompanies == 0) : ?>
 					<legend>Join A Company</legend>
 				<?php endif; ?>
+				
+				<fieldset class="left"><legend>Request To Join Another Company<legend>
+					<div class="left">
+						<label>Select The Company To Look At: </label>
+						<select name="selectedCompanyToJoin">
+							<?php foreach($companies AS $company) : ?>
+								<?php if($company['CompanyID'] == $selectedCompanyToJoinID) : ?>
+									<option selected="selected" value="<?php htmlout($company['CompanyID']); ?>"><?php htmlout($company['CompanyName']); ?></option>
+								<?php else : ?>
+									<option value="<?php htmlout($company['CompanyID']); ?>"><?php htmlout($company['CompanyName']); ?></option>
+								<?php endif; ?>
+							<?php endforeach; ?>
+						</select>
+					</div>
+				</fieldset>
+
+				<div class="left">
+					<input type="submit" name="action" value="Create A Company">
+				</div>
 			</form>
 		</fieldset>
 	</body>
