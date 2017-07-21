@@ -9,7 +9,7 @@
 		<script src="/scripts/myFunctions.js"></script>	
 		<style>
 			label {
-				width: 250px;
+				width: 280px;
 			}
 		</style>		
 		<?php if($numberOfCompanies > 1) : ?>
@@ -17,7 +17,7 @@
 		<?php elseif($numberOfCompanies == 1) : ?>
 			<title>Manage Company</title>
 		<?php elseif($numberOfCompanies == 0) : ?>
-			<title>Join A Company</title>
+			<title>Set Up A Company Connection</title>
 		<?php endif; ?>
 	</head>
 	<body onload="startTime()">
@@ -25,11 +25,17 @@
 	<?php include_once $_SERVER['DOCUMENT_ROOT'] .'/includes/topnav.html.php'; ?>
 	
 		<fieldset class="left">
+			<?php if($numberOfCompanies > 1) : ?>
+				<legend>Manage Companies</legend>
+			<?php elseif($numberOfCompanies == 1) : ?>
+				<legend>Manage Company</legend>
+			<?php elseif($numberOfCompanies == 0) : ?>
+				<legend>Set Up A Company Connection</legend>
+			<?php endif; ?>
+
 			<form action="" method="post">
 				<?php if($numberOfCompanies > 1) : ?>
-					<legend>Manage Companies</legend>
-
-					<div class="left">
+					<div class="left fieldsetIndentReplication">
 						<label>Select The Company To Look At:</label>
 						<select name="selectedCompanyToDisplay">
 							<?php foreach($companiesUserWorksFor AS $company) : ?>
@@ -40,23 +46,22 @@
 								<?php endif; ?>
 							<?php endforeach; ?>
 						</select>
+						<input type="submit" name="action" value="Select Company">
 					</div>
-				<?php elseif($numberOfCompanies == 1) : ?>
-					<legend>Manage Company</legend>
-				<?php elseif($numberOfCompanies == 0) : ?>
-					<legend>Join A Company</legend>
 				<?php endif; ?>
 			
 				<?php if(isSet($companyInformation) AND !empty($companyInformation)) : ?>
-					<div class="left">
-						<label>Displaying Company: </label>
-						<span><b><?php htmlout($companyInformation['CompanyName']); ?></b></span>
-					</div>
-					
-					<div class="left">
-						<label>Employees: </label>
-						<span><a href="?employees"><?php htmlout($companyInformation['NumberOfEmployees']); ?></a></span>
-					</div>
+					<fieldset class="left"><legend>Company Details:</legend>
+						<div class="left">
+							<label>Displaying Company: </label>
+							<span><b><?php htmlout($companyInformation['CompanyName']); ?></b></span>
+						</div>
+						
+						<div class="left">
+							<label>Employees: </label>
+							<span><a href="?employees"><?php htmlout($companyInformation['NumberOfEmployees']); ?></a></span>
+						</div>
+					</fieldset>
 
 					<fieldset class="left"><legend>Booking Details:</legend>
 						<div class="left">
@@ -96,9 +101,9 @@
 					</fieldset>
 				<?php endif; ?>
 			
-				<fieldset class="left"><legend>Request To Join Another Company<legend>
+				<fieldset class="left"><legend>Request To Join Another Company</legend>
 					<div class="left">
-						<label>Select The Company To Look At: </label>
+						<label>Select The Company To Request To Join: </label>
 						<select name="selectedCompanyToJoin">
 							<?php foreach($companies AS $company) : ?>
 								<?php if($company['CompanyID'] == $selectedCompanyToJoinID) : ?>
@@ -108,6 +113,9 @@
 								<?php endif; ?>
 							<?php endforeach; ?>
 						</select>
+					</div>
+					<div class="left">
+						<input type="submit" name="action" value="Request To Join">
 					</div>
 				</fieldset>
 

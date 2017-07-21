@@ -24,24 +24,10 @@ $selectedCompanyToJoinID;//int
 $_POST['selectedCompanyToJoin'];
 */
 
-// get a list of all companies
-try
-{
-	include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
-	$pdo = connect_to_db();
-	$sql = "SELECT 	`CompanyID`	AS CompanyID,
-					`name`		AS CompanyName
-			FROM	`company`
-			WHERE	`isActive` = 1";
-	$return = $pdo->query($sql);
-	$companies = $return->fetchAll(PDO::FETCH_ASSOC);
-}
-catch (PDOException $e)
-{
-	$error = 'Error fetching list of companies from the database: ' . $e->getMessage();
-	include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
-	$pdo = null;
-	exit();
+if(isSet($_POST['action']) AND $_POST['action'] == "Select Company"){
+	if(isSet($_POST['selectedCompanyToDisplay']) AND !empty($_POST['selectedCompanyToDisplay'])){
+		$selectedCompanyToDisplayID = $_POST['selectedCompanyToDisplay'];
+	}
 }
 
 // Get list of companies the user works for
@@ -76,8 +62,24 @@ catch (PDOException $e)
 	exit();
 }
 
-if(isSet($_POST['selectedCompanyToDisplay']) AND !empty($_POST['selectedCompanyToDisplay'])){
-	$selectedCompanyToDisplayID = $_POST['selectedCompanyToDisplay'];
+// get a list of all companies
+try
+{
+	include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+	$pdo = connect_to_db();
+	$sql = "SELECT 	`CompanyID`	AS CompanyID,
+					`name`		AS CompanyName
+			FROM	`company`
+			WHERE	`isActive` = 1";
+	$return = $pdo->query($sql);
+	$companies = $return->fetchAll(PDO::FETCH_ASSOC);
+}
+catch (PDOException $e)
+{
+	$error = 'Error fetching list of companies from the database: ' . $e->getMessage();
+	include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+	$pdo = null;
+	exit();
 }
 
 if(isSet($selectedCompanyToDisplayID) AND !empty($selectedCompanyToDisplayID)){
