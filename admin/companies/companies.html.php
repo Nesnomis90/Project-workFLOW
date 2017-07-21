@@ -11,11 +11,13 @@
 	<body>
 		<h1>Manage Companies</h1>
 		
-		<?php if(isSet($_SESSION['CompanyUserFeedback'])) : ?>
-			<p><b><?php htmlout($_SESSION['CompanyUserFeedback']); ?></b></p>
-			<?php unset($_SESSION['CompanyUserFeedback']); ?>
-		<?php endif; ?>
-		
+		<div class="left">
+			<?php if(isSet($_SESSION['CompanyUserFeedback'])) : ?>
+				<span><b><?php htmlout($_SESSION['CompanyUserFeedback']); ?></b></span>
+				<?php unset($_SESSION['CompanyUserFeedback']); ?>
+			<?php endif; ?>
+		</div>
+
 		<form action="" method="post">
 			<div class="right">
 				<?php if(isSet($_SESSION['companiesEnableDelete']) AND $_SESSION['companiesEnableDelete']) : ?>
@@ -232,7 +234,9 @@
 				</form>
 			</tr>
 		<?php endif; ?>
-		<p><a href="..">Return to CMS home</a></p>
+
+	<div class="left"><a href="..">Return to CMS home</a></div>
+
 	<?php include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/logout.inc.html.php'; ?>
 	</body>
 </html>

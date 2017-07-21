@@ -18,7 +18,7 @@ function getLocationWeCameFromInUserBooking(){
 	$pathWeCameFrom = $_SERVER['PHP_SELF'];
 	$pathWithoutPHPFile = substr($pathWeCameFrom, 0, strrpos($pathWeCameFrom,'/'));	
 	$location = "Location: " . $pathWithoutPHPFile;
-	
+
 	if(isSet($_GET['totalBooking'])){
 		$location .= "?totalBooking";
 	} elseif(isSet($_GET['completedBooking'])){

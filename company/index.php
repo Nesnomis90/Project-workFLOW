@@ -12,6 +12,8 @@ if(isSet($_SESSION['loggedIn'])){
 	userIsLoggedIn();
 }
 
+unsetSessionsFromAdminUsers(); // TO-DO: Add more or remove
 
 
+include_once 'company.html.php';
 ?>
