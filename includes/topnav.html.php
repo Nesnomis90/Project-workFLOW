@@ -73,6 +73,7 @@ if(isSet($_GET['meetingroom'])){
 		<?php elseif(isSet($_SESSION['loggedIn'])) : ?>
 			<li style="float:right;"><a href="<?php htmlout($logoutForNav); ?>">Log Out</a></li>
 			<li style="float:right;"><a href="/user">My Account</a></li>
+			<li style="float:right;"><a href="/company">My Company</a></li>
 		<?php endif; ?>
 	</ul>
 </div>
