@@ -8,7 +8,7 @@
 		<script src="/scripts/myFunctions.js"></script>
 		<title>Manage Booked Meetings</title>
 	</head>
-	<body>
+	<body onload="startTime()">
 		<?php include_once $_SERVER['DOCUMENT_ROOT'] .'/includes/topnav.html.php'; ?>
 		
 		<?php if(isSet($_SESSION['loggedIn']) AND isSet($_SESSION['LoggedInUserID'])) : ?>

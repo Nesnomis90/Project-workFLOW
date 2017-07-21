@@ -9,7 +9,7 @@
 		<script src="/scripts/myFunctions.js"></script>	
 		<style>
 			label {
-				width: 210px;
+				width: 250px;
 			}
 		</style>		
 		<?php if($numberOfCompanies > 1) : ?>
@@ -21,6 +21,9 @@
 		<?php endif; ?>
 	</head>
 	<body onload="startTime()">
+	
+	<?php include_once $_SERVER['DOCUMENT_ROOT'] .'/includes/topnav.html.php'; ?>
+	
 		<fieldset class="left">
 			<form action="" method="post">
 				<?php if($numberOfCompanies > 1) : ?>
@@ -38,22 +41,61 @@
 							<?php endforeach; ?>
 						</select>
 					</div>
-
-					<div class="left">
-						<label>Currently Displaying Company: </label>
-						<span><b><?php htmlout($selectedCompanyName); ?></b></span>
-					</div>
 				<?php elseif($numberOfCompanies == 1) : ?>
 					<legend>Manage Company</legend>
-
-					<div class="left">
-						<label>Displaying Company: </label>
-						<span><b><?php htmlout($selectedCompanyName); ?></b></span>
-					</div>
 				<?php elseif($numberOfCompanies == 0) : ?>
 					<legend>Join A Company</legend>
 				<?php endif; ?>
-				
+			
+				<?php if(isSet($companyInformation) AND !empty($companyInformation)) : ?>
+					<div class="left">
+						<label>Displaying Company: </label>
+						<span><b><?php htmlout($companyInformation['CompanyName']); ?></b></span>
+					</div>
+					
+					<div class="left">
+						<label>Employees: </label>
+						<span><a href="?employees"><?php htmlout($companyInformation['NumberOfEmployees']); ?></a></span>
+					</div>
+
+					<fieldset class="left"><legend>Booking Details:</legend>
+						<div class="left">
+							<label>Monthly Credits Given: </label>
+							<span><b><?php htmlout($companyInformation['CompanyCredits']); ?></b></span>
+						</div>
+
+						<div class="left">
+							<label>Monthly Credits Remaining: </label>
+							<span><b><?php htmlout($companyInformation['CompanyCreditsRemaining']); ?></b></span>
+						</div>
+						
+						<div class="left">
+							<label>Monthly Fee: </label>
+							<span><b><?php htmlout($companyInformation['CreditSubscriptionMonthlyPrice']); ?></b></span>
+						</div>
+
+						<div class="left">
+							<label>Over Credits Fee: </label>
+							<span><b><?php htmlout($companyInformation['OverCreditsFee']); ?></b></span>
+						</div>
+
+						<div class="left">
+							<label>Booking Time Used (This Month): </label>
+							<span><b><?php htmlout($companyInformation['MonthlyCompanyWideBookingTimeUsed']); ?></b></span>
+						</div>
+
+						<div class="left">
+							<label>Booking Time Used (Last Month): </label>
+							<span><b><?php htmlout($companyInformation['PreviousMonthCompanyWideBookingTimeUsed']); ?></b></span>
+						</div>
+
+						<div class="left">
+							<label>Booking Time Used (Total): </label>
+							<span><b><?php htmlout($companyInformation['TotalCompanyWideBookingTimeUsed']); ?></b></span>
+						</div>					
+					</fieldset>
+				<?php endif; ?>
+			
 				<fieldset class="left"><legend>Request To Join Another Company<legend>
 					<div class="left">
 						<label>Select The Company To Look At: </label>

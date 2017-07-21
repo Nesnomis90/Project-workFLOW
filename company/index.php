@@ -16,8 +16,6 @@ unsetSessionsFromAdminUsers(); // TO-DO: Add more or remove
 
 /*
 //variables to implement
-$numberOfCompanies; //int
-$companiesUserWorksFor; //array
 $selectedCompanyToDisplayID; //int
 $selectedCompanyName; //string
 $selectedCompanyToJoinID;//int
@@ -26,8 +24,57 @@ $selectedCompanyToJoinID;//int
 $_POST['selectedCompanyToJoin'];
 */
 
-// get companies user works for
+// get a list of all companies
+try
+{
+	include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+	$pdo = connect_to_db();
+	$sql = "SELECT 	`CompanyID`	AS CompanyID,
+					`name`		AS CompanyName
+			FROM	`company`
+			WHERE	`isActive` = 1";
+	$return = $pdo->query($sql);
+	$companies = $return->fetchAll(PDO::FETCH_ASSOC);
+}
+catch (PDOException $e)
+{
+	$error = 'Error fetching list of companies from the database: ' . $e->getMessage();
+	include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+	$pdo = null;
+	exit();
+}
 
+// Get list of companies the user works for
+try
+{
+	include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+	$pdo = connect_to_db();
+	$sql = "SELECT 		c.`CompanyID`	AS CompanyID,
+						c.`name`		AS CompanyName
+			FROM		`company` c
+			INNER JOIN 	`employee` e
+			ON 			e.`CompanyID` = c.`CompanyID`
+			INNER JOIN	`user` u
+			ON			u.`UserID` = e.`UserID`
+			WHERE		c.`isActive` = 1
+			AND			u.`UserID` = :UserID";
+	$s = $pdo->prepare($sql);
+	$s->bindValue(':UserID', $_SESSION['LoggedInUserID']);
+	$s->execute();
+	$companiesUserWorksFor = $s->fetchAll(PDO::FETCH_ASSOC);
+	if(isSet($companiesUserWorksFor)){
+		$numberOfCompanies = sizeOf($companiesUserWorksFor);
+	} else {
+		$numberOfCompanies = 0;
+	}
+}
+catch (PDOException $e)
+{
+	$error = 'Error fetching list of companies from the database: ' . $e->getMessage();
+	include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+	$pdo = null;
+	exit();
+}
 
 if(isSet($_POST['selectedCompanyToDisplay']) AND !empty($_POST['selectedCompanyToDisplay'])){
 	$selectedCompanyToDisplayID = $_POST['selectedCompanyToDisplay'];
@@ -206,9 +253,7 @@ if(isSet($selectedCompanyToDisplayID) AND !empty($selectedCompanyToDisplayID)){
 							cr.`name`											AS CreditSubscriptionName,
 							cr.`minuteAmount`									AS CreditSubscriptionMinuteAmount,
 							cr.`monthlyPrice`									AS CreditSubscriptionMonthlyPrice,
-							cr.`overCreditHourPrice`							AS CreditSubscriptionHourPrice,
-							COUNT(DISTINCT cch.`startDate`)						AS CompanyCreditsHistoryPeriods,
-							SUM(cch.`hasBeenBilled`)							AS CompanyCreditsHistoryPeriodsSetAsBilled
+							cr.`overCreditHourPrice`							AS CreditSubscriptionHourPrice
 				FROM 		`company` c
 				LEFT JOIN	`companycredits` cc
 				ON			c.`CompanyID` = cc.`CompanyID`
@@ -224,12 +269,7 @@ if(isSet($selectedCompanyToDisplayID) AND !empty($selectedCompanyToDisplayID)){
 		$s->bindValue(':aboveThisManySecondsToCount', $aboveThisManySecondsToCount);
 		$s->bindValue(':CompanyID', $selectedCompanyToDisplayID);
 		$s->execute();
-		$result = $s->fetchAll(PDO::FETCH_ASSOC);
-		if(isSet($result)){
-			$rowNum = sizeOf($result);
-		} else {
-			$rowNum = 0;
-		}
+		$row = $s->fetch(PDO::FETCH_ASSOC);
 		
 		//Close the connection
 		$pdo = null;	
@@ -242,105 +282,85 @@ if(isSet($selectedCompanyToDisplayID) AND !empty($selectedCompanyToDisplayID)){
 		exit();
 	}
 
-	// Create an array with the actual key/value pairs we want to use in our HTML
-	foreach ($result as $row)
-	{	
-		// Calculate and display company booking time details
-		if($row['PreviousMonthCompanyWideBookingTimeUsed'] == null){
-			$PrevMonthTimeUsed = 'N/A';
-		} else {
-			$PrevMonthTimeUsed = convertTimeToHoursAndMinutes($row['PreviousMonthCompanyWideBookingTimeUsed']);
-		}	
+	// Calculate and display company booking time details
+	if($row['PreviousMonthCompanyWideBookingTimeUsed'] == null){
+		$PrevMonthTimeUsed = 'N/A';
+	} else {
+		$PrevMonthTimeUsed = convertTimeToHoursAndMinutes($row['PreviousMonthCompanyWideBookingTimeUsed']);
+	}	
 
-		if($row['MonthlyCompanyWideBookingTimeUsed'] == null){
-			$MonthlyTimeUsed = 'N/A';
-		} else {
-			$MonthlyTimeUsed = convertTimeToHoursAndMinutes($row['MonthlyCompanyWideBookingTimeUsed']);
-		}
+	if($row['MonthlyCompanyWideBookingTimeUsed'] == null){
+		$MonthlyTimeUsed = 'N/A';
+	} else {
+		$MonthlyTimeUsed = convertTimeToHoursAndMinutes($row['MonthlyCompanyWideBookingTimeUsed']);
+	}
 
-		if($row['TotalCompanyWideBookingTimeUsed'] == null){
-			$TotalTimeUsed = 'N/A';
-		} else {
-			$TotalTimeUsed = convertTimeToHoursAndMinutes($row['TotalCompanyWideBookingTimeUsed']);	
-		}
-		
-		// Calculate and display company booking subscription details
-		if($row["CompanyAlternativeMinuteAmount"] != NULL AND $row["CompanyAlternativeMinuteAmount"] != ""){
-			$companyMinuteCredits = $row["CompanyAlternativeMinuteAmount"];
-		} elseif($row["CreditSubscriptionMinuteAmount"] != NULL AND $row["CreditSubscriptionMinuteAmount"] != "") {
-			$companyMinuteCredits = $row["CreditSubscriptionMinuteAmount"];
-		} else {
-			$companyMinuteCredits = 0;
-		}
-			// Format company credits to be displayed
-		$displayCompanyCredits = convertMinutesToHoursAndMinutes($companyMinuteCredits);
-		
-		$monthPrice = $row["CreditSubscriptionMonthlyPrice"];
-		if($monthPrice == NULL OR $monthPrice == ""){
-			$monthPrice = 0;
-		}
-		$hourPrice = $row["CreditSubscriptionHourPrice"];
-		if($hourPrice == NULL OR $hourPrice == ""){
-			$hourPrice = 0;
-		}
-		$overCreditsFee = convertToCurrency($hourPrice) . "/h";
+	if($row['TotalCompanyWideBookingTimeUsed'] == null){
+		$TotalTimeUsed = 'N/A';
+	} else {
+		$TotalTimeUsed = convertTimeToHoursAndMinutes($row['TotalCompanyWideBookingTimeUsed']);	
+	}
+	
+	// Calculate and display company booking subscription details
+	if($row["CompanyAlternativeMinuteAmount"] != NULL AND $row["CompanyAlternativeMinuteAmount"] != ""){
+		$companyMinuteCredits = $row["CompanyAlternativeMinuteAmount"];
+	} elseif($row["CreditSubscriptionMinuteAmount"] != NULL AND $row["CreditSubscriptionMinuteAmount"] != "") {
+		$companyMinuteCredits = $row["CreditSubscriptionMinuteAmount"];
+	} else {
+		$companyMinuteCredits = 0;
+	}
+		// Format company credits to be displayed
+	$displayCompanyCredits = convertMinutesToHoursAndMinutes($companyMinuteCredits);
+	
+	$monthPrice = $row["CreditSubscriptionMonthlyPrice"];
+	if($monthPrice == NULL OR $monthPrice == ""){
+		$monthPrice = 0;
+	}
+	$hourPrice = $row["CreditSubscriptionHourPrice"];
+	if($hourPrice == NULL OR $hourPrice == ""){
+		$hourPrice = 0;
+	}
+	$overCreditsFee = convertToCurrency($hourPrice) . "/h";
 
-			// Calculate Company Credits Remaining
-		if($MonthlyTimeUsed != "N/A"){
-			$monthlyTimeHour = substr($MonthlyTimeUsed,0,strpos($MonthlyTimeUsed,"h"));
-			$monthlyTimeMinute = substr($MonthlyTimeUsed,strpos($MonthlyTimeUsed,"h")+1,-1);
-			$actualTimeUsedInMinutesThisMonth = $monthlyTimeHour*60 + $monthlyTimeMinute;
-			if($actualTimeUsedInMinutesThisMonth > $companyMinuteCredits){
-				$minusCompanyMinuteCreditsRemaining = $actualTimeUsedInMinutesThisMonth - $companyMinuteCredits;
-				$displayCompanyCreditsRemaining = "-" . convertMinutesToHoursAndMinutes($minusCompanyMinuteCreditsRemaining);
-			} else {
-				$companyMinuteCreditsRemaining = $companyMinuteCredits - $actualTimeUsedInMinutesThisMonth;
-				$displayCompanyCreditsRemaining = convertMinutesToHoursAndMinutes($companyMinuteCreditsRemaining);
-			}
+		// Calculate Company Credits Remaining
+	if($MonthlyTimeUsed != "N/A"){
+		$monthlyTimeHour = substr($MonthlyTimeUsed,0,strpos($MonthlyTimeUsed,"h"));
+		$monthlyTimeMinute = substr($MonthlyTimeUsed,strpos($MonthlyTimeUsed,"h")+1,-1);
+		$actualTimeUsedInMinutesThisMonth = $monthlyTimeHour*60 + $monthlyTimeMinute;
+		if($actualTimeUsedInMinutesThisMonth > $companyMinuteCredits){
+			$minusCompanyMinuteCreditsRemaining = $actualTimeUsedInMinutesThisMonth - $companyMinuteCredits;
+			$displayCompanyCreditsRemaining = "-" . convertMinutesToHoursAndMinutes($minusCompanyMinuteCreditsRemaining);
 		} else {
-			$companyMinuteCreditsRemaining = $companyMinuteCredits;
+			$companyMinuteCreditsRemaining = $companyMinuteCredits - $actualTimeUsedInMinutesThisMonth;
 			$displayCompanyCreditsRemaining = convertMinutesToHoursAndMinutes($companyMinuteCreditsRemaining);
 		}
-
-			// Display dates
-		$dateCreated = $row['DatetimeCreated'];	
-		$dateToRemove = $row['DeletionDate'];
-		$isActive = ($row['CompanyActivated'] == 1);
-		$dateTimeCreatedToDisplay = convertDatetimeToFormat($dateCreated, 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
-		$dateToRemoveToDisplay = convertDatetimeToFormat($dateToRemove, 'Y-m-d', DATE_DEFAULT_FORMAT_TO_DISPLAY);	
-		
-			// Get Period Status information
-		if(isSet($row['CompanyCreditsHistoryPeriods']) AND $row['CompanyCreditsHistoryPeriods'] != NULL){
-			$totalPeriods = $row['CompanyCreditsHistoryPeriods'];
-		} else {
-			$totalPeriods = 0;
-		}
-		if(isSet($row['CompanyCreditsHistoryPeriodsSetAsBilled']) AND $row['CompanyCreditsHistoryPeriodsSetAsBilled'] != NULL){
-			$billedPeriods = $row['CompanyCreditsHistoryPeriodsSetAsBilled'];
-		} else {
-			$billedPeriods = 0;
-		}
-		$notBilledPeriods = $totalPeriods - $billedPeriods;
-		
-		$companies[] = array(
-								'CompanyID' => $row['CompanyID'], 
-								'CompanyName' => $row['CompanyName'],
-								'NumberOfEmployees' => $row['NumberOfEmployees'],
-								'PreviousMonthCompanyWideBookingTimeUsed' => $PrevMonthTimeUsed,
-								'MonthlyCompanyWideBookingTimeUsed' => $MonthlyTimeUsed,
-								'TotalCompanyWideBookingTimeUsed' => $TotalTimeUsed,
-								'DeletionDate' => $dateToRemoveToDisplay,
-								'DatetimeCreated' => $dateTimeCreatedToDisplay,
-								'CreditSubscriptionName' => $row["CreditSubscriptionName"],
-								'CompanyCredits' => $displayCompanyCredits,
-								'CompanyCreditsRemaining' => $displayCompanyCreditsRemaining,
-								'CreditSubscriptionMonthlyPrice' => convertToCurrency($monthPrice),
-								'OverCreditsFee' => $overCreditsFee,
-								'TotalPeriods' => $totalPeriods,
-								'BilledPeriods' => $billedPeriods,
-								'NotBilledPeriods' => $notBilledPeriods
-							);
+	} else {
+		$companyMinuteCreditsRemaining = $companyMinuteCredits;
+		$displayCompanyCreditsRemaining = convertMinutesToHoursAndMinutes($companyMinuteCreditsRemaining);
 	}
+
+		// Display dates
+	$dateCreated = $row['DatetimeCreated'];	
+	$dateToRemove = $row['DeletionDate'];
+	$isActive = ($row['CompanyActivated'] == 1);
+	$dateTimeCreatedToDisplay = convertDatetimeToFormat($dateCreated, 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
+	$dateToRemoveToDisplay = convertDatetimeToFormat($dateToRemove, 'Y-m-d', DATE_DEFAULT_FORMAT_TO_DISPLAY);
+	
+	$companyInformation = array(
+							'CompanyID' => $row['CompanyID'], 
+							'CompanyName' => $row['CompanyName'],
+							'NumberOfEmployees' => $row['NumberOfEmployees'],
+							'PreviousMonthCompanyWideBookingTimeUsed' => $PrevMonthTimeUsed,
+							'MonthlyCompanyWideBookingTimeUsed' => $MonthlyTimeUsed,
+							'TotalCompanyWideBookingTimeUsed' => $TotalTimeUsed,
+							'DeletionDate' => $dateToRemoveToDisplay,
+							'DatetimeCreated' => $dateTimeCreatedToDisplay,
+							'CompanyCredits' => $displayCompanyCredits,
+							'CompanyCreditsRemaining' => $displayCompanyCreditsRemaining,
+							'CreditSubscriptionMonthlyPrice' => convertToCurrency($monthPrice),
+							'OverCreditsFee' => $overCreditsFee
+						);
+	
 	var_dump($_SESSION); // TO-DO: remove after testing is done	
 }
 
