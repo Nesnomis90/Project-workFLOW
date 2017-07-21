@@ -14,6 +14,15 @@ if(isSet($_SESSION['loggedIn'])){
 
 unsetSessionsFromAdminUsers(); // TO-DO: Add more or remove
 
+//variables to implement
+$numberOfCompanies //int
+$companies //array
+$selectedCompanyID //int
+$selectedCompanyName //string
+
+// values to retrieve
+$_POST['companySelect'] //int
+
 
 include_once 'company.html.php';
 ?>
