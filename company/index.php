@@ -17,6 +17,16 @@ if(isSet($_SESSION['loggedIn']) AND $_SESSION['loggedIn'] AND isSet($_SESSION['L
 	exit();
 }
 
+// If admin wants to be able to delete companies it needs to enabled first
+if (isSet($_POST['action']) AND $_POST['action'] == "Enable Remove"){
+	$_SESSION['normalEmployeesEnableDelete'] = TRUE;
+}
+
+// If admin wants to be disable company deletion
+if (isSet($_POST['action']) AND $_POST['action'] == "Disable Remove"){
+	unset($_SESSION['normalEmployeesEnableDelete']);
+}
+
 unsetSessionsFromAdminUsers(); // TO-DO: Add more or remove
 unsetSessionsFromUserManagement();
 
@@ -85,7 +95,6 @@ if(isSet($_GET['employees']) AND isSet($_SESSION['normalUserCompanyIDSelected'])
 
 		if(isSet($userResult) AND $userResult['HitCount'] > 0){
 			$companyRole = $userResult['CompanyPosition'];
-			echo "You have the role of $companyRole in this company";
 		} else {
 			$noAccess = TRUE;
 
