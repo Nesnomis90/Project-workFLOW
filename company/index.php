@@ -1050,6 +1050,40 @@ if(isSet($selectedCompanyToDisplayID) AND !empty($selectedCompanyToDisplayID)){
 								FROM 		`booking` b
 								WHERE 		b.`CompanyID` = :CompanyID
 							)													AS TotalCompanyWideBookingTimeUsed,
+							(
+								SELECT 	COUNT(*)
+								FROM	`booking`
+								WHERE	`companyID` = :CompanyID
+							)													AS TotalBookedMeetings,
+							(
+								SELECT 	COUNT(*)
+								FROM	`booking`
+								WHERE	`companyID` = :CompanyID
+								AND 	`actualEndDateTime` IS NULL
+								AND 	`dateTimeCancelled` IS NULL
+								AND 	`endDateTime` > CURRENT_TIMESTAMP
+							)													AS ActiveBookedMeetings,
+							(
+								SELECT 	COUNT(*)
+								FROM	`booking`
+								WHERE	`companyID` = :CompanyID
+								AND 	(
+											`actualEndDateTime` IS NOT NULL
+										OR
+											(
+														`actualEndDateTime` IS NULL
+												AND 	`dateTimeCancelled` IS NULL
+												AND 	`endDateTime` <= CURRENT_TIMESTAMP
+											)
+										)
+							)													AS CompletedBookedMeetings,
+							(
+								SELECT 	COUNT(*)
+								FROM	`booking`
+								WHERE	`companyID` = :CompanyID
+								AND 	`actualEndDateTime` IS NULL
+								AND 	`dateTimeCancelled` IS NOT NULL
+							)													AS CancelledBookedMeetings,
 							cc.`altMinuteAmount`								AS CompanyAlternativeMinuteAmount,
 							cc.`lastModified`									AS CompanyCreditsLastModified,
 							cr.`name`											AS CreditSubscriptionName,
@@ -1065,7 +1099,7 @@ if(isSet($selectedCompanyToDisplayID) AND !empty($selectedCompanyToDisplayID)){
 				ON 			cch.`CompanyID` = c.`CompanyID`
 				WHERE		c.`CompanyID` = :CompanyID
 				GROUP BY 	c.`CompanyID`
-				LIMIT 		1;";
+				LIMIT 		1";
 		$s = $pdo->prepare($sql);
 		$s->bindValue(':minimumSecondsPerBooking', $minimumSecondsPerBooking);
 		$s->bindValue(':aboveThisManySecondsToCount', $aboveThisManySecondsToCount);

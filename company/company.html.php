@@ -113,7 +113,35 @@
 						<div class="left">
 							<label>Booking Time Used (Total): </label>
 							<span><b><?php htmlout($companyInformation['TotalCompanyWideBookingTimeUsed']); ?></b></span>
-						</div>					
+						</div>
+
+						<?php if($numberOfTotalBookedMeetings > 0) : ?>
+							<div>
+								<label>Booked Meetings (Total):</label>
+								<span><a href="?totalBooking"><?php htmlout($numberOfTotalBookedMeetings); ?></a></span>
+							</div>
+							
+							<?php if($numberOfActiveBookedMeetings > 0) : ?>
+								<div>
+									<label>Booked Meetings (Active):</label>
+									<span><a href="?activeBooking"><?php htmlout($numberOfActiveBookedMeetings); ?></a></span>
+								</div>
+							<?php endif; ?>
+
+							<?php if($numberOfCompletedBookedMeetings > 0) : ?>
+								<div>
+									<label>Booked Meetings (Completed):</label>
+									<span><a href="?completedBooking"><?php htmlout($numberOfCompletedBookedMeetings); ?></a></span>
+								</div>
+							<?php endif; ?>
+
+							<?php if($numberOfCancelledBookedMeetings > 0) : ?>
+								<div>
+									<label>Booked Meetings (Cancelled):</label>
+									<span><a href="?cancelledBooking"><?php htmlout($numberOfCancelledBookedMeetings); ?></a></span>
+								</div>
+							<?php endif; ?>
+						<?php endif; ?>	
 					</fieldset>
 				<?php endif; ?>
 			
