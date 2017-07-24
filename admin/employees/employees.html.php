@@ -1,6 +1,5 @@
-<!-- This is the HTML form used for DISPLAYING a list of COMPANIES-->
-<?php include_once $_SERVER['DOCUMENT_ROOT'] .
- '/includes/helpers.inc.php'; ?>
+<!-- This is the HTML form used for DISPLAYING a list of EMPLOYEES for admin-->
+<?php include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/helpers.inc.php'; ?>
 <!DOCTYPE html>
 <html lang="en">
 	<head>
@@ -10,12 +9,16 @@
 	</head>
 	<body>
 		<h1>Manage Company Employees</h1>
-		<?php if(isSet($_SESSION['EmployeeUserFeedback'])) : ?>
-			<p><b><?php htmlout($_SESSION['EmployeeUserFeedback']); ?></b></p>
-			<?php unset($_SESSION['EmployeeUserFeedback']); ?>
-		<?php endif; ?>			
+		
+		<div class="left">
+			<?php if(isSet($_SESSION['EmployeeAdminFeedback'])) : ?>
+				<span><b><?php htmlout($_SESSION['EmployeeAdminFeedback']); ?></b></span>
+				<?php unset($_SESSION['EmployeeAdminFeedback']); ?>
+			<?php endif; ?>
+		</div>
+
 		<?php $goto = "http://$_SERVER[HTTP_HOST]/admin/companies/"; ?>
-		<?php if(isSet($_GET['Company'])) :?>
+		<?php if(isSet($_GET['Company'])) : ?>
 			<form action="<?php htmlout($goto); ?>" method="post">
 				<input type="submit" value="Return to Companies">
 			</form>
@@ -24,6 +27,7 @@
 				<input type="submit" value="Get All Employees">
 			</form>
 		<?php endif; ?>
+	
 		<form action="" method="post">
 			<div>
 				<?php if(isSet($_SESSION['employeesEnableDelete']) AND $_SESSION['employeesEnableDelete']) : ?>
@@ -32,10 +36,12 @@
 					<input type="submit" name="action" value="Enable Remove">
 				<?php endif; ?>
 			</div>
-		</form>		
+		</form>
+		
 		<form action="" method="post">
 			<input type="submit" name="action" value="Add Employee">
 		</form>
+
 		<table>
 			<caption>Company Employees</caption>
 			<tr>
@@ -58,14 +64,14 @@
 				<th>Change Role</th>
 				<th>Remove</th>
 			</tr>
-			<?php if($rowNum>0) :?>
+			<?php if($rowNum > 0) : ?>
 				<?php if(isSet($_GET['Company']) AND 
 						(isSet($deletedEmployees) OR isSet($removedEmployees))) : ?>
 				<tr>
 					<td colspan="11"><b>The Following Are Currently Employed Users</b></td>
 				</tr>
 				<?php endif; ?>
-				<?php foreach ($employees as $employee): ?>
+				<?php foreach ($employees as $employee) : ?>
 					<form action="" method="post">
 						<tr>
 							<td>
@@ -106,7 +112,7 @@
 					<tr>
 						<td colspan="11"><b>The Following Are Previously Employed Users</b></td>
 					</tr>
-					<?php foreach($removedEmployees as $employee): ?>
+					<?php foreach($removedEmployees as $employee) : ?>
 						<tr>
 							<td><?php htmlout($employee['CompanyName']); ?></td>
 							<td>Removed</td>
@@ -124,7 +130,7 @@
 					<tr>
 						<td colspan="11"><b>The Following Is A Summation Of Deleted Users</b></td>
 					</tr>
-					<?php foreach($deletedEmployees as $employee): ?>
+					<?php foreach($deletedEmployees as $employee) : ?>
 						<tr>
 							<td><?php htmlout($employee['CompanyName']); ?></td>
 							<td>Deleted</td>
@@ -137,7 +143,9 @@
 					<?php endforeach; ?>				
 				<?php endif; ?>
 			</table>
-		<p><a href="..">Return to CMS home</a></p>
+
+	<div class="left"><a href="..">Return to CMS home</a></div>
+
 	<?php include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/logout.inc.html.php'; ?>
 	</body>
 </html>

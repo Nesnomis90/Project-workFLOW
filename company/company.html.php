@@ -8,9 +8,15 @@
 		<link rel="stylesheet" type="text/css" href="/CSS/myCSS.css">
 		<script src="/scripts/myFunctions.js"></script>	
 		<style>
-			label {
-				width: 280px;
-			}
+			<?php if(isSet($selectedCompanyToDisplayID)) : ?>
+				label {
+					width: 230px;
+				}
+			<?php else : ?>
+				label {
+					width: 130px;
+				}				
+			<?php endif; ?>
 		</style>		
 		<?php if(isSet($numberOfCompanies) AND $numberOfCompanies > 1) : ?>
 			<title>Manage Companies</title>
@@ -37,19 +43,27 @@
 
 			<form action="" method="post">
 				<?php if(isSet($numberOfCompanies) AND $numberOfCompanies > 1) : ?>
-					<div class="left fieldsetIndentReplication">
-						<label>Select The Company To Look At:</label>
-						<select name="selectedCompanyToDisplay">
-							<?php foreach($companiesUserWorksFor AS $company) : ?>
-								<?php if($company['CompanyID'] == $selectedCompanyToDisplayID) : ?>
-									<option selected="selected" value="<?php htmlout($company['CompanyID']); ?>"><?php htmlout($company['CompanyName']); ?></option>
-								<?php else : ?>
-									<option value="<?php htmlout($company['CompanyID']); ?>"><?php htmlout($company['CompanyName']); ?></option>
-								<?php endif; ?>
-							<?php endforeach; ?>
-						</select>
-						<input type="submit" name="action" value="Select Company">
-					</div>
+					<fieldset class="left"><legend>Select A Company To Display</legend>
+						<div class="left">
+							<label>Currently Selected: </label>
+							<?php if(isSet($companyInformation) AND !empty($companyInformation['CompanyName'])) : ?>
+								<span><b><?php htmlout($companyInformation['CompanyName']); ?></b></span>
+							<?php else : ?>
+								<span><b>No Company Has Been Selected.</b></span>
+							<?php endif; ?>
+							<label>Choose: </label>
+							<select name="selectedCompanyToDisplay">
+								<?php foreach($companiesUserWorksFor AS $company) : ?>
+									<?php if($company['CompanyID'] == $selectedCompanyToDisplayID) : ?>
+										<option selected="selected" value="<?php htmlout($company['CompanyID']); ?>"><?php htmlout($company['CompanyName']); ?></option>
+									<?php else : ?>
+										<option value="<?php htmlout($company['CompanyID']); ?>"><?php htmlout($company['CompanyName']); ?></option>
+									<?php endif; ?>
+								<?php endforeach; ?>
+							</select>
+							<input type="submit" name="action" value="Select Company">
+						</div>
+					</fieldset>
 				<?php endif; ?>
 			
 				<?php if(isSet($companyInformation) AND !empty($companyInformation)) : ?>
@@ -103,9 +117,14 @@
 					</fieldset>
 				<?php endif; ?>
 			
-				<fieldset class="left"><legend>Request To Join A Company</legend>
+				<fieldset class="left">
+				<?php if(isSet($numberOfCompanies) AND $numberOfCompanies > 0) : ?>
+					<legend>Request To Join Another Company</legend>
+				<?php elseif(isSet($numberOfCompanies) AND $numberOfCompanies == 0) : ?>
+					<legend>Request To Join A Company</legend>
+				<?php endif; ?>
 					<div class="left">
-						<label>Select The Company To Request To Join: </label>
+						<label>Choose: </label>
 						<select name="selectedCompanyToJoin">
 							<?php foreach($companies AS $company) : ?>
 								<?php if($company['CompanyID'] == $selectedCompanyToJoinID) : ?>

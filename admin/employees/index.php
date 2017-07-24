@@ -69,7 +69,7 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Remove'){
 		exit();
 	}
 	
-	$_SESSION['EmployeeUserFeedback'] = "Successfully removed the employee.";
+	$_SESSION['EmployeeAdminFeedback'] = "Successfully removed the employee.";
 	
 	// Add a log event that an employee was removed from a company
 	try
@@ -526,7 +526,7 @@ if (isSet($_POST['action']) AND $_POST['action'] == 'Confirm Employee')
 		exit();
 	}
 	
-		$_SESSION['EmployeeUserFeedback'] = "Successfully added the employee.";
+		$_SESSION['EmployeeAdminFeedback'] = "Successfully added the employee.";
 	
 	// Add a log event that a user was added as an employee in a company
 	try
@@ -759,9 +759,9 @@ if (isSet($_POST['action']) AND $_POST['action'] == 'Confirm Role')
 			exit();		
 		}
 		
-		$_SESSION['EmployeeUserFeedback'] = "Successfully updated the employee.";		
+		$_SESSION['EmployeeAdminFeedback'] = "Successfully updated the employee.";		
 	} else {
-		$_SESSION['EmployeeUserFeedback'] = "No changes were made to the employee.";
+		$_SESSION['EmployeeAdminFeedback'] = "No changes were made to the employee.";
 	}
 	
 	clearEditEmployeeSessions();
@@ -782,7 +782,7 @@ if (isSet($_POST['action']) AND $_POST['action'] == 'Confirm Role')
 
 // If the user clicks any cancel buttons he'll be directed back to the employees page again
 if (isSet($_POST['action']) AND $_POST['action'] == 'Cancel'){
-	$_SESSION['EmployeeUserFeedback'] = "Cancel button clicked. Taking you back to /admin/employees/!";
+	$_SESSION['EmployeeAdminFeedback'] = "Cancel button clicked. Taking you back to /admin/employees/!";
 }
 
 if(isSet($refreshEmployees) AND $refreshEmployees){
