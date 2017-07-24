@@ -1,0 +1,132 @@
+<!-- This is the HTML form used for DISPLAYING a list of EMPLOYEES for users in a company-->
+<?php include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/helpers.inc.php'; ?>
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<link rel="stylesheet" type="text/css" href="/CSS/myCSS.css">
+		<title>Manage Company Employees</title>
+	</head>
+	<body onload="startTime()">
+
+	<?php include_once $_SERVER['DOCUMENT_ROOT'] .'/includes/topnav.html.php'; ?>
+
+		<h1>Manage Company Employees</h1>
+		
+		<div class="left">
+			<?php if(isSet($_SESSION['EmployeeUserFeedback'])) : ?>
+				<span><b><?php htmlout($_SESSION['EmployeeUserFeedback']); ?></b></span>
+				<?php unset($_SESSION['EmployeeUserFeedback']); ?>
+			<?php endif; ?>
+		</div>
+
+		<form action="" method="post">
+			<input type="submit" name="action" value="Add Employee">
+		</form>
+
+		<table>
+			<caption>Company Employees</caption>
+			<tr>
+				<th colspan="2">Company</th>
+				<th colspan="3">User Information</th>
+				<th colspan="3">Booking Time Used</th>
+				<th>Date</th>
+				<th colspan="2">Alter Employee</th>
+			</tr>
+			<tr>
+				<th>Name</th>
+				<th>Role</th>
+				<th>First Name</th>
+				<th>Last Name</th>
+				<th>Email</th>
+				<th>Previous Month</th>
+				<th>This Month</th>
+				<th>All Time</th>
+				<th>Added</th>
+				<th>Change Role</th>
+				<th>Remove</th>
+			</tr>
+			<?php if($rowNum > 0) :?>
+				<?php if(isSet($_GET['Company']) AND 
+						(isSet($deletedEmployees) OR isSet($removedEmployees))) : ?>
+				<tr>
+					<td colspan="11"><b>The Following Are Currently Employed Users</b></td>
+				</tr>
+				<?php endif; ?>
+				<?php foreach ($employees as $employee): ?>
+					<form action="" method="post">
+						<tr>
+							<td>
+								<?php htmlout($employee['CompanyName']); ?>
+								<input type="hidden" name="CompanyName" value="<?php htmlout($employee['CompanyName']); ?>">
+							</td>
+							<td><?php htmlout($employee['PositionName']); ?></td>
+							<td><?php htmlout($employee['firstName']); ?></td>
+							<td><?php htmlout($employee['lastName']); ?></td>
+							<td><?php htmlout($employee['email']); ?></td>
+							<td><?php htmlout($employee['PreviousMonthBookingTimeUsed']); ?></td>							
+							<td><?php htmlout($employee['MonthlyBookingTimeUsed']); ?></td>
+							<td><?php htmlout($employee['TotalBookingTimeUsed']); ?></td>
+							<td><?php htmlout($employee['StartDateTime']); ?></td>
+							<td><input type="submit" name="action" value="Change Role"></td>
+							<td>
+								<?php if(isSet($_SESSION['employeesEnableDelete']) AND $_SESSION['employeesEnableDelete']) : ?>
+									<input type="submit" name="action" value="Remove">
+								<?php else : ?>
+									<input type="submit" name="disabled" value="Remove" disabled>
+								<?php endif; ?>
+							</td>
+							<input type="hidden" name="UserID" value="<?php htmlout($employee['UsrID']); ?>">
+							<input type="hidden" name="CompanyID" value="<?php htmlout($employee['CompanyID']); ?>">
+							<input type="hidden" name="UserName" value="<?php htmlout($employee['lastName'] . ", " . $employee['firstName']); ?>">
+						</tr>
+					</form>
+				<?php endforeach; ?>
+			<?php else : ?>
+				<tr><b>There are no employees registered in the database.</b></tr>
+				<tr>
+					<form action="" method="post">
+						<input type="submit" name="action" value="Add Employee">
+					</form>
+				</tr>
+			<?php endif; ?>
+			
+				<?php if(isSet($removedEmployees)) : ?>
+					<tr>
+						<td colspan="11"><b>The Following Are Previously Employed Users</b></td>
+					</tr>
+					<?php foreach($removedEmployees as $employee): ?>
+						<tr>
+							<td><?php htmlout($employee['CompanyName']); ?></td>
+							<td>Removed</td>
+							<td><?php htmlout($employee['firstName']); ?></td>
+							<td><?php htmlout($employee['lastName']); ?></td>
+							<td><?php htmlout($employee['email']); ?></td>
+							<td><?php htmlout($employee['PreviousMonthBookingTimeUsed']); ?></td>
+							<td><?php htmlout($employee['MonthlyBookingTimeUsed']); ?></td>
+							<td><?php htmlout($employee['TotalBookingTimeUsed']); ?></td>
+							<td colspan="3">N/A</td>
+						</tr>
+					<?php endforeach; ?>
+				<?php endif; ?>
+				<?php if(isSet($deletedEmployees)) : ?>
+					<tr>
+						<td colspan="11"><b>The Following Is A Summation Of Deleted Users</b></td>
+					</tr>
+					<?php foreach($deletedEmployees as $employee): ?>
+						<tr>
+							<td><?php htmlout($employee['CompanyName']); ?></td>
+							<td>Deleted</td>
+							<td colspan="3">Every Deleted User Summed Together</td>
+							<td><?php htmlout($employee['PreviousMonthBookingTimeUsed']); ?></td>
+							<td><?php htmlout($employee['MonthlyBookingTimeUsed']); ?></td>
+							<td><?php htmlout($employee['TotalBookingTimeUsed']); ?></td>
+							<td colspan="3">N/A</td>
+						</tr>
+					<?php endforeach; ?>
+				<?php endif; ?>
+			</table>
+
+	<?php include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/logout.inc.html.php'; ?>
+	</body>
+</html>
