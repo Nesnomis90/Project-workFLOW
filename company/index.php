@@ -850,8 +850,6 @@ catch (PDOException $e)
 // get a list of all companies
 try
 {
-	include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
-	$pdo = connect_to_db();
 	$sql = "SELECT 	`CompanyID`	AS CompanyID,
 					`name`		AS CompanyName
 			FROM	`company`
@@ -868,11 +866,28 @@ catch (PDOException $e)
 }
 
 if(isSet($selectedCompanyToDisplayID) AND !empty($selectedCompanyToDisplayID)){
+	
+	// First check if the company selected is one of the companies the user actually works for
+	$companyHit = FALSE;
+	foreach($companiesUserWorksFor AS $cmp){
+		if($selectedCompanyToDisplayID == $cmp['CompanyID']){
+			$companyHit = TRUE;
+			break;
+		}
+	}
+	
+	if($companyHit === FALSE){
+		$noAccess = TRUE;
+		$pdo = null;
+		var_dump($_SESSION); // TO-DO: remove after testing is done	
+
+		include_once 'company.html.php';		
+		exit();
+	}
+
 	// Get company information
 	try
 	{
-		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
-		$pdo = connect_to_db();
 		// Calculate booking time used for a company
 		// Only takes into account time spent and company the booking was booked for.
 			// Booking time is rounded for each booking, instead of summed up and then rounded.
