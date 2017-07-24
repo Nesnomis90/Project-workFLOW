@@ -2,6 +2,7 @@ USE test;
 SET NAMES utf8;
 USE meetingflow;
 SHOW WARNINGS;
+/*PDO::FETCH_ASSOC*/
 
 UPDATE 	`company`
 SET		`prevStartDate` = `startDate`,
@@ -39,6 +40,15 @@ AND		`dateTimeCancelled`
 BETWEEN `startDateTime`
 AND		`endDateTime`
 AND 	`bookingID` <> 0;
+
+SELECT 		COUNT(*) 	AS HitCount,
+			cp.`name` 	AS CompanyPosition
+FROM 		`employee` e
+INNER JOIN `companyposition` cp
+ON 			cp.`PositionID` = e.`PositionID`
+WHERE		`CompanyID` = 5
+AND 		`UserID` = 7
+LIMIT 		1;
 
 SELECT 	*
 FROM	`booking`

@@ -30,7 +30,7 @@
 	
 	<?php include_once $_SERVER['DOCUMENT_ROOT'] .'/includes/topnav.html.php'; ?>
 	
-	<?php if(isSet($_SESSION['loggedIn']) AND $_SESSION['loggedIn'] AND isSet($_SESSION['LoggedInUserID']) AND !empty($_SESSION['LoggedInUserID'])) : ?>
+	<?php if(isSet($_SESSION['loggedIn']) AND $_SESSION['loggedIn'] AND isSet($_SESSION['LoggedInUserID']) AND !empty($_SESSION['LoggedInUserID']) AND !isSet($noAccess)) : ?>
 	
 		<fieldset class="left">
 			<?php if(isSet($numberOfCompanies) AND $numberOfCompanies > 1) : ?>
@@ -145,6 +145,8 @@
 				</div>
 			</form>
 		</fieldset>
+	<?php elseif(isSet($noAccess)) : ?>
+		<h2>You do not have the rights to view this information.</h2>
 	<?php else : ?>
 		<h2>This page requires you to be logged in to view.</h2>
 	<?php endif; ?>

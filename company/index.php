@@ -24,16 +24,30 @@ function unsetSessionsFromCompanyManagement(){
 	unset($_SESSION['normalUserCompanyIDSelected']);
 }
 
+if(!isSet($_GET['ID']) AND !isSet($_GET['employees'])){
+	unset($_SESSION['normalUserCompanyIDSelected']);
+}
+
+if(isSet($_POST['action']) AND $_POST['action'] == "Select Company"){
+	if(isSet($_POST['selectedCompanyToDisplay']) AND !empty($_POST['selectedCompanyToDisplay'])){
+		$selectedCompanyToDisplayID = $_POST['selectedCompanyToDisplay'];
+		$_SESSION['normalUserCompanyIDSelected'] = $selectedCompanyToDisplayID;
+	} else {
+		unset($_SESSION['normalUserCompanyIDSelected']);
+	}
+} elseif(isSet($_GET['ID']) AND !empty($_GET['ID'])) {
+	$selectedCompanyToDisplayID = $_GET['ID'];
+	$_SESSION['normalUserCompanyIDSelected'] = $selectedCompanyToDisplayID;
+}
+
 if(isSet($_SESSION['normalUserCompanyIDSelected']) AND !isSet($_GET['ID']) AND !isSet($_GET['employees'])){
 	header("Location: .?ID=" . $_SESSION['normalUserCompanyIDSelected']);
 } elseif(isSet($_SESSION['normalUserCompanyIDSelected']) AND isSet($_GET['ID']) AND $_GET['ID'] != $_SESSION['normalUserCompanyIDSelected'] AND !isSet($_GET['employees'])) {
 	header("Location: .?ID=" . $_SESSION['normalUserCompanyIDSelected']);
 } elseif(isSet($_SESSION['normalUserCompanyIDSelected']) AND !isSet($_GET['ID']) AND isSet($_GET['employees'])){
-	header("Location: .?ID&employees=" . $_SESSION['normalUserCompanyIDSelected']);
+	header("Location: .?ID=" . $_SESSION['normalUserCompanyIDSelected'] . "&employees");
 } elseif(isSet($_SESSION['normalUserCompanyIDSelected']) AND isSet($_GET['ID']) AND $_GET['ID'] != $_SESSION['normalUserCompanyIDSelected'] AND isSet($_GET['employees'])) {
-	header("Location: .?ID&employees=" . $_SESSION['normalUserCompanyIDSelected']);
-} elseif(!isSet($_SESSION['normalUserCompanyIDSelected']) AND !isSet($_GET['employees'])) {
-	header("Location: .");
+	header("Location: .?ID=" . $_SESSION['normalUserCompanyIDSelected'] . "&employees");
 }
 /*
 //variables to implement
@@ -52,6 +66,35 @@ if(isSet($_GET['employees']) AND isSet($_SESSION['normalUserCompanyIDSelected'])
 
 		$pdo = connect_to_db();
 
+		// First check if the user making the call is actually in the company. If not, we won't display anything.
+		// Also doubles as the company role check to decide what should be displayed.
+		$sql = "SELECT 		COUNT(*) 	AS HitCount,
+							cp.`name` 	AS CompanyPosition
+				FROM 		`employee` e
+				INNER JOIN `companyposition` cp
+				ON 			cp.`PositionID` = e.`PositionID`
+				WHERE		`CompanyID` = :CompanyID
+				AND 		`UserID` = :UserID
+				LIMIT 		1";
+		$s = $pdo->prepare($sql);
+		$s->bindValue(":CompanyID", $_SESSION['normalUserCompanyIDSelected']);
+		$s->bindValue(":UserID", $_SESSION['LoggedInUserID']);
+		$s->execute();
+
+		$userResult = $s->fetch(PDO::FETCH_ASSOC);
+
+		if(isSet($userResult) AND $userResult['HitCount'] > 0){
+			$companyRole = $userResult['CompanyPosition'];
+			echo "You have the role of $companyRole in this company";
+		} else {
+			$noAccess = TRUE;
+
+			var_dump($_SESSION); // TO-DO: remove after testing is done	
+
+			include_once 'company.html.php';		
+			exit();
+		}
+		
 		$sql = "SELECT 	u.`userID`					AS UsrID,
 						c.`companyID`				AS TheCompanyID,
 						c.`name`					AS CompanyName,
@@ -761,18 +804,6 @@ if(isSet($_GET['employees']) AND isSet($_SESSION['normalUserCompanyIDSelected'])
 	
 	include_once 'employees.html.php';
 	exit();
-}
-
-if(isSet($_POST['action']) AND $_POST['action'] == "Select Company"){
-	if(isSet($_POST['selectedCompanyToDisplay']) AND !empty($_POST['selectedCompanyToDisplay'])){
-		$selectedCompanyToDisplayID = $_POST['selectedCompanyToDisplay'];
-		$_SESSION['normalUserCompanyIDSelected'] = $selectedCompanyToDisplayID;
-	} else {
-		unset($_SESSION['normalUserCompanyIDSelected']);
-	}
-} elseif(isSet($_GET['ID']) AND !empty($_GET['ID'])) {
-	$selectedCompanyToDisplayID = $_GET['ID'];
-	$_SESSION['normalUserCompanyIDSelected'] = $selectedCompanyToDisplayID;
 }
 
 // Get list of companies the user works for
