@@ -24,6 +24,17 @@ function unsetSessionsFromCompanyManagement(){
 	unset($_SESSION['normalUserCompanyIDSelected']);
 }
 
+if(isSet($_SESSION['normalUserCompanyIDSelected']) AND !isSet($_GET['ID']) AND !isSet($_GET['employees'])){
+	header("Location: .?ID=" . $_SESSION['normalUserCompanyIDSelected']);
+} elseif(isSet($_SESSION['normalUserCompanyIDSelected']) AND isSet($_GET['ID']) AND $_GET['ID'] != $_SESSION['normalUserCompanyIDSelected'] AND !isSet($_GET['employees'])) {
+	header("Location: .?ID=" . $_SESSION['normalUserCompanyIDSelected']);
+} elseif(isSet($_SESSION['normalUserCompanyIDSelected']) AND !isSet($_GET['ID']) AND isSet($_GET['employees'])){
+	header("Location: .?ID&employees=" . $_SESSION['normalUserCompanyIDSelected']);
+} elseif(isSet($_SESSION['normalUserCompanyIDSelected']) AND isSet($_GET['ID']) AND $_GET['ID'] != $_SESSION['normalUserCompanyIDSelected'] AND isSet($_GET['employees'])) {
+	header("Location: .?ID&employees=" . $_SESSION['normalUserCompanyIDSelected']);
+} elseif(!isSet($_SESSION['normalUserCompanyIDSelected']) AND !isSet($_GET['employees'])) {
+	header("Location: .");
+}
 /*
 //variables to implement
 $selectedCompanyToJoinID;//int
@@ -34,13 +45,13 @@ $_POST['selectedCompanyToJoin'];
 
 // Get employee information for the selected company when user wants it
 if(isSet($_GET['employees']) AND isSet($_SESSION['normalUserCompanyIDSelected']) AND !empty($_SESSION['normalUserCompanyIDSelected'])){
-	
+
 	try
 	{
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 
 		$pdo = connect_to_db();
-		
+
 		$sql = "SELECT 	u.`userID`					AS UsrID,
 						c.`companyID`				AS TheCompanyID,
 						c.`name`					AS CompanyName,
@@ -759,6 +770,9 @@ if(isSet($_POST['action']) AND $_POST['action'] == "Select Company"){
 	} else {
 		unset($_SESSION['normalUserCompanyIDSelected']);
 	}
+} elseif(isSet($_GET['ID']) AND !empty($_GET['ID'])) {
+	$selectedCompanyToDisplayID = $_GET['ID'];
+	$_SESSION['normalUserCompanyIDSelected'] = $selectedCompanyToDisplayID;
 }
 
 // Get list of companies the user works for
@@ -1003,7 +1017,7 @@ if(isSet($selectedCompanyToDisplayID) AND !empty($selectedCompanyToDisplayID)){
 		$s->bindValue(':CompanyID', $selectedCompanyToDisplayID);
 		$s->execute();
 		$row = $s->fetch(PDO::FETCH_ASSOC);
-		
+
 		//Close the connection
 		$pdo = null;	
 	}
@@ -1033,7 +1047,7 @@ if(isSet($selectedCompanyToDisplayID) AND !empty($selectedCompanyToDisplayID)){
 	} else {
 		$TotalTimeUsed = convertTimeToHoursAndMinutes($row['TotalCompanyWideBookingTimeUsed']);	
 	}
-	
+
 	// Calculate and display company booking subscription details
 	if($row["CompanyAlternativeMinuteAmount"] != NULL AND $row["CompanyAlternativeMinuteAmount"] != ""){
 		$companyMinuteCredits = $row["CompanyAlternativeMinuteAmount"];
@@ -1044,7 +1058,7 @@ if(isSet($selectedCompanyToDisplayID) AND !empty($selectedCompanyToDisplayID)){
 	}
 		// Format company credits to be displayed
 	$displayCompanyCredits = convertMinutesToHoursAndMinutes($companyMinuteCredits);
-	
+
 	$monthPrice = $row["CreditSubscriptionMonthlyPrice"];
 	if($monthPrice == NULL OR $monthPrice == ""){
 		$monthPrice = 0;
@@ -1078,7 +1092,7 @@ if(isSet($selectedCompanyToDisplayID) AND !empty($selectedCompanyToDisplayID)){
 	$isActive = ($row['CompanyActivated'] == 1);
 	$dateTimeCreatedToDisplay = convertDatetimeToFormat($dateCreated, 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
 	$dateToRemoveToDisplay = convertDatetimeToFormat($dateToRemove, 'Y-m-d', DATE_DEFAULT_FORMAT_TO_DISPLAY);
-	
+
 	$companyInformation = array(
 							'CompanyID' => $row['CompanyID'], 
 							'CompanyName' => $row['CompanyName'],
