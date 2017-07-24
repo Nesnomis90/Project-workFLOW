@@ -8,15 +8,21 @@
 		<link rel="stylesheet" type="text/css" href="/CSS/myCSS.css">
 		<script src="/scripts/myFunctions.js"></script>	
 		<style>
-			label {
-				width: 280px;
-			}
+			<?php if(isSet($selectedCompanyToDisplayID)) : ?>
+				label {
+					width: 230px;
+				}
+			<?php else : ?>
+				label {
+					width: 130px;
+				}				
+			<?php endif; ?>
 		</style>		
-		<?php if($numberOfCompanies > 1) : ?>
+		<?php if(isSet($numberOfCompanies) AND $numberOfCompanies > 1) : ?>
 			<title>Manage Companies</title>
-		<?php elseif($numberOfCompanies == 1) : ?>
+		<?php elseif(isSet($numberOfCompanies) AND $numberOfCompanies == 1) : ?>
 			<title>Manage Company</title>
-		<?php elseif($numberOfCompanies == 0) : ?>
+		<?php elseif(isSet($numberOfCompanies) AND $numberOfCompanies == 0) : ?>
 			<title>Set Up A Company Connection</title>
 		<?php endif; ?>
 	</head>
@@ -24,30 +30,40 @@
 	
 	<?php include_once $_SERVER['DOCUMENT_ROOT'] .'/includes/topnav.html.php'; ?>
 	
+	<?php if(isSet($_SESSION['loggedIn']) AND $_SESSION['loggedIn'] AND isSet($_SESSION['LoggedInUserID']) AND !empty($_SESSION['LoggedInUserID']) AND !isSet($noAccess)) : ?>
+	
 		<fieldset class="left">
-			<?php if($numberOfCompanies > 1) : ?>
+			<?php if(isSet($numberOfCompanies) AND $numberOfCompanies > 1) : ?>
 				<legend>Manage Companies</legend>
-			<?php elseif($numberOfCompanies == 1) : ?>
+			<?php elseif(isSet($numberOfCompanies) AND $numberOfCompanies == 1) : ?>
 				<legend>Manage Company</legend>
-			<?php elseif($numberOfCompanies == 0) : ?>
+			<?php elseif(isSet($numberOfCompanies) AND $numberOfCompanies == 0) : ?>
 				<legend>Set Up A Company Connection</legend>
 			<?php endif; ?>
 
 			<form action="" method="post">
-				<?php if($numberOfCompanies > 1) : ?>
-					<div class="left fieldsetIndentReplication">
-						<label>Select The Company To Look At:</label>
-						<select name="selectedCompanyToDisplay">
-							<?php foreach($companiesUserWorksFor AS $company) : ?>
-								<?php if($company['CompanyID'] == $selectedCompanyToDisplayID) : ?>
-									<option selected="selected" value="<?php htmlout($company['CompanyID']); ?>"><?php htmlout($company['CompanyName']); ?></option>
-								<?php else : ?>
-									<option value="<?php htmlout($company['CompanyID']); ?>"><?php htmlout($company['CompanyName']); ?></option>
-								<?php endif; ?>
-							<?php endforeach; ?>
-						</select>
-						<input type="submit" name="action" value="Select Company">
-					</div>
+				<?php if(isSet($numberOfCompanies) AND $numberOfCompanies > 1) : ?>
+					<fieldset class="left"><legend>Select A Company To Display</legend>
+						<div class="left">
+							<label>Currently Selected: </label>
+							<?php if(isSet($companyInformation) AND !empty($companyInformation['CompanyName'])) : ?>
+								<span><b><?php htmlout($companyInformation['CompanyName']); ?></b></span>
+							<?php else : ?>
+								<span><b>No Company Has Been Selected.</b></span>
+							<?php endif; ?>
+							<label>Choose: </label>
+							<select name="selectedCompanyToDisplay">
+								<?php foreach($companiesUserWorksFor AS $company) : ?>
+									<?php if($company['CompanyID'] == $selectedCompanyToDisplayID) : ?>
+										<option selected="selected" value="<?php htmlout($company['CompanyID']); ?>"><?php htmlout($company['CompanyName']); ?></option>
+									<?php else : ?>
+										<option value="<?php htmlout($company['CompanyID']); ?>"><?php htmlout($company['CompanyName']); ?></option>
+									<?php endif; ?>
+								<?php endforeach; ?>
+							</select>
+							<input type="submit" name="action" value="Select Company">
+						</div>
+					</fieldset>
 				<?php endif; ?>
 			
 				<?php if(isSet($companyInformation) AND !empty($companyInformation)) : ?>
@@ -97,13 +113,46 @@
 						<div class="left">
 							<label>Booking Time Used (Total): </label>
 							<span><b><?php htmlout($companyInformation['TotalCompanyWideBookingTimeUsed']); ?></b></span>
-						</div>					
+						</div>
+
+						<?php if($numberOfTotalBookedMeetings > 0) : ?>
+							<div>
+								<label>Booked Meetings (Total):</label>
+								<span><a href="?totalBooking"><?php htmlout($numberOfTotalBookedMeetings); ?></a></span>
+							</div>
+							
+							<?php if($numberOfActiveBookedMeetings > 0) : ?>
+								<div>
+									<label>Booked Meetings (Active):</label>
+									<span><a href="?activeBooking"><?php htmlout($numberOfActiveBookedMeetings); ?></a></span>
+								</div>
+							<?php endif; ?>
+
+							<?php if($numberOfCompletedBookedMeetings > 0) : ?>
+								<div>
+									<label>Booked Meetings (Completed):</label>
+									<span><a href="?completedBooking"><?php htmlout($numberOfCompletedBookedMeetings); ?></a></span>
+								</div>
+							<?php endif; ?>
+
+							<?php if($numberOfCancelledBookedMeetings > 0) : ?>
+								<div>
+									<label>Booked Meetings (Cancelled):</label>
+									<span><a href="?cancelledBooking"><?php htmlout($numberOfCancelledBookedMeetings); ?></a></span>
+								</div>
+							<?php endif; ?>
+						<?php endif; ?>	
 					</fieldset>
 				<?php endif; ?>
 			
-				<fieldset class="left"><legend>Request To Join Another Company</legend>
+				<fieldset class="left">
+				<?php if(isSet($numberOfCompanies) AND $numberOfCompanies > 0) : ?>
+					<legend>Request To Join Another Company</legend>
+				<?php elseif(isSet($numberOfCompanies) AND $numberOfCompanies == 0) : ?>
+					<legend>Request To Join A Company</legend>
+				<?php endif; ?>
 					<div class="left">
-						<label>Select The Company To Request To Join: </label>
+						<label>Choose: </label>
 						<select name="selectedCompanyToJoin">
 							<?php foreach($companies AS $company) : ?>
 								<?php if($company['CompanyID'] == $selectedCompanyToJoinID) : ?>
@@ -124,5 +173,10 @@
 				</div>
 			</form>
 		</fieldset>
+	<?php elseif(isSet($noAccess)) : ?>
+		<h2>You do not have the rights to view this information.</h2>
+	<?php else : ?>
+		<h2>This page requires you to be logged in to view.</h2>
+	<?php endif; ?>
 	</body>
 </html>
