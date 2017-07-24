@@ -1184,7 +1184,7 @@ if(isSet($_POST['action']) AND $_POST['action'] == "Confirm Change"){
 									`bookingCode` = :bookingCode,
 									`lastCodeUpdate` = :LastCodeUpdate,
 									`lastActivity` = CURRENT_TIMESTAMP
-							WHERE 	userID = :userID';
+							WHERE 	`userID` = :userID';
 							
 					$s = $pdo->prepare($sql);
 					$s->bindValue(':userID', $_SESSION['LoggedInUserID']);

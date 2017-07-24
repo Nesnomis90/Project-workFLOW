@@ -12,11 +12,11 @@
 				width: 280px;
 			}
 		</style>		
-		<?php if($numberOfCompanies > 1) : ?>
+		<?php if(isSet($numberOfCompanies) AND $numberOfCompanies > 1) : ?>
 			<title>Manage Companies</title>
-		<?php elseif($numberOfCompanies == 1) : ?>
+		<?php elseif(isSet($numberOfCompanies) AND $numberOfCompanies == 1) : ?>
 			<title>Manage Company</title>
-		<?php elseif($numberOfCompanies == 0) : ?>
+		<?php elseif(isSet($numberOfCompanies) AND $numberOfCompanies == 0) : ?>
 			<title>Set Up A Company Connection</title>
 		<?php endif; ?>
 	</head>
@@ -24,17 +24,19 @@
 	
 	<?php include_once $_SERVER['DOCUMENT_ROOT'] .'/includes/topnav.html.php'; ?>
 	
+	<?php if(isSet($_SESSION['loggedIn']) AND $_SESSION['loggedIn'] AND isSet($_SESSION['LoggedInUserID']) AND !empty($_SESSION['LoggedInUserID'])) : ?>
+	
 		<fieldset class="left">
-			<?php if($numberOfCompanies > 1) : ?>
+			<?php if(isSet($numberOfCompanies) AND $numberOfCompanies > 1) : ?>
 				<legend>Manage Companies</legend>
-			<?php elseif($numberOfCompanies == 1) : ?>
+			<?php elseif(isSet($numberOfCompanies) AND $numberOfCompanies == 1) : ?>
 				<legend>Manage Company</legend>
-			<?php elseif($numberOfCompanies == 0) : ?>
+			<?php elseif(isSet($numberOfCompanies) AND $numberOfCompanies == 0) : ?>
 				<legend>Set Up A Company Connection</legend>
 			<?php endif; ?>
 
 			<form action="" method="post">
-				<?php if($numberOfCompanies > 1) : ?>
+				<?php if(isSet($numberOfCompanies) AND $numberOfCompanies > 1) : ?>
 					<div class="left fieldsetIndentReplication">
 						<label>Select The Company To Look At:</label>
 						<select name="selectedCompanyToDisplay">
@@ -101,7 +103,7 @@
 					</fieldset>
 				<?php endif; ?>
 			
-				<fieldset class="left"><legend>Request To Join Another Company</legend>
+				<fieldset class="left"><legend>Request To Join A Company</legend>
 					<div class="left">
 						<label>Select The Company To Request To Join: </label>
 						<select name="selectedCompanyToJoin">
@@ -124,5 +126,8 @@
 				</div>
 			</form>
 		</fieldset>
+	<?php else : ?>
+		<h2>This page requires you to be logged in to view.</h2>
+	<?php endif; ?>
 	</body>
 </html>
