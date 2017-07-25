@@ -27,7 +27,9 @@
 					<tr>
 						<th colspan="8">Booking information</th>
 						<th colspan="4">Connected user information</th>	
-						<th>Cancel Booking</th>
+						<?php if(isSet($companyRole) AND $companyRole == "Owner") : ?>
+							<th>Cancel Booking</th>
+						<?php endif; ?>
 					</tr>
 					<tr>
 						<th>Status</th>
@@ -42,7 +44,9 @@
 						<th>Last Name</th>
 						<th>Email</th>
 						<th>Company Role</th>
-						<th>Cancel</th>
+						<?php if(isSet($companyRole) AND $companyRole == "Owner") : ?>
+							<th>Cancel</th>
+						<?php endif; ?>
 					</tr>
 					<?php if(isSet($bookingsActiveToday)) : ?>
 						<?php foreach ($bookingsActiveToday AS $booking) : ?>
@@ -60,7 +64,9 @@
 									<td><?php htmlout($booking['lastName']); ?></td>
 									<td><?php htmlout($booking['email']); ?></td>
 									<td><?php htmlout($booking['CompanyRole']); ?></td>
-									<td><input type="submit" name="booking" value="Cancel"></td>
+									<?php if(isSet($companyRole) AND $companyRole == "Owner") : ?>
+										<td><input type="submit" name="booking" value="Cancel"></td>
+									<?php endif; ?>
 									<input type="hidden" name="id" value="<?php htmlout($booking['id']); ?>">
 									<input type="hidden" name="MeetingInfo" id="MeetingInfo"
 									value="<?php htmlout($booking['MeetingInfo']); ?>">
@@ -76,7 +82,11 @@
 							</form>
 						<?php endforeach; ?>
 					<?php else : ?>
-						<tr><td colspan="13"><b>There are no more active bookings today.</b></td></tr>
+						<?php if(isSet($companyRole) AND $companyRole == "Owner") : ?>
+							<tr><td colspan="13"><b>There are no more active bookings today.</b></td></tr>
+						<?php else : ?>
+							<tr><td colspan="12"><b>There are no more active bookings today.</b></td></tr>
+						<?php endif; ?>
 					<?php endif; ?>
 				</table>
 			<?php endif; ?>
@@ -142,8 +152,10 @@
 					<caption>Future Bookings</caption>
 					<tr>
 						<th colspan="8">Booking information</th>
-						<th colspan="4">Connected user information</th>	
-						<th>Cancel Booking</th>
+						<th colspan="4">Connected user information</th>
+						<?php if(isSet($companyRole) AND $companyRole == "Owner") : ?>
+							<th>Cancel Booking</th>
+						<?php endif; ?>
 					</tr>
 					<tr>
 						<th>Status</th>
@@ -158,7 +170,9 @@
 						<th>Last Name</th>
 						<th>Email</th>
 						<th>Company Role</th>
-						<th>Cancel</th>
+						<?php if(isSet($companyRole) AND $companyRole == "Owner") : ?>
+							<th>Cancel</th>
+						<?php endif; ?>
 					</tr>
 					<?php if(isSet($bookingsFuture)) : ?>
 						<?php foreach ($bookingsFuture AS $booking) : ?>
@@ -176,7 +190,9 @@
 									<td><?php htmlout($booking['lastName']); ?></td>
 									<td><?php htmlout($booking['email']); ?></td>
 									<td><?php htmlout($booking['CompanyRole']); ?></td>
-									<td><input type="submit" name="booking" value="Cancel"></td>
+									<?php if(isSet($companyRole) AND $companyRole == "Owner") : ?>
+										<td><input type="submit" name="booking" value="Cancel"></td>
+									<?php endif; ?>
 									<input type="hidden" name="id" value="<?php htmlout($booking['id']); ?>">
 									<input type="hidden" name="MeetingInfo" id="MeetingInfo"
 									value="<?php htmlout($booking['MeetingInfo']); ?>">
@@ -192,7 +208,11 @@
 							</form>
 						<?php endforeach; ?>
 					<?php else : ?>
-						<tr><td colspan="13"><b>There are no more future bookings.</b></td></tr>
+						<?php if(isSet($companyRole) AND $companyRole == "Owner") : ?>
+							<tr><td colspan="13"><b>There are no more future bookings.</b></td></tr>
+						<?php else : ?>
+							<tr><td colspan="12"><b>There are no more future bookings.</b></td></tr>
+						<?php endif; ?>
 					<?php endif; ?>
 				</table>
 			<?php endif; ?>
