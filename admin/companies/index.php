@@ -1404,9 +1404,7 @@ if (isSet($_POST['action']) AND $_POST['action'] == 'Add Company')
 		
 		unset($_SESSION['LastCompanyID']);
 		$_SESSION['LastCompanyID'] = $pdo->lastInsertId();
-		
-		//Close the connection
-		$pdo = null;
+
 	}
 	catch (PDOException $e)
 	{
@@ -1420,10 +1418,7 @@ if (isSet($_POST['action']) AND $_POST['action'] == 'Add Company')
 	
 		// Give the company the default subscription
 	try
-	{	
-		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
-		
-		$pdo = connect_to_db();
+	{
 		$sql = "INSERT INTO `companycredits` 
 				SET			`CompanyID` = :CompanyID,
 							`CreditsID` = (
@@ -1434,9 +1429,6 @@ if (isSet($_POST['action']) AND $_POST['action'] == 'Add Company')
 		$s = $pdo->prepare($sql);
 		$s->bindValue(':CompanyID', $_SESSION['LastCompanyID']);
 		$s->execute();
-		
-		//Close the connection
-		$pdo = null;
 	}
 	catch (PDOException $e)
 	{
@@ -1455,15 +1447,12 @@ if (isSet($_POST['action']) AND $_POST['action'] == 'Add Company')
 		}
 		// Save a description with information about the meeting room that was added
 		$logEventdescription = "The company: " . $validatedCompanyName . " was added by: " . $_SESSION['LoggedInUserName'];
-		
-		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
-		
-		$pdo = connect_to_db();
+
 		$sql = "INSERT INTO `logevent` 
 				SET			`actionID` = 	(
-												SELECT `actionID` 
-												FROM `logaction`
-												WHERE `name` = 'Company Created'
+												SELECT 	`actionID` 
+												FROM 	`logaction`
+												WHERE 	`name` = 'Company Created'
 											),
 							`companyID` = :TheCompanyID,
 							`description` = :description";

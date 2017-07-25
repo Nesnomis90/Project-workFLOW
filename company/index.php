@@ -44,8 +44,186 @@ if(isSet($_POST['action']) AND $_POST['action'] == "Create A Company"){
 }
 
 if(isSet($_POST['action']) AND $_POST['action'] == "Confirm"){
-	// TO-DO:
-	unset($_SESSION['normalCompanyCreateACompany']);
+	// Validate text input
+	$invalidInput = FALSE;
+
+	if(isSet($_POST['createACompanyName'])){
+		$companyName = trim($_POST['createACompanyName']);
+	} else {
+		$invalidInput = TRUE;
+		$_SESSION['normalCompanyFeedback'] = "Company cannot be created without a name!";
+	}
+
+	// Remove excess whitespace and prepare strings for validation
+	$validatedCompanyName = trimExcessWhitespace($companyName);
+
+	// Do actual input validation
+	if(validateString($validatedCompanyName) === FALSE AND !$invalidInput){
+		$invalidInput = TRUE;
+		$_SESSION['normalCompanyFeedback'] = "Your submitted company name has illegal characters in it.";
+	}
+
+	// Are values actually filled in?
+	if($validatedCompanyName == "" AND !$invalidInput){
+		$_SESSION['normalCompanyFeedback'] = "You need to fill in a name for the company.";	
+		$invalidInput = TRUE;		
+	}
+
+	// Check if input length is allowed
+		// CompanyName
+		// Uses same limit as display name (max 255 chars)
+	$invalidCompanyName = isLengthInvalidDisplayName($validatedCompanyName);
+	if($invalidCompanyName AND !$invalidInput){
+		$_SESSION['normalCompanyFeedback'] = "The company name submitted is too long.";	
+		$invalidInput = TRUE;
+	}
+
+	// Check if name is already taken
+	if(!$invalidInput){
+		try
+		{
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+
+			// Check for company names
+			$pdo = connect_to_db();
+			$sql = 'SELECT 	COUNT(*)
+					FROM 	`company`
+					WHERE 	`name` = :CompanyName
+					LIMIT 	1';
+			$s = $pdo->prepare($sql);
+			$s->bindValue(':CompanyName', $validatedCompanyName);
+			$s->execute();
+
+			//Close connection
+			$pdo = null;
+
+			$row = $s->fetch();
+
+			if ($row[0] > 0)
+			{
+				// This name is already being used for a company	
+				$_SESSION['normalCompanyFeedback'] = "There is already a company with the name: " . $validatedCompanyName . "!";
+				$invalidInput = TRUE;
+			}
+			// Company name hasn't been used before
+		}
+		catch (PDOException $e)
+		{
+			$error = 'Error fetching company details: ' . $e->getMessage();
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+			$pdo = null;
+			exit();	
+		}
+	}
+
+
+	if(!$invalidInput){
+		// Create Company
+		try
+		{
+			$sql = 'INSERT INTO `company` 
+					SET			`name` = :CompanyName,
+								`startDate` = CURDATE(),
+								`endDate` = (CURDATE() + INTERVAL 1 MONTH)';
+			$s = $pdo->prepare($sql);
+			$s->bindValue(':CompanyName', $validatedCompanyName);
+			$s->execute();
+			
+			unset($_SESSION['LastCompanyID']);
+			$_SESSION['LastCompanyID'] = $pdo->lastInsertId();
+
+		}
+		catch (PDOException $e)
+		{
+			$error = 'Error adding submitted company to database: ' . $e->getMessage();
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+			$pdo = null;
+			exit();
+		}
+		
+		$_SESSION['normalCompanyFeedback'] = "Successfully added the company: " . $validatedCompanyName . ".";
+		
+			// Give the company the default subscription
+		try
+		{
+			$sql = "INSERT INTO `companycredits` 
+					SET			`CompanyID` = :CompanyID,
+								`CreditsID` = (
+												SELECT 	`CreditsID`
+												FROM	`credits`
+												WHERE	`name` = 'Default'
+												)";
+			$s = $pdo->prepare($sql);
+			$s->bindValue(':CompanyID', $_SESSION['LastCompanyID']);
+			$s->execute();
+		}
+		catch (PDOException $e)
+		{
+			$error = 'Error giving company a booking subscription: ' . $e->getMessage();
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+			$pdo = null;
+			exit();
+		}	
+
+			// Make user owner of company
+		try
+		{
+			$sql = "INSERT INTO `employee` 
+					SET			`CompanyID` = :CompanyID,
+								`PositionID` = (
+												SELECT 	`PositionID`
+												FROM	`companyposition`
+												WHERE	`name` = 'Owner'
+												)";
+			$s = $pdo->prepare($sql);
+			$s->bindValue(':CompanyID', $_SESSION['LastCompanyID']);
+			$s->execute();
+		}
+		catch (PDOException $e)
+		{
+			$error = 'Error giving company a booking subscription: ' . $e->getMessage();
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+			$pdo = null;
+			exit();
+		}
+
+			// Add a log event that a company was added
+		try
+		{
+			if(isSet($_SESSION['LastCompanyID'])){
+				$LastCompanyID = $_SESSION['LastCompanyID'];
+				unset($_SESSION['LastCompanyID']);
+			}
+			// Save a description with information about the meeting room that was added
+			$logEventdescription = "The company: " . $validatedCompanyName . " was created by: " . $_SESSION['LoggedInUserName'];
+
+			$sql = "INSERT INTO `logevent` 
+					SET			`actionID` = 	(
+													SELECT 	`actionID` 
+													FROM 	`logaction`
+													WHERE 	`name` = 'Company Created'
+												),
+								`companyID` = :TheCompanyID,
+								`description` = :description";
+			$s = $pdo->prepare($sql);
+			$s->bindValue(':description', $logEventdescription);
+			$s->bindValue(':TheCompanyID', $LastCompanyID);
+			$s->execute();
+
+			//Close the connection
+			$pdo = null;		
+		}
+		catch(PDOException $e)
+		{
+			$error = 'Error adding log event to database: ' . $e->getMessage();
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+			$pdo = null;
+			exit();
+		}
+
+		// Send email to admin(s) that a company has been created
+		unset($_SESSION['normalCompanyCreateACompany']);		
+	}
 }
 
 if(isSet($_POST['action']) AND $_POST['action'] == "Request To Join"){

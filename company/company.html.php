@@ -32,6 +32,13 @@
 	
 	<?php if(isSet($_SESSION['loggedIn']) AND $_SESSION['loggedIn'] AND isSet($_SESSION['LoggedInUserID']) AND !empty($_SESSION['LoggedInUserID']) AND !isSet($noAccess)) : ?>
 	
+		<div class="left">
+			<?php if(isSet($_SESSION['normalCompanyFeedback'])) : ?>
+				<span><b class="feedback"><?php htmlout($_SESSION['normalCompanyFeedback']); ?></b></span>
+				<?php unset($_SESSION['normalCompanyFeedback']); ?>
+			<?php endif; ?>
+		</div>
+	
 		<fieldset class="left">
 			<?php if(isSet($numberOfCompanies) AND $numberOfCompanies > 1) : ?>
 				<legend>Manage Companies</legend>
