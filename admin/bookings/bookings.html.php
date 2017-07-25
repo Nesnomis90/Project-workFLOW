@@ -6,9 +6,12 @@
 	<head>
 		<meta charset="utf-8">
 		<link rel="stylesheet" type="text/css" href="/CSS/myCSS.css">
+		<script src="/scripts/myFunctions.js"></script>
 		<title>Manage Booked Meetings</title>
 	</head>
-	<body>
+	<body onload="startTime()">
+		<?php include_once $_SERVER['DOCUMENT_ROOT'] .'/includes/admintopnav.html.php'; ?>
+
 		<?php if(isSet($_GET['Meetingroom']) AND isSet($displayRoomNameForTitle)) : ?>
 			<h1>Manage Booked Meetings(Room: <?php htmlout($displayRoomNameForTitle); ?>)</h1>
 		<?php elseif(isSet($_GET['Meetingroom']) AND !isSet($displayRoomNameForTitle)) : ?>

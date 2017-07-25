@@ -197,7 +197,7 @@ if(isSet($_POST['action']) AND $_POST['action'] == "Confirm"){
 		{
 			// Save a description with information about the meeting room that was added
 			$userinfo = $_SESSION['LoggedInUserName'] . " - " . $_SESSION['email'];
-			$logEventdescription = "The company: " . $validatedCompanyName . " was created by the user: " . $userinfo;
+			$logEventdescription = "The company: " . $validatedCompanyName . "\nWas created by the user: " . $userinfo;
 
 			$sql = "INSERT INTO `logevent` 
 					SET			`actionID` = 	(

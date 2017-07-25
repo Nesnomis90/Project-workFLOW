@@ -4,7 +4,8 @@
 <html lang="en">
 	<head>
 		<meta charset="utf-8">
-		<link rel="stylesheet" type="text/css" href="/CSS/myCSS.css">		
+		<link rel="stylesheet" type="text/css" href="/CSS/myCSS.css">
+		<script src="/scripts/myFunctions.js"></script>		
 		<title>Schedule A New Event</title>
 		<style>
 			label {
@@ -22,15 +23,17 @@
 			}			
 		</style>
 	</head>
-	<body>
+	<body onload="startTime()">
+		<?php include_once $_SERVER['DOCUMENT_ROOT'] .'/includes/admintopnav.html.php'; ?>
+
 		<fieldset><legend><b>Schedule A New Event</b></legend>
-		
-			<div class="warning">
-				<?php if(isSet($_SESSION['AddEventError'])) : ?>
+
+			<?php if(isSet($_SESSION['AddEventError'])) : ?>
+				<div class="left">
 					<span><b class="feedback"><?php htmlout($_SESSION['AddEventError']); ?></b></span>
 					<?php unset($_SESSION['AddEventError']); ?>
-				<?php endif; ?>
-			</div>
+				</div>
+			<?php endif; ?>
 			
 			<form action="" method="post">
 				<div>

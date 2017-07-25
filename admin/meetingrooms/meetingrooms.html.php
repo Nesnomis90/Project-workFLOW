@@ -6,14 +6,21 @@
 	<head>
 		<meta charset="utf-8">
 		<link rel="stylesheet" type="text/css" href="/CSS/myCSS.css">
+		<script src="/scripts/myFunctions.js"></script>
 		<title>Manage Meeting Rooms</title>
 	</head>
-	<body>
+	<body onload="startTime()">
+		<?php include_once $_SERVER['DOCUMENT_ROOT'] .'/includes/admintopnav.html.php'; ?>
+
 		<h1>Manage Meeting Rooms</h1>
+
 		<?php if(isSet($_SESSION['MeetingRoomUserFeedback'])) : ?>
-			<p><b><?php htmlout($_SESSION['MeetingRoomUserFeedback']); ?></b></p>
-			<?php unset($_SESSION['MeetingRoomUserFeedback']); ?>
-		<?php endif; ?>	
+			<div class="left">
+				<span><b class="feedback"><?php htmlout($_SESSION['MeetingRoomUserFeedback']); ?></b></span>
+				<?php unset($_SESSION['MeetingRoomUserFeedback']); ?>
+			</div>
+		<?php endif; ?>
+
 		<form action="" method="post">
 			<div>
 				<?php if(isSet($_SESSION['meetingroomsEnableDelete']) AND $_SESSION['meetingroomsEnableDelete']) : ?>

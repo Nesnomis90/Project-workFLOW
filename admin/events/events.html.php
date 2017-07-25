@@ -6,17 +6,20 @@
 	<head>
 		<meta charset="utf-8">
 		<link rel="stylesheet" type="text/css" href="/CSS/myCSS.css">
+		<script src="/scripts/myFunctions.js"></script>
 		<title>Scheduled Events</title>
 	</head>
-	<body>
+	<body onload="startTime()">
+		<?php include_once $_SERVER['DOCUMENT_ROOT'] .'/includes/admintopnav.html.php'; ?>
+
 		<h1>Scheduled Events</h1>
 		
-		<div id="feedback">
 		<?php if(isSet($_SESSION['EventsUserFeedback'])) : ?>
-			<b id="feedback"><?php htmlout($_SESSION['EventsUserFeedback']); ?></b>
-			<?php unset($_SESSION['EventsUserFeedback']); ?>
+			<div class="left">
+				<span><b id="feedback"><?php htmlout($_SESSION['EventsUserFeedback']); ?></b></span>
+				<?php unset($_SESSION['EventsUserFeedback']); ?>
+			</div>
 		<?php endif; ?>
-		</div>
 		
 		<form action="" method="post">				
 			<div style="position:absolute; left: 10px;">

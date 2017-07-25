@@ -5,6 +5,7 @@
 	<head>
 		<meta charset="utf-8">
 		<link rel="stylesheet" type="text/css" href="/CSS/myCSS.css">
+		<script src="/scripts/myFunctions.js"></script>
 		<title>Add Employee</title>
 		<style>
 			label {
@@ -12,7 +13,9 @@
 			}
 		</style>		
 	</head>
-	<body>
+	<body onload="startTime()">
+		<?php include_once $_SERVER['DOCUMENT_ROOT'] .'/includes/admintopnav.html.php'; ?>
+
 		<h1>Add Employee</h1>
 		
 		<div class="left">
