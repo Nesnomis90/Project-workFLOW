@@ -9,7 +9,7 @@ if(isSet($_GET['logoutForNav'])){
 	unset($_SESSION['LoggedInUserID']);
 	unset($_SESSION['LoggedInUserName']);
 	unset($_SESSION['LoggedInUserIsOwnerInTheseCompanies']);
-	header("Location: ...");
+	header("Location: /");
 	exit();
 }
 /*	<script src="/scripts/myFunctions.js"></script>
