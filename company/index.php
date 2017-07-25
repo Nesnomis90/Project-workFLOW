@@ -32,13 +32,29 @@ unsetSessionsFromUserManagement();
 
 function unsetSessionsFromCompanyManagement(){
 	unset($_SESSION['normalUserCompanyIDSelected']);
+	unset($_SESSION['normalCompanyCreateACompany']);
 }
 
 if(!isSet($_GET['ID']) AND !isSet($_GET['employees'])){
 	unset($_SESSION['normalUserCompanyIDSelected']);
 }
 
+if(isSet($_POST['action']) AND $_POST['action'] == "Create A Company"){
+	$_SESSION['normalCompanyCreateACompany'] = TRUE;
+}
+
+if(isSet($_POST['action']) AND $_POST['action'] == "Confirm"){
+	// TO-DO:
+	unset($_SESSION['normalCompanyCreateACompany']);
+}
+
+if(isSet($_POST['action']) AND $_POST['action'] == "Request To Join"){
+	unset($_SESSION['normalCompanyCreateACompany']);
+	// TO-DO:
+}
+
 if(isSet($_POST['action']) AND $_POST['action'] == "Select Company"){
+	unset($_SESSION['normalCompanyCreateACompany']);
 	if(isSet($_POST['selectedCompanyToDisplay']) AND !empty($_POST['selectedCompanyToDisplay'])){
 		$selectedCompanyToDisplayID = $_POST['selectedCompanyToDisplay'];
 		$_SESSION['normalUserCompanyIDSelected'] = $selectedCompanyToDisplayID;

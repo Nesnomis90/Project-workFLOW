@@ -14,7 +14,7 @@
 				}
 			<?php else : ?>
 				label {
-					width: 130px;
+					width: 140px;
 				}				
 			<?php endif; ?>
 		</style>		
@@ -87,7 +87,8 @@
 
 						<div class="left">
 							<label>Monthly Credits Remaining: </label>
-							<span><b><?php htmlout($companyInformation['CompanyCreditsRemaining']); ?></b></span>
+							<?php if(substr($companyInformation['CompanyCreditsRemaining'],0,1) == "-"){$color="red";}else{$color="green";} ?>
+							<span><b style="color: <?php htmlout($color); ?>;"><?php htmlout($companyInformation['CompanyCreditsRemaining']); ?></b></span>
 						</div>
 						
 						<div class="left">
@@ -169,7 +170,17 @@
 				</fieldset>
 
 				<div class="left">
-					<input type="submit" name="action" value="Create A Company">
+					<?php if(isSet($_SESSION['normalCompanyCreateACompany']) AND $_SESSION['normalCompanyCreateACompany']) : ?>
+						<fieldset><legend>Create A Company</legend>
+							<label>Set Company Name: </label>
+							<input type="text" name="createACompanyName" value="">
+							<div class="left">
+								<input type="submit" name="action" value="Confirm">
+							</div>
+						</fieldset>
+					<?php else : ?>
+						<input type="submit" name="action" value="Create A Company">
+					<?php endif; ?>
 				</div>
 			</form>
 		</fieldset>
