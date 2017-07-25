@@ -14,7 +14,7 @@
 		
 		<div class="left">
 			<?php if(isSet($_SESSION['EmployeeUserFeedback'])) : ?>
-				<span><b><?php htmlout($_SESSION['EmployeeUserFeedback']); ?></b></span>
+				<span><b class="feedback"><?php htmlout($_SESSION['EmployeeUserFeedback']); ?></b></span>
 				<?php unset($_SESSION['EmployeeUserFeedback']); ?>
 			<?php endif; ?>
 		</div>

@@ -32,13 +32,289 @@ unsetSessionsFromUserManagement();
 
 function unsetSessionsFromCompanyManagement(){
 	unset($_SESSION['normalUserCompanyIDSelected']);
+	unset($_SESSION['normalCompanyCreateACompany']);
+	unset($_SESSION['LastCompanyID']);
+}
+
+if(isSet($_SESSION['normalCompanyCreateACompany']) AND $_SESSION['normalCompanyCreateACompany'] == "Invalid"){
+	$_SESSION['normalCompanyCreateACompany'] = TRUE;
 }
 
 if(!isSet($_GET['ID']) AND !isSet($_GET['employees'])){
 	unset($_SESSION['normalUserCompanyIDSelected']);
 }
 
+if(isSet($_POST['action']) AND $_POST['action'] == "Create A Company"){
+	$_SESSION['normalCompanyCreateACompany'] = TRUE;
+}
+
+if(isSet($_POST['action']) AND $_POST['action'] == "Confirm"){
+	// Validate text input
+	$invalidInput = FALSE;
+
+	if(isSet($_POST['createACompanyName'])){
+		$companyName = trim($_POST['createACompanyName']);
+	} else {
+		$invalidInput = TRUE;
+		$_SESSION['normalCompanyFeedback'] = "Company cannot be created without a name!";
+	}
+
+	// Remove excess whitespace and prepare strings for validation
+	$validatedCompanyName = trimExcessWhitespace($companyName);
+
+	// Do actual input validation
+	if(validateString($validatedCompanyName) === FALSE AND !$invalidInput){
+		$invalidInput = TRUE;
+		$_SESSION['normalCompanyFeedback'] = "Your submitted company name has illegal characters in it.";
+	}
+
+	// Are values actually filled in?
+	if($validatedCompanyName == "" AND !$invalidInput){
+		$_SESSION['normalCompanyFeedback'] = "You need to fill in a name for the company.";	
+		$invalidInput = TRUE;		
+	}
+
+	// Check if input length is allowed
+		// CompanyName
+		// Uses same limit as display name (max 255 chars)
+	$invalidCompanyName = isLengthInvalidDisplayName($validatedCompanyName);
+	if($invalidCompanyName AND !$invalidInput){
+		$_SESSION['normalCompanyFeedback'] = "The company name submitted is too long.";	
+		$invalidInput = TRUE;
+	}
+
+	// Check if name is already taken
+	if(!$invalidInput){
+		try
+		{
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+
+			// Check for company names
+			$pdo = connect_to_db();
+			$sql = 'SELECT 	COUNT(*)
+					FROM 	`company`
+					WHERE 	`name` = :CompanyName
+					LIMIT 	1';
+			$s = $pdo->prepare($sql);
+			$s->bindValue(':CompanyName', $validatedCompanyName);
+			$s->execute();
+
+			$row = $s->fetch();
+
+			if ($row[0] > 0)
+			{
+				// This name is already being used for a company	
+				$_SESSION['normalCompanyFeedback'] = "There is already a company with the name: " . $validatedCompanyName . "!";
+				$invalidInput = TRUE;
+				$pdo = null;
+			}
+			// Company name hasn't been used before
+		}
+		catch (PDOException $e)
+		{
+			$error = 'Error fetching company details: ' . $e->getMessage();
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+			$pdo = null;
+			exit();	
+		}
+	}
+
+
+	if(!$invalidInput){
+		// Create Company
+		try
+		{
+			$sql = 'INSERT INTO `company` 
+					SET			`name` = :CompanyName,
+								`startDate` = CURDATE(),
+								`endDate` = (CURDATE() + INTERVAL 1 MONTH)';
+			$s = $pdo->prepare($sql);
+			$s->bindValue(':CompanyName', $validatedCompanyName);
+			$s->execute();
+			
+			unset($_SESSION['LastCompanyID']);
+			$_SESSION['LastCompanyID'] = $pdo->lastInsertId();
+
+		}
+		catch (PDOException $e)
+		{
+			$error = 'Error adding submitted company to database: ' . $e->getMessage();
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+			$pdo = null;
+			exit();
+		}
+		
+		$_SESSION['normalCompanyFeedback'] = "Successfully added the company: " . $validatedCompanyName . ".";
+
+			// Give the company the default subscription
+		try
+		{
+			$sql = "INSERT INTO `companycredits` 
+					SET			`CompanyID` = :CompanyID,
+								`CreditsID` = (
+												SELECT 	`CreditsID`
+												FROM	`credits`
+												WHERE	`name` = 'Default'
+												)";
+			$s = $pdo->prepare($sql);
+			$s->bindValue(':CompanyID', $_SESSION['LastCompanyID']);
+			$s->execute();
+		}
+		catch (PDOException $e)
+		{
+			$error = 'Error giving company a booking subscription: ' . $e->getMessage();
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+			$pdo = null;
+			exit();
+		}
+
+			// Make user owner of company
+		try
+		{
+			$sql = "INSERT INTO `employee` 
+					SET			`CompanyID` = :CompanyID,
+								`UserID`	= :UserID,
+								`PositionID` = (
+												SELECT 	`PositionID`
+												FROM	`companyposition`
+												WHERE	`name` = 'Owner'
+												)";
+			$s = $pdo->prepare($sql);
+			$s->bindValue(':CompanyID', $_SESSION['LastCompanyID']);
+			$s->bindValue(':UserID', $_SESSION['LoggedInUserID']);
+			$s->execute();
+		}
+		catch (PDOException $e)
+		{
+			$error = 'Error giving company a booking subscription: ' . $e->getMessage();
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+			$pdo = null;
+			exit();
+		}
+
+			// Add a log event that a company was added
+		try
+		{
+			// Save a description with information about the meeting room that was added
+			$userinfo = $_SESSION['LoggedInUserName'] . " - " . $_SESSION['email'];
+			$logEventdescription = "The company: " . $validatedCompanyName . "\nWas created by the user: " . $userinfo;
+
+			$sql = "INSERT INTO `logevent` 
+					SET			`actionID` = 	(
+													SELECT 	`actionID` 
+													FROM 	`logaction`
+													WHERE 	`name` = 'Company Created'
+												),
+								`companyID` = :TheCompanyID,
+								`description` = :description";
+			$s = $pdo->prepare($sql);
+			$s->bindValue(':description', $logEventdescription);
+			$s->bindValue(':TheCompanyID', $_SESSION['LastCompanyID']);
+			$s->execute();
+		}
+		catch(PDOException $e)
+		{
+			$error = 'Error adding log event to database: ' . $e->getMessage();
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+			$pdo = null;
+			exit();
+		}
+
+			// Add a log event that an employee was added (owner)
+		try
+		{
+			// Save a description with information about the employee that was added
+			// to the company.
+			$userinfo = $_SESSION['LoggedInUserName'] . " - " . $_SESSION['email'];
+			$logEventDescription = 'The user: ' . $userinfo . "\nWas automatically given the role: Owner\nIn the company: " . $validatedCompanyName . " on creation.";
+
+			$sql = "INSERT INTO `logevent` 
+					SET			`actionID` = 	(
+													SELECT 	`actionID` 
+													FROM 	`logaction`
+													WHERE 	`name` = 'Employee Added'
+												),
+								`positionID` = (
+													SELECT 	`PositionID`
+													FROM	`companyposition`
+													WHERE	`name` = 'Owner'
+												),
+								`companyID` = :CompanyID,
+								`userID` = :UserID,
+								`description` = :description";
+			$s = $pdo->prepare($sql);
+			$s->bindValue(':CompanyID', $_SESSION['LastCompanyID']);
+			$s->bindValue(':UserID', $_SESSION['LoggedInUserID']);	
+			$s->bindValue(':description', $logEventDescription);
+			$s->execute();
+		}
+		catch(PDOException $e)
+		{
+			$error = 'Error adding log event to database: ' . $e->getMessage();
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+			$pdo = null;
+			exit();
+		}
+
+		// Send email to admin(s) that a company has been created
+		try
+		{
+			// Get admin(s) emails
+			$sql = "SELECT 		u.`email`		AS Email
+					FROM 		`user` u
+					INNER JOIN 	`accesslevel` a
+					ON			a.`AccessID` = u.`AccessID`
+					WHERE		a.`AccessName` = 'Admin'
+					AND			u.`sendAdminEmail` = 1";
+			$return = $pdo->query($sql);
+			$result = $return->fetchAll(PDO::FETCH_ASSOC);
+			
+			if(isSet($result)){
+				foreach($result AS $Email){
+					$email[] = $Email['Email'];
+				}
+			}
+			
+			// Only try to send out email if there are any admins that have set they want them
+			if(isSet($email)){
+				$emailSubject = "New Company Created";
+				
+				$emailMessage = "The user: " . $_SESSION['LoggedInUserName'] .
+								"\ncreated a new company: " . $validatedCompanyName;
+				
+				$mailResult = sendEmail($email, $emailSubject, $emailMessage);
+				
+				if(!$mailResult){
+					$_SESSION['normalCompanyFeedback'] .= "\n\n[WARNING] System failed to send Email to Admin.";
+					// TO-DO: FIX-ME: What to do if the mail doesn't want to send?
+					// Store it somewhere and have a cron try to send emails?
+				}
+				$_SESSION['normalCompanyFeedback'] .= "\nThis is the email msg we're sending out:\n$emailMessage.\nSent to email: $email."; // TO-DO: Remove after testing				
+			}
+			// close connection
+			$pdo = null;
+		}
+		catch(PDOException $e)
+		{
+			$error = 'Error sending mail to Admin: ' . $e->getMessage();
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+			$pdo = null;
+			exit();
+		}
+		unset($_SESSION['normalCompanyCreateACompany']);
+		unset($_SESSION['LastCompanyID']);		
+	} else {
+		$_SESSION['normalCompanyCreateACompany'] = "Invalid";
+	}
+}
+
+if(isSet($_POST['action']) AND $_POST['action'] == "Request To Join"){
+	unset($_SESSION['normalCompanyCreateACompany']);
+	// TO-DO:
+}
+
 if(isSet($_POST['action']) AND $_POST['action'] == "Select Company"){
+	unset($_SESSION['normalCompanyCreateACompany']);
 	if(isSet($_POST['selectedCompanyToDisplay']) AND !empty($_POST['selectedCompanyToDisplay'])){
 		$selectedCompanyToDisplayID = $_POST['selectedCompanyToDisplay'];
 		$_SESSION['normalUserCompanyIDSelected'] = $selectedCompanyToDisplayID;
@@ -847,6 +1123,27 @@ catch (PDOException $e)
 	exit();
 }
 
+// First check if the company selected is one of the companies the user actually works for
+if(isSet($selectedCompanyToDisplayID) OR (isSet($selectedCompanyToDisplayID) AND empty($selectedCompanyToDisplayID))){
+
+	$companyHit = FALSE;
+	foreach($companiesUserWorksFor AS $cmp){
+		if($selectedCompanyToDisplayID == $cmp['CompanyID']){
+			$companyHit = TRUE;
+			break;
+		}
+	}
+	
+	if($companyHit === FALSE){
+		$noAccess = TRUE;
+		$pdo = null;
+		var_dump($_SESSION); // TO-DO: remove after testing is done	
+
+		include_once 'company.html.php';		
+		exit();
+	}
+}
+
 // get a list of all companies
 try
 {
@@ -865,25 +1162,313 @@ catch (PDOException $e)
 	exit();
 }
 
-if(isSet($selectedCompanyToDisplayID) AND !empty($selectedCompanyToDisplayID)){
-	
-	// First check if the company selected is one of the companies the user actually works for
-	$companyHit = FALSE;
-	foreach($companiesUserWorksFor AS $cmp){
-		if($selectedCompanyToDisplayID == $cmp['CompanyID']){
-			$companyHit = TRUE;
-			break;
-		}
-	}
-	
-	if($companyHit === FALSE){
-		$noAccess = TRUE;
-		$pdo = null;
-		var_dump($_SESSION); // TO-DO: remove after testing is done	
+// if user wants to see the details of the company booking history
+if(isSet($_GET['totalBooking']) OR isSet($_GET['activeBooking']) OR isSet($_GET['completedBooking']) OR isSet($_GET['cancelledBooking'])){
 
-		include_once 'company.html.php';		
+	try
+	{
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+
+		$pdo = connect_to_db();
+		$sql = 'SELECT 		b.`userID`										AS BookedUserID,
+							b.`bookingID`,
+							(
+								IF(b.`meetingRoomID` IS NULL, NULL, (SELECT `name` FROM `meetingroom` WHERE `meetingRoomID` = b.`meetingRoomID`))
+							)        										AS BookedRoomName,
+							b.`startDateTime`								AS StartTime,
+							b.`endDateTime`									AS EndTime, 
+							b.`displayName` 								AS BookedBy,
+							(
+								IF(b.`companyID` IS NULL, NULL, (SELECT `name` FROM `company` WHERE `companyID` = b.`companyID`))
+							)        										AS BookedForCompany,	 
+							b.`description`									AS BookingDescription,
+							b.`dateTimeCreated`								AS BookingWasCreatedOn, 
+							b.`actualEndDateTime`							AS BookingWasCompletedOn, 
+							b.`dateTimeCancelled`							AS BookingWasCancelledOn,										
+							(
+								IF(b.`userID` IS NULL, NULL, (SELECT `firstName` FROM `user` WHERE `userID` = b.`userID`))
+							) 												AS firstName,
+							(
+								IF(b.`userID` IS NULL, NULL, (SELECT `lastName` FROM `user` WHERE `userID` = b.`userID`))
+							) 												AS lastName,
+							(
+								IF(b.`userID` IS NULL, NULL, (SELECT `email` FROM `user` WHERE `userID` = b.`userID`))
+							) 												AS email,
+							(
+								IF(b.`userID` IS NULL, NULL, (SELECT `sendEmail` FROM `user` WHERE `userID` = b.`userID`))
+							) 												AS sendEmail,
+							(
+								IF(b.`userID` IS NULL, NULL, 
+									(
+										SELECT 		cp.`name` 
+										FROM 		`companyposition` cp
+										INNER JOIN 	`employee` e
+										ON			cp.`PositionID` = e.`PositionID`
+										WHERE 		e.`userID` = b.`userID`
+										AND			e.`CompanyID`= :CompanyID
+									)
+								)
+							) 												AS CompanyRole
+				FROM 		`booking` b
+				WHERE		b.`CompanyID` = :CompanyID
+				ORDER BY 	UNIX_TIMESTAMP(b.`startDateTime`)
+				ASC';
+		$s = $pdo->prepare($sql);
+		$s->bindValue(':CompanyID', $selectedCompanyToDisplayID);
+		$s->execute();
+
+		$result = $s->fetchAll(PDO::FETCH_ASSOC);
+
+		//Close the connection
+		$pdo = null;
+	}
+	catch(PDOException $e)
+	{
+		$error = 'Error getting booking history: ' . $e->getMessage();
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+		$pdo = null;
 		exit();
 	}
+	foreach($result as $row)
+	{
+		$datetimeNow = getDatetimeNow();
+		$startDateTime = $row['StartTime'];	
+		$endDateTime = $row['EndTime'];
+		$completedDateTime = $row['BookingWasCompletedOn'];
+		$dateOnlyNow = convertDatetimeToFormat($datetimeNow, 'Y-m-d H:i:s', 'Y-m-d');
+		$dateOnlyCompleted = convertDatetimeToFormat($completedDateTime,'Y-m-d H:i:s','Y-m-d');
+		$dateOnlyStart = convertDatetimeToFormat($startDateTime,'Y-m-d H:i:s','Y-m-d');
+		$cancelledDateTime = $row['BookingWasCancelledOn'];
+		$createdDateTime = $row['BookingWasCreatedOn'];	
+		
+		// Describe the status of the booking based on what info is stored in the database
+		// If not finished and not cancelled = active
+		// If meeting time has passed and finished time has updated (and not been cancelled) = completed
+		// If cancelled = cancelled
+		// If meeting time has passed and finished time has NOT updated (and not been cancelled) = Ended without updating
+		// If none of the above = Unknown
+		if(			$completedDateTime == null AND $cancelledDateTime == null AND 
+					$datetimeNow < $endDateTime AND $dateOnlyNow != $dateOnlyStart) {
+			$status = 'Active';
+			// Valid status
+		} elseif(	$completedDateTime == null AND $cancelledDateTime == null AND 
+					$datetimeNow < $endDateTime AND $dateOnlyNow == $dateOnlyStart){
+			$status = 'Active Today';
+			// Valid status		
+		} elseif(	$completedDateTime != null AND $cancelledDateTime == null AND 
+					$dateOnlyNow != $dateOnlyCompleted){
+			$status = 'Completed';
+			// Valid status
+		} elseif(	$completedDateTime != null AND $cancelledDateTime == null AND 
+					$dateOnlyNow == $dateOnlyCompleted){
+			$status = 'Completed Today';
+			// Valid status
+		} elseif(	$completedDateTime == null AND $cancelledDateTime != null AND
+					$startDateTime > $cancelledDateTime){
+			$status = 'Cancelled';
+			// Valid status
+		} elseif(	$completedDateTime != null AND $cancelledDateTime != null AND
+					$completedDateTime >= $cancelledDateTime ){
+			$status = 'Ended Early';
+			// Valid status?
+		} elseif(	$completedDateTime == null AND $cancelledDateTime != null AND
+					$endDateTime < $cancelledDateTime AND 
+					$startDateTime > $cancelledDateTime){
+			$status = 'Ended Early';
+			// Valid status?
+		} elseif(	$completedDateTime != null AND $cancelledDateTime != null AND
+					$completedDateTime < $cancelledDateTime ){
+			$status = 'Cancelled after Completion';
+			// This should not be allowed to happen eventually
+		} elseif(	$completedDateTime == null AND $cancelledDateTime == null AND 
+					$datetimeNow > $endDateTime){
+			$status = 'Ended without updating database';
+			// This should never occur
+		} elseif(	$completedDateTime == null AND $cancelledDateTime != null AND 
+					$endDateTime < $cancelledDateTime){
+			$status = 'Cancelled after meeting should have been Completed';
+			// This should not be allowed to happen eventually
+		} else {
+			$status = 'Unknown';
+			// This should never occur
+		}
+
+		$roomName = $row['BookedRoomName'];
+		$displayRoomNameForTitle = $roomName;
+		$firstname = $row['firstName'];
+		$lastname = $row['lastName'];
+		$email = $row['email'];
+		$userinfo = $lastname . ', ' . $firstname . ' - ' . $row['email'];
+		$companyRole = $row['CompanyRole'];
+
+		if(!isSet($roomName) OR empty($roomName)){
+			$roomName = "N/A - Deleted";
+		}
+		if(!isSet($userinfo) OR $userinfo == NULL OR $userinfo == ",  - "){
+			$userinfo = "N/A - Deleted";	
+		}
+		if(!isSet($email) OR empty($email)){
+			$firstname = "N/A - Deleted";
+			$lastname = "N/A - Deleted";
+			$email = "N/A - Deleted";		
+		}
+		if(!isSet($companyRole) OR empty($companyRole)){
+			$companyRole = "Removed";
+		}
+
+		$displayValidatedStartDate = convertDatetimeToFormat($startDateTime , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
+		$displayValidatedEndDate = convertDatetimeToFormat($endDateTime, 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
+		$displayCompletedDateTime = convertDatetimeToFormat($completedDateTime, 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
+		$displayCancelledDateTime = convertDatetimeToFormat($cancelledDateTime, 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);	
+		$displayCreatedDateTime = convertDatetimeToFormat($createdDateTime, 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
+
+		$meetinginfo = $roomName . ' for the timeslot: ' . $displayValidatedStartDate . 
+						' to ' . $displayValidatedEndDate;
+
+		$completedMeetingDurationInMinutes = convertTwoDateTimesToTimeDifferenceInMinutes($startDateTime, $completedDateTime);
+		$displayCompletedMeetingDuration = convertMinutesToHoursAndMinutes($completedMeetingDurationInMinutes);
+		if($completedMeetingDurationInMinutes < BOOKING_DURATION_IN_MINUTES_USED_BEFORE_INCLUDING_IN_PRICE_CALCULATIONS){
+			$completedMeetingDurationForPrice = 0;
+		} elseif($completedMeetingDurationInMinutes < MINIMUM_BOOKING_DURATION_IN_MINUTES_USED_IN_PRICE_CALCULATIONS){
+			$completedMeetingDurationForPrice = MINIMUM_BOOKING_DURATION_IN_MINUTES_USED_IN_PRICE_CALCULATIONS;
+		} else {
+			$completedMeetingDurationForPrice = $completedMeetingDurationInMinutes;
+		}
+		$displayCompletedMeetingDurationForPrice = convertMinutesToHoursAndMinutes($completedMeetingDurationForPrice);
+		
+		if($status == "Active Today" AND (isSet($_GET['activeBooking']) OR isSet($_GET['totalBooking']))) {				
+			$bookingsActiveToday[] = array(	'id' => $row['bookingID'],
+											'BookingStatus' => $status,
+											'BookedRoomName' => $roomName,
+											'StartTime' => $displayValidatedStartDate,
+											'EndTime' => $displayValidatedEndDate,
+											'BookedBy' => $row['BookedBy'],
+											'BookedForCompany' => $row['BookedForCompany'],
+											'BookingDescription' => $row['BookingDescription'],
+											'BookingWasCreatedOn' => $displayCreatedDateTime,
+											'BookingWasCompletedOn' => $displayCompletedDateTime,
+											'BookingWasCancelledOn' => $displayCancelledDateTime,
+											'firstName' => $firstname,
+											'lastName' => $lastname,
+											'email' => $email,
+											'CompanyRole' => $companyRole,
+											'UserInfo' => $userinfo,
+											'MeetingInfo' => $meetinginfo,
+											'sendEmail' => $row['sendEmail']
+										);
+		}	elseif($status == "Completed Today" AND (isSet($_GET['completedBooking']) OR isSet($_GET['totalBooking']))){
+			$bookingsCompletedToday[] = array(	'id' => $row['bookingID'],
+												'BookingStatus' => $status,
+												'BookedRoomName' => $roomName,
+												'StartTime' => $displayValidatedStartDate,
+												'EndTime' => $displayValidatedEndDate,
+												'CompletedMeetingDuration' => $displayCompletedMeetingDuration,
+												'CompletedMeetingDurationForPrice' => $displayCompletedMeetingDurationForPrice,
+												'BookedBy' => $row['BookedBy'],
+												'BookedForCompany' => $row['BookedForCompany'],
+												'BookingDescription' => $row['BookingDescription'],
+												'BookingWasCreatedOn' => $displayCreatedDateTime,
+												'BookingWasCompletedOn' => $displayCompletedDateTime,
+												'BookingWasCancelledOn' => $displayCancelledDateTime,
+												'firstName' => $firstname,
+												'lastName' => $lastname,
+												'email' => $email,
+												'CompanyRole' => $companyRole,
+												'UserInfo' => $userinfo,
+												'MeetingInfo' => $meetinginfo
+											);
+		}	elseif($status == "Active" AND (isSet($_GET['activeBooking']) OR isSet($_GET['totalBooking']))){
+			$bookingsFuture[] = array(	'id' => $row['bookingID'],
+										'BookingStatus' => $status,
+										'BookedRoomName' => $roomName,
+										'StartTime' => $displayValidatedStartDate,
+										'EndTime' => $displayValidatedEndDate,
+										'BookedBy' => $row['BookedBy'],
+										'BookedForCompany' => $row['BookedForCompany'],
+										'BookingDescription' => $row['BookingDescription'],
+										'BookingWasCreatedOn' => $displayCreatedDateTime,
+										'BookingWasCompletedOn' => $displayCompletedDateTime,
+										'BookingWasCancelledOn' => $displayCancelledDateTime,
+										'firstName' => $firstname,
+										'lastName' => $lastname,
+										'email' => $email,
+										'CompanyRole' => $companyRole,
+										'UserInfo' => $userinfo,
+										'MeetingInfo' => $meetinginfo,
+										'sendEmail' => $row['sendEmail']
+									);
+		}	elseif(($status == "Completed" OR $status == "Ended Early") AND (isSet($_GET['completedBooking']) OR isSet($_GET['totalBooking']))){				
+			$bookingsCompleted[] = array(	'id' => $row['bookingID'],
+											'BookingStatus' => $status,
+											'BookedRoomName' => $roomName,
+											'StartTime' => $displayValidatedStartDate,
+											'EndTime' => $displayValidatedEndDate,
+											'CompletedMeetingDuration' => $displayCompletedMeetingDuration,
+											'CompletedMeetingDurationForPrice' => $displayCompletedMeetingDurationForPrice,
+											'BookedBy' => $row['BookedBy'],
+											'BookedForCompany' => $row['BookedForCompany'],
+											'BookingDescription' => $row['BookingDescription'],
+											'BookingWasCreatedOn' => $displayCreatedDateTime,
+											'BookingWasCompletedOn' => $displayCompletedDateTime,
+											'BookingWasCancelledOn' => $displayCancelledDateTime,
+											'firstName' => $firstname,
+											'lastName' => $lastname,
+											'email' => $email,
+											'CompanyRole' => $companyRole,
+											'UserInfo' => $userinfo,
+											'MeetingInfo' => $meetinginfo
+										);
+		}	elseif($status == "Cancelled" AND (isSet($_GET['cancelledBooking']) OR isSet($_GET['totalBooking']))){
+			$bookingsCancelled[] = array(	'id' => $row['bookingID'],
+											'BookingStatus' => $status,
+											'BookedRoomName' => $roomName,
+											'StartTime' => $displayValidatedStartDate,
+											'EndTime' => $displayValidatedEndDate,
+											'BookedBy' => $row['BookedBy'],
+											'BookedForCompany' => $row['BookedForCompany'],
+											'BookingDescription' => $row['BookingDescription'],
+											'BookingWasCreatedOn' => $displayCreatedDateTime,
+											'BookingWasCompletedOn' => $displayCompletedDateTime,
+											'BookingWasCancelledOn' => $displayCancelledDateTime,
+											'firstName' => $firstname,
+											'lastName' => $lastname,
+											'email' => $email,
+											'CompanyRole' => $companyRole,
+											'UserInfo' => $userinfo,
+											'MeetingInfo' => $meetinginfo
+										);		
+		}	elseif(isSet($_GET['totalBooking'])){				
+			$bookingsOther[] = array(	'id' => $row['bookingID'],
+										'BookingStatus' => $status,
+										'BookedRoomName' => $roomName,
+										'StartTime' => $displayValidatedStartDate,
+										'EndTime' => $displayValidatedEndDate,
+										'BookedBy' => $row['BookedBy'],
+										'BookedForCompany' => $row['BookedForCompany'],
+										'BookingDescription' => $row['BookingDescription'],
+										'BookingWasCreatedOn' => $displayCreatedDateTime,
+										'BookingWasCompletedOn' => $displayCompletedDateTime,
+										'BookingWasCancelledOn' => $displayCancelledDateTime,
+										'firstName' => $firstname,
+										'lastName' => $lastname,
+										'email' => $email,
+										'CompanyRole' => $companyRole,
+										'UserInfo' => $userinfo,
+										'MeetingInfo' => $meetinginfo
+									);
+		}
+	}
+
+	var_dump($_SESSION); // TO-DO: remove after testing is done
+	
+	// Create the booking information table in HTML
+	include_once 'bookings.html.php';
+	exit();
+} else {
+	unset($_SESSION['normalCompanyBookingHistory']);
+}
+
+if(isSet($selectedCompanyToDisplayID) AND !empty($selectedCompanyToDisplayID)){
 
 	// Get company information
 	try
@@ -1182,6 +1767,11 @@ if(isSet($selectedCompanyToDisplayID) AND !empty($selectedCompanyToDisplayID)){
 	$dateTimeCreatedToDisplay = convertDatetimeToFormat($dateCreated, 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
 	$dateToRemoveToDisplay = convertDatetimeToFormat($dateToRemove, 'Y-m-d', DATE_DEFAULT_FORMAT_TO_DISPLAY);
 
+	$numberOfTotalBookedMeetings = $row['TotalBookedMeetings'];
+	$numberOfActiveBookedMeetings = $row['ActiveBookedMeetings'];
+	$numberOfCompletedBookedMeetings = $row['CompletedBookedMeetings'];
+	$numberOfCancelledBookedMeetings = $row['CancelledBookedMeetings'];
+	
 	$companyInformation = array(
 							'CompanyID' => $row['CompanyID'], 
 							'CompanyName' => $row['CompanyName'],

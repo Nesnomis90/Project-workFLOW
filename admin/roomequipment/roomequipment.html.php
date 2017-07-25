@@ -6,14 +6,21 @@
 	<head>
 		<meta charset="utf-8">
 		<link rel="stylesheet" type="text/css" href="/CSS/myCSS.css">
+		<script src="/scripts/myFunctions.js"></script>
 		<title>Manage Equipment in Meeting Rooms</title>
 	</head>
-	<body>
+	<body onload="startTime()">
+		<?php include_once $_SERVER['DOCUMENT_ROOT'] .'/includes/admintopnav.html.php'; ?>
+
 		<h1>Manage Equipment in Meeting Rooms</h1>
+
 		<?php if(isSet($_SESSION['RoomEquipmentUserFeedback'])) : ?>
-			<p><b><?php htmlout($_SESSION['RoomEquipmentUserFeedback']); ?></b></p>
-			<?php unset($_SESSION['RoomEquipmentUserFeedback']); ?>
-		<?php endif; ?>						
+			<div class="left">
+				<span><b class="feedback"><?php htmlout($_SESSION['RoomEquipmentUserFeedback']); ?></b></span>
+				<?php unset($_SESSION['RoomEquipmentUserFeedback']); ?>
+			</div>
+		<?php endif; ?>
+		
 		<?php $goto = "http://$_SERVER[HTTP_HOST]/admin/meetingrooms/"; ?>
 		<?php if(isSet($_GET['Meetingroom'])) :?>
 			<form action="<?php htmlout($goto); ?>" method="post">

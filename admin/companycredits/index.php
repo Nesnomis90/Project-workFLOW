@@ -51,7 +51,6 @@ if (	isSet($_POST['action']) AND $_POST['action'] == 'Edit' OR
 								cr.`description`								AS CreditsDescription,
 								cr.`minuteAmount`								AS CreditsGivenInMinutes,
 								cr.`monthlyPrice`								AS CreditsMonthlyPrice,
-								cr.`overCreditMinutePrice`						AS CreditsMinutePrice,
 								cr.`overCreditHourPrice`						AS CreditsHourPrice,
 								cc.`altMinuteAmount`							AS CreditsAlternativeAmount
 					FROM 		`company` c
@@ -94,8 +93,7 @@ if (	isSet($_POST['action']) AND $_POST['action'] == 'Edit' OR
 							`name`					AS CreditsName,
 							`minuteAmount`			AS CreditsGivenInMinutes,
 							`monthlyPrice`			AS CreditsMonthlyPrice,
-							`overCreditHourPrice`	AS CreditsHourPrice,
-							`overCreditMinutePrice`	AS CreditsMinutePrice
+							`overCreditHourPrice`	AS CreditsHourPrice
 					FROM 	`credits`';
 			$result = $pdo->query($sql);
 				
@@ -107,11 +105,8 @@ if (	isSet($_POST['action']) AND $_POST['action'] == 'Edit' OR
 			foreach($result as $row){
 
 				// Format what over fee rate we're using (hourly or minute by minute)
-				$creditsMinutePrice = $row['CreditsMinutePrice'];
 				$creditsHourPrice = $row['CreditsHourPrice'];
-				if($creditsMinutePrice != NULL){
-					$creditsOverCreditsFee = convertToCurrency($creditsMinutePrice) . '/min';
-				} elseif($creditsHourPrice != NULL) {
+				if($creditsHourPrice != NULL) {
 					$creditsOverCreditsFee = convertToCurrency($creditsHourPrice) . '/hour';
 				} else {
 					$creditsOverCreditsFee = "Error, not set.";
@@ -459,7 +454,6 @@ if(isSet($_GET['Company'])){
 								cr.`description`								AS CreditsDescription,
 								cr.`minuteAmount`								AS CreditsGivenInMinutes,
 								cr.`monthlyPrice`								AS CreditsMonthlyPrice,
-								cr.`overCreditMinutePrice`						AS CreditsMinutePrice,
 								cr.`overCreditHourPrice`						AS CreditsHourPrice,
 								cc.`altMinuteAmount`							AS CreditsAlternativeAmount,
 								cc.`datetimeAdded` 								AS DateTimeAdded,
@@ -507,7 +501,6 @@ if(!isSet($_GET['Company'])){
 								cr.`description`								AS CreditsDescription,
 								cr.`minuteAmount`								AS CreditsGivenInMinutes,
 								cr.`monthlyPrice`								AS CreditsMonthlyPrice,
-								cr.`overCreditMinutePrice`						AS CreditsMinutePrice,
 								cr.`overCreditHourPrice`						AS CreditsHourPrice,
 								cc.`altMinuteAmount`							AS CreditsAlternativeAmount,
 								cc.`datetimeAdded` 								AS DateTimeAdded,
@@ -559,11 +552,8 @@ foreach($result AS $row){
 	}
 		
 	// Format what over fee rate we're using (hourly or minute by minute)
-	$creditsMinutePrice = $row['CreditsMinutePrice'];
 	$creditsHourPrice = $row['CreditsHourPrice'];
-	if($creditsMinutePrice != NULL){
-		$creditsOverCreditsFee = convertToCurrency($creditsMinutePrice) . '/min';
-	} elseif($creditsHourPrice != NULL) {
+	if($creditsHourPrice != NULL) {
 		$creditsOverCreditsFee = convertToCurrency($creditsHourPrice) . '/hour';
 	} else {
 		$creditsOverCreditsFee = "Error, not set.";

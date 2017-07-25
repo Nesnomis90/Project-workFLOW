@@ -14,7 +14,7 @@
 				}
 			<?php else : ?>
 				label {
-					width: 130px;
+					width: 140px;
 				}				
 			<?php endif; ?>
 		</style>		
@@ -31,7 +31,7 @@
 	<?php include_once $_SERVER['DOCUMENT_ROOT'] .'/includes/topnav.html.php'; ?>
 	
 	<?php if(isSet($_SESSION['loggedIn']) AND $_SESSION['loggedIn'] AND isSet($_SESSION['LoggedInUserID']) AND !empty($_SESSION['LoggedInUserID']) AND !isSet($noAccess)) : ?>
-	
+
 		<fieldset class="left">
 			<?php if(isSet($numberOfCompanies) AND $numberOfCompanies > 1) : ?>
 				<legend>Manage Companies</legend>
@@ -40,6 +40,13 @@
 			<?php elseif(isSet($numberOfCompanies) AND $numberOfCompanies == 0) : ?>
 				<legend>Set Up A Company Connection</legend>
 			<?php endif; ?>
+			
+			<div class="left fieldsetIndentReplication">
+				<?php if(isSet($_SESSION['normalCompanyFeedback'])) : ?>
+					<span><b class="feedback"><?php htmlout($_SESSION['normalCompanyFeedback']); ?></b></span>
+					<?php unset($_SESSION['normalCompanyFeedback']); ?>
+				<?php endif; ?>
+			</div>
 
 			<form action="" method="post">
 				<?php if(isSet($numberOfCompanies) AND $numberOfCompanies > 1) : ?>
@@ -87,7 +94,8 @@
 
 						<div class="left">
 							<label>Monthly Credits Remaining: </label>
-							<span><b><?php htmlout($companyInformation['CompanyCreditsRemaining']); ?></b></span>
+							<?php if(substr($companyInformation['CompanyCreditsRemaining'],0,1) == "-"){$color="red";}else{$color="green";} ?>
+							<span><b style="color: <?php htmlout($color); ?>;"><?php htmlout($companyInformation['CompanyCreditsRemaining']); ?></b></span>
 						</div>
 						
 						<div class="left">
@@ -118,27 +126,27 @@
 						<?php if($numberOfTotalBookedMeetings > 0) : ?>
 							<div>
 								<label>Booked Meetings (Total):</label>
-								<span><a href="?totalBooking"><?php htmlout($numberOfTotalBookedMeetings); ?></a></span>
+								<span><a href="?ID=<?php htmlout($_GET['ID']); ?>&totalBooking"><?php htmlout($numberOfTotalBookedMeetings); ?></a></span>
 							</div>
 							
 							<?php if($numberOfActiveBookedMeetings > 0) : ?>
 								<div>
 									<label>Booked Meetings (Active):</label>
-									<span><a href="?activeBooking"><?php htmlout($numberOfActiveBookedMeetings); ?></a></span>
+									<span><a href="?ID=<?php htmlout($_GET['ID']); ?>&activeBooking"><?php htmlout($numberOfActiveBookedMeetings); ?></a></span>
 								</div>
 							<?php endif; ?>
 
 							<?php if($numberOfCompletedBookedMeetings > 0) : ?>
 								<div>
 									<label>Booked Meetings (Completed):</label>
-									<span><a href="?completedBooking"><?php htmlout($numberOfCompletedBookedMeetings); ?></a></span>
+									<span><a href="?ID=<?php htmlout($_GET['ID']); ?>&completedBooking"><?php htmlout($numberOfCompletedBookedMeetings); ?></a></span>
 								</div>
 							<?php endif; ?>
 
 							<?php if($numberOfCancelledBookedMeetings > 0) : ?>
 								<div>
 									<label>Booked Meetings (Cancelled):</label>
-									<span><a href="?cancelledBooking"><?php htmlout($numberOfCancelledBookedMeetings); ?></a></span>
+									<span><a href="?ID=<?php htmlout($_GET['ID']); ?>&cancelledBooking"><?php htmlout($numberOfCancelledBookedMeetings); ?></a></span>
 								</div>
 							<?php endif; ?>
 						<?php endif; ?>	
@@ -169,7 +177,25 @@
 				</fieldset>
 
 				<div class="left">
-					<input type="submit" name="action" value="Create A Company">
+					<?php if(isSet($_SESSION['normalCompanyCreateACompany']) AND $_SESSION['normalCompanyCreateACompany'] === "Invalid") : ?>
+						<fieldset><legend>Create A Company</legend>
+							<label>Set Company Name: </label>
+							<input class="fillOut" type="text" name="createACompanyName" value="">
+							<div class="left">
+								<input type="submit" name="action" value="Confirm">
+							</div>
+						</fieldset>
+					<?php elseif(isSet($_SESSION['normalCompanyCreateACompany']) AND $_SESSION['normalCompanyCreateACompany']) : ?>
+						<fieldset><legend>Create A Company</legend>
+							<label>Set Company Name: </label>
+							<input type="text" name="createACompanyName" value="">
+							<div class="left">
+								<input type="submit" name="action" value="Confirm">
+							</div>
+						</fieldset>
+					<?php else : ?>
+						<input type="submit" name="action" value="Create A Company">
+					<?php endif; ?>
 				</div>
 			</form>
 		</fieldset>

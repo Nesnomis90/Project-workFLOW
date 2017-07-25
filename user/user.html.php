@@ -20,13 +20,7 @@
 	</head>
 	<body onload="startTime()">
 		<?php include_once $_SERVER['DOCUMENT_ROOT'] .'/includes/topnav.html.php'; ?>
-		
-		<?php if(isSet($_SESSION['loggedIn'])) : ?>
-			<h1>Your Account Information</h1>
-		<?php else : ?>
-			<h1>Account Information</h1>
-		<?php endif; ?>
-		
+
 		<div class="left">
 			<?php if(isSet($_SESSION['normalUserFeedback'])) : ?>
 				<span><b class="feedback"><?php htmlout($_SESSION['normalUserFeedback']); ?></b></span>
@@ -34,7 +28,7 @@
 			<?php endif; ?>
 		</div>
 
-		<?php if(isSet($_SESSION['loggedIn']) AND isSet($_SESSION['LoggedInUserID'])) : ?>
+		<?php if(isSet($_SESSION['loggedIn']) AND $_SESSION['loggedIn'] AND isSet($_SESSION['LoggedInUserID']) AND !empty($_SESSION['LoggedInUserID'])) : ?>
 			<div class="left">
 				<fieldset>
 					<form action="" method="post">
@@ -236,6 +230,10 @@
 					</form>
 				</fieldset>
 			</div>
+		<?php elseif(isSet($_GET['activateaccount'])) : ?>
+			<h2>Account Activation</h2>
+		<?php else : ?>
+			<h2>This page requires you to be logged in to view.</h2>
 		<?php endif; ?>
 	</body>
 </html>

@@ -6,9 +6,12 @@
 	<head>
 		<meta charset="utf-8">
 		<link rel="stylesheet" type="text/css" href="/CSS/myCSS.css">
+		<script src="/scripts/myFunctions.js"></script>
 		<title>Manage Companies</title>
 	</head>
-	<body>
+	<body onload="startTime()">
+		<?php include_once $_SERVER['DOCUMENT_ROOT'] .'/includes/admintopnav.html.php'; ?>
+
 		<h1>Manage Companies</h1>
 		
 		<div class="left">

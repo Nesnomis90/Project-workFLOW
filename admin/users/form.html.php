@@ -4,7 +4,8 @@
 <html lang="en">
 	<head>
 		<meta charset="utf-8">
-		<link rel="stylesheet" type="text/css" href="/CSS/myCSS.css">	
+		<link rel="stylesheet" type="text/css" href="/CSS/myCSS.css">
+		<script src="/scripts/myFunctions.js"></script>		
 		<title><?php htmlout($pageTitle); ?></title>
 		<style>
 			<?php if($action == 'editform') : ?>
@@ -18,12 +19,14 @@
 			<?php endif; ?>
 		</style>
 	</head>
-	<body>
+	<body onload="startTime()">
+		<?php include_once $_SERVER['DOCUMENT_ROOT'] .'/includes/admintopnav.html.php'; ?>
+
 		<h1><?php htmlout($pageTitle); ?></h1>
 		
 		<div class="left">
 			<?php if (isSet($_SESSION['AddNewUserError'])) :?>
-				<span><b><?php htmlout($_SESSION['AddNewUserError']);?></b></span> 
+				<span><b class="feedback"><?php htmlout($_SESSION['AddNewUserError']);?></b></span> 
 				<?php unset($_SESSION['AddNewUserError']); ?>
 			<?php endif; ?>
 		</div>

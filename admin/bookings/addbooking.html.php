@@ -5,6 +5,7 @@
 	<head>
 		<meta charset="utf-8">
 		<link rel="stylesheet" type="text/css" href="/CSS/myCSS.css">
+		<script src="/scripts/myFunctions.js"></script>
 		<title>Book A New Meeting</title>
 		<style>
 			label {
@@ -12,8 +13,9 @@
 			}
 		</style>
 	</head>
-	<body>
-	
+	<body onload="startTime()">
+		<?php include_once $_SERVER['DOCUMENT_ROOT'] .'/includes/admintopnav.html.php'; ?>
+
 		<form action="" method="post">
 		<fieldset><legend><b>Book A New Meeting</b></legend>
 			<div class="left">
