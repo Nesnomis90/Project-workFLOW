@@ -358,7 +358,7 @@ if(isSet($_GET['register']) OR (isSet($_SESSION['refreshRegisterUser']) AND $_SE
 }
 
 // Code to execute to activate an account from activation link
-if(isSet($_GET['activateaccount'])){
+if(isSet($_GET['activateaccount']) AND !empty($_GET['activateaccount'])){
 	
 	$activationCode = $_GET['activateaccount'];
 		

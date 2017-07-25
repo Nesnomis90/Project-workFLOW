@@ -847,6 +847,27 @@ catch (PDOException $e)
 	exit();
 }
 
+// First check if the company selected is one of the companies the user actually works for
+if(isSet($selectedCompanyToDisplayID) OR (isSet($selectedCompanyToDisplayID) AND empty($selectedCompanyToDisplayID))){
+
+	$companyHit = FALSE;
+	foreach($companiesUserWorksFor AS $cmp){
+		if($selectedCompanyToDisplayID == $cmp['CompanyID']){
+			$companyHit = TRUE;
+			break;
+		}
+	}
+	
+	if($companyHit === FALSE){
+		$noAccess = TRUE;
+		$pdo = null;
+		var_dump($_SESSION); // TO-DO: remove after testing is done	
+
+		include_once 'company.html.php';		
+		exit();
+	}
+}
+
 // get a list of all companies
 try
 {
@@ -865,25 +886,313 @@ catch (PDOException $e)
 	exit();
 }
 
-if(isSet($selectedCompanyToDisplayID) AND !empty($selectedCompanyToDisplayID)){
-	
-	// First check if the company selected is one of the companies the user actually works for
-	$companyHit = FALSE;
-	foreach($companiesUserWorksFor AS $cmp){
-		if($selectedCompanyToDisplayID == $cmp['CompanyID']){
-			$companyHit = TRUE;
-			break;
-		}
-	}
-	
-	if($companyHit === FALSE){
-		$noAccess = TRUE;
-		$pdo = null;
-		var_dump($_SESSION); // TO-DO: remove after testing is done	
+// if user wants to see the details of the company booking history
+if(isSet($_GET['totalBooking']) OR isSet($_GET['activeBooking']) OR isSet($_GET['completedBooking']) OR isSet($_GET['cancelledBooking'])){
 
-		include_once 'company.html.php';		
+	try
+	{
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+
+		$pdo = connect_to_db();
+		$sql = 'SELECT 		b.`userID`										AS BookedUserID,
+							b.`bookingID`,
+							(
+								IF(b.`meetingRoomID` IS NULL, NULL, (SELECT `name` FROM `meetingroom` WHERE `meetingRoomID` = b.`meetingRoomID`))
+							)        										AS BookedRoomName,
+							b.`startDateTime`								AS StartTime,
+							b.`endDateTime`									AS EndTime, 
+							b.`displayName` 								AS BookedBy,
+							(
+								IF(b.`companyID` IS NULL, NULL, (SELECT `name` FROM `company` WHERE `companyID` = b.`companyID`))
+							)        										AS BookedForCompany,	 
+							b.`description`									AS BookingDescription,
+							b.`dateTimeCreated`								AS BookingWasCreatedOn, 
+							b.`actualEndDateTime`							AS BookingWasCompletedOn, 
+							b.`dateTimeCancelled`							AS BookingWasCancelledOn,										
+							(
+								IF(b.`userID` IS NULL, NULL, (SELECT `firstName` FROM `user` WHERE `userID` = b.`userID`))
+							) 												AS firstName,
+							(
+								IF(b.`userID` IS NULL, NULL, (SELECT `lastName` FROM `user` WHERE `userID` = b.`userID`))
+							) 												AS lastName,
+							(
+								IF(b.`userID` IS NULL, NULL, (SELECT `email` FROM `user` WHERE `userID` = b.`userID`))
+							) 												AS email,
+							(
+								IF(b.`userID` IS NULL, NULL, (SELECT `sendEmail` FROM `user` WHERE `userID` = b.`userID`))
+							) 												AS sendEmail,
+							(
+								IF(b.`userID` IS NULL, NULL, 
+									(
+										SELECT 		cp.`name` 
+										FROM 		`companyposition` cp
+										INNER JOIN 	`employee` e
+										ON			cp.`PositionID` = e.`PositionID`
+										WHERE 		e.`userID` = b.`userID`
+										AND			e.`CompanyID`= :CompanyID
+									)
+								)
+							) 												AS CompanyRole
+				FROM 		`booking` b
+				WHERE		b.`CompanyID` = :CompanyID
+				ORDER BY 	UNIX_TIMESTAMP(b.`startDateTime`)
+				ASC';
+		$s = $pdo->prepare($sql);
+		$s->bindValue(':CompanyID', $selectedCompanyToDisplayID);
+		$s->execute();
+
+		$result = $s->fetchAll(PDO::FETCH_ASSOC);
+
+		//Close the connection
+		$pdo = null;
+	}
+	catch(PDOException $e)
+	{
+		$error = 'Error getting booking history: ' . $e->getMessage();
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+		$pdo = null;
 		exit();
 	}
+	foreach($result as $row)
+	{
+		$datetimeNow = getDatetimeNow();
+		$startDateTime = $row['StartTime'];	
+		$endDateTime = $row['EndTime'];
+		$completedDateTime = $row['BookingWasCompletedOn'];
+		$dateOnlyNow = convertDatetimeToFormat($datetimeNow, 'Y-m-d H:i:s', 'Y-m-d');
+		$dateOnlyCompleted = convertDatetimeToFormat($completedDateTime,'Y-m-d H:i:s','Y-m-d');
+		$dateOnlyStart = convertDatetimeToFormat($startDateTime,'Y-m-d H:i:s','Y-m-d');
+		$cancelledDateTime = $row['BookingWasCancelledOn'];
+		$createdDateTime = $row['BookingWasCreatedOn'];	
+		
+		// Describe the status of the booking based on what info is stored in the database
+		// If not finished and not cancelled = active
+		// If meeting time has passed and finished time has updated (and not been cancelled) = completed
+		// If cancelled = cancelled
+		// If meeting time has passed and finished time has NOT updated (and not been cancelled) = Ended without updating
+		// If none of the above = Unknown
+		if(			$completedDateTime == null AND $cancelledDateTime == null AND 
+					$datetimeNow < $endDateTime AND $dateOnlyNow != $dateOnlyStart) {
+			$status = 'Active';
+			// Valid status
+		} elseif(	$completedDateTime == null AND $cancelledDateTime == null AND 
+					$datetimeNow < $endDateTime AND $dateOnlyNow == $dateOnlyStart){
+			$status = 'Active Today';
+			// Valid status		
+		} elseif(	$completedDateTime != null AND $cancelledDateTime == null AND 
+					$dateOnlyNow != $dateOnlyCompleted){
+			$status = 'Completed';
+			// Valid status
+		} elseif(	$completedDateTime != null AND $cancelledDateTime == null AND 
+					$dateOnlyNow == $dateOnlyCompleted){
+			$status = 'Completed Today';
+			// Valid status
+		} elseif(	$completedDateTime == null AND $cancelledDateTime != null AND
+					$startDateTime > $cancelledDateTime){
+			$status = 'Cancelled';
+			// Valid status
+		} elseif(	$completedDateTime != null AND $cancelledDateTime != null AND
+					$completedDateTime >= $cancelledDateTime ){
+			$status = 'Ended Early';
+			// Valid status?
+		} elseif(	$completedDateTime == null AND $cancelledDateTime != null AND
+					$endDateTime < $cancelledDateTime AND 
+					$startDateTime > $cancelledDateTime){
+			$status = 'Ended Early';
+			// Valid status?
+		} elseif(	$completedDateTime != null AND $cancelledDateTime != null AND
+					$completedDateTime < $cancelledDateTime ){
+			$status = 'Cancelled after Completion';
+			// This should not be allowed to happen eventually
+		} elseif(	$completedDateTime == null AND $cancelledDateTime == null AND 
+					$datetimeNow > $endDateTime){
+			$status = 'Ended without updating database';
+			// This should never occur
+		} elseif(	$completedDateTime == null AND $cancelledDateTime != null AND 
+					$endDateTime < $cancelledDateTime){
+			$status = 'Cancelled after meeting should have been Completed';
+			// This should not be allowed to happen eventually
+		} else {
+			$status = 'Unknown';
+			// This should never occur
+		}
+
+		$roomName = $row['BookedRoomName'];
+		$displayRoomNameForTitle = $roomName;
+		$firstname = $row['firstName'];
+		$lastname = $row['lastName'];
+		$email = $row['email'];
+		$userinfo = $lastname . ', ' . $firstname . ' - ' . $row['email'];
+		$companyRole = $row['CompanyRole'];
+
+		if(!isSet($roomName) OR empty($roomName)){
+			$roomName = "N/A - Deleted";
+		}
+		if(!isSet($userinfo) OR $userinfo == NULL OR $userinfo == ",  - "){
+			$userinfo = "N/A - Deleted";	
+		}
+		if(!isSet($email) OR empty($email)){
+			$firstname = "N/A - Deleted";
+			$lastname = "N/A - Deleted";
+			$email = "N/A - Deleted";		
+		}
+		if(!isSet($companyRole) OR empty($companyRole)){
+			$companyRole = "Removed";
+		}
+
+		$displayValidatedStartDate = convertDatetimeToFormat($startDateTime , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
+		$displayValidatedEndDate = convertDatetimeToFormat($endDateTime, 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
+		$displayCompletedDateTime = convertDatetimeToFormat($completedDateTime, 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
+		$displayCancelledDateTime = convertDatetimeToFormat($cancelledDateTime, 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);	
+		$displayCreatedDateTime = convertDatetimeToFormat($createdDateTime, 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
+
+		$meetinginfo = $roomName . ' for the timeslot: ' . $displayValidatedStartDate . 
+						' to ' . $displayValidatedEndDate;
+
+		$completedMeetingDurationInMinutes = convertTwoDateTimesToTimeDifferenceInMinutes($startDateTime, $completedDateTime);
+		$displayCompletedMeetingDuration = convertMinutesToHoursAndMinutes($completedMeetingDurationInMinutes);
+		if($completedMeetingDurationInMinutes < BOOKING_DURATION_IN_MINUTES_USED_BEFORE_INCLUDING_IN_PRICE_CALCULATIONS){
+			$completedMeetingDurationForPrice = 0;
+		} elseif($completedMeetingDurationInMinutes < MINIMUM_BOOKING_DURATION_IN_MINUTES_USED_IN_PRICE_CALCULATIONS){
+			$completedMeetingDurationForPrice = MINIMUM_BOOKING_DURATION_IN_MINUTES_USED_IN_PRICE_CALCULATIONS;
+		} else {
+			$completedMeetingDurationForPrice = $completedMeetingDurationInMinutes;
+		}
+		$displayCompletedMeetingDurationForPrice = convertMinutesToHoursAndMinutes($completedMeetingDurationForPrice);
+		
+		if($status == "Active Today" AND (isSet($_GET['activeBooking']) OR isSet($_GET['totalBooking']))) {				
+			$bookingsActiveToday[] = array(	'id' => $row['bookingID'],
+											'BookingStatus' => $status,
+											'BookedRoomName' => $roomName,
+											'StartTime' => $displayValidatedStartDate,
+											'EndTime' => $displayValidatedEndDate,
+											'BookedBy' => $row['BookedBy'],
+											'BookedForCompany' => $row['BookedForCompany'],
+											'BookingDescription' => $row['BookingDescription'],
+											'BookingWasCreatedOn' => $displayCreatedDateTime,
+											'BookingWasCompletedOn' => $displayCompletedDateTime,
+											'BookingWasCancelledOn' => $displayCancelledDateTime,
+											'firstName' => $firstname,
+											'lastName' => $lastname,
+											'email' => $email,
+											'CompanyRole' => $companyRole,
+											'UserInfo' => $userinfo,
+											'MeetingInfo' => $meetinginfo,
+											'sendEmail' => $row['sendEmail']
+										);
+		}	elseif($status == "Completed Today" AND (isSet($_GET['completedBooking']) OR isSet($_GET['totalBooking']))){
+			$bookingsCompletedToday[] = array(	'id' => $row['bookingID'],
+												'BookingStatus' => $status,
+												'BookedRoomName' => $roomName,
+												'StartTime' => $displayValidatedStartDate,
+												'EndTime' => $displayValidatedEndDate,
+												'CompletedMeetingDuration' => $displayCompletedMeetingDuration,
+												'CompletedMeetingDurationForPrice' => $displayCompletedMeetingDurationForPrice,
+												'BookedBy' => $row['BookedBy'],
+												'BookedForCompany' => $row['BookedForCompany'],
+												'BookingDescription' => $row['BookingDescription'],
+												'BookingWasCreatedOn' => $displayCreatedDateTime,
+												'BookingWasCompletedOn' => $displayCompletedDateTime,
+												'BookingWasCancelledOn' => $displayCancelledDateTime,
+												'firstName' => $firstname,
+												'lastName' => $lastname,
+												'email' => $email,
+												'CompanyRole' => $companyRole,
+												'UserInfo' => $userinfo,
+												'MeetingInfo' => $meetinginfo
+											);
+		}	elseif($status == "Active" AND (isSet($_GET['activeBooking']) OR isSet($_GET['totalBooking']))){
+			$bookingsFuture[] = array(	'id' => $row['bookingID'],
+										'BookingStatus' => $status,
+										'BookedRoomName' => $roomName,
+										'StartTime' => $displayValidatedStartDate,
+										'EndTime' => $displayValidatedEndDate,
+										'BookedBy' => $row['BookedBy'],
+										'BookedForCompany' => $row['BookedForCompany'],
+										'BookingDescription' => $row['BookingDescription'],
+										'BookingWasCreatedOn' => $displayCreatedDateTime,
+										'BookingWasCompletedOn' => $displayCompletedDateTime,
+										'BookingWasCancelledOn' => $displayCancelledDateTime,
+										'firstName' => $firstname,
+										'lastName' => $lastname,
+										'email' => $email,
+										'CompanyRole' => $companyRole,
+										'UserInfo' => $userinfo,
+										'MeetingInfo' => $meetinginfo,
+										'sendEmail' => $row['sendEmail']
+									);
+		}	elseif(($status == "Completed" OR $status == "Ended Early") AND (isSet($_GET['completedBooking']) OR isSet($_GET['totalBooking']))){				
+			$bookingsCompleted[] = array(	'id' => $row['bookingID'],
+											'BookingStatus' => $status,
+											'BookedRoomName' => $roomName,
+											'StartTime' => $displayValidatedStartDate,
+											'EndTime' => $displayValidatedEndDate,
+											'CompletedMeetingDuration' => $displayCompletedMeetingDuration,
+											'CompletedMeetingDurationForPrice' => $displayCompletedMeetingDurationForPrice,
+											'BookedBy' => $row['BookedBy'],
+											'BookedForCompany' => $row['BookedForCompany'],
+											'BookingDescription' => $row['BookingDescription'],
+											'BookingWasCreatedOn' => $displayCreatedDateTime,
+											'BookingWasCompletedOn' => $displayCompletedDateTime,
+											'BookingWasCancelledOn' => $displayCancelledDateTime,
+											'firstName' => $firstname,
+											'lastName' => $lastname,
+											'email' => $email,
+											'CompanyRole' => $companyRole,
+											'UserInfo' => $userinfo,
+											'MeetingInfo' => $meetinginfo
+										);
+		}	elseif($status == "Cancelled" AND (isSet($_GET['cancelledBooking']) OR isSet($_GET['totalBooking']))){
+			$bookingsCancelled[] = array(	'id' => $row['bookingID'],
+											'BookingStatus' => $status,
+											'BookedRoomName' => $roomName,
+											'StartTime' => $displayValidatedStartDate,
+											'EndTime' => $displayValidatedEndDate,
+											'BookedBy' => $row['BookedBy'],
+											'BookedForCompany' => $row['BookedForCompany'],
+											'BookingDescription' => $row['BookingDescription'],
+											'BookingWasCreatedOn' => $displayCreatedDateTime,
+											'BookingWasCompletedOn' => $displayCompletedDateTime,
+											'BookingWasCancelledOn' => $displayCancelledDateTime,
+											'firstName' => $firstname,
+											'lastName' => $lastname,
+											'email' => $email,
+											'CompanyRole' => $companyRole,
+											'UserInfo' => $userinfo,
+											'MeetingInfo' => $meetinginfo
+										);		
+		}	elseif(isSet($_GET['totalBooking'])){				
+			$bookingsOther[] = array(	'id' => $row['bookingID'],
+										'BookingStatus' => $status,
+										'BookedRoomName' => $roomName,
+										'StartTime' => $displayValidatedStartDate,
+										'EndTime' => $displayValidatedEndDate,
+										'BookedBy' => $row['BookedBy'],
+										'BookedForCompany' => $row['BookedForCompany'],
+										'BookingDescription' => $row['BookingDescription'],
+										'BookingWasCreatedOn' => $displayCreatedDateTime,
+										'BookingWasCompletedOn' => $displayCompletedDateTime,
+										'BookingWasCancelledOn' => $displayCancelledDateTime,
+										'firstName' => $firstname,
+										'lastName' => $lastname,
+										'email' => $email,
+										'CompanyRole' => $companyRole,
+										'UserInfo' => $userinfo,
+										'MeetingInfo' => $meetinginfo
+									);
+		}
+	}
+
+	var_dump($_SESSION); // TO-DO: remove after testing is done
+	
+	// Create the booking information table in HTML
+	include_once 'bookings.html.php';
+	exit();
+} else {
+	unset($_SESSION['normalCompanyBookingHistory']);
+}
+
+if(isSet($selectedCompanyToDisplayID) AND !empty($selectedCompanyToDisplayID)){
 
 	// Get company information
 	try
@@ -1182,6 +1491,11 @@ if(isSet($selectedCompanyToDisplayID) AND !empty($selectedCompanyToDisplayID)){
 	$dateTimeCreatedToDisplay = convertDatetimeToFormat($dateCreated, 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
 	$dateToRemoveToDisplay = convertDatetimeToFormat($dateToRemove, 'Y-m-d', DATE_DEFAULT_FORMAT_TO_DISPLAY);
 
+	$numberOfTotalBookedMeetings = $row['TotalBookedMeetings'];
+	$numberOfActiveBookedMeetings = $row['ActiveBookedMeetings'];
+	$numberOfCompletedBookedMeetings = $row['CompletedBookedMeetings'];
+	$numberOfCancelledBookedMeetings = $row['CancelledBookedMeetings'];
+	
 	$companyInformation = array(
 							'CompanyID' => $row['CompanyID'], 
 							'CompanyName' => $row['CompanyName'],
