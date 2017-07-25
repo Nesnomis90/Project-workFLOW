@@ -33,6 +33,11 @@ unsetSessionsFromUserManagement();
 function unsetSessionsFromCompanyManagement(){
 	unset($_SESSION['normalUserCompanyIDSelected']);
 	unset($_SESSION['normalCompanyCreateACompany']);
+	unset($_SESSION['LastCompanyID']);
+}
+
+if(isSet($_SESSION['normalCompanyCreateACompany']) AND $_SESSION['normalCompanyCreateACompany'] == "Invalid"){
+	$_SESSION['normalCompanyCreateACompany'] = TRUE;
 }
 
 if(!isSet($_GET['ID']) AND !isSet($_GET['employees'])){
@@ -140,7 +145,7 @@ if(isSet($_POST['action']) AND $_POST['action'] == "Confirm"){
 		}
 		
 		$_SESSION['normalCompanyFeedback'] = "Successfully added the company: " . $validatedCompanyName . ".";
-		
+
 			// Give the company the default subscription
 		try
 		{
@@ -161,7 +166,7 @@ if(isSet($_POST['action']) AND $_POST['action'] == "Confirm"){
 			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
 			$pdo = null;
 			exit();
-		}	
+		}
 
 			// Make user owner of company
 		try
@@ -190,12 +195,9 @@ if(isSet($_POST['action']) AND $_POST['action'] == "Confirm"){
 			// Add a log event that a company was added
 		try
 		{
-			if(isSet($_SESSION['LastCompanyID'])){
-				$LastCompanyID = $_SESSION['LastCompanyID'];
-				unset($_SESSION['LastCompanyID']);
-			}
 			// Save a description with information about the meeting room that was added
-			$logEventdescription = "The company: " . $validatedCompanyName . " was created by: " . $_SESSION['LoggedInUserName'];
+			$userinfo = $_SESSION['LoggedInUserName'] . " - " . $_SESSION['email'];
+			$logEventdescription = "The company: " . $validatedCompanyName . " was created by the user: " . $userinfo;
 
 			$sql = "INSERT INTO `logevent` 
 					SET			`actionID` = 	(
@@ -207,11 +209,44 @@ if(isSet($_POST['action']) AND $_POST['action'] == "Confirm"){
 								`description` = :description";
 			$s = $pdo->prepare($sql);
 			$s->bindValue(':description', $logEventdescription);
-			$s->bindValue(':TheCompanyID', $LastCompanyID);
+			$s->bindValue(':TheCompanyID', $_SESSION['LastCompanyID']);
 			$s->execute();
+		}
+		catch(PDOException $e)
+		{
+			$error = 'Error adding log event to database: ' . $e->getMessage();
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+			$pdo = null;
+			exit();
+		}
 
-			//Close the connection
-			$pdo = null;		
+			// Add a log event that an employee was added (owner)
+		try
+		{
+			// Save a description with information about the employee that was added
+			// to the company.
+			$userinfo = $_SESSION['LoggedInUserName'] . " - " . $_SESSION['email'];
+			$logEventDescription = 'The user: ' . $userinfo . "\nWas automatically given the role: Owner\nIn the company: " . $validatedCompanyName . " on creation.";
+
+			$sql = "INSERT INTO `logevent` 
+					SET			`actionID` = 	(
+													SELECT 	`actionID` 
+													FROM 	`logaction`
+													WHERE 	`name` = 'Employee Added'
+												),
+								`positionID` = (
+													SELECT 	`PositionID`
+													FROM	`companyposition`
+													WHERE	`name` = 'Owner'
+												),
+								`companyID` = :CompanyID,
+								`userID` = :UserID,
+								`description` = :description";
+			$s = $pdo->prepare($sql);
+			$s->bindValue(':CompanyID', $_SESSION['LastCompanyID']);
+			$s->bindValue(':UserID', $_SESSION['LoggedInUserID']);	
+			$s->bindValue(':description', $logEventDescription);
+			$s->execute();
 		}
 		catch(PDOException $e)
 		{
@@ -222,9 +257,54 @@ if(isSet($_POST['action']) AND $_POST['action'] == "Confirm"){
 		}
 
 		// Send email to admin(s) that a company has been created
-		// TO-DO:
-		
-		unset($_SESSION['normalCompanyCreateACompany']);		
+		try
+		{
+			// Get admin(s) emails
+			$sql = "SELECT 		u.`email`		AS Email
+					FROM 		`user` u
+					INNER JOIN 	`accesslevel` a
+					ON			a.`AccessID` = u.`AccessID`
+					WHERE		a.`AccessName` = 'Admin'
+					AND			u.`sendAdminEmail` = 1";
+			$return = $pdo->query($sql);
+			$result = $return->fetchAll(PDO::FETCH_ASSOC);
+			
+			if(isSet($result)){
+				foreach($result AS $Email){
+					$email[] = $Email['Email'];
+				}
+			}
+			
+			// Only try to send out email if there are any admins that have set they want them
+			if(isSet($email)){
+				$emailSubject = "New Company Created";
+				
+				$emailMessage = "The user: " . $_SESSION['LoggedInUserName'] .
+								"\ncreated a new company: " . $validatedCompanyName;
+				
+				$mailResult = sendEmail($email, $emailSubject, $emailMessage);
+				
+				if(!$mailResult){
+					$_SESSION['normalCompanyFeedback'] .= "\n\n[WARNING] System failed to send Email to Admin.";
+					// TO-DO: FIX-ME: What to do if the mail doesn't want to send?
+					// Store it somewhere and have a cron try to send emails?
+				}
+				$_SESSION['normalCompanyFeedback'] .= "\nThis is the email msg we're sending out:\n$emailMessage.\nSent to email: $email."; // TO-DO: Remove after testing				
+			}
+			// close connection
+			$pdo = null;
+		}
+		catch(PDOException $e)
+		{
+			$error = 'Error sending mail to Admin: ' . $e->getMessage();
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+			$pdo = null;
+			exit();
+		}
+		unset($_SESSION['normalCompanyCreateACompany']);
+		unset($_SESSION['LastCompanyID']);		
+	} else {
+		$_SESSION['normalCompanyCreateACompany'] = "Invalid";
 	}
 }
 

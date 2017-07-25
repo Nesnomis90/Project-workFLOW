@@ -31,14 +31,7 @@
 	<?php include_once $_SERVER['DOCUMENT_ROOT'] .'/includes/topnav.html.php'; ?>
 	
 	<?php if(isSet($_SESSION['loggedIn']) AND $_SESSION['loggedIn'] AND isSet($_SESSION['LoggedInUserID']) AND !empty($_SESSION['LoggedInUserID']) AND !isSet($noAccess)) : ?>
-	
-		<div class="left">
-			<?php if(isSet($_SESSION['normalCompanyFeedback'])) : ?>
-				<span><b class="feedback"><?php htmlout($_SESSION['normalCompanyFeedback']); ?></b></span>
-				<?php unset($_SESSION['normalCompanyFeedback']); ?>
-			<?php endif; ?>
-		</div>
-	
+
 		<fieldset class="left">
 			<?php if(isSet($numberOfCompanies) AND $numberOfCompanies > 1) : ?>
 				<legend>Manage Companies</legend>
@@ -47,6 +40,13 @@
 			<?php elseif(isSet($numberOfCompanies) AND $numberOfCompanies == 0) : ?>
 				<legend>Set Up A Company Connection</legend>
 			<?php endif; ?>
+			
+			<div class="left fieldsetIndentReplication">
+				<?php if(isSet($_SESSION['normalCompanyFeedback'])) : ?>
+					<span><b class="feedback"><?php htmlout($_SESSION['normalCompanyFeedback']); ?></b></span>
+					<?php unset($_SESSION['normalCompanyFeedback']); ?>
+				<?php endif; ?>
+			</div>
 
 			<form action="" method="post">
 				<?php if(isSet($numberOfCompanies) AND $numberOfCompanies > 1) : ?>
@@ -177,7 +177,15 @@
 				</fieldset>
 
 				<div class="left">
-					<?php if(isSet($_SESSION['normalCompanyCreateACompany']) AND $_SESSION['normalCompanyCreateACompany']) : ?>
+					<?php if(isSet($_SESSION['normalCompanyCreateACompany']) AND $_SESSION['normalCompanyCreateACompany'] === "Invalid") : ?>
+						<fieldset><legend>Create A Company</legend>
+							<label>Set Company Name: </label>
+							<input class="fillOut" type="text" name="createACompanyName" value="">
+							<div class="left">
+								<input type="submit" name="action" value="Confirm">
+							</div>
+						</fieldset>
+					<?php elseif(isSet($_SESSION['normalCompanyCreateACompany']) AND $_SESSION['normalCompanyCreateACompany']) : ?>
 						<fieldset><legend>Create A Company</legend>
 							<label>Set Company Name: </label>
 							<input type="text" name="createACompanyName" value="">

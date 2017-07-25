@@ -264,7 +264,7 @@ function updateBillingDatesForCompanies(){
 							INNER JOIN 	`accesslevel` a
 							ON			a.`AccessID` = u.`AccessID`
 							WHERE		a.`AccessName` = 'Admin'
-							AND			u.`sendAdminEmail` = 1"
+							AND			u.`sendAdminEmail` = 1";
 					$return = $pdo->query($sql);
 					$result = $return->fetchAll(PDO::FETCH_ASSOC);
 					
