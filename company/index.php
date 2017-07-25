@@ -94,9 +94,6 @@ if(isSet($_POST['action']) AND $_POST['action'] == "Confirm"){
 			$s->bindValue(':CompanyName', $validatedCompanyName);
 			$s->execute();
 
-			//Close connection
-			$pdo = null;
-
 			$row = $s->fetch();
 
 			if ($row[0] > 0)
@@ -104,6 +101,7 @@ if(isSet($_POST['action']) AND $_POST['action'] == "Confirm"){
 				// This name is already being used for a company	
 				$_SESSION['normalCompanyFeedback'] = "There is already a company with the name: " . $validatedCompanyName . "!";
 				$invalidInput = TRUE;
+				$pdo = null;
 			}
 			// Company name hasn't been used before
 		}
@@ -170,6 +168,7 @@ if(isSet($_POST['action']) AND $_POST['action'] == "Confirm"){
 		{
 			$sql = "INSERT INTO `employee` 
 					SET			`CompanyID` = :CompanyID,
+								`UserID`	= :UserID,
 								`PositionID` = (
 												SELECT 	`PositionID`
 												FROM	`companyposition`
@@ -177,6 +176,7 @@ if(isSet($_POST['action']) AND $_POST['action'] == "Confirm"){
 												)";
 			$s = $pdo->prepare($sql);
 			$s->bindValue(':CompanyID', $_SESSION['LastCompanyID']);
+			$s->bindValue(':UserID', $_SESSION['LoggedInUserID']);
 			$s->execute();
 		}
 		catch (PDOException $e)
@@ -222,6 +222,8 @@ if(isSet($_POST['action']) AND $_POST['action'] == "Confirm"){
 		}
 
 		// Send email to admin(s) that a company has been created
+		// TO-DO:
+		
 		unset($_SESSION['normalCompanyCreateACompany']);		
 	}
 }
