@@ -18,7 +18,7 @@
 
 		<h1><?php htmlout($pageTitle); ?></h1>
 		
-		<div>
+		<div class="left">
 			<?php if(isSet($_SESSION['AddCompanyError'])) : ?>
 				<span><b class="feedback"><?php htmlout($_SESSION['AddCompanyError']); ?></b></span>
 				<?php unset($_SESSION['AddCompanyError']); ?>
@@ -29,7 +29,7 @@
 			<?php if(isSet($originalCompanyName)) : ?>
 				<div>
 					<label for="originalCompanyName">Original Company Name:</label>
-					<b><?php htmlout($originalCompanyName); ?></b>	
+					<span><b><?php htmlout($originalCompanyName); ?></b></span>	
 				</div>
 			<?php endif; ?>
 			<div>
