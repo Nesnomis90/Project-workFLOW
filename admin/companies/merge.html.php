@@ -19,23 +19,31 @@
 		<fieldset class="left"><legend>Merge Companies</legend>
 			<div class="left">
 				<?php if(isSet($_SESSION['MergeCompanyError'])) : ?>
-					<span><b class="feedback"><?php htmlout($_SESSION['MergeCompanyError']); ?></b></span>
+					<span><b class="warning"><?php htmlout($_SESSION['MergeCompanyError']); ?></b></span>
+					<?php $fillOut = TRUE; ?>
 					<?php unset($_SESSION['MergeCompanyError']); ?>
 				<?php endif; ?>
 			</div>
 
 		<form action="" method="post">
 			<div class="left">
-				<label for="mergingCompanyName">Selected Company Name:</label>
+				<span><b>The company you have selected will be removed. All its employees and booking history will be transferred into the new company.</b></span>
+			</div>
+			<div class="left">
+				<label for="mergingCompanyName">Selected Company To Remove: </label>
 				<span><b><?php htmlout($mergingCompanyName); ?></b></span>
 			</div>
 
 			<?php if(isSet($companies)) : ?>
 				<div class="left">
-					<label for="CompanyName">Select Company To Merge With: </label>
+					<label for="CompanyName">Select Company To Merge Into: </label>
 					<select name="mergingCompanyID">
 						<?php foreach($companies AS $company) : ?>
-							<option value="<?php htmlout($company['CompanyID']); ?>"><?php htmlout($company['CompanyName']); ?></option>
+							<?php if(isSet($selectedCompanyIDToMergeWith) AND $selectedCompanyIDToMergeWith == $company['CompanyID']) : ?>
+								<option selected="selected" value="<?php htmlout($company['CompanyID']); ?>"><?php htmlout($company['CompanyName']); ?></option>
+							<?php else : ?>
+								<option value="<?php htmlout($company['CompanyID']); ?>"><?php htmlout($company['CompanyName']); ?></option>
+							<?php endif; ?>
 						<?php endforeach; ?>
 					</select>
 				</div>
@@ -47,10 +55,14 @@
 
 			<div class="left">
 				<label>Confirm With Password: </label>
-				<input type="password" name="password" value="">
+				<?php if(isSet($fillOut)) : ?>
+					<input class="fillOut" type="password" name="password" value="">
+				<?php else : ?>
+					<input type="password" name="password" value="">
+				<?php endif; ?>
 			</div>
 			<div class="left">
-				<input type="hidden" name="id" value="<?php htmlout($id); ?>">
+				<input type="hidden" name="id" value="<?php htmlout($companyID); ?>">
 				<input type="submit" name="action" value="Confirm Merge">
 				<input type="submit" name="merge" value="Cancel">					
 			</div>

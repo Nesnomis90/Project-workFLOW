@@ -1193,14 +1193,25 @@ if ((isSet($_POST['action']) and $_POST['action'] == 'Merge') OR
 
 	unset($_SESSION['refreshMergeCompany']);
 
-	if(isSet($_POST['id']) AND !empty($_POST['id'])){
-		$companyID = $_POST['id'];
-		if(isSet($_POST['CompanyName'])){
-			$mergingCompanyName = $_POST['CompanyName'];
-		} else {
-			$mergingCompanyName = "N/A";
+	if((isSet($_POST['id']) AND !empty($_POST['id'])) OR isSet($_SESSION['MergeCompanySelectedCompanyID'])){
+
+		if(!isSet($_SESSION['MergeCompanySelectedCompanyID'])){
+			$_SESSION['MergeCompanySelectedCompanyID'] = $_POST['id'];
 		}
-		
+
+		$companyID = $_SESSION['MergeCompanySelectedCompanyID'];
+
+		if(!isSet($_SESSION['MergeCompanySelectedCompanyName'])){
+			$_SESSION['MergeCompanySelectedCompanyName'] = $_POST['CompanyName'];
+		}
+
+		$mergingCompanyName = $_SESSION['MergeCompanySelectedCompanyName'];
+
+		if(isSet($_SESSION['MergeCompanySelectedCompanyID2'])){
+			$selectedCompanyIDToMergeWith = $_SESSION['MergeCompanySelectedCompanyID2'];
+			unset($_SESSION['MergeCompanySelectedCompanyID2']);
+		}
+
 		// Get companies
 		try
 		{
@@ -1232,25 +1243,117 @@ if ((isSet($_POST['action']) and $_POST['action'] == 'Merge') OR
 		exit();
 	} else {
 		$_SESSION['CompanyUserFeedback'] = "Could not retrieve information to merge this company.";
-	}
+	}	
 }
 
 // If admin wants to confirm what two companies to merge
 if (isSet($_POST['action']) and $_POST['action'] == 'Confirm Merge'){
-	$invalidInput = FALSE;
-	if(!isSet($_POST['password']) OR (isSet($_POST['password']) AND empty($_POST['password']))){
-		$invalidInput = TRUE;
-		$_SESSION['MergeCompanyError'] = "You cannot merge two companies without submitting your password.";
-	}
-	
-	
-	
-	if($invalidInput){
+
+	// Check that we have a secondary company to merge into submitted
+	if(!isSet($_POST['mergingCompanyID']) OR (isSet($_POST['mergingCompanyID']) AND empty($_POST['mergingCompanyID']))){
+		$_SESSION['MergeCompanyError'] = "You cannot merge two companies without choosing a secondary company.";
 		$_SESSION['refreshMergeCompany'] = TRUE;
 		header("Location: .");
 		exit();
 	}
+
+	$_SESSION['MergeCompanySelectedCompanyID2'] = $_POST['mergingCompanyID'];
+
+	// Check that we have a password submitted
+	if(!isSet($_POST['password']) OR (isSet($_POST['password']) AND empty($_POST['password']))){
+		$_SESSION['MergeCompanyError'] = "You cannot merge two companies without submitting your password.";
+		$_SESSION['refreshMergeCompany'] = TRUE;
+		header("Location: .");
+		exit();
+	}	
+
+	$password = $_POST['password'];
+	$hashedPassword = hashPassword($password);
+
+	// Check if password is correct
+	try
+	{
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+
+		$pdo = connect_to_db();
+		$sql = 'SELECT 	`password`	AS RealPassword
+				FROM 	`user`
+				WHERE	`userID` = :UserID
+				LIMIT 	1';
+		$s = $pdo->prepare($sql);
+		$s->bindValue(':UserID', $_SESSION['LoggedInUserID']);
+		$s->execute();
+
+		$row = $s->fetch(PDO::FETCH_ASSOC);
+		$realPassword = $row['RealPassword'];
+	}
+	catch (PDOException $e)
+	{
+		$pdo = null;
+		$error = 'Error confirming password: ' . $e->getMessage();
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+		exit();
+	}
+
+	if($hashedPassword != $realPassword){
+		$pdo = null;
+		$_SESSION['MergeCompanyError'] = "The password you submitted is incorrect.";
+		$_SESSION['refreshMergeCompany'] = TRUE;
+		header("Location: .");
+		exit();
+	}
+
+	// Password is correct. Let's transfer all employees and booking history to the new company
+	// TO-DO: Not sure if this works. It removes company and merges employees correct. Have not tested with companycreditshistory
+	try
+	{
+		$pdo->beginTransaction();
+
+		$sql = 'UPDATE 	`employee`
+				SET		`CompanyID` = :CompanyID2
+				WHERE	`CompanyID` = :CompanyID';
+		$s = $pdo->prepare($sql);
+		$s->bindValue(':CompanyID', $_SESSION['MergeCompanySelectedCompanyID']);
+		$s->bindValue(':CompanyID2', $_SESSION['MergeCompanySelectedCompanyID2']);
+		$s->execute();
+
+		$sql = 'UPDATE 	`booking`
+				SET		`CompanyID` = :CompanyID2
+				WHERE	`CompanyID` = :CompanyID';
+		$s = $pdo->prepare($sql);
+		$s->bindValue(':CompanyID', $_SESSION['MergeCompanySelectedCompanyID']);
+		$s->bindValue(':CompanyID2', $_SESSION['MergeCompanySelectedCompanyID2']);
+		$s->execute();
+		
+		// TO-DO: How to handle merging company credits history?
+		$sql = 'UPDATE 	`companycreditshistory`
+				SET		`CompanyID` = :CompanyID2
+				WHERE	`CompanyID` = :CompanyID';
+		$s = $pdo->prepare($sql);
+		$s->bindValue(':CompanyID', $_SESSION['MergeCompanySelectedCompanyID']);
+		$s->bindValue(':CompanyID2', $_SESSION['MergeCompanySelectedCompanyID2']);
+		$s->execute();	
+
+		$sql = 'DELETE FROM `company`
+				WHERE		`CompanyID` = :CompanyID';
+		$s = $pdo->prepare($sql);
+		$s->bindValue(':CompanyID', $_SESSION['MergeCompanySelectedCompanyID']);
+		$s->execute();
+
+		$pdo->commit();
+	}
+	catch (PDOException $e)
+	{
+		$pdo->rollback();
+		$pdo = null;
+		$error = 'Error merging companies: ' . $e->getMessage();
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+		exit();
+	}	
 	
+	unset($_SESSION['MergeCompanySelectedCompanyID']);
+	unset($_SESSION['MergeCompanySelectedCompanyName']);
+	unset($_SESSION['MergeCompanySelectedCompanyID2']);
 }
 
 // If admin wants to remove a company from the database
