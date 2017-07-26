@@ -1187,8 +1187,12 @@ if (isSet($_POST['action']) AND $_POST['action'] == 'Activate') {
 }
 
 // If admin wants to merge two companies
-if (isSet($_POST['action']) and $_POST['action'] == 'Merge')
-{
+if ((isSet($_POST['action']) and $_POST['action'] == 'Merge') OR 
+	(isSet($_SESSION['refreshMergeCompany']) AND $_SESSION['refreshMergeCompany'])
+	){
+
+	unset($_SESSION['refreshMergeCompany']);
+
 	if(isSet($_POST['id']) AND !empty($_POST['id'])){
 		$companyID = $_POST['id'];
 		if(isSet($_POST['CompanyName'])){
@@ -1229,6 +1233,24 @@ if (isSet($_POST['action']) and $_POST['action'] == 'Merge')
 	} else {
 		$_SESSION['CompanyUserFeedback'] = "Could not retrieve information to merge this company.";
 	}
+}
+
+// If admin wants to confirm what two companies to merge
+if (isSet($_POST['action']) and $_POST['action'] == 'Confirm Merge'){
+	$invalidInput = FALSE;
+	if(!isSet($_POST['password']) OR (isSet($_POST['password']) AND empty($_POST['password']))){
+		$invalidInput = TRUE;
+		$_SESSION['MergeCompanyError'] = "You cannot merge two companies without submitting your password.";
+	}
+	
+	
+	
+	if($invalidInput){
+		$_SESSION['refreshMergeCompany'] = TRUE;
+		header("Location: .");
+		exit();
+	}
+	
 }
 
 // If admin wants to remove a company from the database
