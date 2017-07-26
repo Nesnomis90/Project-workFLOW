@@ -2284,7 +2284,8 @@ if((isSet($_POST['add']) AND $_POST['add'] == "Change User") OR
 							`lastname`, 
 							`email`,
 							`displayname`,
-							`bookingdescription`
+							`bookingdescription`,
+							`sendEmail`
 					FROM 	`user`
 					WHERE 	`isActive` > 0
 					AND		`userID`
@@ -2321,7 +2322,8 @@ if((isSet($_POST['add']) AND $_POST['add'] == "Change User") OR
 									'email' => $row['email'],
 									'userInformation' => $row['lastname'] . ', ' . $row['firstname'] . ' - ' . $row['email'],
 									'displayName' => $row['displayname'],
-									'bookingDescription' => $row['bookingdescription']
+									'bookingDescription' => $row['bookingdescription'],
+									'sendEmail' => $row['sendEmail']
 									);
 			}
 			$_SESSION['AddBookingUsersArray'] = $users;
