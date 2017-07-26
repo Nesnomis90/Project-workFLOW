@@ -125,7 +125,7 @@ function emailUserOnCancelledBooking(){
 			$_SESSION['BookingUserFeedback'] .= "\nUser does not want to be sent Email.";
 		}
 	} else {
-		$_SESSION['BookingUserFeedback'] .= "\nDid not send an email because you cancelled your own meeting.";
+		$_SESSION['BookingUserFeedback'] .= "\nDid not send an email because you cancelled your own meeting."; // TO-DO: Remove?
 	}
 }
 
@@ -1482,6 +1482,8 @@ if(isSet($_POST['edit']) AND $_POST['edit'] == "Finish Edit")
 				} else {
 					$_SESSION['BookingUserFeedback'] .= "\nUser does not want to be sent an Email.";
 				}
+			} elseif($originalValue['TheUserID'] == $_SESSION['LoggedInUserID']){
+				$_SESSION['BookingUserFeedback'] .= "\nDid not send an email with the updated information, since you changed your own booking."; // TO-DO: Remove?
 			} else {
 				if($originalValue['sendEmail'] == 1){
 					$emailSubject = "Booking Information Has Changed!";
@@ -1498,16 +1500,16 @@ if(isSet($_POST['edit']) AND $_POST['edit'] == "Finish Edit")
 					"End Time: " . $OldEndDate . ".\n\n" .
 					"If you wish to cancel your meeting, or just end it early, you can easily do so by clicking the link given below.\n" .
 					"Click this link to cancel your booked meeting: " . $_SERVER['HTTP_HOST'] . 
-					"/booking/?cancellationcode=" . $cancellationCode;	
+					"/booking/?cancellationcode=" . $cancellationCode;
 
 					$email = $originalValue['UserEmail'];
-					
+
 					$mailResult = sendEmail($email, $emailSubject, $emailMessage);
-					
+	
 					if(!$mailResult){
 						$_SESSION['BookingUserFeedback'] .= "\n\n[WARNING] System failed to send Email to user.";
 					}
-					
+
 					$_SESSION['BookingUserFeedback'] .= "\nThis is the email msg we're sending out:\n$emailMessage.\nSent to email: $email."; // TO-DO: Remove after testing	
 				} else {	
 					$_SESSION['BookingUserFeedback'] .= "\nUser does not want to be sent an Email.";
@@ -1516,7 +1518,7 @@ if(isSet($_POST['edit']) AND $_POST['edit'] == "Finish Edit")
 		}
 	}
 	clearEditBookingSessions();
-	
+
 	// Load booking history list webpage with the updated booking information
 	header('Location: .');
 	exit();	
