@@ -1308,10 +1308,10 @@ if (isSet($_POST['action']) and $_POST['action'] == 'Confirm Merge'){
 	try
 	{
 		$pdo->beginTransaction();
-
-		$sql = 'UPDATE 	`employee`
-				SET		`CompanyID` = :CompanyID2
-				WHERE	`CompanyID` = :CompanyID';
+		// TO-DO: Find better solution than ignoring updates on duplicates?
+		$sql = 'UPDATE IGNORE	`employee`
+				SET				`CompanyID` = :CompanyID2
+				WHERE			`CompanyID` = :CompanyID';
 		$s = $pdo->prepare($sql);
 		$s->bindValue(':CompanyID', $_SESSION['MergeCompanySelectedCompanyID']);
 		$s->bindValue(':CompanyID2', $_SESSION['MergeCompanySelectedCompanyID2']);
@@ -2119,6 +2119,10 @@ foreach ($result as $row)
 									);		
 	}
 }
+	unset($_SESSION['MergeCompanySelectedCompanyID']);
+	unset($_SESSION['MergeCompanySelectedCompanyName']);
+	unset($_SESSION['MergeCompanySelectedCompanyID2']);
+
 var_dump($_SESSION); // TO-DO: remove after testing is done
 
 // Create the companies list in HTML

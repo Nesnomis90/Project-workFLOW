@@ -27,7 +27,7 @@
 
 		<form action="" method="post">
 			<div class="left">
-				<span><b>The company you have selected will be removed. All its employees and booking history will be transferred into the new company.</b></span>
+				<span style="white-space: pre-wrap;"><b><?php htmlout("The company you have selected will be removed. All its employees and booking history will be transferred into the new company.\nEmployees who work in both companies will not have their employee information transferred."); ?></b></span>
 			</div>
 			<div class="left">
 				<label for="mergingCompanyName">Selected Company To Remove: </label>
