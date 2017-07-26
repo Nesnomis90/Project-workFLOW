@@ -1191,7 +1191,36 @@ if (isSet($_POST['action']) and $_POST['action'] == 'Merge')
 {
 	if(isSet($_POST['id']) AND !empty($_POST['id'])){
 		$companyID = $_POST['id'];
-	
+		if(isSet($_POST['CompanyName'])){
+			$mergingCompanyName = $_POST['CompanyName'];
+		} else {
+			$mergingCompanyName = "N/A";
+		}
+		
+		// Get companies
+		try
+		{
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+			$pdo = connect_to_db();
+			$sql = 'SELECT	`CompanyID`		AS CompanyID,
+							`name`			AS CompanyName
+					FROM	`company`
+					WHERE 	`companyID` != :id';
+			$s = $pdo->prepare($sql);
+			$s->bindValue(':id', $companyID);
+			$s->execute();
+			$companies = $s->fetchAll(PDO::FETCH_ASSOC);
+
+			//close connection
+			$pdo = null;
+		}
+		catch (PDOException $e)
+		{
+			$error = 'Error getting company to delete: ' . $e->getMessage();
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+			exit();
+		}
+
 		var_dump($_SESSION);	// TO-DO: Remove after done testing
 
 		include_once 'merge.html.php';
