@@ -4,6 +4,8 @@ USE meetingflow;
 SHOW WARNINGS;
 /*PDO::FETCH_ASSOC*/
 
+INSERT INTO `companycredits`(`CompanyID`, `CreditsID`) VALUES (1,2);
+
 UPDATE 	`company`
 SET		`prevStartDate` = `startDate`,
 		`startDate` = `endDate`,
@@ -40,6 +42,12 @@ AND		`dateTimeCancelled`
 BETWEEN `startDateTime`
 AND		`endDateTime`
 AND 	`bookingID` <> 0;
+
+UPDATE 	`company`
+SET		`isActive` = 0
+WHERE 	DATE(CURRENT_TIMESTAMP) >= `removeAtDate`
+AND 	`isActive` = 1
+AND		`companyID` <> 0;
 
 SELECT COUNT(*)
 FROM 	`booking`
@@ -2109,18 +2117,6 @@ SELECT 		b.`bookingID`,
 			ORDER BY 	b.bookingID
 			DESC;
 
-UPDATE 	`user`
-SET 	`AccessID` = ( 
-						SELECT 	`AccessID`
-						FROM 	`accesslevel`
-						WHERE 	`AccessName` = 'Normal User'
-						LIMIT 	1
-					),
-		`bookingCode` = NULL
-WHERE 	DATE(CURRENT_TIMESTAMP) >= `reduceAccessAtDate`
-AND 	`isActive` = 1
-AND		`userID` <> 0;
-
 SELECT 	m.`name`					AS MeetingRoomName,
 		c.`name`					AS CompanyName,
 		u.`email`,       
@@ -2158,12 +2154,6 @@ AND		`bookingID` <> 0;
 
 SELECT *
 FROM 	`company`
-WHERE 	DATE(CURRENT_TIMESTAMP) >= `removeAtDate`
-AND 	`isActive` = 1
-AND		`companyID` <> 0;
-
-UPDATE 	`company`
-SET		`isActive` = 0
 WHERE 	DATE(CURRENT_TIMESTAMP) >= `removeAtDate`
 AND 	`isActive` = 1
 AND		`companyID` <> 0;
