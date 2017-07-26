@@ -1186,6 +1186,21 @@ if (isSet($_POST['action']) AND $_POST['action'] == 'Activate') {
 	}	
 }
 
+// If admin wants to merge two companies
+if (isSet($_POST['action']) and $_POST['action'] == 'Merge')
+{
+	if(isSet($_POST['id']) AND !empty($_POST['id'])){
+		$companyID = $_POST['id'];
+	
+		var_dump($_SESSION);	// TO-DO: Remove after done testing
+
+		include_once 'merge.html.php';
+		exit();
+	} else {
+		$_SESSION['CompanyUserFeedback'] = "Could not retrieve information to merge this company.";
+	}
+}
+
 // If admin wants to remove a company from the database
 if (isSet($_POST['action']) and $_POST['action'] == 'Delete')
 {
