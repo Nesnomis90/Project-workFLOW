@@ -38,11 +38,10 @@ function setDefaultSubscriptionIfCompanyHasNone(){
 								)";
 			$return = $pdo->query($sql);
 			$result = $return->fetchAll(PDO::FETCH_ASSOC);
-			
-			$creditsID = $insert['CreditsID'];
 
 			$pdo->beginTransaction();
 			foreach($result AS $insert){
+				$creditsID = $insert['CreditsID'];
 				$companyID = $insert['CompanyID'];
 
 				$pdo->exec("INSERT INTO `companycredits`

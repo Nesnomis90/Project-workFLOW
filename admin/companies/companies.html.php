@@ -46,7 +46,7 @@
 					<th colspan="4">Booking Time Used</th>
 					<th colspan="3">Billing Status (Completed Periods)</th>
 					<th colspan="2">Dates</th>
-					<th colspan="2">Alter Company</th>
+					<th colspan="3">Alter Company</th>
 				</tr>
 				<tr>
 					<th>List</th>
@@ -67,6 +67,7 @@
 					<th>Not Set As Billed</th>
 					<th>Make Inactive At</th>
 					<th>Created At</th>
+					<th>Merge</th>
 					<th>Edit</th>
 					<th>Delete</th>
 				</tr>
@@ -126,7 +127,8 @@
 											<input type="submit" name="action" value="Cancel Date">
 										</td>
 								<?php endif; ?>
-								<td><?php htmlout($company['DatetimeCreated']); ?></td>							
+								<td><?php htmlout($company['DatetimeCreated']); ?></td>		
+								<td><input type="submit" name="action" value="Merge"></td>
 								<td><input type="submit" name="action" value="Edit"></td>
 								<td>
 									<?php if(isSet($_SESSION['companiesEnableDelete']) AND $_SESSION['companiesEnableDelete']) : ?>
@@ -142,7 +144,7 @@
 						</tr>
 					<?php endforeach; ?>
 				<?php else : ?>
-					<tr><td colspan=7><b>There are no active companies</b></td></tr>
+					<tr><td colspan="21"><b>There are no active companies</b></td></tr>
 				<?php endif; ?>
 			</table>
 			

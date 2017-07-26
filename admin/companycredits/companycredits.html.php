@@ -24,35 +24,35 @@
 			<form action="<?php htmlout($goto); ?>" method="post">
 				<input type="submit" value="Return to Companies">
 			</form>
-		<?php $goto = "http://$_SERVER[HTTP_HOST]/admin/companycredits/"; ?>
+			<?php $goto = "http://$_SERVER[HTTP_HOST]/admin/companycredits/"; ?>
 			<form action="<?php htmlout($goto); ?>" method="post">
 				<input type="submit" value="Get All Company Credits">
 			</form>
 		<?php endif; ?>
 		
-		<?php if($rowNum>0) :?>
-			<table id="companycreditstable">
-				<caption>Company Credits</caption>
-				<tr>
-					<th colspan="3">Company</th>
-					<th colspan="6">Credits</th>
-					<th colspan="2">Date</th>
-					<th>Alter Company Credits</th>
-				</tr>
-				<tr>
-					<th>Name</th>
-					<th>Billing Month Start</th>
-					<th>Billing Month End</th>
-					<th>Name</th>
-					<th>Description</th>
-					<th>Monthly Free Booking Time</th>
-					<th>Given Alternative Credits</th>
-					<th>Monthly Subscription Cost</th>
-					<th>Over Credits Fee</th>
-					<th>Last Modified</th>
-					<th>Added</th>
-					<th>Edit</th>
-				</tr>
+		<table id="companycreditstable">
+			<caption>Company Credits</caption>
+			<tr>
+				<th colspan="3">Company</th>
+				<th colspan="6">Credits</th>
+				<th colspan="2">Date</th>
+				<th>Alter Company Credits</th>
+			</tr>
+			<tr>
+				<th>Name</th>
+				<th>Billing Month Start</th>
+				<th>Billing Month End</th>
+				<th>Name</th>
+				<th>Description</th>
+				<th>Monthly Free Booking Time</th>
+				<th>Given Alternative Credits</th>
+				<th>Monthly Subscription Cost</th>
+				<th>Over Credits Fee</th>
+				<th>Last Modified</th>
+				<th>Added</th>
+				<th>Edit</th>
+			</tr>
+		<?php if($rowNum>0) :?>				
 				<?php foreach ($companycredits as $row): ?>
 					<form action="" method="post">
 						<tr>
@@ -79,12 +79,12 @@
 						</tr>
 					</form>
 				<?php endforeach; ?>
-			</table>
 		<?php elseif(isSet($_GET['Company'])) : ?>
-			<tr><b>The company ID submitted does not belong to a registered company.</b></tr>
+			<tr><td colspan="12"><b>The company submitted does not exist or isn't linked to a credits.</b></td></tr>
 		<?php else : ?>
-			<tr><b>There are no credits for any companies registered in the database. This should only occur if there are no companies registered.</b></tr>
+			<tr><td colspan="12"><b>There are no credits for any companies registered in the database. This should only occur if there are no companies registered.</b></td></tr>
 		<?php endif; ?>
+		</table>
 		
 	<div class="left"><a href="..">Return to CMS home</a></div>
 		
