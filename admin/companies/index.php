@@ -1205,7 +1205,8 @@ if (isSet($_POST['action']) and $_POST['action'] == 'Merge')
 			$sql = 'SELECT	`CompanyID`		AS CompanyID,
 							`name`			AS CompanyName
 					FROM	`company`
-					WHERE 	`companyID` != :id';
+					WHERE 	`companyID` != :id
+					AND 	`isActive` = 1';
 			$s = $pdo->prepare($sql);
 			$s->bindValue(':id', $companyID);
 			$s->execute();
@@ -1649,6 +1650,11 @@ if(isSet($_POST['edit']) AND $_POST['edit'] == 'Cancel'){
 if(isSet($_POST['add']) AND $_POST['add'] == 'Cancel'){
 	$refreshcompanies = TRUE;
 	$_SESSION['CompanyUserFeedback'] = "You cancelled your company creation.";
+}
+
+if(isSet($_POST['merge']) AND $_POST['merge'] == 'Cancel'){
+	$refreshcompanies = TRUE;
+	$_SESSION['CompanyUserFeedback'] = "You cancelled your company merging.";
 }
 
 if(isSet($_POST['history']) AND $_POST['history'] == 'Return To Companies'){

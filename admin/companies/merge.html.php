@@ -4,19 +4,19 @@
 <html lang="en">
 	<head>
 		<meta charset="utf-8">
-		<title><?php htmlout($pageTitle); ?></title>
+		<title>Merge Companies</title>
 		<link rel="stylesheet" type="text/css" href="/CSS/myCSS.css">
 		<script src="/scripts/myFunctions.js"></script>
 		<style>
 			label {
-				width: 180px;
+				width: 220px;
 			}
 		</style>
 	</head>
 	<body onload="startTime()">
 		<?php include_once $_SERVER['DOCUMENT_ROOT'] .'/includes/admintopnav.html.php'; ?>
 
-		<fieldset class="left"><legend></legend>
+		<fieldset class="left"><legend>Merge Companies</legend>
 			<div class="left">
 				<?php if(isSet($_SESSION['MergeCompanyError'])) : ?>
 					<span><b class="feedback"><?php htmlout($_SESSION['MergeCompanyError']); ?></b></span>
