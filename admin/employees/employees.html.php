@@ -20,29 +20,30 @@
 			<?php endif; ?>
 		</div>
 
-		<?php $goto = "http://$_SERVER[HTTP_HOST]/admin/companies/"; ?>
 		<?php if(isSet($_GET['Company'])) : ?>
-			<form action="<?php htmlout($goto); ?>" method="post">
-				<input type="submit" value="Return to Companies">
-			</form>
-		<?php $goto = "http://$_SERVER[HTTP_HOST]/admin/employees/"; ?>
-			<form action="<?php htmlout($goto); ?>" method="post">
-				<input type="submit" value="Get All Employees">
-			</form>
+			<div class="left">
+				<?php $goto = "http://$_SERVER[HTTP_HOST]/admin/companies/"; ?>
+				<form action="<?php htmlout($goto); ?>" method="post">
+					<input type="submit" value="Return to Companies">
+				</form>
+				<?php $goto = "http://$_SERVER[HTTP_HOST]/admin/employees/"; ?>
+				<form action="<?php htmlout($goto); ?>" method="post">
+					<input type="submit" value="Get All Employees">
+				</form>
+			</div>
 		<?php endif; ?>
 	
 		<form action="" method="post">
-			<div>
+			<div class="left">
+				<input type="submit" name="action" value="Add Employee">
+			</div>
+			<div class="right">
 				<?php if(isSet($_SESSION['employeesEnableDelete']) AND $_SESSION['employeesEnableDelete']) : ?>
 					<input type="submit" name="action" value="Disable Remove">
 				<?php else : ?>
 					<input type="submit" name="action" value="Enable Remove">
 				<?php endif; ?>
 			</div>
-		</form>
-		
-		<form action="" method="post">
-			<input type="submit" name="action" value="Add Employee">
 		</form>
 
 		<table>
@@ -104,12 +105,7 @@
 					</form>
 				<?php endforeach; ?>
 			<?php else : ?>
-				<tr><b>There are no employees registered in the database.</b></tr>
-				<tr>
-					<form action="" method="post">
-						<input type="submit" name="action" value="Add Employee">
-					</form>
-				</tr>
+				<tr><td colspan="11"><b>There are no employees registered in the database.</b></td></tr>
 			<?php endif; ?>	
 				<?php if(isSet($removedEmployees)) : ?>
 					<tr>
