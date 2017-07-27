@@ -1674,7 +1674,16 @@ if(isSet($selectedCompanyToDisplayID) AND !empty($selectedCompanyToDisplayID)){
 							cr.`name`											AS CreditSubscriptionName,
 							cr.`minuteAmount`									AS CreditSubscriptionMinuteAmount,
 							cr.`monthlyPrice`									AS CreditSubscriptionMonthlyPrice,
-							cr.`overCreditHourPrice`							AS CreditSubscriptionHourPrice
+							cr.`overCreditHourPrice`							AS CreditSubscriptionHourPrice,
+							(
+								SELECT		cp.`name`
+								FROM		`companyposition` cp
+								INNER JOIN	`employee` e
+								ON			e.`PositionID` = cp.`PositionID`
+								WHERE		e.`CompanyID` = :CompanyID
+								AND			e.`UserID` = :UserID
+								LIMIT 		1
+							)													AS CompanyRole
 				FROM 		`company` c
 				LEFT JOIN	`companycredits` cc
 				ON			c.`CompanyID` = cc.`CompanyID`
@@ -1689,6 +1698,7 @@ if(isSet($selectedCompanyToDisplayID) AND !empty($selectedCompanyToDisplayID)){
 		$s->bindValue(':minimumSecondsPerBooking', $minimumSecondsPerBooking);
 		$s->bindValue(':aboveThisManySecondsToCount', $aboveThisManySecondsToCount);
 		$s->bindValue(':CompanyID', $selectedCompanyToDisplayID);
+		$s->bindValue(':UserID', $_SESSION['LoggedInUserID']);
 		$s->execute();
 		$row = $s->fetch(PDO::FETCH_ASSOC);
 
@@ -1784,7 +1794,8 @@ if(isSet($selectedCompanyToDisplayID) AND !empty($selectedCompanyToDisplayID)){
 							'CompanyCredits' => $displayCompanyCredits,
 							'CompanyCreditsRemaining' => $displayCompanyCreditsRemaining,
 							'CreditSubscriptionMonthlyPrice' => convertToCurrency($monthPrice),
-							'OverCreditsFee' => $overCreditsFee
+							'OverCreditsFee' => $overCreditsFee,
+							'CompanyRole' => $row['CompanyRole']
 						);
 }
 
