@@ -67,7 +67,7 @@
 				<?php endif; ?>
 			</div>
 			<div class="left">
-				<input type="hidden" name="id" value="<?php htmlout($companyID); ?>">
+				<input type="hidden" name="CompanyID" value="<?php htmlout($companyID); ?>">
 				<input type="submit" name="action" value="Confirm Transfer">
 				<input type="submit" name="merge" value="Cancel">					
 			</div>
