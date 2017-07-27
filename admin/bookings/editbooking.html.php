@@ -150,6 +150,12 @@
 						<input type="hidden" name="companyID" id="companyID" 
 						value="<?php htmlout($companyID); ?>">
 						<input type="submit" name="edit" value="Change Company">
+						<label>Credits Remaining: </label>
+						<?php if(substr($creditsRemaining,0,1) === "-") : ?>
+							<span style="color:red"><?php htmlout($creditsRemaining); ?></span>
+						<?php else : ?>
+							<span style="color:green"><?php htmlout($creditsRemaining); ?></span>
+						<?php endif; ?>	
 					<?php endif; ?>
 				<?php else : ?>
 					<?php if(isSet($company)) : ?>

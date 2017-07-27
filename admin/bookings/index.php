@@ -647,6 +647,7 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Edit') OR
 			
 			// Create an array with the row information we retrieved		
 			$_SESSION['EditBookingInfoArray'] = $s->fetch(PDO::FETCH_ASSOC);
+			$_SESSION['EditBookingInfoArray']['CreditsRemaining'] = "N/A";
 			$_SESSION['EditBookingOriginalInfoArray'] = $_SESSION['EditBookingInfoArray'];
 		}	
 		
@@ -663,29 +664,127 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Edit') OR
 		// have a dropdown select or just a fixed value (with 0 or 1 company)
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 		$pdo = connect_to_db();
-		$sql = 'SELECT	c.`companyID`,
-						c.`name` 					AS companyName
-				FROM 	`user` u
-				JOIN 	`employee` e
-				ON 		e.userID = u.userID
-				JOIN	`company` c
-				ON 		c.companyID = e.companyID
-				WHERE 	u.`userID` = :userID
-				AND 	c.`isActive` = 1';
-			
+
+		$sql = 'SELECT		c.`companyID`,
+							c.`name` 					AS companyName,
+							(
+								SELECT (BIG_SEC_TO_TIME(SUM(
+														IF(
+															(
+																(
+																	DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
+																	)*86400 
+																+ 
+																(
+																	TIME_TO_SEC(b.`actualEndDateTime`) 
+																	- 
+																	TIME_TO_SEC(b.`startDateTime`)
+																	) 
+															) > :aboveThisManySecondsToCount,
+															IF(
+																(
+																(
+																	DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
+																	)*86400 
+																+ 
+																(
+																	TIME_TO_SEC(b.`actualEndDateTime`) 
+																	- 
+																	TIME_TO_SEC(b.`startDateTime`)
+																	) 
+															) > :minimumSecondsPerBooking, 
+																(
+																(
+																	DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
+																	)*86400 
+																+ 
+																(
+																	TIME_TO_SEC(b.`actualEndDateTime`) 
+																	- 
+																	TIME_TO_SEC(b.`startDateTime`)
+																	) 
+															), 
+																:minimumSecondsPerBooking
+															),
+															0
+														)
+								)))	AS BookingTimeUsed
+								FROM 		`booking` b  
+								INNER JOIN 	`company` c 
+								ON 			b.`CompanyID` = c.`CompanyID` 
+								WHERE 		b.`CompanyID` = e.`CompanyID`
+								AND 		b.`actualEndDateTime`
+								BETWEEN		c.`startDate`
+								AND			c.`endDate`
+							)													AS MonthlyCompanyWideBookingTimeUsed,
+							(
+								SELECT 	IFNULL(cc.`altMinuteAmount`, cr.`minuteAmount`)
+								FROM 		`company` c
+								INNER JOIN	`companycredits` cc
+								ON			c.`CompanyID` = cc.`CompanyID`
+								INNER JOIN	`credits` cr
+								ON			cr.`CreditsID` = cc.`CreditsID`
+								WHERE		c.`CompanyID` = e.`CompanyID`
+								
+							) 													AS CreditSubscriptionMinuteAmount
+				FROM 		`user` u
+				INNER JOIN 	`employee` e
+				ON 			e.`userID` = u.`userID`
+				INNER JOIN	`company` c
+				ON 			c.`companyID` = e.`companyID`
+				WHERE 		u.`userID` = :userID
+				AND			c.`isActive` = 1';
+		$minimumSecondsPerBooking = MINIMUM_BOOKING_DURATION_IN_MINUTES_USED_IN_PRICE_CALCULATIONS * 60; // e.g. 15min = 900s
+		$aboveThisManySecondsToCount = BOOKING_DURATION_IN_MINUTES_USED_BEFORE_INCLUDING_IN_PRICE_CALCULATIONS * 60; // E.g. 1min = 60s	
+
 		$s = $pdo->prepare($sql);
 		$s->bindValue(':userID', $SelectedUserID);
+		$s->bindValue(':minimumSecondsPerBooking', $minimumSecondsPerBooking);
+		$s->bindValue(':aboveThisManySecondsToCount', $aboveThisManySecondsToCount);
 		$s->execute();
-		
+
 		// Create an array with the row information we retrieved
 		$result = $s->fetchAll(PDO::FETCH_ASSOC);
-			
-		foreach($result as $row){		
+
+		foreach($result as $row){
 			// Get the companies the user works for
 			// This will be used to create a dropdown list in HTML
+
+			// Get booking time used this month
+			if(empty($row['MonthlyCompanyWideBookingTimeUsed'])){
+				$MonthlyTimeUsed = 'N/A';
+			} else {
+				$MonthlyTimeUsed = convertTimeToHoursAndMinutes($row['MonthlyCompanyWideBookingTimeUsed']);
+			}
+
+			// Get credits given
+			if(!empty($row["CreditSubscriptionMinuteAmount"])){
+				$companyMinuteCredits = $row["CreditSubscriptionMinuteAmount"];
+			} else {
+				$companyMinuteCredits = 0;
+			}
+
+				// Calculate Company Credits Remaining
+			if($MonthlyTimeUsed != "N/A"){
+				$monthlyTimeHour = substr($MonthlyTimeUsed,0,strpos($MonthlyTimeUsed,"h"));
+				$monthlyTimeMinute = substr($MonthlyTimeUsed,strpos($MonthlyTimeUsed,"h")+1,-1);
+				$actualTimeUsedInMinutesThisMonth = $monthlyTimeHour*60 + $monthlyTimeMinute;
+				if($actualTimeUsedInMinutesThisMonth > $companyMinuteCredits){
+					$minusCompanyMinuteCreditsRemaining = $actualTimeUsedInMinutesThisMonth - $companyMinuteCredits;
+					$displayCompanyCreditsRemaining = "-" . convertMinutesToHoursAndMinutes($minusCompanyMinuteCreditsRemaining);
+				} else {
+					$companyMinuteCreditsRemaining = $companyMinuteCredits - $actualTimeUsedInMinutesThisMonth;
+					$displayCompanyCreditsRemaining = convertMinutesToHoursAndMinutes($companyMinuteCreditsRemaining);
+				}
+			} else {
+				$companyMinuteCreditsRemaining = $companyMinuteCredits;
+				$displayCompanyCreditsRemaining = convertMinutesToHoursAndMinutes($companyMinuteCreditsRemaining);
+			}				
+
 			$company[] = array(
 								'companyID' => $row['companyID'],
-								'companyName' => $row['companyName']
+								'companyName' => $row['companyName'],
+								'creditsRemaining' => $displayCompanyCreditsRemaining 
 								);
 		}
 			
@@ -705,6 +804,8 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Edit') OR
 				unset($_SESSION['EditBookingDisplayCompanySelect']);
 				$_SESSION['EditBookingInfoArray']['TheCompanyID'] = $company[0]['companyID'];
 				$_SESSION['EditBookingInfoArray']['BookedForCompany'] = $company[0]['companyName'];
+				$_SESSION['EditBookingInfoArray']['CreditsRemaining'] = $company[0]['creditsRemaining'];
+				
 			}
 		} else{
 			// User is NOT in a company
@@ -712,6 +813,7 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Edit') OR
 			unset($_SESSION['EditBookingDisplayCompanySelect']);
 			$_SESSION['EditBookingInfoArray']['TheCompanyID'] = "";
 			$_SESSION['EditBookingInfoArray']['BookedForCompany'] = "";
+			$_SESSION['EditBookingInfoArray']['CreditsRemaining'] = "N/A";
 		}		
 	}
 	catch(PDOException $e)
@@ -750,6 +852,7 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Edit') OR
 		foreach($company AS $cmp){
 			if($cmp['companyID'] == $row['TheCompanyID']){
 				$row['BookedForCompany'] = $cmp['companyName'];
+				$row['CreditsRemaining'] = $cmp['creditsRemaining'];
 				break;
 			}
 		}			
@@ -760,6 +863,7 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Edit') OR
 		// Edited inputs
 	$bookingID = $row['TheBookingID'];
 	$companyName = $row['BookedForCompany'];
+	$creditsRemaining = $row['CreditsRemaining'];
 	$selectedCompanyID = $row['TheCompanyID'];
 	$companyID = $row['TheCompanyID'];
 	//	userID has been set earlier
@@ -790,7 +894,7 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Edit') OR
 	if(!validateDatetimeWithFormat($originalEndDateTime, DATETIME_DEFAULT_FORMAT_TO_DISPLAY)){
 		$originalEndDateTime = convertDatetimeToFormat($originalEndDateTime , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
 	}	
-	if($original['BookedForCompany']!=NULL){
+	if($original['BookedForCompany'] != NULL){
 		$originalCompanyName = $original['BookedForCompany'];
 	}
 	$originalMeetingRoomName = $original['BookedRoomName'];
@@ -1789,7 +1893,8 @@ if (	(isSet($_POST['action']) AND $_POST['action'] == "Create Booking") OR
 					ON 			e.`userID` = u.`userID`
 					INNER JOIN	`company` c
 					ON 			c.`companyID` = e.`companyID`
-					WHERE 		u.`userID` = :userID';
+					WHERE 		u.`userID` = :userID
+					AND			c.`isActive` = 1';
 			$minimumSecondsPerBooking = MINIMUM_BOOKING_DURATION_IN_MINUTES_USED_IN_PRICE_CALCULATIONS * 60; // e.g. 15min = 900s
 			$aboveThisManySecondsToCount = BOOKING_DURATION_IN_MINUTES_USED_BEFORE_INCLUDING_IN_PRICE_CALCULATIONS * 60; // E.g. 1min = 60s	
 
