@@ -121,9 +121,9 @@
 						<input type="submit" name="add" value="Change Company">
 						<label>Credits Remaining: </label>
 						<?php if(substr($creditsRemaining,0,1) === "-") : ?>
-							<span style="color:red"><?php htmlout($creditsRemaining); ?></span>
+							<span style="color:red"><?php htmlout($creditsRemaining); ?></span><span>*</span>
 						<?php else : ?>
-							<span style="color:green"><?php htmlout($creditsRemaining); ?></span>
+							<span style="color:green"><?php htmlout($creditsRemaining); ?></span><span>*</span>
 						<?php endif; ?>						
 					<?php endif; ?>
 				<?php else : ?>
@@ -168,7 +168,10 @@
 					<span><b>You need to select the company you want before you can add the booking.</b></span>
 				<?php else : ?>
 					<input type="submit" name="add" value="Add booking">
-				<?php endif; ?>				
+				<?php endif; ?>
+				<?php if(isSet($_SESSION['AddBookingSelectedACompany'])) : ?>
+					<span style="clear: both; white-space: pre-wrap;"><b><?php htmlout("* Only takes into account meetings that have already completed this period.\nTherefore the actual credits remaining could be lower if there are other active meetings."); ?></b></span>
+				<?php endif; ?>
 			</div>
 		</fieldset>
 		</form>

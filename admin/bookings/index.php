@@ -1136,7 +1136,7 @@ if(isSet($_POST['edit']) AND $_POST['edit'] == "Get Default Display Name"){
 	  
 	$displayName = $_SESSION['EditBookingDefaultDisplayNameForNewUser'];
 	if(isSet($_SESSION['EditBookingInfoArray'])){
-		
+
 		rememberEditBookingInputs();
 
 		if($displayName != ""){
@@ -1155,7 +1155,7 @@ if(isSet($_POST['edit']) AND $_POST['edit'] == "Get Default Display Name"){
 			$_SESSION['EditBookingInfoArray']['BookedBy'] = "";
 		}		
 	}
-	
+
 	$_SESSION['refreshEditBooking'] = TRUE;
 	header('Location: .');
 	exit();	
