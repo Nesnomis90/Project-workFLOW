@@ -31,6 +31,14 @@ function clearEditEmployeeSessions(){
 	unset($_SESSION['EditEmployeeOriginalPositionID']);
 }
 
+function clearTransferEmployeeSessions(){
+	unset($_SESSION['TransferEmployeeSelectedCompanyID']);
+	unset($_SESSION['TransferEmployeeSelectedCompanyName']);
+	unset($_SESSION['TransferEmployeeSelectedCompanyID2']);
+	unset($_SESSION['TransferEmployeeSelectedUserID']);
+	unset($_SESSION['TransferEmployeeSelectedUserName']);
+}
+
 // If admin wants to be able to delete companies it needs to enabled first
 if (isSet($_POST['action']) AND $_POST['action'] == "Enable Remove"){
 	$_SESSION['employeesEnableDelete'] = TRUE;
@@ -780,6 +788,158 @@ if (isSet($_POST['action']) AND $_POST['action'] == 'Confirm Role')
 	exit();
 }
 
+// If admin wants to transfer an employee
+if ((isSet($_POST['action']) and $_POST['action'] == 'Transfer') OR 
+	(isSet($_SESSION['refreshTransferEmployee']) AND $_SESSION['refreshTransferEmployee'])
+	){
+
+	unset($_SESSION['refreshTransferEmployee']);
+
+	if((isSet($_POST['CompanyID']) AND !empty($_POST['CompanyID'])) OR isSet($_SESSION['TransferEmployeeSelectedCompanyID'])){
+
+		if(!isSet($_SESSION['TransferEmployeeSelectedCompanyID'])){
+			$_SESSION['TransferEmployeeSelectedCompanyID'] = $_POST['CompanyID'];
+		}
+
+		$companyID = $_SESSION['TransferEmployeeSelectedCompanyID'];
+
+		if(!isSet($_SESSION['TransferEmployeeSelectedCompanyName'])){
+			$_SESSION['TransferEmployeeSelectedCompanyName'] = $_POST['CompanyName'];
+		}
+
+		$transferCompanyName = $_SESSION['TransferEmployeeSelectedCompanyName'];
+
+		if(!isSet($_SESSION['TransferEmployeeSelectedUserID'])){
+			$_SESSION['TransferEmployeeSelectedUserID'] = $_POST['UserID'];
+		}
+		
+		$userID = $_SESSION['TransferEmployeeSelectedUserID'];
+
+		if(!isSet($_SESSION['TransferEmployeeSelectedUserName'])){
+			$_SESSION['TransferEmployeeSelectedUserName'] = $_POST['UserName'];
+		}
+
+		$transferEmployeeName = $_SESSION['TransferEmployeeSelectedUserName'];
+		
+		if(isSet($_SESSION['TransferEmployeeSelectedCompanyID2'])){
+			$selectedCompanyIDToTransferTo = $_SESSION['TransferEmployeeSelectedCompanyID2'];
+		}
+
+		// Get companies
+		try
+		{
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+			$pdo = connect_to_db();
+			$sql = 'SELECT	`CompanyID`		AS CompanyID,
+							`name`			AS CompanyName
+					FROM	`company`
+					WHERE 	`companyID` != :CompanyID
+					AND 	`isActive` = 1';
+			$s = $pdo->prepare($sql);
+			$s->bindValue(':CompanyID', $companyID);
+			$s->execute();
+			$companies = $s->fetchAll(PDO::FETCH_ASSOC);
+
+			//close connection
+			$pdo = null;
+		}
+		catch (PDOException $e)
+		{
+			$error = 'Error getting list of companies: ' . $e->getMessage();
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+			exit();
+		}
+
+		var_dump($_SESSION);	// TO-DO: Remove after done testing
+
+		include_once 'merge.html.php';
+		exit();
+	} else {
+		$_SESSION['CompanyUserFeedback'] = "Could not retrieve information to merge this company.";
+	}
+}
+
+// If admin wants to confirm the employee transfer
+if (isSet($_POST['action']) and $_POST['action'] == 'Confirm Transfer'){
+
+	// Check that we have a secondary company to merge into submitted
+	if(!isSet($_POST['transferCompanyID']) OR (isSet($_POST['transferCompanyID']) AND empty($_POST['transferCompanyID']))){
+		$_SESSION['TransferEmployeeError'] = "You cannot transfer an employee without choosing a target company.";
+		$_SESSION['refreshTransferEmployee'] = TRUE;
+		header("Location: .");
+		exit();
+	}
+
+	$_SESSION['TransferEmployeeSelectedCompanyID2'] = $_POST['mergingCompanyID'];
+
+	// Check that we have a password submitted
+	if(!isSet($_POST['password']) OR (isSet($_POST['password']) AND empty($_POST['password']))){
+		$_SESSION['TransferEmployeeError'] = "You cannot merge two companies without submitting your password.";
+		$_SESSION['refreshTransferEmployee'] = TRUE;
+		header("Location: .");
+		exit();
+	}
+
+	$password = $_POST['password'];
+	$hashedPassword = hashPassword($password);
+
+	// Check if password is correct
+	try
+	{
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+
+		$pdo = connect_to_db();
+		$sql = 'SELECT 	`password`	AS RealPassword
+				FROM 	`user`
+				WHERE	`userID` = :UserID
+				LIMIT 	1';
+		$s = $pdo->prepare($sql);
+		$s->bindValue(':UserID', $_SESSION['LoggedInUserID']);
+		$s->execute();
+
+		$row = $s->fetch(PDO::FETCH_ASSOC);
+		$realPassword = $row['RealPassword'];
+	}
+	catch (PDOException $e)
+	{
+		$pdo = null;
+		$error = 'Error confirming password: ' . $e->getMessage();
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+		exit();
+	}
+
+	if($hashedPassword != $realPassword){
+		$pdo = null;
+		$_SESSION['TransferEmployeeError'] = "The password you submitted is incorrect.";
+		$_SESSION['refreshTransferEmployee'] = TRUE;
+		header("Location: .");
+		exit();
+	}
+
+	// Password is correct. Let's transfer the employee and its booking history to the new company
+	try
+	{
+		$sql = 'UPDATE	`booking`
+				SET 	`CompanyID` = :CompanyID2
+				WHERE	`CompanyID`	= :CompanyID
+				AND		`UserID` = :UserID';
+		$s = $pdo->prepare($sql);
+		$s->bindValue(':CompanyID', $_SESSION['TransferEmployeeSelectedCompanyID']);
+		$s->bindValue(':CompanyID2', $_SESSION['TransferEmployeeSelectedCompanyID2']);
+		$s->bindValue(':UserID', $_SESSION['TransferEmployeeSelectedUserID']);
+		$s->execute();
+	}
+	catch (PDOException $e)
+	{
+		$pdo = null;
+		$error = 'Error transfering employee: ' . $e->getMessage();
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+		exit();
+	}
+
+	clearTransferEmployeeSessions();
+}
+
 // If the user clicks any cancel buttons he'll be directed back to the employees page again
 if (isSet($_POST['action']) AND $_POST['action'] == 'Cancel'){
 	$_SESSION['EmployeeAdminFeedback'] = "Cancel button clicked. Taking you back to /admin/employees/!";
@@ -793,6 +953,7 @@ if(isSet($refreshEmployees) AND $refreshEmployees){
 // Remove any unused variables from memory
 clearAddEmployeeSessions();
 clearEditEmployeeSessions();
+clearTransferEmployeeSessions();
 
 // Get only information from the specific company
 if(isSet($_GET['Company'])){
@@ -860,7 +1021,7 @@ if(isSet($_GET['Company'])){
 							INNER JOIN 	`user` u 
 							ON 			e.`UserID` = u.`UserID` 
 							WHERE 		b.`userID` = UsrID
-							AND 		b.`companyID` = :id
+							AND 		b.`companyID` = :CompanyID
 							AND 		c.`CompanyID` = b.`companyID`
 							AND 		b.`actualEndDateTime`
 							BETWEEN		c.`prevStartDate`
@@ -916,7 +1077,7 @@ if(isSet($_GET['Company'])){
 							INNER JOIN 	`user` u 
 							ON 			e.`UserID` = u.`UserID` 
 							WHERE 		b.`userID` = UsrID
-							AND 		b.`companyID` = :id
+							AND 		b.`companyID` = :CompanyID
 							AND 		c.`CompanyID` = b.`companyID`
 							AND 		b.`actualEndDateTime`
 							BETWEEN		c.`startDate`
@@ -972,7 +1133,7 @@ if(isSet($_GET['Company'])){
 							INNER JOIN 	`user` u 
 							ON 			e.`UserID` = u.`UserID` 
 							WHERE 		b.`userID` = UsrID
-							AND 		b.`companyID` = :id
+							AND 		b.`companyID` = :CompanyID
 							AND 		c.`CompanyID` = b.`companyID`
 						) 							AS TotalBookingTimeUsed							
 				FROM 	`company` c 
@@ -982,11 +1143,11 @@ if(isSet($_GET['Company'])){
 				ON 		cp.PositionID = e.PositionID
 				JOIN 	`user` u 
 				ON 		u.userID = e.UserID 
-				WHERE 	c.`companyID` = :id";
+				WHERE 	c.`companyID` = :CompanyID";
 		$minimumSecondsPerBooking = MINIMUM_BOOKING_DURATION_IN_MINUTES_USED_IN_PRICE_CALCULATIONS * 60; // e.g. 15min = 900s
 		$aboveThisManySecondsToCount = BOOKING_DURATION_IN_MINUTES_USED_BEFORE_INCLUDING_IN_PRICE_CALCULATIONS * 60; // E.g. 1min = 60s				
 		$s = $pdo->prepare($sql);
-		$s->bindValue(':id', $_GET['Company']);
+		$s->bindValue(':CompanyID', $_GET['Company']);
 		$s->bindValue(':minimumSecondsPerBooking', $minimumSecondsPerBooking);
 		$s->bindValue(':aboveThisManySecondsToCount', $aboveThisManySecondsToCount);
 		$s->execute();
@@ -1050,9 +1211,9 @@ if(isSet($_GET['Company'])){
 							FROM 		`booking` b
 							INNER JOIN 	`employee` e
 							ON 			e.`companyID` = b.`companyID`
-							WHERE 		b.`companyID` = :id
+							WHERE 		b.`companyID` = :CompanyID
 							AND 		b.`userID` IS NOT NULL
-							AND			b.`userID` NOT IN (SELECT `userID` FROM employee WHERE `CompanyID` = :id)
+							AND			b.`userID` NOT IN (SELECT `userID` FROM employee WHERE `CompanyID` = :CompanyID)
 							AND 		b.`userID` = UsrID
 							AND 		b.`actualEndDateTime`
 							BETWEEN		c.`prevStartDate`
@@ -1103,9 +1264,9 @@ if(isSet($_GET['Company'])){
 							FROM 		`booking` b
 							INNER JOIN 	`employee` e
 							ON 			e.`companyID` = b.`companyID`
-							WHERE 		b.`companyID` = :id
+							WHERE 		b.`companyID` = :CompanyID
 							AND 		b.`userID` IS NOT NULL
-							AND			b.`userID` NOT IN (SELECT `userID` FROM employee WHERE `CompanyID` = :id)
+							AND			b.`userID` NOT IN (SELECT `userID` FROM employee WHERE `CompanyID` = :CompanyID)
 							AND 		b.`userID` = UsrID
 							AND 		b.`actualEndDateTime`
 							BETWEEN		c.`startDate`
@@ -1156,9 +1317,9 @@ if(isSet($_GET['Company'])){
 							FROM 		`booking` b
 							INNER JOIN 	`employee` e
 							ON 			e.`companyID` = b.`companyID`
-							WHERE 		b.`companyID` = :id
+							WHERE 		b.`companyID` = :CompanyID
 							AND 		b.`userID` IS NOT NULL
-							AND			b.`userID` NOT IN (SELECT `userID` FROM employee WHERE `CompanyID` = :id)
+							AND			b.`userID` NOT IN (SELECT `userID` FROM employee WHERE `CompanyID` = :CompanyID)
 							AND 		b.`userID` = UsrID
 						)														AS TotalBookingTimeUsed
 				FROM 		`company` c
@@ -1166,11 +1327,11 @@ if(isSet($_GET['Company'])){
 				ON 			c.`companyID` = b.`companyID`
 				JOIN 		`user` u 
 				ON 			u.userID = b.UserID 
-				WHERE 		c.`companyID` = :id
-				AND 		b.`userID` NOT IN (SELECT `userID` FROM employee WHERE `CompanyID` = :id)
+				WHERE 		c.`companyID` = :CompanyID
+				AND 		b.`userID` NOT IN (SELECT `userID` FROM employee WHERE `CompanyID` = :CompanyID)
 				GROUP BY 	UsrID";
 		$s = $pdo->prepare($sql);
-		$s->bindValue(':id', $_GET['Company']);
+		$s->bindValue(':CompanyID', $_GET['Company']);
 		$s->bindValue(':minimumSecondsPerBooking', $minimumSecondsPerBooking);
 		$s->bindValue(':aboveThisManySecondsToCount', $aboveThisManySecondsToCount);
 		$s->execute();
@@ -1230,7 +1391,7 @@ if(isSet($_GET['Company'])){
 							FROM 		`booking` b
 							INNER JOIN 	`company` c
 							ON 			b.`CompanyID` = c.`CompanyID`
-							WHERE 		b.`companyID` = :id
+							WHERE 		b.`companyID` = :CompanyID
 							AND 		b.`userID` IS NULL
 							AND 		b.`actualEndDateTime`
 							BETWEEN		c.`prevStartDate`
@@ -1281,7 +1442,7 @@ if(isSet($_GET['Company'])){
 							FROM 		`booking` b
 							INNER JOIN 	`company` c
 							ON 			b.`CompanyID` = c.`CompanyID`
-							WHERE 		b.`companyID` = :id
+							WHERE 		b.`companyID` = :CompanyID
 							AND 		b.`userID` IS NULL
 							AND 		b.`actualEndDateTime`
 							BETWEEN		c.`startDate`
@@ -1330,13 +1491,13 @@ if(isSet($_GET['Company'])){
 													)
 							))) AS TotalBookingTimeByDeletedUsers
 						FROM 	`booking` b
-						WHERE 	b.`companyID` = :id
+						WHERE 	b.`companyID` = :CompanyID
 						AND 	b.`userID` IS NULL
 						)														AS TotalBookingTimeUsed
 				FROM 	`company`
-				WHERE	`companyID` = :id";
+				WHERE	`companyID` = :CompanyID";
 		$s = $pdo->prepare($sql);
-		$s->bindValue(':id', $_GET['Company']);
+		$s->bindValue(':CompanyID', $_GET['Company']);
 		$s->bindValue(':minimumSecondsPerBooking', $minimumSecondsPerBooking);
 		$s->bindValue(':aboveThisManySecondsToCount', $aboveThisManySecondsToCount);
 		$s->execute();
