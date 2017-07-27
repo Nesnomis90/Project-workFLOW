@@ -2552,7 +2552,7 @@ if(!isSet($_GET['Meetingroom'])){
 							b.`dateTimeCancelled`							AS BookingWasCancelledOn 
 				FROM 		`booking` b
 				ORDER BY 	UNIX_TIMESTAMP(b.`startDateTime`)
-				ASC';
+				DESC';
 		$result = $pdo->query($sql);
 
 		//Close the connection
