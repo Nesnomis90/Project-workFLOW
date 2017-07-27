@@ -2037,7 +2037,7 @@ if (	(isSet($_POST['action']) AND $_POST['action'] == "Create Booking") OR
 									AND			c.`endDate`
 								)													AS PotentialExtraMonthlyCompanyWideBookingTimeUsed,
 								(
-									SELECT 	IFNULL(cc.`altMinuteAmount`, cr.`minuteAmount`)
+									SELECT 		IFNULL(cc.`altMinuteAmount`, cr.`minuteAmount`)
 									FROM 		`company` c
 									INNER JOIN	`companycredits` cc
 									ON			c.`CompanyID` = cc.`CompanyID`
@@ -2615,7 +2615,9 @@ if (isSet($_POST['add']) AND $_POST['add'] == "Add booking")
 	}		
 	
 	//Send email with booking information and cancellation code to the user who the booking is for.
-		// TO-DO: This is UNTESTED since we don't have php.ini set up to actually send email	
+		// TO-DO: This is UNTESTED since we don't have php.ini set up to actually send email
+		
+	// TO-DO: add to e-mail being sent if the booking created goes over credits.
 	if($_SESSION['AddBookingInfoArray']['sendEmail'] == 1){
 		if($_POST['userID'] == $_SESSION['LoggedInUserID']){
 			// Admin booked a meeting for him/herself
