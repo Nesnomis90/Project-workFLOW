@@ -49,6 +49,75 @@ WHERE 	DATE(CURRENT_TIMESTAMP) >= `removeAtDate`
 AND 	`isActive` = 1
 AND		`companyID` <> 0;
 
+SELECT		c.`companyID`,
+			c.`name` 					AS companyName,
+			(
+				SELECT (BIG_SEC_TO_TIME(SUM(
+										IF(
+											(
+												(
+													DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
+													)*86400 
+												+ 
+												(
+													TIME_TO_SEC(b.`actualEndDateTime`) 
+													- 
+													TIME_TO_SEC(b.`startDateTime`)
+													) 
+											) > 300,
+											IF(
+												(
+												(
+													DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
+													)*86400 
+												+ 
+												(
+													TIME_TO_SEC(b.`actualEndDateTime`) 
+													- 
+													TIME_TO_SEC(b.`startDateTime`)
+													) 
+											) > 900, 
+												(
+												(
+													DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
+													)*86400 
+												+ 
+												(
+													TIME_TO_SEC(b.`actualEndDateTime`) 
+													- 
+													TIME_TO_SEC(b.`startDateTime`)
+													) 
+											), 
+												900
+											),
+											0
+										)
+				)))	AS BookingTimeUsed
+				FROM 		`booking` b  
+				INNER JOIN 	`company` c 
+				ON 			b.`CompanyID` = c.`CompanyID` 
+				WHERE 		b.`CompanyID` = e.`CompanyID`
+				AND 		b.`actualEndDateTime`
+				BETWEEN		c.`startDate`
+				AND			c.`endDate`
+			)													AS MonthlyCompanyWideBookingTimeUsed,
+			(
+				SELECT 	IFNULL(cc.`altMinuteAmount`, cr.`minuteAmount`)
+                FROM 		`company` c
+				INNER JOIN	`companycredits` cc
+				ON			c.`CompanyID` = cc.`CompanyID`
+				INNER JOIN	`credits` cr
+				ON			cr.`CreditsID` = cc.`CreditsID`
+                WHERE		c.`CompanyID` = e.`CompanyID`
+                
+            ) 													AS CreditSubscriptionMinuteAmount
+FROM 		`user` u
+INNER JOIN 	`employee` e
+ON 			e.`userID` = u.`userID`
+INNER JOIN	`company` c
+ON 			c.`companyID` = e.`companyID`
+WHERE 		u.`userID` = 28;
+
 SELECT COUNT(*)
 FROM 	`booking`
 WHERE 	`companyID` = 2;
