@@ -126,7 +126,6 @@
 								<td style="white-space: pre-wrap;"><?php htmlout($booking['BookedBy']); ?></td>
 								<td><?php htmlout($booking['BookedForCompany']); ?></td>
 								<td style="white-space: pre-wrap;"><?php htmlout($booking['BookingDescription']); ?></td>
-								<td style="white-space: pre-wrap;"><?php htmlout($booking['AdminNote']); ?></td>
 								<td><?php htmlout($booking['BookingWasCreatedOn']); ?></td>
 								<td><?php htmlout($booking['firstName']); ?></td>
 								<td><?php htmlout($booking['lastName']); ?></td>
@@ -135,7 +134,6 @@
 								<td><?php htmlout($booking['BookingWasCompletedOn']); ?></td>
 								<td><?php htmlout($booking['CompletedMeetingDuration']); ?></td>
 								<td><?php htmlout($booking['CompletedMeetingDurationForPrice']); ?></td>
-								<td style="white-space: pre-wrap;"><?php htmlout($booking['WorksForCompany']); ?></td>
 								<input type="hidden" name="id" value="<?php htmlout($booking['id']); ?>">
 								<input type="hidden" name="MeetingInfo" id="MeetingInfo"
 								value="<?php htmlout($booking['MeetingInfo']); ?>">

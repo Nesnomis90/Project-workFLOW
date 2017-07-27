@@ -53,7 +53,7 @@
 				<th colspan="3">User Information</th>
 				<th colspan="3">Booking Time Used</th>
 				<th>Date</th>
-				<th colspan="2">Alter Employee</th>
+				<th colspan="3">Alter Employee</th>
 			</tr>
 			<tr>
 				<th>Name</th>
@@ -65,6 +65,7 @@
 				<th>This Month</th>
 				<th>All Time</th>
 				<th>Added</th>
+				<th>Transfer</th>
 				<th>Change Role</th>
 				<th>Remove</th>
 			</tr>
@@ -72,16 +73,13 @@
 				<?php if(isSet($_GET['Company']) AND 
 						(isSet($deletedEmployees) OR isSet($removedEmployees))) : ?>
 				<tr>
-					<td colspan="11"><b>The Following Are Currently Employed Users</b></td>
+					<td colspan="12"><b>The Following Are Currently Employed Users</b></td>
 				</tr>
 				<?php endif; ?>
 				<?php foreach ($employees as $employee) : ?>
 					<form action="" method="post">
 						<tr>
-							<td>
-								<?php htmlout($employee['CompanyName']); ?>
-								<input type="hidden" name="CompanyName" value="<?php htmlout($employee['CompanyName']); ?>">
-							</td>
+							<td><?php htmlout($employee['CompanyName']); ?></td>
 							<td><?php htmlout($employee['PositionName']); ?></td>
 							<td><?php htmlout($employee['firstName']); ?></td>
 							<td><?php htmlout($employee['lastName']); ?></td>
@@ -90,6 +88,7 @@
 							<td><?php htmlout($employee['MonthlyBookingTimeUsed']); ?></td>
 							<td><?php htmlout($employee['TotalBookingTimeUsed']); ?></td>
 							<td><?php htmlout($employee['StartDateTime']); ?></td>
+							<td><input type="submit" name="action" value="Transfer"></td>
 							<td><input type="submit" name="action" value="Change Role"></td>
 							<td>
 								<?php if(isSet($_SESSION['employeesEnableDelete']) AND $_SESSION['employeesEnableDelete']) : ?>
@@ -100,16 +99,17 @@
 							</td>	
 							<input type="hidden" name="UserID" value="<?php htmlout($employee['UsrID']); ?>">
 							<input type="hidden" name="CompanyID" value="<?php htmlout($employee['CompanyID']); ?>">
+							<input type="hidden" name="CompanyName" value="<?php htmlout($employee['CompanyName']); ?>">
 							<input type="hidden" name="UserName" value="<?php htmlout($employee['lastName'] . ", " . $employee['firstName']); ?>">
 						</tr>
 					</form>
 				<?php endforeach; ?>
 			<?php else : ?>
-				<tr><td colspan="11"><b>There are no employees registered in the database.</b></td></tr>
+				<tr><td colspan="12"><b>There are no employees registered in the database.</b></td></tr>
 			<?php endif; ?>	
 				<?php if(isSet($removedEmployees)) : ?>
 					<tr>
-						<td colspan="11"><b>The Following Are Previously Employed Users</b></td>
+						<td colspan="12"><b>The Following Are Previously Employed Users</b></td>
 					</tr>
 					<?php foreach($removedEmployees as $employee) : ?>
 						<tr>
@@ -127,7 +127,7 @@
 				<?php endif; ?>
 				<?php if(isSet($deletedEmployees)) : ?>
 					<tr>
-						<td colspan="11"><b>The Following Is A Summation Of Deleted Users</b></td>
+						<td colspan="12"><b>The Following Is A Summation Of Deleted Users</b></td>
 					</tr>
 					<?php foreach($deletedEmployees as $employee) : ?>
 						<tr>

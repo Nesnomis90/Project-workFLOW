@@ -79,7 +79,12 @@
 							<label>Displaying Company: </label>
 							<span><b><?php htmlout($companyInformation['CompanyName']); ?></b></span>
 						</div>
-						
+
+						<div class="left">
+							<label>Your Role: </label>
+							<span><b><?php htmlout($companyInformation['CompanyRole']); ?></b></span>
+						</div>
+
 						<div class="left">
 							<label>Employees: </label>
 							<span><a href="?employees"><?php htmlout($companyInformation['NumberOfEmployees']); ?></a></span>

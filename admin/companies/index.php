@@ -1209,7 +1209,6 @@ if ((isSet($_POST['action']) and $_POST['action'] == 'Merge') OR
 
 		if(isSet($_SESSION['MergeCompanySelectedCompanyID2'])){
 			$selectedCompanyIDToMergeWith = $_SESSION['MergeCompanySelectedCompanyID2'];
-			unset($_SESSION['MergeCompanySelectedCompanyID2']);
 		}
 
 		// Get companies
@@ -1232,7 +1231,7 @@ if ((isSet($_POST['action']) and $_POST['action'] == 'Merge') OR
 		}
 		catch (PDOException $e)
 		{
-			$error = 'Error getting company to delete: ' . $e->getMessage();
+			$error = 'Error getting list of companies: ' . $e->getMessage();
 			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
 			exit();
 		}
@@ -1326,13 +1325,14 @@ if (isSet($_POST['action']) and $_POST['action'] == 'Confirm Merge'){
 		$s->execute();
 		
 		// TO-DO: How to handle merging company credits history?
-		$sql = 'UPDATE 	`companycreditshistory`
+		// Just ignore it?
+	/*	$sql = 'UPDATE 	`companycreditshistory`
 				SET		`CompanyID` = :CompanyID2
 				WHERE	`CompanyID` = :CompanyID';
 		$s = $pdo->prepare($sql);
 		$s->bindValue(':CompanyID', $_SESSION['MergeCompanySelectedCompanyID']);
 		$s->bindValue(':CompanyID2', $_SESSION['MergeCompanySelectedCompanyID2']);
-		$s->execute();	
+		$s->execute();*/
 
 		$sql = 'DELETE FROM `company`
 				WHERE		`CompanyID` = :CompanyID';
@@ -2026,9 +2026,9 @@ foreach ($result as $row)
 	}
 	
 	// Calculate and display company booking subscription details
-	if($row["CompanyAlternativeMinuteAmount"] != NULL AND $row["CompanyAlternativeMinuteAmount"] != ""){
+	if(!empty($row["CompanyAlternativeMinuteAmount"])){
 		$companyMinuteCredits = $row["CompanyAlternativeMinuteAmount"];
-	} elseif($row["CreditSubscriptionMinuteAmount"] != NULL AND $row["CreditSubscriptionMinuteAmount"] != "") {
+	} elseif(!empty($row["CreditSubscriptionMinuteAmount"])) {
 		$companyMinuteCredits = $row["CreditSubscriptionMinuteAmount"];
 	} else {
 		$companyMinuteCredits = 0;
