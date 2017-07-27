@@ -852,7 +852,7 @@ if ((isSet($_POST['action']) and $_POST['action'] == 'Transfer') OR
 
 		var_dump($_SESSION);	// TO-DO: Remove after done testing
 
-		include_once 'merge.html.php';
+		include_once 'transfer.html.php';
 		exit();
 	} else {
 		$_SESSION['CompanyUserFeedback'] = "Could not retrieve information to merge this company.";
@@ -870,11 +870,11 @@ if (isSet($_POST['action']) and $_POST['action'] == 'Confirm Transfer'){
 		exit();
 	}
 
-	$_SESSION['TransferEmployeeSelectedCompanyID2'] = $_POST['mergingCompanyID'];
+	$_SESSION['TransferEmployeeSelectedCompanyID2'] = $_POST['transferCompanyID'];
 
 	// Check that we have a password submitted
 	if(!isSet($_POST['password']) OR (isSet($_POST['password']) AND empty($_POST['password']))){
-		$_SESSION['TransferEmployeeError'] = "You cannot merge two companies without submitting your password.";
+		$_SESSION['TransferEmployeeError'] = "You cannot transfer an employee without submitting your password.";
 		$_SESSION['refreshTransferEmployee'] = TRUE;
 		header("Location: .");
 		exit();
@@ -917,8 +917,11 @@ if (isSet($_POST['action']) and $_POST['action'] == 'Confirm Transfer'){
 	}
 
 	// Password is correct. Let's transfer the employee and its booking history to the new company
+	/* TO-DO: FIX-ME: Doing this transfers bookings and the employee. 
+		But if the new company does not have periods that are old enough for the new employees bookings, then it won't show up in booking history. */
 	try
 	{
+		$pdo->beginTransaction();
 		$sql = 'UPDATE	`booking`
 				SET 	`CompanyID` = :CompanyID2
 				WHERE	`CompanyID`	= :CompanyID
@@ -928,6 +931,27 @@ if (isSet($_POST['action']) and $_POST['action'] == 'Confirm Transfer'){
 		$s->bindValue(':CompanyID2', $_SESSION['TransferEmployeeSelectedCompanyID2']);
 		$s->bindValue(':UserID', $_SESSION['TransferEmployeeSelectedUserID']);
 		$s->execute();
+
+		$sql = 'UPDATE IGNORE	`employee`
+				SET				`CompanyID` = :CompanyID2
+				WHERE			`CompanyID` = :CompanyID
+				AND				`UserID` = :UserID';
+		$s = $pdo->prepare($sql);
+		$s->bindValue(':CompanyID', $_SESSION['TransferEmployeeSelectedCompanyID']);
+		$s->bindValue(':CompanyID2', $_SESSION['TransferEmployeeSelectedCompanyID2']);
+		$s->bindValue(':UserID', $_SESSION['TransferEmployeeSelectedUserID']);
+		$s->execute();
+
+		// Make sure the employee is removed if it failed to update due to a duplicate
+		$sql = 'DELETE FROM `employee`
+				WHERE		`CompanyID` = :CompanyID
+				AND			`UserID` = :UserID';
+		$s = $pdo->prepare($sql);
+		$s->bindValue(':CompanyID', $_SESSION['TransferEmployeeSelectedCompanyID']);
+		$s->bindValue(':UserID', $_SESSION['TransferEmployeeSelectedUserID']);
+		$s->execute();
+
+		$pdo->commit();
 	}
 	catch (PDOException $e)
 	{
