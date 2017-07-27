@@ -2026,9 +2026,9 @@ foreach ($result as $row)
 	}
 	
 	// Calculate and display company booking subscription details
-	if($row["CompanyAlternativeMinuteAmount"] != NULL AND $row["CompanyAlternativeMinuteAmount"] != ""){
+	if(!empty($row["CompanyAlternativeMinuteAmount"])){
 		$companyMinuteCredits = $row["CompanyAlternativeMinuteAmount"];
-	} elseif($row["CreditSubscriptionMinuteAmount"] != NULL AND $row["CreditSubscriptionMinuteAmount"] != "") {
+	} elseif(!empty($row["CreditSubscriptionMinuteAmount"])) {
 		$companyMinuteCredits = $row["CreditSubscriptionMinuteAmount"];
 	} else {
 		$companyMinuteCredits = 0;
