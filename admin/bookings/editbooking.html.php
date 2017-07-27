@@ -152,9 +152,17 @@
 						<input type="submit" name="edit" value="Change Company">
 						<label>Credits Remaining: </label>
 						<?php if(substr($creditsRemaining,0,1) === "-") : ?>
-							<span style="color:red"><?php htmlout($creditsRemaining); ?></span><span>*</span>
+							<span style="color:red"><?php htmlout($creditsRemaining); ?></span><span>¹</span>
 						<?php else : ?>
-							<span style="color:green"><?php htmlout($creditsRemaining); ?></span><span>*</span>
+							<span style="color:green"><?php htmlout($creditsRemaining); ?></span><span>¹</span>
+						<?php endif; ?>	
+						<label>Credits In Use: </label>
+						<span><?php htmlout($potentialExtraCreditsUsed); ?></span><span>²</span>
+						<label>Potential Remaining: </label>
+						<?php if(substr($potentialCreditsRemaining,0,1) === "-") : ?>
+							<span style="color:red"><?php htmlout($potentialCreditsRemaining); ?></span><span>³</span>
+						<?php else : ?>
+							<span style="color:green"><?php htmlout($potentialCreditsRemaining); ?></span><span>³</span>
 						<?php endif; ?>	
 					<?php endif; ?>
 				<?php else : ?>
@@ -235,8 +243,10 @@
 				<?php else : ?>
 					<input type="submit" name="edit" value="Finish Edit">
 				<?php endif; ?>
-				<?php if(isSet($_SESSION['AddBookingSelectedACompany'])) : ?>
-					<span style="clear: both; white-space: pre-wrap;"><b><?php htmlout("* Only takes into account meetings that have already completed this period.\nTherefore the actual credits remaining could be lower if there are other active meetings."); ?></b></span>
+				<?php if(!isSet($_SESSION['EditBookingSelectACompany'])) : ?>
+					<span style="clear: both; white-space: pre-wrap;"><b><?php htmlout("¹ The given credit minus the sum of completed bookings this period.\n  This does not take into account non-completed bookings."); ?></b></span>
+					<span style="clear: both; white-space: pre-wrap;"><b><?php htmlout("² The sum of future bookings this period that have not been completed yet.\n  This is the maximum extra credits that have a potential of being used if the booking(s) complete."); ?></b></span>
+					<span style="clear: both; white-space: pre-wrap;"><b><?php htmlout("³ The potential minimum credits remaining if all booked meetings complete.\n  The actual number can be lower if they complete early."); ?></b></span>
 				<?php endif; ?>
 			</div>
 		</fieldset>
