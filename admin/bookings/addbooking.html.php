@@ -125,7 +125,7 @@
 						<?php else : ?>
 							<span style="color:green"><?php htmlout($creditsRemaining); ?></span><span>¹</span>
 						<?php endif; ?>	
-						<label>Credits In Use: </label>
+						<label>Credits Booked: </label>
 						<span><?php htmlout($potentialExtraCreditsUsed); ?></span><span>²</span>
 						<label>Potential Remaining: </label>
 						<?php if(substr($potentialCreditsRemaining,0,1) === "-") : ?>
@@ -180,7 +180,7 @@
 				<?php if(isSet($_SESSION['AddBookingSelectedACompany'])) : ?>
 					<span style="clear: both; white-space: pre-wrap;"><b><?php htmlout("¹ The given credit minus the sum of completed bookings this period.\n  This does not take into account non-completed bookings."); ?></b></span>
 					<span style="clear: both; white-space: pre-wrap;"><b><?php htmlout("² The sum of future bookings this period that have not been completed yet.\n  This is the maximum extra credits that have a potential of being used if the booking(s) complete."); ?></b></span>
-					<span style="clear: both; white-space: pre-wrap;"><b><?php htmlout("³ The potential minimum credits remaining if all booked meetings complete.\n  The actual remaining credits can be higher if the booking(s) complete early."); ?></b></span>
+					<span style="clear: both; white-space: pre-wrap;"><b><?php htmlout("³ The potential minimum credits remaining if all booked meetings complete.\n  The actual remaining credits will be higher if the booking(s) cancel or complete early."); ?></b></span>
 				<?php endif; ?>
 			</div>
 		</fieldset>
