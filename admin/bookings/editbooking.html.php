@@ -130,53 +130,71 @@
 				<?php endif; ?>
 			</div>
 
-			<div>
-				<label for="companyID">Set New Company: </label>
-				<?php if(	isSet($_SESSION['EditBookingDisplayCompanySelect']) AND 
-							$_SESSION['EditBookingDisplayCompanySelect']) : ?>
-					<?php if(isSet($_SESSION['EditBookingSelectACompany'])) : ?>
-						<select name="companyID" id="companyID">
-							<?php foreach($company as $row): ?> 
-								<?php if($row['companyID']==$selectedCompanyID):?>
-									<option selected="selected" value="<?php htmlout($row['companyID']); ?>"><?php htmlout($row['companyName']);?></option>
-								<?php else : ?>
-									<option value="<?php htmlout($row['companyID']); ?>"><?php htmlout($row['companyName']);?></option>
-								<?php endif;?>
-							<?php endforeach; ?>
-						</select>
-						<input type="submit" name="edit" value="Select This Company">
+			<?php if(!isSet($_SESSION['EditBookingChangeUser'])) : ?>
+				<div>
+					<label for="companyID">Set New Company: </label>
+					<?php if(	isSet($_SESSION['EditBookingDisplayCompanySelect']) AND 
+								$_SESSION['EditBookingDisplayCompanySelect']) : ?>
+						<?php if(isSet($_SESSION['EditBookingSelectACompany'])) : ?>
+							<select name="companyID" id="companyID">
+								<?php foreach($company as $row): ?> 
+									<?php if($row['companyID']==$selectedCompanyID):?>
+										<option selected="selected" value="<?php htmlout($row['companyID']); ?>"><?php htmlout($row['companyName']);?></option>
+									<?php else : ?>
+										<option value="<?php htmlout($row['companyID']); ?>"><?php htmlout($row['companyName']);?></option>
+									<?php endif;?>
+								<?php endforeach; ?>
+							</select>
+							<input type="submit" name="edit" value="Select This Company">
+						<?php else : ?>
+							<span><b><?php htmlout($companyName); ?></b></span>
+							<input type="hidden" name="companyID" id="companyID" 
+							value="<?php htmlout($companyID); ?>">
+							<input type="submit" name="edit" value="Change Company">
+							<label>Credits Remaining: </label>
+							<?php if(substr($creditsRemaining,0,1) === "-") : ?>
+								<span style="color:red"><?php htmlout($creditsRemaining); ?></span><span>¹</span>
+							<?php else : ?>
+								<span style="color:green"><?php htmlout($creditsRemaining); ?></span><span>¹</span>
+							<?php endif; ?>	
+							<label>Credits Booked: </label>
+							<span><?php htmlout($potentialExtraCreditsUsed); ?></span><span>²</span>
+							<label>Potential Remaining: </label>
+							<?php if(substr($potentialCreditsRemaining,0,1) === "-") : ?>
+								<span style="color:red"><?php htmlout($potentialCreditsRemaining); ?></span><span>³</span>
+							<?php else : ?>
+								<span style="color:green"><?php htmlout($potentialCreditsRemaining); ?></span><span>³</span>
+							<?php endif; ?>	
+							<label>Next Period At:</label>
+							<span><b><?php htmlout($companyPeriodEndDate); ?></b></span>
+						<?php endif; ?>
 					<?php else : ?>
-						<span><b><?php htmlout($companyName); ?></b></span>
+						<?php if(isSet($company)) : ?>
+							<span><b><?php htmlout($companyName); ?></b></span>
+							<label>Credits Remaining: </label>
+							<?php if(substr($creditsRemaining,0,1) === "-") : ?>
+								<span style="color:red"><?php htmlout($creditsRemaining); ?></span><span>¹</span>
+							<?php else : ?>
+								<span style="color:green"><?php htmlout($creditsRemaining); ?></span><span>¹</span>
+							<?php endif; ?>	
+							<label>Credits Booked: </label>
+							<span><?php htmlout($potentialExtraCreditsUsed); ?></span><span>²</span>
+							<label>Potential Remaining: </label>
+							<?php if(substr($potentialCreditsRemaining,0,1) === "-") : ?>
+								<span style="color:red"><?php htmlout($potentialCreditsRemaining); ?></span><span>³</span>
+							<?php else : ?>
+								<span style="color:green"><?php htmlout($potentialCreditsRemaining); ?></span><span>³</span>
+							<?php endif; ?>
+							<label>Next Period At:</label>
+							<span><b><?php htmlout($companyPeriodEndDate); ?></b></span>
+						<?php else : ?>
+							<span><b>This user is not connected to a company.</b></span>
+						<?php endif; ?>
 						<input type="hidden" name="companyID" id="companyID" 
 						value="<?php htmlout($companyID); ?>">
-						<input type="submit" name="edit" value="Change Company">
-						<label>Credits Remaining: </label>
-						<?php if(substr($creditsRemaining,0,1) === "-") : ?>
-							<span style="color:red"><?php htmlout($creditsRemaining); ?></span><span>¹</span>
-						<?php else : ?>
-							<span style="color:green"><?php htmlout($creditsRemaining); ?></span><span>¹</span>
-						<?php endif; ?>	
-						<label>Credits Booked: </label>
-						<span><?php htmlout($potentialExtraCreditsUsed); ?></span><span>²</span>
-						<label>Potential Remaining: </label>
-						<?php if(substr($potentialCreditsRemaining,0,1) === "-") : ?>
-							<span style="color:red"><?php htmlout($potentialCreditsRemaining); ?></span><span>³</span>
-						<?php else : ?>
-							<span style="color:green"><?php htmlout($potentialCreditsRemaining); ?></span><span>³</span>
-						<?php endif; ?>	
-						<label>Credits Reset At:</label>
-						<span><b><?php htmlout($companyPeriodEndDate); ?></b></span>						
 					<?php endif; ?>
-				<?php else : ?>
-					<?php if(isSet($company)) : ?>
-						<span><b>This user is only connected to one company: <?php htmlout($companyName); ?></b></span>
-					<?php else : ?>
-						<span><b>This user is not connected to a company.</b></span>
-					<?php endif; ?>
-					<input type="hidden" name="companyID" id="companyID" 
-					value="<?php htmlout($companyID); ?>">
-				<?php endif; ?>
-			</div>
+				</div>
+			<?php endif; ?>
 
 			<div>
 				<label for="originalDisplayName">Booked Display Name: </label>
@@ -246,7 +264,7 @@
 					<input type="submit" name="edit" value="Finish Edit">
 				<?php endif; ?>
 				<?php if(!isSet($_SESSION['EditBookingSelectACompany'])) : ?>
-					<span style="clear: both; white-space: pre-wrap;"><b><?php htmlout("¹ The given credit minus the sum of completed bookings this period.\n  This does not take into account non-completed bookings."); ?></b></span>
+					<span style="clear: both; white-space: pre-wrap;"><b><?php htmlout("¹ The given credit minus the sum of completed bookings this period (up to $companyPeriodEndDate).\n  This does not take into account non-completed bookings."); ?></b></span>
 					<span style="clear: both; white-space: pre-wrap;"><b><?php htmlout("² The sum of future bookings this period that have not been completed yet.\n  This is the maximum extra credits that have a potential of being used if the booking(s) complete."); ?></b></span>
 					<span style="clear: both; white-space: pre-wrap;"><b><?php htmlout("³ The potential minimum credits remaining if all booked meetings complete.\n  The actual remaining credits will be higher if the booking(s) cancel or complete early."); ?></b></span>
 				<?php endif; ?>
