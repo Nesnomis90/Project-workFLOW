@@ -580,12 +580,10 @@ if (	(isSet($_POST['action']) and $_POST['action'] == 'Cancel') OR
 			$s = $pdo->prepare($sql);
 			$s->bindValue(':id', $bookingID);
 			$s->execute();
-			
-			//close connection
-			$pdo = null;
 		}
 		catch (PDOException $e)
 		{
+			$pdo = null;
 			$error = 'Error updating selected booked meeting to be cancelled: ' . $e->getMessage();
 			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
 			exit();
