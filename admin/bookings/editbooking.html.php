@@ -164,6 +164,8 @@
 						<?php else : ?>
 							<span style="color:green"><?php htmlout($potentialCreditsRemaining); ?></span><span>³</span>
 						<?php endif; ?>	
+						<label>Credits Reset At:</label>
+						<span><b><?php htmlout($companyPeriodEndDate); ?></b></span>						
 					<?php endif; ?>
 				<?php else : ?>
 					<?php if(isSet($company)) : ?>
