@@ -912,18 +912,134 @@ if(	((isSet($_POST['action']) AND $_POST['action'] == 'Create Meeting')) OR
 		// have a dropdown select or just a fixed value (with 0 or 1 company)
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 		$pdo = connect_to_db();
-		$sql = 'SELECT	c.`companyID`,
-						c.`name` 					AS companyName
-				FROM 	`user` u
-				JOIN 	`employee` e
-				ON 		e.userID = u.userID
-				JOIN	`company` c
-				ON 		c.companyID = e.companyID
-				WHERE 	u.`userID` = :userID
-				AND		c.`isActive` = 1';
-			
+		$sql = 'SELECT		c.`companyID`,
+							c.`name` 					AS companyName,
+							c.`endDate`,
+							(
+								SELECT (BIG_SEC_TO_TIME(SUM(
+														IF(
+															(
+																(
+																	DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
+																	)*86400 
+																+ 
+																(
+																	TIME_TO_SEC(b.`actualEndDateTime`) 
+																	- 
+																	TIME_TO_SEC(b.`startDateTime`)
+																	) 
+															) > :aboveThisManySecondsToCount,
+															IF(
+																(
+																(
+																	DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
+																	)*86400 
+																+ 
+																(
+																	TIME_TO_SEC(b.`actualEndDateTime`) 
+																	- 
+																	TIME_TO_SEC(b.`startDateTime`)
+																	) 
+															) > :minimumSecondsPerBooking, 
+																(
+																(
+																	DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
+																	)*86400 
+																+ 
+																(
+																	TIME_TO_SEC(b.`actualEndDateTime`) 
+																	- 
+																	TIME_TO_SEC(b.`startDateTime`)
+																	) 
+															), 
+																:minimumSecondsPerBooking
+															),
+															0
+														)
+								)))	AS BookingTimeUsed
+								FROM 		`booking` b  
+								INNER JOIN 	`company` c 
+								ON 			b.`CompanyID` = c.`CompanyID` 
+								WHERE 		b.`CompanyID` = e.`CompanyID`
+								AND 		b.`actualEndDateTime`
+								BETWEEN		c.`startDate`
+								AND			c.`endDate`
+							)													AS MonthlyCompanyWideBookingTimeUsed,
+															(
+								SELECT (BIG_SEC_TO_TIME(SUM(
+														IF(
+															(
+																(
+																	DATEDIFF(b.`endDateTime`, b.`startDateTime`)
+																	)*86400 
+																+ 
+																(
+																	TIME_TO_SEC(b.`endDateTime`) 
+																	- 
+																	TIME_TO_SEC(b.`startDateTime`)
+																	) 
+															) > :aboveThisManySecondsToCount,
+															IF(
+																(
+																(
+																	DATEDIFF(b.`endDateTime`, b.`startDateTime`)
+																	)*86400 
+																+ 
+																(
+																	TIME_TO_SEC(b.`endDateTime`) 
+																	- 
+																	TIME_TO_SEC(b.`startDateTime`)
+																	) 
+															) > :minimumSecondsPerBooking, 
+																(
+																(
+																	DATEDIFF(b.`endDateTime`, b.`startDateTime`)
+																	)*86400 
+																+ 
+																(
+																	TIME_TO_SEC(b.`endDateTime`) 
+																	- 
+																	TIME_TO_SEC(b.`startDateTime`)
+																	) 
+															), 
+																:minimumSecondsPerBooking
+															),
+															0
+														)
+								)))	AS BookingTimeUsed
+								FROM 		`booking` b  
+								INNER JOIN 	`company` c 
+								ON 			b.`CompanyID` = c.`CompanyID` 
+								WHERE 		b.`CompanyID` = e.`CompanyID`
+								AND 		b.`actualEndDateTime` IS NULL
+								AND			b.`dateTimeCancelled` IS NULL
+								AND			b.`endDateTime`
+								BETWEEN		c.`startDate`
+								AND			c.`endDate`
+							)													AS PotentialExtraMonthlyCompanyWideBookingTimeUsed,
+							(
+								SELECT 	IFNULL(cc.`altMinuteAmount`, cr.`minuteAmount`)
+								FROM 		`company` c
+								INNER JOIN	`companycredits` cc
+								ON			c.`CompanyID` = cc.`CompanyID`
+								INNER JOIN	`credits` cr
+								ON			cr.`CreditsID` = cc.`CreditsID`
+								WHERE		c.`CompanyID` = e.`CompanyID`
+							) 													AS CreditSubscriptionMinuteAmount
+				FROM 		`user` u
+				INNER JOIN 	`employee` e
+				ON 			e.`userID` = u.`userID`
+				INNER JOIN	`company` c
+				ON 			c.`companyID` = e.`companyID`
+				WHERE 		u.`userID` = :userID
+				AND			c.`isActive` = 1';
+		$minimumSecondsPerBooking = MINIMUM_BOOKING_DURATION_IN_MINUTES_USED_IN_PRICE_CALCULATIONS * 60; // e.g. 15min = 900s
+		$aboveThisManySecondsToCount = BOOKING_DURATION_IN_MINUTES_USED_BEFORE_INCLUDING_IN_PRICE_CALCULATIONS * 60; // E.g. 1min = 60s	
+
 		$s = $pdo->prepare($sql);
 		$s->bindValue(':userID', $SelectedUserID);
+		$s->bindValue(':minimumSecondsPerBooking', $minimumSecondsPerBooking);
+		$s->bindValue(':aboveThisManySecondsToCount', $aboveThisManySecondsToCount);
 		$s->execute();
 		
 		// Create an array with the row information we retrieved
