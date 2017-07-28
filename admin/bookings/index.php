@@ -780,7 +780,6 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Edit') OR
 								INNER JOIN	`credits` cr
 								ON			cr.`CreditsID` = cc.`CreditsID`
 								WHERE		c.`CompanyID` = e.`CompanyID`
-								
 							) 													AS CreditSubscriptionMinuteAmount
 				FROM 		`user` u
 				INNER JOIN 	`employee` e
@@ -2055,7 +2054,6 @@ if (	(isSet($_POST['action']) AND $_POST['action'] == "Create Booking") OR
 									INNER JOIN	`credits` cr
 									ON			cr.`CreditsID` = cc.`CreditsID`
 									WHERE		c.`CompanyID` = e.`CompanyID`
-									
 								) 													AS CreditSubscriptionMinuteAmount
 					FROM 		`user` u
 					INNER JOIN 	`employee` e
