@@ -435,8 +435,9 @@ if (	(isSet($_POST['action']) and $_POST['action'] == 'Cancel') OR
 	$SelectedUserID = checkIfLocalDeviceOrLoggedIn();
 	unset($_SESSION['confirmOrigins']);
 	
-	// Check if selected user ID is creator of booking or an admin
+	// Check if selected user ID is creator of booking, owner of the company it's booked for or an admin
 	$continueCancel = FALSE;
+	$cancelledByOwner = FALSE;
 	$cancelledByAdmin = FALSE;
 		// Check if the user is the creator of the booking	
 	try
@@ -452,60 +453,99 @@ if (	(isSet($_POST['action']) and $_POST['action'] == 'Cancel') OR
 				FROM		`booking` b
 				INNER JOIN 	`user` u
 				ON 			b.`userID` = u.`userID`
-				WHERE 		`bookingID` = :id
+				WHERE 		b.`bookingID` = :BookingID
 				LIMIT 		1';
 		$s = $pdo->prepare($sql);
-		$s->bindValue(':id', $bookingID);
+		$s->bindValue(':BookingID', $bookingID);
 		$s->execute();
 		$row = $s->fetch(PDO::FETCH_ASSOC);
-		$bookingCreatorUserID = $row['userID'];
-		$bookingCreatorUserEmail = $row['UserEmail'];
-		$bookingCreatorUserInfo = $row['lastName'] . ", " . $row['firstName'] . " - " . $row['UserEmail'];
-		if($row['HitCount'] > 0){
-			if($bookingCreatorUserID == $SelectedUserID){
+
+		if(isSet($row) AND $row['HitCount'] > 0){
+			$bookingCreatorUserID = $row['userID'];
+			$bookingCreatorUserEmail = $row['UserEmail'];
+			$bookingCreatorUserInfo = $row['lastName'] . ", " . $row['firstName'] . " - " . $row['UserEmail'];
+			if(isSet($bookingCreatorUserID) AND !empty($bookingCreatorUserID) AND $bookingCreatorUserID == $SelectedUserID){
 				$continueCancel = TRUE;
 			}
 		} 
-		
-		//close connection
-		$pdo = null;
 	}
 	catch (PDOException $e)
 	{
+		$pdo = null;
 		$error = 'Error updating selected booked meeting to be cancelled: ' . $e->getMessage();
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
 		exit();
 	}
-	
-		// Check if the user is an admin
-		// Only needed if the the user isn't the creator of the booking
-	if($SelectedUserID != $bookingCreatorUserID) {
+
+		// Check if the user is an owner of the company the booking is booked for
+	if(!$continueCancel) {	
 		try
 		{
-			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
-			
-			$pdo = connect_to_db();
-			$sql = 'SELECT 	a.`AccessName`	
-					FROM	`user` u
-					JOIN	`accesslevel` a
-					ON 		u.`AccessID` = a.`AccessID`
-					WHERE 	u.`userID` = :userID
-					LIMIT	1';
+			$sql = 'SELECT 		COUNT(*)		AS HitCount,
+								b.`userID`,
+								u.`email`		AS UserEmail,
+								u.`firstName`,
+								u.`lastName`
+					FROM		`booking` b
+					INNER JOIN	`employee` e
+					ON			e.`CompanyID` = b.`CompanyID`
+					INNER JOIN 	`user` u
+					ON 			e.`userID` = u.`userID`
+					INNER JOIN	`companyposition` cp
+					ON			cp.`PositionID` = e.`PositionID`
+					WHERE 		b.`bookingID` = :BookingID
+					AND			e.`UserID` = :UserID
+					AND			cp.`name` = "Owner"
+					LIMIT 		1';
+			$s = $pdo->prepare($sql);
+			$s->bindValue(':BookingID', $bookingID);
+			$s->bindValue(':UserID', $SelectedUserID);
+			$s->execute();
+			$row = $s->fetch(PDO::FETCH_ASSOC);
+
+			if(isSet($row) AND $row['HitCount'] > 0){
+				$cancelledByUserID = $row['userID'];
+				$cancelledByUserEmail = $row['UserEmail'];
+				$cancelledByUserInfo = $row['lastName'] . ", " . $row['firstName'] . " - " . $row['UserEmail'];
+				$continueCancel = TRUE;
+				$cancelledByOwner = TRUE;
+			}
+		}
+		catch (PDOException $e)
+		{
+			$pdo = null;
+			$error = 'Error updating selected booked meeting to be cancelled: ' . $e->getMessage();
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+			exit();
+		}
+	}
+
+		// Check if the user is an admin
+		// Only needed if the the user isn't the creator of the booking or an owner
+	if(!$continueCancel) {
+		try
+		{
+			$sql = 'SELECT 		COUNT(*) 	AS HitCount	
+					FROM		`user` u
+					INNER JOIN	`accesslevel` a
+					ON 			u.`AccessID` = a.`AccessID`
+					WHERE 		u.`userID` = :userID
+					AND			a.`AccessName` = "Admin"
+					LIMIT		1';
 					
 			$s = $pdo->prepare($sql);
 			$s->bindValue(':userID', $SelectedUserID);
 			$s->execute();
 			$row = $s->fetch(PDO::FETCH_ASSOC);
-			if($row['AccessName'] == "Admin"){
+			if(isSet($row) AND $row['HitCount'] > 0){
 				$continueCancel = TRUE;
 				$cancelledByAdmin = TRUE;
 			}
-			
-			//close connection
-			$pdo = null;
+
 		}
 		catch (PDOException $e)
 		{
+			$pdo = null;
 			$error = 'Error updating selected booked meeting to be cancelled: ' . $e->getMessage();
 			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
 			exit();
@@ -513,6 +553,7 @@ if (	(isSet($_POST['action']) and $_POST['action'] == 'Cancel') OR
 	}
 
 	if($continueCancel === FALSE){
+		$pdo = null;
 		$_SESSION['normalBookingFeedback'] = "You cannot cancel this booked meeting.";
 		if(isSet($_GET['meetingroom'])){
 			$meetingRoomID = $_GET['meetingroom'];
@@ -530,9 +571,6 @@ if (	(isSet($_POST['action']) and $_POST['action'] == 'Cancel') OR
 		// Update cancellation date for selected booked meeting in database
 		try
 		{
-			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
-			
-			$pdo = connect_to_db();
 			$sql = 'UPDATE 	`booking` 
 					SET 	`dateTimeCancelled` = CURRENT_TIMESTAMP,
 							`cancellationCode` = NULL				
@@ -574,10 +612,7 @@ if (	(isSet($_POST['action']) and $_POST['action'] == 'Cancel') OR
 			} else {
 				$logEventDescription = 'A booking was cancelled by: ' . $nameOfUserWhoBooked;
 			}
-			
-			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
-			
-			$pdo = connect_to_db();
+
 			$sql = "INSERT INTO `logevent` 
 					SET			`actionID` = 	(
 													SELECT `actionID` 
@@ -599,7 +634,7 @@ if (	(isSet($_POST['action']) and $_POST['action'] == 'Cancel') OR
 			$pdo = null;
 			exit();
 		}	
-		if($cancelledByAdmin){
+		if($cancelledByAdmin OR $cancelledByOwner){
 			$_SESSION['cancelBookingOriginalValues']['UserEmail'] = $bookingCreatorUserEmail;
 			emailUserOnCancelledBooking();
 		}
