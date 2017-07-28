@@ -99,7 +99,7 @@
 						<?php endif; ?>
 					<?php else : ?>
 						<?php if(isSet($company)) : ?>
-							<span><b>You are only connected to one company: <?php htmlout($companyName); ?></b></span>
+							<span><b><?php htmlout($companyName); ?></b></span>
 							<label>Credits Remaining: </label>
 							<?php if(substr($creditsRemaining,0,1) === "-") : ?>
 								<span style="color:red"><?php htmlout($creditsRemaining); ?></span><span>¹</span>
@@ -124,6 +124,7 @@
 					<?php endif; ?>
 				</div>
 
+		
 				<div>
 					<label for="originalDisplayName">Booked Display Name: </label>
 					<span><b>
@@ -135,12 +136,16 @@
 					</b></span>
 				</div>
 
-				<div>
-					<label for="displayName">Change Display Name: </label>
-					<input type="text" name="displayName" id="displayName" 
-					value="<?php htmlout($displayName); ?>">
-					<input type="submit" name="edit" value="Get Default Display Name">
-				</div>
+				<?php if($bookingCreatorUserAccess != "Admin") : ?>
+					
+				<?php else : ?>
+					<div>
+						<label for="displayName">Change Display Name: </label>
+						<input type="text" name="displayName" id="displayName" 
+						value="<?php htmlout($displayName); ?>">
+						<input type="submit" name="edit" value="Get Default Display Name">
+					</div>
+				<?php endif; ?>
 
 				<div>
 					<label for="originalBookingDescription">Booked Description: </label>
@@ -153,21 +158,27 @@
 					</b></span>
 				</div>
 
-				<div>
-					<label class="description" for="description">Set New Booking Description: </label>
-					<textarea rows="4" cols="50" name="description" id="description"><?php htmlout($description); ?></textarea>
-					<input type="submit" name="edit" value="Get Default Booking Description">
-				</div>
+				<?php if($bookingCreatorUserAccess != "Admin") : ?>
+					
+				<?php else : ?>
+					<div>
+						<label class="description" for="description">Set New Booking Description: </label>
+						<textarea rows="4" cols="50" name="description" id="description"><?php htmlout($description); ?></textarea>
+						<input type="submit" name="edit" value="Get Default Booking Description">
+					</div>
+				<?php endif; ?>
 
 				<div class="left">
 					<input type="hidden" name="bookingID" id="bookingID" 
 					value="<?php htmlout($bookingID); ?>">
-					<input type="submit" name="edit" value="Reset">
+					<?php if($bookingCreatorUserAccess == "Admin") : ?>
+						<input type="submit" name="edit" value="Reset">
+					<?php endif; ?>
 					<input type="submit" name="edit" value="Go Back">
 					<?php if(isSet($_SESSION['EditCreateBookingSelectACompany'])) : ?>
 						<input type="submit" name="disabled" value="Finish Edit" disabled>
 						<span><b>You need to select the company you want before you can finish editing.</b></span>			
-					<?php else : ?>
+					<?php elseif($bookingCreatorUserAccess == "Admin") : ?>
 						<input type="submit" name="edit" value="Finish Edit">
 					<?php endif; ?>
 					<?php if(isSet($_SESSION['EditCreateBookingSelectACompany'])) : ?>

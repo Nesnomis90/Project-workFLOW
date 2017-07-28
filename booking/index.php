@@ -804,20 +804,23 @@ if(	((isSet($_POST['action']) AND $_POST['action'] == 'Create Meeting')) OR
 			$pdo = connect_to_db();
 
 			// New SQL where we require a company connection
-			$sql = "SELECT	(
-								SELECT COUNT(*)
-								FROM	`employee`
-								WHERE 	`userID` = :userID
-							) AS HitCount,
-							`bookingdescription`, 
-							`displayname`,
-							`firstName`,
-							`lastName`,
-							`email`,
-							`sendEmail`
-					FROM 	`user`
-					WHERE 	`userID` = :userID
-					LIMIT 	1";	
+				$sql = "SELECT	(
+									SELECT COUNT(*)
+									FROM	`employee`
+									WHERE 	`userID` = :userID
+								) AS HitCount,
+								u.`bookingdescription`, 
+								u.`displayname`,
+								u.`firstName`,
+								u.`lastName`,
+								u.`email`,
+								u.`sendEmail`,
+								a.`AccessName`
+					FROM 		`user` u
+					INNER JOIN 	`accesslevel` a
+					ON			u.`AccessID` = a.`AccessID`
+					WHERE 		u.`userID` = :userID
+					LIMIT 		1";
 			$s = $pdo->prepare($sql);
 			$s->bindValue(':userID', $SelectedUserID);
 			$s->execute();
@@ -858,6 +861,10 @@ if(	((isSet($_POST['action']) AND $_POST['action'] == 'Create Meeting')) OR
 			
 			if($result['sendEmail']!=NULL){
 				$sendEmail = $result['sendEmail'];
+			}
+			
+			if(!empty($result['AccessName'])){
+				$access = $result['AccessName'];
 			}
 
 			//Close connection
@@ -927,7 +934,8 @@ if(	((isSet($_POST['action']) AND $_POST['action'] == 'Create Meeting')) OR
 													'UserEmail' => '',
 													'UserDefaultDisplayName' => '',
 													'UserDefaultBookingDescription' => '',
-													'sendEmail' => ''
+													'sendEmail' => '',
+													'Access' => ''
 												);			
 		$_SESSION['AddCreateBookingInfoArray']['UserDefaultBookingDescription'] = $description;
 		$_SESSION['AddCreateBookingInfoArray']['UserDefaultDisplayName'] = $displayName;
@@ -936,6 +944,8 @@ if(	((isSet($_POST['action']) AND $_POST['action'] == 'Create Meeting')) OR
 		$_SESSION['AddCreateBookingInfoArray']['UserEmail'] = $email;	
 		$_SESSION['AddCreateBookingInfoArray']['TheUserID'] = $SelectedUserID;
 		$_SESSION['AddCreateBookingInfoArray']['sendEmail'] = $sendEmail;
+		$_SESSION['AddCreateBookingInfoArray']['Access'] = $access;
+
 		if(isSet($_GET['meetingroom'])){
 			$_SESSION['AddCreateBookingInfoArray']['TheMeetingRoomID'] = $_GET['meetingroom'];
 		}
@@ -944,7 +954,7 @@ if(	((isSet($_POST['action']) AND $_POST['action'] == 'Create Meeting')) OR
 
 		// Check if we need a company select for the booking
 	try
-	{		
+	{
 		// We want the companies the user works for to decide if we need to
 		// have a dropdown select or just a fixed value (with 0 or 1 company)
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
@@ -1307,6 +1317,12 @@ if(	((isSet($_POST['action']) AND $_POST['action'] == 'Create Meeting')) OR
 		$description = '';
 	}
 	
+	if(isSet($row['Access'])){
+		$access = $row['Access'];
+	} else {
+		$access = '';
+	}
+
 	$userInformation = $row['UserLastname'] . ', ' . $row['UserFirstname'] . ' - ' . $row['UserEmail'];	
 
 	$_SESSION['AddCreateBookingInfoArray'] = $row; // Remember the company/user info we changed based on user choice
@@ -1961,10 +1977,13 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Edit') OR
 							b.`userID`,
 							u.`email`		AS UserEmail,
 							u.`firstName`,
-							u.`lastName`
+							u.`lastName`,
+							a.`AccessName`
 				FROM		`booking` b
 				INNER JOIN 	`user` u
 				ON 			b.`userID` = u.`userID`
+				INNER JOIN	`accesslevel` a
+				ON			a.`AccessID` = u.`AccessID`
 				WHERE 		`bookingID` = :id
 				LIMIT 		1';
 		$s = $pdo->prepare($sql);
@@ -1976,8 +1995,9 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Edit') OR
 		$bookingCreatorUserInfo = $row['lastName'] . ", " . $row['firstName'] . " - " . $row['UserEmail'];
 		$bookingCreatorUserFirstName = $row['firstName'];
 		$bookingCreatorUserLastName = $row['lastName'];
+		$bookingCreatorUserAccess = $row['AccessName'];
 		
-		if($row['HitCount'] > 0){
+		if(isSet($row) AND $row['HitCount'] > 0){
 			if($bookingCreatorUserID == $SelectedUserID){
 				$continueEdit = TRUE;
 			}

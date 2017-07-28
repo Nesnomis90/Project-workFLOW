@@ -27,9 +27,6 @@
 			<form action="" method="post">
 				<div class="left">
 					<label for="userInformation">Welcome </label>
-					<?php $firstName = $_SESSION["AddCreateBookingOriginalInfoArray"]["UserFirstname"]; ?>
-					<?php $lastName = $_SESSION["AddCreateBookingOriginalInfoArray"]["UserLastname"]; ?>
-					<?php $userInformation = $lastName . ", " . $firstName; ?>
 					<span><b><?php htmlout($userInformation); ?></b></span>
 				</div>
 
@@ -121,7 +118,7 @@
 						<?php endif; ?>
 					<?php else : ?>
 						<?php if(isSet($company)) : ?>
-							<span><b>Your booking will automatically be connected with company: <?php htmlout($companyName); ?></b></span>
+							<span><b><?php htmlout($companyName); ?></b></span>
 							<label>Credits Remaining: </label>
 							<?php if(substr($creditsRemaining,0,1) === "-") : ?>
 								<span style="color:red"><?php htmlout($creditsRemaining); ?></span><span>¹</span>
@@ -146,17 +143,25 @@
 					<?php endif; ?>
 				</div>
 
-				<div>
+				<div class="left">
 					<label for="displayName">Display Name: </label>
-					<input type="text" name="displayName" id="displayName" 
-					value="<?php htmlout($displayName); ?>">
-					<input type="submit" name="add" value="Get Default Display Name">
+					<?php if($access != "Admin") : ?>
+
+					<?php else : ?>
+						<input type="text" name="displayName" id="displayName" 
+						value="<?php htmlout($displayName); ?>">
+						<input type="submit" name="add" value="Get Default Display Name">					
+					<?php endif; ?>
 				</div>
 
 				<div class="left">
 					<label class="description" for="description">Booking Description: </label>
-					<textarea rows="4" cols="50" name="description" id="description"><?php htmlout($description); ?></textarea>
-					<input type="submit" name="add" value="Get Default Booking Description"> 
+					<?php if($access != "Admin") : ?>
+					
+					<?php else : ?>
+						<textarea rows="4" cols="50" name="description" id="description"><?php htmlout($description); ?></textarea>
+						<input type="submit" name="add" value="Get Default Booking Description">
+					<?php endif; ?>
 				</div>
 
 				<div class="left">
