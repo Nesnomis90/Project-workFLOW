@@ -79,11 +79,43 @@
 							<span><b><?php htmlout($companyName); ?></b></span>
 							<input type="hidden" name="companyID" id="companyID" 
 							value="<?php htmlout($companyID); ?>">
-							<input type="submit" name="edit" value="Change Company">
+							<input type="submit" name="edit" value="Change Company">							
+							<label>Credits Remaining: </label>
+							<?php if(substr($creditsRemaining,0,1) === "-") : ?>
+								<span style="color:red"><?php htmlout($creditsRemaining); ?></span><span>¹</span>
+							<?php else : ?>
+								<span style="color:green"><?php htmlout($creditsRemaining); ?></span><span>¹</span>
+							<?php endif; ?>	
+							<label>Credits Booked: </label>
+							<span><?php htmlout($potentialExtraCreditsUsed); ?></span><span>²</span>
+							<label>Potential Remaining: </label>
+							<?php if(substr($potentialCreditsRemaining,0,1) === "-") : ?>
+								<span style="color:red"><?php htmlout($potentialCreditsRemaining); ?></span><span>³</span>
+							<?php else : ?>
+								<span style="color:green"><?php htmlout($potentialCreditsRemaining); ?></span><span>³</span>
+							<?php endif; ?>
+							<label>Next Period At:</label>
+							<span><b><?php htmlout($companyPeriodEndDate); ?></b></span>
 						<?php endif; ?>
 					<?php else : ?>
 						<?php if(isSet($company)) : ?>
-							<span><b>You are only connected to one company: <?php htmlout($companyName); ?></b></span>
+							<span><b><?php htmlout($companyName); ?></b></span>
+							<label>Credits Remaining: </label>
+							<?php if(substr($creditsRemaining,0,1) === "-") : ?>
+								<span style="color:red"><?php htmlout($creditsRemaining); ?></span><span>¹</span>
+							<?php else : ?>
+								<span style="color:green"><?php htmlout($creditsRemaining); ?></span><span>¹</span>
+							<?php endif; ?>	
+							<label>Credits Booked: </label>
+							<span><?php htmlout($potentialExtraCreditsUsed); ?></span><span>²</span>
+							<label>Potential Remaining: </label>
+							<?php if(substr($potentialCreditsRemaining,0,1) === "-") : ?>
+								<span style="color:red"><?php htmlout($potentialCreditsRemaining); ?></span><span>³</span>
+							<?php else : ?>
+								<span style="color:green"><?php htmlout($potentialCreditsRemaining); ?></span><span>³</span>
+							<?php endif; ?>
+							<label>Next Period At:</label>
+							<span><b><?php htmlout($companyPeriodEndDate); ?></b></span>
 						<?php else : ?>
 							<span><b>You are not connected with a company.</b></span>
 						<?php endif; ?>
@@ -92,6 +124,7 @@
 					<?php endif; ?>
 				</div>
 
+		
 				<div>
 					<label for="originalDisplayName">Booked Display Name: </label>
 					<span><b>
@@ -103,12 +136,16 @@
 					</b></span>
 				</div>
 
-				<div>
-					<label for="displayName">Change Display Name: </label>
-					<input type="text" name="displayName" id="displayName" 
-					value="<?php htmlout($displayName); ?>">
-					<input type="submit" name="edit" value="Get Default Display Name">
-				</div>
+				<?php if($bookingCreatorUserAccess != "Admin") : ?>
+					
+				<?php else : ?>
+					<div>
+						<label for="displayName">Change Display Name: </label>
+						<input type="text" name="displayName" id="displayName" 
+						value="<?php htmlout($displayName); ?>">
+						<input type="submit" name="edit" value="Get Default Display Name">
+					</div>
+				<?php endif; ?>
 
 				<div>
 					<label for="originalBookingDescription">Booked Description: </label>
@@ -121,22 +158,33 @@
 					</b></span>
 				</div>
 
-				<div>
-					<label class="description" for="description">Set New Booking Description: </label>
-					<textarea rows="4" cols="50" name="description" id="description"><?php htmlout($description); ?></textarea>
-					<input type="submit" name="edit" value="Get Default Booking Description">
-				</div>
+				<?php if($bookingCreatorUserAccess != "Admin") : ?>
+					
+				<?php else : ?>
+					<div>
+						<label class="description" for="description">Set New Booking Description: </label>
+						<textarea rows="4" cols="50" name="description" id="description"><?php htmlout($description); ?></textarea>
+						<input type="submit" name="edit" value="Get Default Booking Description">
+					</div>
+				<?php endif; ?>
 
 				<div class="left">
 					<input type="hidden" name="bookingID" id="bookingID" 
 					value="<?php htmlout($bookingID); ?>">
-					<input type="submit" name="edit" value="Reset">
+					<?php if($bookingCreatorUserAccess == "Admin") : ?>
+						<input type="submit" name="edit" value="Reset">
+					<?php endif; ?>
 					<input type="submit" name="edit" value="Go Back">
 					<?php if(isSet($_SESSION['EditCreateBookingSelectACompany'])) : ?>
 						<input type="submit" name="disabled" value="Finish Edit" disabled>
 						<span><b>You need to select the company you want before you can finish editing.</b></span>			
-					<?php else : ?>
+					<?php elseif($bookingCreatorUserAccess == "Admin") : ?>
 						<input type="submit" name="edit" value="Finish Edit">
+					<?php endif; ?>
+					<?php if(isSet($_SESSION['EditCreateBookingSelectACompany'])) : ?>
+						<span style="clear: both; white-space: pre-wrap;"><b><?php htmlout("¹ The given credit minus the sum of completed bookings this period (up to $companyPeriodEndDate).\n  This does not take into account non-completed bookings."); ?></b></span>
+						<span style="clear: both; white-space: pre-wrap;"><b><?php htmlout("² The sum of future bookings this period that have not been completed yet.\n  This is the maximum extra credits that have a potential of being used if the booking(s) complete."); ?></b></span>
+						<span style="clear: both; white-space: pre-wrap;"><b><?php htmlout("³ The potential minimum credits remaining if all booked meetings complete.\n  The actual remaining credits will be higher if the booking(s) cancel or complete early."); ?></b></span>
 					<?php endif; ?>
 				</div>
 			</form>

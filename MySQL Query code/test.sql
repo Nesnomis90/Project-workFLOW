@@ -49,6 +49,31 @@ WHERE 	DATE(CURRENT_TIMESTAMP) >= `removeAtDate`
 AND 	`isActive` = 1
 AND		`companyID` <> 0;
 
+SELECT 		COUNT(*) 	AS HitCount	
+FROM		`user` u
+INNER JOIN	`accesslevel` a
+ON 			u.`AccessID` = a.`AccessID`
+WHERE 		u.`userID` = 2
+AND			a.`AccessName` = "Admin"
+LIMIT		1;
+
+SELECT 		COUNT(*)		AS HitCount,
+			b.`userID`,
+			u.`email`		AS UserEmail,
+			u.`firstName`,
+			u.`lastName`
+FROM		`booking` b
+INNER JOIN	`employee` e
+ON			e.`CompanyID` = b.`CompanyID`
+INNER JOIN 	`user` u
+ON 			e.`userID` = u.`userID`
+INNER JOIN	`companyposition` cp
+ON			cp.`PositionID` = e.`PositionID`
+WHERE 		b.`bookingID` = 204
+AND			e.`UserID` = 56
+AND			cp.`name` = "Owner"
+LIMIT 		1;
+
 SELECT		c.`companyID`,
 			c.`name` 					AS companyName,
 			(
