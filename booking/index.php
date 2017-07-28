@@ -884,6 +884,10 @@ if(	((isSet($_POST['action']) AND $_POST['action'] == 'Create Meeting')) OR
 													'BookingDescription' => '',
 													'BookedBy' => '',
 													'BookedForCompany' => '',
+													'CreditsRemaining' => 'N/A',
+													'PotentialExtraMonthlyTimeUsed' => 'N/A',
+													'PotentialCreditsRemaining' => 'N/A',
+													'EndDate' => 'N/A',
 													'TheUserID' => '',
 													'UserFirstname' => '',
 													'UserLastname' => '',
@@ -1045,14 +1049,93 @@ if(	((isSet($_POST['action']) AND $_POST['action'] == 'Create Meeting')) OR
 		// Create an array with the row information we retrieved
 		$result = $s->fetchAll(PDO::FETCH_ASSOC);
 			
-		foreach($result as $row){		
-			// Get the companies the user works for
-			// This will be used to create a dropdown list in HTML
-			$company[] = array(
-								'companyID' => $row['companyID'],
-								'companyName' => $row['companyName']
-								);
-		}
+			foreach($result as $row){
+				// Get the companies the user works for
+				// This will be used to create a dropdown list in HTML
+
+				// Get booking time used this month
+				if(empty($row['MonthlyCompanyWideBookingTimeUsed'])){
+					$MonthlyTimeUsed = 'N/A';
+				} else {
+					$MonthlyTimeUsed = convertTimeToHoursAndMinutes($row['MonthlyCompanyWideBookingTimeUsed']);
+				}
+
+				// Get potential booking time used this month
+				if(empty($row['PotentialExtraMonthlyCompanyWideBookingTimeUsed'])){
+					$potentialExtraMonthlyTimeUsed = 'N/A';
+				} else {
+					$potentialExtraMonthlyTimeUsed = convertTimeToHoursAndMinutes($row['PotentialExtraMonthlyCompanyWideBookingTimeUsed']);
+				}
+
+				// Get credits given
+				if(!empty($row["CreditSubscriptionMinuteAmount"])){
+					$companyMinuteCredits = $row["CreditSubscriptionMinuteAmount"];
+				} else {
+					$companyMinuteCredits = 0;
+				}
+
+					// Calculate Company Credits Remaining (only includes completed bookings)
+				if($MonthlyTimeUsed != "N/A"){
+					$monthlyTimeHour = substr($MonthlyTimeUsed,0,strpos($MonthlyTimeUsed,"h"));
+					$monthlyTimeMinute = substr($MonthlyTimeUsed,strpos($MonthlyTimeUsed,"h")+1,-1);
+					$actualTimeUsedInMinutesThisMonth = $monthlyTimeHour*60 + $monthlyTimeMinute;
+					if($actualTimeUsedInMinutesThisMonth > $companyMinuteCredits){
+						$minusCompanyMinuteCreditsRemaining = $actualTimeUsedInMinutesThisMonth - $companyMinuteCredits;
+						$displayCompanyCreditsRemaining = "-" . convertMinutesToHoursAndMinutes($minusCompanyMinuteCreditsRemaining);
+					} else {
+						$companyMinuteCreditsRemaining = $companyMinuteCredits - $actualTimeUsedInMinutesThisMonth;
+						$displayCompanyCreditsRemaining = convertMinutesToHoursAndMinutes($companyMinuteCreditsRemaining);
+					}
+				} else {
+					$companyMinuteCreditsRemaining = $companyMinuteCredits;
+					$displayCompanyCreditsRemaining = convertMinutesToHoursAndMinutes($companyMinuteCreditsRemaining);
+				}
+
+					// Calculate Potential Company Credits Remaining (includes future bookings)
+				if($potentialExtraMonthlyTimeUsed == "N/A"){
+					$displayPotentialCompanyCreditsRemaining = $displayCompanyCreditsRemaining;
+					$displayPotentialExtraMonthlyTimeUsed = convertMinutesToHoursAndMinutes(0);
+				} elseif($MonthlyTimeUsed != "N/A"){
+					$monthlyTimeHour = substr($potentialExtraMonthlyTimeUsed,0,strpos($potentialExtraMonthlyTimeUsed,"h"));
+					$monthlyTimeMinute = substr($potentialExtraMonthlyTimeUsed,strpos($potentialExtraMonthlyTimeUsed,"h")+1,-1);
+					$potentialExtraMonthlyTimeUsedInMinutes = $monthlyTimeHour*60 + $monthlyTimeMinute;
+					$actualTimeUsedInMinutesThisMonth += $potentialExtraMonthlyTimeUsedInMinutes;
+
+					if($actualTimeUsedInMinutesThisMonth > $companyMinuteCredits){
+						$minusPotentialCompanyMinuteCreditsRemaining = $actualTimeUsedInMinutesThisMonth - $companyMinuteCredits;
+						$displayPotentialCompanyCreditsRemaining = "-" . convertMinutesToHoursAndMinutes($minusPotentialCompanyMinuteCreditsRemaining);
+					} else {
+						$potentialCompanyMinuteCreditsRemaining = $companyMinuteCredits - $actualTimeUsedInMinutesThisMonth;
+						$displayPotentialCompanyCreditsRemaining = convertMinutesToHoursAndMinutes($potentialCompanyMinuteCreditsRemaining);
+					}
+					$displayPotentialExtraMonthlyTimeUsed = convertMinutesToHoursAndMinutes($potentialExtraMonthlyTimeUsedInMinutes);
+				} else {
+					$monthlyTimeHour = substr($potentialExtraMonthlyTimeUsed,0,strpos($potentialExtraMonthlyTimeUsed,"h"));
+					$monthlyTimeMinute = substr($potentialExtraMonthlyTimeUsed,strpos($potentialExtraMonthlyTimeUsed,"h")+1,-1);
+					$potentialExtraMonthlyTimeUsedInMinutes = $monthlyTimeHour*60 + $monthlyTimeMinute;
+					$actualTimeUsedInMinutesThisMonth = $potentialExtraMonthlyTimeUsedInMinutes;
+
+					if($actualTimeUsedInMinutesThisMonth > $companyMinuteCredits){
+						$minusPotentialCompanyMinuteCreditsRemaining = $actualTimeUsedInMinutesThisMonth - $companyMinuteCredits;
+						$displayPotentialCompanyCreditsRemaining = "-" . convertMinutesToHoursAndMinutes($minusPotentialCompanyMinuteCreditsRemaining);
+					} else {
+						$potentialCompanyMinuteCreditsRemaining = $companyMinuteCredits - $actualTimeUsedInMinutesThisMonth;
+						$displayPotentialCompanyCreditsRemaining = convertMinutesToHoursAndMinutes($potentialCompanyMinuteCreditsRemaining);
+					}
+					$displayPotentialExtraMonthlyTimeUsed = convertMinutesToHoursAndMinutes($potentialExtraMonthlyTimeUsedInMinutes);				
+				}
+
+				$displayEndDate =  convertDatetimeToFormat($row['endDate'], 'Y-m-d', DATE_DEFAULT_FORMAT_TO_DISPLAY);
+				
+				$company[] = array(
+									'companyID' => $row['companyID'],
+									'companyName' => $row['companyName'],
+									'endDate' => $displayEndDate,
+									'creditsRemaining' => $displayCompanyCreditsRemaining,
+									'PotentialExtraMonthlyTimeUsed' => $displayPotentialExtraMonthlyTimeUsed,
+									'PotentialCreditsRemaining' => $displayPotentialCompanyCreditsRemaining
+									);
+			}
 	
 		$pdo = null;
 				
@@ -1071,6 +1154,9 @@ if(	((isSet($_POST['action']) AND $_POST['action'] == 'Create Meeting')) OR
 				unset($_SESSION['AddCreateBookingDisplayCompanySelect']);
 				$_SESSION['AddCreateBookingInfoArray']['TheCompanyID'] = $company[0]['companyID'];
 				$_SESSION['AddCreateBookingInfoArray']['BookedForCompany'] = $company[0]['companyName'];
+				$_SESSION['AddCreateBookingInfoArray']['CreditsRemaining'] = $company[0]['creditsRemaining'];
+				$_SESSION['AddCreateBookingInfoArray']['PotentialExtraMonthlyTimeUsed'] = $company[0]['PotentialExtraMonthlyTimeUsed'];
+				$_SESSION['AddCreateBookingInfoArray']['PotentialCreditsRemaining'] = $company[0]['PotentialCreditsRemaining'];				
 			}
 			$_SESSION['AddCreateBookingCompanyArray'] = $company;
 		} else{
@@ -1081,6 +1167,9 @@ if(	((isSet($_POST['action']) AND $_POST['action'] == 'Create Meeting')) OR
 			unset($_SESSION['AddCreateBookingCompanyArray']);
 			$_SESSION['AddCreateBookingInfoArray']['TheCompanyID'] = "";
 			$_SESSION['AddCreateBookingInfoArray']['BookedForCompany'] = "";
+			$_SESSION['AddCreateBookingInfoArray']['CreditsRemaining'] = "N/A";
+			$_SESSION['AddCreateBookingInfoArray']['PotentialExtraMonthlyTimeUsed'] = "N/A";
+			$_SESSION['AddCreateBookingInfoArray']['PotentialCreditsRemaining'] = "N/A";
 		}		
 	}
 	catch(PDOException $e)
@@ -1103,6 +1192,10 @@ if(	((isSet($_POST['action']) AND $_POST['action'] == 'Create Meeting')) OR
 			foreach($company AS $cmp){
 				if($cmp['companyID'] == $row['TheCompanyID']){
 					$row['BookedForCompany'] = $cmp['companyName'];
+					$row['CreditsRemaining'] = $cmp['creditsRemaining'];
+					$row['PotentialExtraMonthlyTimeUsed'] = $cmp['PotentialExtraMonthlyTimeUsed'];
+					$row['PotentialCreditsRemaining'] = $cmp['PotentialCreditsRemaining'];
+					$row['EndDate'] = $cmp['endDate'];					
 					break;
 				}
 			}				
@@ -1119,7 +1212,31 @@ if(	((isSet($_POST['action']) AND $_POST['action'] == 'Create Meeting')) OR
 		$companyName = $row['BookedForCompany'];
 	} else {
 		$companyName = '';
-	}	
+	}
+
+	if(isSet($row['CreditsRemaining'])){
+		$creditsRemaining = $row['CreditsRemaining'];
+	} else {
+		$creditsRemaining = 'N/A';
+	}
+
+	if(isSet($row['PotentialExtraMonthlyTimeUsed'])){
+		$potentialExtraCreditsUsed = $row['PotentialExtraMonthlyTimeUsed'];
+	} else {
+		$potentialExtraCreditsUsed = 'N/A';
+	}
+
+	if(isSet($row['PotentialCreditsRemaining'])){
+		$potentialCreditsRemaining = $row['PotentialCreditsRemaining'];
+	} else {
+		$potentialCreditsRemaining = 'N/A';
+	}
+
+	if(isSet($row['EndDate'])){
+		$companyPeriodEndDate = $row['EndDate'];
+	} else {
+		$companyPeriodEndDate = 'N/A';
+	}
 	
 	//	userID has been set earlier
 	$meetingroom = $_SESSION['AddCreateBookingMeetingRoomsArray'];
@@ -1388,6 +1505,11 @@ if (isSet($_POST['add']) AND $_POST['add'] == "Add Booking")
 			foreach($_SESSION['AddCreateBookingCompanyArray'] AS $company){
 				if($companyID == $company['companyID']){
 					$companyName = $company['companyName'];
+					// TO-DO: Use this for something?
+					$companyCreditsRemaining = $company['creditsRemaining'];
+					$companyCreditsBooked = $company['PotentialExtraMonthlyTimeUsed'];
+					$companyCreditsPotentialMinimumRemaining = $company['PotentialCreditsRemaining'];
+					$companyPeriodEndDate = $company['endDate'];
 					break;
 				}
 			}
@@ -1443,6 +1565,16 @@ if (isSet($_POST['add']) AND $_POST['add'] == "Add Booking")
 	
 	//Send email with booking information and cancellation code to the user who the booking is for.
 		// TO-DO: This is UNTESTED since we don't have php.ini set up to actually send email	
+		
+		/*
+			// TO-DO: Use this for something?
+			$companyCreditsRemaining;
+			$companyCreditsBooked;
+			$companyCreditsPotentialMinimumRemaining;
+			$companyPeriodEndDate;
+		*/
+
+	// TO-DO: add to e-mail being sent if the booking created goes over credits.	
 	if($info['sendEmail'] == 1){
 		$emailSubject = "New Booking Information!";
 		
@@ -1590,16 +1722,16 @@ if(isSet($_POST['add']) AND $_POST['add'] == "Get Default Booking Description"){
 
 // If user wants to book the meeting to start immediately.
 if(isSet($_POST['add']) AND $_POST['add'] == "Start Booking Immediately"){
-	
+
 	// Let's remember what was selected if we do any changes before clicking "Select This User"
 	rememberAddCreateBookingInputs();
- 
+
 	$correctStartTime = getDatetimeNow();
 	$newStartTime = convertDatetimeToFormat($correctStartTime, 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
 	$_SESSION['AddCreateBookingInfoArray']['StartTime'] = $newStartTime;
-	
+
 	$_SESSION['AddCreateBookingStartImmediately'] = TRUE;
-	
+
 	$newCorrectStartTime = correctDatetimeFormat($newStartTime);
 	$newEndTime = convertDatetimeToFormat(getNextValidBookingEndTime($newCorrectStartTime), 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
 	$_SESSION['AddCreateBookingInfoArray']['EndTime'] = $newEndTime;
@@ -1618,23 +1750,23 @@ if(isSet($_POST['add']) AND $_POST['add'] == "Start Booking Immediately"){
 
 // If user wants to change the start time of the booking, after having set it to start immediately.
 if(isSet($_POST['add']) AND $_POST['add'] == "Change Start Time"){
-	
+
 	// Let's remember what was selected if we do any changes before clicking "Select This User"
 	rememberAddCreateBookingInputs();
-	
+
 	$startTime = $_SESSION['AddCreateBookingInfoArray']['StartTime'];
 	$correctStartTime = correctDatetimeFormat($startTime);
 	$newStartTime = convertDatetimeToFormat(getNextValidBookingEndTime($correctStartTime), 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
 	$_SESSION['AddCreateBookingInfoArray']['StartTime'] = $newStartTime;
-	
+
 	unset($_SESSION['AddCreateBookingStartImmediately']);
-	
+
 	if($_SESSION['AddCreateBookingInfoArray']['StartTime'] >= $_SESSION['AddCreateBookingInfoArray']['EndTime']){
 		$newCorrectStartTime = correctDatetimeFormat($newStartTime);
 		$newEndTime = convertDatetimeToFormat(getNextValidBookingEndTime($newCorrectStartTime), 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
 		$_SESSION['AddCreateBookingInfoArray']['EndTime'] = $newEndTime;
 	}
-	
+
 	$_SESSION['refreshAddCreateBooking'] = TRUE;
 	if(isSet($_GET['meetingroom'])){
 		$meetingRoomID = $_GET['meetingroom'];
@@ -1649,21 +1781,21 @@ if(isSet($_POST['add']) AND $_POST['add'] == "Change Start Time"){
 
 // If user wants to increase the start timer by minimum allowed time (e.g. to the closest 15 min chunk)
 if(isSet($_POST['add']) AND $_POST['add'] == "Increase Start By Minimum"){
-	
+
 	// Let's remember what was selected if we do any changes before clicking "Select This User"
 	rememberAddCreateBookingInputs();
-	
+
 	$startTime = $_SESSION['AddCreateBookingInfoArray']['StartTime'];
 	$correctStartTime = correctDatetimeFormat($startTime);
 	$newStartTime = convertDatetimeToFormat(getNextValidBookingEndTime($correctStartTime), 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
 	$_SESSION['AddCreateBookingInfoArray']['StartTime'] = $newStartTime;
-	
+
 	if($_SESSION['AddCreateBookingInfoArray']['StartTime'] >= $_SESSION['AddCreateBookingInfoArray']['EndTime']){
 		$newCorrectStartTime = correctDatetimeFormat($newStartTime);
 		$newEndTime = convertDatetimeToFormat(getNextValidBookingEndTime($newCorrectStartTime), 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
 		$_SESSION['AddCreateBookingInfoArray']['EndTime'] = $newEndTime;
 	}
-	
+
 	$_SESSION['refreshAddCreateBooking'] = TRUE;
 	if(isSet($_GET['meetingroom'])){
 		$meetingRoomID = $_GET['meetingroom'];
@@ -1678,14 +1810,14 @@ if(isSet($_POST['add']) AND $_POST['add'] == "Increase Start By Minimum"){
 
 // If user wants to increase the end timer by minimum allowed time (e.g. 15 min)
 if(isSet($_POST['add']) AND $_POST['add'] == "Increase End By Minimum"){
-	
+
 	// Let's remember what was selected if we do any changes before clicking "Select This User"
 	rememberAddCreateBookingInputs();
-	
+
 	$endTime = $_SESSION['AddCreateBookingInfoArray']['EndTime'];
 	$correctEndTime = correctDatetimeFormat($endTime);
 	$_SESSION['AddCreateBookingInfoArray']['EndTime'] = convertDatetimeToFormat(getNextValidBookingEndTime($correctEndTime), 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
-	
+
 	$_SESSION['refreshAddCreateBooking'] = TRUE;
 	if(isSet($_GET['meetingroom'])){
 		$meetingRoomID = $_GET['meetingroom'];
@@ -1973,6 +2105,10 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Edit') OR
 		
 		// Create an array with the row information we retrieved
 		$_SESSION['EditCreateBookingInfoArray'] = $s->fetch(PDO::FETCH_ASSOC);
+		$_SESSION['EditCreateBookingInfoArray']['CreditsRemaining'] = "N/A";
+		$_SESSION['EditCreateBookingInfoArray']['PotentialExtraMonthlyTimeUsed'] = "N/A";
+		$_SESSION['EditCreateBookingInfoArray']['PotentialCreditsRemaining'] = "N/A";
+		$_SESSION['EditCreateBookingInfoArray']['EndDate'] = "N/A";
 		$_SESSION['EditCreateBookingOriginalInfoArray'] = $_SESSION['EditCreateBookingInfoArray'];
 	}
 
@@ -1986,32 +2122,227 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Edit') OR
 		// have a dropdown select or just a fixed value (with 0 or 1 company)
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 		$pdo = connect_to_db();
-		$sql = 'SELECT	c.`companyID`,
-						c.`name` 					AS companyName
-				FROM 	`user` u
-				JOIN 	`employee` e
-				ON 		e.userID = u.userID
-				JOIN	`company` c
-				ON 		c.companyID = e.companyID
-				WHERE 	u.`userID` = :userID
-				AND 	c.`isActive` = 1';
-			
+		$sql = 'SELECT		c.`companyID`,
+							c.`name` 					AS companyName,
+							c.`endDate`,
+							(
+								SELECT (BIG_SEC_TO_TIME(SUM(
+														IF(
+															(
+																(
+																	DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
+																	)*86400 
+																+ 
+																(
+																	TIME_TO_SEC(b.`actualEndDateTime`) 
+																	- 
+																	TIME_TO_SEC(b.`startDateTime`)
+																	) 
+															) > :aboveThisManySecondsToCount,
+															IF(
+																(
+																(
+																	DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
+																	)*86400 
+																+ 
+																(
+																	TIME_TO_SEC(b.`actualEndDateTime`) 
+																	- 
+																	TIME_TO_SEC(b.`startDateTime`)
+																	) 
+															) > :minimumSecondsPerBooking, 
+																(
+																(
+																	DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
+																	)*86400 
+																+ 
+																(
+																	TIME_TO_SEC(b.`actualEndDateTime`) 
+																	- 
+																	TIME_TO_SEC(b.`startDateTime`)
+																	) 
+															), 
+																:minimumSecondsPerBooking
+															),
+															0
+														)
+								)))	AS BookingTimeUsed
+								FROM 		`booking` b  
+								INNER JOIN 	`company` c 
+								ON 			b.`CompanyID` = c.`CompanyID` 
+								WHERE 		b.`CompanyID` = e.`CompanyID`
+								AND 		b.`actualEndDateTime`
+								BETWEEN		c.`startDate`
+								AND			c.`endDate`
+							)													AS MonthlyCompanyWideBookingTimeUsed,
+															(
+								SELECT (BIG_SEC_TO_TIME(SUM(
+														IF(
+															(
+																(
+																	DATEDIFF(b.`endDateTime`, b.`startDateTime`)
+																	)*86400 
+																+ 
+																(
+																	TIME_TO_SEC(b.`endDateTime`) 
+																	- 
+																	TIME_TO_SEC(b.`startDateTime`)
+																	) 
+															) > :aboveThisManySecondsToCount,
+															IF(
+																(
+																(
+																	DATEDIFF(b.`endDateTime`, b.`startDateTime`)
+																	)*86400 
+																+ 
+																(
+																	TIME_TO_SEC(b.`endDateTime`) 
+																	- 
+																	TIME_TO_SEC(b.`startDateTime`)
+																	) 
+															) > :minimumSecondsPerBooking, 
+																(
+																(
+																	DATEDIFF(b.`endDateTime`, b.`startDateTime`)
+																	)*86400 
+																+ 
+																(
+																	TIME_TO_SEC(b.`endDateTime`) 
+																	- 
+																	TIME_TO_SEC(b.`startDateTime`)
+																	) 
+															), 
+																:minimumSecondsPerBooking
+															),
+															0
+														)
+								)))	AS BookingTimeUsed
+								FROM 		`booking` b  
+								INNER JOIN 	`company` c 
+								ON 			b.`CompanyID` = c.`CompanyID` 
+								WHERE 		b.`CompanyID` = e.`CompanyID`
+								AND 		b.`actualEndDateTime` IS NULL
+								AND			b.`dateTimeCancelled` IS NULL
+								AND			b.`endDateTime`
+								BETWEEN		c.`startDate`
+								AND			c.`endDate`
+							)													AS PotentialExtraMonthlyCompanyWideBookingTimeUsed,
+							(
+								SELECT 	IFNULL(cc.`altMinuteAmount`, cr.`minuteAmount`)
+								FROM 		`company` c
+								INNER JOIN	`companycredits` cc
+								ON			c.`CompanyID` = cc.`CompanyID`
+								INNER JOIN	`credits` cr
+								ON			cr.`CreditsID` = cc.`CreditsID`
+								WHERE		c.`CompanyID` = e.`CompanyID`
+							) 													AS CreditSubscriptionMinuteAmount
+				FROM 		`user` u
+				INNER JOIN 	`employee` e
+				ON 			e.`userID` = u.`userID`
+				INNER JOIN	`company` c
+				ON 			c.`companyID` = e.`companyID`
+				WHERE 		u.`userID` = :userID
+				AND			c.`isActive` = 1';
+		$minimumSecondsPerBooking = MINIMUM_BOOKING_DURATION_IN_MINUTES_USED_IN_PRICE_CALCULATIONS * 60; // e.g. 15min = 900s
+		$aboveThisManySecondsToCount = BOOKING_DURATION_IN_MINUTES_USED_BEFORE_INCLUDING_IN_PRICE_CALCULATIONS * 60; // E.g. 1min = 60s	
+
 		$s = $pdo->prepare($sql);
 		$s->bindValue(':userID', $UserIDInBooking);
+		$s->bindValue(':minimumSecondsPerBooking', $minimumSecondsPerBooking);
+		$s->bindValue(':aboveThisManySecondsToCount', $aboveThisManySecondsToCount);
 		$s->execute();
 		
 		// Create an array with the row information we retrieved
 		$result = $s->fetchAll(PDO::FETCH_ASSOC);
 			
-		foreach($result as $row){		
-			// Get the companies the user works for
-			// This will be used to create a dropdown list in HTML
-			$company[] = array(
-								'companyID' => $row['companyID'],
-								'companyName' => $row['companyName']
-								);
-		}
-			
+			foreach($result as $row){
+				// Get the companies the user works for
+				// This will be used to create a dropdown list in HTML
+
+				// Get booking time used this month
+				if(empty($row['MonthlyCompanyWideBookingTimeUsed'])){
+					$MonthlyTimeUsed = 'N/A';
+				} else {
+					$MonthlyTimeUsed = convertTimeToHoursAndMinutes($row['MonthlyCompanyWideBookingTimeUsed']);
+				}
+
+				// Get potential booking time used this month
+				if(empty($row['PotentialExtraMonthlyCompanyWideBookingTimeUsed'])){
+					$potentialExtraMonthlyTimeUsed = 'N/A';
+				} else {
+					$potentialExtraMonthlyTimeUsed = convertTimeToHoursAndMinutes($row['PotentialExtraMonthlyCompanyWideBookingTimeUsed']);
+				}
+
+				// Get credits given
+				if(!empty($row["CreditSubscriptionMinuteAmount"])){
+					$companyMinuteCredits = $row["CreditSubscriptionMinuteAmount"];
+				} else {
+					$companyMinuteCredits = 0;
+				}
+
+					// Calculate Company Credits Remaining (only includes completed bookings)
+				if($MonthlyTimeUsed != "N/A"){
+					$monthlyTimeHour = substr($MonthlyTimeUsed,0,strpos($MonthlyTimeUsed,"h"));
+					$monthlyTimeMinute = substr($MonthlyTimeUsed,strpos($MonthlyTimeUsed,"h")+1,-1);
+					$actualTimeUsedInMinutesThisMonth = $monthlyTimeHour*60 + $monthlyTimeMinute;
+					if($actualTimeUsedInMinutesThisMonth > $companyMinuteCredits){
+						$minusCompanyMinuteCreditsRemaining = $actualTimeUsedInMinutesThisMonth - $companyMinuteCredits;
+						$displayCompanyCreditsRemaining = "-" . convertMinutesToHoursAndMinutes($minusCompanyMinuteCreditsRemaining);
+					} else {
+						$companyMinuteCreditsRemaining = $companyMinuteCredits - $actualTimeUsedInMinutesThisMonth;
+						$displayCompanyCreditsRemaining = convertMinutesToHoursAndMinutes($companyMinuteCreditsRemaining);
+					}
+				} else {
+					$companyMinuteCreditsRemaining = $companyMinuteCredits;
+					$displayCompanyCreditsRemaining = convertMinutesToHoursAndMinutes($companyMinuteCreditsRemaining);
+				}
+
+					// Calculate Potential Company Credits Remaining (includes future bookings)
+				if($potentialExtraMonthlyTimeUsed == "N/A"){
+					$displayPotentialCompanyCreditsRemaining = $displayCompanyCreditsRemaining;
+					$displayPotentialExtraMonthlyTimeUsed = convertMinutesToHoursAndMinutes(0);
+				} elseif($MonthlyTimeUsed != "N/A"){
+					$monthlyTimeHour = substr($potentialExtraMonthlyTimeUsed,0,strpos($potentialExtraMonthlyTimeUsed,"h"));
+					$monthlyTimeMinute = substr($potentialExtraMonthlyTimeUsed,strpos($potentialExtraMonthlyTimeUsed,"h")+1,-1);
+					$potentialExtraMonthlyTimeUsedInMinutes = $monthlyTimeHour*60 + $monthlyTimeMinute;
+					$actualTimeUsedInMinutesThisMonth += $potentialExtraMonthlyTimeUsedInMinutes;
+
+					if($actualTimeUsedInMinutesThisMonth > $companyMinuteCredits){
+						$minusPotentialCompanyMinuteCreditsRemaining = $actualTimeUsedInMinutesThisMonth - $companyMinuteCredits;
+						$displayPotentialCompanyCreditsRemaining = "-" . convertMinutesToHoursAndMinutes($minusPotentialCompanyMinuteCreditsRemaining);
+					} else {
+						$potentialCompanyMinuteCreditsRemaining = $companyMinuteCredits - $actualTimeUsedInMinutesThisMonth;
+						$displayPotentialCompanyCreditsRemaining = convertMinutesToHoursAndMinutes($potentialCompanyMinuteCreditsRemaining);
+					}
+					$displayPotentialExtraMonthlyTimeUsed = convertMinutesToHoursAndMinutes($potentialExtraMonthlyTimeUsedInMinutes);
+				} else {
+					$monthlyTimeHour = substr($potentialExtraMonthlyTimeUsed,0,strpos($potentialExtraMonthlyTimeUsed,"h"));
+					$monthlyTimeMinute = substr($potentialExtraMonthlyTimeUsed,strpos($potentialExtraMonthlyTimeUsed,"h")+1,-1);
+					$potentialExtraMonthlyTimeUsedInMinutes = $monthlyTimeHour*60 + $monthlyTimeMinute;
+					$actualTimeUsedInMinutesThisMonth = $potentialExtraMonthlyTimeUsedInMinutes;
+
+					if($actualTimeUsedInMinutesThisMonth > $companyMinuteCredits){
+						$minusPotentialCompanyMinuteCreditsRemaining = $actualTimeUsedInMinutesThisMonth - $companyMinuteCredits;
+						$displayPotentialCompanyCreditsRemaining = "-" . convertMinutesToHoursAndMinutes($minusPotentialCompanyMinuteCreditsRemaining);
+					} else {
+						$potentialCompanyMinuteCreditsRemaining = $companyMinuteCredits - $actualTimeUsedInMinutesThisMonth;
+						$displayPotentialCompanyCreditsRemaining = convertMinutesToHoursAndMinutes($potentialCompanyMinuteCreditsRemaining);
+					}
+					$displayPotentialExtraMonthlyTimeUsed = convertMinutesToHoursAndMinutes($potentialExtraMonthlyTimeUsedInMinutes);				
+				}
+
+				$displayEndDate =  convertDatetimeToFormat($row['endDate'], 'Y-m-d', DATE_DEFAULT_FORMAT_TO_DISPLAY);
+				
+				$company[] = array(
+									'companyID' => $row['companyID'],
+									'companyName' => $row['companyName'],
+									'endDate' => $displayEndDate,
+									'creditsRemaining' => $displayCompanyCreditsRemaining,
+									'PotentialExtraMonthlyTimeUsed' => $displayPotentialExtraMonthlyTimeUsed,
+									'PotentialCreditsRemaining' => $displayPotentialCompanyCreditsRemaining
+									);
+			}
+	
 		$pdo = null;
 				
 		// We only need to allow the user a company dropdown selector if they
@@ -2029,14 +2360,20 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Edit') OR
 				unset($_SESSION['EditCreateBookingDisplayCompanySelect']);
 				$_SESSION['EditCreateBookingInfoArray']['TheCompanyID'] = $company[0]['companyID'];
 				$_SESSION['EditCreateBookingInfoArray']['BookedForCompany'] = $company[0]['companyName'];
+				$_SESSION['EditCreateBookingInfoArray']['CreditsRemaining'] = $company[0]['creditsRemaining'];
+				$_SESSION['EditCreateBookingInfoArray']['PotentialExtraMonthlyTimeUsed'] = $company[0]['PotentialExtraMonthlyTimeUsed'];
+				$_SESSION['EditCreateBookingInfoArray']['PotentialCreditsRemaining'] = $company[0]['PotentialCreditsRemaining'];				
 			}
-		} else{
+		} else {
 			// User is NOT in a company
 			
 			//$_SESSION['EditCreateBookingSelectedACompany'] = TRUE;
 			unset($_SESSION['EditCreateBookingDisplayCompanySelect']);
 			$_SESSION['EditCreateBookingInfoArray']['TheCompanyID'] = "";
 			$_SESSION['EditCreateBookingInfoArray']['BookedForCompany'] = "";
+			$_SESSION['EditCreateBookingInfoArray']['CreditsRemaining'] = "N/A";
+			$_SESSION['EditCreateBookingInfoArray']['PotentialExtraMonthlyTimeUsed'] = "N/A";
+			$_SESSION['EditCreateBookingInfoArray']['PotentialCreditsRemaining'] = "N/A";
 		}
 	}
 	catch(PDOException $e)
@@ -2056,6 +2393,10 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Edit') OR
 		foreach($company AS $cmp){
 			if($cmp['companyID'] == $row['TheCompanyID']){
 				$row['BookedForCompany'] = $cmp['companyName'];
+				$row['CreditsRemaining'] = $cmp['creditsRemaining'];
+				$row['PotentialExtraMonthlyTimeUsed'] = $cmp['PotentialExtraMonthlyTimeUsed'];
+				$row['PotentialCreditsRemaining'] = $cmp['PotentialCreditsRemaining'];
+				$row['EndDate'] = $cmp['endDate'];				
 				break;
 			}
 		}			
@@ -2064,6 +2405,10 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Edit') OR
 		// Edited inputs
 	$bookingID = $row['TheBookingID'];
 	$companyName = $row['BookedForCompany'];
+	$creditsRemaining = $row['CreditsRemaining'];
+	$potentialExtraCreditsUsed = $row['PotentialExtraMonthlyTimeUsed'];
+	$potentialCreditsRemaining = $row['PotentialCreditsRemaining'];
+	$companyPeriodEndDate = $row['EndDate'];	
 	$selectedCompanyID = $row['TheCompanyID'];
 	$companyID = $row['TheCompanyID'];
 	//	userID has been set earlier
