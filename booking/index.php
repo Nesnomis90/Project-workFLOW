@@ -2296,8 +2296,7 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Edit') OR
 				ON 			e.`userID` = u.`userID`
 				INNER JOIN	`company` c
 				ON 			c.`companyID` = e.`companyID`
-				WHERE 		u.`userID` = :userID
-				AND			c.`isActive` = 1';
+				WHERE 		u.`userID` = :userID';
 		$minimumSecondsPerBooking = MINIMUM_BOOKING_DURATION_IN_MINUTES_USED_IN_PRICE_CALCULATIONS * 60; // e.g. 15min = 900s
 		$aboveThisManySecondsToCount = BOOKING_DURATION_IN_MINUTES_USED_BEFORE_INCLUDING_IN_PRICE_CALCULATIONS * 60; // E.g. 1min = 60s	
 
@@ -2958,10 +2957,9 @@ try
 									(
 										SELECT 		GROUP_CONCAT(c.`name` separator ",\n")
 										FROM 		`company` c
-										INNER JOIN `employee` e
+										INNER JOIN 	`employee` e
 										ON 			e.`CompanyID` = c.`CompanyID`
 										WHERE  		e.`userID` = b.`userID`
-										AND			c.`isActive` = 1
 										GROUP BY 	e.`userID`
 									)
 								)
@@ -3012,10 +3010,9 @@ try
 									(
 										SELECT 		GROUP_CONCAT(c.`name` separator ",\n")
 										FROM 		`company` c
-										INNER JOIN `employee` e
+										INNER JOIN 	`employee` e
 										ON 			e.`CompanyID` = c.`CompanyID`
 										WHERE  		e.`userID` = b.`userID`
-										AND			c.`isActive` = 1
 										GROUP BY 	e.`userID`
 									)
 								)
