@@ -35,6 +35,8 @@ function clearAddCreateBookingSessions(){
 	unset($_SESSION['bookingCodeUserID']);
 	
 	unset($_SESSION['cancelBookingOriginalValues']);
+	
+	unset($_SESSION['normalUserOriginalInfoArray']); // Make sure we get up-to-date user values after doing bookings
 }
 
 // Function to clear sessions used to remember user inputs on refreshing the edit booking form
@@ -53,6 +55,8 @@ function clearEditCreateBookingSessions(){
 	unset($_SESSION["EditCreateBookingOriginalBookingID"]);
 
 	unset($_SESSION['cancelBookingOriginalValues']);
+	
+	unset($_SESSION['normalUserOriginalInfoArray']); // Make sure we get up-to-date user values after doing bookings
 }
 
 // Function to remember the user inputs in Edit Booking
