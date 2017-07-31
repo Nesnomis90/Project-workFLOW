@@ -2256,7 +2256,7 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Edit') OR
 								BETWEEN		c.`startDate`
 								AND			c.`endDate`
 							)													AS MonthlyCompanyWideBookingTimeUsed,
-															(
+							(
 								SELECT (BIG_SEC_TO_TIME(SUM(
 														IF(
 															(
@@ -2522,6 +2522,10 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Edit') OR
 	if(!isSet($originalUserInformation) OR $originalUserInformation == NULL OR $originalUserInformation == ",  - "){
 		$originalUserInformation = "N/A - Deleted";	
 	}	
+	
+	// Save changes
+	$_SESSION['EditCreateBookingInfoArray'] = $row;
+	
 	var_dump($_SESSION); // TO-DO: remove after testing is done
 	
 	// Change to the actual form we want to use
@@ -2643,7 +2647,7 @@ if(isSet($_POST['edit']) AND $_POST['edit'] == "Select This Company"){
 	unset($_SESSION['EditCreateBookingSelectACompany']);
 	// Let's remember what was selected if we do any changes before clicking "Select This Company"
 	rememberEditCreateBookingInputs();
-	
+
 	$_SESSION['refreshEditCreateBooking'] = TRUE;
 	header('Location: .');
 	exit();	

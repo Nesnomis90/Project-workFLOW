@@ -159,7 +159,10 @@
 				</div>
 
 				<?php if($bookingCreatorUserAccess != "Admin") : ?>
-					
+					<div>
+						<label>New Description: </label>
+						<span><b><?php htmlout($description); ?></b></span>
+					</div>
 				<?php else : ?>
 					<div>
 						<label class="description" for="description">Set New Booking Description: </label>
@@ -178,7 +181,7 @@
 					<?php if(isSet($_SESSION['EditCreateBookingSelectACompany'])) : ?>
 						<input type="submit" name="disabled" value="Finish Edit" disabled>
 						<span><b>You need to select the company you want before you can finish editing.</b></span>			
-					<?php elseif($bookingCreatorUserAccess == "Admin") : ?>
+					<?php else : ?>
 						<input type="submit" name="edit" value="Finish Edit">
 					<?php endif; ?>
 					<?php if(isSet($_SESSION['EditCreateBookingSelectACompany'])) : ?>

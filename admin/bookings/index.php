@@ -966,9 +966,7 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Edit') OR
 			}
 		}			
 	}
-	
-	$_SESSION['EditBookingInfoArray'] = $row;	
-	
+
 		// Edited inputs
 	$bookingID = $row['TheBookingID'];
 	$companyName = $row['BookedForCompany'];
@@ -1029,8 +1027,12 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Edit') OR
 	if($original['BookingCompleted'] == 1){
 		$bookingHasBeenCompleted = TRUE;
 	}
+
+	// Save changes
+	$_SESSION['EditBookingInfoArray'] = $row;
+
 	var_dump($_SESSION); // TO-DO: remove after testing is done
-	
+
 	// Change to the actual form we want to use
 	include 'editbooking.html.php';
 	exit();
