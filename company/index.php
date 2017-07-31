@@ -302,7 +302,8 @@ if(isSet($_POST['action']) AND $_POST['action'] == "Confirm"){
 			exit();
 		}
 		unset($_SESSION['normalCompanyCreateACompany']);
-		unset($_SESSION['LastCompanyID']);		
+		unset($_SESSION['LastCompanyID']);
+		unset($_SESSION['normalUserOriginalInfoArray']);
 	} else {
 		$_SESSION['normalCompanyCreateACompany'] = "Invalid";
 	}
