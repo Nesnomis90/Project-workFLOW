@@ -146,7 +146,7 @@
 				<div class="left">
 					<label for="displayName">Display Name: </label>
 					<?php if($access != "Admin") : ?>
-
+						<span><b><?php htmlout($displayName); ?></b></span>
 					<?php else : ?>
 						<input type="text" name="displayName" id="displayName" 
 						value="<?php htmlout($displayName); ?>">
@@ -157,7 +157,7 @@
 				<div class="left">
 					<label class="description" for="description">Booking Description: </label>
 					<?php if($access != "Admin") : ?>
-					
+						<span><b><?php htmlout($description); ?></b></span>
 					<?php else : ?>
 						<textarea rows="4" cols="50" name="description" id="description"><?php htmlout($description); ?></textarea>
 						<input type="submit" name="add" value="Get Default Booking Description">

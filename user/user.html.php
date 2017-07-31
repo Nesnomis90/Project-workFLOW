@@ -100,28 +100,30 @@
 								<?php endif; ?>
 							<?php endif; ?>
 							
-							<div>
-								<label>Default Display Name: </label>
-								<span style="white-space: pre-wrap;"><?php htmlout($originalDisplayName); ?></span>
-							</div>
-
-							<?php if(isSet($editMode)) : ?>
+							<?php if($accessName == "Admin") : ?>
 								<div>
-									<label>Change Display Name: </label>
-									<input type="text" name="displayName" value="<?php htmlout($displayName); ?>">
+									<label>Default Display Name: </label>
+									<span style="white-space: pre-wrap;"><?php htmlout($originalDisplayName); ?></span>
 								</div>
-							<?php endif; ?>
 
-							<div>
-								<label>Default Booking Description: </label>
-								<span style="white-space: pre-wrap;"><?php htmlout($originalBookingDescription); ?></span>
-							</div>
+								<?php if(isSet($editMode)) : ?>
+									<div>
+										<label>Change Display Name: </label>
+										<input type="text" name="displayName" value="<?php htmlout($displayName); ?>">
+									</div>
+								<?php endif; ?>
 
-							<?php if(isSet($editMode)) : ?>
 								<div>
-									<label>Change Booking Description: </label>
-									<textarea rows="4" cols="50" name="bookingDescription" style="white-space: pre-wrap;"><?php htmlout($bookingDescription); ?></textarea>
+									<label>Default Booking Description: </label>
+									<span style="white-space: pre-wrap;"><?php htmlout($originalBookingDescription); ?></span>
 								</div>
+
+								<?php if(isSet($editMode)) : ?>
+									<div>
+										<label>Change Booking Description: </label>
+										<textarea rows="4" cols="50" name="bookingDescription" style="white-space: pre-wrap;"><?php htmlout($bookingDescription); ?></textarea>
+									</div>
+								<?php endif; ?>
 							<?php endif; ?>
 
 							<?php if(isSet($userCanHaveABookingCode)) : ?>
