@@ -147,19 +147,27 @@ function checkIfLocalDeviceOrLoggedIn(){
 	return $SelectedUserID;
 }
 
-// This is used on cancel
+// This is used when a booking is cancelled by someone else than the booking owner
+// e.g. company owner or an admin
 function emailUserOnCancelledBooking(){
 
-	if(isSet($_POST['UserID']) AND $_POST['UserID'] != $_SESSION['LoggedInUserID']){
-		if(isSet($_POST['sendEmail']) AND $_POST['sendEmail'] == 1){
+	if(isSet($_SESSION['cancelBookingOriginalValues'])){
+		if($_SESSION['cancelBookingOriginalValues']['SendEmail'] == 1){
 			$bookingCreatorUserEmail = $_SESSION['cancelBookingOriginalValues']['UserEmail'];
-			unset($_SESSION['cancelBookingOriginalValues']['UserEmail']);
 			$bookingCreatorMeetingInfo = $_SESSION['cancelBookingOriginalValues']['MeetingInfo'];
+			$cancelledBy = $_SESSION['cancelBookingOriginalValues']['CancelledBy'];
+			// TO-DO: Add reason for cancelling
+			//$reasonForCancelling = $_SESSION['cancelBookingOriginalValues']['ReasonForCancelling'];
+			if(!isSet($reasonForCancelling) OR isSet($reasonForCancelling) AND empty($reasonForCancelling)){
+				$reasonForCancelling = "No reason given.";
+			}
+			
 			$emailSubject = "Your meeting has been cancelled!";
 
 			$emailMessage = 
-			"A booked meeting has been cancelled by an Admin!\n" .
-			"The meeting was booked for the room " . $bookingCreatorMeetingInfo;
+			"A booked meeting has been cancelled by $cancelledBy!\n" .
+			"The meeting was booked for the room " . $bookingCreatorMeetingInfo .
+			"\nReason given for cancelling: " . $reasonForCancelling;
 			
 			$email = $bookingCreatorUserEmail;
 			
@@ -170,11 +178,9 @@ function emailUserOnCancelledBooking(){
 			}
 			
 			$_SESSION['normalBookingFeedback'] .= "\nThis is the email msg we're sending out:\n$emailMessage.\nSent to email: $email."; // TO-DO: Remove after testing
-		} elseif(isSet($_POST['sendEmail']) AND $_POST['sendEmail'] == 0) {
-			$_SESSION['BookingUserFeedback'] .= "\nUser does not want to be sent Email.";
 		}
 	} else {
-		$_SESSION['normalBookingFeedback'] .= "\nDid not send an email because you cancelled your own meeting.";
+		$_SESSION['BookingUserFeedback'] .= "\nFailed to send an email to the user that the booking got cancelled.";
 	}
 }
 
@@ -439,6 +445,8 @@ if (	(isSet($_POST['action']) and $_POST['action'] == 'Cancel') OR
 		$_SESSION['cancelBookingOriginalValues']['BookingID'] = $_POST['id'];
 		$_SESSION['cancelBookingOriginalValues']['BookingStatus'] = $_POST['BookingStatus'];
 		$_SESSION['cancelBookingOriginalValues']['MeetingInfo'] = $_POST['MeetingInfo'];
+		$_SESSION['cancelBookingOriginalValues']['SendEmail'] = $_POST['sendEmail'];
+		$_SESSION['cancelBookingOriginalValues']['UserEmail'] = $_POST['email'];
 	}
 
 	$bookingID = $_SESSION['cancelBookingOriginalValues']['BookingID'];
@@ -615,8 +623,10 @@ if (	(isSet($_POST['action']) and $_POST['action'] == 'Cancel') OR
 		{
 			if($cancelledByAdmin){
 				$nameOfUserWhoCancelled = $cancelledByAdminName;
+				$_SESSION['cancelBookingOriginalValues']['CancelledBy'] = "an Admin: $cancelledByAdminName";
 			} elseif($cancelledByOwner) {
 				$nameOfUserWhoCancelled = $cancelledByUserName;
+				$_SESSION['cancelBookingOriginalValues']['CancelledBy'] = "a Company Owner: $cancelledByUserName";
 			} else {
 				$nameOfUserWhoCancelled = $_SESSION["AddCreateBookingInfoArray"]["UserLastname"] . ', ' . $_SESSION["AddCreateBookingInfoArray"]["UserFirstname"];
 			}		
@@ -652,7 +662,6 @@ if (	(isSet($_POST['action']) and $_POST['action'] == 'Cancel') OR
 			exit();
 		}	
 		if($cancelledByAdmin OR $cancelledByOwner){
-			$_SESSION['cancelBookingOriginalValues']['UserEmail'] = $bookingCreatorUserEmail;
 			emailUserOnCancelledBooking();
 		}
 	} else {

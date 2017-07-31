@@ -111,7 +111,7 @@
 							value="<?php htmlout($booking['sendEMail']); ?>">
 						</tr>
 					</form>
-					<?php endforeach; ?>
+				<?php endforeach; ?>
 			<?php endif; ?>				
 				</table>
 				<table>
