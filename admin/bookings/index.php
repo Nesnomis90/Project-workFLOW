@@ -942,7 +942,7 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Edit') OR
 				$row['UserFirstname'] = $user['firstName'];
 				$row['UserEmail'] = $user['email'];
 				$row['sendEmail'] = $user['sendEmail'];
-				
+
 				$_SESSION['EditBookingDefaultDisplayNameForNewUser'] = $user['displayName'];
 				$_SESSION['EditBookingDefaultBookingDescriptionForNewUser'] = $user['bookingDescription'];
 				break;
@@ -952,7 +952,7 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Edit') OR
 		$_SESSION['EditBookingDefaultDisplayNameForNewUser'] = $original['UserDefaultDisplayName'];
 		$_SESSION['EditBookingDefaultBookingDescriptionForNewUser'] = $original['UserDefaultBookingDescription'];
 	}
-	
+
 	// Changed company
 	if(isSet($company)){
 		foreach($company AS $cmp){
@@ -964,11 +964,9 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Edit') OR
 				$row['EndDate'] = $cmp['endDate'];
 				break;
 			}
-		}			
+		}
 	}
-	
-	$_SESSION['EditBookingInfoArray'] = $row;	
-	
+
 		// Edited inputs
 	$bookingID = $row['TheBookingID'];
 	$companyName = $row['BookedForCompany'];
@@ -1025,12 +1023,16 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Edit') OR
 	if(!isSet($originalUserInformation) OR $originalUserInformation == NULL OR $originalUserInformation == ",  - "){
 		$originalUserInformation = "N/A - Deleted";	
 	}	
-	
+
 	if($original['BookingCompleted'] == 1){
 		$bookingHasBeenCompleted = TRUE;
 	}
+
+	// Save changes
+	$_SESSION['EditBookingInfoArray'] = $row;
+
 	var_dump($_SESSION); // TO-DO: remove after testing is done
-	
+
 	// Change to the actual form we want to use
 	include 'editbooking.html.php';
 	exit();
@@ -2060,8 +2062,7 @@ if (	(isSet($_POST['action']) AND $_POST['action'] == "Create Booking") OR
 					ON 			e.`userID` = u.`userID`
 					INNER JOIN	`company` c
 					ON 			c.`companyID` = e.`companyID`
-					WHERE 		u.`userID` = :userID
-					AND			c.`isActive` = 1';
+					WHERE 		u.`userID` = :userID';
 			$minimumSecondsPerBooking = MINIMUM_BOOKING_DURATION_IN_MINUTES_USED_IN_PRICE_CALCULATIONS * 60; // e.g. 15min = 900s
 			$aboveThisManySecondsToCount = BOOKING_DURATION_IN_MINUTES_USED_BEFORE_INCLUDING_IN_PRICE_CALCULATIONS * 60; // E.g. 1min = 60s	
 
@@ -3104,6 +3105,7 @@ foreach ($result as $row)
 	$dateOnlyCompleted = convertDatetimeToFormat($completedDateTime,'Y-m-d H:i:s','Y-m-d');
 	$dateOnlyStart = convertDatetimeToFormat($startDateTime,'Y-m-d H:i:s','Y-m-d');
 	$cancelledDateTime = $row['BookingWasCancelledOn'];
+	$dateOnlyCancelled = convertDatetimeToFormat($cancelledDateTime, 'Y-m-d H:i:s', 'Y-m-d');
 	$createdDateTime = $row['BookingWasCreatedOn'];	
 	
 	// Describe the status of the booking based on what info is stored in the database
@@ -3131,28 +3133,37 @@ foreach ($result as $row)
 	} elseif(	$completedDateTime == null AND $cancelledDateTime != null AND
 				$startDateTime > $cancelledDateTime){
 		$status = 'Cancelled';
+			// Valid status
+	} elseif(	$completedDateTime != null AND $cancelledDateTime != null AND
+				$completedDateTime >= $cancelledDateTime AND $dateOnlyCancelled == $dateOnlyNow){
+		$status = 'Ended Early Today';
+		// Valid status?
+	} elseif(	$completedDateTime == null AND $cancelledDateTime != null AND
+				$endDateTime > $cancelledDateTime AND $startDateTime < $cancelledDateTime 
+				AND $dateOnlyCancelled == $dateOnlyNow){
+		$status = 'Ended Early Today';
 		// Valid status
 	} elseif(	$completedDateTime != null AND $cancelledDateTime != null AND
-				$completedDateTime >= $cancelledDateTime ){
+				$completedDateTime >= $cancelledDateTime AND $dateOnlyCancelled < $dateOnlyNow){
 		$status = 'Ended Early';
 		// Valid status?
 	} elseif(	$completedDateTime == null AND $cancelledDateTime != null AND
-				$endDateTime < $cancelledDateTime AND 
-				$startDateTime > $cancelledDateTime){
+				$endDateTime > $cancelledDateTime AND $startDateTime < $cancelledDateTime 
+				AND $dateOnlyCancelled < $dateOnlyNow){
 		$status = 'Ended Early';
 		// Valid status?
 	} elseif(	$completedDateTime != null AND $cancelledDateTime != null AND
 				$completedDateTime < $cancelledDateTime ){
 		$status = 'Cancelled after Completion';
-		// This should not be allowed to happen eventually
+		// This should not be allowed to happen
 	} elseif(	$completedDateTime == null AND $cancelledDateTime == null AND 
 				$datetimeNow > $endDateTime){
 		$status = 'Ended without updating database';
-		// This should never occur
+		// This should only occur when the cron does not check and update every minute
 	} elseif(	$completedDateTime == null AND $cancelledDateTime != null AND 
 				$endDateTime < $cancelledDateTime){
 		$status = 'Cancelled after meeting should have been Completed';
-		// This should not be allowed to happen eventually
+		// This should not be allowed to happen
 	} else {
 		$status = 'Unknown';
 		// This should never occur
@@ -3223,7 +3234,7 @@ foreach ($result as $row)
 										'UserInfo' => $userinfo,
 										'MeetingInfo' => $meetinginfo
 									);
-	}	elseif($status == "Completed Today") {
+	}	elseif($status == "Completed Today" OR $status == "Ended Early Today") {
 		$bookingsCompletedToday[] = array(	'id' => $row['bookingID'],
 											'BookingStatus' => $status,
 											'BookedRoomName' => $roomName,
@@ -3265,7 +3276,7 @@ foreach ($result as $row)
 									'UserInfo' => $userinfo,
 									'MeetingInfo' => $meetinginfo
 								);
-	}	elseif($status == "Completed"){				
+	}	elseif($status == "Completed" OR $status == "Ended Early"){				
 		$bookingsCompleted[] = array(	'id' => $row['bookingID'],
 										'BookingStatus' => $status,
 										'BookedRoomName' => $roomName,
