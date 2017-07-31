@@ -40,7 +40,7 @@ if(isSet($_SESSION['normalCompanyCreateACompany']) AND $_SESSION['normalCompanyC
 	$_SESSION['normalCompanyCreateACompany'] = TRUE;
 }
 
-if(!isSet($_GET['ID']) AND !isSet($_GET['employees'])){
+if(!isSet($_GET['ID']) AND !isSet($_GET['employees']) AND !isSet($_SESSION['normalUserSettingCompanyID'])){
 	unset($_SESSION['normalUserCompanyIDSelected']);
 }
 
@@ -337,6 +337,7 @@ if(isSet($_SESSION['normalUserCompanyIDSelected']) AND !isSet($_GET['ID']) AND !
 }
 /*
 //variables to implement
+// TO-DO:
 $selectedCompanyToJoinID;//int
 
 // values to retrieve
@@ -1103,7 +1104,6 @@ try
 			ON 			e.`CompanyID` = c.`CompanyID`
 			INNER JOIN	`user` u
 			ON			u.`UserID` = e.`UserID`
-			WHERE		c.`isActive` = 1
 			AND			u.`UserID` = :UserID";
 	$s = $pdo->prepare($sql);
 	$s->bindValue(':UserID', $_SESSION['LoggedInUserID']);
@@ -1121,6 +1121,15 @@ catch (PDOException $e)
 	include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
 	$pdo = null;
 	exit();
+}
+
+if(!isset($_SESSION['normalUserCompanyIDSelected']) AND isSet($numberOfCompanies) AND $numberOfCompanies == 1){
+	$_SESSION['normalUserCompanyIDSelected'] = $companiesUserWorksFor[0]['CompanyID'];
+	$_SESSION['normalUserSettingCompanyID'] = TRUE;
+	header("Location: .");
+	exit();
+} else {
+	unset($_SESSION['normalUserSettingCompanyID']);
 }
 
 // First check if the company selected is one of the companies the user actually works for

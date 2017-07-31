@@ -884,7 +884,6 @@ if(isSet($_SESSION['loggedIn']) AND isSet($_SESSION['LoggedInUserID'])){
 									INNER JOIN 	`companyposition` cp
 									ON 			cp.`PositionID` = e.`PositionID`
 									WHERE  		e.`userID` = u.`userID`
-									AND			c.`isActive` = 1
 									GROUP BY 	e.`userID`
 								)						AS WorksFor
 					FROM		`user` u

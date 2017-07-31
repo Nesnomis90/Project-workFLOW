@@ -67,7 +67,7 @@
 							<?php endif; ?>
 							<div>
 								<label>Company Connection: </label>
-								<span><b><?php htmlout($worksFor); ?></b></span>
+								<span style="white-space: pre-wrap;"><b><?php htmlout($worksFor); ?></b></span>
 							</div>
 						</fieldset>
 						
