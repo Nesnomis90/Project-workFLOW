@@ -117,9 +117,7 @@ function checkIfLocalDeviceOrLoggedIn(){
 		if(isSet($_SESSION['DefaultMeetingRoomInfo'])){
 			// We're accessing a local device.
 			// Confirm with booking code
-			// Set default values for bookingcode template
 			var_dump($_SESSION); // TO-DO: remove after testing is done
-			$bookingCode = "";
 			include_once 'bookingcode.html.php';
 			exit();
 		}
@@ -505,6 +503,7 @@ if (	(isSet($_POST['action']) and $_POST['action'] == 'Cancel') OR
 
 			if(isSet($row) AND $row['HitCount'] > 0){
 				$cancelledByUserID = $row['userID'];
+				$cancelledByUserName = $row['lastName'] . ", " . $row['firstName'];
 				$cancelledByUserEmail = $row['UserEmail'];
 				$cancelledByUserInfo = $row['lastName'] . ", " . $row['firstName'] . " - " . $row['UserEmail'];
 				$continueCancel = TRUE;
@@ -525,7 +524,10 @@ if (	(isSet($_POST['action']) and $_POST['action'] == 'Cancel') OR
 	if(!$continueCancel) {
 		try
 		{
-			$sql = 'SELECT 		COUNT(*) 	AS HitCount	
+			$sql = 'SELECT 		COUNT(*) 	AS HitCount,
+								u.`UserID`,
+								u.`firstName`,
+								u.`lastName`
 					FROM		`user` u
 					INNER JOIN	`accesslevel` a
 					ON 			u.`AccessID` = a.`AccessID`
@@ -538,10 +540,11 @@ if (	(isSet($_POST['action']) and $_POST['action'] == 'Cancel') OR
 			$s->execute();
 			$row = $s->fetch(PDO::FETCH_ASSOC);
 			if(isSet($row) AND $row['HitCount'] > 0){
+				$cancelledByAdminID = $row['userID'];
+				$cancelledByAdminName = $row['lastName'] . ", " . $row['firstName'];
 				$continueCancel = TRUE;
 				$cancelledByAdmin = TRUE;
 			}
-
 		}
 		catch (PDOException $e)
 		{
@@ -594,28 +597,28 @@ if (	(isSet($_POST['action']) and $_POST['action'] == 'Cancel') OR
 			// Add a log event that a booking was cancelled
 		try
 		{
-			$nameOfUserWhoBooked = "N/A";
-			if(isSet($_SESSION['LoggedInUserName'])){
-				$nameOfUserWhoBooked = $_SESSION['LoggedInUserName'];
-			}
-			if(isSet($_SESSION["AddCreateBookingInfoArray"])){
-				$nameOfUserWhoBooked = $_SESSION["AddCreateBookingInfoArray"]["UserLastname"] . ', ' . $_SESSION["AddCreateBookingInfoArray"]["UserFirstname"];
-			}			
-			
+			if($cancelledByAdmin){
+				$nameOfUserWhoCancelled = $cancelledByAdminName;
+			} elseif($cancelledByOwner) {
+				$nameOfUserWhoCancelled = $cancelledByUserName;
+			} else {
+				$nameOfUserWhoCancelled = $_SESSION["AddCreateBookingInfoArray"]["UserLastname"] . ', ' . $_SESSION["AddCreateBookingInfoArray"]["UserFirstname"];
+			}		
+	
 			// Save a description with information about the booking that was cancelled
 			$logEventDescription = "N/A";
 			if(isSet($bookingCreatorUserInfo) AND isSet($bookingMeetingInfo)){
 				$logEventDescription = 'The booking made for ' . $bookingCreatorUserInfo . ' for the meeting room ' .
-				$bookingMeetingInfo . ' was cancelled by: ' . $nameOfUserWhoBooked;
+				$bookingMeetingInfo . ' was cancelled by: ' . $nameOfUserWhoCancelled;
 			} else {
-				$logEventDescription = 'A booking was cancelled by: ' . $nameOfUserWhoBooked;
+				$logEventDescription = 'A booking was cancelled by: ' . $nameOfUserWhoCancelled;
 			}
 
 			$sql = "INSERT INTO `logevent` 
 					SET			`actionID` = 	(
-													SELECT `actionID` 
-													FROM `logaction`
-													WHERE `name` = 'Booking Cancelled'
+													SELECT 	`actionID` 
+													FROM 	`logaction`
+													WHERE 	`name` = 'Booking Cancelled'
 												),
 								`description` = :description";
 			$s = $pdo->prepare($sql);

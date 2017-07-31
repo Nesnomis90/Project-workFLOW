@@ -150,7 +150,7 @@
 				<div>
 					<label for="originalBookingDescription">Booked Description: </label>
 					<span><b>
-						<?php if($originalBookingDescription == "") : ?>
+						<?php if(empty($originalBookingDescription)) : ?>
 							This booking has no Booking Description set.
 						<?php else : ?>
 							<?php htmlout($originalBookingDescription); ?>
