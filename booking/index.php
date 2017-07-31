@@ -446,7 +446,7 @@ if (	(isSet($_POST['action']) and $_POST['action'] == 'Cancel') OR
 		$_SESSION['cancelBookingOriginalValues']['BookingStatus'] = $_POST['BookingStatus'];
 		$_SESSION['cancelBookingOriginalValues']['MeetingInfo'] = $_POST['MeetingInfo'];
 		$_SESSION['cancelBookingOriginalValues']['SendEmail'] = $_POST['sendEmail'];
-		$_SESSION['cancelBookingOriginalValues']['UserEmail'] = $_POST['email'];
+		$_SESSION['cancelBookingOriginalValues']['UserEmail'] = $_POST['Email'];
 	}
 
 	$bookingID = $_SESSION['cancelBookingOriginalValues']['BookingID'];
@@ -2624,6 +2624,8 @@ if(isSet($_POST['edit']) AND $_POST['edit'] == "Finish Edit")
 	}
 		
 	$_SESSION['normalBookingFeedback'] .= "Successfully updated the booking information!";
+	
+	// TO-DO: Email user on edit since admin can edit this too?
 	
 	clearEditCreateBookingSessions();
 	

@@ -88,16 +88,8 @@
 							<td><?php htmlout($booking['BookedForCompany']); ?></td>
 							<td><?php htmlout($booking['BookingDescription']); ?></td>
 							<td><?php htmlout($booking['BookingWasCreatedOn']); ?></td>
-							<td>
-								<?php if(isSet($_SESSION['LoggedInUserID']) AND $_SESSION['LoggedInUserID'] == $booking['BookedUserID']) : ?>
-									<input type="submit" name="action" value="Edit">
-								<?php endif; ?>
-							</td>							
-							<td>
-								<?php if(isSet($_SESSION['LoggedInUserID']) AND $_SESSION['LoggedInUserID'] == $booking['BookedUserID']) : ?>
-									<input type="submit" name="action" value="Cancel">
-								<?php endif; ?>
-							</td>
+							<td><input type="submit" name="action" value="Edit"></td>							
+							<td><input type="submit" name="action" value="Cancel"></td>
 							<input type="hidden" name="id" value="<?php htmlout($booking['id']); ?>">
 							<input type="hidden" name="UserInfo" id="UserInfo"
 							value="<?php htmlout($booking['UserInfo']); ?>">
@@ -108,7 +100,7 @@
 							<input type="hidden" name="Email" id="Email"
 							value="<?php htmlout($booking['email']); ?>">
 							<input type="hidden" name="sendEmail" id="sendEmail"
-							value="<?php htmlout($booking['sendEMail']); ?>">
+							value="<?php htmlout($booking['sendEmail']); ?>">
 						</tr>
 					</form>
 				<?php endforeach; ?>
@@ -148,16 +140,8 @@
 								<td><?php htmlout($booking['BookedForCompany']); ?></td>
 								<td><?php htmlout($booking['BookingDescription']); ?></td>
 								<td><?php htmlout($booking['BookingWasCreatedOn']); ?></td>
-								<td>
-									<?php if(isSet($_SESSION['LoggedInUserID']) AND $_SESSION['LoggedInUserID'] == $booking['BookedUserID']) : ?>
-										<input type="submit" name="action" value="Edit">
-									<?php endif; ?>
-								</td>							
-								<td>
-									<?php if(isSet($_SESSION['LoggedInUserID']) AND $_SESSION['LoggedInUserID'] == $booking['BookedUserID']) : ?>
-										<input type="submit" name="action" value="Cancel">
-									<?php endif; ?>
-								</td>
+								<td><input type="submit" name="action" value="Edit"></td>							
+								<td><input type="submit" name="action" value="Cancel"></td>
 								<input type="hidden" name="id" value="<?php htmlout($booking['id']); ?>">
 								<input type="hidden" name="UserInfo" id="UserInfo"
 								value="<?php htmlout($booking['UserInfo']); ?>">
@@ -168,7 +152,7 @@
 								<input type="hidden" name="Email" id="Email"
 								value="<?php htmlout($booking['email']); ?>">
 								<input type="hidden" name="sendEmail" id="sendEmail"
-								value="<?php htmlout($booking['sendEMail']); ?>">
+								value="<?php htmlout($booking['sendEmail']); ?>">
 							</tr>
 						</form>
 					<?php endforeach; ?>
@@ -183,7 +167,7 @@
 						<input type="submit" name="action" value="Create Meeting">
 					<?php endif; ?>
 					<input type="submit" name="action" value="Refresh">
-					<b>Last Refresh: <?php htmlout(getDatetimeNowInDisplayFormat()); ?></b>
+					<span><b>Last Refresh: <?php htmlout(getDatetimeNowInDisplayFormat()); ?></b></span>
 				</div>		
 			</form>
 			
