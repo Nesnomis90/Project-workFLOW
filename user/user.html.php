@@ -65,6 +65,10 @@
 									<input type="text" name="email" value="<?php htmlout($email); ?>">
 								</div>
 							<?php endif; ?>
+							<div>
+								<label>Company Connection: </label>
+								<span><b><?php htmlout($worksFor); ?></b></span>
+							</div>
 						</fieldset>
 						
 						<fieldset class="left"><legend>Booking Information:</legend>

@@ -823,7 +823,7 @@ if(isSet($_SESSION['loggedIn']) AND isSet($_SESSION['LoggedInUserID'])){
 			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 			
 			$pdo = connect_to_db();
-			$sql = "SELECT 		u.`userID`				AS UserID,
+			$sql = 'SELECT 		u.`userID`				AS UserID,
 								u.`email`				AS Email,
 								u.`firstName`			AS FirstName,
 								u.`lastName`			AS LastName,
@@ -875,13 +875,24 @@ if(isSet($_SESSION['loggedIn']) AND isSet($_SESSION['LoggedInUserID'])){
 									WHERE	`userID` = :userID
 									AND 	`actualEndDateTime` IS NULL
 									AND 	`dateTimeCancelled` IS NOT NULL
-								)						AS CancelledBookedMeetings
+								)						AS CancelledBookedMeetings,
+								(
+									SELECT 		GROUP_CONCAT(CONCAT_WS(" in ", cp.`name`, CONCAT(c.`name`,".")) separator "\n")
+									FROM 		`company` c
+									INNER JOIN 	`employee` e
+									ON 			e.`CompanyID` = c.`CompanyID`
+									INNER JOIN 	`companyposition` cp
+									ON 			cp.`PositionID` = e.`PositionID`
+									WHERE  		e.`userID` = u.`userID`
+									AND			c.`isActive` = 1
+									GROUP BY 	e.`userID`
+								)						AS WorksFor
 					FROM		`user` u
 					INNER JOIN	`accesslevel` a
 					ON			a.`AccessID` = u.`AccessID`
 					WHERE 		u.`userID` = :userID
 					AND			u.`isActive` = 1
-					LIMIT 		1";
+					LIMIT 		1';
 			$s = $pdo->prepare($sql);
 			$s->bindValue(':userID', $userID);
 			$s->execute();
@@ -935,6 +946,11 @@ if(isSet($_SESSION['loggedIn']) AND isSet($_SESSION['LoggedInUserID'])){
 	$accessName = $result['AccessName'];
 	$accessDescription = $result['AccessDescription'];
 	$originalBookingCode = $result['BookingCode'];
+	
+	$worksFor = $result['WorksFor'];
+	if(empty($worksFor)){
+		$worksFor = "You have no company connection.";
+	}
 
 	if($accessName != "Normal User"){
 		$userCanHaveABookingCode = TRUE;
