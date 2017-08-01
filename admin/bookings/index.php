@@ -40,6 +40,7 @@ function clearEditBookingSessions(){
 	unset($_SESSION['EditBookingDefaultDisplayNameForNewUser']);
 	unset($_SESSION['EditBookingDefaultBookingDescriptionForNewUser']);	
 	unset($_SESSION['EditBookingDisplayCompanySelect']);
+	unset($_SESSION['EditBookingCompanyArray']);
 }
 
 // Function to remember the user inputs in Edit Booking
@@ -896,6 +897,7 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Edit') OR
 								'PotentialCreditsRemaining' => $displayPotentialCompanyCreditsRemaining,
 								'HourPriceOverCredit' => $displayOverHourPrice
 								);
+			$_SESSION['EditBookingCompanyArray'] = $company;
 		}
 
 		$pdo = null;
@@ -920,12 +922,12 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Edit') OR
 				$_SESSION['EditBookingInfoArray']['EndDate'] = $company[0]['endDate'];
 				$_SESSION['EditBookingInfoArray']['HourPriceOverCredit'] = $company[0]['HourPriceOverCredit'];
 				$_SESSION['EditBookingInfoArray']['BookingDescription'] = "Booked for " . $company[0]['companyName'];
-
 			}
 		} else{
 			// User is NOT in a company
 
 			unset($_SESSION['EditBookingDisplayCompanySelect']);
+			unset($_SESSION['EditBookingCompanyArray']);
 			$_SESSION['EditBookingInfoArray']['TheCompanyID'] = "";
 			$_SESSION['EditBookingInfoArray']['BookedForCompany'] = "";
 			$_SESSION['EditBookingInfoArray']['CreditsRemaining'] = "N/A";
@@ -1409,6 +1411,7 @@ if(isSet($_POST['edit']) AND $_POST['edit'] == "Finish Edit")
 	$newStartTime = FALSE;
 	$newEndTime = FALSE;
 	$newUser = FALSE;
+	$newCompany = FALSE;
 	
 	if(!$bookingCompleted){
 		if($compareStartDate != $compareOriginalStartDate){
@@ -1423,6 +1426,7 @@ if(isSet($_POST['edit']) AND $_POST['edit'] == "Finish Edit")
 
 	if($_POST['companyID'] != $originalValue['TheCompanyID']){
 		$numberOfChanges++;
+		$newCompany = TRUE;
 	}
 	if($dspname != $originalValue['BookedBy']){
 		$numberOfChanges++;
@@ -1643,6 +1647,23 @@ if(isSet($_POST['edit']) AND $_POST['edit'] == "Finish Edit")
 		// TO-DO: This is UNTESTED since we don't have php.ini set up to actually send email
 	if(!$bookingCompleted){
 		if($_SESSION['EditBookingInfoArray']['sendEmail'] == 1 OR $originalValue['sendEmail'] == 1){
+			
+			// Get company information
+			$companyName = 'N/A';
+			if(isSet($companyID)){
+				foreach($_SESSION['EditBookingCompanyArray'] AS $company){
+					if($companyID == $company['companyID']){
+						$companyName = $company['companyName'];
+						$companyCreditsRemaining = $company['creditsRemaining'];
+						$companyCreditsBooked = $company['PotentialExtraMonthlyTimeUsed'];
+						$companyCreditsPotentialMinimumRemaining = $company['PotentialCreditsRemaining'];
+						$companyCreditsPotentialMinimumRemainingInMinutes = convertHoursAndMinutesToMinutes($companyCreditsPotentialMinimumRemaining);
+						$companyPeriodEndDate = $company['endDate'];
+						$companyHourPriceOverCredits = $company['HourPriceOverCredit'];
+						break;
+					}
+				}
+			}
 
 			// date display formatting
 			$NewStartDate = convertDatetimeToFormat($startDateTime, 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
@@ -1650,6 +1671,38 @@ if(isSet($_POST['edit']) AND $_POST['edit'] == "Finish Edit")
 			$OldStartDate = convertDatetimeToFormat($oldStartTime, 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
 			$OldEndDate = convertDatetimeToFormat($oldEndTime, 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
 
+			$dateOnlyEndDate = convertDatetimeToFormat($endDateTime, 'Y-m-d H:i:s', 'Y-m-d');
+			$timeBookedInMinutes = convertTwoDateTimesToTimeDifferenceInMinutes($startDateTime,$endDateTime);
+			$oldTimeBookedInMinutes = convertTwoDateTimesToTimeDifferenceInMinutes($oldStartTime,$oldEndTime);	
+
+			// Check if the booking that was made was for the current period.
+			$bookingWentOverCredits = FALSE;
+			if($dateOnlyEndDate < $companyPeriodEndDate){ // TO-DO: <= ?
+			
+				// Credits remaining calculation depends what company we selected
+				if(!$newCompany){
+					if($timeBookedInMinutes > $oldTimeBookedInMinutes){
+						$timeBookedInMinutes -= $oldTimeBookedInMinutes; // Extra time used
+						$companyCreditsPotentialMinimumRemainingInMinutes -= $timeBookedInMinutes;
+					} elseif($timeBookedInMinutes != $oldTimeBookedInMinutes) {
+						$timeBookedInMinutes = $oldTimeBookedInMinutes - $timeBookedInMinutes; // Time reduction
+						$companyCreditsPotentialMinimumRemainingInMinutes += $timeBookedInMinutes;
+					}
+				}
+				
+				if($companyCreditsPotentialMinimumRemainingInMinutes < 0){
+					// Company was already over given credits
+					$bookingWentOverCredits = TRUE;
+					$minutesOverCredits = -($companyCreditsPotentialMinimumRemainingInMinutes) + $timeBookedInMinutes;
+					$timeOverCredits = convertMinutesToHoursAndMinutes($minutesOverCredits);
+				} elseif($timeBookedInMinutes > $companyCreditsPotentialMinimumRemainingInMinutes){
+					// This booking, if completed, will put the company over their given credits
+					$bookingWentOverCredits = TRUE;
+					$minutesOverCredits = $timeBookedInMinutes - $companyCreditsPotentialMinimumRemainingInMinutes;
+					$timeOverCredits = convertMinutesToHoursAndMinutes($minutesOverCredits);
+				}
+			}
+			
 			// Meeting room name(s)
 			$oldMeetingRoomName = $originalValue['BookedRoomName'];		
 			if($newMeetingRoom){
@@ -1676,10 +1729,16 @@ if(isSet($_POST['edit']) AND $_POST['edit'] == "Finish Edit")
 					"The meeting has been set to: \n" .
 					"Meeting Room: " . $newMeetingRoomName . ".\n" . 
 					"Start Time: " . $NewStartDate . ".\n" .
-					"End Time: " . $NewEndDate . ".\n\n" .	
-					"If you wish to cancel this meeting, or just end it early, you can easily do so by clicking the link given below.\n" .
+					"End Time: " . $NewEndDate . ".\n" .
+					"For the Company: " . $companyName . "\n\n" .
+					"If you wish to cancel this meeting, or just end it early, you can easily do so by using the link given below.\n" .
 					"Click this link to cancel your booked meeting: " . $_SERVER['HTTP_HOST'] . 
 					"/booking/?cancellationcode=" . $cancellationCode;
+
+					if($bookingWentOverCredits){
+						// Add time over credits and the price per hour the company subscription has.
+						$emailMessage .= "\n\nWarning: If this booking is completed the company it is booked for will be $timeOverCredits over the given free booking time.\nThis will result in a cost of $companyHourPriceOverCredits";
+					}
 
 					$email = $_SESSION['EditBookingInfoArray']['UserEmail'];
 
@@ -1732,9 +1791,14 @@ if(isSet($_POST['edit']) AND $_POST['edit'] == "Finish Edit")
 					"Meeting Room: " . $oldMeetingRoomName . ".\n" . 
 					"Start Time: " . $OldStartDate . ".\n" .
 					"End Time: " . $OldEndDate . ".\n\n" .
-					"If you wish to cancel your meeting, or just end it early, you can easily do so by clicking the link given below.\n" .
+					"If you wish to cancel your meeting, or just end it early, you can easily do so by using the link given below.\n" .
 					"Click this link to cancel your booked meeting: " . $_SERVER['HTTP_HOST'] .
 					"/booking/?cancellationcode=" . $cancellationCode;
+					
+					if($bookingWentOverCredits){
+						// Add time over credits and the price per hour the company subscription has.
+						$emailMessage .= "\n\nWarning: If this booking is completed the company it is booked for will be $timeOverCredits over the given free booking time.\nThis will result in a cost of $companyHourPriceOverCredits";
+					}
 
 					$email = $originalValue['UserEmail'];
 
@@ -2705,7 +2769,7 @@ if (isSet($_POST['add']) AND $_POST['add'] == "Add booking")
 			"Meeting Room: " . $MeetingRoomName . ".\n" . 
 			"Start Time: " . $displayValidatedStartDate . ".\n" .
 			"End Time: " . $displayValidatedEndDate . ".\n\n" .
-			"If you wish to cancel your meeting, or just end it early, you can easily do so by clicking the link given below.\n" .
+			"If you wish to cancel your meeting, or just end it early, you can easily do so by using the link given below.\n" .
 			"Click this link to cancel your booked meeting: " . $_SERVER['HTTP_HOST'] . 
 			"/booking/?cancellationcode=" . $cancellationCode;		
 		} else {
@@ -2718,7 +2782,7 @@ if (isSet($_POST['add']) AND $_POST['add'] == "Add booking")
 			"Meeting Room: " . $MeetingRoomName . ".\n" . 
 			"Start Time: " . $displayValidatedStartDate . ".\n" .
 			"End Time: " . $displayValidatedEndDate . ".\n\n" .
-			"If you wish to cancel this meeting, or just end it early, you can easily do so by clicking the link given below.\n" .
+			"If you wish to cancel this meeting, or just end it early, you can easily do so by using the link given below.\n" .
 			"Click this link to cancel your booked meeting: " . $_SERVER['HTTP_HOST'] . 
 			"/booking/?cancellationcode=" . $cancellationCode;		
 		}

@@ -1686,7 +1686,7 @@ if (isSet($_POST['add']) AND $_POST['add'] == "Add Booking")
 		"Meeting Room: " . $MeetingRoomName . ".\n" . 
 		"Start Time: " . $displayValidatedStartDate . ".\n" .
 		"End Time: " . $displayValidatedEndDate . ".\n\n" .
-		"If you wish to cancel your meeting, or just end it early, you can easily do so by clicking the link given below.\n" .
+		"If you wish to cancel your meeting, or just end it early, you can easily do so by using the link given below.\n" .
 		"Click this link to cancel your booked meeting: " . $_SERVER['HTTP_HOST'] . 
 		"/booking/?cancellationcode=" . $cancellationCode;
 

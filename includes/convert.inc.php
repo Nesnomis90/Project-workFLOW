@@ -8,12 +8,13 @@ function convertHoursAndMinutesToMinutes($hoursAndMinutes){
 	}
 	elseif(substr($hoursAndMinutes,0,1) === "-"){
 		$timeHour = substr($hoursAndMinutes,1,strpos($hoursAndMinutes,"h"));
-		$timeMinute = substr($hoursAndMinutes,strpos($hoursAndMinutes,"h")+1, strpos($hoursAndMinutes,"m"));	
+		$timeMinute = substr($hoursAndMinutes,strpos($hoursAndMinutes,"h")+1, strpos($hoursAndMinutes,"m"));
+		return -($timeHour * 60 + $timeMinute);
 	} else {
 		$timeHour = substr($hoursAndMinutes,0,strpos($hoursAndMinutes,"h"));
-		$timeMinute = substr($hoursAndMinutes,strpos($hoursAndMinutes,"h")+1, strpos($hoursAndMinutes,"m"));		
+		$timeMinute = substr($hoursAndMinutes,strpos($hoursAndMinutes,"h")+1, strpos($hoursAndMinutes,"m"));
+		return $timeHour * 60 + $timeMinute;		
 	}
-	return $timeHour * 60 + $timeMinute;	
 }
 
 // Takes time xx:yy (x hours and y minutes) and returns xxhyym as text
