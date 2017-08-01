@@ -1588,29 +1588,13 @@ if(isSet($_POST['edit']) AND $_POST['edit'] == "Finish Edit")
 	} else {
 		$companyID = NULL;
 	}
-	
+
 	// Generate new cancellation code if we change users
 	if($newUser){
 		$cancellationCode = generateCancellationCode();
 	} else {
 		$cancellationCode = $originalValue['CancellationCode'];
 	}
-	
-	/*// Set a default display name and booking description if there has been none submitted
-	if(empty($bknDscrptn){
-		foreach(){
-			if(){
-				$bknDscrptn = "Booked for " . ; // TO-DO: Add company name
-			}
-		}
-	}
-	if(empty($dspname)){
-		foreach(){
-			if(){
-				$dspname = ; // TO-DO: Add user name
-			}
-		}
-	}*/
 	
 	// Update booking information because values have changed!
 	try
@@ -1652,20 +1636,20 @@ if(isSet($_POST['edit']) AND $_POST['edit'] == "Finish Edit")
 		$pdo = null;
 		exit();
 	}
-		
+
 	$_SESSION['BookingUserFeedback'] .= "Successfully updated the booking information!";
-	
+
 	// Send email to the user (if altered by someone else) that their booking has been changed
 		// TO-DO: This is UNTESTED since we don't have php.ini set up to actually send email
 	if(!$bookingCompleted){
 		if($_SESSION['EditBookingInfoArray']['sendEmail'] == 1 OR $originalValue['sendEmail'] == 1){
-			
+
 			// date display formatting
 			$NewStartDate = convertDatetimeToFormat($startDateTime, 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
 			$NewEndDate = convertDatetimeToFormat($endDateTime, 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
 			$OldStartDate = convertDatetimeToFormat($oldStartTime, 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
 			$OldEndDate = convertDatetimeToFormat($oldEndTime, 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
-			
+
 			// Meeting room name(s)
 			$oldMeetingRoomName = $originalValue['BookedRoomName'];		
 			if($newMeetingRoom){
@@ -1680,13 +1664,13 @@ if(isSet($_POST['edit']) AND $_POST['edit'] == "Finish Edit")
 				$newMeetingRoomName = $oldMeetingRoomName;
 			}
 
-			// Email information	
+			// Email information
 			if($newUser){
-				
+
 				if($_SESSION['EditBookingInfoArray']['sendEmail'] == 1){
 					// Send information to new user about meeting
 					$emailSubject = "You have been assigned a booked meeting!";
-			
+
 					$emailMessage = 
 					"A booked meeting has been assigned to you by an Admin!\n" .
 					"The meeting has been set to: \n" .
@@ -1696,22 +1680,22 @@ if(isSet($_POST['edit']) AND $_POST['edit'] == "Finish Edit")
 					"If you wish to cancel this meeting, or just end it early, you can easily do so by clicking the link given below.\n" .
 					"Click this link to cancel your booked meeting: " . $_SERVER['HTTP_HOST'] . 
 					"/booking/?cancellationcode=" . $cancellationCode;
-					
+
 					$email = $_SESSION['EditBookingInfoArray']['UserEmail'];
-					
+
 					$mailResult = sendEmail($email, $emailSubject, $emailMessage);
-					
+
 					if(!$mailResult){
 						$_SESSION['BookingUserFeedback'] .= "\n\n[WARNING] System failed to send Email to user.";
 					}
-					
+
 					$_SESSION['BookingUserFeedback'] .= "\nThis is the email msg we're sending out:\n$emailMessage.\nSent to email: $email."; // TO-DO: Remove after testing				
 				}
 
 				if($originalValue['sendEmail'] == 1){
 					// Send information to old user that their meeting has been cancelled/transferred
 					$emailSubject = "Your meeting has been cancelled by an Admin!";
-					
+
 					$emailMessage = 
 					"Your booked meeting has been cancelled by an Admin!\n" .
 					"The meeting you had booked for: \n" .
@@ -1719,15 +1703,15 @@ if(isSet($_POST['edit']) AND $_POST['edit'] == "Finish Edit")
 					"Start Time: " . $OldStartDate . ".\n" .
 					"End Time: " . $OldEndDate . ".\n" .
 					"Is no longer active";
-					
+
 					$email = $originalValue['UserEmail'];
-					
+
 					$mailResult = sendEmail($email, $emailSubject, $emailMessage);
-					
+
 					if(!$mailResult){
 						$_SESSION['BookingUserFeedback'] .= "\n\n[WARNING] System failed to send Email to user.";
 					}
-					
+
 					$_SESSION['BookingUserFeedback'] .= "\nThis is the email msg we're sending out:\n$emailMessage.\nSent to email: $email."; // TO-DO: Remove after testing				
 				} else {
 					$_SESSION['BookingUserFeedback'] .= "\nUser does not want to be sent an Email.";
@@ -1737,31 +1721,31 @@ if(isSet($_POST['edit']) AND $_POST['edit'] == "Finish Edit")
 			} else {
 				if($originalValue['sendEmail'] == 1){
 					$emailSubject = "Booking Information Has Changed!";
-					
+
 					$emailMessage = 
 					"Your booked meeting has been altered by an Admin!\n" .
 					"Your new booking has been set to: \n" .
 					"Meeting Room: " . $newMeetingRoomName . ".\n" . 
 					"Start Time: " . $NewStartDate . ".\n" .
-					"End Time: " . $NewEndDate . ".\n\n" .				
+					"End Time: " . $NewEndDate . ".\n\n" .
 					"Your original booking was for: \n" .
 					"Meeting Room: " . $oldMeetingRoomName . ".\n" . 
 					"Start Time: " . $OldStartDate . ".\n" .
 					"End Time: " . $OldEndDate . ".\n\n" .
 					"If you wish to cancel your meeting, or just end it early, you can easily do so by clicking the link given below.\n" .
-					"Click this link to cancel your booked meeting: " . $_SERVER['HTTP_HOST'] . 
+					"Click this link to cancel your booked meeting: " . $_SERVER['HTTP_HOST'] .
 					"/booking/?cancellationcode=" . $cancellationCode;
 
 					$email = $originalValue['UserEmail'];
 
 					$mailResult = sendEmail($email, $emailSubject, $emailMessage);
-	
+
 					if(!$mailResult){
 						$_SESSION['BookingUserFeedback'] .= "\n\n[WARNING] System failed to send Email to user.";
 					}
 
 					$_SESSION['BookingUserFeedback'] .= "\nThis is the email msg we're sending out:\n$emailMessage.\nSent to email: $email."; // TO-DO: Remove after testing	
-				} else {	
+				} else {
 					$_SESSION['BookingUserFeedback'] .= "\nUser does not want to be sent an Email.";
 				}
 			}
