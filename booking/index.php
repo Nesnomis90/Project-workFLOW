@@ -12,12 +12,6 @@ if(isSet($_SESSION['loggedIn'])){
 	userIsLoggedIn();
 }
 
-/*
-	TO-DO:
-		Make log in work properly
-		Make Edit booking work (Fullført?) (needs testing)
-*/
-
 // Function to clear sessions used to remember user inputs on refreshing the add booking form
 function clearAddCreateBookingSessions(){
 	unset($_SESSION['AddCreateBookingInfoArray']);
@@ -1559,6 +1553,8 @@ if (isSet($_POST['add']) AND $_POST['add'] == "Add Booking")
 
 	$displayValidatedStartDate = convertDatetimeToFormat($startDateTime , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
 	$displayValidatedEndDate = convertDatetimeToFormat($endDateTime, 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
+	$dateOnlyEndDate = convertDatetimeToFormat($cancelledDateTime, 'Y-m-d H:i:s', 'Y-m-d');
+	$timeBookedInMinutes = convertTwoDateTimesToTimeDifferenceInMinutes($startDateTime,$endDateTime);
 
 	// Add a log event that a booking has been created
 	try
@@ -1593,6 +1589,7 @@ if (isSet($_POST['add']) AND $_POST['add'] == "Add Booking")
 					$companyCreditsRemaining = $company['creditsRemaining'];
 					$companyCreditsBooked = $company['PotentialExtraMonthlyTimeUsed'];
 					$companyCreditsPotentialMinimumRemaining = $company['PotentialCreditsRemaining'];
+					$companyCreditsPotentialMinimumRemainingInMinutes = convertHoursAndMinutesToMinutes($companyCreditsPotentialMinimumRemaining);
 					$companyPeriodEndDate = $company['endDate'];
 					break;
 				}
@@ -1610,6 +1607,23 @@ if (isSet($_POST['add']) AND $_POST['add'] == "Add Booking")
 		// Save a description with information about the booking that was created
 		$logEventDescription = 'A booking was created for the meeting room: ' . $meetinginfo . 
 		', for the user: ' . $userinfo . ' and company: ' . $companyName . '. Booking was made by: ' . $nameOfUserWhoBooked;
+
+		// Check if the booking that was made was for the current period.
+			// TO-DO: Not properly tested
+		$bookingWentOverCredits = FALSE;
+		if($dateOnlyEndDate < $companyPeriodEndDate){ // TO-DO: <= ?
+			if(substr($companyCreditsPotentialMinimumRemaining,0,1) === "-"){
+				// Company was already over given credits
+				$bookingWentOverCredits = TRUE;
+				$minutesOverCredits = $companyCreditsPotentialMinimumRemainingInMinutes + $timeBookedInMinutes;
+				$timeOverCredits = convertMinutesToHoursAndMinutes($minutesOverCredits);
+			} elseif($timeBookedInMinutes > $companyCreditsPotentialMinimumRemainingInMinutes){
+				// This booking, if completed, will put the company over their given credits
+				$bookingWentOverCredits = TRUE;
+				$minutesOverCredits = $timeBookedInMinutes - $companyCreditsPotentialMinimumRemainingInMinutes;
+				$timeOverCredits = convertMinutesToHoursAndMinutes($minutesOverCredits);
+			}
+		}
 
 		if(isSet($_SESSION['lastBookingID'])){
 			$lastBookingID = $_SESSION['lastBookingID'];
@@ -1662,15 +1676,19 @@ if (isSet($_POST['add']) AND $_POST['add'] == "Add Booking")
 	if($info['sendEmail'] == 1){
 		$emailSubject = "New Booking Information!";
 		
-		$emailMessage = 
-		"Your meeting has been successfully booked!\n" . 
-		"The meeting has been set to: \n" .
-		"Meeting Room: " . $MeetingRoomName . ".\n" . 
-		"Start Time: " . $displayValidatedStartDate . ".\n" .
-		"End Time: " . $displayValidatedEndDate . ".\n\n" .
-		"If you wish to cancel your meeting, or just end it early, you can easily do so by clicking the link given below.\n" .
-		"Click this link to cancel your booked meeting: " . $_SERVER['HTTP_HOST'] . 
-		"/booking/?cancellationcode=" . $cancellationCode;		
+		if(!$bookingWentOverCredits){
+			$emailMessage = 
+			"Your meeting has been successfully booked!\n" . 
+			"The meeting has been set to: \n" .
+			"Meeting Room: " . $MeetingRoomName . ".\n" . 
+			"Start Time: " . $displayValidatedStartDate . ".\n" .
+			"End Time: " . $displayValidatedEndDate . ".\n\n" .
+			"If you wish to cancel your meeting, or just end it early, you can easily do so by clicking the link given below.\n" .
+			"Click this link to cancel your booked meeting: " . $_SERVER['HTTP_HOST'] . 
+			"/booking/?cancellationcode=" . $cancellationCode;
+		} else {
+			
+		}
 
 		$email = $_SESSION['AddCreateBookingInfoArray']['UserEmail'];
 		
@@ -2624,8 +2642,6 @@ if(isSet($_POST['edit']) AND $_POST['edit'] == "Finish Edit")
 	}
 		
 	$_SESSION['normalBookingFeedback'] .= "Successfully updated the booking information!";
-	
-	// TO-DO: Email user on edit since admin can edit this too?
 	
 	clearEditCreateBookingSessions();
 	

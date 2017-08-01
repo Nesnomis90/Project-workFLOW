@@ -1,6 +1,21 @@
 <?php
 // This holds all the functions we use to convert values (excluding datetime convertions, see datetime.inc.php)
 
+// Takes hours and minutes (xxhyym) and returns minutes
+function convertHoursAndMinutesToMinutes($hoursAndMinutes){
+	if(strtolower($hoursAndMinutes) === "none"){
+		return 0;
+	}
+	elseif(substr($hoursAndMinutes,0,1) === "-"){
+		$timeHour = substr($hoursAndMinutes,1,strpos($hoursAndMinutes,"h"));
+		$timeMinute = substr($hoursAndMinutes,strpos($hoursAndMinutes,"h")+1, strpos($hoursAndMinutes,"m"));	
+	} else {
+		$timeHour = substr($hoursAndMinutes,0,strpos($hoursAndMinutes,"h"));
+		$timeMinute = substr($hoursAndMinutes,strpos($hoursAndMinutes,"h")+1, strpos($hoursAndMinutes,"m"));		
+	}
+	return $timeHour * 60 + $timeMinute;	
+}
+
 // Takes time xx:yy (x hours and y minutes) and returns xxhyym as text
 function convertTimeToHoursAndMinutes($time){
 	$timeHour = substr($time,0,strpos($time,":"));
