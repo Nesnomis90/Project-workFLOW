@@ -1770,25 +1770,7 @@ if(isSet($_POST['edit']) AND $_POST['edit'] == "Finish Edit")
 					$_SESSION['BookingUserFeedback'] .= "\nUser does not want to be sent an Email.";
 				}
 			} elseif($originalValue['TheUserID'] == $_SESSION['LoggedInUserID']){
-				//$_SESSION['BookingUserFeedback'] .= "\nDid not send an email with the updated information, since you changed your own booking."; // TO-DO: Remove?
-				$_SESSION['BookingUserFeedback'] = 
-					"Your booked meeting has been altered by an Admin!\n" .
-					"Your new booking has been set to: \n" .
-					"Meeting Room: " . $newMeetingRoomName . ".\n" . 
-					"Start Time: " . $NewStartDate . ".\n" .
-					"End Time: " . $NewEndDate . ".\n\n" .
-					"Your original booking was for: \n" .
-					"Meeting Room: " . $oldMeetingRoomName . ".\n" . 
-					"Start Time: " . $OldStartDate . ".\n" .
-					"End Time: " . $OldEndDate . ".\n\n" .
-					"If you wish to cancel your meeting, or just end it early, you can easily do so by using the link given below.\n" .
-					"Click this link to cancel your booked meeting: " . $_SERVER['HTTP_HOST'] .
-					"/booking/?cancellationcode=" . $cancellationCode;
-
-					if($bookingWentOverCredits){
-						// Add time over credits and the price per hour the company subscription has.
-						$_SESSION['BookingUserFeedback'] .= "\n\nWarning: If this booking is completed the company it is booked for will be $timeOverCredits over the given free booking time.\nThis will result in a cost of $companyHourPriceOverCredits";
-					} // TO-DO: remove
+				$_SESSION['BookingUserFeedback'] .= "\nDid not send an email with the updated information, since you changed your own booking."; // TO-DO: Remove?
 			} else {
 				if($originalValue['sendEmail'] == 1){
 					$emailSubject = "Booking Information Has Changed!";
@@ -1979,7 +1961,8 @@ if (	(isSet($_POST['action']) AND $_POST['action'] == "Create Booking") OR
 				$_SESSION['AddBookingInfoArray']['UserFirstname'] = $firstname;	
 				$_SESSION['AddBookingInfoArray']['UserLastname'] = $lastname;	
 				$_SESSION['AddBookingInfoArray']['UserEmail'] = $email;
-				$_SESSION['AddBookingInfoArray']['sendEmail'] = $sendEmail;	
+				$_SESSION['AddBookingInfoArray']['sendEmail'] = $sendEmail;
+				$_SESSION['AddBookingInfoArray']['BookedBy'] = $firstname . " " . $lastname;
 				$_SESSION['AddBookingInfoArray']['TheUserID'] = $_SESSION['LoggedInUserID'];
 			}
 			$_SESSION['AddBookingOriginalInfoArray'] = $_SESSION['AddBookingInfoArray'];
@@ -2335,7 +2318,8 @@ if (	(isSet($_POST['action']) AND $_POST['action'] == "Create Booking") OR
 				$row['UserFirstname'] = $user['firstName'];
 				$row['UserEmail'] = $user['email'];
 				$row['sendEmail'] = $user['sendEmail'];
-
+				$row['BookedBy'] = $user['firstName'] . " " . $user['lastName'];
+ 
 				$_SESSION['AddBookingDefaultDisplayNameForNewUser'] = $user['displayName'];
 				$_SESSION['AddBookingDefaultBookingDescriptionForNewUser'] = $user['bookingDescription'];
 				break;
