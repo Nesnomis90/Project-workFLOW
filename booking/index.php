@@ -1567,7 +1567,7 @@ if (isSet($_POST['add']) AND $_POST['add'] == "Add Booking")
 
 	$displayValidatedStartDate = convertDatetimeToFormat($startDateTime , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
 	$displayValidatedEndDate = convertDatetimeToFormat($endDateTime, 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
-	$dateOnlyEndDate = convertDatetimeToFormat($cancelledDateTime, 'Y-m-d H:i:s', 'Y-m-d');
+	$dateOnlyEndDate = convertDatetimeToFormat($endDateTime, 'Y-m-d H:i:s', 'Y-m-d');
 	$timeBookedInMinutes = convertTwoDateTimesToTimeDifferenceInMinutes($startDateTime,$endDateTime);
 
 	// Add a log event that a booking has been created
@@ -1599,7 +1599,6 @@ if (isSet($_POST['add']) AND $_POST['add'] == "Add Booking")
 			foreach($_SESSION['AddCreateBookingCompanyArray'] AS $company){
 				if($companyID == $company['companyID']){
 					$companyName = $company['companyName'];
-					// TO-DO: Use this for something?
 					$companyCreditsRemaining = $company['creditsRemaining'];
 					$companyCreditsBooked = $company['PotentialExtraMonthlyTimeUsed'];
 					$companyCreditsPotentialMinimumRemaining = $company['PotentialCreditsRemaining'];
@@ -1624,7 +1623,6 @@ if (isSet($_POST['add']) AND $_POST['add'] == "Add Booking")
 		', for the user: ' . $userinfo . ' and company: ' . $companyName . '. Booking was made by: ' . $nameOfUserWhoBooked;
 
 		// Check if the booking that was made was for the current period.
-			// TO-DO: Not properly tested
 		$bookingWentOverCredits = FALSE;
 		if($dateOnlyEndDate < $companyPeriodEndDate){ // TO-DO: <= ?
 			if(substr($companyCreditsPotentialMinimumRemaining,0,1) === "-"){

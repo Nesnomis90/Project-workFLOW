@@ -780,14 +780,21 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Edit') OR
 								INNER JOIN	`credits` cr
 								ON			cr.`CreditsID` = cc.`CreditsID`
 								WHERE		c.`CompanyID` = e.`CompanyID`
-							) 													AS CreditSubscriptionMinuteAmount
+							) 													AS CreditSubscriptionMinuteAmount,
+							(
+								SELECT 		cr.`overCreditHourPrice`
+								FROM		`credits` cr
+								INNER JOIN 	`companycredits` cc
+								ON			cr.`CreditsID` = cc.`CreditsID`
+								WHERE		cc.`CompanyID` = e.`companyID`
+								Limit		1
+							)													AS CreditHourPriceOverCredits
 				FROM 		`user` u
 				INNER JOIN 	`employee` e
 				ON 			e.`userID` = u.`userID`
 				INNER JOIN	`company` c
 				ON 			c.`companyID` = e.`companyID`
-				WHERE 		u.`userID` = :userID
-				AND			c.`isActive` = 1';
+				WHERE 		u.`userID` = :userID';
 		$minimumSecondsPerBooking = MINIMUM_BOOKING_DURATION_IN_MINUTES_USED_IN_PRICE_CALCULATIONS * 60; // e.g. 15min = 900s
 		$aboveThisManySecondsToCount = BOOKING_DURATION_IN_MINUTES_USED_BEFORE_INCLUDING_IN_PRICE_CALCULATIONS * 60; // E.g. 1min = 60s	
 
@@ -877,6 +884,8 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Edit') OR
 			}
 			
 			$displayEndDate =  convertDatetimeToFormat($row['endDate'], 'Y-m-d', DATE_DEFAULT_FORMAT_TO_DISPLAY);
+			$overHourPrice = $row['CreditHourPriceOverCredits'];
+			$displayOverHourPrice = convertToCurrency($overHourPrice) . "/h";
 
 			$company[] = array(
 								'companyID' => $row['companyID'],
@@ -884,7 +893,8 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Edit') OR
 								'endDate' => $displayEndDate,
 								'creditsRemaining' => $displayCompanyCreditsRemaining,
 								'PotentialExtraMonthlyTimeUsed' => $displayPotentialExtraMonthlyTimeUsed,
-								'PotentialCreditsRemaining' => $displayPotentialCompanyCreditsRemaining
+								'PotentialCreditsRemaining' => $displayPotentialCompanyCreditsRemaining,
+								'HourPriceOverCredit' => $displayOverHourPrice
 								);
 		}
 
@@ -908,6 +918,8 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Edit') OR
 				$_SESSION['EditBookingInfoArray']['PotentialExtraMonthlyTimeUsed'] = $company[0]['PotentialExtraMonthlyTimeUsed'];
 				$_SESSION['EditBookingInfoArray']['PotentialCreditsRemaining'] = $company[0]['PotentialCreditsRemaining'];
 				$_SESSION['EditBookingInfoArray']['EndDate'] = $company[0]['endDate'];
+				$_SESSION['EditBookingInfoArray']['HourPriceOverCredit'] = $company[0]['HourPriceOverCredit'];
+				$_SESSION['EditBookingInfoArray']['BookingDescription'] = "Booked for " . $company[0]['companyName'];
 
 			}
 		} else{
@@ -920,6 +932,8 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Edit') OR
 			$_SESSION['EditBookingInfoArray']['PotentialExtraMonthlyTimeUsed'] = "N/A";
 			$_SESSION['EditBookingInfoArray']['PotentialCreditsRemaining'] = "N/A";
 			$_SESSION['EditBookingInfoArray']['EndDate'] = "N/A";
+			$_SESSION['EditBookingInfoArray']['HourPriceOverCredit'] = "N/A";
+			$_SESSION['EditBookingInfoArray']['BookingDescription'] = "";
 		}
 	}
 	catch(PDOException $e)
@@ -962,6 +976,8 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Edit') OR
 				$row['PotentialExtraMonthlyTimeUsed'] = $cmp['PotentialExtraMonthlyTimeUsed'];
 				$row['PotentialCreditsRemaining'] = $cmp['PotentialCreditsRemaining'];
 				$row['EndDate'] = $cmp['endDate'];
+				$row['HourPriceOverCredit'] = $cmp['HourPriceOverCredit'];
+				$row['BookingDescription'] = "Booked for " . $cmp['companyName'];
 				break;
 			}
 		}
@@ -2056,7 +2072,15 @@ if (	(isSet($_POST['action']) AND $_POST['action'] == "Create Booking") OR
 									INNER JOIN	`credits` cr
 									ON			cr.`CreditsID` = cc.`CreditsID`
 									WHERE		c.`CompanyID` = e.`CompanyID`
-								) 													AS CreditSubscriptionMinuteAmount
+								) 													AS CreditSubscriptionMinuteAmount,
+								(
+									SELECT 		cr.`overCreditHourPrice`
+									FROM		`credits` cr
+									INNER JOIN 	`companycredits` cc
+									ON			cr.`CreditsID` = cc.`CreditsID`
+									WHERE		cc.`CompanyID` = e.`companyID`
+									Limit		1
+								)													AS CreditHourPriceOverCredits
 					FROM 		`user` u
 					INNER JOIN 	`employee` e
 					ON 			e.`userID` = u.`userID`
@@ -2152,6 +2176,8 @@ if (	(isSet($_POST['action']) AND $_POST['action'] == "Create Booking") OR
 				}
 
 				$displayEndDate =  convertDatetimeToFormat($row['endDate'], 'Y-m-d', DATE_DEFAULT_FORMAT_TO_DISPLAY);
+				$overHourPrice = $row['CreditHourPriceOverCredits'];
+				$displayOverHourPrice = convertToCurrency($overHourPrice) . "/h";
 				
 				$company[] = array(
 									'companyID' => $row['companyID'],
@@ -2159,8 +2185,10 @@ if (	(isSet($_POST['action']) AND $_POST['action'] == "Create Booking") OR
 									'endDate' => $displayEndDate,
 									'creditsRemaining' => $displayCompanyCreditsRemaining,
 									'PotentialExtraMonthlyTimeUsed' => $displayPotentialExtraMonthlyTimeUsed,
-									'PotentialCreditsRemaining' => $displayPotentialCompanyCreditsRemaining
+									'PotentialCreditsRemaining' => $displayPotentialCompanyCreditsRemaining,
+									'HourPriceOverCredit' => $displayOverHourPrice
 									);
+				$_SESSION['AddBookingCompanyArray'] = $company;					
 			}
 
 			$pdo = null;
@@ -2182,9 +2210,10 @@ if (	(isSet($_POST['action']) AND $_POST['action'] == "Create Booking") OR
 					$_SESSION['AddBookingInfoArray']['BookedForCompany'] = $company[0]['companyName'];
 					$_SESSION['AddBookingInfoArray']['CreditsRemaining'] = $company[0]['creditsRemaining'];
 					$_SESSION['AddBookingInfoArray']['PotentialExtraMonthlyTimeUsed'] = $company[0]['PotentialExtraMonthlyTimeUsed'];
+					$_SESSION['AddBookingInfoArray']['HourPriceOverCredit'] = $company[0]['HourPriceOverCredit'];
 					$_SESSION['AddBookingInfoArray']['PotentialCreditsRemaining'] = $company[0]['PotentialCreditsRemaining'];
+					$_SESSION['AddBookingInfoArray']['BookingDescription'] = "Booked for " . $company[0]['companyName'];
 				}
-				$_SESSION['AddBookingCompanyArray'] = $company;
 			} else{
 				// User is NOT in a company
 
@@ -2196,6 +2225,8 @@ if (	(isSet($_POST['action']) AND $_POST['action'] == "Create Booking") OR
 				$_SESSION['AddBookingInfoArray']['CreditsRemaining'] = "N/A";
 				$_SESSION['AddBookingInfoArray']['PotentialExtraMonthlyTimeUsed'] = "N/A";
 				$_SESSION['AddBookingInfoArray']['PotentialCreditsRemaining'] = "N/A";
+				$_SESSION['AddBookingInfoArray']['HourPriceOverCredit'] = "N/A";
+				$_SESSION['AddBookingInfoArray']['BookingDescription'] = "";
 			}		
 		}
 		catch(PDOException $e)
@@ -2252,6 +2283,8 @@ if (	(isSet($_POST['action']) AND $_POST['action'] == "Create Booking") OR
 					$row['PotentialExtraMonthlyTimeUsed'] = $cmp['PotentialExtraMonthlyTimeUsed'];
 					$row['PotentialCreditsRemaining'] = $cmp['PotentialCreditsRemaining'];
 					$row['EndDate'] = $cmp['endDate'];
+					$row['HourPriceOverCredit'] = $cmp['HourPriceOverCredit'];
+					$row['BookingDescription'] = "Booked for " . $cmp['companyName'];
 					break;
 				}
 			}				
@@ -2560,6 +2593,8 @@ if (isSet($_POST['add']) AND $_POST['add'] == "Add booking")
 	
 	$displayValidatedStartDate = convertDatetimeToFormat($startDateTime , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
 	$displayValidatedEndDate = convertDatetimeToFormat($endDateTime, 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
+	$dateOnlyEndDate = convertDatetimeToFormat($endDateTime, 'Y-m-d H:i:s', 'Y-m-d');
+	$timeBookedInMinutes = convertTwoDateTimesToTimeDifferenceInMinutes($startDateTime,$endDateTime);	
 	
 	// Add a log event that a booking has been created
 	try
@@ -2590,11 +2625,12 @@ if (isSet($_POST['add']) AND $_POST['add'] == "Add booking")
 			foreach($_SESSION['AddBookingCompanyArray'] AS $company){
 				if($companyID == $company['companyID']){
 					$companyName = $company['companyName'];
-					// TO-DO: Use this for something?
 					$companyCreditsRemaining = $company['creditsRemaining'];
 					$companyCreditsBooked = $company['PotentialExtraMonthlyTimeUsed'];
 					$companyCreditsPotentialMinimumRemaining = $company['PotentialCreditsRemaining'];
+					$companyCreditsPotentialMinimumRemainingInMinutes = convertHoursAndMinutesToMinutes($companyCreditsPotentialMinimumRemaining);
 					$companyPeriodEndDate = $company['endDate'];
+					$companyHourPriceOverCredits = $company['HourPriceOverCredit'];
 					break;
 				}
 			}
@@ -2605,6 +2641,23 @@ if (isSet($_POST['add']) AND $_POST['add'] == "Add booking")
 								".\nTime Slot: " . $displayValidatedStartDate . " to " . $displayValidatedEndDate .
 								".\nFor the user: " . $userinfo . " and company: " . $companyName . 
 								".\nBooking was made by: " . $_SESSION['LoggedInUserName'] . ".";
+		
+		// Check if the booking that was made was for the current period.
+		$bookingWentOverCredits = FALSE;
+		if($dateOnlyEndDate < $companyPeriodEndDate){ // TO-DO: <= ?
+			if(substr($companyCreditsPotentialMinimumRemaining,0,1) === "-"){
+				// Company was already over given credits
+				$bookingWentOverCredits = TRUE;
+				$minutesOverCredits = $companyCreditsPotentialMinimumRemainingInMinutes + $timeBookedInMinutes;
+				$timeOverCredits = convertMinutesToHoursAndMinutes($minutesOverCredits);
+			} elseif($timeBookedInMinutes > $companyCreditsPotentialMinimumRemainingInMinutes){
+				// This booking, if completed, will put the company over their given credits
+				$bookingWentOverCredits = TRUE;
+				$minutesOverCredits = $timeBookedInMinutes - $companyCreditsPotentialMinimumRemainingInMinutes;
+				$timeOverCredits = convertMinutesToHoursAndMinutes($minutesOverCredits);
+			}
+			$logEventDescription .= "\nThis booking, if completed, will put the company at $timeOverCredits over the Credits given this period.";
+		}		
 		
 		if(isSet($_SESSION['lastBookingID'])){
 			$lastBookingID = $_SESSION['lastBookingID'];
@@ -2641,16 +2694,6 @@ if (isSet($_POST['add']) AND $_POST['add'] == "Add booking")
 	
 	//Send email with booking information and cancellation code to the user who the booking is for.
 		// TO-DO: This is UNTESTED since we don't have php.ini set up to actually send email
-
-		/*
-			// TO-DO: Use this for something?
-			$companyCreditsRemaining;
-			$companyCreditsBooked;
-			$companyCreditsPotentialMinimumRemaining;
-			$companyPeriodEndDate;
-		*/
-
-	// TO-DO: add to e-mail being sent if the booking created goes over credits.
 	if($_SESSION['AddBookingInfoArray']['sendEmail'] == 1){
 		if($_POST['userID'] == $_SESSION['LoggedInUserID']){
 			// Admin booked a meeting for him/herself
@@ -2678,6 +2721,11 @@ if (isSet($_POST['add']) AND $_POST['add'] == "Add booking")
 			"If you wish to cancel this meeting, or just end it early, you can easily do so by clicking the link given below.\n" .
 			"Click this link to cancel your booked meeting: " . $_SERVER['HTTP_HOST'] . 
 			"/booking/?cancellationcode=" . $cancellationCode;		
+		}
+
+		if($bookingWentOverCredits){
+			// Add time over credits and the price per hour the company subscription has.
+			$emailMessage .= "\n\nWarning: If this booking is completed the company you booked for will be $timeOverCredits over the given free booking time.\nThis will result in a cost of $companyHourPriceOverCredits";
 		}
 
 		$email = $_SESSION['AddBookingInfoArray']['UserEmail'];
@@ -3003,7 +3051,6 @@ if(!isSet($_GET['Meetingroom'])){
 										INNER JOIN 	`employee` e
 										ON 			e.`CompanyID` = c.`CompanyID`
 										WHERE  		e.`userID` = b.`userID`
-										AND			c.`isActive` = 1
 										GROUP BY 	e.`userID`
 									)
 								)
@@ -3064,7 +3111,6 @@ if(!isSet($_GET['Meetingroom'])){
 										INNER JOIN 	`employee` e
 										ON 			e.`CompanyID` = c.`CompanyID`
 										WHERE  		e.`userID` = b.`userID`
-										AND			c.`isActive` = 1
 										GROUP BY 	e.`userID`
 									)
 								)
