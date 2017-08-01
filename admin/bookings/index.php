@@ -1438,7 +1438,7 @@ if(isSet($_POST['edit']) AND $_POST['edit'] == "Finish Edit")
 		$numberOfChanges++;
 		$newUser = TRUE;
 	}	
-	if($validatedAdminNote == ""){
+	if(empty($validatedAdminNote)){
 		$validatedAdminNote = NULL;
 	}
 	if($validatedAdminNote != $originalValue['AdminNote']){
@@ -1595,6 +1595,22 @@ if(isSet($_POST['edit']) AND $_POST['edit'] == "Finish Edit")
 	} else {
 		$cancellationCode = $originalValue['CancellationCode'];
 	}
+	
+	/*// Set a default display name and booking description if there has been none submitted
+	if(empty($bknDscrptn){
+		foreach(){
+			if(){
+				$bknDscrptn = "Booked for " . ; // TO-DO: Add company name
+			}
+		}
+	}
+	if(empty($dspname)){
+		foreach(){
+			if(){
+				$dspname = ; // TO-DO: Add user name
+			}
+		}
+	}*/
 	
 	// Update booking information because values have changed!
 	try
