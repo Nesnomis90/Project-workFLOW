@@ -1678,18 +1678,12 @@ if(isSet($_POST['edit']) AND $_POST['edit'] == "Finish Edit")
 			// Check if the booking that was made was for the current period.
 			$bookingWentOverCredits = FALSE;
 			if($dateOnlyEndDate < $companyPeriodEndDate){ // TO-DO: <= ?
-			
+
 				// Credits remaining calculation depends what company we selected
 				if(!$newCompany){
-					if($timeBookedInMinutes > $oldTimeBookedInMinutes){
-						$timeBookedInMinutes -= $oldTimeBookedInMinutes; // Extra time used
-						$companyCreditsPotentialMinimumRemainingInMinutes -= $timeBookedInMinutes;
-					} elseif($timeBookedInMinutes != $oldTimeBookedInMinutes) {
-						$timeBookedInMinutes = $oldTimeBookedInMinutes - $timeBookedInMinutes; // Time reduction
-						$companyCreditsPotentialMinimumRemainingInMinutes += $timeBookedInMinutes;
-					}
+					$companyCreditsPotentialMinimumRemainingInMinutes += $oldTimeBookedInMinutes;
 				}
-				
+
 				if($companyCreditsPotentialMinimumRemainingInMinutes < 0){
 					// Company was already over given credits
 					$bookingWentOverCredits = TRUE;
@@ -1702,9 +1696,9 @@ if(isSet($_POST['edit']) AND $_POST['edit'] == "Finish Edit")
 					$timeOverCredits = convertMinutesToHoursAndMinutes($minutesOverCredits);
 				}
 			}
-			
+
 			// Meeting room name(s)
-			$oldMeetingRoomName = $originalValue['BookedRoomName'];		
+			$oldMeetingRoomName = $originalValue['BookedRoomName'];
 			if($newMeetingRoom){
 				// Get meeting room name
 				foreach ($_SESSION['EditBookingMeetingRoomsArray'] AS $room){
@@ -1776,7 +1770,25 @@ if(isSet($_POST['edit']) AND $_POST['edit'] == "Finish Edit")
 					$_SESSION['BookingUserFeedback'] .= "\nUser does not want to be sent an Email.";
 				}
 			} elseif($originalValue['TheUserID'] == $_SESSION['LoggedInUserID']){
-				$_SESSION['BookingUserFeedback'] .= "\nDid not send an email with the updated information, since you changed your own booking."; // TO-DO: Remove?
+				//$_SESSION['BookingUserFeedback'] .= "\nDid not send an email with the updated information, since you changed your own booking."; // TO-DO: Remove?
+				$_SESSION['BookingUserFeedback'] = 
+					"Your booked meeting has been altered by an Admin!\n" .
+					"Your new booking has been set to: \n" .
+					"Meeting Room: " . $newMeetingRoomName . ".\n" . 
+					"Start Time: " . $NewStartDate . ".\n" .
+					"End Time: " . $NewEndDate . ".\n\n" .
+					"Your original booking was for: \n" .
+					"Meeting Room: " . $oldMeetingRoomName . ".\n" . 
+					"Start Time: " . $OldStartDate . ".\n" .
+					"End Time: " . $OldEndDate . ".\n\n" .
+					"If you wish to cancel your meeting, or just end it early, you can easily do so by using the link given below.\n" .
+					"Click this link to cancel your booked meeting: " . $_SERVER['HTTP_HOST'] .
+					"/booking/?cancellationcode=" . $cancellationCode;
+
+					if($bookingWentOverCredits){
+						// Add time over credits and the price per hour the company subscription has.
+						$_SESSION['BookingUserFeedback'] .= "\n\nWarning: If this booking is completed the company it is booked for will be $timeOverCredits over the given free booking time.\nThis will result in a cost of $companyHourPriceOverCredits";
+					} // TO-DO: remove
 			} else {
 				if($originalValue['sendEmail'] == 1){
 					$emailSubject = "Booking Information Has Changed!";
@@ -2709,10 +2721,10 @@ if (isSet($_POST['add']) AND $_POST['add'] == "Add booking")
 		// Check if the booking that was made was for the current period.
 		$bookingWentOverCredits = FALSE;
 		if($dateOnlyEndDate < $companyPeriodEndDate){ // TO-DO: <= ?
-			if(substr($companyCreditsPotentialMinimumRemaining,0,1) === "-"){
+			if($companyCreditsPotentialMinimumRemainingInMinutes < 0){
 				// Company was already over given credits
 				$bookingWentOverCredits = TRUE;
-				$minutesOverCredits = $companyCreditsPotentialMinimumRemainingInMinutes + $timeBookedInMinutes;
+				$minutesOverCredits = -($companyCreditsPotentialMinimumRemainingInMinutes) + $timeBookedInMinutes;
 				$timeOverCredits = convertMinutesToHoursAndMinutes($minutesOverCredits);
 			} elseif($timeBookedInMinutes > $companyCreditsPotentialMinimumRemainingInMinutes){
 				// This booking, if completed, will put the company over their given credits

@@ -1625,10 +1625,10 @@ if (isSet($_POST['add']) AND $_POST['add'] == "Add Booking")
 		// Check if the booking that was made was for the current period.
 		$bookingWentOverCredits = FALSE;
 		if($dateOnlyEndDate < $companyPeriodEndDate){ // TO-DO: <= ?
-			if(substr($companyCreditsPotentialMinimumRemaining,0,1) === "-"){
+			if($companyCreditsPotentialMinimumRemainingInMinutes < 0){
 				// Company was already over given credits
 				$bookingWentOverCredits = TRUE;
-				$minutesOverCredits = $companyCreditsPotentialMinimumRemainingInMinutes + $timeBookedInMinutes;
+				$minutesOverCredits = -($companyCreditsPotentialMinimumRemainingInMinutes) + $timeBookedInMinutes;
 				$timeOverCredits = convertMinutesToHoursAndMinutes($minutesOverCredits);
 			} elseif($timeBookedInMinutes > $companyCreditsPotentialMinimumRemainingInMinutes){
 				// This booking, if completed, will put the company over their given credits
