@@ -594,9 +594,9 @@ if (isSet($_POST['action']) AND $_POST['action'] == 'Confirm Employee')
 		$pdo = null;
 		exit();
 	}
-	
+
 	$_SESSION['AddEmployeeAsOwnerError'] = "Successfully added the employee.";
-	
+
 	// Add a log event that a user was added as an employee in a company
 	try
 	{
@@ -627,7 +627,6 @@ if (isSet($_POST['action']) AND $_POST['action'] == 'Confirm Employee')
 			}
 			unset($_SESSION['AddEmployeeAsOwnerCompanyPositionArray']);
 		}
-
 
 		// Save a description with information about the employee that was added
 		// to the company.
