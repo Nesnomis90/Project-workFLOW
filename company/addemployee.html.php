@@ -16,22 +16,31 @@
 	<body onload="startTime()">
 		<?php include_once $_SERVER['DOCUMENT_ROOT'] .'/includes/topnav.html.php'; ?>
 
-		<fieldset class="left"><legend>Add Employee</legend>
-			<div class="left">
-				<?php if(isSet($_SESSION['AddEmployeeAsOwnerError'])) :?>
-						<span><b class="feedback"><?php htmlout($_SESSION['AddEmployeeAsOwnerError']); ?></b></span>
-					<?php unset($_SESSION['AddEmployeeAsOwnerError']); ?>
-				<?php endif; ?>
-			</div>
+		<fieldset class="left"><legend>Add An Employee</legend>
+			<fieldset class="left"><legend>Create And Add A New User</legend>
+					<div>
+						<label>New User Email:</label>
+						<input type="text" name="registerThenAddUserFromEmail" placeholder="Insert New User's Email"
+						value="<?php htmlout($registerThenAddUserFromEmail); ?>">
+					</div>		
+			</fieldset>		
 
-			<div class="left">
-				<?php if(isSet($_SESSION['AddEmployeeAsOwnerSearchResult'])) :?>
-						<span><b class="feedback"><?php htmlout($_SESSION['AddEmployeeAsOwnerSearchResult']); ?></b></span>
-					<?php unset($_SESSION['AddEmployeeAsOwnerSearchResult']); ?>
-				<?php endif; ?>
-			</div>
+			<fieldset class="left"><legend>Add Existing User</legend>
+				<div class="left">
+					<?php if(isSet($_SESSION['AddEmployeeAsOwnerError'])) :?>
+							<span><b class="feedback"><?php htmlout($_SESSION['AddEmployeeAsOwnerError']); ?></b></span>
+						<?php unset($_SESSION['AddEmployeeAsOwnerError']); ?>
+					<?php endif; ?>
+				</div>
 
-			<form action="" method="post">
+				<div class="left">
+					<?php if(isSet($_SESSION['AddEmployeeAsOwnerSearchResult'])) :?>
+							<span><b class="feedback"><?php htmlout($_SESSION['AddEmployeeAsOwnerSearchResult']); ?></b></span>
+						<?php unset($_SESSION['AddEmployeeAsOwnerSearchResult']); ?>
+					<?php endif; ?>
+				</div>
+
+				<form action="" method="post">
 				<div>
 					<label for="CompanyID">Company Name:</label>
 					<span><b><?php htmlout($companyName); ?></b></span>
@@ -54,28 +63,25 @@
 					<input type="text" name="usersearchstring" 
 					value="<?php htmlout($usersearchstring); ?>">
 				</div>
-				<div>
-					<label>Create New User:</label>
-					<input type="text" name="registerThenAddUserFromEmail" placeholder="Insert New User's Email"
-					value="<?php htmlout($registerThenAddUserFromEmail); ?>">
-				</div>
-				<div>
-					<label for="PositionID">Select Role:</label>
-					<select name="PositionID">
-						<?php foreach($companyposition as $row): ?>
-							<?php if (isSet($selectedPositionID) AND $selectedPositionID == $row['PositionID']) : ?>
-								<option selected="selected" value="<?php htmlout($row['PositionID']); ?>"><?php htmlout($row['CompanyPositionName']);?></option>
-							<?php else : ?>
-								<option value="<?php htmlout($row['PositionID']); ?>"><?php htmlout($row['CompanyPositionName']);?></option>
-							<?php endif; ?>
-						<?php endforeach; ?>
-					</select>
-				</div>
-				<div class="left">
-					<input type="submit" name="action" value="Search">
-					<input type="submit" name="action" value="Confirm Employee">
-					<input type="submit" name="action" value="Cancel">
-				</div>
+			</fieldset>
+
+			<div>
+				<label for="PositionID">Select Role:</label>
+				<select name="PositionID">
+					<?php foreach($companyposition as $row): ?>
+						<?php if (isSet($selectedPositionID) AND $selectedPositionID == $row['PositionID']) : ?>
+							<option selected="selected" value="<?php htmlout($row['PositionID']); ?>"><?php htmlout($row['CompanyPositionName']);?></option>
+						<?php else : ?>
+							<option value="<?php htmlout($row['PositionID']); ?>"><?php htmlout($row['CompanyPositionName']);?></option>
+						<?php endif; ?>
+					<?php endforeach; ?>
+				</select>
+			</div>
+			<div class="left">
+				<input type="submit" name="action" value="Search">
+				<input type="submit" name="action" value="Confirm Employee">
+				<input type="submit" name="action" value="Cancel">
+			</div>
 			</form>
 		</fieldset>
 	</body>
