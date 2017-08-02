@@ -11,7 +11,7 @@
 			label {
 				width: 130px;
 			}
-		</style>		
+		</style>
 	</head>
 	<body onload="startTime()">
 		<?php include_once $_SERVER['DOCUMENT_ROOT'] .'/includes/topnav.html.php'; ?>
@@ -22,8 +22,8 @@
 						<label>New User Email:</label>
 						<input type="text" name="registerThenAddUserFromEmail" placeholder="Insert New User's Email"
 						value="<?php htmlout($registerThenAddUserFromEmail); ?>">
-					</div>		
-			</fieldset>		
+					</div>
+			</fieldset>	
 
 			<fieldset class="left"><legend>Add Existing User</legend>
 				<div class="left">

@@ -345,6 +345,169 @@ $selectedCompanyToJoinID;//int
 $_POST['selectedCompanyToJoin'];
 */
 
+// 	If admin wants to add an employee to a company in the database
+// 	we load a new html form
+if ((isSet($_POST['action']) AND $_POST['action'] == 'Add Employee') OR 
+	(isSet($_SESSION['refreshAddEmployeeAsOwner']) AND $_SESSION['refreshAddEmployeeAsOwner']))
+{
+	$usersearchstring = '';
+
+	// Check if the call was a form submit or a forced refresh
+	if(isSet($_SESSION['refreshAddEmployeeAsOwner']) AND $_SESSION['refreshAddEmployeeAsOwner']){
+		// Acknowledge that we have refreshed the page
+		unset($_SESSION['refreshAddEmployeeAsOwner']);
+
+		// Remember the user string that was searched before refreshing
+		if(isSet($_SESSION['AddEmployeeAsOwnerUserSearch'])){
+			$usersearchstring = $_SESSION['AddEmployeeAsOwnerUserSearch'];
+			unset($_SESSION['AddEmployeeAsOwnerUserSearch']);
+		}
+
+		// Remember what company was selected before refreshing
+		if(isSet($_SESSION['AddEmployeeAsOwnerSelectedCompanyID'])){
+			$selectedCompanyID = $_SESSION['AddEmployeeAsOwnerSelectedCompanyID'];
+			unset($_SESSION['AddEmployeeAsOwnerSelectedCompanyID']);
+		}
+
+		// Remember what user was selected before refreshing
+		if(isSet($_SESSION['AddEmployeeAsOwnerSelectedUserID'])){
+			$selectedUserID = $_SESSION['AddEmployeeAsOwnerSelectedUserID'];
+			unset($_SESSION['AddEmployeeAsOwnerSelectedUserID']);
+		}
+
+		// Remember what company position was selected before refreshing
+		if(isSet($_SESSION['AddEmployeeAsOwnerSelectedPositionID'])){
+			$selectedPositionID = $_SESSION['AddEmployeeAsOwnerSelectedPositionID'];
+			unset($_SESSION['AddEmployeeAsOwnerSelectedPositionID']);
+		}
+	}
+
+	// Get info about company position, users and companies from the database
+	// if we don't already have them saved in a session array
+	if(!isSet($_SESSION['AddEmployeeAsOwnerUsersArray']) OR !isSet($_SESSION['AddEmployeeAsOwnerCompanyPositionArray'])){	
+
+		try
+		{
+			// Get all users and companypositions so owner can search/choose from them
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+			$pdo = connect_to_db();
+
+				// Company Positions
+			//Only get info if we haven't gotten it before
+			if(!isSet($_SESSION['AddEmployeeAsOwnerCompanyPositionArray'])){
+				// We don't have info about company position saved. Let's get it
+
+				$sql = 'SELECT 	`PositionID`,
+								`name` 			AS CompanyPositionName,
+								`description`	AS CompanyPositionDescription
+						FROM 	`companyposition`';
+				$result = $pdo->query($sql);
+
+				// Get the rows of information from the query
+				// This will be used to create a dropdown list in HTML
+				foreach($result as $row){
+					$companyposition[] = array(
+											'PositionID' => $row['PositionID'],
+											'CompanyPositionName' => $row['CompanyPositionName'],
+											'CompanyPositionDescription' => $row['CompanyPositionDescription']
+											);
+				}
+
+				$_SESSION['AddEmployeeAsOwnerCompanyPositionArray'] = $companyposition;
+			} else {
+				$companyposition = $_SESSION['AddEmployeeAsOwnerCompanyPositionArray'];
+			}
+
+				//	Users - Only active ones
+			// Only get info if we haven't gotten it before
+			if(!isSet($_SESSION['AddEmployeeAsOwnerUsersArray'])){
+				// We don't have info about users saved. Let's get it
+
+				$sql = "SELECT 	`userID` 	AS UserID,
+								`firstname`,
+								`lastname`,
+								`email`
+						FROM 	`user`
+						WHERE	`isActive` > 0
+						AND		(`UserID` NOT IN 
+								(
+									SELECT 	`UserID`
+									FROM	`employee`
+									WHERE	`CompanyID` = :CompanyID
+								))";
+
+				if ($usersearchstring != ''){
+					$sqladd = " AND (`firstname` LIKE :search
+								OR `lastname` LIKE :search
+								OR `email` LIKE :search)";
+					$sql = $sql . $sqladd;
+
+					$finalusersearchstring = '%' . $usersearchstring . '%';
+
+					$s = $pdo->prepare($sql);
+					$s->bindValue(":search", $finalusersearchstring);
+					$s->bindValue(':CompanyID', $companyID);
+					$s->execute();
+					$result = $s->fetchAll(PDO::FETCH_ASSOC);
+				} else {
+					$s = $pdo->prepare($sql);
+					$s->bindValue(':CompanyID', $companyID);
+					$s->execute();
+					$result = $s->fetchAll(PDO::FETCH_ASSOC);
+				}
+
+				// Get the rows of information from the query
+				// This will be used to create a dropdown list in HTML
+				foreach($result as $row){
+					$users[] = array(
+										'UserID' => $row['UserID'],
+										'UserIdentifier' => $row['lastname'] . ', ' . $row['firstname'] . ' - ' . $row['email']
+									);
+				}
+				if(isSet($users)){
+					$_SESSION['AddEmployeeAsOwnerUsersArray'] = $users;
+					$usersFound = sizeOf($users);
+				} else {
+					$_SESSION['AddEmployeeAsOwnerUsersArray'] = array();
+					$usersFound = 0;
+				}
+				if(isSet($_SESSION['AddEmployeeAsOwnerShowSearchResults']) AND $_SESSION['AddEmployeeAsOwnerShowSearchResults']){
+					$_SESSION['AddEmployeeAsOwnerSearchResult'] = "The search result found $usersFound users";
+				}
+
+			} else {
+				$users = $_SESSION['AddEmployeeAsOwnerUsersArray'];
+			}	
+
+			//close connection
+			$pdo = null;
+		}
+		catch (PDOException $e)
+		{
+			$error = 'Error fetching user, company and company position lists: ' . $e->getMessage();
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+			$pdo = null;
+			exit();
+		}
+
+	} else {
+		$companyposition = $_SESSION['AddEmployeeAsOwnerCompanyPositionArray'];
+		$users = $_SESSION['AddEmployeeAsOwnerUsersArray'];
+	}
+
+
+	if(isSet($_SESSION['AddEmployeeAsOwnerSearchResult'])){
+		$_SESSION['AddEmployeeAsOwnerSearchResult'] .= ".";
+	}
+	unset($_SESSION['AddEmployeeAsOwnerShowSearchResults']);
+
+	var_dump($_SESSION); // TO-DO: remove after testing is done
+
+	// Change to the actual html form template
+	include 'addemployee.html.php';
+	exit();
+}
+
 // Get employee information for the selected company when user wants it
 if(isSet($_GET['employees']) AND isSet($_SESSION['normalUserCompanyIDSelected']) AND !empty($_SESSION['normalUserCompanyIDSelected'])){
 
@@ -1160,7 +1323,7 @@ try
 	$sql = "SELECT 	`CompanyID`	AS CompanyID,
 					`name`		AS CompanyName
 			FROM	`company`
-			WHERE	`isActive` = 1";
+			WHERE	`CompanyID` <> 0";
 	$return = $pdo->query($sql);
 	$companies = $return->fetchAll(PDO::FETCH_ASSOC);
 }

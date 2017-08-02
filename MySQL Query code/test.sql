@@ -1998,7 +1998,7 @@ SELECT 	u.`userID`					AS UsrID,
 			ON 			e.`companyID` = b.`companyID`
 			WHERE 		b.`companyID` = 2
 			AND 		b.`userID` IS NOT NULL
-			AND			b.`userID` NOT IN (SELECT `userID` FROM employee WHERE `CompanyID` = 2)
+			AND			b.`userID` NOT IN (SELECT `userID` FROM `employee` WHERE `CompanyID` = 2)
 			AND 		b.`userID` = UsrID
 			AND 		b.`actualEndDateTime`
 			BETWEEN		c.`prevStartDate`

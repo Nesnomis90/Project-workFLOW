@@ -22,7 +22,7 @@
 					<label for="CompanyName">Company Name:</label>
 					<span><b id="CompanyName"><?php htmlout($CompanyName); ?></b></span>
 				</div>
-				<div>				
+				<div>
 					<label for="UserIdentifier">User:</label>
 					<span><b id="UserIdentifier"><?php htmlout($UserIdentifier); ?></b></span>
 				</div>
