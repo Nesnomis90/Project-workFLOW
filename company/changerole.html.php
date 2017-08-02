@@ -1,4 +1,4 @@
-<!-- This is the HTML form used for CHANGING an EMPLOYEE ROLE-->
+<!-- This is the HTML form used for CHANGING an EMPLOYEE ROLE for the company owner-->
 <?php include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/helpers.inc.php'; ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -14,7 +14,7 @@
 		</style>
 	</head>
 	<body onload="startTime()">
-		<?php include_once $_SERVER['DOCUMENT_ROOT'] .'/includes/admintopnav.html.php'; ?>
+		<?php include_once $_SERVER['DOCUMENT_ROOT'] .'/includes/topnav.html.php'; ?>
 
 		<fieldset class="left"><legend>Change Employee Role</legend>
 			<form action="" method="post">
@@ -22,7 +22,7 @@
 					<label for="CompanyName">Company Name:</label>
 					<span><b id="CompanyName"><?php htmlout($CompanyName); ?></b></span>
 				</div>
-				<div>				
+				<div>
 					<label for="UserIdentifier">User:</label>
 					<span><b id="UserIdentifier"><?php htmlout($UserIdentifier); ?></b></span>
 				</div>
@@ -55,9 +55,5 @@
 				</div>
 			</form>
 		</fieldset>
-		
-	<div class="left"><a href="..">Return to CMS home</a></div>
-	
-	<?php include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/logout.inc.html.php'; ?>
 	</body>
 </html>

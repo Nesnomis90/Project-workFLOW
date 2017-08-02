@@ -176,43 +176,43 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Add Employee') OR
 	(isSet($_SESSION['refreshAddEmployee']) AND $_SESSION['refreshAddEmployee']))
 {	
 
-	$companysearchstring = '';			
+	$companysearchstring = '';
 	$usersearchstring = '';
 
 	// Check if the call was a form submit or a forced refresh
 	if(isSet($_SESSION['refreshAddEmployee']) AND $_SESSION['refreshAddEmployee']){
 		// Acknowledge that we have refreshed the page
 		unset($_SESSION['refreshAddEmployee']);
-		
+
 		// Remember the company string that was searched before refreshing
 		if(isSet($_SESSION['AddEmployeeCompanySearch'])){
 			$companysearchstring = $_SESSION['AddEmployeeCompanySearch'];
 			unset($_SESSION['AddEmployeeCompanySearch']);
 		}
-		
+
 		// Remember the user string that was searched before refreshing
 		if(isSet($_SESSION['AddEmployeeUserSearch'])){
 			$usersearchstring = $_SESSION['AddEmployeeUserSearch'];
 			unset($_SESSION['AddEmployeeUserSearch']);
 		}
-		
+
 		// Remember what company was selected before refreshing
 		if(isSet($_SESSION['AddEmployeeSelectedCompanyID'])){
 			$selectedCompanyID = $_SESSION['AddEmployeeSelectedCompanyID'];
 			unset($_SESSION['AddEmployeeSelectedCompanyID']);
 		}
-		
+
 		// Remember what user was selected before refreshing
 		if(isSet($_SESSION['AddEmployeeSelectedUserID'])){
 			$selectedUserID = $_SESSION['AddEmployeeSelectedUserID'];
 			unset($_SESSION['AddEmployeeSelectedUserID']);
-		}	
+		}
 
 		// Remember what company position was selected before refreshing
 		if(isSet($_SESSION['AddEmployeeSelectedPositionID'])){
 			$selectedPositionID = $_SESSION['AddEmployeeSelectedPositionID'];
 			unset($_SESSION['AddEmployeeSelectedPositionID']);
-		}		
+		}
 	}
 
 	// Get info about company position, users and companies from the database
@@ -222,29 +222,29 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Add Employee') OR
 		!isSet($_SESSION['AddEmployeeCompanyPositionArray'])){	
 	
 		try
-		{	
+		{
 			// Get all users, companies and companypositions so admin can search/choose from them
 			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 			$pdo = connect_to_db();
-			
+
 				//Companies	
 			// Only get info if we haven't gotten it before
 			if(!isSet($_SESSION['AddEmployeeCompaniesArray'])){
 				// We don't have info about companies saved. Let's get it
-				
+
 				if(!isSet($_GET['Company'])){
 					// If we're NOT looking at a specific company already
 					$sql = 'SELECT 	`companyID` AS CompanyID,
 									`name`		AS CompanyName
 							FROM 	`company`
-							WHERE	`isActive` = 1';
-							
+							WHERE	`companyID` <> 0';
+
 					if ($companysearchstring != ''){
 						$sqladd = " AND `name` LIKE :search";
 						$sql = $sql . $sqladd;	
-						
+
 						$finalcompanysearchstring = '%' . $companysearchstring . '%';
-						
+
 						$s = $pdo->prepare($sql);
 						$s->bindValue(':search', $finalcompanysearchstring);
 						$s->execute();
@@ -253,7 +253,7 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Add Employee') OR
 						$return = $pdo->query($sql);
 						$result = $return->fetchAll(PDO::FETCH_ASSOC);
 					}
-					
+
 					// Get the rows of information from the query
 					// This will be used to create a dropdown list in HTML
 					foreach($result as $row){
@@ -262,7 +262,7 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Add Employee') OR
 												'CompanyName' => $row['CompanyName']
 												);
 					}
-					
+
 					if(isSet($companies)){
 						$_SESSION['AddEmployeeCompaniesArray'] = $companies;
 						$companiesFound = sizeOf($companies);
@@ -272,8 +272,8 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Add Employee') OR
 					}
 					if(isSet($_SESSION['AddEmployeeShowSearchResults']) AND $_SESSION['AddEmployeeShowSearchResults']){
 						$_SESSION['AddEmployeeSearchResult'] = "The search result found $companiesFound companies.";
-					}					
-						
+					}
+
 				} else {
 					$sql = 'SELECT 	`companyID` AS CompanyID,
 									`name`		AS CompanyName
@@ -284,23 +284,23 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Add Employee') OR
 					$s = $pdo->prepare($sql);
 					$s->bindValue(':CompanyID', $_GET['Company']);
 					$s->execute();
-					$companies = $s->fetch(PDO::FETCH_ASSOC);		
+					$companies = $s->fetch(PDO::FETCH_ASSOC);
 				}
 			} else {
 				$companies = $_SESSION['AddEmployeeCompaniesArray'];
 			}
-			
+
 				// Company Positions
 			//Only get info if we haven't gotten it before
 			if(!isSet($_SESSION['AddEmployeeCompanyPositionArray'])){
 				// We don't have info about company position saved. Let's get it
-				
+
 				$sql = 'SELECT 	`PositionID`,
 								`name` 			AS CompanyPositionName,
 								`description`	AS CompanyPositionDescription
 						FROM 	`companyposition`';
 				$result = $pdo->query($sql);
-				
+
 				// Get the rows of information from the query
 				// This will be used to create a dropdown list in HTML
 				foreach($result as $row){
@@ -310,17 +310,17 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Add Employee') OR
 											'CompanyPositionDescription' => $row['CompanyPositionDescription']
 											);
 				}
-				
+
 				$_SESSION['AddEmployeeCompanyPositionArray'] = $companyposition;
 			} else {
 				$companyposition = $_SESSION['AddEmployeeCompanyPositionArray'];
 			}
-		
+
 				//	Users - Only active ones
 			// Only get info if we haven't gotten it before
 			if(!isSet($_SESSION['AddEmployeeUsersArray'])){
 				// We don't have info about users saved. Let's get it
-				
+
 				$sql = "SELECT 	`userID` 	AS UserID,
 								`firstname`,
 								`lastname`,
@@ -333,9 +333,9 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Add Employee') OR
 								OR `lastname` LIKE :search
 								OR `email` LIKE :search)";
 					$sql = $sql . $sqladd;
-					
+
 					$finalusersearchstring = '%' . $usersearchstring . '%';
-					
+
 					$s = $pdo->prepare($sql);
 					$s->bindValue(":search", $finalusersearchstring);
 					$s->execute();
@@ -344,7 +344,7 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Add Employee') OR
 					$return = $pdo->query($sql);
 					$result = $return->fetchAll(PDO::FETCH_ASSOC);
 				}
-					
+
 				// Get the rows of information from the query
 				// This will be used to create a dropdown list in HTML
 				foreach($result as $row){
@@ -382,7 +382,7 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Add Employee') OR
 			$pdo = null;
 			exit();
 		}
-	
+
 	} else {
 		$companies = $_SESSION['AddEmployeeCompaniesArray'];
 		$companyposition = $_SESSION['AddEmployeeCompanyPositionArray'];
