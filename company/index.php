@@ -356,7 +356,28 @@ $selectedCompanyToJoinID;//int
 $_POST['selectedCompanyToJoin'];
 */
 
-// 	If admin wants to add an employee to a company in the database
+// Company owner clicked the search button, trying to limit the shown user lists
+if(isSet($_POST['action']) AND $_POST['action'] == 'Search'){
+	// Forget the old array values we have saved
+	unset($_SESSION['AddEmployeeAsOwnerUsersArray']);
+
+	$_SESSION['AddEmployeeAsOwnerShowSearchResults'] = TRUE;
+	// Let's remember what was selected and searched for
+
+	$userSearchString = $_POST['usersearchstring'];
+	$_SESSION['AddEmployeeAsOwnerUserSearch'] = trimExcessWhitespace($userSearchString);
+	$_SESSION['AddEmployeeAsOwnerSelectedUserID'] = $_POST['UserID'];
+	$_SESSION['AddEmployeeAsOwnerSelectedPositionID'] = $_POST['PositionID'];
+
+	// Also we want to refresh AddEmployee with our new values!
+	$_SESSION['refreshAddEmployeeAsOwner'] = TRUE;
+	$TheCompanyID = $_GET['ID'];
+	$location = "http://$_SERVER[HTTP_HOST]/company/?ID=" . $TheCompanyID . "&employees";
+	header("Location: $location");
+	exit();
+}
+
+// 	If company owner wants to add an employee to a company in the database
 // 	we load a new html form
 if ((isSet($_POST['action']) AND $_POST['action'] == 'Add Employee') OR 
 	(isSet($_SESSION['refreshAddEmployeeAsOwner']) AND $_SESSION['refreshAddEmployeeAsOwner']))
