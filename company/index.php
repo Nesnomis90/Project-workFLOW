@@ -599,6 +599,26 @@ if (isSet($_POST['action']) AND $_POST['action'] == 'Confirm Employee')
 			$s->execute();
 
 			$userID = $pdo->lastInsertId();
+			
+			// Send user an email with the activation code and password
+				// TO-DO: This is UNTESTED since we don't have php.ini set up to actually send email
+			$emailSubject = "Account Activation Link - FLOW";
+			
+			$emailMessage = 
+			"An account has been registered for you at " . $_SERVER['HTTP_HOST'] . ", by the user: " . $_SESSION['LoggedInUserName'] . 
+			"\nYour generated password is: " . $generatedPassword . " (This can and should be changed after you log in)" .
+			"\nBefore you can log in you need to activate your account.\n" .
+			"If the account isn't activated within 8 hours, it is removed.\n" .
+			"Click this link to activate your account: " . $_SERVER['HTTP_HOST'] . 
+			"/user/?activateaccount=" . $activationcode;
+			
+			$mailResult = sendEmail($email, $emailSubject, $emailMessage);
+			
+			if(!$mailResult){
+				$_SESSION['AddEmployeeAsOwnerError'] .= "\n[WARNING] System failed to send Email to user.";
+			}
+			
+			$_SESSION['AddEmployeeAsOwnerError'] .= "\nThis is the email msg we're sending out:\n$emailMessage.\nSent to: $email."; // TO-DO: Remove after testing	
 		} else {
 			$sql = 'SELECT 	COUNT(*) 
 					FROM 	`employee`
@@ -657,9 +677,9 @@ if (isSet($_POST['action']) AND $_POST['action'] == 'Confirm Employee')
 	}
 
 	if($createUser){
-		$_SESSION['AddEmployeeAsOwnerError'] = "Successfully created the user and added it as an employee.";
+		$_SESSION['AddEmployeeAsOwnerError'] .= "Successfully created the user and added it as an employee.";
 	} else {
-		$_SESSION['AddEmployeeAsOwnerError'] = "Successfully added the employee.";
+		$_SESSION['AddEmployeeAsOwnerError'] .= "Successfully added the employee.";
 	}
 
 	if($createUser){
@@ -716,7 +736,12 @@ if (isSet($_POST['action']) AND $_POST['action'] == 'Confirm Employee')
 		}
 
 		// Get selected company name
-		$companyinfo = ; // TO-DO: FIX-ME:
+		if(isSet($_POST['CompanyName']) AND !empty($_POST['CompanyName'])){
+			$companyinfo = $_POST['CompanyName'];
+		} else {
+			$companyinfo = "N/A";
+		}
+		
 
 		// Get selected position name
 		if(isSet($_SESSION['AddEmployeeAsOwnerCompanyPositionArray'])){
