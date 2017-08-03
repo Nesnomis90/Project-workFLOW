@@ -656,7 +656,43 @@ if (isSet($_POST['action']) AND $_POST['action'] == 'Confirm Employee')
 		exit();
 	}
 
-	$_SESSION['AddEmployeeAsOwnerError'] = "Successfully added the employee.";
+	if($createUser){
+		$_SESSION['AddEmployeeAsOwnerError'] = "Successfully created the user and added it as an employee.";
+	} else {
+		$_SESSION['AddEmployeeAsOwnerError'] = "Successfully added the employee.";
+	}
+
+	if($createUser){
+		// Add a log event that a user was created by the company owner
+		try
+		{
+			// Save a description with information about the employee that was added
+			// to the company.
+			$logEventDescription = 'An account was created to add as an employee. The user created is based on the email: ' . $email . 
+			".\nThe company owner who added this account is: " . $_SESSION['LoggedInUserName'];
+
+			$sql = "INSERT INTO `logevent` 
+					SET			`actionID` = 	(
+													SELECT 	`actionID` 
+													FROM 	`logaction`
+													WHERE 	`name` = 'Account Created'
+												),
+								`userID` = :UserID,
+								`description` = :description";
+			$s = $pdo->prepare($sql);
+			$s->bindValue(':UserID', $userID);
+			$s->bindValue(':description', $logEventDescription);
+			$s->execute();
+
+		}
+		catch(PDOException $e)
+		{
+			$error = 'Error adding log event to database: ' . $e->getMessage();
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+			$pdo = null;
+			exit();
+		}
+	}
 
 	// Add a log event that a user was added as an employee in a company
 	try
