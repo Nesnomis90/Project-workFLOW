@@ -6,6 +6,17 @@ session_start();
 include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/helpers.inc.php';
 include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/magicquotes.inc.php';
 
+// Function to clear sessions used to remember user inputs on refreshing the add employee form
+function clearAddEmployeeAsOwnerSessions(){
+	unset($_SESSION['AddEmployeeAsOwnerUserSearch']);
+
+	unset($_SESSION['AddEmployeeAsOwnerSelectedUserID']);
+	unset($_SESSION['AddEmployeeAsOwnerSelectedPositionID']);
+
+	unset($_SESSION['AddEmployeeAsOwnerCompanyPositionArray']);
+	unset($_SESSION['AddEmployeeAsOwnerUsersArray']);	
+}
+
 // Make sure logout works properly and that we check if their login details are up-to-date
 if(isSet($_SESSION['loggedIn']) AND $_SESSION['loggedIn'] AND isSet($_SESSION['LoggedInUserID']) AND !empty($_SESSION['LoggedInUserID'])){
 	$gotoPage = ".";
@@ -352,14 +363,8 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Add Employee') OR
 {
 	$usersearchstring = '';
 
-	if(!isSet($_SESSION['AddEmployeeAsOwnerSelectedCompanyID'])){
-		if(isSet($_POST['CompanyID']) AND !empty($_POST['CompanyID'])){
-			$_SESSION['AddEmployeeAsOwnerSelectedCompanyID'] = $_POST['CompanyID']
-			$companyID = $_SESSION['AddEmployeeAsOwnerSelectedCompanyID'];
-		}
-	} else {
-		$companyID = $_SESSION['AddEmployeeAsOwnerSelectedCompanyID'];
-	}
+	$companyID = $_SESSION['normalUserCompanyIDSelected'];
+	$companyName = $_SESSION['normalUserCompanyNameSelected'];
 
 	// Check if the call was a form submit or a forced refresh
 	if(isSet($_SESSION['refreshAddEmployeeAsOwner']) AND $_SESSION['refreshAddEmployeeAsOwner']){
@@ -517,7 +522,9 @@ if (isSet($_POST['action']) AND $_POST['action'] == 'Confirm Employee')
 	$createUser = FALSE;
 	
 	// If we're looking at a specific company
-	$CompanyID = $_SESSION['AddEmployeeAsOwnerSelectedCompanyID'];
+	$companyID = $_SESSION['normalUserCompanyIDSelected'];
+	$companyName = $_SESSION['normalUserCompanyNameSelected'];
+
 	if(isSet($_POST['UserID']) AND !empty($_POST['UserID'])){
 		$userID = $_POST['UserID'];
 	} elseif(isset($_POST['registerThenAddUserFromEmail']) AND !empty($_POST['registerThenAddUserFromEmail'])){
@@ -591,7 +598,7 @@ if (isSet($_POST['action']) AND $_POST['action'] == 'Confirm Employee')
 					WHERE		u.`UserID` = :loggedInUser';
 			$s = $pdo->prepare($sql);
 			$s->bindValue(':firstname', $firstName);
-			$s->bindValue(':firstname', $lastName);
+			$s->bindValue(':lastname', $lastName);
 			$s->bindValue(':password', $hashedPassword);
 			$s->bindValue(':activationcode', $activationcode);
 			$s->bindValue(':email', $email);
@@ -615,17 +622,17 @@ if (isSet($_POST['action']) AND $_POST['action'] == 'Confirm Employee')
 			$mailResult = sendEmail($email, $emailSubject, $emailMessage);
 			
 			if(!$mailResult){
-				$_SESSION['AddEmployeeAsOwnerError'] .= "\n[WARNING] System failed to send Email to user.";
+				$_SESSION['EmployeeUserFeedback'] .= "\n[WARNING] System failed to send Email to user.";
 			}
 			
-			$_SESSION['AddEmployeeAsOwnerError'] .= "\nThis is the email msg we're sending out:\n$emailMessage.\nSent to: $email."; // TO-DO: Remove after testing	
+			$_SESSION['EmployeeUserFeedback'] .= "\nThis is the email msg we're sending out:\n$emailMessage.\nSent to: $email."; // TO-DO: Remove after testing	
 		} else {
 			$sql = 'SELECT 	COUNT(*) 
 					FROM 	`employee`
 					WHERE 	`CompanyID`= :CompanyID
 					AND 	`UserID` = :UserID';
 			$s = $pdo->prepare($sql);
-			$s->bindValue(':CompanyID', $CompanyID);
+			$s->bindValue(':CompanyID', $companyID);
 			$s->bindValue(':UserID', $userID);
 			$s->execute();
 
@@ -663,7 +670,7 @@ if (isSet($_POST['action']) AND $_POST['action'] == 'Confirm Employee')
 							`userID` = :UserID,
 							`PositionID` = :PositionID';
 		$s = $pdo->prepare($sql);
-		$s->bindValue(':CompanyID', $CompanyID);
+		$s->bindValue(':CompanyID', $companyID);
 		$s->bindValue(':UserID', $userID);
 		$s->bindValue(':PositionID', $_POST['PositionID']);		
 		$s->execute();
@@ -677,9 +684,9 @@ if (isSet($_POST['action']) AND $_POST['action'] == 'Confirm Employee')
 	}
 
 	if($createUser){
-		$_SESSION['AddEmployeeAsOwnerError'] .= "Successfully created the user and added it as an employee.";
+		$_SESSION['EmployeeUserFeedback'] .= "Successfully created the user and added it as an employee.";
 	} else {
-		$_SESSION['AddEmployeeAsOwnerError'] .= "Successfully added the employee.";
+		$_SESSION['EmployeeUserFeedback'] .= "Successfully added the employee.";
 	}
 
 	if($createUser){
@@ -735,14 +742,6 @@ if (isSet($_POST['action']) AND $_POST['action'] == 'Confirm Employee')
 			}
 		}
 
-		// Get selected company name
-		if(isSet($_POST['CompanyName']) AND !empty($_POST['CompanyName'])){
-			$companyinfo = $_POST['CompanyName'];
-		} else {
-			$companyinfo = "N/A";
-		}
-		
-
 		// Get selected position name
 		if(isSet($_SESSION['AddEmployeeAsOwnerCompanyPositionArray'])){
 			foreach($_SESSION['AddEmployeeAsOwnerCompanyPositionArray'] AS $row){
@@ -757,7 +756,7 @@ if (isSet($_POST['action']) AND $_POST['action'] == 'Confirm Employee')
 		// Save a description with information about the employee that was added
 		// to the company.
 		$logEventDescription = 'The user: ' . $userinfo . 
-		' was added to the company: ' . $companyinfo . 
+		' was added to the company: ' . $companyName . 
 		' and was given the position: ' . $positioninfo . ".\nAdded by : " .
 		$_SESSION['LoggedInUserName'];
 
@@ -772,7 +771,7 @@ if (isSet($_POST['action']) AND $_POST['action'] == 'Confirm Employee')
 							`positionID` = :PositionID,
 							`description` = :description";
 		$s = $pdo->prepare($sql);
-		$s->bindValue(':CompanyID', $CompanyID);
+		$s->bindValue(':CompanyID', $companyID);
 		$s->bindValue(':UserID', $userID);
 		$s->bindValue(':PositionID', $_POST['PositionID']);
 		$s->bindValue(':description', $logEventDescription);
@@ -789,10 +788,14 @@ if (isSet($_POST['action']) AND $_POST['action'] == 'Confirm Employee')
 		exit();
 	}
 
+	clearAddEmployeeAsOwnerSessions();
+	
 	// Load employee list webpage with new employee connection
 	header('Location: .');
 	exit();
 }
+
+clearAddEmployeeAsOwnerSessions();
 
 // Get employee information for the selected company when user wants it
 if(isSet($_GET['employees']) AND isSet($_SESSION['normalUserCompanyIDSelected']) AND !empty($_SESSION['normalUserCompanyIDSelected'])){
@@ -806,12 +809,15 @@ if(isSet($_GET['employees']) AND isSet($_SESSION['normalUserCompanyIDSelected'])
 		// First check if the user making the call is actually in the company. If not, we won't display anything.
 		// Also doubles as the company role check to decide what should be displayed.
 		$sql = "SELECT 		COUNT(*) 	AS HitCount,
-							cp.`name` 	AS CompanyPosition
+							cp.`name` 	AS CompanyPosition,
+							c.`name`	AS CompanyName
 				FROM 		`employee` e
-				INNER JOIN `companyposition` cp
+				INNER JOIN 	`companyposition` cp
 				ON 			cp.`PositionID` = e.`PositionID`
-				WHERE		`CompanyID` = :CompanyID
-				AND 		`UserID` = :UserID
+				INNER JOIN 	`company` c
+				ON			c.`CompanyID` = e.`CompanyID`
+				WHERE		e.`CompanyID` = :CompanyID
+				AND 		e.`UserID` = :UserID
 				LIMIT 		1";
 		$s = $pdo->prepare($sql);
 		$s->bindValue(":CompanyID", $_SESSION['normalUserCompanyIDSelected']);
@@ -822,6 +828,7 @@ if(isSet($_GET['employees']) AND isSet($_SESSION['normalUserCompanyIDSelected'])
 
 		if(isSet($userResult) AND $userResult['HitCount'] > 0){
 			$companyRole = $userResult['CompanyPosition'];
+			$_SESSION['normalUserCompanyNameSelected'] = $userResult['CompanyName'];
 		} else {
 			$noAccess = TRUE;
 
@@ -1592,13 +1599,13 @@ if(isSet($selectedCompanyToDisplayID) OR (isSet($selectedCompanyToDisplayID) AND
 			break;
 		}
 	}
-	
+
 	if($companyHit === FALSE){
 		$noAccess = TRUE;
 		$pdo = null;
 		var_dump($_SESSION); // TO-DO: remove after testing is done	
 
-		include_once 'company.html.php';		
+		include_once 'company.html.php';
 		exit();
 	}
 }
@@ -1699,7 +1706,7 @@ if(isSet($_GET['totalBooking']) OR isSet($_GET['activeBooking']) OR isSet($_GET[
 		$dateOnlyStart = convertDatetimeToFormat($startDateTime,'Y-m-d H:i:s','Y-m-d');
 		$cancelledDateTime = $row['BookingWasCancelledOn'];
 		$createdDateTime = $row['BookingWasCreatedOn'];	
-		
+
 		// Describe the status of the booking based on what info is stored in the database
 		// If not finished and not cancelled = active
 		// If meeting time has passed and finished time has updated (and not been cancelled) = completed
@@ -1795,7 +1802,7 @@ if(isSet($_GET['totalBooking']) OR isSet($_GET['activeBooking']) OR isSet($_GET[
 		}
 		$displayCompletedMeetingDurationForPrice = convertMinutesToHoursAndMinutes($completedMeetingDurationForPrice);
 		
-		if($status == "Active Today" AND (isSet($_GET['activeBooking']) OR isSet($_GET['totalBooking']))) {				
+		if($status == "Active Today" AND (isSet($_GET['activeBooking']) OR isSet($_GET['totalBooking']))) {
 			$bookingsActiveToday[] = array(	'id' => $row['bookingID'],
 											'BookingStatus' => $status,
 											'BookedRoomName' => $roomName,
