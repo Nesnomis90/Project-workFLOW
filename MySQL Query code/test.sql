@@ -49,6 +49,26 @@ WHERE 	DATE(CURRENT_TIMESTAMP) >= `removeAtDate`
 AND 	`isActive` = 1
 AND		`companyID` <> 0;
 
+INSERT INTO `user`(`firstname`, `lastname`, `password`, `activationcode`, `email`, `accessID`)
+SELECT		'',
+			'',
+			'1234567890123456789012345678901234567890123456789012345678901234',
+			'1234567890123456789012345678901234567890123456789012345678901234',
+			'test@email',
+			IF(
+				(a.`AccessName` = "Normal User"),
+				(a.`AccessID`),
+				(
+					SELECT 	`AccessID`
+					FROM	`accesslevel`
+					WHERE	`AccessName` = "In-House User"
+				)
+			) AS AccessID
+FROM 		`accesslevel` a
+INNER JOIN	`user` u
+ON			u.`AccessID` = a.`AccessID`
+WHERE		u.`UserID` = 28;
+
 SELECT 		COUNT(*) 	AS HitCount	
 FROM		`user` u
 INNER JOIN	`accesslevel` a

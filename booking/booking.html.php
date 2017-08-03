@@ -19,16 +19,27 @@
 			<?php endif; ?>
 		</div>
 
-		<?php if(isSet($_GET['cancellationcode'])) : ?>
-			<h1>Cancel Your Booking!</h1>
-		<?php elseif(isSet($_SESSION['loggedIn']) AND $_SESSION['loggedIn']) : ?>
-			<h1>Booking Information Overview</h1>
-
-			<?php if(isSet($_SESSION['LoggedInUserName'])) : ?>
-				<h3>Logged in as <?php htmlout($_SESSION['LoggedInUserName']); ?>.</h3>
-			<?php else : ?>
-				<h3>Logged in</h3>
+		<div class="left">
+			<?php if(isSet($_GET['cancellationcode'])) : ?>
+				<h1>Cancel Your Booking!</h1>
+			<?php elseif(isSet($_SESSION['loggedIn']) AND $_SESSION['loggedIn']) : ?>
+				<h1>Booking Information Overview</h1>
+			<?php elseif(!isSet($_SESSION['loggedIn'])) : ?>
+				<h1>Booking Information Overview</h1>
 			<?php endif; ?>
+		</div>
+		
+		<?php if(isSet($_GET['cancellationcode'])) : ?>
+
+		<?php elseif(isSet($_SESSION['loggedIn']) AND $_SESSION['loggedIn']) : ?>
+
+			<div class="left">
+				<?php if(isSet($_SESSION['LoggedInUserName'])) : ?>
+					<h3>Logged in as <?php htmlout($_SESSION['LoggedInUserName']); ?>.</h3>
+				<?php else : ?>
+					<h3>Logged in</h3>
+				<?php endif; ?>
+			</div>
 
 			<form action="" method="post">
 				<div class="left">
@@ -159,7 +170,6 @@
 				<?php endif; ?>	
 				</table>
 		<?php elseif(!isSet($_SESSION['loggedIn'])) : ?>
-			<h1>Booking Information Overview</h1>
 
 			<form action="" method="post">
 				<div>

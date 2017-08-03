@@ -57,7 +57,7 @@ if(isSet($_GET['meetingroom'])){
 <div class="topnav">
 	<ul>
 		<?php if(!isSet($_SESSION["DefaultMeetingRoomInfo"])) : ?>
-			<li><a href="..">Home</a></li>
+			<li><a href="/">Home</a></li>
 		<?php else : ?>
 			<li><a href="/booking/?meetingroom=<?php htmlout($_SESSION["DefaultMeetingRoomInfo"]["TheMeetingRoomID"]); ?>">Home</a></li>
 		<?php endif; ?>

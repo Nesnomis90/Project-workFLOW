@@ -388,59 +388,6 @@ function databaseContainsBookingCode($rawBookingCode)
 	
 }
 
-// Function to get user information based on the booking code submitted
-// TO-DO: UNTESTED
-function getUserInfoFromBookingCode($rawBookingCode)
-{
-	if(!databaseContainsBookingCode($rawBookingCode))
-	{
-		// The booking code we received does not exist in the database.
-		// Can't retrieve any info then
-		return FALSE;
-	}
-	
-	// We know the code exists. Let's get the info of the person it belongs to
-	$hashedBookingCode = hashBookingCode($rawBookingCode);
-	
-	try
-	{
-		include_once 'db.inc.php';
-		$pdo = connect_to_db();
-		$sql = "SELECT 	`userID`						AS TheUserID,
-						`email`							AS TheUserEmail,
-						`firstName`						AS TheUserFirstname,
-						`lastName`						AS TheUserLastname,
-						`displayName`					AS TheUserDisplayName,
-						`bookingDescription`			AS TheUserBookingDescription,
-						`AccessID`						AS TheUserAccessID,
-						(
-							SELECT 	`AccessName`
-							FROM 	`accesslevel`
-							WHERE 	`AccessID` = TheUserAccessID
-							LIMIT 	1
-						)								AS TheUserAccessName
-				FROM 	`user`
-				WHERE 	`bookingCode` = :BookingCode
-				AND		`isActive` > 0
-				LIMIT 	1";
-		$s = $pdo->prepare($sql);
-		$s->bindValue(':BookingCode', $hashedBookingCode);
-		$s->execute();
-		
-		$pdo = null;		
-	}
-	catch(PDOException $e)
-	{
-		$error = 'Error fetching user info based on booking code.';
-		include_once 'error.html.php';
-		$pdo = null;
-		exit();		
-	}
-	
-	$row = $s->fetch();
-	return $row;
-}
-
 // Function to "return" the raw booking code value to a user who has forgotten their own
 // returns FALSE if not found.
 function revealBookingCode($bookingCode){
@@ -517,67 +464,5 @@ function isUserInHouseUser(){
 		return false;
 	}
 	return true;
-}
-
-// Function to make sure user is the owner of the company
-// TO-DO: UNTESTED!
-function isUserCompanyOwner(){
-	session_start();
-	
-	if(!isSet($_SESSION['LoggedInUserIsOwnerInTheseCompanies'])){
-		// Check if user is a company owner
-		try
-		{
-			$UserID = $_SESSION['LoggedInUserID'];
-			
-			include_once 'db.inc.php';
-			$pdo = connect_to_db();
-			$sql = "SELECT 		COUNT(*),
-								c.`name`		AS CompanyName,
-								c.`companyID`   AS CompanyID
-					FROM 		`employee` e
-					INNER JOIN 	`companyposition` cp
-					ON			e.`PositionID` = cp.`PositionID`
-					LEFT JOIN	`company` c
-					ON			c.`companyID` = e.`companyID`
-					WHERE 		e.`UserID` = :UserID 
-					AND 		cp.`name` = 'Owner'";
-			$s = $pdo->prepare($sql);
-			$s->bindValue(':UserID', $UserID);
-			$s->execute();
-			
-			$pdo = null;
-		}
-		catch (PDOException $e)
-		{
-			$error = 'Error checking if user is company owner.' . $e->getMessage();
-			include_once 'error.html.php';
-			$pdo = null;
-			exit();
-		}
-		 
-		$result = $s->fetchAll();
-		// If we got a hit, then the user is an owner for at least 1 company in our database
-		if ($result[0] > 0)
-		{
-			foreach($result AS $row){
-				$OwnerInCompanies[] = array (
-												'CompanyName' => $row['CompanyName'],
-												'CompanyID' => $row['CompanyID']
-											);
-			}
-			
-			$_SESSION['LoggedInUserIsOwnerInTheseCompanies'] = $OwnerInCompanies;
-			
-			return TRUE;
-		}
-		else
-		{
-			unset($_SESSION['LoggedInUserIsOwnerInTheseCompanies']);
-			return FALSE;
-		}
-	} else {
-		return TRUE;
-	}
 }
 ?>
