@@ -514,13 +514,28 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Add Employee') OR
 if (isSet($_POST['action']) AND $_POST['action'] == 'Confirm Employee')
 {
 	$invalidInput = FALSE;
+	$createUser = FALSE;
 	
 	// If we're looking at a specific company
 	$CompanyID = $_SESSION['AddEmployeeAsOwnerSelectedCompanyID'];
 	if(isSet($_POST['UserID']) AND !empty($_POST['UserID'])){
-		$userID = $_POST['UserID']; // TO-DO: Get selected UserID or create new user and get the userID.
+		$userID = $_POST['UserID'];
 	} elseif(isset($_POST['registerThenAddUserFromEmail']) AND !empty($_POST['registerThenAddUserFromEmail'])){
-		$userID = ;// The user id that was created when we registered a new user on this email
+		$email = $_POST['registerThenAddUserFromEmail'];
+		if(validateUserEmail($email) === FALSE){
+			$_SESSION['AddEmployeeAsOwnerError'] = "The email you submitted is not a valid email";
+			$invalidInput = TRUE;
+		}
+		if(strlen($email) < 3 AND !$invalidInput){
+			$_SESSION[AddEmployeeAsOwnerError] = "You need to submit an actual email.";
+			$invalidInput = TRUE;
+		}
+		if(!databaseContainsEmail($email) AND !$invalidInput){
+			$createUser = TRUE;
+		} else {
+			$invalidInput = TRUE;
+			$_SESSION['AddEmployeeAsOwnerError'] = "The email you submitted belongs to an already existing user.";
+		}
 	} else {
 		$invalidInput = TRUE;
 		$_SESSION['AddEmployeeAsOwnerError'] = "You have not selected an existing user or inserted an email to create a new one.";
@@ -541,30 +556,76 @@ if (isSet($_POST['action']) AND $_POST['action'] == 'Confirm Employee')
 	{
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 		$pdo = connect_to_db();
-		$sql = 'SELECT 	COUNT(*) 
-				FROM 	`employee`
-				WHERE 	`CompanyID`= :CompanyID
-				AND 	`UserID` = :UserID';
-		$s = $pdo->prepare($sql);
-		$s->bindValue(':CompanyID', $CompanyID);
-		$s->bindValue(':UserID', $userID);
-		$s->execute();
 
-		$row = $s->fetch();
+		// If we're creating a new user, we give it the same access level as the company owner has. (Normal or in-house).
+		if($createUser){
+			
+			//Generate activation code
+			$activationcode = generateActivationCode();
+			
+			// Hash the user generated password
+			$generatedPassword = generateUserPassword(6);
+			$hashedPassword = hashPassword($generatedPassword);
+			
+			$firstName = "";
+			$lastName = "";
+		
+			$sql = 'INSERT INTO `user`(`firstname`, `lastname`, `password`, `activationcode`, `email`, `accessID`)
+					SELECT		:firstname,
+								:lastname,
+								:password,
+								:activationcode,
+								:email,
+								IF(
+									(a.`AccessName` = "Normal User"),
+									(a.`AccessID`),
+									(
+										SELECT 	`AccessID`
+										FROM	`accesslevel`
+										WHERE	`AccessName` = "In-House User"
+									)
+								) AS AccessID
+					FROM 		`accesslevel` a
+					INNER JOIN	`user` u
+					ON			u.`AccessID` = a.`AccessID`
+					WHERE		u.`UserID` = :loggedInUser';
+			$s = $pdo->prepare($sql);
+			$s->bindValue(':firstname', $firstName);
+			$s->bindValue(':firstname', $lastName);
+			$s->bindValue(':password', $hashedPassword);
+			$s->bindValue(':activationcode', $activationcode);
+			$s->bindValue(':email', $email);
+			$s->bindValue(':loggedInUser', $_SESSION['LoggedInUserID']);
+			$s->execute();
 
-		if ($row[0] > 0)
-		{
-			// This user and company combination already exists in our database
-			// This means the user is already an employee in the company!
-			$_SESSION['AddEmployeeAsOwnerError'] = "The selected user is already an employee in your company!";
-			$_SESSION['AddEmployeeAsOwnerSelectedUserID'] = $userID;
-			$_SESSION['AddEmployeeAsOwnerSelectedPositionID'] = $_POST['PositionID'];
-			$_SESSION['refreshAddEmployeeAsOwner'] = TRUE;
-			$_SESSION['AddEmployeeAsOwnerUserSearch'] = trimExcessWhitespace($_POST['usersearchstring']);
+			$userID = $pdo->lastInsertId();
+		} else {
+			$sql = 'SELECT 	COUNT(*) 
+					FROM 	`employee`
+					WHERE 	`CompanyID`= :CompanyID
+					AND 	`UserID` = :UserID';
+			$s = $pdo->prepare($sql);
+			$s->bindValue(':CompanyID', $CompanyID);
+			$s->bindValue(':UserID', $userID);
+			$s->execute();
 
-			header('Location: .');
-			exit();
+			$row = $s->fetch();
+
+			if ($row[0] > 0)
+			{
+				// This user and company combination already exists in our database
+				// This means the user is already an employee in the company!
+				$_SESSION['AddEmployeeAsOwnerError'] = "The selected user is already an employee in your company!";
+				$_SESSION['AddEmployeeAsOwnerSelectedUserID'] = $userID;
+				$_SESSION['AddEmployeeAsOwnerSelectedPositionID'] = $_POST['PositionID'];
+				$_SESSION['refreshAddEmployeeAsOwner'] = TRUE;
+				$_SESSION['AddEmployeeAsOwnerUserSearch'] = trimExcessWhitespace($_POST['usersearchstring']);
+
+				header('Location: .');
+				exit();
+			}
 		}
+
 	}
 	catch (PDOException $e)
 	{
@@ -602,16 +663,20 @@ if (isSet($_POST['action']) AND $_POST['action'] == 'Confirm Employee')
 	{
 		$userinfo = 'N/A';
 		$positioninfo = 'N/A';
-		
+
 		// Get selected user info
-		if(isSet($_SESSION['AddEmployeeAsOwnerUsersArray'])){
-			foreach($_SESSION['AddEmployeeAsOwnerUsersArray'] AS $row){
-				if($row['UserID'] == $userID){
-					$userinfo = $row['UserIdentifier'];
-					break;
+		if($createUser){
+			$userinfo = "N/A - " . $email;
+		} else {
+			if(isSet($_SESSION['AddEmployeeAsOwnerUsersArray'])){
+				foreach($_SESSION['AddEmployeeAsOwnerUsersArray'] AS $row){
+					if($row['UserID'] == $userID){
+						$userinfo = $row['UserIdentifier'];
+						break;
+					}
 				}
+				unset($_SESSION['AddEmployeeAsOwnerUsersArray']);
 			}
-			unset($_SESSION['AddEmployeeAsOwnerUsersArray']);
 		}
 
 		// Get selected company name
