@@ -47,6 +47,7 @@ unsetSessionsFromUserManagement();
 
 function unsetSessionsFromCompanyManagement(){
 	unset($_SESSION['normalUserCompanyIDSelected']);
+	unset($_SESSION['normalUserCompanyNameSelected']);
 	unset($_SESSION['normalCompanyCreateACompany']);
 	unset($_SESSION['LastCompanyID']);
 }
