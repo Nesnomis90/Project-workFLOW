@@ -80,7 +80,11 @@
 							<?php endif; ?>
 							<td><?php htmlout($employee['StartDateTime']); ?></td>
 							<?php if(isSet($companyRole) AND $companyRole == "Owner") : ?>
-								<td><input type="submit" name="action" value="Change Role"></td>
+								<?php if($_SESSION['LoggedInUserID'] != $employee['UsrID']) : ?>
+									<td><input type="submit" name="action" value="Change Role"></td>
+								<?php else : ?>
+									<td><input type="submit" name="disabled" value="Change Role" disabled></td>
+								<?php endif; ?>
 								<td>
 									<?php if(isSet($_SESSION['normalEmployeesEnableDelete']) AND $_SESSION['normalEmployeesEnableDelete']) : ?>
 										<input type="submit" name="action" value="Remove">

@@ -16,6 +16,10 @@ function clearAddEmployeeAsOwnerSessions(){
 	unset($_SESSION['AddEmployeeAsOwnerCompanyPositionArray']);
 	unset($_SESSION['AddEmployeeAsOwnerUsersArray']);	
 }
+// Function to clear sessions used to remember user inputs on refreshing the edit employee form
+function clearEditEmployeeAsOwnerSessions(){
+	unset($_SESSION['EditEmployeeAsOwnerOriginalPositionID']);
+}
 
 // Make sure logout works properly and that we check if their login details are up-to-date
 if(isSet($_SESSION['loggedIn']) AND $_SESSION['loggedIn'] AND isSet($_SESSION['LoggedInUserID']) AND !empty($_SESSION['LoggedInUserID'])){
@@ -356,6 +360,145 @@ $selectedCompanyToJoinID;//int
 $_POST['selectedCompanyToJoin'];
 */
 
+// if admin wants to change the company role for a user
+// we load a new html form
+if (isSet($_POST['action']) AND $_POST['action'] == 'Change Role')
+{
+	// Get information from database again on the selected employee
+	try
+	{
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+		
+		// Get name and IDs for company position
+		$pdo = connect_to_db();
+		$sql = 'SELECT 	`PositionID`,
+						`name` 			AS CompanyPositionName,
+						`description`	AS CompanyPositionDescription
+				FROM 	`companyposition`';
+		$result = $pdo->query($sql);
+		
+		// Get the rows of information from the query
+		// This will be used to create a dropdown list in HTML
+		foreach($result as $row){
+			$companyposition[] = array(
+									'PositionID' => $row['PositionID'],
+									'CompanyPositionName' => $row['CompanyPositionName'],
+									'CompanyPositionDescription' => $row['CompanyPositionDescription']
+									);
+		}
+		
+		// Get employee information
+		$sql = 'SELECT 	u.`userID`					AS UsrID,
+						c.`companyID`				AS TheCompanyID,
+						c.`name`					AS CompanyName,
+						u.`firstName`, 
+						u.`lastName`,
+						cp.`PositionID`,
+						cp.`name`					AS PositionName							
+				FROM 	`company` c 
+				JOIN 	`employee` e
+				ON 		e.CompanyID = c.CompanyID 
+				JOIN 	`companyposition` cp 
+				ON 		cp.PositionID = e.PositionID
+				JOIN 	`user` u 
+				ON 		u.userID = e.UserID
+				WHERE	e.userID = :UserID
+				AND 	e.companyID = :CompanyID
+				LIMIT 	1';
+		$s = $pdo->prepare($sql);
+		$s->bindValue(':UserID', $_POST['UserID']);
+		$s->bindValue(':CompanyID', $_POST['CompanyID']);
+		$s->execute();
+						
+		//Close connection
+		$pdo = null;
+	}
+	catch (PDOException $e)
+	{
+		$error = 'Error fetching employee details: ' . $e->getMessage();
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+		$pdo = null;
+		exit();		
+	}
+	
+	// Create an array with the row information we retrieved
+	$row = $s->fetch(PDO::FETCH_ASSOC);
+		
+	// Set the correct information
+	$CompanyName = $row['CompanyName'];
+	$UserIdentifier = $row['firstName'] . ' ' . $row['lastName'];
+	$CurrentCompanyPositionName = $row['PositionName'];
+	$CompanyID = $row['TheCompanyID'];
+	$UserID = $row['UsrID'];
+	$_SESSION['EditEmployeeAsOwnerOriginalPositionID'] = $row['PositionID'];
+	
+	var_dump($_SESSION); // TO-DO: remove after testing is done
+	
+	// Change to the actual form we want to use
+	include 'changerole.html.php';
+	exit();
+}
+
+// Perform the actual database update of the edited information
+if (isSet($_POST['action']) AND $_POST['action'] == 'Confirm Role')
+{
+	// Check if anything actually changed
+	$theSelectedPositionID = $_POST['PositionID'];
+	$NumberOfChanges = 0;
+
+	if(	isSet($_SESSION['EditEmployeeAsOwnerOriginalPositionID']) AND 
+		$_SESSION['EditEmployeeAsOwnerOriginalPositionID'] != $theSelectedPositionID){
+		$NumberOfChanges++;
+	}
+
+	if($_SESSION['LoggedInUserID'] != $_POST['UserID']){
+
+		if($NumberOfChanges > 0){
+			// Update selected employee connection with a new company position
+			try
+			{
+				include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+
+				$pdo = connect_to_db();
+				$sql = 'UPDATE 	`employee` 
+						SET		`PositionID` = :PositionID
+						WHERE 	`companyID` = :CompanyID
+						AND 	`userID` = :UserID
+						AND		`userID` <> :LoggedInUserID';
+				$s = $pdo->prepare($sql);
+				$s->bindValue(':CompanyID', $_POST['CompanyID']);
+				$s->bindValue(':UserID', $_POST['UserID']);
+				$s->bindValue(':LoggedInUserID', $_SESSION['LoggedInUserID']);
+				$s->bindValue(':PositionID', $theSelectedPositionID);
+				$s->execute(); 
+
+				//close connection
+				$pdo = null;
+			}
+			catch (PDOException $e)
+			{
+				$error = 'Error changing company position in employee information: ' . $e->getMessage();
+				include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+				$pdo = null;
+				exit();
+			}
+
+			$_SESSION['EmployeeUserFeedback'] = "Successfully updated the employee.";
+		} else {
+			$_SESSION['EmployeeUserFeedback'] = "No changes were made to the employee.";
+		}
+	} else {
+		$_SESSION['EmployeeUserFeedback'] = "No changes were made since you tried to alter your own role.";
+	}
+ 
+	clearEditEmployeeAsOwnerSessions();
+
+	$TheCompanyID = $_GET['ID'];
+	$location = "http://$_SERVER[HTTP_HOST]/company/?ID=" . $TheCompanyID . "&employees";
+	header("Location: $location");
+	exit();
+}
+
 // Company owner clicked the search button, trying to limit the shown user lists
 if(isSet($_POST['action']) AND $_POST['action'] == 'Search'){
 	// Forget the old array values we have saved
@@ -369,7 +512,6 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Search'){
 	$_SESSION['AddEmployeeAsOwnerSelectedUserID'] = $_POST['UserID'];
 	$_SESSION['AddEmployeeAsOwnerSelectedPositionID'] = $_POST['PositionID'];
 
-	// Also we want to refresh AddEmployee with our new values!
 	$_SESSION['refreshAddEmployeeAsOwner'] = TRUE;
 	$TheCompanyID = $_GET['ID'];
 	$location = "http://$_SERVER[HTTP_HOST]/company/?ID=" . $TheCompanyID . "&employees";
