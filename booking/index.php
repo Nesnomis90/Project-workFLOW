@@ -720,6 +720,7 @@ if (	(isSet($_POST['action']) and $_POST['action'] == 'Change Room') OR
 		// Check if the user is the creator of the booking	
 	try
 	{
+		// TO-DO: Get available/occupied meeting rooms as two different arrays for the timeslot of this booking
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 		
 		$pdo = connect_to_db();
@@ -1019,6 +1020,9 @@ if ((isSet($_POST['changeroom']) and $_POST['changeroom'] == 'Confirm Change')){
 			header('Location: ' . $location);
 			exit();
 		}
+		
+		// Update both bookings and swap their meeting room IDs
+		// TO-DO:
 	} else {
 		// Just change booked room to the selected available room
 		// TO-DO:
