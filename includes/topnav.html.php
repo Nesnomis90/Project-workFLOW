@@ -14,6 +14,14 @@ function getLocationWeCameFrom(){
 		}
 	}
 
+	if(isSet($_GET['ID'])){
+		$CompanyID = $_GET['ID'];
+		$location .= "?ID=" . $CompanyID;
+		if(isSet($_GET['employees'])){
+			$location .= "&employees";	
+		}
+	}
+
 	return $location;
 }
 
