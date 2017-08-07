@@ -244,8 +244,11 @@
 					<th>Room Name</th>
 					<th>Start Time</th>
 					<th>End Time</th>
-					<th>Edit</th>
-					<th>Cancel</th>
+					<?php if(isSet($_SESSION["DefaultMeetingRoomInfo"])) : ?>
+						<th>Change Room</th>
+						<th>Edit</th>
+						<th>Cancel</th>
+					<?php endif; ?>
 				</tr>
 			<?php if(isSet($bookingsFuture)) :?>
 				<?php foreach ($bookingsFuture AS $booking): ?>

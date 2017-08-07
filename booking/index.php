@@ -1034,8 +1034,112 @@ if ((isSet($_POST['changeroom']) and $_POST['changeroom'] == 'Confirm Change')){
 
 // ADD BOOKING CODE SNIPPET // START //
 
+// Handles removing booking code timeout on the device if an admin submits their booking code
+if(isSet($_POST['action']) AND $_POST['action'] == "Remove Timeout"){
+
+	// Check if any of the old admin guesses are old enough to remove
+	if(isSet($_SESSION['adminBookingCodeGuesses'])){
+		$dateTimeNow = getDatetimeNow();
+		$startDateTime = $_SESSION['adminBookingCodeGuesses'];
+
+		$timeDifference = convertTwoDateTimesToTimeDifferenceInMinutes($startDateTime, $dateTimeNow);		
+		if($timeDifference >= BOOKING_CODE_WRONG_GUESS_TIMEOUT_IN_MINUTES){
+			unset($_SESSION['adminBookingCodeGuesses']);
+		}
+	}
+
+	// Limit the amount of tries the session has to guess an admin booking code.
+	if(isSet($_SESSION['adminBookingCodeGuesses'])){
+
+		$startDateTime = $_SESSION['adminBookingCodeGuesses'];
+
+		$timeDifference = convertTwoDateTimesToTimeDifferenceInMinutes($startDateTime, $dateTimeNow);
+		$timeRemaining = floor(BOOKING_CODE_WRONG_GUESS_TIMEOUT_IN_MINUTES - $timeDifference);
+		if($timeRemaining > 0){
+			$_SESSION['confirmBookingCodeError'] = "You have inserted an incorrect admin code.\nYou can try again in $timeRemaining minute(s).";
+		} else {
+			$_SESSION['confirmBookingCodeError'] = "You have inserted an incorrect admin code.\nYou can try again in less than a minute.";
+		}
+
+		var_dump($_SESSION); // TO-DO: remove after testing is done
+		include_once 'bookingcode.html.php';
+		exit();
+	}
+
+	$bookingCode = trim($_POST['bookingCode']);
+	$validatedBookingCode = trimAllWhitespace($bookingCode);
+	if(validateIntegerNumber($validatedBookingCode) !== TRUE){
+		$_SESSION['confirmBookingCodeError'] = "The booking code you submitted had non-numbers in it.";
+		var_dump($_SESSION); // TO-DO: remove after testing is done
+		include_once 'bookingcode.html.php';
+		exit();
+	}
+
+	$invalidBookingCode = isNumberInvalidBookingCode($validatedBookingCode);
+	if($invalidBookingCode === TRUE){
+		$_SESSION['confirmBookingCodeError'] = "The booking code you submitted is an invalid code.";
+		var_dump($_SESSION); // TO-DO: remove after testing is done
+		include_once 'bookingcode.html.php';
+		exit();	
+	}
+
+	$hashedBookingCode = hashBookingCode($validatedBookingCode);
+
+	// Code is a valid digit. Check if it matches with an admin in our database
+	try
+	{
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+
+		// Get booking information
+		$pdo = connect_to_db();
+		// Get name and IDs for meeting rooms
+		$sql = 'SELECT 		COUNT(*)		AS HitCount
+				FROM 		`user` u
+				INNER JOIN 	`accesslevel` a
+				ON			a.`AccessID` = u.`AccessID`
+				WHERE		u.`isActive` = 1
+				AND			a.`AccessName` = "Admin"
+				AND			u.`bookingCode` = :bookingCode
+				LIMIT 		1';
+		$s = $pdo->prepare($sql);
+		$s->bindValue(':bookingCode',$hashedBookingCode);
+		$s->execute();
+		$row = $s->fetch(PDO::FETCH_ASSOC);
+
+		//Close connection
+		$pdo = null;
+
+		if ($row['HitCount'] > 0)
+		{
+			unset($_SESSION['bookingCodeGuesses']);
+			$_SESSION['confirmBookingCodeError'] = "Successfully removed timeout.";
+
+			var_dump($_SESSION); // TO-DO: Remove after testing
+
+			include_once 'bookingcode.html.php';
+			exit();
+		} else {
+			// Remember last datetime we guessed wrong
+			$_SESSION['adminBookingCodeGuesses'] = getDatetimeNow();
+			$_SESSION['confirmBookingCodeError'] = "The booking code you submitted is an incorrect admin code.";
+
+			var_dump($_SESSION); // TO-DO: Remove after testing
+
+			include_once 'bookingcode.html.php';
+			exit();
+		}
+	}
+	catch (PDOException $e)
+	{
+		$error = 'Error fetching user information from booking code: ' . $e->getMessage();
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+		$pdo = null;
+		exit();
+	}
+}
+
 // Handles booking code check
-if(isSet($_POST['action']) AND $_POST['action'] == "confirmcode"){
+if(isSet($_POST['action']) AND $_POST['action'] == "Confirm Code"){
 
 	// Check if any of the old guesses are old enough to remove
 	if(isSet($_SESSION['bookingCodeGuesses'])){
@@ -1055,6 +1159,7 @@ if(isSet($_POST['action']) AND $_POST['action'] == "confirmcode"){
 			unset($_SESSION['bookingCodeGuesses']);
 		}
 	}
+
 	// Limit the amount of tries the session has to guess a booking code.
 	if(isSet($_SESSION['bookingCodeGuesses']) AND (sizeOf($_SESSION['bookingCodeGuesses']) >= MAXIMUM_BOOKING_CODE_GUESSES)){
 
@@ -1072,10 +1177,10 @@ if(isSet($_POST['action']) AND $_POST['action'] == "confirmcode"){
 		include_once 'bookingcode.html.php';
 		exit();
 	} elseif(isSet($_SESSION['bookingCodeGuesses']) AND (sizeOf($_SESSION['bookingCodeGuesses']) == (MAXIMUM_BOOKING_CODE_GUESSES - 1))){
-		$_SESSION['confirmBookingCodeError'] = "You have 1 attempt remaining before you are timed out.\nLog in and check your account information to see your code, if you have forgotten it.";
+		$_SESSION['confirmBookingCodeError'] = "The booking code you submitted is an incorrect code.\nYou have 1 attempt remaining before you are timed out.\nLog in and check your account information to see your code, if you have forgotten it.";
 	} elseif(isSet($_SESSION['bookingCodeGuesses']) AND (sizeOf($_SESSION['bookingCodeGuesses']) < (MAXIMUM_BOOKING_CODE_GUESSES - 1))){
 		$remainingAttempts = MAXIMUM_BOOKING_CODE_GUESSES - sizeOf($_SESSION['bookingCodeGuesses']);
-		$_SESSION['confirmBookingCodeError'] = "You have $remainingAttempts attempts remaining before you are timed out.";
+		$_SESSION['confirmBookingCodeError'] = "The booking code you submitted is an incorrect code.\nYou have $remainingAttempts attempts remaining before you are timed out.";
 	}
 
 	$bookingCode = trim($_POST['bookingCode']);
@@ -1122,6 +1227,7 @@ if(isSet($_POST['action']) AND $_POST['action'] == "confirmcode"){
 		if ($row['HitCount'] > 0)
 		{
 			// Booking code is a valid user
+			unset($_SESSION['bookingCodeGuesses']);
 			$_SESSION['bookingCodeUserID'] = $row['userID'];
 			// Check if we are confirming a create booking, a cancel or an edit.
 			if($_SESSION['confirmOrigins'] == "Create Meeting"){
@@ -1153,7 +1259,9 @@ if(isSet($_POST['action']) AND $_POST['action'] == "confirmcode"){
 		} else {
 			// Remember last datetime we guessed wrong
 			$_SESSION['bookingCodeGuesses'][] = getDatetimeNow();
-			$_SESSION['confirmBookingCodeError'] = "The booking code you submitted is an incorrect code.";
+			if(!isSet($_SESSION['confirmBookingCodeError'])){
+				$_SESSION['confirmBookingCodeError'] = "The booking code you submitted is an incorrect code.";
+			}
 
 			var_dump($_SESSION); // TO-DO: Remove after testing
 
@@ -1210,10 +1318,10 @@ if(	((isSet($_POST['action']) AND $_POST['action'] == 'Create Meeting')) OR
 			$s = $pdo->prepare($sql);
 			$s->bindValue(':userID', $SelectedUserID);
 			$s->execute();
-			
+
 			// Create an array with the row information we retrieved
 			$result = $s->fetch(PDO::FETCH_ASSOC);
-			
+
 			if($result['HitCount'] == 0){
 				// User is not working in a company. We can't let them book
 				$_SESSION['normalBookingFeedback'] = "Only users connected to a company can book a meeting.";

@@ -19,7 +19,7 @@
 		<fieldset><legend>Confirm your identity with your Booking Code:</legend>
 			<div class="left">
 				<?php if(isSet($_SESSION['confirmBookingCodeError'])) : ?>
-					<span class="warning"><?php htmlout($_SESSION['confirmBookingCodeError']); ?></span>
+					<span style="white-space: pre-wrap;" class="warning"><?php htmlout($_SESSION['confirmBookingCodeError']); ?></span>
 					<?php unset($_SESSION['confirmBookingCodeError']); ?>
 				<?php endif; ?>
 			</div>
@@ -30,8 +30,10 @@
 					<input type="password" name="bookingCode" maxlength="<?php htmlout(BOOKING_CODE_LENGTH); ?>"
 					placeholder="<?php htmlout(BOOKING_CODE_LENGTH); ?> digits"
 					value="">
-					<input type="hidden" name="action" value="confirmcode">
-					<input type="submit" value="Confirm Code">
+					<input type="submit" name="action" value="Confirm Code">
+					<?php if(isSet($_SESSION['bookingCodeGuesses']) AND (sizeOf($_SESSION['bookingCodeGuesses']) >= MAXIMUM_BOOKING_CODE_GUESSES)) : ?>
+						<input type="submit" name="action" value="Remove Timeout"><span>* Requires Admin Access</span>
+					<?php endif; ?>
 				</form>
 			</div>
 			<div class="left">
