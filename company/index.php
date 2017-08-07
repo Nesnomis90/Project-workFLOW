@@ -537,8 +537,17 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Remove'){
 	{
 		// Save a description with information about the employee that was removed
 		// from the company.
-		$logEventDescription = 'The user: ' . $_POST['UserName'] . 
-		' was removed from the company: ' . $_POST['CompanyName'] . 
+		$userName = $_POST['UserName'];
+		if(empty($userName) OR $userName == ", "){
+			$userName = "N/A";
+		}
+		$companyName = $_POST['CompanyName'];
+		if(empty($companyName)){
+			$companyName = "N/A";
+		}
+
+		$logEventDescription = 'The user: ' . $userName . 
+		' was removed from the company: ' . $companyName . 
 		".\nRemoved by: " . $_SESSION['LoggedInUserName'];
 
 		$sql = "INSERT INTO `logevent` 
