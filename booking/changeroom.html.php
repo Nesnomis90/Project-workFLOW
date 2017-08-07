@@ -19,7 +19,6 @@
 			<div class="left">
 				<?php if(isSet($_SESSION['BookingRoomChangeError'])) : ?>
 					<span><b class="feedback"><?php htmlout($_SESSION['BookingRoomChangeError']); ?></b></span>
-					<?php unset($_SESSION['BookingRoomChangeError']); ?>
 				<?php endif; ?>
 			</div>
 
@@ -47,11 +46,12 @@
 				<div class="left">
 					<input type="hidden" name="bookingID" value="<?php htmlout($bookingID); ?>">
 					<input type="submit" name="changeroom" value="Go Back">
-					<?php if(!isSet($_SESSION[''])) : ?>
+					<?php if(!isSet($_SESSION['BookingRoomChangeError'])) : ?>
 						<input type="submit" name="changeroom" value="Confirm Change">
 					<?php else : ?>
 						<input type="submit" name="disabed" value="Confirm Change" disabled>
 					<?php endif; ?>
+					<?php unset($_SESSION['BookingRoomChangeError']); ?>
 				</div>
 			</form>
 		</fieldset>
