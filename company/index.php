@@ -343,15 +343,20 @@ if(isSet($_POST['action']) AND $_POST['action'] == "Select Company"){
 	$_SESSION['normalUserCompanyIDSelected'] = $selectedCompanyToDisplayID;
 }
 
-if(isSet($_SESSION['normalUserCompanyIDSelected']) AND !isSet($_GET['ID']) AND !isSet($_GET['employees'])){
-	header("Location: .?ID=" . $_SESSION['normalUserCompanyIDSelected']);
-} elseif(isSet($_SESSION['normalUserCompanyIDSelected']) AND isSet($_GET['ID']) AND $_GET['ID'] != $_SESSION['normalUserCompanyIDSelected'] AND !isSet($_GET['employees'])) {
-	header("Location: .?ID=" . $_SESSION['normalUserCompanyIDSelected']);
-} elseif(isSet($_SESSION['normalUserCompanyIDSelected']) AND !isSet($_GET['ID']) AND isSet($_GET['employees'])){
-	header("Location: .?ID=" . $_SESSION['normalUserCompanyIDSelected'] . "&employees");
-} elseif(isSet($_SESSION['normalUserCompanyIDSelected']) AND isSet($_GET['ID']) AND $_GET['ID'] != $_SESSION['normalUserCompanyIDSelected'] AND isSet($_GET['employees'])) {
-	header("Location: .?ID=" . $_SESSION['normalUserCompanyIDSelected'] . "&employees");
+if(isSet($_SESSION['loggedIn']) AND $_SESSION['loggedIn']){
+	if(isSet($_SESSION['normalUserCompanyIDSelected']) AND !isSet($_GET['ID']) AND !isSet($_GET['employees'])){
+		header("Location: .?ID=" . $_SESSION['normalUserCompanyIDSelected']);
+	} elseif(isSet($_SESSION['normalUserCompanyIDSelected']) AND isSet($_GET['ID']) AND $_GET['ID'] != $_SESSION['normalUserCompanyIDSelected'] AND !isSet($_GET['employees'])) {
+		header("Location: .?ID=" . $_SESSION['normalUserCompanyIDSelected']);
+	} elseif(isSet($_SESSION['normalUserCompanyIDSelected']) AND !isSet($_GET['ID']) AND isSet($_GET['employees'])){
+		header("Location: .?ID=" . $_SESSION['normalUserCompanyIDSelected'] . "&employees");
+	} elseif(isSet($_SESSION['normalUserCompanyIDSelected']) AND isSet($_GET['ID']) AND $_GET['ID'] != $_SESSION['normalUserCompanyIDSelected'] AND isSet($_GET['employees'])) {
+		header("Location: .?ID=" . $_SESSION['normalUserCompanyIDSelected'] . "&employees");
+	}
+} else {
+	header("Location: /company/");
 }
+
 /*
 //variables to implement
 // TO-DO:
@@ -493,6 +498,76 @@ if (isSet($_POST['action']) AND $_POST['action'] == 'Confirm Role')
 	}
  
 	clearEditEmployeeAsOwnerSessions();
+
+	$TheCompanyID = $_GET['ID'];
+	$location = "http://$_SERVER[HTTP_HOST]/company/?ID=" . $TheCompanyID . "&employees";
+	header("Location: $location");
+	exit();
+}
+
+// If company owner wants to remove an employee from their company
+if(isSet($_POST['action']) AND $_POST['action'] == 'Remove'){
+	// Remove employee connection in database
+	try
+	{
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+		
+		$pdo = connect_to_db();
+		$sql = 'DELETE FROM `employee` 
+				WHERE 		`companyID` = :CompanyID
+				AND 		`userID` = :UserID
+				AND 		`userID` <> :LoggedInUserID';
+		$s = $pdo->prepare($sql);
+		$s->bindValue(':CompanyID', $_POST['CompanyID']);
+		$s->bindValue(':UserID', $_POST['UserID']);
+		$s->bindValue(':LoggedInUserID', $_SESSION['LoggedInUserID']);
+		$s->execute();
+	}
+	catch (PDOException $e)
+	{
+		$error = 'Error deleting employee connection: ' . $e->getMessage();
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+		exit();
+	}
+	
+	$_SESSION['EmployeeUserFeedback'] = "Successfully removed the employee.";
+	
+	// Add a log event that an employee was removed from a company
+	try
+	{
+		// Save a description with information about the employee that was removed
+		// from the company.
+		$logEventDescription = 'The user: ' . $_POST['UserName'] . 
+		' was removed from the company: ' . $_POST['CompanyName'] . 
+		".\nRemoved by: " . $_SESSION['LoggedInUserName'];
+
+		$sql = "INSERT INTO `logevent` 
+				SET			`actionID` = 	(
+												SELECT 	`actionID` 
+												FROM 	`logaction`
+												WHERE 	`name` = 'Employee Removed'
+											),
+							`companyID` = :CompanyID,
+							`userID` = :UserID,
+							`positionID` = :PositionID,
+							`description` = :description";
+		$s = $pdo->prepare($sql);
+		$s->bindValue(':CompanyID', $_POST['CompanyID']);
+		$s->bindValue(':UserID', $_POST['UserID']);
+		$s->bindValue(':PositionID', $_POST['PositionID']);		
+		$s->bindValue(':description', $logEventDescription);
+		$s->execute();
+		
+		//Close the connection
+		$pdo = null;		
+	}
+	catch(PDOException $e)
+	{
+		$error = 'Error adding log event to database: ' . $e->getMessage();
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+		$pdo = null;
+		exit();
+	}		
 
 	$TheCompanyID = $_GET['ID'];
 	$location = "http://$_SERVER[HTTP_HOST]/company/?ID=" . $TheCompanyID . "&employees";
