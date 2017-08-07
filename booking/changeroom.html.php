@@ -19,6 +19,7 @@
 			<div class="left">
 				<?php if(isSet($_SESSION['BookingRoomChangeError'])) : ?>
 					<span><b class="feedback"><?php htmlout($_SESSION['BookingRoomChangeError']); ?></b></span>
+					<?php unset($_SESSION['BookingRoomChangeError']); ?>
 				<?php endif; ?>
 			</div>
 
@@ -37,7 +38,7 @@
 
 				<div>
 					<label>Swap Occupied Room:</label><span>*</span>
-					<select name="availableRooms">
+					<select name="occupiedRooms">
 						<option value="">Select A Room</option>
 					</select>
 					<span><b>* This requires confirmation from the owner of the booked meeting room, or someone with the appropriate access rights.</b></span>
@@ -46,12 +47,7 @@
 				<div class="left">
 					<input type="hidden" name="bookingID" value="<?php htmlout($bookingID); ?>">
 					<input type="submit" name="changeroom" value="Go Back">
-					<?php if(!isSet($_SESSION['BookingRoomChangeError'])) : ?>
-						<input type="submit" name="changeroom" value="Confirm Change">
-					<?php else : ?>
-						<input type="submit" name="disabed" value="Confirm Change" disabled>
-					<?php endif; ?>
-					<?php unset($_SESSION['BookingRoomChangeError']); ?>
+					<input type="submit" name="changeroom" value="Confirm Change">
 				</div>
 			</form>
 		</fieldset>
