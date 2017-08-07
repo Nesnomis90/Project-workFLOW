@@ -12,7 +12,7 @@
 		<h1>Log In</h1>
 		
 		<div class="left">
-			<b>Please log in to view the page that you requested</b>
+			<span><b>Please log in to view the page that you requested</b></span>
 		</div>
 		
 		<div class="left">
@@ -46,7 +46,11 @@
 			</form>
 		</div>
 		<div class="left">
-			<span><a href="/admin/">Return to CMS home</a></span>
+			<?php if(isSet($_SESSION['SetDefaultRoom'])) : ?>
+				<span><a href="/meetingroom/?cancelSetDefaultRoom">Return to Meetingroom</a></span>
+			<?php else : ?>
+				<span><a href="/admin/">Return to CMS home</a></span>
+			<?php endif; ?>
 		</div>
 	</body>
 </html>

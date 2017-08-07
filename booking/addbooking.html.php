@@ -9,7 +9,7 @@
 		<script src="/scripts/myFunctions.js"></script>
 		<style>
 			label{
-				width: 140px;
+				width: 150px;
 			}
 		</style>
 	</head>
@@ -113,7 +113,7 @@
 							<?php else : ?>
 								<span style="color:green"><?php htmlout($potentialCreditsRemaining); ?></span><span>³</span>
 							<?php endif; ?>
-							<label>Next Period At:</label>
+							<label>Next Period Starts At:</label>
 							<span><b><?php htmlout($companyPeriodEndDate); ?></b></span>
 						<?php endif; ?>
 					<?php else : ?>
@@ -133,7 +133,7 @@
 							<?php else : ?>
 								<span style="color:green"><?php htmlout($potentialCreditsRemaining); ?></span><span>³</span>
 							<?php endif; ?>
-							<label>Next Period At:</label>
+							<label>Next Period Starts At:</label>
 							<span><b><?php htmlout($companyPeriodEndDate); ?></b></span>
 						<?php else : ?>
 							<span><b>Your booking will not be connected with a company.</b></span>

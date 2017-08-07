@@ -20,6 +20,12 @@ if(isSet($_SESSION['loggedIn'])){
 
 // ADMIN INTERACTIONS // START //
 
+if(isSet($_GET['cancelSetDefaultRoom'])){
+	unset($_SESSION['SetDefaultRoom']);
+	header("Location: .");
+	exit();
+}
+
 // If Admin wants to set a meeting room as the default room on a local device
 if(	(isSet($_POST['action']) AND $_POST['action'] == "Set Default Room") OR 
 	(isSet($_POST['action']) AND $_POST['action'] == "Change Default Room") OR

@@ -29,6 +29,7 @@ function clearAddCreateBookingSessions(){
 	unset($_SESSION['bookingCodeUserID']);
 	
 	unset($_SESSION['cancelBookingOriginalValues']);
+	unset($_SESSION['changeRoomOriginalValues']);
 	
 	unset($_SESSION['normalUserOriginalInfoArray']); // Make sure we get up-to-date user values after doing bookings
 }
@@ -49,6 +50,7 @@ function clearEditCreateBookingSessions(){
 	unset($_SESSION["EditCreateBookingOriginalBookingID"]);
 
 	unset($_SESSION['cancelBookingOriginalValues']);
+	unset($_SESSION['changeRoomOriginalValues']);
 	
 	unset($_SESSION['normalUserOriginalInfoArray']); // Make sure we get up-to-date user values after doing bookings
 }
@@ -388,7 +390,7 @@ if (isSet($_POST['action']) and $_POST['action'] == 'Go Back'){
 		$TheMeetingRoomID = $_GET['meetingroom'];
 		$location = "http://$_SERVER[HTTP_HOST]/booking/?meetingroom=" . $TheMeetingRoomID;		
 	} else {
-		$location = ".";
+		$location = "http://$_SERVER[HTTP_HOST]/booking/";
 	}
 
 	header("Location: $location");
@@ -404,7 +406,23 @@ if (isSet($_POST['edit']) and $_POST['edit'] == 'Go Back'){
 		$TheMeetingRoomID = $_GET['meetingroom'];
 		$location = "http://$_SERVER[HTTP_HOST]/booking/?meetingroom=" . $TheMeetingRoomID;		
 	} else {
-		$location = ".";
+		$location = "http://$_SERVER[HTTP_HOST]/booking/";
+	}
+
+	header("Location: $location");
+	exit();
+}
+
+// If user wants to go back to the main page while changing rooms
+if (isSet($_POST['changeroom']) and $_POST['changeroom'] == 'Go Back'){
+	
+	$_SESSION['normalBookingFeedback'] = "You cancelled your meeting room change.";
+
+	if(isSet($_GET['meetingroom'])){
+		$TheMeetingRoomID = $_GET['meetingroom'];
+		$location = "http://$_SERVER[HTTP_HOST]/booking/?meetingroom=" . $TheMeetingRoomID;		
+	} else {
+		$location = "http://$_SERVER[HTTP_HOST]/booking/";
 	}
 
 	header("Location: $location");
@@ -580,7 +598,7 @@ if (	(isSet($_POST['action']) and $_POST['action'] == 'Cancel') OR
 			$meetingRoomID = $_GET['meetingroom'];
 			$location = "http://$_SERVER[HTTP_HOST]/booking/?meetingroom=" . $meetingRoomID;
 		} else {
-			$location = '.';
+			$location = 'http://$_SERVER[HTTP_HOST]/booking/';
 		}
 		header('Location: ' . $location);
 		exit();				
@@ -669,18 +687,463 @@ if (	(isSet($_POST['action']) and $_POST['action'] == 'Cancel') OR
 		$meetingRoomID = $_GET['meetingroom'];
 		$location = "http://$_SERVER[HTTP_HOST]/booking/?meetingroom=" . $meetingRoomID;
 	} else {
-		$location = '.';
+		$location = 'http://$_SERVER[HTTP_HOST]/booking/';
 	}
 	header('Location: ' . $location);
 	exit();		
+}
+
+// If user wants to change the room for the booked meeting
+if (	(isSet($_POST['action']) and $_POST['action'] == 'Change Room') OR 
+		(isSet($_SESSION['refreshChangeBookingRoom']) AND $_SESSION['refreshChangeBookingRoom']))
+{
+	if(isSet($_SESSION['refreshChangeBookingRoom']) AND $_SESSION['refreshChangeBookingRoom']){
+		unset($_SESSION['refreshChangeBookingRoom']);
+	} else {
+		$_SESSION['changeRoomOriginalValues']['BookingID'] = $_POST['id'];
+		$_SESSION['changeRoomOriginalValues']['BookingStatus'] = $_POST['BookingStatus'];
+		$_SESSION['changeRoomOriginalValues']['MeetingInfo'] = $_POST['MeetingInfo'];
+	}
+
+	$bookingID = $_SESSION['changeRoomOriginalValues']['BookingID'];
+	$bookingStatus = $_SESSION['changeRoomOriginalValues']['BookingStatus'];
+	$bookingMeetingInfo = $_SESSION['changeRoomOriginalValues']['MeetingInfo'];
+	
+	$_SESSION['confirmOrigins'] = "Change Room";
+	$SelectedUserID = checkIfLocalDeviceOrLoggedIn();
+	unset($_SESSION['confirmOrigins']);
+	
+	// Check if selected user ID is creator of booking, owner of the company it's booked for or an admin
+	$continueChangeRoom = FALSE;
+	$changedByOwner = FALSE;
+	$changedByAdmin = FALSE;
+		// Check if the user is the creator of the booking	
+	try
+	{
+		// TO-DO: Get available/occupied meeting rooms as two different arrays for the timeslot of this booking
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+		
+		$pdo = connect_to_db();
+		$sql = 'SELECT 		COUNT(*)		AS HitCount,
+							b.`userID`,
+							u.`email`		AS UserEmail,
+							u.`firstName`,
+							u.`lastName`
+				FROM		`booking` b
+				INNER JOIN 	`user` u
+				ON 			b.`userID` = u.`userID`
+				WHERE 		b.`bookingID` = :BookingID
+				LIMIT 		1';
+		$s = $pdo->prepare($sql);
+		$s->bindValue(':BookingID', $bookingID);
+		$s->execute();
+		$row = $s->fetch(PDO::FETCH_ASSOC);
+
+		if(isSet($row) AND $row['HitCount'] > 0){
+			$bookingCreatorUserID = $row['userID'];
+			$bookingCreatorUserEmail = $row['UserEmail'];
+			$bookingCreatorUserInfo = $row['lastName'] . ", " . $row['firstName'] . " - " . $row['UserEmail'];
+			if(isSet($bookingCreatorUserID) AND !empty($bookingCreatorUserID) AND $bookingCreatorUserID == $SelectedUserID){
+				$continueChangeRoom = TRUE;
+			}
+		} 
+	}
+	catch (PDOException $e)
+	{
+		$pdo = null;
+		$error = 'Error changing booked meeting room: ' . $e->getMessage();
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+		exit();
+	}
+
+		// Check if the user is an owner of the company the booking is booked for
+	if(!$continueChangeRoom) {
+		try
+		{
+			$sql = 'SELECT 		COUNT(*)		AS HitCount,
+								b.`userID`,
+								u.`email`		AS UserEmail,
+								u.`firstName`,
+								u.`lastName`
+					FROM		`booking` b
+					INNER JOIN	`employee` e
+					ON			e.`CompanyID` = b.`CompanyID`
+					INNER JOIN 	`user` u
+					ON 			e.`userID` = u.`userID`
+					INNER JOIN	`companyposition` cp
+					ON			cp.`PositionID` = e.`PositionID`
+					WHERE 		b.`bookingID` = :BookingID
+					AND			e.`UserID` = :UserID
+					AND			cp.`name` = "Owner"
+					LIMIT 		1';
+			$s = $pdo->prepare($sql);
+			$s->bindValue(':BookingID', $bookingID);
+			$s->bindValue(':UserID', $SelectedUserID);
+			$s->execute();
+			$row = $s->fetch(PDO::FETCH_ASSOC);
+
+			if(isSet($row) AND $row['HitCount'] > 0){
+				$cancelledByUserID = $row['userID'];
+				$cancelledByUserName = $row['lastName'] . ", " . $row['firstName'];
+				$cancelledByUserEmail = $row['UserEmail'];
+				$cancelledByUserInfo = $row['lastName'] . ", " . $row['firstName'] . " - " . $row['UserEmail'];
+				$continueChangeRoom = TRUE;
+				$changedByOwner = TRUE;
+			}
+		}
+		catch (PDOException $e)
+		{
+			$pdo = null;
+			$error = 'Error changing booked meeting room: ' . $e->getMessage();
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+			exit();
+		}
+	}
+
+		// Check if the user is an admin
+		// Only needed if the the user isn't the creator of the booking or an owner
+	if(!$continueChangeRoom) {
+		try
+		{
+			$sql = 'SELECT 		COUNT(*) 	AS HitCount,
+								u.`UserID`,
+								u.`firstName`,
+								u.`lastName`
+					FROM		`user` u
+					INNER JOIN	`accesslevel` a
+					ON 			u.`AccessID` = a.`AccessID`
+					WHERE 		u.`userID` = :userID
+					AND			a.`AccessName` = "Admin"
+					LIMIT		1';
+
+			$s = $pdo->prepare($sql);
+			$s->bindValue(':userID', $SelectedUserID);
+			$s->execute();
+			$row = $s->fetch(PDO::FETCH_ASSOC);
+			if(isSet($row) AND $row['HitCount'] > 0){
+				$changedByAdminID = $row['userID'];
+				$changedByAdminName = $row['lastName'] . ", " . $row['firstName'];
+				$continueChangeRoom = TRUE;
+				$changedByAdmin = TRUE;
+			}
+		}
+		catch (PDOException $e)
+		{
+			$pdo = null;
+			$error = 'Error changing booked meeting room: ' . $e->getMessage();
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+			exit();
+		}
+	}
+
+	if($continueChangeRoom === FALSE){
+		$pdo = null;
+		$_SESSION['normalBookingFeedback'] = "You cannot change room for this booked meeting.";
+		if(isSet($_GET['meetingroom'])){
+			$meetingRoomID = $_GET['meetingroom'];
+			$location = "http://$_SERVER[HTTP_HOST]/booking/?meetingroom=" . $meetingRoomID;
+		} else {
+			$location = 'http://$_SERVER[HTTP_HOST]/booking/';
+		}
+		header('Location: ' . $location);
+		exit();
+	}
+
+	var_dump($_SESSION); // TO-DO: Remove after done testing
+
+	include_once 'changeroom.html.php';
+	exit();
+}
+
+// If user wants to change the room for the booked meeting
+if ((isSet($_POST['changeroom']) and $_POST['changeroom'] == 'Confirm Change')){
+
+	$changeToAvailableRoom = FALSE;
+	$changeToOccupiedRoom = FALSE;
+	if(isSet($_POST['availableRooms']) AND !empty($_POST['availableRooms'])){
+		$changeToAvailableRoom = TRUE;
+	}	
+	if(isSet($_POST['occupiedRooms']) AND !empty($_POST['occupiedRooms'])){
+		$changeToOccupiedRoom = TRUE;
+	}
+
+	if($changeToAvailableRoom AND $changeToOccupiedRoom){
+		$_SESSION['BookingRoomChangeError'] = "You have to choose between selecting an available room or an occupied room. You can not select both.";
+		if(isSet($_GET['meetingroom'])){
+			$meetingRoomID = $_GET['meetingroom'];
+			$location = "http://$_SERVER[HTTP_HOST]/booking/?meetingroom=" . $meetingRoomID;
+		} else {
+			$location = 'http://$_SERVER[HTTP_HOST]/booking/';
+		}
+		header('Location: ' . $location);
+		exit();
+	}
+
+	// Go through process of validating booking code, just like we did on accessing this form, for the other booked meeting room
+	if($changeToOccupiedRoom){
+		$_SESSION['confirmOrigins'] = "Change Room";
+		// TO-DO: Make it so the previous validation isn't needed (on refresh change room)
+		$SelectedUserID = checkIfLocalDeviceOrLoggedIn();
+		unset($_SESSION['confirmOrigins']);
+
+		// Check if selected user ID is creator of booking, owner of the company it's booked for or an admin
+		$continueChangeRoom = FALSE;
+		$changedByOwner = FALSE;
+		$changedByAdmin = FALSE;
+			// Check if the user is the creator of the booking	
+		try
+		{
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+			
+			$pdo = connect_to_db();
+			$sql = 'SELECT 		COUNT(*)		AS HitCount,
+								b.`userID`,
+								u.`email`		AS UserEmail,
+								u.`firstName`,
+								u.`lastName`
+					FROM		`booking` b
+					INNER JOIN 	`user` u
+					ON 			b.`userID` = u.`userID`
+					WHERE 		b.`bookingID` = :BookingID
+					LIMIT 		1';
+			$s = $pdo->prepare($sql);
+			$s->bindValue(':BookingID', $bookingID);
+			$s->execute();
+			$row = $s->fetch(PDO::FETCH_ASSOC);
+
+			if(isSet($row) AND $row['HitCount'] > 0){
+				$bookingCreatorUserID = $row['userID'];
+				$bookingCreatorUserEmail = $row['UserEmail'];
+				$bookingCreatorUserInfo = $row['lastName'] . ", " . $row['firstName'] . " - " . $row['UserEmail'];
+				if(isSet($bookingCreatorUserID) AND !empty($bookingCreatorUserID) AND $bookingCreatorUserID == $SelectedUserID){
+					$continueChangeRoom = TRUE;
+				}
+			} 
+		}
+		catch (PDOException $e)
+		{
+			$pdo = null;
+			$error = 'Error changing booked meeting room: ' . $e->getMessage();
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+			exit();
+		}
+
+			// Check if the user is an owner of the company the booking is booked for
+		if(!$continueChangeRoom) {
+			try
+			{
+				$sql = 'SELECT 		COUNT(*)		AS HitCount,
+									b.`userID`,
+									u.`email`		AS UserEmail,
+									u.`firstName`,
+									u.`lastName`
+						FROM		`booking` b
+						INNER JOIN	`employee` e
+						ON			e.`CompanyID` = b.`CompanyID`
+						INNER JOIN 	`user` u
+						ON 			e.`userID` = u.`userID`
+						INNER JOIN	`companyposition` cp
+						ON			cp.`PositionID` = e.`PositionID`
+						WHERE 		b.`bookingID` = :BookingID
+						AND			e.`UserID` = :UserID
+						AND			cp.`name` = "Owner"
+						LIMIT 		1';
+				$s = $pdo->prepare($sql);
+				$s->bindValue(':BookingID', $bookingID);
+				$s->bindValue(':UserID', $SelectedUserID);
+				$s->execute();
+				$row = $s->fetch(PDO::FETCH_ASSOC);
+
+				if(isSet($row) AND $row['HitCount'] > 0){
+					$cancelledByUserID = $row['userID'];
+					$cancelledByUserName = $row['lastName'] . ", " . $row['firstName'];
+					$cancelledByUserEmail = $row['UserEmail'];
+					$cancelledByUserInfo = $row['lastName'] . ", " . $row['firstName'] . " - " . $row['UserEmail'];
+					$continueChangeRoom = TRUE;
+					$changedByOwner = TRUE;
+				}
+			}
+			catch (PDOException $e)
+			{
+				$pdo = null;
+				$error = 'Error changing booked meeting room: ' . $e->getMessage();
+				include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+				exit();
+			}
+		}
+
+			// Check if the user is an admin
+			// Only needed if the the user isn't the creator of the booking or an owner
+		if(!$continueChangeRoom) {
+			try
+			{
+				$sql = 'SELECT 		COUNT(*) 	AS HitCount,
+									u.`UserID`,
+									u.`firstName`,
+									u.`lastName`
+						FROM		`user` u
+						INNER JOIN	`accesslevel` a
+						ON 			u.`AccessID` = a.`AccessID`
+						WHERE 		u.`userID` = :userID
+						AND			a.`AccessName` = "Admin"
+						LIMIT		1';
+
+				$s = $pdo->prepare($sql);
+				$s->bindValue(':userID', $SelectedUserID);
+				$s->execute();
+				$row = $s->fetch(PDO::FETCH_ASSOC);
+				if(isSet($row) AND $row['HitCount'] > 0){
+					$changedByAdminID = $row['userID'];
+					$changedByAdminName = $row['lastName'] . ", " . $row['firstName'];
+					$continueChangeRoom = TRUE;
+					$changedByAdmin = TRUE;
+				}
+			}
+			catch (PDOException $e)
+			{
+				$pdo = null;
+				$error = 'Error changing booked meeting room: ' . $e->getMessage();
+				include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+				exit();
+			}
+		}
+
+		if($continueChangeRoom === FALSE){
+			$pdo = null;
+			$_SESSION['normalBookingFeedback'] = "You cannot change room for this booked meeting.";
+			if(isSet($_GET['meetingroom'])){
+				$meetingRoomID = $_GET['meetingroom'];
+				$location = "http://$_SERVER[HTTP_HOST]/booking/?meetingroom=" . $meetingRoomID;
+			} else {
+				$location = 'http://$_SERVER[HTTP_HOST]/booking/';
+			}
+			header('Location: ' . $location);
+			exit();
+		}
+		
+		// Update both bookings and swap their meeting room IDs
+		// TO-DO:
+	} else {
+		// Just change booked room to the selected available room
+		// TO-DO:
+	}
+
+	var_dump($_SESSION); // TO-DO: Remove after done testing
+
+	include_once 'changeroom.html.php';
+	exit();
 }
 
 // BOOKING OVERVIEW CODE SNIPPETS // END //
 
 // ADD BOOKING CODE SNIPPET // START //
 
+// Handles removing booking code timeout on the device if an admin submits their booking code
+if(isSet($_POST['action']) AND $_POST['action'] == "Remove Timeout"){
+
+	// Check if any of the old admin guesses are old enough to remove
+	if(isSet($_SESSION['adminBookingCodeGuesses'])){
+		$dateTimeNow = getDatetimeNow();
+		$startDateTime = $_SESSION['adminBookingCodeGuesses'];
+
+		$timeDifference = convertTwoDateTimesToTimeDifferenceInMinutes($startDateTime, $dateTimeNow);		
+		if($timeDifference >= BOOKING_CODE_WRONG_GUESS_TIMEOUT_IN_MINUTES){
+			unset($_SESSION['adminBookingCodeGuesses']);
+		}
+	}
+
+	// Limit the amount of tries the session has to guess an admin booking code.
+	if(isSet($_SESSION['adminBookingCodeGuesses'])){
+
+		$startDateTime = $_SESSION['adminBookingCodeGuesses'];
+
+		$timeDifference = convertTwoDateTimesToTimeDifferenceInMinutes($startDateTime, $dateTimeNow);
+		$timeRemaining = floor(BOOKING_CODE_WRONG_GUESS_TIMEOUT_IN_MINUTES - $timeDifference);
+		if($timeRemaining > 0){
+			$_SESSION['confirmBookingCodeError'] = "You have inserted an incorrect admin code.\nYou can try again in $timeRemaining minute(s).";
+		} else {
+			$_SESSION['confirmBookingCodeError'] = "You have inserted an incorrect admin code.\nYou can try again in less than a minute.";
+		}
+
+		var_dump($_SESSION); // TO-DO: remove after testing is done
+		include_once 'bookingcode.html.php';
+		exit();
+	}
+
+	$bookingCode = trim($_POST['bookingCode']);
+	$validatedBookingCode = trimAllWhitespace($bookingCode);
+	if(validateIntegerNumber($validatedBookingCode) !== TRUE){
+		$_SESSION['confirmBookingCodeError'] = "The booking code you submitted had non-numbers in it.";
+		var_dump($_SESSION); // TO-DO: remove after testing is done
+		include_once 'bookingcode.html.php';
+		exit();
+	}
+
+	$invalidBookingCode = isNumberInvalidBookingCode($validatedBookingCode);
+	if($invalidBookingCode === TRUE){
+		$_SESSION['confirmBookingCodeError'] = "The booking code you submitted is an invalid code.";
+		var_dump($_SESSION); // TO-DO: remove after testing is done
+		include_once 'bookingcode.html.php';
+		exit();	
+	}
+
+	$hashedBookingCode = hashBookingCode($validatedBookingCode);
+
+	// Code is a valid digit. Check if it matches with an admin in our database
+	try
+	{
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+
+		// Get booking information
+		$pdo = connect_to_db();
+		// Get name and IDs for meeting rooms
+		$sql = 'SELECT 		COUNT(*)		AS HitCount
+				FROM 		`user` u
+				INNER JOIN 	`accesslevel` a
+				ON			a.`AccessID` = u.`AccessID`
+				WHERE		u.`isActive` = 1
+				AND			a.`AccessName` = "Admin"
+				AND			u.`bookingCode` = :bookingCode
+				LIMIT 		1';
+		$s = $pdo->prepare($sql);
+		$s->bindValue(':bookingCode',$hashedBookingCode);
+		$s->execute();
+		$row = $s->fetch(PDO::FETCH_ASSOC);
+
+		//Close connection
+		$pdo = null;
+
+		if ($row['HitCount'] > 0)
+		{
+			unset($_SESSION['bookingCodeGuesses']);
+			$_SESSION['confirmBookingCodeError'] = "Successfully removed timeout.";
+
+			var_dump($_SESSION); // TO-DO: Remove after testing
+
+			include_once 'bookingcode.html.php';
+			exit();
+		} else {
+			// Remember last datetime we guessed wrong
+			$_SESSION['adminBookingCodeGuesses'] = getDatetimeNow();
+			$_SESSION['confirmBookingCodeError'] = "The booking code you submitted is an incorrect admin code.";
+
+			var_dump($_SESSION); // TO-DO: Remove after testing
+
+			include_once 'bookingcode.html.php';
+			exit();
+		}
+	}
+	catch (PDOException $e)
+	{
+		$error = 'Error fetching user information from booking code: ' . $e->getMessage();
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+		$pdo = null;
+		exit();
+	}
+}
+
 // Handles booking code check
-if(isSet($_POST['action']) AND $_POST['action'] == "confirmcode"){
+if(isSet($_POST['action']) AND $_POST['action'] == "Confirm Code"){
 
 	// Check if any of the old guesses are old enough to remove
 	if(isSet($_SESSION['bookingCodeGuesses'])){
@@ -700,11 +1163,12 @@ if(isSet($_POST['action']) AND $_POST['action'] == "confirmcode"){
 			unset($_SESSION['bookingCodeGuesses']);
 		}
 	}
+
 	// Limit the amount of tries the session has to guess a booking code.
 	if(isSet($_SESSION['bookingCodeGuesses']) AND (sizeOf($_SESSION['bookingCodeGuesses']) >= MAXIMUM_BOOKING_CODE_GUESSES)){
-		
+
 		$startDateTime = $_SESSION['bookingCodeGuesses'][0];
-		
+
 		$timeDifference = convertTwoDateTimesToTimeDifferenceInMinutes($startDateTime, $dateTimeNow);
 		$timeRemaining = floor(BOOKING_CODE_WRONG_GUESS_TIMEOUT_IN_MINUTES - $timeDifference);
 		if($timeRemaining > 0){
@@ -712,12 +1176,17 @@ if(isSet($_POST['action']) AND $_POST['action'] == "confirmcode"){
 		} else {
 			$_SESSION['confirmBookingCodeError'] = "You have inserted an incorrect booking code too many times.\nYou can try again in less than a minute.";
 		}
-		
+
 		var_dump($_SESSION); // TO-DO: remove after testing is done
 		include_once 'bookingcode.html.php';
-		exit();		
+		exit();
+	} elseif(isSet($_SESSION['bookingCodeGuesses']) AND (sizeOf($_SESSION['bookingCodeGuesses']) == (MAXIMUM_BOOKING_CODE_GUESSES - 1))){
+		$_SESSION['confirmBookingCodeError'] = "The booking code you submitted is an incorrect code.\nYou have 1 attempt remaining before you are timed out.\nLog in and check your account information to see your code, if you have forgotten it.";
+	} elseif(isSet($_SESSION['bookingCodeGuesses']) AND (sizeOf($_SESSION['bookingCodeGuesses']) < (MAXIMUM_BOOKING_CODE_GUESSES - 1))){
+		$remainingAttempts = MAXIMUM_BOOKING_CODE_GUESSES - sizeOf($_SESSION['bookingCodeGuesses']);
+		$_SESSION['confirmBookingCodeError'] = "The booking code you submitted is an incorrect code.\nYou have $remainingAttempts attempts remaining before you are timed out.";
 	}
-	
+
 	$bookingCode = trim($_POST['bookingCode']);
 	$validatedBookingCode = trimAllWhitespace($bookingCode);
 	if(validateIntegerNumber($validatedBookingCode) !== TRUE){
@@ -726,7 +1195,7 @@ if(isSet($_POST['action']) AND $_POST['action'] == "confirmcode"){
 		include_once 'bookingcode.html.php';
 		exit();
 	}
-	
+
 	$invalidBookingCode = isNumberInvalidBookingCode($validatedBookingCode);
 	if($invalidBookingCode === TRUE){
 		$_SESSION['confirmBookingCodeError'] = "The booking code you submitted is an invalid code.";
@@ -734,14 +1203,14 @@ if(isSet($_POST['action']) AND $_POST['action'] == "confirmcode"){
 		include_once 'bookingcode.html.php';
 		exit();	
 	}
-	
+
 	$hashedBookingCode = hashBookingCode($validatedBookingCode);
 
 	// Code is a valid digit. Check if it matches with a user in our database
 	try
 	{
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
-		
+
 		// Get booking information
 		$pdo = connect_to_db();
 		// Get name and IDs for meeting rooms
@@ -755,13 +1224,14 @@ if(isSet($_POST['action']) AND $_POST['action'] == "confirmcode"){
 		$s->bindValue(':bookingCode',$hashedBookingCode);
 		$s->execute();
 		$row = $s->fetch(PDO::FETCH_ASSOC);
-			
+
 		//Close connection
 		$pdo = null;
-		
+
 		if ($row['HitCount'] > 0)
 		{
 			// Booking code is a valid user
+			unset($_SESSION['bookingCodeGuesses']);
 			$_SESSION['bookingCodeUserID'] = $row['userID'];
 			// Check if we are confirming a create booking, a cancel or an edit.
 			if($_SESSION['confirmOrigins'] == "Create Meeting"){
@@ -769,14 +1239,18 @@ if(isSet($_POST['action']) AND $_POST['action'] == "confirmcode"){
 				unset($_SESSION['confirmOrigins']);
 			}
 			if($_SESSION['confirmOrigins'] == "Cancel"){
-				$_SESSION['refreshCancelBooking'] = TRUE;
+				$_SESSION['refreshChangeBookingRoom'] = TRUE;
 				unset($_SESSION['confirmOrigins']);
 			}
 			if($_SESSION['confirmOrigins'] == "Edit Meeting"){
 				$_SESSION['refreshEditCreateBooking'] = TRUE;
 				unset($_SESSION['confirmOrigins']);
 			}
-			
+			if($_SESSION['confirmOrigins'] == "Change Room"){
+				$_SESSION['refreshChangeBookingRoom'] = TRUE;
+				unset($_SESSION['confirmOrigins']);
+			}
+
 			if(isSet($_GET['meetingroom'])){
 				$meetingRoomID = $_GET['meetingroom'];
 				$location = "http://$_SERVER[HTTP_HOST]/booking/?meetingroom=" . $meetingRoomID;
@@ -785,14 +1259,16 @@ if(isSet($_POST['action']) AND $_POST['action'] == "confirmcode"){
 				$location = '.';
 			}
 			header('Location: ' . $location);
-			exit();						
+			exit();
 		} else {
 			// Remember last datetime we guessed wrong
 			$_SESSION['bookingCodeGuesses'][] = getDatetimeNow();
-			$_SESSION['confirmBookingCodeError'] = "The booking code you submitted is an incorrect code.";
-		
+			if(!isSet($_SESSION['confirmBookingCodeError'])){
+				$_SESSION['confirmBookingCodeError'] = "The booking code you submitted is an incorrect code.";
+			}
+
 			var_dump($_SESSION); // TO-DO: Remove after testing
-			
+
 			include_once 'bookingcode.html.php';
 			exit();
 		}
@@ -802,7 +1278,7 @@ if(isSet($_POST['action']) AND $_POST['action'] == "confirmcode"){
 		$error = 'Error fetching user information from booking code: ' . $e->getMessage();
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
 		$pdo = null;
-		exit();		
+		exit();
 	}
 }
 
@@ -846,10 +1322,10 @@ if(	((isSet($_POST['action']) AND $_POST['action'] == 'Create Meeting')) OR
 			$s = $pdo->prepare($sql);
 			$s->bindValue(':userID', $SelectedUserID);
 			$s->execute();
-			
+
 			// Create an array with the row information we retrieved
 			$result = $s->fetch(PDO::FETCH_ASSOC);
-			
+
 			if($result['HitCount'] == 0){
 				// User is not working in a company. We can't let them book
 				$_SESSION['normalBookingFeedback'] = "Only users connected to a company can book a meeting.";
@@ -868,23 +1344,23 @@ if(	((isSet($_POST['action']) AND $_POST['action'] == 'Create Meeting')) OR
 			} else {
 				$description = "";
 			}
-			
+
 			if(!empty($result['firstName'])){
 				$firstname = $result['firstName'];
-			}		
-			
+			}
+
 			if(!empty($result['lastName'])){
 				$lastname = $result['lastName'];
 			}	
-			
+
 			if(!empty($result['email'])){
 				$email = $result['email'];
 			}
-			
+
 			if(!empty($result['sendEmail'])){
 				$sendEmail = $result['sendEmail'];
 			}
-			
+
 			if(!empty($result['AccessName'])){
 				$access = $result['AccessName'];
 			}
@@ -897,7 +1373,7 @@ if(	((isSet($_POST['action']) AND $_POST['action'] == 'Create Meeting')) OR
 			$error = 'Error fetching default user details: ' . $e->getMessage();
 			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
 			$pdo = null;
-			exit();		
+			exit();
 		}	
 
 		// Get information from database on booking information user can choose between
@@ -905,7 +1381,7 @@ if(	((isSet($_POST['action']) AND $_POST['action'] == 'Create Meeting')) OR
 			try
 			{
 				include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
-				
+
 				// Get booking information
 				$pdo = connect_to_db();
 				// Get name and IDs for meeting rooms
@@ -913,10 +1389,10 @@ if(	((isSet($_POST['action']) AND $_POST['action'] == 'Create Meeting')) OR
 								`name` 
 						FROM 	`meetingroom`';
 				$result = $pdo->query($sql);
-					
+
 				//Close connection
 				$pdo = null;
-				
+
 				// Get the rows of information from the query
 				// This will be used to create a dropdown list in HTML
 				foreach($result as $row){
@@ -924,8 +1400,8 @@ if(	((isSet($_POST['action']) AND $_POST['action'] == 'Create Meeting')) OR
 										'meetingRoomID' => $row['meetingRoomID'],
 										'meetingRoomName' => $row['name']
 										);
-				}		
-				
+				}
+
 				$_SESSION['AddCreateBookingMeetingRoomsArray'] = $meetingroom;
 			}
 			catch (PDOException $e)
@@ -933,7 +1409,7 @@ if(	((isSet($_POST['action']) AND $_POST['action'] == 'Create Meeting')) OR
 				$error = 'Error fetching meeting room details: ' . $e->getMessage();
 				include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
 				$pdo = null;
-				exit();		
+				exit();
 			}
 		}
 
@@ -3003,6 +3479,7 @@ if(isSet($_GET['cancellationcode']) OR isSet($_SESSION['refreshWithCancellationC
 clearAddCreateBookingSessions();
 clearEditCreateBookingSessions();
 unset($_SESSION["cancelBookingOriginalValues"]);
+unset($_SESSION["changeRoomOriginalValues"]);
 unset($_SESSION["confirmOrigins"]);
 unset($_SESSION["EditCreateBookingError"]);
 

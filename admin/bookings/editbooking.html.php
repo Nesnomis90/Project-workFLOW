@@ -35,7 +35,7 @@
 					<label for="meetingRoomID">Set New Meeting Room: </label>
 					<select name="meetingRoomID" id="meetingRoomID">
 						<?php foreach($meetingroom as $row): ?> 
-							<?php if($row['meetingRoomID']==$selectedMeetingRoomID):?>
+							<?php if($row['meetingRoomID'] == $selectedMeetingRoomID):?>
 								<option selected="selected" value="<?php htmlout($row['meetingRoomID']); ?>"><?php htmlout($row['meetingRoomName']);?></option>
 							<?php else : ?>
 								<option value="<?php htmlout($row['meetingRoomID']); ?>"><?php htmlout($row['meetingRoomName']);?></option>
@@ -138,7 +138,7 @@
 						<?php if(isSet($_SESSION['EditBookingSelectACompany'])) : ?>
 							<select name="companyID" id="companyID">
 								<?php foreach($company as $row): ?> 
-									<?php if($row['companyID']==$selectedCompanyID):?>
+									<?php if($row['companyID'] == $selectedCompanyID):?>
 										<option selected="selected" value="<?php htmlout($row['companyID']); ?>"><?php htmlout($row['companyName']);?></option>
 									<?php else : ?>
 										<option value="<?php htmlout($row['companyID']); ?>"><?php htmlout($row['companyName']);?></option>
@@ -165,7 +165,7 @@
 							<?php else : ?>
 								<span style="color:green"><?php htmlout($potentialCreditsRemaining); ?></span><span>³</span>
 							<?php endif; ?>	
-							<label>Next Period At:</label>
+							<label>Next Period Starts At:</label>
 							<span><b><?php htmlout($companyPeriodEndDate); ?></b></span>
 						<?php endif; ?>
 					<?php else : ?>
