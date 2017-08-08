@@ -729,6 +729,11 @@ if (	(isSet($_POST['action']) and $_POST['action'] == 'Change Room') OR
 							b.`startDateTime` 	AS StartDateTime,
 							b.`endDateTime` 	AS EndDateTime,
 							b.`meetingRoomID` 	AS MeetingRoomID,
+							(
+								SELECT 	`name`
+								FROM 	`meetingroom`
+								WHERE	`meetingRoomID` = b.`meetingRoomID`
+							)					AS MeetingRoomName,
 							u.`email`			AS UserEmail,
 							u.`firstName`,
 							u.`lastName`
@@ -749,6 +754,7 @@ if (	(isSet($_POST['action']) and $_POST['action'] == 'Change Room') OR
 			$bookingStartDateTime = $row['StartDateTime'];
 			$bookingEndDateTime = $row['EndDateTime'];
 			$bookingMeetingRoomID = $row['MeetingRoomID'];
+			$originalMeetingRoomName = $row['MeetingRoomName'];
 
 			// Check if the user is the creator of the booking	
 			if(isSet($bookingCreatorUserID) AND !empty($bookingCreatorUserID) AND $bookingCreatorUserID == $SelectedUserID){
@@ -870,7 +876,7 @@ if (	(isSet($_POST['action']) and $_POST['action'] == 'Change Room') OR
 				AND			b.`dateTimeCancelled` IS NULL
 				AND			b.`startDateTime` <= :startDateTime
 				AND			b.`endDateTime` >= :endDateTime
-				AND			b.`bookingID <> :bookingID';
+				AND			b.`bookingID` <> :bookingID';
 		$s = $pdo->prepare($sql);
 		$s->bindValue(':bookingID', $bookingID);
 		$s->bindValue(':startDateTime', $bookingStartDateTime);
@@ -896,7 +902,6 @@ if (	(isSet($_POST['action']) and $_POST['action'] == 'Change Room') OR
 				AND			b.`endDateTime` >= :endDateTime
 				WHERE		b.`bookingID` IS NULL';
 		$s = $pdo->prepare($sql);
-		$s->bindValue(':bookingID', $bookingID);
 		$s->bindValue(':startDateTime', $bookingStartDateTime);
 		$s->bindValue(':endDateTime', $bookingEndDateTime);
 		$s->execute();

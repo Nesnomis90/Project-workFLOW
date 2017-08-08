@@ -33,14 +33,24 @@
 					<label>Select Available Room:</label>
 					<select name="availableRooms">
 						<option value="">Select A Room</option>
+						<?php if(isSet($availableRooms)) : ?>
+							<?php foreach($availableRooms AS $room) : ?>
+								<option value="<?php htmlout($room['MeetingRoomID']); ?>"><?php htmlout($room['MeetingRoomName']); ?></option>
+							<?php endforeach; ?>
+						<?php endif; ?>
 					</select>
 				</div>
 
 				<div>
-					<label>Swap Occupied Room:</label><span>*</span>
+					<label>Swap Occupied Room:</label>
 					<select name="occupiedRooms">
 						<option value="">Select A Room</option>
-					</select>
+						<?php if(isSet($occupiedRooms)) : ?>
+							<?php foreach($occupiedRooms AS $room) : ?>
+								<option value="<?php htmlout($room['MeetingRoomID']); ?>"><?php htmlout($room['MeetingRoomName']); ?></option>
+							<?php endforeach; ?>
+						<?php endif; ?>						
+					</select><span>*</span>
 					<span><b>* This requires confirmation from the owner of the booked meeting room, or someone with the appropriate access rights.</b></span>
 				</div>
 

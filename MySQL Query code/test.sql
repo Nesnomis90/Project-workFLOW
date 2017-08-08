@@ -69,7 +69,7 @@ ON 			b.`meetingRoomID` = m.`meetingRoomID`
 WHERE 		b.`actualEndDateTime` IS NULL
 AND			b.`dateTimeCancelled` IS NULL
 AND			b.`startDateTime` <= CURRENT_TIMESTAMP
-AND			b.`endDateTIme` > CURRENT_TIMESTAMP;
+AND			b.`endDateTime` > CURRENT_TIMESTAMP;
 
 INSERT INTO `user`(`firstname`, `lastname`, `password`, `activationcode`, `email`, `accessID`)
 SELECT		'',
