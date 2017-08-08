@@ -49,6 +49,28 @@ WHERE 	DATE(CURRENT_TIMESTAMP) >= `removeAtDate`
 AND 	`isActive` = 1
 AND		`companyID` <> 0;
 
+SELECT 		m.`name`			AS MeetingRoomName,
+			m.`meetingRoomID` 	AS MeetingRoomID,
+			b.`bookingID`		AS BookingID
+FROM		`meetingroom` m
+LEFT JOIN	`booking` b
+ON 			b.`meetingRoomID` = m.`meetingRoomID`
+AND			b.`startDateTime` <= CURRENT_TIMESTAMP
+AND			b.`endDateTime` >= CURRENT_TIMESTAMP
+WHERE		b.`bookingID` IS NULL;
+
+
+SELECT 		m.`name`			AS MeetingRoomName,
+			m.`meetingRoomID` 	AS MeetingRoomID,
+			b.`bookingID`		AS BookingID
+FROM		`booking` b
+INNER JOIN	`meetingroom` m
+ON 			b.`meetingRoomID` = m.`meetingRoomID`
+WHERE 		b.`actualEndDateTime` IS NULL
+AND			b.`dateTimeCancelled` IS NULL
+AND			b.`startDateTime` <= CURRENT_TIMESTAMP
+AND			b.`endDateTIme` > CURRENT_TIMESTAMP;
+
 INSERT INTO `user`(`firstname`, `lastname`, `password`, `activationcode`, `email`, `accessID`)
 SELECT		'',
 			'',

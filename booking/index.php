@@ -717,16 +717,19 @@ if (	(isSet($_POST['action']) and $_POST['action'] == 'Change Room') OR
 	$continueChangeRoom = FALSE;
 	$changedByOwner = FALSE;
 	$changedByAdmin = FALSE;
-		// Check if the user is the creator of the booking	
+	
+	// Get original booking information
 	try
 	{
-		// TO-DO: Get available/occupied meeting rooms as two different arrays for the timeslot of this booking
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 		
 		$pdo = connect_to_db();
-		$sql = 'SELECT 		COUNT(*)		AS HitCount,
+		$sql = 'SELECT 		COUNT(*)			AS HitCount,
 							b.`userID`,
-							u.`email`		AS UserEmail,
+							b.`startDateTime` 	AS StartDateTime,
+							b.`endDateTime` 	AS EndDateTime,
+							b.`meetingRoomID` 	AS MeetingRoomID,
+							u.`email`			AS UserEmail,
 							u.`firstName`,
 							u.`lastName`
 				FROM		`booking` b
@@ -743,6 +746,11 @@ if (	(isSet($_POST['action']) and $_POST['action'] == 'Change Room') OR
 			$bookingCreatorUserID = $row['userID'];
 			$bookingCreatorUserEmail = $row['UserEmail'];
 			$bookingCreatorUserInfo = $row['lastName'] . ", " . $row['firstName'] . " - " . $row['UserEmail'];
+			$bookingStartDateTime = $row['StartDateTime'];
+			$bookingEndDateTime = $row['EndDateTime'];
+			$bookingMeetingRoomID = $row['MeetingRoomID'];
+
+			// Check if the user is the creator of the booking	
 			if(isSet($bookingCreatorUserID) AND !empty($bookingCreatorUserID) AND $bookingCreatorUserID == $SelectedUserID){
 				$continueChangeRoom = TRUE;
 			}
@@ -849,6 +857,68 @@ if (	(isSet($_POST['action']) and $_POST['action'] == 'Change Room') OR
 		exit();
 	}
 
+	// TO-DO: Get available/occupied meeting rooms as two different arrays for the timeslot of this booking
+	try
+	{
+		$sql = 'SELECT 		m.`name`			AS MeetingRoomName,
+							m.`meetingRoomID` 	AS MeetingRoomID,
+							b.`bookingID`		AS BookingID
+				FROM		`meetingroom` m
+				INNER JOIN	`booking` b
+				ON 			b.`meetingRoomID` = m.`meetingRoomID`
+				WHERE 		b.`actualEndDateTime` IS NULL
+				AND			b.`dateTimeCancelled` IS NULL
+				AND			b.`startDateTime` <= :startDateTime
+				AND			b.`endDateTime` >= :endDateTime
+				AND			b.`bookingID <> :bookingID';
+		$s = $pdo->prepare($sql);
+		$s->bindValue(':bookingID', $bookingID);
+		$s->bindValue(':startDateTime', $bookingStartDateTime);
+		$s->bindValue(':endDateTime', $bookingEndDateTime);
+		$s->execute();
+		$result = $s->fetchAll(PDO::FETCH_ASSOC);
+		if(isSet($result) AND sizeOf($result) > 0){
+			foreach($result AS $row){
+				$occupiedRooms[] = array(
+											'MeetingRoomName' => $row['MeetingRoomName'],
+											'MeetingRoomID' => $row['MeetingRoomID'],
+											'BookingID' => $row['BookingID']
+										);
+			}
+		}
+
+		$sql = 'SELECT 		m.`name`			AS MeetingRoomName,
+							m.`meetingRoomID` 	AS MeetingRoomID
+				FROM		`meetingroom` m
+				LEFT JOIN	`booking` b
+				ON 			b.`meetingRoomID` = m.`meetingRoomID`
+				AND			b.`startDateTime` <= :startDateTime
+				AND			b.`endDateTime` >= :endDateTime
+				WHERE		b.`bookingID` IS NULL';
+		$s = $pdo->prepare($sql);
+		$s->bindValue(':bookingID', $bookingID);
+		$s->bindValue(':startDateTime', $bookingStartDateTime);
+		$s->bindValue(':endDateTime', $bookingEndDateTime);
+		$s->execute();
+		$result = $s->fetchAll(PDO::FETCH_ASSOC);
+		if(isSet($result) AND sizeOf($result) > 0){
+			foreach($result AS $row){
+				$availableRooms[] = array(
+											'MeetingRoomName' => $row['MeetingRoomName'],
+											'MeetingRoomID' => $row['MeetingRoomID']
+										);
+			}
+		}
+		$pdo = null;
+	}
+	catch (PDOException $e)
+	{
+		$pdo = null;
+		$error = 'Error getting occupied meeting rooms: ' . $e->getMessage();
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+		exit();
+	}
+
 	var_dump($_SESSION); // TO-DO: Remove after done testing
 
 	include_once 'changeroom.html.php';
@@ -865,6 +935,18 @@ if ((isSet($_POST['changeroom']) and $_POST['changeroom'] == 'Confirm Change')){
 	}	
 	if(isSet($_POST['occupiedRooms']) AND !empty($_POST['occupiedRooms'])){
 		$changeToOccupiedRoom = TRUE;
+	}
+
+	if(!$changeToAvailableRoom AND !$changeToOccupiedRoom){
+		$_SESSION['BookingRoomChangeError'] = "You have to choose between selecting an available room or an occupied room. You have to select one.";
+		if(isSet($_GET['meetingroom'])){
+			$meetingRoomID = $_GET['meetingroom'];
+			$location = "http://$_SERVER[HTTP_HOST]/booking/?meetingroom=" . $meetingRoomID;
+		} else {
+			$location = 'http://$_SERVER[HTTP_HOST]/booking/';
+		}
+		header('Location: ' . $location);
+		exit();
 	}
 
 	if($changeToAvailableRoom AND $changeToOccupiedRoom){
