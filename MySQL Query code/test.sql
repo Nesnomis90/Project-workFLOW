@@ -49,15 +49,58 @@ WHERE 	DATE(CURRENT_TIMESTAMP) >= `removeAtDate`
 AND 	`isActive` = 1
 AND		`companyID` <> 0;
 
+SELECT CURRENT_TIMESTAMP;
+
 SELECT 		m.`name`			AS MeetingRoomName,
 			m.`meetingRoomID` 	AS MeetingRoomID,
 			b.`bookingID`		AS BookingID
 FROM		`meetingroom` m
 LEFT JOIN	`booking` b
 ON 			b.`meetingRoomID` = m.`meetingRoomID`
-AND			b.`startDateTime` <= CURRENT_TIMESTAMP
-AND			b.`endDateTime` >= CURRENT_TIMESTAMP
-WHERE		b.`bookingID` IS NULL;
+AND			b.`actualEndDateTime` IS NULL
+AND			b.`dateTimeCancelled` IS NULL
+AND								
+	(		
+			(
+				b.`startDateTime` >= '2017-08-08 15:30:00' AND 
+				b.`startDateTime` < '2017-08-08 17:00:00'
+			) 
+	OR 		(
+				b.`endDateTime` > '2017-08-08 15:30:00' AND 
+				b.`endDateTime` <= '2017-08-08 17:00:00'
+			)
+	OR 		(
+				'2017-08-08 17:00:00' > b.`startDateTime` AND 
+				'2017-08-08 17:00:00' < b.`endDateTime`
+			)
+	OR 		(
+				'2017-08-08 15:30:00' > b.`startDateTime` AND 
+				'2017-08-08 15:30:00' < b.`endDateTime`
+			)
+	)
+LEFT JOIN 	`roomevent` rev
+ON			b.`meetingRoomID` = rev.`meetingRoomID`
+AND	
+		(		
+				(
+					rev.`startDateTime` >= '2017-08-08 15:30:00' AND 
+					rev.`startDateTime` < '2017-08-08 17:00:00'
+				) 
+		OR 		(
+					rev.`endDateTime` > '2017-08-08 15:30:00' AND 
+					rev.`endDateTime` <= '2017-08-08 17:00:00'
+				)
+		OR 		(
+					'2017-08-08 17:00:00' > rev.`startDateTime` AND 
+					'2017-08-08 17:00:00' < rev.`endDateTime`
+				)
+		OR 		(
+					'2017-08-08 15:30:00' > rev.`startDateTime` AND 
+					'2017-08-08 15:30:00' < rev.`endDateTime`
+				)
+		)
+WHERE	rev.`EventID` IS NULL
+AND 	b.`meetingRoomID` IS NULL;
 
 
 SELECT 		m.`name`			AS MeetingRoomName,
