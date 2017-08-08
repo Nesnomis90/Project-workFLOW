@@ -41,13 +41,13 @@
 				<?php endif; ?>
 			</div>
 
-			<form action="" method="post">
-				<div class="left">
+			<div class="left">
+				<form action="" method="post">
 					<input type="submit" name="action" value="Create Meeting">
 					<input type="submit" name="action" value="Refresh">
 					<span><b>Last Refresh: <?php htmlout(getDatetimeNowInDisplayFormat()); ?></b></span>
-				</div>
-			</form>
+				</form>
+			</div>
 
 			<?php if(isSet($_GET['meetingroom']) AND isSet($_GET['name'])) : ?>
 				<div class="left">
@@ -171,15 +171,15 @@
 				</table>
 		<?php elseif(!isSet($_SESSION['loggedIn'])) : ?>
 
-			<form action="" method="post">
-				<div>
+			<div class="left">
+				<form action="" method="post">
 					<?php if(isSet($_SESSION["DefaultMeetingRoomInfo"])) : ?>
 						<input type="submit" name="action" value="Create Meeting">
 					<?php endif; ?>
 					<input type="submit" name="action" value="Refresh">
 					<span><b>Last Refresh: <?php htmlout(getDatetimeNowInDisplayFormat()); ?></b></span>
-				</div>
-			</form>
+				</form>
+			</div>
 
 			<table>
 				<caption>Bookings Today</caption>
