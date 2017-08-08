@@ -2,6 +2,7 @@ USE test;
 SET NAMES utf8;
 USE meetingflow;
 SHOW WARNINGS;
+SELECT CURRENT_TIMESTAMP;
 /*PDO::FETCH_ASSOC*/
 
 INSERT INTO `companycredits`(`CompanyID`, `CreditsID`) VALUES (1,2);
@@ -49,7 +50,43 @@ WHERE 	DATE(CURRENT_TIMESTAMP) >= `removeAtDate`
 AND 	`isActive` = 1
 AND		`companyID` <> 0;
 
-SELECT CURRENT_TIMESTAMP;
+
+SELECT 		m.`name`			AS MeetingRoomName,
+			m.`meetingRoomID` 	AS MeetingRoomID,
+			b.`bookingID`		AS BookingID
+FROM		`booking` b
+INNER JOIN 	`meetingroom` m
+ON			b.`meetingRoomID` = m.`meetingRoomID`
+WHERE		`actualEndDateTime` IS NULL
+AND 		`dateTimeCancelled` IS NULL
+AND 		b.`bookingID`
+NOT IN	
+(
+	SELECT 	`bookingID`
+    FROM 	`booking`
+    WHERE	`actualEndDateTime` IS NULL
+    AND		`dateTimeCancelled` IS NULL
+	AND								
+		(		
+				(
+					`startDateTime` >= '2017-08-08 15:30:00' AND 
+					`startDateTime` < '2017-08-08 17:00:00'
+				) 
+		OR 		(
+					`endDateTime` > '2017-08-08 15:30:00' AND 
+					`endDateTime` <= '2017-08-08 17:00:00'
+				)
+		OR 		(
+					'2017-08-08 17:00:00' > `startDateTime` AND 
+					'2017-08-08 17:00:00' < `endDateTime`
+				)
+		OR 		(
+					'2017-08-08 15:30:00' > `startDateTime` AND 
+					'2017-08-08 15:30:00' < `endDateTime`
+				)
+		)
+);
+
 
 SELECT 		m.`name`			AS MeetingRoomName,
 			m.`meetingRoomID` 	AS MeetingRoomID,
