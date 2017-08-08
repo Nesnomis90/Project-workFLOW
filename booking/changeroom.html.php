@@ -8,7 +8,7 @@
 		<title>Change Meeting Room</title>
 		<style>
 			label{
-				width: 200px;
+				width: 220px;
 			}
 		</style>		
 	</head>
@@ -25,33 +25,37 @@
 
 			<form action="" method="post">
 				<div>
-					<label>Booked Meeting Room: </label>
+					<label>Current Booked Meeting Room: </label>
 					<span><b><?php htmlout($originalMeetingRoomName); ?></b></span>
 				</div>
 
 				<div>
-					<label>Select Available Room:</label>
-					<select name="availableRooms">
-						<option value="">Select A Room</option>
-						<?php if(isSet($availableRooms)) : ?>
+					<label>Swap To An Available Room:</label>
+					<?php if(isSet($availableRooms)) : ?>
+						<select name="availableRooms">
+							<option value="">Select A Room</option>
 							<?php foreach($availableRooms AS $room) : ?>
 								<option value="<?php htmlout($room['MeetingRoomID']); ?>"><?php htmlout($room['MeetingRoomName']); ?></option>
 							<?php endforeach; ?>
-						<?php endif; ?>
-					</select>
+						</select>
+					<?php else : ?>
+						<span><b>There are no available rooms.</b></span>
+					<?php endif; ?>
 				</div>
 
 				<div>
-					<label>Swap Occupied Room:</label>
-					<select name="occupiedRooms">
-						<option value="">Select A Room</option>
-						<?php if(isSet($occupiedRooms)) : ?>
+					<label>Swap With An Occupied Room:</label>
+					<?php if(isSet($occupiedRooms)) : ?>
+						<select name="occupiedRooms">
+							<option value="">Select A Room</option>
 							<?php foreach($occupiedRooms AS $room) : ?>
 								<option value="<?php htmlout($room['MeetingRoomID']); ?>"><?php htmlout($room['MeetingRoomName']); ?></option>
 							<?php endforeach; ?>
-						<?php endif; ?>						
-					</select><span>*</span>
-					<span><b>* This requires confirmation from the owner of the booked meeting room, or someone with the appropriate access rights.</b></span>
+						</select><span>*</span>
+						<span><b>* This requires confirmation from the owner of the booked meeting room, or someone with the appropriate access rights.</b></span>
+					<?php else : ?>
+						<span><b>There are no occupied rooms.</b></span>
+					<?php endif; ?>	
 				</div>
 
 				<div class="left">

@@ -891,6 +891,7 @@ if (	(isSet($_POST['action']) and $_POST['action'] == 'Change Room') OR
 	}
 
 	// Get Available/Occupied rooms in the time period of the original booked meeting.
+	// This needs a lot more work. We also need to check for events.
 	try
 	{
 		$sql = 'SELECT 		m.`name`			AS MeetingRoomName,
