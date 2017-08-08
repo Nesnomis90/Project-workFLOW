@@ -2,6 +2,7 @@ USE test;
 SET NAMES utf8;
 USE meetingflow;
 SHOW WARNINGS;
+SELECT CURRENT_TIMESTAMP;
 /*PDO::FETCH_ASSOC*/
 
 INSERT INTO `companycredits`(`CompanyID`, `CreditsID`) VALUES (1,2);
@@ -48,6 +49,107 @@ SET		`isActive` = 0
 WHERE 	DATE(CURRENT_TIMESTAMP) >= `removeAtDate`
 AND 	`isActive` = 1
 AND		`companyID` <> 0;
+
+
+SELECT 		m.`name`			AS MeetingRoomName,
+			m.`meetingRoomID` 	AS MeetingRoomID,
+			b.`bookingID`		AS BookingID
+FROM		`booking` b
+INNER JOIN 	`meetingroom` m
+ON			b.`meetingRoomID` = m.`meetingRoomID`
+WHERE		`actualEndDateTime` IS NULL
+AND 		`dateTimeCancelled` IS NULL
+AND 		b.`bookingID`
+NOT IN	
+(
+	SELECT 	`bookingID`
+    FROM 	`booking`
+    WHERE	`actualEndDateTime` IS NULL
+    AND		`dateTimeCancelled` IS NULL
+	AND								
+		(		
+				(
+					`startDateTime` >= '2017-08-08 15:30:00' AND 
+					`startDateTime` < '2017-08-08 17:00:00'
+				) 
+		OR 		(
+					`endDateTime` > '2017-08-08 15:30:00' AND 
+					`endDateTime` <= '2017-08-08 17:00:00'
+				)
+		OR 		(
+					'2017-08-08 17:00:00' > `startDateTime` AND 
+					'2017-08-08 17:00:00' < `endDateTime`
+				)
+		OR 		(
+					'2017-08-08 15:30:00' > `startDateTime` AND 
+					'2017-08-08 15:30:00' < `endDateTime`
+				)
+		)
+);
+
+
+SELECT 		m.`name`			AS MeetingRoomName,
+			m.`meetingRoomID` 	AS MeetingRoomID,
+			b.`bookingID`		AS BookingID
+FROM		`meetingroom` m
+LEFT JOIN	`booking` b
+ON 			b.`meetingRoomID` = m.`meetingRoomID`
+AND			b.`actualEndDateTime` IS NULL
+AND			b.`dateTimeCancelled` IS NULL
+AND								
+	(		
+			(
+				b.`startDateTime` >= '2017-08-08 15:30:00' AND 
+				b.`startDateTime` < '2017-08-08 17:00:00'
+			) 
+	OR 		(
+				b.`endDateTime` > '2017-08-08 15:30:00' AND 
+				b.`endDateTime` <= '2017-08-08 17:00:00'
+			)
+	OR 		(
+				'2017-08-08 17:00:00' > b.`startDateTime` AND 
+				'2017-08-08 17:00:00' < b.`endDateTime`
+			)
+	OR 		(
+				'2017-08-08 15:30:00' > b.`startDateTime` AND 
+				'2017-08-08 15:30:00' < b.`endDateTime`
+			)
+	)
+LEFT JOIN 	`roomevent` rev
+ON			b.`meetingRoomID` = rev.`meetingRoomID`
+AND	
+		(		
+				(
+					rev.`startDateTime` >= '2017-08-08 15:30:00' AND 
+					rev.`startDateTime` < '2017-08-08 17:00:00'
+				) 
+		OR 		(
+					rev.`endDateTime` > '2017-08-08 15:30:00' AND 
+					rev.`endDateTime` <= '2017-08-08 17:00:00'
+				)
+		OR 		(
+					'2017-08-08 17:00:00' > rev.`startDateTime` AND 
+					'2017-08-08 17:00:00' < rev.`endDateTime`
+				)
+		OR 		(
+					'2017-08-08 15:30:00' > rev.`startDateTime` AND 
+					'2017-08-08 15:30:00' < rev.`endDateTime`
+				)
+		)
+WHERE	rev.`EventID` IS NULL
+AND 	b.`meetingRoomID` IS NULL;
+
+
+SELECT 		m.`name`			AS MeetingRoomName,
+			m.`meetingRoomID` 	AS MeetingRoomID,
+			b.`bookingID`		AS BookingID
+FROM		`booking` b
+INNER JOIN	`meetingroom` m
+ON 			b.`meetingRoomID` = m.`meetingRoomID`
+WHERE 		b.`actualEndDateTime` IS NULL
+AND			b.`dateTimeCancelled` IS NULL
+AND			b.`startDateTime` <= CURRENT_TIMESTAMP
+AND			b.`endDateTime` > CURRENT_TIMESTAMP;
 
 INSERT INTO `user`(`firstname`, `lastname`, `password`, `activationcode`, `email`, `accessID`)
 SELECT		'',
