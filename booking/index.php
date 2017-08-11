@@ -891,7 +891,7 @@ if (	(isSet($_POST['action']) and $_POST['action'] == 'Change Room') OR
 	}
 
 	// Get Available/Occupied rooms in the time period of the original booked meeting.
-	// This needs a lot more work. We also need to check for events.
+		// We don't care about room events for occupied rooms, since we can just swap with another booked room.
 	try
 	{
 		$sql = 'SELECT 		m.`name`			AS MeetingRoomName,
@@ -921,14 +921,63 @@ if (	(isSet($_POST['action']) and $_POST['action'] == 'Change Room') OR
 			}
 		}
 
-		$sql = 'SELECT 		m.`name`			AS MeetingRoomName,
-							m.`meetingRoomID` 	AS MeetingRoomID
-				FROM		`meetingroom` m
-				LEFT JOIN	`booking` b
-				ON 			b.`meetingRoomID` = m.`meetingRoomID`
-				AND			b.`startDateTime` <= :startDateTime
-				AND			b.`endDateTime` >= :endDateTime
-				WHERE		b.`bookingID` IS NULL';
+			// For available rooms we have to check what rooms are taken by both bookings and events.
+			// Here we use the same approach we use for "checking if timeslot is taken" for bookings, to keep it consistent.
+		$sql = "SELECT 		m.`meetingRoomID`	AS MeetingRoomID,
+							m.`name`			AS MeetingRoomName
+				FROM 		`meetingroom` m
+				WHERE		m.`meetingRoomID` 
+				NOT IN
+				(
+					SELECT 		b.`meetingRoomID`
+					FROM 		`booking` b
+					WHERE 		b.`dateTimeCancelled` IS NULL
+					AND			b.`actualEndDateTime` IS NULL
+					AND
+							(		
+									(
+										b.`startDateTime` >= :startDateTime AND 
+										b.`startDateTime` < :endDateTime
+									) 
+							OR 		(
+										b.`endDateTime` > :startDateTime AND 
+										b.`endDateTime` <= :endDateTime
+									)
+							OR 		(
+										:endDateTime > b.`startDateTime` AND 
+										:endDateTime < b.`endDateTime`
+									)
+							OR 		(
+										:startDateTime > b.`startDateTime` AND 
+										:startDateTime < b.`endDateTime`
+									)
+							)
+				)
+				AND			m.`meetingRoomID` 
+				NOT IN
+				(
+					SELECT 		rev.`meetingRoomID`
+					FROM 		`roomevent` rev
+					WHERE 
+							(		
+									(
+										rev.`startDateTime` >= :startDateTime AND 
+										rev.`startDateTime` < :endDateTime
+									) 
+							OR 		(
+										rev.`endDateTime` > :startDateTime AND 
+										rev.`endDateTime` <= :endDateTime
+									)
+							OR 		(
+										:endDateTime > rev.`startDateTime` AND 
+										:endDateTime < rev.`endDateTime`
+									)
+							OR 		(
+										:startDateTime > rev.`startDateTime` AND 
+										:startDateTime < rev.`endDateTime`
+									)
+							)
+				)";
 		$s = $pdo->prepare($sql);
 		$s->bindValue(':startDateTime', $bookingStartDateTime);
 		$s->bindValue(':endDateTime', $bookingEndDateTime);
