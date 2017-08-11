@@ -50,12 +50,129 @@ WHERE 	DATE(CURRENT_TIMESTAMP) >= `removeAtDate`
 AND 	`isActive` = 1
 AND		`companyID` <> 0;
 
+SELECT 		m.`meetingRoomID`	AS MeetingRoomID,
+			m.`name`			AS MeetingRoomName
+FROM 		`meetingroom` m
+WHERE		m.`meetingRoomID` 
+NOT IN
+(
+	SELECT 		b.`meetingRoomID`
+	FROM 		`booking` b
+	WHERE 		b.`dateTimeCancelled` IS NULL
+	AND			b.`actualEndDateTime` IS NULL
+	AND
+			(		
+					(
+						b.`startDateTime` >= '2017-08-11 13:00:00' AND 
+						b.`startDateTime` < '2017-08-11 17:00:00'
+					) 
+			OR 		(
+						b.`endDateTime` > '2017-08-11 13:00:00' AND 
+						b.`endDateTime` <= '2017-08-11 17:00:00'
+					)
+			OR 		(
+						'2017-08-11 17:00:00' > b.`startDateTime` AND 
+						'2017-08-11 17:00:00' < b.`endDateTime`
+					)
+			OR 		(
+						'2017-08-11 13:00:00' > b.`startDateTime` AND 
+						'2017-08-11 13:00:00' < b.`endDateTime`
+					)
+			)
+)
+AND 	m.`meetingRoomID`
+NOT IN
+(
+	SELECT 		rev.`meetingRoomID`
+	FROM 		`roomevent` rev
+	WHERE 
+			(		
+					(
+						rev.`startDateTime` >= '2017-08-11 13:00:00' AND 
+						rev.`startDateTime` < '2017-08-11 17:00:00'
+					) 
+			OR 		(
+						rev.`endDateTime` > '2017-08-11 13:00:00' AND 
+						rev.`endDateTime` <= '2017-08-11 17:00:00'
+					)
+			OR 		(
+						'2017-08-11 17:00:00' > rev.`startDateTime` AND 
+						'2017-08-11 17:00:00' < rev.`endDateTime`
+					)
+			OR 		(
+						'2017-08-11 13:00:00' > rev.`startDateTime` AND 
+						'2017-08-11 13:00:00' < rev.`endDateTime`
+					)
+			)
+);
+
+SELECT 		m.`meetingRoomID`	AS MeetingRoomID,
+			m.`name`			AS MeetingRoomName
+FROM 		`meetingroom` m
+WHERE		m.`meetingRoomID` 
+NOT IN
+(
+	SELECT * 
+	FROM 
+	(
+		(
+		SELECT 		b.`meetingRoomID`
+		FROM 		`booking` b
+		WHERE 		b.`dateTimeCancelled` IS NULL
+		AND			b.`actualEndDateTime` IS NULL
+		AND
+				(		
+						(
+							b.`startDateTime` >= '2017-08-11 13:00:00' AND 
+							b.`startDateTime` < '2017-08-11 17:00:00'
+						) 
+				OR 		(
+							b.`endDateTime` > '2017-08-11 13:00:00' AND 
+							b.`endDateTime` <= '2017-08-11 17:00:00'
+						)
+				OR 		(
+							'2017-08-11 17:00:00' > b.`startDateTime` AND 
+							'2017-08-11 17:00:00' < b.`endDateTime`
+						)
+				OR 		(
+							'2017-08-11 13:00:00' > b.`startDateTime` AND 
+							'2017-08-11 13:00:00' < b.`endDateTime`
+						)
+				)
+		)
+		UNION
+		(
+		SELECT 		rev.`meetingRoomID`
+		FROM 		`roomevent` rev
+		WHERE 
+				(		
+						(
+							rev.`startDateTime` >= '2017-08-11 13:00:00' AND 
+							rev.`startDateTime` < '2017-08-11 17:00:00'
+						) 
+				OR 		(
+							rev.`endDateTime` > '2017-08-11 13:00:00' AND 
+							rev.`endDateTime` <= '2017-08-11 17:00:00'
+						)
+				OR 		(
+							'2017-08-11 17:00:00' > rev.`startDateTime` AND 
+							'2017-08-11 17:00:00' < rev.`endDateTime`
+						)
+				OR 		(
+							'2017-08-11 13:00:00' > rev.`startDateTime` AND 
+							'2017-08-11 13:00:00' < rev.`endDateTime`
+						)
+				)
+		)
+	) AS OccupiedMeetingRooms
+);
+
 
 SELECT 		m.`name`			AS MeetingRoomName,
 			m.`meetingRoomID` 	AS MeetingRoomID,
 			b.`bookingID`		AS BookingID
-FROM		`booking` b
-INNER JOIN 	`meetingroom` m
+FROM		`meetingroom` m
+INNER JOIN 	`booking` b
 ON			b.`meetingRoomID` = m.`meetingRoomID`
 WHERE		`actualEndDateTime` IS NULL
 AND 		`dateTimeCancelled` IS NULL
@@ -90,7 +207,8 @@ NOT IN
 
 SELECT 		m.`name`			AS MeetingRoomName,
 			m.`meetingRoomID` 	AS MeetingRoomID,
-			b.`bookingID`		AS BookingID
+			b.`bookingID`		AS BookingID,
+            rev.`EventID`		AS EventID
 FROM		`meetingroom` m
 LEFT JOIN	`booking` b
 ON 			b.`meetingRoomID` = m.`meetingRoomID`
@@ -149,7 +267,15 @@ ON 			b.`meetingRoomID` = m.`meetingRoomID`
 WHERE 		b.`actualEndDateTime` IS NULL
 AND			b.`dateTimeCancelled` IS NULL
 AND			b.`startDateTime` <= CURRENT_TIMESTAMP
-AND			b.`endDateTime` > CURRENT_TIMESTAMP;
+AND			b.`endDateTime` > CURRENT_TIMESTAMP
+AND
+(
+	(
+		b.`startDateTime` <= '2017-08-11 13:45:00' AND
+        b.`endDateTime` >= '2017-08-11 16:30:00' AND
+        
+    )
+);
 
 INSERT INTO `user`(`firstname`, `lastname`, `password`, `activationcode`, `email`, `accessID`)
 SELECT		'',
@@ -1444,7 +1570,8 @@ ORDER BY 	UNIX_TIMESTAMP(b.`startDateTime`)
 ASC;
 
 
-SELECT SUM(cnt)	AS HitCount
+SELECT 	SUM(cnt)	AS HitCount,
+		(SELECT `name` FROM `meetingroom` WHERE `meetingRoomID` = 32) AS MeetingRoomName
 FROM (
 	(SELECT 		COUNT(*) AS cnt
 	FROM 		`booking` b
