@@ -13,14 +13,7 @@
 		<?php include_once $_SERVER['DOCUMENT_ROOT'] .'/includes/admintopnav.html.php'; ?>
 
 		<h1>Scheduled Events</h1>
-		
-		<?php if(isSet($_SESSION['EventsUserFeedback'])) : ?>
-			<div class="left">
-				<span><b id="feedback"><?php htmlout($_SESSION['EventsUserFeedback']); ?></b></span>
-				<?php unset($_SESSION['EventsUserFeedback']); ?>
-			</div>
-		<?php endif; ?>
-		
+
 		<form action="" method="post">				
 			<div style="position:absolute; left: 10px;">
 				<input type="submit" name="action" value="Create Event">
@@ -34,6 +27,13 @@
 			</div>			
 		</form>
 		
+		<?php if(isSet($_SESSION['EventsUserFeedback'])) : ?>
+			<div class="left">
+				<span><b class="feedback"><?php htmlout($_SESSION['EventsUserFeedback']); ?></b></span>
+				<?php unset($_SESSION['EventsUserFeedback']); ?>
+			</div>
+		<?php endif; ?>		
+
 		<table>
 			<caption>Active Events</caption>
 			<tr>
