@@ -267,7 +267,15 @@ ON 			b.`meetingRoomID` = m.`meetingRoomID`
 WHERE 		b.`actualEndDateTime` IS NULL
 AND			b.`dateTimeCancelled` IS NULL
 AND			b.`startDateTime` <= CURRENT_TIMESTAMP
-AND			b.`endDateTime` > CURRENT_TIMESTAMP;
+AND			b.`endDateTime` > CURRENT_TIMESTAMP
+AND
+(
+	(
+		b.`startDateTime` <= '2017-08-11 13:45:00' AND
+        b.`endDateTime` >= '2017-08-11 16:30:00' AND
+        
+    )
+);
 
 INSERT INTO `user`(`firstname`, `lastname`, `password`, `activationcode`, `email`, `accessID`)
 SELECT		'',
@@ -1562,7 +1570,8 @@ ORDER BY 	UNIX_TIMESTAMP(b.`startDateTime`)
 ASC;
 
 
-SELECT SUM(cnt)	AS HitCount
+SELECT 	SUM(cnt)	AS HitCount,
+		(SELECT `name` FROM `meetingroom` WHERE `meetingRoomID` = 32) AS MeetingRoomName
 FROM (
 	(SELECT 		COUNT(*) AS cnt
 	FROM 		`booking` b

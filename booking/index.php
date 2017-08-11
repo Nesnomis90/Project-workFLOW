@@ -1229,7 +1229,12 @@ if ((isSet($_POST['changeroom']) and $_POST['changeroom'] == 'Confirm Change') O
 			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 			$pdo = connect_to_db();	
 			
-			$sql =	" 	SELECT SUM(cnt)	AS HitCount
+			$sql =	" 	SELECT 	SUM(cnt)	AS HitCount,
+								(
+									SELECT 	`name` 
+									FROM 	`meetingroom` 
+									WHERE 	`meetingRoomID` = :MeetingRoomID
+								) 			AS MeetingRoomName
 						FROM 
 						(
 							(
@@ -1309,6 +1314,8 @@ if ((isSet($_POST['changeroom']) and $_POST['changeroom'] == 'Confirm Change') O
 				}
 				header('Location: ' . $location);
 				exit();
+			} elseif(isSet($row) AND empty($row['HitCount'])){
+				$newMeetingRoomName = $row['MeetingRoomName'];
 			}
 		}
 		catch(PDOException $e)
@@ -1339,8 +1346,50 @@ if ((isSet($_POST['changeroom']) and $_POST['changeroom'] == 'Confirm Change') O
 			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
 			exit();
 		}
-		
+
 		$_SESSION['normalBookingFeedback'] = "Successfully changed the room for your meeting.";
+
+		// Send email to the original user if the room is changed by someone else.
+		//  TO-DO: This needs to know who changed in "change room" and not here. Since we never get that info on swapping to an available room!
+		if($changedByOwner OR $changedByAdmin){
+
+			if($_SESSION['changeRoomOriginalValues']['SendEmail'] == 1){
+
+				$originalMeetingRoomName = $_SESSION['changeRoomOriginalBookingValues']['MeetingRoomName'];
+				$startDateTime = $_SESSION['changeRoomOriginalBookingValues']['StartDateTime'];
+				$endDateTime = $_SESSION['changeRoomOriginalBookingValues']['EndDateTime'];
+				$displayStartDate = convertDatetimeToFormat($startDateTime , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
+				$displayEndDate = convertDatetimeToFormat($endDateTime, 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
+
+				$emailSubject = "New Booking Information!";
+
+				if(isSet($changedByAdminName)){
+					$emailMessage = "Your meeting has been moved to a new room by the admin: $changedByAdminName!\n";
+				} elseif(isSet($changedByUserName)){
+					$emailMessage = "Your meeting has been moved to a new room by your company owner: $changedByUserName!\n";
+				}
+
+				$emailMessage .=
+				"The current meeting information has been updated: \n" .
+				"Old Meeting Room: " . $originalMeetingRoomName . ".\n" .
+				"New Meeting Room: " . $newMeetingRoomName . ".\n" .
+				"Start Time: " . $displayStartDate . ".\n" .
+				"End Time: " . $displayEndDate . ".";
+
+				$email = $_SESSION['changeRoomOriginalValues']['UserEmail'];
+
+				$mailResult = sendEmail($email, $emailSubject, $emailMessage);
+
+				if(!$mailResult){
+					$_SESSION['normalBookingFeedback'] .= "\n\n[WARNING] System failed to send Email to user.";
+				}
+
+				$_SESSION['normalBookingFeedback'] .= "\nThis is the email msg we're sending out:\n$emailMessage.\nSent to email: $email."; // TO-DO: Remove after testing	
+
+			} elseif($_SESSION['changeRoomOriginalValues']['SendEmail'] == 0){
+				$_SESSION['normalBookingFeedback'] .= "\nUser did not want to get sent Emails."; // TO-DO: remove when done testing
+			}
+		}
 	}
 
 	unset($_SESSION['changeToMeetingRoomID']);
