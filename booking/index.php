@@ -459,8 +459,12 @@ if (	(isSet($_POST['action']) and $_POST['action'] == 'Cancel') OR
 		$_SESSION['cancelBookingOriginalValues']['BookingID'] = $_POST['id'];
 		$_SESSION['cancelBookingOriginalValues']['BookingStatus'] = $_POST['BookingStatus'];
 		$_SESSION['cancelBookingOriginalValues']['MeetingInfo'] = $_POST['MeetingInfo'];
-		$_SESSION['cancelBookingOriginalValues']['SendEmail'] = $_POST['sendEmail'];
-		$_SESSION['cancelBookingOriginalValues']['UserEmail'] = $_POST['Email'];
+		if(isSet($_POST['sendEmail'])){
+			$_SESSION['cancelBookingOriginalValues']['SendEmail'] = $_POST['sendEmail'];
+		}
+		if(isSet($_POST['Email'])){
+			$_SESSION['cancelBookingOriginalValues']['UserEmail'] = $_POST['Email'];
+		}
 	}
 
 	$bookingID = $_SESSION['cancelBookingOriginalValues']['BookingID'];
@@ -485,7 +489,8 @@ if (	(isSet($_POST['action']) and $_POST['action'] == 'Cancel') OR
 							b.`userID`,
 							u.`email`		AS UserEmail,
 							u.`firstName`,
-							u.`lastName`
+							u.`lastName`,
+							u.`sendEmail`
 				FROM		`booking` b
 				INNER JOIN 	`user` u
 				ON 			b.`userID` = u.`userID`
@@ -500,6 +505,8 @@ if (	(isSet($_POST['action']) and $_POST['action'] == 'Cancel') OR
 			$bookingCreatorUserID = $row['userID'];
 			$bookingCreatorUserEmail = $row['UserEmail'];
 			$bookingCreatorUserInfo = $row['lastName'] . ", " . $row['firstName'] . " - " . $row['UserEmail'];
+			$_SESSION['cancelBookingOriginalValues']['SendEmail'] = $row['sendEmail'];
+			$_SESSION['cancelBookingOriginalValues']['UserEmail'] = $bookingCreatorUserEmail;
 			if(isSet($bookingCreatorUserID) AND !empty($bookingCreatorUserID) AND $bookingCreatorUserID == $SelectedUserID){
 				$continueCancel = TRUE;
 			}
@@ -600,7 +607,7 @@ if (	(isSet($_POST['action']) and $_POST['action'] == 'Cancel') OR
 			$meetingRoomID = $_GET['meetingroom'];
 			$location = "http://$_SERVER[HTTP_HOST]/booking/?meetingroom=" . $meetingRoomID;
 		} else {
-			$location = 'http://$_SERVER[HTTP_HOST]/booking/';
+			$location = "http://$_SERVER[HTTP_HOST]/booking/";
 		}
 		header('Location: ' . $location);
 		exit();				
@@ -676,6 +683,7 @@ if (	(isSet($_POST['action']) and $_POST['action'] == 'Cancel') OR
 			exit();
 		}	
 		if($cancelledByAdmin OR $cancelledByOwner){
+			// only send email to inform the user that the booking was cancelled, if the user didn't cancel their own booking.
 			emailUserOnCancelledBooking();
 		}
 	} else {
@@ -689,7 +697,7 @@ if (	(isSet($_POST['action']) and $_POST['action'] == 'Cancel') OR
 		$meetingRoomID = $_GET['meetingroom'];
 		$location = "http://$_SERVER[HTTP_HOST]/booking/?meetingroom=" . $meetingRoomID;
 	} else {
-		$location = 'http://$_SERVER[HTTP_HOST]/booking/';
+		$location = "http://$_SERVER[HTTP_HOST]/booking/";
 	}
 	header('Location: ' . $location);
 	exit();		
@@ -705,6 +713,12 @@ if (	(isSet($_POST['action']) and $_POST['action'] == 'Change Room') OR
 		$_SESSION['changeRoomOriginalValues']['BookingID'] = $_POST['id'];
 		$_SESSION['changeRoomOriginalValues']['BookingStatus'] = $_POST['BookingStatus'];
 		$_SESSION['changeRoomOriginalValues']['MeetingInfo'] = $_POST['MeetingInfo'];
+		if(isSet($_POST['sendEmail'])){
+			$_SESSION['changeRoomOriginalValues']['SendEmail'] = $_POST['sendEmail'];
+		}
+		if(isSet($_POST['Email'])){
+			$_SESSION['changeRoomOriginalValues']['UserEmail'] = $_POST['Email'];
+		}		
 	}
 
 	$bookingID = $_SESSION['changeRoomOriginalValues']['BookingID'];
@@ -740,7 +754,8 @@ if (	(isSet($_POST['action']) and $_POST['action'] == 'Change Room') OR
 								)					AS MeetingRoomName,
 								u.`email`			AS UserEmail,
 								u.`firstName`,
-								u.`lastName`
+								u.`lastName`,
+								u.`sendEmail`
 					FROM		`booking` b
 					INNER JOIN 	`user` u
 					ON 			b.`userID` = u.`userID`
@@ -759,6 +774,9 @@ if (	(isSet($_POST['action']) and $_POST['action'] == 'Change Room') OR
 				$bookingEndDateTime = $row['EndDateTime'];
 				$bookingMeetingRoomID = $row['MeetingRoomID'];
 				$originalMeetingRoomName = $row['MeetingRoomName'];
+
+				$_SESSION['changeRoomOriginalValues']['SendEmail'] = $row['sendEmail'];
+				$_SESSION['changeRoomOriginalValues']['UserEmail'] = $bookingCreatorUserEmail;
 				$_SESSION['changeRoomOriginalBookingValues'] = array(
 																		'UserID' => $bookingCreatorUserID,
 																		'Email' => $bookingCreatorUserEmail,
@@ -884,7 +902,7 @@ if (	(isSet($_POST['action']) and $_POST['action'] == 'Change Room') OR
 			$meetingRoomID = $_GET['meetingroom'];
 			$location = "http://$_SERVER[HTTP_HOST]/booking/?meetingroom=" . $meetingRoomID;
 		} else {
-			$location = 'http://$_SERVER[HTTP_HOST]/booking/';
+			$location = "http://$_SERVER[HTTP_HOST]/booking/";
 		}
 		header('Location: ' . $location);
 		exit();
@@ -892,6 +910,7 @@ if (	(isSet($_POST['action']) and $_POST['action'] == 'Change Room') OR
 
 	// Get Available/Occupied rooms in the time period of the original booked meeting.
 		// We don't care about room events for occupied rooms, since we can just swap with another booked room.
+		// But we also need to make sure that the two bookings can actually swap properly (different booking times)
 	try
 	{
 		$sql = 'SELECT 		m.`name`			AS MeetingRoomName,
@@ -902,13 +921,11 @@ if (	(isSet($_POST['action']) and $_POST['action'] == 'Change Room') OR
 				ON 			b.`meetingRoomID` = m.`meetingRoomID`
 				WHERE 		b.`actualEndDateTime` IS NULL
 				AND			b.`dateTimeCancelled` IS NULL
-				AND			b.`startDateTime` <= :startDateTime
-				AND			b.`endDateTime` >= :endDateTime
+				AND			b.`startDateTime` <= CURRENT_TIMESTAMP
+				AND			b.`endDateTime` > CURRENT_TIMESTAMP
 				AND			b.`bookingID` <> :bookingID';
 		$s = $pdo->prepare($sql);
 		$s->bindValue(':bookingID', $bookingID);
-		$s->bindValue(':startDateTime', $bookingStartDateTime);
-		$s->bindValue(':endDateTime', $bookingEndDateTime);
 		$s->execute();
 		$result = $s->fetchAll(PDO::FETCH_ASSOC);
 		if(isSet($result) AND sizeOf($result) > 0){
@@ -1003,46 +1020,59 @@ if (	(isSet($_POST['action']) and $_POST['action'] == 'Change Room') OR
 
 	var_dump($_SESSION); // TO-DO: Remove after done testing
 
+	unset($_SESSION['bookingCodeUserID']);
+	
 	include_once 'changeroom.html.php';
 	exit();
 }
 
 // If user wants to change the room for the booked meeting
-if ((isSet($_POST['changeroom']) and $_POST['changeroom'] == 'Confirm Change')){
+if ((isSet($_POST['changeroom']) and $_POST['changeroom'] == 'Confirm Change') OR 
+	(isSet($_SESSION['refreshConfirmBookingRoom']) AND $_SESSION['refreshConfirmBookingRoom'])
+	){
 
-	$changeToAvailableRoom = FALSE;
-	$changeToOccupiedRoom = FALSE;
-	if(isSet($_POST['availableRooms']) AND !empty($_POST['availableRooms'])){
-		$changeToAvailableRoom = TRUE;
-	}	
-	if(isSet($_POST['occupiedRooms']) AND !empty($_POST['occupiedRooms'])){
+	if(!isSet($_SESSION['refreshConfirmBookingRoom'])){
+		$changeToAvailableRoom = FALSE;
+		$changeToOccupiedRoom = FALSE;
+		if(isSet($_POST['availableRooms']) AND !empty($_POST['availableRooms'])){
+			$changeToAvailableRoom = TRUE;
+			$SelectedMeetingRoomID = $_POST['availableRooms'];
+		}	
+		if(isSet($_POST['occupiedRooms']) AND !empty($_POST['occupiedRooms'])){
+			$changeToOccupiedRoom = TRUE;
+			$SelectedMeetingRoomID = $_POST['occupiedRooms'];
+		}
+
+		if(!$changeToAvailableRoom AND !$changeToOccupiedRoom){
+			$_SESSION['BookingRoomChangeError'] = "You have to choose the room you want to swap with.";
+			$_SESSION['refreshChangeBookingRoom'] = TRUE;
+			if(isSet($_GET['meetingroom'])){
+				$meetingRoomID = $_GET['meetingroom'];
+				$location = "http://$_SERVER[HTTP_HOST]/booking/?meetingroom=" . $meetingRoomID;
+			} else {
+				$location = "http://$_SERVER[HTTP_HOST]/booking/";
+			}
+			header('Location: ' . $location);
+			exit();
+		}
+
+		if($changeToAvailableRoom AND $changeToOccupiedRoom){
+			$_SESSION['BookingRoomChangeError'] = "You have to choose between selecting an available room or an occupied room. You can not select both.";
+			$_SESSION['refreshChangeBookingRoom'] = TRUE;
+			if(isSet($_GET['meetingroom'])){
+				$meetingRoomID = $_GET['meetingroom'];
+				$location = "http://$_SERVER[HTTP_HOST]/booking/?meetingroom=" . $meetingRoomID;
+			} else {
+				$location = "http://$_SERVER[HTTP_HOST]/booking/";
+			}
+			header('Location: ' . $location);
+			exit();
+		}
+		$_SESSION['changeToMeetingRoomID'] = $SelectedMeetingRoomID;
+	} else {
+		unset($_SESSION['refreshConfirmBookingRoom']);
+		$SelectedMeetingRoomID = $_SESSION['changeToMeetingRoomID'];
 		$changeToOccupiedRoom = TRUE;
-	}
-
-	if(!$changeToAvailableRoom AND !$changeToOccupiedRoom){
-		$_SESSION['BookingRoomChangeError'] = "You have to choose between selecting an available room or an occupied room. You have to select one.";
-		$_SESSION['refreshChangeBookingRoom'] = TRUE;
-		if(isSet($_GET['meetingroom'])){
-			$meetingRoomID = $_GET['meetingroom'];
-			$location = "http://$_SERVER[HTTP_HOST]/booking/?meetingroom=" . $meetingRoomID;
-		} else {
-			$location = 'http://$_SERVER[HTTP_HOST]/booking/';
-		}
-		header('Location: ' . $location);
-		exit();
-	}
-
-	if($changeToAvailableRoom AND $changeToOccupiedRoom){
-		$_SESSION['BookingRoomChangeError'] = "You have to choose between selecting an available room or an occupied room. You can not select both.";
-		$_SESSION['refreshChangeBookingRoom'] = TRUE;
-		if(isSet($_GET['meetingroom'])){
-			$meetingRoomID = $_GET['meetingroom'];
-			$location = "http://$_SERVER[HTTP_HOST]/booking/?meetingroom=" . $meetingRoomID;
-		} else {
-			$location = 'http://$_SERVER[HTTP_HOST]/booking/';
-		}
-		header('Location: ' . $location);
-		exit();
 	}
 
 	// Go through process of validating booking code, just like we did on accessing this form, for the other booked meeting room
@@ -1180,7 +1210,7 @@ if ((isSet($_POST['changeroom']) and $_POST['changeroom'] == 'Confirm Change')){
 				$meetingRoomID = $_GET['meetingroom'];
 				$location = "http://$_SERVER[HTTP_HOST]/booking/?meetingroom=" . $meetingRoomID;
 			} else {
-				$location = 'http://$_SERVER[HTTP_HOST]/booking/';
+				$location = "http://$_SERVER[HTTP_HOST]/booking/";
 			}
 			header('Location: ' . $location);
 			exit();
@@ -1190,12 +1220,142 @@ if ((isSet($_POST['changeroom']) and $_POST['changeroom'] == 'Confirm Change')){
 		// TO-DO:
 	} else {
 		// Just change booked room to the selected available room
-		// TO-DO:
+			// Double check that the room is available for that timeslot	
+		$originalStartDateTime = $_SESSION['changeRoomOriginalBookingValues']['StartDateTime'];
+		$originalEndDateTime = $_SESSION['changeRoomOriginalBookingValues']['EndDateTime'];
+		
+		try
+		{
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+			$pdo = connect_to_db();	
+			
+			$sql =	" 	SELECT SUM(cnt)	AS HitCount
+						FROM 
+						(
+							(
+							SELECT 		COUNT(*) AS cnt
+							FROM 		`booking` b
+							WHERE 		b.`meetingRoomID` = :MeetingRoomID
+							AND			b.`dateTimeCancelled` IS NULL
+							AND			b.`actualEndDateTime` IS NULL
+							AND		
+									(		
+											(
+												b.`startDateTime` >= :StartTime AND 
+												b.`startDateTime` < :EndTime
+											) 
+									OR 		(
+												b.`endDateTime` > :StartTime AND 
+												b.`endDateTime` <= :EndTime
+											)
+									OR 		(
+												:EndTime > b.`startDateTime` AND 
+												:EndTime < b.`endDateTime`
+											)
+									OR 		(
+												:StartTime > b.`startDateTime` AND 
+												:StartTime < b.`endDateTime`
+											)
+									)
+							LIMIT 1
+							)
+							UNION
+							(
+							SELECT 		COUNT(*) AS cnt
+							FROM 		`roomevent` rev
+							WHERE 		rev.`meetingRoomID` = :MeetingRoomID
+							AND	
+									(		
+											(
+												rev.`startDateTime` >= :StartTime AND 
+												rev.`startDateTime` < :EndTime
+											) 
+									OR 		(
+												rev.`endDateTime` > :StartTime AND 
+												rev.`endDateTime` <= :EndTime
+											)
+									OR 		(
+												:EndTime > rev.`startDateTime` AND 
+												:EndTime < rev.`endDateTime`
+											)
+									OR 		(
+												:StartTime > rev.`startDateTime` AND 
+												:StartTime < rev.`endDateTime`
+											)
+									)
+							LIMIT 1
+							)
+						) AS TimeSlotTaken";
+			$s = $pdo->prepare($sql);
+
+			$s->bindValue(':MeetingRoomID', $SelectedMeetingRoomID);
+			$s->bindValue(':StartTime', $originalStartDateTime);
+			$s->bindValue(':EndTime', $originalEndDateTime);
+			$s->execute();
+			$row = $s->fetch(PDO::FETCH_ASSOC);
+			if(isSet($row) AND $row['HitCount'] > 0){
+				// We can't change to this room, since it's already taken.
+				unset($_SESSION['changeToMeetingRoomID']);
+				unset($_SESSION['bookingCodeUserID']);
+				$pdo = null;
+
+				$_SESSION['normalBookingFeedback'] = "Could not change your meeting to your selected room, since it's already taken.";
+
+				if(isSet($_GET['meetingroom'])){
+					$meetingRoomID = $_GET['meetingroom'];
+					$location = "http://$_SERVER[HTTP_HOST]/booking/?meetingroom=" . $meetingRoomID;
+				} else {
+					$location = "http://$_SERVER[HTTP_HOST]/booking/";
+				}
+				header('Location: ' . $location);
+				exit();
+			}
+		}
+		catch(PDOException $e)
+		{
+			$error = 'Error checking if booking time is available: ' . $e->getMessage();
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+			$pdo = null;
+			exit();
+		}
+
+		try
+		{
+			$originalBookingID = $_SESSION['changeRoomOriginalValues']['BookingID'];
+
+			$sql = 'UPDATE	`booking`
+					SET		`meetingRoomID` = :meetingRoomID
+					WHERE	`bookingID` = :bookingID';
+
+			$s = $pdo->prepare($sql);
+			$s->bindValue(':meetingRoomID', $SelectedMeetingRoomID);
+			$s->bindValue(':bookingID', $originalBookingID);
+			$s->execute();
+		}
+		catch (PDOException $e)
+		{
+			$pdo = null;
+			$error = 'Error changing booked meeting room: ' . $e->getMessage();
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+			exit();
+		}
+		
+		$_SESSION['normalBookingFeedback'] = "Successfully changed the room for your meeting.";
 	}
 
-	var_dump($_SESSION); // TO-DO: Remove after done testing
+	unset($_SESSION['changeToMeetingRoomID']);
+	unset($_SESSION['changeRoomOriginalBookingValues']);
+	unset($_SESSION['changeRoomOriginalValues']);
+	unset($_SESSION['continueChangeRoom']);
+	unset($_SESSION['bookingCodeUserID']);
 
-	include_once 'changeroom.html.php';
+	if(isSet($_GET['meetingroom'])){
+		$meetingRoomID = $_GET['meetingroom'];
+		$location = "http://$_SERVER[HTTP_HOST]/booking/?meetingroom=" . $meetingRoomID;
+	} else {
+		$location = "http://$_SERVER[HTTP_HOST]/booking/";
+	}
+	header('Location: ' . $location);
 	exit();
 }
 
@@ -1404,7 +1564,7 @@ if(isSet($_POST['action']) AND $_POST['action'] == "Confirm Code"){
 				unset($_SESSION['confirmOrigins']);
 			}
 			if($_SESSION['confirmOrigins'] == "Cancel"){
-				$_SESSION['refreshChangeBookingRoom'] = TRUE;
+				$_SESSION['refreshCancelBooking'] = TRUE;
 				unset($_SESSION['confirmOrigins']);
 			}
 			if($_SESSION['confirmOrigins'] == "Edit Meeting"){
@@ -1415,6 +1575,10 @@ if(isSet($_POST['action']) AND $_POST['action'] == "Confirm Code"){
 				$_SESSION['refreshChangeBookingRoom'] = TRUE;
 				unset($_SESSION['confirmOrigins']);
 			}
+			if($_SESSION['confirmOrigins'] == "Confirm Change"){
+				$_SESSION['refreshConfirmBookingRoom'] = TRUE;
+				unset($_SESSION['confirmOrigins']);
+			}	
 
 			if(isSet($_GET['meetingroom'])){
 				$meetingRoomID = $_GET['meetingroom'];
@@ -3647,6 +3811,9 @@ unset($_SESSION["cancelBookingOriginalValues"]);
 unset($_SESSION["changeRoomOriginalValues"]);
 unset($_SESSION["confirmOrigins"]);
 unset($_SESSION["EditCreateBookingError"]);
+unset($_SESSION['changeToMeetingRoomID']);
+unset($_SESSION['changeRoomOriginalBookingValues']);
+unset($_SESSION['continueChangeRoom']);
 
 if(isSet($refreshBookings) AND $refreshBookings) {
 	// TO-DO: Add code that should occur on a refresh

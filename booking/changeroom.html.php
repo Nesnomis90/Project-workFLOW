@@ -59,7 +59,6 @@
 				</div>
 
 				<div class="left">
-					<input type="hidden" name="bookingID" value="<?php htmlout($bookingID); ?>">
 					<input type="submit" name="changeroom" value="Go Back">
 					<input type="submit" name="changeroom" value="Confirm Change">
 				</div>
