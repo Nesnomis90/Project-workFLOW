@@ -837,6 +837,7 @@ if (	(isSet($_POST['action']) and $_POST['action'] == 'Change Room') OR
 					$continueChangeRoom = TRUE;
 					$changedByOwner = TRUE;
 					$_SESSION['changeRoomOriginalBookingValues']['ContinueChangeRoom'] = TRUE;
+					$_SESSION['changeRoomChangedByUser'] = $row['lastname'] . ", " . $row['firstname'];
 				}
 			}
 			catch (PDOException $e)
@@ -874,6 +875,7 @@ if (	(isSet($_POST['action']) and $_POST['action'] == 'Change Room') OR
 					$continueChangeRoom = TRUE;
 					$changedByAdmin = TRUE;
 					$_SESSION['changeRoomOriginalBookingValues']['ContinueChangeRoom'] = TRUE;
+					$_SESSION['changeRoomChangedByUser'] = $row['lastname'] . ", " . $row['firstname'];
 				}
 			}
 			catch (PDOException $e)
@@ -896,16 +898,30 @@ if (	(isSet($_POST['action']) and $_POST['action'] == 'Change Room') OR
 	}
 
 	if($continueChangeRoom === FALSE){
-		$pdo = null;
+
 		$_SESSION['normalBookingFeedback'] = "You cannot change room for this booked meeting.";
+
+		$pdo = null;
+		unset($_SESSION['changeRoomChangedByUser']);
+		unset($_SESSION['changeRoomOriginalValues']);
+
 		if(isSet($_GET['meetingroom'])){
 			$meetingRoomID = $_GET['meetingroom'];
 			$location = "http://$_SERVER[HTTP_HOST]/booking/?meetingroom=" . $meetingRoomID;
 		} else {
 			$location = "http://$_SERVER[HTTP_HOST]/booking/";
 		}
+
 		header('Location: ' . $location);
 		exit();
+	}
+
+	if(isSet($changedByOwner)){
+		$_SESSION['changeRoomChangedBy'] = "Owner";
+	} elseif(isSet($changedByAdmin)){
+		$_SESSION['changeRoomChangedBy'] = "Admin";
+	} else {
+		unset($_SESSION['changeRoomChangedBy']);
 	}
 
 	// Get Available/Occupied rooms in the time period of the original booked meeting.
@@ -1349,9 +1365,8 @@ if ((isSet($_POST['changeroom']) and $_POST['changeroom'] == 'Confirm Change') O
 
 		$_SESSION['normalBookingFeedback'] = "Successfully changed the room for your meeting.";
 
-		// Send email to the original user if the room is changed by someone else.
-		//  TO-DO: This needs to know who changed in "change room" and not here. Since we never get that info on swapping to an available room!
-		if($changedByOwner OR $changedByAdmin){
+		// Send email to the original user if the room is changed by someone else. (Changing to available room)
+		if(isSet($_SESSION['changeRoomChangedBy'])){
 
 			if($_SESSION['changeRoomOriginalValues']['SendEmail'] == 1){
 
@@ -1363,10 +1378,11 @@ if ((isSet($_POST['changeroom']) and $_POST['changeroom'] == 'Confirm Change') O
 
 				$emailSubject = "New Booking Information!";
 
-				if(isSet($changedByAdminName)){
-					$emailMessage = "Your meeting has been moved to a new room by the admin: $changedByAdminName!\n";
-				} elseif(isSet($changedByUserName)){
-					$emailMessage = "Your meeting has been moved to a new room by your company owner: $changedByUserName!\n";
+				$changedByUser = $_SESSION['changeRoomChangedByUser'];
+				if(isSet($_SESSION['changeRoomChangedBy']) AND $_SESSION['changeRoomChangedBy'] == "Admin"){
+					$emailMessage = "Your meeting has been moved to a new room by the admin: $changedByUser!\n";
+				} elseif(isSet($_SESSION['changeRoomChangedBy']) AND $_SESSION['changeRoomChangedBy'] == "Owner"){
+					$emailMessage = "Your meeting has been moved to a new room by your company owner: $changedByUser!\n";
 				}
 
 				$emailMessage .=
@@ -1389,9 +1405,13 @@ if ((isSet($_POST['changeroom']) and $_POST['changeroom'] == 'Confirm Change') O
 			} elseif($_SESSION['changeRoomOriginalValues']['SendEmail'] == 0){
 				$_SESSION['normalBookingFeedback'] .= "\nUser did not want to get sent Emails."; // TO-DO: remove when done testing
 			}
+			
+			unset($_SESSION['changeRoomChangedByUser']);
+			unset($_SESSION['changeRoomChangedBy']);
 		}
 	}
 
+	unset($_SESSION['changeRoomChangedByUser']);
 	unset($_SESSION['changeToMeetingRoomID']);
 	unset($_SESSION['changeRoomOriginalBookingValues']);
 	unset($_SESSION['changeRoomOriginalValues']);
