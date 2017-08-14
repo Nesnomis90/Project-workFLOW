@@ -32,6 +32,7 @@ function clearAddCreateBookingSessions(){
 	unset($_SESSION['changeRoomOriginalValues']);
 	unset($_SESSION['changeRoomChangedBy']);
 	unset($_SESSION['changeRoomChangedByUser']);
+	unset($_SESSION['changeToOccupiedRoomBookingID']);
 	
 	unset($_SESSION['normalUserOriginalInfoArray']); // Make sure we get up-to-date user values after doing bookings
 }
@@ -55,6 +56,7 @@ function clearEditCreateBookingSessions(){
 	unset($_SESSION['changeRoomOriginalValues']);
 	unset($_SESSION['changeRoomChangedBy']);
 	unset($_SESSION['changeRoomChangedByUser']);
+	unset($_SESSION['changeToOccupiedRoomBookingID']);
 	
 	unset($_SESSION['normalUserOriginalInfoArray']); // Make sure we get up-to-date user values after doing bookings
 }
@@ -1390,6 +1392,7 @@ if ((isSet($_POST['changeroom']) and $_POST['changeroom'] == 'Confirm Change') O
 				unset($_SESSION['changeRoomChangedBy']);
 				unset($_SESSION['changeRoomChangedByUser']);
 				unset($_SESSION['bookingCodeUserID']);
+				unset($_SESSION['changeToOccupiedRoomBookingID']);
 				$pdo = null;
 
 				$_SESSION['normalBookingFeedback'] = "Could not change your meeting to your selected room, since it's already taken.";
@@ -1491,6 +1494,7 @@ if ((isSet($_POST['changeroom']) and $_POST['changeroom'] == 'Confirm Change') O
 	unset($_SESSION['changeRoomOriginalValues']);
 	unset($_SESSION['continueChangeRoom']);
 	unset($_SESSION['bookingCodeUserID']);
+	unset($_SESSION['changeToOccupiedRoomBookingID']);
 
 	if(isSet($_GET['meetingroom']) AND !empty($_GET['meetingroom'])){
 		$meetingRoomID = $_GET['meetingroom'];
