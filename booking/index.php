@@ -28,9 +28,6 @@ function clearAddCreateBookingSessions(){
 	
 	unset($_SESSION['bookingCodeUserID']);
 	
-	unset($_SESSION['cancelBookingOriginalValues']);
-	unset($_SESSION['changeRoomOriginalValues']);
-	
 	unset($_SESSION['normalUserOriginalInfoArray']); // Make sure we get up-to-date user values after doing bookings
 }
 
@@ -46,12 +43,26 @@ function clearEditCreateBookingSessions(){
 	unset($_SESSION['EditCreateBookingSelectACompany']);
 	unset($_SESSION['EditCreateBookingDisplayCompanySelect']);
 	unset($_SESSION['EditCreateBookingLoggedInUserInformation']);
-	
+
 	unset($_SESSION["EditCreateBookingOriginalBookingID"]);
 
-	unset($_SESSION['cancelBookingOriginalValues']);
+	unset($_SESSION['bookingCodeUserID']);
+
+	unset($_SESSION['normalUserOriginalInfoArray']); // Make sure we get up-to-date user values after doing bookings
+}
+
+// Function to clear sessions used during cancelling and changing rooms.
+function clearChangeBookingSessions(){
+	unset($_SESSION['changeRoomChangedBy']);
+	unset($_SESSION['changeRoomChangedByUser']);
+	unset($_SESSION['changeToMeetingRoomID']);
+	unset($_SESSION['changeRoomOriginalBookingValues']);
 	unset($_SESSION['changeRoomOriginalValues']);
-	
+	unset($_SESSION['continueChangeRoom']);
+	unset($_SESSION['bookingCodeUserID']);
+	unset($_SESSION['changeToOccupiedRoomBookingID']);	
+	unset($_SESSION['cancelBookingOriginalValues']);
+
 	unset($_SESSION['normalUserOriginalInfoArray']); // Make sure we get up-to-date user values after doing bookings
 }
 
@@ -157,7 +168,7 @@ function emailUserOnCancelledBooking(){
 			if(!isSet($reasonForCancelling) OR isSet($reasonForCancelling) AND empty($reasonForCancelling)){
 				$reasonForCancelling = "No reason given.";
 			}
-			
+
 			$emailSubject = "Your meeting has been cancelled!";
 
 			$emailMessage = 
@@ -172,7 +183,7 @@ function emailUserOnCancelledBooking(){
 			if(!$mailResult){
 				$_SESSION['normalBookingFeedback'] .= "\n\n[WARNING] System failed to send Email to user.";
 			}
-			
+
 			$_SESSION['normalBookingFeedback'] .= "\nThis is the email msg we're sending out:\n$emailMessage.\nSent to email: $email."; // TO-DO: Remove after testing
 		}
 	} else {
@@ -199,7 +210,7 @@ function validateUserInputs($FeedbackSessionToUse, $editing){
 			$_SESSION[$FeedbackSessionToUse] = "A booking cannot be created without submitting an end time.";
 		}
 	}
-	
+
 	if(isSet($_POST['displayName'])){
 		$displayNameString = $_POST['displayName'];
 	} else {
@@ -210,7 +221,7 @@ function validateUserInputs($FeedbackSessionToUse, $editing){
 	} else {
 		$bookingDescriptionString = '';
 	}
-	
+
 	if($usingBookingCode){
 		if(isSet($_POST['bookingCode'])){
 			$bookingCode = $_POST['bookingCode'];
@@ -219,7 +230,7 @@ function validateUserInputs($FeedbackSessionToUse, $editing){
 			$_SESSION[$FeedbackSessionToUse] = "A booking cannot be created without submitting a booking code.";		
 		}
 	}
-	
+
 	// Remove excess whitespace and prepare strings for validation
 	if(!$editing){
 		$validatedStartDateTime = trimExcessWhitespace($startDateTimeString);
@@ -232,7 +243,7 @@ function validateUserInputs($FeedbackSessionToUse, $editing){
 	} else {
 		$validatedBookingCode = "";
 	}
-	
+
 	// Do actual input validation
 	if(!$editing){
 		if(validateDateTimeString($validatedStartDateTime) === FALSE AND !$invalidInput){
@@ -252,26 +263,26 @@ function validateUserInputs($FeedbackSessionToUse, $editing){
 		$invalidInput = TRUE;
 		$_SESSION[$FeedbackSessionToUse] = "Your submitted booking description has illegal characters in it.";
 	}
-	
+
 	if($usingBookingCode){	
 		if(validateIntegerNumber($validatedBookingCode) === FALSE AND !$invalidInput){
 			$invalidInput = TRUE;
 			$_SESSION[$FeedbackSessionToUse] = "Your submitted booking code has illegal characters in it.";		
 		}
 	}
-	
+
 	// Are values actually filled in?
 	if(!$editing){
 		if($validatedStartDateTime == "" AND $validatedEndDateTime == "" AND !$invalidInput){
-			
+
 			$_SESSION[$FeedbackSessionToUse] = "You need to fill in a start and end time for your booking.";	
 			$invalidInput = TRUE;
 		} elseif($validatedStartDateTime != "" AND $validatedEndDateTime == "" AND !$invalidInput) {
 			$_SESSION[$FeedbackSessionToUse] = "You need to fill in an end time for your booking.";	
-			$invalidInput = TRUE;		
+			$invalidInput = TRUE;
 		} elseif($validatedStartDateTime == "" AND $validatedEndDateTime != "" AND !$invalidInput){
 			$_SESSION[$FeedbackSessionToUse] = "You need to fill in a start time for your booking.";	
-			$invalidInput = TRUE;		
+			$invalidInput = TRUE;
 		}
 	}
 	if($usingBookingCode){
@@ -286,15 +297,15 @@ function validateUserInputs($FeedbackSessionToUse, $editing){
 	$invalidDisplayName = isLengthInvalidDisplayName($validatedDisplayName);
 	if($invalidDisplayName AND !$invalidInput){
 		$_SESSION[$FeedbackSessionToUse] = "The display name submitted is too long.";	
-		$invalidInput = TRUE;		
-	}	
+		$invalidInput = TRUE;
+	}
 		// BookingDescription
 	$invalidBookingDescription = isLengthInvalidBookingDescription($validatedBookingDescription);
 	if($invalidBookingDescription AND !$invalidInput){
 		$_SESSION[$FeedbackSessionToUse] = "The booking description submitted is too long.";	
-		$invalidInput = TRUE;		
+		$invalidInput = TRUE;
 	}
-	
+
 	// Check if the dateTime inputs we received are actually datetimes
 	if(!$editing){
 		$startDateTime = correctDatetimeFormat($validatedStartDateTime);
@@ -307,35 +318,35 @@ function validateUserInputs($FeedbackSessionToUse, $editing){
 		if (isSet($endDateTime) AND $endDateTime === FALSE AND !$invalidInput){
 			$_SESSION[$FeedbackSessionToUse] = "The end date you submitted did not have a correct format. Please try again.";
 			$invalidInput = TRUE;
-		}	
+		}
 		
 		$timeNow = getDatetimeNow();
-	
+
 		if($startDateTime > $endDateTime AND !$invalidInput){
 			// End time can't be before the start time
-			
+
 			$_SESSION[$FeedbackSessionToUse] = "The start time can't be later than the end time. Please select a new start time or end time.";
 			$invalidInput = TRUE;
 		}
-	
+
 		if($startDateTime < $timeNow AND !$invalidInput AND !isSet($_SESSION['AddCreateBookingStartImmediately'])){
 			// You can't book a meeting starting in the past.
-			
+
 			$_SESSION[$FeedbackSessionToUse] = "The start time you selected is already over. Select a new start time.";
 			$invalidInput = TRUE;
 		}
-		
+
 		if($endDateTime < $timeNow AND !$invalidInput){
 			// You can't book a meeting ending in the past.
-			
+
 			$_SESSION[$FeedbackSessionToUse] = "The end time you selected is already over. Select a new end time.";
-			$invalidInput = TRUE;	
-		}	
-		
+			$invalidInput = TRUE;
+		}
+
 		if($endDateTime == $startDateTime AND !$invalidInput){
 			$_SESSION[$FeedbackSessionToUse] = "You need to select an end time that is different from your start time.";	
-			$invalidInput = TRUE;				
-		} 
+			$invalidInput = TRUE;
+		}
 
 		// Check if booking code submitted is a valid booking code
 		if($usingBookingCode){
@@ -344,7 +355,7 @@ function validateUserInputs($FeedbackSessionToUse, $editing){
 				$invalidInput = TRUE;
 			}
 		}
-		
+
 		// We want to check if a booking is in the correct minute slice e.g. 15 minute increments.
 			// We check both start and end time for online/admin bookings
 			// Does not apply to booking with booking code (starts immediately until next/selected chunk
@@ -352,27 +363,27 @@ function validateUserInputs($FeedbackSessionToUse, $editing){
 			$invalidStartTime = isBookingDateTimeMinutesInvalid($startDateTime);
 			if($invalidStartTime AND !$usingBookingCode){
 				$_SESSION[$FeedbackSessionToUse] = "Your start time has to be in a " . MINIMUM_BOOKING_TIME_IN_MINUTES . " minutes slice from hh:00.";
-				$invalidInput = TRUE;	
-			}			
+				$invalidInput = TRUE;
+			}
 		}
 		if(!$invalidInput){
 			$invalidEndTime = isBookingDateTimeMinutesInvalid($endDateTime);
 			if($invalidEndTime){
 				$_SESSION[$FeedbackSessionToUse] = "Your end time has to be in a " . MINIMUM_BOOKING_TIME_IN_MINUTES . " minutes slice from hh:00.";
-				$invalidInput = TRUE;	
-			}			
+				$invalidInput = TRUE;
+			}
 		}
-		
+
 		// We want to check if the booking is the correct minimum length
 			// Does not apply to booking with booking code (starts immediately until next/selected chunk
 		if(!isSet($_SESSION['AddCreateBookingStartImmediately']) AND !$invalidInput){
 			$invalidBookingLength = isBookingTimeDurationInvalid($startDateTime, $endDateTime);
 			if($invalidBookingLength AND !$usingBookingCode){
 				$_SESSION[$FeedbackSessionToUse] = "Your start time and end time needs to have at least a " . MINIMUM_BOOKING_TIME_IN_MINUTES . " minutes difference.";
-				$invalidInput = TRUE;		
-			}		
+				$invalidInput = TRUE;
+			}
 		}
-		
+
 		return array($invalidInput, $startDateTime, $endDateTime, $validatedBookingDescription, $validatedDisplayName, $validatedBookingCode);
 	} else {
 		return array($invalidInput, $validatedBookingDescription, $validatedDisplayName, $validatedBookingCode);
@@ -417,8 +428,8 @@ if (isSet($_POST['edit']) and $_POST['edit'] == 'Go Back'){
 if (isSet($_POST['changeroom']) and $_POST['changeroom'] == 'Go Back'){
 	
 	$_SESSION['normalBookingFeedback'] = "You cancelled your meeting room change.";
-	unset($_SESSION['changeRoomOriginalBookingValues']);
-	unset($_SESSION['changeRoomOriginalValues']);
+
+	clearChangeBookingSessions();
 
 	if(isSet($_GET['meetingroom'])){
 		$TheMeetingRoomID = $_GET['meetingroom'];
@@ -691,7 +702,8 @@ if (	(isSet($_POST['action']) and $_POST['action'] == 'Cancel') OR
 		$_SESSION['normalBookingFeedback'] = "Meeting has already ended. Did not cancel it.";
 	}
 
-	unset($_SESSION['cancelBookingOriginalValues']);	
+	clearChangeBookingSessions();	
+
 	// Load booked meetings list webpage with updated database
 	if(isSet($_GET['meetingroom'])){
 		$meetingRoomID = $_GET['meetingroom'];
@@ -718,7 +730,7 @@ if (	(isSet($_POST['action']) and $_POST['action'] == 'Change Room') OR
 		}
 		if(isSet($_POST['Email'])){
 			$_SESSION['changeRoomOriginalValues']['UserEmail'] = $_POST['Email'];
-		}		
+		}
 	}
 
 	$bookingID = $_SESSION['changeRoomOriginalValues']['BookingID'];
@@ -743,7 +755,7 @@ if (	(isSet($_POST['action']) and $_POST['action'] == 'Change Room') OR
 
 			$pdo = connect_to_db();
 			$sql = 'SELECT 		COUNT(*)			AS HitCount,
-								b.`userID`,
+								b.`userID`			AS UserID,
 								b.`startDateTime` 	AS StartDateTime,
 								b.`endDateTime` 	AS EndDateTime,
 								b.`meetingRoomID` 	AS MeetingRoomID,
@@ -767,7 +779,7 @@ if (	(isSet($_POST['action']) and $_POST['action'] == 'Change Room') OR
 			$row = $s->fetch(PDO::FETCH_ASSOC);
 
 			if(isSet($row) AND $row['HitCount'] > 0){
-				$bookingCreatorUserID = $row['userID'];
+				$bookingCreatorUserID = $row['UserID'];
 				$bookingCreatorUserEmail = $row['UserEmail'];
 				$bookingCreatorUserInfo = $row['lastName'] . ", " . $row['firstName'] . " - " . $row['UserEmail'];
 				$bookingStartDateTime = $row['StartDateTime'];
@@ -792,6 +804,8 @@ if (	(isSet($_POST['action']) and $_POST['action'] == 'Change Room') OR
 				if(isSet($bookingCreatorUserID) AND !empty($bookingCreatorUserID) AND $bookingCreatorUserID == $SelectedUserID){
 					$continueChangeRoom = TRUE;
 					$_SESSION['changeRoomOriginalBookingValues']['ContinueChangeRoom'] = TRUE;
+					unset($_SESSION['changeRoomChangedByUser']);
+					unset($_SESSION['changeRoomChangedBy']);
 				}
 			} 
 		}
@@ -808,10 +822,10 @@ if (	(isSet($_POST['action']) and $_POST['action'] == 'Change Room') OR
 			try
 			{
 				$sql = 'SELECT 		COUNT(*)		AS HitCount,
-									b.`userID`,
+									b.`userID`		AS UserID,
 									u.`email`		AS UserEmail,
-									u.`firstName`,
-									u.`lastName`
+									u.`firstName`	AS FirstName,
+									u.`lastName`	AS LastName
 						FROM		`booking` b
 						INNER JOIN	`employee` e
 						ON			e.`CompanyID` = b.`CompanyID`
@@ -830,13 +844,15 @@ if (	(isSet($_POST['action']) and $_POST['action'] == 'Change Room') OR
 				$row = $s->fetch(PDO::FETCH_ASSOC);
 
 				if(isSet($row) AND $row['HitCount'] > 0){
-					$changedByUserID = $row['userID'];
-					$changedByUserName = $row['lastName'] . ", " . $row['firstName'];
+					$changedByUserID = $row['UserID'];
+					$changedByUserName = $row['LastName'] . ", " . $row['FirstName'];
 					$changedByUserEmail = $row['UserEmail'];
-					$changedByUserInfo = $row['lastName'] . ", " . $row['firstName'] . " - " . $row['UserEmail'];
+					$changedByUserInfo = $row['LastName'] . ", " . $row['FirstName'] . " - " . $row['UserEmail'];
 					$continueChangeRoom = TRUE;
 					$changedByOwner = TRUE;
+					$_SESSION['changeRoomChangedBy'] = "Owner";
 					$_SESSION['changeRoomOriginalBookingValues']['ContinueChangeRoom'] = TRUE;
+					$_SESSION['changeRoomChangedByUser'] = $changedByUserName;
 				}
 			}
 			catch (PDOException $e)
@@ -853,10 +869,10 @@ if (	(isSet($_POST['action']) and $_POST['action'] == 'Change Room') OR
 		if(!$continueChangeRoom) {
 			try
 			{
-				$sql = 'SELECT 		COUNT(*) 	AS HitCount,
-									u.`UserID`,
-									u.`firstName`,
-									u.`lastName`
+				$sql = 'SELECT 		COUNT(*) 		AS HitCount,
+									u.`UserID`		AS UserID,
+									u.`firstName`	AS FirstName,
+									u.`lastName`	AS LastName
 						FROM		`user` u
 						INNER JOIN	`accesslevel` a
 						ON 			u.`AccessID` = a.`AccessID`
@@ -869,11 +885,13 @@ if (	(isSet($_POST['action']) and $_POST['action'] == 'Change Room') OR
 				$s->execute();
 				$row = $s->fetch(PDO::FETCH_ASSOC);
 				if(isSet($row) AND $row['HitCount'] > 0){
-					$changedByAdminID = $row['userID'];
-					$changedByAdminName = $row['lastName'] . ", " . $row['firstName'];
+					$changedByAdminID = $row['UserID'];
+					$changedByAdminName = $row['LastName'] . ", " . $row['FirstName'];
 					$continueChangeRoom = TRUE;
 					$changedByAdmin = TRUE;
+					$_SESSION['changeRoomChangedBy'] = "Admin";
 					$_SESSION['changeRoomOriginalBookingValues']['ContinueChangeRoom'] = TRUE;
+					$_SESSION['changeRoomChangedByUser'] = $changedByAdminName;
 				}
 			}
 			catch (PDOException $e)
@@ -896,24 +914,30 @@ if (	(isSet($_POST['action']) and $_POST['action'] == 'Change Room') OR
 	}
 
 	if($continueChangeRoom === FALSE){
-		$pdo = null;
+
 		$_SESSION['normalBookingFeedback'] = "You cannot change room for this booked meeting.";
+
+		$pdo = null;
+		clearChangeBookingSessions();
+
 		if(isSet($_GET['meetingroom'])){
 			$meetingRoomID = $_GET['meetingroom'];
 			$location = "http://$_SERVER[HTTP_HOST]/booking/?meetingroom=" . $meetingRoomID;
 		} else {
 			$location = "http://$_SERVER[HTTP_HOST]/booking/";
 		}
+
 		header('Location: ' . $location);
 		exit();
 	}
 
 	// Get Available/Occupied rooms in the time period of the original booked meeting.
-		// We don't care about room events for occupied rooms, since we can just swap with another booked room.
+		// We don't care about room events for occupied rooms, since we can only swap with another booked room.
 		// But we also need to make sure that the two bookings can actually swap properly (different booking times)
 	try
 	{
-		$sql = 'SELECT 		m.`name`			AS MeetingRoomName,
+		$sql = 'SELECT 		COUNT(*)			AS HitCount,
+							m.`name`			AS MeetingRoomName,
 							m.`meetingRoomID` 	AS MeetingRoomID,
 							b.`bookingID`		AS BookingID
 				FROM		`meetingroom` m
@@ -921,20 +945,49 @@ if (	(isSet($_POST['action']) and $_POST['action'] == 'Change Room') OR
 				ON 			b.`meetingRoomID` = m.`meetingRoomID`
 				WHERE 		b.`actualEndDateTime` IS NULL
 				AND			b.`dateTimeCancelled` IS NULL
-				AND			b.`startDateTime` <= CURRENT_TIMESTAMP
-				AND			b.`endDateTime` > CURRENT_TIMESTAMP
-				AND			b.`bookingID` <> :bookingID';
+				AND
+						(		
+								(
+									b.`startDateTime` >= :startDateTime AND 
+									b.`startDateTime` < :endDateTime
+								) 
+						OR 		(
+									b.`endDateTime` > :startDateTime AND 
+									b.`endDateTime` <= :endDateTime
+								)
+						OR 		(
+									:endDateTime > b.`startDateTime` AND 
+									:endDateTime < b.`endDateTime`
+								)
+						OR 		(
+									:startDateTime > b.`startDateTime` AND 
+									:startDateTime < b.`endDateTime`
+								)
+						)
+				AND			b.`bookingID` <> :bookingID
+				GROUP BY	m.`meetingRoomID`';
 		$s = $pdo->prepare($sql);
 		$s->bindValue(':bookingID', $bookingID);
+		$s->bindValue(':startDateTime', $bookingStartDateTime);
+		$s->bindValue(':endDateTime', $bookingEndDateTime);
 		$s->execute();
 		$result = $s->fetchAll(PDO::FETCH_ASSOC);
 		if(isSet($result) AND sizeOf($result) > 0){
 			foreach($result AS $row){
-				$occupiedRooms[] = array(
-											'MeetingRoomName' => $row['MeetingRoomName'],
-											'MeetingRoomID' => $row['MeetingRoomID'],
-											'BookingID' => $row['BookingID']
-										);
+				if($row['HitCount'] == 1){
+					$occupiedRooms[] = array(
+												'MeetingRoomName' => $row['MeetingRoomName'],
+												'MeetingRoomID' => $row['MeetingRoomID'],
+												'BookingID' => $row['BookingID']
+											);
+				} else {
+					if(isSet($unavailableOccupiedRooms)){
+						$unavailableOccupiedRooms .= "\n" . $row['MeetingRoomName'];
+					} else {
+						$unavailableOccupiedRooms = $row['MeetingRoomName'];
+					}
+					
+				}
 			}
 		}
 
@@ -1040,11 +1093,14 @@ if ((isSet($_POST['changeroom']) and $_POST['changeroom'] == 'Confirm Change') O
 		}	
 		if(isSet($_POST['occupiedRooms']) AND !empty($_POST['occupiedRooms'])){
 			$changeToOccupiedRoom = TRUE;
-			$SelectedMeetingRoomID = $_POST['occupiedRooms'];
+			$SelectedMeetingRoomIDAndBookingID = $_POST['occupiedRooms'];
+			$explode_result = explode("|", $SelectedMeetingRoomIDAndBookingID);
+			$SelectedMeetingRoomID = $explode_result[0];
+			$bookingID = $explode_result[1];
 		}
 
 		if(!$changeToAvailableRoom AND !$changeToOccupiedRoom){
-			$_SESSION['BookingRoomChangeError'] = "You have to choose the room you want to swap with.";
+			$_SESSION['BookingRoomChangeError'] = "You have to choose the new room you want your meeting to take place in.";
 			$_SESSION['refreshChangeBookingRoom'] = TRUE;
 			if(isSet($_GET['meetingroom'])){
 				$meetingRoomID = $_GET['meetingroom'];
@@ -1069,9 +1125,11 @@ if ((isSet($_POST['changeroom']) and $_POST['changeroom'] == 'Confirm Change') O
 			exit();
 		}
 		$_SESSION['changeToMeetingRoomID'] = $SelectedMeetingRoomID;
+		$_SESSION['changeToOccupiedRoomBookingID'] = $bookingID;
 	} else {
 		unset($_SESSION['refreshConfirmBookingRoom']);
 		$SelectedMeetingRoomID = $_SESSION['changeToMeetingRoomID'];
+		$bookingID = $_SESSION['changeToOccupiedRoomBookingID'];
 		$changeToOccupiedRoom = TRUE;
 	}
 
@@ -1085,17 +1143,27 @@ if ((isSet($_POST['changeroom']) and $_POST['changeroom'] == 'Confirm Change') O
 		$continueChangeRoom = FALSE;
 		$changedByOwner = FALSE;
 		$changedByAdmin = FALSE;
-			// Check if the user is the creator of the booking	
+
+		// Get original booking information
 		try
 		{
 			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
-			
+
 			$pdo = connect_to_db();
-			$sql = 'SELECT 		COUNT(*)		AS HitCount,
-								b.`userID`,
-								u.`email`		AS UserEmail,
-								u.`firstName`,
-								u.`lastName`
+			$sql = 'SELECT 		COUNT(*)			AS HitCount,
+								b.`userID`			AS UserID,
+								b.`startDateTime` 	AS StartDateTime,
+								b.`endDateTime` 	AS EndDateTime,
+								b.`meetingRoomID` 	AS MeetingRoomID,
+								(
+									SELECT 	`name`
+									FROM 	`meetingroom`
+									WHERE	`meetingRoomID` = b.`meetingRoomID`
+								)					AS MeetingRoomName,
+								u.`email`			AS UserEmail,
+								u.`firstName`		AS FirstName,
+								u.`lastName`		AS LastName,
+								u.`sendEmail`
 					FROM		`booking` b
 					INNER JOIN 	`user` u
 					ON 			b.`userID` = u.`userID`
@@ -1107,17 +1175,25 @@ if ((isSet($_POST['changeroom']) and $_POST['changeroom'] == 'Confirm Change') O
 			$row = $s->fetch(PDO::FETCH_ASSOC);
 
 			if(isSet($row) AND $row['HitCount'] > 0){
-				$bookingCreatorUserID = $row['userID'];
+				$bookingCreatorUserID = $row['UserID'];
 				$bookingCreatorUserEmail = $row['UserEmail'];
-				$bookingCreatorUserInfo = $row['lastName'] . ", " . $row['firstName'] . " - " . $row['UserEmail'];
+				$bookingCreatorUserInfo = $row['LastName'] . ", " . $row['FirstName'] . " - " . $row['UserEmail'];
+				$bookingCreatorSendEmail = $row['sendEmail'];
+				$bookingStartDateTime = $row['StartDateTime'];
+				$bookingEndDateTime = $row['EndDateTime'];
+				$bookingMeetingRoomID = $row['MeetingRoomID'];
+				$occupiedMeetingRoomName = $row['MeetingRoomName'];
+
+				// Check if the user is the creator of the booking	
 				if(isSet($bookingCreatorUserID) AND !empty($bookingCreatorUserID) AND $bookingCreatorUserID == $SelectedUserID){
 					$continueChangeRoom = TRUE;
 				}
-			} 
+			}
 		}
 		catch (PDOException $e)
 		{
 			$pdo = null;
+			clearChangeBookingSessions();
 			$error = 'Error changing booked meeting room: ' . $e->getMessage();
 			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
 			exit();
@@ -1128,10 +1204,10 @@ if ((isSet($_POST['changeroom']) and $_POST['changeroom'] == 'Confirm Change') O
 			try
 			{
 				$sql = 'SELECT 		COUNT(*)		AS HitCount,
-									b.`userID`,
+									b.`userID`		AS UserID,
 									u.`email`		AS UserEmail,
-									u.`firstName`,
-									u.`lastName`
+									u.`firstName`	AS FirstName,
+									u.`lastName`	AS LastName
 						FROM		`booking` b
 						INNER JOIN	`employee` e
 						ON			e.`CompanyID` = b.`CompanyID`
@@ -1150,10 +1226,10 @@ if ((isSet($_POST['changeroom']) and $_POST['changeroom'] == 'Confirm Change') O
 				$row = $s->fetch(PDO::FETCH_ASSOC);
 
 				if(isSet($row) AND $row['HitCount'] > 0){
-					$changedByUserID = $row['userID'];
-					$changedByUserName = $row['lastName'] . ", " . $row['firstName'];
+					$changedByUserID = $row['UserID'];
+					$changedByUserName = $row['LastName'] . ", " . $row['FirstName'];
 					$changedByUserEmail = $row['UserEmail'];
-					$changedByUserInfo = $row['lastName'] . ", " . $row['firstName'] . " - " . $row['UserEmail'];
+					$changedByUserInfo = $row['LastName'] . ", " . $row['FirstName'] . " - " . $row['UserEmail'];
 					$continueChangeRoom = TRUE;
 					$changedByOwner = TRUE;
 				}
@@ -1161,6 +1237,7 @@ if ((isSet($_POST['changeroom']) and $_POST['changeroom'] == 'Confirm Change') O
 			catch (PDOException $e)
 			{
 				$pdo = null;
+				clearChangeBookingSessions();
 				$error = 'Error changing booked meeting room: ' . $e->getMessage();
 				include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
 				exit();
@@ -1172,10 +1249,10 @@ if ((isSet($_POST['changeroom']) and $_POST['changeroom'] == 'Confirm Change') O
 		if(!$continueChangeRoom) {
 			try
 			{
-				$sql = 'SELECT 		COUNT(*) 	AS HitCount,
-									u.`UserID`,
-									u.`firstName`,
-									u.`lastName`
+				$sql = 'SELECT 		COUNT(*) 		AS HitCount,
+									u.`userID`		AS UserID,
+									u.`firstName`	AS FirstName,
+									u.`lastName`	AS LastName
 						FROM		`user` u
 						INNER JOIN	`accesslevel` a
 						ON 			u.`AccessID` = a.`AccessID`
@@ -1188,8 +1265,8 @@ if ((isSet($_POST['changeroom']) and $_POST['changeroom'] == 'Confirm Change') O
 				$s->execute();
 				$row = $s->fetch(PDO::FETCH_ASSOC);
 				if(isSet($row) AND $row['HitCount'] > 0){
-					$changedByAdminID = $row['userID'];
-					$changedByAdminName = $row['lastName'] . ", " . $row['firstName'];
+					$changedByAdminID = $row['UserID'];
+					$changedByAdminName = $row['LastName'] . ", " . $row['FirstName'];
 					$continueChangeRoom = TRUE;
 					$changedByAdmin = TRUE;
 				}
@@ -1197,6 +1274,7 @@ if ((isSet($_POST['changeroom']) and $_POST['changeroom'] == 'Confirm Change') O
 			catch (PDOException $e)
 			{
 				$pdo = null;
+				clearChangeBookingSessions();
 				$error = 'Error changing booked meeting room: ' . $e->getMessage();
 				include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
 				exit();
@@ -1206,6 +1284,7 @@ if ((isSet($_POST['changeroom']) and $_POST['changeroom'] == 'Confirm Change') O
 		if($continueChangeRoom === FALSE){
 			$pdo = null;
 			$_SESSION['normalBookingFeedback'] = "You cannot change room for this booked meeting.";
+			clearChangeBookingSessions();
 			if(isSet($_GET['meetingroom'])){
 				$meetingRoomID = $_GET['meetingroom'];
 				$location = "http://$_SERVER[HTTP_HOST]/booking/?meetingroom=" . $meetingRoomID;
@@ -1215,20 +1294,299 @@ if ((isSet($_POST['changeroom']) and $_POST['changeroom'] == 'Confirm Change') O
 			header('Location: ' . $location);
 			exit();
 		}
-		
+
+		// Double check that the timeslots are available
+		$originalStartDateTime = $_SESSION['changeRoomOriginalBookingValues']['StartDateTime'];
+		$originalEndDateTime = $_SESSION['changeRoomOriginalBookingValues']['EndDateTime'];
+		$occupiedStartDateTime = $bookingStartDateTime;
+		$occupiedEndDateTime = $bookingEndDateTime;
+		$originalBookingID = $_SESSION['changeRoomOriginalValues']['BookingID'];
+		$occupiedBookingID = $bookingID;
+		$originalMeetingRoomID = $_SESSION['changeRoomOriginalBookingValues']['MeetingRoomID'];
+		$occupiedMeetingRoomID = $SelectedMeetingRoomID;
+
+		try
+		{
+			$sql =	" 	SELECT 	SUM(cnt)	AS HitCount
+						FROM 
+						(
+							(
+							SELECT 		COUNT(*) AS cnt
+							FROM 		`booking` b
+							WHERE 		b.`meetingRoomID` = :OldMeetingRoomID
+							AND			b.`bookingID` <> :OldBookingID
+							AND			b.`dateTimeCancelled` IS NULL
+							AND			b.`actualEndDateTime` IS NULL
+							AND		
+									(		
+											(
+												b.`startDateTime` >= :NewStartTime AND 
+												b.`startDateTime` < :NewEndTime
+											) 
+									OR 		(
+												b.`endDateTime` > :NewStartTime AND 
+												b.`endDateTime` <= :NewEndTime
+											)
+									OR 		(
+												:NewEndTime > b.`startDateTime` AND 
+												:NewEndTime < b.`endDateTime`
+											)
+									OR 		(
+												:NewStartTime > b.`startDateTime` AND 
+												:NewStartTime < b.`endDateTime`
+											)
+									)
+							LIMIT 1
+							)
+							UNION
+							(
+							SELECT 		COUNT(*) AS cnt
+							FROM 		`roomevent` rev
+							WHERE 		rev.`meetingRoomID` = :OldMeetingRoomID
+							AND	
+									(		
+											(
+												rev.`startDateTime` >= :NewStartTime AND 
+												rev.`startDateTime` < :NewEndTime
+											) 
+									OR 		(
+												rev.`endDateTime` > :NewStartTime AND 
+												rev.`endDateTime` <= :NewEndTime
+											)
+									OR 		(
+												:NewEndTime > rev.`startDateTime` AND 
+												:NewEndTime < rev.`endDateTime`
+											)
+									OR 		(
+												:NewStartTime > rev.`startDateTime` AND 
+												:NewStartTime < rev.`endDateTime`
+											)
+									)
+							LIMIT 1
+							)
+							UNION
+							(
+							SELECT 		COUNT(*) AS cnt
+							FROM 		`booking` b
+							WHERE 		b.`meetingRoomID` = :NewMeetingRoomID
+							AND			b.`bookingID` <> :NewBookingID
+							AND			b.`dateTimeCancelled` IS NULL
+							AND			b.`actualEndDateTime` IS NULL
+							AND		
+									(		
+											(
+												b.`startDateTime` >= :OldStartTime AND 
+												b.`startDateTime` < :OldEndTime
+											) 
+									OR 		(
+												b.`endDateTime` > :OldStartTime AND 
+												b.`endDateTime` <= :OldEndTime
+											)
+									OR 		(
+												:OldEndTime > b.`startDateTime` AND 
+												:OldEndTime < b.`endDateTime`
+											)
+									OR 		(
+												:OldStartTime > b.`startDateTime` AND 
+												:OldStartTime < b.`endDateTime`
+											)
+									)
+							LIMIT 1
+							)
+							UNION
+							(
+							SELECT 		COUNT(*) AS cnt
+							FROM 		`roomevent` rev
+							WHERE 		rev.`meetingRoomID` = :NewMeetingRoomID
+							AND	
+									(		
+											(
+												rev.`startDateTime` >= :OldStartTime AND 
+												rev.`startDateTime` < :OldEndTime
+											) 
+									OR 		(
+												rev.`endDateTime` > :OldStartTime AND 
+												rev.`endDateTime` <= :OldEndTime
+											)
+									OR 		(
+												:OldEndTime > rev.`startDateTime` AND 
+												:OldEndTime < rev.`endDateTime`
+											)
+									OR 		(
+												:OldStartTime > rev.`startDateTime` AND 
+												:OldStartTime < rev.`endDateTime`
+											)
+									)
+							LIMIT 1
+							)
+						) AS TimeSlotTaken";
+			$s = $pdo->prepare($sql);
+
+			$s->bindValue(':OldMeetingRoomID', $originalMeetingRoomID);
+			$s->bindValue(':NewMeetingRoomID', $occupiedMeetingRoomID);
+			$s->bindValue(':OldStartTime', $originalStartDateTime);
+			$s->bindValue(':OldEndTime', $originalEndDateTime);
+			$s->bindValue(':NewStartTime', $occupiedStartDateTime);
+			$s->bindValue(':NewEndTime', $occupiedEndDateTime);
+			$s->bindValue(':OldBookingID', $originalBookingID);
+			$s->bindValue(':NewBookingID', $occupiedBookingID);
+			$s->execute();
+
+			$row = $s->fetch(PDO::FETCH_ASSOC);
+
+			if(isSet($row) AND $row['HitCount'] > 0){
+				// We can't change to this room, since it's already taken.
+				clearChangeBookingSessions();
+				$pdo = null;
+
+				$_SESSION['normalBookingFeedback'] = "Could not swap rooms because the booked time slot of at least one meeting is no longer available in the other room.";
+
+ 				if(isSet($_GET['meetingroom'])){
+					$meetingRoomID = $_GET['meetingroom'];
+					$location = "http://$_SERVER[HTTP_HOST]/booking/?meetingroom=" . $meetingRoomID;
+				} else {
+					$location = "http://$_SERVER[HTTP_HOST]/booking/";
+				}
+
+				header('Location: ' . $location);
+				exit();
+			}
+		}
+		catch(PDOException $e)
+		{
+			$error = 'Error checking if booking time is available: ' . $e->getMessage();
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+			$pdo = null;
+			clearChangeBookingSessions();
+			exit();
+		}
+
 		// Update both bookings and swap their meeting room IDs
-		// TO-DO:
+		try
+		{
+			$pdo->beginTransaction();
+			$sql = 'UPDATE	`booking`
+					SET		`meetingRoomID` = :meetingRoomID
+					WHERE	`bookingID` = :bookingID';
+
+			$s = $pdo->prepare($sql);
+			$s->bindValue(':meetingRoomID', $occupiedMeetingRoomID);
+			$s->bindValue(':bookingID', $originalBookingID);
+			$s->execute();
+
+			$sql = 'UPDATE	`booking`
+					SET		`meetingRoomID` = :meetingRoomID
+					WHERE	`bookingID` = :bookingID';
+
+			$s = $pdo->prepare($sql);
+			$s->bindValue(':meetingRoomID', $originalMeetingRoomID);
+			$s->bindValue(':bookingID', $occupiedBookingID);
+			$s->execute();
+
+			$pdo->commit();
+			$pdo = null;
+		}
+		catch (PDOException $e)
+		{
+			$pdo->rollBack();
+			$pdo = null;
+			clearChangeBookingSessions();
+			$error = 'Error changing booked meeting room: ' . $e->getMessage();
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+			exit();
+		}
+		$originalMeetingRoomName = $_SESSION['changeRoomOriginalBookingValues']['MeetingRoomName'];
+
+		$_SESSION['normalBookingFeedback'] = "Successfully swapped the booked meetings for the rooms $originalMeetingRoomName and $occupiedMeetingRoomName.";
+
+		// Send email to the original user if the room is changed by someone else.
+		if(isSet($_SESSION['changeRoomChangedBy'])){
+
+			if($_SESSION['changeRoomOriginalValues']['SendEmail'] == 1){
+
+				$startDateTime = $_SESSION['changeRoomOriginalBookingValues']['StartDateTime'];
+				$endDateTime = $_SESSION['changeRoomOriginalBookingValues']['EndDateTime'];
+				$displayStartDate = convertDatetimeToFormat($startDateTime, 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
+				$displayEndDate = convertDatetimeToFormat($endDateTime, 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
+
+				$emailSubject = "New Booking Information!";
+
+				$changedByUser = $_SESSION['changeRoomChangedByUser'];
+				if(isSet($_SESSION['changeRoomChangedBy']) AND $_SESSION['changeRoomChangedBy'] == "Admin"){
+					$emailMessage = "Your meeting has been moved to a new room by the admin: $changedByUser!\n";
+				} elseif(isSet($_SESSION['changeRoomChangedBy']) AND $_SESSION['changeRoomChangedBy'] == "Owner"){
+					$emailMessage = "Your meeting has been moved to a new room by your company owner: $changedByUser!\n";
+				}
+
+				$emailMessage .=
+				"The current meeting information has been updated: \n" .
+				"Old Meeting Room: " . $originalMeetingRoomName . ".\n" .
+				"New Meeting Room: " . $occupiedMeetingRoomName . ".\n" .
+				"Start Time: " . $displayStartDate . ".\n" .
+				"End Time: " . $displayEndDate . ".";
+
+				$email = $_SESSION['changeRoomOriginalValues']['UserEmail'];
+
+				$mailResult = sendEmail($email, $emailSubject, $emailMessage);
+
+				if(!$mailResult){
+					$_SESSION['normalBookingFeedback'] .= "\n\n[WARNING] System failed to send Email to user.";
+				}
+
+				$_SESSION['normalBookingFeedback'] .= "\nThis is the email msg we're sending out:\n$emailMessage\nSent to email: $email."; // TO-DO: Remove after testing	
+
+			} elseif($_SESSION['changeRoomOriginalValues']['SendEmail'] == 0){
+				$_SESSION['normalBookingFeedback'] .= "\nUser did not want to get sent Emails."; // TO-DO: remove when done testing
+			}
+		}
+
+		// Send email to the original user of the occupied room, if it's changed by someone else.
+		if(isSet($changedByAdmin) OR isSet($changedByOwner)){
+
+			if($bookingCreatorSendEmail == 1){
+
+				$displayStartDate = convertDatetimeToFormat($bookingStartDateTime , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
+				$displayEndDate = convertDatetimeToFormat($bookingEndDateTime, 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
+				$emailSubject = "New Booking Information!";
+
+				if(isSet($changedByAdmin)){
+					$emailMessage = "Your meeting has been moved to a new room by the admin: $changedByAdminName!\n";
+				} elseif(isSet($changedByOwner)){
+					$emailMessage = "Your meeting has been moved to a new room by your company owner: $changedByUserName!\n";
+				}
+
+				$emailMessage .=
+				"The current meeting information has been updated: \n" .
+				"Old Meeting Room: " . $occupiedMeetingRoomName . ".\n" .
+				"New Meeting Room: " . $originalMeetingRoomName . ".\n" .
+				"Start Time: " . $displayStartDate . ".\n" .
+				"End Time: " . $displayEndDate . ".";
+
+				$email = $bookingCreatorUserEmail;
+
+				$mailResult = sendEmail($email, $emailSubject, $emailMessage);
+
+				if(!$mailResult){
+					$_SESSION['normalBookingFeedback'] .= "\n\n[WARNING] System failed to send Email to user.";
+				}
+
+				$_SESSION['normalBookingFeedback'] .= "\nThis is the email msg we're sending out:\n$emailMessage\nSent to email: $email."; // TO-DO: Remove after testing	
+
+			} elseif($bookingCreatorSendEmail == 0){
+				$_SESSION['normalBookingFeedback'] .= "\nUser did not want to get sent Emails."; // TO-DO: remove when done testing
+			}			
+		}
 	} else {
 		// Just change booked room to the selected available room
 			// Double check that the room is available for that timeslot	
 		$originalStartDateTime = $_SESSION['changeRoomOriginalBookingValues']['StartDateTime'];
 		$originalEndDateTime = $_SESSION['changeRoomOriginalBookingValues']['EndDateTime'];
-		
+
 		try
 		{
 			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 			$pdo = connect_to_db();	
-			
+
 			$sql =	" 	SELECT 	SUM(cnt)	AS HitCount,
 								(
 									SELECT 	`name` 
@@ -1300,8 +1658,7 @@ if ((isSet($_POST['changeroom']) and $_POST['changeroom'] == 'Confirm Change') O
 			$row = $s->fetch(PDO::FETCH_ASSOC);
 			if(isSet($row) AND $row['HitCount'] > 0){
 				// We can't change to this room, since it's already taken.
-				unset($_SESSION['changeToMeetingRoomID']);
-				unset($_SESSION['bookingCodeUserID']);
+				clearChangeBookingSessions();
 				$pdo = null;
 
 				$_SESSION['normalBookingFeedback'] = "Could not change your meeting to your selected room, since it's already taken.";
@@ -1323,6 +1680,7 @@ if ((isSet($_POST['changeroom']) and $_POST['changeroom'] == 'Confirm Change') O
 			$error = 'Error checking if booking time is available: ' . $e->getMessage();
 			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
 			$pdo = null;
+			clearChangeBookingSessions();
 			exit();
 		}
 
@@ -1338,20 +1696,21 @@ if ((isSet($_POST['changeroom']) and $_POST['changeroom'] == 'Confirm Change') O
 			$s->bindValue(':meetingRoomID', $SelectedMeetingRoomID);
 			$s->bindValue(':bookingID', $originalBookingID);
 			$s->execute();
+			$pdo = null;
 		}
 		catch (PDOException $e)
 		{
 			$pdo = null;
 			$error = 'Error changing booked meeting room: ' . $e->getMessage();
 			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+			clearChangeBookingSessions();
 			exit();
 		}
 
 		$_SESSION['normalBookingFeedback'] = "Successfully changed the room for your meeting.";
 
-		// Send email to the original user if the room is changed by someone else.
-		//  TO-DO: This needs to know who changed in "change room" and not here. Since we never get that info on swapping to an available room!
-		if($changedByOwner OR $changedByAdmin){
+		// Send email to the original user if the room is changed by someone else. (Changing to available room)
+		if(isSet($_SESSION['changeRoomChangedBy'])){
 
 			if($_SESSION['changeRoomOriginalValues']['SendEmail'] == 1){
 
@@ -1363,10 +1722,11 @@ if ((isSet($_POST['changeroom']) and $_POST['changeroom'] == 'Confirm Change') O
 
 				$emailSubject = "New Booking Information!";
 
-				if(isSet($changedByAdminName)){
-					$emailMessage = "Your meeting has been moved to a new room by the admin: $changedByAdminName!\n";
-				} elseif(isSet($changedByUserName)){
-					$emailMessage = "Your meeting has been moved to a new room by your company owner: $changedByUserName!\n";
+				$changedByUser = $_SESSION['changeRoomChangedByUser'];
+				if(isSet($_SESSION['changeRoomChangedBy']) AND $_SESSION['changeRoomChangedBy'] == "Admin"){
+					$emailMessage = "Your meeting has been moved to a new room by the admin: $changedByUser!\n";
+				} elseif(isSet($_SESSION['changeRoomChangedBy']) AND $_SESSION['changeRoomChangedBy'] == "Owner"){
+					$emailMessage = "Your meeting has been moved to a new room by your company owner: $changedByUser!\n";
 				}
 
 				$emailMessage .=
@@ -1392,18 +1752,15 @@ if ((isSet($_POST['changeroom']) and $_POST['changeroom'] == 'Confirm Change') O
 		}
 	}
 
-	unset($_SESSION['changeToMeetingRoomID']);
-	unset($_SESSION['changeRoomOriginalBookingValues']);
-	unset($_SESSION['changeRoomOriginalValues']);
-	unset($_SESSION['continueChangeRoom']);
-	unset($_SESSION['bookingCodeUserID']);
+	clearChangeBookingSessions();		
 
-	if(isSet($_GET['meetingroom'])){
+	if(isSet($_GET['meetingroom']) AND !empty($_GET['meetingroom'])){
 		$meetingRoomID = $_GET['meetingroom'];
 		$location = "http://$_SERVER[HTTP_HOST]/booking/?meetingroom=" . $meetingRoomID;
 	} else {
 		$location = "http://$_SERVER[HTTP_HOST]/booking/";
 	}
+
 	header('Location: ' . $location);
 	exit();
 }

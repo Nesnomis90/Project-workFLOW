@@ -49,12 +49,24 @@
 						<select name="occupiedRooms">
 							<option value="">Select A Room</option>
 							<?php foreach($occupiedRooms AS $room) : ?>
-								<option value="<?php htmlout($room['MeetingRoomID']); ?>"><?php htmlout($room['MeetingRoomName']); ?></option>
+								<option value="<?php htmlout($room['MeetingRoomID'] . "|" . $room['BookingID']); ?>"><?php htmlout($room['MeetingRoomName']); ?></option>
 							<?php endforeach; ?>
-						</select><span>*</span>
-						<span><b>* This requires confirmation from the owner of the booked meeting room, or someone with the appropriate access rights.</b></span>
+						</select><span> ¹</span>
+						<?php if(isSet($unavailableOccupiedRooms)) : ?>
+							<label>Excluded Occupied Rooms:</label>
+							<span style="white-space: pre-wrap;"><b><?php htmlout($unavailableOccupiedRooms); ?></b>²</span>
+							<span><b>¹ This requires confirmation from the owner of the booked meeting, or someone with the appropriate access rights.</b></span>
+							<span><b>² These rooms are occupied in the same time slot as your booked meeting, but they overlap with more than one meeting.</b></span>
+						<?php else : ?>
+							<span><b>¹ This requires confirmation from the owner of the booked meeting, or someone with the appropriate access rights.</b></span>
+						<?php endif; ?>
 					<?php else : ?>
 						<span><b>There are no occupied rooms.</b></span>
+						<?php if(isSet($unavailableOccupiedRooms)) : ?>
+							<label>Excluded Occupied Rooms:</label>
+							<span><?php htmlout($unavailableOccupiedRooms); ?>¹</span>
+							<span><b>¹ These rooms are occupied in the same time slot as your booked meeting, but they overlap with more than one meeting.</b></span>
+						<?php endif; ?>
 					<?php endif; ?>	
 				</div>
 
