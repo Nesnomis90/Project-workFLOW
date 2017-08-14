@@ -58,7 +58,7 @@ FROM
     )
     UNION
  	(
-		SELECT 2 AS cnt
+		SELECT 1 AS cnt
     ) 
 	UNION
  	(
