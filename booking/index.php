@@ -755,7 +755,7 @@ if (	(isSet($_POST['action']) and $_POST['action'] == 'Change Room') OR
 
 			$pdo = connect_to_db();
 			$sql = 'SELECT 		COUNT(*)			AS HitCount,
-								b.`userID`,
+								b.`userID`			AS UserID,
 								b.`startDateTime` 	AS StartDateTime,
 								b.`endDateTime` 	AS EndDateTime,
 								b.`meetingRoomID` 	AS MeetingRoomID,
@@ -779,7 +779,7 @@ if (	(isSet($_POST['action']) and $_POST['action'] == 'Change Room') OR
 			$row = $s->fetch(PDO::FETCH_ASSOC);
 
 			if(isSet($row) AND $row['HitCount'] > 0){
-				$bookingCreatorUserID = $row['userID'];
+				$bookingCreatorUserID = $row['UserID'];
 				$bookingCreatorUserEmail = $row['UserEmail'];
 				$bookingCreatorUserInfo = $row['lastName'] . ", " . $row['firstName'] . " - " . $row['UserEmail'];
 				$bookingStartDateTime = $row['StartDateTime'];
@@ -804,6 +804,8 @@ if (	(isSet($_POST['action']) and $_POST['action'] == 'Change Room') OR
 				if(isSet($bookingCreatorUserID) AND !empty($bookingCreatorUserID) AND $bookingCreatorUserID == $SelectedUserID){
 					$continueChangeRoom = TRUE;
 					$_SESSION['changeRoomOriginalBookingValues']['ContinueChangeRoom'] = TRUE;
+					unset($_SESSION['changeRoomChangedByUser']);
+					unset($_SESSION['changeRoomChangedBy']);
 				}
 			} 
 		}
@@ -820,10 +822,10 @@ if (	(isSet($_POST['action']) and $_POST['action'] == 'Change Room') OR
 			try
 			{
 				$sql = 'SELECT 		COUNT(*)		AS HitCount,
-									b.`userID`,
+									b.`userID`		AS UserID,
 									u.`email`		AS UserEmail,
-									u.`firstName`,
-									u.`lastName`
+									u.`firstName`	AS FirstName,
+									u.`lastName`	AS LastName
 						FROM		`booking` b
 						INNER JOIN	`employee` e
 						ON			e.`CompanyID` = b.`CompanyID`
@@ -842,12 +844,13 @@ if (	(isSet($_POST['action']) and $_POST['action'] == 'Change Room') OR
 				$row = $s->fetch(PDO::FETCH_ASSOC);
 
 				if(isSet($row) AND $row['HitCount'] > 0){
-					$changedByUserID = $row['userID'];
-					$changedByUserName = $row['lastName'] . ", " . $row['firstName'];
+					$changedByUserID = $row['UserID'];
+					$changedByUserName = $row['LastName'] . ", " . $row['FirstName'];
 					$changedByUserEmail = $row['UserEmail'];
-					$changedByUserInfo = $row['lastName'] . ", " . $row['firstName'] . " - " . $row['UserEmail'];
+					$changedByUserInfo = $row['LastName'] . ", " . $row['FirstName'] . " - " . $row['UserEmail'];
 					$continueChangeRoom = TRUE;
 					$changedByOwner = TRUE;
+					$_SESSION['changeRoomChangedBy'] = "Owner";
 					$_SESSION['changeRoomOriginalBookingValues']['ContinueChangeRoom'] = TRUE;
 					$_SESSION['changeRoomChangedByUser'] = $changedByUserName;
 				}
@@ -866,10 +869,10 @@ if (	(isSet($_POST['action']) and $_POST['action'] == 'Change Room') OR
 		if(!$continueChangeRoom) {
 			try
 			{
-				$sql = 'SELECT 		COUNT(*) 	AS HitCount,
-									u.`UserID`,
-									u.`firstName`,
-									u.`lastName`
+				$sql = 'SELECT 		COUNT(*) 		AS HitCount,
+									u.`UserID`		AS UserID,
+									u.`firstName`	AS FirstName,
+									u.`lastName`	AS LastName
 						FROM		`user` u
 						INNER JOIN	`accesslevel` a
 						ON 			u.`AccessID` = a.`AccessID`
@@ -883,9 +886,10 @@ if (	(isSet($_POST['action']) and $_POST['action'] == 'Change Room') OR
 				$row = $s->fetch(PDO::FETCH_ASSOC);
 				if(isSet($row) AND $row['HitCount'] > 0){
 					$changedByAdminID = $row['UserID'];
-					$changedByAdminName = $row['lastName'] . ", " . $row['firstName'];
+					$changedByAdminName = $row['LastName'] . ", " . $row['FirstName'];
 					$continueChangeRoom = TRUE;
 					$changedByAdmin = TRUE;
+					$_SESSION['changeRoomChangedBy'] = "Admin";
 					$_SESSION['changeRoomOriginalBookingValues']['ContinueChangeRoom'] = TRUE;
 					$_SESSION['changeRoomChangedByUser'] = $changedByAdminName;
 				}
@@ -925,14 +929,6 @@ if (	(isSet($_POST['action']) and $_POST['action'] == 'Change Room') OR
 
 		header('Location: ' . $location);
 		exit();
-	}
-
-	if(isSet($changedByOwner)){
-		$_SESSION['changeRoomChangedBy'] = "Owner";
-	} elseif(isSet($changedByAdmin)){
-		$_SESSION['changeRoomChangedBy'] = "Admin";
-	} else {
-		unset($_SESSION['changeRoomChangedBy']);
 	}
 
 	// Get Available/Occupied rooms in the time period of the original booked meeting.
@@ -1155,7 +1151,7 @@ if ((isSet($_POST['changeroom']) and $_POST['changeroom'] == 'Confirm Change') O
 
 			$pdo = connect_to_db();
 			$sql = 'SELECT 		COUNT(*)			AS HitCount,
-								b.`userID`,
+								b.`userID`			AS UserID,
 								b.`startDateTime` 	AS StartDateTime,
 								b.`endDateTime` 	AS EndDateTime,
 								b.`meetingRoomID` 	AS MeetingRoomID,
@@ -1165,8 +1161,8 @@ if ((isSet($_POST['changeroom']) and $_POST['changeroom'] == 'Confirm Change') O
 									WHERE	`meetingRoomID` = b.`meetingRoomID`
 								)					AS MeetingRoomName,
 								u.`email`			AS UserEmail,
-								u.`firstName`,
-								u.`lastName`,
+								u.`firstName`		AS FirstName,
+								u.`lastName`		AS LastName,
 								u.`sendEmail`
 					FROM		`booking` b
 					INNER JOIN 	`user` u
@@ -1179,9 +1175,9 @@ if ((isSet($_POST['changeroom']) and $_POST['changeroom'] == 'Confirm Change') O
 			$row = $s->fetch(PDO::FETCH_ASSOC);
 
 			if(isSet($row) AND $row['HitCount'] > 0){
-				$bookingCreatorUserID = $row['userID'];
+				$bookingCreatorUserID = $row['UserID'];
 				$bookingCreatorUserEmail = $row['UserEmail'];
-				$bookingCreatorUserInfo = $row['lastName'] . ", " . $row['firstName'] . " - " . $row['UserEmail'];
+				$bookingCreatorUserInfo = $row['LastName'] . ", " . $row['FirstName'] . " - " . $row['UserEmail'];
 				$bookingCreatorSendEmail = $row['sendEmail'];
 				$bookingStartDateTime = $row['StartDateTime'];
 				$bookingEndDateTime = $row['EndDateTime'];
@@ -1208,10 +1204,10 @@ if ((isSet($_POST['changeroom']) and $_POST['changeroom'] == 'Confirm Change') O
 			try
 			{
 				$sql = 'SELECT 		COUNT(*)		AS HitCount,
-									b.`userID`,
+									b.`userID`		AS UserID,
 									u.`email`		AS UserEmail,
-									u.`firstName`,
-									u.`lastName`
+									u.`firstName`	AS FirstName,
+									u.`lastName`	AS LastName
 						FROM		`booking` b
 						INNER JOIN	`employee` e
 						ON			e.`CompanyID` = b.`CompanyID`
@@ -1230,10 +1226,10 @@ if ((isSet($_POST['changeroom']) and $_POST['changeroom'] == 'Confirm Change') O
 				$row = $s->fetch(PDO::FETCH_ASSOC);
 
 				if(isSet($row) AND $row['HitCount'] > 0){
-					$changedByUserID = $row['userID'];
-					$changedByUserName = $row['lastName'] . ", " . $row['firstName'];
+					$changedByUserID = $row['UserID'];
+					$changedByUserName = $row['LastName'] . ", " . $row['FirstName'];
 					$changedByUserEmail = $row['UserEmail'];
-					$changedByUserInfo = $row['lastName'] . ", " . $row['firstName'] . " - " . $row['UserEmail'];
+					$changedByUserInfo = $row['LastName'] . ", " . $row['FirstName'] . " - " . $row['UserEmail'];
 					$continueChangeRoom = TRUE;
 					$changedByOwner = TRUE;
 				}
@@ -1253,10 +1249,10 @@ if ((isSet($_POST['changeroom']) and $_POST['changeroom'] == 'Confirm Change') O
 		if(!$continueChangeRoom) {
 			try
 			{
-				$sql = 'SELECT 		COUNT(*) 	AS HitCount,
-									u.`UserID`,
-									u.`firstName`,
-									u.`lastName`
+				$sql = 'SELECT 		COUNT(*) 		AS HitCount,
+									u.`userID`		AS UserID,
+									u.`firstName`	AS FirstName,
+									u.`lastName`	AS LastName
 						FROM		`user` u
 						INNER JOIN	`accesslevel` a
 						ON 			u.`AccessID` = a.`AccessID`
@@ -1270,7 +1266,7 @@ if ((isSet($_POST['changeroom']) and $_POST['changeroom'] == 'Confirm Change') O
 				$row = $s->fetch(PDO::FETCH_ASSOC);
 				if(isSet($row) AND $row['HitCount'] > 0){
 					$changedByAdminID = $row['UserID'];
-					$changedByAdminName = $row['lastName'] . ", " . $row['firstName'];
+					$changedByAdminName = $row['LastName'] . ", " . $row['FirstName'];
 					$continueChangeRoom = TRUE;
 					$changedByAdmin = TRUE;
 				}
@@ -1510,7 +1506,7 @@ if ((isSet($_POST['changeroom']) and $_POST['changeroom'] == 'Confirm Change') O
 
 				$startDateTime = $_SESSION['changeRoomOriginalBookingValues']['StartDateTime'];
 				$endDateTime = $_SESSION['changeRoomOriginalBookingValues']['EndDateTime'];
-				$displayStartDate = convertDatetimeToFormat($startDateTime , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
+				$displayStartDate = convertDatetimeToFormat($startDateTime, 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
 				$displayEndDate = convertDatetimeToFormat($endDateTime, 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
 
 				$emailSubject = "New Booking Information!";
@@ -1574,7 +1570,7 @@ if ((isSet($_POST['changeroom']) and $_POST['changeroom'] == 'Confirm Change') O
 					$_SESSION['normalBookingFeedback'] .= "\n\n[WARNING] System failed to send Email to user.";
 				}
 
-				$_SESSION['normalBookingFeedback'] .= "\nThis is the email msg we're sending out:\n$emailMessage.\nSent to email: $email."; // TO-DO: Remove after testing	
+				$_SESSION['normalBookingFeedback'] .= "\nThis is the email msg we're sending out:\n$emailMessage\nSent to email: $email."; // TO-DO: Remove after testing	
 
 			} elseif($bookingCreatorSendEmail == 0){
 				$_SESSION['normalBookingFeedback'] .= "\nUser did not want to get sent Emails."; // TO-DO: remove when done testing
