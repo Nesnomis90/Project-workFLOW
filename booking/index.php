@@ -837,7 +837,7 @@ if (	(isSet($_POST['action']) and $_POST['action'] == 'Change Room') OR
 					$continueChangeRoom = TRUE;
 					$changedByOwner = TRUE;
 					$_SESSION['changeRoomOriginalBookingValues']['ContinueChangeRoom'] = TRUE;
-					$_SESSION['changeRoomChangedByUser'] = $row['lastname'] . ", " . $row['firstname'];
+					$_SESSION['changeRoomChangedByUser'] = $changedByUserName;
 				}
 			}
 			catch (PDOException $e)
@@ -875,7 +875,7 @@ if (	(isSet($_POST['action']) and $_POST['action'] == 'Change Room') OR
 					$continueChangeRoom = TRUE;
 					$changedByAdmin = TRUE;
 					$_SESSION['changeRoomOriginalBookingValues']['ContinueChangeRoom'] = TRUE;
-					$_SESSION['changeRoomChangedByUser'] = $row['lastname'] . ", " . $row['firstname'];
+					$_SESSION['changeRoomChangedByUser'] = $changedByAdminName;
 				}
 			}
 			catch (PDOException $e)
@@ -1410,7 +1410,8 @@ if ((isSet($_POST['changeroom']) and $_POST['changeroom'] == 'Confirm Change') O
 			unset($_SESSION['changeRoomChangedBy']);
 		}
 	}
-
+	
+	unset($_SESSION['changeRoomChangedBy']);
 	unset($_SESSION['changeRoomChangedByUser']);
 	unset($_SESSION['changeToMeetingRoomID']);
 	unset($_SESSION['changeRoomOriginalBookingValues']);
@@ -1418,12 +1419,13 @@ if ((isSet($_POST['changeroom']) and $_POST['changeroom'] == 'Confirm Change') O
 	unset($_SESSION['continueChangeRoom']);
 	unset($_SESSION['bookingCodeUserID']);
 
-	if(isSet($_GET['meetingroom'])){
+	if(isSet($_GET['meetingroom']) AND !empty($_GET['meetingroom'])){
 		$meetingRoomID = $_GET['meetingroom'];
 		$location = "http://$_SERVER[HTTP_HOST]/booking/?meetingroom=" . $meetingRoomID;
 	} else {
 		$location = "http://$_SERVER[HTTP_HOST]/booking/";
 	}
+
 	header('Location: ' . $location);
 	exit();
 }
