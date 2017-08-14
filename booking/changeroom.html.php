@@ -49,7 +49,7 @@
 						<select name="occupiedRooms">
 							<option value="">Select A Room</option>
 							<?php foreach($occupiedRooms AS $room) : ?>
-								<option value="<?php htmlout($room['MeetingRoomID']); ?>"><?php htmlout($room['MeetingRoomName']); ?></option>
+								<option value="<?php htmlout($room['MeetingRoomID'] . "|" . $room['BookingID']); ?>"><?php htmlout($room['MeetingRoomName']); ?></option>
 							<?php endforeach; ?>
 						</select><span>*</span>
 						<span><b>* This requires confirmation from the owner of the booked meeting room, or someone with the appropriate access rights.</b></span>
