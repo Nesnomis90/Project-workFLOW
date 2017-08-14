@@ -50,6 +50,27 @@ WHERE 	DATE(CURRENT_TIMESTAMP) >= `removeAtDate`
 AND 	`isActive` = 1
 AND		`companyID` <> 0;
 
+SELECT SUM(cnt) AS HitCount
+FROM 
+(
+	(
+		SELECT 1 AS cnt
+    )
+    UNION
+ 	(
+		SELECT 2 AS cnt
+    ) 
+	UNION
+ 	(
+		SELECT 0 AS cnt
+    )
+ 	UNION
+ 	(
+		SELECT 1 AS cnt
+    )   
+) AS TimeSlotTaken;
+
+
 SELECT 		m.`meetingRoomID`	AS MeetingRoomID,
 			m.`name`			AS MeetingRoomName
 FROM 		`meetingroom` m
