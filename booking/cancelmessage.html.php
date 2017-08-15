@@ -26,9 +26,9 @@
 
 			<div class="left">
 				<form action="" method="post">
-					<label for="bookingCode">Added message: </label>
-					<textarea name="cancelMessage" placeholder="Default: No reason given."></textarea>
 					<span>This will be added to the email sent out to the user the meeting was registered to.</span>
+					<label for="bookingCode">Added message: </label>
+					<textarea rows="4" cols="50" name="cancelMessage" placeholder="Default: No reason given."></textarea>
 					<input type="submit" name="action" value="Confirm Reason">
 				</form>
 			</div>

@@ -66,6 +66,7 @@ Folder status (last updated 15.08.2017):
 	* addbooking.html.php (969 words)
 	* booking.html.php (1 163 words)
 	* bookingcode.html.php (192 words)
+	* cancelmessage.html.php (--- words)
 	* changeroom.html.php (386 words)
 	* editbooking.html.php (934 words)
 	* index.php (14 242 words)
