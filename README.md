@@ -120,4 +120,5 @@ Folder status (last updated 15.08.2017):
 	* index.php (4 191 words)
 	* register.html.php (469 words)
 	* user.html.php (986 words)
+
 Total words: 129 530
