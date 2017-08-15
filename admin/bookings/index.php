@@ -202,37 +202,37 @@ function validateUserInputs($FeedbackSessionToUse, $editing, $bookingCompleted){
 	// Are values actually filled in?
 	if(!$bookingCompleted){
 		if($validatedStartDateTime == "" AND $validatedEndDateTime == "" AND !$invalidInput){
-			
+
 			$_SESSION[$FeedbackSessionToUse] = "You need to fill in a start and an end time for your booking.";	
 			$invalidInput = TRUE;
 		} elseif($validatedStartDateTime != "" AND $validatedEndDateTime == "" AND !$invalidInput) {
 			$_SESSION[$FeedbackSessionToUse] = "You need to fill in an end time for your booking.";	
-			$invalidInput = TRUE;		
+			$invalidInput = TRUE;
 		} elseif($validatedStartDateTime == "" AND $validatedEndDateTime != "" AND !$invalidInput){
 			$_SESSION[$FeedbackSessionToUse] = "You need to fill in a start time for your booking.";	
-			$invalidInput = TRUE;		
+			$invalidInput = TRUE;
 		}
 	}
-	
+
 	// Check if input length is allowed
 		// DisplayName
 	$invalidDisplayName = isLengthInvalidDisplayName($validatedDisplayName);
 	if($invalidDisplayName AND !$invalidInput){
 		$_SESSION[$FeedbackSessionToUse] = "The display name submitted is too long.";	
-		$invalidInput = TRUE;		
-	}	
+		$invalidInput = TRUE;
+	}
 		// BookingDescription
 	$invalidBookingDescription = isLengthInvalidBookingDescription($validatedBookingDescription);
 	if($invalidBookingDescription AND !$invalidInput){
 		$_SESSION[$FeedbackSessionToUse] = "The booking description submitted is too long.";	
-		$invalidInput = TRUE;		
+		$invalidInput = TRUE;
 	}
 		// AdminNote
 	$invalidAdminNote = isLengthInvalidBookingDescription($validatedAdminNote);
 	if($invalidAdminNote AND !$invalidInput){
 		$_SESSION[$FeedbackSessionToUse] = "The admin note submitted is too long.";	
-		$invalidInput = TRUE;		
-	}	
+		$invalidInput = TRUE;
+	}
 
 	// Check if the dateTime inputs we received are actually datetimes
 	if(!$bookingCompleted){
@@ -246,36 +246,36 @@ function validateUserInputs($FeedbackSessionToUse, $editing, $bookingCompleted){
 		if (isSet($endDateTime) AND $endDateTime === FALSE AND !$invalidInput){
 			$_SESSION[$FeedbackSessionToUse] = "The end date you submitted did not have a correct format. Please try again.";
 			$invalidInput = TRUE;
-		}	
-		
+		}
+
 		$timeNow = getDatetimeNow();
-		
+
 		if($startDateTime > $endDateTime AND !$invalidInput){
 			// End time can't be before the start time
-			
+
 			$_SESSION[$FeedbackSessionToUse] = "The start time can't be later than the end time. Please select a new start time or end time.";
 			$invalidInput = TRUE;
 		}
-		
+
 		if($startDateTime < $timeNow AND !$invalidInput){
 			// You can't book a meeting starting in the past.
-			
+
 			$_SESSION[$FeedbackSessionToUse] = "The start time you selected is already over. Select a new start time.";
 			$invalidInput = TRUE;
 		}
-		
+
 		if($endDateTime < $timeNow AND !$invalidInput){
 			// You can't book a meeting ending in the past.
-			
+
 			$_SESSION[$FeedbackSessionToUse] = "The end time you selected is already over. Select a new end time.";
-			$invalidInput = TRUE;	
-		}	
-		
+			$invalidInput = TRUE;
+		}
+
 		if($endDateTime == $startDateTime AND !$invalidInput){
 			$_SESSION[$FeedbackSessionToUse] = "You need to select an end time that is different from your start time.";	
-			$invalidInput = TRUE;				
+			$invalidInput = TRUE;
 		} 
-	
+
 		// We want to check if a booking is in the correct minute slice e.g. 15 minute increments.
 			// We check both start and end time for online/admin bookings
 		if(!$editing){
@@ -283,28 +283,28 @@ function validateUserInputs($FeedbackSessionToUse, $editing, $bookingCompleted){
 				$invalidStartTime = isBookingDateTimeMinutesInvalid($startDateTime);
 				if($invalidStartTime){
 					$_SESSION[$FeedbackSessionToUse] = "Your start time has to be in a " . MINIMUM_BOOKING_TIME_IN_MINUTES . " minutes slice from hh:00.";
-					$invalidInput = TRUE;	
+					$invalidInput = TRUE;
 				}
 			}
 			if(!$invalidInput){
 				$invalidEndTime = isBookingDateTimeMinutesInvalid($endDateTime);
 				if($invalidEndTime){
 					$_SESSION[$FeedbackSessionToUse] = "Your end time has to be in a " . MINIMUM_BOOKING_TIME_IN_MINUTES . " minutes slice from hh:00.";
-					$invalidInput = TRUE;	
+					$invalidInput = TRUE;
 				}
 			}
-			
+
 			// We want to check if the booking is the correct minimum length
 			if(!$invalidInput){
 				$invalidBookingLength = isBookingTimeDurationInvalid($startDateTime, $endDateTime);
 				if($invalidBookingLength){
 					$_SESSION[$FeedbackSessionToUse] = "Your start time and end time needs to have at least a " . MINIMUM_BOOKING_TIME_IN_MINUTES . " minutes difference.";
-					$invalidInput = TRUE;		
+					$invalidInput = TRUE;
 				}
 			}
 		}
 	}
-	
+
 	if($bookingCompleted){
 		$startDateTime = NULL;
 		$endDateTime = NULL;
@@ -358,10 +358,12 @@ if (isSet($_POST['action']) and $_POST['action'] == 'Delete')
 		// Save a description with information about the booking that was removed
 		$logEventDescription = "N/A";
 		if(isSet($_POST['UserInfo']) AND isSet($_POST['MeetingInfo'])){
-			$logEventDescription = 'The booking made for ' . $_POST['UserInfo'] . ' for the meeting room ' .
-			$_POST['MeetingInfo'] . ' was deleted by: ' . $_SESSION['LoggedInUserName'];
+			$logEventDescription = 	"A booking with these details was removed:" .
+									"\nMeeting Information: " . $_POST['MeetingInfo'] .
+									"\nUser Information: " . $_POST['UserInfo'] .
+									"\nIt was removed by: " . $_SESSION['LoggedInUserName'];
 		} else {
-			$logEventDescription = 'A booking was deleted by: ' . $_SESSION['LoggedInUserName'];
+			$logEventDescription = 'A booking was removed by: ' . $_SESSION['LoggedInUserName'];
 		}
 		
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
@@ -440,14 +442,16 @@ if (isSet($_POST['action']) and $_POST['action'] == 'Cancel')
 			// Save a description with information about the booking that was cancelled
 			$logEventDescription = "N/A";
 			if(isSet($_POST['UserInfo']) AND isSet($_POST['MeetingInfo'])){
-				$logEventDescription = 'The booking made for ' . $_POST['UserInfo'] . ' for the meeting room ' .
-				$_POST['MeetingInfo'] . ' was cancelled by: ' . $_SESSION['LoggedInUserName'];
+				$logEventDescription = 	"A booking with these details was cancelled:" .
+										"\nMeeting Information: " . $_POST['MeetingInfo'] .
+										"\nUser Information: " . $_POST['UserInfo'] .
+										"\nIt was cancelled by: " . $_SESSION['LoggedInUserName'];
 			} else {
 				$logEventDescription = 'A booking was cancelled by: ' . $_SESSION['LoggedInUserName'];
 			}
 
 			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
-			
+
 			$pdo = connect_to_db();
 			$sql = "INSERT INTO `logevent` 
 					SET			`actionID` = 	(
@@ -461,7 +465,7 @@ if (isSet($_POST['action']) and $_POST['action'] == 'Cancel')
 			$s->execute();
 
 			//Close the connection
-			$pdo = null;		
+			$pdo = null;
 		}
 		catch(PDOException $e)
 		{
@@ -469,14 +473,14 @@ if (isSet($_POST['action']) and $_POST['action'] == 'Cancel')
 			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
 			$pdo = null;
 			exit();
-		}	
+		}
 
 		emailUserOnCancelledBooking();
 	} else {
 		// Booking was not active, so no need to cancel it.
 		$_SESSION['BookingUserFeedback'] = "Meeting has already been completed. Did not cancel it.";
 	}
-	
+
 	// Load booked meetings list webpage with updated database
 	header('Location: .');
 	exit();	
@@ -2697,10 +2701,13 @@ if (isSet($_POST['add']) AND $_POST['add'] == "Add booking")
 		}		
 
 		// Save a description with information about the booking that was created
-		$logEventDescription =  "Meeting room: " . $MeetingRoomName . 
-								".\nTime Slot: " . $displayValidatedStartDate . " to " . $displayValidatedEndDate .
-								".\nFor the user: " . $userinfo . " and company: " . $companyName . 
-								".\nBooking was made by: " . $_SESSION['LoggedInUserName'] . ".";
+		$logEventDescription = 	"A booking with these details was created: " .
+								"\nMeeting room: " . $MeetingRoomName . 
+								"\nStart Time: " . $displayValidatedStartDate . 
+								"\nEnd Time: ". $displayValidatedEndDate .
+								"\nBooker for User: " . $userinfo . 
+								"\nBooked for Company: " . $companyName . 
+								"\nIt was created by: " . $_SESSION['LoggedInUserName'] . ".";
 		
 		// Check if the booking that was made was for the current period.
 		$bookingWentOverCredits = FALSE;
