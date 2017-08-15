@@ -10,81 +10,81 @@ Built from scratch with MySQL, PHP, HTML, CSS and JavaScript.
 
 Folder status (last updated 15.08.2017):
 
-1. admin
-	* bookings
+1. admin (63 038 words)
+	* bookings (15 944 words)
 		* addbooking.html.php (1 162 words)
 		* bookings.html.php (2 256 words)
 		* editbooking.html.php (1 386 words)
 		* index.php (11 140 words)
-	* companies
+	* companies (8 939 words)
 		* bookinghistory.html.php (1 216 words)
 		* companies.html.php (974 words)
 		* form.html.php (293 words)
 		* index.php (6 119 words)
 		* merge.html.php (337 words)
-	* companycredits
+	* companycredits (2 868 words)
 		* companycredits.html.php (439 words)
 		* editcompanycredits.html.php (547 words)
 		* index.php (1 882 words)
-	* credits
+	* credits (3 722 words)
 		* credits.html.php (498 words)
 		* form.html.php (547 words)
 		* index.php (2 677 words)
-	* employees
+	* employees (7 033 words)
 		* addemployee.html.php (419 words)
 		* changerole.html.php (243 words)
 		* employees.html.php (660 words)
 		* index.php (5 358 words)
 		* transfer.html.php (353 words)
-	* equipment
+	* equipment (2 526 words)
 		* equipment.html.php (368 words)
 		* form.html.php (289 words)
 		* index.php (1 869 words)
-	* events
+	* events (6 209 words)
 		* addevent.html.php (2 006 words)
 		* events.html.php (697 words)
 		* index.php (3 506 words)
-	* logevents
+	* logevents (2 629 words)
 		* index.php (1 810 words)
 		* log.html.php (819 words)
-	* meetingrooms
+	* meetingrooms (3 476 words)
 		* form.html.php (408 words)
 		* index.php (2 353 words)
 		* meetingrooms.html.php (535 words)
-	* roomequipment
+	* roomequipment (4 142 words))
 		* addroomequipment.html.php (391 words)
 		* changeamount.html.php (213 words)
 		* index.php (3 096 words)
 		* roomequipment.html.php (442 words)
-	* users
+	* users (5 433 words)
 		* form.html.php (680 words)
 		* index.php (3 831 words)
 		* listemail.html.php (324 words)
 		* users.html.php (598 words)
 	* index.html (117 words)
-2. booking
+2. booking (17 886 words)
 	* addbooking.html.php (969 words)
 	* booking.html.php (1 163 words)
 	* bookingcode.html.php (192 words)
 	* changeroom.html.php (386 words)
 	* editbooking.html.php (934 words)
 	* index.php (14 242 words)
-3. company
+3. company (11 087 words)
 	* addemployee.html.php (378 words)
 	* bookings.html.php (1 759 words)
 	* changerole.html.php (227 words)
 	* company.html.php (865 words)
 	* employees.html.php (629 words)
 	* index.php (7 229 words)
-4. connect
+4. connect (36 words)
 	* index.php (36 words)
-5. cron
+5. cron (2 004 words)
 	* minimumOnceADay.php (1 208 words)
 	* minimumOnceAnHour.php (166 words)
 	* onceAMinute.php (630 words)
-6. css
+6. css (718 words)
 	* myCSS.css (718 words)
-7. includes
+7. includes (12 787 words)
 	* access.inc.php (1 411 words)
 	* accessdenied.inc.php (44 words)
 	* admintopnav.html.php (165 words)
@@ -105,18 +105,19 @@ Folder status (last updated 15.08.2017):
 	* sessions.inc.php (173 words)
 	* topnav.html.php (278 words)
 	* variables.inc.php (283 words)
-8. meetingroom
+8. meetingroom (1 817 words)
 	* adminroomselect.html.php (274 words)
 	* index.php (851 words)
 	* meetingroomforallusers.html.php (692 words)
-9. MySQL Query code
+9. MySQL Query code (13 067 words)
 	* BIG_SEC_TO_TIME.sql (84 words)
 	* BIG_TIME_TO_SEC.sql (79 words)
 	* test.sql (12 904 words)
-10. scripts
+10. scripts (95 words)
 	* myFunctions.js (95 words)
-11. user
+11. user (6 995 words)
 	* bookings.html.php (1 349 words)
 	* index.php (4 191 words)
 	* register.html.php (469 words)
 	* user.html.php (986 words)
+Total words: 129 530
