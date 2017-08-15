@@ -6,7 +6,7 @@
 		<meta charset="utf-8">
 		<link rel="stylesheet" type="text/css" href="/CSS/myCSS.css">
 		<script src="/scripts/myFunctions.js"></script>			
-		<title>Add cancel feedback</title>
+		<title>Cancel Message</title>
 		<style>
 			label {
 				width: auto;
@@ -28,7 +28,11 @@
 				<form action="" method="post">
 					<span>This will be added to the email sent out to the user the meeting was registered to.</span>
 					<label for="bookingCode">Added message: </label>
-					<textarea rows="4" cols="50" name="cancelMessage" placeholder="Default: No reason given."></textarea>
+					<?php if(isSet($cancelMessage)) : ?>
+						<textarea rows="4" cols="50" name="cancelMessage" placeholder="Default: No reason given."><?php htmlout($cancelMessage); ?></textarea>
+					<?php else : ?>
+						<textarea rows="4" cols="50" name="cancelMessage" placeholder="Default: No reason given."></textarea>
+					<?php endif; ?>
 					<input type="submit" name="action" value="Confirm Reason">
 				</form>
 			</div>
