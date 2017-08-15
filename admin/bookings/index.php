@@ -358,10 +358,12 @@ if (isSet($_POST['action']) and $_POST['action'] == 'Delete')
 		// Save a description with information about the booking that was removed
 		$logEventDescription = "N/A";
 		if(isSet($_POST['UserInfo']) AND isSet($_POST['MeetingInfo'])){
-			$logEventDescription = 'The booking made for ' . $_POST['UserInfo'] . ' for the meeting room ' .
-			$_POST['MeetingInfo'] . ' was deleted by: ' . $_SESSION['LoggedInUserName'];
+			$logEventDescription = 	"A booking with these details was removed:" .
+									"\nMeeting Information: " . $_POST['MeetingInfo'] .
+									"\nUser Information: " . $_POST['UserInfo'] .
+									"\nIt was removed by: " . $_SESSION['LoggedInUserName'];
 		} else {
-			$logEventDescription = 'A booking was deleted by: ' . $_SESSION['LoggedInUserName'];
+			$logEventDescription = 'A booking was removed by: ' . $_SESSION['LoggedInUserName'];
 		}
 		
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
@@ -440,14 +442,16 @@ if (isSet($_POST['action']) and $_POST['action'] == 'Cancel')
 			// Save a description with information about the booking that was cancelled
 			$logEventDescription = "N/A";
 			if(isSet($_POST['UserInfo']) AND isSet($_POST['MeetingInfo'])){
-				$logEventDescription = 'The booking made for ' . $_POST['UserInfo'] . ' for the meeting room ' .
-				$_POST['MeetingInfo'] . ' was cancelled by: ' . $_SESSION['LoggedInUserName'];
+				$logEventDescription = 	"A booking with these details was cancelled:" .
+										"\nMeeting Information: " . $_POST['MeetingInfo'] .
+										"\nUser Information: " . $_POST['UserInfo'] .
+										"\nIt was cancelled by: " . $_SESSION['LoggedInUserName'];
 			} else {
 				$logEventDescription = 'A booking was cancelled by: ' . $_SESSION['LoggedInUserName'];
 			}
 
 			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
-			
+
 			$pdo = connect_to_db();
 			$sql = "INSERT INTO `logevent` 
 					SET			`actionID` = 	(
@@ -461,7 +465,7 @@ if (isSet($_POST['action']) and $_POST['action'] == 'Cancel')
 			$s->execute();
 
 			//Close the connection
-			$pdo = null;		
+			$pdo = null;
 		}
 		catch(PDOException $e)
 		{
@@ -469,14 +473,14 @@ if (isSet($_POST['action']) and $_POST['action'] == 'Cancel')
 			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
 			$pdo = null;
 			exit();
-		}	
+		}
 
 		emailUserOnCancelledBooking();
 	} else {
 		// Booking was not active, so no need to cancel it.
 		$_SESSION['BookingUserFeedback'] = "Meeting has already been completed. Did not cancel it.";
 	}
-	
+
 	// Load booked meetings list webpage with updated database
 	header('Location: .');
 	exit();	
@@ -2697,10 +2701,13 @@ if (isSet($_POST['add']) AND $_POST['add'] == "Add booking")
 		}		
 
 		// Save a description with information about the booking that was created
-		$logEventDescription =  "Meeting room: " . $MeetingRoomName . 
-								".\nTime Slot: " . $displayValidatedStartDate . " to " . $displayValidatedEndDate .
-								".\nFor the user: " . $userinfo . " and company: " . $companyName . 
-								".\nBooking was made by: " . $_SESSION['LoggedInUserName'] . ".";
+		$logEventDescription = 	"A booking with these details was created: " .
+								"\nMeeting room: " . $MeetingRoomName . 
+								"\nStart Time: " . $displayValidatedStartDate . 
+								"\nEnd Time: ". $displayValidatedEndDate .
+								"\nBooker for User: " . $userinfo . 
+								"\nBooked for Company: " . $companyName . 
+								"\nIt was created by: " . $_SESSION['LoggedInUserName'] . ".";
 		
 		// Check if the booking that was made was for the current period.
 		$bookingWentOverCredits = FALSE;
