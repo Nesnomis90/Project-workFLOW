@@ -580,7 +580,7 @@ if (	(isSet($_POST['action']) and $_POST['action'] == 'Cancel') OR
 	if(!$continueCancel) {
 		try
 		{
-			$sql = 'SELECT 		COUNT(*) 	AS HitCount,
+			$sql = 'SELECT 		COUNT(*) 		AS HitCount,
 								u.`userID`		AS UserID,
 								u.`firstName`	AS FirstName,
 								u.`lastName`	AS LastName
@@ -655,10 +655,10 @@ if (	(isSet($_POST['action']) and $_POST['action'] == 'Cancel') OR
 		{
 			if($cancelledByAdmin){
 				$nameOfUserWhoCancelled = $cancelledByAdminName;
-				$_SESSION['cancelBookingOriginalValues']['CancelledBy'] = "an Admin: $cancelledByAdminName";
+				$_SESSION['cancelBookingOriginalValues']['CancelledBy'] = "an Admin: " . $cancelledByAdminName;
 			} elseif($cancelledByOwner) {
 				$nameOfUserWhoCancelled = $cancelledByUserName;
-				$_SESSION['cancelBookingOriginalValues']['CancelledBy'] = "a Company Owner: $cancelledByUserName";
+				$_SESSION['cancelBookingOriginalValues']['CancelledBy'] = "a Company Owner: " . $cancelledByUserName;
 			} else {
 				$nameOfUserWhoCancelled = $_SESSION["AddCreateBookingInfoArray"]["UserLastname"] . ', ' . $_SESSION["AddCreateBookingInfoArray"]["UserFirstname"];
 			}		
