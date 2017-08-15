@@ -202,37 +202,37 @@ function validateUserInputs($FeedbackSessionToUse, $editing, $bookingCompleted){
 	// Are values actually filled in?
 	if(!$bookingCompleted){
 		if($validatedStartDateTime == "" AND $validatedEndDateTime == "" AND !$invalidInput){
-			
+
 			$_SESSION[$FeedbackSessionToUse] = "You need to fill in a start and an end time for your booking.";	
 			$invalidInput = TRUE;
 		} elseif($validatedStartDateTime != "" AND $validatedEndDateTime == "" AND !$invalidInput) {
 			$_SESSION[$FeedbackSessionToUse] = "You need to fill in an end time for your booking.";	
-			$invalidInput = TRUE;		
+			$invalidInput = TRUE;
 		} elseif($validatedStartDateTime == "" AND $validatedEndDateTime != "" AND !$invalidInput){
 			$_SESSION[$FeedbackSessionToUse] = "You need to fill in a start time for your booking.";	
-			$invalidInput = TRUE;		
+			$invalidInput = TRUE;
 		}
 	}
-	
+
 	// Check if input length is allowed
 		// DisplayName
 	$invalidDisplayName = isLengthInvalidDisplayName($validatedDisplayName);
 	if($invalidDisplayName AND !$invalidInput){
 		$_SESSION[$FeedbackSessionToUse] = "The display name submitted is too long.";	
-		$invalidInput = TRUE;		
-	}	
+		$invalidInput = TRUE;
+	}
 		// BookingDescription
 	$invalidBookingDescription = isLengthInvalidBookingDescription($validatedBookingDescription);
 	if($invalidBookingDescription AND !$invalidInput){
 		$_SESSION[$FeedbackSessionToUse] = "The booking description submitted is too long.";	
-		$invalidInput = TRUE;		
+		$invalidInput = TRUE;
 	}
 		// AdminNote
 	$invalidAdminNote = isLengthInvalidBookingDescription($validatedAdminNote);
 	if($invalidAdminNote AND !$invalidInput){
 		$_SESSION[$FeedbackSessionToUse] = "The admin note submitted is too long.";	
-		$invalidInput = TRUE;		
-	}	
+		$invalidInput = TRUE;
+	}
 
 	// Check if the dateTime inputs we received are actually datetimes
 	if(!$bookingCompleted){
@@ -246,36 +246,36 @@ function validateUserInputs($FeedbackSessionToUse, $editing, $bookingCompleted){
 		if (isSet($endDateTime) AND $endDateTime === FALSE AND !$invalidInput){
 			$_SESSION[$FeedbackSessionToUse] = "The end date you submitted did not have a correct format. Please try again.";
 			$invalidInput = TRUE;
-		}	
-		
+		}
+
 		$timeNow = getDatetimeNow();
-		
+
 		if($startDateTime > $endDateTime AND !$invalidInput){
 			// End time can't be before the start time
-			
+
 			$_SESSION[$FeedbackSessionToUse] = "The start time can't be later than the end time. Please select a new start time or end time.";
 			$invalidInput = TRUE;
 		}
-		
+
 		if($startDateTime < $timeNow AND !$invalidInput){
 			// You can't book a meeting starting in the past.
-			
+
 			$_SESSION[$FeedbackSessionToUse] = "The start time you selected is already over. Select a new start time.";
 			$invalidInput = TRUE;
 		}
-		
+
 		if($endDateTime < $timeNow AND !$invalidInput){
 			// You can't book a meeting ending in the past.
-			
+
 			$_SESSION[$FeedbackSessionToUse] = "The end time you selected is already over. Select a new end time.";
-			$invalidInput = TRUE;	
-		}	
-		
+			$invalidInput = TRUE;
+		}
+
 		if($endDateTime == $startDateTime AND !$invalidInput){
 			$_SESSION[$FeedbackSessionToUse] = "You need to select an end time that is different from your start time.";	
-			$invalidInput = TRUE;				
+			$invalidInput = TRUE;
 		} 
-	
+
 		// We want to check if a booking is in the correct minute slice e.g. 15 minute increments.
 			// We check both start and end time for online/admin bookings
 		if(!$editing){
@@ -283,28 +283,28 @@ function validateUserInputs($FeedbackSessionToUse, $editing, $bookingCompleted){
 				$invalidStartTime = isBookingDateTimeMinutesInvalid($startDateTime);
 				if($invalidStartTime){
 					$_SESSION[$FeedbackSessionToUse] = "Your start time has to be in a " . MINIMUM_BOOKING_TIME_IN_MINUTES . " minutes slice from hh:00.";
-					$invalidInput = TRUE;	
+					$invalidInput = TRUE;
 				}
 			}
 			if(!$invalidInput){
 				$invalidEndTime = isBookingDateTimeMinutesInvalid($endDateTime);
 				if($invalidEndTime){
 					$_SESSION[$FeedbackSessionToUse] = "Your end time has to be in a " . MINIMUM_BOOKING_TIME_IN_MINUTES . " minutes slice from hh:00.";
-					$invalidInput = TRUE;	
+					$invalidInput = TRUE;
 				}
 			}
-			
+
 			// We want to check if the booking is the correct minimum length
 			if(!$invalidInput){
 				$invalidBookingLength = isBookingTimeDurationInvalid($startDateTime, $endDateTime);
 				if($invalidBookingLength){
 					$_SESSION[$FeedbackSessionToUse] = "Your start time and end time needs to have at least a " . MINIMUM_BOOKING_TIME_IN_MINUTES . " minutes difference.";
-					$invalidInput = TRUE;		
+					$invalidInput = TRUE;
 				}
 			}
 		}
 	}
-	
+
 	if($bookingCompleted){
 		$startDateTime = NULL;
 		$endDateTime = NULL;
