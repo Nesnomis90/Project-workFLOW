@@ -476,7 +476,7 @@ if(isSet($_POST['action']) AND $_POST['action'] == "Confirm Reason"){
 
 	$invalidCancelMessage = isLengthInvalidBookingDescription($cancelMessage);
 	if($invalidCancelMessage AND !$invalidInput){
-		$_SESSION[$FeedbackSessionToUse] = "Your submitted message is too long.";	
+		$_SESSION['confirmReasonError'] = "Your submitted message is too long.";	
 		$invalidInput = TRUE;
 	}
 

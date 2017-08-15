@@ -10,7 +10,7 @@ function isLengthInvalidDisplayName($displayName){
 
 	$dspnameLength = strlen(utf8_decode($displayName));
 	$dspnameMaxLength = 255; // TO-DO: Adjust max length if needed.
-	if($dspnameLength > $dspnameMaxLength AND !$invalidInput){	
+	if($dspnameLength > $dspnameMaxLength){	
 		return TRUE;	
 	}
 	return FALSE;
@@ -22,7 +22,7 @@ function isLengthInvalidBookingDescription($bookingDescription){
 
 	$bknDscrptnLength = strlen(utf8_decode($bookingDescription));
 	$bknDscrptnMaxLength = 500; // TO-DO: Adjust max length if needed.
-	if($bknDscrptnLength > $bknDscrptnMaxLength AND !$invalidInput){
+	if($bknDscrptnLength > $bknDscrptnMaxLength){
 		return TRUE;	
 	}
 	return FALSE;
@@ -35,7 +35,7 @@ function isLengthInvalidEquipmentDescription($equipmentDescription){
 
 	$eqpmntDscrptnLength = strlen(utf8_decode($equipmentDescription));
 	$eqpmntDscrptnMaxLength = 500; // TO-DO: Adjust max length if needed.
-	if($eqpmntDscrptnLength > $eqpmntDscrptnMaxLength AND !$invalidInput){
+	if($eqpmntDscrptnLength > $eqpmntDscrptnMaxLength){
 		return TRUE;	
 	}
 	return FALSE;
@@ -48,7 +48,7 @@ function isLengthInvalidMeetingRoomDescription($meetingRoomDescription){
 
 	$mtngrmDscrptnLength = strlen(utf8_decode($meetingRoomDescription));
 	$mtngrmDscrptnMaxLength = 500; // TO-DO: Adjust max length if needed.
-	if($mtngrmDscrptnLength > $mtngrmDscrptnMaxLength AND !$invalidInput){
+	if($mtngrmDscrptnLength > $mtngrmDscrptnMaxLength){
 		return TRUE;	
 	}
 	return FALSE;
@@ -61,7 +61,7 @@ function isLengthInvalidMeetingRoomLocation($meetingRoomCapacity){
 
 	$mtngrmCapacityLength = strlen(utf8_decode($meetingRoomCapacity));
 	$mtngrmCapacityMaxLength = 500; // TO-DO: Adjust max length if needed.
-	if($mtngrmCapacityLength > $mtngrmCapacityMaxLength AND !$invalidInput){
+	if($mtngrmCapacityLength > $mtngrmCapacityMaxLength){
 		return TRUE;	
 	}
 	return FALSE;
