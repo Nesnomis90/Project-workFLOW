@@ -25,9 +25,9 @@ function clearAddCreateBookingSessions(){
 	unset($_SESSION['AddCreateBookingDisplayCompanySelect']);
 	unset($_SESSION['AddCreateBookingCompanyArray']);
 	unset($_SESSION['AddCreateBookingStartImmediately']);
-	
+
 	unset($_SESSION['bookingCodeUserID']);
-	
+
 	unset($_SESSION['normalUserOriginalInfoArray']); // Make sure we get up-to-date user values after doing bookings
 }
 
@@ -163,8 +163,8 @@ function emailUserOnCancelledBooking(){
 			$bookingCreatorUserEmail = $_SESSION['cancelBookingOriginalValues']['UserEmail'];
 			$bookingCreatorMeetingInfo = $_SESSION['cancelBookingOriginalValues']['MeetingInfo'];
 			$cancelledBy = $_SESSION['cancelBookingOriginalValues']['CancelledBy'];
-			// TO-DO: Add reason for cancelling
-			//$reasonForCancelling = $_SESSION['cancelBookingOriginalValues']['ReasonForCancelling'];
+
+			$reasonForCancelling = $_SESSION['cancelBookingOriginalValues']['ReasonForCancelling'];
 			if(!isSet($reasonForCancelling) OR isSet($reasonForCancelling) AND empty($reasonForCancelling)){
 				$reasonForCancelling = "No reason given.";
 			}
@@ -172,19 +172,19 @@ function emailUserOnCancelledBooking(){
 			$emailSubject = "Your meeting has been cancelled!";
 
 			$emailMessage = 
-			"A booked meeting has been cancelled by $cancelledBy!\n" .
+			"A booked meeting has been cancelled by " . $cancelledBy . "!\n" .
 			"The meeting was booked for the room " . $bookingCreatorMeetingInfo .
 			"\nReason given for cancelling: " . $reasonForCancelling;
-			
+
 			$email = $bookingCreatorUserEmail;
-			
+
 			$mailResult = sendEmail($email, $emailSubject, $emailMessage);
 
 			if(!$mailResult){
 				$_SESSION['normalBookingFeedback'] .= "\n\n[WARNING] System failed to send Email to user.";
 			}
 
-			$_SESSION['normalBookingFeedback'] .= "\nThis is the email msg we're sending out:\n$emailMessage.\nSent to email: $email."; // TO-DO: Remove after testing
+			$_SESSION['normalBookingFeedback'] .= "\nThis is the email msg we're sending out:\n$emailMessage\nSent to email: $email."; // TO-DO: Remove after testing
 		}
 	} else {
 		$_SESSION['BookingUserFeedback'] .= "\nFailed to send an email to the user that the booking got cancelled.";
@@ -451,13 +451,52 @@ if (isSet($_POST['action']) and $_POST['action'] == 'Refresh'){
 		if(isSet($_GET['name'])){
 			$name = $_GET['name'];
 			$location .= "&name=" . $name;	
-		}		
+		}
 	} else {
 		$location = ".";
 	}
 
 	header("Location: $location");
 	exit();
+}
+
+// If admin has finished adding a reason for cancelling a meeting.
+if(isSet($_POST['action']) AND $_POST['action'] == "Confirm Reason"){
+	$invalidInput = FALSE;
+	// Do input validation
+	if(isSet($_POST['cancelMessage']) AND !empty($_POST['cancelMessage'])){
+		$cancelMessage = trimExcessWhitespaceButLeaveLinefeed($_POST['cancelMessage']);
+	} else {
+		$cancelMessage = "";
+	}
+	if(validateString($cancelMessage) === FALSE AND !$invalidInput){
+		$invalidInput = TRUE;
+		$_SESSION['confirmReasonError'] = "Your submitted message has illegal characters in it.";
+	}
+
+	$invalidCancelMessage = isLengthInvalidBookingDescription($cancelMessage);
+	if($invalidCancelMessage AND !$invalidInput){
+		$_SESSION[$FeedbackSessionToUse] = "Your submitted message is too long.";	
+		$invalidInput = TRUE;
+	}
+
+	if($invalidInput){
+		include_once 'cancelmessage.html.php';
+		exit();
+	}
+
+	$_SESSION['cancelBookingOriginalValues']['ReasonForCancelling'] = $cancelMessage;
+	$_SESSION['refreshCancelBooking'] = TRUE;
+
+	if(isSet($_GET['meetingroom'])){
+		$meetingRoomID = $_GET['meetingroom'];
+		$location = "http://$_SERVER[HTTP_HOST]/booking/?meetingroom=" . $meetingRoomID;
+	} else {
+		$meetingRoomID = $_POST['meetingRoomID'];
+		$location = '.';
+	}
+	header('Location: ' . $location);
+	exit();	
 }
 
 // If user wants to cancel a scheduled booked meeting
@@ -481,11 +520,11 @@ if (	(isSet($_POST['action']) and $_POST['action'] == 'Cancel') OR
 	$bookingID = $_SESSION['cancelBookingOriginalValues']['BookingID'];
 	$bookingStatus = $_SESSION['cancelBookingOriginalValues']['BookingStatus'];
 	$bookingMeetingInfo = $_SESSION['cancelBookingOriginalValues']['MeetingInfo'];
-	
+
 	$_SESSION['confirmOrigins'] = "Cancel";
 	$SelectedUserID = checkIfLocalDeviceOrLoggedIn();
 	unset($_SESSION['confirmOrigins']);
-	
+
 	// Check if selected user ID is creator of booking, owner of the company it's booked for or an admin
 	$continueCancel = FALSE;
 	$cancelledByOwner = FALSE;
@@ -494,14 +533,14 @@ if (	(isSet($_POST['action']) and $_POST['action'] == 'Cancel') OR
 	try
 	{
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
-		
+
 		$pdo = connect_to_db();
-		$sql = 'SELECT 		COUNT(*)		AS HitCount,
-							b.`userID`		AS UserID,
-							u.`email`		AS UserEmail,
-							u.`firstName`	AS FirstName,
-							u.`lastName`	AS LastName,
-							u.`sendEmail`	AS SendEmail
+		$sql = 'SELECT 		COUNT(*)			AS HitCount,
+							b.`userID`			AS UserID,
+							u.`email`			AS UserEmail,
+							u.`firstName`		AS FirstName,
+							u.`lastName`		AS LastName,
+							u.`sendEmail`		AS SendEmail
 				FROM		`booking` b
 				INNER JOIN 	`user` u
 				ON 			b.`userID` = u.`userID`
@@ -521,7 +560,7 @@ if (	(isSet($_POST['action']) and $_POST['action'] == 'Cancel') OR
 			if(isSet($bookingCreatorUserID) AND !empty($bookingCreatorUserID) AND $bookingCreatorUserID == $SelectedUserID){
 				$continueCancel = TRUE;
 			}
-		} 
+		}
 	}
 	catch (PDOException $e)
 	{
@@ -590,7 +629,7 @@ if (	(isSet($_POST['action']) and $_POST['action'] == 'Cancel') OR
 					WHERE 		u.`userID` = :userID
 					AND			a.`AccessName` = "Admin"
 					LIMIT		1';
-					
+
 			$s = $pdo->prepare($sql);
 			$s->bindValue(':userID', $SelectedUserID);
 			$s->execute();
@@ -608,7 +647,7 @@ if (	(isSet($_POST['action']) and $_POST['action'] == 'Cancel') OR
 			$error = 'Error updating selected booked meeting to be cancelled: ' . $e->getMessage();
 			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
 			exit();
-		}		
+		}
 	}
 
 	if($continueCancel === FALSE){
@@ -621,12 +660,21 @@ if (	(isSet($_POST['action']) and $_POST['action'] == 'Cancel') OR
 			$location = "http://$_SERVER[HTTP_HOST]/booking/";
 		}
 		header('Location: ' . $location);
-		exit();				
+		exit();
 	}
-	
+
 	// Only cancel if booking is currently active
 	if(	isSet($bookingStatus) AND  
 		($bookingStatus == 'Active' OR $bookingStatus == 'Active Today')){
+
+		// Load new template to let admin add a reason for cancelling the meeting
+		if(isSet($cancelledByAdmin) AND $cancelledByAdmin AND !isSet($_SESSION['cancelBookingOriginalValues']['ReasonForCancelling'])){
+			include_once 'cancelmessage.html.php';
+			exit();
+		} elseif(!isSet($cancelledByAdmin)){
+			unset($_SESSION['cancelBookingOriginalValues']['ReasonForCancelling']);
+		}
+
 		// Update cancellation date for selected booked meeting in database
 		try
 		{
@@ -647,9 +695,9 @@ if (	(isSet($_POST['action']) and $_POST['action'] == 'Cancel') OR
 			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
 			exit();
 		}
-		
+
 		$_SESSION['normalBookingFeedback'] = "Successfully cancelled the booking.";
-		
+
 			// Add a log event that a booking was cancelled
 		try
 		{
@@ -660,18 +708,23 @@ if (	(isSet($_POST['action']) and $_POST['action'] == 'Cancel') OR
 				$nameOfUserWhoCancelled = $cancelledByUserName;
 				$_SESSION['cancelBookingOriginalValues']['CancelledBy'] = "a Company Owner: " . $cancelledByUserName;
 			} else {
-				$nameOfUserWhoCancelled = $_SESSION["AddCreateBookingInfoArray"]["UserLastname"] . ', ' . $_SESSION["AddCreateBookingInfoArray"]["UserFirstname"];
+				$nameOfUserWhoCancelled = $bookingCreatorUserInfo;
+				unset($_SESSION['cancelBookingOriginalValues']);
 			}		
-	
+
 			// Save a description with information about the booking that was cancelled
 			$logEventDescription = "N/A";
 			if(isSet($bookingCreatorUserInfo) AND isSet($bookingMeetingInfo)){
 				$logEventDescription = 	"A booking with these details was cancelled:" . 
-										"\nUser Information: " . $bookingCreatorUserInfo . 
+										"\nBooked for User: " . $bookingCreatorUserInfo . 
 										"\nMeeting Information: " . $bookingMeetingInfo . 
 										"\nIt was cancelled by: " . $nameOfUserWhoCancelled;
 			} else {
-				$logEventDescription = 'A booking was cancelled by: ' . $nameOfUserWhoCancelled;
+				$logEventDescription = 	"A booking was cancelled by: " . $nameOfUserWhoCancelled;
+			}
+
+			if(isSet($cancelledByAdmin) AND $cancelledByAdmin AND isSet($_SESSION['cancelBookingOriginalValues']['ReasonForCancelling'])){
+				$logEventDescription .= "\nReason for cancelling: " . $_SESSION['cancelBookingOriginalValues']['ReasonForCancelling'];
 			}
 
 			$sql = "INSERT INTO `logevent` 
@@ -1998,6 +2051,7 @@ if(isSet($_POST['action']) AND $_POST['action'] == "Confirm Code"){
 			header('Location: ' . $location);
 			exit();
 		} else {
+			unset($_SESSION['bookingCodeUserID']);
 			// Remember last datetime we guessed wrong
 			$_SESSION['bookingCodeGuesses'][] = getDatetimeNow();
 			if(!isSet($_SESSION['confirmBookingCodeError'])){
