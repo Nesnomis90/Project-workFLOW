@@ -1312,11 +1312,11 @@ if (isSet($_POST['action']) and $_POST['action'] == 'Confirm Merge'){
 	}
 
 	// Password is correct. Let's transfer all employees and booking history to the new company
-	// TO-DO: Not sure if this works. It removes company and merges employees correct. Have not tested with companycreditshistory
+	// FIX-ME: Not sure if this works. It removes company and merges employees correct. Have not tested with companycreditshistory
 	try
 	{
 		$pdo->beginTransaction();
-		// TO-DO: Find better solution than ignoring updates on duplicates?
+		// FIX-ME: Find better solution than ignoring updates on duplicates?
 		$sql = 'UPDATE IGNORE	`employee`
 				SET				`CompanyID` = :CompanyID2
 				WHERE			`CompanyID` = :CompanyID';
@@ -1333,7 +1333,7 @@ if (isSet($_POST['action']) and $_POST['action'] == 'Confirm Merge'){
 		$s->bindValue(':CompanyID2', $_SESSION['MergeCompanySelectedCompanyID2']);
 		$s->execute();
 		
-		// TO-DO: How to handle merging company credits history?
+		// FIX-ME: How to handle merging company credits history?
 		// Just ignore it?
 	/*	$sql = 'UPDATE 	`companycreditshistory`
 				SET		`CompanyID` = :CompanyID2
