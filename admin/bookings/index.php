@@ -407,7 +407,10 @@ if (isSet($_POST['action']) and $_POST['action'] == 'Cancel')
 {
 	// Only cancel if booking is currently active
 	if(	isSet($_POST['BookingStatus']) AND  
-		($_POST['BookingStatus'] == 'Active' OR $_POST['BookingStatus'] == 'Active Today')){	
+		($_POST['BookingStatus'] == 'Active' OR $_POST['BookingStatus'] == 'Active Today')){
+
+		$bookingID = $_POST['id'];
+
 		// Update cancellation date for selected booked meeting in database
 		try
 		{
@@ -416,12 +419,26 @@ if (isSet($_POST['action']) and $_POST['action'] == 'Cancel')
 			$pdo = connect_to_db();
 			$sql = 'UPDATE 	`booking` 
 					SET 	`dateTimeCancelled` = CURRENT_TIMESTAMP,
-							`cancellationCode` = NULL
-					WHERE 	`bookingID` = :id
+							`cancellationCode` = NULL,
+							`cancelledByUserID` = :cancelledByUserID
+					WHERE 	`bookingID` = :bookingID
 					AND		`dateTimeCancelled` IS NULL
 					AND		`actualEndDateTime` IS NULL';
 			$s = $pdo->prepare($sql);
-			$s->bindValue(':id', $_POST['id']);
+			$s->bindValue(':bookingID', $bookingID);
+			$s->bindValue(':cancelledByUserID', $_SESSION['LoggedInUserID']);			
+			$s->execute();
+
+			// If we cancelled the meeting after it had started, we have to update that it ended.
+			$sql = 'UPDATE 	`booking` 
+					SET		`actualEndDateTime` = `dateTimeCancelled`
+					WHERE 	`actualEndDateTime` IS NULL
+					AND		`dateTimeCancelled`
+					BETWEEN `startDateTime`
+					AND		`endDateTime`
+					AND		`bookingID = :bookingID';
+			$s = $pdo->prepare($sql);
+			$s->bindValue(':bookingID', $bookingID);
 			$s->execute();
 
 			//close connection

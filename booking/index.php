@@ -699,6 +699,18 @@ if (	(isSet($_POST['action']) and $_POST['action'] == 'Cancel') OR
 			$s->bindValue(':cancelMessage', $cancelMessage);
 			$s->bindValue(':cancelledByUserID', $SelectedUserID);
 			$s->execute();
+			
+			// If we cancelled the meeting after it had started, we have to update that it ended.
+			$sql = 'UPDATE 	`booking` 
+					SET		`actualEndDateTime` = `dateTimeCancelled`
+					WHERE 	`actualEndDateTime` IS NULL
+					AND		`dateTimeCancelled`
+					BETWEEN `startDateTime`
+					AND		`endDateTime`
+					AND		`bookingID = :bookingID';
+			$s = $pdo->prepare($sql);
+			$s->bindValue(':bookingID', $bookingID);
+			$s->execute();
 		}
 		catch (PDOException $e)
 		{
