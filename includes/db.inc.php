@@ -467,17 +467,19 @@ function create_tables()
 						  `description` text,
 						  `adminNote` text,
 						  `cancelMessage` text,
+						  `cancelledByUserID` int(10) unsigned DEFAULT NULL,
 						  `cancellationCode` char(64) DEFAULT NULL,
 						  `emailSent` tinyint(1) NOT NULL DEFAULT '0',
 						  PRIMARY KEY (`bookingID`),
 						  UNIQUE KEY `cancellationCode_UNIQUE` (`cancellationCode`),
 						  KEY `FK_MeetingRoomID_idx` (`meetingRoomID`),
-						  KEY `FK_UserID_idx` (`userID`),
 						  KEY `FK_UserID2_idx` (`userID`),
 						  KEY `FK_CompanyID3_idx` (`companyID`),
+						  KEY `FK_UserID4_idx` (`cancelledByUserID`),
 						  CONSTRAINT `FK_CompanyID3` FOREIGN KEY (`companyID`) REFERENCES `company` (`CompanyID`) ON DELETE SET NULL ON UPDATE CASCADE,
 						  CONSTRAINT `FK_MeetingRoomID` FOREIGN KEY (`meetingRoomID`) REFERENCES `meetingroom` (`meetingRoomID`) ON DELETE SET NULL ON UPDATE CASCADE,
-						  CONSTRAINT `FK_UserID2` FOREIGN KEY (`userID`) REFERENCES `user` (`userID`) ON DELETE SET NULL ON UPDATE CASCADE
+						  CONSTRAINT `FK_UserID2` FOREIGN KEY (`userID`) REFERENCES `user` (`userID`) ON DELETE SET NULL ON UPDATE CASCADE,
+						  CONSTRAINT `FK_UserID4` FOREIGN KEY (`cancelledByUserID`) REFERENCES `user` (`userID`) ON DELETE SET NULL ON UPDATE CASCADE
 						) ENGINE=InnoDB DEFAULT CHARSET=utf8");
 
 			//	Add the creation to log event
