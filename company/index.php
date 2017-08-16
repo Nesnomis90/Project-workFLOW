@@ -1901,6 +1901,12 @@ if(isSet($_GET['totalBooking']) OR isSet($_GET['activeBooking']) OR isSet($_GET[
 							b.`dateTimeCancelled`							AS BookingWasCancelledOn,
 							b.`cancelMessage`								AS BookingCancelMessage,
 							(
+								IF(b.`cancelledByUserID` IS NULL, NULL, (SELECT `firstName` FROM `user` WHERE `userID` = b.`cancelledByUserID`))
+							)        										AS CancelledByUserFirstName,
+							(
+								IF(b.`cancelledByUserID` IS NULL, NULL, (SELECT `lastName` FROM `user` WHERE `userID` = b.`cancelledByUserID`))
+							)        										AS CancelledByUserLastName,
+							(
 								IF(b.`userID` IS NULL, NULL, (SELECT `firstName` FROM `user` WHERE `userID` = b.`userID`))
 							) 												AS firstName,
 							(
@@ -2055,7 +2061,11 @@ if(isSet($_GET['totalBooking']) OR isSet($_GET['activeBooking']) OR isSet($_GET[
 		if($cancelMessage == NULL){
 			$cancelMessage = "";
 		}
-
+		if($row['CancelledByUserLastName'] == NULL AND $row['CancelledByUserFirstName'] == NULL){
+			$cancelledByUserName = "N/A - Deleted";
+		} else {
+			$cancelledByUserName = $row['CancelledByUserLastName'] . ", " . $row['CancelledByUserFirstName'];
+		}
 		if($status == "Active Today" AND (isSet($_GET['activeBooking']) OR isSet($_GET['totalBooking']))) {
 			$bookingsActiveToday[] = array(	'id' => $row['bookingID'],
 											'BookingStatus' => $status,
@@ -2091,6 +2101,7 @@ if(isSet($_GET['totalBooking']) OR isSet($_GET['activeBooking']) OR isSet($_GET[
 												'BookingWasCompletedOn' => $displayCompletedDateTime,
 												'BookingWasCancelledOn' => $displayCancelledDateTime,
 												'CancelMessage' => $cancelMessage,
+												'CancelledByUserName' => $cancelledByUserName,
 												'firstName' => $firstname,
 												'lastName' => $lastname,
 												'email' => $email,
@@ -2133,6 +2144,7 @@ if(isSet($_GET['totalBooking']) OR isSet($_GET['activeBooking']) OR isSet($_GET[
 											'BookingWasCompletedOn' => $displayCompletedDateTime,
 											'BookingWasCancelledOn' => $displayCancelledDateTime,
 											'CancelMessage' => $cancelMessage,
+											'CancelledByUserName' => $cancelledByUserName,
 											'firstName' => $firstname,
 											'lastName' => $lastname,
 											'email' => $email,
@@ -2153,6 +2165,7 @@ if(isSet($_GET['totalBooking']) OR isSet($_GET['activeBooking']) OR isSet($_GET[
 											'BookingWasCompletedOn' => $displayCompletedDateTime,
 											'BookingWasCancelledOn' => $displayCancelledDateTime,
 											'CancelMessage' => $cancelMessage,
+											'CancelledByUserName' => $cancelledByUserName,
 											'firstName' => $firstname,
 											'lastName' => $lastname,
 											'email' => $email,
@@ -2173,6 +2186,7 @@ if(isSet($_GET['totalBooking']) OR isSet($_GET['activeBooking']) OR isSet($_GET[
 										'BookingWasCompletedOn' => $displayCompletedDateTime,
 										'BookingWasCancelledOn' => $displayCancelledDateTime,
 										'CancelMessage' => $cancelMessage,
+										'CancelledByUserName' => $cancelledByUserName,
 										'firstName' => $firstname,
 										'lastName' => $lastname,
 										'email' => $email,
