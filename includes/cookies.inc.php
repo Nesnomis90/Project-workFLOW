@@ -29,7 +29,7 @@ function checkIfLocalDevice(){
 		// There are local meeting room identifiers set in cookies. Check if they are valid
 		$meetingRoomName = $_COOKIE[MEETINGROOM_NAME];
 		$meetingRoomIDCode = $_COOKIE[MEETINGROOM_IDCODE];
-		
+
 		if(!isSet($_SESSION['OriginalCookieMeetingRoomName']) AND !isSet($_SESSION['OriginalCookieMeetingRoomIDCode'])){
 			$validMeetingRoom = databaseContainsMeetingRoomWithIDCode($meetingRoomName, $meetingRoomIDCode);
 			if ($validMeetingRoom === TRUE){
@@ -37,7 +37,7 @@ function checkIfLocalDevice(){
 				// Hopefully this means it's a local device we set up and not someone malicious
 				$_SESSION['OriginalCookieMeetingRoomName'] = $meetingRoomName;
 				$_SESSION['OriginalCookieMeetingRoomIDCode'] = $meetingRoomIDCode;
-				
+
 				if(!isSet($_SESSION['DefaultMeetingRoomInfo'])){
 					try
 					{
@@ -56,7 +56,7 @@ function checkIfLocalDevice(){
 						$s->bindValue(':meetingRoomName', $meetingRoomName);
 						$s->execute();
 						$result = $s->fetchAll(PDO::FETCH_ASSOC);
-						
+
 						foreach($result AS $row){
 							$defaultRoomInfo = array(
 														'TheMeetingRoomID' => $row['TheMeetingRoomID'],
@@ -66,7 +66,7 @@ function checkIfLocalDevice(){
 														'TheMeetingRoomLocation' => $row['TheMeetingRoomLocation']
 														);
 						}
-						
+
 						$_SESSION['DefaultMeetingRoomInfo'] = $defaultRoomInfo;
 						//Close the connection
 						$pdo = null;
@@ -77,12 +77,12 @@ function checkIfLocalDevice(){
 						include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
 						$pdo = null;
 						exit();
-					}			
+					}
 				}
 			} elseif($validMeetingRoom === FALSE){
 				// The cookies set does not match a meeting room i.e. someone manually changed a cookie
 				resetLocalDevice();
-			}	
+			}
 		}
 		if(	$_COOKIE[MEETINGROOM_NAME] != $_SESSION['OriginalCookieMeetingRoomName'] OR 
 			$_COOKIE[MEETINGROOM_IDCODE] != $_SESSION['OriginalCookieMeetingRoomIDCode']){
@@ -95,7 +95,7 @@ function checkIfLocalDevice(){
 		unset($_SESSION['OriginalCookieMeetingRoomName']);
 		unset($_SESSION['OriginalCookieMeetingRoomIDCode']);
 		unset($_SESSION['DefaultMeetingRoomInfo']);
-	}	
+	}
 }
 
 // Function to remove locally set device information

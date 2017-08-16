@@ -42,7 +42,7 @@ function convertMinutesToHoursAndMinutes($GivenInMinutes){
 		$GivenInHoursAndMinutes = $GivenInMinutes . 'm';
 	} else {
 		$GivenInHoursAndMinutes = 'None';
-	}	
+	}
 	return $GivenInHoursAndMinutes;
 }
 
@@ -55,7 +55,7 @@ function convertToCurrency($input){
 			$output = number_format($input,SET_CURRENCY_DECIMAL_PRECISION) . " " . SET_CURRENCY;
 		} else {
 			$output = number_format($input,SET_CURRENCY_DECIMAL_PRECISION);
-		}		
+		}
 	} else {
 		if(SET_CURRENCY_SYMBOL != ""){
 			$output = $input . SET_CURRENCY_SYMBOL;
@@ -63,7 +63,7 @@ function convertToCurrency($input){
 			$output = $input . " " . SET_CURRENCY;
 		} else {
 			$output = $input;
-		}			
+		}
 	}
 	return $output;
 }
@@ -80,7 +80,7 @@ function convertTwoDateTimesToTimeDifferenceInMinutes($startDateTime,$endDateTim
 	if($timeDifferenceInSeconds > 0){
 		$timeDifferenceInMinutes += 1;
 	}
-	
+
 	$timeDifference = $timeDifferenceInDays*1440 + $timeDifferenceInHours*60 + $timeDifferenceInMinutes;
 
 	return $timeDifference;
@@ -95,7 +95,7 @@ function convertTwoDateTimesToTimeDifferenceInMonths($startDateTime,$endDateTime
 	$timeDifference = $timeDifferenceStartDate->diff($timeDifferenceCompletionDate);
 	$timeDifferenceInYears = $timeDifference->y;
 	$timeDifferenceInMonths = $timeDifference->m;
-	
+
 	$timeDifference = $timeDifferenceInYears*12 + $timeDifferenceInMonths;
 
 	return $timeDifference;
