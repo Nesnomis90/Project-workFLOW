@@ -28,10 +28,10 @@ function clearAddCompanySessions(){
 function clearEditCompanySessions(){	
 	unset($_SESSION['EditCompanyOriginalName']);
 	unset($_SESSION['EditCompanyOriginalRemoveDate']);
-	
+
 	unset($_SESSION['EditCompanyChangedName']);
 	unset($_SESSION['EditCompanyChangedRemoveDate']);
-	
+
 	unset($_SESSION['EditCompanyCompanyID']);
 }
 // Function to check if the company has unbilled periods and then sums them up and displays the total 

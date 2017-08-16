@@ -699,7 +699,7 @@ if (	(isSet($_POST['action']) and $_POST['action'] == 'Cancel') OR
 			$s->bindValue(':cancelMessage', $cancelMessage);
 			$s->bindValue(':cancelledByUserID', $SelectedUserID);
 			$s->execute();
-			
+
 			// If we cancelled the meeting after it had started, we have to update that it ended.
 			$sql = 'UPDATE 	`booking` 
 					SET		`actualEndDateTime` = `dateTimeCancelled`
@@ -734,7 +734,7 @@ if (	(isSet($_POST['action']) and $_POST['action'] == 'Cancel') OR
 			} else {
 				$nameOfUserWhoCancelled = $bookingCreatorUserInfo;
 				unset($_SESSION['cancelBookingOriginalValues']);
-			}		
+			}
 
 			// Save a description with information about the booking that was cancelled
 			$logEventDescription = "N/A";
@@ -761,9 +761,9 @@ if (	(isSet($_POST['action']) and $_POST['action'] == 'Cancel') OR
 			$s = $pdo->prepare($sql);
 			$s->bindValue(':description', $logEventDescription);
 			$s->execute();
-			
+
 			//Close the connection
-			$pdo = null;		
+			$pdo = null;
 		}
 		catch(PDOException $e)
 		{
@@ -771,7 +771,7 @@ if (	(isSet($_POST['action']) and $_POST['action'] == 'Cancel') OR
 			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
 			$pdo = null;
 			exit();
-		}	
+		}
 		if($cancelledByAdmin OR $cancelledByOwner){
 			// only send email to inform the user that the booking was cancelled, if the user didn't cancel their own booking.
 			emailUserOnCancelledBooking();
@@ -781,7 +781,7 @@ if (	(isSet($_POST['action']) and $_POST['action'] == 'Cancel') OR
 		$_SESSION['normalBookingFeedback'] = "Meeting has already ended. Did not cancel it.";
 	}
 
-	clearChangeBookingSessions();	
+	clearChangeBookingSessions();
 
 	// Load booked meetings list webpage with updated database
 	if(isSet($_GET['meetingroom'])){
@@ -791,7 +791,7 @@ if (	(isSet($_POST['action']) and $_POST['action'] == 'Cancel') OR
 		$location = "http://$_SERVER[HTTP_HOST]/booking/";
 	}
 	header('Location: ' . $location);
-	exit();		
+	exit();	
 }
 
 // If user wants to change the room for the booked meeting
@@ -826,7 +826,7 @@ if (	(isSet($_POST['action']) and $_POST['action'] == 'Change Room') OR
 		$continueChangeRoom = FALSE;
 		$changedByOwner = FALSE;
 		$changedByAdmin = FALSE;
-	
+
 		// Get original booking information
 		try
 		{

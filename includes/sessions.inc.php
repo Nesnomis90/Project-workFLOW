@@ -3,6 +3,132 @@
 
 // Remove all sessions used by admin in the user overview
 function unsetSessionsFromAdminUsers(){
+	
+	unset($_SESSION['AddBookingInfoArray']);
+	unset($_SESSION['AddBookingChangeUser']);
+	unset($_SESSION['AddBookingUsersArray']);
+	unset($_SESSION['AddBookingOriginalInfoArray']);
+	unset($_SESSION['AddBookingMeetingRoomsArray']);	
+	unset($_SESSION['AddBookingUserSearch']);
+	unset($_SESSION['AddBookingSelectedNewUser']);
+	unset($_SESSION['AddBookingSelectedACompany']);
+	unset($_SESSION['AddBookingDefaultDisplayNameForNewUser']);
+	unset($_SESSION['AddBookingDefaultBookingDescriptionForNewUser']);	
+	unset($_SESSION['AddBookingDisplayCompanySelect']);	
+	unset($_SESSION['AddBookingCompanyArray']);
+	unset($_SESSION['AddBookingUserCannotBookForSelf']);
+
+	unset($_SESSION['EditBookingInfoArray']);
+	unset($_SESSION['EditBookingChangeUser']);
+	unset($_SESSION['EditBookingUsersArray']);
+	unset($_SESSION['EditBookingOriginalInfoArray']);
+	unset($_SESSION['EditBookingMeetingRoomsArray']);	
+	unset($_SESSION['EditBookingUserSearch']);
+	unset($_SESSION['EditBookingSelectedNewUser']);
+	unset($_SESSION['EditBookingSelectACompany']);
+	unset($_SESSION['EditBookingDefaultDisplayNameForNewUser']);
+	unset($_SESSION['EditBookingDefaultBookingDescriptionForNewUser']);	
+	unset($_SESSION['EditBookingDisplayCompanySelect']);
+	unset($_SESSION['EditBookingCompanyArray']);
+
+	unset($_SESSION['BookingHistoryIntervalNumber']);
+	unset($_SESSION['BookingHistoryCompanyInfo']);
+	unset($_SESSION['BookingHistoryFirstPeriodIntervalNumber']);
+
+	unset($_SESSION['AddCompanyCompanyName']);
+
+	unset($_SESSION['EditCompanyOriginalName']);
+	unset($_SESSION['EditCompanyOriginalRemoveDate']);
+	unset($_SESSION['EditCompanyChangedName']);
+	unset($_SESSION['EditCompanyChangedRemoveDate']);
+	unset($_SESSION['EditCompanyCompanyID']);
+
+	unset($_SESSION['EditCompanyCreditsChangeCredits']);
+	unset($_SESSION['EditCompanyCreditsChangeAlternativeCreditsAmount']);
+	unset($_SESSION['EditCompanyCreditsCreditsArray']);
+	unset($_SESSION['EditCompanyCreditsOriginalInfo']);
+	unset($_SESSION['EditCompanyCreditsSelectedCreditsID']);
+	unset($_SESSION['EditCompanyCreditsPreviouslySelectedCreditsID']);
+	unset($_SESSION['EditCompanyCreditsNewAlternativeAmount']);
+
+	unset($_SESSION['AddCreditsDescription']);
+	unset($_SESSION['AddCreditsName']);
+	unset($_SESSION['LastCreditsID']);
+
+	unset($_SESSION['EditCreditsOriginalInfo']);
+	unset($_SESSION['EditCreditsName']);
+	unset($_SESSION['EditCreditsDescription']);
+	unset($_SESSION['EditCreditsAmount']);
+	unset($_SESSION['EditCreditsMonthlyPrice']);
+	unset($_SESSION['EditCreditsHourPrice']);
+	unset($_SESSION['EditCreditsCreditsID']);
+
+	unset($_SESSION['AddEmployeeCompanySearch']);
+	unset($_SESSION['AddEmployeeUserSearch']);
+	unset($_SESSION['AddEmployeeSelectedCompanyID']);
+	unset($_SESSION['AddEmployeeSelectedUserID']);
+	unset($_SESSION['AddEmployeeSelectedPositionID']);
+	unset($_SESSION['AddEmployeeCompaniesArray']);
+	unset($_SESSION['AddEmployeeCompanyPositionArray']);
+	unset($_SESSION['AddEmployeeUsersArray']);
+
+	unset($_SESSION['EditEmployeeOriginalPositionID']);
+	
+	unset($_SESSION['TransferEmployeeSelectedCompanyID']);
+	unset($_SESSION['TransferEmployeeSelectedCompanyName']);
+	unset($_SESSION['TransferEmployeeSelectedCompanyID2']);
+	unset($_SESSION['TransferEmployeeSelectedUserID']);
+	unset($_SESSION['TransferEmployeeSelectedUserName']);	
+
+	unset($_SESSION['AddEquipmentDescription']);
+	unset($_SESSION['AddEquipmentName']);
+	unset($_SESSION['LastEquipmentID']);
+
+	unset($_SESSION['EditEquipmentOriginalInfo']);
+	unset($_SESSION['EditEquipmentDescription']);
+	unset($_SESSION['EditEquipmentName']);
+	unset($_SESSION['EditEquipmentEquipmentID']);
+
+	unset($_SESSION['AddEventWeeksSelected']);
+	unset($_SESSION['AddEventDaysSelected']);
+	unset($_SESSION['AddEventRoomChoiceSelected']);
+	unset($_SESSION['AddEventRoomsSelected']);
+	unset($_SESSION['AddEventInfoArray']);
+	unset($_SESSION['AddEventMeetingRoomsArray']);
+	unset($_SESSION['AddEventDaysConfirmed']);
+	unset($_SESSION['AddEventDetailsConfirmed']);
+	unset($_SESSION['AddEventWeekChoiceSelected']);
+	unset($_SESSION['AddEventRoomSelectedButNotConfirmed']);
+	unset($_SESSION['AddEventWeekSelectedButNotConfirmed']);
+
+	unset($_SESSION['LogEventsLogLimitSet']);
+	unset($_SESSION['LogEventsSearchCheckmarks']);
+	unset($_SESSION['LogEventsSearchAllCheckmarks']);
+	unset($_SESSION['logEventsEnableDelete']);	
+
+	unset($_SESSION['AddMeetingRoomDescription']);
+	unset($_SESSION['AddMeetingRoomName']);
+	unset($_SESSION['AddMeetingRoomCapacity']);
+	unset($_SESSION['AddMeetingRoomLocation']);
+	unset($_SESSION['LastMeetingRoomID']);
+
+	unset($_SESSION['EditMeetingRoomOriginalInfo']);	
+	unset($_SESSION['EditMeetingRoomDescription']);
+	unset($_SESSION['EditMeetingRoomName']);
+	unset($_SESSION['EditMeetingRoomCapacity']);
+	unset($_SESSION['EditMeetingRoomLocation']);
+	unset($_SESSION['EditMeetingRoomMeetingRoomID']);
+
+	unset($_SESSION['AddRoomEquipmentEquipmentArray']);	
+	unset($_SESSION['AddRoomEquipmentEquipmentSearch']);
+	unset($_SESSION['AddRoomEquipmentSelectedEquipment']);
+	unset($_SESSION['AddRoomEquipmentSelectedEquipmentAmount']);
+	unset($_SESSION['AddRoomEquipmentSelectedMeetingRoom']);
+	unset($_SESSION['AddRoomEquipmentMeetingRoomArray']);
+	unset($_SESSION['AddRoomEquipmentMeetingRoomSearch']);
+
+	unset($_SESSION['EditRoomEquipmentOriginalEquipmentAmount']);
+	
 	unset($_SESSION['UserEmailsToBeDisplayed']);
 	unset($_SESSION['UserEmailListSeparatorSelected']);
 
@@ -13,8 +139,6 @@ function unsetSessionsFromAdminUsers(){
 	unset($_SESSION['AddNewUserAccessArray']);
 	unset($_SESSION['AddNewUserGeneratedPassword']);
 	unset($_SESSION['AddNewUserDefaultAccessID']);
-	
-	unset($_SESSION['lastUserID']);
 	
 	unset($_SESSION['EditUserOriginaEmail']);
 	unset($_SESSION['EditUserOriginalFirstName']);
@@ -43,7 +167,6 @@ function unsetSessionsFromUserManagement(){
 	unset($_SESSION['normalUserEditInfoArray']);
 	unset($_SESSION['normalUserEditMode']);
 }
-
 
 // Removes all stored info e.g. logs out user
 function destroySession(){

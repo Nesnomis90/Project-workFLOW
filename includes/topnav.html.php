@@ -1,5 +1,8 @@
 <?php
 session_start();
+// Make sure we don't have any admin sessions still around when not browsing admin pages.
+unsetSessionsFromAdminUsers(); // TO-DO: Remove if stuff gets broken.
+
 function getLocationWeCameFrom(){
 	$pathWeCameFrom = $_SERVER['PHP_SELF'];
 	$pathWithoutPHPFile = substr($pathWeCameFrom, 0, strrpos($pathWeCameFrom,'/'));	
