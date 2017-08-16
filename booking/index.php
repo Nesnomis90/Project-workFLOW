@@ -679,17 +679,25 @@ if (	(isSet($_POST['action']) and $_POST['action'] == 'Cancel') OR
 			unset($_SESSION['cancelBookingOriginalValues']['ReasonForCancelling']);
 		}
 
+		if(isSet($_SESSION['cancelBookingOriginalValues']['ReasonForCancelling']) AND !empty($_SESSION['cancelBookingOriginalValues']['ReasonForCancelling'])){
+			$cancelMessage = $_SESSION['cancelBookingOriginalValues']['ReasonForCancelling'];
+		} else {
+			$cancelMessage = NULL;
+		}
+		
 		// Update cancellation date for selected booked meeting in database
 		try
 		{
 			$sql = 'UPDATE 	`booking` 
 					SET 	`dateTimeCancelled` = CURRENT_TIMESTAMP,
-							`cancellationCode` = NULL				
-					WHERE 	`bookingID` = :id
+							`cancellationCode` = NULL,
+							`cancelMessage` = :cancelMessage
+					WHERE 	`bookingID` = :bookingID
 					AND		`dateTimeCancelled` IS NULL
 					AND		`actualEndDateTime` IS NULL';
 			$s = $pdo->prepare($sql);
-			$s->bindValue(':id', $bookingID);
+			$s->bindValue(':bookingID', $bookingID);
+			$s->bindValue(':cancelMessage', $cancelMessage);
 			$s->execute();
 		}
 		catch (PDOException $e)
