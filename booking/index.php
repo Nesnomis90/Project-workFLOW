@@ -600,7 +600,6 @@ if (	(isSet($_POST['action']) and $_POST['action'] == 'Cancel') OR
 			$row = $s->fetch(PDO::FETCH_ASSOC);
 
 			if(isSet($row) AND $row['HitCount'] > 0){
-				$cancelledByUserID = $row['UserID'];
 				$cancelledByUserName = $row['LastName'] . ", " . $row['FirstName'];
 				$cancelledByUserEmail = $row['UserEmail'];
 				$cancelledByUserInfo = $row['LastName'] . ", " . $row['FirstName'] . " - " . $row['UserEmail'];
@@ -638,7 +637,6 @@ if (	(isSet($_POST['action']) and $_POST['action'] == 'Cancel') OR
 			$s->execute();
 			$row = $s->fetch(PDO::FETCH_ASSOC);
 			if(isSet($row) AND $row['HitCount'] > 0){
-				$cancelledByAdminID = $row['UserID'];
 				$cancelledByAdminName = $row['LastName'] . ", " . $row['FirstName'];
 				$continueCancel = TRUE;
 				$cancelledByAdmin = TRUE;
@@ -684,20 +682,22 @@ if (	(isSet($_POST['action']) and $_POST['action'] == 'Cancel') OR
 		} else {
 			$cancelMessage = NULL;
 		}
-		
+
 		// Update cancellation date for selected booked meeting in database
 		try
 		{
 			$sql = 'UPDATE 	`booking` 
 					SET 	`dateTimeCancelled` = CURRENT_TIMESTAMP,
 							`cancellationCode` = NULL,
-							`cancelMessage` = :cancelMessage
+							`cancelMessage` = :cancelMessage,
+							`cancelledByUserID` = :cancelledByUserID
 					WHERE 	`bookingID` = :bookingID
 					AND		`dateTimeCancelled` IS NULL
 					AND		`actualEndDateTime` IS NULL';
 			$s = $pdo->prepare($sql);
 			$s->bindValue(':bookingID', $bookingID);
 			$s->bindValue(':cancelMessage', $cancelMessage);
+			$s->bindValue(':cancelledByUserID', $SelectedUserID);
 			$s->execute();
 		}
 		catch (PDOException $e)
