@@ -102,7 +102,10 @@
 								<label class="period">For the period of:</label><span><b><?php htmlout($row['BookingPeriod']); ?></b></span>
 								<label class="period">Using a total time of:</label><span><b><?php htmlout($row['BookingTimeUsed']); ?></b></span>
 								<label class="period">Time used in price calculation:</label><span><b><?php htmlout($row['BookingTimeCharged']); ?></b></span>
-								<?php if(isSet($row['AdminNote']) AND $row['AdminNote'] != "") : ?>
+								<?php if(isSet($row['CancelMessage']) AND !empty($row['CancelMessage'])) : ?>
+									<label class="period">Ended Early Message:</label><span><b><?php htmlout($row['CancelMessage']); ?></b></span>
+								<?php endif; ?>
+								<?php if(isSet($row['AdminNote']) AND !empty($row['AdminNote'])) : ?>
 									<label class="period" style="color: red;">Admin Note:</label><span style="color:red;"><b><?php htmlout($row['AdminNote']); ?></b></span>
 								<?php endif; ?>
 						</fieldset>

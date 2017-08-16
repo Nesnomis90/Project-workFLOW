@@ -402,6 +402,7 @@ function calculatePeriodInformation($pdo, $companyID, $BillingStart, $BillingEnd
 						b.`startDateTime`		AS BookingStartedDatetime,
 						b.`actualEndDateTime`	AS BookingCompletedDatetime,
 						b.`adminNote`			AS AdminNote,
+						b.`cancelMessage`		AS CancelMessage,
 						(
 							IF(b.`userID` IS NULL, NULL, (SELECT `firstName` FROM `user` WHERE `userID` = b.`userID`))
 						)						AS UserFirstname,
@@ -468,14 +469,20 @@ function calculatePeriodInformation($pdo, $companyID, $BillingStart, $BillingEnd
 			$adminNote = "";
 		} else {
 			$adminNote = $row['AdminNote'];
-		}		
+		}
+		if($row['CancelMessage'] == NULL){
+			$cancelMessage = "";
+		} else {
+			$cancelMessage = $row['CancelMessage'];
+		}	
 		$bookingHistory[] = array(
 									'BookingPeriod' => $bookingPeriod,
 									'UserInformation' => $userInformation,
 									'MeetingRoomName' => $meetingRoomName,
 									'BookingTimeUsed' => $displayBookingTimeUsed,
 									'BookingTimeCharged' => $displayBookingTimeUsedInPriceCalculations,
-									'AdminNote' => $adminNote
+									'AdminNote' => $adminNote,
+									'CancelMessage' => $cancelMessage
 									);
 	}
 	
@@ -525,8 +532,10 @@ function calculatePeriodInformation($pdo, $companyID, $BillingStart, $BillingEnd
 	$displayMonthPrice = convertToCurrency($monthPrice);
 	$displayTotalBookingTimeThisPeriod = convertMinutesToHoursAndMinutes($totalBookingTimeThisPeriod);
 	$displayTotalBookingTimeUsedInPriceCalculationsThisPeriod = convertMinutesToHoursAndMinutes($totalBookingTimeUsedInPriceCalculations);
-	$displayTotalBookingTimeChargedWithAfterCredits = convertMinutesToHoursAndMinutes($roundedDownTimeOverCreditsInMinutes);
-	
+	if(isSet($roundedDownTimeOverCreditsInMinutes)){
+		$displayTotalBookingTimeChargedWithAfterCredits = convertMinutesToHoursAndMinutes($roundedDownTimeOverCreditsInMinutes);
+	}
+
 	if(!isSet($actualTimeOverCreditsInMinutes)){
 		$actualTimeOverCreditsInMinutes = "";
 	}				
@@ -539,6 +548,9 @@ function calculatePeriodInformation($pdo, $companyID, $BillingStart, $BillingEnd
 	if(!isSet($displayTotalBookingTimeChargedWithAfterCredits)){
 		$displayTotalBookingTimeChargedWithAfterCredits = "N/A";
 	}
+	if(!isSet($displayTotalBookingTimeChargedWithAfterCredits)){
+		$displayTotalBookingTimeChargedWithAfterCredits = "N/A";
+	}	
 	if(!isSet($bookingHistory)){
 		$bookingHistory = array();
 	}
@@ -548,7 +560,7 @@ function calculatePeriodInformation($pdo, $companyID, $BillingStart, $BillingEnd
 	if(!isSet($billingDescription) OR $billingDescription == NULL){
 		$billingDescription = "";
 	}
-	
+
 	return array(	$bookingHistory, $displayCompanyCredits, $displayCompanyCreditsRemaining, $displayOverCreditsTimeUsed, 
 					$displayMonthPrice, $displayTotalBookingTimeThisPeriod, $displayOverFeeCostThisMonth, $overCreditsFee,
 					$bookingCostThisMonth, $totalBookingCostThisMonth, $companyMinuteCreditsRemaining, $actualTimeOverCreditsInMinutes, 

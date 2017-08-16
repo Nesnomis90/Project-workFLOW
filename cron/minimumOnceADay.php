@@ -83,7 +83,6 @@ function updateBillingDatesForCompanies(){
 				ON 			cc.`CompanyID` = c.`CompanyID`
 				INNER JOIN 	`credits` cr
 				ON			cr.`CreditsID` = cc.`CreditsID`
-				WHERE 		c.`isActive` = 1
 				AND			CURDATE() >= c.`endDate`"
 		$return = $pdo->query($sql);
 		$rowCount = $return->fetchColumn();
@@ -154,7 +153,6 @@ function updateBillingDatesForCompanies(){
 					ON 			cc.`CompanyID` = c.`CompanyID`
 					INNER JOIN 	`credits` cr
 					ON			cr.`CreditsID` = cc.`CreditsID`
-					WHERE 		c.`isActive` = 1
 					AND			CURDATE() >= c.`endDate`";
 			$s = $pdo->prepare($sql);
 			$s->bindValue(':minimumSecondsPerBooking', $minimumSecondsPerBooking);

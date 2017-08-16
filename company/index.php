@@ -1898,7 +1898,8 @@ if(isSet($_GET['totalBooking']) OR isSet($_GET['activeBooking']) OR isSet($_GET[
 							b.`description`									AS BookingDescription,
 							b.`dateTimeCreated`								AS BookingWasCreatedOn, 
 							b.`actualEndDateTime`							AS BookingWasCompletedOn, 
-							b.`dateTimeCancelled`							AS BookingWasCancelledOn,										
+							b.`dateTimeCancelled`							AS BookingWasCancelledOn,
+							b.`cancelMessage`								AS BookingCancelMessage,
 							(
 								IF(b.`userID` IS NULL, NULL, (SELECT `firstName` FROM `user` WHERE `userID` = b.`userID`))
 							) 												AS firstName,
@@ -1926,7 +1927,7 @@ if(isSet($_GET['totalBooking']) OR isSet($_GET['activeBooking']) OR isSet($_GET[
 				FROM 		`booking` b
 				WHERE		b.`CompanyID` = :CompanyID
 				ORDER BY 	UNIX_TIMESTAMP(b.`startDateTime`)
-				ASC';
+				DESC';
 		$s = $pdo->prepare($sql);
 		$s->bindValue(':CompanyID', $selectedCompanyToDisplayID);
 		$s->execute();
@@ -2049,7 +2050,12 @@ if(isSet($_GET['totalBooking']) OR isSet($_GET['activeBooking']) OR isSet($_GET[
 			$completedMeetingDurationForPrice = $completedMeetingDurationInMinutes;
 		}
 		$displayCompletedMeetingDurationForPrice = convertMinutesToHoursAndMinutes($completedMeetingDurationForPrice);
-		
+
+		$cancelMessage = $row['BookingCancelMessage'];
+		if($cancelMessage == NULL){
+			$cancelMessage = "";
+		}
+
 		if($status == "Active Today" AND (isSet($_GET['activeBooking']) OR isSet($_GET['totalBooking']))) {
 			$bookingsActiveToday[] = array(	'id' => $row['bookingID'],
 											'BookingStatus' => $status,
@@ -2084,6 +2090,7 @@ if(isSet($_GET['totalBooking']) OR isSet($_GET['activeBooking']) OR isSet($_GET[
 												'BookingWasCreatedOn' => $displayCreatedDateTime,
 												'BookingWasCompletedOn' => $displayCompletedDateTime,
 												'BookingWasCancelledOn' => $displayCancelledDateTime,
+												'CancelMessage' => $cancelMessage,
 												'firstName' => $firstname,
 												'lastName' => $lastname,
 												'email' => $email,
@@ -2125,6 +2132,7 @@ if(isSet($_GET['totalBooking']) OR isSet($_GET['activeBooking']) OR isSet($_GET[
 											'BookingWasCreatedOn' => $displayCreatedDateTime,
 											'BookingWasCompletedOn' => $displayCompletedDateTime,
 											'BookingWasCancelledOn' => $displayCancelledDateTime,
+											'CancelMessage' => $cancelMessage,
 											'firstName' => $firstname,
 											'lastName' => $lastname,
 											'email' => $email,
@@ -2144,6 +2152,7 @@ if(isSet($_GET['totalBooking']) OR isSet($_GET['activeBooking']) OR isSet($_GET[
 											'BookingWasCreatedOn' => $displayCreatedDateTime,
 											'BookingWasCompletedOn' => $displayCompletedDateTime,
 											'BookingWasCancelledOn' => $displayCancelledDateTime,
+											'CancelMessage' => $cancelMessage,
 											'firstName' => $firstname,
 											'lastName' => $lastname,
 											'email' => $email,
@@ -2163,6 +2172,7 @@ if(isSet($_GET['totalBooking']) OR isSet($_GET['activeBooking']) OR isSet($_GET[
 										'BookingWasCreatedOn' => $displayCreatedDateTime,
 										'BookingWasCompletedOn' => $displayCompletedDateTime,
 										'BookingWasCancelledOn' => $displayCancelledDateTime,
+										'CancelMessage' => $cancelMessage,
 										'firstName' => $firstname,
 										'lastName' => $lastname,
 										'email' => $email,

@@ -591,11 +591,12 @@ if(	(isSet($_SESSION['loggedIn']) AND isSet($_SESSION['LoggedInUserID']) AND
 							b.`description`									AS BookingDescription,
 							b.`dateTimeCreated`								AS BookingWasCreatedOn, 
 							b.`actualEndDateTime`							AS BookingWasCompletedOn, 
-							b.`dateTimeCancelled`							AS BookingWasCancelledOn 
+							b.`dateTimeCancelled`							AS BookingWasCancelledOn,
+							b.`cancelMessage`								AS BookingCancelMessage
 				FROM 		`booking` b
 				WHERE		b.`UserID` = :userID
 				ORDER BY 	UNIX_TIMESTAMP(b.`startDateTime`)
-				ASC';
+				DESC';
 		$s = $pdo->prepare($sql);
 		$s->bindValue(':userID', $userID);
 		$s->execute();
@@ -702,6 +703,11 @@ if(	(isSet($_SESSION['loggedIn']) AND isSet($_SESSION['LoggedInUserID']) AND
 		}
 		$displayCompletedMeetingDurationForPrice = convertMinutesToHoursAndMinutes($completedMeetingDurationForPrice);
 		
+		$cancelMessage = $row['BookingCancelMessage'];
+		if($cancelMessage == NULL){
+			$cancelMessage = "";
+		}
+		
 		if($status == "Active Today" AND (isSet($_GET['activeBooking']) OR isSet($_GET['totalBooking']))) {				
 			$bookingsActiveToday[] = array(	'id' => $row['bookingID'],
 											'BookingStatus' => $status,
@@ -730,7 +736,8 @@ if(	(isSet($_SESSION['loggedIn']) AND isSet($_SESSION['LoggedInUserID']) AND
 												'BookingWasCreatedOn' => $displayCreatedDateTime,
 												'BookingWasCompletedOn' => $displayCompletedDateTime,
 												'BookingWasCancelledOn' => $displayCancelledDateTime,
-												'MeetingInfo' => $meetinginfo
+												'MeetingInfo' => $meetinginfo,
+												'CancelMessage' => $cancelMessage
 											);
 		}	elseif($status == "Active" AND (isSet($_GET['activeBooking']) OR isSet($_GET['totalBooking']))){
 			$bookingsFuture[] = array(	'id' => $row['bookingID'],
@@ -760,7 +767,8 @@ if(	(isSet($_SESSION['loggedIn']) AND isSet($_SESSION['LoggedInUserID']) AND
 											'BookingWasCreatedOn' => $displayCreatedDateTime,
 											'BookingWasCompletedOn' => $displayCompletedDateTime,
 											'BookingWasCancelledOn' => $displayCancelledDateTime,
-											'MeetingInfo' => $meetinginfo
+											'MeetingInfo' => $meetinginfo,
+											'CancelMessage' => $cancelMessage
 										);
 		}	elseif($status == "Cancelled" AND (isSet($_GET['cancelledBooking']) OR isSet($_GET['totalBooking']))){
 			$bookingsCancelled[] = array(	'id' => $row['bookingID'],
@@ -774,7 +782,8 @@ if(	(isSet($_SESSION['loggedIn']) AND isSet($_SESSION['LoggedInUserID']) AND
 											'BookingWasCreatedOn' => $displayCreatedDateTime,
 											'BookingWasCompletedOn' => $displayCompletedDateTime,
 											'BookingWasCancelledOn' => $displayCancelledDateTime,
-											'MeetingInfo' => $meetinginfo
+											'MeetingInfo' => $meetinginfo,
+											'CancelMessage' => $cancelMessage
 										);		
 		}	elseif(isSet($_GET['totalBooking'])){				
 			$bookingsOther[] = array(	'id' => $row['bookingID'],
@@ -788,7 +797,8 @@ if(	(isSet($_SESSION['loggedIn']) AND isSet($_SESSION['LoggedInUserID']) AND
 										'BookingWasCreatedOn' => $displayCreatedDateTime,
 										'BookingWasCompletedOn' => $displayCompletedDateTime,
 										'BookingWasCancelledOn' => $displayCancelledDateTime,
-										'MeetingInfo' => $meetinginfo
+										'MeetingInfo' => $meetinginfo,
+										'CancelMessage' => $cancelMessage
 									);
 		}
 	}

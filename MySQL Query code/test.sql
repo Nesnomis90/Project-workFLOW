@@ -5,6 +5,14 @@ SHOW WARNINGS;
 SELECT CURRENT_TIMESTAMP;
 /*PDO::FETCH_ASSOC*/
 
+INSERT INTO `companycreditshistory`
+SET			`CompanyID` = 2,
+			`startDate` = '2017-07-15',
+            `endDate` = '2017-08-15',
+            `minuteAmount` = 95,
+            `monthlyPrice` = 2000,
+            `overCreditHourPrice` = 250;
+
 INSERT INTO `companycredits`(`CompanyID`, `CreditsID`) VALUES (1,2);
 
 UPDATE 	`company`
