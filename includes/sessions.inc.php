@@ -1,9 +1,9 @@
 <?php
 // Functions to do anything related with sessions
 
-// Remove all sessions used by admin in the user overview
-function unsetSessionsFromAdminUsers(){
-	
+// Remove all sessions used by admin
+function unsetSessionsFromAdmin(){
+
 	unset($_SESSION['AddBookingInfoArray']);
 	unset($_SESSION['AddBookingChangeUser']);
 	unset($_SESSION['AddBookingUsersArray']);

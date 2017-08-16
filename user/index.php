@@ -12,8 +12,6 @@ if(isSet($_SESSION['loggedIn'])){
 	userIsLoggedIn();
 }
 
-unsetSessionsFromAdminUsers(); // TO-DO: Add more or remove
-
 function getLocationWeCameFromInUserBooking(){
 	$pathWeCameFrom = $_SERVER['PHP_SELF'];
 	$pathWithoutPHPFile = substr($pathWeCameFrom, 0, strrpos($pathWeCameFrom,'/'));	

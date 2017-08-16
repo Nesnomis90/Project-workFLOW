@@ -42,7 +42,6 @@ if (isSet($_POST['action']) AND $_POST['action'] == "Disable Remove"){
 	unset($_SESSION['normalEmployeesEnableDelete']);
 }
 
-unsetSessionsFromAdminUsers(); // TO-DO: Add more or remove
 unsetSessionsFromUserManagement();
 
 function unsetSessionsFromCompanyManagement(){
