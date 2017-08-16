@@ -1,6 +1,11 @@
 <?php
 // This holds all the adjustable variables/defines we use througout the code
 
+// Our Contact/Email information
+define('EMAIL_USED_FOR_SENDING_INFORMATION', 'jusimonsen@gmail.com'); // TO-DO: REPLACE WITH PROPER EMAIL AFTER UPLOADING.
+define('FROM_NAME_USED_IN_EMAIL', "Meeting FLOW booking service");	// TO-DO: REPLACE WITH WANTED FROM NAME
+define('CONTACT_INFO_SENT_IN_MAIL', "http://www.flownorway.com/contact-us/");	// TO-DO: REPLACE WITH WANTED CONTACT INFO
+
 // Database
 	// Connection definitions
 //$dbengine 	= 'mysql';

@@ -446,7 +446,7 @@ function create_tables()
 			echo '<b>Execution time for creating table ' . $table. ':</b> ' . $time . 's<br />';	
 		} else { 
 			echo '<b>Table ' . $table. ' already exists</b>.<br />';
-		}	
+		}
 
 			//Booking
 		$table = 'booking';
@@ -466,17 +466,20 @@ function create_tables()
 						  `actualEndDateTime` datetime DEFAULT NULL,
 						  `description` text,
 						  `adminNote` text,
+						  `cancelMessage` text,
+						  `cancelledByUserID` int(10) unsigned DEFAULT NULL,
 						  `cancellationCode` char(64) DEFAULT NULL,
 						  `emailSent` tinyint(1) NOT NULL DEFAULT '0',
 						  PRIMARY KEY (`bookingID`),
 						  UNIQUE KEY `cancellationCode_UNIQUE` (`cancellationCode`),
 						  KEY `FK_MeetingRoomID_idx` (`meetingRoomID`),
-						  KEY `FK_UserID_idx` (`userID`),
 						  KEY `FK_UserID2_idx` (`userID`),
 						  KEY `FK_CompanyID3_idx` (`companyID`),
+						  KEY `FK_UserID4_idx` (`cancelledByUserID`),
 						  CONSTRAINT `FK_CompanyID3` FOREIGN KEY (`companyID`) REFERENCES `company` (`CompanyID`) ON DELETE SET NULL ON UPDATE CASCADE,
 						  CONSTRAINT `FK_MeetingRoomID` FOREIGN KEY (`meetingRoomID`) REFERENCES `meetingroom` (`meetingRoomID`) ON DELETE SET NULL ON UPDATE CASCADE,
-						  CONSTRAINT `FK_UserID2` FOREIGN KEY (`userID`) REFERENCES `user` (`userID`) ON DELETE SET NULL ON UPDATE CASCADE
+						  CONSTRAINT `FK_UserID2` FOREIGN KEY (`userID`) REFERENCES `user` (`userID`) ON DELETE SET NULL ON UPDATE CASCADE,
+						  CONSTRAINT `FK_UserID4` FOREIGN KEY (`cancelledByUserID`) REFERENCES `user` (`userID`) ON DELETE SET NULL ON UPDATE CASCADE
 						) ENGINE=InnoDB DEFAULT CHARSET=utf8");
 
 			//	Add the creation to log event
@@ -489,7 +492,7 @@ function create_tables()
 										), 
 									"The table ' . $table . ' was created automatically by the PHP script.\nThis should only occur once, at the very start of the log events."
 									)';
-			$logEventArray[] = $sqlLog;						
+			$logEventArray[] = $sqlLog;
 
 			$totaltime = microtime(true) - $_SERVER["REQUEST_TIME_FLOAT"];
 			$time = $totaltime - $prevtime;
@@ -497,8 +500,8 @@ function create_tables()
 			echo '<b>Execution time for creating table ' . $table. ':</b> ' . $time . 's<br />';	
 		} else { 
 			echo '<b>Table ' . $table. ' already exists</b>.<br />';
-		}	
-				
+		}
+
 			//Company Position
 		$table = 'companyposition';
 		//Check if table already exists
@@ -511,10 +514,10 @@ function create_tables()
 						  PRIMARY KEY (`PositionID`),
 						  UNIQUE KEY `name_UNIQUE` (`name`)
 						) ENGINE=InnoDB DEFAULT CHARSET=utf8");
-			
+
 			//Insert default values for the Company Position table
 			fillCompanyPosition($conn);
-						
+
 			//	Add the creation to log event
 			$sqlLog = '	INSERT INTO `logevent`(`actionID`, `description`) 
 						VALUES 		(
@@ -525,7 +528,7 @@ function create_tables()
 										), 
 									"The table ' . $table . ' was created automatically by the PHP script.\nThis should only occur once, at the very start of the log events."
 									)';
-			$logEventArray[] = $sqlLog;						
+			$logEventArray[] = $sqlLog;
 
 			$totaltime = microtime(true) - $_SERVER["REQUEST_TIME_FLOAT"];
 			$time = $totaltime - $prevtime;

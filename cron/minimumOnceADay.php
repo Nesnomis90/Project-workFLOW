@@ -83,7 +83,6 @@ function updateBillingDatesForCompanies(){
 				ON 			cc.`CompanyID` = c.`CompanyID`
 				INNER JOIN 	`credits` cr
 				ON			cr.`CreditsID` = cc.`CreditsID`
-				WHERE 		c.`isActive` = 1
 				AND			CURDATE() >= c.`endDate`"
 		$return = $pdo->query($sql);
 		$rowCount = $return->fetchColumn();
@@ -154,7 +153,6 @@ function updateBillingDatesForCompanies(){
 					ON 			cc.`CompanyID` = c.`CompanyID`
 					INNER JOIN 	`credits` cr
 					ON			cr.`CreditsID` = cc.`CreditsID`
-					WHERE 		c.`isActive` = 1
 					AND			CURDATE() >= c.`endDate`";
 			$s = $pdo->prepare($sql);
 			$s->bindValue(':minimumSecondsPerBooking', $minimumSecondsPerBooking);
@@ -256,7 +254,7 @@ function updateBillingDatesForCompanies(){
 							$emailMessage .= "Link: " . $link . "\n";
 						}
 					}
-					
+
 					// Get admin(s) emails
 					$sql = "SELECT 		u.`email`		AS Email
 							FROM 		`user` u
@@ -266,28 +264,28 @@ function updateBillingDatesForCompanies(){
 							AND			u.`sendAdminEmail` = 1";
 					$return = $pdo->query($sql);
 					$result = $return->fetchAll(PDO::FETCH_ASSOC);
-					
+
 					if(isSet($result)){
 						foreach($result AS $Email){
 							$email[] = $Email['Email'];
 						}
 					}
-					
+
 					// Only try to send out email if there are any admins that have set they want them
 					if(isSet($email)){
 						$mailResult = sendEmail($email, $emailSubject, $emailMessage);
-						
+
 						if(!$mailResult){
 							// TO-DO: FIX-ME: What to do if the mail doesn't want to send?
 							// Store it somewhere and have another cron try to send emails?
 						}
-					}					
+					}
 				}
 			} else {
 				// If commit failed we have to retry
 				$pdo = null;
 				return FALSE;
-			}			
+			}
 		}
 		//Close the connection
 		$pdo = null;
@@ -302,6 +300,7 @@ function updateBillingDatesForCompanies(){
 }
 
 // Make a company inactive when the current date is past the date set by admin
+	// Note: This doesn't really do anything since inactive companies are not treated any different.
 function setCompanyAsInactiveOnSetDate(){
 	try
 	{

@@ -462,6 +462,7 @@ if(isSet($_POST['add']) AND $_POST['add'] == "Create Event"){
 	if(!is_array($daysSelected)){
 		$daysSelected = array($daysSelected);
 	}
+	// FIX-ME: Allow choosing the year.
 	$yearNow = date("Y"); // TO-DO: Change if we allow different years
 	$dateTimeNow = getDatetimeNow();
 	for($i=0; $i < sizeOf($weeksSelected); $i++){

@@ -71,7 +71,7 @@
 					<caption>Completed Bookings Today</caption>
 					<tr>
 						<th colspan="8">Booking information</th>
-						<th colspan="3">Completion Info</th>
+						<th colspan="5">Completion Info</th>
 					</tr>
 					<tr>
 						<th>Status</th>
@@ -85,8 +85,10 @@
 						<th>Finished At</th>
 						<th>Actual Duration</th>
 						<th>Price Duration</th>
+						<th>Ended Early Message</th>
+						<th>Ended Early By</th>
 					</tr>
-					<?php foreach ($bookingsCompletedToday AS $booking) : ?>
+					<?php foreach ($bookingsCompleted AS $booking) : ?>
 						<form action="" method="post">
 							<tr>
 								<td><?php htmlout($booking['BookingStatus']);?></td>
@@ -96,16 +98,14 @@
 								<td style="white-space: pre-wrap;"><?php htmlout($booking['BookedBy']); ?></td>
 								<td><?php htmlout($booking['BookedForCompany']); ?></td>
 								<td style="white-space: pre-wrap;"><?php htmlout($booking['BookingDescription']); ?></td>
-								<td style="white-space: pre-wrap;"><?php htmlout($booking['AdminNote']); ?></td>
 								<td><?php htmlout($booking['BookingWasCreatedOn']); ?></td>
 								<td><?php htmlout($booking['BookingWasCompletedOn']); ?></td>
 								<td><?php htmlout($booking['CompletedMeetingDuration']); ?></td>
 								<td><?php htmlout($booking['CompletedMeetingDurationForPrice']); ?></td>
-								<td><?php htmlout($booking['firstName']); ?></td>
-								<td><?php htmlout($booking['lastName']); ?></td>
-								<td><?php htmlout($booking['email']); ?></td>
-								<td style="white-space: pre-wrap;"><?php htmlout($booking['WorksForCompany']); ?></td>
+								<td style="white-space: pre-wrap;"><?php htmlout($booking['CancelMessage']); ?></td>
+								<td><?php htmlout($booking['CancelledByUserName']); ?></td>
 								<input type="hidden" name="id" value="<?php htmlout($booking['id']); ?>">
+								<input type="hidden" name="UserID" value="<?php htmlout($booking['BookedUserID']); ?>">
 								<input type="hidden" name="MeetingInfo" id="MeetingInfo"
 								value="<?php htmlout($booking['MeetingInfo']); ?>">
 								<input type="hidden" name="BookingStatus" id="BookingStatus"
@@ -168,7 +168,7 @@
 					<caption>Completed Bookings</caption>
 					<tr>
 						<th colspan="8">Booking information</th>
-						<th colspan="3">Completion Info</th>
+						<th colspan="5">Completion Info</th>
 					</tr>
 					<tr>
 						<th>Status</th>
@@ -182,7 +182,9 @@
 						<th>Finished At</th>
 						<th>Actual Duration</th>
 						<th>Price Duration</th>
-					</tr>			
+						<th>Ended Early Message</th>
+						<th>Ended Early By</th>
+					</tr>
 					<?php foreach ($bookingsCompleted AS $booking) : ?>
 						<form action="" method="post">
 							<tr>
@@ -197,6 +199,8 @@
 								<td><?php htmlout($booking['BookingWasCompletedOn']); ?></td>
 								<td><?php htmlout($booking['CompletedMeetingDuration']); ?></td>
 								<td><?php htmlout($booking['CompletedMeetingDurationForPrice']); ?></td>
+								<td style="white-space: pre-wrap;"><?php htmlout($booking['CancelMessage']); ?></td>
+								<td><?php htmlout($booking['CancelledByUserName']); ?></td>
 								<input type="hidden" name="id" value="<?php htmlout($booking['id']); ?>">
 								<input type="hidden" name="UserID" value="<?php htmlout($booking['BookedUserID']); ?>">
 								<input type="hidden" name="MeetingInfo" id="MeetingInfo"
@@ -214,7 +218,7 @@
 					<caption>Bookings Cancelled</caption>
 					<tr>
 						<th colspan="8">Booking information</th>
-						<th>Completion Date</th>
+						<th colspan="3">Cancel information</th>
 					</tr>
 					<tr>
 						<th>Status</th>
@@ -225,7 +229,9 @@
 						<th>For Company</th>
 						<th>Description</th>
 						<th>Created At</th>
-						<th>Cancelled</th>
+						<th>Cancelled At</th>
+						<th>Cancel Message</th>
+						<th>Cancelled By</th>
 					</tr>
 					<?php foreach ($bookingsCancelled AS $booking) : ?>
 						<form action="" method="post">
@@ -239,6 +245,8 @@
 								<td style="white-space: pre-wrap;"><?php htmlout($booking['BookingDescription']); ?></td>
 								<td><?php htmlout($booking['BookingWasCreatedOn']); ?></td>
 								<td><?php htmlout($booking['BookingWasCancelledOn']); ?></td>
+								<td style="white-space: pre-wrap;"><?php htmlout($booking['CancelMessage']); ?></td>
+								<td><?php htmlout($booking['CancelledByUserName']); ?></td>
 								<input type="hidden" name="id" value="<?php htmlout($booking['id']); ?>">
 								<input type="hidden" name="MeetingInfo" id="MeetingInfo"
 								value="<?php htmlout($booking['MeetingInfo']); ?>">
@@ -257,7 +265,7 @@
 					<caption>Other Bookings</caption>
 					<tr>
 						<th colspan="8">Booking information</th>
-						<th colspan="2">Completion Info</th>
+						<th colspan="4">Completion Info</th>
 					</tr>
 					<tr>
 						<th>Status</th>
@@ -270,6 +278,8 @@
 						<th>Created At</th>
 						<th>Finished</th>
 						<th>Cancelled</th>
+						<th>Cancel Message</th>
+						<th>Cancelled By</th>
 					</tr>
 					<?php foreach ($bookingsOther AS $booking) : ?>
 						<form action="" method="post">
@@ -284,6 +294,8 @@
 								<td><?php htmlout($booking['BookingWasCreatedOn']); ?></td>
 								<td><?php htmlout($booking['BookingWasCompletedOn']); ?></td>
 								<td><?php htmlout($booking['BookingWasCancelledOn']); ?></td>
+								<td style="white-space: pre-wrap;"><?php htmlout($booking['CancelMessage']); ?></td>
+								<td><?php htmlout($booking['CancelledByUserName']); ?></td>
 								<input type="hidden" name="id" value="<?php htmlout($booking['id']); ?>">
 								<input type="hidden" name="MeetingInfo" id="MeetingInfo"
 								value="<?php htmlout($booking['MeetingInfo']); ?>">

@@ -5,8 +5,6 @@ session_start();
 include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/helpers.inc.php';
 include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/magicquotes.inc.php';
 
-unsetSessionsFromAdminUsers(); // TO-DO: Add sessions from other places too. Remove if it breaks multiple tabs
-
 // CHECK IF USER TRYING TO ACCESS THIS IS IN FACT THE ADMIN!
 if (!isUserAdmin()){
 	exit();
@@ -28,10 +26,10 @@ function clearAddCompanySessions(){
 function clearEditCompanySessions(){	
 	unset($_SESSION['EditCompanyOriginalName']);
 	unset($_SESSION['EditCompanyOriginalRemoveDate']);
-	
+
 	unset($_SESSION['EditCompanyChangedName']);
 	unset($_SESSION['EditCompanyChangedRemoveDate']);
-	
+
 	unset($_SESSION['EditCompanyCompanyID']);
 }
 // Function to check if the company has unbilled periods and then sums them up and displays the total 
@@ -402,6 +400,7 @@ function calculatePeriodInformation($pdo, $companyID, $BillingStart, $BillingEnd
 						b.`startDateTime`		AS BookingStartedDatetime,
 						b.`actualEndDateTime`	AS BookingCompletedDatetime,
 						b.`adminNote`			AS AdminNote,
+						b.`cancelMessage`		AS CancelMessage,
 						(
 							IF(b.`userID` IS NULL, NULL, (SELECT `firstName` FROM `user` WHERE `userID` = b.`userID`))
 						)						AS UserFirstname,
@@ -417,11 +416,10 @@ function calculatePeriodInformation($pdo, $companyID, $BillingStart, $BillingEnd
 			FROM 		`booking` b
 			WHERE   	b.`CompanyID` = :CompanyID
 			AND 		b.`actualEndDateTime` IS NOT NULL
-			AND     	b.`dateTimeCancelled` IS NULL
 			AND         b.`actualEndDateTime`
 			BETWEEN	    :startDate
 			AND			:endDate";
-			
+
 	$minimumSecondsPerBooking = MINIMUM_BOOKING_DURATION_IN_MINUTES_USED_IN_PRICE_CALCULATIONS * 60; // e.g. 15min = 900s
 	$aboveThisManySecondsToCount = BOOKING_DURATION_IN_MINUTES_USED_BEFORE_INCLUDING_IN_PRICE_CALCULATIONS * 60; // e.g. 1min = 60s
 	$s = $pdo->prepare($sql);
@@ -432,23 +430,23 @@ function calculatePeriodInformation($pdo, $companyID, $BillingStart, $BillingEnd
 	$s->bindValue(':aboveThisManySecondsToCount', $aboveThisManySecondsToCount);	
 	$s->execute();
 	$result = $s->fetchAll(PDO::FETCH_ASSOC);
-	
+
 	$totalBookingTimeThisPeriod = 0;
 	$totalBookingTimeUsedInPriceCalculations = 0;
-	foreach($result as $row){
-		
+	foreach($result AS $row){
+
 		// Format dates to display
 		$startDateTime = convertDatetimeToFormat($row['BookingStartedDatetime'], 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
 		$endDateTime = convertDatetimeToFormat($row['BookingCompletedDatetime'], 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
-		
+
 		$bookingPeriod = $startDateTime . " to " . $endDateTime;
-		
+
 		// Calculate time used
 		$bookingTimeUsed = convertTimeToMinutes($row['BookingTimeUsed']);
 		$displayBookingTimeUsed = convertTimeToHoursAndMinutes($row['BookingTimeUsed']);
 		$bookingTimeUsedInPriceCalculations = convertTimeToMinutes($row['BookingTimeCharged']);
 		$displayBookingTimeUsedInPriceCalculations = convertTimeToHoursAndMinutes($row['BookingTimeCharged']);
-			
+
 		$totalBookingTimeThisPeriod += $bookingTimeUsed;
 		$totalBookingTimeUsedInPriceCalculations += $bookingTimeUsedInPriceCalculations;
 
@@ -468,23 +466,29 @@ function calculatePeriodInformation($pdo, $companyID, $BillingStart, $BillingEnd
 			$adminNote = "";
 		} else {
 			$adminNote = $row['AdminNote'];
-		}		
+		}
+		if($row['CancelMessage'] == NULL){
+			$cancelMessage = "";
+		} else {
+			$cancelMessage = $row['CancelMessage'];
+		}	
 		$bookingHistory[] = array(
 									'BookingPeriod' => $bookingPeriod,
 									'UserInformation' => $userInformation,
 									'MeetingRoomName' => $meetingRoomName,
 									'BookingTimeUsed' => $displayBookingTimeUsed,
 									'BookingTimeCharged' => $displayBookingTimeUsedInPriceCalculations,
-									'AdminNote' => $adminNote
+									'AdminNote' => $adminNote,
+									'CancelMessage' => $cancelMessage
 									);
 	}
-	
+
 		// Calculate monthly cost (subscription + over credit charges)
 	if($totalBookingTimeUsedInPriceCalculations > 0){
 		if($totalBookingTimeUsedInPriceCalculations > $companyMinuteCredits){
 			// Company has used more booking time than credited. Let's calculate how far over they went
 			$actualTimeOverCreditsInMinutes = $totalBookingTimeUsedInPriceCalculations - $companyMinuteCredits;
-		
+
 			// Let's calculate cost
 				// Check if user has set that price should be rounded down to x minutes (e.g. down to closest 15 minute)
 			$selectedMinuteAmount = ROUND_SUMMED_BOOKING_TIME_CHARGED_FOR_PERIOD_DOWN_TO_THIS_CLOSEST_MINUTE_AMOUNT;
@@ -506,15 +510,15 @@ function calculatePeriodInformation($pdo, $companyID, $BillingStart, $BillingEnd
 			$totalCost = $monthPrice+$overFeeCostThisMonth;
 			$bookingCostThisMonth = convertToCurrency($monthPrice) . " + " . convertToCurrency($overFeeCostThisMonth);
 			$totalBookingCostThisMonth = convertToCurrency($totalCost);
-		
+
 			$companyMinuteCreditsRemaining = $companyMinuteCredits - $totalBookingTimeUsedInPriceCalculations;
 			$overCreditsTimeUsed = $totalBookingTimeUsedInPriceCalculations - $companyMinuteCredits;
 			$displayOverCreditsTimeUsed = convertMinutesToHoursAndMinutes($overCreditsTimeUsed);
 		} else {
 			$bookingCostThisMonth = convertToCurrency($monthPrice) . " + " . convertToCurrency(0);
-			$totalBookingCostThisMonth = convertToCurrency($monthPrice);				
+			$totalBookingCostThisMonth = convertToCurrency($monthPrice);
 			$companyMinuteCreditsRemaining = $companyMinuteCredits - $totalBookingTimeUsedInPriceCalculations;
-		}		
+		}
 	} else {
 		$bookingCostThisMonth = convertToCurrency($monthPrice) . " + " . convertToCurrency(0);
 		$displayOverFeeCostThisMonth = convertToCurrency(0);
@@ -525,11 +529,13 @@ function calculatePeriodInformation($pdo, $companyID, $BillingStart, $BillingEnd
 	$displayMonthPrice = convertToCurrency($monthPrice);
 	$displayTotalBookingTimeThisPeriod = convertMinutesToHoursAndMinutes($totalBookingTimeThisPeriod);
 	$displayTotalBookingTimeUsedInPriceCalculationsThisPeriod = convertMinutesToHoursAndMinutes($totalBookingTimeUsedInPriceCalculations);
-	$displayTotalBookingTimeChargedWithAfterCredits = convertMinutesToHoursAndMinutes($roundedDownTimeOverCreditsInMinutes);
-	
+	if(isSet($roundedDownTimeOverCreditsInMinutes)){
+		$displayTotalBookingTimeChargedWithAfterCredits = convertMinutesToHoursAndMinutes($roundedDownTimeOverCreditsInMinutes);
+	}
+
 	if(!isSet($actualTimeOverCreditsInMinutes)){
 		$actualTimeOverCreditsInMinutes = "";
-	}				
+	}
 	if(!isSet($displayOverCreditsTimeUsed)){
 		$displayOverCreditsTimeUsed = "None";
 	}
@@ -539,6 +545,9 @@ function calculatePeriodInformation($pdo, $companyID, $BillingStart, $BillingEnd
 	if(!isSet($displayTotalBookingTimeChargedWithAfterCredits)){
 		$displayTotalBookingTimeChargedWithAfterCredits = "N/A";
 	}
+	if(!isSet($displayTotalBookingTimeChargedWithAfterCredits)){
+		$displayTotalBookingTimeChargedWithAfterCredits = "N/A";
+	}	
 	if(!isSet($bookingHistory)){
 		$bookingHistory = array();
 	}
@@ -548,7 +557,7 @@ function calculatePeriodInformation($pdo, $companyID, $BillingStart, $BillingEnd
 	if(!isSet($billingDescription) OR $billingDescription == NULL){
 		$billingDescription = "";
 	}
-	
+
 	return array(	$bookingHistory, $displayCompanyCredits, $displayCompanyCreditsRemaining, $displayOverCreditsTimeUsed, 
 					$displayMonthPrice, $displayTotalBookingTimeThisPeriod, $displayOverFeeCostThisMonth, $overCreditsFee,
 					$bookingCostThisMonth, $totalBookingCostThisMonth, $companyMinuteCreditsRemaining, $actualTimeOverCreditsInMinutes, 
@@ -1303,11 +1312,11 @@ if (isSet($_POST['action']) and $_POST['action'] == 'Confirm Merge'){
 	}
 
 	// Password is correct. Let's transfer all employees and booking history to the new company
-	// TO-DO: Not sure if this works. It removes company and merges employees correct. Have not tested with companycreditshistory
+	// FIX-ME: Not sure if this works. It removes company and merges employees correct. Have not tested with companycreditshistory
 	try
 	{
 		$pdo->beginTransaction();
-		// TO-DO: Find better solution than ignoring updates on duplicates?
+		// FIX-ME: Find better solution than ignoring updates on duplicates?
 		$sql = 'UPDATE IGNORE	`employee`
 				SET				`CompanyID` = :CompanyID2
 				WHERE			`CompanyID` = :CompanyID';
@@ -1324,7 +1333,7 @@ if (isSet($_POST['action']) and $_POST['action'] == 'Confirm Merge'){
 		$s->bindValue(':CompanyID2', $_SESSION['MergeCompanySelectedCompanyID2']);
 		$s->execute();
 		
-		// TO-DO: How to handle merging company credits history?
+		// FIX-ME: How to handle merging company credits history?
 		// Just ignore it?
 	/*	$sql = 'UPDATE 	`companycreditshistory`
 				SET		`CompanyID` = :CompanyID2

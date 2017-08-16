@@ -34,26 +34,48 @@ function sendEmail($toEmail, $subject, $message){
 	
 	// Prepare email to be sent with valid email(s)
 	if(isSet($validEmail) AND sizeOf($validEmail) > 0){
+
+		$encoding = "utf-8";
+
+		// Preferences for Subject field
+		$subject_preferences = array(
+										"input-charset" => $encoding,
+										"output-charset" => $encoding,
+										"line-length" => 76,
+										"line-break-chars" => "\r\n"
+									);
+
 			// If subject is left blank, set a default subject
 		if($subject == ""){
 			$subject = "Message from Meeting Flow booking service.";
 		}
 			// If msg is not empty, prepare the email
 		if($message != ""){
+
+			$ourName = FROM_NAME_USED_IN_EMAIL;
+			$ourEmail = EMAIL_USED_FOR_SENDING_INFORMATION;
+			$ourContact = CONTACT_INFO_SENT_IN_MAIL;
+
+			// Add a "No reply"-warning to all emails sent out.
+			$message .= "\n\nThis Email address is not monitored for responses.";
+			$message .= "\nTo contact us check out " . $ourContact;
 			// Use wordwrap() if lines are longer than 70 characters
-			$message = wordwrap($message,70);
-			
-			$ourEmail = 'ouremail@ourhost.com'; // To-DO: Change this to a valid created email account in cPanel
+			$message = wordwrap($message,70,"\r\n");
+
 			$toEmail = implode(', ', $validEmail);
+
 			// Set header information
-				//$from = 'From: "Meeting Flow booking service" <ouremail@ourhost.com>' . "\r\n";
-			$headers = 	'From: "Meeting Flow booking service" <' . $ourEmail . '>' . "\r\n" .
-						'BCC: ' . $toEmail . "\r\n"; // TO-DO: Insert correct email
-				//"From: " . $ourEmail; //TO-DO: use this (with $from instead of $header) if above doesn't work
+			$header = 	"Content-type: text/html; charset=" . $encoding . "\r\n";
+			$header .= 	"From: " . $ourName." <" . $ourEmail . ">\r\n";
+			$header .=	"Bcc: " . $toEmail . "\r\n";
+			$header .= 	"MIME-Version: 1.0\r\n";
+			$header .= 	"Content-Transfer-Encoding: 8bit\r\n";
+			$header .= 	"Date: " . date("r (T)") . "\r\n";
+			$header .= 	iconv_mime_encode("Subject", $subject, $subject_preferences);
 
 			// Prepare the email to be sent
 			//return mail($toEmail, $subject, $message, $from); This version sends email to the users without hiding emails
-			return mail($ourEmail, $subject, $message, $headers); 	// This version sends email to ourselves and sends blind carbon copies (BCC) to the receivers
+			return mail($ourEmail, $subject, $message, $header); 	// This version sends email to ourselves and sends blind carbon copies (BCC) to the receivers
 																	// Effectively hiding receiver emails from showing up to other receivers.
 																	// TO-DO: if we don't want to send email to ourselves, set field to NULL	
 		} else {
