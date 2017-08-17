@@ -77,7 +77,7 @@ function updateBillingDatesForCompanies(){
 	try
 	{
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
-		
+
 		$pdo = connect_to_db();
 		// Check if there is any information to change
 		$sql = "SELECT 		COUNT(*)
@@ -89,7 +89,7 @@ function updateBillingDatesForCompanies(){
 				AND			CURDATE() >= c.`endDate`";
 		$return = $pdo->query($sql);
 		$rowCount = $return->fetchColumn();
-		
+
 		if($rowCount > 0) {
 			$minimumSecondsPerBooking = MINIMUM_BOOKING_DURATION_IN_MINUTES_USED_IN_PRICE_CALCULATIONS * 60; // e.g. 15min = 900s
 			$aboveThisManySecondsToCount = BOOKING_DURATION_IN_MINUTES_USED_BEFORE_INCLUDING_IN_PRICE_CALCULATIONS * 60; // E.g. 1min = 60s			
@@ -162,10 +162,9 @@ function updateBillingDatesForCompanies(){
 			$s->bindValue(':aboveThisManySecondsToCount', $aboveThisManySecondsToCount);
 			$s->execute();
 			$result = $s->fetchAll(PDO::FETCH_ASSOC);
-
 			$dateTimeNow = getDatetimeNow();
 			$displayDateTimeNow = convertDatetimeToFormat($dateTimeNow , 'Y-m-d H:i:s', DATE_DEFAULT_FORMAT_TO_DISPLAY);
-			
+
 			$pdo->beginTransaction();
 			foreach($result AS $insert){
 				if($insert['AlternativeAmount'] == NULL){
@@ -181,7 +180,8 @@ function updateBillingDatesForCompanies(){
 				$bookingTimeUsedThisMonth = $insert['BookingTimeThisPeriod'];
 				$bookingTimeUsedThisMonthInMinutes = convertTimeToMinutes($bookingTimeUsedThisMonth);
 				$displayTotalBookingTimeThisPeriod = convertTimeToHoursAndMinutes($bookingTimeUsedThisMonthInMinutes);
-				
+				$displayCompanyCredits = convertMinutesToHoursAndMinutes($creditsGivenInMinutes);
+
 				$setAsBilled = FALSE;
 				if($bookingTimeUsedThisMonthInMinutes > $creditsGivenInMinutes){
 					// Company went over credit this period
@@ -204,22 +204,23 @@ function updateBillingDatesForCompanies(){
 									`monthlyPrice` = " . $monthlyPrice . ",
 									`overCreditHourPrice` = " . $hourPrice;
 				if($setAsBilled){
-					$billingDescriptionInformation = 	"This period was 'Set As Billed' automatically at the end of the period due to there being no fees.\n" .
+					$billingDescriptionInformation = 	"This period was Set As Billed automatically at the end of the period due to there being no fees.\n" .
 														"At that time the company had produced a total booking time of: " . $displayTotalBookingTimeThisPeriod .
 														", with a credit given of: " . $displayCompanyCredits . " and a monthly fee of " . convertToCurrency(0) . ".";							
 					$sql .= ", 	`hasBeenBilled` = 1,
 								`billingDescription` = '" . $billingDescriptionInformation . "'";
 				}
 				$pdo->exec($sql);
-			}	
-		
-			$sql = "UPDATE 	`company`
-					SET		`prevStartDate` = `startDate`,
-							`startDate` = `endDate`,
-							`endDate` = (`startDate` + INTERVAL 1 MONTH)
-					WHERE	`companyID` <> 0
-					AND		CURDATE() >= `endDate`";		
-			$pdo->exec($sql);
+				$sql = "UPDATE 	`company`
+						SET		`prevStartDate` = `startDate`,
+								`startDate` = `endDate`,
+								`endDate` = (`startDate` + INTERVAL 1 MONTH)
+						WHERE	`companyID` = :companyID";
+				$s = $pdo->prepare($sql);
+				$s->bindValue(':companyID', $companyID);
+				$s->execute();
+			}
+
 			$success = $pdo->commit();
 			if($success){
 				// Check if any of the companies went over credits and send an email to Admin that they did
@@ -235,7 +236,7 @@ function updateBillingDatesForCompanies(){
 						//Link example: http://localhost/admin/companies/?companyID=2&BillingStart=2017-05-15&BillingEnd=2017-06-15
 						$link = "http://$_SERVER[HTTP_HOST]/admin/companies/?CompanyID=" . $companyID . 
 								"&BillingStart=" . $startDate . "&BillingEnd=" . $endDate;
-							
+
 						$emailMessage = 
 						"Click the link below to see the details\n
 						Link: " . $link;
@@ -245,12 +246,12 @@ function updateBillingDatesForCompanies(){
 
 						$emailMessage =
 						"Click the links below to see the details\n";
-						
+
 						foreach($companiesOverCredit AS $url){
 							$companyID = $url['CompanyID'];
 							$startDate = $url['StartDate'];
 							$endDate = $url['EndDate'];
-							
+
 							$link = "http://$_SERVER[HTTP_HOST]/admin/companies/?CompanyID=" . $companyID . 
 									"&BillingStart=" . $startDate . "&BillingEnd=" . $endDate;
 
@@ -298,8 +299,10 @@ function updateBillingDatesForCompanies(){
 	{
 		$pdo->rollback();
 		$pdo = null;
+		echo "PDO Exception: " . $e->getMessage(); // TO-DO: Remove before uploading
+		echo "<br />";
 		return FALSE;
-	}	
+	}
 }
 
 // Make a company inactive when the current date is past the date set by admin

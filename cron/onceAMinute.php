@@ -11,7 +11,7 @@ function updateCompletedBookings(){
 	try
 	{
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
-	
+
 		if(!isSet($pdo)){
 			$pdo = connect_to_db();
 		}
@@ -135,16 +135,15 @@ function alertUserThatMeetingIsAboutToStart(){
 					{
 						include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 						
-						$pdo = connect_to_db();
+						if(!isSet($pdo)){
+							$pdo = connect_to_db();
+						}
 						$sql = "UPDATE 	`booking`
 								SET		`emailSent` = 1
 								WHERE	`bookingID` = :bookingID";
 						$s = $pdo->prepare($sql);
 						$s->bindValue(':bookingID', $row['TheBookingID']);
 						$s->execute();
-						
-						//Close the connection
-						$pdo = null;
 					}
 					catch(PDOException $e)
 					{

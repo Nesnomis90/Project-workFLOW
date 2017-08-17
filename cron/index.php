@@ -1,5 +1,6 @@
 <?php 
 // This is a temporary index file for the folder CRON to test if the PHP files will achieve what we want.
+// TO-DO: Delete this file before uploading.
 
 include_once 'minimumOnceADay.php';
 echo "<b>Finished minimumOnceAday.php</b>";
