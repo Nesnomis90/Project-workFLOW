@@ -296,7 +296,12 @@ if(isSet($_POST['register']) AND $_POST['register'] == "Register Account"){
 	$mailResult = sendEmail($email, $emailSubject, $emailMessage);
 	
 	if(!$mailResult){
-		$_SESSION['registerUserFeedback'] .= "\n[WARNING] System failed to send Email to user.";
+		if(isSet($_SESSION['registerUserFeedback'])){
+			$_SESSION['registerUserFeedback'] .= "\n[WARNING] System failed to send Email to user.";
+		} else {
+			$_SESSION['registerUserFeedback'] = "\n[WARNING] System failed to send Email to user.";
+		}
+		
 	}
 	
 	$_SESSION['registerUserFeedback'] .= "\nThis is the email msg we're sending out:\n$emailMessage.\nSent to: $email."; // TO-DO: Remove after testing	

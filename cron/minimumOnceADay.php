@@ -24,7 +24,7 @@ function setDefaultSubscriptionIfCompanyHasNone(){
 		$return = $pdo->query($sql);
 		$rowCount = $return->fetchColumn();
 		
-		if($rowCount > 0) {		
+		if($rowCount > 0) {
 			$pdo = connect_to_db();
 			$sql = "SELECT 		`CompanyID`						AS CompanyID,
 								(
@@ -72,6 +72,7 @@ function setDefaultSubscriptionIfCompanyHasNone(){
 //		Update the company credits history table with the current values
 //		Update the billing date periods
 // 		Check if company went over booking credits and alert admin including links to the exact booking history
+// TO-DO: Not properly tested.
 function updateBillingDatesForCompanies(){
 	try
 	{

@@ -1175,15 +1175,16 @@ if (isSet($_POST['action']) AND $_POST['action'] == 'Activate') {
 	try
 	{
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
-		
+
 		$pdo = connect_to_db();
 		$sql = 'UPDATE 	`company`
-				SET		`isActive` = 1
+				SET		`isActive` = 1,
+						`removeAtDate` = NULL
 				WHERE 	`companyID` = :id';
 		$s = $pdo->prepare($sql);
 		$s->bindValue(':id', $_POST['id']);
 		$s->execute();
-		
+
 		//close connection
 		$pdo = null;
 	}
@@ -1192,7 +1193,7 @@ if (isSet($_POST['action']) AND $_POST['action'] == 'Activate') {
 		$error = 'Error activating company: ' . $e->getMessage();
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
 		exit();
-	}	
+	}
 }
 
 // If admin wants to merge two companies
@@ -1332,7 +1333,7 @@ if (isSet($_POST['action']) and $_POST['action'] == 'Confirm Merge'){
 		$s->bindValue(':CompanyID', $_SESSION['MergeCompanySelectedCompanyID']);
 		$s->bindValue(':CompanyID2', $_SESSION['MergeCompanySelectedCompanyID2']);
 		$s->execute();
-		
+
 		// FIX-ME: How to handle merging company credits history?
 		// Just ignore it?
 	/*	$sql = 'UPDATE 	`companycreditshistory`
@@ -1358,8 +1359,8 @@ if (isSet($_POST['action']) and $_POST['action'] == 'Confirm Merge'){
 		$error = 'Error merging companies: ' . $e->getMessage();
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
 		exit();
-	}	
-	
+	}
+
 	unset($_SESSION['MergeCompanySelectedCompanyID']);
 	unset($_SESSION['MergeCompanySelectedCompanyName']);
 	unset($_SESSION['MergeCompanySelectedCompanyID2']);
@@ -1372,14 +1373,14 @@ if (isSet($_POST['action']) and $_POST['action'] == 'Delete')
 	try
 	{
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
-		
+
 		$pdo = connect_to_db();
 		$sql = 'DELETE FROM `company` 
 				WHERE 		`companyID` = :id';
 		$s = $pdo->prepare($sql);
 		$s->bindValue(':id', $_POST['id']);
 		$s->execute();
-		
+
 		//close connection
 		$pdo = null;
 	}
@@ -1389,17 +1390,17 @@ if (isSet($_POST['action']) and $_POST['action'] == 'Delete')
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
 		exit();
 	}
-	
+
 	$_SESSION['CompanyUserFeedback'] = "Successfully removed the company!";
-	
+
 	// Add a log event that a company was removed
 	try
 	{
 		// Save a description with information about the meeting room that was removed
 		$description = "The company: " . $_POST['CompanyName'] . " was removed by: " . $_SESSION['LoggedInUserName'];
-		
+
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
-		
+
 		$pdo = connect_to_db();
 		$sql = "INSERT INTO `logevent` 
 				SET			`actionID` = 	(
@@ -1411,9 +1412,9 @@ if (isSet($_POST['action']) and $_POST['action'] == 'Delete')
 		$s = $pdo->prepare($sql);
 		$s->bindValue(':description', $description);
 		$s->execute();
-		
+
 		//Close the connection
-		$pdo = null;		
+		$pdo = null;
 	}
 	catch(PDOException $e)
 	{
@@ -1421,8 +1422,8 @@ if (isSet($_POST['action']) and $_POST['action'] == 'Delete')
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
 		$pdo = null;
 		exit();
-	}		
-	
+	}
+
 	// Load company list webpage with updated database
 	header('Location: .');
 	exit();	
@@ -1444,22 +1445,22 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Create Company') OR
 
 	// Set always correct values
 	$pageTitle = 'New Company';
-	$button = 'Add Company';	
+	$button = 'Add Company';
 	$id = '';
-	
+
 	if(isSet($_SESSION['AddCompanyCompanyName'])){
 		$CompanyName = $_SESSION['AddCompanyCompanyName'];
 		unset($_SESSION['AddCompanyCompanyName']);
 	}
-	
+
 	// We want a reset all fields button while adding a new company
 	$reset = 'reset';
-	
+
 	// We don't need to see date to remove when adding a new company
 	$ShowDateToRemove = FALSE;
-	
+
 	var_dump($_SESSION); // TO-DO: remove after testing is done
-	
+
 	// Change to the actual html form template
 	include 'form.html.php';
 	exit();
@@ -1474,14 +1475,14 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Edit') OR
 	if(isSet($_SESSION['refreshEditCompany']) AND $_SESSION['refreshEditCompany']){
 		//	Acknowledge that we have refreshed
 		unset($_SESSION['refreshEditCompany']);
-		
+
 		// Get values we had before the refresh
 		if(isSet($_SESSION['EditCompanyChangedName'])){
 			$CompanyName = $_SESSION['EditCompanyChangedName'];
 		} else {
 			$CompanyName = '';
 		}
-			
+
 		if(isSet($_SESSION['EditCompanyCompanyID'])){
 			$id = $_SESSION['EditCompanyCompanyID'];
 		}
@@ -1492,7 +1493,7 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Edit') OR
 		try
 		{
 			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
-			
+
 			// Get company information
 			$pdo = connect_to_db();
 			$sql = 'SELECT 	`companyID`,
@@ -1503,7 +1504,7 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Edit') OR
 			$s = $pdo->prepare($sql);
 			$s->bindValue(':id', $_POST['id']);
 			$s->execute();
-							
+
 			//Close connection
 			$pdo = null;
 		}
@@ -1512,14 +1513,14 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Edit') OR
 			$error = 'Error fetching company details: ' . $e->getMessage();
 			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
 			$pdo = null;
-			exit();		
+			exit();	
 		}	
 		// Create an array with the row information we retrieved
 		$row = $s->fetch(PDO::FETCH_ASSOC);
 		$CompanyName = $row['name'];
 		$DateToRemove = $row['removeAtDate'];
 		$id = $row['companyID'];
-		
+
 		if(!isSet($DateToRemove) OR $DateToRemove == NULL){
 			$DateToRemove = '';
 		}
@@ -1536,18 +1537,18 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Edit') OR
 	} else {
 		$DateToRemove = $originalDateToDisplay;
 	}
-	
+
 	// Set always correct values
 	$pageTitle = 'Edit Company';
 	$button = 'Edit Company';
-	
+
 	// Don't want a reset button to blank all fields while editing
 	$reset = 'hidden';
 	// Want to see date to remove while editing
 	$ShowDateToRemove = TRUE;
-	
+
 	var_dump($_SESSION); // TO-DO: remove after testing is done
-	
+
 	// Change to the actual form we want to use
 	include 'form.html.php';
 	exit();
@@ -1561,17 +1562,17 @@ if (isSet($_POST['action']) AND $_POST['action'] == 'Add Company')
 	// Refresh form on invalid
 	if($invalidInput){
 		$_SESSION['AddCompanyCompanyName'] = $validatedCompanyName;
-		
+
 		$_SESSION['refreshAddCompany'] = TRUE;
 		header('Location: .');
-		exit();			
-	}			
-		
+		exit();	
+	}
+
 	// Add the company to the database
 	try
-	{	
+	{
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
-		
+
 		$pdo = connect_to_db();
 		$sql = 'INSERT INTO `company` 
 				SET			`name` = :CompanyName,
@@ -1580,7 +1581,7 @@ if (isSet($_POST['action']) AND $_POST['action'] == 'Add Company')
 		$s = $pdo->prepare($sql);
 		$s->bindValue(':CompanyName', $validatedCompanyName);
 		$s->execute();
-		
+
 		unset($_SESSION['LastCompanyID']);
 		$_SESSION['LastCompanyID'] = $pdo->lastInsertId();
 
@@ -1592,9 +1593,9 @@ if (isSet($_POST['action']) AND $_POST['action'] == 'Add Company')
 		$pdo = null;
 		exit();
 	}
-	
+
 	$_SESSION['CompanyUserFeedback'] = "Successfully added the company: " . $validatedCompanyName . ".";
-	
+
 		// Give the company the default subscription
 	try
 	{
@@ -1616,7 +1617,7 @@ if (isSet($_POST['action']) AND $_POST['action'] == 'Add Company')
 		$pdo = null;
 		exit();
 	}	
-	
+
 		// Add a log event that a company was added
 	try
 	{
@@ -1639,9 +1640,9 @@ if (isSet($_POST['action']) AND $_POST['action'] == 'Add Company')
 		$s->bindValue(':description', $logEventdescription);
 		$s->bindValue(':TheCompanyID', $LastCompanyID);
 		$s->execute();
-		
+
 		//Close the connection
-		$pdo = null;		
+		$pdo = null;
 	}
 	catch(PDOException $e)
 	{
@@ -1649,10 +1650,10 @@ if (isSet($_POST['action']) AND $_POST['action'] == 'Add Company')
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
 		$pdo = null;
 		exit();
-	}		
-	
+	}
+
 	clearAddCompanySessions();
-	
+
 	// Load companies list webpage with new company
 	header('Location: .');
 	exit();
@@ -1662,7 +1663,7 @@ if (isSet($_POST['action']) AND $_POST['action'] == 'Add Company')
 if ((isSet($_POST['action']) AND $_POST['action'] == 'Edit Company'))
 {
 	list($invalidInput, $validatedCompanyName, $validatedCompanyDateToRemove) = validateUserInputs();
-	
+
 	// Refresh form on invalid
 	if($invalidInput){
 		$_SESSION['EditCompanyChangedName'] = $validatedCompanyName;
@@ -1670,17 +1671,17 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Edit Company'))
 
 		$_SESSION['refreshEditCompany'] = TRUE;
 		header('Location: .');
-		exit();			
-	}			
-	
+		exit();	
+	}
+
 	// Check if there has been any changes
 	$NumberOfChanges = 0;
-	
+
 	if(	isSet($_SESSION['EditCompanyOriginalName']) AND 
 		$_SESSION['EditCompanyOriginalName'] != $validatedCompanyName){
 		$NumberOfChanges++;
 	}
-	
+
 	if(	isSet($_SESSION['EditCompanyOriginalRemoveDate']) AND 
 		$_SESSION['EditCompanyOriginalRemoveDate'] != $validatedCompanyDateToRemove){
 		$NumberOfChanges++;
@@ -1693,41 +1694,41 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Edit Company'))
 		try
 		{
 			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
-			
+
 			$pdo = connect_to_db();
 			$sql = 'UPDATE 	`company` 
 					SET		`removeAtDate` = :removeAtDate,
 							`name` = :name
 					WHERE 	`companyID` = :id';
-			
+
 			if ($validatedCompanyDateToRemove == ''){
 				$validatedCompanyDateToRemove = null;
 			}
-				
+
 			$s = $pdo->prepare($sql);
 			$s->bindValue(':id', $_POST['id']);
 			$s->bindValue(':removeAtDate', $validatedCompanyDateToRemove);
 			$s->bindValue(':name', $validatedCompanyName);
 			$s->execute();
-			
+
 			//close connection
-			$pdo = null;	
+			$pdo = null;
 		}
 		catch (PDOException $e)
 		{
 			$error = 'Error editing company information: ' . $e->getMessage();
 			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
 			$pdo = null;
-			exit();		
+			exit();
 		}
-		
+
 		$_SESSION['CompanyUserFeedback'] = "Successfully updated the company: " . $validatedCompanyName . ".";		
 	} else {
 		$_SESSION['CompanyUserFeedback'] = "No changes were made to the company: " . $validatedCompanyName . ".";
 	}
 
 	clearEditCompanySessions();
-	
+
 	// Load company list webpage with updated database
 	header('Location: .');
 	exit();
@@ -1740,7 +1741,7 @@ if (isSet($_POST['action']) AND $_POST['action'] == 'Cancel Date')
 	try
 	{
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
-		
+
 		$pdo = connect_to_db();
 		$sql = 'UPDATE 	`company` 
 				SET		`removeAtDate` = NULL
@@ -1748,20 +1749,20 @@ if (isSet($_POST['action']) AND $_POST['action'] == 'Cancel Date')
 		$s = $pdo->prepare($sql);
 		$s->bindValue(':id', $_POST['id']);
 		$s->execute();
-		
+
 		//close connection
-		$pdo = null;	
+		$pdo = null;
 	}
 	catch (PDOException $e)
 	{
 		$error = 'Error cancelling removal date: ' . $e->getMessage();
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
 		$pdo = null;
-		exit();		
+		exit();
 	}
-	
+
 	$_SESSION['CompanyUserFeedback'] = "Successfully removed the cancel date from the company: " . $_POST['CompanyName'] . ".";
-	
+
 	// Load company list webpage with updated database
 	header('Location: .');
 	exit();
@@ -1770,7 +1771,7 @@ if (isSet($_POST['action']) AND $_POST['action'] == 'Cancel Date')
 if(isSet($_POST['edit']) AND $_POST['edit'] == 'Reset'){	
 	$_SESSION['EditCompanyChangedName'] = $_SESSION['EditCompanyOriginalName'];
 	$_SESSION['EditCompanyChangedRemoveDate'] = $_SESSION['EditCompanyOriginalRemoveDate'];
-	
+
 	$_SESSION['refreshEditCompany'] = TRUE;
 	header('Location: .');
 	exit();	
@@ -1818,7 +1819,7 @@ try
 		// We therefore get the minimum time per booking for our equations
 	$minimumSecondsPerBooking = MINIMUM_BOOKING_DURATION_IN_MINUTES_USED_IN_PRICE_CALCULATIONS * 60; // e.g. 15min = 900s
 	$aboveThisManySecondsToCount = BOOKING_DURATION_IN_MINUTES_USED_BEFORE_INCLUDING_IN_PRICE_CALCULATIONS * 60; // E.g. 1min = 60s
-	
+
 	$sql = "SELECT 		c.companyID 										AS CompID,
 						c.`name` 											AS CompanyName,
 						c.`dateTimeCreated`									AS DatetimeCreated,

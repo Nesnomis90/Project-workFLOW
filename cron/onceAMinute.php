@@ -36,6 +36,7 @@ function updateCompletedBookings(){
 }
 
 // Check if a meeting is about to start and alert the user by sending an email
+// TO-DO: Not properly tested.
 function alertUserThatMeetingIsAboutToStart(){
 	try
 	{
