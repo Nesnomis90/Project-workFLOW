@@ -764,7 +764,10 @@ if(	(isSet($_SESSION['loggedIn']) AND isSet($_SESSION['LoggedInUserID']) AND
 										'BookingWasCancelledOn' => $displayCancelledDateTime,
 										'MeetingInfo' => $meetinginfo
 									);
-		}	elseif(($status == "Completed" OR $status == "Ended Early") AND (isSet($_GET['completedBooking']) OR isSet($_GET['totalBooking']))){				
+		}	elseif(($status == "Completed" OR $status == "Ended Early") AND (isSet($_GET['completedBooking']) OR isSet($_GET['totalBooking']))){	
+			if($status == "Completed"){
+				$cancelledByUserName = "";
+			}
 			$bookingsCompleted[] = array(	'id' => $row['bookingID'],
 											'BookingStatus' => $status,
 											'BookedRoomName' => $roomName,

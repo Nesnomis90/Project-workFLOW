@@ -2099,8 +2099,6 @@ if(isSet($_GET['totalBooking']) OR isSet($_GET['activeBooking']) OR isSet($_GET[
 												'BookingWasCreatedOn' => $displayCreatedDateTime,
 												'BookingWasCompletedOn' => $displayCompletedDateTime,
 												'BookingWasCancelledOn' => $displayCancelledDateTime,
-												'CancelMessage' => $cancelMessage,
-												'CancelledByUserName' => $cancelledByUserName,
 												'firstName' => $firstname,
 												'lastName' => $lastname,
 												'email' => $email,
@@ -2128,7 +2126,10 @@ if(isSet($_GET['totalBooking']) OR isSet($_GET['activeBooking']) OR isSet($_GET[
 										'MeetingInfo' => $meetinginfo,
 										'sendEmail' => $row['sendEmail']
 									);
-		}	elseif(($status == "Completed" OR $status == "Ended Early") AND (isSet($_GET['completedBooking']) OR isSet($_GET['totalBooking']))){				
+		}	elseif(($status == "Completed" OR $status == "Ended Early") AND (isSet($_GET['completedBooking']) OR isSet($_GET['totalBooking']))){
+			if($status == "Completed"){
+				$cancelledByUserName = "";
+			}			
 			$bookingsCompleted[] = array(	'id' => $row['bookingID'],
 											'BookingStatus' => $status,
 											'BookedRoomName' => $roomName,
