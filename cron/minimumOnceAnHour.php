@@ -10,17 +10,16 @@ function deleteNotActivatedUsersIfTakingTooLong(){
 	try
 	{
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
-		
+
 		$pdo = connect_to_db();
+
 		$sql = "DELETE 	
 				FROM 	`user`
 				WHERE 	DATE_ADD(`create_time`, INTERVAL 8 HOUR) < CURRENT_TIMESTAMP
 				AND 	`isActive` = 0
-				AND		`userID` <> 0";		
+				AND		`userID` <> 0";
 		$pdo->exec($sql);
-		
-		//Close the connection
-		$pdo = null;
+
 		return TRUE;
 	}
 	catch(PDOException $e)
@@ -45,11 +44,20 @@ if(!$deletedNotActivatedUsers){
 		sleep($sleepTime);
 		$success = deleteNotActivatedUsersIfTakingTooLong();
 		if($success){
+			echo "Successfully Deleted Non-Activated Users";	// TO-DO: Remove before uploading.
+			echo "<br />";
 			break;
 		}
 	}
 	unset($success);
+	echo "Failed To Delete Non-Activated Users";	// TO-DO: Remove before uploading.
+	echo "<br />";	
+} else {
+	echo "Successfully Deleted Non-Activated Users";	// TO-DO: Remove before uploading.
+	echo "<br />";
 }
 
+// Close database connection
+$pdo = null;
 // The actual actions taken // END //
 ?>

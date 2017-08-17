@@ -377,10 +377,17 @@ if(!$updatedDefaultSubscription){
 		sleep($sleepTime);
 		$success = setDefaultSubscriptionIfCompanyHasNone();
 		if($success){
+			echo "Successfully Updated Default Subscription";	// TO-DO: Remove before uploading.
+			echo "<br />";
 			break;
 		}
 	}
 	unset($success);
+	echo "Failed To Update Default Subscription";	// TO-DO: Remove before uploading.
+	echo "<br />";
+} else {
+	echo "Successfully Updated Default Subscription";	// TO-DO: Remove before uploading.
+	echo "<br />";
 }
 
 if(!$updatedBillingDates){
@@ -388,10 +395,17 @@ if(!$updatedBillingDates){
 		sleep($sleepTime);
 		$success = updateBillingDatesForCompanies();
 		if($success){
+			echo "Successfully Updated Billing Dates For Companies";	// TO-DO: Remove before uploading.
+			echo "<br />";
 			break;
 		}
 	}
 	unset($success);
+	echo "Failed To Update Billing Dates For Companies";	// TO-DO: Remove before uploading.
+	echo "<br />";
+} else {
+	echo "Successfully Updated Billing Dates For Companies";	// TO-DO: Remove before uploading.
+	echo "<br />";
 }
 
 if(!$updatedCompanyActivity){
@@ -399,10 +413,17 @@ if(!$updatedCompanyActivity){
 		sleep($sleepTime);
 		$success = setCompanyAsInactiveOnSetDate();
 		if($success){
+			echo "Successfully Set Company As Inactive";	// TO-DO: Remove before uploading.
+			echo "<br />";			
 			break;
 		}
 	}
 	unset($success);
+	echo "Failed To Set Company As Inactive";	// TO-DO: Remove before uploading.
+	echo "<br />";
+} else {
+	echo "Successfully Set Company As Inactive";	// TO-DO: Remove before uploading.
+	echo "<br />";
 }
 
 if(!$updatedUserAccess){
@@ -410,11 +431,21 @@ if(!$updatedUserAccess){
 		sleep($sleepTime);
 		$success = setUserAccessToNormalOnSetDate();
 		if($success){
+			echo "Successfully Set User Access Level To Normal";	// TO-DO: Remove before uploading.
+			echo "<br />";
 			break;
 		}
 	}
 	unset($success);
+	echo "Failed To Set User Access Level To Normal";	// TO-DO: Remove before uploading.
+	echo "<br />";	
+} else {
+	echo "Successfully Set User Access Level To Normal";	// TO-DO: Remove before uploading.
+	echo "<br />";
 }
+
+// Close database connection
+$pdo = null;
 
 // The actual actions taken // END //
 ?>

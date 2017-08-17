@@ -11,8 +11,11 @@ function updateCompletedBookings(){
 	try
 	{
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
-		
-		$pdo = connect_to_db();
+	
+		if(!isSet($pdo)){
+			$pdo = connect_to_db();
+		}
+
 		$sql = "UPDATE 	`booking`
 				SET		`actualEndDateTime` = `endDateTime`,
 						`cancellationCode` = NULL,
@@ -22,9 +25,7 @@ function updateCompletedBookings(){
 				AND 	`dateTimeCancelled` IS NULL
 				AND		`bookingID` <> 0";
 		$pdo->exec($sql);
-		
-		//Close the connection
-		$pdo = null;
+
 		return TRUE;
 	}
 	catch(PDOException $e)
@@ -40,7 +41,10 @@ function alertUserThatMeetingIsAboutToStart(){
 	{
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 		
-		$pdo = connect_to_db();
+		if(!isSet($pdo)){
+			$pdo = connect_to_db();
+		}
+
 		// Get all upcoming meetings that are TIME_LEFT_IN_MINUTES_UNTIL_MEETING_STARTS_BEFORE_SENDING_EMAIL minutes away from starting.
 		// That we haven't already alerted/sent email to
 		// And only for the users who want to receive emails
@@ -85,11 +89,8 @@ function alertUserThatMeetingIsAboutToStart(){
 			$rowNum = sizeOf($result);
 		} else {
 			$rowNum  = 0;
-		}
-		
-		//Close the connection
-		$pdo = null;
-		
+		}	
+	
 		if($rowNum > 0){
 			foreach($result AS $row){
 				$upcomingMeetingsNotAlerted[] = array(
@@ -176,10 +177,17 @@ if(!$updatedCompletedBookings){
 		sleep($sleepTime);
 		$success = updateCompletedBookings();
 		if($success){
+			echo "Successfully Updated Completed Bookings";	// TO-DO: Remove before uploading.
+			echo "<br />";	
 			break;
 		}
 	}
 	unset($success);
+	echo "Failed To Update Completed Bookings";	// TO-DO: Remove before uploading.
+	echo "<br />";	
+} else {
+	echo "Successfully Updated Completed Bookings";	// TO-DO: Remove before uploading.
+	echo "<br />";
 }
 
 if(!$alertedUserOnMeetingStart){
@@ -187,10 +195,21 @@ if(!$alertedUserOnMeetingStart){
 		sleep($sleepTime);
 		$success = alertUserThatMeetingIsAboutToStart();
 		if($success){
+			echo "Successfully Sent Emails To User(s) That Meeting Is Starting Soon";	// TO-DO: Remove before uploading.
+			echo "<br />";
 			break;
 		}
 	}
 	unset($success);
+	echo "Failed To Send Emails To User(s) That Meeting Is Starting Soon";	// TO-DO: Remove before uploading.
+	echo "<br />";	
+} else {
+	echo "Successfully Sent Emails To User(s) That Meeting Is Starting Soon";	// TO-DO: Remove before uploading.
+	echo "<br />";
 }
+
+// Close database connection
+$pdo = null;
+
 // The actual actions taken // END //
 ?>
