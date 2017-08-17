@@ -832,9 +832,7 @@ if(	(isSet($_SESSION['loggedIn']) AND isSet($_SESSION['LoggedInUserID']) AND
 										'BookingWasCreatedOn' => $displayCreatedDateTime,
 										'BookingWasCompletedOn' => $displayCompletedDateTime,
 										'BookingWasCancelledOn' => $displayCancelledDateTime,
-										'MeetingInfo' => $meetinginfo,
-										'CancelMessage' => $cancelMessage,
-										'CancelledByUserName' => $cancelledByUserName
+										'MeetingInfo' => $meetinginfo
 									);
 		}
 	}

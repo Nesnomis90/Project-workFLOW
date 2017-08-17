@@ -72,7 +72,7 @@ function setDefaultSubscriptionIfCompanyHasNone(){
 //		Update the company credits history table with the current values
 //		Update the billing date periods
 // 		Check if company went over booking credits and alert admin including links to the exact booking history
-// TO-DO: Not properly tested.
+// TO-DO: "company went over credits" has not been tested
 function updateBillingDatesForCompanies(){
 	try
 	{
@@ -234,7 +234,7 @@ function updateBillingDatesForCompanies(){
 						$endDate = $companiesOverCredit[0]['EndDate'];					
 
 						//Link example: http://localhost/admin/companies/?companyID=2&BillingStart=2017-05-15&BillingEnd=2017-06-15
-						$link = "http://$_SERVER[HTTP_HOST]/admin/companies/?CompanyID=" . $companyID . 
+						$link = "http://$_SERVER[HTTP_HOST]/admin/companies/?companyID=" . $companyID . 
 								"&BillingStart=" . $startDate . "&BillingEnd=" . $endDate;
 
 						$emailMessage = 
@@ -252,12 +252,15 @@ function updateBillingDatesForCompanies(){
 							$startDate = $url['StartDate'];
 							$endDate = $url['EndDate'];
 
-							$link = "http://$_SERVER[HTTP_HOST]/admin/companies/?CompanyID=" . $companyID . 
+							$link = "http://$_SERVER[HTTP_HOST]/admin/companies/?companyID=" . $companyID . 
 									"&BillingStart=" . $startDate . "&BillingEnd=" . $endDate;
 
 							$emailMessage .= "Link: " . $link . "\n";
 						}
 					}
+
+					echo "Email Message being sent out: \n" . $emailMessage;	// TO-DO: Remove before uploading
+					echo "<br />";
 
 					// Get admin(s) emails
 					$sql = "SELECT 		u.`email`		AS Email
@@ -273,6 +276,11 @@ function updateBillingDatesForCompanies(){
 						foreach($result AS $Email){
 							$email[] = $Email['Email'];
 						}
+						echo "Will be sent to these email(s): " . implode(", ", $email); // TO-DO: Remove before uploading
+						echo "<br />";
+					} else {
+						echo "No Admins want to receive an Email"; // TO-DO: Remove before uploading
+						echo "<br />";
 					}
 
 					// Only try to send out email if there are any admins that have set they want them
