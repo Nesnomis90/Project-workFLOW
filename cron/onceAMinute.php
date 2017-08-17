@@ -36,7 +36,7 @@ function updateCompletedBookings(){
 }
 
 // Check if a meeting is about to start and alert the user by sending an email
-// TO-DO: Not properly tested.
+// FIX-ME: PHP script only runs for 30 sec before cancelling. What if we have to send a lot of emails?
 function alertUserThatMeetingIsAboutToStart(){
 	try
 	{
@@ -70,7 +70,8 @@ function alertUserThatMeetingIsAboutToStart(){
 							b.`description`				AS BookingDescription,
 							b.`cancellationCode`		AS CancelCode
 				FROM		`booking` b
-				INNER JOIN `user` u
+				INNER JOIN 	`user` u
+				ON			u.`userID` = b.`userID`
 				WHERE 		DATE_SUB(b.`startDateTime`, INTERVAL :bufferMinutes MINUTE) < CURRENT_TIMESTAMP
 				AND			DATE_SUB(b.`startDateTime`, INTERVAL 1 MINUTE) > CURRENT_TIMESTAMP
 				AND 		b.`dateTimeCancelled` IS NULL
@@ -92,6 +93,9 @@ function alertUserThatMeetingIsAboutToStart(){
 			$rowNum  = 0;
 		}	
 	
+		echo "Number of hits about users to Alert: $rowNum";	// TO-DO: Remove before uploading.
+		echo "<br />";
+	
 		if($rowNum > 0){
 			foreach($result AS $row){
 				$upcomingMeetingsNotAlerted[] = array(
@@ -107,15 +111,17 @@ function alertUserThatMeetingIsAboutToStart(){
 														'CancelCode' => $row['CancelCode']
 													);
 			}
-			
+
 			$numberOfUsersToAlert = sizeOf($upcomingMeetingsNotAlerted);
-			
-			foreach(upcomingMeetingsNotAlerted AS $row){
+			echo "Number of users to Alert: $numberOfUsersToAlert";	// TO-DO: Remove before uploading.
+			echo "<br />";
+
+			foreach($upcomingMeetingsNotAlerted AS $row){
 				$emailSubject = "Upcoming Meeting Info!";
 
 				$displayStartDate = convertDatetimeToFormat($row['StartDate'] , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
 				$displayEndDate = convertDatetimeToFormat($row['EndDate'], 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
-				
+
 				$emailMessage = 
 				"You have a booked meeting starting soon!\n" . 
 				"Your booked Meeting Room: " . $row['MeetingRoomName'] . ".\n" . 
@@ -124,11 +130,16 @@ function alertUserThatMeetingIsAboutToStart(){
 				"If you wish to cancel your meeting, or just end it early, you can easily do so by clicking the link given below.\n" .
 				"Click this link to cancel your booked meeting: " . $_SERVER['HTTP_HOST'] . 
 				"/booking/?cancellationcode=" . $row['CancelCode'];
-		
+
 				$email = $row['UserEmail'];
-		
+
 				$mailResult = sendEmail($email, $emailSubject, $emailMessage);
-				
+
+				echo "Email being sent out about a meeting starting soon: $emailMessage";	// TO-DO: Remove before uploading
+				echo "<br />";
+				echo "Email is being sent to: $email";
+				echo "<br />";
+
 				if($mailResult){
 					// Update booking that we've "sent" an email to the user 
 					try
