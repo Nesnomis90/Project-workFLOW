@@ -3143,7 +3143,14 @@ if(!isSet($_GET['Meetingroom'])){
 							b.`adminNote`									AS AdminNote,
 							b.`dateTimeCreated`								AS BookingWasCreatedOn, 
 							b.`actualEndDateTime`							AS BookingWasCompletedOn, 
-							b.`dateTimeCancelled`							AS BookingWasCancelledOn 
+							b.`dateTimeCancelled`							AS BookingWasCancelledOn,
+							b.`cancelMessage`								AS BookingCancelMessage,
+							(
+								IF(b.`cancelledByUserID` IS NULL, NULL, (SELECT `firstName` FROM `user` WHERE `userID` = b.`cancelledByUserID`))
+							)        										AS CancelledByUserFirstName,
+							(
+								IF(b.`cancelledByUserID` IS NULL, NULL, (SELECT `lastName` FROM `user` WHERE `userID` = b.`cancelledByUserID`))
+							)        										AS CancelledByUserLastName
 				FROM 		`booking` b
 				ORDER BY 	UNIX_TIMESTAMP(b.`startDateTime`)
 				DESC';
@@ -3203,7 +3210,14 @@ if(!isSet($_GET['Meetingroom'])){
 							b.`adminNote`									AS AdminNote,							
 							b.`dateTimeCreated`								AS BookingWasCreatedOn, 
 							b.`actualEndDateTime`							AS BookingWasCompletedOn, 
-							b.`dateTimeCancelled`							AS BookingWasCancelledOn 
+							b.`dateTimeCancelled`							AS BookingWasCancelledOn,
+							b.`cancelMessage`								AS BookingCancelMessage,
+							(
+								IF(b.`cancelledByUserID` IS NULL, NULL, (SELECT `firstName` FROM `user` WHERE `userID` = b.`cancelledByUserID`))
+							)        										AS CancelledByUserFirstName,
+							(
+								IF(b.`cancelledByUserID` IS NULL, NULL, (SELECT `lastName` FROM `user` WHERE `userID` = b.`cancelledByUserID`))
+							)        										AS CancelledByUserLastName							
 				FROM 		`booking` b
 				WHERE		b.`meetingRoomID` = :MeetingRoomID
 				ORDER BY 	UNIX_TIMESTAMP(b.`startDateTime`)
@@ -3344,6 +3358,17 @@ foreach ($result as $row)
 		$completedMeetingDurationForPrice = $completedMeetingDurationInMinutes;
 	}
 	$displayCompletedMeetingDurationForPrice = convertMinutesToHoursAndMinutes($completedMeetingDurationForPrice);
+	
+	$cancelMessage = $row['BookingCancelMessage'];
+	if($cancelMessage == NULL){
+		$cancelMessage = "";
+	}
+	if($row['CancelledByUserLastName'] == NULL AND $row['CancelledByUserFirstName'] == NULL){
+		$cancelledByUserName = "N/A - Deleted";
+	} else {
+		$cancelledByUserName = $row['CancelledByUserLastName'] . ", " . $row['CancelledByUserFirstName'];
+	}
+
 	if($status == "Active Today"){				
 		$bookingsActiveToday[] = array(	'id' => $row['bookingID'],
 										'BookingStatus' => $status,
@@ -3365,6 +3390,10 @@ foreach ($result as $row)
 										'MeetingInfo' => $meetinginfo
 									);
 	}	elseif($status == "Completed Today" OR $status == "Ended Early Today") {
+		if($status == "Completed Today"){
+			$cancelMessage = "";
+			$cancelledByUserName = "";
+		}
 		$bookingsCompletedToday[] = array(	'id' => $row['bookingID'],
 											'BookingStatus' => $status,
 											'BookedRoomName' => $roomName,
@@ -3376,6 +3405,8 @@ foreach ($result as $row)
 											'BookedForCompany' => $row['BookedForCompany'],
 											'BookingDescription' => $row['BookingDescription'],
 											'AdminNote' => $adminNote,
+											'CancelMessage' => $cancelMessage,
+											'CancelledByUserName' => $cancelledByUserName,
 											'firstName' => $firstname,
 											'lastName' => $lastname,
 											'email' => $email,
@@ -3406,7 +3437,11 @@ foreach ($result as $row)
 									'UserInfo' => $userinfo,
 									'MeetingInfo' => $meetinginfo
 								);
-	}	elseif($status == "Completed" OR $status == "Ended Early"){				
+	}	elseif($status == "Completed" OR $status == "Ended Early"){	
+		if($status == "Completed"){
+			$cancelMessage = "";
+			$cancelledByUserName = "";
+		}
 		$bookingsCompleted[] = array(	'id' => $row['bookingID'],
 										'BookingStatus' => $status,
 										'BookedRoomName' => $roomName,
@@ -3418,6 +3453,8 @@ foreach ($result as $row)
 										'BookedForCompany' => $row['BookedForCompany'],
 										'BookingDescription' => $row['BookingDescription'],
 										'AdminNote' => $adminNote,
+										'CancelMessage' => $cancelMessage,
+										'CancelledByUserName' => $cancelledByUserName,
 										'firstName' => $firstname,
 										'lastName' => $lastname,
 										'email' => $email,
@@ -3438,6 +3475,8 @@ foreach ($result as $row)
 										'BookedForCompany' => $row['BookedForCompany'],
 										'BookingDescription' => $row['BookingDescription'],
 										'AdminNote' => $adminNote,
+										'CancelMessage' => $cancelMessage,
+										'CancelledByUserName' => $cancelledByUserName,
 										'firstName' => $firstname,
 										'lastName' => $lastname,
 										'email' => $email,

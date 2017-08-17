@@ -11,8 +11,11 @@ function updateCompletedBookings(){
 	try
 	{
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
-		
-		$pdo = connect_to_db();
+
+		if(!isSet($pdo)){
+			$pdo = connect_to_db();
+		}
+
 		$sql = "UPDATE 	`booking`
 				SET		`actualEndDateTime` = `endDateTime`,
 						`cancellationCode` = NULL,
@@ -22,9 +25,7 @@ function updateCompletedBookings(){
 				AND 	`dateTimeCancelled` IS NULL
 				AND		`bookingID` <> 0";
 		$pdo->exec($sql);
-		
-		//Close the connection
-		$pdo = null;
+
 		return TRUE;
 	}
 	catch(PDOException $e)
@@ -35,12 +36,16 @@ function updateCompletedBookings(){
 }
 
 // Check if a meeting is about to start and alert the user by sending an email
+// FIX-ME: PHP script only runs for 30 sec before cancelling. What if we have to send a lot of emails?
 function alertUserThatMeetingIsAboutToStart(){
 	try
 	{
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 		
-		$pdo = connect_to_db();
+		if(!isSet($pdo)){
+			$pdo = connect_to_db();
+		}
+
 		// Get all upcoming meetings that are TIME_LEFT_IN_MINUTES_UNTIL_MEETING_STARTS_BEFORE_SENDING_EMAIL minutes away from starting.
 		// That we haven't already alerted/sent email to
 		// And only for the users who want to receive emails
@@ -65,7 +70,8 @@ function alertUserThatMeetingIsAboutToStart(){
 							b.`description`				AS BookingDescription,
 							b.`cancellationCode`		AS CancelCode
 				FROM		`booking` b
-				INNER JOIN `user` u
+				INNER JOIN 	`user` u
+				ON			u.`userID` = b.`userID`
 				WHERE 		DATE_SUB(b.`startDateTime`, INTERVAL :bufferMinutes MINUTE) < CURRENT_TIMESTAMP
 				AND			DATE_SUB(b.`startDateTime`, INTERVAL 1 MINUTE) > CURRENT_TIMESTAMP
 				AND 		b.`dateTimeCancelled` IS NULL
@@ -75,9 +81,9 @@ function alertUserThatMeetingIsAboutToStart(){
 				AND			b.`emailSent` = 0
 				AND			u.`sendEmail` = 1
 				AND			b.`bookingID` <> 0";		
-		$s = $pdo->preare($sql);
-		$s->bindValue(':bufferMinutes', TIME_LEFT_IN_MINUTES_UNTIL_MEETING_STARTS_BEFORE_SENDING_EMAIL)
-		$s->bindValue(':waitMinutes', MINIMUM_TIME_PASSED_IN_MINUTES_AFTER_CREATING_BOOKING_BEFORE_SENDING_EMAIL)
+		$s = $pdo->prepare($sql);
+		$s->bindValue(':bufferMinutes', TIME_LEFT_IN_MINUTES_UNTIL_MEETING_STARTS_BEFORE_SENDING_EMAIL);
+		$s->bindValue(':waitMinutes', MINIMUM_TIME_PASSED_IN_MINUTES_AFTER_CREATING_BOOKING_BEFORE_SENDING_EMAIL);
 		$s->execute();
 		
 		$result = $s->fetchAll(PDO::FETCH_ASSOC);
@@ -85,11 +91,11 @@ function alertUserThatMeetingIsAboutToStart(){
 			$rowNum = sizeOf($result);
 		} else {
 			$rowNum  = 0;
-		}
-		
-		//Close the connection
-		$pdo = null;
-		
+		}	
+	
+		echo "Number of hits about users to Alert: $rowNum";	// TO-DO: Remove before uploading.
+		echo "<br />";
+	
 		if($rowNum > 0){
 			foreach($result AS $row){
 				$upcomingMeetingsNotAlerted[] = array(
@@ -105,15 +111,17 @@ function alertUserThatMeetingIsAboutToStart(){
 														'CancelCode' => $row['CancelCode']
 													);
 			}
-			
+
 			$numberOfUsersToAlert = sizeOf($upcomingMeetingsNotAlerted);
-			
-			foreach(upcomingMeetingsNotAlerted AS $row){
+			echo "Number of users to Alert: $numberOfUsersToAlert";	// TO-DO: Remove before uploading.
+			echo "<br />";
+
+			foreach($upcomingMeetingsNotAlerted AS $row){
 				$emailSubject = "Upcoming Meeting Info!";
 
 				$displayStartDate = convertDatetimeToFormat($row['StartDate'] , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
 				$displayEndDate = convertDatetimeToFormat($row['EndDate'], 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
-				
+
 				$emailMessage = 
 				"You have a booked meeting starting soon!\n" . 
 				"Your booked Meeting Room: " . $row['MeetingRoomName'] . ".\n" . 
@@ -122,27 +130,31 @@ function alertUserThatMeetingIsAboutToStart(){
 				"If you wish to cancel your meeting, or just end it early, you can easily do so by clicking the link given below.\n" .
 				"Click this link to cancel your booked meeting: " . $_SERVER['HTTP_HOST'] . 
 				"/booking/?cancellationcode=" . $row['CancelCode'];
-		
+
 				$email = $row['UserEmail'];
-		
+
 				$mailResult = sendEmail($email, $emailSubject, $emailMessage);
-				
+
+				echo "Email being sent out about a meeting starting soon: $emailMessage";	// TO-DO: Remove before uploading
+				echo "<br />";
+				echo "Email is being sent to: $email";
+				echo "<br />";
+
 				if($mailResult){
 					// Update booking that we've "sent" an email to the user 
 					try
 					{
 						include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 						
-						$pdo = connect_to_db();
+						if(!isSet($pdo)){
+							$pdo = connect_to_db();
+						}
 						$sql = "UPDATE 	`booking`
 								SET		`emailSent` = 1
 								WHERE	`bookingID` = :bookingID";
 						$s = $pdo->prepare($sql);
 						$s->bindValue(':bookingID', $row['TheBookingID']);
 						$s->execute();
-						
-						//Close the connection
-						$pdo = null;
 					}
 					catch(PDOException $e)
 					{
@@ -176,10 +188,17 @@ if(!$updatedCompletedBookings){
 		sleep($sleepTime);
 		$success = updateCompletedBookings();
 		if($success){
+			echo "Successfully Updated Completed Bookings";	// TO-DO: Remove before uploading.
+			echo "<br />";	
 			break;
 		}
 	}
 	unset($success);
+	echo "Failed To Update Completed Bookings";	// TO-DO: Remove before uploading.
+	echo "<br />";	
+} else {
+	echo "Successfully Updated Completed Bookings";	// TO-DO: Remove before uploading.
+	echo "<br />";
 }
 
 if(!$alertedUserOnMeetingStart){
@@ -187,10 +206,21 @@ if(!$alertedUserOnMeetingStart){
 		sleep($sleepTime);
 		$success = alertUserThatMeetingIsAboutToStart();
 		if($success){
+			echo "Successfully Sent Emails To User(s) That Meeting Is Starting Soon";	// TO-DO: Remove before uploading.
+			echo "<br />";
 			break;
 		}
 	}
 	unset($success);
+	echo "Failed To Send Emails To User(s) That Meeting Is Starting Soon";	// TO-DO: Remove before uploading.
+	echo "<br />";	
+} else {
+	echo "Successfully Sent Emails To User(s) That Meeting Is Starting Soon";	// TO-DO: Remove before uploading.
+	echo "<br />";
 }
+
+// Close database connection
+$pdo = null;
+
 // The actual actions taken // END //
 ?>

@@ -58,8 +58,8 @@
 		<table>
 			<caption>Active Bookings Today</caption>
 			<tr>
-				<th colspan="9">Booking information</th>
-				<th colspan="4">Connected user information</th>
+				<th colspan="9">Booking Information</th>
+				<th colspan="4">Booked For User</th>
 				<th colspan="3">Alter Booking</th>
 			</tr>				
 			<tr>
@@ -126,9 +126,9 @@
 		<table>
 			<caption>Completed Bookings Today</caption>
 			<tr>
-				<th colspan="9">Booking information</th>
-				<th colspan="3">Completion Info</th>
-				<th colspan="4">Connected user information</th>
+				<th colspan="9">Booking Information</th>
+				<th colspan="5">Completion Info</th>
+				<th colspan="4">Booked For User</th>
 				<th colspan="3">Alter Booking</th>
 			</tr>				
 			<tr>
@@ -144,6 +144,8 @@
 				<th>Finished At</th>
 				<th>Actual Duration</th>
 				<th>Price Duration</th>
+				<th>Ended Early Message</th>
+				<th>Ended Early By</th>
 				<th>First Name</th>
 				<th>Last Name</th>
 				<th>Email</th>
@@ -168,6 +170,8 @@
 						<td><?php htmlout($booking['BookingWasCompletedOn']); ?></td>
 						<td><?php htmlout($booking['CompletedMeetingDuration']); ?></td>
 						<td><?php htmlout($booking['CompletedMeetingDurationForPrice']); ?></td>
+						<td style="white-space: pre-wrap;"><?php htmlout($booking['CancelMessage']); ?></td>
+						<td><?php htmlout($booking['CancelledByUserName']); ?></td>
 						<td><?php htmlout($booking['firstName']); ?></td>
 						<td><?php htmlout($booking['lastName']); ?></td>
 						<td><?php htmlout($booking['email']); ?></td>
@@ -283,6 +287,8 @@
 				<th>Finished At</th>
 				<th>Actual Duration</th>
 				<th>Price Duration</th>
+				<th>Ended Early Message</th>
+				<th>Ended Early By</th>
 				<th>First Name</th>
 				<th>Last Name</th>
 				<th>Email</th>
@@ -307,6 +313,8 @@
 						<td><?php htmlout($booking['BookingWasCompletedOn']); ?></td>
 						<td><?php htmlout($booking['CompletedMeetingDuration']); ?></td>
 						<td><?php htmlout($booking['CompletedMeetingDurationForPrice']); ?></td>
+						<td style="white-space: pre-wrap;"><?php htmlout($booking['CancelMessage']); ?></td>
+						<td><?php htmlout($booking['CancelledByUserName']); ?></td>
 						<td><?php htmlout($booking['firstName']); ?></td>
 						<td><?php htmlout($booking['lastName']); ?></td>
 						<td><?php htmlout($booking['email']); ?></td>
@@ -340,8 +348,8 @@
 			<caption>Bookings Cancelled</caption>
 			<tr>
 				<th colspan="9">Booking information</th>
-				<th>Completion Date</th>
-				<th colspan="4">Connected user information</th>
+				<th colspan="3">Cancel information</th>
+				<th colspan="4">Booked for user</th>
 				<th colspan="3">Alter Booking</th>
 			</tr>				
 			<tr>
@@ -354,7 +362,9 @@
 				<th>Description</th>
 				<th>Admin Note</th>
 				<th>Created At</th>
-				<th>Cancelled</th>
+				<th>Cancelled At</th>
+				<th>Cancel Message</th>
+				<th>Cancelled By</th>
 				<th>First Name</th>
 				<th>Last Name</th>
 				<th>Email</th>
@@ -377,6 +387,8 @@
 						<td style="white-space: pre-wrap;"><?php htmlout($booking['AdminNote']); ?></td>
 						<td><?php htmlout($booking['BookingWasCreatedOn']); ?></td>
 						<td><?php htmlout($booking['BookingWasCancelledOn']); ?></td>
+						<td style="white-space: pre-wrap;"><?php htmlout($booking['CancelMessage']); ?></td>
+						<td><?php htmlout($booking['CancelledByUserName']); ?></td>
 						<td><?php htmlout($booking['firstName']); ?></td>
 						<td><?php htmlout($booking['lastName']); ?></td>
 						<td><?php htmlout($booking['email']); ?></td>

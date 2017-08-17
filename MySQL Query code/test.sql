@@ -37,7 +37,8 @@ AND		`userID` <> 0;
 
 UPDATE 	`booking`
 SET		`actualEndDateTime` = `endDateTime`,
-		`cancellationCode` = NULL
+		`cancellationCode` = NULL,
+        `emailSent` = 1
 WHERE 	CURRENT_TIMESTAMP > `endDateTime`
 AND 	`actualEndDateTime` IS NULL
 AND 	`dateTimeCancelled` IS NULL

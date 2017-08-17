@@ -11,6 +11,8 @@ function setDefaultSubscriptionIfCompanyHasNone(){
 	{
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 
+		$pdo = connect_to_db();
+
 		// Check if there is any information to change
 		$sql = "SELECT 		COUNT(*)
 				FROM 		`company`
@@ -18,11 +20,11 @@ function setDefaultSubscriptionIfCompanyHasNone(){
 				NOT IN		(
 								SELECT 	`CompanyID`
 								FROM 	`companycredits`
-							)"
+							)";
 		$return = $pdo->query($sql);
 		$rowCount = $return->fetchColumn();
 		
-		if($rowCount > 0) {		
+		if($rowCount > 0) {
 			$pdo = connect_to_db();
 			$sql = "SELECT 		`CompanyID`						AS CompanyID,
 								(
@@ -74,7 +76,7 @@ function updateBillingDatesForCompanies(){
 	try
 	{
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
-		
+
 		$pdo = connect_to_db();
 		// Check if there is any information to change
 		$sql = "SELECT 		COUNT(*)
@@ -83,10 +85,10 @@ function updateBillingDatesForCompanies(){
 				ON 			cc.`CompanyID` = c.`CompanyID`
 				INNER JOIN 	`credits` cr
 				ON			cr.`CreditsID` = cc.`CreditsID`
-				AND			CURDATE() >= c.`endDate`"
+				AND			CURDATE() >= c.`endDate`";
 		$return = $pdo->query($sql);
 		$rowCount = $return->fetchColumn();
-		
+
 		if($rowCount > 0) {
 			$minimumSecondsPerBooking = MINIMUM_BOOKING_DURATION_IN_MINUTES_USED_IN_PRICE_CALCULATIONS * 60; // e.g. 15min = 900s
 			$aboveThisManySecondsToCount = BOOKING_DURATION_IN_MINUTES_USED_BEFORE_INCLUDING_IN_PRICE_CALCULATIONS * 60; // E.g. 1min = 60s			
@@ -159,10 +161,9 @@ function updateBillingDatesForCompanies(){
 			$s->bindValue(':aboveThisManySecondsToCount', $aboveThisManySecondsToCount);
 			$s->execute();
 			$result = $s->fetchAll(PDO::FETCH_ASSOC);
-
 			$dateTimeNow = getDatetimeNow();
 			$displayDateTimeNow = convertDatetimeToFormat($dateTimeNow , 'Y-m-d H:i:s', DATE_DEFAULT_FORMAT_TO_DISPLAY);
-			
+
 			$pdo->beginTransaction();
 			foreach($result AS $insert){
 				if($insert['AlternativeAmount'] == NULL){
@@ -178,7 +179,8 @@ function updateBillingDatesForCompanies(){
 				$bookingTimeUsedThisMonth = $insert['BookingTimeThisPeriod'];
 				$bookingTimeUsedThisMonthInMinutes = convertTimeToMinutes($bookingTimeUsedThisMonth);
 				$displayTotalBookingTimeThisPeriod = convertTimeToHoursAndMinutes($bookingTimeUsedThisMonthInMinutes);
-				
+				$displayCompanyCredits = convertMinutesToHoursAndMinutes($creditsGivenInMinutes);
+
 				$setAsBilled = FALSE;
 				if($bookingTimeUsedThisMonthInMinutes > $creditsGivenInMinutes){
 					// Company went over credit this period
@@ -201,22 +203,23 @@ function updateBillingDatesForCompanies(){
 									`monthlyPrice` = " . $monthlyPrice . ",
 									`overCreditHourPrice` = " . $hourPrice;
 				if($setAsBilled){
-					$billingDescriptionInformation = 	"This period was 'Set As Billed' automatically at the end of the period due to there being no fees.\n" .
+					$billingDescriptionInformation = 	"This period was Set As Billed automatically at the end of the period due to there being no fees.\n" .
 														"At that time the company had produced a total booking time of: " . $displayTotalBookingTimeThisPeriod .
 														", with a credit given of: " . $displayCompanyCredits . " and a monthly fee of " . convertToCurrency(0) . ".";							
 					$sql .= ", 	`hasBeenBilled` = 1,
 								`billingDescription` = '" . $billingDescriptionInformation . "'";
 				}
 				$pdo->exec($sql);
-			}	
-		
-			$sql = "UPDATE 	`company`
-					SET		`prevStartDate` = `startDate`,
-							`startDate` = `endDate`,
-							`endDate` = (`startDate` + INTERVAL 1 MONTH)
-					WHERE	`companyID` <> 0
-					AND		CURDATE() >= `endDate`";		
-			$pdo->exec($sql);
+				$sql = "UPDATE 	`company`
+						SET		`prevStartDate` = `startDate`,
+								`startDate` = `endDate`,
+								`endDate` = (`startDate` + INTERVAL 1 MONTH)
+						WHERE	`companyID` = :companyID";
+				$s = $pdo->prepare($sql);
+				$s->bindValue(':companyID', $companyID);
+				$s->execute();
+			}
+
 			$success = $pdo->commit();
 			if($success){
 				// Check if any of the companies went over credits and send an email to Admin that they did
@@ -230,9 +233,9 @@ function updateBillingDatesForCompanies(){
 						$endDate = $companiesOverCredit[0]['EndDate'];					
 
 						//Link example: http://localhost/admin/companies/?companyID=2&BillingStart=2017-05-15&BillingEnd=2017-06-15
-						$link = "http://$_SERVER[HTTP_HOST]/admin/companies/?CompanyID=" . $companyID . 
+						$link = "http://$_SERVER[HTTP_HOST]/admin/companies/?companyID=" . $companyID . 
 								"&BillingStart=" . $startDate . "&BillingEnd=" . $endDate;
-							
+
 						$emailMessage = 
 						"Click the link below to see the details\n
 						Link: " . $link;
@@ -242,18 +245,21 @@ function updateBillingDatesForCompanies(){
 
 						$emailMessage =
 						"Click the links below to see the details\n";
-						
-						foreach($companiesOverCredit AS Url){
-							$companyID = url['CompanyID'];
-							$startDate = url['StartDate'];
-							$endDate = url['EndDate'];
-							
-							$link = "http://$_SERVER[HTTP_HOST]/admin/companies/?CompanyID=" . $companyID . 
+
+						foreach($companiesOverCredit AS $url){
+							$companyID = $url['CompanyID'];
+							$startDate = $url['StartDate'];
+							$endDate = $url['EndDate'];
+
+							$link = "http://$_SERVER[HTTP_HOST]/admin/companies/?companyID=" . $companyID . 
 									"&BillingStart=" . $startDate . "&BillingEnd=" . $endDate;
 
 							$emailMessage .= "Link: " . $link . "\n";
 						}
 					}
+
+					echo "Email Message being sent out: \n" . $emailMessage;	// TO-DO: Remove before uploading
+					echo "<br />";
 
 					// Get admin(s) emails
 					$sql = "SELECT 		u.`email`		AS Email
@@ -269,6 +275,11 @@ function updateBillingDatesForCompanies(){
 						foreach($result AS $Email){
 							$email[] = $Email['Email'];
 						}
+						echo "Will be sent to these email(s): " . implode(", ", $email); // TO-DO: Remove before uploading
+						echo "<br />";
+					} else {
+						echo "No Admins want to receive an Email"; // TO-DO: Remove before uploading
+						echo "<br />";
 					}
 
 					// Only try to send out email if there are any admins that have set they want them
@@ -295,8 +306,10 @@ function updateBillingDatesForCompanies(){
 	{
 		$pdo->rollback();
 		$pdo = null;
+		echo "PDO Exception: " . $e->getMessage(); // TO-DO: Remove before uploading
+		echo "<br />";
 		return FALSE;
-	}	
+	}
 }
 
 // Make a company inactive when the current date is past the date set by admin
@@ -375,10 +388,17 @@ if(!$updatedDefaultSubscription){
 		sleep($sleepTime);
 		$success = setDefaultSubscriptionIfCompanyHasNone();
 		if($success){
+			echo "Successfully Updated Default Subscription";	// TO-DO: Remove before uploading.
+			echo "<br />";
 			break;
 		}
 	}
 	unset($success);
+	echo "Failed To Update Default Subscription";	// TO-DO: Remove before uploading.
+	echo "<br />";
+} else {
+	echo "Successfully Updated Default Subscription";	// TO-DO: Remove before uploading.
+	echo "<br />";
 }
 
 if(!$updatedBillingDates){
@@ -386,10 +406,17 @@ if(!$updatedBillingDates){
 		sleep($sleepTime);
 		$success = updateBillingDatesForCompanies();
 		if($success){
+			echo "Successfully Updated Billing Dates For Companies";	// TO-DO: Remove before uploading.
+			echo "<br />";
 			break;
 		}
 	}
 	unset($success);
+	echo "Failed To Update Billing Dates For Companies";	// TO-DO: Remove before uploading.
+	echo "<br />";
+} else {
+	echo "Successfully Updated Billing Dates For Companies";	// TO-DO: Remove before uploading.
+	echo "<br />";
 }
 
 if(!$updatedCompanyActivity){
@@ -397,10 +424,17 @@ if(!$updatedCompanyActivity){
 		sleep($sleepTime);
 		$success = setCompanyAsInactiveOnSetDate();
 		if($success){
+			echo "Successfully Set Company As Inactive";	// TO-DO: Remove before uploading.
+			echo "<br />";			
 			break;
 		}
 	}
 	unset($success);
+	echo "Failed To Set Company As Inactive";	// TO-DO: Remove before uploading.
+	echo "<br />";
+} else {
+	echo "Successfully Set Company As Inactive";	// TO-DO: Remove before uploading.
+	echo "<br />";
 }
 
 if(!$updatedUserAccess){
@@ -408,11 +442,21 @@ if(!$updatedUserAccess){
 		sleep($sleepTime);
 		$success = setUserAccessToNormalOnSetDate();
 		if($success){
+			echo "Successfully Set User Access Level To Normal";	// TO-DO: Remove before uploading.
+			echo "<br />";
 			break;
 		}
 	}
 	unset($success);
+	echo "Failed To Set User Access Level To Normal";	// TO-DO: Remove before uploading.
+	echo "<br />";	
+} else {
+	echo "Successfully Set User Access Level To Normal";	// TO-DO: Remove before uploading.
+	echo "<br />";
 }
+
+// Close database connection
+$pdo = null;
 
 // The actual actions taken // END //
 ?>

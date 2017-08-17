@@ -707,7 +707,7 @@ if (	(isSet($_POST['action']) and $_POST['action'] == 'Cancel') OR
 					AND		`dateTimeCancelled`
 					BETWEEN `startDateTime`
 					AND		`endDateTime`
-					AND		`bookingID = :bookingID';
+					AND		`bookingID` = :bookingID';
 			$s = $pdo->prepare($sql);
 			$s->bindValue(':bookingID', $bookingID);
 			$s->execute();

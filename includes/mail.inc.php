@@ -35,6 +35,7 @@ function sendEmail($toEmail, $subject, $message){
 	// Prepare email to be sent with valid email(s)
 	if(isSet($validEmail) AND sizeOf($validEmail) > 0){
 
+		date_default_timezone_set(DATE_DEFAULT_TIMEZONE);
 		$encoding = "utf-8";
 
 		// Preferences for Subject field
