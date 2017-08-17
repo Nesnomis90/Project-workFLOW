@@ -97,7 +97,7 @@
 					<tr>
 						<th colspan="8">Booking information</th>
 						<th colspan="4">Connected user information</th>	
-						<th colspan="3">Completion Info</th>
+						<th colspan="5">Completion Info</th>
 					</tr>
 					<tr>
 						<th>Status</th>
@@ -115,6 +115,8 @@
 						<th>Finished At</th>
 						<th>Actual Duration</th>
 						<th>Price Duration</th>
+						<th>Ended Early Message</th>
+						<th>Ended Early By</th>
 					</tr>
 					<?php foreach ($bookingsCompletedToday AS $booking) : ?>
 						<form action="" method="post">
@@ -134,6 +136,8 @@
 								<td><?php htmlout($booking['BookingWasCompletedOn']); ?></td>
 								<td><?php htmlout($booking['CompletedMeetingDuration']); ?></td>
 								<td><?php htmlout($booking['CompletedMeetingDurationForPrice']); ?></td>
+								<td style="white-space: pre-wrap;"><?php htmlout($booking['CancelMessage']); ?></td>
+								<td><?php htmlout($booking['CancelledByUserName']); ?></td>								
 								<input type="hidden" name="id" value="<?php htmlout($booking['id']); ?>">
 								<input type="hidden" name="MeetingInfo" id="MeetingInfo"
 								value="<?php htmlout($booking['MeetingInfo']); ?>">
@@ -336,7 +340,7 @@
 					<tr>
 						<th colspan="8">Booking information</th>
 						<th colspan="4">Connected user information</th>						
-						<th colspan="4">Completion Info</th>
+						<th colspan="2">Completion Info</th>
 					</tr>
 					<tr>
 						<th>Status</th>
@@ -353,8 +357,6 @@
 						<th>Company Role</th>
 						<th>Finished</th>
 						<th>Cancelled</th>
-						<th>Cancel Message</th>
-						<th>Cancelled By</th>
 					</tr>
 					<?php foreach ($bookingsOther AS $booking) : ?>
 						<form action="" method="post">
@@ -373,8 +375,6 @@
 								<td><?php htmlout($booking['CompanyRole']); ?></td>
 								<td><?php htmlout($booking['BookingWasCompletedOn']); ?></td>
 								<td><?php htmlout($booking['BookingWasCancelledOn']); ?></td>
-								<td style="white-space: pre-wrap;"><?php htmlout($booking['CancelMessage']); ?></td>
-								<td><?php htmlout($booking['CancelledByUserName']); ?></td>
 								<input type="hidden" name="id" value="<?php htmlout($booking['id']); ?>">
 								<input type="hidden" name="MeetingInfo" id="MeetingInfo"
 								value="<?php htmlout($booking['MeetingInfo']); ?>">

@@ -75,9 +75,9 @@ function alertUserThatMeetingIsAboutToStart(){
 				AND			b.`emailSent` = 0
 				AND			u.`sendEmail` = 1
 				AND			b.`bookingID` <> 0";		
-		$s = $pdo->preare($sql);
-		$s->bindValue(':bufferMinutes', TIME_LEFT_IN_MINUTES_UNTIL_MEETING_STARTS_BEFORE_SENDING_EMAIL)
-		$s->bindValue(':waitMinutes', MINIMUM_TIME_PASSED_IN_MINUTES_AFTER_CREATING_BOOKING_BEFORE_SENDING_EMAIL)
+		$s = $pdo->prepare($sql);
+		$s->bindValue(':bufferMinutes', TIME_LEFT_IN_MINUTES_UNTIL_MEETING_STARTS_BEFORE_SENDING_EMAIL);
+		$s->bindValue(':waitMinutes', MINIMUM_TIME_PASSED_IN_MINUTES_AFTER_CREATING_BOOKING_BEFORE_SENDING_EMAIL);
 		$s->execute();
 		
 		$result = $s->fetchAll(PDO::FETCH_ASSOC);

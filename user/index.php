@@ -654,28 +654,37 @@ if(	(isSet($_SESSION['loggedIn']) AND isSet($_SESSION['LoggedInUserID']) AND
 		} elseif(	$completedDateTime == null AND $cancelledDateTime != null AND
 					$startDateTime > $cancelledDateTime){
 			$status = 'Cancelled';
+				// Valid status
+		} elseif(	$completedDateTime != null AND $cancelledDateTime != null AND
+					$completedDateTime >= $cancelledDateTime AND $dateOnlyCancelled == $dateOnlyNow){
+			$status = 'Ended Early Today';
+			// Valid status?
+		} elseif(	$completedDateTime == null AND $cancelledDateTime != null AND
+					$endDateTime > $cancelledDateTime AND $startDateTime < $cancelledDateTime 
+					AND $dateOnlyCancelled == $dateOnlyNow){
+			$status = 'Ended Early Today';
 			// Valid status
 		} elseif(	$completedDateTime != null AND $cancelledDateTime != null AND
-					$completedDateTime >= $cancelledDateTime ){
+					$completedDateTime >= $cancelledDateTime AND $dateOnlyCancelled < $dateOnlyNow){
 			$status = 'Ended Early';
 			// Valid status?
 		} elseif(	$completedDateTime == null AND $cancelledDateTime != null AND
-					$endDateTime < $cancelledDateTime AND 
-					$startDateTime > $cancelledDateTime){
+					$endDateTime > $cancelledDateTime AND $startDateTime < $cancelledDateTime 
+					AND $dateOnlyCancelled < $dateOnlyNow){
 			$status = 'Ended Early';
 			// Valid status?
 		} elseif(	$completedDateTime != null AND $cancelledDateTime != null AND
 					$completedDateTime < $cancelledDateTime ){
 			$status = 'Cancelled after Completion';
-			// This should not be allowed to happen eventually
+			// This should not be allowed to happen
 		} elseif(	$completedDateTime == null AND $cancelledDateTime == null AND 
 					$datetimeNow > $endDateTime){
 			$status = 'Ended without updating database';
-			// This should never occur
+			// This should only occur when the cron does not check and update every minute
 		} elseif(	$completedDateTime == null AND $cancelledDateTime != null AND 
 					$endDateTime < $cancelledDateTime){
 			$status = 'Cancelled after meeting should have been Completed';
-			// This should not be allowed to happen eventually
+			// This should not be allowed to happen
 		} else {
 			$status = 'Unknown';
 			// This should never occur
@@ -732,7 +741,11 @@ if(	(isSet($_SESSION['loggedIn']) AND isSet($_SESSION['LoggedInUserID']) AND
 											'BookingWasCancelledOn' => $displayCancelledDateTime,
 											'MeetingInfo' => $meetinginfo
 										);
-		}	elseif($status == "Completed Today" AND (isSet($_GET['completedBooking']) OR isSet($_GET['totalBooking']))){
+		}	elseif(($status == "Completed Today" OR $status == "Ended Early Today")AND (isSet($_GET['completedBooking']) OR isSet($_GET['totalBooking']))){
+			if($status == "Completed Today"){
+				$cancelledByUserName = "";
+				$cancelMessage = "";
+			}			
 			$bookingsCompletedToday[] = array(	'id' => $row['bookingID'],
 												'BookingStatus' => $status,
 												'BookedRoomName' => $roomName,
@@ -767,6 +780,7 @@ if(	(isSet($_SESSION['loggedIn']) AND isSet($_SESSION['LoggedInUserID']) AND
 		}	elseif(($status == "Completed" OR $status == "Ended Early") AND (isSet($_GET['completedBooking']) OR isSet($_GET['totalBooking']))){	
 			if($status == "Completed"){
 				$cancelledByUserName = "";
+				$cancelMessage = "";
 			}
 			$bookingsCompleted[] = array(	'id' => $row['bookingID'],
 											'BookingStatus' => $status,

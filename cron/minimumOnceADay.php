@@ -11,6 +11,8 @@ function setDefaultSubscriptionIfCompanyHasNone(){
 	{
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 
+		$pdo = connect_to_db();
+
 		// Check if there is any information to change
 		$sql = "SELECT 		COUNT(*)
 				FROM 		`company`
@@ -18,7 +20,7 @@ function setDefaultSubscriptionIfCompanyHasNone(){
 				NOT IN		(
 								SELECT 	`CompanyID`
 								FROM 	`companycredits`
-							)"
+							)";
 		$return = $pdo->query($sql);
 		$rowCount = $return->fetchColumn();
 		
@@ -83,7 +85,7 @@ function updateBillingDatesForCompanies(){
 				ON 			cc.`CompanyID` = c.`CompanyID`
 				INNER JOIN 	`credits` cr
 				ON			cr.`CreditsID` = cc.`CreditsID`
-				AND			CURDATE() >= c.`endDate`"
+				AND			CURDATE() >= c.`endDate`";
 		$return = $pdo->query($sql);
 		$rowCount = $return->fetchColumn();
 		
@@ -243,10 +245,10 @@ function updateBillingDatesForCompanies(){
 						$emailMessage =
 						"Click the links below to see the details\n";
 						
-						foreach($companiesOverCredit AS Url){
-							$companyID = url['CompanyID'];
-							$startDate = url['StartDate'];
-							$endDate = url['EndDate'];
+						foreach($companiesOverCredit AS $url){
+							$companyID = $url['CompanyID'];
+							$startDate = $url['StartDate'];
+							$endDate = $url['EndDate'];
 							
 							$link = "http://$_SERVER[HTTP_HOST]/admin/companies/?CompanyID=" . $companyID . 
 									"&BillingStart=" . $startDate . "&BillingEnd=" . $endDate;
