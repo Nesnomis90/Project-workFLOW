@@ -72,7 +72,6 @@ function setDefaultSubscriptionIfCompanyHasNone(){
 //		Update the company credits history table with the current values
 //		Update the billing date periods
 // 		Check if company went over booking credits and alert admin including links to the exact booking history
-// TO-DO: "company went over credits" has not been tested
 function updateBillingDatesForCompanies(){
 	try
 	{
