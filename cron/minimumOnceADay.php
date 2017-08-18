@@ -318,15 +318,15 @@ function setCompanyAsInactiveOnSetDate(){
 	try
 	{
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
-		
+
 		$pdo = connect_to_db();
 		$sql = "UPDATE 	`company`
 				SET 	`isActive` = 0
 				WHERE 	DATE(CURRENT_TIMESTAMP) >= `removeAtDate`
 				AND 	`isActive` = 1
-				AND		`companyID` <> 0";		
+				AND		`companyID` <> 0";
 		$pdo->exec($sql);
-		
+
 		//Close the connection
 		$pdo = null;
 		return TRUE;
@@ -343,7 +343,7 @@ function setUserAccessToNormalOnSetDate(){
 	try
 	{
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
-		
+
 		$pdo = connect_to_db();
 		$sql = "UPDATE 	`user`
 				SET 	`AccessID` = ( 
@@ -358,7 +358,7 @@ function setUserAccessToNormalOnSetDate(){
 				AND 	`isActive` = 1
 				AND		`userID` <> 0";		
 		$pdo->exec($sql);
-		
+
 		//Close the connection
 		$pdo = null;
 		return TRUE;
@@ -367,7 +367,7 @@ function setUserAccessToNormalOnSetDate(){
 	{
 		$pdo = null;
 		return FALSE;
-	}	
+	}
 }
 
 // The actual actions taken // START //

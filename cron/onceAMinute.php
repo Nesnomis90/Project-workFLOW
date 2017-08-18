@@ -91,11 +91,8 @@ function alertUserThatMeetingIsAboutToStart(){
 			$rowNum = sizeOf($result);
 		} else {
 			$rowNum  = 0;
-		}	
-	
-		echo "Number of hits about users to Alert: $rowNum";	// TO-DO: Remove before uploading.
-		echo "<br />";
-	
+		}
+
 		if($rowNum > 0){
 			foreach($result AS $row){
 				$upcomingMeetingsNotAlerted[] = array(
