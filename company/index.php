@@ -283,22 +283,22 @@ if(isSet($_POST['action']) AND $_POST['action'] == "Confirm"){
 					AND			u.`sendAdminEmail` = 1";
 			$return = $pdo->query($sql);
 			$result = $return->fetchAll(PDO::FETCH_ASSOC);
-			
+
 			if(isSet($result)){
 				foreach($result AS $Email){
 					$email[] = $Email['Email'];
 				}
 			}
-			
+
 			// Only try to send out email if there are any admins that have set they want them
 			if(isSet($email)){
 				$emailSubject = "New Company Created";
-				
+
 				$emailMessage = "The user: " . $_SESSION['LoggedInUserName'] .
 								"\ncreated a new company: " . $validatedCompanyName;
-				
+
 				$mailResult = sendEmail($email, $emailSubject, $emailMessage);
-				
+
 				if(!$mailResult){
 					$_SESSION['normalCompanyFeedback'] .= "\n\n[WARNING] System failed to send Email to Admin.";
 					// TO-DO: FIX-ME: What to do if the mail doesn't want to send?
@@ -373,7 +373,7 @@ if (isSet($_POST['action']) AND $_POST['action'] == 'Change Role')
 	try
 	{
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
-		
+
 		// Get name and IDs for company position
 		$pdo = connect_to_db();
 		$sql = 'SELECT 	`PositionID`,
@@ -381,7 +381,7 @@ if (isSet($_POST['action']) AND $_POST['action'] == 'Change Role')
 						`description`	AS CompanyPositionDescription
 				FROM 	`companyposition`';
 		$result = $pdo->query($sql);
-		
+
 		// Get the rows of information from the query
 		// This will be used to create a dropdown list in HTML
 		foreach($result as $row){
@@ -391,7 +391,7 @@ if (isSet($_POST['action']) AND $_POST['action'] == 'Change Role')
 									'CompanyPositionDescription' => $row['CompanyPositionDescription']
 									);
 		}
-		
+
 		// Get employee information
 		$sql = 'SELECT 	u.`userID`					AS UsrID,
 						c.`companyID`				AS TheCompanyID,
@@ -414,7 +414,7 @@ if (isSet($_POST['action']) AND $_POST['action'] == 'Change Role')
 		$s->bindValue(':UserID', $_POST['UserID']);
 		$s->bindValue(':CompanyID', $_POST['CompanyID']);
 		$s->execute();
-						
+
 		//Close connection
 		$pdo = null;
 	}
@@ -425,10 +425,10 @@ if (isSet($_POST['action']) AND $_POST['action'] == 'Change Role')
 		$pdo = null;
 		exit();		
 	}
-	
+
 	// Create an array with the row information we retrieved
 	$row = $s->fetch(PDO::FETCH_ASSOC);
-		
+
 	// Set the correct information
 	$CompanyName = $row['CompanyName'];
 	$UserIdentifier = $row['firstName'] . ' ' . $row['lastName'];
@@ -436,9 +436,9 @@ if (isSet($_POST['action']) AND $_POST['action'] == 'Change Role')
 	$CompanyID = $row['TheCompanyID'];
 	$UserID = $row['UsrID'];
 	$_SESSION['EditEmployeeAsOwnerOriginalPositionID'] = $row['PositionID'];
-	
+
 	var_dump($_SESSION); // TO-DO: remove after testing is done
-	
+
 	// Change to the actual form we want to use
 	include 'changerole.html.php';
 	exit();
@@ -510,7 +510,7 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Remove'){
 	try
 	{
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
-		
+
 		$pdo = connect_to_db();
 		$sql = 'DELETE FROM `employee` 
 				WHERE 		`companyID` = :CompanyID
@@ -528,9 +528,9 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Remove'){
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
 		exit();
 	}
-	
+
 	$_SESSION['EmployeeUserFeedback'] = "Successfully removed the employee.";
-	
+
 	// Add a log event that an employee was removed from a company
 	try
 	{
@@ -565,9 +565,9 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Remove'){
 		$s->bindValue(':PositionID', $_POST['PositionID']);		
 		$s->bindValue(':description', $logEventDescription);
 		$s->execute();
-		
+
 		//Close the connection
-		$pdo = null;		
+		$pdo = null;
 	}
 	catch(PDOException $e)
 	{
@@ -575,7 +575,7 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Remove'){
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
 		$pdo = null;
 		exit();
-	}		
+	}
 
 	$TheCompanyID = $_GET['ID'];
 	$location = "http://$_SERVER[HTTP_HOST]/company/?ID=" . $TheCompanyID . "&employees";
@@ -767,7 +767,7 @@ if (isSet($_POST['action']) AND $_POST['action'] == 'Confirm Employee')
 {
 	$invalidInput = FALSE;
 	$createUser = FALSE;
-	
+
 	// If we're looking at a specific company
 	$companyID = $_SESSION['normalUserCompanyIDSelected'];
 	$companyName = $_SESSION['normalUserCompanyNameSelected'];
@@ -815,17 +815,17 @@ if (isSet($_POST['action']) AND $_POST['action'] == 'Confirm Employee')
 
 		// If we're creating a new user, we give it the same access level as the company owner has. (Normal or in-house).
 		if($createUser){
-			
+
 			//Generate activation code
 			$activationcode = generateActivationCode();
-			
+
 			// Hash the user generated password
 			$generatedPassword = generateUserPassword(6);
 			$hashedPassword = hashPassword($generatedPassword);
-			
+
 			$firstName = "";
 			$lastName = "";
-		
+
 			$sql = 'INSERT INTO `user`(`firstname`, `lastname`, `password`, `activationcode`, `email`, `accessID`)
 					SELECT		:firstname,
 								:lastname,
@@ -855,11 +855,11 @@ if (isSet($_POST['action']) AND $_POST['action'] == 'Confirm Employee')
 			$s->execute();
 
 			$userID = $pdo->lastInsertId();
-			
+
 			// Send user an email with the activation code and password
 				// TO-DO: This is UNTESTED since we don't have php.ini set up to actually send email
 			$emailSubject = "Account Activation Link - FLOW";
-			
+
 			$emailMessage = 
 			"An account has been registered for you at " . $_SERVER['HTTP_HOST'] . ", by the user: " . $_SESSION['LoggedInUserName'] . 
 			"\nYour generated password is: " . $generatedPassword . " (This can and should be changed after you log in)" .
@@ -867,13 +867,13 @@ if (isSet($_POST['action']) AND $_POST['action'] == 'Confirm Employee')
 			"If the account isn't activated within 8 hours, it is removed.\n" .
 			"Click this link to activate your account: " . $_SERVER['HTTP_HOST'] . 
 			"/user/?activateaccount=" . $activationcode;
-			
+
 			$mailResult = sendEmail($email, $emailSubject, $emailMessage);
-			
+
 			if(!$mailResult){
 				$_SESSION['EmployeeUserFeedback'] .= "\n[WARNING] System failed to send Email to user.";
 			}
-			
+
 			$_SESSION['EmployeeUserFeedback'] .= "\nThis is the email msg we're sending out:\n$emailMessage.\nSent to: $email."; // TO-DO: Remove after testing	
 		} else {
 			$sql = 'SELECT 	COUNT(*) 
@@ -1040,7 +1040,7 @@ if (isSet($_POST['action']) AND $_POST['action'] == 'Confirm Employee')
 	}
 
 	clearAddEmployeeAsOwnerSessions();
-	
+
 	// Load employee list webpage with new employee connection
 	$TheCompanyID = $_SESSION['normalUserCompanyIDSelected'];
 	$location = "http://$_SERVER[HTTP_HOST]/company/?ID=" . $TheCompanyID . "&employees";
@@ -1087,10 +1087,10 @@ if(isSet($_GET['employees']) AND isSet($_SESSION['normalUserCompanyIDSelected'])
 
 			var_dump($_SESSION); // TO-DO: remove after testing is done	
 
-			include_once 'company.html.php';		
+			include_once 'company.html.php';
 			exit();
 		}
-		
+
 		$sql = "SELECT 	u.`userID`					AS UsrID,
 						c.`companyID`				AS TheCompanyID,
 						c.`name`					AS CompanyName,
@@ -1279,14 +1279,14 @@ if(isSet($_GET['employees']) AND isSet($_SESSION['normalUserCompanyIDSelected'])
 		$s->bindValue(':minimumSecondsPerBooking', $minimumSecondsPerBooking);
 		$s->bindValue(':aboveThisManySecondsToCount', $aboveThisManySecondsToCount);
 		$s->execute();
-		
+
 		$result = $s->fetchAll(PDO::FETCH_ASSOC);
 		if(isSet($result)){
 			$rowNum = sizeOf($result);
 		} else {
 			$rowNum = 0;
 		}
-		
+
 		// Start a second SQL query to collect the booked time by removed users
 		$sql = "SELECT 	u.`userID`					AS UsrID,
 						c.`companyID`				AS TheCompanyID,
@@ -1463,14 +1463,14 @@ if(isSet($_GET['employees']) AND isSet($_SESSION['normalUserCompanyIDSelected'])
 		$s->bindValue(':minimumSecondsPerBooking', $minimumSecondsPerBooking);
 		$s->bindValue(':aboveThisManySecondsToCount', $aboveThisManySecondsToCount);
 		$s->execute();
-		
+
 		$removedEmployeesResult = $s->fetchAll(PDO::FETCH_ASSOC);
 		if(isSet($removedEmployeesResult)){
 			$removedEmployeesResultRowNum = sizeOf($removedEmployeesResult);
 		} else {
 			$removedEmployeesResultRowNum = 0;
 		}
-		
+
 		// SQL Query to get booked time for deleted users
 		$sql = "SELECT 	`companyID`				AS TheCompanyID,
 						`name`					AS CompanyName,
@@ -1636,7 +1636,7 @@ if(isSet($_GET['employees']) AND isSet($_SESSION['normalUserCompanyIDSelected'])
 		} else {
 			$deletedUsersResultRowNum = 0;
 		}
-		
+
 		//close connection
 		$pdo = null;
 	}
@@ -1646,11 +1646,11 @@ if(isSet($_GET['employees']) AND isSet($_SESSION['normalUserCompanyIDSelected'])
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
 		exit();
 	}
-	
+
 	// If we're looking at a specific company and they have removed employees with booking time
 	if($removedEmployeesResultRowNum > 0){
 		foreach($removedEmployeesResult AS $row){	
-			
+
 			// Calculate and display company booking time details
 			if($row['PreviousMonthBookingTimeUsed'] == null){
 				$PrevMonthTimeUsed = 'N/A';
@@ -1660,7 +1660,7 @@ if(isSet($_GET['employees']) AND isSet($_SESSION['normalUserCompanyIDSelected'])
 				$prevMonthTimeMinute = substr($PrevMonthTimeUsed,strpos($PrevMonthTimeUsed,":")+1, 2);
 				$PrevMonthTimeUsed = $prevMonthTimeHour . 'h' . $prevMonthTimeMinute . 'm';
 			}	
-			
+
 			if($row['MonthlyBookingTimeUsed'] == null){
 				$MonthlyTimeUsed = 'N/A';
 			} else {
@@ -1679,7 +1679,7 @@ if(isSet($_GET['employees']) AND isSet($_SESSION['normalUserCompanyIDSelected'])
 				$totalTimeMinute = substr($TotalTimeUsed,strpos($TotalTimeUsed,":")+1, 2);
 				$TotalTimeUsed = $totalTimeHour . 'h' . $totalTimeMinute . 'm';			
 			}
-			
+
 			$removedEmployees[] = array(
 										'CompanyID' => $row['TheCompanyID'],
 										'CompanyName' => $row['CompanyName'],
@@ -1697,7 +1697,7 @@ if(isSet($_GET['employees']) AND isSet($_SESSION['normalUserCompanyIDSelected'])
 			unset($removedEmployees);
 		}
 	}
-	
+
 	// If we're looking at a specific company and they have old booking time used by now deleted users
 	if($deletedUsersResultRowNum > 0){
 		foreach($deletedUsersResult AS $row){	
@@ -1710,16 +1710,15 @@ if(isSet($_GET['employees']) AND isSet($_SESSION['normalUserCompanyIDSelected'])
 				$prevMonthTimeHour = substr($PrevMonthTimeUsed,0,strpos($PrevMonthTimeUsed,":"));
 				$prevMonthTimeMinute = substr($PrevMonthTimeUsed,strpos($PrevMonthTimeUsed,":")+1, 2);
 				$PrevMonthTimeUsed = $prevMonthTimeHour . 'h' . $prevMonthTimeMinute . 'm';
-			}	
-			
+			}
+
 			if($row['MonthlyBookingTimeUsed'] == null){
 				$MonthlyTimeUsed = 'N/A';
 			} else {
 				$MonthlyTimeUsed = $row['MonthlyBookingTimeUsed'];
 				$monthlyTimeHour = substr($MonthlyTimeUsed,0,strpos($MonthlyTimeUsed,":"));
 				$monthylTimeMinute = substr($MonthlyTimeUsed,strpos($MonthlyTimeUsed,":")+1, 2);
-				$MonthlyTimeUsed = $monthlyTimeHour . 'h' . $monthylTimeMinute . 'm';	
-			
+				$MonthlyTimeUsed = $monthlyTimeHour . 'h' . $monthylTimeMinute . 'm';
 			}
 
 			if($row['TotalBookingTimeUsed'] == null){
@@ -1729,8 +1728,8 @@ if(isSet($_GET['employees']) AND isSet($_SESSION['normalUserCompanyIDSelected'])
 				$totalTimeHour = substr($TotalTimeUsed,0,strpos($TotalTimeUsed,":"));
 				$totalTimeMinute = substr($TotalTimeUsed,strpos($TotalTimeUsed,":")+1, 2);
 				$TotalTimeUsed = $totalTimeHour . 'h' . $totalTimeMinute . 'm';			
-			}		
-			
+			}
+
 			$deletedEmployees[] = array(
 										'CompanyID' => $row['TheCompanyID'],
 										'CompanyName' => $row['CompanyName'],
@@ -1739,7 +1738,7 @@ if(isSet($_GET['employees']) AND isSet($_SESSION['normalUserCompanyIDSelected'])
 										'TotalBookingTimeUsed' => $TotalTimeUsed
 										);
 		}
-		
+
 		if($deletedEmployees[0]['TotalBookingTimeUsed'] == "N/A"){
 			// The company has no used booking time by deleted users
 			unset($deletedEmployees);
@@ -1748,7 +1747,7 @@ if(isSet($_GET['employees']) AND isSet($_SESSION['normalUserCompanyIDSelected'])
 
 	// Create an array with the actual key/value pairs we want to use in our HTML	
 	foreach($result AS $row){
-		
+
 		// Calculate and display company booking time details
 		if($row['PreviousMonthBookingTimeUsed'] == null){
 			$PrevMonthTimeUsed = 'N/A';
@@ -1757,8 +1756,8 @@ if(isSet($_GET['employees']) AND isSet($_SESSION['normalUserCompanyIDSelected'])
 			$prevMonthTimeHour = substr($PrevMonthTimeUsed,0,strpos($PrevMonthTimeUsed,":"));
 			$prevMonthTimeMinute = substr($PrevMonthTimeUsed,strpos($PrevMonthTimeUsed,":")+1, 2);
 			$PrevMonthTimeUsed = $prevMonthTimeHour . 'h' . $prevMonthTimeMinute . 'm';
-		}	
-		
+		}
+
 		if($row['MonthlyBookingTimeUsed'] == null){
 			$MonthlyTimeUsed = 'N/A';
 		} else {
@@ -1776,10 +1775,10 @@ if(isSet($_GET['employees']) AND isSet($_SESSION['normalUserCompanyIDSelected'])
 			$totalTimeMinute = substr($TotalTimeUsed,strpos($TotalTimeUsed,":")+1, 2);
 			$TotalTimeUsed = $totalTimeHour . 'h' . $totalTimeMinute . 'm';			
 		}
-		
+
 		$startDateTime = $row['StartDateTime'];
 		$displayStartDateTime = convertDatetimeToFormat($startDateTime , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
-		
+
 		// Create an array with the actual key/value pairs we want to use in our HTML
 		$employees[] = array(
 							'CompanyID' => $row['TheCompanyID'], 
@@ -1795,9 +1794,9 @@ if(isSet($_GET['employees']) AND isSet($_SESSION['normalUserCompanyIDSelected'])
 							'StartDateTime' => $displayStartDateTime
 							);
 	}
-	
+
 	var_dump($_SESSION); // TO-DO: remove after testing is done
-	
+
 	include_once 'employees.html.php';
 	exit();
 }
@@ -2040,12 +2039,12 @@ if(isSet($_GET['totalBooking']) OR isSet($_GET['activeBooking']) OR isSet($_GET[
 			$roomName = "N/A - Deleted";
 		}
 		if(!isSet($userinfo) OR $userinfo == NULL OR $userinfo == ",  - "){
-			$userinfo = "N/A - Deleted";	
+			$userinfo = "N/A - Deleted";
 		}
 		if(!isSet($email) OR empty($email)){
 			$firstname = "N/A - Deleted";
 			$lastname = "N/A - Deleted";
-			$email = "N/A - Deleted";		
+			$email = "N/A - Deleted";
 		}
 		if(!isSet($companyRole) OR empty($companyRole)){
 			$companyRole = "Removed";
@@ -2151,7 +2150,7 @@ if(isSet($_GET['totalBooking']) OR isSet($_GET['activeBooking']) OR isSet($_GET[
 			if($status == "Completed"){
 				$cancelledByUserName = "";
 				$cancelMessage = "";
-			}			
+			}
 			$bookingsCompleted[] = array(	'id' => $row['bookingID'],
 											'BookingStatus' => $status,
 											'BookedRoomName' => $roomName,
@@ -2239,7 +2238,7 @@ if(isSet($selectedCompanyToDisplayID) AND !empty($selectedCompanyToDisplayID)){
 			// We therefore get the minimum time per booking for our equations
 		$minimumSecondsPerBooking = MINIMUM_BOOKING_DURATION_IN_MINUTES_USED_IN_PRICE_CALCULATIONS * 60; // e.g. 15min = 900s
 		$aboveThisManySecondsToCount = BOOKING_DURATION_IN_MINUTES_USED_BEFORE_INCLUDING_IN_PRICE_CALCULATIONS * 60; // E.g. 1min = 60s
-		
+
 		$sql = "SELECT 		c.`companyID` 										AS CompanyID,
 							c.`name` 											AS CompanyName,
 							c.`dateTimeCreated`									AS DatetimeCreated,
@@ -2463,7 +2462,7 @@ if(isSet($selectedCompanyToDisplayID) AND !empty($selectedCompanyToDisplayID)){
 		$row = $s->fetch(PDO::FETCH_ASSOC);
 
 		//Close the connection
-		$pdo = null;	
+		$pdo = null;
 	}
 	catch (PDOException $e)
 	{
@@ -2478,7 +2477,7 @@ if(isSet($selectedCompanyToDisplayID) AND !empty($selectedCompanyToDisplayID)){
 		$PrevMonthTimeUsed = 'N/A';
 	} else {
 		$PrevMonthTimeUsed = convertTimeToHoursAndMinutes($row['PreviousMonthCompanyWideBookingTimeUsed']);
-	}	
+	}
 
 	if($row['MonthlyCompanyWideBookingTimeUsed'] == null){
 		$MonthlyTimeUsed = 'N/A';
@@ -2541,7 +2540,7 @@ if(isSet($selectedCompanyToDisplayID) AND !empty($selectedCompanyToDisplayID)){
 	$numberOfActiveBookedMeetings = $row['ActiveBookedMeetings'];
 	$numberOfCompletedBookedMeetings = $row['CompletedBookedMeetings'];
 	$numberOfCancelledBookedMeetings = $row['CancelledBookedMeetings'];
-	
+
 	$companyInformation = array(
 							'CompanyID' => $row['CompanyID'], 
 							'CompanyName' => $row['CompanyName'],
