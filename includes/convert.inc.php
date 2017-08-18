@@ -21,6 +21,12 @@ function convertHoursAndMinutesToMinutes($hoursAndMinutes){
 function convertTimeToHoursAndMinutes($time){
 	$timeHour = substr($time,0,strpos($time,":"));
 	$timeMinute = substr($time,strpos($time,":")+1, 2);
+	if(empty($timeHour)){
+		$timeHour = 0;
+	}
+	if(empty($timeMinute)){
+		$timeMinute = 0;
+	}
 	return $timeHour . 'h' . $timeMinute . 'm';	
 }
 

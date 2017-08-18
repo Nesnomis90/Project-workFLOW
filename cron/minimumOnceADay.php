@@ -178,12 +178,8 @@ function updateBillingDatesForCompanies(){
 				$hourPrice = $insert['HourPrice'];
 				$bookingTimeUsedThisMonth = $insert['BookingTimeThisPeriod'];
 				$bookingTimeUsedThisMonthInMinutes = convertTimeToMinutes($bookingTimeUsedThisMonth);
-				$displayTotalBookingTimeThisPeriod = convertTimeToHoursAndMinutes($bookingTimeUsedThisMonthInMinutes);
-				if(!empty($creditsGivenInMinutes) AND $creditsGivenInMinutes > 0){
-					$displayCompanyCredits = convertMinutesToHoursAndMinutes($creditsGivenInMinutes);
-				} else {
-					$displayCompanyCredits = "None";
-				}
+				$displayTotalBookingTimeThisPeriod = convertMinutesToHoursAndMinutes($bookingTimeUsedThisMonthInMinutes);
+				$displayCompanyCredits = convertMinutesToHoursAndMinutes($creditsGivenInMinutes);
 
 				$setAsBilled = FALSE;
 				if($bookingTimeUsedThisMonthInMinutes > $creditsGivenInMinutes){

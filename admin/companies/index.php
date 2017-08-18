@@ -740,7 +740,7 @@ if (isSet($_POST['history']) AND $_POST['history'] == "Set As Billed"){
 		
 		$dateTimeNow = getDatetimeNow();
 		$displayDateTimeNow = convertDatetimeToFormat($dateTimeNow , 'Y-m-d H:i:s', DATE_DEFAULT_FORMAT_TO_DISPLAY);
-		$billingDescriptionInformation = 	"This period was 'Set As Billed' on " . $displayDateTimeNow .
+		$billingDescriptionInformation = 	"This period was Set As Billed on " . $displayDateTimeNow .
 											" by the user " . $_SESSION['LoggedInUserName'] .
 											".\nAt that time the company had produced a total booking time of: " . $displayTotalBookingTimeThisPeriod .
 											", with a credit given of: " . $displayCompanyCredits . " resulting in excess use of: " . $displayOverCreditsTimeUsed . 
