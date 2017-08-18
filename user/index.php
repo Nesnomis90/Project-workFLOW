@@ -244,9 +244,9 @@ if(isSet($_POST['register']) AND $_POST['register'] == "Register Account"){
 		$description = "N/A";
 		$userinfo = $validatedLastname . ', ' . $validatedFirstname . ' - ' . $email;
 		if(isSet($_SESSION['LoggedInUserName'])){
-			$description = "An account for: " . $userinfo . " was registered by: " . $_SESSION['LoggedInUserName'];
+			$description = "An account for the user: " . $userinfo . " was registered by the user: " . $_SESSION['LoggedInUserName'];
 		} else {
-			$description = "An account was registered for " . $userinfo;
+			$description = "An account was registered for the user: " . $userinfo;
 		}
 		
 		if(isSet($_SESSION['lastUserID'])){
