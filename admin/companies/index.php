@@ -1275,7 +1275,7 @@ if (isSet($_POST['action']) and $_POST['action'] == 'Confirm Merge'){
 		$_SESSION['refreshMergeCompany'] = TRUE;
 		header("Location: .");
 		exit();
-	}	
+	}
 
 	$password = $_POST['password'];
 	$hashedPassword = hashPassword($password);
