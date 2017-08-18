@@ -178,7 +178,7 @@ function updateBillingDatesForCompanies(){
 				$hourPrice = $insert['HourPrice'];
 				$bookingTimeUsedThisMonth = $insert['BookingTimeThisPeriod'];
 				$bookingTimeUsedThisMonthInMinutes = convertTimeToMinutes($bookingTimeUsedThisMonth);
-				$displayTotalBookingTimeThisPeriod = convertTimeToHoursAndMinutes($bookingTimeUsedThisMonthInMinutes);
+				$displayTotalBookingTimeThisPeriod = convertMinutesToHoursAndMinutes($bookingTimeUsedThisMonthInMinutes);
 				$displayCompanyCredits = convertMinutesToHoursAndMinutes($creditsGivenInMinutes);
 
 				$setAsBilled = FALSE;
@@ -237,14 +237,14 @@ function updateBillingDatesForCompanies(){
 								"&BillingStart=" . $startDate . "&BillingEnd=" . $endDate;
 
 						$emailMessage = 
-						"Click the link below to see the details\n
+						"A company has gone over credit the previous period.\nClick the link below to see the details!\n
 						Link: " . $link;
 					} else {
 						// More than one company went over
 						$emailSubject = "Companies went over credit!";
 
 						$emailMessage =
-						"Click the links below to see the details\n";
+						"More than one company has gone over credit the previous period.\nClick the links below to see the details!\n";
 
 						foreach($companiesOverCredit AS $url){
 							$companyID = $url['CompanyID'];
@@ -318,15 +318,15 @@ function setCompanyAsInactiveOnSetDate(){
 	try
 	{
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
-		
+
 		$pdo = connect_to_db();
 		$sql = "UPDATE 	`company`
 				SET 	`isActive` = 0
 				WHERE 	DATE(CURRENT_TIMESTAMP) >= `removeAtDate`
 				AND 	`isActive` = 1
-				AND		`companyID` <> 0";		
+				AND		`companyID` <> 0";
 		$pdo->exec($sql);
-		
+
 		//Close the connection
 		$pdo = null;
 		return TRUE;
@@ -343,7 +343,7 @@ function setUserAccessToNormalOnSetDate(){
 	try
 	{
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
-		
+
 		$pdo = connect_to_db();
 		$sql = "UPDATE 	`user`
 				SET 	`AccessID` = ( 
@@ -358,7 +358,7 @@ function setUserAccessToNormalOnSetDate(){
 				AND 	`isActive` = 1
 				AND		`userID` <> 0";		
 		$pdo->exec($sql);
-		
+
 		//Close the connection
 		$pdo = null;
 		return TRUE;
@@ -367,7 +367,7 @@ function setUserAccessToNormalOnSetDate(){
 	{
 		$pdo = null;
 		return FALSE;
-	}	
+	}
 }
 
 // The actual actions taken // START //

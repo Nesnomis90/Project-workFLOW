@@ -79,18 +79,20 @@
 								<td><?php htmlout($employee['TotalBookingTimeUsed']); ?></td>
 							<?php endif; ?>
 							<td><?php htmlout($employee['StartDateTime']); ?></td>
-							<?php if(isSet($companyRole) AND $companyRole == "Owner" AND $_SESSION['LoggedInUserID'] != $employee['UsrID'])  : ?>
-								<td><input type="submit" name="action" value="Change Role"></td>
-								<td>
-									<?php if(isSet($_SESSION['normalEmployeesEnableDelete']) AND $_SESSION['normalEmployeesEnableDelete']) : ?>
-										<input type="submit" name="action" value="Remove">
-									<?php else : ?>
-										<input type="submit" name="disabled" value="Remove" disabled>
-									<?php endif; ?>
-								</td>
-							<?php else : ?>
-								<td></td>
-								<td></td>
+							<?php if(isSet($companyRole) AND $companyRole == "Owner") : ?>
+								<?php if($_SESSION['LoggedInUserID'] != $employee['UsrID']) : ?>
+									<td><input type="submit" name="action" value="Change Role"></td>
+									<td>
+										<?php if(isSet($_SESSION['normalEmployeesEnableDelete']) AND $_SESSION['normalEmployeesEnableDelete']) : ?>
+											<input type="submit" name="action" value="Remove">
+										<?php else : ?>
+											<input type="submit" name="disabled" value="Remove" disabled>
+										<?php endif; ?>
+									</td>
+								<?php else : ?>
+									<td></td>
+									<td></td>
+								<?php endif; ?>
 							<?php endif; ?>
 							<input type="hidden" name="CompanyName" value="<?php htmlout($employee['CompanyName']); ?>">
 							<input type="hidden" name="UserID" value="<?php htmlout($employee['UsrID']); ?>">

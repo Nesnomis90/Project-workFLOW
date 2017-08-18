@@ -740,7 +740,7 @@ if (isSet($_POST['history']) AND $_POST['history'] == "Set As Billed"){
 		
 		$dateTimeNow = getDatetimeNow();
 		$displayDateTimeNow = convertDatetimeToFormat($dateTimeNow , 'Y-m-d H:i:s', DATE_DEFAULT_FORMAT_TO_DISPLAY);
-		$billingDescriptionInformation = 	"This period was 'Set As Billed' on " . $displayDateTimeNow .
+		$billingDescriptionInformation = 	"This period was Set As Billed on " . $displayDateTimeNow .
 											" by the user " . $_SESSION['LoggedInUserName'] .
 											".\nAt that time the company had produced a total booking time of: " . $displayTotalBookingTimeThisPeriod .
 											", with a credit given of: " . $displayCompanyCredits . " resulting in excess use of: " . $displayOverCreditsTimeUsed . 
@@ -1069,15 +1069,16 @@ if (	(isSet($_GET['companyID']) AND isSet($_GET['BillingStart']) AND isSet($_GET
 
 // If admin wants to see the booking history of the selected company
 if ((isSet($_POST['action']) AND $_POST['action'] == "Booking History") OR 
-	((isSet($_POST['history']) AND $_POST['history'] == "Last Period"))){
-		
+	((isSet($_POST['history']) AND $_POST['history'] == "Last Period"))
+	){
+
 	if(isSet($_SESSION['BookingHistoryCompanyInfo'])){
 		unset($_SESSION['BookingHistoryIntervalNumber']);
 		$companyID = $_SESSION['BookingHistoryCompanyInfo']['CompanyID'];
 	} else {
 		$companyID = $_POST['id'];
 	}
-	
+
 	// Get booking history for the selected company
 	try
 	{
@@ -1099,48 +1100,48 @@ if ((isSet($_POST['action']) AND $_POST['action'] == "Booking History") OR
 		$s->execute();
 		$row = $s->fetch(PDO::FETCH_ASSOC);
 		$_SESSION['BookingHistoryCompanyInfo'] = $row;
-		
+
 		$dateTimeCreated = $row['CompanyDateTimeCreated'];
 		$displayDateTimeCreated = convertDatetimeToFormat($dateTimeCreated,'Y-m-d H:i:s', DATE_DEFAULT_FORMAT_TO_DISPLAY);
-		
+
 		$_SESSION['BookingHistoryCompanyInfo']['CompanyDateTimeCreated'] = $displayDateTimeCreated;
-		
+
 		$CompanyName = $row['CompanyName'];
-		
+
 		if($row['CompanyBillingDatePreviousStart'] == NULL){
 			$PreviousPeriod = FALSE;
 		} else {
 			$PreviousPeriod = TRUE;
 		}
 		$NextPeriod = FALSE;
-	
+
 		// Format billing dates
 		$BillingStart = $row['CompanyBillingDateStart'];
 		$BillingEnd =  $row['CompanyBillingDateEnd'];
 		$displayBillingStart = convertDatetimeToFormat($BillingStart , 'Y-m-d', DATE_DEFAULT_FORMAT_TO_DISPLAY);
 		$displayBillingEnd = convertDatetimeToFormat($BillingEnd , 'Y-m-d', DATE_DEFAULT_FORMAT_TO_DISPLAY);
 		$BillingPeriod = $displayBillingStart . " To " . $displayBillingEnd . ".";			
-		
+
 		// Get first period as intervalNumber
 		$firstPeriodIntervalNumber = convertTwoDateTimesToTimeDifferenceInMonths($dateTimeCreated,$BillingEnd);
 		$_SESSION['BookingHistoryFirstPeriodIntervalNumber'] = $firstPeriodIntervalNumber;
-		
+
 		$rightNow = TRUE;
-		
+
 		list(	$bookingHistory, $displayCompanyCredits, $displayCompanyCreditsRemaining, $displayOverCreditsTimeUsed, 
 				$displayMonthPrice, $displayTotalBookingTimeThisPeriod, $displayOverFeeCostThisMonth, $overCreditsFee,
 				$bookingCostThisMonth, $totalBookingCostThisMonth, $companyMinuteCreditsRemaining, $actualTimeOverCreditsInMinutes, 
 				$periodHasBeenBilled, $billingDescription, $displayTotalBookingTimeUsedInPriceCalculationsThisPeriod, 
 				$displayTotalBookingTimeChargedWithAfterCredits)
 		= calculatePeriodInformation($pdo, $companyID, $BillingStart, $BillingEnd, $rightNow);
-		
+
 			// Sum up periods that are not set as billed
 		$periodsSummmedUp = sumUpUnbilledPeriods($pdo, $companyID);
 		if($periodsSummmedUp === FALSE){
 			// No periods not set as billed
 			unset($periodsSummmedUp);
 		}
-		
+
 		$pdo = NULL;
 	}
 	catch (PDOException $e)
@@ -1150,9 +1151,9 @@ if ((isSet($_POST['action']) AND $_POST['action'] == "Booking History") OR
 		$pdo = null;
 		exit();
 	}
-	
+
 	var_dump($_SESSION); // TO-DO: Remove after testing is over.
-	
+
 	include_once 'bookinghistory.html.php';
 	exit();
 }
@@ -1252,7 +1253,7 @@ if ((isSet($_POST['action']) and $_POST['action'] == 'Merge') OR
 		exit();
 	} else {
 		$_SESSION['CompanyUserFeedback'] = "Could not retrieve information to merge this company.";
-	}	
+	}
 }
 
 // If admin wants to confirm what two companies to merge
@@ -1274,7 +1275,7 @@ if (isSet($_POST['action']) and $_POST['action'] == 'Confirm Merge'){
 		$_SESSION['refreshMergeCompany'] = TRUE;
 		header("Location: .");
 		exit();
-	}	
+	}
 
 	$password = $_POST['password'];
 	$hashedPassword = hashPassword($password);
