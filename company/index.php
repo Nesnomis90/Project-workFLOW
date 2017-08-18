@@ -498,7 +498,7 @@ if (isSet($_POST['action']) AND $_POST['action'] == 'Confirm Role')
  
 	clearEditEmployeeAsOwnerSessions();
 
-	$TheCompanyID = $_GET['ID'];
+	$TheCompanyID = $_SESSION['normalUserCompanyIDSelected'];
 	$location = "http://$_SERVER[HTTP_HOST]/company/?ID=" . $TheCompanyID . "&employees";
 	header("Location: $location");
 	exit();
@@ -801,7 +801,9 @@ if (isSet($_POST['action']) AND $_POST['action'] == 'Confirm Employee')
 		$userSearchString = $_POST['usersearchstring'];
 		$_SESSION['AddEmployeeAsOwnerUserSearch'] = trimExcessWhitespace($userSearchString);
 
-		header('Location: .');
+		$TheCompanyID = $_SESSION['normalUserCompanyIDSelected'];
+		$location = "http://$_SERVER[HTTP_HOST]/company/?ID=" . $TheCompanyID . "&employees";
+		header("Location: $location");
 		exit();
 	}
 
@@ -895,7 +897,9 @@ if (isSet($_POST['action']) AND $_POST['action'] == 'Confirm Employee')
 				$_SESSION['refreshAddEmployeeAsOwner'] = TRUE;
 				$_SESSION['AddEmployeeAsOwnerUserSearch'] = trimExcessWhitespace($_POST['usersearchstring']);
 
-				header('Location: .');
+				$TheCompanyID = $_SESSION['normalUserCompanyIDSelected'];
+				$location = "http://$_SERVER[HTTP_HOST]/company/?ID=" . $TheCompanyID . "&employees";
+				header("Location: $location");
 				exit();
 			}
 		}
@@ -931,9 +935,9 @@ if (isSet($_POST['action']) AND $_POST['action'] == 'Confirm Employee')
 	}
 
 	if($createUser){
-		$_SESSION['EmployeeUserFeedback'] .= "Successfully created the user and added it as an employee.";
+		$_SESSION['EmployeeUserFeedback'] .= "\nSuccessfully created the user and added it as an employee.";
 	} else {
-		$_SESSION['EmployeeUserFeedback'] .= "Successfully added the employee.";
+		$_SESSION['EmployeeUserFeedback'] .= "\nSuccessfully added the employee.";
 	}
 
 	if($createUser){
@@ -1038,7 +1042,9 @@ if (isSet($_POST['action']) AND $_POST['action'] == 'Confirm Employee')
 	clearAddEmployeeAsOwnerSessions();
 	
 	// Load employee list webpage with new employee connection
-	header('Location: .');
+	$TheCompanyID = $_SESSION['normalUserCompanyIDSelected'];
+	$location = "http://$_SERVER[HTTP_HOST]/company/?ID=" . $TheCompanyID . "&employees";
+	header("Location: $location");
 	exit();
 }
 
