@@ -179,7 +179,11 @@ function updateBillingDatesForCompanies(){
 				$bookingTimeUsedThisMonth = $insert['BookingTimeThisPeriod'];
 				$bookingTimeUsedThisMonthInMinutes = convertTimeToMinutes($bookingTimeUsedThisMonth);
 				$displayTotalBookingTimeThisPeriod = convertTimeToHoursAndMinutes($bookingTimeUsedThisMonthInMinutes);
-				$displayCompanyCredits = convertMinutesToHoursAndMinutes($creditsGivenInMinutes);
+				if(!empty($creditsGivenInMinutes) AND $creditsGivenInMinutes > 0){
+					$displayCompanyCredits = convertMinutesToHoursAndMinutes($creditsGivenInMinutes);
+				} else {
+					$displayCompanyCredits = "None";
+				}
 
 				$setAsBilled = FALSE;
 				if($bookingTimeUsedThisMonthInMinutes > $creditsGivenInMinutes){
@@ -237,14 +241,14 @@ function updateBillingDatesForCompanies(){
 								"&BillingStart=" . $startDate . "&BillingEnd=" . $endDate;
 
 						$emailMessage = 
-						"Click the link below to see the details\n
+						"A company has gone over credit the previous period.\nClick the link below to see the details!\n
 						Link: " . $link;
 					} else {
 						// More than one company went over
 						$emailSubject = "Companies went over credit!";
 
 						$emailMessage =
-						"Click the links below to see the details\n";
+						"More than one company has gone over credit the previous period.\nClick the links below to see the details!\n";
 
 						foreach($companiesOverCredit AS $url){
 							$companyID = $url['CompanyID'];
