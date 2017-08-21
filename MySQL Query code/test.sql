@@ -69,7 +69,8 @@ ON 			c.`CompanyID` = e.`CompanyID`
 INNER JOIN	`companyposition` cp
 ON			e.`PositionID` = cp.`PositionID`
 WHERE 		c.`CompanyID` = 4
-AND			cp.`name` = "Owner";
+AND			cp.`name` = "Owner"
+AND			u.`email` <> "d@d.com";
 
 SELECT SUM(cnt) AS HitCount
 FROM 
