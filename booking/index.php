@@ -3022,11 +3022,14 @@ if (isSet($_POST['add']) AND $_POST['add'] == "Add Booking")
 					INNER JOIN	`company` c
 					ON 			c.`CompanyID` = e.`CompanyID`
 					INNER JOIN	`companyposition` cp
+					ON			e.`PositionID` = cp.`PositionID`
 					WHERE 		c.`CompanyID` = :CompanyID
-					AND			cp.`name` = "Owner"';
+					AND			cp.`name` = "Owner"
+					AND			u.`email` <> :UserEmail';
 
 			$s = $pdo->prepare($sql);
 			$s->bindValue(':CompanyID', $companyID);
+			$s->bindValue(':UserEmail', $_SESSION['AddCreateBookingInfoArray']['UserEmail']);
 			$s->execute();
 			$result = $s->fetchAll(PDO::FETCH_ASSOC);
 
@@ -3074,6 +3077,7 @@ if (isSet($_POST['add']) AND $_POST['add'] == "Add Booking")
 				$_SESSION['normalBookingFeedback'] .= "\n\n[WARNING] System failed to send Email to user(s).";
 			}
 
+			$email = implode(", ", $email);
 			$_SESSION['normalBookingFeedback'] .= "\nThis is the email msg we're sending out:\n$emailMessage\nSent to email: $email."; // TO-DO: Remove before uploading			
 		} else {
 			$_SESSION['normalBookingFeedback'] .= "\n\nNo Company Owners were sent an email about the booking going over booking."; // TO-DO: Remove before uploading.

@@ -67,7 +67,8 @@ ON 			e.`UserID` = u.`UserID`
 INNER JOIN	`company` c
 ON 			c.`CompanyID` = e.`CompanyID`
 INNER JOIN	`companyposition` cp
-WHERE 		c.`CompanyID` = 2
+ON			e.`PositionID` = cp.`PositionID`
+WHERE 		c.`CompanyID` = 4
 AND			cp.`name` = "Owner";
 
 SELECT SUM(cnt) AS HitCount
