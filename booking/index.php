@@ -2999,10 +2999,87 @@ if (isSet($_POST['add']) AND $_POST['add'] == "Add Booking")
 			$_SESSION['normalBookingFeedback'] .= "\n\n[WARNING] System failed to send Email to user.";
 		}
 		
-		$_SESSION['normalBookingFeedback'] .= "\nThis is the email msg we're sending out:\n$emailMessage.\nSent to email: $email."; // TO-DO: Remove after testing	
+		$_SESSION['normalBookingFeedback'] .= "\nThis is the email msg we're sending out:\n$emailMessage.\nSent to email: $email."; // TO-DO: Remove before uploading
 	} elseif($info['sendEmail'] == 0){
 		$_SESSION['normalBookingFeedback'] .= "\nUser did not want to get sent Emails.";
 	}
+
+	// Send email to alert company owner(s) that a booking was made that is over credits.
+		// Check if any owners want to receive an email
+	// TO-DO: Add SendOwnerEmail?
+	if($bookingWentOverCredits){
+		try
+		{
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+
+			$pdo = connect_to_db();
+
+			$sql = 'SELECT		u.`email`		AS Email,
+								u.`sendEmail`	AS SendEmail
+					FROM 		`user` u
+					INNER JOIN	`employee` e
+					ON 			e.`UserID` = u.`UserID`
+					INNER JOIN	`company` c
+					ON 			c.`CompanyID` = e.`CompanyID`
+					INNER JOIN	`companyposition` cp
+					WHERE 		c.`CompanyID` = :CompanyID
+					AND			cp.`name` = "Owner"';
+
+			$s = $pdo->prepare($sql);
+			$s->bindValue(':CompanyID', $companyID);
+			$s->execute();
+			$result = $s->fetchAll(PDO::FETCH_ASSOC);
+
+			if(isSet($result) AND !empty($result)){
+				foreach($result AS $row){
+					if($row['SendEmail'] == 1){ // TO-DO: add AND $row['SendOwnerEmail'] == 1?
+						$companyOwnerEmails[] = $row['Email'];
+					}
+				}
+			}
+
+			//Close the connection
+			$pdo = null;
+		}
+		catch (PDOException $e)
+		{
+			$error = 'Error sending email to company owner(s): ' . $e->getMessage();
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+			$pdo = null;
+			exit();
+		}
+
+			// We found company owners to send email too
+		if(isSet($companyOwnerEmails) AND !empty($companyOwnerEmails)){
+			$emailSubject = "Booked Meeting Above Credits!";
+
+			$emailMessage = 
+			"The employee: " . $nameOfUserWhoBooked . "\n" .
+			"In your company: " . $companyName . "\n" .
+			"Has booked a meeting that will put your company above the treshold of free booking time this period.\n" .
+			"If this booking is completed your company will be $timeOverCredits over the treshold.\nThis will result in a cost of $companyHourPriceOverCredits\n\n" .
+			"The meeting has been set to: \n" .
+			"Meeting Room: " . $MeetingRoomName . ".\n" . 
+			"Start Time: " . $displayValidatedStartDate . ".\n" .
+			"End Time: " . $displayValidatedEndDate . ".\n\n" .
+			"If you wish to cancel this meeting, or just end it early, you can easily do so by using the link given below.\n" .
+			"Click this link to cancel the booked meeting: " . $_SERVER['HTTP_HOST'] . 
+			"/booking/?cancellationcode=" . $cancellationCode;
+
+			$email = $companyOwnerEmails;
+
+			$mailResult = sendEmail($email, $emailSubject, $emailMessage);
+
+			if(!$mailResult){
+				$_SESSION['normalBookingFeedback'] .= "\n\n[WARNING] System failed to send Email to user(s).";
+			}
+
+			$_SESSION['normalBookingFeedback'] .= "\nThis is the email msg we're sending out:\n$emailMessage\nSent to email: $email."; // TO-DO: Remove before uploading			
+		} else {
+			$_SESSION['normalBookingFeedback'] .= "\n\nNo Company Owners were sent an email about the booking going over booking."; // TO-DO: Remove before uploading.
+		}
+	}
+
 	// Booking a new meeting is done. Reset all connected sessions.
 	clearAddCreateBookingSessions();
 	

@@ -59,6 +59,17 @@ WHERE 	DATE(CURRENT_TIMESTAMP) >= `removeAtDate`
 AND 	`isActive` = 1
 AND		`companyID` <> 0;
 
+SELECT		u.`email`		AS Email,
+			u.`sendEmail`	AS SendEmail
+FROM 		`user` u
+INNER JOIN	`employee` e
+ON 			e.`UserID` = u.`UserID`
+INNER JOIN	`company` c
+ON 			c.`CompanyID` = e.`CompanyID`
+INNER JOIN	`companyposition` cp
+WHERE 		c.`CompanyID` = 2
+AND			cp.`name` = "Owner";
+
 SELECT SUM(cnt) AS HitCount
 FROM 
 (
