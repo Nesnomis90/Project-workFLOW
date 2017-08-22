@@ -22,6 +22,13 @@ function clearAddCompanySessions(){
 	unset($_SESSION['AddCompanyCompanyName']);
 }
 
+// Function to clear sessions used to remember user inputs during the company merging
+function clearMergeCompanySessions(){
+	unset($_SESSION['MergeCompanySelectedCompanyID']);
+	unset($_SESSION['MergeCompanySelectedCompanyName']);
+	unset($_SESSION['MergeCompanySelectedCompanyID2']);
+}
+
 // Function to clear sessions used to remember user inputs on refreshing the edit company form
 function clearEditCompanySessions(){	
 	unset($_SESSION['EditCompanyOriginalName']);
@@ -1230,8 +1237,7 @@ if ((isSet($_POST['action']) and $_POST['action'] == 'Merge') OR
 			$sql = 'SELECT	`CompanyID`		AS CompanyID,
 							`name`			AS CompanyName
 					FROM	`company`
-					WHERE 	`companyID` != :id
-					AND 	`isActive` = 1';
+					WHERE 	`companyID` != :id';
 			$s = $pdo->prepare($sql);
 			$s->bindValue(':id', $companyID);
 			$s->execute();
@@ -1314,57 +1320,91 @@ if (isSet($_POST['action']) and $_POST['action'] == 'Confirm Merge'){
 	}
 
 	// Password is correct. Let's transfer all employees and booking history to the new company
-	// FIX-ME: Not sure if this works. It removes company and merges employees correct. Have not tested with companycreditshistory
-	try
+	if(	isSet($_SESSION['MergeCompanySelectedCompanyID']) AND !empty($_SESSION['MergeCompanySelectedCompanyID']) AND
+		isSet($_SESSION['MergeCompanySelectedCompanyID2']) AND !empty($_SESSION['MergeCompanySelectedCompanyID2']) AND
+		$_SESSION['MergeCompanySelectedCompanyID' != $_SESSION['MergeCompanySelectedCompanyID2'])
 	{
-		$pdo->beginTransaction();
-		// FIX-ME: Find better solution than ignoring updates on duplicates?
-		$sql = 'UPDATE IGNORE	`employee`
-				SET				`CompanyID` = :CompanyID2
-				WHERE			`CompanyID` = :CompanyID';
-		$s = $pdo->prepare($sql);
-		$s->bindValue(':CompanyID', $_SESSION['MergeCompanySelectedCompanyID']);
-		$s->bindValue(':CompanyID2', $_SESSION['MergeCompanySelectedCompanyID2']);
-		$s->execute();
+		// We have two company IDs and can start the merging process
+		try
+		{
+			$pdo = connect_to_db();
+			$sql = 'SELECT 	`name`	AS NewCompanyName
+					FROM 	`company`
+					WHERE	`companyID` = :companyID
+					LIMIT 	1';
+			$s = $pdo->prepare($sql);
+			$s->bindValue(':companyID', $_SESSION['MergeCompanySelectedCompanyID2']);
+			$s->execute();
 
-		$sql = 'UPDATE 	`booking`
-				SET		`CompanyID` = :CompanyID2
-				WHERE	`CompanyID` = :CompanyID';
-		$s = $pdo->prepare($sql);
-		$s->bindValue(':CompanyID', $_SESSION['MergeCompanySelectedCompanyID']);
-		$s->bindValue(':CompanyID2', $_SESSION['MergeCompanySelectedCompanyID2']);
-		$s->execute();
+			$row = $s->fetch(PDO::FETCH_ASSOC);
+			$oldCompanyName = $_SESSION['MergeCompanySelectedCompanyName'];
+			$newCompanyName = $row['NewCompanyName'];
 
-		// FIX-ME: How to handle merging company credits history?
-		// Just ignore it?
-	/*	$sql = 'UPDATE 	`companycreditshistory`
-				SET		`CompanyID` = :CompanyID2
-				WHERE	`CompanyID` = :CompanyID';
-		$s = $pdo->prepare($sql);
-		$s->bindValue(':CompanyID', $_SESSION['MergeCompanySelectedCompanyID']);
-		$s->bindValue(':CompanyID2', $_SESSION['MergeCompanySelectedCompanyID2']);
-		$s->execute();*/
+			$pdo->beginTransaction();
+			// FIX-ME: Find better solution than ignoring updates on duplicates?
+			$sql = 'UPDATE IGNORE	`employee`
+					SET				`CompanyID` = :CompanyID2
+					WHERE			`CompanyID` = :CompanyID';
+			$s = $pdo->prepare($sql);
+			$s->bindValue(':CompanyID', $_SESSION['MergeCompanySelectedCompanyID']);
+			$s->bindValue(':CompanyID2', $_SESSION['MergeCompanySelectedCompanyID2']);
+			$s->execute();
 
-		$sql = 'DELETE FROM `company`
-				WHERE		`CompanyID` = :CompanyID';
-		$s = $pdo->prepare($sql);
-		$s->bindValue(':CompanyID', $_SESSION['MergeCompanySelectedCompanyID']);
-		$s->execute();
+			$currentDate = getDateNow();
+			$mergeMessage = "This booking originally belonged to the company: " . $oldCompanyName .
+							"\nIt was merged into the company: " . $newCompanyName . 
+							" at " . convertDatetimeToFormat($currentDate, 'Y-m-d', DATE_DEFAULT_FORMAT_TO_DISPLAY);
 
-		$pdo->commit();
+			$sql = 'UPDATE 	`booking`
+					SET		`CompanyID` = :CompanyID2,
+							`adminNote` = CONCAT_WS("\n\n",`adminNote`, :mergeMessage)
+					WHERE	`CompanyID` = :CompanyID';
+			$s = $pdo->prepare($sql);
+			$s->bindValue(':mergeMessage', $mergeMessage);
+			$s->bindValue(':CompanyID', $_SESSION['MergeCompanySelectedCompanyID']);
+			$s->bindValue(':CompanyID2', $_SESSION['MergeCompanySelectedCompanyID2']);
+			$s->execute();
+
+			// FIX-ME: How to handle merging company credits history?
+				// Split date into the appropriate periods for the new company
+				// Keep info if billed or not.
+			// Just ignore it?
+		/*	$sql = 'UPDATE 	`companycreditshistory`
+					SET		`CompanyID` = :CompanyID2
+					WHERE	`CompanyID` = :CompanyID';
+			$s = $pdo->prepare($sql);
+			$s->bindValue(':CompanyID', $_SESSION['MergeCompanySelectedCompanyID']);
+			$s->bindValue(':CompanyID2', $_SESSION['MergeCompanySelectedCompanyID2']);
+			$s->execute();*/
+
+			// Deleting company will cascade to companycredits, companycreditshistory and employees.
+			$sql = 'DELETE FROM `company`
+					WHERE		`CompanyID` = :CompanyID';
+			$s = $pdo->prepare($sql);
+			$s->bindValue(':CompanyID', $_SESSION['MergeCompanySelectedCompanyID']);
+			$s->execute();
+
+			$pdo->commit();
+			$pdo = null;
+		}
+		catch (PDOException $e)
+		{
+			$pdo->rollback();
+			$pdo = null;
+			$error = 'Error merging companies: ' . $e->getMessage();
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+			exit();
+		}
+		$_SESSION['CompanyUserFeedback'] = 	"Successfully merged the company: " . $oldCompanyName . 
+											"\nInto the company: " . $newCompanyName;
+	} else {
+		$_SESSION['CompanyUserFeedback'] = "Failed to merge the two selected companies.";
 	}
-	catch (PDOException $e)
-	{
-		$pdo->rollback();
-		$pdo = null;
-		$error = 'Error merging companies: ' . $e->getMessage();
-		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
-		exit();
-	}
 
-	unset($_SESSION['MergeCompanySelectedCompanyID']);
-	unset($_SESSION['MergeCompanySelectedCompanyName']);
-	unset($_SESSION['MergeCompanySelectedCompanyID2']);
+	$pdo = null;
+	clearMergeCompanySessions();
+	header("Location: .");
+	exit();
 }
 
 // If admin wants to remove a company from the database

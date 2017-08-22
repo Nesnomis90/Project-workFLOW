@@ -27,7 +27,7 @@
 
 		<form action="" method="post">
 			<div class="left">
-				<span style="white-space: pre-wrap;"><b><?php htmlout("The user you have selected will have all its booking history transferred to the new company.\nIf you don't want this to happen, you should instead remove the employee and add it to the new company."); ?></b></span>
+				<span style="white-space: pre-wrap;"><b><?php htmlout("The employee you have selected will have all its booking history, from this company, transferred to the new company.\nIf you don't want this to happen, you should instead remove the employee and add it to the new company manually."); ?></b></span>
 			</div>
 			<div class="left">
 				<label>Selected Employee To Transfer: </label>

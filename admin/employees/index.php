@@ -118,13 +118,13 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Remove'){
 	}		
 	
 	//	Go to the employee main page with the appropriate values
-	if(isSet($_GET['Company'])){	
+	if(isSet($_GET['Company'])){
 		// Refresh employee for the specific company again
 		$TheCompanyID = $_GET['Company'];
 		$location = "http://$_SERVER[HTTP_HOST]/admin/employees/?Company=" . $TheCompanyID;
 		header("Location: $location");
 		exit();
-	} else {	
+	} else {
 		// Do a normal page reload
 		header('Location: .');
 		exit();
@@ -915,51 +915,88 @@ if (isSet($_POST['action']) and $_POST['action'] == 'Confirm Transfer'){
 	}
 
 	// Password is correct. Let's transfer the employee and its booking history to the new company
-	/* TO-DO: FIX-ME: Doing this transfers bookings and the employee. 
-		But if the new company does not have periods that are old enough for the new employees bookings, then it won't show up in booking history. */
-	try
+	if(	isSet($_SESSION['TransferEmployeeSelectedCompanyID']) AND !empty($_SESSION['TransferEmployeeSelectedCompanyID']) AND
+		isSet($_SESSION['TransferEmployeeSelectedCompanyID2']) AND !empty($_SESSION['TransferEmployeeSelectedCompanyID2']) AND
+		isSet($_SESSION['TransferEmployeeSelectedUserID']) AND !empty($_SESSION['TransferEmployeeSelectedUserID']) AND
+		$_SESSION['TransferEmployeeSelectedCompanyID'] != $_SESSION['TransferEmployeeSelectedCompanyID2'])
 	{
-		$pdo->beginTransaction();
-		$sql = 'UPDATE	`booking`
-				SET 	`CompanyID` = :CompanyID2
-				WHERE	`CompanyID`	= :CompanyID
-				AND		`UserID` = :UserID';
-		$s = $pdo->prepare($sql);
-		$s->bindValue(':CompanyID', $_SESSION['TransferEmployeeSelectedCompanyID']);
-		$s->bindValue(':CompanyID2', $_SESSION['TransferEmployeeSelectedCompanyID2']);
-		$s->bindValue(':UserID', $_SESSION['TransferEmployeeSelectedUserID']);
-		$s->execute();
+		try
+		{
+			$pdo = connect_to_db();
+			$sql = 'SELECT 	`name`	AS NewCompanyName
+					FROM 	`company`
+					WHERE	`companyID` = :companyID
+					LIMIT 	1';
+			$s = $pdo->prepare($sql);
+			$s->bindValue(':companyID', $_SESSION['TransferEmployeeSelectedCompanyID2']);
+			$s->execute();
 
-		$sql = 'UPDATE IGNORE	`employee`
-				SET				`CompanyID` = :CompanyID2
-				WHERE			`CompanyID` = :CompanyID
-				AND				`UserID` = :UserID';
-		$s = $pdo->prepare($sql);
-		$s->bindValue(':CompanyID', $_SESSION['TransferEmployeeSelectedCompanyID']);
-		$s->bindValue(':CompanyID2', $_SESSION['TransferEmployeeSelectedCompanyID2']);
-		$s->bindValue(':UserID', $_SESSION['TransferEmployeeSelectedUserID']);
-		$s->execute();
+			$row = $s->fetch(PDO::FETCH_ASSOC);
+			$oldCompanyName = $_SESSION['TransferEmployeeSelectedCompanyName'];
+			$newCompanyName = $row['NewCompanyName'];
+			
+			$pdo->beginTransaction();
+			$sql = 'UPDATE	`booking`
+					SET 	`CompanyID` = :CompanyID2
+					WHERE	`CompanyID`	= :CompanyID
+					AND		`UserID` = :UserID';
+			$s = $pdo->prepare($sql);
+			$s->bindValue(':CompanyID', $_SESSION['TransferEmployeeSelectedCompanyID']);
+			$s->bindValue(':CompanyID2', $_SESSION['TransferEmployeeSelectedCompanyID2']);
+			$s->bindValue(':UserID', $_SESSION['TransferEmployeeSelectedUserID']);
+			$s->execute();
 
-		// Make sure the employee is removed if it failed to update due to a duplicate
-		$sql = 'DELETE FROM `employee`
-				WHERE		`CompanyID` = :CompanyID
-				AND			`UserID` = :UserID';
-		$s = $pdo->prepare($sql);
-		$s->bindValue(':CompanyID', $_SESSION['TransferEmployeeSelectedCompanyID']);
-		$s->bindValue(':UserID', $_SESSION['TransferEmployeeSelectedUserID']);
-		$s->execute();
+			$sql = 'UPDATE IGNORE	`employee`
+					SET				`CompanyID` = :CompanyID2
+					WHERE			`CompanyID` = :CompanyID
+					AND				`UserID` = :UserID';
+			$s = $pdo->prepare($sql);
+			$s->bindValue(':CompanyID', $_SESSION['TransferEmployeeSelectedCompanyID']);
+			$s->bindValue(':CompanyID2', $_SESSION['TransferEmployeeSelectedCompanyID2']);
+			$s->bindValue(':UserID', $_SESSION['TransferEmployeeSelectedUserID']);
+			$s->execute();
 
-		$pdo->commit();
-	}
-	catch (PDOException $e)
-	{
-		$pdo = null;
-		$error = 'Error transfering employee: ' . $e->getMessage();
-		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
-		exit();
+			// Make sure the employee is removed if it failed to update due to a duplicate
+			$sql = 'DELETE FROM `employee`
+					WHERE		`CompanyID` = :CompanyID
+					AND			`UserID` = :UserID';
+			$s = $pdo->prepare($sql);
+			$s->bindValue(':CompanyID', $_SESSION['TransferEmployeeSelectedCompanyID']);
+			$s->bindValue(':UserID', $_SESSION['TransferEmployeeSelectedUserID']);
+			$s->execute();
+
+			$pdo->commit();
+		}
+		catch (PDOException $e)
+		{
+			$pdo = null;
+			$error = 'Error transfering employee: ' . $e->getMessage();
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+			exit();
+		}
+
+		$employeeName = $_SESSION['TransferEmployeeSelectedUserName'];
+		$_SESSION['EmployeeAdminFeedback'] = 	"Successfully transferred the employee: " . $employeeName . 
+												"\nFrom the company: " . $oldCompanyName .
+												"\nTo the company: " . $newCompanyName;
+	} else {
+		$_SESSION['EmployeeAdminFeedback'] = "Failed to transfer the employee.";
 	}
 
 	clearTransferEmployeeSessions();
+
+	//	Go to the employee main page with the appropriate values
+	if(isSet($_GET['Company'])){
+		// Refresh employee for the specific company again
+		$TheCompanyID = $_GET['Company'];
+		$location = "http://$_SERVER[HTTP_HOST]/admin/employees/?Company=" . $TheCompanyID;
+		header("Location: $location");
+		exit();
+	} else {
+		// Do a normal page reload
+		header('Location: .');
+		exit();
+	}
 }
 
 // If the user clicks any cancel buttons he'll be directed back to the employees page again

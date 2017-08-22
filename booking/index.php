@@ -66,6 +66,124 @@ function clearChangeBookingSessions(){
 	unset($_SESSION['normalUserOriginalInfoArray']); // Make sure we get up-to-date user values after doing bookings
 }
 
+function updateBookingCodeGuesses(){
+	// Check if any of the old guesses are old enough to remove
+	if(isSet($_SESSION['bookingCodeGuesses'])){
+		$dateTimeNow = getDatetimeNow();
+		$newArray = array();
+		for($i=0; $i < sizeOf($_SESSION['bookingCodeGuesses']); $i++){
+			$startDateTime = $_SESSION['bookingCodeGuesses'][$i];
+			
+			$timeDifference = convertTwoDateTimesToTimeDifferenceInMinutes($startDateTime, $dateTimeNow);		
+			if($timeDifference < BOOKING_CODE_WRONG_GUESS_TIMEOUT_IN_MINUTES){
+				$newArray[] = $_SESSION['bookingCodeGuesses'][$i];
+			}
+		}
+		if(sizeOf($newArray) > 0){
+			$_SESSION['bookingCodeGuesses'] = $newArray;
+		} else {
+			unset($_SESSION['bookingCodeGuesses']);
+			unset($_SESSION['adminBookingCodeGuesses']);
+			return TRUE;
+		}
+	} else {
+		return TRUE;
+	}
+
+	// Limit the amount of tries the session has to guess a booking code.
+	if(isSet($_SESSION['bookingCodeGuesses']) AND (sizeOf($_SESSION['bookingCodeGuesses']) >= MAXIMUM_BOOKING_CODE_GUESSES)){
+
+		$startDateTime = $_SESSION['bookingCodeGuesses'][0];
+
+		$timeDifference = convertTwoDateTimesToTimeDifferenceInMinutes($startDateTime, $dateTimeNow);
+		$timeRemaining = floor(BOOKING_CODE_WRONG_GUESS_TIMEOUT_IN_MINUTES - $timeDifference);
+		if($timeRemaining > 0){
+			$_SESSION['confirmBookingCodeError'] = "You have inserted an incorrect booking code too many times.\nYou can try again in $timeRemaining minute(s).";
+		} else {
+			$_SESSION['confirmBookingCodeError'] = "You have inserted an incorrect booking code too many times.\nYou can try again in less than a minute.";
+		}
+
+		return FALSE;
+	} elseif(isSet($_SESSION['bookingCodeGuesses']) AND (sizeOf($_SESSION['bookingCodeGuesses']) == (MAXIMUM_BOOKING_CODE_GUESSES - 1))){
+		$_SESSION['confirmBookingCodeError'] = "The booking code you submitted is an incorrect code.\nYou have 1 attempt remaining before you are timed out.\nLog in and check your account information to see your code, if you have forgotten it.";
+		return TRUE;
+	} elseif(isSet($_SESSION['bookingCodeGuesses']) AND (sizeOf($_SESSION['bookingCodeGuesses']) > 0)){
+		$remainingAttempts = MAXIMUM_BOOKING_CODE_GUESSES - sizeOf($_SESSION['bookingCodeGuesses']);
+		$_SESSION['confirmBookingCodeError'] = "The booking code you submitted is an incorrect code.\nYou have $remainingAttempts attempts remaining before you are timed out.";
+		return TRUE;
+	}
+}
+
+function updateAdminBookingCodeGuesses(){
+/*	// Check if any of the old admin guesses are old enough to remove
+	if(isSet($_SESSION['adminBookingCodeGuesses'])){
+		$dateTimeNow = getDatetimeNow();
+		$newArray = array();
+		for($i=0; $i < sizeOf($_SESSION['adminBookingCodeGuesses']); $i++){
+			$startDateTime = $_SESSION['adminBookingCodeGuesses'][$i];
+			
+			$timeDifference = convertTwoDateTimesToTimeDifferenceInMinutes($startDateTime, $dateTimeNow);		
+			if($timeDifference < BOOKING_CODE_WRONG_GUESS_TIMEOUT_IN_MINUTES){
+				$newArray[] = $_SESSION['adminBookingCodeGuesses'][$i];
+			}
+		}
+		if(sizeOf($newArray) > 0){
+			$_SESSION['adminBookingCodeGuesses'] = $newArray;
+		} else {
+			unset($_SESSION['adminBookingCodeGuesses']);
+			return TRUE;
+		}
+	} else {
+		return TRUE;
+	}*/
+
+	// Limit the amount of tries the session has to guess an admin booking code.
+	if(isSet($_SESSION['adminBookingCodeGuesses']) AND (sizeOf($_SESSION['adminBookingCodeGuesses']) >= MAXIMUM_ADMIN_BOOKING_CODE_GUESSES)){
+		$dateTimeNow = getDatetimeNow();
+		$startDateTime = $_SESSION['bookingCodeGuesses'][0];
+
+		$timeDifference = convertTwoDateTimesToTimeDifferenceInMinutes($startDateTime, $dateTimeNow);
+		$timeRemaining = floor(BOOKING_CODE_WRONG_GUESS_TIMEOUT_IN_MINUTES - $timeDifference);
+		if($timeRemaining > 0){
+			$_SESSION['confirmBookingCodeError'] = "You have inserted an incorrect code too many times.\nThe timeout can not be removed.\nYou can try again in $timeRemaining minute(s).";
+		} else {
+			$_SESSION['confirmBookingCodeError'] = "You have inserted an incorrect code too many times.\nThe timeout can not be removed.\nYou can try again in less than a minute.";
+		}
+
+		return FALSE;
+	} elseif(isSet($_SESSION['adminBookingCodeGuesses']) AND (sizeOf($_SESSION['adminBookingCodeGuesses']) > 0)){
+		$dateTimeNow = getDatetimeNow();
+		$startDateTime = $_SESSION['bookingCodeGuesses'][0];
+
+		$timeDifference = convertTwoDateTimesToTimeDifferenceInMinutes($startDateTime, $dateTimeNow);
+		$timeRemaining = floor(BOOKING_CODE_WRONG_GUESS_TIMEOUT_IN_MINUTES - $timeDifference);
+		$remainingAttempts = MAXIMUM_ADMIN_BOOKING_CODE_GUESSES - sizeOf($_SESSION['adminBookingCodeGuesses']);
+		if($timeRemaining > 0){
+			$_SESSION['confirmBookingCodeError'] = "You have inserted an incorrect code too many times.\nThe timeout can be removed by an Admin ($remainingAttempts attempts left).\nOr you can try again in $timeRemaining minute(s).";
+		} else {
+			$_SESSION['confirmBookingCodeError'] = "You have inserted an incorrect code too many times.\nThe timeout can be removed by an Admin ($remainingAttempts attempts left).\nOr you can try again in less than a minute.";
+		}
+
+		return TRUE;
+	} elseif(!isSet($_SESSION['adminBookingCodeGuesses']) AND isSet($_SESSION['bookingCodeGuesses'])){
+		$dateTimeNow = getDatetimeNow();
+		$startDateTime = $_SESSION['bookingCodeGuesses'][0];
+
+		$timeDifference = convertTwoDateTimesToTimeDifferenceInMinutes($startDateTime, $dateTimeNow);
+		$timeRemaining = floor(BOOKING_CODE_WRONG_GUESS_TIMEOUT_IN_MINUTES - $timeDifference);
+		$remainingAttempts = MAXIMUM_ADMIN_BOOKING_CODE_GUESSES;
+		if($timeRemaining > 0){
+			$_SESSION['confirmBookingCodeError'] = "You have inserted an incorrect code too many times.\nThe timeout can be removed by an Admin ($remainingAttempts attempts left).\nOr you can try again in $timeRemaining minute(s).";
+		} else {
+			$_SESSION['confirmBookingCodeError'] = "You have inserted an incorrect code too many times.\nThe timeout can be removed by an Admin ($remainingAttempts attempts left).\nOr you can try again in less than a minute.";
+		}
+
+		return TRUE;		
+	} else {
+		return TRUE;
+	}
+}
+
 // Function to remember the user inputs in Edit Booking
 function rememberEditCreateBookingInputs(){
 	if(isSet($_SESSION['EditCreateBookingInfoArray'])){
@@ -394,9 +512,16 @@ function validateUserInputs($FeedbackSessionToUse, $editing){
 // If so, set that meeting room's info as the default meeting room info
 checkIfLocalDevice();
 
+// If user wants to refresh the booking code template when timed out.
+if(isSet($_POST['bookingCode']) AND $_POST['bookingCode'] == "Refresh"){
+	var_dump($_SESSION);	// TO-DO: Remove before uploading
+	include_once 'bookingcode.html.php';
+	exit();
+}
+
 // If user wants to go back to the main page while in the confirm booking page
 if (isSet($_POST['action']) and $_POST['action'] == 'Go Back'){
-	
+	unset($_SESSION['confirmOrigins']);
 	if(isSet($_GET['meetingroom'])){
 		$TheMeetingRoomID = $_GET['meetingroom'];
 		$location = "http://$_SERVER[HTTP_HOST]/booking/?meetingroom=" . $TheMeetingRoomID;		
@@ -410,7 +535,7 @@ if (isSet($_POST['action']) and $_POST['action'] == 'Go Back'){
 
 // If user wants to go back to the main page while editing
 if (isSet($_POST['edit']) and $_POST['edit'] == 'Go Back'){
-	
+	unset($_SESSION['confirmOrigins']);
 	$_SESSION['normalBookingFeedback'] = "You cancelled your booking editing.";
 	
 	if(isSet($_GET['meetingroom'])){
@@ -426,7 +551,7 @@ if (isSet($_POST['edit']) and $_POST['edit'] == 'Go Back'){
 
 // If user wants to go back to the main page while changing rooms
 if (isSet($_POST['changeroom']) and $_POST['changeroom'] == 'Go Back'){
-	
+	unset($_SESSION['confirmOrigins']);
 	$_SESSION['normalBookingFeedback'] = "You cancelled your meeting room change.";
 
 	clearChangeBookingSessions();
@@ -1851,30 +1976,7 @@ if ((isSet($_POST['changeroom']) and $_POST['changeroom'] == 'Confirm Change') O
 // Handles removing booking code timeout on the device if an admin submits their booking code
 if(isSet($_POST['action']) AND $_POST['action'] == "Remove Timeout"){
 
-	// Check if any of the old admin guesses are old enough to remove
-	if(isSet($_SESSION['adminBookingCodeGuesses'])){
-		$dateTimeNow = getDatetimeNow();
-		$startDateTime = $_SESSION['adminBookingCodeGuesses'];
-
-		$timeDifference = convertTwoDateTimesToTimeDifferenceInMinutes($startDateTime, $dateTimeNow);		
-		if($timeDifference >= BOOKING_CODE_WRONG_GUESS_TIMEOUT_IN_MINUTES){
-			unset($_SESSION['adminBookingCodeGuesses']);
-		}
-	}
-
-	// Limit the amount of tries the session has to guess an admin booking code.
-	if(isSet($_SESSION['adminBookingCodeGuesses'])){
-
-		$startDateTime = $_SESSION['adminBookingCodeGuesses'];
-
-		$timeDifference = convertTwoDateTimesToTimeDifferenceInMinutes($startDateTime, $dateTimeNow);
-		$timeRemaining = floor(BOOKING_CODE_WRONG_GUESS_TIMEOUT_IN_MINUTES - $timeDifference);
-		if($timeRemaining > 0){
-			$_SESSION['confirmBookingCodeError'] = "You have inserted an incorrect admin code.\nYou can try again in $timeRemaining minute(s).";
-		} else {
-			$_SESSION['confirmBookingCodeError'] = "You have inserted an incorrect admin code.\nYou can try again in less than a minute.";
-		}
-
+	if(updateAdminBookingCodeGuesses() === FALSE){
 		var_dump($_SESSION); // TO-DO: remove after testing is done
 		include_once 'bookingcode.html.php';
 		exit();
@@ -1926,6 +2028,7 @@ if(isSet($_POST['action']) AND $_POST['action'] == "Remove Timeout"){
 		if ($row['HitCount'] > 0)
 		{
 			unset($_SESSION['bookingCodeGuesses']);
+			unset($_SESSION['adminBookingCodeGuesses']);
 			$_SESSION['confirmBookingCodeError'] = "Successfully removed timeout.";
 
 			var_dump($_SESSION); // TO-DO: Remove after testing
@@ -1934,7 +2037,7 @@ if(isSet($_POST['action']) AND $_POST['action'] == "Remove Timeout"){
 			exit();
 		} else {
 			// Remember last datetime we guessed wrong
-			$_SESSION['adminBookingCodeGuesses'] = getDatetimeNow();
+			$_SESSION['adminBookingCodeGuesses'][] = getDatetimeNow();
 			$_SESSION['confirmBookingCodeError'] = "The booking code you submitted is an incorrect admin code.";
 
 			var_dump($_SESSION); // TO-DO: Remove after testing
@@ -1955,46 +2058,10 @@ if(isSet($_POST['action']) AND $_POST['action'] == "Remove Timeout"){
 // Handles booking code check
 if(isSet($_POST['action']) AND $_POST['action'] == "Confirm Code"){
 
-	// Check if any of the old guesses are old enough to remove
-	if(isSet($_SESSION['bookingCodeGuesses'])){
-		$dateTimeNow = getDatetimeNow();
-		$newArray = array();
-		for($i=0; $i < sizeOf($_SESSION['bookingCodeGuesses']); $i++){
-			$startDateTime = $_SESSION['bookingCodeGuesses'][$i];
-			
-			$timeDifference = convertTwoDateTimesToTimeDifferenceInMinutes($startDateTime, $dateTimeNow);		
-			if($timeDifference < BOOKING_CODE_WRONG_GUESS_TIMEOUT_IN_MINUTES){
-				$newArray[] = $_SESSION['bookingCodeGuesses'][$i];
-			}
-		}
-		if(sizeOf($newArray) > 0){
-			$_SESSION['bookingCodeGuesses'] = $newArray;
-		} else {
-			unset($_SESSION['bookingCodeGuesses']);
-		}
-	}
-
-	// Limit the amount of tries the session has to guess a booking code.
-	if(isSet($_SESSION['bookingCodeGuesses']) AND (sizeOf($_SESSION['bookingCodeGuesses']) >= MAXIMUM_BOOKING_CODE_GUESSES)){
-
-		$startDateTime = $_SESSION['bookingCodeGuesses'][0];
-
-		$timeDifference = convertTwoDateTimesToTimeDifferenceInMinutes($startDateTime, $dateTimeNow);
-		$timeRemaining = floor(BOOKING_CODE_WRONG_GUESS_TIMEOUT_IN_MINUTES - $timeDifference);
-		if($timeRemaining > 0){
-			$_SESSION['confirmBookingCodeError'] = "You have inserted an incorrect booking code too many times.\nYou can try again in $timeRemaining minute(s).";
-		} else {
-			$_SESSION['confirmBookingCodeError'] = "You have inserted an incorrect booking code too many times.\nYou can try again in less than a minute.";
-		}
-
+	if(updateBookingCodeGuesses() === FALSE){
 		var_dump($_SESSION); // TO-DO: remove after testing is done
 		include_once 'bookingcode.html.php';
 		exit();
-	} elseif(isSet($_SESSION['bookingCodeGuesses']) AND (sizeOf($_SESSION['bookingCodeGuesses']) == (MAXIMUM_BOOKING_CODE_GUESSES - 1))){
-		$_SESSION['confirmBookingCodeError'] = "The booking code you submitted is an incorrect code.\nYou have 1 attempt remaining before you are timed out.\nLog in and check your account information to see your code, if you have forgotten it.";
-	} elseif(isSet($_SESSION['bookingCodeGuesses']) AND (sizeOf($_SESSION['bookingCodeGuesses']) < (MAXIMUM_BOOKING_CODE_GUESSES - 1))){
-		$remainingAttempts = MAXIMUM_BOOKING_CODE_GUESSES - sizeOf($_SESSION['bookingCodeGuesses']);
-		$_SESSION['confirmBookingCodeError'] = "The booking code you submitted is an incorrect code.\nYou have $remainingAttempts attempts remaining before you are timed out.";
 	}
 
 	$bookingCode = trim($_POST['bookingCode']);
@@ -4377,6 +4444,8 @@ if(isSet($_GET['cancellationcode']) OR isSet($_SESSION['refreshWithCancellationC
 
 // Remove any unused variables from memory 
 // TO-DO: Change if this ruins having multiple tabs open etc.
+updateAdminBookingCodeGuesses();
+updateBookingCodeGuesses();
 clearAddCreateBookingSessions();
 clearEditCreateBookingSessions();
 unset($_SESSION["cancelBookingOriginalValues"]);
