@@ -61,6 +61,7 @@ define('BOOKING_CODE_LENGTH', 6);
 
 // Repetition variables
 define('MAXIMUM_BOOKING_CODE_GUESSES', 5);
+define('MAXIMUM_ADMIN_BOOKING_CODE_GUESSES', 3);
 
 // Numbers we use
 define('MAXIMUM_FLOAT_NUMBER', 65535);
