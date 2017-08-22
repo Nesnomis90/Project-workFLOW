@@ -39,7 +39,7 @@ function getDateTimeFromTimeDayNameWeekNumberAndYear($time,$day,$week,$year){
 
 function getFirstWeekNumberFromYear($year){
 	/* 	Weeks start with Monday. Each week's year is the Gregorian year in which the Thursday falls. 
-		The first week of the year, hence, always contains 4 January.*/
+		The first week of the year, hence, always contains January 4th.*/
 	$january4th = $year . '-01-04';
 	$firstWeek = date("W", strtotime($january4th));
 	return $firstWeek;

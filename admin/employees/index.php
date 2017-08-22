@@ -923,7 +923,8 @@ if (isSet($_POST['action']) and $_POST['action'] == 'Confirm Transfer'){
 		$sql = 'UPDATE	`booking`
 				SET 	`CompanyID` = :CompanyID2
 				WHERE	`CompanyID`	= :CompanyID
-				AND		`UserID` = :UserID';
+				AND		`UserID` = :UserID
+				AND 	`UserID` IS NOT NULL';
 		$s = $pdo->prepare($sql);
 		$s->bindValue(':CompanyID', $_SESSION['TransferEmployeeSelectedCompanyID']);
 		$s->bindValue(':CompanyID2', $_SESSION['TransferEmployeeSelectedCompanyID2']);
