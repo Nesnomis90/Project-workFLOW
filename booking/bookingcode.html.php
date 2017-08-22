@@ -45,6 +45,9 @@
 			<div class="left">
 				<form action="" method="Post">
 					<input type="submit" name="action" value="Go Back">
+					<?php if(isSet($_SESSION['bookingCodeGuesses'])) : ?>
+						<input type="submit" name="bookingCode" value="Refresh">
+					<?php endif; ?>
 				</form>
 			</div>
 		</fieldset>
