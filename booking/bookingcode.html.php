@@ -16,6 +16,8 @@
 	<body onload="startTime()">
 		<?php include_once $_SERVER['DOCUMENT_ROOT'] .'/includes/topnav.html.php'; ?>
 
+		<?php $activateRemoveTimeout = !updateBookingCodeGuesses(); ?>
+		<?php if($activateRemoveTimeout){ updateAdminBookingCodeGuesses(); } ?>
 		<fieldset><legend>Confirm your identity with your Booking Code:</legend>
 			<div class="left">
 				<?php if(isSet($_SESSION['confirmBookingCodeError'])) : ?>
@@ -26,12 +28,16 @@
 
 			<div class="left">
 				<form action="" method="post">
-					<label for="bookingCode">Submit your booking code: </label>
-					<input type="password" name="bookingCode" maxlength="<?php htmlout(BOOKING_CODE_LENGTH); ?>"
-					placeholder="<?php htmlout(BOOKING_CODE_LENGTH); ?> digits"
-					value="">
-					<input type="submit" name="action" value="Confirm Code">
-					<?php if(isSet($_SESSION['bookingCodeGuesses']) AND (sizeOf($_SESSION['bookingCodeGuesses']) >= MAXIMUM_BOOKING_CODE_GUESSES)) : ?>
+					<?php if(!$activateRemoveTimeout OR ($activateRemoveTimeout AND !isSet($_SESSION['adminBookingCodeGuesses'])) OR ($activateRemoveTimeout AND isSet($_SESSION['adminBookingCodeGuesses']) AND sizeOf($_SESSION['adminBookingCodeGuesses']) != MAXIMUM_ADMIN_BOOKING_CODE_GUESSES)) : ?>
+						<label for="bookingCode">Submit your booking code: </label>
+						<input type="password" name="bookingCode" maxlength="<?php htmlout(BOOKING_CODE_LENGTH); ?>"
+						placeholder="<?php htmlout(BOOKING_CODE_LENGTH); ?> digits"
+						value="">
+					<?php endif; ?>
+					<?php if(!$activateRemoveTimeout) : ?>
+						<input type="submit" name="action" value="Confirm Code">
+					<?php endif; ?>
+					<?php if(($activateRemoveTimeout AND !isSet($_SESSION['adminBookingCodeGuesses'])) OR ($activateRemoveTimeout AND isSet($_SESSION['adminBookingCodeGuesses']) AND sizeOf($_SESSION['adminBookingCodeGuesses']) != MAXIMUM_ADMIN_BOOKING_CODE_GUESSES)) : ?>
 						<input type="submit" name="action" value="Remove Timeout"><span>* Requires Admin Access</span>
 					<?php endif; ?>
 				</form>
