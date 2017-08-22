@@ -1366,6 +1366,8 @@ if (isSet($_POST['action']) and $_POST['action'] == 'Confirm Merge'){
 			$s->execute();
 
 			// FIX-ME: How to handle merging company credits history?
+				// Split date into the appropriate periods for the new company
+				// Keep info if billed or not.
 			// Just ignore it?
 		/*	$sql = 'UPDATE 	`companycreditshistory`
 					SET		`CompanyID` = :CompanyID2
