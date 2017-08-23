@@ -196,8 +196,6 @@
 						value="<?php htmlout($booking['MeetingInfo']); ?>">
 						<input type="hidden" name="BookingStatus" id="BookingStatus"
 						value="<?php htmlout($booking['BookingStatus']); ?>">
-						<input type="hidden" name="Email" id="Email"
-						value="<?php htmlout($booking['email']); ?>">
 					</tr>
 				</form>
 			<?php endforeach; ?>
@@ -266,6 +264,8 @@
 						value="<?php htmlout($booking['BookingStatus']); ?>">
 						<input type="hidden" name="Email" id="Email"
 						value="<?php htmlout($booking['email']); ?>">
+						<input type="hidden" name="sendEmail" id="sendEmail"
+						value="<?php htmlout($booking['sendEmail']); ?>">
 					</tr>
 				</form>
 			<?php endforeach; ?>
@@ -343,8 +343,6 @@
 						value="<?php htmlout($booking['MeetingInfo']); ?>">
 						<input type="hidden" name="BookingStatus" id="BookingStatus"
 						value="<?php htmlout($booking['BookingStatus']); ?>">
-						<input type="hidden" name="Email" id="Email"
-						value="<?php htmlout($booking['email']); ?>">
 					</tr>
 				</form>
 			<?php endforeach; ?>
@@ -418,8 +416,6 @@
 						value="<?php htmlout($booking['MeetingInfo']); ?>">
 						<input type="hidden" name="BookingStatus" id="BookingStatus"
 						value="<?php htmlout($booking['BookingStatus']); ?>">
-						<input type="hidden" name="Email" id="Email"
-						value="<?php htmlout($booking['email']); ?>">
 					</tr>
 				</form>
 			<?php endforeach; ?>
@@ -493,6 +489,8 @@
 						value="<?php htmlout($booking['BookingStatus']); ?>">
 						<input type="hidden" name="Email" id="Email"
 						value="<?php htmlout($booking['email']); ?>">
+						<input type="hidden" name="sendEmail" id="sendEmail"
+						value="<?php htmlout($booking['sendEmail']); ?>">
 					</tr>
 				</form>
 			<?php endforeach; ?>

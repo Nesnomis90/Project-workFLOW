@@ -3292,6 +3292,9 @@ if(!isSet($_GET['Meetingroom'])){
 								IF(b.`userID` IS NULL, NULL, (SELECT `email` FROM `user` WHERE `userID` = b.`userID`))
 							) 												AS email,
 							(
+								IF(b.`userID` IS NULL, NULL, (SELECT `sendEmail` FROM `user` WHERE `userID` = b.`userID`))
+							) 												AS sendEmail,
+							(
 								IF(b.`userID` IS NULL, NULL,
 									(
 										SELECT 		GROUP_CONCAT(c.`name` separator ",\n")
@@ -3330,7 +3333,7 @@ if(!isSet($_GET['Meetingroom'])){
 		$pdo = null;
 		exit();
 	}
-} elseif(isSet($_GET['Meetingroom']) AND $_GET['Meetingroom'] != NULL AND $_GET['Meetingroom'] != "") {
+} elseif(isSet($_GET['Meetingroom']) AND !empty($_GET['Meetingroom'])) {
 	try
 	{
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
@@ -3552,7 +3555,8 @@ foreach ($result as $row)
 										'BookingWasCompletedOn' => $displayCompletedDateTime,
 										'BookingWasCancelledOn' => $displayCancelledDateTime,	
 										'UserInfo' => $userinfo,
-										'MeetingInfo' => $meetinginfo
+										'MeetingInfo' => $meetinginfo,
+										'sendEmail' => $row['sendEmail']
 									);
 	}	elseif($status == "Completed Today" OR $status == "Ended Early Today") {
 		if($status == "Completed Today"){
@@ -3602,7 +3606,8 @@ foreach ($result as $row)
 									'BookingWasCompletedOn' => $displayCompletedDateTime,
 									'BookingWasCancelledOn' => $displayCancelledDateTime,	
 									'UserInfo' => $userinfo,
-									'MeetingInfo' => $meetinginfo
+									'MeetingInfo' => $meetinginfo,
+									'sendEmail' => $row['sendEmail']
 								);
 	}	elseif($status == "Completed" OR $status == "Ended Early"){	
 		if($status == "Completed"){
@@ -3675,7 +3680,8 @@ foreach ($result as $row)
 									'BookingWasCompletedOn' => $displayCompletedDateTime,
 									'BookingWasCancelledOn' => $displayCancelledDateTime,	
 									'UserInfo' => $userinfo,
-									'MeetingInfo' => $meetinginfo
+									'MeetingInfo' => $meetinginfo,
+									'sendEmail' => $row['sendEmail']
 								);
 	}
 }
