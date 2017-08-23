@@ -367,9 +367,9 @@ if (isSet($_POST['action']) and $_POST['action'] == 'Delete')
 		$pdo = null;
 		exit();
 	}
-	
+
 	$_SESSION['BookingUserFeedback'] .= "Successfully removed the booking";
-	
+
 	// Add a log event that a booking was deleted
 	try
 	{
@@ -383,9 +383,9 @@ if (isSet($_POST['action']) and $_POST['action'] == 'Delete')
 		} else {
 			$logEventDescription = 'A booking was removed by: ' . $_SESSION['LoggedInUserName'];
 		}
-		
+
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
-		
+
 		$pdo = connect_to_db();
 		$sql = "INSERT INTO `logevent` 
 				SET			`actionID` = 	(
@@ -397,9 +397,9 @@ if (isSet($_POST['action']) and $_POST['action'] == 'Delete')
 		$s = $pdo->prepare($sql);
 		$s->bindValue(':description', $logEventDescription);
 		$s->execute();
-		
+
 		//Close the connection
-		$pdo = null;		
+		$pdo = null;
 	}
 	catch(PDOException $e)
 	{
@@ -426,7 +426,7 @@ if (isSet($_POST['action']) and $_POST['action'] == 'Delete')
 		if(isSet($_POST['Email']) AND !empty($_POST['Email'])){
 			$_SESSION['cancelAdminBookingOriginalValues']['UserEmail'] = $_POST['Email'];
 		}
-		$_SESSION['cancelAdminBookingOriginalValues']['ReasonForCancelling']	
+
 		emailUserOnCancelledBooking();
 		clearCancelSessions();
 	}
