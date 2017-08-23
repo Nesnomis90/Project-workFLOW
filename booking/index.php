@@ -73,7 +73,7 @@ function updateBookingCodeGuesses(){
 		$newArray = array();
 		for($i=0; $i < sizeOf($_SESSION['bookingCodeGuesses']); $i++){
 			$startDateTime = $_SESSION['bookingCodeGuesses'][$i];
-			
+
 			$timeDifference = convertTwoDateTimesToTimeDifferenceInMinutes($startDateTime, $dateTimeNow);		
 			if($timeDifference < BOOKING_CODE_WRONG_GUESS_TIMEOUT_IN_MINUTES){
 				$newArray[] = $_SESSION['bookingCodeGuesses'][$i];
@@ -3007,6 +3007,7 @@ if (isSet($_POST['add']) AND $_POST['add'] == "Add Booking")
 
 		// Check if the booking that was made was for the current period.
 		$bookingWentOverCredits = FALSE;
+		$firstTimeOverCredit = FALSE;
 		if($dateOnlyEndDate < $companyPeriodEndDate){ // TO-DO: <= ?
 			if($companyCreditsPotentialMinimumRemainingInMinutes < 0){
 				// Company was already over given credits
@@ -3016,6 +3017,7 @@ if (isSet($_POST['add']) AND $_POST['add'] == "Add Booking")
 			} elseif($timeBookedInMinutes > $companyCreditsPotentialMinimumRemainingInMinutes){
 				// This booking, if completed, will put the company over their given credits
 				$bookingWentOverCredits = TRUE;
+				$firstTimeOverCredit = TRUE;
 				$minutesOverCredits = $timeBookedInMinutes - $companyCreditsPotentialMinimumRemainingInMinutes;
 				$timeOverCredits = convertMinutesToHoursAndMinutes($minutesOverCredits);
 			}
@@ -3082,7 +3084,6 @@ if (isSet($_POST['add']) AND $_POST['add'] == "Add Booking")
 
 	// Send email to alert company owner(s) that a booking was made that is over credits.
 		// Check if any owners want to receive an email
-	// TO-DO: Add SendOwnerEmail?
 	if($bookingWentOverCredits){
 		try
 		{
@@ -3090,8 +3091,9 @@ if (isSet($_POST['add']) AND $_POST['add'] == "Add Booking")
 
 			$pdo = connect_to_db();
 
-			$sql = 'SELECT		u.`email`		AS Email,
-								u.`sendEmail`	AS SendEmail
+			$sql = 'SELECT		u.`email`					AS Email,
+								u.`sendOwnerEmail`			AS SendOwnerEmail,
+								e.`sendEmailOnceOrAlways`	AS SendEmailOnceOrAlways
 					FROM 		`user` u
 					INNER JOIN	`employee` e
 					ON 			e.`UserID` = u.`UserID`
@@ -3111,8 +3113,13 @@ if (isSet($_POST['add']) AND $_POST['add'] == "Add Booking")
 
 			if(isSet($result) AND !empty($result)){
 				foreach($result AS $row){
-					if($row['SendEmail'] == 1){ // TO-DO: add AND $row['SendOwnerEmail'] == 1?
-						$companyOwnerEmails[] = $row['Email'];
+					// Check if user wants to receive owner emails
+					if($row['SendOwnerEmail'] == 1){ 
+						// Check if user wants to receive all emails or just the first time booking goes over credit per period
+							// sendEmailOnceOrAlways: 1 = always, sendEmailOnceOrAlways: 0 = once.
+						if(($row['SendEmailOnceOrAlways'] == 1 OR ($row['SendEmailOnceOrAlways'] == 0 AND $firstTimeOverCredit)){ 
+							$companyOwnerEmails[] = $row['Email'];
+						}
 					}
 				}
 			}

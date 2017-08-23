@@ -271,7 +271,6 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Add Employee') OR
 									`name`		AS CompanyName
 							FROM 	`company`
 							WHERE 	`companyID` = :CompanyID
-							AND		`isActive` = 1
 							LIMIT 	1';
 					$s = $pdo->prepare($sql);
 					$s->bindValue(':CompanyID', $_GET['Company']);
@@ -591,9 +590,9 @@ if (isSet($_POST['action']) AND $_POST['action'] == 'Confirm Employee')
 		// Save a description with information about the employee that was added
 		// to the company.
 		$logEventDescription = 'The user: ' . $userinfo . 
-		' was added to the company: ' . $companyinfo . 
-		' and was given the position: ' . $positioninfo . ".\nAdded by : " .
-		$_SESSION['LoggedInUserName'];
+		'\nWas added to the company: ' . $companyinfo . 
+		'\nAnd was given the position: ' . $positioninfo . 
+		".\nAdded by : " . $_SESSION['LoggedInUserName'];
 		
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 		
