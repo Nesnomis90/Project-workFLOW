@@ -974,9 +974,9 @@ if (isSet($_POST['action']) and $_POST['action'] == 'Confirm Transfer'){
 			// Save a description with information about the employee that was removed
 			// from the company.
 			$logEventDescription = "The user: " . $employeeName . 
-			" was transferred as an employee from the company: " . $oldCompanyName . 
-			"\nto the company: " . $newCompanyName . 
-			".\nThis also transferred all the user's booking history, for that company, to the new company." . 
+			"\nWas transferred as an employee from the company: " . $oldCompanyName . 
+			"\nTo the company: " . $newCompanyName . 
+			".\nThis also transferred all the user's booking history, for that company, to the new company" . 
 			".\nTransferred by: " . $_SESSION['LoggedInUserName'];
 
 			$pdo = connect_to_db();

@@ -1322,7 +1322,7 @@ if (isSet($_POST['action']) and $_POST['action'] == 'Confirm Merge'){
 	// Password is correct. Let's transfer all employees and booking history to the new company
 	if(	isSet($_SESSION['MergeCompanySelectedCompanyID']) AND !empty($_SESSION['MergeCompanySelectedCompanyID']) AND
 		isSet($_SESSION['MergeCompanySelectedCompanyID2']) AND !empty($_SESSION['MergeCompanySelectedCompanyID2']) AND
-		$_SESSION['MergeCompanySelectedCompanyID' != $_SESSION['MergeCompanySelectedCompanyID2'])
+		$_SESSION['MergeCompanySelectedCompanyID'] != $_SESSION['MergeCompanySelectedCompanyID2'])
 	{
 		// We have two company IDs and can start the merging process
 		try
@@ -1397,6 +1397,40 @@ if (isSet($_POST['action']) and $_POST['action'] == 'Confirm Merge'){
 		}
 		$_SESSION['CompanyUserFeedback'] = 	"Successfully merged the company: " . $oldCompanyName . 
 											"\nInto the company: " . $newCompanyName;
+
+		// Add a log event that the companies merged
+		try
+		{
+			// Save a description with information about the meeting room that was removed
+			$description = 	"The company: " . $oldCompanyName . 
+							"\nHas been merged into the company: " . $newCompanyName .
+							"\nThis transferred all employees and the company's booking history." .
+							"\nIt was merged by: " . $_SESSION['LoggedInUserName'];
+
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+
+			$pdo = connect_to_db();
+			$sql = "INSERT INTO `logevent` 
+					SET			`actionID` = 	(
+													SELECT 	`actionID` 
+													FROM 	`logaction`
+													WHERE 	`name` = 'Company Merged'
+												),
+								`description` = :description";
+			$s = $pdo->prepare($sql);
+			$s->bindValue(':description', $description);
+			$s->execute();
+
+			//Close the connection
+			$pdo = null;
+		}
+		catch(PDOException $e)
+		{
+			$error = 'Error adding log event to database: ' . $e->getMessage();
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+			$pdo = null;
+			exit();
+		}
 	} else {
 		$_SESSION['CompanyUserFeedback'] = "Failed to merge the two selected companies.";
 	}

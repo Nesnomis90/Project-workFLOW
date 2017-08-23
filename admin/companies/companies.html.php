@@ -16,7 +16,7 @@
 		
 		<div class="left">
 			<?php if(isSet($_SESSION['CompanyUserFeedback'])) : ?>
-				<span><b><?php htmlout($_SESSION['CompanyUserFeedback']); ?></b></span>
+				<span style="white-space: pre-wrap;"><b><?php htmlout($_SESSION['CompanyUserFeedback']); ?></b></span>
 				<?php unset($_SESSION['CompanyUserFeedback']); ?>
 			<?php endif; ?>
 		</div>
