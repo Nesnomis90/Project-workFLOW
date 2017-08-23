@@ -282,8 +282,9 @@ function emailUserOnCancelledBooking(){
 			$bookingCreatorMeetingInfo = $_SESSION['cancelBookingOriginalValues']['MeetingInfo'];
 			$cancelledBy = $_SESSION['cancelBookingOriginalValues']['CancelledBy'];
 
-			$reasonForCancelling = $_SESSION['cancelBookingOriginalValues']['ReasonForCancelling'];
-			if(!isSet($reasonForCancelling) OR isSet($reasonForCancelling) AND empty($reasonForCancelling)){
+			if(isSet($_SESSION['cancelBookingOriginalValues']['ReasonForCancelling'] AND !empty($_SESSION['cancelBookingOriginalValues']['ReasonForCancelling'])){
+				$reasonForCancelling = $_SESSION['cancelBookingOriginalValues']['ReasonForCancelling'];
+			} else {
 				$reasonForCancelling = "No reason given.";
 			}
 
@@ -637,10 +638,11 @@ if (	(isSet($_POST['action']) and $_POST['action'] == 'Cancel') OR
 		$_SESSION['cancelBookingOriginalValues']['BookingID'] = $_POST['id'];
 		$_SESSION['cancelBookingOriginalValues']['BookingStatus'] = $_POST['BookingStatus'];
 		$_SESSION['cancelBookingOriginalValues']['MeetingInfo'] = $_POST['MeetingInfo'];
-		if(isSet($_POST['sendEmail'])){
+
+		if(isSet($_POST['sendEmail']) AND !empty($_POST['sendEmail'])){
 			$_SESSION['cancelBookingOriginalValues']['SendEmail'] = $_POST['sendEmail'];
 		}
-		if(isSet($_POST['Email'])){
+		if(isSet($_POST['Email']) AND !empty($_POST['Email'])){
 			$_SESSION['cancelBookingOriginalValues']['UserEmail'] = $_POST['Email'];
 		}
 	}
@@ -790,8 +792,7 @@ if (	(isSet($_POST['action']) and $_POST['action'] == 'Cancel') OR
 	}
 
 	// Only cancel if booking is currently active
-	if(	isSet($bookingStatus) AND  
-		($bookingStatus == 'Active' OR $bookingStatus == 'Active Today')){
+	if(isSet($bookingStatus) AND ($bookingStatus == 'Active' OR $bookingStatus == 'Active Today')){
 
 		// Load new template to let admin add a reason for cancelling the meeting
 		if(isSet($cancelledByAdmin) AND $cancelledByAdmin AND !isSet($_SESSION['cancelBookingOriginalValues']['ReasonForCancelling'])){

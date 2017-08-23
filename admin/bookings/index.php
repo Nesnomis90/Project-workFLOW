@@ -43,6 +43,11 @@ function clearEditBookingSessions(){
 	unset($_SESSION['EditBookingCompanyArray']);
 }
 
+// Function to clear sessions used to remember information during the cancel process.
+function clearCancelSessions(){
+	unset($_SESSION['cancelAdminBookingOriginalValues']);
+}
+
 // Function to remember the user inputs in Edit Booking
 function rememberEditBookingInputs(){
 	if(isSet($_SESSION['EditBookingInfoArray'])){
@@ -105,30 +110,41 @@ function rememberAddBookingInputs(){
 
 // This is used on cancel and delete.
 function emailUserOnCancelledBooking(){
-	if(isSet($_POST['UserID']) AND $_POST['UserID'] != $_SESSION['LoggedInUserID']){
-		if(isSet($_POST['sendEmail']) AND $_POST['sendEmail'] == 1){
+	if(isSet($_SESSION['cancelAdminBookingOriginalValues']['UserID']) AND $_SESSION['cancelAdminBookingOriginalValues']['UserID'] != $_SESSION['LoggedInUserID']){
+		if(isSet($_SESSION['cancelAdminBookingOriginalValues']['SendEmail']) AND $_SESSION['cancelAdminBookingOriginalValues']['SendEmail'] == 1){
+
+			$bookingCreatorUserEmail = $_SESSION['cancelAdminBookingOriginalValues']['UserEmail'];
+			$bookingCreatorMeetingInfo = $_SESSION['cancelAdminBookingOriginalValues']['MeetingInfo'];
+
+			if(isSet($_SESSION['cancelAdminBookingOriginalValues']['ReasonForCancelling'] AND !empty($_SESSION['cancelAdminBookingOriginalValues']['ReasonForCancelling'])){
+				$reasonForCancelling = $_SESSION['cancelAdminBookingOriginalValues']['ReasonForCancelling'];
+			} else {
+				$reasonForCancelling = "No reason given.";
+			}
+
 			$emailSubject = "Your meeting has been cancelled!";
 
 			$emailMessage = 
 			"A booked meeting has been cancelled by an Admin!\n" .
-			"The meeting was booked for the room " . $_POST['MeetingInfo'];
-			
-			$email = $_POST['Email'];
-			
+			"The meeting was booked for the room " . $bookingCreatorMeetingInfo .
+			"\nReason given for cancelling: " . $reasonForCancelling;
+
+			$email = $bookingCreatorUserEmail;
+
 			$mailResult = sendEmail($email, $emailSubject, $emailMessage);
-			
+
 			if(!$mailResult){
 				$_SESSION['BookingUserFeedback'] .= "\n\n[WARNING] System failed to send Email to user.";
 			}
-		
-			$_SESSION['BookingUserFeedback'] .= "\nThis is the email msg we're sending out:\n$emailMessage.\nSent to email: $email."; // TO-DO: Remove after testing
-		} elseif(isSet($_POST['sendEmail']) AND $_POST['sendEmail'] == 0) {
+
+			$_SESSION['BookingUserFeedback'] .= "\nThis is the email msg we're sending out:\n$emailMessage\nSent to email: $email."; // TO-DO: Remove before uploading
+		} elseif(isSet($_SESSION['cancelAdminBookingOriginalValues']['SendEmail']) AND $_SESSION['cancelAdminBookingOriginalValues']['SendEmail'] == 0) {
 			$_SESSION['BookingUserFeedback'] .= "\nUser does not want to be sent Email.";
 		}
-	} elseif(isSet($_POST['UserID']) AND $_POST['UserID'] == $_SESSION['LoggedInUserID']){
-		$_SESSION['BookingUserFeedback'] .= "\nDid not send an email because you cancelled your own meeting."; // TO-DO: Remove?
+	} elseif(isSet($_SESSION['cancelAdminBookingOriginalValues']['UserID']) AND $_SESSION['cancelAdminBookingOriginalValues']['UserID'] == $_SESSION['LoggedInUserID']){
+		$_SESSION['BookingUserFeedback'] .= "\nDid not send an email because you cancelled your own meeting.";
 	} else {
-		$_SESSION['BookingUserFeedback'] .= "\nDid not send an email because there was no UserID found."; // TO-DO: FIX-ME: Change
+		$_SESSION['BookingUserFeedback'] .= "\nFailed to send an email to the user that the booking got cancelled.";
 	}
 }
 
@@ -394,9 +410,25 @@ if (isSet($_POST['action']) and $_POST['action'] == 'Delete')
 	}	
 
 	// Check if the meeting that was removed still was active, if so
-	if(isSet($_POST['BookingStatus']) AND $_POST['BookingStatus'] == 'Active'){
+	if(isSet($_POST['BookingStatus']) AND ($_POST['BookingStatus'] == 'Active' OR $_POST['BookingStatus'] == 'Active Today')){
 		// Send email to user that meeting has been cancelled
+		$_SESSION['cancelAdminBookingOriginalValues']['BookingID'] = $_POST['id'];
+		$_SESSION['cancelAdminBookingOriginalValues']['BookingStatus'] = $_POST['BookingStatus'];
+		$_SESSION['cancelAdminBookingOriginalValues']['MeetingInfo'] = $_POST['MeetingInfo'];
+		$_SESSION['cancelAdminBookingOriginalValues']['UserInfo'] = $_POST['UserInfo'];
+
+		if(isSet($_POST['UserID']) AND !empty($_POST['UserID'])){
+			$_SESSION['cancelAdminBookingOriginalValues']['UserID'] = $_POST['UserID'];
+		}
+		if(isSet($_POST['sendEmail']) AND !empty($_POST['sendEmail'])){
+			$_SESSION['cancelAdminBookingOriginalValues']['SendEmail'] = $_POST['sendEmail'];
+		}
+		if(isSet($_POST['Email']) AND !empty($_POST['Email'])){
+			$_SESSION['cancelAdminBookingOriginalValues']['UserEmail'] = $_POST['Email'];
+		}
+		$_SESSION['cancelAdminBookingOriginalValues']['ReasonForCancelling']	
 		emailUserOnCancelledBooking();
+		clearCancelSessions();
 	}
 	
 	// Load booked meetings list webpage with updated database
@@ -405,13 +437,49 @@ if (isSet($_POST['action']) and $_POST['action'] == 'Delete')
 }
 
 // If admin wants to cancel a scheduled booked meeting (instead of deleting)
-if (isSet($_POST['action']) and $_POST['action'] == 'Cancel')
+if (	(isSet($_POST['action']) and $_POST['action'] == 'Cancel') OR 
+		(isSet($_SESSION['refreshCancelAdminBooking']) AND $_SESSION['refreshCancelAdminBooking']))
 {
-	// Only cancel if booking is currently active
-	if(	isSet($_POST['BookingStatus']) AND  
-		($_POST['BookingStatus'] == 'Active' OR $_POST['BookingStatus'] == 'Active Today')){
+	
+	if(isSet($_SESSION['refreshCancelAdminBooking']) AND $_SESSION['refreshCancelAdminBooking']){
+		unset($_SESSION['refreshCancelAdminBooking']);
+	} else {
+		$_SESSION['cancelAdminBookingOriginalValues']['BookingID'] = $_POST['id'];
+		$_SESSION['cancelAdminBookingOriginalValues']['BookingStatus'] = $_POST['BookingStatus'];
+		$_SESSION['cancelAdminBookingOriginalValues']['MeetingInfo'] = $_POST['MeetingInfo'];
+		$_SESSION['cancelAdminBookingOriginalValues']['UserInfo'] = $_POST['UserInfo'];
 
-		$bookingID = $_POST['id'];
+		if(isSet($_POST['UserID']) AND !empty($_POST['UserID'])){
+			$_SESSION['cancelAdminBookingOriginalValues']['UserID'] = $_POST['UserID'];
+		}
+		if(isSet($_POST['sendEmail']) AND !empty($_POST['sendEmail'])){
+			$_SESSION['cancelAdminBookingOriginalValues']['SendEmail'] = $_POST['sendEmail'];
+		}
+		if(isSet($_POST['Email']) AND !empty($_POST['Email'])){
+			$_SESSION['cancelAdminBookingOriginalValues']['UserEmail'] = $_POST['Email'];
+		}
+	}
+
+	$bookingID = $_SESSION['cancelAdminBookingOriginalValues']['BookingID'];
+	$bookingStatus = $_SESSION['cancelAdminBookingOriginalValues']['BookingStatus'];
+	$bookingMeetingInfo = $_SESSION['cancelAdminBookingOriginalValues']['MeetingInfo'];
+	$userInfo = $_SESSION['cancelAdminBookingOriginalValues']['UserInfo'];
+
+	// Only cancel if booking is currently active
+	if(isSet($bookingStatus) AND ($bookingStatus == 'Active' OR $bookingStatus == 'Active Today')){
+
+		// Load new template to let admin add a reason for cancelling the meeting
+		if(!isSet($_SESSION['cancelAdminBookingOriginalValues']['ReasonForCancelling'])){
+			var_dump($_SESSION); // TO-DO: Remove before uploading
+			include_once 'cancelmessage.html.php';
+			exit();
+		}
+
+		if(isSet($_SESSION['cancelAdminBookingOriginalValues']['ReasonForCancelling']) AND !empty($_SESSION['cancelAdminBookingOriginalValues']['ReasonForCancelling'])){
+			$cancelMessage = $_SESSION['cancelAdminBookingOriginalValues']['ReasonForCancelling'];
+		} else {
+			$cancelMessage = NULL;
+		}
 
 		// Update cancellation date for selected booked meeting in database
 		try
@@ -422,12 +490,14 @@ if (isSet($_POST['action']) and $_POST['action'] == 'Cancel')
 			$sql = 'UPDATE 	`booking` 
 					SET 	`dateTimeCancelled` = CURRENT_TIMESTAMP,
 							`cancellationCode` = NULL,
+							`cancelMessage` = :cancelMessage,
 							`cancelledByUserID` = :cancelledByUserID
 					WHERE 	`bookingID` = :bookingID
 					AND		`dateTimeCancelled` IS NULL
 					AND		`actualEndDateTime` IS NULL';
 			$s = $pdo->prepare($sql);
 			$s->bindValue(':bookingID', $bookingID);
+			$s->bindValue(':cancelMessage', $cancelMessage);
 			$s->bindValue(':cancelledByUserID', $_SESSION['LoggedInUserID']);			
 			$s->execute();
 
@@ -460,10 +530,10 @@ if (isSet($_POST['action']) and $_POST['action'] == 'Cancel')
 		{
 			// Save a description with information about the booking that was cancelled
 			$logEventDescription = "N/A";
-			if(isSet($_POST['UserInfo']) AND isSet($_POST['MeetingInfo'])){
+			if(isSet($bookingMeetingInfo) AND isSet($userInfo)){
 				$logEventDescription = 	"A booking with these details was cancelled:" .
-										"\nMeeting Information: " . $_POST['MeetingInfo'] .
-										"\nUser Information: " . $_POST['UserInfo'] .
+										"\nMeeting Information: " . $bookingMeetingInfo .
+										"\nUser Information: " . $userInfo .
 										"\nIt was cancelled by: " . $_SESSION['LoggedInUserName'];
 			} else {
 				$logEventDescription = 'A booking was cancelled by: ' . $_SESSION['LoggedInUserName'];
@@ -499,6 +569,8 @@ if (isSet($_POST['action']) and $_POST['action'] == 'Cancel')
 		// Booking was not active, so no need to cancel it.
 		$_SESSION['BookingUserFeedback'] = "Meeting has already been completed. Did not cancel it.";
 	}
+
+	clearCancelSessions();
 
 	// Load booked meetings list webpage with updated database
 	header('Location: .');
@@ -3256,6 +3328,7 @@ if (isSet($_POST['add']) AND $_POST['add'] == 'Cancel'){
 // TO-DO: Change if this ruins having multiple tabs open etc.
 clearAddBookingSessions();
 clearEditBookingSessions();
+clearCancelSessions();
 
 
 // BOOKING OVERVIEW CODE SNIPPET START //
