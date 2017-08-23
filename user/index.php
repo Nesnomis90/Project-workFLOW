@@ -869,6 +869,7 @@ if(isSet($_SESSION['loggedIn']) AND isSet($_SESSION['LoggedInUserID'])){
 								u.`create_time`			AS DateTimeCreated,
 								u.`lastActivity`		AS LastActive,
 								u.`sendEmail`			AS SendEmail,
+								u.`sendOwnerEmail`		AS SendOwnerEmail,
 								u.`sendAdminEmail`		AS SendAdminEmail,
 								u.`password`			AS HashedPassword,
 								a.`AccessName`			AS AccessName,
@@ -908,7 +909,7 @@ if(isSet($_SESSION['loggedIn']) AND isSet($_SESSION['LoggedInUserID'])){
 									AND 	`dateTimeCancelled` IS NOT NULL
 								)						AS CancelledBookedMeetings,
 								(
-									SELECT 		GROUP_CONCAT(CONCAT_WS(" in ", cp.`name`, CONCAT(c.`name`,".")) separator "\n")
+									SELECT 		GROUP_CONCAT(CONCAT_WS(" in ", cp.`name`, CONCAT(c.`name`,".",e.`sendEmailOnceOrAlways`)) separator "\n")
 									FROM 		`company` c
 									INNER JOIN 	`employee` e
 									ON 			e.`CompanyID` = c.`CompanyID`
@@ -979,9 +980,28 @@ if(isSet($_SESSION['loggedIn']) AND isSet($_SESSION['LoggedInUserID'])){
 	$originalBookingCode = $result['BookingCode'];
 	
 	$worksFor = $result['WorksFor'];
+	$userIsACompanyOwner = FALSE;
 	if(empty($worksFor)){
 		$worksFor = "You have no company connection.";
+	} else {
+		// Check if user is owner in any companies.
+		// TO-DO: Double check this stupid code and see if the logic is correct
+		$worksForArray = explode("\n", $worksFor);
+		foreach($worksForArray AS $row){
+			$position = substr($row,0, (strpos($row," in ")));
+			if($position == "Owner"){
+				$userIsACompanyOwner = TRUE;
+				$companyName = substr($row,(strpos($row," in ") + 4), -2);
+				$sendEmailOnceOrAlways = substr($row, (strrpos($row,".") + 1));
+				$ownerInCompanies[] = array(
+												'CompanyName' => $companyName,
+												'SendEmailOnceOrAlways' => $sendEmailOnceOrAlways //1 = always, 0 = once
+											);
+			}
+			$newWorksForArray[] = substr($row, 0, -1);
+		}
 	}
+	$worksFor = implode("\n",$newWorksForArray);
 
 	if($accessName != "Normal User"){
 		$userCanHaveABookingCode = TRUE;

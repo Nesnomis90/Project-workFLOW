@@ -205,11 +205,11 @@
 								<?php if($originalSendOwnerEmail == 1) : ?>
 									<div>
 										<?php foreach($ownerInCompanies AS $company) : ?>
-											<label>Status For Company: <?php htmlout($company['CompanyName']); ?></label>
+											<label>Company: <b><?php htmlout($company['CompanyName']); ?></b></label>
 											<?php if($company['SendEmailOnceOrAlways'] == 1) : ?>
 												<span><b>Send Everytime A Booking Goes Over Credit</b></span>
 											<?php elseif($company['SendEmailOnceOrAlways'] == 0) : ?>
-												<span><b>Only Send First Time, Per Period, A Booking Goes Over Credit</b></span>
+												<span><b>Only Send First Time A Booking Goes Over Credit</b></span>
 											<?php endif; ?>
 										<?php endforeach; ?>
 									</div>
