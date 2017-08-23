@@ -264,10 +264,7 @@ if (isSet($_POST['action']) AND $_POST['action'] == 'Confirm Equipment')
 		$s = $pdo->prepare($sql);
 		$s->bindValue(':EquipmentName', $validatedEquipmentName);
 		$s->bindValue(':EquipmentDescription', $validatedEquipmentDescription);		
-		$s->execute();
-	
-		unset($_SESSION['LastEquipmentID']);
-		$_SESSION['LastEquipmentID'] = $pdo->lastInsertId();	
+		$s->execute();	
 	
 		//Close the connection
 		$pdo = null;
@@ -289,11 +286,6 @@ if (isSet($_POST['action']) AND $_POST['action'] == 'Confirm Equipment')
 		$description = "The equipment: " . $validatedEquipmentName . ", with description: " . 
 		$validatedEquipmentDescription . " was added by: " . $_SESSION['LoggedInUserName'];
 		
-		if(isSet($_SESSION['LastEquipmentID'])){
-			$lastEquipmentID = $_SESSION['LastEquipmentID'];
-			unset($_SESSION['LastEquipmentID']);
-		}
-		
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 		
 		$pdo = connect_to_db();
@@ -303,11 +295,9 @@ if (isSet($_POST['action']) AND $_POST['action'] == 'Confirm Equipment')
 												FROM 	`logaction`
 												WHERE 	`name` = 'Equipment Added'
 											),
-							`equipmentID` = :TheEquipmentID,
 							`description` = :description";
 		$s = $pdo->prepare($sql);
 		$s->bindValue(':description', $description);
-		$s->bindValue(':TheEquipmentID', $lastEquipmentID);
 		$s->execute();
 		
 		//Close the connection

@@ -1675,11 +1675,9 @@ if (isSet($_POST['action']) AND $_POST['action'] == 'Add Company')
 												FROM 	`logaction`
 												WHERE 	`name` = 'Company Created'
 											),
-							`companyID` = :TheCompanyID,
 							`description` = :description";
 		$s = $pdo->prepare($sql);
 		$s->bindValue(':description', $logEventdescription);
-		$s->bindValue(':TheCompanyID', $LastCompanyID);
 		$s->execute();
 
 		//Close the connection

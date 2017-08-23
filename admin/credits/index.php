@@ -443,11 +443,9 @@ if (isSet($_POST['action']) AND $_POST['action'] == 'Confirm Credits')
 												FROM 	`logaction`
 												WHERE 	`name` = 'Credits Added'
 											),
-							`CreditsID` = :TheCreditsID,
 							`description` = :description";
 		$s = $pdo->prepare($sql);
 		$s->bindValue(':description', $description);
-		$s->bindValue(':TheCreditsID', $lastCreditsID);
 		$s->execute();
 		
 		//Close the connection

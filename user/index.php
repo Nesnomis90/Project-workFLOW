@@ -221,10 +221,7 @@ if(isSet($_POST['register']) AND $_POST['register'] == "Register Account"){
 		$s->bindValue(':activationcode', $activationcode);
 		$s->bindValue(':email', $email);
 		$s->execute();
-		
-		unset($_SESSION['lastUserID']);
-		$_SESSION['lastUserID'] = $pdo->lastInsertId();
-		
+
 		//Close the connection
 		$pdo = null;
 	}
@@ -248,13 +245,7 @@ if(isSet($_POST['register']) AND $_POST['register'] == "Register Account"){
 		} else {
 			$description = "An account was registered for the user: " . $userinfo;
 		}
-		
-		if(isSet($_SESSION['lastUserID'])){
-			$lastUserID = $_SESSION['lastUserID'];
-			unset($_SESSION['lastUserID']);				
-		}
 
-		
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 		
 		$pdo = connect_to_db();
@@ -264,11 +255,9 @@ if(isSet($_POST['register']) AND $_POST['register'] == "Register Account"){
 												FROM 	`logaction`
 												WHERE 	`name` = 'Account Created'
 											),
-							`UserID` = :UserID,
 							`description` = :description";
 		$s = $pdo->prepare($sql);
 		$s->bindValue(':description', $description);
-		$s->bindValue(':UserID', $lastUserID);
 		$s->execute();
 		
 		//Close the connection
@@ -466,11 +455,9 @@ if(isSet($_GET['activateaccount']) AND !empty($_GET['activateaccount'])){
 												FROM `logaction`
 												WHERE `name` = 'Account Activated'
 											),
-							`description` = :description,
-							`userID` = :userID";
+							`description` = :description";
 		$s = $pdo->prepare($sql);
 		$s->bindValue(':description', $logEventDescription);
-		$s->bindValue(':userID', $userID);
 		$s->execute();
 		
 		//Close the connection

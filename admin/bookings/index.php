@@ -2750,10 +2750,6 @@ if (isSet($_POST['add']) AND $_POST['add'] == "Add booking")
 		$s->bindValue(':adminNote', $validatedAdminNote);
 		$s->bindValue(':cancellationCode', $cancellationCode);
 		$s->execute();
-
-		unset($_SESSION['lastBookingID']);
-		$_SESSION['lastBookingID'] = $pdo->lastInsertId();
-
 	}
 	catch (PDOException $e)
 	{
@@ -2834,11 +2830,6 @@ if (isSet($_POST['add']) AND $_POST['add'] == "Add booking")
 				$timeOverCredits = convertMinutesToHoursAndMinutes($minutesOverCredits);
 			}
 			$logEventDescription .= "\nThis booking, if completed, will put the company at $timeOverCredits over the Credits given this period.";
-		}		
-		
-		if(isSet($_SESSION['lastBookingID'])){
-			$lastBookingID = $_SESSION['lastBookingID'];
-			unset($_SESSION['lastBookingID']);				
 		}
 
 		$sql = "INSERT INTO `logevent` 
@@ -2847,15 +2838,9 @@ if (isSet($_POST['add']) AND $_POST['add'] == "Add booking")
 												FROM `logaction`
 												WHERE `name` = 'Booking Created'
 											),
-							`userID` = :UserID,
-							`meetingRoomID` = :MeetingRoomID,
-							`bookingID` = :BookingID,
 							`description` = :description";
 		$s = $pdo->prepare($sql);
 		$s->bindValue(':description', $logEventDescription);
-		$s->bindValue(':BookingID', $lastBookingID);
-		$s->bindValue(':MeetingRoomID', $_POST['meetingRoomID']);
-		$s->bindValue(':UserID', $_POST['userID']);
 		$s->execute();
 		
 		//Close the connection

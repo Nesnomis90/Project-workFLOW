@@ -939,35 +939,11 @@ function create_tables()
 			$conn->exec("CREATE TABLE IF NOT EXISTS `$table` (
 						  `logID` int(10) unsigned NOT NULL AUTO_INCREMENT,
 						  `actionID` int(10) unsigned DEFAULT NULL,
-						  `userID` int(10) unsigned DEFAULT NULL,
-						  `companyID` int(10) unsigned DEFAULT NULL,
-						  `bookingID` int(10) unsigned DEFAULT NULL,
-						  `meetingRoomID` int(10) unsigned DEFAULT NULL,
-						  `equipmentID` int(10) unsigned DEFAULT NULL,
-						  `positionID` int(10) unsigned DEFAULT NULL,
-						  `creditsID` int(10) unsigned DEFAULT NULL,
-						  `eventID` int(10) unsigned DEFAULT NULL,
 						  `description` text,
 						  `logDateTime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
 						  PRIMARY KEY (`logID`),
-						  KEY `FK_UserID3_idx` (`userID`),
 						  KEY `FK_ActionID_idx` (`actionID`),
-						  KEY `FK_CompanyID2_idx` (`companyID`),
-						  KEY `FK_BookingID_idx` (`bookingID`),
-						  KEY `FK_MeetingRoomID3_idx` (`meetingRoomID`),
-						  KEY `FK_EquipmentID2_idx` (`equipmentID`),
-						  KEY `FK_PositionID2_idx` (`positionID`),
-						  KEY `FK_CreditsID2_idx` (`creditsID`),
-						  KEY `FK_EventID2_idx` (`eventID`),
-						  CONSTRAINT `FK_ActionID` FOREIGN KEY (`actionID`) REFERENCES `logaction` (`actionID`) ON DELETE SET NULL ON UPDATE CASCADE,
-						  CONSTRAINT `FK_BookingID` FOREIGN KEY (`bookingID`) REFERENCES `booking` (`bookingID`) ON DELETE SET NULL ON UPDATE CASCADE,
-						  CONSTRAINT `FK_CompanyID2` FOREIGN KEY (`companyID`) REFERENCES `company` (`CompanyID`) ON DELETE SET NULL ON UPDATE CASCADE,
-						  CONSTRAINT `FK_CreditsID2` FOREIGN KEY (`creditsID`) REFERENCES `credits` (`CreditsID`) ON DELETE SET NULL ON UPDATE CASCADE,
-						  CONSTRAINT `FK_EquipmentID2` FOREIGN KEY (`equipmentID`) REFERENCES `equipment` (`EquipmentID`) ON DELETE SET NULL ON UPDATE CASCADE,
-						  CONSTRAINT `FK_EventID2` FOREIGN KEY (`eventID`) REFERENCES `event` (`EventID`) ON DELETE SET NULL ON UPDATE CASCADE,
-						  CONSTRAINT `FK_MeetingRoomID3` FOREIGN KEY (`meetingRoomID`) REFERENCES `meetingroom` (`meetingRoomID`) ON DELETE SET NULL ON UPDATE CASCADE,
-						  CONSTRAINT `FK_PositionID2` FOREIGN KEY (`positionID`) REFERENCES `companyposition` (`PositionID`) ON DELETE SET NULL ON UPDATE CASCADE,
-						  CONSTRAINT `FK_UserID3` FOREIGN KEY (`userID`) REFERENCES `user` (`userID`) ON DELETE SET NULL ON UPDATE CASCADE
+						  CONSTRAINT `FK_ActionID` FOREIGN KEY (`actionID`) REFERENCES `logaction` (`actionID`) ON DELETE SET NULL ON UPDATE CASCADE
 						) ENGINE=InnoDB DEFAULT CHARSET=utf8");
 
 			//	Add the creation to log event

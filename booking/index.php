@@ -2907,9 +2907,6 @@ if (isSet($_POST['add']) AND $_POST['add'] == "Add Booking")
 		$s->bindValue(':cancellationCode', $cancellationCode);
 		$s->execute();
 
-		unset($_SESSION['lastBookingID']);
-		$_SESSION['lastBookingID'] = $pdo->lastInsertId();
-
 		//Close the connection
 		$pdo = null;
 	}
@@ -3002,11 +2999,6 @@ if (isSet($_POST['add']) AND $_POST['add'] == "Add Booking")
 			$logEventDescription .= "\nThis booking, if completed, will put the company at $timeOverCredits over the Credits given this period.";
 		}
 
-		if(isSet($_SESSION['lastBookingID'])){
-			$lastBookingID = $_SESSION['lastBookingID'];
-			unset($_SESSION['lastBookingID']);				
-		}
-
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 
 		$pdo = connect_to_db();
@@ -3016,15 +3008,9 @@ if (isSet($_POST['add']) AND $_POST['add'] == "Add Booking")
 												FROM 	`logaction`
 												WHERE 	`name` = 'Booking Created'
 											),
-							`userID` = :UserID,
-							`meetingRoomID` = :MeetingRoomID,
-							`bookingID` = :BookingID,
 							`description` = :description";
 		$s = $pdo->prepare($sql);
 		$s->bindValue(':description', $logEventDescription);
-		$s->bindValue(':BookingID', $lastBookingID);
-		$s->bindValue(':MeetingRoomID', $meetingRoomID);
-		$s->bindValue(':UserID', $_SESSION["AddCreateBookingInfoArray"]["TheUserID"]);
 		$s->execute();
 
 		//Close the connection
@@ -4419,11 +4405,9 @@ if(isSet($_GET['cancellationcode']) OR isSet($_SESSION['refreshWithCancellationC
 													FROM `logaction`
 													WHERE `name` = 'Booking Cancelled'
 												),
-								`description` = :description,
-								`bookingID` = :bookingID";
+								`description` = :description";
 			$s = $pdo->prepare($sql);
 			$s->bindValue(':description', $logEventDescription);
-			$s->bindValue(':bookingID', $bookingID);
 			$s->execute();
 			
 			//Close the connection
