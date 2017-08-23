@@ -3150,7 +3150,8 @@ if (isSet($_POST['add']) AND $_POST['add'] == "Add Booking")
 			"End Time: " . $displayValidatedEndDate . ".\n\n" .
 			"If you wish to cancel this meeting, or just end it early, you can easily do so by using the link given below.\n" .
 			"Click this link to cancel the booked meeting: " . $_SERVER['HTTP_HOST'] . 
-			"/booking/?cancellationcode=" . $cancellationCode;
+			"/booking/?cancellationcode=" . $cancellationCode . "\n\n" . 
+			"If you do not wish to receive these emails, you can disable them in 'My Account' under 'Company Owner Alert Status'.";
 
 			$email = $companyOwnerEmails;
 

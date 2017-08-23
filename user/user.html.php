@@ -70,14 +70,14 @@
 								<span style="white-space: pre-wrap;"><b><?php htmlout($worksFor); ?></b></span>
 							</div>
 						</fieldset>
-						
+
 						<fieldset class="left"><legend>Booking Information:</legend>
 							<?php if($numberOfTotalBookedMeetings > 0 AND !isSet($editMode)) : ?>
 								<div>
 									<label>Booked Meetings (Total):</label>
 									<span><a href="?totalBooking"><?php htmlout($numberOfTotalBookedMeetings); ?></a></span>
 								</div>
-								
+
 								<?php if($numberOfActiveBookedMeetings > 0) : ?>
 									<div>
 										<label>Booked Meetings (Active):</label>
@@ -138,7 +138,7 @@
 										<label>Reveal Code: </label><span><b>Could not retrieve code.</b></span>
 									<?php endif; ?>
 								</div>
-								
+
 								<?php if(isSet($editMode)) : ?>
 									<div>
 										<?php if(!isSet($userHasABookingCode)) : ?>
@@ -169,7 +169,7 @@
 							</div>
 
 							<div>
-								<label>Email Alert Status: </label>
+								<label>Account And Meeting Alert Status: </label>
 								<?php if($originalSendEmail == 1) : ?>
 									<span><b>Send Me Email Alerts</b></span>
 								<?php elseif($originalSendEmail == 0) : ?>
@@ -179,7 +179,7 @@
 
 							<?php if(isSet($editMode)) : ?>
 								<div>
-									<label>Change Email Alert Status: </label>
+									<label>Change Account And Meeting Alert Status: </label>
 									<select name="sendEmail">
 										<?php if($sendEmail == 1) : ?>
 											<option selected="selected" value="1"><b>Send Me Email Alerts</b></option>
@@ -192,13 +192,39 @@
 								</div>
 							<?php endif; ?>
 
+							<?php if($userIsACompanyOwner) : ?>
+								<div>
+									<label>Company Owner Alert Status: </label>
+									<?php if($originalSendOwnerEmail == 1) : ?>
+										<span><b>Send Me Email Alerts</b></span>
+									<?php elseif($originalSendOwnerEmail == 0) : ?>
+										<span><b>Don't Send Me Email Alerts</b></span>
+									<?php endif; ?>
+								</div>
+
+								<?php if(isSet($editMode)) : ?>
+									<div>
+										<label>Change Company Owner Alert Status: </label>
+										<select name="sendOwnerEmail">
+											<?php if($sendOwnerEmail == 1) : ?>
+												<option selected="selected" value="1"><b>Send Me Email Alerts</b></option>
+												<option value="0"><b>Don't Send Me Email Alerts</b></option>
+											<?php elseif($sendOwnerEmail == 0) : ?>
+												<option value="1"><b>Send Me Email Alerts</b></option>
+												<option selected="selected" value="0"><b>Don't Send Me Email Alerts</b></option>										
+											<?php endif; ?>
+										</select>
+									</div>
+								<?php endif; ?>
+							<?php endif; ?>
+
 							<?php if($accessName == "Admin") : ?>
 								<div>
-									<label>Admin Alert Status: </label>
+									<label>Admin Information Alert Status: </label>
 									<?php if($originalSendAdminEmail == 1) : ?>
-										<span><b>Send Me Admin Email Alerts</b></span>
+										<span><b>Send Me Email Alerts</b></span>
 									<?php elseif($originalSendAdminEmail == 0) : ?>
-										<span><b>Don't Send Me Admin Email Alerts</b></span>
+										<span><b>Don't Send Me Email Alerts</b></span>
 									<?php endif; ?>
 								</div>
 
@@ -207,17 +233,17 @@
 										<label>Change Admin Alert Status: </label>
 										<select name="sendAdminEmail">
 											<?php if($sendAdminEmail == 1) : ?>
-												<option selected="selected" value="1"><b>Send Me Admin Email Alerts</b></option>
-												<option value="0"><b>Don't Send Me Admin Email Alerts</b></option>
+												<option selected="selected" value="1"><b>Send Me Email Alerts</b></option>
+												<option value="0"><b>Don't Send Me Email Alerts</b></option>
 											<?php elseif($sendAdminEmail == 0) : ?>
-												<option value="1"><b>Send Me Admin Email Alerts</b></option>
-												<option selected="selected" value="0"><b>Don't Send Me Admin Email Alerts</b></option>										
+												<option value="1"><b>Send Me Email Alerts</b></option>
+												<option selected="selected" value="0"><b>Don't Send Me Email Alerts</b></option>										
 											<?php endif; ?>
 										</select>
 									</div>
-								<?php endif; ?>							
+								<?php endif; ?>
 							<?php endif; ?>
-							
+
 							<div class="left">
 								<?php if(isSet($editMode)) : ?>
 									<label>Set New Password: </label><input type="password" name="password1" value="">
