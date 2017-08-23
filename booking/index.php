@@ -795,7 +795,7 @@ if (	(isSet($_POST['action']) and $_POST['action'] == 'Cancel') OR
 
 		// Load new template to let admin add a reason for cancelling the meeting
 		if(isSet($cancelledByAdmin) AND $cancelledByAdmin AND !isSet($_SESSION['cancelBookingOriginalValues']['ReasonForCancelling'])){
-			var_dump($_SESSION); // TO-DO: Remove when done testing
+			var_dump($_SESSION); // TO-DO: Remove before uploading
 			include_once 'cancelmessage.html.php';
 			exit();
 		} elseif(!isSet($cancelledByAdmin)){

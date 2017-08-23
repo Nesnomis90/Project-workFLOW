@@ -1407,9 +1407,8 @@ if (isSet($_POST['action']) and $_POST['action'] == 'Confirm Merge'){
 							"\nThis transferred all employees and the company's booking history." .
 							"\nIt was merged by: " . $_SESSION['LoggedInUserName'];
 
-			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
-
 			$pdo = connect_to_db();
+			$pdo->beginTransaction();
 			$sql = "INSERT INTO `logevent` 
 					SET			`actionID` = 	(
 													SELECT 	`actionID` 
@@ -1420,6 +1419,23 @@ if (isSet($_POST['action']) and $_POST['action'] == 'Confirm Merge'){
 			$s = $pdo->prepare($sql);
 			$s->bindValue(':description', $description);
 			$s->execute();
+
+			$description = 	"The company: " . $oldCompanyName . 
+							" no longer exists due to being merged." .
+							"\nIt was removed by: " . $_SESSION['LoggedInUserName'];	
+
+			$sql = "INSERT INTO `logevent` 
+					SET			`actionID` = 	(
+													SELECT 	`actionID` 
+													FROM 	`logaction`
+													WHERE 	`name` = 'Company Removed'
+												),
+								`description` = :description";
+			$s = $pdo->prepare($sql);
+			$s->bindValue(':description', $description);
+			$s->execute();
+
+			$pdo->commit();
 
 			//Close the connection
 			$pdo = null;
@@ -1472,9 +1488,8 @@ if (isSet($_POST['action']) and $_POST['action'] == 'Delete')
 	try
 	{
 		// Save a description with information about the meeting room that was removed
-		$description = "The company: " . $_POST['CompanyName'] . " was removed by: " . $_SESSION['LoggedInUserName'];
-
-		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+		$description = 	"The company: " . $_POST['CompanyName'] . " no longer exists." .
+						"\nIt was removed by: " . $_SESSION['LoggedInUserName'];
 
 		$pdo = connect_to_db();
 		$sql = "INSERT INTO `logevent` 

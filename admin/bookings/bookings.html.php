@@ -109,6 +109,8 @@
 						<input type="hidden" name="id" value="<?php htmlout($booking['id']); ?>">
 						<input type="hidden" name="UserInfo" id="UserInfo"
 						value="<?php htmlout($booking['UserInfo']); ?>">
+						<input type="hidden" name="UserID" 
+						value="<?php htmlout($booking['BookedUserID']); ?>">
 						<input type="hidden" name="MeetingInfo" id="MeetingInfo"
 						value="<?php htmlout($booking['MeetingInfo']); ?>">
 						<input type="hidden" name="BookingStatus" id="BookingStatus"
@@ -188,6 +190,8 @@
 						<input type="hidden" name="id" value="<?php htmlout($booking['id']); ?>">
 						<input type="hidden" name="UserInfo" id="UserInfo"
 						value="<?php htmlout($booking['UserInfo']); ?>">
+						<input type="hidden" name="UserID" 
+						value="<?php htmlout($booking['BookedUserID']); ?>">
 						<input type="hidden" name="MeetingInfo" id="MeetingInfo"
 						value="<?php htmlout($booking['MeetingInfo']); ?>">
 						<input type="hidden" name="BookingStatus" id="BookingStatus"
@@ -254,6 +258,8 @@
 						<input type="hidden" name="id" value="<?php htmlout($booking['id']); ?>">
 						<input type="hidden" name="UserInfo" id="UserInfo"
 						value="<?php htmlout($booking['UserInfo']); ?>">
+						<input type="hidden" name="UserID" 
+						value="<?php htmlout($booking['BookedUserID']); ?>">
 						<input type="hidden" name="MeetingInfo" id="MeetingInfo"
 						value="<?php htmlout($booking['MeetingInfo']); ?>">
 						<input type="hidden" name="BookingStatus" id="BookingStatus"
@@ -331,7 +337,8 @@
 						<input type="hidden" name="id" value="<?php htmlout($booking['id']); ?>">
 						<input type="hidden" name="UserInfo" id="UserInfo"
 						value="<?php htmlout($booking['UserInfo']); ?>">
-						<input type="hidden" name="UserID" value="<?php htmlout($booking['BookedUserID']); ?>">
+						<input type="hidden" name="UserID" 
+						value="<?php htmlout($booking['BookedUserID']); ?>">
 						<input type="hidden" name="MeetingInfo" id="MeetingInfo"
 						value="<?php htmlout($booking['MeetingInfo']); ?>">
 						<input type="hidden" name="BookingStatus" id="BookingStatus"
@@ -405,6 +412,8 @@
 						<input type="hidden" name="id" value="<?php htmlout($booking['id']); ?>">
 						<input type="hidden" name="UserInfo" id="UserInfo"
 						value="<?php htmlout($booking['UserInfo']); ?>">
+						<input type="hidden" name="UserID" 
+						value="<?php htmlout($booking['BookedUserID']); ?>">
 						<input type="hidden" name="MeetingInfo" id="MeetingInfo"
 						value="<?php htmlout($booking['MeetingInfo']); ?>">
 						<input type="hidden" name="BookingStatus" id="BookingStatus"
@@ -476,6 +485,8 @@
 						<input type="hidden" name="id" value="<?php htmlout($booking['id']); ?>">
 						<input type="hidden" name="UserInfo" id="UserInfo"
 						value="<?php htmlout($booking['UserInfo']); ?>">
+						<input type="hidden" name="UserID" 
+						value="<?php htmlout($booking['BookedUserID']); ?>">
 						<input type="hidden" name="MeetingInfo" id="MeetingInfo"
 						value="<?php htmlout($booking['MeetingInfo']); ?>">
 						<input type="hidden" name="BookingStatus" id="BookingStatus"
@@ -487,8 +498,8 @@
 			<?php endforeach; ?>
 		</table>
 		<?php endif; ?>
-		
-	<div class="left"><a href="..">Return to CMS home</a></div>
+
+	<div class="left"><a href="/admin/">Return to CMS home</a></div>
 
 	<?php include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/logout.inc.html.php'; ?>
 	</body>

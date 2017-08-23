@@ -125,8 +125,10 @@ function emailUserOnCancelledBooking(){
 		} elseif(isSet($_POST['sendEmail']) AND $_POST['sendEmail'] == 0) {
 			$_SESSION['BookingUserFeedback'] .= "\nUser does not want to be sent Email.";
 		}
-	} else {
+	} elseif(isSet($_POST['UserID']) AND $_POST['UserID'] == $_SESSION['LoggedInUserID']){
 		$_SESSION['BookingUserFeedback'] .= "\nDid not send an email because you cancelled your own meeting."; // TO-DO: Remove?
+	} else {
+		$_SESSION['BookingUserFeedback'] .= "\nDid not send an email because there was no UserID found."; // TO-DO: FIX-ME: Change
 	}
 }
 
@@ -3546,6 +3548,7 @@ foreach ($result as $row)
 										'email' => $email,
 										'WorksForCompany' => $worksForCompany,
 										'BookingWasCreatedOn' => $displayCreatedDateTime,
+										'BookedUserID' => $row['BookedUserID'],
 										'BookingWasCompletedOn' => $displayCompletedDateTime,
 										'BookingWasCancelledOn' => $displayCancelledDateTime,	
 										'UserInfo' => $userinfo,
@@ -3574,6 +3577,7 @@ foreach ($result as $row)
 											'email' => $email,
 											'WorksForCompany' => $worksForCompany,
 											'BookingWasCreatedOn' => $displayCreatedDateTime,
+											'BookedUserID' => $row['BookedUserID'],
 											'BookingWasCompletedOn' => $displayCompletedDateTime,
 											'BookingWasCancelledOn' => $displayCancelledDateTime,	
 											'UserInfo' => $userinfo,
@@ -3594,6 +3598,7 @@ foreach ($result as $row)
 									'email' => $email,
 									'WorksForCompany' => $worksForCompany,
 									'BookingWasCreatedOn' => $displayCreatedDateTime,
+									'BookedUserID' => $row['BookedUserID'],
 									'BookingWasCompletedOn' => $displayCompletedDateTime,
 									'BookingWasCancelledOn' => $displayCancelledDateTime,	
 									'UserInfo' => $userinfo,
@@ -3622,6 +3627,7 @@ foreach ($result as $row)
 										'email' => $email,
 										'WorksForCompany' => $worksForCompany,
 										'BookingWasCreatedOn' => $displayCreatedDateTime,
+										'BookedUserID' => $row['BookedUserID'],
 										'BookingWasCompletedOn' => $displayCompletedDateTime,
 										'BookingWasCancelledOn' => $displayCancelledDateTime,	
 										'UserInfo' => $userinfo,
@@ -3644,6 +3650,7 @@ foreach ($result as $row)
 										'email' => $email,
 										'WorksForCompany' => $worksForCompany,
 										'BookingWasCreatedOn' => $displayCreatedDateTime,
+										'BookedUserID' => $row['BookedUserID'],
 										'BookingWasCompletedOn' => $displayCompletedDateTime,
 										'BookingWasCancelledOn' => $displayCancelledDateTime,	
 										'UserInfo' => $userinfo,
@@ -3664,6 +3671,7 @@ foreach ($result as $row)
 									'email' => $email,
 									'WorksForCompany' => $worksForCompany,
 									'BookingWasCreatedOn' => $displayCreatedDateTime,
+									'BookedUserID' => $row['BookedUserID'],
 									'BookingWasCompletedOn' => $displayCompletedDateTime,
 									'BookingWasCancelledOn' => $displayCancelledDateTime,	
 									'UserInfo' => $userinfo,
