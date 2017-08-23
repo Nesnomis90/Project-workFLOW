@@ -967,6 +967,7 @@ if(isSet($_SESSION['loggedIn']) AND isSet($_SESSION['LoggedInUserID'])){
 	$originalBookingDescription = $result['BookingDescription'];
 	$originalSendEmail = $result['SendEmail'];
 	$originalSendAdminEmail = $result['SendAdminEmail'];
+	$originalSendOwnerEmail = $result['SendOwnerEmail'];
 
 	$numberOfTotalBookedMeetings = $result['TotalBookedMeetings'];
 	$numberOfActiveBookedMeetings = $result['ActiveBookedMeetings'];
@@ -1008,6 +1009,9 @@ if(isSet($_POST['action']) AND $_POST['action'] == "Show Code"){
 		$_SESSION['normalUserEditInfoArray']['BookingDescription'] = trimExcessWhitespaceButLeaveLinefeed($_POST['bookingDescription']);
 		$_SESSION['normalUserEditInfoArray']['Email'] = $_POST['email'];
 		$_SESSION['normalUserEditInfoArray']['SendEmail'] = $_POST['sendEmail'];
+		if(isSet($_POST['sendOwnerEmail'])){
+			$_SESSION['normalUserEditInfoArray']['SendOwnerEmail'] = $_POST['sendOwnerEmail'];
+		}			
 		if(isSet($_POST['sendAdminEmail'])){
 			$_SESSION['normalUserEditInfoArray']['SendAdminEmail'] = $_POST['sendAdminEmail'];
 		}		
@@ -1148,8 +1152,8 @@ if(isSet($_POST['action']) AND $_POST['action'] == "Confirm Change"){
 		if(databaseContainsEmail($email)){
 			// The email has been used before. So we can't create a new user with this info.
 			$_SESSION['normalUserFeedback'] = "The new email you've set is already connected to an account.";
-			$invalidInput = TRUE;	
-		}				
+			$invalidInput = TRUE;
+		}
 	}
 
 	$changePassword = FALSE;
@@ -1164,16 +1168,16 @@ if(isSet($_POST['action']) AND $_POST['action'] == "Confirm Change"){
 	}
 	$minimumPasswordLength = MINIMUM_PASSWORD_LENGTH;
 	if(($password1 != '' OR $password2 != '') AND !$invalidInput){
-			
+
 		if($password1 == $password2){
 			// Both passwords match, hopefully that means it's the correct password the user wanted to submit
 
 				if(strlen(utf8_decode($password1)) < $minimumPasswordLength){
 					$_SESSION['normalUserFeedback'] = "The submitted password is not long enough. You are required to make it at least $minimumPasswordLength characters long.";
-					$invalidInput = TRUE;			
+					$invalidInput = TRUE;
 				} else {
 					// Both passwords were the same. They were not empty and they were longer than the minimum requirement
-					$changePassword = TRUE;			
+					$changePassword = TRUE;
 				}
 		} else {
 			$_SESSION['normalUserFeedback'] = "Your new Password and Repeat Password did not match.";
@@ -1191,6 +1195,9 @@ if(isSet($_POST['action']) AND $_POST['action'] == "Confirm Change"){
 		$_SESSION['normalUserEditInfoArray']['BookingDescription'] = $validatedBookingDescription;
 		$_SESSION['normalUserEditInfoArray']['Email'] = $email;
 		$_SESSION['normalUserEditInfoArray']['SendEmail'] = $_POST['sendEmail'];
+		if(isSet($_POST['sendOwnerEmail'])){
+			$_SESSION['normalUserEditInfoArray']['SendOwnerEmail'] = $_POST['sendOwnerEmail'];
+		}
 		if(isSet($_POST['sendAdminEmail'])){
 			$_SESSION['normalUserEditInfoArray']['SendAdminEmail'] = $_POST['sendAdminEmail'];
 		}
@@ -1216,7 +1223,7 @@ if(isSet($_POST['action']) AND $_POST['action'] == "Confirm Change"){
 				try
 				{
 					include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
-					
+
 					$pdo = connect_to_db();
 					$sql = 'UPDATE 	`user` 
 							SET		`firstName` = :firstname,
@@ -1226,12 +1233,13 @@ if(isSet($_POST['action']) AND $_POST['action'] == "Confirm Change"){
 									`displayName` = :displayname,
 									`bookingDescription` = :bookingdescription,
 									`sendEmail` = :sendEmail,
+									`sendOwnerEmail` = :sendOwnerEmail,
 									`sendAdminEmail` = :sendAdminEmail,
 									`bookingCode` = :bookingCode,
 									`lastCodeUpdate` = :LastCodeUpdate,
 									`lastActivity` = CURRENT_TIMESTAMP
 							WHERE 	`userID` = :userID';
-							
+
 					$s = $pdo->prepare($sql);
 					$s->bindValue(':userID', $_SESSION['LoggedInUserID']);
 					$s->bindValue(':firstname', $new['FirstName']);
@@ -1241,11 +1249,12 @@ if(isSet($_POST['action']) AND $_POST['action'] == "Confirm Change"){
 					$s->bindValue(':displayname', $new['DisplayName']);
 					$s->bindValue(':bookingdescription', $new['BookingDescription']);
 					$s->bindValue(':sendEmail', $new['SendEmail']);
+					$s->bindValue(':sendOwnerEmail', $new['SendOwnerEmail']);
 					$s->bindValue(':sendAdminEmail', $new['SendAdminEmail']);
 					$s->bindValue(':bookingCode', $new['BookingCode']);
 					$s->bindValue(':LastCodeUpdate', $new['LastCodeUpdate']);
 					$s->execute();
-						
+
 					// Close the connection
 					$pdo = Null;
 				}
@@ -1255,7 +1264,7 @@ if(isSet($_POST['action']) AND $_POST['action'] == "Confirm Change"){
 					include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
 					$pdo = null;
 					exit();
-				}				
+				}
 			} else {
 				$_SESSION['normalUserFeedback'] = "No changes were made.";
 			}
@@ -1289,6 +1298,7 @@ if(isSet($_SESSION['normalUserEditMode'])){
 	$displayName = $edit['DisplayName'];
 	$bookingDescription = $edit['BookingDescription'];
 	$sendEmail = $edit['SendEmail'];
+	$sendOwnerEmail = $edit['SendOwnerEmail'];
 	$sendAdminEmail = $edit['SendAdminEmail'];
 }
 
