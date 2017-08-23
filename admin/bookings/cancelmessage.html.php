@@ -1,4 +1,4 @@
-<!-- This is the HTML form used for ADMINS in BOOKING to add a feedback message to users when cancelling their bookings -->
+<!-- This is the HTML form used for ADMINS in ADMIN/BOOKINGS to add a feedback message to users when cancelling their bookings -->
 <?php include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/helpers.inc.php'; ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -18,9 +18,9 @@
 
 		<fieldset><legend>Add a reason for cancelling:</legend>
 			<div class="left">
-				<?php if(isSet($_SESSION['confirmReasonError'])) : ?>
-					<span style="white-space: pre-wrap;" class="warning"><?php htmlout($_SESSION['confirmReasonError']); ?></span>
-					<?php unset($_SESSION['confirmReasonError']); ?>
+				<?php if(isSet($_SESSION['confirmAdminReasonError'])) : ?>
+					<span style="white-space: pre-wrap;" class="warning"><?php htmlout($_SESSION['confirmAdminReasonError']); ?></span>
+					<?php unset($_SESSION['confirmAdminReasonError']); ?>
 				<?php endif; ?>
 			</div>
 

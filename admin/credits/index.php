@@ -14,7 +14,6 @@ if (!isUserAdmin()){
 function clearAddCreditsSessions(){
 	unset($_SESSION['AddCreditsDescription']);
 	unset($_SESSION['AddCreditsName']);
-	unset($_SESSION['LastCreditsID']);
 }
 
 // Function to clear sessions used to remember user inputs on refreshing the edit Credits form
@@ -365,7 +364,7 @@ if (isSet($_POST['action']) AND $_POST['action'] == 'Confirm Credits')
 
 	// Add the Credits to the database
 	try
-	{		
+	{
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 		$pdo = connect_to_db();
 		$sql = 'INSERT INTO `credits` 
@@ -381,10 +380,7 @@ if (isSet($_POST['action']) AND $_POST['action'] == 'Confirm Credits')
 		$s->bindValue(':CreditsMonthlyPrice', $validatedCreditsMonthlyPrice);
 		$s->bindValue(':CreditsHourPrice', $validatedCreditsHourPrice);
 		$s->execute();
-	
-		unset($_SESSION['LastCreditsID']);
-		$_SESSION['LastCreditsID'] = $pdo->lastInsertId();	
-	
+
 		//Close the connection
 		$pdo = null;
 	}
@@ -395,9 +391,9 @@ if (isSet($_POST['action']) AND $_POST['action'] == 'Confirm Credits')
 		$pdo = null;
 		exit();
 	}
-	
+
 	$_SESSION['CreditsUserFeedback'] = "Successfully added the Credits: " . $validatedCreditsName;
-	
+
 		// Add a log event that we added a Credits
 	try
 	{
@@ -412,29 +408,22 @@ if (isSet($_POST['action']) AND $_POST['action'] == 'Confirm Credits')
 		} else {
 			$creditsGiven = 'None';
 		}
-		
+
 		// Format what over fee rate we're using (hourly or minute by minute)
 		if($validatedCreditsHourPrice != NULL) {
 			$creditsOverCreditsFee = convertToCurrency($validatedCreditsHourPrice) . '/hour';
 		} else {
 			$creditsOverCreditsFee = "Error, not set.";
 		}
-		
+
 		$creditsMonthlyPrice = convertToCurrency($validatedCreditsMonthlyPrice);
-		
+
 	// Save a description with information about the Credits that was added
 		$description = "New Credits: " . $validatedCreditsName . "\nwith description: " . 
 		$validatedCreditsDescription . ",\nand monthly credits given: " . $creditsGiven . 
 		",\nand monthly subscription price: " . $creditsMonthlyPrice . 
 		",\nand over credits fee: " . $creditsOverCreditsFee .
 		"\nwas added by: " . $_SESSION['LoggedInUserName'];
-		
-		if(isSet($_SESSION['LastCreditsID'])){
-			$lastCreditsID = $_SESSION['LastCreditsID'];
-			unset($_SESSION['LastCreditsID']);
-		}
-		
-		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 
 		$pdo = connect_to_db();
 		$sql = "INSERT INTO `logevent` 
@@ -443,11 +432,9 @@ if (isSet($_POST['action']) AND $_POST['action'] == 'Confirm Credits')
 												FROM 	`logaction`
 												WHERE 	`name` = 'Credits Added'
 											),
-							`CreditsID` = :TheCreditsID,
 							`description` = :description";
 		$s = $pdo->prepare($sql);
 		$s->bindValue(':description', $description);
-		$s->bindValue(':TheCreditsID', $lastCreditsID);
 		$s->execute();
 		
 		//Close the connection

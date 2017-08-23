@@ -73,7 +73,7 @@ function updateBookingCodeGuesses(){
 		$newArray = array();
 		for($i=0; $i < sizeOf($_SESSION['bookingCodeGuesses']); $i++){
 			$startDateTime = $_SESSION['bookingCodeGuesses'][$i];
-			
+
 			$timeDifference = convertTwoDateTimesToTimeDifferenceInMinutes($startDateTime, $dateTimeNow);		
 			if($timeDifference < BOOKING_CODE_WRONG_GUESS_TIMEOUT_IN_MINUTES){
 				$newArray[] = $_SESSION['bookingCodeGuesses'][$i];
@@ -282,8 +282,9 @@ function emailUserOnCancelledBooking(){
 			$bookingCreatorMeetingInfo = $_SESSION['cancelBookingOriginalValues']['MeetingInfo'];
 			$cancelledBy = $_SESSION['cancelBookingOriginalValues']['CancelledBy'];
 
-			$reasonForCancelling = $_SESSION['cancelBookingOriginalValues']['ReasonForCancelling'];
-			if(!isSet($reasonForCancelling) OR isSet($reasonForCancelling) AND empty($reasonForCancelling)){
+			if(isSet($_SESSION['cancelBookingOriginalValues']['ReasonForCancelling']) AND !empty($_SESSION['cancelBookingOriginalValues']['ReasonForCancelling'])){
+				$reasonForCancelling = $_SESSION['cancelBookingOriginalValues']['ReasonForCancelling'];
+			} else {
 				$reasonForCancelling = "No reason given.";
 			}
 
@@ -575,7 +576,7 @@ if (isSet($_POST['action']) and $_POST['action'] == 'Refresh'){
 		$location = "http://$_SERVER[HTTP_HOST]/booking/?meetingroom=" . $TheMeetingRoomID;
 		if(isSet($_GET['name'])){
 			$name = $_GET['name'];
-			$location .= "&name=" . $name;	
+			$location .= "&name=" . $name;
 		}
 	} else {
 		$location = ".";
@@ -583,6 +584,28 @@ if (isSet($_POST['action']) and $_POST['action'] == 'Refresh'){
 
 	header("Location: $location");
 	exit();
+}
+
+// If admin does not want to cancel the meeting anyway.
+if(isSet($_POST['action']) AND $_POST['action'] == "Abort Cancel"){
+	
+	clearChangeBookingSessions();
+
+	$_SESSION['normalBookingFeedback'] = "You did not cancel the meeting.";
+
+	if(isSet($_GET['meetingroom'])){
+		$TheMeetingRoomID = $_GET['meetingroom'];
+		$location = "http://$_SERVER[HTTP_HOST]/booking/?meetingroom=" . $TheMeetingRoomID;
+		if(isSet($_GET['name'])){
+			$name = $_GET['name'];
+			$location .= "&name=" . $name;
+		}
+	} else {
+		$location = ".";
+	}
+
+	header("Location: $location");
+	exit();	
 }
 
 // If admin has finished adding a reason for cancelling a meeting.
@@ -637,10 +660,11 @@ if (	(isSet($_POST['action']) and $_POST['action'] == 'Cancel') OR
 		$_SESSION['cancelBookingOriginalValues']['BookingID'] = $_POST['id'];
 		$_SESSION['cancelBookingOriginalValues']['BookingStatus'] = $_POST['BookingStatus'];
 		$_SESSION['cancelBookingOriginalValues']['MeetingInfo'] = $_POST['MeetingInfo'];
-		if(isSet($_POST['sendEmail'])){
+
+		if(isSet($_POST['sendEmail']) AND !empty($_POST['sendEmail'])){
 			$_SESSION['cancelBookingOriginalValues']['SendEmail'] = $_POST['sendEmail'];
 		}
-		if(isSet($_POST['Email'])){
+		if(isSet($_POST['Email']) AND !empty($_POST['Email'])){
 			$_SESSION['cancelBookingOriginalValues']['UserEmail'] = $_POST['Email'];
 		}
 	}
@@ -790,12 +814,11 @@ if (	(isSet($_POST['action']) and $_POST['action'] == 'Cancel') OR
 	}
 
 	// Only cancel if booking is currently active
-	if(	isSet($bookingStatus) AND  
-		($bookingStatus == 'Active' OR $bookingStatus == 'Active Today')){
+	if(isSet($bookingStatus) AND ($bookingStatus == 'Active' OR $bookingStatus == 'Active Today')){
 
 		// Load new template to let admin add a reason for cancelling the meeting
 		if(isSet($cancelledByAdmin) AND $cancelledByAdmin AND !isSet($_SESSION['cancelBookingOriginalValues']['ReasonForCancelling'])){
-			var_dump($_SESSION); // TO-DO: Remove when done testing
+			var_dump($_SESSION); // TO-DO: Remove before uploading
 			include_once 'cancelmessage.html.php';
 			exit();
 		} elseif(!isSet($cancelledByAdmin)){
@@ -2907,9 +2930,6 @@ if (isSet($_POST['add']) AND $_POST['add'] == "Add Booking")
 		$s->bindValue(':cancellationCode', $cancellationCode);
 		$s->execute();
 
-		unset($_SESSION['lastBookingID']);
-		$_SESSION['lastBookingID'] = $pdo->lastInsertId();
-
 		//Close the connection
 		$pdo = null;
 	}
@@ -2987,6 +3007,7 @@ if (isSet($_POST['add']) AND $_POST['add'] == "Add Booking")
 
 		// Check if the booking that was made was for the current period.
 		$bookingWentOverCredits = FALSE;
+		$firstTimeOverCredit = FALSE;
 		if($dateOnlyEndDate < $companyPeriodEndDate){ // TO-DO: <= ?
 			if($companyCreditsPotentialMinimumRemainingInMinutes < 0){
 				// Company was already over given credits
@@ -2996,15 +3017,11 @@ if (isSet($_POST['add']) AND $_POST['add'] == "Add Booking")
 			} elseif($timeBookedInMinutes > $companyCreditsPotentialMinimumRemainingInMinutes){
 				// This booking, if completed, will put the company over their given credits
 				$bookingWentOverCredits = TRUE;
+				$firstTimeOverCredit = TRUE;
 				$minutesOverCredits = $timeBookedInMinutes - $companyCreditsPotentialMinimumRemainingInMinutes;
 				$timeOverCredits = convertMinutesToHoursAndMinutes($minutesOverCredits);
 			}
 			$logEventDescription .= "\nThis booking, if completed, will put the company at $timeOverCredits over the Credits given this period.";
-		}
-
-		if(isSet($_SESSION['lastBookingID'])){
-			$lastBookingID = $_SESSION['lastBookingID'];
-			unset($_SESSION['lastBookingID']);				
 		}
 
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
@@ -3016,15 +3033,9 @@ if (isSet($_POST['add']) AND $_POST['add'] == "Add Booking")
 												FROM 	`logaction`
 												WHERE 	`name` = 'Booking Created'
 											),
-							`userID` = :UserID,
-							`meetingRoomID` = :MeetingRoomID,
-							`bookingID` = :BookingID,
 							`description` = :description";
 		$s = $pdo->prepare($sql);
 		$s->bindValue(':description', $logEventDescription);
-		$s->bindValue(':BookingID', $lastBookingID);
-		$s->bindValue(':MeetingRoomID', $meetingRoomID);
-		$s->bindValue(':UserID', $_SESSION["AddCreateBookingInfoArray"]["TheUserID"]);
 		$s->execute();
 
 		//Close the connection
@@ -3073,7 +3084,6 @@ if (isSet($_POST['add']) AND $_POST['add'] == "Add Booking")
 
 	// Send email to alert company owner(s) that a booking was made that is over credits.
 		// Check if any owners want to receive an email
-	// TO-DO: Add SendOwnerEmail?
 	if($bookingWentOverCredits){
 		try
 		{
@@ -3081,8 +3091,9 @@ if (isSet($_POST['add']) AND $_POST['add'] == "Add Booking")
 
 			$pdo = connect_to_db();
 
-			$sql = 'SELECT		u.`email`		AS Email,
-								u.`sendEmail`	AS SendEmail
+			$sql = 'SELECT		u.`email`					AS Email,
+								u.`sendOwnerEmail`			AS SendOwnerEmail,
+								e.`sendEmailOnceOrAlways`	AS SendEmailOnceOrAlways
 					FROM 		`user` u
 					INNER JOIN	`employee` e
 					ON 			e.`UserID` = u.`UserID`
@@ -3102,8 +3113,13 @@ if (isSet($_POST['add']) AND $_POST['add'] == "Add Booking")
 
 			if(isSet($result) AND !empty($result)){
 				foreach($result AS $row){
-					if($row['SendEmail'] == 1){ // TO-DO: add AND $row['SendOwnerEmail'] == 1?
-						$companyOwnerEmails[] = $row['Email'];
+					// Check if user wants to receive owner emails
+					if($row['SendOwnerEmail'] == 1){ 
+						// Check if user wants to receive all emails or just the first time booking goes over credit per period
+							// sendEmailOnceOrAlways: 1 = always, sendEmailOnceOrAlways: 0 = once.
+						if(($row['SendEmailOnceOrAlways'] == 1 OR ($row['SendEmailOnceOrAlways'] == 0 AND $firstTimeOverCredit)){ 
+							$companyOwnerEmails[] = $row['Email'];
+						}
 					}
 				}
 			}
@@ -3134,7 +3150,8 @@ if (isSet($_POST['add']) AND $_POST['add'] == "Add Booking")
 			"End Time: " . $displayValidatedEndDate . ".\n\n" .
 			"If you wish to cancel this meeting, or just end it early, you can easily do so by using the link given below.\n" .
 			"Click this link to cancel the booked meeting: " . $_SERVER['HTTP_HOST'] . 
-			"/booking/?cancellationcode=" . $cancellationCode;
+			"/booking/?cancellationcode=" . $cancellationCode . "\n\n" . 
+			"If you do not wish to receive these emails, you can disable them in 'My Account' under 'Company Owner Alert Status'.";
 
 			$email = $companyOwnerEmails;
 
@@ -4415,15 +4432,13 @@ if(isSet($_GET['cancellationcode']) OR isSet($_SESSION['refreshWithCancellationC
 			$pdo = connect_to_db();
 			$sql = "INSERT INTO `logevent`
 					SET			`actionID` = 	(
-													SELECT `actionID` 
-													FROM `logaction`
-													WHERE `name` = 'Booking Cancelled'
+													SELECT 	`actionID` 
+													FROM 	`logaction`
+													WHERE 	`name` = 'Booking Cancelled'
 												),
-								`description` = :description,
-								`bookingID` = :bookingID";
+								`description` = :description";
 			$s = $pdo->prepare($sql);
 			$s->bindValue(':description', $logEventDescription);
-			$s->bindValue(':bookingID', $bookingID);
 			$s->execute();
 			
 			//Close the connection

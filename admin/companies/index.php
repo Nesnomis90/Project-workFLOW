@@ -1322,7 +1322,7 @@ if (isSet($_POST['action']) and $_POST['action'] == 'Confirm Merge'){
 	// Password is correct. Let's transfer all employees and booking history to the new company
 	if(	isSet($_SESSION['MergeCompanySelectedCompanyID']) AND !empty($_SESSION['MergeCompanySelectedCompanyID']) AND
 		isSet($_SESSION['MergeCompanySelectedCompanyID2']) AND !empty($_SESSION['MergeCompanySelectedCompanyID2']) AND
-		$_SESSION['MergeCompanySelectedCompanyID' != $_SESSION['MergeCompanySelectedCompanyID2'])
+		$_SESSION['MergeCompanySelectedCompanyID'] != $_SESSION['MergeCompanySelectedCompanyID2'])
 	{
 		// We have two company IDs and can start the merging process
 		try
@@ -1397,6 +1397,56 @@ if (isSet($_POST['action']) and $_POST['action'] == 'Confirm Merge'){
 		}
 		$_SESSION['CompanyUserFeedback'] = 	"Successfully merged the company: " . $oldCompanyName . 
 											"\nInto the company: " . $newCompanyName;
+
+		// Add a log event that the companies merged
+		try
+		{
+			// Save a description with information about the meeting room that was removed
+			$description = 	"The company: " . $oldCompanyName . 
+							"\nHas been merged into the company: " . $newCompanyName .
+							"\nThis transferred all employees and the company's booking history." .
+							"\nIt was merged by: " . $_SESSION['LoggedInUserName'];
+
+			$pdo = connect_to_db();
+			$pdo->beginTransaction();
+			$sql = "INSERT INTO `logevent` 
+					SET			`actionID` = 	(
+													SELECT 	`actionID` 
+													FROM 	`logaction`
+													WHERE 	`name` = 'Company Merged'
+												),
+								`description` = :description";
+			$s = $pdo->prepare($sql);
+			$s->bindValue(':description', $description);
+			$s->execute();
+
+			$description = 	"The company: " . $oldCompanyName . 
+							" no longer exists due to being merged." .
+							"\nIt was removed by: " . $_SESSION['LoggedInUserName'];	
+
+			$sql = "INSERT INTO `logevent` 
+					SET			`actionID` = 	(
+													SELECT 	`actionID` 
+													FROM 	`logaction`
+													WHERE 	`name` = 'Company Removed'
+												),
+								`description` = :description";
+			$s = $pdo->prepare($sql);
+			$s->bindValue(':description', $description);
+			$s->execute();
+
+			$pdo->commit();
+
+			//Close the connection
+			$pdo = null;
+		}
+		catch(PDOException $e)
+		{
+			$error = 'Error adding log event to database: ' . $e->getMessage();
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+			$pdo = null;
+			exit();
+		}
 	} else {
 		$_SESSION['CompanyUserFeedback'] = "Failed to merge the two selected companies.";
 	}
@@ -1438,9 +1488,8 @@ if (isSet($_POST['action']) and $_POST['action'] == 'Delete')
 	try
 	{
 		// Save a description with information about the meeting room that was removed
-		$description = "The company: " . $_POST['CompanyName'] . " was removed by: " . $_SESSION['LoggedInUserName'];
-
-		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+		$description = 	"The company: " . $_POST['CompanyName'] . " no longer exists." .
+						"\nIt was removed by: " . $_SESSION['LoggedInUserName'];
 
 		$pdo = connect_to_db();
 		$sql = "INSERT INTO `logevent` 
@@ -1623,9 +1672,7 @@ if (isSet($_POST['action']) AND $_POST['action'] == 'Add Company')
 		$s->bindValue(':CompanyName', $validatedCompanyName);
 		$s->execute();
 
-		unset($_SESSION['LastCompanyID']);
-		$_SESSION['LastCompanyID'] = $pdo->lastInsertId();
-
+		$companyID = $pdo->lastInsertId();
 	}
 	catch (PDOException $e)
 	{
@@ -1648,7 +1695,7 @@ if (isSet($_POST['action']) AND $_POST['action'] == 'Add Company')
 											WHERE	`name` = 'Default'
 											)";
 		$s = $pdo->prepare($sql);
-		$s->bindValue(':CompanyID', $_SESSION['LastCompanyID']);
+		$s->bindValue(':CompanyID', $companyID);
 		$s->execute();
 	}
 	catch (PDOException $e)
@@ -1662,10 +1709,6 @@ if (isSet($_POST['action']) AND $_POST['action'] == 'Add Company')
 		// Add a log event that a company was added
 	try
 	{
-		if(isSet($_SESSION['LastCompanyID'])){
-			$LastCompanyID = $_SESSION['LastCompanyID'];
-			unset($_SESSION['LastCompanyID']);
-		}
 		// Save a description with information about the meeting room that was added
 		$logEventdescription = "The company: " . $validatedCompanyName . " was added by: " . $_SESSION['LoggedInUserName'];
 
@@ -1675,11 +1718,9 @@ if (isSet($_POST['action']) AND $_POST['action'] == 'Add Company')
 												FROM 	`logaction`
 												WHERE 	`name` = 'Company Created'
 											),
-							`companyID` = :TheCompanyID,
 							`description` = :description";
 		$s = $pdo->prepare($sql);
 		$s->bindValue(':description', $logEventdescription);
-		$s->bindValue(':TheCompanyID', $LastCompanyID);
 		$s->execute();
 
 		//Close the connection

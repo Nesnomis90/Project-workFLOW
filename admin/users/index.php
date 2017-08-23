@@ -518,10 +518,7 @@ if (isSet($_GET['addform']) AND isSet($_POST['action']) AND $_POST['action'] == 
 		$s->bindValue(':activationcode', $activationcode);
 		$s->bindValue(':email', $email);
 		$s->execute();
-		
-		unset($_SESSION['lastUserID']);
-		$_SESSION['lastUserID'] = $pdo->lastInsertId();
-		
+
 		//Close the connection
 		$pdo = null;
 	}
@@ -548,13 +545,7 @@ if (isSet($_GET['addform']) AND isSet($_POST['action']) AND $_POST['action'] == 
 		} else {
 			$description = "An account was created for " . $userinfo;
 		}
-		
-		if(isSet($_SESSION['lastUserID'])){
-			$lastUserID = $_SESSION['lastUserID'];
-			unset($_SESSION['lastUserID']);				
-		}
 
-		
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 		
 		$pdo = connect_to_db();
@@ -564,11 +555,9 @@ if (isSet($_GET['addform']) AND isSet($_POST['action']) AND $_POST['action'] == 
 												FROM 	`logaction`
 												WHERE 	`name` = 'Account Created'
 											),
-							`UserID` = :UserID,
 							`description` = :description";
 		$s = $pdo->prepare($sql);
 		$s->bindValue(':description', $description);
-		$s->bindValue(':UserID', $lastUserID);
 		$s->execute();
 		
 		//Close the connection

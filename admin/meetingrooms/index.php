@@ -241,9 +241,9 @@ if (isSet($_POST['action']) and $_POST['action'] == 'Delete')
 		$pdo = connect_to_db();
 		$sql = "INSERT INTO `logevent` 
 				SET			`actionID` = 	(
-												SELECT `actionID` 
-												FROM `logaction`
-												WHERE `name` = 'Meeting Room Removed'
+												SELECT 	`actionID` 
+												FROM 	`logaction`
+												WHERE 	`name` = 'Meeting Room Removed'
 											),
 							`description` = :description";
 		$s = $pdo->prepare($sql);
@@ -352,11 +352,7 @@ if ((isSet($_POST['action']) AND $_POST['action'] == "Add Room"))
 		$s->bindValue(':location', $validatedMeetingRoomLocation);
 		$s->bindValue(':idCode', $idCode);
 		$s->execute();
-		
-		session_start();
-		unset($_SESSION['LastMeetingRoomID']);
-		$_SESSION['LastMeetingRoomID'] = $pdo->lastInsertId();	
-		
+
 		//Close the connection
 		$pdo = null;
 	}
@@ -379,28 +375,21 @@ if ((isSet($_POST['action']) AND $_POST['action'] == "Add Room"))
 		$logEventDescription = "New meeting room: " . $validatedMeetingRoomName . ",\nwith capacity: " . 
 		$validatedMeetingRoomCapacity . "\nand description: " . $validatedMeetingRoomDescription . 
 		"\nwas added by: " . $_SESSION['LoggedInUserName'];
-		
-		if(isSet($_SESSION['LastMeetingRoomID'])){
-			$lastMeetingRoomID = $_SESSION['LastMeetingRoomID'];
-			unset($_SESSION['LastMeetingRoomID']);
-		}
-		
+
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 		
 		$pdo = connect_to_db();
 		$sql = "INSERT INTO `logevent` 
 				SET			`actionID` = 	(
-												SELECT `actionID` 
-												FROM `logaction`
-												WHERE `name` = 'Meeting Room Added'
+												SELECT 	`actionID` 
+												FROM 	`logaction`
+												WHERE 	`name` = 'Meeting Room Added'
 											),
-							`meetingRoomID` = :TheMeetingRoomID,
 							`description` = :description";
 		$s = $pdo->prepare($sql);
 		$s->bindValue(':description', $logEventDescription);
-		$s->bindValue(':TheMeetingRoomID', $lastMeetingRoomID);
 		$s->execute();
-		
+
 		//Close the connection
 		$pdo = null;		
 	}

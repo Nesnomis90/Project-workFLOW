@@ -83,16 +83,12 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Remove'){
 		$pdo = connect_to_db();
 		$sql = "INSERT INTO `logevent` 
 				SET			`actionID` = 	(
-												SELECT `actionID` 
-												FROM `logaction`
-												WHERE `name` = 'Room Equipment Removed'
+												SELECT 	`actionID` 
+												FROM 	`logaction`
+												WHERE 	`name` = 'Room Equipment Removed'
 											),
-							`meetingRoomID` = :MeetingRoomID,
-							`equipmentID` = :EquipmentID,
 							`description` = :description";
 		$s = $pdo->prepare($sql);
-		$s->bindValue(':MeetingRoomID', $_POST['MeetingRoomID']);
-		$s->bindValue(':EquipmentID', $_POST['EquipmentID']);	
 		$s->bindValue(':description', $description);
 		$s->execute();
 		
@@ -573,16 +569,12 @@ if (isSet($_POST['action']) AND $_POST['action'] == 'Confirm Room Equipment')
 		$pdo = connect_to_db();
 		$sql = "INSERT INTO `logevent` 
 				SET			`actionID` = 	(
-												SELECT `actionID` 
-												FROM `logaction`
-												WHERE `name` = 'Room Equipment Added'
+												SELECT 	`actionID` 
+												FROM 	`logaction`
+												WHERE 	`name` = 'Room Equipment Added'
 											),
-							`meetingRoomID` = :MeetingRoomID,
-							`equipmentID` = :EquipmentID,
 							`description` = :description";
-		$s = $pdo->prepare($sql);
-		$s->bindValue(':MeetingRoomID', $MeetingRoomID);
-		$s->bindValue(':EquipmentID', $_POST['EquipmentID']);	
+		$s = $pdo->prepare($sql);	
 		$s->bindValue(':description', $logEventDescription);
 		$s->execute();
 		

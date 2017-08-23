@@ -85,9 +85,9 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Remove'){
 		$logEventDescription = 'The user: ' . $_POST['UserName'] . 
 		' was removed from the company: ' . $_POST['CompanyName'] . 
 		".\nRemoved by: " . $_SESSION['LoggedInUserName'];
-		
+
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
-		
+
 		$pdo = connect_to_db();
 		$sql = "INSERT INTO `logevent` 
 				SET			`actionID` = 	(
@@ -95,19 +95,13 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Remove'){
 												FROM 	`logaction`
 												WHERE 	`name` = 'Employee Removed'
 											),
-							`companyID` = :CompanyID,
-							`userID` = :UserID,
-							`positionID` = :PositionID,
 							`description` = :description";
-		$s = $pdo->prepare($sql);
-		$s->bindValue(':CompanyID', $_POST['CompanyID']);
-		$s->bindValue(':UserID', $_POST['UserID']);
-		$s->bindValue(':PositionID', $_POST['PositionID']);		
+		$s = $pdo->prepare($sql);	
 		$s->bindValue(':description', $logEventDescription);
 		$s->execute();
-		
+
 		//Close the connection
-		$pdo = null;		
+		$pdo = null;
 	}
 	catch(PDOException $e)
 	{
@@ -277,7 +271,6 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Add Employee') OR
 									`name`		AS CompanyName
 							FROM 	`company`
 							WHERE 	`companyID` = :CompanyID
-							AND		`isActive` = 1
 							LIMIT 	1';
 					$s = $pdo->prepare($sql);
 					$s->bindValue(':CompanyID', $_GET['Company']);
@@ -597,9 +590,9 @@ if (isSet($_POST['action']) AND $_POST['action'] == 'Confirm Employee')
 		// Save a description with information about the employee that was added
 		// to the company.
 		$logEventDescription = 'The user: ' . $userinfo . 
-		' was added to the company: ' . $companyinfo . 
-		' and was given the position: ' . $positioninfo . ".\nAdded by : " .
-		$_SESSION['LoggedInUserName'];
+		'\nWas added to the company: ' . $companyinfo . 
+		'\nAnd was given the position: ' . $positioninfo . 
+		".\nAdded by : " . $_SESSION['LoggedInUserName'];
 		
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 		
@@ -610,14 +603,8 @@ if (isSet($_POST['action']) AND $_POST['action'] == 'Confirm Employee')
 												FROM 	`logaction`
 												WHERE 	`name` = 'Employee Added'
 											),
-							`companyID` = :CompanyID,
-							`userID` = :UserID,
-							`positionID` = :PositionID,
 							`description` = :description";
-		$s = $pdo->prepare($sql);
-		$s->bindValue(':CompanyID', $CompanyID);
-		$s->bindValue(':UserID', $_POST['UserID']);
-		$s->bindValue(':PositionID', $_POST['PositionID']);		
+		$s = $pdo->prepare($sql);	
 		$s->bindValue(':description', $logEventDescription);
 		$s->execute();
 		
@@ -979,6 +966,40 @@ if (isSet($_POST['action']) and $_POST['action'] == 'Confirm Transfer'){
 		$_SESSION['EmployeeAdminFeedback'] = 	"Successfully transferred the employee: " . $employeeName . 
 												"\nFrom the company: " . $oldCompanyName .
 												"\nTo the company: " . $newCompanyName;
+
+		// Add log event that an employee was transferred
+		try
+		{
+			// Save a description with information about the employee that was removed
+			// from the company.
+			$logEventDescription = "The user: " . $employeeName . 
+			"\nWas transferred as an employee from the company: " . $oldCompanyName . 
+			"\nTo the company: " . $newCompanyName . 
+			".\nThis also transferred all the user's booking history, for that company, to the new company" . 
+			".\nTransferred by: " . $_SESSION['LoggedInUserName'];
+
+			$pdo = connect_to_db();
+			$sql = "INSERT INTO `logevent` 
+					SET			`actionID` = 	(
+													SELECT 	`actionID` 
+													FROM 	`logaction`
+													WHERE 	`name` = 'Employee Transferred'
+												),
+								`description` = :description";
+			$s = $pdo->prepare($sql);		
+			$s->bindValue(':description', $logEventDescription);
+			$s->execute();
+
+			//Close the connection
+			$pdo = null;
+		}
+		catch(PDOException $e)
+		{
+			$error = 'Error adding log event to database: ' . $e->getMessage();
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+			$pdo = null;
+			exit();
+		}
 	} else {
 		$_SESSION['EmployeeAdminFeedback'] = "Failed to transfer the employee.";
 	}

@@ -618,9 +618,7 @@ if(isSet($_POST['add']) AND $_POST['add'] == "Create Event"){
 			$s->bindValue(':LastDate', $lastDate);
 			$s->bindValue(':DaysSelected',$daysSelectedWithLineFeed);	
 			$s->execute();
-			
-			$EventID = $pdo->lastInsertID();
-			
+
 			// Insert new events into database
 			$sql = "INSERT INTO `roomevent`
 					SET			`EventID` = :EventID,
@@ -713,11 +711,9 @@ if(isSet($_POST['add']) AND $_POST['add'] == "Create Event"){
 													FROM 	`logaction`
 													WHERE 	`name` = 'Event Created'
 												),
-								`EventID` = :EventID,
 								`description` = :description";
 			$s = $pdo->prepare($sql);
 			$s->bindValue(':description', $description);
-			$s->bindValue(':EventID', $EventID);
 			$s->execute();
 
 			//Close the connection

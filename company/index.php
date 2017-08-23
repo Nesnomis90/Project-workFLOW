@@ -146,10 +146,6 @@ if(isSet($_POST['action']) AND $_POST['action'] == "Confirm"){
 			$s = $pdo->prepare($sql);
 			$s->bindValue(':CompanyName', $validatedCompanyName);
 			$s->execute();
-			
-			unset($_SESSION['LastCompanyID']);
-			$_SESSION['LastCompanyID'] = $pdo->lastInsertId();
-
 		}
 		catch (PDOException $e)
 		{
@@ -220,11 +216,9 @@ if(isSet($_POST['action']) AND $_POST['action'] == "Confirm"){
 													FROM 	`logaction`
 													WHERE 	`name` = 'Company Created'
 												),
-								`companyID` = :TheCompanyID,
 								`description` = :description";
 			$s = $pdo->prepare($sql);
 			$s->bindValue(':description', $logEventdescription);
-			$s->bindValue(':TheCompanyID', $_SESSION['LastCompanyID']);
 			$s->execute();
 		}
 		catch(PDOException $e)
@@ -249,17 +243,8 @@ if(isSet($_POST['action']) AND $_POST['action'] == "Confirm"){
 													FROM 	`logaction`
 													WHERE 	`name` = 'Employee Added'
 												),
-								`positionID` = (
-													SELECT 	`PositionID`
-													FROM	`companyposition`
-													WHERE	`name` = 'Owner'
-												),
-								`companyID` = :CompanyID,
-								`userID` = :UserID,
 								`description` = :description";
 			$s = $pdo->prepare($sql);
-			$s->bindValue(':CompanyID', $_SESSION['LastCompanyID']);
-			$s->bindValue(':UserID', $_SESSION['LoggedInUserID']);	
 			$s->bindValue(':description', $logEventDescription);
 			$s->execute();
 		}
@@ -555,14 +540,8 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Remove'){
 												FROM 	`logaction`
 												WHERE 	`name` = 'Employee Removed'
 											),
-							`companyID` = :CompanyID,
-							`userID` = :UserID,
-							`positionID` = :PositionID,
 							`description` = :description";
-		$s = $pdo->prepare($sql);
-		$s->bindValue(':CompanyID', $_POST['CompanyID']);
-		$s->bindValue(':UserID', $_POST['UserID']);
-		$s->bindValue(':PositionID', $_POST['PositionID']);		
+		$s = $pdo->prepare($sql);	
 		$s->bindValue(':description', $logEventDescription);
 		$s->execute();
 
@@ -955,10 +934,8 @@ if (isSet($_POST['action']) AND $_POST['action'] == 'Confirm Employee')
 													FROM 	`logaction`
 													WHERE 	`name` = 'Account Created'
 												),
-								`userID` = :UserID,
 								`description` = :description";
 			$s = $pdo->prepare($sql);
-			$s->bindValue(':UserID', $userID);
 			$s->bindValue(':description', $logEventDescription);
 			$s->execute();
 
@@ -1017,14 +994,8 @@ if (isSet($_POST['action']) AND $_POST['action'] == 'Confirm Employee')
 												FROM 	`logaction`
 												WHERE 	`name` = 'Employee Added'
 											),
-							`companyID` = :CompanyID,
-							`userID` = :UserID,
-							`positionID` = :PositionID,
 							`description` = :description";
 		$s = $pdo->prepare($sql);
-		$s->bindValue(':CompanyID', $companyID);
-		$s->bindValue(':UserID', $userID);
-		$s->bindValue(':PositionID', $_POST['PositionID']);
 		$s->bindValue(':description', $logEventDescription);
 		$s->execute();
 
