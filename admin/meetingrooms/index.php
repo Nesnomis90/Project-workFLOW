@@ -241,9 +241,9 @@ if (isSet($_POST['action']) and $_POST['action'] == 'Delete')
 		$pdo = connect_to_db();
 		$sql = "INSERT INTO `logevent` 
 				SET			`actionID` = 	(
-												SELECT `actionID` 
-												FROM `logaction`
-												WHERE `name` = 'Meeting Room Removed'
+												SELECT 	`actionID` 
+												FROM 	`logaction`
+												WHERE 	`name` = 'Meeting Room Removed'
 											),
 							`description` = :description";
 		$s = $pdo->prepare($sql);
@@ -381,9 +381,9 @@ if ((isSet($_POST['action']) AND $_POST['action'] == "Add Room"))
 		$pdo = connect_to_db();
 		$sql = "INSERT INTO `logevent` 
 				SET			`actionID` = 	(
-												SELECT `actionID` 
-												FROM `logaction`
-												WHERE `name` = 'Meeting Room Added'
+												SELECT 	`actionID` 
+												FROM 	`logaction`
+												WHERE 	`name` = 'Meeting Room Added'
 											),
 							`description` = :description";
 		$s = $pdo->prepare($sql);

@@ -4401,9 +4401,9 @@ if(isSet($_GET['cancellationcode']) OR isSet($_SESSION['refreshWithCancellationC
 			$pdo = connect_to_db();
 			$sql = "INSERT INTO `logevent`
 					SET			`actionID` = 	(
-													SELECT `actionID` 
-													FROM `logaction`
-													WHERE `name` = 'Booking Cancelled'
+													SELECT 	`actionID` 
+													FROM 	`logaction`
+													WHERE 	`name` = 'Booking Cancelled'
 												),
 								`description` = :description";
 			$s = $pdo->prepare($sql);

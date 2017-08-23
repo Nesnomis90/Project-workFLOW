@@ -451,9 +451,9 @@ if(isSet($_GET['activateaccount']) AND !empty($_GET['activateaccount'])){
 		$pdo = connect_to_db();
 		$sql = "INSERT INTO `logevent`
 				SET			`actionID` = 	(
-												SELECT `actionID` 
-												FROM `logaction`
-												WHERE `name` = 'Account Activated'
+												SELECT 	`actionID` 
+												FROM 	`logaction`
+												WHERE 	`name` = 'Account Activated'
 											),
 							`description` = :description";
 		$s = $pdo->prepare($sql);
