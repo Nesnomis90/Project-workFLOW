@@ -576,7 +576,7 @@ if (isSet($_POST['action']) and $_POST['action'] == 'Refresh'){
 		$location = "http://$_SERVER[HTTP_HOST]/booking/?meetingroom=" . $TheMeetingRoomID;
 		if(isSet($_GET['name'])){
 			$name = $_GET['name'];
-			$location .= "&name=" . $name;	
+			$location .= "&name=" . $name;
 		}
 	} else {
 		$location = ".";
@@ -584,6 +584,28 @@ if (isSet($_POST['action']) and $_POST['action'] == 'Refresh'){
 
 	header("Location: $location");
 	exit();
+}
+
+// If admin does not want to cancel the meeting anyway.
+if(isSet($_POST['action']) AND $_POST['action'] == "Abort Cancel"){
+	
+	clearChangeBookingSessions();
+
+	$_SESSION['normalBookingFeedback'] = "You did not cancel the meeting.";
+
+	if(isSet($_GET['meetingroom'])){
+		$TheMeetingRoomID = $_GET['meetingroom'];
+		$location = "http://$_SERVER[HTTP_HOST]/booking/?meetingroom=" . $TheMeetingRoomID;
+		if(isSet($_GET['name'])){
+			$name = $_GET['name'];
+			$location .= "&name=" . $name;
+		}
+	} else {
+		$location = ".";
+	}
+
+	header("Location: $location");
+	exit();	
 }
 
 // If admin has finished adding a reason for cancelling a meeting.

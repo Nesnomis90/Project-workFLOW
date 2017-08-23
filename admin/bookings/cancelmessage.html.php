@@ -34,6 +34,7 @@
 						<textarea rows="4" cols="50" name="cancelMessage" placeholder="Default: No reason given."></textarea>
 					<?php endif; ?>
 					<input type="submit" name="action" value="Confirm Reason">
+					<input type="submit" name="action" value="Abort Cancel">
 				</form>
 			</div>
 		</fieldset>

@@ -436,6 +436,18 @@ if (isSet($_POST['action']) and $_POST['action'] == 'Delete')
 	exit();	
 }
 
+// If admin does not want to cancel the meeting anyway.
+if(isSet($_POST['action']) AND $_POST['action'] == "Abort Cancel"){
+
+	clearCancelSessions();
+
+	$_SESSION['BookingUserFeedback'] = "You did not cancel the meeting.";
+
+	// Load booked meetings list webpage with updated database
+	header('Location: .');
+	exit();
+}
+
 // If admin wants to cancel a scheduled booked meeting (instead of deleting)
 if (	(isSet($_POST['action']) and $_POST['action'] == 'Cancel') OR 
 		(isSet($_SESSION['refreshCancelAdminBooking']) AND $_SESSION['refreshCancelAdminBooking']))
