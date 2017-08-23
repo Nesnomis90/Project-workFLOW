@@ -1623,9 +1623,7 @@ if (isSet($_POST['action']) AND $_POST['action'] == 'Add Company')
 		$s->bindValue(':CompanyName', $validatedCompanyName);
 		$s->execute();
 
-		unset($_SESSION['LastCompanyID']);
-		$_SESSION['LastCompanyID'] = $pdo->lastInsertId();
-
+		$companyID = $pdo->lastInsertId();
 	}
 	catch (PDOException $e)
 	{
@@ -1648,7 +1646,7 @@ if (isSet($_POST['action']) AND $_POST['action'] == 'Add Company')
 											WHERE	`name` = 'Default'
 											)";
 		$s = $pdo->prepare($sql);
-		$s->bindValue(':CompanyID', $_SESSION['LastCompanyID']);
+		$s->bindValue(':CompanyID', $companyID);
 		$s->execute();
 	}
 	catch (PDOException $e)
@@ -1662,10 +1660,6 @@ if (isSet($_POST['action']) AND $_POST['action'] == 'Add Company')
 		// Add a log event that a company was added
 	try
 	{
-		if(isSet($_SESSION['LastCompanyID'])){
-			$LastCompanyID = $_SESSION['LastCompanyID'];
-			unset($_SESSION['LastCompanyID']);
-		}
 		// Save a description with information about the meeting room that was added
 		$logEventdescription = "The company: " . $validatedCompanyName . " was added by: " . $_SESSION['LoggedInUserName'];
 
