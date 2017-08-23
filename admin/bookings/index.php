@@ -116,7 +116,7 @@ function emailUserOnCancelledBooking(){
 			$bookingCreatorUserEmail = $_SESSION['cancelAdminBookingOriginalValues']['UserEmail'];
 			$bookingCreatorMeetingInfo = $_SESSION['cancelAdminBookingOriginalValues']['MeetingInfo'];
 
-			if(isSet($_SESSION['cancelAdminBookingOriginalValues']['ReasonForCancelling'] AND !empty($_SESSION['cancelAdminBookingOriginalValues']['ReasonForCancelling'])){
+			if(isSet($_SESSION['cancelAdminBookingOriginalValues']['ReasonForCancelling']) AND !empty($_SESSION['cancelAdminBookingOriginalValues']['ReasonForCancelling'])){
 				$reasonForCancelling = $_SESSION['cancelAdminBookingOriginalValues']['ReasonForCancelling'];
 			} else {
 				$reasonForCancelling = "No reason given.";
@@ -533,7 +533,7 @@ if (	(isSet($_POST['action']) and $_POST['action'] == 'Cancel') OR
 			if(isSet($bookingMeetingInfo) AND isSet($userInfo)){
 				$logEventDescription = 	"A booking with these details was cancelled:" .
 										"\nMeeting Information: " . $bookingMeetingInfo .
-										"\nUser Information: " . $userInfo .
+										"\nBooked For User: " . $userInfo .
 										"\nIt was cancelled by: " . $_SESSION['LoggedInUserName'];
 			} else {
 				$logEventDescription = 'A booking was cancelled by: ' . $_SESSION['LoggedInUserName'];
@@ -577,7 +577,41 @@ if (	(isSet($_POST['action']) and $_POST['action'] == 'Cancel') OR
 	exit();	
 }
 
+// If admin has finished adding a reason for cancelling a meeting.
+if(isSet($_POST['action']) AND $_POST['action'] == "Confirm Reason"){
+	$invalidInput = FALSE;
+	// Do input validation
+	if(isSet($_POST['cancelMessage']) AND !empty($_POST['cancelMessage'])){
+		$cancelMessage = trimExcessWhitespaceButLeaveLinefeed($_POST['cancelMessage']);
+	} else {
+		$cancelMessage = "";
+	}
+	if(validateString($cancelMessage) === FALSE AND !$invalidInput){
+		$invalidInput = TRUE;
+		$_SESSION['confirmAdminReasonError'] = "Your submitted message has illegal characters in it.";
+	}
 
+	$invalidCancelMessage = isLengthInvalidBookingDescription($cancelMessage);
+	if($invalidCancelMessage AND !$invalidInput){
+		$_SESSION['confirmAdminReasonError'] = "Your submitted message is too long.";	
+		$invalidInput = TRUE;
+	}
+
+	if($invalidInput){
+		
+		var_dump($_SESSION); // TO-DO: Remove when done testing
+
+		include_once 'cancelmessage.html.php';
+		exit();
+	}
+
+	$_SESSION['cancelAdminBookingOriginalValues']['ReasonForCancelling'] = $cancelMessage;
+	$_SESSION['refreshCancelAdminBooking'] = TRUE;
+
+	// Load booked meetings list webpage with updated database
+	header('Location: .');
+	exit();	
+}
 
 // EDIT CODE SNIPPET START//
 

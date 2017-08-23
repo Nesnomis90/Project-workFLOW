@@ -282,7 +282,7 @@ function emailUserOnCancelledBooking(){
 			$bookingCreatorMeetingInfo = $_SESSION['cancelBookingOriginalValues']['MeetingInfo'];
 			$cancelledBy = $_SESSION['cancelBookingOriginalValues']['CancelledBy'];
 
-			if(isSet($_SESSION['cancelBookingOriginalValues']['ReasonForCancelling'] AND !empty($_SESSION['cancelBookingOriginalValues']['ReasonForCancelling'])){
+			if(isSet($_SESSION['cancelBookingOriginalValues']['ReasonForCancelling']) AND !empty($_SESSION['cancelBookingOriginalValues']['ReasonForCancelling'])){
 				$reasonForCancelling = $_SESSION['cancelBookingOriginalValues']['ReasonForCancelling'];
 			} else {
 				$reasonForCancelling = "No reason given.";
