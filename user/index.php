@@ -1235,13 +1235,24 @@ if(isSet($_POST['action']) AND $_POST['action'] == "Confirm Change"){
 	}
 	
 	if(isSet($_SESSION['normalUserEditWorksForArray'])){
-		// TO-DO: Change SendEmailOnceOrAlways values from POST
 		foreach($_SESSION['normalUserEditWorksForArray'] AS $company){
-			$post = "sendCompanyID=" . $company['CompanyID'] . "Email";
+			$post = "sendCompanyID" . $company['CompanyID'] . "Email";
 			if(isSet($_POST[$post])){
-				$company['SendEmailOnceOrAlways'] = $_POST[$post];
+				$newArray = array(
+									'CompanyID' => $company['CompanyID'],
+									'CompanyPosition' => $company['CompanyPosition'],
+									'CompanyName' => $company['CompanyName'],
+									'SendEmailOnceOrAlways' => $_POST[$post]
+								);
+			} else {
+				$newArray = array(
+									'CompanyID' => $company['CompanyID'],
+									'CompanyPosition' => $company['CompanyPosition'],
+									'CompanyName' => $company['CompanyName'],
+									'SendEmailOnceOrAlways' => $company['SendEmailOnceOrAlways']
+								);
 			}
-			$updatedWorksForArray[] = $company;
+			$updatedWorksForArray[] = $newArray;
 		}
 		$_SESSION['normalUserEditWorksForArray'] = $updatedWorksForArray;
 	}
@@ -1250,7 +1261,9 @@ if(isSet($_POST['action']) AND $_POST['action'] == "Confirm Change"){
 		$password = $_POST['confirmPassword'];
 		$hashedPassword = hashPassword($password);
 		if($hashedPassword == $result['HashedPassword']){
-			if($_SESSION['normalUserEditInfoArray'] != $_SESSION['normalUserOriginalInfoArray']){
+			if(	($_SESSION['normalUserEditInfoArray'] != $_SESSION['normalUserOriginalInfoArray']) OR 
+				(isSet($_SESSION['normalUserEditWorksForArray']) AND isSet($_SESSION['normalUserOriginalWorksForArray']) AND
+				$_SESSION['normalUserEditWorksForArray'] != $_SESSION['normalUserOriginalWorksForArray'])){
 				// Save changes to database
 				if($changePassword){
 					// Change password
@@ -1299,8 +1312,23 @@ if(isSet($_POST['action']) AND $_POST['action'] == "Confirm Change"){
 					$s->execute();
 
 					// Update Employee Information (company owner emails)
-					
-					
+					if(isSet($_SESSION['normalUserEditWorksForArray'])){
+						foreach($_SESSION['normalUserEditWorksForArray'] AS $company){
+							$companyID = $company['CompanyID'];
+							$sendEmailOnceOrAlways = $company['SendEmailOnceOrAlways'];
+							
+							$sql = "UPDATE	`employee`
+									SET		`sendEmailOnceOrAlways` = :sendEmailOnceOrAlways
+									WHERE	`userID` = :userID
+									AND		`companyID` = :companyID";
+							$s = $pdo->prepare($sql);
+							$s->bindValue(':userID', $_SESSION['LoggedInUserID']);
+							$s->bindValue(':companyID', $companyID);
+							$s->bindValue(':sendEmailOnceOrAlways', $sendEmailOnceOrAlways);
+							$s->execute();
+						}
+					}
+
 					$pdo->commit();
 					
 					// Close the connection
@@ -1342,7 +1370,7 @@ if(isSet($_SESSION['normalUserEditMode'])){
 	if(!isSet($_SESSION['normalUserEditInfoArray'])){
 		$_SESSION['normalUserEditInfoArray'] = $_SESSION['normalUserOriginalInfoArray'];
 	}
-	if(!isSet($_SESSION['normalUserEditWorksForArray']) AND isSet($_SESSION['normalUserEditWorksForArray'])){
+	if(!isSet($_SESSION['normalUserEditWorksForArray']) AND isSet($_SESSION['normalUserOriginalWorksForArray'])){
 		$_SESSION['normalUserEditWorksForArray'] = $_SESSION['normalUserOriginalWorksForArray'];
 	}
 	$edit = $_SESSION['normalUserEditInfoArray'];

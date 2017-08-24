@@ -240,7 +240,7 @@
 
 												<?php if(isSet($editMode)) : ?>
 													<label>Change <b><?php htmlout($company['CompanyName']); ?></b> alerts</label>
-													<select name="sendCompanyID=<?php htmlout($company['CompanyID']); ?>Email">
+													<select name="sendCompanyID<?php htmlout($company['CompanyID']); ?>Email">
 														<?php if($company['SendEmailOnceOrAlways'] == 1) : ?>
 															<option selected="selected" value="1"><b>Send Everytime A Booking Goes Over Credit</b></option>
 															<option value="0"><b>Only Send First Time A Booking Goes Over Credit</b></option>
