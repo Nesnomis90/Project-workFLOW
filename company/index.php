@@ -48,7 +48,6 @@ function unsetSessionsFromCompanyManagement(){
 	unset($_SESSION['normalUserCompanyIDSelected']);
 	unset($_SESSION['normalUserCompanyNameSelected']);
 	unset($_SESSION['normalCompanyCreateACompany']);
-	unset($_SESSION['LastCompanyID']);
 }
 
 if(isSet($_SESSION['normalCompanyCreateACompany']) AND $_SESSION['normalCompanyCreateACompany'] == "Invalid"){
@@ -146,6 +145,8 @@ if(isSet($_POST['action']) AND $_POST['action'] == "Confirm"){
 			$s = $pdo->prepare($sql);
 			$s->bindValue(':CompanyName', $validatedCompanyName);
 			$s->execute();
+			
+			$lastCompanyID = $pdo->lastInsertId();
 		}
 		catch (PDOException $e)
 		{
@@ -168,7 +169,7 @@ if(isSet($_POST['action']) AND $_POST['action'] == "Confirm"){
 												WHERE	`name` = 'Default'
 												)";
 			$s = $pdo->prepare($sql);
-			$s->bindValue(':CompanyID', $_SESSION['LastCompanyID']);
+			$s->bindValue(':CompanyID', $lastCompanyID);
 			$s->execute();
 		}
 		catch (PDOException $e)
@@ -191,7 +192,7 @@ if(isSet($_POST['action']) AND $_POST['action'] == "Confirm"){
 												WHERE	`name` = 'Owner'
 												)";
 			$s = $pdo->prepare($sql);
-			$s->bindValue(':CompanyID', $_SESSION['LastCompanyID']);
+			$s->bindValue(':CompanyID', $lastCompanyID);
 			$s->bindValue(':UserID', $_SESSION['LoggedInUserID']);
 			$s->execute();
 		}
@@ -302,7 +303,6 @@ if(isSet($_POST['action']) AND $_POST['action'] == "Confirm"){
 			exit();
 		}
 		unset($_SESSION['normalCompanyCreateACompany']);
-		unset($_SESSION['LastCompanyID']);
 		unset($_SESSION['normalUserOriginalInfoArray']);
 	} else {
 		$_SESSION['normalCompanyCreateACompany'] = "Invalid";
