@@ -841,6 +841,7 @@ if(isSet($_POST['action']) AND $_POST['action'] == "Cancel"){
 	unset($_SESSION['normalUserOriginalInfoArray']);
 	unset($_SESSION['normalUserOriginalWorksForArray']);
 	unset($_SESSION['normalUserEditInfoArray']);
+	unset($_SESSION['normalUserEditWorksForArray']);
 	unset($_SESSION['normalUserEditMode']);
 }
 
@@ -998,16 +999,9 @@ if(isSet($_SESSION['loggedIn']) AND isSet($_SESSION['LoggedInUserID'])){
 		// Check if user is owner in any companies.
 		foreach($worksForArray AS $row){
 			$position = $row['CompanyPosition'];
+			$companyName = $row['CompanyName'];
 			if($position == "Owner"){
 				$userIsACompanyOwner = TRUE;
-				$companyName = $row['CompanyName'];
-				$companyID = $row['CompanyID'];
-				$sendEmailOnceOrAlways = $row['SendEmailOnceOrAlways'];
-				$ownerInCompanies[] = array(
-												'CompanyName' => $companyName,
-												'CompanyID' => $companyID,
-												'SendEmailOnceOrAlways' => $sendEmailOnceOrAlways //1 = always, 0 = once
-											);
 			}
 			$newWorksForArray[] = $position . " in " . $companyName . ".";
 		}
@@ -1028,6 +1022,7 @@ if(isSet($_SESSION['loggedIn']) AND isSet($_SESSION['LoggedInUserID'])){
 	unset($_SESSION['normalUserOriginalInfoArray']);
 	unset($_SESSION['normalUserOriginalWorksForArray']);
 	unset($_SESSION['normalUserEditInfoArray']);
+	unset($_SESSION['normalUserEditWorksForArray']);
 	unset($_SESSION['normalUserEditMode']);
 }
 
@@ -1238,6 +1233,18 @@ if(isSet($_POST['action']) AND $_POST['action'] == "Confirm Change"){
 			$_SESSION['normalUserEditInfoArray']['LastCodeUpdate'] = getDatetimeNow();
 		}
 	}
+	
+	if(isSet($_SESSION['normalUserEditWorksForArray'])){
+		// TO-DO: Change SendEmailOnceOrAlways values from POST
+		foreach($_SESSION['normalUserEditWorksForArray'] AS $company){
+			$post = "sendCompanyID=" . $company['CompanyID'] . "Email";
+			if(isSet($_POST[$post])){
+				$company['SendEmailOnceOrAlways'] = $_POST[$post];
+			}
+			$updatedWorksForArray[] = $company;
+		}
+		$_SESSION['normalUserEditWorksForArray'] = $updatedWorksForArray;
+	}
 
 	if(isSet($_POST['confirmPassword']) AND !empty($_POST['confirmPassword']) AND !$invalidInput){
 		$password = $_POST['confirmPassword'];
@@ -1312,6 +1319,7 @@ if(isSet($_POST['action']) AND $_POST['action'] == "Confirm Change"){
 			}
 			unset($_SESSION['normalUserEditMode']);
 			unset($_SESSION['normalUserEditInfoArray']);
+			unset($_SESSION['normalUserEditWorksForArray']);
 			unset($_SESSION['normalUserOriginalInfoArray']);
 			unset($_SESSION['normalUserOriginalWorksForArray']);
 			
@@ -1334,6 +1342,9 @@ if(isSet($_SESSION['normalUserEditMode'])){
 	if(!isSet($_SESSION['normalUserEditInfoArray'])){
 		$_SESSION['normalUserEditInfoArray'] = $_SESSION['normalUserOriginalInfoArray'];
 	}
+	if(!isSet($_SESSION['normalUserEditWorksForArray']) AND isSet($_SESSION['normalUserEditWorksForArray'])){
+		$_SESSION['normalUserEditWorksForArray'] = $_SESSION['normalUserOriginalWorksForArray'];
+	}
 	$edit = $_SESSION['normalUserEditInfoArray'];
 	$firstName = $edit['FirstName'];
 	$lastName = $edit['LastName'];
@@ -1343,6 +1354,10 @@ if(isSet($_SESSION['normalUserEditMode'])){
 	$sendEmail = $edit['SendEmail'];
 	$sendOwnerEmail = $edit['SendOwnerEmail'];
 	$sendAdminEmail = $edit['SendAdminEmail'];
+
+	if(isSet($_SESSION['normalUserEditWorksForArray'])){
+		$editWorksFor = $_SESSION['normalUserEditWorksForArray'];
+	}
 }
 
 var_dump($_SESSION); // TO-DO: Remove after done testing
