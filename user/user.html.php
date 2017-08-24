@@ -7,11 +7,21 @@
 		<meta charset="utf-8">
 		<link rel="stylesheet" type="text/css" href="/CSS/myCSS.css">
 		<script src="/scripts/myFunctions.js"></script>	
-		<style>
-			label {
-				width: 210px;
-			}
-		</style>
+
+		<?php if(isSet($editMode)) : ?>
+			<style>
+				label {
+					width: 260px;
+				}
+			</style>
+		<?php else : ?>
+			<style>
+				label {
+					width: 220px;
+				}
+			</style>			
+		<?php endif; ?>
+
 		<?php if(isSet($_SESSION['loggedIn'])) : ?>
 			<title>Your User Information</title>
 		<?php else : ?>
@@ -98,6 +108,8 @@
 										<span><a href="?cancelledBooking"><?php htmlout($numberOfCancelledBookedMeetings); ?></a></span>
 									</div>
 								<?php endif; ?>
+							<?php elseif($numberOfTotalBookedMeetings == 0) : ?>
+								<span>This will display your meeting statistics if you have any.</span>
 							<?php endif; ?>
 							
 							<?php if($accessName == "Admin") : ?>
@@ -169,7 +181,7 @@
 							</div>
 
 							<div>
-								<label>Account And Meeting Alert Status: </label>
+								<label>Account & Meeting Alert Status: </label>
 								<?php if($originalSendEmail == 1) : ?>
 									<span><b>Send Me Email Alerts</b></span>
 								<?php elseif($originalSendEmail == 0) : ?>
@@ -179,7 +191,7 @@
 
 							<?php if(isSet($editMode)) : ?>
 								<div>
-									<label>Change Account And Meeting Alert Status: </label>
+									<label>Change Account & Meeting Alert Status: </label>
 									<select name="sendEmail">
 										<?php if($sendEmail == 1) : ?>
 											<option selected="selected" value="1"><b>Send Me Email Alerts</b></option>
@@ -201,19 +213,6 @@
 										<span><b>Don't Send Me Email Alerts</b></span>
 									<?php endif; ?>
 								</div>
-								
-								<?php if($originalSendOwnerEmail == 1) : ?>
-									<div>
-										<?php foreach($ownerInCompanies AS $company) : ?>
-											<label>Company: <b><?php htmlout($company['CompanyName']); ?></b></label>
-											<?php if($company['SendEmailOnceOrAlways'] == 1) : ?>
-												<span><b>Send Everytime A Booking Goes Over Credit</b></span>
-											<?php elseif($company['SendEmailOnceOrAlways'] == 0) : ?>
-												<span><b>Only Send First Time A Booking Goes Over Credit</b></span>
-											<?php endif; ?>
-										<?php endforeach; ?>
-									</div>
-								<?php endif; ?>
 
 								<?php if(isSet($editMode)) : ?>
 									<div>
@@ -229,6 +228,35 @@
 										</select>
 									</div>
 								<?php endif; ?>
+
+								<?php if($originalSendOwnerEmail == 1) : ?>
+									<div>
+										<?php foreach($worksForArray AS $company) : ?>
+											<?php if($company['CompanyPosition'] == "Owner") : ?>
+												<label>Company: <b><?php htmlout($company['CompanyName']); ?></b></label>
+												<?php if($company['SendEmailOnceOrAlways'] == 1) : ?>
+													<span><b>Send Everytime A Booking Goes Over Credit</b></span>
+												<?php elseif($company['SendEmailOnceOrAlways'] == 0) : ?>
+													<span><b>Only Send First Time A Booking Goes Over Credit</b></span>
+												<?php endif; ?>
+
+												<?php if(isSet($editMode)) : ?>
+													<label>Change <b><?php htmlout($company['CompanyName']); ?></b></label>
+													<select name="sendCompanyID<?php htmlout($company['CompanyID']); ?>Email">
+														<?php if($company['SendEmailOnceOrAlways'] == 1) : ?>
+															<option selected="selected" value="1"><b>Send Everytime A Booking Goes Over Credit</b></option>
+															<option value="0"><b>Only Send First Time A Booking Goes Over Credit</b></option>
+														<?php elseif($company['SendEmailOnceOrAlways'] == 0) : ?>
+															<option value="1"><b>Send Everytime A Booking Goes Over Credit</b></option>
+															<option selected="selected" value="0"><b>Only Send First Time A Booking Goes Over Credit</b></option>
+														<?php endif; ?>
+													</select>
+												<?php endif; ?>
+											<?php endif; ?>
+										<?php endforeach; ?>
+									</div>
+								<?php endif; ?>
+
 							<?php endif; ?>
 
 							<?php if($accessName == "Admin") : ?>
