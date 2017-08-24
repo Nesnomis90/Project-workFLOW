@@ -542,6 +542,7 @@ if (isSet($_POST['booking']) and $_POST['booking'] == 'Cancel')
 			exit();
 		}
 		unset($_SESSION['normalUserOriginalInfoArray']);
+		unset($_SESSION['normalUserOriginalWorksForArray']);
 	} else {
 		// Booking was not active, so no need to cancel it.
 		$_SESSION['normalUserBookingFeedback'] = "Meeting has already been completed. Did not cancel it.";
@@ -838,6 +839,7 @@ if(isSet($_POST['action']) AND $_POST['action'] == "Reset"){
 }
 if(isSet($_POST['action']) AND $_POST['action'] == "Cancel"){
 	unset($_SESSION['normalUserOriginalInfoArray']);
+	unset($_SESSION['normalUserOriginalWorksForArray']);
 	unset($_SESSION['normalUserEditInfoArray']);
 	unset($_SESSION['normalUserEditMode']);
 }
@@ -847,8 +849,9 @@ if(isSet($_SESSION['loggedIn']) AND isSet($_SESSION['LoggedInUserID'])){
 	$userID = $_SESSION['LoggedInUserID'];
 	if(isSet($_SESSION['normalUserOriginalInfoArray']) AND $_SESSION['normalUserOriginalInfoArray']['UserID'] != $userID){
 		unset($_SESSION['normalUserOriginalInfoArray']);
+		unset($_SESSION['normalUserOriginalWorksForArray']);
 	}
-	if(!isSet($_SESSION['normalUserOriginalInfoArray'])){
+	if(!isSet($_SESSION['normalUserOriginalInfoArray']) OR !isSet($_SESSION['normalUserOriginalWorksForArray'])){
 		try
 		{
 			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
@@ -907,17 +910,7 @@ if(isSet($_SESSION['loggedIn']) AND isSet($_SESSION['LoggedInUserID'])){
 									WHERE	`userID` = :userID
 									AND 	`actualEndDateTime` IS NULL
 									AND 	`dateTimeCancelled` IS NOT NULL
-								)						AS CancelledBookedMeetings,
-								(
-									SELECT 		GROUP_CONCAT(CONCAT_WS(" in ", cp.`name`, CONCAT(c.`name`,".",e.`sendEmailOnceOrAlways`)) separator "\n")
-									FROM 		`company` c
-									INNER JOIN 	`employee` e
-									ON 			e.`CompanyID` = c.`CompanyID`
-									INNER JOIN 	`companyposition` cp
-									ON 			cp.`PositionID` = e.`PositionID`
-									WHERE  		e.`userID` = u.`userID`
-									GROUP BY 	e.`userID`
-								)						AS WorksFor
+								)						AS CancelledBookedMeetings
 					FROM		`user` u
 					INNER JOIN	`accesslevel` a
 					ON			a.`AccessID` = u.`AccessID`
@@ -931,6 +924,24 @@ if(isSet($_SESSION['loggedIn']) AND isSet($_SESSION['LoggedInUserID'])){
 			$result = $s->fetch(PDO::FETCH_ASSOC);
 			$_SESSION['normalUserOriginalInfoArray'] = $result;
 			
+			// Get employee information
+			$sql = "SELECT 		cp.`name`					AS CompanyPosition,
+								c.`name`					AS CompanyName,
+								c.`CompanyID`				AS CompanyID,
+								e.`sendEmailOnceOrAlways`	AS SendEmailOnceOrAlways
+					FROM		`employee` e
+					INNER JOIN	`company` c
+					ON			c.`CompanyID` = e.`CompanyID`
+					INNER JOIN	`companyposition` cp
+					ON			e.`PositionID` = cp.`PositionID`
+					WHERE		e.`userID` = :userID";
+			$s = $pdo->prepare($sql);
+			$s->bindValue(':userID', $userID);
+			$s->execute();
+			
+			$worksForArray = $s->fetchAll(PDO::FETCH_ASSOC);
+			$_SESSION['normalUserOriginalWorksForArray'] = $worksForArray;
+			
 			//Close the connection
 			$pdo = null;
 		}
@@ -943,6 +954,7 @@ if(isSet($_SESSION['loggedIn']) AND isSet($_SESSION['LoggedInUserID'])){
 		}
 	} else {
 		$result = $_SESSION['normalUserOriginalInfoArray'];
+		$worksForArray = $_SESSION['normalUserOriginalWorksForArray'];
 	}
 
 	$lastActive = convertDatetimeToFormat($result['LastActive'], 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY_WITH_SECONDS);
@@ -979,26 +991,25 @@ if(isSet($_SESSION['loggedIn']) AND isSet($_SESSION['LoggedInUserID'])){
 	$accessDescription = $result['AccessDescription'];
 	$originalBookingCode = $result['BookingCode'];
 	
-	$worksFor = $result['WorksFor'];
 	$userIsACompanyOwner = FALSE;
-	if(empty($worksFor)){
+	if(!isSet($worksForArray) OR (isSet($worksForArray) AND empty($worksForArray))){
 		$worksFor = "You have no company connection.";
 	} else {
 		// Check if user is owner in any companies.
-		// TO-DO: Double check this stupid code and see if the logic is correct
-		$worksForArray = explode("\n", $worksFor);
 		foreach($worksForArray AS $row){
-			$position = substr($row,0, (strpos($row," in ")));
+			$position = $row['CompanyPosition'];
 			if($position == "Owner"){
 				$userIsACompanyOwner = TRUE;
-				$companyName = substr($row,(strpos($row," in ") + 4), -2);
-				$sendEmailOnceOrAlways = substr($row, (strrpos($row,".") + 1));
+				$companyName = $row['CompanyName'];
+				$companyID = $row['CompanyID'];
+				$sendEmailOnceOrAlways = $row['SendEmailOnceOrAlways'];
 				$ownerInCompanies[] = array(
 												'CompanyName' => $companyName,
+												'CompanyID' => $companyID,
 												'SendEmailOnceOrAlways' => $sendEmailOnceOrAlways //1 = always, 0 = once
 											);
 			}
-			$newWorksForArray[] = substr($row, 0, -1);
+			$newWorksForArray[] = $position . " in " . $companyName . ".";
 		}
 	}
 	$worksFor = implode("\n",$newWorksForArray);
@@ -1015,6 +1026,7 @@ if(isSet($_SESSION['loggedIn']) AND isSet($_SESSION['LoggedInUserID'])){
 	}
 } else {
 	unset($_SESSION['normalUserOriginalInfoArray']);
+	unset($_SESSION['normalUserOriginalWorksForArray']);
 	unset($_SESSION['normalUserEditInfoArray']);
 	unset($_SESSION['normalUserEditMode']);
 }
@@ -1245,6 +1257,10 @@ if(isSet($_POST['action']) AND $_POST['action'] == "Confirm Change"){
 					include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 
 					$pdo = connect_to_db();
+
+					$pdo->beginTransaction();
+
+					// Update User Information
 					$sql = 'UPDATE 	`user` 
 							SET		`firstName` = :firstname,
 									`lastName` = :lastname,
@@ -1275,13 +1291,19 @@ if(isSet($_POST['action']) AND $_POST['action'] == "Confirm Change"){
 					$s->bindValue(':LastCodeUpdate', $new['LastCodeUpdate']);
 					$s->execute();
 
+					// Update Employee Information (company owner emails)
+					
+					
+					$pdo->commit();
+					
 					// Close the connection
 					$pdo = Null;
 				}
 				catch (PDOException $e)
 				{
-					$error = 'Error updating submitted user: ' . $e->getMessage();
+					$error = 'Error updating user information: ' . $e->getMessage();
 					include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+					$pdo->rollBack();
 					$pdo = null;
 					exit();
 				}
@@ -1291,6 +1313,7 @@ if(isSet($_POST['action']) AND $_POST['action'] == "Confirm Change"){
 			unset($_SESSION['normalUserEditMode']);
 			unset($_SESSION['normalUserEditInfoArray']);
 			unset($_SESSION['normalUserOriginalInfoArray']);
+			unset($_SESSION['normalUserOriginalWorksForArray']);
 			
 			header("Location: .");
 			exit();

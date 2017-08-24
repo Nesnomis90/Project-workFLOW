@@ -59,6 +59,17 @@ WHERE 	DATE(CURRENT_TIMESTAMP) >= `removeAtDate`
 AND 	`isActive` = 1
 AND		`companyID` <> 0;
 
+SELECT 		cp.`name`					AS CompanyPosition,
+			c.`name`					AS CompanyName,
+			c.`CompanyID`				AS CompanyID,
+			e.`sendEmailOnceOrAlways`	AS SendEmailOnceOrAlways
+FROM		`employee` e
+INNER JOIN	`company` c
+ON			c.`CompanyID` = e.`CompanyID`
+INNER JOIN	`companyposition` cp
+ON			e.`PositionID` = cp.`PositionID`
+WHERE		e.`userID` = 28;
+
 SELECT		u.`email`		AS Email,
 			u.`sendEmail`	AS SendEmail
 FROM 		`user` u
