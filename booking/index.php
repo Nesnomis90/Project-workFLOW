@@ -3117,7 +3117,7 @@ if (isSet($_POST['add']) AND $_POST['add'] == "Add Booking")
 					if($row['SendOwnerEmail'] == 1){ 
 						// Check if user wants to receive all emails or just the first time booking goes over credit per period
 							// sendEmailOnceOrAlways: 1 = always, sendEmailOnceOrAlways: 0 = once.
-						if(($row['SendEmailOnceOrAlways'] == 1 OR ($row['SendEmailOnceOrAlways'] == 0 AND $firstTimeOverCredit)){ 
+						if($row['SendEmailOnceOrAlways'] == 1 OR ($row['SendEmailOnceOrAlways'] == 0 AND $firstTimeOverCredit)){ 
 							$companyOwnerEmails[] = $row['Email'];
 						}
 					}
@@ -4276,7 +4276,7 @@ if (isSet($_POST['edit']) AND $_POST['edit'] == "Reset"){
 if(isSet($_GET['cancellationcode']) OR isSet($_SESSION['refreshWithCancellationCode'])){
 	if(isSet($_GET['cancellationcode'])){
 		// Check if code is correct (64 chars)
-		if(strlen($_GET['cancellationcode'])!=64){
+		if(strlen($_GET['cancellationcode']) != 64){
 			$_SESSION['normalBookingFeedback'] = "The cancellation code that was submitted is not a valid code.";
 			header("Location: .");
 			exit();
@@ -4295,18 +4295,24 @@ if(isSet($_GET['cancellationcode']) OR isSet($_SESSION['refreshWithCancellationC
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 		
 		$pdo = connect_to_db();
-		$sql = "SELECT 	COUNT(*)										AS HitCount,
-						`bookingID`,
-						`meetingRoomID`									AS TheMeetingRoomID, 
+		$sql = "SELECT 	COUNT(*)											AS HitCount,
+						(
+							IF(b.`userID` IS NULL, NULL, (SELECT u.`email` FROM `user` u WHERE u.`userID` = b.`userID`))
+						) 													AS Email,
+						(
+							IF(b.`userID` IS NULL, NULL, (SELECT u.`sendEmail` FROM `user` u WHERE u.`userID` = b.`userID`))
+						) 													AS SendEmail,
+						b.`bookingID`										AS BookingID,
+						b.`meetingRoomID`									AS TheMeetingRoomID, 
 						(
 							SELECT	`name`
 							FROM	`meetingroom`
 							WHERE	`meetingRoomID` = TheMeetingRoomID 
-						)												AS TheMeetingRoomName,
-						`startDateTime`									AS StartDateTime,
-						`endDateTime`									AS EndDateTime,
-						`actualEndDateTime`								AS ActualEndDateTime
-				FROM	`booking`
+						)													AS TheMeetingRoomName,
+						b.`startDateTime`									AS StartDateTime,
+						b.`endDateTime`										AS EndDateTime,
+						b.`actualEndDateTime`								AS ActualEndDateTime
+				FROM	`booking` b
 				WHERE 	`cancellationCode` = :cancellationCode
 				AND		`dateTimeCancelled` IS NULL
 				LIMIT 	1";
@@ -4339,7 +4345,7 @@ if(isSet($_GET['cancellationcode']) OR isSet($_SESSION['refreshWithCancellationC
 		exit();
 	}
 	
-	$bookingID = $result['bookingID'];
+	$bookingID = $result['BookingID'];
 	$TheMeetingRoomName = $result['TheMeetingRoomName'];
 	$startDateTimeString = $result['StartDateTime'];
 	$endDateTimeString = $result['EndDateTime'];
@@ -4351,6 +4357,12 @@ if(isSet($_GET['cancellationcode']) OR isSet($_SESSION['refreshWithCancellationC
 	$displayValidatedStartDate = convertDatetimeToFormat($startDateTime , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
 	$displayValidatedEndDate = convertDatetimeToFormat($endDateTime, 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);	
 	
+	$email = $result['Email'];
+	$sendEmail = $result['SendEmail'];
+	$meetinginfo = $TheMeetingRoomName . ' for the timeslot: ' . $displayValidatedStartDate . 
+					' to ' . $displayValidatedEndDate;	
+	
+	$meetingCancelled = FALSE;
 	// Check if the meeting has already ended
 	if($actualEndDateTimeString == "" OR $actualEndDateTimeString == NULL){
 		// Meeting has not ended already.
@@ -4366,15 +4378,17 @@ if(isSet($_GET['cancellationcode']) OR isSet($_SESSION['refreshWithCancellationC
 			$bookingFeedback = 	"The booking for " . $TheMeetingRoomName . ".\nStarting at: " . $displayValidatedStartDate . 
 								" and ending at: " . $displayValidatedEndDate . " has been ended early by using the cancellation link.";
 			$logEventDescription = $bookingFeedback;
+			$meetingCancelled = TRUE;
 		} elseif($timeNow < $startDateTime) {
 			// The booking hasn't started yet, so we're actually cancelling the meeting
 			$sql = "UPDATE 	`booking`
 					SET		`dateTimeCancelled` = CURRENT_TIMESTAMP,
 							`cancellationCode` = NULL
-					WHERE 	`bookingID` = :bookingID";	
+					WHERE 	`bookingID` = :bookingID";
 			$bookingFeedback = 	"The booking for " . $TheMeetingRoomName . ".\nStarting at: " . $displayValidatedStartDate . 
 								" and ending at: " . $displayValidatedEndDate . " has been cancelled by using the cancellation link.";
-			$logEventDescription = $bookingFeedback;								
+			$logEventDescription = $bookingFeedback;
+			$meetingCancelled = TRUE;
 		} elseif($timeNow > $endDateTime) {
 			// The booking has (in theory) already ended, so there shouldn't be an active cancellation code for it
 			// We just have to assume the booking failed to update itself on completion
@@ -4452,7 +4466,17 @@ if(isSet($_GET['cancellationcode']) OR isSet($_SESSION['refreshWithCancellationC
 			exit();
 		}
 	}
+	
 	$_SESSION['normalBookingFeedback'] = $bookingFeedback;
+	
+	// Send mail to the user the booking was registered too about the meeting being cancelled/ended early.
+	if(isSet($meetingCancelled) AND $meetingCancelled){		
+		$_SESSION['cancelBookingOriginalValues']['SendEmail'] = $sendEmail;
+		$_SESSION['cancelBookingOriginalValues']['UserEmail'] = $email ;
+		$_SESSION['cancelBookingOriginalValues']['MeetingInfo'] = $meetinginfo;
+		$_SESSION['cancelBookingOriginalValues']['CancelledBy'] = "someone using the cancellation link";
+		emailUserOnCancelledBooking();
+	}
 }
 
 // CANCELLATION CODE SNIPPET // END //

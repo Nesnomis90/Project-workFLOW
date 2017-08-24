@@ -109,7 +109,7 @@
 									</div>
 								<?php endif; ?>
 							<?php elseif($numberOfTotalBookedMeetings == 0) : ?>
-								<span>You have not had any meetings yet.</span>
+								<span>This will display your meeting statistics if you have any.</span>
 							<?php endif; ?>
 							
 							<?php if($accessName == "Admin") : ?>
