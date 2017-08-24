@@ -108,6 +108,8 @@
 										<span><a href="?cancelledBooking"><?php htmlout($numberOfCancelledBookedMeetings); ?></a></span>
 									</div>
 								<?php endif; ?>
+							<?php elseif($numberOfTotalBookedMeetings == 0) : ?>
+								<span>You have not had any meetings yet.</span>
 							<?php endif; ?>
 							
 							<?php if($accessName == "Admin") : ?>
@@ -239,7 +241,7 @@
 												<?php endif; ?>
 
 												<?php if(isSet($editMode)) : ?>
-													<label>Change <b><?php htmlout($company['CompanyName']); ?></b> alerts</label>
+													<label>Change <b><?php htmlout($company['CompanyName']); ?></b></label>
 													<select name="sendCompanyID<?php htmlout($company['CompanyID']); ?>Email">
 														<?php if($company['SendEmailOnceOrAlways'] == 1) : ?>
 															<option selected="selected" value="1"><b>Send Everytime A Booking Goes Over Credit</b></option>

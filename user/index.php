@@ -1005,8 +1005,8 @@ if(isSet($_SESSION['loggedIn']) AND isSet($_SESSION['LoggedInUserID'])){
 			}
 			$newWorksForArray[] = $position . " in " . $companyName . ".";
 		}
+		$worksFor = implode("\n",$newWorksForArray);
 	}
-	$worksFor = implode("\n",$newWorksForArray);
 
 	if($accessName != "Normal User"){
 		$userCanHaveABookingCode = TRUE;
