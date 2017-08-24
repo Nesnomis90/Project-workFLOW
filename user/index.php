@@ -1330,7 +1330,7 @@ if(isSet($_POST['action']) AND $_POST['action'] == "Confirm Change"){
 					}
 
 					$pdo->commit();
-					
+
 					// Close the connection
 					$pdo = Null;
 				}
@@ -1350,7 +1350,7 @@ if(isSet($_POST['action']) AND $_POST['action'] == "Confirm Change"){
 			unset($_SESSION['normalUserEditWorksForArray']);
 			unset($_SESSION['normalUserOriginalInfoArray']);
 			unset($_SESSION['normalUserOriginalWorksForArray']);
-			
+
 			header("Location: .");
 			exit();
 		} else {
@@ -1382,10 +1382,6 @@ if(isSet($_SESSION['normalUserEditMode'])){
 	$sendEmail = $edit['SendEmail'];
 	$sendOwnerEmail = $edit['SendOwnerEmail'];
 	$sendAdminEmail = $edit['SendAdminEmail'];
-
-	if(isSet($_SESSION['normalUserEditWorksForArray'])){
-		$editWorksFor = $_SESSION['normalUserEditWorksForArray'];
-	}
 }
 
 var_dump($_SESSION); // TO-DO: Remove after done testing
