@@ -2956,10 +2956,96 @@ if ((isSet($_POST['add']) AND $_POST['add'] == "Add Booking") OR
 		}
 		$addExtraLogEventDescription = TRUE;
 	} else {
-		$bookingWentOverCredits = FALSE;
-		// TO-DO: Get credits used so far for the future period
-		// Assume they'll have the same credits given that period
-		
+		// TO-DO: FIX-ME: Get the exact period we're booking for. Not just "anything in the future" like now.!!!!!
+		// Get booking time used so far for the future period
+		try
+		{
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+
+			$pdo = connect_to_db();
+			$sql = 'SELECT (BIG_SEC_TO_TIME(SUM(
+											IF(
+												(
+													(
+														DATEDIFF(b.`endDateTime`, b.`startDateTime`)
+														)*86400 
+													+ 
+													(
+														TIME_TO_SEC(b.`endDateTime`) 
+														- 
+														TIME_TO_SEC(b.`startDateTime`)
+														) 
+												) > :aboveThisManySecondsToCount,
+												IF(
+													(
+													(
+														DATEDIFF(b.`endDateTime`, b.`startDateTime`)
+														)*86400 
+													+ 
+													(
+														TIME_TO_SEC(b.`endDateTime`) 
+														- 
+														TIME_TO_SEC(b.`startDateTime`)
+														) 
+												) > :minimumSecondsPerBooking, 
+													(
+													(
+														DATEDIFF(b.`endDateTime`, b.`startDateTime`)
+														)*86400 
+													+ 
+													(
+														TIME_TO_SEC(b.`endDateTime`) 
+														- 
+														TIME_TO_SEC(b.`startDateTime`)
+														) 
+												), 
+													:minimumSecondsPerBooking
+												),
+												0
+											)
+					)))	AS PotentialBookingTimeUsed
+					FROM 		`booking` b 
+					WHERE 		b.`CompanyID` = :companyID
+					AND 		b.`endDateTime` > c.`endDate`
+					AND 		b.`actualEndDateTime` IS NULL
+					AND			b.`dateTimeCancelled` IS NULL';
+			$minimumSecondsPerBooking = MINIMUM_BOOKING_DURATION_IN_MINUTES_USED_IN_PRICE_CALCULATIONS * 60; // e.g. 15min = 900s
+			$aboveThisManySecondsToCount = BOOKING_DURATION_IN_MINUTES_USED_BEFORE_INCLUDING_IN_PRICE_CALCULATIONS * 60; // E.g. 1min = 60s	
+
+			$s = $pdo->prepare($sql);
+			$s->bindValue(':companyID', $companyID);
+			$s->bindValue(':minimumSecondsPerBooking', $minimumSecondsPerBooking);
+			$s->bindValue(':aboveThisManySecondsToCount', $aboveThisManySecondsToCount);
+			$s->execute();
+			$row = $s->fetch(PDO::FETCH_ASSOC);
+
+		/*	if($MonthlyTimeUsed != "N/A"){
+				$monthlyTimeHour = substr($MonthlyTimeUsed,0,strpos($MonthlyTimeUsed,"h"));
+				$monthlyTimeMinute = substr($MonthlyTimeUsed,strpos($MonthlyTimeUsed,"h")+1,-1);
+				$actualTimeUsedInMinutesThisMonth = $monthlyTimeHour*60 + $monthlyTimeMinute;
+				if($actualTimeUsedInMinutesThisMonth > $companyMinuteCredits){
+					$minusCompanyMinuteCreditsRemaining = $actualTimeUsedInMinutesThisMonth - $companyMinuteCredits;
+					$displayCompanyCreditsRemaining = "-" . convertMinutesToHoursAndMinutes($minusCompanyMinuteCreditsRemaining);
+				} else {
+					$companyMinuteCreditsRemaining = $companyMinuteCredits - $actualTimeUsedInMinutesThisMonth;
+					$displayCompanyCreditsRemaining = convertMinutesToHoursAndMinutes($companyMinuteCreditsRemaining);
+				}
+			} else {
+				$companyMinuteCreditsRemaining = $companyMinuteCredits;
+				$displayCompanyCreditsRemaining = convertMinutesToHoursAndMinutes($companyMinuteCreditsRemaining);
+			}*/
+			
+			$bookingWentOverCredits = FALSE;
+			// TO-DO: Calculate if booking went over credits. Assume they get same credits as before
+			$pdo = null;
+		}
+		catch(PDOException $e)
+		{
+			$error = 'Error fetching user details: ' . $e->getMessage();
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+			$pdo = null;
+			exit();
+		}
 	}
 
 	// Send user to the confirmation template if needed
