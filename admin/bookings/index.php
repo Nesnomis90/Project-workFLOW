@@ -2001,7 +2001,7 @@ if(isSet($_POST['edit']) AND $_POST['edit'] == "Finish Edit")
 						if($row['SendOwnerEmail'] == 1){ 
 							// Check if user wants to receive all emails or just the first time booking goes over credit per period
 								// sendEmailOnceOrAlways: 1 = always, sendEmailOnceOrAlways: 0 = once.
-							if(($row['SendEmailOnceOrAlways'] == 1 OR ($row['SendEmailOnceOrAlways'] == 0 AND $firstTimeOverCredit)){ 
+							if($row['SendEmailOnceOrAlways'] == 1 OR ($row['SendEmailOnceOrAlways'] == 0 AND $firstTimeOverCredit)){ 
 								$companyOwnerEmails[] = $row['Email'];
 							}
 						}
@@ -3073,7 +3073,7 @@ if (isSet($_POST['add']) AND $_POST['add'] == "Add booking")
 					if($row['SendOwnerEmail'] == 1){ 
 						// Check if user wants to receive all emails or just the first time booking goes over credit per period
 							// sendEmailOnceOrAlways: 1 = always, sendEmailOnceOrAlways: 0 = once.
-						if(($row['SendEmailOnceOrAlways'] == 1 OR ($row['SendEmailOnceOrAlways'] == 0 AND $firstTimeOverCredit)){ 
+						if($row['SendEmailOnceOrAlways'] == 1 OR ($row['SendEmailOnceOrAlways'] == 0 AND $firstTimeOverCredit)){ 
 							$companyOwnerEmails[] = $row['Email'];
 						}
 					}

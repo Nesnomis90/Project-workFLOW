@@ -25,6 +25,7 @@ function clearAddCreateBookingSessions(){
 	unset($_SESSION['AddCreateBookingDisplayCompanySelect']);
 	unset($_SESSION['AddCreateBookingCompanyArray']);
 	unset($_SESSION['AddCreateBookingStartImmediately']);
+	unset($_SESSION['refreshAddCreateBookingConfirmed']);
 
 	unset($_SESSION['bookingCodeUserID']);
 
@@ -2752,34 +2753,51 @@ if(	((isSet($_POST['action']) AND $_POST['action'] == 'Create Meeting')) OR
 }
 
 // When the user has added the needed information and wants to add the booking
-if (isSet($_POST['add']) AND $_POST['add'] == "Add Booking")
+if ((isSet($_POST['add']) AND $_POST['add'] == "Add Booking") OR 
+	(isSet($_SESSION['refreshAddCreateBookingConfirmed']) AND $_SESSION['refreshAddCreateBookingConfirmed']))
 {
 	// Validate user inputs
-	list($invalidInput, $startDateTime, $endDateTime, $bknDscrptn, $dspname, $bookingCode) = validateUserInputs('AddCreateBookingError', FALSE);
+	if(!isSet($_SESSION['refreshAddCreateBookingConfirmed'])){
+		list($invalidInput, $startDateTime, $endDateTime, $bknDscrptn, $dspname, $bookingCode) = validateUserInputs('AddCreateBookingError', FALSE);
 
-	// handle feedback process on invalid input values
-	if(isSet($_GET['meetingroom'])){
-		$meetingRoomID = $_GET['meetingroom'];
-		$location = "http://$_SERVER[HTTP_HOST]/booking/?meetingroom=" . $meetingRoomID;
+		// handle feedback process on invalid input values
+		if(isSet($_GET['meetingroom'])){
+			$meetingRoomID = $_GET['meetingroom'];
+			$location = "http://$_SERVER[HTTP_HOST]/booking/?meetingroom=" . $meetingRoomID;
+		} else {
+			$meetingRoomID = $_POST['meetingRoomID'];
+			$location = '.';
+		}
+
+		if($invalidInput){
+			rememberAddCreateBookingInputs();
+			$_SESSION['refreshAddCreateBooking'] = TRUE;
+			
+			header('Location: ' . $location);
+			exit();
+		}
+
+		if(isSet($_GET['meetingroom'])){
+			$meetingRoomID = $_GET['meetingroom'];
+		} else {
+			$meetingRoomID = $_POST['meetingRoomID'];
+		}
+		if(isSet($_POST['companyID']) AND !empty($_POST['companyID'])){
+			$companyID = $_POST['companyID'];
+		} else {
+			// TO-DO: Give error since there's no companyID?
+			$companyID = NULL;
+		}
+		$_SESSION['AddCreateBookingInfoArray']['TheCompanyID'] = $companyID;
+		$_SESSION['AddCreateBookingInfoArray']['TheMeetingRoomID'] = $meetingRoomID;
+		$_SESSION['AddCreateBookingInfoArray']['StartTime'] = $startDateTime;
+		$_SESSION['AddCreateBookingInfoArray']['EndTime'] = $endDateTime;
 	} else {
-		$meetingRoomID = $_POST['meetingRoomID'];
-		$location = '.';
+		$meetingRoomID = $_SESSION['AddCreateBookingInfoArray']['TheMeetingRoomID'];
+		$companyID = $_SESSION['AddCreateBookingInfoArray']['TheCompanyID'];
+		$startDateTime = $_SESSION['AddCreateBookingInfoArray']['StartTime'];
+		$endDateTime = $_SESSION['AddCreateBookingInfoArray']['EndTime'];
 	}
-
-	if($invalidInput){
-		rememberAddCreateBookingInputs();
-		$_SESSION['refreshAddCreateBooking'] = TRUE;
-		
-		header('Location: ' . $location);
-		exit();			
-	}
-
-	if(isSet($_GET['meetingroom'])){
-		$meetingRoomID = $_GET['meetingroom'];
-	} else {
-		$meetingRoomID = $_POST['meetingRoomID'];
-	}	
-
 	if(isSet($_SESSION['AddCreateBookingStartImmediately']) AND $_SESSION['AddCreateBookingStartImmediately']){
 		$startDateTime = getDatetimeNow();
 	}
@@ -2883,6 +2901,68 @@ if (isSet($_POST['add']) AND $_POST['add'] == "Add Booking")
 		exit();
 	}
 
+	// We know it's available. Let's check if this booking makes the company go over credits.
+	// If over credits, ask for a confirmation before creating the booking
+	$displayValidatedStartDate = convertDatetimeToFormat($startDateTime , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
+	$displayValidatedEndDate = convertDatetimeToFormat($endDateTime, 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
+	$dateOnlyEndDate = convertDatetimeToFormat($endDateTime, 'Y-m-d H:i:s', 'Y-m-d');
+	$timeBookedInMinutes = convertTwoDateTimesToTimeDifferenceInMinutes($startDateTime,$endDateTime);	
+
+	// Get meeting room name
+	$MeetingRoomName = 'N/A';
+	foreach ($_SESSION['AddCreateBookingMeetingRoomsArray'] AS $room){
+		if($room['meetingRoomID'] == $meetingRoomID){
+			$MeetingRoomName = $room['meetingRoomName'];
+			break;
+		}
+	}
+
+	// Get company info
+	$companyName = 'N/A';
+	if(isSet($companyID)){
+		foreach($_SESSION['AddCreateBookingCompanyArray'] AS $company){
+			if($companyID == $company['companyID']){
+				$companyName = $company['companyName'];
+				$companyCreditsRemaining = $company['creditsRemaining'];
+				$companyCreditsBooked = $company['PotentialExtraMonthlyTimeUsed'];
+				$companyCreditsPotentialMinimumRemaining = $company['PotentialCreditsRemaining'];
+				$companyCreditsPotentialMinimumRemainingInMinutes = convertHoursAndMinutesToMinutes($companyCreditsPotentialMinimumRemaining);
+				$companyPeriodEndDate = $company['endDate'];
+				$companyHourPriceOverCredits = $company['HourPriceOverCredit'];
+				break;
+			}
+		}
+	}
+
+	// Check if the booking that was made was for the current period.
+	$bookingWentOverCredits = FALSE;
+	$firstTimeOverCredit = FALSE;
+	$addExtraLogEventDescription = FALSE;
+	if($dateOnlyEndDate < $companyPeriodEndDate){ // TO-DO: <= ?
+		if($companyCreditsPotentialMinimumRemainingInMinutes < 0){
+			// Company was already over given credits
+			$bookingWentOverCredits = TRUE;
+			$minutesOverCredits = -($companyCreditsPotentialMinimumRemainingInMinutes) + $timeBookedInMinutes;
+			$timeOverCredits = convertMinutesToHoursAndMinutes($minutesOverCredits);
+		} elseif($timeBookedInMinutes > $companyCreditsPotentialMinimumRemainingInMinutes){
+			// This booking, if completed, will put the company over their given credits
+			$bookingWentOverCredits = TRUE;
+			$firstTimeOverCredit = TRUE;
+			$minutesOverCredits = $timeBookedInMinutes - $companyCreditsPotentialMinimumRemainingInMinutes;
+			$timeOverCredits = convertMinutesToHoursAndMinutes($minutesOverCredits);
+		}
+		$addExtraLogEventDescription = TRUE;
+	} else {
+		// TO-DO: Get credits used so far for the future period
+	}
+
+	// Send user to the confirmation template if needed
+	if($bookingWentOverCredits AND !isSet($_SESSION['refreshAddCreateBookingConfirmed'])){
+		var_dump($_SESSION); // TO-DO: Remove before uploading
+		include_once 'confirmbooking.html.php';
+		exit();
+	}
+
 	unset($_SESSION['AddCreateBookingStartImmediately']);
 
 	if(empty($dspname) AND !empty($_SESSION["AddCreateBookingInfoArray"]["BookedBy"])){
@@ -2895,13 +2975,6 @@ if (isSet($_POST['add']) AND $_POST['add'] == "Add Booking")
 	// Add the booking to the database
 	try
 	{
-		if(	isSet($_POST['companyID']) AND $_POST['companyID'] != NULL AND 
-			$_POST['companyID'] != ''){
-			$companyID = $_POST['companyID'];
-		} else {
-			$companyID = NULL;
-		}
-
 		// Generate cancellation code
 		$cancellationCode = generateCancellationCode();
 
@@ -2943,22 +3016,10 @@ if (isSet($_POST['add']) AND $_POST['add'] == "Add Booking")
 
 	$_SESSION['normalBookingFeedback'] = "Successfully created the booking.";
 
-	$displayValidatedStartDate = convertDatetimeToFormat($startDateTime , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
-	$displayValidatedEndDate = convertDatetimeToFormat($endDateTime, 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
-	$dateOnlyEndDate = convertDatetimeToFormat($endDateTime, 'Y-m-d H:i:s', 'Y-m-d');
-	$timeBookedInMinutes = convertTwoDateTimesToTimeDifferenceInMinutes($startDateTime,$endDateTime);
-
 	// Add a log event that a booking has been created
 	try
 	{
-		// Get meeting room name
-		$MeetingRoomName = 'N/A';
-		foreach ($_SESSION['AddCreateBookingMeetingRoomsArray'] AS $room){
-			if($room['meetingRoomID'] == $meetingRoomID){
-				$MeetingRoomName = $room['meetingRoomName'];
-				break;
-			}
-		}
+
 		unset($_SESSION['AddCreateBookingMeetingRoomsArray']);
 
 		$meetinginfo = $MeetingRoomName . ' for the timeslot: ' . 
@@ -2969,23 +3030,6 @@ if (isSet($_POST['add']) AND $_POST['add'] == "Add Booking")
 		$info = $_SESSION['AddCreateBookingInfoArray']; 
 		if(isSet($info['UserLastname'])){
 			$userinfo = $info['UserLastname'] . ', ' . $info['UserFirstname'] . ' - ' . $info['UserEmail'];
-		}
-
-		// Get company name
-		$companyName = 'N/A';
-		if(isSet($companyID)){
-			foreach($_SESSION['AddCreateBookingCompanyArray'] AS $company){
-				if($companyID == $company['companyID']){
-					$companyName = $company['companyName'];
-					$companyCreditsRemaining = $company['creditsRemaining'];
-					$companyCreditsBooked = $company['PotentialExtraMonthlyTimeUsed'];
-					$companyCreditsPotentialMinimumRemaining = $company['PotentialCreditsRemaining'];
-					$companyCreditsPotentialMinimumRemainingInMinutes = convertHoursAndMinutesToMinutes($companyCreditsPotentialMinimumRemaining);
-					$companyPeriodEndDate = $company['endDate'];
-					$companyHourPriceOverCredits = $company['HourPriceOverCredit'];
-					break;
-				}
-			}
 		}
 
 		$nameOfUserWhoBooked = "N/A";
@@ -3004,23 +3048,7 @@ if (isSet($_POST['add']) AND $_POST['add'] == "Add Booking")
 								"\nBooked for User: " . $userinfo . 
 								"\nBooked for Company: " . $companyName . 
 								"\nIt was created by: " . $nameOfUserWhoBooked;
-
-		// Check if the booking that was made was for the current period.
-		$bookingWentOverCredits = FALSE;
-		$firstTimeOverCredit = FALSE;
-		if($dateOnlyEndDate < $companyPeriodEndDate){ // TO-DO: <= ?
-			if($companyCreditsPotentialMinimumRemainingInMinutes < 0){
-				// Company was already over given credits
-				$bookingWentOverCredits = TRUE;
-				$minutesOverCredits = -($companyCreditsPotentialMinimumRemainingInMinutes) + $timeBookedInMinutes;
-				$timeOverCredits = convertMinutesToHoursAndMinutes($minutesOverCredits);
-			} elseif($timeBookedInMinutes > $companyCreditsPotentialMinimumRemainingInMinutes){
-				// This booking, if completed, will put the company over their given credits
-				$bookingWentOverCredits = TRUE;
-				$firstTimeOverCredit = TRUE;
-				$minutesOverCredits = $timeBookedInMinutes - $companyCreditsPotentialMinimumRemainingInMinutes;
-				$timeOverCredits = convertMinutesToHoursAndMinutes($minutesOverCredits);
-			}
+		if($addExtraLogEventDescription){
 			$logEventDescription .= "\nThis booking, if completed, will put the company at $timeOverCredits over the Credits given this period.";
 		}
 
@@ -3047,8 +3075,8 @@ if (isSet($_POST['add']) AND $_POST['add'] == "Add Booking")
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
 		$pdo = null;
 		exit();
-	}		
-	
+	}
+
 	//Send email with booking information and cancellation code to the user who the booking is for.
 		// TO-DO: This is UNTESTED since we don't have php.ini set up to actually send email	
 	if($info['sendEmail'] == 1){
@@ -3070,13 +3098,13 @@ if (isSet($_POST['add']) AND $_POST['add'] == "Add Booking")
 		}
 
 		$email = $_SESSION['AddCreateBookingInfoArray']['UserEmail'];
-		
+
 		$mailResult = sendEmail($email, $emailSubject, $emailMessage);
-		
+
 		if(!$mailResult){
 			$_SESSION['normalBookingFeedback'] .= "\n\n[WARNING] System failed to send Email to user.";
 		}
-		
+
 		$_SESSION['normalBookingFeedback'] .= "\nThis is the email msg we're sending out:\n$emailMessage.\nSent to email: $email."; // TO-DO: Remove before uploading
 	} elseif($info['sendEmail'] == 0){
 		$_SESSION['normalBookingFeedback'] .= "\nUser did not want to get sent Emails.";
@@ -3173,6 +3201,33 @@ if (isSet($_POST['add']) AND $_POST['add'] == "Add Booking")
 	
 	// Load booking history list webpage with new booking
 	header('Location: .');
+	exit();
+}
+
+if(isSet($_POST['confirm']) AND $_POST['confirm'] == "Yes, Create The Booking"){
+	$_SESSION['refreshAddCreateBookingConfirmed'] = TRUE;
+	if(isSet($_GET['meetingroom'])){
+		$meetingRoomID = $_GET['meetingroom'];
+		$location = "http://$_SERVER[HTTP_HOST]/booking/?meetingroom=" . $meetingRoomID;
+	} else {
+		$meetingRoomID = $_POST['meetingRoomID'];
+		$location = '.';
+	}
+	header('Location: ' . $location);
+	exit();
+}
+
+if(isSet($_POST['confirm']) AND $_POST['confirm'] == "No, Cancel The Booking"){
+	$_SESSION['normalBookingFeedback'] = "You cancelled your new booking.";
+	unset($_SESSION['refreshAddCreateBookingConfirmed']);
+	if(isSet($_GET['meetingroom'])){
+		$meetingRoomID = $_GET['meetingroom'];
+		$location = "http://$_SERVER[HTTP_HOST]/booking/?meetingroom=" . $meetingRoomID;
+	} else {
+		$meetingRoomID = $_POST['meetingRoomID'];
+		$location = '.';
+	}
+	header('Location: ' . $location);
 	exit();
 }
 

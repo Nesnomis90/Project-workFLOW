@@ -16,20 +16,16 @@
 	<body onload="startTime()">
 		<?php include_once $_SERVER['DOCUMENT_ROOT'] .'/includes/topnav.html.php'; ?>
 
-		<fieldset><legend>Booking Information:</legend>
+		<fieldset><legend>Warning!</legend>
 			<div class="left">
-				<span style="white-space: pre-wrap;" class="warning">TO-DO: This booking will put your company at xhxm above credits this period and will result in a cost of xxkr/h </span>
-				<label>Meeting Room: </label>
-				<span></span>
-				<label>Start Date: </label>
-				<span></span>
-				<label>End Date: </label>
-				<span></span>
-				<label>Booked For Company: </label>
-				<span></span>
+				<span style="white-space: pre-wrap;"><?php htmlout("This booking, if completed, will put the company $companyName at a total of $timeOverCredits above credits this period." .
+					"\nThe 'over credits'-fee is $companyHourPriceOverCredits" .
+					"\nDo you still want to create this booking?"); ?></span>
+			</div>
+			<div class="left">
 				<form action="" method="post">
-					<input type="submit" name="action" value="Confirm Booking">
-					<input type="submit" name="add" value="Cancel">
+					<input type="submit" name="confirm" value="Yes, Create The Booking">
+					<input type="submit" name="confirm" value="No, Cancel The Booking">
 				</form>
 			</div>
 		</fieldset>
