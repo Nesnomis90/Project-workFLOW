@@ -2788,6 +2788,7 @@ if ((isSet($_POST['add']) AND $_POST['add'] == "Add Booking") OR
 			// TO-DO: Give error since there's no companyID?
 			$companyID = NULL;
 		}
+
 		$_SESSION['AddCreateBookingInfoArray']['TheCompanyID'] = $companyID;
 		$_SESSION['AddCreateBookingInfoArray']['TheMeetingRoomID'] = $meetingRoomID;
 		$_SESSION['AddCreateBookingInfoArray']['StartTime'] = $startDateTime;
@@ -2927,7 +2928,9 @@ if ((isSet($_POST['add']) AND $_POST['add'] == "Add Booking") OR
 				$companyCreditsBooked = $company['PotentialExtraMonthlyTimeUsed'];
 				$companyCreditsPotentialMinimumRemaining = $company['PotentialCreditsRemaining'];
 				$companyCreditsPotentialMinimumRemainingInMinutes = convertHoursAndMinutesToMinutes($companyCreditsPotentialMinimumRemaining);
-				$companyPeriodEndDate = $company['endDate'];
+				$companyPeriodEndDate = $company['endDate']; //Display format
+				$companyPeriodEndDate = convertDatetimeToFormat($companyPeriodEndDate, DATE_DEFAULT_FORMAT_TO_DISPLAY, 'Y-m-d');
+				
 				$companyHourPriceOverCredits = $company['HourPriceOverCredit'];
 				break;
 			}
@@ -2953,7 +2956,10 @@ if ((isSet($_POST['add']) AND $_POST['add'] == "Add Booking") OR
 		}
 		$addExtraLogEventDescription = TRUE;
 	} else {
+		$bookingWentOverCredits = FALSE;
 		// TO-DO: Get credits used so far for the future period
+		// Assume they'll have the same credits given that period
+		
 	}
 
 	// Send user to the confirmation template if needed
