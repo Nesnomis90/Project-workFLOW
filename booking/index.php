@@ -2588,6 +2588,7 @@ if(	((isSet($_POST['action']) AND $_POST['action'] == 'Create Meeting')) OR
 									'companyName' => $row['companyName'],
 									'startDate' => $row['startDate'],
 									'endDate' => $displayEndDate,
+									'creditsGiven' => $companyMinuteCredits,
 									'creditsRemaining' => $displayCompanyCreditsRemaining,
 									'PotentialExtraMonthlyTimeUsed' => $displayPotentialExtraMonthlyTimeUsed,
 									'PotentialCreditsRemaining' => $displayPotentialCompanyCreditsRemaining,
@@ -2934,6 +2935,7 @@ if ((isSet($_POST['add']) AND $_POST['add'] == "Add Booking") OR
 				$companyPeriodEndDate = convertDatetimeToFormat($displayCompanyPeriodEndDate, DATE_DEFAULT_FORMAT_TO_DISPLAY, 'Y-m-d');
 				$companyPeriodStartDate = $company['startDate'];
 				$companyHourPriceOverCredits = $company['HourPriceOverCredit'];
+				$companyMinuteCredits = $company['creditsGiven'];
 				break;
 			}
 		}
@@ -3031,24 +3033,30 @@ if ((isSet($_POST['add']) AND $_POST['add'] == "Add Booking") OR
 			$s->execute();
 			$row = $s->fetch(PDO::FETCH_ASSOC);
 
-		/*	if($MonthlyTimeUsed != "N/A"){
+			if(isSet($row) AND !empty($row['PotentialBookingTimeUsed'])){
+				$MonthlyTimeUsed = $row['PotentialBookingTimeUsed'];
+			} else {
+				$MonthlyTimeUsed = "N/A";
+			}
+
+			if($MonthlyTimeUsed != "N/A"){
 				$monthlyTimeHour = substr($MonthlyTimeUsed,0,strpos($MonthlyTimeUsed,"h"));
 				$monthlyTimeMinute = substr($MonthlyTimeUsed,strpos($MonthlyTimeUsed,"h")+1,-1);
 				$actualTimeUsedInMinutesThisMonth = $monthlyTimeHour*60 + $monthlyTimeMinute;
 				if($actualTimeUsedInMinutesThisMonth > $companyMinuteCredits){
+					$bookingWentOverCredits = TRUE;
 					$minusCompanyMinuteCreditsRemaining = $actualTimeUsedInMinutesThisMonth - $companyMinuteCredits;
 					$displayCompanyCreditsRemaining = "-" . convertMinutesToHoursAndMinutes($minusCompanyMinuteCreditsRemaining);
 				} else {
+					$bookingWentOverCredits = FALSE;
 					$companyMinuteCreditsRemaining = $companyMinuteCredits - $actualTimeUsedInMinutesThisMonth;
 					$displayCompanyCreditsRemaining = convertMinutesToHoursAndMinutes($companyMinuteCreditsRemaining);
 				}
 			} else {
+				$bookingWentOverCredits = FALSE;
 				$companyMinuteCreditsRemaining = $companyMinuteCredits;
 				$displayCompanyCreditsRemaining = convertMinutesToHoursAndMinutes($companyMinuteCreditsRemaining);
-			}*/
-			
-			$bookingWentOverCredits = FALSE;
-			// TO-DO: Calculate if booking went over credits. Assume they get same credits as before
+			}
 			$pdo = null;
 		}
 		catch(PDOException $e)
