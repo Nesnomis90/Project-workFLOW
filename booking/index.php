@@ -2364,6 +2364,7 @@ if(	((isSet($_POST['action']) AND $_POST['action'] == 'Create Meeting')) OR
 		$pdo = connect_to_db();
 		$sql = 'SELECT		c.`companyID`,
 							c.`name` 					AS companyName,
+							c.`startDate`
 							c.`endDate`,
 							(
 								SELECT (BIG_SEC_TO_TIME(SUM(
@@ -2585,6 +2586,7 @@ if(	((isSet($_POST['action']) AND $_POST['action'] == 'Create Meeting')) OR
 				$company[] = array(
 									'companyID' => $row['companyID'],
 									'companyName' => $row['companyName'],
+									'startDate' => $row['startDate'],
 									'endDate' => $displayEndDate,
 									'creditsRemaining' => $displayCompanyCreditsRemaining,
 									'PotentialExtraMonthlyTimeUsed' => $displayPotentialExtraMonthlyTimeUsed,
@@ -2807,7 +2809,7 @@ if ((isSet($_POST['add']) AND $_POST['add'] == "Add Booking") OR
 	try
 	{
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
-		$pdo = connect_to_db();					
+		$pdo = connect_to_db();
 		$sql =	" 	SELECT SUM(cnt)	AS HitCount
 					FROM 
 					(
@@ -2882,14 +2884,14 @@ if ((isSet($_POST['add']) AND $_POST['add'] == "Add Booking") OR
 	}
 
 	// Check if we got any hits, if so the timeslot is already taken
-	$row = $s->fetch(PDO::FETCH_ASSOC);		
+	$row = $s->fetch(PDO::FETCH_ASSOC);	
 	if ($row['HitCount'] > 0){
 
 		// Timeslot was taken
 		rememberAddCreateBookingInputs();
 
 		$_SESSION['AddCreateBookingError'] = "The booking couldn't be made. The timeslot is already taken for this meeting room.";
-		$_SESSION['refreshAddCreateBooking'] = TRUE;	
+		$_SESSION['refreshAddCreateBooking'] = TRUE;
 
 		if(isSet($_GET['meetingroom'])){
 			$meetingRoomID = $_GET['meetingroom'];
@@ -2928,9 +2930,9 @@ if ((isSet($_POST['add']) AND $_POST['add'] == "Add Booking") OR
 				$companyCreditsBooked = $company['PotentialExtraMonthlyTimeUsed'];
 				$companyCreditsPotentialMinimumRemaining = $company['PotentialCreditsRemaining'];
 				$companyCreditsPotentialMinimumRemainingInMinutes = convertHoursAndMinutesToMinutes($companyCreditsPotentialMinimumRemaining);
-				$companyPeriodEndDate = $company['endDate']; //Display format
-				$companyPeriodEndDate = convertDatetimeToFormat($companyPeriodEndDate, DATE_DEFAULT_FORMAT_TO_DISPLAY, 'Y-m-d');
-				
+				$displayCompanyPeriodEndDate = $company['endDate']; //Display format
+				$companyPeriodEndDate = convertDatetimeToFormat($displayCompanyPeriodEndDate, DATE_DEFAULT_FORMAT_TO_DISPLAY, 'Y-m-d');
+				$companyPeriodStartDate = $company['startDate'];
 				$companyHourPriceOverCredits = $company['HourPriceOverCredit'];
 				break;
 			}
@@ -2956,7 +2958,13 @@ if ((isSet($_POST['add']) AND $_POST['add'] == "Add Booking") OR
 		}
 		$addExtraLogEventDescription = TRUE;
 	} else {
-		// TO-DO: FIX-ME: Get the exact period we're booking for. Not just "anything in the future" like now.!!!!!
+		
+		// Get exact period the user is booking for
+		$newDate = DateTime::createFromFormat("Y-m-d", $dateOnlyEndDate)
+		$dayNumberToKeep = $newDate->format("d");
+		
+		list($newCompanyPeriodStart, $newCompanyPeriodEnd) = getPeriodDatesForCompanyFromDateSubmitted($dayNumberToKeep, $dateOnlyEndDate, $companyPeriodStartDate, $companyPeriodEndDate);
+
 		// Get booking time used so far for the future period
 		try
 		{
@@ -2969,7 +2977,7 @@ if ((isSet($_POST['add']) AND $_POST['add'] == "Add Booking") OR
 													(
 														DATEDIFF(b.`endDateTime`, b.`startDateTime`)
 														)*86400 
-													+ 
+							 						+ 
 													(
 														TIME_TO_SEC(b.`endDateTime`) 
 														- 
@@ -3006,7 +3014,9 @@ if ((isSet($_POST['add']) AND $_POST['add'] == "Add Booking") OR
 					)))	AS PotentialBookingTimeUsed
 					FROM 		`booking` b 
 					WHERE 		b.`CompanyID` = :companyID
-					AND 		b.`endDateTime` > c.`endDate`
+					AND 		b.`endDateTime`
+					BETWEEN		:newStartPeriod
+					AND			:newEndPeriod
 					AND 		b.`actualEndDateTime` IS NULL
 					AND			b.`dateTimeCancelled` IS NULL';
 			$minimumSecondsPerBooking = MINIMUM_BOOKING_DURATION_IN_MINUTES_USED_IN_PRICE_CALCULATIONS * 60; // e.g. 15min = 900s
@@ -3016,6 +3026,8 @@ if ((isSet($_POST['add']) AND $_POST['add'] == "Add Booking") OR
 			$s->bindValue(':companyID', $companyID);
 			$s->bindValue(':minimumSecondsPerBooking', $minimumSecondsPerBooking);
 			$s->bindValue(':aboveThisManySecondsToCount', $aboveThisManySecondsToCount);
+			$s->bindValue(':newStartPeriod', $newCompanyPeriodStart);
+			$s->bindValue(':newEndPeriod', $newCompanyPeriodEnd);
 			$s->execute();
 			$row = $s->fetch(PDO::FETCH_ASSOC);
 
