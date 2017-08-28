@@ -21,6 +21,45 @@ function convertDatetimeToFormat($oldDatetimeString, $oldformat, $format){
 	}
 }
 
+function getPeriodDatesForCompanyFromDateSubmitted($dayNumberToKeep, $selectedDate, $companyStartDate, $companyEndDate){
+
+	if($selectedDate >= $companyStartDate){
+		// Selected date is a valid period date
+		if($selectedDate <= $companyEndDate){
+			// Selected date is in current/correct period
+			return array($companyStartDate, $companyEndDate);
+		} else {
+			// Add one month to periods and try again
+			$newPeriodStartDate = $companyEndDate;
+			$newPeriodEndDate = addOneMonthToPeriodDate($dayNumberToKeep, $companyEndDate);
+			list($companyStartDate, $companyEndDate) = getPeriodDatesForCompanyFromDateSubmitted($dayNumberToKeep, $selectedDate, $newPeriodStartDate, $newPeriodEndDate);
+			return array($companyStartDate, $companyEndDate);
+		}
+	} else {
+		return FALSE;
+	}
+}
+
+// We add one month were possible. For months, like february, we have to adjust our date
+function addOneMonthToPeriodDate($dayNumberToKeep, $date){
+	$newDate = DateTime::createFromFormat("Y-m-d", $date);
+	$newDateCheck = DateTime::createFromFormat("Y-m-d", $date);
+	$dayOnly = $newDate->format("d");
+	if($dayOnly < $dayNumberToKeep){
+		$dayOnly = $dayNumberToKeep;
+	}
+	$newDate->modify('first day of next month');
+	$newDate->modify('+ ' . ($dayOnly - 1) . 'days');
+	$newDateCheck->modify('last day of next month');
+	$newDate = $newDate->format("Y-m-d");
+	$newDateCheck = $newDateCheck->format("Y-m-d");
+	if($newDate > $newDateCheck){
+		return $newDateCheck;
+	} else {
+		return $newDate;
+	}
+}
+
 function getDateTimeFromTimeDayNameWeekNumberAndYear($time,$day,$week,$year){
 	$date = new DateTime();
 	switch(strtolower($day)) {

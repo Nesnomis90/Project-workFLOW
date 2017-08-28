@@ -2364,6 +2364,7 @@ if(	((isSet($_POST['action']) AND $_POST['action'] == 'Create Meeting')) OR
 		$pdo = connect_to_db();
 		$sql = 'SELECT		c.`companyID`,
 							c.`name` 					AS companyName,
+							c.`startDate`,
 							c.`endDate`,
 							(
 								SELECT (BIG_SEC_TO_TIME(SUM(
@@ -2585,7 +2586,9 @@ if(	((isSet($_POST['action']) AND $_POST['action'] == 'Create Meeting')) OR
 				$company[] = array(
 									'companyID' => $row['companyID'],
 									'companyName' => $row['companyName'],
+									'startDate' => $row['startDate'],
 									'endDate' => $displayEndDate,
+									'creditsGiven' => $companyMinuteCredits,
 									'creditsRemaining' => $displayCompanyCreditsRemaining,
 									'PotentialExtraMonthlyTimeUsed' => $displayPotentialExtraMonthlyTimeUsed,
 									'PotentialCreditsRemaining' => $displayPotentialCompanyCreditsRemaining,
@@ -2807,7 +2810,7 @@ if ((isSet($_POST['add']) AND $_POST['add'] == "Add Booking") OR
 	try
 	{
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
-		$pdo = connect_to_db();					
+		$pdo = connect_to_db();
 		$sql =	" 	SELECT SUM(cnt)	AS HitCount
 					FROM 
 					(
@@ -2882,14 +2885,14 @@ if ((isSet($_POST['add']) AND $_POST['add'] == "Add Booking") OR
 	}
 
 	// Check if we got any hits, if so the timeslot is already taken
-	$row = $s->fetch(PDO::FETCH_ASSOC);		
+	$row = $s->fetch(PDO::FETCH_ASSOC);	
 	if ($row['HitCount'] > 0){
 
 		// Timeslot was taken
 		rememberAddCreateBookingInputs();
 
 		$_SESSION['AddCreateBookingError'] = "The booking couldn't be made. The timeslot is already taken for this meeting room.";
-		$_SESSION['refreshAddCreateBooking'] = TRUE;	
+		$_SESSION['refreshAddCreateBooking'] = TRUE;
 
 		if(isSet($_GET['meetingroom'])){
 			$meetingRoomID = $_GET['meetingroom'];
@@ -2907,7 +2910,7 @@ if ((isSet($_POST['add']) AND $_POST['add'] == "Add Booking") OR
 	$displayValidatedStartDate = convertDatetimeToFormat($startDateTime , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
 	$displayValidatedEndDate = convertDatetimeToFormat($endDateTime, 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
 	$dateOnlyEndDate = convertDatetimeToFormat($endDateTime, 'Y-m-d H:i:s', 'Y-m-d');
-	$timeBookedInMinutes = convertTwoDateTimesToTimeDifferenceInMinutes($startDateTime,$endDateTime);	
+	$timeBookedInMinutes = convertTwoDateTimesToTimeDifferenceInMinutes($startDateTime, $endDateTime);	
 
 	// Get meeting room name
 	$MeetingRoomName = 'N/A';
@@ -2928,10 +2931,11 @@ if ((isSet($_POST['add']) AND $_POST['add'] == "Add Booking") OR
 				$companyCreditsBooked = $company['PotentialExtraMonthlyTimeUsed'];
 				$companyCreditsPotentialMinimumRemaining = $company['PotentialCreditsRemaining'];
 				$companyCreditsPotentialMinimumRemainingInMinutes = convertHoursAndMinutesToMinutes($companyCreditsPotentialMinimumRemaining);
-				$companyPeriodEndDate = $company['endDate']; //Display format
-				$companyPeriodEndDate = convertDatetimeToFormat($companyPeriodEndDate, DATE_DEFAULT_FORMAT_TO_DISPLAY, 'Y-m-d');
-				
+				$displayCompanyPeriodEndDate = $company['endDate']; //Display format
+				$companyPeriodEndDate = convertDatetimeToFormat($displayCompanyPeriodEndDate, DATE_DEFAULT_FORMAT_TO_DISPLAY, 'Y-m-d');
+				$companyPeriodStartDate = $company['startDate'];
 				$companyHourPriceOverCredits = $company['HourPriceOverCredit'];
+				$companyMinuteCredits = $company['creditsGiven'];
 				break;
 			}
 		}
@@ -2941,7 +2945,8 @@ if ((isSet($_POST['add']) AND $_POST['add'] == "Add Booking") OR
 	$bookingWentOverCredits = FALSE;
 	$firstTimeOverCredit = FALSE;
 	$addExtraLogEventDescription = FALSE;
-	if($dateOnlyEndDate < $companyPeriodEndDate){ // TO-DO: <= ?
+	$newPeriod = FALSE;
+	if($dateOnlyEndDate <= $companyPeriodEndDate){
 		if($companyCreditsPotentialMinimumRemainingInMinutes < 0){
 			// Company was already over given credits
 			$bookingWentOverCredits = TRUE;
@@ -2956,7 +2961,17 @@ if ((isSet($_POST['add']) AND $_POST['add'] == "Add Booking") OR
 		}
 		$addExtraLogEventDescription = TRUE;
 	} else {
-		// TO-DO: FIX-ME: Get the exact period we're booking for. Not just "anything in the future" like now.!!!!!
+		$newPeriod = TRUE;
+		// Get exact period the user is booking for
+		$newDate = DateTime::createFromFormat("Y-m-d", $companyPeriodEndDate);
+		$dayNumberToKeep = $newDate->format("d");
+		
+		list($newCompanyPeriodStart, $newCompanyPeriodEnd) = getPeriodDatesForCompanyFromDateSubmitted($dayNumberToKeep, $dateOnlyEndDate, $companyPeriodStartDate, $companyPeriodEndDate);
+
+		// For displaying the new period dates
+		$periodStartDate = convertDatetimeToFormat($newCompanyPeriodStart, "Y-m-d", DATE_DEFAULT_FORMAT_TO_DISPLAY);
+		$periodEndDate = convertDatetimeToFormat($newCompanyPeriodEnd, "Y-m-d", DATE_DEFAULT_FORMAT_TO_DISPLAY);
+
 		// Get booking time used so far for the future period
 		try
 		{
@@ -2969,7 +2984,7 @@ if ((isSet($_POST['add']) AND $_POST['add'] == "Add Booking") OR
 													(
 														DATEDIFF(b.`endDateTime`, b.`startDateTime`)
 														)*86400 
-													+ 
+							 						+ 
 													(
 														TIME_TO_SEC(b.`endDateTime`) 
 														- 
@@ -3006,37 +3021,45 @@ if ((isSet($_POST['add']) AND $_POST['add'] == "Add Booking") OR
 					)))	AS PotentialBookingTimeUsed
 					FROM 		`booking` b 
 					WHERE 		b.`CompanyID` = :companyID
-					AND 		b.`endDateTime` > c.`endDate`
+					AND 		b.`endDateTime`
+					BETWEEN		:newStartPeriod
+					AND			:newEndPeriod
 					AND 		b.`actualEndDateTime` IS NULL
 					AND			b.`dateTimeCancelled` IS NULL';
 			$minimumSecondsPerBooking = MINIMUM_BOOKING_DURATION_IN_MINUTES_USED_IN_PRICE_CALCULATIONS * 60; // e.g. 15min = 900s
 			$aboveThisManySecondsToCount = BOOKING_DURATION_IN_MINUTES_USED_BEFORE_INCLUDING_IN_PRICE_CALCULATIONS * 60; // E.g. 1min = 60s	
+			$newCompanyPeriodStartAsDateTime = convertDatetimeToFormat($newCompanyPeriodStart, "Y-m-d", "Y-m-d H:i:s");
+			$newCompanyPeriodEndAsDateTime = convertDatetimeToFormat($newCompanyPeriodEnd, "Y-m-d", "Y-m-d H:i:s");
 
 			$s = $pdo->prepare($sql);
 			$s->bindValue(':companyID', $companyID);
 			$s->bindValue(':minimumSecondsPerBooking', $minimumSecondsPerBooking);
 			$s->bindValue(':aboveThisManySecondsToCount', $aboveThisManySecondsToCount);
+			$s->bindValue(':newStartPeriod', $newCompanyPeriodStartAsDateTime);
+			$s->bindValue(':newEndPeriod', $newCompanyPeriodEndAsDateTime);
 			$s->execute();
 			$row = $s->fetch(PDO::FETCH_ASSOC);
 
-		/*	if($MonthlyTimeUsed != "N/A"){
-				$monthlyTimeHour = substr($MonthlyTimeUsed,0,strpos($MonthlyTimeUsed,"h"));
-				$monthlyTimeMinute = substr($MonthlyTimeUsed,strpos($MonthlyTimeUsed,"h")+1,-1);
-				$actualTimeUsedInMinutesThisMonth = $monthlyTimeHour*60 + $monthlyTimeMinute;
-				if($actualTimeUsedInMinutesThisMonth > $companyMinuteCredits){
-					$minusCompanyMinuteCreditsRemaining = $actualTimeUsedInMinutesThisMonth - $companyMinuteCredits;
-					$displayCompanyCreditsRemaining = "-" . convertMinutesToHoursAndMinutes($minusCompanyMinuteCreditsRemaining);
-				} else {
-					$companyMinuteCreditsRemaining = $companyMinuteCredits - $actualTimeUsedInMinutesThisMonth;
-					$displayCompanyCreditsRemaining = convertMinutesToHoursAndMinutes($companyMinuteCreditsRemaining);
-				}
+			if(isSet($row['PotentialBookingTimeUsed']) AND !empty($row['PotentialBookingTimeUsed'])){
+				$timeBookedSoFarThisPeriod = convertTimeToMinutes($row['PotentialBookingTimeUsed']);
 			} else {
-				$companyMinuteCreditsRemaining = $companyMinuteCredits;
-				$displayCompanyCreditsRemaining = convertMinutesToHoursAndMinutes($companyMinuteCreditsRemaining);
-			}*/
-			
-			$bookingWentOverCredits = FALSE;
-			// TO-DO: Calculate if booking went over credits. Assume they get same credits as before
+				$timeBookedSoFarThisPeriod = 0;
+			}
+
+			// Add the time in minutes for the selected booking to the period time
+			$totalTimeBookedSoFarThisPeriod = $timeBookedSoFarThisPeriod + $timeBookedInMinutes;
+			$totalTimeBookedInTime = convertMinutesToHoursAndMinutes($totalTimeBookedSoFarThisPeriod);
+
+			if($totalTimeBookedSoFarThisPeriod > $companyMinuteCredits){
+				$bookingWentOverCredits = TRUE;
+				if($timeBookedSoFarThisPeriod <= $companyMinuteCredits){
+					$firstTimeOverCredit = TRUE;
+				}
+				$minutesOverCredits = $totalTimeBookedSoFarThisPeriod - $companyMinuteCredits;
+				$timeOverCredits = convertMinutesToHoursAndMinutes($minutesOverCredits);
+				$addExtraLogEventDescription = TRUE;
+			}
+
 			$pdo = null;
 		}
 		catch(PDOException $e)
