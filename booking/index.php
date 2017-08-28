@@ -2945,7 +2945,8 @@ if ((isSet($_POST['add']) AND $_POST['add'] == "Add Booking") OR
 	$bookingWentOverCredits = FALSE;
 	$firstTimeOverCredit = FALSE;
 	$addExtraLogEventDescription = FALSE;
-	if($dateOnlyEndDate < $companyPeriodEndDate){ // TO-DO: <= ?
+	$newPeriod = FALSE;
+	if($dateOnlyEndDate <= $companyPeriodEndDate){
 		if($companyCreditsPotentialMinimumRemainingInMinutes < 0){
 			// Company was already over given credits
 			$bookingWentOverCredits = TRUE;
@@ -2960,7 +2961,7 @@ if ((isSet($_POST['add']) AND $_POST['add'] == "Add Booking") OR
 		}
 		$addExtraLogEventDescription = TRUE;
 	} else {
-		
+		$newPeriod = TRUE;
 		// Get exact period the user is booking for
 		$newDate = DateTime::createFromFormat("Y-m-d", $dateOnlyEndDate);
 		$dayNumberToKeep = $newDate->format("d");
@@ -3034,30 +3035,25 @@ if ((isSet($_POST['add']) AND $_POST['add'] == "Add Booking") OR
 			$row = $s->fetch(PDO::FETCH_ASSOC);
 
 			if(isSet($row['PotentialBookingTimeUsed']) AND !empty($row['PotentialBookingTimeUsed'])){
-				$MonthlyTimeUsed = $row['PotentialBookingTimeUsed'];
+				$timeBookedSoFarThisPeriod = convertHoursAndMinutesToMinutes($row['PotentialBookingTimeUsed']);
 			} else {
-				$MonthlyTimeUsed = "N/A";
+				$timeBookedSoFarThisPeriod = 0;
 			}
 
-			// TO-DO: Test this. Doesn't seem to work.
-			
-			if($MonthlyTimeUsed != "N/A"){
-				// TO-DO: Add check if booking went over credits for the first time?!?!?!?!
-				$monthlyTimeHour = substr($MonthlyTimeUsed,0,strpos($MonthlyTimeUsed,"h"));
-				$monthlyTimeMinute = substr($MonthlyTimeUsed,strpos($MonthlyTimeUsed,"h")+1,-1);
-				$actualTimeUsedInMinutesThisMonth = $monthlyTimeHour*60 + $monthlyTimeMinute;
-				if($actualTimeUsedInMinutesThisMonth > $companyMinuteCredits){
-					$bookingWentOverCredits = TRUE;
-					$minusCompanyMinuteCreditsRemaining = $actualTimeUsedInMinutesThisMonth - $companyMinuteCredits;
-					$displayCompanyCreditsRemaining = "-" . convertMinutesToHoursAndMinutes($minusCompanyMinuteCreditsRemaining);
-				} else {
-					$companyMinuteCreditsRemaining = $companyMinuteCredits - $actualTimeUsedInMinutesThisMonth;
-					$displayCompanyCreditsRemaining = convertMinutesToHoursAndMinutes($companyMinuteCreditsRemaining);
+			// Add the time in minutes for the selected booking to the period time
+			$currentBookingTime = convertTwoDateTimesToTimeDifferenceInMinutes($startDateTime, $endDateTime);
+			$totalTimeBookedSoFarThisPeriod = $timeBookedSoFarThisPeriod + $currentBookingTime;
+
+			if($totalTimeBookedSoFarThisPeriod > $companyMinuteCredits){
+				$bookingWentOverCredits = TRUE;
+				if($timeBookedSoFarThisPeriod <= $companyMinuteCredits){
+					$firstTimeOverCredit = TRUE;
 				}
-			} else {
-				$companyMinuteCreditsRemaining = $companyMinuteCredits;
-				$displayCompanyCreditsRemaining = convertMinutesToHoursAndMinutes($companyMinuteCreditsRemaining);
+				$minutesOverCredits = $totalTimeBookedSoFarThisPeriod - $companyMinuteCredits;
+				$timeOverCredits = convertMinutesToHoursAndMinutes($minutesOverCredits);
+				$addExtraLogEventDescription = TRUE;
 			}
+
 			$pdo = null;
 		}
 		catch(PDOException $e)
