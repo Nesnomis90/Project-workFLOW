@@ -2910,7 +2910,7 @@ if ((isSet($_POST['add']) AND $_POST['add'] == "Add Booking") OR
 	$displayValidatedStartDate = convertDatetimeToFormat($startDateTime , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
 	$displayValidatedEndDate = convertDatetimeToFormat($endDateTime, 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
 	$dateOnlyEndDate = convertDatetimeToFormat($endDateTime, 'Y-m-d H:i:s', 'Y-m-d');
-	$timeBookedInMinutes = convertTwoDateTimesToTimeDifferenceInMinutes($startDateTime,$endDateTime);	
+	$timeBookedInMinutes = convertTwoDateTimesToTimeDifferenceInMinutes($startDateTime, $endDateTime);	
 
 	// Get meeting room name
 	$MeetingRoomName = 'N/A';
@@ -2963,10 +2963,14 @@ if ((isSet($_POST['add']) AND $_POST['add'] == "Add Booking") OR
 	} else {
 		$newPeriod = TRUE;
 		// Get exact period the user is booking for
-		$newDate = DateTime::createFromFormat("Y-m-d", $dateOnlyEndDate);
+		$newDate = DateTime::createFromFormat("Y-m-d", $companyPeriodEndDate);
 		$dayNumberToKeep = $newDate->format("d");
 		
 		list($newCompanyPeriodStart, $newCompanyPeriodEnd) = getPeriodDatesForCompanyFromDateSubmitted($dayNumberToKeep, $dateOnlyEndDate, $companyPeriodStartDate, $companyPeriodEndDate);
+
+		// For displaying the new period dates
+		$periodStartDate = convertDatetimeToFormat($newCompanyPeriodStart, "Y-m-d", DATE_DEFAULT_FORMAT_TO_DISPLAY);
+		$periodEndDate = convertDatetimeToFormat($newCompanyPeriodEnd, "Y-m-d", DATE_DEFAULT_FORMAT_TO_DISPLAY);
 
 		// Get booking time used so far for the future period
 		try
@@ -3024,25 +3028,27 @@ if ((isSet($_POST['add']) AND $_POST['add'] == "Add Booking") OR
 					AND			b.`dateTimeCancelled` IS NULL';
 			$minimumSecondsPerBooking = MINIMUM_BOOKING_DURATION_IN_MINUTES_USED_IN_PRICE_CALCULATIONS * 60; // e.g. 15min = 900s
 			$aboveThisManySecondsToCount = BOOKING_DURATION_IN_MINUTES_USED_BEFORE_INCLUDING_IN_PRICE_CALCULATIONS * 60; // E.g. 1min = 60s	
+			$newCompanyPeriodStartAsDateTime = convertDatetimeToFormat($newCompanyPeriodStart, "Y-m-d", "Y-m-d H:i:s");
+			$newCompanyPeriodEndAsDateTime = convertDatetimeToFormat($newCompanyPeriodEnd, "Y-m-d", "Y-m-d H:i:s");
 
 			$s = $pdo->prepare($sql);
 			$s->bindValue(':companyID', $companyID);
 			$s->bindValue(':minimumSecondsPerBooking', $minimumSecondsPerBooking);
 			$s->bindValue(':aboveThisManySecondsToCount', $aboveThisManySecondsToCount);
-			$s->bindValue(':newStartPeriod', $newCompanyPeriodStart);
-			$s->bindValue(':newEndPeriod', $newCompanyPeriodEnd);
+			$s->bindValue(':newStartPeriod', $newCompanyPeriodStartAsDateTime);
+			$s->bindValue(':newEndPeriod', $newCompanyPeriodEndAsDateTime);
 			$s->execute();
 			$row = $s->fetch(PDO::FETCH_ASSOC);
 
 			if(isSet($row['PotentialBookingTimeUsed']) AND !empty($row['PotentialBookingTimeUsed'])){
-				$timeBookedSoFarThisPeriod = convertHoursAndMinutesToMinutes($row['PotentialBookingTimeUsed']);
+				$timeBookedSoFarThisPeriod = convertTimeToMinutes($row['PotentialBookingTimeUsed']);
 			} else {
 				$timeBookedSoFarThisPeriod = 0;
 			}
 
 			// Add the time in minutes for the selected booking to the period time
-			$currentBookingTime = convertTwoDateTimesToTimeDifferenceInMinutes($startDateTime, $endDateTime);
-			$totalTimeBookedSoFarThisPeriod = $timeBookedSoFarThisPeriod + $currentBookingTime;
+			$totalTimeBookedSoFarThisPeriod = $timeBookedSoFarThisPeriod + $timeBookedInMinutes;
+			$totalTimeBookedInTime = convertMinutesToHoursAndMinutes($totalTimeBookedSoFarThisPeriod);
 
 			if($totalTimeBookedSoFarThisPeriod > $companyMinuteCredits){
 				$bookingWentOverCredits = TRUE;
