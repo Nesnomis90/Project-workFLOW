@@ -2364,7 +2364,7 @@ if(	((isSet($_POST['action']) AND $_POST['action'] == 'Create Meeting')) OR
 		$pdo = connect_to_db();
 		$sql = 'SELECT		c.`companyID`,
 							c.`name` 					AS companyName,
-							c.`startDate`
+							c.`startDate`,
 							c.`endDate`,
 							(
 								SELECT (BIG_SEC_TO_TIME(SUM(
@@ -2962,7 +2962,7 @@ if ((isSet($_POST['add']) AND $_POST['add'] == "Add Booking") OR
 	} else {
 		
 		// Get exact period the user is booking for
-		$newDate = DateTime::createFromFormat("Y-m-d", $dateOnlyEndDate)
+		$newDate = DateTime::createFromFormat("Y-m-d", $dateOnlyEndDate);
 		$dayNumberToKeep = $newDate->format("d");
 		
 		list($newCompanyPeriodStart, $newCompanyPeriodEnd) = getPeriodDatesForCompanyFromDateSubmitted($dayNumberToKeep, $dateOnlyEndDate, $companyPeriodStartDate, $companyPeriodEndDate);
@@ -3033,13 +3033,16 @@ if ((isSet($_POST['add']) AND $_POST['add'] == "Add Booking") OR
 			$s->execute();
 			$row = $s->fetch(PDO::FETCH_ASSOC);
 
-			if(isSet($row) AND !empty($row['PotentialBookingTimeUsed'])){
+			if(isSet($row['PotentialBookingTimeUsed']) AND !empty($row['PotentialBookingTimeUsed'])){
 				$MonthlyTimeUsed = $row['PotentialBookingTimeUsed'];
 			} else {
 				$MonthlyTimeUsed = "N/A";
 			}
 
+			// TO-DO: Test this. Doesn't seem to work.
+			
 			if($MonthlyTimeUsed != "N/A"){
+				// TO-DO: Add check if booking went over credits for the first time?!?!?!?!
 				$monthlyTimeHour = substr($MonthlyTimeUsed,0,strpos($MonthlyTimeUsed,"h"));
 				$monthlyTimeMinute = substr($MonthlyTimeUsed,strpos($MonthlyTimeUsed,"h")+1,-1);
 				$actualTimeUsedInMinutesThisMonth = $monthlyTimeHour*60 + $monthlyTimeMinute;
@@ -3048,12 +3051,10 @@ if ((isSet($_POST['add']) AND $_POST['add'] == "Add Booking") OR
 					$minusCompanyMinuteCreditsRemaining = $actualTimeUsedInMinutesThisMonth - $companyMinuteCredits;
 					$displayCompanyCreditsRemaining = "-" . convertMinutesToHoursAndMinutes($minusCompanyMinuteCreditsRemaining);
 				} else {
-					$bookingWentOverCredits = FALSE;
 					$companyMinuteCreditsRemaining = $companyMinuteCredits - $actualTimeUsedInMinutesThisMonth;
 					$displayCompanyCreditsRemaining = convertMinutesToHoursAndMinutes($companyMinuteCreditsRemaining);
 				}
 			} else {
-				$bookingWentOverCredits = FALSE;
 				$companyMinuteCreditsRemaining = $companyMinuteCredits;
 				$displayCompanyCreditsRemaining = convertMinutesToHoursAndMinutes($companyMinuteCreditsRemaining);
 			}
