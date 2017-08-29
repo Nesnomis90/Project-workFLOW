@@ -3483,7 +3483,7 @@ if ((isSet($_POST['add']) AND $_POST['add'] == "Add Booking") OR
 			$email = implode(", ", $email);
 			$_SESSION['BookingUserFeedback'] .= "\nThis is the email msg we're sending out:\n$emailMessage\nSent to email: $email."; // TO-DO: Remove before uploading			
 		} else {
-			$_SESSION['BookingUserFeedback'] .= "\n\nNo Company Owners were sent an email about the booking going over booking."; // TO-DO: Remove before uploading.
+			$_SESSION['BookingUserFeedback'] .= "\n\nNo Company Owners were sent an email about the booking going over credits."; // TO-DO: Remove before uploading.
 		}
 	}	
 	
