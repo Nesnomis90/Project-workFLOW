@@ -25,6 +25,7 @@ function clearAddCreateBookingSessions(){
 	unset($_SESSION['AddCreateBookingDisplayCompanySelect']);
 	unset($_SESSION['AddCreateBookingCompanyArray']);
 	unset($_SESSION['AddCreateBookingStartImmediately']);
+
 	unset($_SESSION['refreshAddCreateBookingConfirmed']);
 
 	unset($_SESSION['bookingCodeUserID']);
@@ -44,7 +45,6 @@ function clearEditCreateBookingSessions(){
 	unset($_SESSION['EditCreateBookingSelectACompany']);
 	unset($_SESSION['EditCreateBookingDisplayCompanySelect']);
 	unset($_SESSION['EditCreateBookingLoggedInUserInformation']);
-
 	unset($_SESSION["EditCreateBookingOriginalBookingID"]);
 
 	unset($_SESSION['bookingCodeUserID']);
@@ -2341,6 +2341,7 @@ if(	((isSet($_POST['action']) AND $_POST['action'] == 'Create Meeting')) OR
 													'sendEmail' => '',
 													'Access' => ''
 												);
+
 		$_SESSION['AddCreateBookingInfoArray']['UserDefaultBookingDescription'] = $description;
 		$_SESSION['AddCreateBookingInfoArray']['UserDefaultDisplayName'] = $displayName;
 		$_SESSION['AddCreateBookingInfoArray']['UserFirstname'] = $firstname;	
@@ -2785,6 +2786,7 @@ if ((isSet($_POST['add']) AND $_POST['add'] == "Add Booking") OR
 		} else {
 			$meetingRoomID = $_POST['meetingRoomID'];
 		}
+
 		if(isSet($_POST['companyID']) AND !empty($_POST['companyID'])){
 			$companyID = $_POST['companyID'];
 		} else {
@@ -2796,12 +2798,17 @@ if ((isSet($_POST['add']) AND $_POST['add'] == "Add Booking") OR
 		$_SESSION['AddCreateBookingInfoArray']['TheMeetingRoomID'] = $meetingRoomID;
 		$_SESSION['AddCreateBookingInfoArray']['StartTime'] = $startDateTime;
 		$_SESSION['AddCreateBookingInfoArray']['EndTime'] = $endDateTime;
+		$_SESSION['AddCreateBookingInfoArray']['BookedBy'] = $dspname;
+		$_SESSION['AddCreateBookingInfoArray']['BookingDescription'] = $bknDscrptn;		
 	} else {
 		$meetingRoomID = $_SESSION['AddCreateBookingInfoArray']['TheMeetingRoomID'];
 		$companyID = $_SESSION['AddCreateBookingInfoArray']['TheCompanyID'];
 		$startDateTime = $_SESSION['AddCreateBookingInfoArray']['StartTime'];
 		$endDateTime = $_SESSION['AddCreateBookingInfoArray']['EndTime'];
+		$dspname = $_SESSION['AddCreateBookingInfoArray']['BookedBy'];
+		$bknDscrptn = $_SESSION['AddCreateBookingInfoArray']['BookingDescription'];
 	}
+
 	if(isSet($_SESSION['AddCreateBookingStartImmediately']) AND $_SESSION['AddCreateBookingStartImmediately']){
 		$startDateTime = getDatetimeNow();
 	}
@@ -2952,14 +2959,15 @@ if ((isSet($_POST['add']) AND $_POST['add'] == "Add Booking") OR
 			$bookingWentOverCredits = TRUE;
 			$minutesOverCredits = -($companyCreditsPotentialMinimumRemainingInMinutes) + $timeBookedInMinutes;
 			$timeOverCredits = convertMinutesToHoursAndMinutes($minutesOverCredits);
+			$addExtraLogEventDescription = TRUE;
 		} elseif($timeBookedInMinutes > $companyCreditsPotentialMinimumRemainingInMinutes){
 			// This booking, if completed, will put the company over their given credits
 			$bookingWentOverCredits = TRUE;
 			$firstTimeOverCredit = TRUE;
 			$minutesOverCredits = $timeBookedInMinutes - $companyCreditsPotentialMinimumRemainingInMinutes;
 			$timeOverCredits = convertMinutesToHoursAndMinutes($minutesOverCredits);
+			$addExtraLogEventDescription = TRUE;
 		}
-		$addExtraLogEventDescription = TRUE;
 	} else {
 		$newPeriod = TRUE;
 		// Get exact period the user is booking for
@@ -3064,7 +3072,7 @@ if ((isSet($_POST['add']) AND $_POST['add'] == "Add Booking") OR
 		}
 		catch(PDOException $e)
 		{
-			$error = 'Error fetching user details: ' . $e->getMessage();
+			$error = 'Error fetching future booking details: ' . $e->getMessage();
 			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
 			$pdo = null;
 			exit();
@@ -3080,10 +3088,11 @@ if ((isSet($_POST['add']) AND $_POST['add'] == "Add Booking") OR
 
 	unset($_SESSION['AddCreateBookingStartImmediately']);
 
-	if(empty($dspname) AND !empty($_SESSION["AddCreateBookingInfoArray"]["BookedBy"])){
+	if(!isSet($dspname) OR (empty($dspname) AND !empty($_SESSION["AddCreateBookingInfoArray"]["BookedBy"]))){
 		$dspname = $_SESSION["AddCreateBookingInfoArray"]["BookedBy"];
 	}
-	if(empty($bknDscrptn) AND !empty($_SESSION["AddCreateBookingInfoArray"]["BookingDescription"])){
+
+	if(!isSet($bknDscrptn) OR (empty($bknDscrptn) AND !empty($_SESSION["AddCreateBookingInfoArray"]["BookingDescription"]))){
 		$bknDscrptn = $_SESSION["AddCreateBookingInfoArray"]["BookingDescription"];
 	}
 
@@ -3164,7 +3173,7 @@ if ((isSet($_POST['add']) AND $_POST['add'] == "Add Booking") OR
 								"\nBooked for Company: " . $companyName . 
 								"\nIt was created by: " . $nameOfUserWhoBooked;
 		if($addExtraLogEventDescription){
-			$logEventDescription .= "\nThis booking, if completed, will put the company at $timeOverCredits over the Credits given this period.";
+			$logEventDescription .= "\nThis booking, if completed, will put the company at $timeOverCredits over the Credits given that period.";
 		}
 
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';

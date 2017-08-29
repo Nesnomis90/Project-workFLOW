@@ -1935,6 +1935,7 @@ if(isSet($_GET['totalBooking']) OR isSet($_GET['activeBooking']) OR isSet($_GET[
 		$dateOnlyCompleted = convertDatetimeToFormat($completedDateTime,'Y-m-d H:i:s','Y-m-d');
 		$dateOnlyStart = convertDatetimeToFormat($startDateTime,'Y-m-d H:i:s','Y-m-d');
 		$cancelledDateTime = $row['BookingWasCancelledOn'];
+		$dateOnlyCancelled = convertDatetimeToFormat($cancelledDateTime, 'Y-m-d H:i:s', 'Y-m-d');
 		$createdDateTime = $row['BookingWasCreatedOn'];	
 
 		// Describe the status of the booking based on what info is stored in the database
@@ -1968,8 +1969,8 @@ if(isSet($_GET['totalBooking']) OR isSet($_GET['activeBooking']) OR isSet($_GET[
 			$status = 'Ended Early Today';
 			// Valid status?
 		} elseif(	$completedDateTime == null AND $cancelledDateTime != null AND
-					$endDateTime > $cancelledDateTime AND $startDateTime < $cancelledDateTime 
-					AND $dateOnlyCancelled == $dateOnlyNow){
+					$endDateTime > $cancelledDateTime AND $startDateTime < $cancelledDateTime AND 
+					$dateOnlyCancelled == $dateOnlyNow){
 			$status = 'Ended Early Today';
 			// Valid status
 		} elseif(	$completedDateTime != null AND $cancelledDateTime != null AND
@@ -1977,8 +1978,8 @@ if(isSet($_GET['totalBooking']) OR isSet($_GET['activeBooking']) OR isSet($_GET[
 			$status = 'Ended Early';
 			// Valid status?
 		} elseif(	$completedDateTime == null AND $cancelledDateTime != null AND
-					$endDateTime > $cancelledDateTime AND $startDateTime < $cancelledDateTime 
-					AND $dateOnlyCancelled < $dateOnlyNow){
+					$endDateTime > $cancelledDateTime AND $startDateTime < $cancelledDateTime AND 
+					$dateOnlyCancelled < $dateOnlyNow){
 			$status = 'Ended Early';
 			// Valid status?
 		} elseif(	$completedDateTime != null AND $cancelledDateTime != null AND
@@ -2070,7 +2071,7 @@ if(isSet($_GET['totalBooking']) OR isSet($_GET['activeBooking']) OR isSet($_GET[
 											'MeetingInfo' => $meetinginfo,
 											'sendEmail' => $row['sendEmail']
 										);
-		}	elseif(($status == "Completed Today" OR $status = "Ended Early Today") AND (isSet($_GET['completedBooking']) OR isSet($_GET['totalBooking']))){
+		}	elseif(($status == "Completed Today" OR $status == "Ended Early Today") AND (isSet($_GET['completedBooking']) OR isSet($_GET['totalBooking']))){
 			if($status == "Completed Today"){
 				$cancelledByUserName = "";
 				$cancelMessage = "";
