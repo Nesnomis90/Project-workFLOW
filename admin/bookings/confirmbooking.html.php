@@ -34,8 +34,13 @@
 			</div>
 			<div class="left">
 				<form action="" method="post">
-					<input type="submit" name="confirm" value="Yes, Create The Booking">
-					<input type="submit" name="confirm" value="No, Cancel The Booking">
+					<?php if(isSet($_SESSION['AddBookingInfoArray'])) : ?>
+						<input type="submit" name="Add" value="Yes, Create The Booking">
+						<input type="submit" name="Add" value="No, Cancel The Booking">
+					<?php elseif(isSet($_SESSION['EditBookingInfoArray'])) : ?>
+						<input type="submit" name="Edit" value="Yes, Edit The Booking">
+						<input type="submit" name="Edit" value="No, Cancel The Edit">					
+					<?php endif; ?>
 				</form>
 			</div>
 		</fieldset>
