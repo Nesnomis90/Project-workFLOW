@@ -1562,7 +1562,7 @@ if( (isSet($_POST['edit']) AND $_POST['edit'] == "Finish Edit") OR
 			$companyID = NULL;
 		}
 		
-		if(isSet($_POST['userID'])) AND !empty($_POST['userID']){
+		if(isSet($_POST['userID']) AND !empty($_POST['userID'])){
 			$userID = $_POST['userID'];
 		}
 
@@ -1630,7 +1630,6 @@ if( (isSet($_POST['edit']) AND $_POST['edit'] == "Finish Edit") OR
 	}
 	if($validatedAdminNote != $originalValue['AdminNote']){
 		$numberOfChanges++;
-		$newUser = TRUE;
 	}
 
 	if($numberOfChanges == 0){
