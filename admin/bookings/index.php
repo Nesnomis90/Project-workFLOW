@@ -25,6 +25,8 @@ function clearAddBookingSessions(){
 	unset($_SESSION['AddBookingDisplayCompanySelect']);	
 	unset($_SESSION['AddBookingCompanyArray']);
 	unset($_SESSION['AddBookingUserCannotBookForSelf']);
+	
+	unset($_SESSION['refreshAddBookingConfirmed']);
 }
 
 // Function to clear sessions used to remember user inputs on refreshing the edit booking form
@@ -2264,6 +2266,7 @@ if (	(isSet($_POST['action']) AND $_POST['action'] == "Create Booking") OR
 			$pdo = connect_to_db();
 			$sql = 'SELECT		c.`companyID`,
 								c.`name` 					AS companyName,
+								c.`startDate`,
 								c.`endDate`,
 								(
 									SELECT (BIG_SEC_TO_TIME(SUM(
@@ -2485,7 +2488,9 @@ if (	(isSet($_POST['action']) AND $_POST['action'] == "Create Booking") OR
 				$company[] = array(
 									'companyID' => $row['companyID'],
 									'companyName' => $row['companyName'],
+									'startDate' => $row['startDate'],
 									'endDate' => $displayEndDate,
+									'creditsGiven' => $companyMinuteCredits,
 									'creditsRemaining' => $displayCompanyCreditsRemaining,
 									'PotentialExtraMonthlyTimeUsed' => $displayPotentialExtraMonthlyTimeUsed,
 									'PotentialCreditsRemaining' => $displayPotentialCompanyCreditsRemaining,

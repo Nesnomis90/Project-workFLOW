@@ -25,6 +25,7 @@ function clearAddCreateBookingSessions(){
 	unset($_SESSION['AddCreateBookingDisplayCompanySelect']);
 	unset($_SESSION['AddCreateBookingCompanyArray']);
 	unset($_SESSION['AddCreateBookingStartImmediately']);
+
 	unset($_SESSION['refreshAddCreateBookingConfirmed']);
 
 	unset($_SESSION['bookingCodeUserID']);
@@ -44,7 +45,6 @@ function clearEditCreateBookingSessions(){
 	unset($_SESSION['EditCreateBookingSelectACompany']);
 	unset($_SESSION['EditCreateBookingDisplayCompanySelect']);
 	unset($_SESSION['EditCreateBookingLoggedInUserInformation']);
-
 	unset($_SESSION["EditCreateBookingOriginalBookingID"]);
 
 	unset($_SESSION['bookingCodeUserID']);

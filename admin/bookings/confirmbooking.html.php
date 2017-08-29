@@ -14,7 +14,7 @@
 		</style>
 	</head>
 	<body onload="startTime()">
-		<?php include_once $_SERVER['DOCUMENT_ROOT'] .'/includes/topnav.html.php'; ?>
+		<?php include_once $_SERVER['DOCUMENT_ROOT'] .'/includes/admintopnav.html.php'; ?>
 
 		<fieldset><legend>Warning!</legend>
 			<div class="left">
