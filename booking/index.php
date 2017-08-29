@@ -2786,6 +2786,7 @@ if ((isSet($_POST['add']) AND $_POST['add'] == "Add Booking") OR
 		} else {
 			$meetingRoomID = $_POST['meetingRoomID'];
 		}
+
 		if(isSet($_POST['companyID']) AND !empty($_POST['companyID'])){
 			$companyID = $_POST['companyID'];
 		} else {
@@ -2958,14 +2959,15 @@ if ((isSet($_POST['add']) AND $_POST['add'] == "Add Booking") OR
 			$bookingWentOverCredits = TRUE;
 			$minutesOverCredits = -($companyCreditsPotentialMinimumRemainingInMinutes) + $timeBookedInMinutes;
 			$timeOverCredits = convertMinutesToHoursAndMinutes($minutesOverCredits);
+			$addExtraLogEventDescription = TRUE;
 		} elseif($timeBookedInMinutes > $companyCreditsPotentialMinimumRemainingInMinutes){
 			// This booking, if completed, will put the company over their given credits
 			$bookingWentOverCredits = TRUE;
 			$firstTimeOverCredit = TRUE;
 			$minutesOverCredits = $timeBookedInMinutes - $companyCreditsPotentialMinimumRemainingInMinutes;
 			$timeOverCredits = convertMinutesToHoursAndMinutes($minutesOverCredits);
+			$addExtraLogEventDescription = TRUE;
 		}
-		$addExtraLogEventDescription = TRUE;
 	} else {
 		$newPeriod = TRUE;
 		// Get exact period the user is booking for
@@ -3171,7 +3173,7 @@ if ((isSet($_POST['add']) AND $_POST['add'] == "Add Booking") OR
 								"\nBooked for Company: " . $companyName . 
 								"\nIt was created by: " . $nameOfUserWhoBooked;
 		if($addExtraLogEventDescription){
-			$logEventDescription .= "\nThis booking, if completed, will put the company at $timeOverCredits over the Credits given this period.";
+			$logEventDescription .= "\nThis booking, if completed, will put the company at $timeOverCredits over the Credits given that period.";
 		}
 
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
