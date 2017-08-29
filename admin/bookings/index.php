@@ -3966,8 +3966,8 @@ foreach ($result as $row)
 		$status = 'Ended Early Today';
 		// Valid status?
 	} elseif(	$completedDateTime == null AND $cancelledDateTime != null AND
-				$endDateTime > $cancelledDateTime AND $startDateTime < $cancelledDateTime 
-				AND $dateOnlyCancelled == $dateOnlyNow){
+				$endDateTime > $cancelledDateTime AND $startDateTime < $cancelledDateTime AND 
+				$dateOnlyCancelled == $dateOnlyNow){
 		$status = 'Ended Early Today';
 		// Valid status
 	} elseif(	$completedDateTime != null AND $cancelledDateTime != null AND
@@ -3975,8 +3975,8 @@ foreach ($result as $row)
 		$status = 'Ended Early';
 		// Valid status?
 	} elseif(	$completedDateTime == null AND $cancelledDateTime != null AND
-				$endDateTime > $cancelledDateTime AND $startDateTime < $cancelledDateTime 
-				AND $dateOnlyCancelled < $dateOnlyNow){
+				$endDateTime > $cancelledDateTime AND $startDateTime < $cancelledDateTime AND 
+				$dateOnlyCancelled < $dateOnlyNow){
 		$status = 'Ended Early';
 		// Valid status?
 	} elseif(	$completedDateTime != null AND $cancelledDateTime != null AND
