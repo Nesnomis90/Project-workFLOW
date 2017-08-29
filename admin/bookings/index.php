@@ -838,7 +838,7 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Edit') OR
 																	TIME_TO_SEC(b.`actualEndDateTime`) 
 																	- 
 																	TIME_TO_SEC(b.`startDateTime`)
-																	) 
+																)
 															) > :minimumSecondsPerBooking, 
 																(
 																(
@@ -849,7 +849,7 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Edit') OR
 																	TIME_TO_SEC(b.`actualEndDateTime`) 
 																	- 
 																	TIME_TO_SEC(b.`startDateTime`)
-																	) 
+																) 
 															), 
 																:minimumSecondsPerBooking
 															),
@@ -876,7 +876,7 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Edit') OR
 																	TIME_TO_SEC(b.`endDateTime`) 
 																	- 
 																	TIME_TO_SEC(b.`startDateTime`)
-																	) 
+																) 
 															) > :aboveThisManySecondsToCount,
 															IF(
 																(
@@ -888,7 +888,7 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Edit') OR
 																	TIME_TO_SEC(b.`endDateTime`) 
 																	- 
 																	TIME_TO_SEC(b.`startDateTime`)
-																	) 
+																) 
 															) > :minimumSecondsPerBooking, 
 																(
 																(
@@ -899,7 +899,7 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Edit') OR
 																	TIME_TO_SEC(b.`endDateTime`) 
 																	- 
 																	TIME_TO_SEC(b.`startDateTime`)
-																	) 
+																) 
 															), 
 																:minimumSecondsPerBooking
 															),
@@ -2106,15 +2106,7 @@ if (	(isSet($_POST['action']) AND $_POST['action'] == "Create Booking") OR
 				
 				// Get the logged in user's default booking information
 				$pdo = connect_to_db();
-				/* old SQL without company requirement restriction
-				$sql = 'SELECT	`bookingdescription`, 
-								`displayname`,
-								`firstName`,
-								`lastName`,
-								`email`
-						FROM 	`user`
-						WHERE 	`userID` = :userID
-						LIMIT 	1'; */
+
 				// New SQL where we require a company connection
 				$sql = "SELECT	(
 									SELECT COUNT(*)
@@ -2733,7 +2725,7 @@ if ((isSet($_POST['add']) AND $_POST['add'] == "Add Booking") OR
 	(isSet($_SESSION['refreshAddBookingConfirmed']) AND $_SESSION['refreshAddBookingConfirmed']))
 {
 	// Validate user inputs
-	if(!isSet($_SESSION['refreshAddCreateBookingConfirmed'])){
+	if(!isSet($_SESSION['refreshAddBookingConfirmed'])){
 		list($invalidInput, $startDateTime, $endDateTime, $bknDscrptn, $dspname, $validatedAdminNote) = validateUserInputs('AddBookingError', FALSE, FALSE);
 
 		// handle feedback process on invalid input values
@@ -2767,11 +2759,17 @@ if ((isSet($_POST['add']) AND $_POST['add'] == "Add Booking") OR
 		$_SESSION['AddBookingInfoArray']['TheMeetingRoomID'] = $meetingRoomID;
 		$_SESSION['AddBookingInfoArray']['StartTime'] = $startDateTime;
 		$_SESSION['AddBookingInfoArray']['EndTime'] = $endDateTime;
+		$_SESSION['AddBookingInfoArray']['BookedBy'] = $dspname;
+		$_SESSION['AddBookingInfoArray']['BookingDescription'] = $bknDscrptn;
+		$_SESSION['AddBookingInfoArray']['AdminNote'] = $validatedAdminNote;
 	} else {
 		$companyID = $_SESSION['AddBookingInfoArray']['TheCompanyID'];
 		$meetingRoomID = $_SESSION['AddBookingInfoArray']['TheMeetingRoomID'];
 		$startDateTime = $_SESSION['AddBookingInfoArray']['StartTime'];
 		$endDateTime = $_SESSION['AddBookingInfoArray']['EndTime'];
+		$dspname = $_SESSION['AddBookingInfoArray']['BookedBy'];
+		$bknDscrptn = $_SESSION['AddBookingInfoArray']['BookingDescription'];
+		$validatedAdminNote = $_SESSION['AddBookingInfoArray']['AdminNote'];
 	}
 
 	// Check if the timeslot is taken for the selected meeting room
@@ -2869,6 +2867,12 @@ if ((isSet($_POST['add']) AND $_POST['add'] == "Add Booking") OR
 		exit();				
 	}
 
+	// We know it's available. Let's check if this booking makes the company go over credits.
+	// If over credits, ask for a confirmation before creating the booking
+	$displayValidatedStartDate = convertDatetimeToFormat($startDateTime , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
+	$displayValidatedEndDate = convertDatetimeToFormat($endDateTime, 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
+	$dateOnlyEndDate = convertDatetimeToFormat($endDateTime, 'Y-m-d H:i:s', 'Y-m-d');
+	$timeBookedInMinutes = convertTwoDateTimesToTimeDifferenceInMinutes($startDateTime, $endDateTime);	
 
 	// Get meeting room name
 	$MeetingRoomName = 'N/A';
@@ -2903,6 +2907,7 @@ if ((isSet($_POST['add']) AND $_POST['add'] == "Add Booking") OR
 	$bookingWentOverCredits = FALSE;
 	$firstTimeOverCredit = FALSE;
 	$addExtraLogEventDescription = FALSE;
+	$newPeriod = FALSE;
 	if($dateOnlyEndDate <= $companyPeriodEndDate){
 		if($companyCreditsPotentialMinimumRemainingInMinutes < 0){
 			// Company was already over given credits
@@ -3035,10 +3040,10 @@ if ((isSet($_POST['add']) AND $_POST['add'] == "Add Booking") OR
 		exit();
 	}
 
-	if(empty($dspname) AND !empty($_SESSION["AddCreateBookingInfoArray"]["BookedBy"])){
+	if(!isSet($dspname) OR (empty($dspname) AND !empty($_SESSION["AddCreateBookingInfoArray"]["BookedBy"]))){
 		$dspname = $_SESSION["AddBookingInfoArray"]["BookedBy"];
 	}
-	if(empty($bknDscrptn) AND !empty($_SESSION["AddCreateBookingInfoArray"]["BookingDescription"])){
+	if(!isSet($bknDscrptn) OR (empty($bknDscrptn) AND !empty($_SESSION["AddCreateBookingInfoArray"]["BookingDescription"]))){
 		$bknDscrptn = $_SESSION["AddBookingInfoArray"]["BookingDescription"];
 	}
 
@@ -3051,9 +3056,9 @@ if ((isSet($_POST['add']) AND $_POST['add'] == "Add Booking") OR
 
 		//Generate cancellation code
 		$cancellationCode = generateCancellationCode();
-		
+
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
-		
+
 		$pdo = connect_to_db();
 		$sql = 'INSERT INTO `booking` 
 				SET			`meetingRoomID` = :meetingRoomID,
@@ -3067,7 +3072,7 @@ if ((isSet($_POST['add']) AND $_POST['add'] == "Add Booking") OR
 							`cancellationCode` = :cancellationCode';
 
 		$s = $pdo->prepare($sql);
-		
+
 		$s->bindValue(':meetingRoomID', $meetingRoomID);
 		$s->bindValue(':userID', $_SESSION["AddBookingInfoArray"]["TheUserID"]);
 		$s->bindValue(':companyID', $companyID);
@@ -3348,16 +3353,6 @@ if((isSet($_POST['add']) AND $_POST['add'] == "Change User") OR
 		try
 		{
 			$pdo = connect_to_db();
-			/* Old SQL with all users
-			$sql = "SELECT 	`userID`, 
-							`firstname`, 
-							`lastname`, 
-							`email`,
-							`displayname`,
-							`bookingdescription`
-					FROM 	`user`
-					WHERE 	`isActive` > 0";
-			*/
 			// New SQL that only gets users that are registered in a company (an employee)
 			$sql = "SELECT 	`userID`, 
 							`firstname`, 

@@ -2341,6 +2341,7 @@ if(	((isSet($_POST['action']) AND $_POST['action'] == 'Create Meeting')) OR
 													'sendEmail' => '',
 													'Access' => ''
 												);
+
 		$_SESSION['AddCreateBookingInfoArray']['UserDefaultBookingDescription'] = $description;
 		$_SESSION['AddCreateBookingInfoArray']['UserDefaultDisplayName'] = $displayName;
 		$_SESSION['AddCreateBookingInfoArray']['UserFirstname'] = $firstname;	
@@ -2796,11 +2797,15 @@ if ((isSet($_POST['add']) AND $_POST['add'] == "Add Booking") OR
 		$_SESSION['AddCreateBookingInfoArray']['TheMeetingRoomID'] = $meetingRoomID;
 		$_SESSION['AddCreateBookingInfoArray']['StartTime'] = $startDateTime;
 		$_SESSION['AddCreateBookingInfoArray']['EndTime'] = $endDateTime;
+		$_SESSION['AddCreateBookingInfoArray']['BookedBy'] = $dspname;
+		$_SESSION['AddCreateBookingInfoArray']['BookingDescription'] = $bknDscrptn;		
 	} else {
 		$meetingRoomID = $_SESSION['AddCreateBookingInfoArray']['TheMeetingRoomID'];
 		$companyID = $_SESSION['AddCreateBookingInfoArray']['TheCompanyID'];
 		$startDateTime = $_SESSION['AddCreateBookingInfoArray']['StartTime'];
 		$endDateTime = $_SESSION['AddCreateBookingInfoArray']['EndTime'];
+		$dspname = $_SESSION['AddCreateBookingInfoArray']['BookedBy'];
+		$bknDscrptn = $_SESSION['AddCreateBookingInfoArray']['BookingDescription'];
 	}
 
 	if(isSet($_SESSION['AddCreateBookingStartImmediately']) AND $_SESSION['AddCreateBookingStartImmediately']){
@@ -3081,10 +3086,11 @@ if ((isSet($_POST['add']) AND $_POST['add'] == "Add Booking") OR
 
 	unset($_SESSION['AddCreateBookingStartImmediately']);
 
-	if(empty($dspname) AND !empty($_SESSION["AddCreateBookingInfoArray"]["BookedBy"])){
+	if(!isSet($dspname) OR (empty($dspname) AND !empty($_SESSION["AddCreateBookingInfoArray"]["BookedBy"]))){
 		$dspname = $_SESSION["AddCreateBookingInfoArray"]["BookedBy"];
 	}
-	if(empty($bknDscrptn) AND !empty($_SESSION["AddCreateBookingInfoArray"]["BookingDescription"])){
+
+	if(!isSet($bknDscrptn) OR (empty($bknDscrptn) AND !empty($_SESSION["AddCreateBookingInfoArray"]["BookingDescription"]))){
 		$bknDscrptn = $_SESSION["AddCreateBookingInfoArray"]["BookingDescription"];
 	}
 

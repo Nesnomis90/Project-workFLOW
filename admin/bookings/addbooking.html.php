@@ -189,13 +189,13 @@
 				<input type="submit" name="add" value="Reset">
 				<input type="submit" name="add" value="Cancel">
 				<?php if(isSet($_SESSION['AddBookingChangeUser']) AND $_SESSION['AddBookingChangeUser']) : ?>
-					<input type="submit" name="disabled" value="Add booking" disabled>
+					<input type="submit" name="disabled" value="Add Booking" disabled>
 					<span><b>You need to select the user you want before you can add the booking.</b></span>
 				<?php elseif(!isSet($_SESSION['AddBookingSelectedACompany'])) : ?>
-					<input type="submit" name="disabled" value="Add booking" disabled>
+					<input type="submit" name="disabled" value="Add Booking" disabled>
 					<span><b>You need to select the company you want before you can add the booking.</b></span>
 				<?php else : ?>
-					<input type="submit" name="add" value="Add booking">
+					<input type="submit" name="add" value="Add Booking">
 				<?php endif; ?>
 				<?php if(isSet($_SESSION['AddBookingSelectedACompany'])) : ?>
 					<span style="clear: both; white-space: pre-wrap;"><b><?php htmlout("¹ The given credit minus the sum of completed bookings this period (up to $companyPeriodEndDate).\n  This does not take into account non-completed bookings."); ?></b></span>
