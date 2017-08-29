@@ -24,7 +24,7 @@
 						"\nThis puts that company $timeOverCredits* above credits for that period." .
 						"\nWith an 'over credits'-fee of $companyHourPriceOverCredits*" .
 						"\nDo you still want to create this booking?" . 
-						"\n\n*This is assuming your company keeps the same credits given and 'over fee'-cost as their current period." . 
+						"\n\n*This is assuming the company keeps the same credits given and 'over fee'-cost as their current period." . 
 						"\nTherefore these details may not accurately reflect the correct amount they will be charged."); ?></span>				
 				<?php else : ?>
 					<span style="white-space: pre-wrap;"><?php htmlout("This booking, if completed, will put the company $companyName at a total of $timeOverCredits above credits for the current period." .
