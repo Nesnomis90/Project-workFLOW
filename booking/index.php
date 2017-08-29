@@ -2802,6 +2802,7 @@ if ((isSet($_POST['add']) AND $_POST['add'] == "Add Booking") OR
 		$startDateTime = $_SESSION['AddCreateBookingInfoArray']['StartTime'];
 		$endDateTime = $_SESSION['AddCreateBookingInfoArray']['EndTime'];
 	}
+
 	if(isSet($_SESSION['AddCreateBookingStartImmediately']) AND $_SESSION['AddCreateBookingStartImmediately']){
 		$startDateTime = getDatetimeNow();
 	}
@@ -3064,7 +3065,7 @@ if ((isSet($_POST['add']) AND $_POST['add'] == "Add Booking") OR
 		}
 		catch(PDOException $e)
 		{
-			$error = 'Error fetching user details: ' . $e->getMessage();
+			$error = 'Error fetching future booking details: ' . $e->getMessage();
 			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
 			$pdo = null;
 			exit();
