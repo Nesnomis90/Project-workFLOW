@@ -312,6 +312,15 @@ if(isSet($_POST['action']) AND $_POST['action'] == "Confirm"){
 if(isSet($_POST['action']) AND $_POST['action'] == "Request To Join"){
 	unset($_SESSION['normalCompanyCreateACompany']);
 	// TO-DO:
+	
+	/*
+	//variables to implement
+	// TO-DO:
+	$selectedCompanyToJoinID;//int
+
+	// values to retrieve
+	$_POST['selectedCompanyToJoin'];
+	*/	
 }
 
 if(isSet($_POST['action']) AND $_POST['action'] == "Select Company"){
@@ -340,15 +349,6 @@ if(isSet($_SESSION['loggedIn']) AND $_SESSION['loggedIn']){
 } else {
 	header("Location: /company/");
 }
-
-/*
-//variables to implement
-// TO-DO:
-$selectedCompanyToJoinID;//int
-
-// values to retrieve
-$_POST['selectedCompanyToJoin'];
-*/
 
 // if admin wants to change the company role for a user
 // we load a new html form

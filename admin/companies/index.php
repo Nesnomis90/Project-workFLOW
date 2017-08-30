@@ -908,7 +908,7 @@ if (	(isSet($_POST['history']) AND $_POST['history'] == "Previous Period") OR
 		$pdo = connect_to_db();	
 
 		$sql = "SELECT IF(
-							DATE(`dateTimeCreated`) = DATE_SUB(`startDate`, INTERVAL :intervalNumber MONTH), 
+							DATE(`dateTimeCreated`) >= DATE_SUB(`startDate`, INTERVAL :intervalNumber MONTH), 
 							NULL, 
 							1
 						) 															AS ValidBillingDate,
@@ -1328,20 +1328,29 @@ if (isSet($_POST['action']) and $_POST['action'] == 'Confirm Merge'){
 		try
 		{
 			$pdo = connect_to_db();
-			$sql = 'SELECT 	`name`	AS NewCompanyName
+			$sql = 'SELECT 	`name`				AS NewCompanyName,
+							`dateTimeCreated`	AS NewCreationDate,
+							( 
+								SELECT 	`dateTimeCreated`
+								FROM	`company`
+								WHERE 	`companyID` = :oldCompanyID
+							)					AS OldCreationDate
 					FROM 	`company`
-					WHERE	`companyID` = :companyID
+					WHERE	`companyID` = :newCompanyID
 					LIMIT 	1';
 			$s = $pdo->prepare($sql);
-			$s->bindValue(':companyID', $_SESSION['MergeCompanySelectedCompanyID2']);
+			$s->bindValue(':oldCompanyID', $_SESSION['MergeCompanySelectedCompanyID']);
+			$s->bindValue(':newCompanyID', $_SESSION['MergeCompanySelectedCompanyID2']);
 			$s->execute();
 
 			$row = $s->fetch(PDO::FETCH_ASSOC);
 			$oldCompanyName = $_SESSION['MergeCompanySelectedCompanyName'];
 			$newCompanyName = $row['NewCompanyName'];
+			$oldCreationDate = $row['OldCreationDate'];
+			$newCreationDate = $row['NewCreationDate'];
 
 			$pdo->beginTransaction();
-			// FIX-ME: Find better solution than ignoring updates on duplicates?
+			// Ignore these updates if they're already an employee in that company
 			$sql = 'UPDATE IGNORE	`employee`
 					SET				`CompanyID` = :CompanyID2
 					WHERE			`CompanyID` = :CompanyID';
@@ -1376,6 +1385,32 @@ if (isSet($_POST['action']) and $_POST['action'] == 'Confirm Merge'){
 			$s->bindValue(':CompanyID', $_SESSION['MergeCompanySelectedCompanyID']);
 			$s->bindValue(':CompanyID2', $_SESSION['MergeCompanySelectedCompanyID2']);
 			$s->execute();*/
+
+			/*// Update the company's creation date if the old company was older.
+			// This does not really work. SInce it ruins booking history if it's accurate and makes no sense if we change it
+			if($oldCreationDate < $newCreationDate){
+				
+				
+				$newDateTime = new DateTime::createFromFormat("Y-m-d H:i:s", $newCreationDate);
+				$dayFromNewCreationDate = $newDateTime->format("d");
+				$oldDateTime = new DateTime::createFromFormat("Y-m-d H:i:s", $oldCreationDate);
+				$dayFromOldCreationDate = $oldDateTime->format("d");
+				$yearAndMonth = $oldDateTime->format("Y-m");
+				$theTime = $oldDateTime->format("H:i:s");
+				
+				if($dayFromNewCreationDate  dayFromOldCreationDate){
+					
+				}
+				$newDateCreatedBasedOnOldCompanyCreationDate = $dayFromNewCreationDate
+				
+				$sql = 'UPDATE 	`company`
+						SET		`dateTimeCreated` = :NewDateCreatedBasedOnOldCompanyCreationDate
+						WHERE	`CompanyID` = :newCompanyID';
+				$s = $pdo->prepare($sql);
+				$s->bindValue(':NewDateCreatedBasedOnOldCompanyCreationDate', $newDateCreatedBasedOnOldCompanyCreationDate);
+				$s->bindValue(':newCompanyID', $_SESSION['MergeCompanySelectedCompanyID2']);
+				$s->execute();
+			}*/
 
 			// Deleting company will cascade to companycredits, companycreditshistory and employees.
 			$sql = 'DELETE FROM `company`
