@@ -312,17 +312,6 @@ if(isSet($_POST['action']) AND $_POST['action'] == "Confirm"){
 
 if(isSet($_POST['action']) AND $_POST['action'] == "Request To Join"){
 	unset($_SESSION['normalCompanyCreateACompany']);
-	// TO-DO:
-	
-	/*
-	//variables to implement
-	// TO-DO:
-	$selectedCompanyToJoinID;//int
-
-	// values to retrieve
-	$_POST['selectedCompanyToJoin'];
-	$_POST['requestToJoinMessage'];
-	*/
 
 	$continueRequest = FALSE;
 
@@ -332,21 +321,158 @@ if(isSet($_POST['action']) AND $_POST['action'] == "Request To Join"){
 	} else {
 		$_SESSION['normalCompanyFeedback'] = "Failed to identify the company you wanted to join, so the process was aborted.";
 	}
-	
-	if(isSet($_POST['requestToJoinMessage']) AND !empty($_POST['requestToJoinMessage'])){
-		$requestMessage = trimExcessWhitespaceButLeaveLinefeed($_POST['requestToJoinMessage']);
-	} else {
-		$requestMessage = "N/A";
-	}
-	
+
 	if($continueRequest){
-		
-		
-		
+		if(isSet($_POST['requestToJoinMessage']) AND !empty($_POST['requestToJoinMessage'])){
+			$requestMessage = trimExcessWhitespaceButLeaveLinefeed($_POST['requestToJoinMessage']);
+		} else {
+			$requestMessage = "N/A";
+		}
+
+		try
+		{
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+
+			$pdo = connect_to_db();
+
+			$sql = "SELECT 	`name`	AS CompanyName
+					FROM	`company`
+					WHERE	`companyID` = :companyID
+					LIMIT 	1";
+			$s = $pdo->prepare($sql);
+			$s->bindValue(":companyID", $selectedCompanyToJoinID);
+			$s->execute();
+			$row = $s->fetch(PDO::FETCH_ASSOC);
+			
+			if(isSet($row['CompanyName']) AND !empty($row['CompanyName'])){
+				$companyName = $row['CompanyName'];
+			}
+		}
+		catch(PDOException $e)
+		{
+			$error = 'Error getting company name: ' . $e->getMessage();
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+			$pdo = null;
+			exit();
+		}
+
 		var_dump($_SESSION);	// TO-DO: Remove before uploading
 		include_once 'confirmrequest.html.php';
 		exit();
 	}
+}
+
+if(isSet($_POST['confirm']) AND $_POST['confirm'] == "Yes, Send The Request"){
+	
+	$continueRequest = FALSE;
+
+	if(isSet($_POST['companyID']) AND !empty($_POST['companyID'])){
+		$selectedCompanyToJoinID = $_POST['companyID'];
+		$continueRequest = TRUE;
+	} else {
+		$_SESSION['normalCompanyFeedback'] = "Failed to identify the company you wanted to join, so the process was aborted.";
+	}
+	
+	if($continueRequest = TRUE){
+		if(isSet($_POST['requestMessage']) AND !empty($_POST['requestMessage'])){
+			$requestMessage	= $_POST['requestMessage'];
+		} else {
+			$requestMessage = "N/A";
+		}
+		if(isSet($_POST['companyName']) AND !empty($_POST['companyName'])){
+			$companyName = $_POST['companyName'];
+		} else {
+			$companyName = "N/A";
+		}
+
+		// Get company owner(s) in company and check if they want to receive email.
+		try
+		{
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+
+			$pdo = connect_to_db();
+
+			$sql = 'SELECT		u.`email`					AS Email,
+								u.`sendOwnerEmail`			AS SendOwnerEmail,
+								e.`sendEmailOnceOrAlways`	AS SendEmailOnceOrAlways
+					FROM 		`user` u
+					INNER JOIN	`employee` e
+					ON 			e.`UserID` = u.`UserID`
+					INNER JOIN	`company` c
+					ON 			c.`CompanyID` = e.`CompanyID`
+					INNER JOIN	`companyposition` cp
+					ON			e.`PositionID` = cp.`PositionID`
+					WHERE 		c.`CompanyID` = :CompanyID
+					AND			cp.`name` = "Owner"';
+
+			$s = $pdo->prepare($sql);
+			$s->bindValue(':CompanyID', $selectedCompanyToJoinID);
+			$s->execute();
+			$result = $s->fetchAll(PDO::FETCH_ASSOC);
+
+			// TO-DO: Adjust send email logic here?
+			if(isSet($result) AND !empty($result)){
+				foreach($result AS $row){
+					// Check if user wants to receive owner emails
+					if($row['SendOwnerEmail'] == 1){ 
+						// Check if user wants to receive all emails or just the first time booking goes over credit per period
+							// sendEmailOnceOrAlways: 1 = always, sendEmailOnceOrAlways: 0 = once.
+						if($row['SendEmailOnceOrAlways'] == 1){ 
+							$companyOwnerEmails[] = $row['Email'];
+						}
+					}
+				}
+			}
+
+			//Close the connection
+			$pdo = null;
+		}
+		catch (PDOException $e)
+		{
+			$error = 'Error getting company owner contact information: ' . $e->getMessage();
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+			$pdo = null;
+			exit();
+		}
+
+			// We found company owners to send email too
+		if(isSet($companyOwnerEmails) AND !empty($companyOwnerEmails)){
+			$emailSubject = "A user wants to join your company!";
+
+			$url = $_SERVER['HTTP_HOST'] . "/company/?ID=" . $selectedCompanyToJoinID . "&employees";
+
+			$emailMessage = 
+			"The user: " . $_SESSION['LoggedInUserName'] .
+			"\nWho can be contacted at: " . $_SESSION['email'] . 
+			"\nHas requested to join your company: " . $companyName .
+			"\n\nIf you want to add this user, log in to the url below and add the user" .
+			"\nLink: " . $url;
+
+			$email = $companyOwnerEmails;
+
+			$mailResult = sendEmail($email, $emailSubject, $emailMessage);
+
+			if(!$mailResult){
+				$_SESSION['normalCompanyFeedback'] .= "\n\n[WARNING] System failed to send Email to user(s).";
+			}
+
+			$email = implode(", ", $email);
+
+			$_SESSION['normalCompanyFeedback'] .= "\nThis is the email msg we're sending out:\n$emailMessage\nSent to email: $email."; // TO-DO: Remove before uploading			
+		} else {
+			if(isSet($_SESSION['normalCompanyFeedback'])){
+				$_SESSION['normalCompanyFeedback'] .= "\n\nThe request couldn't be made, since there were no company owner(s) that wanted to be contacted."; // TO-DO: Remove before uploading.
+			} else {
+				$_SESSION['normalCompanyFeedback'] .= "The request couldn't be made, since there were no company owner(s) that wanted to be contacted."; // TO-DO: Remove before uploading.
+			}
+			
+		}
+	}
+}
+
+if(isSet($_POST['confirm']) AND $_POST['confirm'] == "No, Cancel The Request"){
+	// TO-DO: Add more?
+	$_SESSION['normalCompanyFeedback'] = "Cancelled your request.";
 }
 
 if(isSet($_POST['action']) AND $_POST['action'] == "Select Company"){
@@ -1859,15 +1985,23 @@ if(isSet($selectedCompanyToDisplayID) OR (isSet($selectedCompanyToDisplayID) AND
 	}
 }
 
-// get a list of all companies
+// Get a list of all companies that the user does not already work in
 try
 {
-	$sql = "SELECT 	`CompanyID`	AS CompanyID,
-					`name`		AS CompanyName
-			FROM	`company`
-			WHERE	`CompanyID` <> 0";
-	$return = $pdo->query($sql);
-	$companies = $return->fetchAll(PDO::FETCH_ASSOC);
+	$sql = "SELECT 	c.`CompanyID`	AS CompanyID,
+					c.`name`		AS CompanyName
+			FROM	`company` c
+			WHERE	`companyID`
+			NOT IN	(
+						SELECT 	`companyID`
+						FROM	`employee`
+						WHERE	`userID` = :userID
+					)";
+	$s = $pdo->prepare($sql);
+	$s->bindValue(":userID", $_SESSION['LoggedInUserID']);
+	$s->execute();
+
+	$companies = $s->fetchAll(PDO::FETCH_ASSOC);
 }
 catch (PDOException $e)
 {
