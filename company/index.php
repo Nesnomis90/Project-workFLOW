@@ -48,6 +48,7 @@ function unsetSessionsFromCompanyManagement(){
 	unset($_SESSION['normalUserCompanyIDSelected']);
 	unset($_SESSION['normalUserCompanyNameSelected']);
 	unset($_SESSION['normalCompanyCreateACompany']);
+	unset($_SESSION['normalCompanyJoinACompany']);
 }
 
 if(isSet($_SESSION['normalCompanyCreateACompany']) AND $_SESSION['normalCompanyCreateACompany'] == "Invalid"){
@@ -60,6 +61,12 @@ if(!isSet($_GET['ID']) AND !isSet($_GET['employees']) AND !isSet($_SESSION['norm
 
 if(isSet($_POST['action']) AND $_POST['action'] == "Create A Company"){
 	$_SESSION['normalCompanyCreateACompany'] = TRUE;
+	unset($_SESSION['normalCompanyJoinACompany']);
+}
+
+if(isSet($_POST['action']) AND $_POST['action'] == "Join A Company"){
+	$_SESSION['normalCompanyJoinACompany'] = TRUE;
+	unset($_SESSION['normalCompanyCreateACompany']);
 }
 
 if(isSet($_POST['action']) AND $_POST['action'] == "Confirm"){
@@ -310,6 +317,11 @@ if(isSet($_POST['action']) AND $_POST['action'] == "Confirm"){
 	}
 }
 
+if(isSet($_POST['action']) AND $_POST['action'] == "Cancel"){
+	unset($_SESSION['normalCompanyCreateACompany']);
+	unset($_SESSION['normalCompanyJoinACompany']);
+}
+
 if(isSet($_POST['action']) AND $_POST['action'] == "Request To Join"){
 	unset($_SESSION['normalCompanyCreateACompany']);
 
@@ -391,7 +403,7 @@ if(isSet($_POST['confirm']) AND $_POST['confirm'] == "Yes, Send The Request"){
 			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 
 			$pdo = connect_to_db();
-
+			// TO-DO: Limit the companies to the ones that have owners that want to receive email?
 			$sql = 'SELECT		u.`email`					AS Email,
 								u.`sendOwnerEmail`			AS SendOwnerEmail,
 								e.`sendEmailOnceOrAlways`	AS SendEmailOnceOrAlways
@@ -463,20 +475,22 @@ if(isSet($_POST['confirm']) AND $_POST['confirm'] == "Yes, Send The Request"){
 			if(isSet($_SESSION['normalCompanyFeedback'])){
 				$_SESSION['normalCompanyFeedback'] .= "\n\nThe request couldn't be made, since there were no company owner(s) that wanted to be contacted."; // TO-DO: Remove before uploading.
 			} else {
-				$_SESSION['normalCompanyFeedback'] .= "The request couldn't be made, since there were no company owner(s) that wanted to be contacted."; // TO-DO: Remove before uploading.
+				$_SESSION['normalCompanyFeedback'] = "The request couldn't be made, since there were no company owner(s) that wanted to be contacted."; // TO-DO: Remove before uploading.
 			}
 			
 		}
 	}
+	unset($_SESSION['normalCompanyJoinACompany']);
 }
 
 if(isSet($_POST['confirm']) AND $_POST['confirm'] == "No, Cancel The Request"){
-	// TO-DO: Add more?
 	$_SESSION['normalCompanyFeedback'] = "Cancelled your request.";
+	unset($_SESSION['normalCompanyJoinACompany']);
 }
 
 if(isSet($_POST['action']) AND $_POST['action'] == "Select Company"){
 	unset($_SESSION['normalCompanyCreateACompany']);
+	unset($_SESSION['normalCompanyJoinACompany']);
 	if(isSet($_POST['selectedCompanyToDisplay']) AND !empty($_POST['selectedCompanyToDisplay'])){
 		$selectedCompanyToDisplayID = $_POST['selectedCompanyToDisplay'];
 		$_SESSION['normalUserCompanyIDSelected'] = $selectedCompanyToDisplayID;
