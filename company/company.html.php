@@ -183,10 +183,9 @@
 							</div>
 							<div class="left">
 								<input type="submit" name="action" value="Request To Join">
+								<input type="submit" name="action" value="Cancel">
 							</div>
 						</fieldset>
-					<?php else : ?>
-						<input type="submit" name="action" value="Join A Company">
 					<?php endif; ?>
 				</div>
 
@@ -209,10 +208,21 @@
 								<input type="submit" name="action" value="Cancel">
 							</div>
 						</fieldset>
-					<?php else : ?>
-						<input type="submit" name="action" value="Create A Company">
 					<?php endif; ?>
 				</div>
+				
+				<?php if(!isSet($_SESSION['normalCompanyCreateACompany']) OR !isSet($_SESSION['normalCompanyJoinACompany'])) : ?>
+					<div class="left">
+						<fieldset><legend>Other Choices</legend>
+							<?php if(!isSet($_SESSION['normalCompanyJoinACompany'])) : ?>
+								<input type="submit" name="action" value="Join A Company">
+							<?php endif; ?>
+							<?php if(!isSet($_SESSION['normalCompanyCreateACompany'])) : ?>
+								<input type="submit" name="action" value="Create A Company">
+							<?php endif; ?>
+						</fieldset>
+					</div>
+				<?php endif; ?>
 			</form>
 		</fieldset>
 	<?php elseif(isSet($noAccess)) : ?>
