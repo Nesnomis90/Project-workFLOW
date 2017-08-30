@@ -290,7 +290,8 @@ if(isSet($_POST['action']) AND $_POST['action'] == "Confirm"){
 					// TO-DO: FIX-ME: What to do if the mail doesn't want to send?
 					// Store it somewhere and have a cron try to send emails?
 				}
-				$_SESSION['normalCompanyFeedback'] .= "\nThis is the email msg we're sending out:\n$emailMessage.\nSent to email: $email."; // TO-DO: Remove after testing				
+				$email = implode($email,", ");
+				$_SESSION['normalCompanyFeedback'] .= "\nThis is the email msg we're sending out:\n$emailMessage.\nSent to email(s): $email."; // TO-DO: Remove after testing				
 			}
 			// close connection
 			$pdo = null;
@@ -320,7 +321,32 @@ if(isSet($_POST['action']) AND $_POST['action'] == "Request To Join"){
 
 	// values to retrieve
 	$_POST['selectedCompanyToJoin'];
-	*/	
+	$_POST['requestToJoinMessage'];
+	*/
+
+	$continueRequest = FALSE;
+
+	if(isSet($_POST['selectedCompanyToJoin']) AND !empty($_POST['selectedCompanyToJoin'])){
+		$selectedCompanyToJoinID = $_POST['selectedCompanyToJoin'];
+		$continueRequest = TRUE;
+	} else {
+		$_SESSION['normalCompanyFeedback'] = "Failed to identify the company you wanted to join, so the process was aborted.";
+	}
+	
+	if(isSet($_POST['requestToJoinMessage']) AND !empty($_POST['requestToJoinMessage'])){
+		$requestMessage = trimExcessWhitespaceButLeaveLinefeed($_POST['requestToJoinMessage']);
+	} else {
+		$requestMessage = "N/A";
+	}
+	
+	if($continueRequest){
+		
+		
+		
+		var_dump($_SESSION);	// TO-DO: Remove before uploading
+		include_once 'confirmrequest.html.php';
+		exit();
+	}
 }
 
 if(isSet($_POST['action']) AND $_POST['action'] == "Select Company"){

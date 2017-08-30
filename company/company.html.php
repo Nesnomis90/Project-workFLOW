@@ -175,6 +175,9 @@
 								<?php endif; ?>
 							<?php endforeach; ?>
 						</select>
+						<label>Request Message: </label>
+						<textarea rows="4" cols="50" name="requestToJoinMessage"
+						placeholder="Enter any information you would like to send to the company owner(s)."></textarea>
 					</div>
 					<div class="left">
 						<input type="submit" name="action" value="Request To Join">
