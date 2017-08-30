@@ -179,7 +179,7 @@
 								</select>
 								<label>Request Message: </label>
 								<textarea rows="4" cols="50" name="requestToJoinMessage"
-								placeholder="Enter any information you would like to send to the company owner(s)."></textarea>
+								placeholder="Enter any information you would like to send to the company."></textarea>
 							</div>
 							<div class="left">
 								<input type="submit" name="action" value="Request To Join">
@@ -197,6 +197,7 @@
 							<input class="fillOut" type="text" name="createACompanyName" value="">
 							<div class="left">
 								<input type="submit" name="action" value="Confirm">
+								<input type="submit" name="action" value="Cancel">
 							</div>
 						</fieldset>
 					<?php elseif(isSet($_SESSION['normalCompanyCreateACompany']) AND $_SESSION['normalCompanyCreateACompany']) : ?>
