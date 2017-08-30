@@ -158,28 +158,36 @@
 					</fieldset>
 				<?php endif; ?>
 			
-				<fieldset class="left">
-				<?php if(isSet($numberOfCompanies) AND $numberOfCompanies > 0) : ?>
-					<legend>Request To Join Another Company</legend>
-				<?php elseif(isSet($numberOfCompanies) AND $numberOfCompanies == 0) : ?>
-					<legend>Request To Join A Company</legend>
-				<?php endif; ?>
-					<div class="left">
-						<label>Choose: </label>
-						<select name="selectedCompanyToJoin">
-							<?php foreach($companies AS $company) : ?>
-								<?php if($company['CompanyID'] == $selectedCompanyToJoinID) : ?>
-									<option selected="selected" value="<?php htmlout($company['CompanyID']); ?>"><?php htmlout($company['CompanyName']); ?></option>
-								<?php else : ?>
-									<option value="<?php htmlout($company['CompanyID']); ?>"><?php htmlout($company['CompanyName']); ?></option>
-								<?php endif; ?>
-							<?php endforeach; ?>
-						</select>
-					</div>
-					<div class="left">
-						<input type="submit" name="action" value="Request To Join">
-					</div>
-				</fieldset>
+				<div class="left">
+					<?php if(isSet($_SESSION['normalCompanyJoinACompany'])) : ?>
+						<fieldset class="left">
+						<?php if(isSet($numberOfCompanies) AND $numberOfCompanies > 0) : ?>
+							<legend>Request To Join Another Company</legend>
+						<?php elseif(isSet($numberOfCompanies) AND $numberOfCompanies == 0) : ?>
+							<legend>Request To Join A Company</legend>
+						<?php endif; ?>
+							<div class="left">
+								<label>Choose: </label>
+								<select name="selectedCompanyToJoin">
+									<?php foreach($companies AS $company) : ?>
+										<?php if($company['CompanyID'] == $selectedCompanyToJoinID) : ?>
+											<option selected="selected" value="<?php htmlout($company['CompanyID']); ?>"><?php htmlout($company['CompanyName']); ?></option>
+										<?php else : ?>
+											<option value="<?php htmlout($company['CompanyID']); ?>"><?php htmlout($company['CompanyName']); ?></option>
+										<?php endif; ?>
+									<?php endforeach; ?>
+								</select>
+								<label>Request Message: </label>
+								<textarea rows="4" cols="50" name="requestToJoinMessage"
+								placeholder="Enter any information you would like to send to the company."></textarea>
+							</div>
+							<div class="left">
+								<input type="submit" name="action" value="Request To Join">
+								<input type="submit" name="action" value="Cancel">
+							</div>
+						</fieldset>
+					<?php endif; ?>
+				</div>
 
 				<div class="left">
 					<?php if(isSet($_SESSION['normalCompanyCreateACompany']) AND $_SESSION['normalCompanyCreateACompany'] === "Invalid") : ?>
@@ -188,6 +196,7 @@
 							<input class="fillOut" type="text" name="createACompanyName" value="">
 							<div class="left">
 								<input type="submit" name="action" value="Confirm">
+								<input type="submit" name="action" value="Cancel">
 							</div>
 						</fieldset>
 					<?php elseif(isSet($_SESSION['normalCompanyCreateACompany']) AND $_SESSION['normalCompanyCreateACompany']) : ?>
@@ -196,12 +205,24 @@
 							<input type="text" name="createACompanyName" value="">
 							<div class="left">
 								<input type="submit" name="action" value="Confirm">
+								<input type="submit" name="action" value="Cancel">
 							</div>
 						</fieldset>
-					<?php else : ?>
-						<input type="submit" name="action" value="Create A Company">
 					<?php endif; ?>
 				</div>
+				
+				<?php if(!isSet($_SESSION['normalCompanyCreateACompany']) OR !isSet($_SESSION['normalCompanyJoinACompany'])) : ?>
+					<div class="left">
+						<fieldset><legend>Other Choices</legend>
+							<?php if(!isSet($_SESSION['normalCompanyJoinACompany'])) : ?>
+								<input type="submit" name="action" value="Join A Company">
+							<?php endif; ?>
+							<?php if(!isSet($_SESSION['normalCompanyCreateACompany'])) : ?>
+								<input type="submit" name="action" value="Create A Company">
+							<?php endif; ?>
+						</fieldset>
+					</div>
+				<?php endif; ?>
 			</form>
 		</fieldset>
 	<?php elseif(isSet($noAccess)) : ?>
