@@ -59,6 +59,29 @@ WHERE 	DATE(CURRENT_TIMESTAMP) >= `removeAtDate`
 AND 	`isActive` = 1
 AND		`companyID` <> 0;
 
+SELECT  	m.`meetingRoomID`	AS TheMeetingRoomID, 
+			m.`name`			AS MeetingRoomName, 
+			m.`capacity`		AS MeetingRoomCapacity, 
+			m.`description`		AS MeetingRoomDescription, 
+			m.`location`		AS MeetingRoomLocation,
+			(
+				SELECT 	COUNT(*)
+				FROM 	`roomequipment` re
+				WHERE 	re.`MeetingRoomID` = TheMeetingRoomID
+			)					AS MeetingRoomEquipmentAmount,
+            (
+				SELECT	COUNT(*)
+                FROM	`booking` b
+                WHERE	b.`meetingRoomID` = TheMeetingRoomID
+                AND		b.`actualEndDateTime` IS NULL
+                AND		b.`dateTimeCancelled` IS NULL
+                AND		CURRENT_TIMESTAMP 
+                BETWEEN	b.`startDateTime` 
+                AND 	b.`endDateTime`
+            )					AS MeetingRoomStatus
+FROM 		`meetingroom` m;
+
+
 SELECT 		cp.`name`					AS CompanyPosition,
 			c.`name`					AS CompanyName,
 			c.`CompanyID`				AS CompanyID,

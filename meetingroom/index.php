@@ -68,8 +68,7 @@ if(	(isSet($_POST['action']) AND $_POST['action'] == "Set Default Room") OR
 		exit();
 	}
 
-	foreach ($result as $row)
-	{
+	foreach ($result as $row){
 		$meetingrooms[] = array('MeetingRoomID' => $row['TheMeetingRoomID'], 
 								'MeetingRoomName' => $row['MeetingRoomName'],
 								'MeetingRoomCapacity' => $row['MeetingRoomCapacity'],
@@ -186,7 +185,17 @@ if(isSet($_GET['meetingroom'])){
 								SELECT 	COUNT(*)
 								FROM 	`roomequipment` re
 								WHERE 	re.`MeetingRoomID` = TheMeetingRoomID
-							)					AS MeetingRoomEquipmentAmount
+							)					AS MeetingRoomEquipmentAmount,
+							(
+								SELECT	COUNT(*)
+								FROM	`booking` b
+								WHERE	b.`meetingRoomID` = TheMeetingRoomID
+								AND		b.`actualEndDateTime` IS NULL
+								AND		b.`dateTimeCancelled` IS NULL
+								AND		CURRENT_TIMESTAMP 
+								BETWEEN	b.`startDateTime` 
+								AND 	b.`endDateTime`
+							)					AS MeetingRoomStatus
 				FROM 		`meetingroom` m
 				WHERE		m.`meetingRoomID` = :meetingRoomID
 				LIMIT 		1';
@@ -220,7 +229,17 @@ if(isSet($_GET['meetingroom'])){
 								SELECT 	COUNT(*)
 								FROM 	`roomequipment` re
 								WHERE 	re.`MeetingRoomID` = TheMeetingRoomID
-							)					AS MeetingRoomEquipmentAmount
+							)					AS MeetingRoomEquipmentAmount,
+							(
+								SELECT	COUNT(*)
+								FROM	`booking` b
+								WHERE	b.`meetingRoomID` = TheMeetingRoomID
+								AND		b.`actualEndDateTime` IS NULL
+								AND		b.`dateTimeCancelled` IS NULL
+								AND		CURRENT_TIMESTAMP 
+								BETWEEN	b.`startDateTime` 
+								AND 	b.`endDateTime`
+							)					AS MeetingRoomStatus
 				FROM 		`meetingroom` m';
 		$result = $pdo->query($sql);
 
@@ -236,14 +255,15 @@ if(isSet($_GET['meetingroom'])){
 	}
 }
 
-foreach ($result as $row)
-{
+foreach ($result as $row){
+	$status = ( ($row['MeetingRoomStatus'] == 1) ? "Occupied" : "Available");
 	$meetingrooms[] = array('MeetingRoomID' => $row['TheMeetingRoomID'], 
 							'MeetingRoomName' => $row['MeetingRoomName'],
 							'MeetingRoomCapacity' => $row['MeetingRoomCapacity'],
 							'MeetingRoomDescription' => $row['MeetingRoomDescription'],
 							'MeetingRoomLocation' => $row['MeetingRoomLocation'],
-							'MeetingRoomEquipmentAmount' => $row['MeetingRoomEquipmentAmount']
+							'MeetingRoomEquipmentAmount' => $row['MeetingRoomEquipmentAmount'],
+							'MeetingRoomStatus' => $status
 					);
 }
 
