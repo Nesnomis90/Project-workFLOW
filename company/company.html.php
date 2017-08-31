@@ -14,7 +14,7 @@
 				}
 			<?php else : ?>
 				label {
-					width: 140px;
+					width: 150px;
 				}				
 			<?php endif; ?>
 		</style>		
@@ -93,33 +93,38 @@
 
 					<fieldset class="left"><legend>Booking Details:</legend>
 						<div class="left">
-							<label>Monthly Credits Given: </label>
+							<label>Current Period: </label>
+							<span><b><?php htmlout($companyInformation['PeriodInfo']); ?></b></span>
+						</div>
+						
+						<div class="left">
+							<label>Credits Given (This Period): </label>
 							<span><b><?php htmlout($companyInformation['CompanyCredits']); ?></b></span>
 						</div>
 
 						<div class="left">
-							<label>Monthly Credits Remaining: </label>
+							<label>Credits Remaining (This Period): </label>
 							<?php if(substr($companyInformation['CompanyCreditsRemaining'],0,1) == "-"){$color="red";}else{$color="green";} ?>
 							<span><b style="color: <?php htmlout($color); ?>;"><?php htmlout($companyInformation['CompanyCreditsRemaining']); ?></b></span>
 						</div>
 						
 						<div class="left">
-							<label>Monthly Fee: </label>
+							<label>Monthly Fee (This Period): </label>
 							<span><b><?php htmlout($companyInformation['CreditSubscriptionMonthlyPrice']); ?></b></span>
 						</div>
 
 						<div class="left">
-							<label>Over Credits Fee: </label>
+							<label>Over Credits Fee (This Period): </label>
 							<span><b><?php htmlout($companyInformation['OverCreditsFee']); ?></b></span>
 						</div>
 
 						<div class="left">
-							<label>Booking Time Used (This Month): </label>
+							<label>Booking Time Used (This Period): </label>
 							<span><b><?php htmlout($companyInformation['MonthlyCompanyWideBookingTimeUsed']); ?></b></span>
 						</div>
 
 						<div class="left">
-							<label>Booking Time Used (Last Month): </label>
+							<label>Booking Time Used (Last Period): </label>
 							<span><b><?php htmlout($companyInformation['PreviousMonthCompanyWideBookingTimeUsed']); ?></b></span>
 						</div>
 

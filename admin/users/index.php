@@ -297,7 +297,6 @@ if (isSet($_POST['action']) AND $_POST['action'] == "Disable Delete"){
 	$refreshUsers = TRUE;
 }
 
-
 // If admin wants to remove a user from the database
 if (isSet($_POST['action']) and $_POST['action'] == 'Delete')
 {
@@ -367,7 +366,85 @@ if (isSet($_POST['action']) and $_POST['action'] == 'Delete')
 	header('Location: .');
 	exit();	
 }
- 
+
+// If admin wants to activate an unactivated user
+if (isSet($_POST['action']) and $_POST['action'] == 'Activate'){
+	if(isSet($_POST['id']) AND !empty($_POST['id'])){
+
+		$userID = $_POST['id'];	
+
+		try
+		{
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+
+			$pdo = connect_to_db();
+
+			$sql = 'SELECT 	`isActive`,
+							`email`
+					FROM	`user`
+					WHERE	`userID` = :userID
+					LIMIT 	1';
+			$s = $pdo->prepare($sql);
+			$s->bindValue(':userID', $userID);
+			$s->execute();					
+			$row = $s->fetch(PDO::FETCH_ASSOC);
+			
+			if(isSet($row) AND $row['isActive'] == 0){
+				// User can be activated
+
+				$sql = 'UPDATE 	`user`
+						SET		`isActive` = 1,
+								`activationCode` = NULL
+						WHERE	`userID` = :userID';
+				$s = $pdo->prepare($sql);
+				$s->bindValue(':userID', $userID);
+				$s->execute();
+
+				$_SESSION['UserManagementFeedbackMessage'] = "Successfully activated the account.";
+				
+				// Send email to user that the account has been activated
+				$emailSubject = "Account Activated";
+
+				$email = $row['email'];
+
+				$emailMessage = 
+				"Your account has been activated by an Admin.\n" . 
+				"You are now free to log in to your account with your email and previously received password.";
+
+				$mailResult = sendEmail($email, $emailSubject, $emailMessage);
+
+				if(!$mailResult){
+					$_SESSION['UserManagementFeedbackMessage'] .= "\n\n[WARNING] System failed to send Email to user.";
+				}
+
+				$_SESSION['UserManagementFeedbackMessage'] .= "\nThis is the email msg we're sending out: $emailMessage\nSent to: $email."; // TO-DO: Remove after testing
+			} elseif(isSet($row) AND $row['isActive'] == 1) {
+				// User is already active
+				$_SESSION['UserManagementFeedbackMessage'] = "User had already been activated";
+			} else {
+				// User not found
+				$_SESSION['UserManagementFeedbackMessage'] = "Could not activate user due to it no longer existing";
+			}
+
+			//Close connection
+			$pdo = null;
+		}
+		catch (PDOException $e)
+		{
+			$error = 'Error activating user: ' . $e->getMessage();
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+			$pdo = null;
+			exit();
+		}
+	} else {
+		$_SESSION['UserManagementFeedbackMessage'] = "Could not activate user due to a missing identifier";
+	}
+
+	// Load user list webpage with updated database
+	header('Location: .');
+	exit();
+}
+
 // If admin wants to add a user to the database
 // we load a new html form
 if (isSet($_GET['add']) OR (isSet($_SESSION['refreshAddUser']) AND $_SESSION['refreshAddUser']))
@@ -570,13 +647,13 @@ if (isSet($_GET['addform']) AND isSet($_POST['action']) AND $_POST['action'] == 
 		$pdo = null;
 		exit();
 	}	
-	
+
 	// Send user an email with the activation code
 		// TO-DO: This is UNTESTED since we don't have php.ini set up to actually send email
 	$generatedPassword = $_SESSION['AddNewUserGeneratedPassword'];
 
 	$emailSubject = "Account Activation Link";
-	
+
 	$emailMessage = 
 	"Your account has been created.\n" . 
 	"Your generated Password: " . $generatedPassword . ".\n" .
@@ -585,15 +662,15 @@ if (isSet($_GET['addform']) AND isSet($_POST['action']) AND $_POST['action'] == 
 	"If the account isn't activated within 8 hours, it is removed.\n" .
 	"Click this link to activate your account: " . $_SERVER['HTTP_HOST'] . 
 	"/user/?activateaccount=" . $activationcode;
-	
+
 	$mailResult = sendEmail($email, $emailSubject, $emailMessage);
-	
+
 	if(!$mailResult){
-		$_SESSION['UserManagementFeedbackMessage'] .= " [WARNING] System failed to send Email to user.";
+		$_SESSION['UserManagementFeedbackMessage'] .= "\n[WARNING] System failed to send Email to user.";
 	}
-	
-	$_SESSION['UserManagementFeedbackMessage'] .= "this is the email msg we're sending out: $emailMessage. Sent to: $email."; // TO-DO: Remove after testing	
-	
+
+	$_SESSION['UserManagementFeedbackMessage'] .= "\nThis is the email msg we're sending out: $emailMessage\nSent to: $email."; // TO-DO: Remove after testing	
+
 	// Forget information we don't need anymore
 	clearAddUserSessions();
 

@@ -23,7 +23,7 @@ function setDefaultSubscriptionIfCompanyHasNone(){
 							)";
 		$return = $pdo->query($sql);
 		$rowCount = $return->fetchColumn();
-		
+
 		if($rowCount > 0) {
 			$pdo = connect_to_db();
 			$sql = "SELECT 		`CompanyID`						AS CompanyID,
@@ -50,21 +50,21 @@ function setDefaultSubscriptionIfCompanyHasNone(){
 							SET			`CompanyID` = " . $companyID . ",
 										`CreditsID` = " . $creditsID);
 			}
-			
+
 			$success = $pdo->commit();
 			if(!$success){ // If commit failed we have to retry
 				$pdo = null;
 				return FALSE;
-			}				
+			}
 		}
 		$pdo = null;
-		return TRUE;	
+		return TRUE;
 	}
 	catch(PDOException $e)
 	{
 		$pdo = null;
 		return FALSE;
-	}	
+	}
 }
 
 // Checks if there are any billing periods that have ended for any company
@@ -210,6 +210,8 @@ function updateBillingDatesForCompanies(){
 								`billingDescription` = '" . $billingDescriptionInformation . "'";
 				}
 				$pdo->exec($sql);
+				// TO-DO: FIX-ME: Interval 1 month isn't good enough. January 31 -> February 28 -> March 28
+				// Make it + 30 day?
 				$sql = "UPDATE 	`company`
 						SET		`prevStartDate` = `startDate`,
 								`startDate` = `endDate`,
@@ -356,7 +358,7 @@ function setUserAccessToNormalOnSetDate(){
 						`reduceAccessAtDate` = NULL
 				WHERE 	DATE(CURRENT_TIMESTAMP) >= `reduceAccessAtDate`
 				AND 	`isActive` = 1
-				AND		`userID` <> 0";		
+				AND		`userID` <> 0";
 		$pdo->exec($sql);
 
 		//Close the connection
@@ -425,7 +427,7 @@ if(!$updatedCompanyActivity){
 		$success = setCompanyAsInactiveOnSetDate();
 		if($success){
 			echo "Successfully Set Company As Inactive";	// TO-DO: Remove before uploading.
-			echo "<br />";			
+			echo "<br />";
 			break;
 		}
 	}
@@ -449,7 +451,7 @@ if(!$updatedUserAccess){
 	}
 	unset($success);
 	echo "Failed To Set User Access Level To Normal";	// TO-DO: Remove before uploading.
-	echo "<br />";	
+	echo "<br />";
 } else {
 	echo "Successfully Set User Access Level To Normal";	// TO-DO: Remove before uploading.
 	echo "<br />";
