@@ -6,6 +6,9 @@ session_start();
 include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/helpers.inc.php';
 include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/magicquotes.inc.php';
 
+unsetSessionsFromCompanyManagement();
+unsetSessionsFromUserManagement();
+
 // Make sure logout works properly and that we check if their login details are up-to-date
 if(isSet($_SESSION['loggedIn'])){
 	$gotoPage = ".";
@@ -14,7 +17,6 @@ if(isSet($_SESSION['loggedIn'])){
 
 /*
 	TO-DO:
-		Show meeting room status (booked or not?)
 		Search meeting room status by datetime?
 */
 

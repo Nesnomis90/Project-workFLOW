@@ -80,7 +80,7 @@
 						<?php elseif($room['MeetingRoomStatus'] == "Available") : ?>
 							<?php $color = "#33ff33"; // Light Green?>
 						<?php endif; ?>
-						<fieldset style="border-color: <?php htmlout($color); ?>"><legend><b><?php htmlout($room['MeetingRoomName']); ?></b></legend>
+						<fieldset style="border-style: solid; border-color: <?php htmlout($color); ?>"><legend><b><?php htmlout($room['MeetingRoomName']); ?></b></legend>
 							<div class="left">
 								<label>Status: </label>
 								<span><?php htmlout($room['MeetingRoomStatus']); ?></span>
@@ -131,7 +131,7 @@
 							<?php elseif($room['MeetingRoomStatus'] == "Available") : ?>
 								<?php $color = "#33ff33"; // Light Green?>
 							<?php endif; ?>
-								<fieldset style="border-color: <?php htmlout($color); ?>"><legend><b><?php htmlout($room['MeetingRoomName']); ?></b></legend>
+								<fieldset style="border-style: solid; border-color: <?php htmlout($color); ?>"><legend><b><?php htmlout($room['MeetingRoomName']); ?></b></legend>
 									<div class="left">
 										<label>Status: </label>
 										<span><?php htmlout($room['MeetingRoomStatus']); ?></span>

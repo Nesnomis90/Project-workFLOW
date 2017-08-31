@@ -168,6 +168,14 @@ function unsetSessionsFromUserManagement(){
 	unset($_SESSION['normalUserEditMode']);
 }
 
+// Remove all sessions used by all users in company management
+function unsetSessionsFromCompanyManagement(){
+	unset($_SESSION['normalUserCompanyIDSelected']);
+	unset($_SESSION['normalUserCompanyNameSelected']);
+	unset($_SESSION['normalCompanyCreateACompany']);
+	unset($_SESSION['normalCompanyJoinACompany']);
+}
+
 // Removes all stored info e.g. logs out user
 function destroySession(){
 	session_start();

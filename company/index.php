@@ -44,13 +44,6 @@ if (isSet($_POST['action']) AND $_POST['action'] == "Disable Remove"){
 
 unsetSessionsFromUserManagement();
 
-function unsetSessionsFromCompanyManagement(){
-	unset($_SESSION['normalUserCompanyIDSelected']);
-	unset($_SESSION['normalUserCompanyNameSelected']);
-	unset($_SESSION['normalCompanyCreateACompany']);
-	unset($_SESSION['normalCompanyJoinACompany']);
-}
-
 if(isSet($_SESSION['normalCompanyCreateACompany']) AND $_SESSION['normalCompanyCreateACompany'] == "Invalid"){
 	$_SESSION['normalCompanyCreateACompany'] = TRUE;
 }
