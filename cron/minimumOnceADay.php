@@ -210,6 +210,8 @@ function updateBillingDatesForCompanies(){
 								`billingDescription` = '" . $billingDescriptionInformation . "'";
 				}
 				$pdo->exec($sql);
+				// TO-DO: FIX-ME: Interval 1 month isn't good enough. January 31 -> February 28 -> March 28
+				// Make it + 30 day?
 				$sql = "UPDATE 	`company`
 						SET		`prevStartDate` = `startDate`,
 								`startDate` = `endDate`,

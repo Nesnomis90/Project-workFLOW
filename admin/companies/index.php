@@ -478,7 +478,7 @@ function calculatePeriodInformation($pdo, $companyID, $BillingStart, $BillingEnd
 			$cancelMessage = "";
 		} else {
 			$cancelMessage = $row['CancelMessage'];
-		}	
+		}
 		$bookingHistory[] = array(
 									'BookingPeriod' => $bookingPeriod,
 									'UserInformation' => $userInformation,
