@@ -1387,7 +1387,7 @@ if (isSet($_POST['action']) and $_POST['action'] == 'Confirm Merge'){
 			$s->execute();*/
 
 			/*// Update the company's creation date if the old company was older.
-			// This does not really work. SInce it ruins booking history if it's accurate and makes no sense if we change it 
+			// This does not really work. Since it ruins booking history if it's accurate and makes no sense if we change it 
 			if($oldCreationDate < $newCreationDate){
 				
 				

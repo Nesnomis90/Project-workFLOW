@@ -3836,7 +3836,7 @@ if(!isSet($_GET['Meetingroom'])){
 							)        										AS CancelledByUserLastName
 				FROM 		`booking` b
 				ORDER BY 	UNIX_TIMESTAMP(b.`startDateTime`)
-				DESC';
+				ASC';
 		$result = $pdo->query($sql);
 
 		//Close the connection
