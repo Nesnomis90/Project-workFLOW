@@ -2390,6 +2390,8 @@ if(isSet($selectedCompanyToDisplayID) AND !empty($selectedCompanyToDisplayID)){
 							c.`dateTimeCreated`									AS DatetimeCreated,
 							c.`removeAtDate`									AS DeletionDate,
 							c.`isActive`										AS CompanyActivated,
+							c.`startDate`										AS PeriodStartDate,
+							c.`endDate`											AS PeriodEndDate,
 							(
 								SELECT 	COUNT(e.`CompanyID`)
 								FROM 	`employee` e
@@ -2678,9 +2680,14 @@ if(isSet($selectedCompanyToDisplayID) AND !empty($selectedCompanyToDisplayID)){
 		// Display dates
 	$dateCreated = $row['DatetimeCreated'];	
 	$dateToRemove = $row['DeletionDate'];
+	$periodStartDate = $row['PeriodStartDate'];
+	$periodEndDate = $row['PeriodEndDate'];
 	$isActive = ($row['CompanyActivated'] == 1);
 	$dateTimeCreatedToDisplay = convertDatetimeToFormat($dateCreated, 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
 	$dateToRemoveToDisplay = convertDatetimeToFormat($dateToRemove, 'Y-m-d', DATE_DEFAULT_FORMAT_TO_DISPLAY);
+	$periodStartDateDisplay = convertDatetimeToFormat($periodStartDate, 'Y-m-d', DATE_DEFAULT_FORMAT_TO_DISPLAY);
+	$periodEndDateDisplay = convertDatetimeToFormat($periodEndDate, 'Y-m-d', DATE_DEFAULT_FORMAT_TO_DISPLAY);
+	$periodInfo = $periodStartDateDisplay . " - " . $periodEndDateDisplay;
 
 	$numberOfTotalBookedMeetings = $row['TotalBookedMeetings'];
 	$numberOfActiveBookedMeetings = $row['ActiveBookedMeetings'];
@@ -2700,7 +2707,8 @@ if(isSet($selectedCompanyToDisplayID) AND !empty($selectedCompanyToDisplayID)){
 							'CompanyCreditsRemaining' => $displayCompanyCreditsRemaining,
 							'CreditSubscriptionMonthlyPrice' => convertToCurrency($monthPrice),
 							'OverCreditsFee' => $overCreditsFee,
-							'CompanyRole' => $row['CompanyRole']
+							'CompanyRole' => $row['CompanyRole'],
+							'PeriodInfo' => $periodInfo
 						);
 }
 
