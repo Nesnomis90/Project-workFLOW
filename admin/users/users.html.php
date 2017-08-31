@@ -18,7 +18,7 @@
 		<?php include_once $_SERVER['DOCUMENT_ROOT'] .'/includes/admintopnav.html.php'; ?>
 
 		<h1>Manage Users</h1>
-		
+
 		<div class="left">
 			<?php if(isSet($_SESSION['UserManagementFeedbackMessage'])) : ?>
 				<span><b class="feedback"><?php htmlout($_SESSION['UserManagementFeedbackMessage']); ?></b></span>
@@ -39,8 +39,8 @@
 					<input type="submit" name="action" value="Enable Delete">
 				<?php endif; ?>
 			</form>
-		</div>		
-		
+		</div>
+
 		<?php if($rowNum>0) :?>
 			<table>
 				<caption>Activated Users</caption>
@@ -84,7 +84,7 @@
 								<td>
 									<p><?php htmlout($user['reduceaccess']); ?></p>
 									<input type="submit" name="action" value="Cancel Date">
-								</td>								
+								</td>
 							<?php endif; ?>
 							<td><input type="submit" name="action" value="Edit"></td>
 							<td>
@@ -101,7 +101,7 @@
 					</form>
 				<?php endforeach; ?>
 			</table>
-			
+
 			<?php if(isSet($inactiveusers)) : ?>
 				<table>
 					<caption>Unactivated Users</caption>
@@ -109,14 +109,15 @@
 						<th colspan="3">User Information</th>
 						<th>Website</th>
 						<th>Date</th>
-						<th>Alter User</th>
-					</tr>				
+						<th colspan="2">Alter User</th>
+					</tr>
 					<tr>
 						<th>First Name</th>
 						<th>Last Name</th>
 						<th>Email</th>
 						<th>Access</th>
 						<th>Created</th>
+						<th>Activate</th>
 						<th>Delete</th>
 					</tr>
 					<?php foreach ($inactiveusers as $user): ?>
@@ -127,6 +128,7 @@
 							<td><?php htmlout($user['email']); ?></td>
 							<td><?php htmlout($user['accessname']); ?></td>
 							<td><?php htmlout($user['datecreated']); ?></td>
+							<td><input type="submit" name="action" value="Activate"></td>
 							<td>
 								<?php if(isSet($_SESSION['usersEnableDelete']) AND $_SESSION['usersEnableDelete']) : ?>
 									<input type="submit" name="action" value="Delete">
@@ -140,13 +142,13 @@
 					<?php endforeach; ?>
 				</table>
 			<?php endif; ?>
-			
+
 		<?php else : ?>
 			<tr><b>There are no users registered in the database.</b></tr>
 		<?php endif; ?>
-		
-	<div class="left"><a href="..">Return to CMS home</a></div>
-		
+
+	<div class="left"><a href="/admin/">Return to CMS home</a></div>
+
 	<?php include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/logout.inc.html.php'; ?>
 	</body>
 </html>

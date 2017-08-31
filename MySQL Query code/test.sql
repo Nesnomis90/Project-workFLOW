@@ -59,6 +59,11 @@ WHERE 	DATE(CURRENT_TIMESTAMP) >= `removeAtDate`
 AND 	`isActive` = 1
 AND		`companyID` <> 0;
 
+SELECT 	('2011-01-01' + INTERVAL 30 DAY),
+		('2011-01-01' + INTERVAL 60 DAY),
+        ('2011-01-01' + INTERVAL 1 MONTH),
+        ('2011-01-01' + INTERVAL 2 MONTH);
+
 SELECT  	m.`meetingRoomID`	AS TheMeetingRoomID, 
 			m.`name`			AS MeetingRoomName, 
 			m.`capacity`		AS MeetingRoomCapacity, 
