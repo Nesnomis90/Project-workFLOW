@@ -4,7 +4,7 @@
 <!DOCTYPE html>
 <html lang="en">
 	<head>
-		<meta charset="utf-8" HTTP-EQUIV="refresh" CONTENT="<?php htmlout(SECONDS_BEFORE_REFRESHING_BOOKING_PAGE); ?>"> <!-- Refreshes every x sec -->
+		<meta charset="utf-8" HTTP-EQUIV="refresh" CONTENT="<?php htmlout(SECONDS_BEFORE_REFRESHING_BOOKING_PAGE); ?>"> <!-- Refreshes every <?php htmlout(SECONDS_BEFORE_REFRESHING_BOOKING_PAGE); ?> sec -->
 		<title>Booking Information</title>
 		<link rel="stylesheet" type="text/css" href="/CSS/myCSS.css">
 		<script src="/scripts/myFunctions.js"></script>		

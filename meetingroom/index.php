@@ -258,7 +258,7 @@ if(isSet($_GET['meetingroom'])){
 }
 
 foreach ($result as $row){
-	$status = ( ($row['MeetingRoomStatus'] == 1) ? "Occupied" : "Available");
+	$status = ( ($row['MeetingRoomStatus'] > 0) ? "Occupied" : "Available");
 	$meetingrooms[] = array('MeetingRoomID' => $row['TheMeetingRoomID'], 
 							'MeetingRoomName' => $row['MeetingRoomName'],
 							'MeetingRoomCapacity' => $row['MeetingRoomCapacity'],
