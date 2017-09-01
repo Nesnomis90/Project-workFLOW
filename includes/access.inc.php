@@ -136,6 +136,11 @@ function checkIfUserIsLoggedIn(){
 			return FALSE;
 		}
 
+		if(!validateUserEmail($email)){
+			$_SESSION['loginError'] = 'Email submitted is not a valid email.';
+			return FALSE;
+		}
+
 		// User has filled in both fields, check if login details are correct
 			// Add our custom password salt and compare the finished hash to the database
 		$submittedPassword = $_POST['password'];
@@ -178,15 +183,41 @@ function checkIfUserIsLoggedIn(){
 			unset($_SESSION['LoggedInUserName']);
 			unset($_SESSION['LoggedInUserIsOwnerInTheseCompanies']);
 
-			$_SESSION['loginError'] = 
-			'The specified email address or password was incorrect.';
+			$_SESSION['loginError'] = 'The specified email address or password was incorrect.';
 			return FALSE;
 		}
 	}
 
 	// If user has forgotten password
 	if(isSet($_POST['action']) AND $_POST['action'] == "Forgotten Password?"){
-		// TO-DO: 
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/forgottenpassword.html.php';
+		exit();
+	}
+	
+	//
+	if(isSet($_POST['action']) AND $_POST['action'] == "requestPassword"){
+		if(isSet($_POST['email']) AND $_POST['email'] != ""){
+			// Remember email if it's filled in. Retyping an email is the most annoying thing in the world.
+			$email = trim($_POST['email']);
+			$_SESSION['forgottenPasswordEmailSubmitted'] = $email;
+			if(validateUserEmail($email)){
+				if(databaseContainsEmail($email)){
+					// email submitted exists, let's send an email about requesting a temp password
+				} else {
+					$_SESSION['forgottenPasswordError'] = "Email submitted does not belong to a user.";
+					include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/forgottenpassword.html.php';
+					exit();
+				}
+			} else {
+				$_SESSION['forgottenPasswordError'] = "Email submitted is not a valid email.";
+				include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/forgottenpassword.html.php';
+				exit();
+			}
+		} else {
+			$_SESSION['forgottenPasswordError'] = "Please fill in your email.";
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/forgottenpassword.html.php';
+			exit();
+		}
 	}
 
 	// If user wants to log out
@@ -211,8 +242,7 @@ function checkIfUserIsLoggedIn(){
 	// loggedIn = true session variable in the case that user info
 	// has been altered while someone is already logged in with old data
 	if(isSet($_SESSION['loggedIn'])){
-		return databaseContainsUser($_SESSION['email'],
-		$_SESSION['password']);
+		return databaseContainsUser($_SESSION['email'], $_SESSION['password']);
 	}
 	return FALSE;
 }
