@@ -154,25 +154,7 @@ if(isSet($_POST['action']) AND $_POST['action'] == "Booking Information"){
 	exit();
 }
 
-if(isSet($_POST['action']) AND $_POST['action'] == "Set New Max"){
-	
-	// Validate user input
-	$roomDisplayLimitString = trimExcessWhiteSpace($_POST['logsToShow']);
-	$isNumber = validateIntegerNumber($roomDisplayLimitString);
-	if($isNumber === TRUE){
-		$maxRoomsToShow = $roomDisplayLimitString;
-		$roomDisplayLimit = $roomDisplayLimitString;
-		if($roomDisplayLimitString != $_POST['oldDisplayLimit']){
-			$_SESSION['MeetingRoomAllUsersFeedback'] = "Set new maximum rooms to display to: $maxRoomsToShow.";				
-		} else {
-			$_SESSION['MeetingRoomAllUsersFeedback'] = "No change were made.";
-		}
-	} else {
-		$_SESSION['MeetingRoomAllUsersFeedback'] = "You tried to submit something that wasn't a valid number.";	 
-	}
-}
-
-if(isSet($_GET['meetingroom'])){
+if(isSet($_GET['meetingroom']) AND !empty($_GET['meetingroom'])){
 	// Display selected meeting room
 	try
 	{
@@ -228,7 +210,7 @@ if(isSet($_GET['meetingroom'])){
 		$pdo = null;
 		exit();
 	}	
-} elseif(!isSet($_GET['meetingroom'])){
+} else {
 	// Display meeting rooms
 	try
 	{
@@ -281,7 +263,8 @@ if(isSet($_GET['meetingroom'])){
 	}
 }
 
-foreach ($result as $row){
+foreach($result as $row){
+
 	if($row['CurrentMeetingEnd'] != NULL AND $row['NextMeetingStart'] == NULL){
 		$currentMeetingEnd = convertDatetimeToFormat($row['CurrentMeetingEnd'], 'Y-m-d H:i:s', TIME_DEFAULT_FORMAT_TO_DISPLAY);
 		$status = "Occupied until " . $currentMeetingEnd . " and then available all day";
