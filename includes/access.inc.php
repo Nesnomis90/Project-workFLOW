@@ -200,9 +200,29 @@ function checkIfUserIsLoggedIn(){
 			// Remember email if it's filled in. Retyping an email is the most annoying thing in the world.
 			$email = trim($_POST['email']);
 			$_SESSION['forgottenPasswordEmailSubmitted'] = $email;
+
 			if(validateUserEmail($email)){
 				if(databaseContainsEmail($email)){
 					// email submitted exists, let's send an email about requesting a temp password
+					
+					$emailSubject = "New Password Request!";
+
+					$url = "";
+
+					$emailMessage = 
+					"Someone has requested a new password for your account!\n" .
+					"If you did not request this, just ignore this email.\n\n" . 
+					"To set a new password for your account go to the link below.\n" . 
+					"Link: " . $url;
+
+					$mailResult = sendEmail($email, $emailSubject, $emailMessage);
+
+					if(!$mailResult){
+						$_SESSION['forgottenPasswordError'] .= "\n\n[WARNING] System failed to send Email.";
+					}
+
+					$_SESSION['forgottenPasswordError'] .= "\nThis is the email msg we're sending out:\n$emailMessage\nSent to email: $email."; // TO-DO: Remove before uploading
+
 				} else {
 					$_SESSION['forgottenPasswordError'] = "Email submitted does not belong to a user.";
 					include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/forgottenpassword.html.php';
