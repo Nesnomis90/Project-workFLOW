@@ -306,22 +306,6 @@ foreach ($result as $row){
 					);
 }
 
-$totalMeetingRooms = sizeOf($meetingrooms);
-
-/* The refresh resets the number shown anyway. So remove it for now
-if(!isSet($_GET['meetingroom'])){
-	// Sets default values
-	if(!isSet($maxRoomsToShow)){
-		if($totalMeetingRooms < 10){
-			$maxRoomsToShow = $totalMeetingRooms;
-		} else {
-			$maxRoomsToShow = 10;	
-		}
-	}
-	if(!isSet($roomDisplayLimit)){
-		$roomDisplayLimit = $maxRoomsToShow;
-	}		
-}*/
 var_dump($_SESSION); // TO-DO: remove after testing is done
 
 // Load the html template
