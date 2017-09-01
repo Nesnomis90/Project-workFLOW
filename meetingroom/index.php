@@ -284,7 +284,7 @@ if(isSet($_GET['meetingroom'])){
 foreach ($result as $row){
 	if($row['CurrentMeetingEnd'] != NULL AND $row['NextMeetingStart'] == NULL){
 		$currentMeetingEnd = convertDatetimeToFormat($row['CurrentMeetingEnd'], 'Y-m-d H:i:s', TIME_DEFAULT_FORMAT_TO_DISPLAY);
-		$status = "Occupied until " . $currentMeetingEnd;
+		$status = "Occupied until " . $currentMeetingEnd . " and then available all day";
 	} elseif($row['CurrentMeetingEnd'] != NULL AND $row['NextMeetingStart'] != NULL){
 		$currentMeetingEnd = convertDatetimeToFormat($row['CurrentMeetingEnd'], 'Y-m-d H:i:s', TIME_DEFAULT_FORMAT_TO_DISPLAY);
 		$nextMeetingStart = convertDatetimeToFormat($row['NextMeetingStart'], 'Y-m-d H:i:s', TIME_DEFAULT_FORMAT_TO_DISPLAY);
