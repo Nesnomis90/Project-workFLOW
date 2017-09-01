@@ -114,7 +114,7 @@ checkIfLocalDevice();
 // NON-ADMIN INTERACTIONS // START //
 
 // Updates/Sets the default page when user wants it
-if(isSet($_POST['action']) AND $_POST['action'] == "Select Default Room"){
+if(isSet($_POST['action']) AND $_POST['action'] == "Show Default Room Only"){
 
 	$TheMeetingRoomID = $_SESSION["DefaultMeetingRoomInfo"]["TheMeetingRoomID"];
 	$location = "http://$_SERVER[HTTP_HOST]/meetingroom/?meetingroom=" . $TheMeetingRoomID;
@@ -204,6 +204,7 @@ if(isSet($_GET['meetingroom'])){
 								WHERE		b.`meetingRoomID` = TheMeetingRoomID
 								AND			b.`actualEndDateTime` IS NULL
 								AND			b.`dateTimeCancelled` IS NULL
+								AND			b.`startDateTime` > CURRENT_TIMESTAMP
 								AND			CURRENT_DATE = DATE(b.`startDateTime`)
 								ORDER BY 	UNIX_TIMESTAMP(b.`startDateTime`)
 								ASC
@@ -244,7 +245,7 @@ if(isSet($_GET['meetingroom'])){
 								WHERE 	re.`MeetingRoomID` = TheMeetingRoomID
 							)					AS MeetingRoomEquipmentAmount,
 							(
-								SELECT	COUNT(*)
+								SELECT	b.`endDateTime`
 								FROM	`booking` b
 								WHERE	b.`meetingRoomID` = TheMeetingRoomID
 								AND		b.`actualEndDateTime` IS NULL
@@ -252,13 +253,14 @@ if(isSet($_GET['meetingroom'])){
 								AND		CURRENT_TIMESTAMP 
 								BETWEEN	b.`startDateTime` 
 								AND 	b.`endDateTime`
-							)					AS MeetingRoomStatus,
+							)					AS CurrentMeetingEnd,
 							(
 								SELECT		b.`startDateTime`
 								FROM		`booking` b
 								WHERE		b.`meetingRoomID` = TheMeetingRoomID
 								AND			b.`actualEndDateTime` IS NULL
 								AND			b.`dateTimeCancelled` IS NULL
+								AND			b.`startDateTime` > CURRENT_TIMESTAMP
 								AND			CURRENT_DATE = DATE(b.`startDateTime`)
 								ORDER BY 	UNIX_TIMESTAMP(b.`startDateTime`)
 								ASC
@@ -280,9 +282,14 @@ if(isSet($_GET['meetingroom'])){
 }
 
 foreach ($result as $row){
-	if($row['MeetingRoomStatus'] > 0){
-		$status = "Occupied";
-	} elseif($row['MeetingRoomStatus'] == 0 AND $row['NextMeetingStart'] != NULL){
+	if($row['CurrentMeetingEnd'] != NULL AND $row['NextMeetingStart'] == NULL){
+		$currentMeetingEnd = convertDatetimeToFormat($row['CurrentMeetingEnd'], 'Y-m-d H:i:s', TIME_DEFAULT_FORMAT_TO_DISPLAY);
+		$status = "Occupied until " . $currentMeetingEnd;
+	} elseif($row['CurrentMeetingEnd'] != NULL AND $row['NextMeetingStart'] != NULL){
+		$currentMeetingEnd = convertDatetimeToFormat($row['CurrentMeetingEnd'], 'Y-m-d H:i:s', TIME_DEFAULT_FORMAT_TO_DISPLAY);
+		$nextMeetingStart = convertDatetimeToFormat($row['NextMeetingStart'], 'Y-m-d H:i:s', TIME_DEFAULT_FORMAT_TO_DISPLAY);
+		$status = "Occupied until " . $currentMeetingEnd . " and again starting at " . $nextMeetingStart;
+	} elseif($row['NextMeetingStart'] != NULL){
 		$nextMeetingStart = convertDatetimeToFormat($row['NextMeetingStart'], 'Y-m-d H:i:s', TIME_DEFAULT_FORMAT_TO_DISPLAY);
 		$status = "Available until " . $nextMeetingStart;
 	} else {
@@ -301,6 +308,7 @@ foreach ($result as $row){
 
 $totalMeetingRooms = sizeOf($meetingrooms);
 
+/* The refresh resets the number shown anyway. So remove it for now
 if(!isSet($_GET['meetingroom'])){
 	// Sets default values
 	if(!isSet($maxRoomsToShow)){
@@ -313,7 +321,7 @@ if(!isSet($_GET['meetingroom'])){
 	if(!isSet($roomDisplayLimit)){
 		$roomDisplayLimit = $maxRoomsToShow;
 	}		
-}
+}*/
 var_dump($_SESSION); // TO-DO: remove after testing is done
 
 // Load the html template

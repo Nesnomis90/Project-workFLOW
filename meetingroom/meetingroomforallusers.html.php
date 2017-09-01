@@ -45,7 +45,7 @@
 				<?php $default = $_SESSION['DefaultMeetingRoomInfo']; ?>
 					<?php if((!isSet($_GET['meetingroom'])) OR
 							(isSet($_GET['meetingroom']) AND $_GET['meetingroom'] != $default['TheMeetingRoomID'])) : ?>
-						<input type="submit" name="action" value="Select Default Room">
+						<input type="submit" name="action" value="Show Default Room Only">
 					<?php else : ?>
 						<input type="submit" name="action" value="Show All Rooms">
 					<?php endif; ?>
@@ -74,88 +74,74 @@
 					<div class="left"><h2>Viewing Selected Meeting Room</h2></div>
 				<?php endif; ?>			
 				<?php foreach ($meetingrooms as $room): ?>
-					<form action="" method="post">
-						<?php if($room['MeetingRoomStatus'] == "Occupied") : ?>
-							<?php $color = "#ff3333"; // Light Red?>
-						<?php elseif(substr($room['MeetingRoomStatus'],0,9) == "Available") : ?>
-							<?php $color = "#33ff33"; // Light Green?>
-						<?php endif; ?>
-						<fieldset style="border-style: solid; border-color: <?php htmlout($color); ?>"><legend><b><?php htmlout($room['MeetingRoomName']); ?></b></legend>
-							<div class="left">
-								<label>Status: </label>
-								<span><?php htmlout($room['MeetingRoomStatus']); ?></span>
-							</div>
-							<div class="left">
-								<label for="MeetingRoomCapacity">Capacity: </label>
-								<span><?php htmlout($room['MeetingRoomCapacity']); ?></span>
-							</div>
-							<div class="left">
-								<label for="MeetingRoomDescription">Description: </label>
-								<span><?php htmlout($room['MeetingRoomDescription']); ?></span>
-							</div>
-							<div class="left">
-								<label for="MeetingRoomLocation">Location: </label>
-								<span><?php htmlout($room['MeetingRoomLocation']); ?></span>
-							</div>
-							<div class="left"><input type="submit" name="action" value="Booking Information"></div>
-							<input type="hidden" name="MeetingRoomName" value="<?php htmlout($room['MeetingRoomName']); ?>">
-							<input type="hidden" name="MeetingRoomID" value="<?php htmlout($room['MeetingRoomID']); ?>">
-						</fieldset>
-					</form>
+					<div class="left">
+						<form action="" method="post">
+							<?php if(substr($room['MeetingRoomStatus'],0,8) == "Occupied") : ?>
+								<?php $color = "#ff3333"; // Light Red?>
+							<?php elseif(substr($room['MeetingRoomStatus'],0,9) == "Available") : ?>
+								<?php $color = "#33ff33"; // Light Green?>
+							<?php endif; ?>
+							<fieldset style="border-style: solid; border-color: <?php htmlout($color); ?>"><legend><b><?php htmlout($room['MeetingRoomName']); ?></b></legend>
+								<div class="left">
+									<label>Status: </label>
+									<span><?php htmlout($room['MeetingRoomStatus']); ?></span>
+								</div>
+								<div class="left">
+									<label for="MeetingRoomCapacity">Capacity: </label>
+									<span><?php htmlout($room['MeetingRoomCapacity']); ?></span>
+								</div>
+								<div class="left">
+									<label for="MeetingRoomDescription">Description: </label>
+									<span><?php htmlout($room['MeetingRoomDescription']); ?></span>
+								</div>
+								<div class="left">
+									<label for="MeetingRoomLocation">Location: </label>
+									<span><?php htmlout($room['MeetingRoomLocation']); ?></span>
+								</div>
+								<div class="left"><input type="submit" name="action" value="Booking Information"></div>
+								<input type="hidden" name="MeetingRoomName" value="<?php htmlout($room['MeetingRoomName']); ?>">
+								<input type="hidden" name="MeetingRoomID" value="<?php htmlout($room['MeetingRoomID']); ?>">
+							</fieldset>
+						</form>
+					</div>
 				<?php endforeach; ?>
 			<?php else : ?>
 				<div class="left"><h2>This isn't a valid meeting room.</h2></div>
 			<?php endif; ?>
 		<?php elseif(!isSet($_GET['meetingroom'])) : ?>
-			<div class="left">
-				<form action="" method="post">
-					<label style="width: 160px;" for="maxRoomsToDisplay">Max Rooms Displayed: </label>
-					<input type="number" name="logsToShow" min="1" max="<?php htmlout($totalMeetingRooms); ?>"
-					value="<?php htmlout($roomDisplayLimit); ?>">
-					<b>/<?php htmlout($totalMeetingRooms); ?></b>
-					<div class="left">
-						<input type="submit" name="action" value="Set New Max">
-						<input type="hidden" name="oldDisplayLimit" value="<?php htmlout($maxRoomsToShow); ?>">
-					</div>
-				</form>
-			</div>
 			<?php if(isSet($meetingrooms)) :?>
 				<div class="left"><h2>Active Meeting Rooms:</h2></div>
 				<?php foreach ($meetingrooms as $room): ?>
-					<?php if(!isSet($i)){$i = 0;}; ?>
-					<?php if($i < $maxRoomsToShow) : ?>
-						<div class="left">
-							<form action="" method="post">
-							<?php if($room['MeetingRoomStatus'] == "Occupied") : ?>
-								<?php $color = "#ff3333"; // Light Red?>
-							<?php elseif(substr($room['MeetingRoomStatus'],0,9) == "Available") : ?>
-								<?php $color = "#33ff33"; // Light Green?>
-							<?php endif; ?>
-								<fieldset style="border-style: solid; border-color: <?php htmlout($color); ?>"><legend><b><?php htmlout($room['MeetingRoomName']); ?></b></legend>
-									<div class="left">
-										<label>Status: </label>
-										<span><?php htmlout($room['MeetingRoomStatus']); ?></span>
-									</div>
-									<div class="left">
-										<label for="MeetingRoomCapacity">Capacity: </label>
-										<?php htmlout($room['MeetingRoomCapacity']); ?>
-									</div>
-									<div class="left">
-										<label for="MeetingRoomDescription">Description: </label>
-										<?php htmlout($room['MeetingRoomDescription']); ?>
-									</div>
-									<div class="left">
-										<label for="MeetingRoomLocation">Location: </label>
-										<?php htmlout($room['MeetingRoomLocation']); ?>
-									</div>
-									<div class="left"><input type="submit" name="action" value="Booking Information"></div>
-									<input type="hidden" name="MeetingRoomName" value="<?php htmlout($room['MeetingRoomName']); ?>">
-									<input type="hidden" name="MeetingRoomID" value="<?php htmlout($room['MeetingRoomID']); ?>">
-								</fieldset>
-							</form>
-						</div>
-					<?php $i++; ?>
-					<?php endif; ?>
+					<div class="left">
+						<form action="" method="post">
+						<?php if(substr($room['MeetingRoomStatus'],0,8) == "Occupied") : ?>
+							<?php $color = "#ff3333"; // Light Red?>
+						<?php elseif(substr($room['MeetingRoomStatus'],0,9) == "Available") : ?>
+							<?php $color = "#33ff33"; // Light Green?>
+						<?php endif; ?>
+							<fieldset style="border-style: solid; border-color: <?php htmlout($color); ?>"><legend><b><?php htmlout($room['MeetingRoomName']); ?></b></legend>
+								<div class="left">
+									<label>Status: </label>
+									<span><?php htmlout($room['MeetingRoomStatus']); ?></span>
+								</div>
+								<div class="left">
+									<label for="MeetingRoomCapacity">Capacity: </label>
+									<?php htmlout($room['MeetingRoomCapacity']); ?>
+								</div>
+								<div class="left">
+									<label for="MeetingRoomDescription">Description: </label>
+									<?php htmlout($room['MeetingRoomDescription']); ?>
+								</div>
+								<div class="left">
+									<label for="MeetingRoomLocation">Location: </label>
+									<?php htmlout($room['MeetingRoomLocation']); ?>
+								</div>
+								<div class="left"><input type="submit" name="action" value="Booking Information"></div>
+								<input type="hidden" name="MeetingRoomName" value="<?php htmlout($room['MeetingRoomName']); ?>">
+								<input type="hidden" name="MeetingRoomID" value="<?php htmlout($room['MeetingRoomID']); ?>">
+							</fieldset>
+						</form>
+					</div>
 				<?php endforeach; ?>
 			<?php else : ?>
 				<div class="left"><h2>There are no meeting rooms.</h2></div>
