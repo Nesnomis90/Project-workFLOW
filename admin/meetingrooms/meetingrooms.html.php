@@ -22,7 +22,7 @@
 		<?php endif; ?>
 
 		<form action="" method="post">
-			<div>
+			<div class="left">
 				<?php if(isSet($_SESSION['meetingroomsEnableDelete']) AND $_SESSION['meetingroomsEnableDelete']) : ?>
 					<input type="submit" name="action" value="Disable Delete">
 					<?php if(isSet($_SESSION['meetingroomsEnableDeleteUsedMeetingRoom']) AND $_SESSION['meetingroomsEnableDeleteUsedMeetingRoom']) : ?>
@@ -37,11 +37,11 @@
 		</form>		
 		<?php if($rowNum>0) :?>
 			<form action="" method="post">
-				<div>
+				<div class="left">
 					<input type="submit" name="action" value="Create Meeting Room">
 				</div>
 			</form>
-			<table id= "meetingroomstable">
+			<table>
 				<caption>Current Meeting Rooms</caption>
 				<tr>
 					<th colspan="2">Equipment In Room</th>
@@ -116,7 +116,7 @@
 				</form>
 			</tr>
 		<?php endif; ?>
-		<p><a href="..">Return to CMS home</a></p>
+		<p><a href="/admin/">Return to CMS home</a></p>
 	<?php include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/logout.inc.html.php'; ?>
 	</body>
 </html>
