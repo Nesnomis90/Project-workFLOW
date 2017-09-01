@@ -27,7 +27,7 @@ function hashMeetingRoomIDCode($rawCode){
 
 // Checks if the cookie submitted is a valid meeting room
 function databaseContainsMeetingRoomWithIDCode($name, $cookieIdCode){
-	
+
 	try
 	{
 		include_once 'db.inc.php';
@@ -40,7 +40,7 @@ function databaseContainsMeetingRoomWithIDCode($name, $cookieIdCode){
 		$s = $pdo->prepare($sql);
 		$s->bindValue(':name', $name);
 		$s->execute();
-		
+
 		$pdo = null;
 	}
 	catch (PDOException $e)
@@ -50,7 +50,7 @@ function databaseContainsMeetingRoomWithIDCode($name, $cookieIdCode){
 		$pdo = null;
 		exit();
 	}
-	
+
 	$row = $s->fetch();
 	if ($row[0] > 0)
 	{
@@ -65,7 +65,7 @@ function databaseContainsMeetingRoomWithIDCode($name, $cookieIdCode){
 		{
 			// idCode in cookie is not the valid idCode
 			return FALSE;
-		}	
+		}
 	}
 	else
 	{
@@ -75,8 +75,7 @@ function databaseContainsMeetingRoomWithIDCode($name, $cookieIdCode){
 }
 
 // Updates the timestamp of when the user was last active
-function updateUserActivity()
-{
+function updateUserActivity(){
 	if(isSet($_SESSION['LoggedInUserID'])){
 		// If a user logs in, or does something while logged in, we'll use this to update the database
 		// to indicate when they last used the website
@@ -90,9 +89,8 @@ function updateUserActivity()
 					AND		`isActive` > 0';
 			$s = $pdo->prepare($sql);
 			$s->bindValue(':userID', $_SESSION['LoggedInUserID']);
-
 			$s->execute();
-			
+
 			$pdo = null;
 		}
 		catch (PDOException $e)
@@ -101,13 +99,12 @@ function updateUserActivity()
 			include_once 'error.html.php';
 			$pdo = null;
 			exit();
-		}			
+		}
 	}
 }
 
 // returns TRUE if user is logged in and updates the database with their last active timestamp
-function userIsLoggedIn() 
-{
+function userIsLoggedIn(){
 	session_start(); // Do not remove this
 	$isLoggedIn = checkIfUserIsLoggedIn();
 	if($isLoggedIn === TRUE){
@@ -119,8 +116,8 @@ function userIsLoggedIn()
 }
 
 // returns TRUE if user is logged in
-function checkIfUserIsLoggedIn()
-{
+function checkIfUserIsLoggedIn(){
+
 	// If user is trying to log in
 	if (isSet($_POST['action']) and $_POST['action'] == 'login'){
 
@@ -141,8 +138,8 @@ function checkIfUserIsLoggedIn()
 
 		// User has filled in both fields, check if login details are correct
 			// Add our custom password salt and compare the finished hash to the database
-		$SubmittedPassword = $_POST['password'];
-		$password = hashPassword($SubmittedPassword);
+		$submittedPassword = $_POST['password'];
+		$password = hashPassword($submittedPassword);
 
 		if(databaseContainsUser($email, $password)){
 			// Correct log in info! Update the session data to know we're logged in
@@ -186,8 +183,14 @@ function checkIfUserIsLoggedIn()
 			return FALSE;
 		}
 	}
+
+	// If user has forgotten password
+	if(isSet($_POST['action']) AND $_POST['action'] == "Forgotten Password?"){
+		// TO-DO: 
+	}
+
 	// If user wants to log out
-	if (isSet($_POST['action']) and $_POST['action'] == 'logout')
+	if(isSet($_POST['action']) and $_POST['action'] == 'logout')
 	{
 		unset($_SESSION['loggedIn']);
 		unset($_SESSION['email']);
@@ -199,6 +202,7 @@ function checkIfUserIsLoggedIn()
 		header('Location: ' . $_POST['goto']);
 		exit();
 	}
+
 	// The user is in a session that was previously logged in
 	// Let's check if the user STILL EXISTS in the database
 	// i.e. if the login info is still correct
@@ -206,8 +210,7 @@ function checkIfUserIsLoggedIn()
 	// is loaded again. But is more secure than just checking for the 
 	// loggedIn = true session variable in the case that user info
 	// has been altered while someone is already logged in with old data
-	if (isSet($_SESSION['loggedIn']))
-	{
+	if(isSet($_SESSION['loggedIn'])){
 		return databaseContainsUser($_SESSION['email'],
 		$_SESSION['password']);
 	}
