@@ -197,7 +197,18 @@ if(isSet($_GET['meetingroom'])){
 								AND		CURRENT_TIMESTAMP 
 								BETWEEN	b.`startDateTime` 
 								AND 	b.`endDateTime`
-							)					AS MeetingRoomStatus
+							)					AS MeetingRoomStatus,
+							(
+								SELECT		b.`startDateTime`
+								FROM		`booking` b
+								WHERE		b.`meetingRoomID` = TheMeetingRoomID
+								AND			b.`actualEndDateTime` IS NULL
+								AND			b.`dateTimeCancelled` IS NULL
+								AND			CURRENT_DATE = DATE(b.`startDateTime`)
+								ORDER BY 	UNIX_TIMESTAMP(b.`startDateTime`)
+								ASC
+								LIMIT 1
+							)					AS NextMeetingStart
 				FROM 		`meetingroom` m
 				WHERE		m.`meetingRoomID` = :meetingRoomID
 				LIMIT 		1';
@@ -241,7 +252,18 @@ if(isSet($_GET['meetingroom'])){
 								AND		CURRENT_TIMESTAMP 
 								BETWEEN	b.`startDateTime` 
 								AND 	b.`endDateTime`
-							)					AS MeetingRoomStatus
+							)					AS MeetingRoomStatus,
+							(
+								SELECT		b.`startDateTime`
+								FROM		`booking` b
+								WHERE		b.`meetingRoomID` = TheMeetingRoomID
+								AND			b.`actualEndDateTime` IS NULL
+								AND			b.`dateTimeCancelled` IS NULL
+								AND			CURRENT_DATE = DATE(b.`startDateTime`)
+								ORDER BY 	UNIX_TIMESTAMP(b.`startDateTime`)
+								ASC
+								LIMIT 1
+							)					AS NextMeetingStart 
 				FROM 		`meetingroom` m';
 		$result = $pdo->query($sql);
 
@@ -258,7 +280,15 @@ if(isSet($_GET['meetingroom'])){
 }
 
 foreach ($result as $row){
-	$status = ( ($row['MeetingRoomStatus'] > 0) ? "Occupied" : "Available");
+	if($row['MeetingRoomStatus'] > 0){
+		$status = "Occupied";
+	} elseif($row['MeetingRoomStatus'] == 0 AND $row['NextMeetingStart'] != NULL){
+		$nextMeetingStart = convertDatetimeToFormat($row['NextMeetingStart'], 'Y-m-d H:i:s', TIME_DEFAULT_FORMAT_TO_DISPLAY);
+		$status = "Available until " . $nextMeetingStart;
+	} else {
+		$status = "Available all day";
+	}
+
 	$meetingrooms[] = array('MeetingRoomID' => $row['TheMeetingRoomID'], 
 							'MeetingRoomName' => $row['MeetingRoomName'],
 							'MeetingRoomCapacity' => $row['MeetingRoomCapacity'],

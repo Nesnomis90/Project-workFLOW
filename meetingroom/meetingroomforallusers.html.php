@@ -77,7 +77,7 @@
 					<form action="" method="post">
 						<?php if($room['MeetingRoomStatus'] == "Occupied") : ?>
 							<?php $color = "#ff3333"; // Light Red?>
-						<?php elseif($room['MeetingRoomStatus'] == "Available") : ?>
+						<?php elseif(substr($room['MeetingRoomStatus'],0,9) == "Available") : ?>
 							<?php $color = "#33ff33"; // Light Green?>
 						<?php endif; ?>
 						<fieldset style="border-style: solid; border-color: <?php htmlout($color); ?>"><legend><b><?php htmlout($room['MeetingRoomName']); ?></b></legend>
@@ -128,7 +128,7 @@
 							<form action="" method="post">
 							<?php if($room['MeetingRoomStatus'] == "Occupied") : ?>
 								<?php $color = "#ff3333"; // Light Red?>
-							<?php elseif($room['MeetingRoomStatus'] == "Available") : ?>
+							<?php elseif(substr($room['MeetingRoomStatus'],0,9) == "Available") : ?>
 								<?php $color = "#33ff33"; // Light Green?>
 							<?php endif; ?>
 								<fieldset style="border-style: solid; border-color: <?php htmlout($color); ?>"><legend><b><?php htmlout($room['MeetingRoomName']); ?></b></legend>

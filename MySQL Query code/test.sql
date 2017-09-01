@@ -83,7 +83,18 @@ SELECT  	m.`meetingRoomID`	AS TheMeetingRoomID,
                 AND		CURRENT_TIMESTAMP 
                 BETWEEN	b.`startDateTime` 
                 AND 	b.`endDateTime`
-            )					AS MeetingRoomStatus
+            )					AS MeetingRoomStatus,
+			(
+				SELECT		b.`startDateTime`
+                FROM		`booking` b
+                WHERE		b.`meetingRoomID` = TheMeetingRoomID
+                AND			b.`actualEndDateTime` IS NULL
+                AND			b.`dateTimeCancelled` IS NULL
+                AND			CURRENT_DATE = DATE(b.`startDateTime`)
+                ORDER BY 	UNIX_TIMESTAMP(b.`startDateTime`)
+                ASC
+                LIMIT 1
+            )					AS NextMeetingStart           
 FROM 		`meetingroom` m;
 
 
