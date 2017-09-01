@@ -400,19 +400,19 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Edit') OR
 			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
 			$pdo = null;
 			exit();
-		}		
+		}
 	}
 
 	// Set always correct information
-	$pageTitle = 'Edit User';	
+	$pageTitle = 'Edit Equipment';
 	$button = 'Edit Equipment';	
-	
+
 	// Set original values
 	$originalEquipmentName = $_SESSION['EditEquipmentOriginalInfo']['EquipmentName'];
 	$originalEquipmentDescription = $_SESSION['EditEquipmentOriginalInfo']['EquipmentDescription'];
-	
+
 	var_dump($_SESSION); // TO-DO: remove after testing is done
-	
+
 	// Change to the template we want to use
 	include 'form.html.php';
 	exit();

@@ -27,7 +27,7 @@ function hashMeetingRoomIDCode($rawCode){
 
 // Checks if the cookie submitted is a valid meeting room
 function databaseContainsMeetingRoomWithIDCode($name, $cookieIdCode){
-	
+
 	try
 	{
 		include_once 'db.inc.php';
@@ -40,7 +40,7 @@ function databaseContainsMeetingRoomWithIDCode($name, $cookieIdCode){
 		$s = $pdo->prepare($sql);
 		$s->bindValue(':name', $name);
 		$s->execute();
-		
+
 		$pdo = null;
 	}
 	catch (PDOException $e)
@@ -50,7 +50,7 @@ function databaseContainsMeetingRoomWithIDCode($name, $cookieIdCode){
 		$pdo = null;
 		exit();
 	}
-	
+
 	$row = $s->fetch();
 	if ($row[0] > 0)
 	{
@@ -65,7 +65,7 @@ function databaseContainsMeetingRoomWithIDCode($name, $cookieIdCode){
 		{
 			// idCode in cookie is not the valid idCode
 			return FALSE;
-		}	
+		}
 	}
 	else
 	{
@@ -75,8 +75,7 @@ function databaseContainsMeetingRoomWithIDCode($name, $cookieIdCode){
 }
 
 // Updates the timestamp of when the user was last active
-function updateUserActivity()
-{
+function updateUserActivity(){
 	if(isSet($_SESSION['LoggedInUserID'])){
 		// If a user logs in, or does something while logged in, we'll use this to update the database
 		// to indicate when they last used the website
@@ -90,9 +89,8 @@ function updateUserActivity()
 					AND		`isActive` > 0';
 			$s = $pdo->prepare($sql);
 			$s->bindValue(':userID', $_SESSION['LoggedInUserID']);
-
 			$s->execute();
-			
+
 			$pdo = null;
 		}
 		catch (PDOException $e)
@@ -101,13 +99,12 @@ function updateUserActivity()
 			include_once 'error.html.php';
 			$pdo = null;
 			exit();
-		}			
+		}
 	}
 }
 
 // returns TRUE if user is logged in and updates the database with their last active timestamp
-function userIsLoggedIn() 
-{
+function userIsLoggedIn(){
 	session_start(); // Do not remove this
 	$isLoggedIn = checkIfUserIsLoggedIn();
 	if($isLoggedIn === TRUE){
@@ -119,31 +116,37 @@ function userIsLoggedIn()
 }
 
 // returns TRUE if user is logged in
-function checkIfUserIsLoggedIn()
-{
+function checkIfUserIsLoggedIn(){
+
 	// If user is trying to log in
-	if (isSet($_POST['action']) and $_POST['action'] == 'login')
-	{
+	if (isSet($_POST['action']) and $_POST['action'] == 'login'){
+
 		if(isSet($_POST['email']) AND $_POST['email'] != ""){
 			// Remember email if it's filled in. Retyping an email is the most annoying thing in the world.
 			$email = trim($_POST['email']);
 			$_SESSION['loginEmailSubmitted'] = $email;
 		}
+
 		// Check if user has filled in the necessary information
-		if (!isSet($_POST['email']) or $_POST['email'] == '' or
-		!isSet($_POST['password']) or $_POST['password'] == '')
-		{
+		if (!isSet($_POST['email']) OR $_POST['email'] == '' OR
+			!isSet($_POST['password']) OR $_POST['password'] == ''){
 			// User didn't fill in enough info
 			// Save a custom error message for the user
 			$_SESSION['loginError'] = 'Please fill in both fields';
 			return FALSE;
 		}
+
+		if(!validateUserEmail($email)){
+			$_SESSION['loginError'] = 'Email submitted is not a valid email.';
+			return FALSE;
+		}
+
 		// User has filled in both fields, check if login details are correct
 			// Add our custom password salt and compare the finished hash to the database
-		$SubmittedPassword = $_POST['password'];
-		$password = hashPassword($SubmittedPassword);
-		if (databaseContainsUser($email, $password))
-		{
+		$submittedPassword = $_POST['password'];
+		$password = hashPassword($submittedPassword);
+
+		if(databaseContainsUser($email, $password)){
 			// Correct log in info! Update the session data to know we're logged in
 			if(!isSet($_SESSION['loggedIn'])){
 				$_SESSION['loggedIn'] = TRUE;
@@ -160,17 +163,15 @@ function checkIfUserIsLoggedIn()
 			if(!isSet($_SESSION['LoggedInUserName'])){
 				$_SESSION['LoggedInUserName'] = $_SESSION['DatabaseContainsUserName']; 
 			}
-			
+
 			// We're not a local device if we can log in
 			resetLocalDevice();
-			
+
 			unset($_SESSION['DatabaseContainsUserID']);
 			unset($_SESSION['DatabaseContainsUserName']);
 			unset($_SESSION['loginEmailSubmitted']);
 			return TRUE;
-		}
-		else
-		{
+		} else {
 			// Wrong log in info.
 			// Or user data has changed since last check
 			// Meaning the login data isn't correct anymore
@@ -181,14 +182,66 @@ function checkIfUserIsLoggedIn()
 			unset($_SESSION['LoggedInUserID']);
 			unset($_SESSION['LoggedInUserName']);
 			unset($_SESSION['LoggedInUserIsOwnerInTheseCompanies']);
-			
-			$_SESSION['loginError'] = 
-			'The specified email address or password was incorrect.';
+
+			$_SESSION['loginError'] = 'The specified email address or password was incorrect.';
 			return FALSE;
 		}
 	}
+
+	// If user has forgotten password
+	if(isSet($_POST['action']) AND $_POST['action'] == "Forgotten Password?"){
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/forgottenpassword.html.php';
+		exit();
+	}
+	
+	//
+	if(isSet($_POST['action']) AND $_POST['action'] == "requestPassword"){
+		if(isSet($_POST['email']) AND $_POST['email'] != ""){
+			// Remember email if it's filled in. Retyping an email is the most annoying thing in the world.
+			$email = trim($_POST['email']);
+			$_SESSION['forgottenPasswordEmailSubmitted'] = $email;
+
+			if(validateUserEmail($email)){
+				if(databaseContainsEmail($email)){
+					// email submitted exists, let's send an email about requesting a temp password
+					
+					$emailSubject = "New Password Request!";
+
+					$url = "";
+
+					$emailMessage = 
+					"Someone has requested a new password for your account!\n" .
+					"If you did not request this, just ignore this email.\n\n" . 
+					"To set a new password for your account go to the link below.\n" . 
+					"Link: " . $url;
+
+					$mailResult = sendEmail($email, $emailSubject, $emailMessage);
+
+					if(!$mailResult){
+						$_SESSION['forgottenPasswordError'] .= "\n\n[WARNING] System failed to send Email.";
+					}
+
+					$_SESSION['forgottenPasswordError'] .= "\nThis is the email msg we're sending out:\n$emailMessage\nSent to email: $email."; // TO-DO: Remove before uploading
+
+				} else {
+					$_SESSION['forgottenPasswordError'] = "Email submitted does not belong to a user.";
+					include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/forgottenpassword.html.php';
+					exit();
+				}
+			} else {
+				$_SESSION['forgottenPasswordError'] = "Email submitted is not a valid email.";
+				include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/forgottenpassword.html.php';
+				exit();
+			}
+		} else {
+			$_SESSION['forgottenPasswordError'] = "Please fill in your email.";
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/forgottenpassword.html.php';
+			exit();
+		}
+	}
+
 	// If user wants to log out
-	if (isSet($_POST['action']) and $_POST['action'] == 'logout')
+	if(isSet($_POST['action']) and $_POST['action'] == 'logout')
 	{
 		unset($_SESSION['loggedIn']);
 		unset($_SESSION['email']);
@@ -200,6 +253,7 @@ function checkIfUserIsLoggedIn()
 		header('Location: ' . $_POST['goto']);
 		exit();
 	}
+
 	// The user is in a session that was previously logged in
 	// Let's check if the user STILL EXISTS in the database
 	// i.e. if the login info is still correct
@@ -207,18 +261,15 @@ function checkIfUserIsLoggedIn()
 	// is loaded again. But is more secure than just checking for the 
 	// loggedIn = true session variable in the case that user info
 	// has been altered while someone is already logged in with old data
-	if (isSet($_SESSION['loggedIn']))
-	{
-		return databaseContainsUser($_SESSION['email'],
-		$_SESSION['password']);
+	if(isSet($_SESSION['loggedIn'])){
+		return databaseContainsUser($_SESSION['email'], $_SESSION['password']);
 	}
 	return FALSE;
 }
 
 // Function to check if the submitted user exists in our database
 // AND has been activated
-function databaseContainsUser($email, $password)
-{
+function databaseContainsUser($email, $password){
 	try
 	{
 		include_once 'db.inc.php';
@@ -236,7 +287,7 @@ function databaseContainsUser($email, $password)
 		$s->bindValue(':email', $email);
 		$s->bindValue(':password', $password);
 		$s->execute();
-		
+
 		$pdo = null;
 	}
 	catch (PDOException $e)
@@ -246,7 +297,7 @@ function databaseContainsUser($email, $password)
 		$pdo = null;
 		exit();
 	}
-	
+
 	$row = $s->fetch();
 	// If we got a hit, then the user info was correct
 	if ($row[0] > 0)
@@ -269,8 +320,7 @@ function databaseContainsUser($email, $password)
 }
 
 // Check if user has the specific access we're looking for
-function userHasAccess($access)
-{
+function userHasAccess($access){
 	try
 	{
 		include_once 'db.inc.php';
@@ -286,7 +336,7 @@ function userHasAccess($access)
 		$s->bindValue(':email', $_SESSION['email']);
 		$s->bindValue(':AccessName', $access);
 		$s->execute();
-		
+
 		$pdo = null;
 	}
 	catch (PDOException $e)
@@ -296,7 +346,7 @@ function userHasAccess($access)
 		$pdo = connect_to_db();
 		exit();
 	}
-	
+
 	$row = $s->fetch();
 	if ($row[0] > 0)
 	{
@@ -311,8 +361,7 @@ function userHasAccess($access)
 }
 
 // Function to check if the email submitted already is being used
-function databaseContainsEmail($email)
-{
+function databaseContainsEmail($email){
 	try
 	{
 		include_once 'db.inc.php';
@@ -324,7 +373,7 @@ function databaseContainsEmail($email)
 		$s = $pdo->prepare($sql);
 		$s->bindValue(':email', $email);
 		$s->execute();
-		
+
 		$pdo = null;
 	}
 	catch (PDOException $e)
@@ -334,7 +383,7 @@ function databaseContainsEmail($email)
 		$pdo = null;
 		exit();
 	}
-	
+
 	$row = $s->fetch();
 	// If we got a hit, then the email exists in our database
 	if ($row[0] > 0)
@@ -348,10 +397,9 @@ function databaseContainsEmail($email)
 }
 
 // Function to check if the booking code submitted already is being used
-function databaseContainsBookingCode($rawBookingCode)
-{
+function databaseContainsBookingCode($rawBookingCode){
 	$hashedBookingCode = hashBookingCode($rawBookingCode);
-	
+
 	try
 	{
 		include_once 'db.inc.php';
@@ -365,16 +413,16 @@ function databaseContainsBookingCode($rawBookingCode)
 		$s->bindValue(':BookingCode', $hashedBookingCode);
 		$s->execute();
 		
-		$pdo = null;		
+		$pdo = null;
 	}
 	catch(PDOException $e)
 	{
 		$error = 'Error validating booking code.';
 		include_once 'error.html.php';
 		$pdo = null;
-		exit();		
+		exit();	
 	}
-	
+
 	$row = $s->fetch();
 	// If we got a hit, then the booking code exists in our database
 	if ($row[0] > 0)
@@ -384,8 +432,7 @@ function databaseContainsBookingCode($rawBookingCode)
 	else
 	{
 		return FALSE;
-	}	
-	
+	}
 }
 
 // Function to "return" the raw booking code value to a user who has forgotten their own
@@ -397,19 +444,19 @@ function revealBookingCode($bookingCode){
 	// For 6 digits a for loop will take up to 1.4s loop through all combinations
 
 	$maxNumber = 10 ** BOOKING_CODE_LENGTH;
-	
+
 	// Loop through possible combinations and hash them
 	for($i=0; $i<$maxNumber; $i++){
-		
+
 		$viableHashedBookingCode = hashBookingCode($i);
-		
+
 		if($viableHashedBookingCode == $bookingCode){
 			// We found a match!
 			$actualBookingCode = $i;
 			return $actualBookingCode;
 		}
 	}
-	
+
 	// Found no match. 
 	return FALSE;
 }

@@ -505,7 +505,7 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Edit') OR
 	}
 	
 	// Set the always correct information
-	$pageTitle = 'Edit User';
+	$pageTitle = 'Edit Meeting Room';
 	$button = 'Edit Room';
 	
 	// Set original values

@@ -114,7 +114,7 @@ checkIfLocalDevice();
 // NON-ADMIN INTERACTIONS // START //
 
 // Updates/Sets the default page when user wants it
-if(isSet($_POST['action']) AND $_POST['action'] == "Select Default Room"){
+if(isSet($_POST['action']) AND $_POST['action'] == "Show Default Room Only"){
 
 	$TheMeetingRoomID = $_SESSION["DefaultMeetingRoomInfo"]["TheMeetingRoomID"];
 	$location = "http://$_SERVER[HTTP_HOST]/meetingroom/?meetingroom=" . $TheMeetingRoomID;
@@ -154,25 +154,7 @@ if(isSet($_POST['action']) AND $_POST['action'] == "Booking Information"){
 	exit();
 }
 
-if(isSet($_POST['action']) AND $_POST['action'] == "Set New Max"){
-	
-	// Validate user input
-	$roomDisplayLimitString = trimExcessWhiteSpace($_POST['logsToShow']);
-	$isNumber = validateIntegerNumber($roomDisplayLimitString);
-	if($isNumber === TRUE){
-		$maxRoomsToShow = $roomDisplayLimitString;
-		$roomDisplayLimit = $roomDisplayLimitString;
-		if($roomDisplayLimitString != $_POST['oldDisplayLimit']){
-			$_SESSION['MeetingRoomAllUsersFeedback'] = "Set new maximum rooms to display to: $maxRoomsToShow.";				
-		} else {
-			$_SESSION['MeetingRoomAllUsersFeedback'] = "No change were made.";
-		}
-	} else {
-		$_SESSION['MeetingRoomAllUsersFeedback'] = "You tried to submit something that wasn't a valid number.";	 
-	}
-}
-
-if(isSet($_GET['meetingroom'])){
+if(isSet($_GET['meetingroom']) AND !empty($_GET['meetingroom'])){
 	// Display selected meeting room
 	try
 	{
@@ -197,7 +179,19 @@ if(isSet($_GET['meetingroom'])){
 								AND		CURRENT_TIMESTAMP 
 								BETWEEN	b.`startDateTime` 
 								AND 	b.`endDateTime`
-							)					AS MeetingRoomStatus
+							)					AS MeetingRoomStatus,
+							(
+								SELECT		b.`startDateTime`
+								FROM		`booking` b
+								WHERE		b.`meetingRoomID` = TheMeetingRoomID
+								AND			b.`actualEndDateTime` IS NULL
+								AND			b.`dateTimeCancelled` IS NULL
+								AND			b.`startDateTime` > CURRENT_TIMESTAMP
+								AND			CURRENT_DATE = DATE(b.`startDateTime`)
+								ORDER BY 	UNIX_TIMESTAMP(b.`startDateTime`)
+								ASC
+								LIMIT 1
+							)					AS NextMeetingStart
 				FROM 		`meetingroom` m
 				WHERE		m.`meetingRoomID` = :meetingRoomID
 				LIMIT 		1';
@@ -216,7 +210,7 @@ if(isSet($_GET['meetingroom'])){
 		$pdo = null;
 		exit();
 	}	
-} elseif(!isSet($_GET['meetingroom'])){
+} else {
 	// Display meeting rooms
 	try
 	{
@@ -233,7 +227,7 @@ if(isSet($_GET['meetingroom'])){
 								WHERE 	re.`MeetingRoomID` = TheMeetingRoomID
 							)					AS MeetingRoomEquipmentAmount,
 							(
-								SELECT	COUNT(*)
+								SELECT	b.`endDateTime`
 								FROM	`booking` b
 								WHERE	b.`meetingRoomID` = TheMeetingRoomID
 								AND		b.`actualEndDateTime` IS NULL
@@ -241,7 +235,19 @@ if(isSet($_GET['meetingroom'])){
 								AND		CURRENT_TIMESTAMP 
 								BETWEEN	b.`startDateTime` 
 								AND 	b.`endDateTime`
-							)					AS MeetingRoomStatus
+							)					AS CurrentMeetingEnd,
+							(
+								SELECT		b.`startDateTime`
+								FROM		`booking` b
+								WHERE		b.`meetingRoomID` = TheMeetingRoomID
+								AND			b.`actualEndDateTime` IS NULL
+								AND			b.`dateTimeCancelled` IS NULL
+								AND			b.`startDateTime` > CURRENT_TIMESTAMP
+								AND			CURRENT_DATE = DATE(b.`startDateTime`)
+								ORDER BY 	UNIX_TIMESTAMP(b.`startDateTime`)
+								ASC
+								LIMIT 1
+							)					AS NextMeetingStart 
 				FROM 		`meetingroom` m';
 		$result = $pdo->query($sql);
 
@@ -257,8 +263,22 @@ if(isSet($_GET['meetingroom'])){
 	}
 }
 
-foreach ($result as $row){
-	$status = ( ($row['MeetingRoomStatus'] > 0) ? "Occupied" : "Available");
+foreach($result as $row){
+
+	if($row['CurrentMeetingEnd'] != NULL AND $row['NextMeetingStart'] == NULL){
+		$currentMeetingEnd = convertDatetimeToFormat($row['CurrentMeetingEnd'], 'Y-m-d H:i:s', TIME_DEFAULT_FORMAT_TO_DISPLAY);
+		$status = "Occupied until " . $currentMeetingEnd . " and then available all day";
+	} elseif($row['CurrentMeetingEnd'] != NULL AND $row['NextMeetingStart'] != NULL){
+		$currentMeetingEnd = convertDatetimeToFormat($row['CurrentMeetingEnd'], 'Y-m-d H:i:s', TIME_DEFAULT_FORMAT_TO_DISPLAY);
+		$nextMeetingStart = convertDatetimeToFormat($row['NextMeetingStart'], 'Y-m-d H:i:s', TIME_DEFAULT_FORMAT_TO_DISPLAY);
+		$status = "Occupied until " . $currentMeetingEnd . " and again starting at " . $nextMeetingStart;
+	} elseif($row['NextMeetingStart'] != NULL){
+		$nextMeetingStart = convertDatetimeToFormat($row['NextMeetingStart'], 'Y-m-d H:i:s', TIME_DEFAULT_FORMAT_TO_DISPLAY);
+		$status = "Available until " . $nextMeetingStart;
+	} else {
+		$status = "Available all day";
+	}
+
 	$meetingrooms[] = array('MeetingRoomID' => $row['TheMeetingRoomID'], 
 							'MeetingRoomName' => $row['MeetingRoomName'],
 							'MeetingRoomCapacity' => $row['MeetingRoomCapacity'],
@@ -269,21 +289,6 @@ foreach ($result as $row){
 					);
 }
 
-$totalMeetingRooms = sizeOf($meetingrooms);
-
-if(!isSet($_GET['meetingroom'])){
-	// Sets default values
-	if(!isSet($maxRoomsToShow)){
-		if($totalMeetingRooms < 10){
-			$maxRoomsToShow = $totalMeetingRooms;
-		} else {
-			$maxRoomsToShow = 10;	
-		}
-	}
-	if(!isSet($roomDisplayLimit)){
-		$roomDisplayLimit = $maxRoomsToShow;
-	}		
-}
 var_dump($_SESSION); // TO-DO: remove after testing is done
 
 // Load the html template

@@ -1,54 +1,19 @@
 <!--This is the HTML form for DISPLAYING a list of MEETING ROOMS -->
-<?php include_once $_SERVER['DOCUMENT_ROOT'] .
- '/includes/helpers.inc.php'; ?>
+<?php include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/helpers.inc.php'; ?>
 <!DOCTYPE html>
 <html lang="en">
 	<head>
 		<meta charset="utf-8">
-		<style>
-			#meetingroomstable {
-				font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
-				border-collapse: collapse;
-				width: 100%;
-			}
-
-			#meetingroomstable tr {
-				padding: 8px;
-				text-align: left;
-				border-bottom: 1px solid #ddd;
-				
-			}
-			
-			#meetingroomstable th {
-				padding: 12px;
-				text-align: left;
-				background-color: #4CAF50;
-				color: white;
-				border: 1px solid #ddd;
-			}
-
-			#meetingroomstable td {
-				padding: 8px;
-				text-align: left;
-				border: 1px solid #ddd;
-			}			
-			
-			#meetingroomstable tr:hover{background-color:#ddd;}
-			
-			#meetingroomstable tr:nth-child(even) {background-color: #f2f2f2;}
-			
-			#meetingroomstable caption {
-				padding: 8px;
-				font-size: 300%;
-			}
-		</style>
+		<link rel="stylesheet" type="text/css" href="/CSS/myCSS.css">
+		<script src="/scripts/myFunctions.js"></script>
 		<title>Select A Meeting Room</title>
 	</head>
 	<body>
-		<h1>Select A Meeting Room</h1>	
+		<?php include_once $_SERVER['DOCUMENT_ROOT'] .'/includes/topnav.html.php'; ?>
+
 		<?php if($rowNum>0) :?>
-			<table id= "meetingroomstable">
-				<caption>Current Meeting Rooms</caption>
+			<table>
+				<caption>Active Meeting Rooms</caption>
 				<tr>
 					<th colspan="3">Meeting Room</th>
 					<th>Select A Room</th>
@@ -79,7 +44,5 @@
 		<?php else : ?>
 			<tr><b>There are no meeting rooms registered in the database.</b></tr>
 		<?php endif; ?>
-		<p><a href="..">Return to CMS home</a></p>
-	<?php include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/logout.inc.html.php'; ?>
 	</body>
 </html>

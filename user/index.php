@@ -349,23 +349,89 @@ if(isSet($_GET['register']) OR (isSet($_SESSION['refreshRegisterUser']) AND $_SE
 	exit();
 }
 
+// Code to execute to set a new password for a user if they've forgotten it
+if(isSet($_GET['resetpassword']) AND !empty($_GET['resetpassword'])){
+
+	// TO-DO: FIX-ME: Create a new HTML-page for setting new password (twice) and update password
+
+	$resetPasswordCode = $_GET['resetpassword'];
+
+	// Check if code is correct (64 chars)
+	if(strlen($resetPasswordCode) != 64){
+		$_SESSION['normalUserFeedback'] = "This link is not a valid reset password link.";
+		header("Location: .");
+		exit();
+	}
+
+	//	Check if the submitted code is in the database
+	try
+	{
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+
+		$pdo = connect_to_db();
+		$sql = "SELECT 	`userID`,
+						`email`,
+						`firstname`,
+						`lastname`,
+						`password`
+				FROM	`user`
+				WHERE 	`tempPassword` = :resetPasswordCode
+				AND		`isActive` = 1
+				LIMIT 	1";
+		$s = $pdo->prepare($sql);
+		$s->bindValue(':resetPasswordCode', $resetPasswordCode);
+		$s->execute();
+
+		//Close the connection
+		$pdo = null;
+	}
+	catch(PDOException $e)
+	{
+		$error = 'Error validating reset password code: ' . $e->getMessage();
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+		$pdo = null;
+		exit();
+	}
+
+	// Check if the select even found something
+	$result = $s->fetch(PDO::FETCH_ASSOC);
+	if(isSet($result)){
+		$rowNum = sizeOf($result);
+	} else {
+		$rowNum = 0;
+	}
+	if($rowNum == 0){
+		// No match.
+		$_SESSION['normalUserFeedback'] = "This link is not a valid reset password link.";
+		header("Location: .");
+		exit();
+	}
+
+	$userID = $result['userID'];
+	$email = $result['email'];
+	$firstname = $result['firstname'];
+	$lastname = $result['lastname'];
+	$hashedPassword = $result['password'];
+
+}
+
 // Code to execute to activate an account from activation link
 if(isSet($_GET['activateaccount']) AND !empty($_GET['activateaccount'])){
-	
+
 	$activationCode = $_GET['activateaccount'];
-		
+
 	// Check if code is correct (64 chars)
 	if(strlen($activationCode) != 64){
 		$_SESSION['normalUserFeedback'] = "The activation code that was submitted is not a valid code.";
 		header("Location: .");
 		exit();
 	}
-		
+
 	//	Check if the submitted code is in the database
 	try
 	{
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
-		
+
 		$pdo = connect_to_db();
 		$sql = "SELECT 	`userID`,
 						`email`,
@@ -379,7 +445,7 @@ if(isSet($_GET['activateaccount']) AND !empty($_GET['activateaccount'])){
 		$s = $pdo->prepare($sql);
 		$s->bindValue(':activationCode', $activationCode);
 		$s->execute();
-		
+
 		//Close the connection
 		$pdo = null;
 	}
@@ -390,7 +456,7 @@ if(isSet($_GET['activateaccount']) AND !empty($_GET['activateaccount'])){
 		$pdo = null;
 		exit();
 	}
-	
+
 	// Check if the select even found something
 	$result = $s->fetch(PDO::FETCH_ASSOC);
 	if(isSet($result)){
@@ -404,13 +470,13 @@ if(isSet($_GET['activateaccount']) AND !empty($_GET['activateaccount'])){
 		header("Location: .");
 		exit();
 	}
-	
+
 	$userID = $result['userID'];
 	$email = $result['email'];
 	$firstname = $result['firstname'];
 	$lastname = $result['lastname'];
 	$hashedPassword = $result['password'];
-	
+
 	try
 	{
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
@@ -423,7 +489,7 @@ if(isSet($_GET['activateaccount']) AND !empty($_GET['activateaccount'])){
 		$s = $pdo->prepare($sql);
 		$s->bindValue(':userID', $userID);
 		$s->execute();
-		
+
 		//Close the connection
 		$pdo = null;
 	}
@@ -433,11 +499,11 @@ if(isSet($_GET['activateaccount']) AND !empty($_GET['activateaccount'])){
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
 		$pdo = null;
 		exit();
-	}	
-	
+	}
+
 	$_SESSION['normalUserFeedback'] = 	"The account for " . $lastname . ", " . $firstname . " - " . $email . 
 										" has been activated!";
-									
+
 	// Add a log event that the account got activated
 	try
 	{
@@ -459,9 +525,9 @@ if(isSet($_GET['activateaccount']) AND !empty($_GET['activateaccount'])){
 		$s = $pdo->prepare($sql);
 		$s->bindValue(':description', $logEventDescription);
 		$s->execute();
-		
+
 		//Close the connection
-		$pdo = null;		
+		$pdo = null;
 	}
 	catch(PDOException $e)
 	{
@@ -469,7 +535,7 @@ if(isSet($_GET['activateaccount']) AND !empty($_GET['activateaccount'])){
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
 		$pdo = null;
 		exit();
-	}	
+	}
 }
 
 // If admin wants to cancel a scheduled booked meeting (instead of deleting)
