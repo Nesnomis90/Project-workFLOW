@@ -55,7 +55,7 @@
 			<?php if(isSet($_SESSION['SetDefaultRoom'])) : ?>
 				<span><a href="/meetingroom/?cancelSetDefaultRoom">Return to Meetingroom</a></span>
 			<?php else : ?>
-				<span><a href="/">Return to home</a></span>
+				<span><a href="/">Return to Home</a></span>
 			<?php endif; ?>
 		</div>
 	</body>

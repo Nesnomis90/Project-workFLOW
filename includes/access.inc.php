@@ -216,8 +216,7 @@ function checkIfUserIsLoggedIn()
 
 // Function to check if the submitted user exists in our database
 // AND has been activated
-function databaseContainsUser($email, $password)
-{
+function databaseContainsUser($email, $password){
 	try
 	{
 		include_once 'db.inc.php';
@@ -268,8 +267,7 @@ function databaseContainsUser($email, $password)
 }
 
 // Check if user has the specific access we're looking for
-function userHasAccess($access)
-{
+function userHasAccess($access){
 	try
 	{
 		include_once 'db.inc.php';
@@ -310,8 +308,7 @@ function userHasAccess($access)
 }
 
 // Function to check if the email submitted already is being used
-function databaseContainsEmail($email)
-{
+function databaseContainsEmail($email){
 	try
 	{
 		include_once 'db.inc.php';
@@ -347,8 +344,7 @@ function databaseContainsEmail($email)
 }
 
 // Function to check if the booking code submitted already is being used
-function databaseContainsBookingCode($rawBookingCode)
-{
+function databaseContainsBookingCode($rawBookingCode){
 	$hashedBookingCode = hashBookingCode($rawBookingCode);
 
 	try
