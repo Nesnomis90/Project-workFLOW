@@ -409,7 +409,8 @@ if (isSet($_POST['action']) and $_POST['action'] == 'Activate'){
 
 				$emailMessage = 
 				"Your account has been activated by an Admin.\n" . 
-				"You are now free to log in to your account with your email and previously received password.";
+				"You are now free to log in to your account with your email and previously received password.\n" .
+				"If you never received a password in the first place, you can request a new password during the log in process.";
 
 				$mailResult = sendEmail($email, $emailSubject, $emailMessage);
 
