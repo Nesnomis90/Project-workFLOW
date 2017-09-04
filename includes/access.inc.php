@@ -79,12 +79,15 @@ function updateUserActivity(){
 	if(isSet($_SESSION['LoggedInUserID'])){
 		// If a user logs in, or does something while logged in, we'll use this to update the database
 		// to indicate when they last used the website
+		// If a user logs in, this also means they didn't forget their password, so we can reset any request for it
 		try
 		{
 			include_once 'db.inc.php';
 			$pdo = connect_to_db();
 			$sql = 'UPDATE 	`user`
-					SET		`lastActivity` = CURRENT_TIMESTAMP()
+					SET		`lastActivity` = CURRENT_TIMESTAMP(),
+							`activationCode` = NULL,
+							`resetPasswordCode` = NULL
 					WHERE 	`userID` = :userID
 					AND		`isActive` > 0';
 			$s = $pdo->prepare($sql);
@@ -181,7 +184,6 @@ function checkIfUserIsLoggedIn(){
 			unset($_SESSION['password']);
 			unset($_SESSION['LoggedInUserID']);
 			unset($_SESSION['LoggedInUserName']);
-			unset($_SESSION['LoggedInUserIsOwnerInTheseCompanies']);
 
 			$_SESSION['loginError'] = 'The specified email address or password was incorrect.';
 			return FALSE;
@@ -280,7 +282,6 @@ function checkIfUserIsLoggedIn(){
 		unset($_SESSION['password']);
 		unset($_SESSION['LoggedInUserID']);
 		unset($_SESSION['LoggedInUserName']);
-		unset($_SESSION['LoggedInUserIsOwnerInTheseCompanies']);
 		unset($_SESSION['loginEmailSubmitted']);
 		header('Location: ' . $_POST['goto']);
 		exit();

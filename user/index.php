@@ -410,6 +410,8 @@ if(isSet($_POST['reset']) AND $_POST['reset'] == "Set New Password"){
 		header("Location: .");
 		exit();
 	}
+	
+	// When an error occurs we don't do anything, since it will automatically refresh by going into the code below
 }
 
 // Code to execute to set a new password for a user if they've forgotten it

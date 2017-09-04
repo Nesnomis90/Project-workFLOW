@@ -17,6 +17,7 @@ function deleteNotActivatedUsersIfTakingTooLong(){
 				FROM 	`user`
 				WHERE 	DATE_ADD(`create_time`, INTERVAL 8 HOUR) < CURRENT_TIMESTAMP
 				AND 	`isActive` = 0
+				AND		`activationCode` IS NOT NULL
 				AND		`userID` <> 0";
 		$pdo->exec($sql);
 
