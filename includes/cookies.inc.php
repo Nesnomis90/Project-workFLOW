@@ -14,9 +14,8 @@ function setNewMeetingRoomCookies($meetingRoomName, $idCode){
 // Cookie removal
 function deleteMeetingRoomCookies(){
 	// To delete a cookie you have to make it expire by setting a date in the past
-	// To-DO: Add path if not working?
-	setcookie(MEETINGROOM_NAME, '', time() - 3600);
-	setcookie(MEETINGROOM_IDCODE, '', time() - 3600);	
+	setcookie(MEETINGROOM_NAME, "", time() - 3600, '/');
+	setcookie(MEETINGROOM_IDCODE, "", time() - 3600, '/');	
 	// Just in case?
 	unset($_COOKIE[MEETINGROOM_NAME]);
 	unset($_COOKIE[MEETINGROOM_IDCODE]);
@@ -32,7 +31,7 @@ function checkIfLocalDevice(){
 
 		if(!isSet($_SESSION['OriginalCookieMeetingRoomName']) AND !isSet($_SESSION['OriginalCookieMeetingRoomIDCode'])){
 			$validMeetingRoom = databaseContainsMeetingRoomWithIDCode($meetingRoomName, $meetingRoomIDCode);
-			if ($validMeetingRoom === TRUE){
+			if($validMeetingRoom === TRUE){
 				// Cookies are correctly identifying a meeting room
 				// Hopefully this means it's a local device we set up and not someone malicious
 				$_SESSION['OriginalCookieMeetingRoomName'] = $meetingRoomName;
@@ -55,19 +54,10 @@ function checkIfLocalDevice(){
 						$s = $pdo->prepare($sql);
 						$s->bindValue(':meetingRoomName', $meetingRoomName);
 						$s->execute();
-						$result = $s->fetchAll(PDO::FETCH_ASSOC);
+						$row = $s->fetch(PDO::FETCH_ASSOC);
 
-						foreach($result AS $row){
-							$defaultRoomInfo = array(
-														'TheMeetingRoomID' => $row['TheMeetingRoomID'],
-														'TheMeetingRoomName' => $row['TheMeetingRoomName'],
-														'TheMeetingRoomCapacity' => $row['TheMeetingRoomCapacity'],
-														'TheMeetingRoomDescription' => $row['TheMeetingRoomDescription'],
-														'TheMeetingRoomLocation' => $row['TheMeetingRoomLocation']
-														);
-						}
+						$_SESSION['DefaultMeetingRoomInfo'] = $row;
 
-						$_SESSION['DefaultMeetingRoomInfo'] = $defaultRoomInfo;
 						//Close the connection
 						$pdo = null;
 					}
@@ -99,12 +89,12 @@ function checkIfLocalDevice(){
 }
 
 // Function to remove locally set device information
+// This occurs when cookies do not match session info or if someone logs in
 function resetLocalDevice(){
 	deleteMeetingRoomCookies();
 	unset($_SESSION['DefaultMeetingRoomInfo']);
 	unset($_SESSION['OriginalCookieMeetingRoomName']);
 	unset($_SESSION['OriginalCookieMeetingRoomIDCode']);
 	// TO-DO: Do anything more here to punish cookie manipulation?
-	// Remember: also happens on normal log in
 }
 ?>

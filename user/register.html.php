@@ -1,6 +1,5 @@
 <!-- This is the HTML form used for users to register an account-->
-<?php include_once $_SERVER['DOCUMENT_ROOT'] .
- '/includes/helpers.inc.php'; ?>
+<?php include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/helpers.inc.php'; ?>
 <!DOCTYPE html>
 <html lang="en">
 	<head>
@@ -81,7 +80,7 @@
 								value="<?php htmlout($password2); ?>">
 							<?php else : ?>
 								<input type="password" name="password2" placeholder="Repeat your password"
-								value="<?php htmlout($password2); ?>">							
+								value="<?php htmlout($password2); ?>">
 							<?php endif; ?>
 						</div>
 						<div>

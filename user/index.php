@@ -237,7 +237,7 @@ if(isSet($_POST['register']) AND $_POST['register'] == "Register Account"){
 	try
 	{
 		// Save a description with information about the user that was added
-		
+
 		$description = "N/A";
 		$userinfo = $validatedLastname . ', ' . $validatedFirstname . ' - ' . $email;
 		if(isSet($_SESSION['LoggedInUserName'])){
@@ -247,7 +247,7 @@ if(isSet($_POST['register']) AND $_POST['register'] == "Register Account"){
 		}
 
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
-		
+
 		$pdo = connect_to_db();
 		$sql = "INSERT INTO `logevent` 
 				SET			`actionID` = 	(
@@ -259,9 +259,9 @@ if(isSet($_POST['register']) AND $_POST['register'] == "Register Account"){
 		$s = $pdo->prepare($sql);
 		$s->bindValue(':description', $description);
 		$s->execute();
-		
+
 		//Close the connection
-		$pdo = null;		
+		$pdo = null;
 	}
 	catch(PDOException $e)
 	{
@@ -269,43 +269,42 @@ if(isSet($_POST['register']) AND $_POST['register'] == "Register Account"){
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
 		$pdo = null;
 		exit();
-	}	
-	
+	}
+
 	// Send user an email with the activation code
 		// TO-DO: This is UNTESTED since we don't have php.ini set up to actually send email
 	$emailSubject = "Account Activation Link";
-	
+
 	$emailMessage = 
 	"Your account has been created.\n" .
 	"Before you can log in you need to activate your account.\n" .
 	"If the account isn't activated within 8 hours, it is removed.\n" .
 	"Click this link to activate your account: " . $_SERVER['HTTP_HOST'] . 
 	"/user/?activateaccount=" . $activationcode;
-	
+
 	$mailResult = sendEmail($email, $emailSubject, $emailMessage);
-	
+
 	if(!$mailResult){
 		if(isSet($_SESSION['registerUserFeedback'])){
 			$_SESSION['registerUserFeedback'] .= "\n[WARNING] System failed to send Email to user.";
 		} else {
 			$_SESSION['registerUserFeedback'] = "\n[WARNING] System failed to send Email to user.";
 		}
-		
 	}
-	
+
 	$_SESSION['registerUserFeedback'] .= "\nThis is the email msg we're sending out:\n$emailMessage.\nSent to: $email."; // TO-DO: Remove before uploading	
-	
+
 	// End of register account 
 	$_SESSION['registerUserFeedback'] .= "\nYour account has been successfully created.\nA confirmation link has been sent to your email.";
-	
+
 	$firstName = "";
 	$lastName = "";
 	$email = "";
 	$password1 = "";
 	$password2 = "";
-	
+
 	var_dump($_SESSION); // TO-DO: Remove after testing
-	
+
 	include_once 'register.html.php';
 	exit();
 }
@@ -317,7 +316,7 @@ if(isSet($_GET['register']) OR (isSet($_SESSION['refreshRegisterUser']) AND $_SE
 		$refreshedRegister = TRUE;
 		unset($_SESSION['refreshRegisterUser']);
 	}
-	
+
 	if(isSet($_SESSION['registerUserWarning']) AND strpos(strtolower($_SESSION['registerUserWarning']), 'email') !== FALSE){
 		$invalidEmail = TRUE;
 	}
@@ -342,77 +341,148 @@ if(isSet($_GET['register']) OR (isSet($_SESSION['refreshRegisterUser']) AND $_SE
 	}
 	$password1 = "";
 	$password2 = "";
-	
+
 	var_dump($_SESSION); // TO-DO: Remove after testing
-	
+
 	include_once 'register.html.php';
 	exit();
+}
+
+if(isSet($_POST['reset']) AND $_POST['reset'] == "Set New Password"){
+
+	$setNewPassword = FALSE;
+
+	if(isSet($_POST['password1'], $_POST['password2'])){
+		// Check if passwords are filled in, have the minimum characters entered and that they match each other.
+		$password1 = $_POST['password1'];
+		$password2 = $_POST['password2'];
+		$minimumPasswordLength = MINIMUM_PASSWORD_LENGTH;
+
+		if(strlen(utf8_decode($password1)) >= $minimumPasswordLength){
+			if($password1 == $password2){
+				$setNewPassword = TRUE;
+			} else {
+				$_SESSION['resetPasswordFeedback'] = "Your new Password and the repeated Password did not match. Try again.";
+			}
+		} else {
+			$_SESSION['resetPasswordFeedback'] = "The submitted password is not long enough. You are required to make it at least $minimumPasswordLength characters long.";
+		}
+	} else {
+		$_SESSION['resetPasswordFeedback'] = "Password cannot be reset without a new password being submitted";
+	}
+
+	if($setNewPassword AND isSet($_SESSION['resetPasswordInfoArray'])){
+
+		$userID = $_SESSION['resetPasswordInfoArray']['UserID'];
+		$resetPasswordCode = $_SESSION['resetPasswordInfoArray']['resetPasswordCode'];
+		$newHashedPassword = hashPassword($password1);
+
+		try
+		{
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+
+			$pdo = connect_to_db();
+			$sql = "UPDATE 	`user`
+					SET		`resetPasswordCode` = NULL,
+							`password` = :newHashedPassword
+					WHERE 	`userID` = :userID
+					AND		`resetPasswordCode` = :resetPasswordCode
+					AND		`isActive` = 1";
+			$s = $pdo->prepare($sql);
+			$s->bindValue(':userID', $userID);
+			$s->bindValue(':newHashedPassword', $newHashedPassword);
+			$s->bindValue(':resetPasswordCode', $resetPasswordCode);
+			$s->execute();
+
+			//Close the connection
+			$pdo = null;
+		}
+		catch(PDOException $e)
+		{
+			$error = 'Error validating reset password code: ' . $e->getMessage();
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+			$pdo = null;
+			exit();
+		}
+		
+		// New password set
+		$_SESSION['normalUserFeedback'] = "Successfully set a new password for your account.";
+		header("Location: .");
+		exit();
+	}
+	
+	// When an error occurs we don't do anything, since it will automatically refresh by going into the code below
 }
 
 // Code to execute to set a new password for a user if they've forgotten it
 if(isSet($_GET['resetpassword']) AND !empty($_GET['resetpassword'])){
 
-	// TO-DO: FIX-ME: Create a new HTML-page for setting new password (twice) and update password
-
 	$resetPasswordCode = $_GET['resetpassword'];
 
-	// Check if code is correct (64 chars)
-	if(strlen($resetPasswordCode) != 64){
-		$_SESSION['normalUserFeedback'] = "This link is not a valid reset password link.";
-		header("Location: .");
-		exit();
-	}
+	if(	!isSet($_SESSION['resetPasswordInfoArray']) OR 
+		(isSet($_SESSION['resetPasswordInfoArray']) AND $_SESSION['resetPasswordInfoArray']['resetPasswordCode'] != $resetPasswordCode)){
 
-	//	Check if the submitted code is in the database
-	try
-	{
-		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+		// Check if code is correct (64 chars)
+		if(strlen($resetPasswordCode) != 64){
+			$_SESSION['normalUserFeedback'] = "This link is not a valid reset password link.";
+			header("Location: .");
+			exit();
+		}
 
-		$pdo = connect_to_db();
-		$sql = "SELECT 	`userID`,
-						`email`,
-						`firstname`,
-						`lastname`,
-						`password`
-				FROM	`user`
-				WHERE 	`tempPassword` = :resetPasswordCode
-				AND		`isActive` = 1
-				LIMIT 	1";
-		$s = $pdo->prepare($sql);
-		$s->bindValue(':resetPasswordCode', $resetPasswordCode);
-		$s->execute();
+		//	Check if the submitted code is in the database
+		try
+		{
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 
-		//Close the connection
-		$pdo = null;
-	}
-	catch(PDOException $e)
-	{
-		$error = 'Error validating reset password code: ' . $e->getMessage();
-		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
-		$pdo = null;
-		exit();
-	}
+			$pdo = connect_to_db();
+			$sql = "SELECT 	`userID`			AS UserID,
+							`email`				AS Email,
+							`firstname`			AS FirstName,
+							`lastname`			AS LastName,
+							`password`			AS HashedPassword
+					FROM	`user`
+					WHERE 	`resetPasswordCode` = :resetPasswordCode
+					AND		`isActive` = 1
+					LIMIT 	1";
+			$s = $pdo->prepare($sql);
+			$s->bindValue(':resetPasswordCode', $resetPasswordCode);
+			$s->execute();
 
-	// Check if the select even found something
-	$result = $s->fetch(PDO::FETCH_ASSOC);
-	if(isSet($result)){
-		$rowNum = sizeOf($result);
+			//Close the connection
+			$pdo = null;
+		}
+		catch(PDOException $e)
+		{
+			$error = 'Error validating reset password code: ' . $e->getMessage();
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+			$pdo = null;
+			exit();
+		}
+
+		// Check if the select even found something
+		$result = $s->fetch(PDO::FETCH_ASSOC);
+		if(!isSet($result) OR (isSet($result) AND empty($result))){
+			// No match.
+			$_SESSION['normalUserFeedback'] = "This link is not a valid reset password link.";
+			header("Location: .");
+			exit();
+		}
+
+		$_SESSION['resetPasswordInfoArray'] =  $result;
+		$_SESSION['resetPasswordInfoArray']['resetPasswordCode'] = $resetPasswordCode;
 	} else {
-		$rowNum = 0;
-	}
-	if($rowNum == 0){
-		// No match.
-		$_SESSION['normalUserFeedback'] = "This link is not a valid reset password link.";
-		header("Location: .");
-		exit();
+		$result = $_SESSION['resetPasswordInfoArray'];
 	}
 
-	$userID = $result['userID'];
-	$email = $result['email'];
-	$firstname = $result['firstname'];
-	$lastname = $result['lastname'];
-	$hashedPassword = $result['password'];
+	$userID = $result['UserID'];
+	$email = $result['Email'];
+	$firstName = $result['FirstName'];
+	$lastName = $result['LastName'];
+	$hashedPassword = $result['HashedPassword'];
 
+	var_dump($_SESSION); // TO-DO: Remove before uploading
+	include_once 'resetpassword.html.php';
+	exit();
 }
 
 // Code to execute to activate an account from activation link
@@ -1273,7 +1343,7 @@ if(isSet($_POST['action']) AND $_POST['action'] == "Confirm Change"){
 					$changePassword = TRUE;
 				}
 		} else {
-			$_SESSION['normalUserFeedback'] = "Your new Password and Repeat Password did not match.";
+			$_SESSION['normalUserFeedback'] = "Your new Password and the repeated Password did not match.";
 			$invalidInput = TRUE;
 		}
 	} else {

@@ -79,12 +79,15 @@ function updateUserActivity(){
 	if(isSet($_SESSION['LoggedInUserID'])){
 		// If a user logs in, or does something while logged in, we'll use this to update the database
 		// to indicate when they last used the website
+		// If a user logs in, this also means they didn't forget their password, so we can reset any request for it
 		try
 		{
 			include_once 'db.inc.php';
 			$pdo = connect_to_db();
 			$sql = 'UPDATE 	`user`
-					SET		`lastActivity` = CURRENT_TIMESTAMP()
+					SET		`lastActivity` = CURRENT_TIMESTAMP(),
+							`activationCode` = NULL,
+							`resetPasswordCode` = NULL
 					WHERE 	`userID` = :userID
 					AND		`isActive` > 0';
 			$s = $pdo->prepare($sql);
@@ -181,7 +184,8 @@ function checkIfUserIsLoggedIn(){
 			unset($_SESSION['password']);
 			unset($_SESSION['LoggedInUserID']);
 			unset($_SESSION['LoggedInUserName']);
-			unset($_SESSION['LoggedInUserIsOwnerInTheseCompanies']);
+			
+			// TO-DO: Track # of wrong login attempts and limit login if too high.
 
 			$_SESSION['loginError'] = 'The specified email address or password was incorrect.';
 			return FALSE;
@@ -203,11 +207,39 @@ function checkIfUserIsLoggedIn(){
 
 			if(validateUserEmail($email)){
 				if(databaseContainsEmail($email)){
-					// email submitted exists, let's send an email about requesting a temp password
-					
+					// Email submitted belongs to a user. Let's genereate a reset password code and update the user
+					try
+					{
+						// Generate reset password code
+						$resetPasswordCode = generateResetPasswordCode();
+
+						include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+
+						$pdo = connect_to_db();
+						$sql = 'UPDATE	`user`
+								SET		`resetPasswordCode` = :resetPasswordCode
+								WHERE	`email` = :email';
+						$s = $pdo->prepare($sql);
+						$s->bindValue(':resetPasswordCode', $resetPasswordCode);
+						$s->bindValue(':email', $email);
+						$s->execute();
+
+						//Close the connection
+						$pdo = null;
+					}
+					catch (PDOException $e)
+					{
+						$error = 'Error connecting reset password code to user: ' . $e->getMessage();
+						include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+						$pdo = null;
+						exit();
+					}
+
+					// Let's send an email to the user with the reset password link
+
 					$emailSubject = "New Password Request!";
 
-					$url = "";
+					$url = $_SERVER['HTTP_HOST'] . "/user/?resetpassword=" . $resetPasswordCode;
 
 					$emailMessage = 
 					"Someone has requested a new password for your account!\n" .
@@ -217,12 +249,16 @@ function checkIfUserIsLoggedIn(){
 
 					$mailResult = sendEmail($email, $emailSubject, $emailMessage);
 
+					$_SESSION['forgottenPasswordError'] = "User found and reset link sent to email!";
+					
 					if(!$mailResult){
 						$_SESSION['forgottenPasswordError'] .= "\n\n[WARNING] System failed to send Email.";
 					}
 
 					$_SESSION['forgottenPasswordError'] .= "\nThis is the email msg we're sending out:\n$emailMessage\nSent to email: $email."; // TO-DO: Remove before uploading
 
+					include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/forgottenpassword.html.php';
+					exit();					
 				} else {
 					$_SESSION['forgottenPasswordError'] = "Email submitted does not belong to a user.";
 					include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/forgottenpassword.html.php';
@@ -248,7 +284,6 @@ function checkIfUserIsLoggedIn(){
 		unset($_SESSION['password']);
 		unset($_SESSION['LoggedInUserID']);
 		unset($_SESSION['LoggedInUserName']);
-		unset($_SESSION['LoggedInUserIsOwnerInTheseCompanies']);
 		unset($_SESSION['loginEmailSubmitted']);
 		header('Location: ' . $_POST['goto']);
 		exit();

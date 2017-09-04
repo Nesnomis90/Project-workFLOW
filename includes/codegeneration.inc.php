@@ -23,7 +23,7 @@ function generateMeetingRoomIDCode(){
 	{
 		// Create a 64char code
 		$code = hash('sha256', mt_rand());
-		
+
 		// Check if code has already been used
 		// If it has, continue making more codes until we find one
 		// that hasn't been used yet.
@@ -46,7 +46,7 @@ function generateMeetingRoomIDCode(){
 
 // Function to check if activation code already exists in database or not
 function idCodeExists($code){
-	try 
+	try
 	{
 		// Check database if the code already exists or not
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
@@ -57,9 +57,9 @@ function idCodeExists($code){
 				' LIMIT 1'; //To-do: remove/fix limit 1 if broken
 		$return = $pdo->query($sql);
 		$result = $return->fetchColumn();
-		
+
 		$pdo = null;
-		
+
 		// The result will either be an empty set, if it doesn't exist. Or a single row, if it does exist.
 		if($result > 0){
 			return TRUE;
@@ -71,7 +71,7 @@ function idCodeExists($code){
 	{
 		$pdo = null;
 		return FALSE;
-	}		
+	}
 }
 
 // Function to generate an activation code for new users
@@ -81,7 +81,7 @@ function generateActivationCode(){
 	{
 		// Create a 64char code
 		$code = hash('sha256', mt_rand());
-		
+
 		// Check if code has already been used
 		// If it has, continue making more codes until we find one
 		// that hasn't been used yet.
@@ -104,7 +104,7 @@ function generateActivationCode(){
 
 // Function to check if activation code already exists in database or not
 function activationCodeExists($code){
-	try 
+	try
 	{
 		// Check database if the code already exists or not
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
@@ -115,9 +115,9 @@ function activationCodeExists($code){
 				' LIMIT 1'; //To-do: remove/fix limit 1 if broken
 		$return = $pdo->query($sql);
 		$result = $return->fetchColumn();
-		
+
 		$pdo = null;
-		
+
 		// The result will either be an empty set, if it doesn't exist. Or a single row, if it does exist.
 		if($result > 0){
 			return TRUE;
@@ -129,7 +129,7 @@ function activationCodeExists($code){
 	{
 		$pdo = null;
 		return FALSE;
-	}		
+	}
 }
 
 // Function to generate a cancellation code for new bookings
@@ -139,7 +139,7 @@ function generateCancellationCode(){
 	{
 		// Create a 64char code
 		$code = hash('sha256', mt_rand());
-		
+
 		// Check if code has already been used
 		// If it has, continue making more codes until we find one
 		// that hasn't been used yet.
@@ -150,7 +150,6 @@ function generateCancellationCode(){
 		} else {
 			return $code;
 		}
-		
 	}
 	catch (PDOException $e)
 	{
@@ -171,12 +170,12 @@ function cancellationCodeExists($code){
 		$sql = 'SELECT 	COUNT(*) 
 				FROM 	`booking` 
 				WHERE 	`cancellationCode` = ' . $code . 
-				' LIMIT 1'; //To-do: remove/fix limit 1 if broken
+				' LIMIT 1';
 		$return = $pdo->query($sql);
 		$result = $return->fetchColumn();
-		
+
 		$pdo = null;
-		
+
 		// The result will either be an empty set, if it doesn't exist. Or a single row, if it does exist.
 		if($result > 0){
 			return TRUE;
@@ -188,6 +187,64 @@ function cancellationCodeExists($code){
 	{
 		$pdo = null;
 		return FALSE;
-	}		
+	}
+}
+
+// Function to generate a reset password code for users who have forgotten their password
+// Result is a 64 char code
+function generateResetPasswordCode(){
+	try
+	{
+		// Create a 64char code
+		$code = hash('sha256', mt_rand());
+
+		// Check if code has already been used
+		// If it has, continue making more codes until we find one
+		// that hasn't been used yet.
+		// If it has not been used, return the code
+		if(resetPasswordCodeExists($code)){
+			$newcode = generateResetPasswordCode();
+			return $newcode;
+		} else {
+			return $code;
+		}
+	}
+	catch (PDOException $e)
+	{
+		$error = 'Error generating booking Cancellation Code: ' . $e->getMessage();
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+		$pdo = null;
+		exit();
+	}
+}
+
+// Function to check if cancellation code already exists in database or not
+function resetPasswordCodeExists($code){
+	try
+	{
+		// Check database if the code already exists or not
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+		$pdo =  connect_to_db();
+		$sql = 'SELECT 	COUNT(*) 
+				FROM 	`user` 
+				WHERE 	`resetPasswordCode` = ' . $code . 
+				' LIMIT 1';
+		$return = $pdo->query($sql);
+		$result = $return->fetchColumn();
+
+		$pdo = null;
+
+		// The result will either be an empty set, if it doesn't exist. Or a single row, if it does exist.
+		if($result > 0){
+			return TRUE;
+		} else {
+			return FALSE;
+		}
+	}
+	catch (PDOException $e)
+	{
+		$pdo = null;
+		return FALSE;
+	}
 }
 ?>

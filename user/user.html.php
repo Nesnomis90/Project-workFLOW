@@ -305,6 +305,8 @@
 			</div>
 		<?php elseif(isSet($_GET['activateaccount'])) : ?>
 			<h2>Account Activation</h2>
+		<?php elseif(isSet($_GET['resetpassword'])) : ?>
+			<h2>Set New Password</h2>
 		<?php else : ?>
 			<h2>This page requires you to be logged in to view.</h2>
 		<?php endif; ?>
