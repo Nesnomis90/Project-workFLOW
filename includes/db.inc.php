@@ -337,7 +337,6 @@ function create_tables()
 						  `displayName` varchar(255) DEFAULT NULL,
 						  `bookingDescription` text,
 						  `bookingCode` char(64) DEFAULT NULL,
-						  `tempPassword` char(64) DEFAULT NULL,
 						  `dateRequested` timestamp NULL DEFAULT NULL,
 						  `AccessID` int(10) unsigned NOT NULL,
 						  `reduceAccessAtDate` date DEFAULT NULL,
@@ -345,6 +344,7 @@ function create_tables()
 						  `lastActivity` timestamp NULL DEFAULT NULL,
 						  `isActive` tinyint(1) unsigned NOT NULL DEFAULT '0',
 						  `activationCode` char(64) DEFAULT NULL,
+						  `resetPasswordCode` char(64) DEFAULT NULL,
 						  `sendEmail` tinyint(1) unsigned NOT NULL DEFAULT '1',
 						  `sendOwnerEmail` tinyint(1) unsigned NOT NULL DEFAULT '1',
 						  `sendAdminEmail` tinyint(1) unsigned NOT NULL DEFAULT '0',
@@ -352,6 +352,7 @@ function create_tables()
 						  UNIQUE KEY `email_UNIQUE` (`email`),
 						  UNIQUE KEY `activationCode_UNIQUE` (`activationCode`),
 						  UNIQUE KEY `bookingCode_UNIQUE` (`bookingCode`),
+						  UNIQUE KEY `resetPasswordCode_UNIQUE` (`resetPasswordCode`),
 						  KEY `FK_AccessID_idx` (`AccessID`),
 						  CONSTRAINT `FK_AccessID` FOREIGN KEY (`AccessID`) REFERENCES `accesslevel` (`AccessID`) ON DELETE NO ACTION ON UPDATE CASCADE
 						) ENGINE=InnoDB DEFAULT CHARSET=utf8");

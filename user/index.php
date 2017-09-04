@@ -352,67 +352,74 @@ if(isSet($_GET['register']) OR (isSet($_SESSION['refreshRegisterUser']) AND $_SE
 // Code to execute to set a new password for a user if they've forgotten it
 if(isSet($_GET['resetpassword']) AND !empty($_GET['resetpassword'])){
 
-	// TO-DO: FIX-ME: Create a new HTML-page for setting new password (twice) and update password
-
 	$resetPasswordCode = $_GET['resetpassword'];
 
-	// Check if code is correct (64 chars)
-	if(strlen($resetPasswordCode) != 64){
-		$_SESSION['normalUserFeedback'] = "This link is not a valid reset password link.";
-		header("Location: .");
-		exit();
-	}
+	if(	!isSet($_SESSION['resetPasswordInfoArray'] OR 
+		(isSet($_SESSION['resetPasswordInfoArray']) AND $_SESSION['resetPasswordInfoArray']['resetPasswordCode'] != $resetPasswordCode)){
 
-	//	Check if the submitted code is in the database
-	try
-	{
-		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+		// Check if code is correct (64 chars)
+		if(strlen($resetPasswordCode) != 64){
+			$_SESSION['normalUserFeedback'] = "This link is not a valid reset password link.";
+			header("Location: .");
+			exit();
+		}
 
-		$pdo = connect_to_db();
-		$sql = "SELECT 	`userID`,
-						`email`,
-						`firstname`,
-						`lastname`,
-						`password`
-				FROM	`user`
-				WHERE 	`tempPassword` = :resetPasswordCode
-				AND		`isActive` = 1
-				LIMIT 	1";
-		$s = $pdo->prepare($sql);
-		$s->bindValue(':resetPasswordCode', $resetPasswordCode);
-		$s->execute();
+		//	Check if the submitted code is in the database
+		try
+		{
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 
-		//Close the connection
-		$pdo = null;
-	}
-	catch(PDOException $e)
-	{
-		$error = 'Error validating reset password code: ' . $e->getMessage();
-		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
-		$pdo = null;
-		exit();
-	}
+			$pdo = connect_to_db();
+			$sql = "SELECT 	`userID`			AS UserID,
+							`email`				AS Email,
+							`firstname`			AS FirstName,
+							`lastname`			AS LastName,
+							`password`			AS HashedPassword
+					FROM	`user`
+					WHERE 	`resetPasswordCode` = :resetPasswordCode
+					AND		`isActive` = 1
+					LIMIT 	1";
+			$s = $pdo->prepare($sql);
+			$s->bindValue(':resetPasswordCode', $resetPasswordCode);
+			$s->execute();
 
-	// Check if the select even found something
-	$result = $s->fetch(PDO::FETCH_ASSOC);
-	if(isSet($result)){
-		$rowNum = sizeOf($result);
+			//Close the connection
+			$pdo = null;
+		}
+		catch(PDOException $e)
+		{
+			$error = 'Error validating reset password code: ' . $e->getMessage();
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+			$pdo = null;
+			exit();
+		}
+
+		// Check if the select even found something
+		$result = $s->fetch(PDO::FETCH_ASSOC);
+		if(!isSet($result) OR (isSet($result) AND empty($result))){
+			// No match.
+			$_SESSION['normalUserFeedback'] = "This link is not a valid reset password link.";
+			header("Location: .");
+			exit();
+		}
+
+		$_SESSION['resetPasswordInfoArray'] =  $result;
+		$_SESSION['resetPasswordInfoArray']['resetPasswordCode'] = $resetPasswordCode;
 	} else {
-		$rowNum = 0;
-	}
-	if($rowNum == 0){
-		// No match.
-		$_SESSION['normalUserFeedback'] = "This link is not a valid reset password link.";
-		header("Location: .");
-		exit();
+		$result = $_SESSION['resetPasswordInfoArray'];
 	}
 
-	$userID = $result['userID'];
-	$email = $result['email'];
-	$firstname = $result['firstname'];
-	$lastname = $result['lastname'];
-	$hashedPassword = $result['password'];
+	$userID = $result['UserID'];
+	$email = $result['Email'];
+	$firstName = $result['FirstName'];
+	$lastName = $result['LastName'];
+	$hashedPassword = $result['HashedPassword'];
+	
+	// TO-DO: FIX-ME: Create a new HTML-page for setting new password (twice) and update password
 
+	var_dump($_SESSION); // TO-DO: Remove before uploading
+	include_once 'resetpassword.html.php';
+	exit();
 }
 
 // Code to execute to activate an account from activation link
