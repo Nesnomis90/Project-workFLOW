@@ -184,6 +184,8 @@ function checkIfUserIsLoggedIn(){
 			unset($_SESSION['password']);
 			unset($_SESSION['LoggedInUserID']);
 			unset($_SESSION['LoggedInUserName']);
+			
+			// TO-DO: Track # of wrong login attempts and limit login if too high.
 
 			$_SESSION['loginError'] = 'The specified email address or password was incorrect.';
 			return FALSE;

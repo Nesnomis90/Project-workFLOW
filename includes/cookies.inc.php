@@ -14,9 +14,8 @@ function setNewMeetingRoomCookies($meetingRoomName, $idCode){
 // Cookie removal
 function deleteMeetingRoomCookies(){
 	// To delete a cookie you have to make it expire by setting a date in the past
-	// To-DO: Add path if not working?
-	setcookie(MEETINGROOM_NAME, '', time() - 3600);
-	setcookie(MEETINGROOM_IDCODE, '', time() - 3600);	
+	setcookie(MEETINGROOM_NAME, "", time() - 3600, '/');
+	setcookie(MEETINGROOM_IDCODE, "", time() - 3600, '/');	
 	// Just in case?
 	unset($_COOKIE[MEETINGROOM_NAME]);
 	unset($_COOKIE[MEETINGROOM_IDCODE]);

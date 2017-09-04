@@ -171,7 +171,7 @@ if(isSet($_GET['meetingroom']) AND !empty($_GET['meetingroom'])){
 								WHERE 	re.`MeetingRoomID` = TheMeetingRoomID
 							)					AS MeetingRoomEquipmentAmount,
 							(
-								SELECT	COUNT(*)
+								SELECT	b.`endDateTime`
 								FROM	`booking` b
 								WHERE	b.`meetingRoomID` = TheMeetingRoomID
 								AND		b.`actualEndDateTime` IS NULL
@@ -179,7 +179,7 @@ if(isSet($_GET['meetingroom']) AND !empty($_GET['meetingroom'])){
 								AND		CURRENT_TIMESTAMP 
 								BETWEEN	b.`startDateTime` 
 								AND 	b.`endDateTime`
-							)					AS MeetingRoomStatus,
+							)					AS CurrentMeetingEnd,
 							(
 								SELECT		b.`startDateTime`
 								FROM		`booking` b
