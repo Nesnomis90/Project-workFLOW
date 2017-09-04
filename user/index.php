@@ -317,7 +317,7 @@ if(isSet($_GET['register']) OR (isSet($_SESSION['refreshRegisterUser']) AND $_SE
 		$refreshedRegister = TRUE;
 		unset($_SESSION['refreshRegisterUser']);
 	}
-	
+
 	if(isSet($_SESSION['registerUserWarning']) AND strpos(strtolower($_SESSION['registerUserWarning']), 'email') !== FALSE){
 		$invalidEmail = TRUE;
 	}
@@ -342,15 +342,77 @@ if(isSet($_GET['register']) OR (isSet($_SESSION['refreshRegisterUser']) AND $_SE
 	}
 	$password1 = "";
 	$password2 = "";
-	
+
 	var_dump($_SESSION); // TO-DO: Remove after testing
-	
+
 	include_once 'register.html.php';
 	exit();
 }
 
+if(isSet($_POST['reset']) AND $_POST['reset'] == "Set New Password"){
+
+	$setNewPassword = FALSE;
+
+	if(isSet($_POST['password1'], $_POST['password2'])){
+		// Check if passwords are filled in, have the minimum characters entered and that they match each other.
+		$password1 = $_POST['password1'];
+		$password2 = $_POST['password2'];
+		$minimumPasswordLength = MINIMUM_PASSWORD_LENGTH;
+
+		if(strlen(utf8_decode($password1)) >= $minimumPasswordLength){
+			if($password1 == $password2){
+				$setNewPassword = TRUE;
+			} else {
+				$_SESSION['resetPasswordFeedback'] = "Your new Password and the repeated Password did not match.";
+			}
+		} else {
+			$_SESSION['resetPasswordFeedback'] = "The submitted password is not long enough. You are required to make it at least $minimumPasswordLength characters long.";
+		}
+	} else {
+		$_SESSION['resetPasswordFeedback'] = "Password cannot be reset without a new password being submitted";
+	}
+
+	if($setNewPassword AND isSet($_SESSION['resetPasswordInfoArray'])){
+
+		$userID = $_SESSION['resetPasswordInfoArray']['UserID'];
+		$resetPasswordCode = $_SESSION['resetPasswordInfoArray']['resetPasswordCode'];
+		$newHashedPassword = hashPassword($password1);
+
+		try
+		{
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+
+			$pdo = connect_to_db();
+			$sql = "UPDATE 	`user`
+					SET		`resetPasswordCode` = NULL,
+							`password` = :newHashedPassword
+					WHERE 	`userID` = :userID
+					AND		`resetPasswordCode` = :resetPasswordCode
+					AND		`isActive` = 1";
+			$s = $pdo->prepare($sql);
+			$s->bindValue(':userID', $userID);
+			$s->bindValue(':newHashedPassword', $newHashedPassword);
+			$s->bindValue(':resetPasswordCode', $resetPasswordCode);
+			$s->execute();
+
+			//Close the connection
+			$pdo = null;
+		}
+		catch(PDOException $e)
+		{
+			$error = 'Error validating reset password code: ' . $e->getMessage();
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+			$pdo = null;
+			exit();
+		}
+	}
+
+	header("Location: .");
+	exit();
+}
+
 // Code to execute to set a new password for a user if they've forgotten it
-if(isSet($_GET['resetpassword']) AND !empty($_GET['resetpassword'])){
+if(isSet($_GET['resetpassword']) AND !empty($_GET['resetpassword']))){
 
 	$resetPasswordCode = $_GET['resetpassword'];
 
@@ -414,8 +476,6 @@ if(isSet($_GET['resetpassword']) AND !empty($_GET['resetpassword'])){
 	$firstName = $result['FirstName'];
 	$lastName = $result['LastName'];
 	$hashedPassword = $result['HashedPassword'];
-	
-	// TO-DO: FIX-ME: Create a new HTML-page for setting new password (twice) and update password
 
 	var_dump($_SESSION); // TO-DO: Remove before uploading
 	include_once 'resetpassword.html.php';
@@ -1280,7 +1340,7 @@ if(isSet($_POST['action']) AND $_POST['action'] == "Confirm Change"){
 					$changePassword = TRUE;
 				}
 		} else {
-			$_SESSION['normalUserFeedback'] = "Your new Password and Repeat Password did not match.";
+			$_SESSION['normalUserFeedback'] = "Your new Password and the repeated Password did not match.";
 			$invalidInput = TRUE;
 		}
 	} else {

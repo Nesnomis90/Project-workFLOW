@@ -32,8 +32,8 @@
 								value="<?php htmlout($password2); ?>">
 						</div>
 						<div class="left">
-							<input type="hidden" name="register" value="Register Account">
-							<input type="submit" value="Register Account">
+							<input type="hidden" name="reset" value="Set New Password">
+							<input type="submit" value="Set New Password">
 						</div>
 					</fieldset>
 				</form>
