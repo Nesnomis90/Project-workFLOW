@@ -7,6 +7,9 @@
 		<link rel="stylesheet" type="text/css" href="/CSS/myCSS.css">
 		<script src="/scripts/myFunctions.js"></script>
 		<title>Set New Password</title>
+		<style>
+			label {width: 140px;}
+		</style>
 	</head>
 	<body>
 		<?php include_once $_SERVER['DOCUMENT_ROOT'] .'/includes/topnav.html.php'; ?>
@@ -23,13 +26,11 @@
 						</div>
 						<div class="left">
 							<label for="password1">Set New Password: </label>
-							<input type="password" name="password1" placeholder="Set your password"
-							value="<?php htmlout($password1); ?>">
+							<input type="password" name="password1" placeholder="Set your password" value="">
 						</div>
 						<div class="left">
 							<label for="password2">Set New Password: </label>
-								<input type="password" name="password2" placeholder="Repeat your password"
-								value="<?php htmlout($password2); ?>">
+							<input type="password" name="password2" placeholder="Repeat your password" value="">
 						</div>
 						<div class="left">
 							<input type="hidden" name="reset" value="Set New Password">

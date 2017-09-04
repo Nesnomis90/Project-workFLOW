@@ -203,11 +203,39 @@ function checkIfUserIsLoggedIn(){
 
 			if(validateUserEmail($email)){
 				if(databaseContainsEmail($email)){
-					// email submitted exists, let's send an email about requesting a temp password
-					
+					// Email submitted belongs to a user. Let's genereate a reset password code and update the user
+					try
+					{
+						// Generate reset password code
+						$resetPasswordCode = generateResetPasswordCode();
+
+						include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+
+						$pdo = connect_to_db();
+						$sql = 'UPDATE	`user`
+								SET		`resetPasswordCode` = :resetPasswordCode
+								WHERE	`email` = :email';
+						$s = $pdo->prepare($sql);
+						$s->bindValue(':resetPasswordCode', $resetPasswordCode);
+						$s->bindValue(':email', $email);
+						$s->execute();
+
+						//Close the connection
+						$pdo = null;
+					}
+					catch (PDOException $e)
+					{
+						$error = 'Error connecting reset password code to user: ' . $e->getMessage();
+						include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+						$pdo = null;
+						exit();
+					}
+
+					// Let's send an email to the user with the reset password link
+
 					$emailSubject = "New Password Request!";
 
-					$url = "";
+					$url = $_SERVER['HTTP_HOST'] . "/user/?resetpassword=" . $resetPasswordCode;
 
 					$emailMessage = 
 					"Someone has requested a new password for your account!\n" .
@@ -217,12 +245,16 @@ function checkIfUserIsLoggedIn(){
 
 					$mailResult = sendEmail($email, $emailSubject, $emailMessage);
 
+					$_SESSION['forgottenPasswordError'] = "User found and reset link sent to email!";
+					
 					if(!$mailResult){
 						$_SESSION['forgottenPasswordError'] .= "\n\n[WARNING] System failed to send Email.";
 					}
 
 					$_SESSION['forgottenPasswordError'] .= "\nThis is the email msg we're sending out:\n$emailMessage\nSent to email: $email."; // TO-DO: Remove before uploading
 
+					include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/forgottenpassword.html.php';
+					exit();					
 				} else {
 					$_SESSION['forgottenPasswordError'] = "Email submitted does not belong to a user.";
 					include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/forgottenpassword.html.php';

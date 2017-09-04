@@ -14,10 +14,10 @@
 			</div>
 
 			<div class="left">
-			<?php if(isSet($_SESSION['forgottenPasswordError'])): ?>
-				<span><b class="warning"><?php htmlout($_SESSION['forgottenPasswordError']); ?></b></span>
-				<?php unset($_SESSION['forgottenPasswordError']); ?>
-			<?php endif; ?>
+				<?php if(isSet($_SESSION['forgottenPasswordError'])): ?>
+					<span><b class="warning"><?php htmlout($_SESSION['forgottenPasswordError']); ?></b></span>
+					<?php unset($_SESSION['forgottenPasswordError']); ?>
+				<?php endif; ?>
 			</div>
 
 			<div class="left">

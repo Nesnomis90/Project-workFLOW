@@ -237,7 +237,7 @@ if(isSet($_POST['register']) AND $_POST['register'] == "Register Account"){
 	try
 	{
 		// Save a description with information about the user that was added
-		
+
 		$description = "N/A";
 		$userinfo = $validatedLastname . ', ' . $validatedFirstname . ' - ' . $email;
 		if(isSet($_SESSION['LoggedInUserName'])){
@@ -247,7 +247,7 @@ if(isSet($_POST['register']) AND $_POST['register'] == "Register Account"){
 		}
 
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
-		
+
 		$pdo = connect_to_db();
 		$sql = "INSERT INTO `logevent` 
 				SET			`actionID` = 	(
@@ -259,9 +259,9 @@ if(isSet($_POST['register']) AND $_POST['register'] == "Register Account"){
 		$s = $pdo->prepare($sql);
 		$s->bindValue(':description', $description);
 		$s->execute();
-		
+
 		//Close the connection
-		$pdo = null;		
+		$pdo = null;
 	}
 	catch(PDOException $e)
 	{
@@ -269,43 +269,42 @@ if(isSet($_POST['register']) AND $_POST['register'] == "Register Account"){
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
 		$pdo = null;
 		exit();
-	}	
-	
+	}
+
 	// Send user an email with the activation code
 		// TO-DO: This is UNTESTED since we don't have php.ini set up to actually send email
 	$emailSubject = "Account Activation Link";
-	
+
 	$emailMessage = 
 	"Your account has been created.\n" .
 	"Before you can log in you need to activate your account.\n" .
 	"If the account isn't activated within 8 hours, it is removed.\n" .
 	"Click this link to activate your account: " . $_SERVER['HTTP_HOST'] . 
 	"/user/?activateaccount=" . $activationcode;
-	
+
 	$mailResult = sendEmail($email, $emailSubject, $emailMessage);
-	
+
 	if(!$mailResult){
 		if(isSet($_SESSION['registerUserFeedback'])){
 			$_SESSION['registerUserFeedback'] .= "\n[WARNING] System failed to send Email to user.";
 		} else {
 			$_SESSION['registerUserFeedback'] = "\n[WARNING] System failed to send Email to user.";
 		}
-		
 	}
-	
+
 	$_SESSION['registerUserFeedback'] .= "\nThis is the email msg we're sending out:\n$emailMessage.\nSent to: $email."; // TO-DO: Remove before uploading	
-	
+
 	// End of register account 
 	$_SESSION['registerUserFeedback'] .= "\nYour account has been successfully created.\nA confirmation link has been sent to your email.";
-	
+
 	$firstName = "";
 	$lastName = "";
 	$email = "";
 	$password1 = "";
 	$password2 = "";
-	
+
 	var_dump($_SESSION); // TO-DO: Remove after testing
-	
+
 	include_once 'register.html.php';
 	exit();
 }
@@ -363,7 +362,7 @@ if(isSet($_POST['reset']) AND $_POST['reset'] == "Set New Password"){
 			if($password1 == $password2){
 				$setNewPassword = TRUE;
 			} else {
-				$_SESSION['resetPasswordFeedback'] = "Your new Password and the repeated Password did not match.";
+				$_SESSION['resetPasswordFeedback'] = "Your new Password and the repeated Password did not match. Try again.";
 			}
 		} else {
 			$_SESSION['resetPasswordFeedback'] = "The submitted password is not long enough. You are required to make it at least $minimumPasswordLength characters long.";
@@ -405,18 +404,20 @@ if(isSet($_POST['reset']) AND $_POST['reset'] == "Set New Password"){
 			$pdo = null;
 			exit();
 		}
+		
+		// New password set
+		$_SESSION['normalUserFeedback'] = "Successfully set a new password for your account.";
+		header("Location: .");
+		exit();
 	}
-
-	header("Location: .");
-	exit();
 }
 
 // Code to execute to set a new password for a user if they've forgotten it
-if(isSet($_GET['resetpassword']) AND !empty($_GET['resetpassword']))){
+if(isSet($_GET['resetpassword']) AND !empty($_GET['resetpassword'])){
 
 	$resetPasswordCode = $_GET['resetpassword'];
 
-	if(	!isSet($_SESSION['resetPasswordInfoArray'] OR 
+	if(	!isSet($_SESSION['resetPasswordInfoArray']) OR 
 		(isSet($_SESSION['resetPasswordInfoArray']) AND $_SESSION['resetPasswordInfoArray']['resetPasswordCode'] != $resetPasswordCode)){
 
 		// Check if code is correct (64 chars)
