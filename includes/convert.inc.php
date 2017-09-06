@@ -94,7 +94,8 @@ function convertTwoDateTimesToTimeDifferenceInMinutes($startDateTime,$endDateTim
 
 // Two datetimes to difference in months
 // TO-DO: FIX-ME: This needs a change. It does not properly deal with all dates
-// e.g. 31 January 2011 to 28 February 2011 gives 0 months, not 1. Is this correct behaviour?
+// e.g. 31 January 2011 to 28 February 2011 gives 0 months, not 1.
+// This makes our "interval number" incorrect for "booking history" in admin companies
 function convertTwoDateTimesToTimeDifferenceInMonths($startDateTime,$endDateTime){
 	$timeDifferenceStartDate = new DateTime($startDateTime);
 	$timeDifferenceCompletionDate = new DateTime($endDateTime);

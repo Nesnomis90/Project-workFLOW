@@ -815,6 +815,7 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Edit') OR
 		$pdo = connect_to_db();
 		$sql = 'SELECT		c.`companyID`,
 							c.`name` 					AS companyName,
+							c.`dateTimeCreated`,
 							c.`startDate`,
 							c.`endDate`,
 							(
@@ -1037,6 +1038,7 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Edit') OR
 			$company[] = array(
 								'companyID' => $row['companyID'],
 								'companyName' => $row['companyName'],
+								'dateTimeCreated' => $row['dateTimeCreated'],
 								'startDate' => $row['startDate'],
 								'endDate' => $displayEndDate,
 								'creditsGiven' => $companyMinuteCredits,
@@ -1054,7 +1056,7 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Edit') OR
 		// are connected to more than 1 company.
 		// If not we just store the companyID in a hidden form field
 		if(isSet($company)){
-			if (sizeOf($company)>1){
+			if(sizeOf($company)>1){
 				// User is in multiple companies
 
 				$_SESSION['EditBookingDisplayCompanySelect'] = TRUE;
@@ -1799,6 +1801,7 @@ if( (isSet($_POST['edit']) AND $_POST['edit'] == "Finish Edit") OR
 			foreach($_SESSION['EditBookingCompanyArray'] AS $company){
 				if($companyID == $company['companyID']){
 					$companyName = $company['companyName'];
+					$companyCreationDate = $company['dateTimeCreated'];
 					$companyCreditsRemaining = $company['creditsRemaining'];
 					$companyCreditsBooked = $company['PotentialExtraMonthlyTimeUsed'];
 					$companyCreditsPotentialMinimumRemaining = $company['PotentialCreditsRemaining'];
@@ -1845,7 +1848,7 @@ if( (isSet($_POST['edit']) AND $_POST['edit'] == "Finish Edit") OR
 			} else {
 				$newPeriod = TRUE;
 				// Get exact period the user is booking for
-				$newDate = DateTime::createFromFormat("Y-m-d", $companyPeriodEndDate);
+				$newDate = DateTime::createFromFormat("Y-m-d", $companyCreationDate);
 				$dayNumberToKeep = $newDate->format("d");
 
 				list($newCompanyPeriodStart, $newCompanyPeriodEnd) = getPeriodDatesForCompanyFromDateSubmitted($dayNumberToKeep, $dateOnlyEndDate, $companyPeriodStartDate, $companyPeriodEndDate);
@@ -2456,6 +2459,7 @@ if (	(isSet($_POST['action']) AND $_POST['action'] == "Create Booking") OR
 			$pdo = connect_to_db();
 			$sql = 'SELECT		c.`companyID`,
 								c.`name` 					AS companyName,
+								c.`dateTimeCreated`,
 								c.`startDate`,
 								c.`endDate`,
 								(
@@ -2678,6 +2682,7 @@ if (	(isSet($_POST['action']) AND $_POST['action'] == "Create Booking") OR
 				$company[] = array(
 									'companyID' => $row['companyID'],
 									'companyName' => $row['companyName'],
+									'dateTimeCreated' => $row['dateTimeCreated'],
 									'startDate' => $row['startDate'],
 									'endDate' => $displayEndDate,
 									'creditsGiven' => $companyMinuteCredits,
@@ -3087,6 +3092,7 @@ if ((isSet($_POST['add']) AND $_POST['add'] == "Add Booking") OR
 		foreach($_SESSION['AddBookingCompanyArray'] AS $company){
 			if($companyID == $company['companyID']){
 				$companyName = $company['companyName'];
+				$companyCreationDate = $company['dateTimeCreated'];
 				$companyCreditsRemaining = $company['creditsRemaining'];
 				$companyCreditsBooked = $company['PotentialExtraMonthlyTimeUsed'];
 				$companyCreditsPotentialMinimumRemaining = $company['PotentialCreditsRemaining'];
@@ -3124,9 +3130,9 @@ if ((isSet($_POST['add']) AND $_POST['add'] == "Add Booking") OR
 	} else {
 		$newPeriod = TRUE;
 		// Get exact period the user is booking for
-		$newDate = DateTime::createFromFormat("Y-m-d", $companyPeriodEndDate);
+		$newDate = DateTime::createFromFormat("Y-m-d", $companyCreationDate);
 		$dayNumberToKeep = $newDate->format("d");
-		
+
 		list($newCompanyPeriodStart, $newCompanyPeriodEnd) = getPeriodDatesForCompanyFromDateSubmitted($dayNumberToKeep, $dateOnlyEndDate, $companyPeriodStartDate, $companyPeriodEndDate);
 
 		// For displaying the new period dates
