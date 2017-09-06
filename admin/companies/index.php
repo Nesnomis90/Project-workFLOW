@@ -781,7 +781,7 @@ if (isSet($_POST['history']) AND $_POST['history'] == "Set As Billed"){
 	$billingDescription = $billingDescriptionInformation;
 	$displayDateTimeCreated = $_SESSION['BookingHistoryCompanyInfo']['CompanyDateTimeCreated'];
 
-	var_dump($_SESSION); // TO-DO: Remove after testing is over.
+	var_dump($_SESSION); // TO-DO: Remove before uploading
 
 	include_once 'bookinghistory.html.php';
 	exit();	
@@ -799,6 +799,7 @@ if (isSet($_POST['history']) AND $_POST['history'] == "Next Period"){
 
 	$companyID = $_SESSION['BookingHistoryCompanyInfo']['CompanyID'];
 	$CompanyName = $_SESSION['BookingHistoryCompanyInfo']['CompanyName'];
+	$companyCreationDate = $_SESSION['BookingHistoryCompanyInfo']['CompanyDateTimeCreated'];
 
 	// Get booking history for the selected company
 	try
@@ -870,7 +871,7 @@ if (isSet($_POST['history']) AND $_POST['history'] == "Next Period"){
 
 	$displayDateTimeCreated = $_SESSION['BookingHistoryCompanyInfo']['CompanyDateTimeCreated'];
 
-	var_dump($_SESSION); // TO-DO: Remove after testing is over.
+	var_dump($_SESSION); // TO-DO: Remove before uploading
 
 	include_once 'bookinghistory.html.php';
 	exit();
@@ -958,7 +959,7 @@ if (	(isSet($_POST['history']) AND $_POST['history'] == "Previous Period") OR
 	}
 	$displayDateTimeCreated = $_SESSION['BookingHistoryCompanyInfo']['CompanyDateTimeCreated'];
 
-	var_dump($_SESSION); // TO-DO: Remove after testing is over.
+	var_dump($_SESSION); // TO-DO: Remove before uploading.
 
 	include_once 'bookinghistory.html.php';
 	exit();
@@ -1062,7 +1063,7 @@ if (	(isSet($_GET['companyID']) AND isSet($_GET['BillingStart']) AND isSet($_GET
 		exit();
 	}
 
-	var_dump($_SESSION); // TO-DO: Remove after testing is over.
+	var_dump($_SESSION); // TO-DO: Remove before uploading
 
 	include_once 'bookinghistory.html.php';
 	exit();
@@ -1153,7 +1154,7 @@ if ((isSet($_POST['action']) AND $_POST['action'] == "Booking History") OR
 		exit();
 	}
 
-	var_dump($_SESSION); // TO-DO: Remove after testing is over.
+	var_dump($_SESSION); // TO-DO: Remove before uploading
 
 	include_once 'bookinghistory.html.php';
 	exit();
@@ -1247,7 +1248,7 @@ if ((isSet($_POST['action']) and $_POST['action'] == 'Merge') OR
 			exit();
 		}
 
-		var_dump($_SESSION);	// TO-DO: Remove after done testing
+		var_dump($_SESSION); // TO-DO: Remove before uploading
 
 		include_once 'merge.html.php';
 		exit();
@@ -1578,7 +1579,7 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Create Company') OR
 	// We don't need to see date to remove when adding a new company
 	$ShowDateToRemove = FALSE;
 
-	var_dump($_SESSION); // TO-DO: remove after testing is done
+	var_dump($_SESSION); // TO-DO: Remove before uploading
 
 	// Change to the actual html form template
 	include 'form.html.php';
@@ -1666,7 +1667,7 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Edit') OR
 	// Want to see date to remove while editing
 	$ShowDateToRemove = TRUE;
 
-	var_dump($_SESSION); // TO-DO: remove after testing is done
+	var_dump($_SESSION); // TO-DO: Remove before uploading
 
 	// Change to the actual form we want to use
 	include 'form.html.php';
@@ -2242,7 +2243,7 @@ foreach ($result as $row)
 	unset($_SESSION['MergeCompanySelectedCompanyName']);
 	unset($_SESSION['MergeCompanySelectedCompanyID2']);
 
-var_dump($_SESSION); // TO-DO: remove after testing is done
+var_dump($_SESSION); // TO-DO: Remove before uploading
 
 // Create the companies list in HTML
 include_once 'companies.html.php';

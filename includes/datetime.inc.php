@@ -21,8 +21,23 @@ function convertDatetimeToFormat($oldDatetimeString, $oldformat, $format){
 	}
 }
 
-function getPeriodDatesForCompanyFromDateSubmitted($dayNumberToKeep, $selectedDate, $companyStartDate, $companyEndDate){
+function getPeriodIntervalNumberFromDateSubmitted($dayNumberToKeep, $startDate, $endDate){
+	
+	$intervalNumber = 0;
+	$nextPeriodEnd = addOneMonthToPeriodDate($dayNumberToKeep, $startDate);
+	
+	while($nextPeriodEnd < $endDate){
+		$intervalNumber += 1;
+		$nextPeriodEnd = addOneMonthToPeriodDate($dayNumberToKeep, $nextPeriodEnd);
+	}
+	
+	if($nextPeriodEnd == $endDate){
+		$intervalNumber += 1;
+	}
+	return $intervalNumber;
+}
 
+function getPeriodDatesForCompanyFromDateSubmitted($dayNumberToKeep, $selectedDate, $companyStartDate, $companyEndDate){
 	if($selectedDate >= $companyStartDate){
 		// Selected date is a valid period date
 		if($selectedDate <= $companyEndDate){
