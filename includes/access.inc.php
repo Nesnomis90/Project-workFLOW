@@ -124,14 +124,14 @@ function checkIfUserIsLoggedIn(){
 	// If user is trying to log in
 	if(isSet($_POST['action']) and $_POST['action'] == 'login'){
 
-		if(isSet($_SESSION['wrongLoginAttempts'])){
+		if(isSet($_SESSION['wrongLoginAttempts'], $_SESSION['loginBlocked'])){
 			$dateTimeNow = getDatetimeNow();
 			$dateTimeBlocked = end($_SESSION['wrongLoginAttempts']);
 			$timoutInMinutes = convertTwoDateTimesToTimeDifferenceInMinutes($dateTimeBlocked, $dateTimeNow);
 
 			if($timoutInMinutes >= WRONG_LOGIN_GUESS_TIMEOUT_IN_MINUTES){
 				unset($_SESSION['wrongLoginAttempts']);
-				unset($_SESSION['loginError']);
+				unset($_SESSION['loginBlocked']);
 			} else {
 				$timeoutLeft = WRONG_LOGIN_GUESS_TIMEOUT_IN_MINUTES - $timoutInMinutes;
 			}
@@ -139,7 +139,7 @@ function checkIfUserIsLoggedIn(){
 
 		if(isSet($_SESSION['loginBlocked'])){
 			if($timeoutLeft > 0){
-				$_SESSION['loginError'] = "You are not allowed to attempt a login for another $timeLeft minute(s).";
+				$_SESSION['loginError'] = "You are not allowed to attempt a login for another $timeoutLeft minute(s).";
 			} else {
 				$_SESSION['loginError'] = "You are not allowed to attempt a login for another minute.";
 			}
@@ -210,15 +210,21 @@ function checkIfUserIsLoggedIn(){
 			unset($_SESSION['LoggedInUserName']);
 
 			// Track # of wrong login attempts and limit login if too high.
-				// Should it trigger on email specific login? Any attempts?
-				// Make it alert the email trying to be logged into?
 			$_SESSION['wrongLoginAttempts'][] = getDatetimeNow();
 
-			if(sizeOf($_SESSION['wrongLoginAttempts']) > MAXIMUM_WRONG_LOGIN_GUESSES){
+			if(sizeOf($_SESSION['wrongLoginAttempts']) >= MAXIMUM_WRONG_LOGIN_GUESSES){
 				$_SESSION['loginBlocked'] = TRUE;
 			}
+			$attemptsSoFar = sizeOf($_SESSION['wrongLoginAttempts']);
+			$attemptsRemaining = MAXIMUM_WRONG_LOGIN_GUESSES - $attemptsSoFar + 1;
 
-			$_SESSION['loginError'] = 'The specified email address or password was incorrect.';
+			if($attemptsRemaining == 2){
+				$_SESSION['loginError'] = "The specified email address or password was incorrect. You have 2 attempts left to insert the correct login information.";
+			} elseif($attemptsRemaining == 1){
+				$_SESSION['loginError'] = "The specified email address or password was incorrect. You have 1 attempt left to insert the correct login information.";
+			} else {
+				$_SESSION['loginError'] = "The specified email address or password was incorrect.";
+			}
 			return FALSE;
 		}
 	}
