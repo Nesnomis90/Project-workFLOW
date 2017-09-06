@@ -213,12 +213,14 @@ function checkIfUserIsLoggedIn(){
 				$_SESSION['loginBlocked'] = TRUE;
 			}
 			$attemptsSoFar = sizeOf($_SESSION['wrongLoginAttempts']);
-			$attemptsRemaining = MAXIMUM_WRONG_LOGIN_GUESSES - $attemptsSoFar + 1;
-
+			$attemptsRemaining = MAXIMUM_WRONG_LOGIN_GUESSES - $attemptsSoFar;
+			$timeoutDurationInMinutes = WRONG_LOGIN_GUESS_TIMEOUT_IN_MINUTES;
 			if($attemptsRemaining == 2){
-				$_SESSION['loginError'] = "The specified email address or password was incorrect. You have 2 attempts left to insert the correct login information.";
+				$_SESSION['loginError'] = "The specified email address or password was incorrect.\nYou have 2 attempts left to insert the correct login information.";
 			} elseif($attemptsRemaining == 1){
-				$_SESSION['loginError'] = "The specified email address or password was incorrect. You have 1 attempt left to insert the correct login information.";
+				$_SESSION['loginError'] = "The specified email address or password was incorrect.\nYou have 1 attempt left to insert the correct login information.";
+			} elseif($attemptsRemaining == 0){
+				$_SESSION['loginError'] = "The specified email address or password was incorrect.\nYou are now unable to log in for $timeoutDurationInMinutes minutes.";
 			} else {
 				$_SESSION['loginError'] = "The specified email address or password was incorrect.";
 			}
