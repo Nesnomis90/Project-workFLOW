@@ -197,7 +197,7 @@ function getNextValidBookingEndTime($startTimeString){
 }
 
 // Function to get the current datetime in MySQL format
-function getDatetimeNow() {
+function getDatetimeNow(){
 	// We use the same format as used in MySQL
 	// yyyy-mm-dd hh:mm:ss
 	date_default_timezone_set(DATE_DEFAULT_TIMEZONE);
