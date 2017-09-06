@@ -94,6 +94,7 @@ function updateBillingDatesForCompanies(){
 			$aboveThisManySecondsToCount = BOOKING_DURATION_IN_MINUTES_USED_BEFORE_INCLUDING_IN_PRICE_CALCULATIONS * 60; // E.g. 1min = 60s			
 			// There is information to update. Get needed values
 			$sql = "SELECT 		c.`CompanyID`				AS TheCompanyID,
+								c.`dateTimeCreated`			AS dateTimeCreated,
 								c.`startDate`				AS StartDate,
 								c.`endDate`					AS EndDate,
 								cr.`minuteAmount`			AS CreditsGivenInMinutes,
@@ -172,6 +173,7 @@ function updateBillingDatesForCompanies(){
 					$creditsGivenInMinutes = $insert['AlternativeAmount'];
 				}
 				$companyID = $insert['TheCompanyID'];
+				$companyCreationDate = $insert['dateTimeCreated'];
 				$startDate = $insert['StartDate'];
 				$endDate = $insert['EndDate'];
 				$monthlyPrice = $insert['MonthlyPrice'];
@@ -210,15 +212,20 @@ function updateBillingDatesForCompanies(){
 								`billingDescription` = '" . $billingDescriptionInformation . "'";
 				}
 				$pdo->exec($sql);
-				// TO-DO: FIX-ME: Interval 1 month isn't good enough. January 31 -> February 28 -> March 28
-				// Make it + 30 day?
+				
+				$newDate = DateTime::createFromFormat("Y-m-d", $companyCreationDate);
+				$dayNumberToKeep = $newDate->format("d");
+
+				$newEndDate = addOneMonthToPeriodDate($dayNumberToKeep, $endDate)
+				// TO-DO: Test if this works. Changed from + 1 month to adding a specific date we set ourselves based on day of creation.
 				$sql = "UPDATE 	`company`
 						SET		`prevStartDate` = `startDate`,
 								`startDate` = `endDate`,
-								`endDate` = (`startDate` + INTERVAL 1 MONTH)
+								`endDate` = :newEndDate
 						WHERE	`companyID` = :companyID";
 				$s = $pdo->prepare($sql);
 				$s->bindValue(':companyID', $companyID);
+				$s->bindValue(':newEndDate', $newEndDate);
 				$s->execute();
 			}
 

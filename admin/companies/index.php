@@ -964,7 +964,7 @@ if (	(isSet($_POST['history']) AND $_POST['history'] == "Previous Period") OR
 	var_dump($_SESSION); // TO-DO: Remove after testing is over.
 
 	include_once 'bookinghistory.html.php';
-	exit();	
+	exit();
 }
 
 // Redirect to the proper period and company when given a link
@@ -984,7 +984,7 @@ if (	(isSet($_GET['companyID']) AND isSet($_GET['BillingStart']) AND isSet($_GET
 		$BillingEnd =  $_GET['BillingEnd'];
 		$_SESSION['refreshBookingHistoryFromLink'] = array($companyID, $BillingStart, $BillingEnd);
 		header("Location: .");
-		exit();	
+		exit();
 	}
 
 	// Get booking history for the selected company
