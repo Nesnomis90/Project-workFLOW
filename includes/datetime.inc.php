@@ -22,15 +22,14 @@ function convertDatetimeToFormat($oldDatetimeString, $oldformat, $format){
 }
 
 function getPeriodIntervalNumberFromDateSubmitted($dayNumberToKeep, $startDate, $endDate){
-	
 	$intervalNumber = 0;
 	$nextPeriodEnd = addOneMonthToPeriodDate($dayNumberToKeep, $startDate);
-	
+
 	while($nextPeriodEnd < $endDate){
 		$intervalNumber += 1;
 		$nextPeriodEnd = addOneMonthToPeriodDate($dayNumberToKeep, $nextPeriodEnd);
 	}
-	
+
 	if($nextPeriodEnd == $endDate){
 		$intervalNumber += 1;
 	}
