@@ -463,9 +463,8 @@ SELECT		c.`companyID`,
 				INNER JOIN 	`company` c 
 				ON 			b.`CompanyID` = c.`CompanyID` 
 				WHERE 		b.`CompanyID` = e.`CompanyID`
-				AND 		b.`actualEndDateTime`
-				BETWEEN		c.`startDate`
-				AND			c.`endDate`
+				AND 		DATE(b.`actualEndDateTime`) >= c.`startDate`
+				AND 		DATE(b.`actualEndDateTime`) < c.`endDate`
 			)													AS MonthlyCompanyWideBookingTimeUsed,
 			(
 				SELECT 	IFNULL(cc.`altMinuteAmount`, cr.`minuteAmount`)
@@ -544,9 +543,8 @@ SELECT 		c.`companyID` 										AS CompanyID,
 				INNER JOIN 	`company` c 
 				ON 			b.`CompanyID` = c.`CompanyID` 
 				WHERE 		b.`CompanyID` = 2
-				AND 		b.`actualEndDateTime`
-				BETWEEN		c.`prevStartDate`
-				AND			c.`startDate`
+				AND 		DATE(b.`actualEndDateTime`) >= c.`prevStartDate`
+				AND 		DATE(b.`actualEndDateTime`) < c.`startDate`
 			)   												AS PreviousMonthCompanyWideBookingTimeUsed,           
 			(
 				SELECT (BIG_SEC_TO_TIME(SUM(
@@ -594,9 +592,8 @@ SELECT 		c.`companyID` 										AS CompanyID,
 				INNER JOIN 	`company` c 
 				ON 			b.`CompanyID` = c.`CompanyID` 
 				WHERE 		b.`CompanyID` = 2
-				AND 		b.`actualEndDateTime`
-				BETWEEN		c.`startDate`
-				AND			c.`endDate`
+				AND 		DATE(b.`actualEndDateTime`) >= c.`startDate`
+				AND 		DATE(b.`actualEndDateTime`) < c.`endDate`
 			)													AS MonthlyCompanyWideBookingTimeUsed,
 			(
 				SELECT (BIG_SEC_TO_TIME(SUM(
@@ -1350,9 +1347,8 @@ SELECT 		c.`companyID` 										AS CompID,
 				INNER JOIN 	`company` c 
 				ON 			b.`CompanyID` = c.`CompanyID` 
 				WHERE 		b.`CompanyID` = CompID
-				AND 		b.`actualEndDateTime`
-				BETWEEN		c.`prevStartDate`
-				AND			c.`startDate`
+				AND 		DATE(b.`actualEndDateTime`) >= c.`prevStartDate`
+				AND 		DATE(b.`actualEndDateTime`) < c.`startDate`
 			)   												AS PreviousMonthCompanyWideBookingTimeUsed,           
 			(
 				SELECT (BIG_SEC_TO_TIME(SUM(
@@ -1400,9 +1396,8 @@ SELECT 		c.`companyID` 										AS CompID,
 				INNER JOIN 	`company` c 
 				ON 			b.`CompanyID` = c.`CompanyID` 
 				WHERE 		b.`CompanyID` = CompID
-				AND 		b.`actualEndDateTime`
-				BETWEEN		c.`startDate`
-				AND			c.`endDate`
+				AND 		DATE(b.`actualEndDateTime`) >= c.`startDate`
+				AND 		DATE(b.`actualEndDateTime`) < c.`endDate`
 			)													AS MonthlyCompanyWideBookingTimeUsed,
    						(
 				SELECT (BIG_SEC_TO_TIME(SUM(
@@ -1541,9 +1536,8 @@ FROM 		`booking` b
 WHERE   	b.`CompanyID` = 2
 AND 		b.`actualEndDateTime` IS NOT NULL
 AND     	b.`dateTimeCancelled` IS NULL
-AND         b.`actualEndDateTime`
-BETWEEN	    '2017-03-15'
-AND			'2017-06-15';
+AND         DATE(b.`actualEndDateTime`) >= '2017-03-15'
+AND         DATE(b.`actualEndDateTime`) < '2017-06-15';
 
 SELECT 		(
 				BIG_SEC_TO_TIME(
@@ -1617,9 +1611,8 @@ ON			m.`meetingRoomID` = b.`meetingRoomID`
 WHERE   	b.`CompanyID` = 2
 AND 		b.`actualEndDateTime` IS NOT NULL
 AND     	b.`dateTimeCancelled` IS NULL
-AND         b.`actualEndDateTime`
-BETWEEN	    '2017-03-15'
-AND			'2017-06-15';
+AND         DATE(b.`actualEndDateTime`) >= '2017-03-15'
+AND         DATE(b.`actualEndDateTime`) < '2017-06-15';
 
 SELECT 		b.`userID`										AS BookedUserID,
 			b.`bookingID`,
@@ -1978,9 +1971,8 @@ FROM (
 				),0))
 			FROM 		`booking` b
 			WHERE 		b.`CompanyID` = 2
-			AND 		b.`actualEndDateTime`
-			BETWEEN		cch.`startDate`
-			AND			cch.`endDate`
+			AND 		DATE(b.`actualEndDateTime`) >= cch.`startDate`
+			AND 		DATE(b.`actualEndDateTime`) < cch.`endDate`
 			)												AS BookingTimeChargedInSeconds
 		FROM 		`companycreditshistory` cch
 		INNER JOIN	`companycredits` cc
@@ -2021,9 +2013,8 @@ INNER JOIN (
 				INNER JOIN 	`company` c 
 				ON 			b.`CompanyID` = c.`CompanyID`
 				WHERE		b.`CompanyID` = 2
-				AND 		b.`actualEndDateTime`
-				BETWEEN		c.`startDate`
-				AND			c.`endDate`
+				AND 		DATE(b.`actualEndDateTime`) >= c.`startDate`
+				AND 		DATE(b.`actualEndDateTime`) < c.`endDate`
 				GROUP BY 	b.`bookingID`
 			) AS SummedBookingTime
 WHERE b.`CompanyID` = 2
@@ -2086,10 +2077,8 @@ FROM 		`booking` b
 INNER JOIN 	`company` c 
 ON 			b.`CompanyID` = c.`CompanyID` 
 WHERE 		b.`CompanyID` = 2
-AND 		b.`actualEndDateTime`
-BETWEEN		c.`startDate`
-AND			c.`endDate`;
-
+AND 		DATE(b.`actualEndDateTime`) >= c.`startDate`
+AND 		DATE(b.`actualEndDateTime`) < c.`endDate`;
 
 SELECT 	(
 		SUM(
@@ -2106,9 +2095,8 @@ FROM 		`booking` b
 INNER JOIN 	`company` c 
 ON 			b.`CompanyID` = c.`CompanyID` 
 WHERE 		b.`CompanyID` = 2
-AND 		b.`actualEndDateTime`
-BETWEEN		c.`startDate`
-AND			c.`endDate`;
+AND 		DATE(b.`actualEndDateTime`) >= c.`startDate`
+AND 		DATE(b.`actualEndDateTime`) < c.`endDate`;
 
 SELECT *,(
 		BIG_SEC_TO_TIME(
@@ -2127,9 +2115,8 @@ FROM 		`booking` b
 INNER JOIN 	`company` c 
 ON 			b.`CompanyID` = c.`CompanyID` 
 WHERE 		b.`CompanyID` = 2
-AND 		b.`actualEndDateTime`
-BETWEEN		c.`startDate`
-AND			c.`endDate`
+AND 		DATE(b.`actualEndDateTime`) >= c.`startDate`
+AND 		DATE(b.`actualEndDateTime`) < c.`endDate`
 GROUP BY 	b.`bookingID`;
 
 
@@ -2218,9 +2205,8 @@ SELECT 		c.`CompanyID`			AS TheCompanyID,
 				INNER JOIN 	`company` c 
 				ON 			b.`CompanyID` = c.`CompanyID` 
 				WHERE 		b.`CompanyID` = TheCompanyID
-				AND 		b.`actualEndDateTime`
-				BETWEEN		c.`startDate`
-				AND			c.`endDate`
+				AND 		DATE(b.`actualEndDateTime`) >= c.`startDate`
+				AND 		DATE(b.`actualEndDateTime`) < c.`endDate`
             )	AS BookingTimeThisPeriod
 FROM 		`company` c
 INNER JOIN 	`companycredits` cc
@@ -2311,9 +2297,8 @@ ON			m.`meetingRoomID` = b.`meetingRoomID`
 WHERE   	b.`CompanyID` = 2
 AND 		b.`actualEndDateTime` IS NOT NULL
 AND     	b.`dateTimeCancelled` IS NULL
-AND         b.`actualEndDateTime`
-BETWEEN	    c.`startDate`
-AND			c.`endDate`;
+AND         DATE(b.`actualEndDateTime`) >=  c.`startDate`
+AND         DATE(b.`actualEndDateTime`) <  c.`endDate`;
 
 SELECT 	u.`userID`					AS UsrID,
 		c.`companyID`				AS TheCompanyID,
@@ -2342,9 +2327,8 @@ SELECT 	u.`userID`					AS UsrID,
 			AND 		b.`userID` IS NOT NULL
 			AND			b.`userID` NOT IN (SELECT `userID` FROM `employee` WHERE `CompanyID` = 2)
 			AND 		b.`userID` = UsrID
-			AND 		b.`actualEndDateTime`
-			BETWEEN		c.`prevStartDate`
-			AND			c.`startDate`
+			AND 		DATE(b.`actualEndDateTime`) >= c.`prevStartDate`
+			AND 		DATE(b.`actualEndDateTime`) < c.`startDate`
 		)														AS PreviousMonthBookingTimeUsed,						
 		(
 			SELECT 	(
@@ -2367,9 +2351,8 @@ SELECT 	u.`userID`					AS UsrID,
 			AND 		b.`userID` IS NOT NULL
             AND			b.`userID` NOT IN (SELECT `userID` FROM employee WHERE `CompanyID` = 2)
 			AND 		b.`userID` = UsrID
-			AND 		b.`actualEndDateTime`
-			BETWEEN		c.`startDate`
-			AND			c.`endDate`
+			AND 		DATE(b.`actualEndDateTime`) >= c.`startDate`
+			AND 		DATE(b.`actualEndDateTime`) < c.`endDate`
 		)														AS MonthlyBookingTimeUsed,
 		(
 			SELECT 	(

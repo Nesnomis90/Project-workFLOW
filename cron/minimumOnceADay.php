@@ -147,9 +147,8 @@ function updateBillingDatesForCompanies(){
 									INNER JOIN 	`company` c 
 									ON 			b.`CompanyID` = c.`CompanyID` 
 									WHERE 		b.`CompanyID` = TheCompanyID
-									AND 		b.`actualEndDateTime`
-									BETWEEN		c.`startDate`
-									AND			c.`endDate`
+									AND 		DATE(b.`actualEndDateTime`) >= c.`startDate`
+									AND 		DATE(b.`actualEndDateTime`) < c.`endDate`
 								)							AS BookingTimeThisPeriod								
 					FROM 		`company` c
 					INNER JOIN 	`companycredits` cc

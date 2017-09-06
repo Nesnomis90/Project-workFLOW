@@ -121,9 +121,8 @@ function sumUpUnbilledPeriods($pdo, $companyID){
 									),0))
 									FROM 		`booking` b
 									WHERE 		b.`CompanyID` = :CompanyID
-									AND 		b.`actualEndDateTime`
-									BETWEEN		cch.`startDate`
-									AND			cch.`endDate`
+									AND 		DATE(b.`actualEndDateTime`) >= cch.`startDate`
+									AND			DATE(b.`actualEndDateTime`) < cch.`endDate`
 								)										AS BookingTimeChargedInSeconds
 							FROM 		`companycreditshistory` cch
 							INNER JOIN	`companycredits` cc
@@ -209,9 +208,8 @@ function sumUpUnbilledPeriods($pdo, $companyID){
 									),0))
 									FROM 		`booking` b
 									WHERE 		b.`CompanyID` = :CompanyID
-									AND 		b.`actualEndDateTime`
-									BETWEEN		cch.`startDate`
-									AND			cch.`endDate`
+									AND 		DATE(b.`actualEndDateTime`) >= cch.`startDate`
+									AND 		DATE(b.`actualEndDateTime`) < cch.`endDate`
 								)										AS BookingTimeChargedInSeconds
 							FROM 		`companycreditshistory` cch
 							INNER JOIN	`companycredits` cc
@@ -423,9 +421,8 @@ function calculatePeriodInformation($pdo, $companyID, $BillingStart, $BillingEnd
 			FROM 		`booking` b
 			WHERE   	b.`CompanyID` = :CompanyID
 			AND 		b.`actualEndDateTime` IS NOT NULL
-			AND         b.`actualEndDateTime`
-			BETWEEN	    :startDate
-			AND			:endDate";
+			AND         DATE(b.`actualEndDateTime`) >= :startDate
+			AND         DATE(b.`actualEndDateTime`) < :endDate";
 
 	$minimumSecondsPerBooking = MINIMUM_BOOKING_DURATION_IN_MINUTES_USED_IN_PRICE_CALCULATIONS * 60; // e.g. 15min = 900s
 	$aboveThisManySecondsToCount = BOOKING_DURATION_IN_MINUTES_USED_BEFORE_INCLUDING_IN_PRICE_CALCULATIONS * 60; // e.g. 1min = 60s
@@ -1990,9 +1987,8 @@ try
 							INNER JOIN 	`company` c 
 							ON 			b.`CompanyID` = c.`CompanyID` 
 							WHERE 		b.`CompanyID` = CompID
-							AND 		b.`actualEndDateTime`
-							BETWEEN		c.`prevStartDate`
-							AND			c.`startDate`
+							AND 		DATE(b.`actualEndDateTime`) >= c.`prevStartDate`
+							AND 		DATE(b.`actualEndDateTime`) < c.`startDate`
 						)   												AS PreviousMonthCompanyWideBookingTimeUsed,           
 						(
 							SELECT (BIG_SEC_TO_TIME(SUM(
@@ -2040,9 +2036,8 @@ try
 							INNER JOIN 	`company` c 
 							ON 			b.`CompanyID` = c.`CompanyID` 
 							WHERE 		b.`CompanyID` = CompID
-							AND 		b.`actualEndDateTime`
-							BETWEEN		c.`startDate`
-							AND			c.`endDate`
+							AND 		DATE(b.`actualEndDateTime`) >= c.`startDate`
+							AND 		DATE(b.`actualEndDateTime`) < c.`endDate`
 						)													AS MonthlyCompanyWideBookingTimeUsed,
 						(
 							SELECT (BIG_SEC_TO_TIME(SUM(
