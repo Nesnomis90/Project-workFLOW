@@ -154,7 +154,10 @@ table caption {
 	font-size: 120%;
 }	
 	
-.warning{color: red;}
+.warning{
+	white-space: pre-wrap;
+	color: red;
+}
 
 .fillOut{
 	border-style: groove;

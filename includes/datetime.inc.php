@@ -21,8 +21,22 @@ function convertDatetimeToFormat($oldDatetimeString, $oldformat, $format){
 	}
 }
 
-function getPeriodDatesForCompanyFromDateSubmitted($dayNumberToKeep, $selectedDate, $companyStartDate, $companyEndDate){
+function getPeriodIntervalNumberFromDateSubmitted($dayNumberToKeep, $startDate, $endDate){
+	$intervalNumber = 0;
+	$nextPeriodEnd = addOneMonthToPeriodDate($dayNumberToKeep, $startDate);
 
+	while($nextPeriodEnd < $endDate){
+		$intervalNumber += 1;
+		$nextPeriodEnd = addOneMonthToPeriodDate($dayNumberToKeep, $nextPeriodEnd);
+	}
+
+	if($nextPeriodEnd == $endDate){
+		$intervalNumber += 1;
+	}
+	return $intervalNumber;
+}
+
+function getPeriodDatesForCompanyFromDateSubmitted($dayNumberToKeep, $selectedDate, $companyStartDate, $companyEndDate){
 	if($selectedDate >= $companyStartDate){
 		// Selected date is a valid period date
 		if($selectedDate <= $companyEndDate){
@@ -40,8 +54,9 @@ function getPeriodDatesForCompanyFromDateSubmitted($dayNumberToKeep, $selectedDa
 	}
 }
 
-// We add one month were possible. For months, like february, we have to adjust our date
+// We add one "month" as we have defined for our period information. For months, like february, we have to adjust our date
 function addOneMonthToPeriodDate($dayNumberToKeep, $date){
+	date_default_timezone_set(DATE_DEFAULT_TIMEZONE);
 	$newDate = DateTime::createFromFormat("Y-m-d", $date);
 	$newDateCheck = DateTime::createFromFormat("Y-m-d", $date);
 	$dayOnly = $newDate->format("d");
@@ -58,6 +73,27 @@ function addOneMonthToPeriodDate($dayNumberToKeep, $date){
 	} else {
 		return $newDate;
 	}
+}
+
+// We remove one "month" as we have defined for our period information. For months, like february, we have to adjust our date
+function removeOneMonthFromPeriodDate($dayNumberToKeep, $date){
+	date_default_timezone_set(DATE_DEFAULT_TIMEZONE);
+	$newDate = DateTime::createFromFormat("Y-m-d", $date);
+	$newDateCheck = DateTime::createFromFormat("Y-m-d", $date);
+	$dayOnly = $newDate->format("d");
+	if($dayOnly < $dayNumberToKeep){
+		$dayOnly = $dayNumberToKeep;
+	}
+	$newDate->modify('first day of last month');
+	$newDate->modify('+ ' . ($dayOnly - 1) . 'days');
+	$newDateCheck->modify('last day of last month');
+	$newDate = $newDate->format("Y-m-d");
+	$newDateCheck = $newDateCheck->format("Y-m-d");
+	if($newDate > $newDateCheck){
+		return $newDateCheck;
+	} else {
+		return $newDate;
+	}	
 }
 
 function getDateTimeFromTimeDayNameWeekNumberAndYear($time,$day,$week,$year){
@@ -197,7 +233,7 @@ function getNextValidBookingEndTime($startTimeString){
 }
 
 // Function to get the current datetime in MySQL format
-function getDatetimeNow() {
+function getDatetimeNow(){
 	// We use the same format as used in MySQL
 	// yyyy-mm-dd hh:mm:ss
 	date_default_timezone_set(DATE_DEFAULT_TIMEZONE);
@@ -213,7 +249,7 @@ function getDatetimeNowInDisplayFormat(){
 }
 
 // Function to get the current date
-function getDateNow() {
+function getDateNow(){
 	// We use the same format as used in MySQL
 	// yyyy-mm-dd
 	date_default_timezone_set(DATE_DEFAULT_TIMEZONE);
@@ -222,7 +258,7 @@ function getDateNow() {
 }
 
 // Function to get the current time
-function getTimeNow() {
+function getTimeNow(){
 	// We use the same format as used in MySQL
 	// yyyy-mm-dd
 	date_default_timezone_set(DATE_DEFAULT_TIMEZONE);

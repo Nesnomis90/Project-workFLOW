@@ -815,6 +815,7 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Edit') OR
 		$pdo = connect_to_db();
 		$sql = 'SELECT		c.`companyID`,
 							c.`name` 					AS companyName,
+							c.`dateTimeCreated`,
 							c.`startDate`,
 							c.`endDate`,
 							(
@@ -863,9 +864,8 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Edit') OR
 								INNER JOIN 	`company` c 
 								ON 			b.`CompanyID` = c.`CompanyID` 
 								WHERE 		b.`CompanyID` = e.`CompanyID`
-								AND 		b.`actualEndDateTime`
-								BETWEEN		c.`startDate`
-								AND			c.`endDate`
+								AND 		DATE(b.`actualEndDateTime`) >= c.`startDate`
+								AND			DATE(b.`actualEndDateTime`) < c.`endDate`
 							)													AS MonthlyCompanyWideBookingTimeUsed,
 															(
 								SELECT (BIG_SEC_TO_TIME(SUM(
@@ -915,9 +915,8 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Edit') OR
 								WHERE 		b.`CompanyID` = e.`CompanyID`
 								AND 		b.`actualEndDateTime` IS NULL
 								AND			b.`dateTimeCancelled` IS NULL
-								AND			b.`endDateTime`
-								BETWEEN		c.`startDate`
-								AND			c.`endDate`
+								AND			DATE(b.`endDateTime`) >= c.`startDate`
+								AND			DATE(b.`endDateTime`) < c.`endDate`
 							)													AS PotentialExtraMonthlyCompanyWideBookingTimeUsed,
 							(
 								SELECT 	IFNULL(cc.`altMinuteAmount`, cr.`minuteAmount`)
@@ -1037,6 +1036,7 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Edit') OR
 			$company[] = array(
 								'companyID' => $row['companyID'],
 								'companyName' => $row['companyName'],
+								'dateTimeCreated' => $row['dateTimeCreated'],
 								'startDate' => $row['startDate'],
 								'endDate' => $displayEndDate,
 								'creditsGiven' => $companyMinuteCredits,
@@ -1054,7 +1054,7 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Edit') OR
 		// are connected to more than 1 company.
 		// If not we just store the companyID in a hidden form field
 		if(isSet($company)){
-			if (sizeOf($company)>1){
+			if(sizeOf($company)>1){
 				// User is in multiple companies
 
 				$_SESSION['EditBookingDisplayCompanySelect'] = TRUE;
@@ -1799,6 +1799,7 @@ if( (isSet($_POST['edit']) AND $_POST['edit'] == "Finish Edit") OR
 			foreach($_SESSION['EditBookingCompanyArray'] AS $company){
 				if($companyID == $company['companyID']){
 					$companyName = $company['companyName'];
+					$companyCreationDate = $company['dateTimeCreated'];
 					$companyCreditsRemaining = $company['creditsRemaining'];
 					$companyCreditsBooked = $company['PotentialExtraMonthlyTimeUsed'];
 					$companyCreditsPotentialMinimumRemaining = $company['PotentialCreditsRemaining'];
@@ -1845,7 +1846,8 @@ if( (isSet($_POST['edit']) AND $_POST['edit'] == "Finish Edit") OR
 			} else {
 				$newPeriod = TRUE;
 				// Get exact period the user is booking for
-				$newDate = DateTime::createFromFormat("Y-m-d", $companyPeriodEndDate);
+				date_default_timezone_set(DATE_DEFAULT_TIMEZONE);
+				$newDate = DateTime::createFromFormat("Y-m-d H:i:s", $companyCreationDate);
 				$dayNumberToKeep = $newDate->format("d");
 
 				list($newCompanyPeriodStart, $newCompanyPeriodEnd) = getPeriodDatesForCompanyFromDateSubmitted($dayNumberToKeep, $dateOnlyEndDate, $companyPeriodStartDate, $companyPeriodEndDate);
@@ -1903,24 +1905,21 @@ if( (isSet($_POST['edit']) AND $_POST['edit'] == "Finish Edit") OR
 							)))	AS PotentialBookingTimeUsed
 							FROM 		`booking` b 
 							WHERE 		b.`CompanyID` = :companyID
-							AND 		b.`endDateTime`
-							BETWEEN		:newStartPeriod
-							AND			:newEndPeriod
+							AND 		DATE(b.`endDateTime`) >= :newStartPeriod
+							AND			DATE(b.`endDateTime`) < :newEndPeriod
 							AND 		b.`actualEndDateTime` IS NULL
 							AND			b.`dateTimeCancelled` IS NULL
 							AND			b.`bookingID` <> :bookingID';
 					$minimumSecondsPerBooking = MINIMUM_BOOKING_DURATION_IN_MINUTES_USED_IN_PRICE_CALCULATIONS * 60; // e.g. 15min = 900s
 					$aboveThisManySecondsToCount = BOOKING_DURATION_IN_MINUTES_USED_BEFORE_INCLUDING_IN_PRICE_CALCULATIONS * 60; // E.g. 1min = 60s	
-					$newCompanyPeriodStartAsDateTime = convertDatetimeToFormat($newCompanyPeriodStart, "Y-m-d", "Y-m-d H:i:s");
-					$newCompanyPeriodEndAsDateTime = convertDatetimeToFormat($newCompanyPeriodEnd, "Y-m-d", "Y-m-d H:i:s");
 
 					$s = $pdo->prepare($sql);
 					$s->bindValue(':companyID', $companyID);
 					$s->bindValue(':bookingID', $bookingID);
 					$s->bindValue(':minimumSecondsPerBooking', $minimumSecondsPerBooking);
 					$s->bindValue(':aboveThisManySecondsToCount', $aboveThisManySecondsToCount);
-					$s->bindValue(':newStartPeriod', $newCompanyPeriodStartAsDateTime);
-					$s->bindValue(':newEndPeriod', $newCompanyPeriodEndAsDateTime);
+					$s->bindValue(':newStartPeriod', $newCompanyPeriodStart);
+					$s->bindValue(':newEndPeriod', $newCompanyPeriodEnd);
 					$s->execute();
 					$row = $s->fetch(PDO::FETCH_ASSOC);
 
@@ -2456,6 +2455,7 @@ if (	(isSet($_POST['action']) AND $_POST['action'] == "Create Booking") OR
 			$pdo = connect_to_db();
 			$sql = 'SELECT		c.`companyID`,
 								c.`name` 					AS companyName,
+								c.`dateTimeCreated`,
 								c.`startDate`,
 								c.`endDate`,
 								(
@@ -2504,9 +2504,8 @@ if (	(isSet($_POST['action']) AND $_POST['action'] == "Create Booking") OR
 									INNER JOIN 	`company` c 
 									ON 			b.`CompanyID` = c.`CompanyID` 
 									WHERE 		b.`CompanyID` = e.`CompanyID`
-									AND 		b.`actualEndDateTime`
-									BETWEEN		c.`startDate`
-									AND			c.`endDate`
+									AND			DATE(b.`actualEndDateTime`) >= c.`startDate`
+									AND			DATE(b.`actualEndDateTime`) < c.`endDate`
 								)													AS MonthlyCompanyWideBookingTimeUsed,
 																(
 									SELECT (BIG_SEC_TO_TIME(SUM(
@@ -2556,9 +2555,8 @@ if (	(isSet($_POST['action']) AND $_POST['action'] == "Create Booking") OR
 									WHERE 		b.`CompanyID` = e.`CompanyID`
 									AND 		b.`actualEndDateTime` IS NULL
 									AND			b.`dateTimeCancelled` IS NULL
-									AND			b.`endDateTime`
-									BETWEEN		c.`startDate`
-									AND			c.`endDate`
+									AND			DATE(b.`endDateTime`) >= c.`startDate`
+									AND			DATE(b.`endDateTime`) < c.`endDate`
 								)													AS PotentialExtraMonthlyCompanyWideBookingTimeUsed,
 								(
 									SELECT 		IFNULL(cc.`altMinuteAmount`, cr.`minuteAmount`)
@@ -2678,6 +2676,7 @@ if (	(isSet($_POST['action']) AND $_POST['action'] == "Create Booking") OR
 				$company[] = array(
 									'companyID' => $row['companyID'],
 									'companyName' => $row['companyName'],
+									'dateTimeCreated' => $row['dateTimeCreated'],
 									'startDate' => $row['startDate'],
 									'endDate' => $displayEndDate,
 									'creditsGiven' => $companyMinuteCredits,
@@ -3087,6 +3086,7 @@ if ((isSet($_POST['add']) AND $_POST['add'] == "Add Booking") OR
 		foreach($_SESSION['AddBookingCompanyArray'] AS $company){
 			if($companyID == $company['companyID']){
 				$companyName = $company['companyName'];
+				$companyCreationDate = $company['dateTimeCreated'];
 				$companyCreditsRemaining = $company['creditsRemaining'];
 				$companyCreditsBooked = $company['PotentialExtraMonthlyTimeUsed'];
 				$companyCreditsPotentialMinimumRemaining = $company['PotentialCreditsRemaining'];
@@ -3124,9 +3124,10 @@ if ((isSet($_POST['add']) AND $_POST['add'] == "Add Booking") OR
 	} else {
 		$newPeriod = TRUE;
 		// Get exact period the user is booking for
-		$newDate = DateTime::createFromFormat("Y-m-d", $companyPeriodEndDate);
+		date_default_timezone_set(DATE_DEFAULT_TIMEZONE);
+		$newDate = DateTime::createFromFormat("Y-m-d H:i:s", $companyCreationDate);
 		$dayNumberToKeep = $newDate->format("d");
-		
+
 		list($newCompanyPeriodStart, $newCompanyPeriodEnd) = getPeriodDatesForCompanyFromDateSubmitted($dayNumberToKeep, $dateOnlyEndDate, $companyPeriodStartDate, $companyPeriodEndDate);
 
 		// For displaying the new period dates
@@ -3182,22 +3183,19 @@ if ((isSet($_POST['add']) AND $_POST['add'] == "Add Booking") OR
 					)))	AS PotentialBookingTimeUsed
 					FROM 		`booking` b 
 					WHERE 		b.`CompanyID` = :companyID
-					AND 		b.`endDateTime`
-					BETWEEN		:newStartPeriod
-					AND			:newEndPeriod
+					AND 		DATE(b.`endDateTime`) >= :newStartPeriod
+					AND			DATE(b.`endDateTime`) < :newEndPeriod
 					AND 		b.`actualEndDateTime` IS NULL
 					AND			b.`dateTimeCancelled` IS NULL';
 			$minimumSecondsPerBooking = MINIMUM_BOOKING_DURATION_IN_MINUTES_USED_IN_PRICE_CALCULATIONS * 60; // e.g. 15min = 900s
 			$aboveThisManySecondsToCount = BOOKING_DURATION_IN_MINUTES_USED_BEFORE_INCLUDING_IN_PRICE_CALCULATIONS * 60; // E.g. 1min = 60s	
-			$newCompanyPeriodStartAsDateTime = convertDatetimeToFormat($newCompanyPeriodStart, "Y-m-d", "Y-m-d H:i:s");
-			$newCompanyPeriodEndAsDateTime = convertDatetimeToFormat($newCompanyPeriodEnd, "Y-m-d", "Y-m-d H:i:s");
 
 			$s = $pdo->prepare($sql);
 			$s->bindValue(':companyID', $companyID);
 			$s->bindValue(':minimumSecondsPerBooking', $minimumSecondsPerBooking);
 			$s->bindValue(':aboveThisManySecondsToCount', $aboveThisManySecondsToCount);
-			$s->bindValue(':newStartPeriod', $newCompanyPeriodStartAsDateTime);
-			$s->bindValue(':newEndPeriod', $newCompanyPeriodEndAsDateTime);
+			$s->bindValue(':newStartPeriod', $newCompanyPeriodStart);
+			$s->bindValue(':newEndPeriod', $newCompanyPeriodEnd);
 			$s->execute();
 			$row = $s->fetch(PDO::FETCH_ASSOC);
 

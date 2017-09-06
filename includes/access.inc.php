@@ -122,7 +122,29 @@ function userIsLoggedIn(){
 function checkIfUserIsLoggedIn(){
 
 	// If user is trying to log in
-	if (isSet($_POST['action']) and $_POST['action'] == 'login'){
+	if(isSet($_POST['action']) and $_POST['action'] == 'login'){
+
+		if(isSet($_SESSION['wrongLoginAttempts'], $_SESSION['loginBlocked'])){
+			$dateTimeNow = getDatetimeNow();
+			$dateTimeBlocked = end($_SESSION['wrongLoginAttempts']);
+			$timoutInMinutes = convertTwoDateTimesToTimeDifferenceInMinutes($dateTimeBlocked, $dateTimeNow);
+
+			if($timoutInMinutes >= WRONG_LOGIN_GUESS_TIMEOUT_IN_MINUTES){
+				unset($_SESSION['wrongLoginAttempts']);
+				unset($_SESSION['loginBlocked']);
+			} else {
+				$timeoutLeft = WRONG_LOGIN_GUESS_TIMEOUT_IN_MINUTES - $timoutInMinutes;
+			}
+		}
+
+		if(isSet($_SESSION['loginBlocked'])){
+			if($timeoutLeft > 0){
+				$_SESSION['loginError'] = "You are not allowed to attempt a login for another $timeoutLeft minute(s).";
+			} else {
+				$_SESSION['loginError'] = "You are not allowed to attempt a login for another minute.";
+			}
+			return FALSE;
+		}
 
 		if(isSet($_POST['email']) AND $_POST['email'] != ""){
 			// Remember email if it's filled in. Retyping an email is the most annoying thing in the world.
@@ -170,24 +192,38 @@ function checkIfUserIsLoggedIn(){
 			// We're not a local device if we can log in
 			resetLocalDevice();
 
+			unset($_SESSION['wrongLoginAttempts']);
+			unset($_SESSION['loginBlocked']);
 			unset($_SESSION['DatabaseContainsUserID']);
 			unset($_SESSION['DatabaseContainsUserName']);
 			unset($_SESSION['loginEmailSubmitted']);
 			return TRUE;
 		} else {
 			// Wrong log in info.
-			// Or user data has changed since last check
-			// Meaning the login data isn't correct anymore
-			// So we log out a user if previously logged in
 			unset($_SESSION['loggedIn']);
 			unset($_SESSION['email']);
 			unset($_SESSION['password']);
 			unset($_SESSION['LoggedInUserID']);
 			unset($_SESSION['LoggedInUserName']);
-			
-			// TO-DO: Track # of wrong login attempts and limit login if too high.
 
-			$_SESSION['loginError'] = 'The specified email address or password was incorrect.';
+			// Track # of wrong login attempts and limit login if too high.
+			$_SESSION['wrongLoginAttempts'][] = getDatetimeNow();
+
+			if(sizeOf($_SESSION['wrongLoginAttempts']) >= MAXIMUM_WRONG_LOGIN_GUESSES){
+				$_SESSION['loginBlocked'] = TRUE;
+			}
+			$attemptsSoFar = sizeOf($_SESSION['wrongLoginAttempts']);
+			$attemptsRemaining = MAXIMUM_WRONG_LOGIN_GUESSES - $attemptsSoFar;
+			$timeoutDurationInMinutes = WRONG_LOGIN_GUESS_TIMEOUT_IN_MINUTES;
+			if($attemptsRemaining == 2){
+				$_SESSION['loginError'] = "The specified email address or password was incorrect.\nYou have 2 attempts left to insert the correct login information.";
+			} elseif($attemptsRemaining == 1){
+				$_SESSION['loginError'] = "The specified email address or password was incorrect.\nYou have 1 attempt left to insert the correct login information.";
+			} elseif($attemptsRemaining == 0){
+				$_SESSION['loginError'] = "The specified email address or password was incorrect.\nYou are now unable to log in for $timeoutDurationInMinutes minutes.";
+			} else {
+				$_SESSION['loginError'] = "The specified email address or password was incorrect.";
+			}
 			return FALSE;
 		}
 	}
@@ -197,8 +233,8 @@ function checkIfUserIsLoggedIn(){
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/forgottenpassword.html.php';
 		exit();
 	}
-	
-	//
+
+	// If user has set their new password
 	if(isSet($_POST['action']) AND $_POST['action'] == "requestPassword"){
 		if(isSet($_POST['email']) AND $_POST['email'] != ""){
 			// Remember email if it's filled in. Retyping an email is the most annoying thing in the world.
@@ -258,7 +294,7 @@ function checkIfUserIsLoggedIn(){
 					$_SESSION['forgottenPasswordError'] .= "\nThis is the email msg we're sending out:\n$emailMessage\nSent to email: $email."; // TO-DO: Remove before uploading
 
 					include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/forgottenpassword.html.php';
-					exit();					
+					exit();
 				} else {
 					$_SESSION['forgottenPasswordError'] = "Email submitted does not belong to a user.";
 					include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/forgottenpassword.html.php';

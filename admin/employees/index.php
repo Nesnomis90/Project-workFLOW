@@ -1103,9 +1103,8 @@ if(isSet($_GET['Company'])){
 							WHERE 		b.`userID` = UsrID
 							AND 		b.`companyID` = :CompanyID
 							AND 		c.`CompanyID` = b.`companyID`
-							AND 		b.`actualEndDateTime`
-							BETWEEN		c.`prevStartDate`
-							AND			c.`startDate`
+							AND 		DATE(b.`actualEndDateTime`) >= c.`prevStartDate`
+							AND 		DATE(b.`actualEndDateTime`) < c.`startDate`
 						) 							AS PreviousMonthBookingTimeUsed,						
 						(
 							SELECT (BIG_SEC_TO_TIME(SUM(
@@ -1159,9 +1158,8 @@ if(isSet($_GET['Company'])){
 							WHERE 		b.`userID` = UsrID
 							AND 		b.`companyID` = :CompanyID
 							AND 		c.`CompanyID` = b.`companyID`
-							AND 		b.`actualEndDateTime`
-							BETWEEN		c.`startDate`
-							AND			c.`endDate`
+							AND 		DATE(b.`actualEndDateTime`) >= c.`startDate`
+							AND 		DATE(b.`actualEndDateTime`) < c.`startDate`
 						) 							AS MonthlyBookingTimeUsed,
 						(
 							SELECT (BIG_SEC_TO_TIME(SUM(
@@ -1295,10 +1293,9 @@ if(isSet($_GET['Company'])){
 							AND 		b.`userID` IS NOT NULL
 							AND			b.`userID` NOT IN (SELECT `userID` FROM employee WHERE `CompanyID` = :CompanyID)
 							AND 		b.`userID` = UsrID
-							AND 		b.`actualEndDateTime`
-							BETWEEN		c.`prevStartDate`
-							AND			c.`startDate`
-						)														AS PreviousMonthBookingTimeUsed,						
+							AND 		DATE(b.`actualEndDateTime`) >= c.`prevStartDate`
+							AND 		DATE(b.`actualEndDateTime`) < c.`startDate`
+						)														AS PreviousMonthBookingTimeUsed,
 						(
 							SELECT (BIG_SEC_TO_TIME(SUM(
 													IF(
@@ -1348,9 +1345,8 @@ if(isSet($_GET['Company'])){
 							AND 		b.`userID` IS NOT NULL
 							AND			b.`userID` NOT IN (SELECT `userID` FROM employee WHERE `CompanyID` = :CompanyID)
 							AND 		b.`userID` = UsrID
-							AND 		b.`actualEndDateTime`
-							BETWEEN		c.`startDate`
-							AND			c.`endDate`
+							AND 		DATE(b.`actualEndDateTime`) >= c.`startDate`
+							AND 		DATE(b.`actualEndDateTime`) < c.`endDate`
 						)														AS MonthlyBookingTimeUsed,
 						(
 							SELECT (BIG_SEC_TO_TIME(SUM(
@@ -1473,10 +1469,9 @@ if(isSet($_GET['Company'])){
 							ON 			b.`CompanyID` = c.`CompanyID`
 							WHERE 		b.`companyID` = :CompanyID
 							AND 		b.`userID` IS NULL
-							AND 		b.`actualEndDateTime`
-							BETWEEN		c.`prevStartDate`
-							AND			c.`startDate`
-						)														AS PreviousMonthBookingTimeUsed,						
+							AND 		DATE(b.`actualEndDateTime`) >= c.`prevStartDate`
+							AND 		DATE(b.`actualEndDateTime`) < c.`startDate`
+						)														AS PreviousMonthBookingTimeUsed,
 						(
 							SELECT (BIG_SEC_TO_TIME(SUM(
 													IF(
@@ -1524,9 +1519,8 @@ if(isSet($_GET['Company'])){
 							ON 			b.`CompanyID` = c.`CompanyID`
 							WHERE 		b.`companyID` = :CompanyID
 							AND 		b.`userID` IS NULL
-							AND 		b.`actualEndDateTime`
-							BETWEEN		c.`startDate`
-							AND			c.`endDate`
+							AND 		DATE(b.`actualEndDateTime`) >= c.`startDate`
+							AND 		DATE(b.`actualEndDateTime`) < c.`endDate`
 						)														AS MonthlyBookingTimeUsed,
 						(
 							SELECT (BIG_SEC_TO_TIME(SUM(
@@ -1768,10 +1762,9 @@ if(!isSet($_GET['Company'])){
 								WHERE 		b.`userID` = UsrID
 								AND 		b.`companyID` = TheCompanyID
 								AND 		c.`CompanyID` = b.`companyID`
-								AND 		b.`actualEndDateTime`
-								BETWEEN		c.`prevStartDate`
-								AND			c.`startDate`
-							) 												AS PreviousMonthBookingTimeUsed,							
+								AND 		DATE(b.`actualEndDateTime`) >= c.`prevStartDate`
+								AND 		DATE(b.`actualEndDateTime`) < c.`startDate`
+							) 												AS PreviousMonthBookingTimeUsed,
 							(
 								SELECT (BIG_SEC_TO_TIME(SUM(
 														IF(
@@ -1824,9 +1817,8 @@ if(!isSet($_GET['Company'])){
 								WHERE 		b.`userID` = UsrID
 								AND 		b.`companyID` = TheCompanyID
 								AND 		c.`CompanyID` = b.`companyID`
-								AND 		b.`actualEndDateTime`
-								BETWEEN		c.`startDate`
-								AND			c.`endDate`
+								AND 		DATE(b.`actualEndDateTime`) >= c.`startDate`
+								AND 		DATE(b.`actualEndDateTime`) < c.`endDate`
 							) 												AS MonthlyBookingTimeUsed,
 							(
 								SELECT (BIG_SEC_TO_TIME(SUM(
