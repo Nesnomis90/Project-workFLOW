@@ -247,7 +247,7 @@ function getDatetimeNowInDisplayFormat(){
 }
 
 // Function to get the current date
-function getDateNow() {
+function getDateNow(){
 	// We use the same format as used in MySQL
 	// yyyy-mm-dd
 	date_default_timezone_set(DATE_DEFAULT_TIMEZONE);
@@ -256,7 +256,7 @@ function getDateNow() {
 }
 
 // Function to get the current time
-function getTimeNow() {
+function getTimeNow(){
 	// We use the same format as used in MySQL
 	// yyyy-mm-dd
 	date_default_timezone_set(DATE_DEFAULT_TIMEZONE);
