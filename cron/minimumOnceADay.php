@@ -213,11 +213,13 @@ function updateBillingDatesForCompanies(){
 				}
 				$pdo->exec($sql);
 				
-				$newDate = DateTime::createFromFormat("Y-m-d", $companyCreationDate);
+				// We want the system to always have a period from x day to x day of next month. 
+				// This doesn't work for all dates, due to February, so we manually set an appropriate date
+				// And return to the correct pattern again in March
+				$newDate = DateTime::createFromFormat("Y-m-d H:i:s", $companyCreationDate);
 				$dayNumberToKeep = $newDate->format("d");
 
-				$newEndDate = addOneMonthToPeriodDate($dayNumberToKeep, $endDate)
-				// TO-DO: Test if this works. Changed from + 1 month to adding a specific date we set ourselves based on day of creation.
+				$newEndDate = addOneMonthToPeriodDate($dayNumberToKeep, $endDate);
 				$sql = "UPDATE 	`company`
 						SET		`prevStartDate` = `startDate`,
 								`startDate` = `endDate`,
