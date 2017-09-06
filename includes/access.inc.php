@@ -200,9 +200,6 @@ function checkIfUserIsLoggedIn(){
 			return TRUE;
 		} else {
 			// Wrong log in info.
-			// Or user data has changed since last check
-			// Meaning the login data isn't correct anymore
-			// So we log out a user if previously logged in
 			unset($_SESSION['loggedIn']);
 			unset($_SESSION['email']);
 			unset($_SESSION['password']);
