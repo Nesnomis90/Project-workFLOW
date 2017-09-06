@@ -215,6 +215,7 @@ function updateBillingDatesForCompanies(){
 				// We want the system to always have a period from x day to x day of next month. 
 				// This doesn't work for all dates, due to February, so we manually set an appropriate date
 				// And return to the correct pattern again in March
+				date_default_timezone_set(DATE_DEFAULT_TIMEZONE);
 				$newDate = DateTime::createFromFormat("Y-m-d H:i:s", $companyCreationDate);
 				$dayNumberToKeep = $newDate->format("d");
 

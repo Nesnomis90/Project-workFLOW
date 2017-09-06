@@ -795,6 +795,7 @@ if (isSet($_POST['history']) AND $_POST['history'] == "Next Period"){
 	$CompanyName = $_SESSION['BookingHistoryCompanyInfo']['CompanyName'];		
 	$companyCreationDate = $_SESSION['BookingHistoryCompanyInfo']['CompanyDateCreated'];
 	$companyBillingDateEnd = $_SESSION['BookingHistoryCompanyInfo']['CompanyBillingDateEnd'];
+	date_default_timezone_set(DATE_DEFAULT_TIMEZONE);
 	$newDate = DateTime::createFromFormat("Y-m-d", $companyCreationDate);
 	$dayNumberToKeep = $newDate->format("d");
 
@@ -870,10 +871,12 @@ if (isSet($_POST['history']) AND $_POST['history'] == "Next Period"){
 if (	(isSet($_POST['history']) AND $_POST['history'] == "Previous Period") OR 
 		(isSet($_POST['history']) AND $_POST['history'] == "First Period")){
 
+	date_default_timezone_set(DATE_DEFAULT_TIMEZONE);	
 	// Get company information
 	$companyID = $_SESSION['BookingHistoryCompanyInfo']['CompanyID'];
 	$CompanyName = $_SESSION['BookingHistoryCompanyInfo']['CompanyName'];		
 	$companyCreationDate = $_SESSION['BookingHistoryCompanyInfo']['CompanyDateCreated'];
+	date_default_timezone_set(DATE_DEFAULT_TIMEZONE);
 	$newDate = DateTime::createFromFormat("Y-m-d", $companyCreationDate);
 	$dayNumberToKeep = $newDate->format("d");
 
@@ -1364,7 +1367,7 @@ if (isSet($_POST['action']) and $_POST['action'] == 'Confirm Merge'){
 			// This does not really work. Since it ruins booking history if it's accurate and makes no sense if we change it 
 			if($oldCreationDate < $newCreationDate){
 				
-				
+				date_default_timezone_set(DATE_DEFAULT_TIMEZONE);
 				$newDateTime = new DateTime::createFromFormat("Y-m-d H:i:s", $newCreationDate);
 				$dayFromNewCreationDate = $newDateTime->format("d");
 				$oldDateTime = new DateTime::createFromFormat("Y-m-d H:i:s", $oldCreationDate);
@@ -1673,6 +1676,7 @@ if (isSet($_POST['action']) AND $_POST['action'] == 'Add Company')
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 
 		$startPeriodDate = getDateNow();
+		date_default_timezone_set(DATE_DEFAULT_TIMEZONE);
 		$newDate = DateTime::createFromFormat("Y-m-d", $startPeriodDate);
 		$dayNumberToKeep = $newDate->format("d");
 		$endPeriodDate = addOneMonthToPeriodDate($dayNumberToKeep, $startPeriodDate);

@@ -1846,6 +1846,7 @@ if( (isSet($_POST['edit']) AND $_POST['edit'] == "Finish Edit") OR
 			} else {
 				$newPeriod = TRUE;
 				// Get exact period the user is booking for
+				date_default_timezone_set(DATE_DEFAULT_TIMEZONE);
 				$newDate = DateTime::createFromFormat("Y-m-d H:i:s", $companyCreationDate);
 				$dayNumberToKeep = $newDate->format("d");
 
@@ -3123,6 +3124,7 @@ if ((isSet($_POST['add']) AND $_POST['add'] == "Add Booking") OR
 	} else {
 		$newPeriod = TRUE;
 		// Get exact period the user is booking for
+		date_default_timezone_set(DATE_DEFAULT_TIMEZONE);
 		$newDate = DateTime::createFromFormat("Y-m-d H:i:s", $companyCreationDate);
 		$dayNumberToKeep = $newDate->format("d");
 

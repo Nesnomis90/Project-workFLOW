@@ -56,6 +56,7 @@ function getPeriodDatesForCompanyFromDateSubmitted($dayNumberToKeep, $selectedDa
 
 // We add one "month" as we have defined for our period information. For months, like february, we have to adjust our date
 function addOneMonthToPeriodDate($dayNumberToKeep, $date){
+	date_default_timezone_set(DATE_DEFAULT_TIMEZONE);
 	$newDate = DateTime::createFromFormat("Y-m-d", $date);
 	$newDateCheck = DateTime::createFromFormat("Y-m-d", $date);
 	$dayOnly = $newDate->format("d");
@@ -76,6 +77,7 @@ function addOneMonthToPeriodDate($dayNumberToKeep, $date){
 
 // We remove one "month" as we have defined for our period information. For months, like february, we have to adjust our date
 function removeOneMonthFromPeriodDate($dayNumberToKeep, $date){
+	date_default_timezone_set(DATE_DEFAULT_TIMEZONE);
 	$newDate = DateTime::createFromFormat("Y-m-d", $date);
 	$newDateCheck = DateTime::createFromFormat("Y-m-d", $date);
 	$dayOnly = $newDate->format("d");
