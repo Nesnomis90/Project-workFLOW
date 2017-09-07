@@ -1392,23 +1392,50 @@ if (isSet($_POST['action']) and $_POST['action'] == 'Confirm Merge'){
 					SET		`CompanyID` = :CompanyID2,
 							`adminNote` = CONCAT_WS("\n\n",`adminNote`, :mergeMessage),
 							`mergeNumber` = :CompanyID
-					WHERE	`CompanyID` = :CompanyID';
+					WHERE	`CompanyID` = :CompanyID
+					AND		`mergeNumber` = 0';
 			$s = $pdo->prepare($sql);
 			$s->bindValue(':mergeMessage', $mergeMessage);
 			$s->bindValue(':CompanyID', $_SESSION['MergeCompanySelectedCompanyID']);
 			$s->bindValue(':CompanyID2', $_SESSION['MergeCompanySelectedCompanyID2']);
 			$s->execute();
 
+			// Update previously merged bookings also
+			$sql = 'UPDATE 	`booking`
+					SET		`CompanyID` = :CompanyID2,
+							`adminNote` = CONCAT_WS("\n\n",`adminNote`, :mergeMessage)
+					WHERE	`CompanyID` = :CompanyID
+					AND		`mergeNumber` <> 0';
+			$s = $pdo->prepare($sql);
+			$s->bindValue(':mergeMessage', $mergeMessage);
+			$s->bindValue(':CompanyID', $_SESSION['MergeCompanySelectedCompanyID']);
+			$s->bindValue(':CompanyID2', $_SESSION['MergeCompanySelectedCompanyID2']);
+			$s->execute();			
+			
+			// Add the current credits as companycreditshistory for the old company, before transferring it to the new company
+				// TO-DO: 
+
 			// Update companycreditshistory to be a part of the new company, but mark it as a merged history.
 			$sql = 'UPDATE 	`companycreditshistory`
 					SET		`CompanyID` = :CompanyID2,
 							`mergeNumber` = :CompanyID
-					WHERE	`CompanyID` = :CompanyID';
+					WHERE	`CompanyID` = :CompanyID
+					AND		`mergeNumber` = 0';
 			$s = $pdo->prepare($sql);
 			$s->bindValue(':CompanyID', $_SESSION['MergeCompanySelectedCompanyID']);
 			$s->bindValue(':CompanyID2', $_SESSION['MergeCompanySelectedCompanyID2']);
 			$s->execute();
 
+			// Update previously merged companycreditshistory also
+			$sql = 'UPDATE 	`companycreditshistory`
+					SET		`CompanyID` = :CompanyID2
+					WHERE	`CompanyID` = :CompanyID
+					AND		`mergeNumber` <> 0';
+			$s = $pdo->prepare($sql);
+			$s->bindValue(':CompanyID', $_SESSION['MergeCompanySelectedCompanyID']);
+			$s->bindValue(':CompanyID2', $_SESSION['MergeCompanySelectedCompanyID2']);
+			$s->execute();
+			
 			// Deleting company will cascade to companycredits(, companycreditshistory) and employees.
 			$sql = 'DELETE FROM `company`
 					WHERE		`CompanyID` = :CompanyID';
