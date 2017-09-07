@@ -131,6 +131,7 @@ function sumUpUnbilledPeriods($pdo, $companyID){
 							ON 			cr.`CreditsID` = cc.`CreditsID`
 							WHERE 		cch.`CompanyID` = :CompanyID
 							AND 		cch.`hasBeenBilled` = 0
+							AND			cch.`mergeNumber` = 0
 				)													AS PeriodInformation";
 		$s = $pdo->prepare($sql);
 		$s->bindValue(':CompanyID', $companyID);
@@ -218,6 +219,7 @@ function sumUpUnbilledPeriods($pdo, $companyID){
 							ON 			cr.`CreditsID` = cc.`CreditsID`
 							WHERE 		cch.`CompanyID` = :CompanyID
 							AND 		cch.`hasBeenBilled` = 0
+							AND			cch.`mergeNumber` = 0
 				)													AS PeriodInformation";
 		$s = $pdo->prepare($sql);
 		$s->bindValue(':CompanyID', $companyID);
@@ -314,6 +316,7 @@ function calculatePeriodInformation($pdo, $companyID, $BillingStart, $BillingEnd
 				WHERE 		`companyID` = :CompanyID
 				AND 		`startDate` = :startDate
 				AND			`endDate` = :endDate
+				AND			`mergeNumber` = 0
 				LIMIT 		1";
 		$s = $pdo->prepare($sql);
 		$s->bindValue(':CompanyID', $companyID);
@@ -758,7 +761,8 @@ if (isSet($_POST['history']) AND $_POST['history'] == "Set As Billed"){
 						`billingDescription` = :billingDescription
 				WHERE   `CompanyID` = :CompanyID
 				AND	    `startDate` = :startDate
-				AND		`endDate` = :endDate";
+				AND		`endDate` = :endDate
+				AND		`mergeNumber` = 0";
 		$s = $pdo->prepare($sql);
 		$s->bindValue(':CompanyID', $companyID);
 		$s->bindValue(':startDate', $BillingStart);
@@ -983,6 +987,7 @@ if (	(isSet($_GET['companyID']) AND isSet($_GET['BillingStart']) AND isSet($_GET
 					WHERE	`companyID` = :companyID
 					AND		`startDate` = :startDate
 					AND		`endDate` = :endDate
+					AND		`mergeNumber` = 0
 					LIMIT 	1";
 			$s = $pdo->prepare($sql);
 			$s->bindValue(':companyID', $companyID);
@@ -1392,19 +1397,17 @@ if (isSet($_POST['action']) and $_POST['action'] == 'Confirm Merge'){
 			$s->execute();
 
 			// TO-DO: FIX-ME: How to handle merging company credits history?
-				// Only update/keep info of history from before the new company was created?
 				// Get info from both histories and compare which one was charged the most and keep that?
 				// Split date into the appropriate periods for the new company?
 				// Keep info if billed or not?
-		/*	$sql = 'UPDATE 	`companycreditshistory`
-					SET		`CompanyID` = :CompanyID2
-					WHERE	`CompanyID` = :CompanyID
-					AND		`endDate` < :newCreationDate';
+			$sql = 'UPDATE 	`companycreditshistory`
+					SET		`CompanyID` = :CompanyID2,
+							`mergeNumber` = :CompanyID
+					WHERE	`CompanyID` = :CompanyID';
 			$s = $pdo->prepare($sql);
 			$s->bindValue(':CompanyID', $_SESSION['MergeCompanySelectedCompanyID']);
 			$s->bindValue(':CompanyID2', $_SESSION['MergeCompanySelectedCompanyID2']);
-			$s->bindValue(':newCreationDate', $newCreationDate);
-			$s->execute();*/
+			$s->execute();
 
 			// Deleting company will cascade to companycredits, companycreditshistory and employees.
 			$sql = 'DELETE FROM `company`
@@ -1424,6 +1427,7 @@ if (isSet($_POST['action']) and $_POST['action'] == 'Confirm Merge'){
 			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
 			exit();
 		}
+
 		$_SESSION['CompanyUserFeedback'] = 	"Successfully merged the company: " . $oldCompanyName . 
 											"\nInto the company: " . $newCompanyName;
 
@@ -2107,6 +2111,7 @@ try
 			ON			cr.`CreditsID` = cc.`CreditsID`
 			LEFT JOIN 	`companycreditshistory` cch
 			ON 			cch.`CompanyID` = c.`CompanyID`
+			WHERE		cch.`mergeNumber` = 0
 			GROUP BY 	c.`CompanyID`;";
 	$s = $pdo->prepare($sql);
 	$s->bindValue(':minimumSecondsPerBooking', $minimumSecondsPerBooking);

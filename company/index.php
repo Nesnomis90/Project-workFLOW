@@ -2584,6 +2584,7 @@ if(isSet($selectedCompanyToDisplayID) AND !empty($selectedCompanyToDisplayID)){
 				LEFT JOIN 	`companycreditshistory` cch
 				ON 			cch.`CompanyID` = c.`CompanyID`
 				WHERE		c.`CompanyID` = :CompanyID
+				AND			cch.`mergeNumber` = 0
 				GROUP BY 	c.`CompanyID`
 				LIMIT 		1";
 		$s = $pdo->prepare($sql);

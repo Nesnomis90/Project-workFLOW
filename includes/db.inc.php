@@ -831,12 +831,13 @@ function create_tables()
 						  `CompanyID` int(10) unsigned NOT NULL,
 						  `startDate` date NOT NULL,
 						  `endDate` date NOT NULL,
+						  `mergeNumber` int(10) unsigned NOT NULL DEFAULT '0',
 						  `minuteAmount` smallint(5) unsigned NOT NULL,
 						  `monthlyPrice` float unsigned NOT NULL DEFAULT '0',
 						  `overCreditHourPrice` float unsigned NOT NULL,
 						  `hasBeenBilled` tinyint(1) unsigned NOT NULL DEFAULT '0',
 						  `billingDescription` text,
-						  PRIMARY KEY (`CompanyID`,`startDate`,`endDate`),
+						  PRIMARY KEY (`CompanyID`,`startDate`,`endDate`,`mergeNumber`),
 						  CONSTRAINT `FK_CompanyID5` FOREIGN KEY (`CompanyID`) REFERENCES `company` (`CompanyID`) ON DELETE CASCADE ON UPDATE CASCADE
 						) ENGINE=InnoDB DEFAULT CHARSET=utf8");
 
