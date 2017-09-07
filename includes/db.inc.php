@@ -473,6 +473,7 @@ function create_tables()
 						  `cancelledByUserID` int(10) unsigned DEFAULT NULL,
 						  `cancellationCode` char(64) DEFAULT NULL,
 						  `emailSent` tinyint(1) NOT NULL DEFAULT '0',
+						  `mergeNumber` int(10) unsigned NOT NULL DEFAULT '0',
 						  PRIMARY KEY (`bookingID`),
 						  UNIQUE KEY `cancellationCode_UNIQUE` (`cancellationCode`),
 						  KEY `FK_MeetingRoomID_idx` (`meetingRoomID`),

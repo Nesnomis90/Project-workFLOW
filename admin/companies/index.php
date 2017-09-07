@@ -1388,7 +1388,8 @@ if (isSet($_POST['action']) and $_POST['action'] == 'Confirm Merge'){
 
 			$sql = 'UPDATE 	`booking`
 					SET		`CompanyID` = :CompanyID2,
-							`adminNote` = CONCAT_WS("\n\n",`adminNote`, :mergeMessage)
+							`adminNote` = CONCAT_WS("\n\n",`adminNote`, :mergeMessage),
+							`mergeNumber` = :CompanyID
 					WHERE	`CompanyID` = :CompanyID';
 			$s = $pdo->prepare($sql);
 			$s->bindValue(':mergeMessage', $mergeMessage);

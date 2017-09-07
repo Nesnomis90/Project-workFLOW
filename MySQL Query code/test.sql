@@ -15,13 +15,6 @@ SET			`CompanyID` = 2,
 
 INSERT INTO `companycredits`(`CompanyID`, `CreditsID`) VALUES (1,2);
 
-UPDATE 	`company`
-SET		`prevStartDate` = `startDate`,
-		`startDate` = `endDate`,
-        `endDate` = (`startDate` + INTERVAL 1 MONTH)
-WHERE	`companyID` <> 0
-AND		CURDATE() > `endDate`;
-
 UPDATE 	`user`
 SET 	`AccessID` = ( 
 						SELECT 	`AccessID`
@@ -2416,49 +2409,6 @@ FROM 		`meetingroom` m
 LEFT JOIN 	`roomequipment` re
 ON 			re.`meetingRoomID` = m.`meetingRoomID`			
 GROUP BY 	m.`meetingRoomID`;
-
-SELECT IF(
-			DATE(`endDate`) = DATE_SUB(`startDate`, INTERVAL -1 -1 MONTH), 
-			NULL, 
-			1
-		) AS ValidBillingDate,
-		DATE_SUB(`startDate`,INTERVAL -1 MONTH) AS CompanyBillingDateStart,
-		DATE_SUB(`startDate`,INTERVAL -1 - 1 MONTH) AS CompanyBillingDateEnd,
-        `startDate`
-FROM 	`company`
-WHERE 	`companyID` = 1
-LIMIT 	1;
-
-SELECT *,
-TIMESTAMPDIFF(MONTH, c.`dateTimeCreated`, date_add(c.`startDate`, INTERVAL 1 day))
-FROM `company` c
-WHERE c.`companyID` = 2;
-
-SELECT IF(
-			DATE(`endDate`) = DATE_SUB('2017-04-15', INTERVAL -1 MONTH), 
-            NULL, 
-            DATE_SUB('2017-04-15', INTERVAL -1 MONTH)
-		) AS PreviousBillingDate
-FROM 	`company`
-WHERE 	`companyID` = 2
-LIMIT 	1;
-
-SELECT IF(
-			DATE(`dateTimeCreated`) = DATE_SUB('2017-03-31', INTERVAL 1 MONTH), 
-            NULL, 
-            DATE_SUB('2017-03-31', INTERVAL 5 MONTH)
-		) AS PreviousBillingDate
-FROM 	`company`
-WHERE 	`companyID` = 2
-LIMIT 	1;
-
-SELECT 	`name`,
-		`prevStartDate`,
-        DATE_SUB(`startDate`, INTERVAL 1 MONTH),
-        `endDate`
-FROM 	`company`
-WHERE 	`companyID` = 2
-LIMIT 	1;
 
 SELECT 		b.`displayName`,
 			b.`description`,
