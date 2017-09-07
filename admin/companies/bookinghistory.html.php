@@ -105,8 +105,8 @@
 								<?php if(isSet($row['CancelMessage']) AND !empty($row['CancelMessage'])) : ?>
 									<label class="period">Ended Early Message:</label><span><b><?php htmlout($row['CancelMessage']); ?></b></span>
 								<?php endif; ?>
-								<?php if(isSet($row['AdminNote']) AND !empty($row['AdminNote'])) : ?>
-									<label class="period" style="color: red;">Admin Note:</label><span style="color:red;"><b><?php htmlout($row['AdminNote']); ?></b></span>
+								<?php if(isSet($row['AdminNote']) AND $row['AdminNote'] != "") : ?>
+									<label class="period" style="color: red;">Admin Note:</label><span style="white-space: pre-wrap; color:red;"><b><?php htmlout($row['AdminNote']); ?></b></span>
 								<?php endif; ?>
 						</fieldset>
 						<?php $bookingNumberThisPeriod += 1; ?>
