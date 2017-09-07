@@ -969,6 +969,52 @@ if (	(isSet($_GET['companyID']) AND isSet($_GET['BillingStart']) AND isSet($_GET
 		exit();
 	}
 
+	$abortLink = FALSE;
+
+	if(isSet($companyID, $BillingStart, $BillingEnd) AND $companyID != "" AND $BillingStart != "" AND $BillingEnd != ""){
+		// First check if the dates in the get parameters are valid period dates for the company
+		try
+		{
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+			$pdo = connect_to_db();
+
+			$sql = "SELECT 	COUNT(*)
+					FROM	`companycreditshistory`
+					WHERE	`companyID` = :companyID
+					AND		`startDate` = :startDate
+					AND		`endDate` = :endDate
+					LIMIT 	1";
+			$s = $pdo->prepare($sql);
+			$s->bindValue(':companyID', $companyID);
+			$s->bindValue(':startDate', $BillingStart);
+			$s->bindValue(':endDate', $BillingEnd);
+			$s->execute();
+			$row = $s->fetch();
+
+			if($row[0] == 0){
+				// The dates submitted are not valid. At least not stored in the database.
+				$abortLink = TRUE;
+			}
+		}
+		catch (PDOException $e)
+		{
+			$error = 'Error checking if link parameters are a valid period: ' . $e->getMessage();
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+			$pdo = null;
+			exit();
+		}
+	} else {
+		$abortLink = TRUE;
+	}
+
+	if($abortLink){
+		$_SESSION['CompanyUserFeedback'] = 	"The link you used did not correspond to a correct period and/or company." .
+											"\nCould therefore not retrieve any booking information.";
+
+		header('Location: .');
+		exit();
+	}
+
 	// Get booking history for the selected company
 	try
 	{
@@ -1008,7 +1054,7 @@ if (	(isSet($_GET['companyID']) AND isSet($_GET['BillingStart']) AND isSet($_GET
 		// Save our newly set start/end dates
 		$_SESSION['BookingHistoryStartDate'] = $BillingStart;
 		$_SESSION['BookingHistoryEndDate'] = $BillingEnd;
-		
+
 		// Check if date submitted is current period
 		if($BillingEnd != $lastBillingDate){
 			$rightNow = FALSE;
@@ -1306,12 +1352,7 @@ if (isSet($_POST['action']) and $_POST['action'] == 'Confirm Merge'){
 		{
 			$pdo = connect_to_db();
 			$sql = 'SELECT 	`name`				AS NewCompanyName,
-							`dateTimeCreated`	AS NewCreationDate,
-							( 
-								SELECT 	`dateTimeCreated`
-								FROM	`company`
-								WHERE 	`companyID` = :oldCompanyID
-							)					AS OldCreationDate
+							`dateTimeCreated`	AS NewCreationDate
 					FROM 	`company`
 					WHERE	`companyID` = :newCompanyID
 					LIMIT 	1';
@@ -1323,7 +1364,6 @@ if (isSet($_POST['action']) and $_POST['action'] == 'Confirm Merge'){
 			$row = $s->fetch(PDO::FETCH_ASSOC);
 			$oldCompanyName = $_SESSION['MergeCompanySelectedCompanyName'];
 			$newCompanyName = $row['NewCompanyName'];
-			$oldCreationDate = $row['OldCreationDate'];
 			$newCreationDate = $row['NewCreationDate'];
 
 			$pdo->beginTransaction();
@@ -1351,43 +1391,20 @@ if (isSet($_POST['action']) and $_POST['action'] == 'Confirm Merge'){
 			$s->bindValue(':CompanyID2', $_SESSION['MergeCompanySelectedCompanyID2']);
 			$s->execute();
 
-			// FIX-ME: How to handle merging company credits history?
-				// Split date into the appropriate periods for the new company
-				// Keep info if billed or not.
-			// Just ignore it?
+			// TO-DO: FIX-ME: How to handle merging company credits history?
+				// Only update/keep info of history from before the new company was created?
+				// Get info from both histories and compare which one was charged the most and keep that?
+				// Split date into the appropriate periods for the new company?
+				// Keep info if billed or not?
 		/*	$sql = 'UPDATE 	`companycreditshistory`
 					SET		`CompanyID` = :CompanyID2
-					WHERE	`CompanyID` = :CompanyID';
+					WHERE	`CompanyID` = :CompanyID
+					AND		`endDate` < :newCreationDate';
 			$s = $pdo->prepare($sql);
 			$s->bindValue(':CompanyID', $_SESSION['MergeCompanySelectedCompanyID']);
 			$s->bindValue(':CompanyID2', $_SESSION['MergeCompanySelectedCompanyID2']);
+			$s->bindValue(':newCreationDate', $newCreationDate);
 			$s->execute();*/
-
-			/*// Update the company's creation date if the old company was older.
-			// This does not really work. Since it ruins booking history if it's accurate and makes no sense if we change it 
-			if($oldCreationDate < $newCreationDate){
-				
-				date_default_timezone_set(DATE_DEFAULT_TIMEZONE);
-				$newDateTime = new DateTime::createFromFormat("Y-m-d H:i:s", $newCreationDate);
-				$dayFromNewCreationDate = $newDateTime->format("d");
-				$oldDateTime = new DateTime::createFromFormat("Y-m-d H:i:s", $oldCreationDate);
-				$dayFromOldCreationDate = $oldDateTime->format("d");
-				$yearAndMonth = $oldDateTime->format("Y-m");
-				$theTime = $oldDateTime->format("H:i:s");
-				
-				if($dayFromNewCreationDate  dayFromOldCreationDate){
-					
-				}
-				$newDateCreatedBasedOnOldCompanyCreationDate = $dayFromNewCreationDate
-				
-				$sql = 'UPDATE 	`company`
-						SET		`dateTimeCreated` = :NewDateCreatedBasedOnOldCompanyCreationDate
-						WHERE	`CompanyID` = :newCompanyID';
-				$s = $pdo->prepare($sql);
-				$s->bindValue(':NewDateCreatedBasedOnOldCompanyCreationDate', $newDateCreatedBasedOnOldCompanyCreationDate);
-				$s->bindValue(':newCompanyID', $_SESSION['MergeCompanySelectedCompanyID2']);
-				$s->execute();
-			}*/
 
 			// Deleting company will cascade to companycredits, companycreditshistory and employees.
 			$sql = 'DELETE FROM `company`

@@ -59,6 +59,13 @@ WHERE 	DATE(CURRENT_TIMESTAMP) >= `removeAtDate`
 AND 	`isActive` = 1
 AND		`companyID` <> 0;
 
+SELECT 	COUNT(*)
+FROM	`companycreditshistory`
+WHERE	`companyID` = 2
+AND		`startDate` = '2017-05-15'
+AND		`endDate` = '2017-06-15'
+LIMIT	1;
+
 SELECT 	u.`userID`					AS UsrID,
 		c.`companyID`				AS TheCompanyID,
 		c.`name`					AS CompanyName,
