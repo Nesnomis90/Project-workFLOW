@@ -43,8 +43,6 @@ function clearEditCompanySessions(){
 // Function to check if the company has unbilled periods and then sums them up and displays the total 
 function sumUpUnbilledPeriods($pdo, $companyID){
 
-	// TO-DO: Sort by different merge numbers to get unbilled periods from companies that were merged into the selected one?
-
 	$minimumSecondsPerBooking = MINIMUM_BOOKING_DURATION_IN_MINUTES_USED_IN_PRICE_CALCULATIONS * 60; // e.g. 15min = 900s
 	$aboveThisManySecondsToCount = BOOKING_DURATION_IN_MINUTES_USED_BEFORE_INCLUDING_IN_PRICE_CALCULATIONS * 60; // e.g. 5min = 300s
 	$roundDownToTheClosestMinuteNumberInSeconds = ROUND_SUMMED_BOOKING_TIME_CHARGED_FOR_PERIOD_DOWN_TO_THIS_CLOSEST_MINUTE_AMOUNT * 60; // e.g. 15min = 900s
@@ -236,6 +234,8 @@ function sumUpUnbilledPeriods($pdo, $companyID){
 	$s->execute();
 	$result = $s->fetchAll(PDO::FETCH_ASSOC);
 
+	$numberOfMergedPeriods = 0;
+
 	foreach($result AS $row){
 				// Get credits values
 		$companyMinuteCredits = $row['CreditSubscriptionMinuteAmount'];
@@ -253,9 +253,10 @@ function sumUpUnbilledPeriods($pdo, $companyID){
 
 		$mergeNumber = $row['CompanyMergeNumber'];
 		if($mergeNumber == 0){
-			$mergeStatus = "Booked For This Company";
+			$mergeStatus = "Period From This Company";
 		} else {
-			$mergeStatus = "Merged From Another Company";
+			$mergeStatus = "Transferred From Another Company";
+			$numberOfMergedPeriods += 1;
 		}
 
 		// Calculate price
@@ -294,8 +295,14 @@ function sumUpUnbilledPeriods($pdo, $companyID){
 									);
 	}
 
+	if($numberOfMergedPeriods > 0){
+		$displayMergeStatus = TRUE;
+	} else {
+		$displayMergeStatus = FALSE;
+	}
+
 	if(isSet($periodsSummmedUp)){
-		return $periodsSummmedUp;
+		return array($periodsSummmedUp, $displayMergeStatus);
 	} else {
 		return FALSE;
 	}
@@ -880,7 +887,7 @@ if (isSet($_POST['history']) AND $_POST['history'] == "Next Period"){
 		= calculatePeriodInformation($pdo, $companyID, $BillingStart, $BillingEnd, $rightNow, $mergeNumber);
 
 		// Sum up periods that are not set as billed
-		$periodsSummmedUp = sumUpUnbilledPeriods($pdo, $companyID);
+		list($periodsSummmedUp, $displayMergeStatus) = sumUpUnbilledPeriods($pdo, $companyID);
 		if($periodsSummmedUp === FALSE){
 			// No periods not set as billed
 			unset($periodsSummmedUp);
@@ -969,7 +976,7 @@ if (	(isSet($_POST['history']) AND $_POST['history'] == "Previous Period") OR
 		= calculatePeriodInformation($pdo, $companyID, $BillingStart, $BillingEnd, $rightNow, $mergeNumber);
 
 		// Sum up periods that are not set as billed
-		$periodsSummmedUp = sumUpUnbilledPeriods($pdo, $companyID);
+		list($periodsSummmedUp, $displayMergeStatus) = sumUpUnbilledPeriods($pdo, $companyID);
 		if($periodsSummmedUp === FALSE){
 			// No periods not set as billed
 			unset($periodsSummmedUp);
@@ -1220,7 +1227,7 @@ if ((isSet($_POST['action']) AND $_POST['action'] == "Booking History") OR
 		= calculatePeriodInformation($pdo, $companyID, $BillingStart, $BillingEnd, $rightNow, $mergeNumber);
 
 			// Sum up periods that are not set as billed
-		$periodsSummmedUp = sumUpUnbilledPeriods($pdo, $companyID);
+		list($periodsSummmedUp, $displayMergeStatus) = sumUpUnbilledPeriods($pdo, $companyID);
 		if($periodsSummmedUp === FALSE){
 			// No periods not set as billed
 			unset($periodsSummmedUp);
@@ -2174,7 +2181,7 @@ try
 						cr.`minuteAmount`									AS CreditSubscriptionMinuteAmount,
 						cr.`monthlyPrice`									AS CreditSubscriptionMonthlyPrice,
 						cr.`overCreditHourPrice`							AS CreditSubscriptionHourPrice,
-						COUNT(DISTINCT cch.`startDate`)						AS CompanyCreditsHistoryPeriods,
+						COUNT(c.`CompanyID`)								AS CompanyCreditsHistoryPeriods,
 						SUM(cch.`hasBeenBilled`)							AS CompanyCreditsHistoryPeriodsSetAsBilled
 			FROM 		`company` c
 			LEFT JOIN	`companycredits` cc
@@ -2183,7 +2190,7 @@ try
 			ON			cr.`CreditsID` = cc.`CreditsID`
 			LEFT JOIN 	`companycreditshistory` cch
 			ON 			cch.`CompanyID` = c.`CompanyID`
-			GROUP BY 	c.`CompanyID`;";
+			GROUP BY 	c.`CompanyID`";
 	$s = $pdo->prepare($sql);
 	$s->bindValue(':minimumSecondsPerBooking', $minimumSecondsPerBooking);
 	$s->bindValue(':aboveThisManySecondsToCount', $aboveThisManySecondsToCount);

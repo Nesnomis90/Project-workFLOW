@@ -139,7 +139,6 @@ FROM (
 			ON 			cr.`CreditsID` = cc.`CreditsID`
 			WHERE 		cch.`CompanyID` = '68'
 			AND 		cch.`hasBeenBilled` = 0
-			GROUP BY	cch.`mergeNumber`
 )													AS PeriodInformation;
 
 SELECT 	COUNT(*)
