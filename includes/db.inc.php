@@ -22,63 +22,64 @@ function create_db()
 	$pdo = null;
 	global $logEventArray;
 
-	try {
-	//	Create connection without an existing database
-	$pdo = new PDO("mysql:host=".DB_HOST, DB_USER, DB_PASSWORD);
-	//	set the PDO error mode to exception
-	$pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-	$pdo->exec('SET NAMES "utf8"');
-	
-	if(!dbExists($pdo,DB_NAME)){
-		// Creating the SQL query to make the database
-		$sql = "CREATE DATABASE IF NOT EXISTS " . DB_NAME;
-
-		//Executing the SQL query
-		$pdo->exec($sql);
-		$output = 'Created database: ' . DB_NAME . '<br />';
-		
-		//	Add the creation to log event
-		$sqlLog = '	INSERT INTO `logevent`(`actionID`, `description`) 
-					VALUES 		(
-									(
-										SELECT 	`actionID` 
-										FROM 	`logaction` 
-										WHERE 	`name` = "Database Created"
-									), 
-								"Database ' . DB_NAME . ' was created automatically by the PHP script.\nThis should only occur once, at the very start of the log event."
-								)';
-		$logEventArray[] = $sqlLog;
-
-	} else {
-		$output = '<b>Database: ' . DB_NAME . ' already exists.</b><br />';
-	}
-	
-	include $_SERVER['DOCUMENT_ROOT'] . '/includes/output.html.php';
-	
-	//Closing the connection
-	$pdo = null;
-	} 
-catch(PDOException $e)
+	try 
 	{
-	$error = 'Unable to create the database: ' . $e->getMessage() . '<br />';
-	include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
-	$pdo = null;
-	exit();
-	}	
+		//	Create connection without an existing database
+		$pdo = new PDO("mysql:host=".DB_HOST, DB_USER, DB_PASSWORD);
+		//	set the PDO error mode to exception
+		$pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+		$pdo->exec('SET NAMES "utf8"');
+		
+		if(!dbExists($pdo,DB_NAME)){
+			// Creating the SQL query to make the database
+			$sql = "CREATE DATABASE IF NOT EXISTS " . DB_NAME;
+
+			//Executing the SQL query
+			$pdo->exec($sql);
+			$output = 'Created database: ' . DB_NAME . '<br />';
+
+			//	Add the creation to log event
+			$sqlLog = '	INSERT INTO `logevent`(`actionID`, `description`) 
+						VALUES 		(
+										(
+											SELECT 	`actionID` 
+											FROM 	`logaction` 
+											WHERE 	`name` = "Database Created"
+										), 
+									"Database ' . DB_NAME . ' was created automatically by the PHP script.\nThis should only occur once, at the very start of the log event."
+									)';
+			$logEventArray[] = $sqlLog;
+
+		} else {
+			$output = '<b>Database: ' . DB_NAME . ' already exists.</b><br />';
+		}
+
+		include $_SERVER['DOCUMENT_ROOT'] . '/includes/output.html.php';
+
+		//Closing the connection
+		$pdo = null;
+	} 
+	catch(PDOException $e)
+	{
+		$error = 'Unable to create the database: ' . $e->getMessage() . '<br />';
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+		$pdo = null;
+		exit();
+	}
 }
 
 // Function to connect to an existing database
 function connect_to_db()
 {
 	$pdo = null;
-	
+
 	try {
 	//	Create connection with an existing database
 	$pdo = new PDO("mysql:host=".DB_HOST.";dbname=" . DB_NAME, DB_USER, DB_PASSWORD);
 	//	set the PDO error mode to exception
 	$pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 	$pdo->exec('SET NAMES "utf8"');
-	
+
 	return $pdo; //Return the active connection
 
 	} 
@@ -122,7 +123,7 @@ function fillCredits($pdo){
 								`minuteAmount` = 0,
 								`monthlyPrice` = 0,
 								`overCreditHourPrice` = 0");
-		
+
 		// Commit the transaction
 		$pdo->commit();
 	} 
@@ -145,7 +146,7 @@ function fillAccessLevel($pdo){
 		$pdo->exec("INSERT INTO `accesslevel`(`AccessName`, `Description`) VALUES ('Admin', 'Full access to all website pages, company information and user information.')");
 		$pdo->exec("INSERT INTO `accesslevel`(`AccessName`, `Description`) VALUES ('In-House User', 'Can book meeting rooms with a booking code.')");
 		$pdo->exec("INSERT INTO `accesslevel`(`AccessName`, `Description`) VALUES ('Normal User', 'Can browse meeting room schedules, with limited information, and request a booking.')");
-		
+
 		// Commit the transaction
 		$pdo->commit();
 	} 
@@ -168,7 +169,7 @@ function fillCompanyPosition($pdo){
 		$pdo->beginTransaction();
 		$pdo->exec("INSERT INTO `companyposition`(`name`, `description`) VALUES ('Owner', 'User can manage company information and add/remove users connected to the company.')");
 		$pdo->exec("INSERT INTO `companyposition`(`name`, `description`) VALUES ('Employee', 'User can view company information and connected users.')");
-		
+
 		// Commit the transaction
 		$pdo->commit();
 	}
@@ -179,7 +180,7 @@ function fillCompanyPosition($pdo){
 		$pdo = null;
 		$error = 'Encountered an error while trying to insert default values into table companyposition: ' .
 			$e->getMessage() . '<br />';
-		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';		
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
 		exit();
 	}
 }
@@ -217,10 +218,9 @@ function fillLogAction($pdo){
 		$pdo->exec("INSERT INTO `logaction`(`name`,`description`) VALUES ('Room Equipment Added', 'The referenced equipment was added into the referenced meeting room with the referenced amount.')");
 		$pdo->exec("INSERT INTO `logaction`(`name`,`description`) VALUES ('Room Equipment Removed', 'The referenced equipment was removed from the referenced meeting room.')");
 
-		
 		// Commit the transaction
 		$pdo->commit();
-		
+
 	}
 	catch (PDOException $e)
 	{
@@ -260,14 +260,14 @@ function create_tables()
 		$time = 0;
 		$prevtime = 0;
 		$totaltime = 0;
-		
+
 		//	Connect to the database so we can create tables in it
 		$conn = connect_to_db();
-		
+
 		// The SQL queries of the tables we need to create
 			//Access Level
 		$table = 'accesslevel';
-		
+
 		//Check if table already exists
 		if (!tableExists($conn, $table))
 		{
@@ -278,10 +278,10 @@ function create_tables()
 						  PRIMARY KEY (`AccessID`),
 						  UNIQUE KEY `AccessName_UNIQUE` (`AccessName`)
 						) ENGINE=InnoDB DEFAULT CHARSET=utf8");
-			
+
 			// Fill default values
 			fillAccessLevel($conn);
-			
+
 			//	Add the creation to log event
 			$sqlLog = '	INSERT INTO `logevent`(`actionID`, `description`) 
 						VALUES 		(
@@ -293,12 +293,12 @@ function create_tables()
 									"The table ' . $table . ' was created automatically by the PHP script.\nThis should only occur once, at the very start of the log events."
 									)';
 			$logEventArray[] = $sqlLog;
-			
+
 			$totaltime = microtime(true) - $_SERVER["REQUEST_TIME_FLOAT"];
 			$time = $totaltime - $prevtime;
 			$prevtime = $totaltime;
-			echo '<b>Execution time for creating and filling table ' . $table. ':</b> ' . $time . 's<br />';	
-		
+			echo '<b>Execution time for creating and filling table ' . $table. ':</b> ' . $time . 's<br />';
+
 		} else {
 			//If the table exists, but for some reason has no values in it, then fill it
 			$return = $conn->query("SELECT 	COUNT(*) 
@@ -307,9 +307,9 @@ function create_tables()
 			if($rowCount == 0){
 				// No values in the table. Insert the needed values.
 				fillAccessLevel($conn);
-				
+
 				echo "<b>Inserted default values into $table.</b> <br />";
-		
+
 				$totaltime = microtime(true) - $_SERVER["REQUEST_TIME_FLOAT"];
 				$time = $totaltime - $prevtime;
 				$prevtime = $totaltime;
@@ -318,7 +318,6 @@ function create_tables()
 				// Table already has (some) values in it
 				echo "<b>Table $table already had values in it.</b> <br />";
 			}
-			
 			echo '<b>Table ' . $table. ' already exists</b>.<br />';
 		}
 
@@ -367,7 +366,7 @@ function create_tables()
 										), 
 									"The table ' . $table . ' was created automatically by the PHP script.\nThis should only occur once, at the very start of the log events."
 									)';
-			$logEventArray[] = $sqlLog;						
+			$logEventArray[] = $sqlLog;
 
 			$totaltime = microtime(true) - $_SERVER["REQUEST_TIME_FLOAT"];
 			$time = $totaltime - $prevtime;
@@ -381,7 +380,7 @@ function create_tables()
 		$table = 'meetingroom';
 		//Check if table already exists
 		if (!tableExists($conn, $table))
-		{		
+		{
 			$conn->exec("CREATE TABLE IF NOT EXISTS `$table` (
 						  `meetingRoomID` int(10) unsigned NOT NULL AUTO_INCREMENT,
 						  `name` varchar(255) NOT NULL DEFAULT 'No name set',
@@ -393,7 +392,7 @@ function create_tables()
 						  UNIQUE KEY `idCode_UNIQUE` (`idCode`),
 						  UNIQUE KEY `name_UNIQUE` (`name`)
 						) ENGINE=InnoDB DEFAULT CHARSET=utf8");
-						
+
 			//	Add the creation to log event
 			$sqlLog = '	INSERT INTO `logevent`(`actionID`, `description`) 
 						VALUES 		(
@@ -404,12 +403,12 @@ function create_tables()
 										), 
 									"The table ' . $table . ' was created automatically by the PHP script.\nThis should only occur once, at the very start of the log events."
 									)';
-			$logEventArray[] = $sqlLog;						
-						
+			$logEventArray[] = $sqlLog;
+
 			$totaltime = microtime(true) - $_SERVER["REQUEST_TIME_FLOAT"];
 			$time = $totaltime - $prevtime;
 			$prevtime = $totaltime;
-			echo '<b>Execution time for creating table ' . $table. ':</b> ' . $time . 's<br />';	
+			echo '<b>Execution time for creating table ' . $table. ':</b> ' . $time . 's<br />';
 		} else { 
 			echo '<b>Table ' . $table. ' already exists</b>.<br />';
 		}
@@ -447,7 +446,7 @@ function create_tables()
 			$totaltime = microtime(true) - $_SERVER["REQUEST_TIME_FLOAT"];
 			$time = $totaltime - $prevtime;
 			$prevtime = $totaltime;
-			echo '<b>Execution time for creating table ' . $table. ':</b> ' . $time . 's<br />';	
+			echo '<b>Execution time for creating table ' . $table. ':</b> ' . $time . 's<br />';
 		} else { 
 			echo '<b>Table ' . $table. ' already exists</b>.<br />';
 		}
@@ -501,7 +500,7 @@ function create_tables()
 			$totaltime = microtime(true) - $_SERVER["REQUEST_TIME_FLOAT"];
 			$time = $totaltime - $prevtime;
 			$prevtime = $totaltime;
-			echo '<b>Execution time for creating table ' . $table. ':</b> ' . $time . 's<br />';	
+			echo '<b>Execution time for creating table ' . $table. ':</b> ' . $time . 's<br />';
 		} else { 
 			echo '<b>Table ' . $table. ' already exists</b>.<br />';
 		}
@@ -537,18 +536,18 @@ function create_tables()
 			$totaltime = microtime(true) - $_SERVER["REQUEST_TIME_FLOAT"];
 			$time = $totaltime - $prevtime;
 			$prevtime = $totaltime;
-			echo '<b>Execution time for creating and filling table ' . $table. ':</b> ' . $time . 's<br />';	
+			echo '<b>Execution time for creating and filling table ' . $table. ':</b> ' . $time . 's<br />';
 		} else { 
 			//If the table exists, but for some reason has no values in it, then fill it
 			$return = $conn->query("SELECT 	COUNT(*) 
 									FROM 	`companyposition`");
 			$rowCount = $return->fetchColumn();
 			if($rowCount == 0){
-				
+
 				fillCompanyPosition($conn);
-				
+
 				echo "<b>Inserted default values into $table.</b> <br />";
-		
+
 				$totaltime = microtime(true) - $_SERVER["REQUEST_TIME_FLOAT"];
 				$time = $totaltime - $prevtime;
 				$prevtime = $totaltime;
@@ -557,10 +556,10 @@ function create_tables()
 				// Table already has (some) values in it
 				echo "<b>Table $table already had values in it.</b> <br />";
 			}
-		
+
 			echo '<b>Table ' . $table. ' already exists</b>.<br />';
-		}	
-		
+		}
+
 			//Employee
 		$table = 'employee';
 		//Check if table already exists
@@ -578,7 +577,7 @@ function create_tables()
 						  CONSTRAINT `FK_CompanyID` FOREIGN KEY (`CompanyID`) REFERENCES `company` (`CompanyID`) ON DELETE CASCADE ON UPDATE CASCADE,
 						  CONSTRAINT `FK_UserID` FOREIGN KEY (`UserID`) REFERENCES `user` (`userID`) ON DELETE CASCADE ON UPDATE CASCADE
 						) ENGINE=InnoDB DEFAULT CHARSET=utf8");
-						
+
 			//	Add the creation to log event
 			$sqlLog = '	INSERT INTO `logevent`(`actionID`, `description`) 
 						VALUES 		(
@@ -589,16 +588,16 @@ function create_tables()
 										), 
 									"The table ' . $table . ' was created automatically by the PHP script.\nThis should only occur once, at the very start of the log events."
 									)';
-			$logEventArray[] = $sqlLog;						
+			$logEventArray[] = $sqlLog;
 
 			$totaltime = microtime(true) - $_SERVER["REQUEST_TIME_FLOAT"];
 			$time = $totaltime - $prevtime;
 			$prevtime = $totaltime;
-			echo '<b>Execution time for creating table ' . $table. ':</b> ' . $time . 's<br />';			
+			echo '<b>Execution time for creating table ' . $table. ':</b> ' . $time . 's<br />';
 		} else { 
 			echo '<b>Table ' . $table. ' already exists</b>.<br />';
-		}	
-		
+		}
+
 			//Equipment for meeting rooms
 		$table = 'equipment';
 		//Check if table already exists
@@ -612,27 +611,27 @@ function create_tables()
 						  PRIMARY KEY (`EquipmentID`),
 						  UNIQUE KEY `name_UNIQUE` (`name`)
 						) ENGINE=InnoDB DEFAULT CHARSET=utf8");
-						
+
 			//	Add the creation to log event
 			$sqlLog = '	INSERT INTO `logevent`(`actionID`, `description`) 
 						VALUES 		(
 										(
 										SELECT 	`actionID` 
-										FROM 	`logaction` 
+										FROM 	`logaction`
 										WHERE 	`name` = "Table Created"
 										), 
 									"The table ' . $table . ' was created automatically by the PHP script.\nThis should only occur once, at the very start of the log events."
 									)';
-			$logEventArray[] = $sqlLog;						
+			$logEventArray[] = $sqlLog;
 
 			$totaltime = microtime(true) - $_SERVER["REQUEST_TIME_FLOAT"];
 			$time = $totaltime - $prevtime;
 			$prevtime = $totaltime;
-			echo '<b>Execution time for creating table ' . $table. ':</b> ' . $time . 's<br />';		
+			echo '<b>Execution time for creating table ' . $table. ':</b> ' . $time . 's<br />';
 		} else { 
 			echo '<b>Table ' . $table. ' already exists</b>.<br />';
-		}	
-		
+		}
+
 			//Log Action
 		$table = 'logaction';
 		//Check if table already exists
@@ -645,10 +644,10 @@ function create_tables()
 						  PRIMARY KEY (`actionID`),
 						  UNIQUE KEY `name_UNIQUE` (`name`)
 						) ENGINE=InnoDB DEFAULT CHARSET=utf8");
-			
+
 			//Fill in default values for table Log Action
 			fillLogAction($conn);
-						
+
 			//	Add the creation to log event
 			$sqlLog = '	INSERT INTO `logevent`(`actionID`, `description`) 
 						VALUES 		(
@@ -659,12 +658,12 @@ function create_tables()
 										), 
 									"The table ' . $table . ' was created automatically by the PHP script.\nThis should only occur once, at the very start of the log events."
 									)';
-			$logEventArray[] = $sqlLog;						
+			$logEventArray[] = $sqlLog;
 
 			$totaltime = microtime(true) - $_SERVER["REQUEST_TIME_FLOAT"];
 			$time = $totaltime - $prevtime;
 			$prevtime = $totaltime;
-			echo '<b>Execution time for creating table ' . $table. ':</b> ' . $time . 's<br />';		
+			echo '<b>Execution time for creating table ' . $table. ':</b> ' . $time . 's<br />';
 		} else { 
 			//If the table exists, but for some reason has no values in it, then fill it
 			$return = $conn->query("SELECT 	COUNT(*) 
@@ -673,9 +672,9 @@ function create_tables()
 			if($rowCount == 0){
 				// No values in the table. Insert the needed values.
 				fillLogAction($conn);
-				
+
 				echo "<b>Inserted default values into $table.</b> <br />";
-		
+
 				$totaltime = microtime(true) - $_SERVER["REQUEST_TIME_FLOAT"];
 				$time = $totaltime - $prevtime;
 				$prevtime = $totaltime;
@@ -683,11 +682,11 @@ function create_tables()
 			} else {
 				// Table already has (some) values in it
 				echo "<b>Table $table already had values in it.</b> <br />";
-			}		
-		
+			}
+
 			echo '<b>Table ' . $table. ' already exists</b>.<br />';
 		}
-		
+
 			//Equipment in meeting rooms
 		$table = 'roomequipment';
 		//Check if table already exists
@@ -704,7 +703,7 @@ function create_tables()
 						  CONSTRAINT `FK_EquipmentID` FOREIGN KEY (`EquipmentID`) REFERENCES `equipment` (`EquipmentID`) ON UPDATE CASCADE,
 						  CONSTRAINT `FK_MeetingRoomID2` FOREIGN KEY (`MeetingRoomID`) REFERENCES `meetingroom` (`meetingRoomID`) ON DELETE CASCADE ON UPDATE CASCADE
 						) ENGINE=InnoDB DEFAULT CHARSET=utf8");
-						
+
 			//	Add the creation to log event
 			$sqlLog = '	INSERT INTO `logevent`(`actionID`, `description`) 
 						VALUES 		(
@@ -714,13 +713,13 @@ function create_tables()
 										WHERE 	`name` = "Table Created"
 										), 
 									"The table ' . $table . ' was created automatically by the PHP script.\nThis should only occur once, at the very start of the log events."
-									)';		
-			$logEventArray[] = $sqlLog;						
+									)';
+			$logEventArray[] = $sqlLog;
 
 			$totaltime = microtime(true) - $_SERVER["REQUEST_TIME_FLOAT"];
 			$time = $totaltime - $prevtime;
 			$prevtime = $totaltime;
-			echo '<b>Execution time for creating table ' . $table. ':</b> ' . $time . 's<br />';		
+			echo '<b>Execution time for creating table ' . $table. ':</b> ' . $time . 's<br />';
 		} else { 
 			echo '<b>Table ' . $table. ' already exists</b>.<br />';
 		}
@@ -755,13 +754,13 @@ function create_tables()
 										WHERE 	`name` = "Table Created"
 										), 
 									"The table ' . $table . ' was created automatically by the PHP script.\nThis should only occur once, at the very start of the log events."
-									)';		
-			$logEventArray[] = $sqlLog;						
+									)';
+			$logEventArray[] = $sqlLog;
 
 			$totaltime = microtime(true) - $_SERVER["REQUEST_TIME_FLOAT"];
 			$time = $totaltime - $prevtime;
 			$prevtime = $totaltime;
-			echo '<b>Execution time for creating table ' . $table. ':</b> ' . $time . 's<br />';		
+			echo '<b>Execution time for creating table ' . $table. ':</b> ' . $time . 's<br />';
 		} else {
 			//If the table exists, but for some reason has no values in it, then fill it
 			$return = $conn->query("SELECT 	COUNT(*) 
@@ -770,9 +769,9 @@ function create_tables()
 			if($rowCount == 0){
 				// No values in the table. Insert the needed values.
 				fillCredits($conn);
-				
+
 				echo "<b>Inserted default values into $table.</b> <br />";
-		
+
 				$totaltime = microtime(true) - $_SERVER["REQUEST_TIME_FLOAT"];
 				$time = $totaltime - $prevtime;
 				$prevtime = $totaltime;
@@ -781,7 +780,7 @@ function create_tables()
 				// Table already has (some) values in it
 				echo "<b>Table $table already had values in it.</b> <br />";
 			}
-			
+
 			echo '<b>Table ' . $table. ' already exists</b>.<br />';
 		}
 
@@ -811,13 +810,13 @@ function create_tables()
 										WHERE 	`name` = "Table Created"
 										), 
 									"The table ' . $table . ' was created automatically by the PHP script.\nThis should only occur once, at the very start of the log events."
-									)';		
-			$logEventArray[] = $sqlLog;						
+									)';
+			$logEventArray[] = $sqlLog;
 
 			$totaltime = microtime(true) - $_SERVER["REQUEST_TIME_FLOAT"];
 			$time = $totaltime - $prevtime;
 			$prevtime = $totaltime;
-			echo '<b>Execution time for creating table ' . $table. ':</b> ' . $time . 's<br />';		
+			echo '<b>Execution time for creating table ' . $table. ':</b> ' . $time . 's<br />';
 		} else { 
 			echo '<b>Table ' . $table. ' already exists</b>.<br />';
 		}
@@ -850,16 +849,16 @@ function create_tables()
 										WHERE 	`name` = "Table Created"
 										), 
 									"The table ' . $table . ' was created automatically by the PHP script.\nThis should only occur once, at the very start of the log events."
-									)';			
-			$logEventArray[] = $sqlLog;						
+									)';
+			$logEventArray[] = $sqlLog;
 
 			$totaltime = microtime(true) - $_SERVER["REQUEST_TIME_FLOAT"];
 			$time = $totaltime - $prevtime;
 			$prevtime = $totaltime;
-			echo '<b>Execution time for creating table ' . $table. ':</b> ' . $time . 's<br />';		
+			echo '<b>Execution time for creating table ' . $table. ':</b> ' . $time . 's<br />';
 		} else { 
 			echo '<b>Table ' . $table. ' already exists</b>.<br />';
-		}		
+		}
 
 			// Admin created events
 		$table = 'event';
@@ -888,17 +887,17 @@ function create_tables()
 										WHERE 	`name` = "Table Created"
 										), 
 									"The table ' . $table . ' was created automatically by the PHP script.\nThis should only occur once, at the very start of the log events."
-									)';			
-			$logEventArray[] = $sqlLog;						
+									)';
+			$logEventArray[] = $sqlLog;
 
 			$totaltime = microtime(true) - $_SERVER["REQUEST_TIME_FLOAT"];
 			$time = $totaltime - $prevtime;
 			$prevtime = $totaltime;
-			echo '<b>Execution time for creating table ' . $table. ':</b> ' . $time . 's<br />';		
+			echo '<b>Execution time for creating table ' . $table. ':</b> ' . $time . 's<br />';
 		} else { 
 			echo '<b>Table ' . $table. ' already exists</b>.<br />';
 		}
-		
+
 			// Actual event datetime overview per room
 		$table = 'roomevent';
 		//Check if table already exists
@@ -914,7 +913,7 @@ function create_tables()
 						  CONSTRAINT `FK_EventID` FOREIGN KEY (`EventID`) REFERENCES `event` (`EventID`) ON DELETE CASCADE ON UPDATE CASCADE,
 						  CONSTRAINT `FK_MeetingRoomID4` FOREIGN KEY (`meetingRoomID`) REFERENCES `meetingroom` (`meetingRoomID`) ON DELETE CASCADE ON UPDATE CASCADE
 						) ENGINE=InnoDB DEFAULT CHARSET=utf8");
-						
+
 			//	Add the creation to log event
 			$sqlLog = '	INSERT INTO `logevent`(`actionID`, `description`) 
 						VALUES 		(
@@ -924,8 +923,8 @@ function create_tables()
 										WHERE 	`name` = "Table Created"
 										), 
 									"The table ' . $table . ' was created automatically by the PHP script.\nThis should only occur once, at the very start of the log events."
-									)';			
-			$logEventArray[] = $sqlLog;						
+									)';
+			$logEventArray[] = $sqlLog;
 
 			$totaltime = microtime(true) - $_SERVER["REQUEST_TIME_FLOAT"];
 			$time = $totaltime - $prevtime;
@@ -933,7 +932,7 @@ function create_tables()
 			echo '<b>Execution time for creating table ' . $table. ':</b> ' . $time . 's<br />';		
 		} else { 
 			echo '<b>Table ' . $table. ' already exists</b>.<br />';
-		}		
+		}
 
 			//Log Event
 		$table = 'logevent';
@@ -960,7 +959,7 @@ function create_tables()
 										), 
 									"The table ' . $table . ' was created automatically by the PHP script.\nThis should only occur once, at the very start of the log events."
 									)';
-			$logEventArray[] = $sqlLog;						
+			$logEventArray[] = $sqlLog;
 
 			$totaltime = microtime(true) - $_SERVER["REQUEST_TIME_FLOAT"];
 			$time = $totaltime - $prevtime;
@@ -968,8 +967,8 @@ function create_tables()
 			echo '<b>Execution time for creating table ' . $table. ':</b> ' . $time . 's<br />';	
 		} else { 
 			echo '<b>Table ' . $table. ' already exists</b>.<br />';
-		}	
-		
+		}
+
 		// Store the saved up log events in the now created database
 		if(tableExists($conn,$table)){
 			if(count($logEventArray)>0){
@@ -981,17 +980,17 @@ function create_tables()
 				$totaltime = microtime(true) - $_SERVER["REQUEST_TIME_FLOAT"];
 				$time = $totaltime - $prevtime;
 				$prevtime = $totaltime;
-				echo '<b>Execution time for filling in Log Event with database/table creation:</b> ' . $time . 's<br />';	
+				echo '<b>Execution time for filling in Log Event with database/table creation:</b> ' . $time . 's<br />';
 			}else{
 				echo "<b>There was nothing to add into Log Event</b><br />";
 			}
 		}else{
 			echo "<b>$table does not exist so couldn't start log event procedure</b><br />";
 		}
-		
+
 		//Calculating total time spent checking if tables exist and/or creating them.
 		echo '<b>Total Execution Time for creating all tables:</b> ' . $totaltime . 's.<br />';
-		
+
 		//Close connection
 		$conn = null;
 	}

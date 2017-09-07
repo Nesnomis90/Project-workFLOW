@@ -1396,10 +1396,7 @@ if (isSet($_POST['action']) and $_POST['action'] == 'Confirm Merge'){
 			$s->bindValue(':CompanyID2', $_SESSION['MergeCompanySelectedCompanyID2']);
 			$s->execute();
 
-			// TO-DO: FIX-ME: How to handle merging company credits history?
-				// Get info from both histories and compare which one was charged the most and keep that?
-				// Split date into the appropriate periods for the new company?
-				// Keep info if billed or not?
+			// Update companycreditshistory to be a part of the new company, but mark it as a merged history.
 			$sql = 'UPDATE 	`companycreditshistory`
 					SET		`CompanyID` = :CompanyID2,
 							`mergeNumber` = :CompanyID
@@ -1409,7 +1406,7 @@ if (isSet($_POST['action']) and $_POST['action'] == 'Confirm Merge'){
 			$s->bindValue(':CompanyID2', $_SESSION['MergeCompanySelectedCompanyID2']);
 			$s->execute();
 
-			// Deleting company will cascade to companycredits, companycreditshistory and employees.
+			// Deleting company will cascade to companycredits(, companycreditshistory) and employees.
 			$sql = 'DELETE FROM `company`
 					WHERE		`CompanyID` = :CompanyID';
 			$s = $pdo->prepare($sql);
@@ -2123,9 +2120,9 @@ try
 	} else {
 		$rowNum = 0;
 	}
-	
+
 	//Close the connection
-	$pdo = null;	
+	$pdo = null;
 }
 catch (PDOException $e)
 {
