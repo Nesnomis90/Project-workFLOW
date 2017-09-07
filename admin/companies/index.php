@@ -42,6 +42,8 @@ function clearEditCompanySessions(){
 // Function to check if the company has unbilled periods and then sums them up and displays the total 
 function sumUpUnbilledPeriods($pdo, $companyID){
 
+	// TO-DO: Sort by different merge numbers to get unbilled periods from companies that were merged into the selected one
+
 	$minimumSecondsPerBooking = MINIMUM_BOOKING_DURATION_IN_MINUTES_USED_IN_PRICE_CALCULATIONS * 60; // e.g. 15min = 900s
 	$aboveThisManySecondsToCount = BOOKING_DURATION_IN_MINUTES_USED_BEFORE_INCLUDING_IN_PRICE_CALCULATIONS * 60; // e.g. 1min = 60s
 	$roundDownToTheClosestMinuteNumberInSeconds = ROUND_SUMMED_BOOKING_TIME_CHARGED_FOR_PERIOD_DOWN_TO_THIS_CLOSEST_MINUTE_AMOUNT * 60; // e.g. 15min = 900s
@@ -121,6 +123,7 @@ function sumUpUnbilledPeriods($pdo, $companyID){
 									),0))
 									FROM 		`booking` b
 									WHERE 		b.`CompanyID` = :CompanyID
+									AND			b.`mergeNumber` = 0
 									AND 		DATE(b.`actualEndDateTime`) >= cch.`startDate`
 									AND			DATE(b.`actualEndDateTime`) < cch.`endDate`
 								)										AS BookingTimeChargedInSeconds
@@ -209,6 +212,7 @@ function sumUpUnbilledPeriods($pdo, $companyID){
 									),0))
 									FROM 		`booking` b
 									WHERE 		b.`CompanyID` = :CompanyID
+									AND			b.`mergeNumber` = 0
 									AND 		DATE(b.`actualEndDateTime`) >= cch.`startDate`
 									AND 		DATE(b.`actualEndDateTime`) < cch.`endDate`
 								)										AS BookingTimeChargedInSeconds
@@ -1363,8 +1367,8 @@ if (isSet($_POST['action']) and $_POST['action'] == 'Confirm Merge'){
 			$s = $pdo->prepare($sql);
 			$s->bindValue(':newCompanyID', $_SESSION['MergeCompanySelectedCompanyID2']);
 			$s->execute();
-
 			$row = $s->fetch(PDO::FETCH_ASSOC);
+
 			$oldCompanyName = $_SESSION['MergeCompanySelectedCompanyName'];
 			$mergeIntoCompanyName = $row['MergeIntoCompanyName'];
 
