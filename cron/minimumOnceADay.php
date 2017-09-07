@@ -183,6 +183,7 @@ function updateBillingDatesForCompanies(){
 				$displayCompanyCredits = convertMinutesToHoursAndMinutes($creditsGivenInMinutes);
 
 				$setAsBilled = FALSE;
+
 				if($bookingTimeUsedThisMonthInMinutes > $creditsGivenInMinutes){
 					// Company went over credit this period
 					$companiesOverCredit[] = array(
@@ -196,6 +197,7 @@ function updateBillingDatesForCompanies(){
 						$setAsBilled = TRUE;
 					}
 				}
+
 				$sql = "INSERT INTO `companycreditshistory`
 						SET			`CompanyID` = " . $companyID . ",
 									`startDate` = '" . $startDate . "',
@@ -211,7 +213,7 @@ function updateBillingDatesForCompanies(){
 								`billingDescription` = '" . $billingDescriptionInformation . "'";
 				}
 				$pdo->exec($sql);
-				
+
 				// We want the system to always have a period from x day to x day of next month. 
 				// This doesn't work for all dates, due to February, so we manually set an appropriate date
 				// And return to the correct pattern again in March
@@ -272,7 +274,7 @@ function updateBillingDatesForCompanies(){
 					echo "Email Message being sent out: \n" . $emailMessage;	// TO-DO: Remove before uploading
 					echo "<br />";
 
-					// Get admin(s) emails
+					// Get admin email(s)
 					$sql = "SELECT 		u.`email`		AS Email
 							FROM 		`user` u
 							INNER JOIN 	`accesslevel` a

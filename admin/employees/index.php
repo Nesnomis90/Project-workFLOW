@@ -1036,7 +1036,7 @@ clearEditEmployeeSessions();
 clearTransferEmployeeSessions();
 
 // Get only information from the specific company
-if(isSet($_GET['Company'])){
+if(isSet($_GET['Company']) AND $_GET['Company'] != ""){
 	try
 	{
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
@@ -1159,7 +1159,7 @@ if(isSet($_GET['Company'])){
 							AND 		b.`companyID` = :CompanyID
 							AND 		c.`CompanyID` = b.`companyID`
 							AND 		DATE(b.`actualEndDateTime`) >= c.`startDate`
-							AND 		DATE(b.`actualEndDateTime`) < c.`startDate`
+							AND 		DATE(b.`actualEndDateTime`) < c.`endDate`
 						) 							AS MonthlyBookingTimeUsed,
 						(
 							SELECT (BIG_SEC_TO_TIME(SUM(

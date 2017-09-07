@@ -40,7 +40,10 @@
 			<fieldset><legend><b>Not Billed Periods</b></legend>
 			<?php $totalCostForAllPeriodsSummedUp = 0; ?>
 			<?php foreach($periodsSummmedUp AS $period) : ?>
-				<fieldset><legend><b><?php htmlout($period['StartDate'] . " - " . $period['EndDate']); ?></b></legend>
+				<fieldset><legend><b><?php htmlout($period['StartDate'] . " up to " . $period['EndDate']); ?></b></legend>
+					<?php if($displayMergeStatus) : ?>
+						<label class="notBilled">Period Info:</label><span><b><?php htmlout($period['MergeStatus']); ?></b></span>
+					<?php endif; ?>
 					<label class="notBilled">Credits Given:</label><span><b><?php htmlout($period['CreditsGiven']); ?></b></span>
 					<label class="notBilled">Booking Time Charged:</label><span><b><?php htmlout($period['BookingTimeCharged']); ?></b></span>
 					<label class="notBilled">Excess Booking Time:</label><span><b><?php htmlout($period['OverCreditsTimeExact']); ?></b></span>
@@ -105,8 +108,8 @@
 								<?php if(isSet($row['CancelMessage']) AND !empty($row['CancelMessage'])) : ?>
 									<label class="period">Ended Early Message:</label><span><b><?php htmlout($row['CancelMessage']); ?></b></span>
 								<?php endif; ?>
-								<?php if(isSet($row['AdminNote']) AND !empty($row['AdminNote'])) : ?>
-									<label class="period" style="color: red;">Admin Note:</label><span style="color:red;"><b><?php htmlout($row['AdminNote']); ?></b></span>
+								<?php if(isSet($row['AdminNote']) AND $row['AdminNote'] != "") : ?>
+									<label class="period" style="color: red;">Admin Note:</label><span style="white-space: pre-wrap; color:red;"><b><?php htmlout($row['AdminNote']); ?></b></span>
 								<?php endif; ?>
 						</fieldset>
 						<?php $bookingNumberThisPeriod += 1; ?>

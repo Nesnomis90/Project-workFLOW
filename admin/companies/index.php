@@ -15,6 +15,7 @@ function clearBookingHistorySessions(){
 	unset($_SESSION['BookingHistoryStartDate']);
 	unset($_SESSION['BookingHistoryEndDate']);
 	unset($_SESSION['BookingHistoryCompanyInfo']);
+	unset($_SESSION['BookingHistoryCompanyMergeNumber']);
 }
 
 // Function to clear sessions used to remember user inputs on refreshing the add company form
@@ -43,12 +44,13 @@ function clearEditCompanySessions(){
 function sumUpUnbilledPeriods($pdo, $companyID){
 
 	$minimumSecondsPerBooking = MINIMUM_BOOKING_DURATION_IN_MINUTES_USED_IN_PRICE_CALCULATIONS * 60; // e.g. 15min = 900s
-	$aboveThisManySecondsToCount = BOOKING_DURATION_IN_MINUTES_USED_BEFORE_INCLUDING_IN_PRICE_CALCULATIONS * 60; // e.g. 1min = 60s
+	$aboveThisManySecondsToCount = BOOKING_DURATION_IN_MINUTES_USED_BEFORE_INCLUDING_IN_PRICE_CALCULATIONS * 60; // e.g. 5min = 300s
 	$roundDownToTheClosestMinuteNumberInSeconds = ROUND_SUMMED_BOOKING_TIME_CHARGED_FOR_PERIOD_DOWN_TO_THIS_CLOSEST_MINUTE_AMOUNT * 60; // e.g. 15min = 900s
 	if(isSet($roundDownToTheClosestMinuteNumberInSeconds) AND $roundDownToTheClosestMinuteNumberInSeconds != 0){
 			// Rounds down to the closest 15 minutes (on finished summation per period)
 		$sql = "SELECT		StartDate, 
 							EndDate,
+							CompanyMergeNumber,
 							CreditSubscriptionMonthlyPrice,
 							CreditSubscriptionHourPrice,
 							CreditsGivenInSeconds/60							AS CreditSubscriptionMinuteAmount,
@@ -78,6 +80,7 @@ function sumUpUnbilledPeriods($pdo, $companyID){
 								cch.`minuteAmount`*60							AS CreditsGivenInSeconds,
 								cch.`monthlyPrice`								AS CreditSubscriptionMonthlyPrice,
 								cch.`overCreditHourPrice`						AS CreditSubscriptionHourPrice,
+								cch.`mergeNumber`								AS CompanyMergeNumber,
 								(
 									SELECT (IFNULL(SUM(
 										IF(
@@ -121,6 +124,7 @@ function sumUpUnbilledPeriods($pdo, $companyID){
 									),0))
 									FROM 		`booking` b
 									WHERE 		b.`CompanyID` = :CompanyID
+									AND			b.`mergeNumber` = cch.`mergeNumber`
 									AND 		DATE(b.`actualEndDateTime`) >= cch.`startDate`
 									AND			DATE(b.`actualEndDateTime`) < cch.`endDate`
 								)										AS BookingTimeChargedInSeconds
@@ -140,6 +144,7 @@ function sumUpUnbilledPeriods($pdo, $companyID){
 	} else {
 		$sql = "SELECT		StartDate, 
 							EndDate,
+							CompanyMergeNumber,
 							CreditSubscriptionMonthlyPrice,
 							CreditSubscriptionHourPrice,
 							CreditsGivenInSeconds/60							AS CreditSubscriptionMinuteAmount,
@@ -165,6 +170,7 @@ function sumUpUnbilledPeriods($pdo, $companyID){
 								cch.`minuteAmount`*60							AS CreditsGivenInSeconds,
 								cch.`monthlyPrice`								AS CreditSubscriptionMonthlyPrice,
 								cch.`overCreditHourPrice`						AS CreditSubscriptionHourPrice,
+								cch.`mergeNumber`								AS CompanyMergeNumber,
 								(
 									SELECT (IFNULL(SUM(
 										IF(
@@ -208,6 +214,7 @@ function sumUpUnbilledPeriods($pdo, $companyID){
 									),0))
 									FROM 		`booking` b
 									WHERE 		b.`CompanyID` = :CompanyID
+									AND			b.`mergeNumber` = cch.`mergeNumber`
 									AND 		DATE(b.`actualEndDateTime`) >= cch.`startDate`
 									AND 		DATE(b.`actualEndDateTime`) < cch.`endDate`
 								)										AS BookingTimeChargedInSeconds
@@ -227,6 +234,8 @@ function sumUpUnbilledPeriods($pdo, $companyID){
 	$s->execute();
 	$result = $s->fetchAll(PDO::FETCH_ASSOC);
 
+	$numberOfMergedPeriods = 0;
+
 	foreach($result AS $row){
 				// Get credits values
 		$companyMinuteCredits = $row['CreditSubscriptionMinuteAmount'];
@@ -240,6 +249,14 @@ function sumUpUnbilledPeriods($pdo, $companyID){
 		$hourPrice = $row["CreditSubscriptionHourPrice"];
 		if($hourPrice == NULL OR $hourPrice == ""){
 			$hourPrice = 0;
+		}
+
+		$mergeNumber = $row['CompanyMergeNumber'];
+		if($mergeNumber == 0){
+			$mergeStatus = "Period From This Company";
+		} else {
+			$mergeStatus = "Transferred From Another Company";
+			$numberOfMergedPeriods += 1;
 		}
 
 		// Calculate price
@@ -265,6 +282,7 @@ function sumUpUnbilledPeriods($pdo, $companyID){
 		$displayEndDate = convertDatetimeToFormat($row['EndDate'], 'Y-m-d', DATE_DEFAULT_FORMAT_TO_DISPLAY);
 
 		$periodsSummmedUp[] = array(
+										'MergeStatus' => $mergeStatus,
 										'StartDate' => $displayStartDate,
 										'EndDate' => $displayEndDate,
 										'CreditsGiven' => convertTimeToHoursAndMinutes($row['CreditsGiven']),
@@ -277,15 +295,21 @@ function sumUpUnbilledPeriods($pdo, $companyID){
 									);
 	}
 
+	if($numberOfMergedPeriods > 0){
+		$displayMergeStatus = TRUE;
+	} else {
+		$displayMergeStatus = FALSE;
+	}
+
 	if(isSet($periodsSummmedUp)){
-		return $periodsSummmedUp;
+		return array($periodsSummmedUp, $displayMergeStatus);
 	} else {
 		return FALSE;
 	}
 }
 
 // Function to calculate booking time used and the cost of that period for a company
-function calculatePeriodInformation($pdo, $companyID, $BillingStart, $BillingEnd, $rightNow){
+function calculatePeriodInformation($pdo, $companyID, $BillingStart, $BillingEnd, $rightNow, $mergeNumber){
 
 	if($rightNow === TRUE){
 		// Get the current credit information
@@ -314,11 +338,13 @@ function calculatePeriodInformation($pdo, $companyID, $BillingStart, $BillingEnd
 				WHERE 		`companyID` = :CompanyID
 				AND 		`startDate` = :startDate
 				AND			`endDate` = :endDate
+				AND			`mergeNumber` = :mergeNumber
 				LIMIT 		1";
 		$s = $pdo->prepare($sql);
 		$s->bindValue(':CompanyID', $companyID);
 		$s->bindValue(':startDate', $BillingStart);
 		$s->bindValue(':endDate', $BillingEnd);
+		$s->bindValue(':mergeNumber', $mergeNumber);
 		$s->execute();
 		$row = $s->fetch(PDO::FETCH_ASSOC);
 
@@ -422,7 +448,8 @@ function calculatePeriodInformation($pdo, $companyID, $BillingStart, $BillingEnd
 			WHERE   	b.`CompanyID` = :CompanyID
 			AND 		b.`actualEndDateTime` IS NOT NULL
 			AND         DATE(b.`actualEndDateTime`) >= :startDate
-			AND         DATE(b.`actualEndDateTime`) < :endDate";
+			AND         DATE(b.`actualEndDateTime`) < :endDate
+			AND			b.`mergeNumber` = :mergeNumber";
 
 	$minimumSecondsPerBooking = MINIMUM_BOOKING_DURATION_IN_MINUTES_USED_IN_PRICE_CALCULATIONS * 60; // e.g. 15min = 900s
 	$aboveThisManySecondsToCount = BOOKING_DURATION_IN_MINUTES_USED_BEFORE_INCLUDING_IN_PRICE_CALCULATIONS * 60; // e.g. 1min = 60s
@@ -430,6 +457,7 @@ function calculatePeriodInformation($pdo, $companyID, $BillingStart, $BillingEnd
 	$s->bindValue(':CompanyID', $companyID);
 	$s->bindValue(':startDate', $BillingStart);
 	$s->bindValue(':endDate', $BillingEnd);
+	$s->bindValue(':mergeNumber', $mergeNumber);
 	$s->bindValue(':minimumSecondsPerBooking', $minimumSecondsPerBooking);
 	$s->bindValue(':aboveThisManySecondsToCount', $aboveThisManySecondsToCount);	
 	$s->execute();
@@ -443,7 +471,7 @@ function calculatePeriodInformation($pdo, $companyID, $BillingStart, $BillingEnd
 		$startDateTime = convertDatetimeToFormat($row['BookingStartedDatetime'], 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
 		$endDateTime = convertDatetimeToFormat($row['BookingCompletedDatetime'], 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
 
-		$bookingPeriod = $startDateTime . " to " . $endDateTime;
+		$bookingPeriod = $startDateTime . " up to " . $endDateTime;
 
 		// Calculate time used
 		$bookingTimeUsed = convertTimeToMinutes($row['BookingTimeUsed']);
@@ -697,6 +725,13 @@ if (isSet($_POST['history']) AND $_POST['history'] == "Set As Billed"){
 	$PreviousPeriod = $_POST['previousPeriod'];
 	$BillingStart = $_POST['billingStart'];
 	$BillingEnd = $_POST['billingEnd'];
+	
+	if(isSet($_SESSION['BookingHistoryCompanyMergeNumber']) AND $_SESSION['BookingHistoryCompanyMergeNumber'] != ""){
+		$mergeNumber = $_SESSION['BookingHistoryCompanyMergeNumber'];
+	} else {
+		unset($_SESSION['BookingHistoryCompanyMergeNumber']);
+		$mergeNumber = 0;
+	}
 
 	if(isSet($_POST['billingDescription'])){
 		$billingDescriptionAdminAddition = trimExcessWhitespaceButLeaveLinefeed($_POST['billingDescription']);
@@ -715,7 +750,7 @@ if (isSet($_POST['history']) AND $_POST['history'] == "Set As Billed"){
 		// Format billing dates
 		$displayBillingStart = convertDatetimeToFormat($BillingStart , 'Y-m-d', DATE_DEFAULT_FORMAT_TO_DISPLAY);
 		$displayBillingEnd = convertDatetimeToFormat($BillingEnd , 'Y-m-d', DATE_DEFAULT_FORMAT_TO_DISPLAY);
-		$BillingPeriod = $displayBillingStart . " To " . $displayBillingEnd . ".";	
+		$BillingPeriod = $displayBillingStart . " up to " . $displayBillingEnd . ".";	
 
 		// rightNow decides if we use the companycreditshistory or the credits/companycredits information
 		if($NextPeriod){
@@ -729,7 +764,7 @@ if (isSet($_POST['history']) AND $_POST['history'] == "Set As Billed"){
 				$bookingCostThisMonth, $totalBookingCostThisMonth, $companyMinuteCreditsRemaining, $actualTimeOverCreditsInMinutes, 
 				$periodHasBeenBilled, $billingDescription, $displayTotalBookingTimeUsedInPriceCalculationsThisPeriod, 
 				$displayTotalBookingTimeChargedWithAfterCredits)
-		= calculatePeriodInformation($pdo, $companyID, $BillingStart, $BillingEnd, $rightNow);
+		= calculatePeriodInformation($pdo, $companyID, $BillingStart, $BillingEnd, $rightNow, $mergeNumber);
 
 		// Update period as billed relevant information and admin inputs
 
@@ -758,11 +793,13 @@ if (isSet($_POST['history']) AND $_POST['history'] == "Set As Billed"){
 						`billingDescription` = :billingDescription
 				WHERE   `CompanyID` = :CompanyID
 				AND	    `startDate` = :startDate
-				AND		`endDate` = :endDate";
+				AND		`endDate` = :endDate
+				AND		`mergeNumber` = :mergeNumber";
 		$s = $pdo->prepare($sql);
 		$s->bindValue(':CompanyID', $companyID);
 		$s->bindValue(':startDate', $BillingStart);
 		$s->bindValue(':endDate', $BillingEnd);
+		$s->bindValue(':mergeNumber', $mergeNumber);
 		$s->bindValue(':billingDescription', $billingDescriptionInformation);
 		$s->execute();
 
@@ -808,6 +845,13 @@ if (isSet($_POST['history']) AND $_POST['history'] == "Next Period"){
 	$_SESSION['BookingHistoryStartDate'] = $startDate;
 	$_SESSION['BookingHistoryEndDate'] = $endDate;	
 
+	if(isSet($_SESSION['BookingHistoryCompanyMergeNumber']) AND $_SESSION['BookingHistoryCompanyMergeNumber'] != ""){
+		$mergeNumber = $_SESSION['BookingHistoryCompanyMergeNumber'];
+	} else {
+		unset($_SESSION['BookingHistoryCompanyMergeNumber']);
+		$mergeNumber = 0;
+	}
+
 	// Get booking history for the selected company
 	try
 	{
@@ -826,7 +870,7 @@ if (isSet($_POST['history']) AND $_POST['history'] == "Next Period"){
 		$BillingEnd = $endDate;
 		$displayBillingStart = convertDatetimeToFormat($BillingStart , 'Y-m-d', DATE_DEFAULT_FORMAT_TO_DISPLAY);
 		$displayBillingEnd = convertDatetimeToFormat($BillingEnd , 'Y-m-d', DATE_DEFAULT_FORMAT_TO_DISPLAY);
-		$BillingPeriod = $displayBillingStart . " To " . $displayBillingEnd . ".";	
+		$BillingPeriod = $displayBillingStart . " up to " . $displayBillingEnd . ".";	
 
 		// rightNow decides if we use the companycreditshistory or the credits/companycredits information
 		if($NextPeriod){
@@ -840,10 +884,10 @@ if (isSet($_POST['history']) AND $_POST['history'] == "Next Period"){
 				$bookingCostThisMonth, $totalBookingCostThisMonth, $companyMinuteCreditsRemaining, $actualTimeOverCreditsInMinutes, 
 				$periodHasBeenBilled, $billingDescription, $displayTotalBookingTimeUsedInPriceCalculationsThisPeriod, 
 				$displayTotalBookingTimeChargedWithAfterCredits)
-		= calculatePeriodInformation($pdo, $companyID, $BillingStart, $BillingEnd, $rightNow);
+		= calculatePeriodInformation($pdo, $companyID, $BillingStart, $BillingEnd, $rightNow, $mergeNumber);
 
 		// Sum up periods that are not set as billed
-		$periodsSummmedUp = sumUpUnbilledPeriods($pdo, $companyID);
+		list($periodsSummmedUp, $displayMergeStatus) = sumUpUnbilledPeriods($pdo, $companyID);
 		if($periodsSummmedUp === FALSE){
 			// No periods not set as billed
 			unset($periodsSummmedUp);
@@ -894,6 +938,13 @@ if (	(isSet($_POST['history']) AND $_POST['history'] == "Previous Period") OR
 	// Save our newly set start/end dates
 	$_SESSION['BookingHistoryStartDate'] = $startDate;
 	$_SESSION['BookingHistoryEndDate'] = $endDate;
+	
+	if(isSet($_SESSION['BookingHistoryCompanyMergeNumber']) AND $_SESSION['BookingHistoryCompanyMergeNumber'] != ""){
+		$mergeNumber = $_SESSION['BookingHistoryCompanyMergeNumber'];
+	} else {
+		unset($_SESSION['BookingHistoryCompanyMergeNumber']);
+		$mergeNumber = 0;
+	}
 
 	// Get booking history for the selected company
 	try
@@ -913,7 +964,7 @@ if (	(isSet($_POST['history']) AND $_POST['history'] == "Previous Period") OR
 		$BillingEnd =  $endDate;
 		$displayBillingStart = convertDatetimeToFormat($BillingStart , 'Y-m-d', DATE_DEFAULT_FORMAT_TO_DISPLAY);
 		$displayBillingEnd = convertDatetimeToFormat($BillingEnd , 'Y-m-d', DATE_DEFAULT_FORMAT_TO_DISPLAY);
-		$BillingPeriod = $displayBillingStart . " To " . $displayBillingEnd . ".";			
+		$BillingPeriod = $displayBillingStart . " up to " . $displayBillingEnd . ".";			
 
 		$rightNow = FALSE;
 
@@ -922,10 +973,10 @@ if (	(isSet($_POST['history']) AND $_POST['history'] == "Previous Period") OR
 				$bookingCostThisMonth, $totalBookingCostThisMonth, $companyMinuteCreditsRemaining, $actualTimeOverCreditsInMinutes, 
 				$periodHasBeenBilled, $billingDescription, $displayTotalBookingTimeUsedInPriceCalculationsThisPeriod, 
 				$displayTotalBookingTimeChargedWithAfterCredits)
-		= calculatePeriodInformation($pdo, $companyID, $BillingStart, $BillingEnd, $rightNow);
+		= calculatePeriodInformation($pdo, $companyID, $BillingStart, $BillingEnd, $rightNow, $mergeNumber);
 
 		// Sum up periods that are not set as billed
-		$periodsSummmedUp = sumUpUnbilledPeriods($pdo, $companyID);
+		list($periodsSummmedUp, $displayMergeStatus) = sumUpUnbilledPeriods($pdo, $companyID);
 		if($periodsSummmedUp === FALSE){
 			// No periods not set as billed
 			unset($periodsSummmedUp);
@@ -967,6 +1018,53 @@ if (	(isSet($_GET['companyID']) AND isSet($_GET['BillingStart']) AND isSet($_GET
 		$_SESSION['refreshBookingHistoryFromLink'] = array($companyID, $BillingStart, $BillingEnd);
 		header("Location: .");
 		exit();
+	}	
+
+	$abortLink = FALSE;
+
+	if(isSet($companyID, $BillingStart, $BillingEnd) AND $companyID != "" AND $BillingStart != "" AND $BillingEnd != ""){
+		// First check if the dates in the get parameters are valid period dates for the company
+		try
+		{
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+			$pdo = connect_to_db();
+
+			$sql = "SELECT 	COUNT(*)
+					FROM	`companycreditshistory`
+					WHERE	`companyID` = :companyID
+					AND		`startDate` = :startDate
+					AND		`endDate` = :endDate
+					AND		`mergeNumber` = 0
+					LIMIT 	1";
+			$s = $pdo->prepare($sql);
+			$s->bindValue(':companyID', $companyID);
+			$s->bindValue(':startDate', $BillingStart);
+			$s->bindValue(':endDate', $BillingEnd);
+			$s->execute();
+			$row = $s->fetch();
+
+			if($row[0] == 0){
+				// The dates submitted are not valid. At least not stored in the database.
+				$abortLink = TRUE;
+			}
+		}
+		catch (PDOException $e)
+		{
+			$error = 'Error checking if link parameters are a valid period: ' . $e->getMessage();
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+			$pdo = null;
+			exit();
+		}
+	} else {
+		$abortLink = TRUE;
+	}
+
+	if($abortLink){
+		$_SESSION['CompanyUserFeedback'] = 	"The link you used did not correspond to a correct period and/or company." .
+											"\nCould therefore not retrieve any booking information.";
+
+		header('Location: .');
+		exit();
 	}
 
 	// Get booking history for the selected company
@@ -1003,12 +1101,12 @@ if (	(isSet($_GET['companyID']) AND isSet($_GET['BillingStart']) AND isSet($_GET
 		// Format billing dates
 		$displayBillingStart = convertDatetimeToFormat($BillingStart , 'Y-m-d', DATE_DEFAULT_FORMAT_TO_DISPLAY);
 		$displayBillingEnd = convertDatetimeToFormat($BillingEnd , 'Y-m-d', DATE_DEFAULT_FORMAT_TO_DISPLAY);
-		$BillingPeriod = $displayBillingStart . " To " . $displayBillingEnd . ".";			
+		$BillingPeriod = $displayBillingStart . " up to " . $displayBillingEnd . ".";			
 
 		// Save our newly set start/end dates
 		$_SESSION['BookingHistoryStartDate'] = $BillingStart;
 		$_SESSION['BookingHistoryEndDate'] = $BillingEnd;
-		
+
 		// Check if date submitted is current period
 		if($BillingEnd != $lastBillingDate){
 			$rightNow = FALSE;
@@ -1028,12 +1126,14 @@ if (	(isSet($_GET['companyID']) AND isSet($_GET['BillingStart']) AND isSet($_GET
 			$PreviousPeriod = TRUE;
 		}
 
+		$mergeNumber = 0;
+
 		list(	$bookingHistory, $displayCompanyCredits, $displayCompanyCreditsRemaining, $displayOverCreditsTimeUsed, 
 				$displayMonthPrice, $displayTotalBookingTimeThisPeriod, $displayOverFeeCostThisMonth, $overCreditsFee,
 				$bookingCostThisMonth, $totalBookingCostThisMonth, $companyMinuteCreditsRemaining, $actualTimeOverCreditsInMinutes, 
 				$periodHasBeenBilled, $billingDescription, $displayTotalBookingTimeUsedInPriceCalculationsThisPeriod, 
 				$displayTotalBookingTimeChargedWithAfterCredits)
-		= calculatePeriodInformation($pdo, $companyID, $BillingStart, $BillingEnd, $rightNow);
+		= calculatePeriodInformation($pdo, $companyID, $BillingStart, $BillingEnd, $rightNow, $mergeNumber);
 
 		$pdo = NULL;
 	}
@@ -1104,7 +1204,7 @@ if ((isSet($_POST['action']) AND $_POST['action'] == "Booking History") OR
 		$BillingEnd =  $row['CompanyBillingDateEnd'];
 		$displayBillingStart = convertDatetimeToFormat($BillingStart , 'Y-m-d', DATE_DEFAULT_FORMAT_TO_DISPLAY);
 		$displayBillingEnd = convertDatetimeToFormat($BillingEnd , 'Y-m-d', DATE_DEFAULT_FORMAT_TO_DISPLAY);
-		$BillingPeriod = $displayBillingStart . " To " . $displayBillingEnd . ".";
+		$BillingPeriod = $displayBillingStart . " up to " . $displayBillingEnd . ".";
 
 		// Save booking period dates
 		$_SESSION['BookingHistoryStartDate'] = $BillingStart;
@@ -1112,15 +1212,22 @@ if ((isSet($_POST['action']) AND $_POST['action'] == "Booking History") OR
 
 		$rightNow = TRUE;
 
+		if(isSet($_SESSION['BookingHistoryCompanyMergeNumber']) AND $_SESSION['BookingHistoryCompanyMergeNumber'] != ""){
+			$mergeNumber = $_SESSION['BookingHistoryCompanyMergeNumber'];
+		} else {
+			unset($_SESSION['BookingHistoryCompanyMergeNumber']);
+			$mergeNumber = 0;
+		}
+
 		list(	$bookingHistory, $displayCompanyCredits, $displayCompanyCreditsRemaining, $displayOverCreditsTimeUsed, 
 				$displayMonthPrice, $displayTotalBookingTimeThisPeriod, $displayOverFeeCostThisMonth, $overCreditsFee,
 				$bookingCostThisMonth, $totalBookingCostThisMonth, $companyMinuteCreditsRemaining, $actualTimeOverCreditsInMinutes, 
 				$periodHasBeenBilled, $billingDescription, $displayTotalBookingTimeUsedInPriceCalculationsThisPeriod, 
 				$displayTotalBookingTimeChargedWithAfterCredits)
-		= calculatePeriodInformation($pdo, $companyID, $BillingStart, $BillingEnd, $rightNow);
+		= calculatePeriodInformation($pdo, $companyID, $BillingStart, $BillingEnd, $rightNow, $mergeNumber);
 
 			// Sum up periods that are not set as billed
-		$periodsSummmedUp = sumUpUnbilledPeriods($pdo, $companyID);
+		list($periodsSummmedUp, $displayMergeStatus) = sumUpUnbilledPeriods($pdo, $companyID);
 		if($periodsSummmedUp === FALSE){
 			// No periods not set as billed
 			unset($periodsSummmedUp);
@@ -1305,26 +1412,17 @@ if (isSet($_POST['action']) and $_POST['action'] == 'Confirm Merge'){
 		try
 		{
 			$pdo = connect_to_db();
-			$sql = 'SELECT 	`name`				AS NewCompanyName,
-							`dateTimeCreated`	AS NewCreationDate,
-							( 
-								SELECT 	`dateTimeCreated`
-								FROM	`company`
-								WHERE 	`companyID` = :oldCompanyID
-							)					AS OldCreationDate
+			$sql = 'SELECT 	`name`				AS MergeIntoCompanyName
 					FROM 	`company`
 					WHERE	`companyID` = :newCompanyID
 					LIMIT 	1';
 			$s = $pdo->prepare($sql);
-			$s->bindValue(':oldCompanyID', $_SESSION['MergeCompanySelectedCompanyID']);
 			$s->bindValue(':newCompanyID', $_SESSION['MergeCompanySelectedCompanyID2']);
 			$s->execute();
-
 			$row = $s->fetch(PDO::FETCH_ASSOC);
+
 			$oldCompanyName = $_SESSION['MergeCompanySelectedCompanyName'];
-			$newCompanyName = $row['NewCompanyName'];
-			$oldCreationDate = $row['OldCreationDate'];
-			$newCreationDate = $row['NewCreationDate'];
+			$mergeIntoCompanyName = $row['MergeIntoCompanyName'];
 
 			$pdo->beginTransaction();
 			// Ignore these updates if they're already an employee in that company
@@ -1338,58 +1436,59 @@ if (isSet($_POST['action']) and $_POST['action'] == 'Confirm Merge'){
 
 			$currentDate = getDateNow();
 			$mergeMessage = "This booking originally belonged to the company: " . $oldCompanyName .
-							"\nIt was merged into the company: " . $newCompanyName . 
+							"\nIt was merged into the company: " . $mergeIntoCompanyName . 
 							" at " . convertDatetimeToFormat($currentDate, 'Y-m-d', DATE_DEFAULT_FORMAT_TO_DISPLAY);
 
+			// Update bookings to transfer them to the new company. Also keep a record that it was merged.
 			$sql = 'UPDATE 	`booking`
 					SET		`CompanyID` = :CompanyID2,
-							`adminNote` = CONCAT_WS("\n\n",`adminNote`, :mergeMessage)
-					WHERE	`CompanyID` = :CompanyID';
+							`adminNote` = CONCAT_WS("\n\n",`adminNote`, :mergeMessage),
+							`mergeNumber` = :CompanyID
+					WHERE	`CompanyID` = :CompanyID
+					AND		`mergeNumber` = 0';
 			$s = $pdo->prepare($sql);
 			$s->bindValue(':mergeMessage', $mergeMessage);
 			$s->bindValue(':CompanyID', $_SESSION['MergeCompanySelectedCompanyID']);
 			$s->bindValue(':CompanyID2', $_SESSION['MergeCompanySelectedCompanyID2']);
 			$s->execute();
 
-			// FIX-ME: How to handle merging company credits history?
-				// Split date into the appropriate periods for the new company
-				// Keep info if billed or not.
-			// Just ignore it?
-		/*	$sql = 'UPDATE 	`companycreditshistory`
-					SET		`CompanyID` = :CompanyID2
-					WHERE	`CompanyID` = :CompanyID';
+			// Update previously merged bookings also
+			$sql = 'UPDATE 	`booking`
+					SET		`CompanyID` = :CompanyID2,
+							`adminNote` = CONCAT_WS("\n\n",`adminNote`, :mergeMessage)
+					WHERE	`CompanyID` = :CompanyID
+					AND		`mergeNumber` <> 0';
+			$s = $pdo->prepare($sql);
+			$s->bindValue(':mergeMessage', $mergeMessage);
+			$s->bindValue(':CompanyID', $_SESSION['MergeCompanySelectedCompanyID']);
+			$s->bindValue(':CompanyID2', $_SESSION['MergeCompanySelectedCompanyID2']);
+			$s->execute();			
+			
+			// Add the current credits as companycreditshistory for the old company, before transferring it to the new company?
+				// TO-DO: 
+
+			// Update companycreditshistory to be a part of the new company, but mark it as a merged history.
+			$sql = 'UPDATE 	`companycreditshistory`
+					SET		`CompanyID` = :CompanyID2,
+							`mergeNumber` = :CompanyID
+					WHERE	`CompanyID` = :CompanyID
+					AND		`mergeNumber` = 0';
 			$s = $pdo->prepare($sql);
 			$s->bindValue(':CompanyID', $_SESSION['MergeCompanySelectedCompanyID']);
 			$s->bindValue(':CompanyID2', $_SESSION['MergeCompanySelectedCompanyID2']);
-			$s->execute();*/
+			$s->execute();
 
-			/*// Update the company's creation date if the old company was older.
-			// This does not really work. Since it ruins booking history if it's accurate and makes no sense if we change it 
-			if($oldCreationDate < $newCreationDate){
-				
-				date_default_timezone_set(DATE_DEFAULT_TIMEZONE);
-				$newDateTime = new DateTime::createFromFormat("Y-m-d H:i:s", $newCreationDate);
-				$dayFromNewCreationDate = $newDateTime->format("d");
-				$oldDateTime = new DateTime::createFromFormat("Y-m-d H:i:s", $oldCreationDate);
-				$dayFromOldCreationDate = $oldDateTime->format("d");
-				$yearAndMonth = $oldDateTime->format("Y-m");
-				$theTime = $oldDateTime->format("H:i:s");
-				
-				if($dayFromNewCreationDate  dayFromOldCreationDate){
-					
-				}
-				$newDateCreatedBasedOnOldCompanyCreationDate = $dayFromNewCreationDate
-				
-				$sql = 'UPDATE 	`company`
-						SET		`dateTimeCreated` = :NewDateCreatedBasedOnOldCompanyCreationDate
-						WHERE	`CompanyID` = :newCompanyID';
-				$s = $pdo->prepare($sql);
-				$s->bindValue(':NewDateCreatedBasedOnOldCompanyCreationDate', $newDateCreatedBasedOnOldCompanyCreationDate);
-				$s->bindValue(':newCompanyID', $_SESSION['MergeCompanySelectedCompanyID2']);
-				$s->execute();
-			}*/
-
-			// Deleting company will cascade to companycredits, companycreditshistory and employees.
+			// Update previously merged companycreditshistory also
+			$sql = 'UPDATE 	`companycreditshistory`
+					SET		`CompanyID` = :CompanyID2
+					WHERE	`CompanyID` = :CompanyID
+					AND		`mergeNumber` <> 0';
+			$s = $pdo->prepare($sql);
+			$s->bindValue(':CompanyID', $_SESSION['MergeCompanySelectedCompanyID']);
+			$s->bindValue(':CompanyID2', $_SESSION['MergeCompanySelectedCompanyID2']);
+			$s->execute();
+			
+			// Deleting company will cascade to companycredits(, companycreditshistory) and employees.
 			$sql = 'DELETE FROM `company`
 					WHERE		`CompanyID` = :CompanyID';
 			$s = $pdo->prepare($sql);
@@ -1407,15 +1506,16 @@ if (isSet($_POST['action']) and $_POST['action'] == 'Confirm Merge'){
 			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
 			exit();
 		}
+
 		$_SESSION['CompanyUserFeedback'] = 	"Successfully merged the company: " . $oldCompanyName . 
-											"\nInto the company: " . $newCompanyName;
+											"\nInto the company: " . $mergeIntoCompanyName;
 
 		// Add a log event that the companies merged
 		try
 		{
 			// Save a description with information about the meeting room that was removed
 			$description = 	"The company: " . $oldCompanyName . 
-							"\nHas been merged into the company: " . $newCompanyName .
+							"\nHas been merged into the company: " . $mergeIntoCompanyName .
 							"\nThis transferred all employees and the company's booking history." .
 							"\nIt was merged by: " . $_SESSION['LoggedInUserName'];
 
@@ -2081,7 +2181,7 @@ try
 						cr.`minuteAmount`									AS CreditSubscriptionMinuteAmount,
 						cr.`monthlyPrice`									AS CreditSubscriptionMonthlyPrice,
 						cr.`overCreditHourPrice`							AS CreditSubscriptionHourPrice,
-						COUNT(DISTINCT cch.`startDate`)						AS CompanyCreditsHistoryPeriods,
+						COUNT(c.`CompanyID`)								AS CompanyCreditsHistoryPeriods,
 						SUM(cch.`hasBeenBilled`)							AS CompanyCreditsHistoryPeriodsSetAsBilled
 			FROM 		`company` c
 			LEFT JOIN	`companycredits` cc
@@ -2090,7 +2190,7 @@ try
 			ON			cr.`CreditsID` = cc.`CreditsID`
 			LEFT JOIN 	`companycreditshistory` cch
 			ON 			cch.`CompanyID` = c.`CompanyID`
-			GROUP BY 	c.`CompanyID`;";
+			GROUP BY 	c.`CompanyID`";
 	$s = $pdo->prepare($sql);
 	$s->bindValue(':minimumSecondsPerBooking', $minimumSecondsPerBooking);
 	$s->bindValue(':aboveThisManySecondsToCount', $aboveThisManySecondsToCount);
@@ -2101,9 +2201,9 @@ try
 	} else {
 		$rowNum = 0;
 	}
-	
+
 	//Close the connection
-	$pdo = null;	
+	$pdo = null;
 }
 catch (PDOException $e)
 {
