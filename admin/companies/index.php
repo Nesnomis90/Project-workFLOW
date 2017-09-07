@@ -52,6 +52,7 @@ function sumUpUnbilledPeriods($pdo, $companyID){
 			// Rounds down to the closest 15 minutes (on finished summation per period)
 		$sql = "SELECT		StartDate, 
 							EndDate,
+							CompanyMergeNumber,
 							CreditSubscriptionMonthlyPrice,
 							CreditSubscriptionHourPrice,
 							CreditsGivenInSeconds/60							AS CreditSubscriptionMinuteAmount,
@@ -81,6 +82,7 @@ function sumUpUnbilledPeriods($pdo, $companyID){
 								cch.`minuteAmount`*60							AS CreditsGivenInSeconds,
 								cch.`monthlyPrice`								AS CreditSubscriptionMonthlyPrice,
 								cch.`overCreditHourPrice`						AS CreditSubscriptionHourPrice,
+								cch.`mergeNumber`								AS CompanyMergeNumber,
 								(
 									SELECT (IFNULL(SUM(
 										IF(
@@ -124,7 +126,7 @@ function sumUpUnbilledPeriods($pdo, $companyID){
 									),0))
 									FROM 		`booking` b
 									WHERE 		b.`CompanyID` = :CompanyID
-									AND			b.`mergeNumber` = 0
+									AND			b.`mergeNumber` = cch.`mergeNumber`
 									AND 		DATE(b.`actualEndDateTime`) >= cch.`startDate`
 									AND			DATE(b.`actualEndDateTime`) < cch.`endDate`
 								)										AS BookingTimeChargedInSeconds
@@ -135,7 +137,6 @@ function sumUpUnbilledPeriods($pdo, $companyID){
 							ON 			cr.`CreditsID` = cc.`CreditsID`
 							WHERE 		cch.`CompanyID` = :CompanyID
 							AND 		cch.`hasBeenBilled` = 0
-							AND			cch.`mergeNumber` = 0
 				)													AS PeriodInformation";
 		$s = $pdo->prepare($sql);
 		$s->bindValue(':CompanyID', $companyID);
@@ -145,6 +146,7 @@ function sumUpUnbilledPeriods($pdo, $companyID){
 	} else {
 		$sql = "SELECT		StartDate, 
 							EndDate,
+							CompanyMergeNumber,
 							CreditSubscriptionMonthlyPrice,
 							CreditSubscriptionHourPrice,
 							CreditsGivenInSeconds/60							AS CreditSubscriptionMinuteAmount,
@@ -170,6 +172,7 @@ function sumUpUnbilledPeriods($pdo, $companyID){
 								cch.`minuteAmount`*60							AS CreditsGivenInSeconds,
 								cch.`monthlyPrice`								AS CreditSubscriptionMonthlyPrice,
 								cch.`overCreditHourPrice`						AS CreditSubscriptionHourPrice,
+								cch.`mergeNumber`								AS CompanyMergeNumber,
 								(
 									SELECT (IFNULL(SUM(
 										IF(
@@ -213,7 +216,7 @@ function sumUpUnbilledPeriods($pdo, $companyID){
 									),0))
 									FROM 		`booking` b
 									WHERE 		b.`CompanyID` = :CompanyID
-									AND			b.`mergeNumber` = 0
+									AND			b.`mergeNumber` = cch.`mergeNumber`
 									AND 		DATE(b.`actualEndDateTime`) >= cch.`startDate`
 									AND 		DATE(b.`actualEndDateTime`) < cch.`endDate`
 								)										AS BookingTimeChargedInSeconds
@@ -224,7 +227,6 @@ function sumUpUnbilledPeriods($pdo, $companyID){
 							ON 			cr.`CreditsID` = cc.`CreditsID`
 							WHERE 		cch.`CompanyID` = :CompanyID
 							AND 		cch.`hasBeenBilled` = 0
-							AND			cch.`mergeNumber` = 0
 				)													AS PeriodInformation";
 		$s = $pdo->prepare($sql);
 		$s->bindValue(':CompanyID', $companyID);
@@ -247,6 +249,13 @@ function sumUpUnbilledPeriods($pdo, $companyID){
 		$hourPrice = $row["CreditSubscriptionHourPrice"];
 		if($hourPrice == NULL OR $hourPrice == ""){
 			$hourPrice = 0;
+		}
+
+		$mergeNumber = $row['CompanyMergeNumber'];
+		if($mergeNumber == 0){
+			$mergeStatus = "Booked For This Company";
+		} else {
+			$mergeStatus = "Merged From Another Company";
 		}
 
 		// Calculate price
@@ -272,6 +281,7 @@ function sumUpUnbilledPeriods($pdo, $companyID){
 		$displayEndDate = convertDatetimeToFormat($row['EndDate'], 'Y-m-d', DATE_DEFAULT_FORMAT_TO_DISPLAY);
 
 		$periodsSummmedUp[] = array(
+										'MergeStatus' => $mergeStatus,
 										'StartDate' => $displayStartDate,
 										'EndDate' => $displayEndDate,
 										'CreditsGiven' => convertTimeToHoursAndMinutes($row['CreditsGiven']),
@@ -733,7 +743,7 @@ if (isSet($_POST['history']) AND $_POST['history'] == "Set As Billed"){
 		// Format billing dates
 		$displayBillingStart = convertDatetimeToFormat($BillingStart , 'Y-m-d', DATE_DEFAULT_FORMAT_TO_DISPLAY);
 		$displayBillingEnd = convertDatetimeToFormat($BillingEnd , 'Y-m-d', DATE_DEFAULT_FORMAT_TO_DISPLAY);
-		$BillingPeriod = $displayBillingStart . " To " . $displayBillingEnd . ".";	
+		$BillingPeriod = $displayBillingStart . " up to " . $displayBillingEnd . ".";	
 
 		// rightNow decides if we use the companycreditshistory or the credits/companycredits information
 		if($NextPeriod){
@@ -947,7 +957,7 @@ if (	(isSet($_POST['history']) AND $_POST['history'] == "Previous Period") OR
 		$BillingEnd =  $endDate;
 		$displayBillingStart = convertDatetimeToFormat($BillingStart , 'Y-m-d', DATE_DEFAULT_FORMAT_TO_DISPLAY);
 		$displayBillingEnd = convertDatetimeToFormat($BillingEnd , 'Y-m-d', DATE_DEFAULT_FORMAT_TO_DISPLAY);
-		$BillingPeriod = $displayBillingStart . " To " . $displayBillingEnd . ".";			
+		$BillingPeriod = $displayBillingStart . " up to " . $displayBillingEnd . ".";			
 
 		$rightNow = FALSE;
 
@@ -1084,7 +1094,7 @@ if (	(isSet($_GET['companyID']) AND isSet($_GET['BillingStart']) AND isSet($_GET
 		// Format billing dates
 		$displayBillingStart = convertDatetimeToFormat($BillingStart , 'Y-m-d', DATE_DEFAULT_FORMAT_TO_DISPLAY);
 		$displayBillingEnd = convertDatetimeToFormat($BillingEnd , 'Y-m-d', DATE_DEFAULT_FORMAT_TO_DISPLAY);
-		$BillingPeriod = $displayBillingStart . " To " . $displayBillingEnd . ".";			
+		$BillingPeriod = $displayBillingStart . " up to " . $displayBillingEnd . ".";			
 
 		// Save our newly set start/end dates
 		$_SESSION['BookingHistoryStartDate'] = $BillingStart;
@@ -1187,7 +1197,7 @@ if ((isSet($_POST['action']) AND $_POST['action'] == "Booking History") OR
 		$BillingEnd =  $row['CompanyBillingDateEnd'];
 		$displayBillingStart = convertDatetimeToFormat($BillingStart , 'Y-m-d', DATE_DEFAULT_FORMAT_TO_DISPLAY);
 		$displayBillingEnd = convertDatetimeToFormat($BillingEnd , 'Y-m-d', DATE_DEFAULT_FORMAT_TO_DISPLAY);
-		$BillingPeriod = $displayBillingStart . " To " . $displayBillingEnd . ".";
+		$BillingPeriod = $displayBillingStart . " up to " . $displayBillingEnd . ".";
 
 		// Save booking period dates
 		$_SESSION['BookingHistoryStartDate'] = $BillingStart;

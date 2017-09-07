@@ -52,6 +52,96 @@ WHERE 	DATE(CURRENT_TIMESTAMP) >= `removeAtDate`
 AND 	`isActive` = 1
 AND		`companyID` <> 0;
 
+SELECT		StartDate, 
+			EndDate,
+			CompanyMergeNumber,
+			CreditSubscriptionMonthlyPrice,
+			CreditSubscriptionHourPrice,
+			CreditsGivenInSeconds/60							AS CreditSubscriptionMinuteAmount,
+			BIG_SEC_TO_TIME(CreditsGivenInSeconds) 				AS CreditsGiven,
+			BIG_SEC_TO_TIME(BookingTimeChargedInSeconds) 		AS BookingTimeCharged,
+			BIG_SEC_TO_TIME(
+							IF(
+								(BookingTimeChargedInSeconds>CreditsGivenInSeconds),
+								BookingTimeChargedInSeconds-CreditsGivenInSeconds,
+                                0
+                                )
+			)													AS OverCreditsTimeExact,
+			BIG_SEC_TO_TIME(
+							FLOOR(
+								(
+									IF(
+										(BookingTimeChargedInSeconds>CreditsGivenInSeconds),
+										BookingTimeChargedInSeconds-CreditsGivenInSeconds,
+                                        0
+									)
+								)/'900'
+							)*'900'
+			)													AS OverCreditsTimeCharged
+FROM (
+		SELECT 	cch.`startDate`									AS StartDate,
+				cch.`endDate`									AS EndDate,
+				cch.`minuteAmount`*60							AS CreditsGivenInSeconds,
+				cch.`monthlyPrice`								AS CreditSubscriptionMonthlyPrice,
+				cch.`overCreditHourPrice`						AS CreditSubscriptionHourPrice,
+				cch.`mergeNumber`								AS CompanyMergeNumber,
+				(
+					SELECT (IFNULL(SUM(
+						IF(
+							(
+								(
+									DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
+									)*86400 
+								+
+								(
+									TIME_TO_SEC(b.`actualEndDateTime`) 
+									- 
+									TIME_TO_SEC(b.`startDateTime`)
+									)
+							) > '300',
+							IF(
+								(
+									(
+										DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
+										)*86400 
+									+ 
+									(
+									TIME_TO_SEC(b.`actualEndDateTime`) 
+									- 
+									TIME_TO_SEC(b.`startDateTime`)
+									) 
+								) > '900', 
+								(
+									(
+										DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
+										)*86400 
+									+ 
+									(
+									TIME_TO_SEC(b.`actualEndDateTime`) 
+									- 
+									TIME_TO_SEC(b.`startDateTime`)
+									) 
+								), 
+								'900'
+							),
+						0)
+					),0))
+					FROM 		`booking` b
+					WHERE 		b.`CompanyID` = '68'
+					AND			b.`mergeNumber` = cch.`mergeNumber`
+					AND 		DATE(b.`actualEndDateTime`) >= cch.`startDate`
+					AND			DATE(b.`actualEndDateTime`) < cch.`endDate`
+				)										AS BookingTimeChargedInSeconds
+			FROM 		`companycreditshistory` cch
+			INNER JOIN	`companycredits` cc
+			ON 			cc.`CompanyID` = cch.`CompanyID`
+			INNER JOIN 	`credits` cr
+			ON 			cr.`CreditsID` = cc.`CreditsID`
+			WHERE 		cch.`CompanyID` = '68'
+			AND 		cch.`hasBeenBilled` = 0
+			GROUP BY	cch.`mergeNumber`
+)													AS PeriodInformation;
+
 SELECT 	COUNT(*)
 FROM	`companycreditshistory`
 WHERE	`companyID` = 2
