@@ -52,6 +52,33 @@ WHERE 	DATE(CURRENT_TIMESTAMP) >= `removeAtDate`
 AND 	`isActive` = 1
 AND		`companyID` <> 0;
 
+SELECT 		c.companyID 										AS CompID,
+			c.`name` 											AS CompanyName,
+			c.`dateTimeCreated`									AS DatetimeCreated,
+			c.`removeAtDate`									AS DeletionDate,
+			c.`isActive`										AS CompanyActivated,
+			(
+				SELECT 	COUNT(e.`CompanyID`)
+				FROM 	`employee` e
+				WHERE 	e.`companyID` = CompID
+			)													AS NumberOfEmployees,
+			cc.`altMinuteAmount`								AS CompanyAlternativeMinuteAmount,
+			cc.`lastModified`									AS CompanyCreditsLastModified,
+			cr.`name`											AS CreditSubscriptionName,
+			cr.`minuteAmount`									AS CreditSubscriptionMinuteAmount,
+			cr.`monthlyPrice`									AS CreditSubscriptionMonthlyPrice,
+			cr.`overCreditHourPrice`							AS CreditSubscriptionHourPrice,
+			COUNT(c.`CompanyID`)								AS CompanyCreditsHistoryPeriods,
+			SUM(cch.`hasBeenBilled`)							AS CompanyCreditsHistoryPeriodsSetAsBilled
+FROM 		`company` c
+LEFT JOIN	`companycredits` cc
+ON			c.`CompanyID` = cc.`CompanyID`
+LEFT JOIN	`credits` cr
+ON			cr.`CreditsID` = cc.`CreditsID`
+LEFT JOIN 	`companycreditshistory` cch
+ON 			cch.`CompanyID` = c.`CompanyID`
+GROUP BY 	c.`CompanyID`;
+
 SELECT		StartDate, 
 			EndDate,
 			CompanyMergeNumber,
