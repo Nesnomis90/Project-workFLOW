@@ -1356,20 +1356,17 @@ if (isSet($_POST['action']) and $_POST['action'] == 'Confirm Merge'){
 		try
 		{
 			$pdo = connect_to_db();
-			$sql = 'SELECT 	`name`				AS NewCompanyName,
-							`dateTimeCreated`	AS NewCreationDate
+			$sql = 'SELECT 	`name`				AS MergeIntoCompanyName
 					FROM 	`company`
 					WHERE	`companyID` = :newCompanyID
 					LIMIT 	1';
 			$s = $pdo->prepare($sql);
-			$s->bindValue(':oldCompanyID', $_SESSION['MergeCompanySelectedCompanyID']);
 			$s->bindValue(':newCompanyID', $_SESSION['MergeCompanySelectedCompanyID2']);
 			$s->execute();
 
 			$row = $s->fetch(PDO::FETCH_ASSOC);
 			$oldCompanyName = $_SESSION['MergeCompanySelectedCompanyName'];
-			$newCompanyName = $row['NewCompanyName'];
-			$newCreationDate = $row['NewCreationDate'];
+			$mergeIntoCompanyName = $row['MergeIntoCompanyName'];
 
 			$pdo->beginTransaction();
 			// Ignore these updates if they're already an employee in that company
@@ -1383,9 +1380,10 @@ if (isSet($_POST['action']) and $_POST['action'] == 'Confirm Merge'){
 
 			$currentDate = getDateNow();
 			$mergeMessage = "This booking originally belonged to the company: " . $oldCompanyName .
-							"\nIt was merged into the company: " . $newCompanyName . 
+							"\nIt was merged into the company: " . $mergeIntoCompanyName . 
 							" at " . convertDatetimeToFormat($currentDate, 'Y-m-d', DATE_DEFAULT_FORMAT_TO_DISPLAY);
 
+			// Update bookings to transfer them to the new company. Also keep a record that it was merged.
 			$sql = 'UPDATE 	`booking`
 					SET		`CompanyID` = :CompanyID2,
 							`adminNote` = CONCAT_WS("\n\n",`adminNote`, :mergeMessage),
@@ -1427,14 +1425,14 @@ if (isSet($_POST['action']) and $_POST['action'] == 'Confirm Merge'){
 		}
 
 		$_SESSION['CompanyUserFeedback'] = 	"Successfully merged the company: " . $oldCompanyName . 
-											"\nInto the company: " . $newCompanyName;
+											"\nInto the company: " . $mergeIntoCompanyName;
 
 		// Add a log event that the companies merged
 		try
 		{
 			// Save a description with information about the meeting room that was removed
 			$description = 	"The company: " . $oldCompanyName . 
-							"\nHas been merged into the company: " . $newCompanyName .
+							"\nHas been merged into the company: " . $mergeIntoCompanyName .
 							"\nThis transferred all employees and the company's booking history." .
 							"\nIt was merged by: " . $_SESSION['LoggedInUserName'];
 
