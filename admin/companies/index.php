@@ -26,7 +26,6 @@ function clearAddCompanySessions(){
 // Function to clear sessions used to remember user inputs during the company merging
 function clearMergeCompanySessions(){
 	unset($_SESSION['MergeCompanySelectedCompanyID']);
-	unset($_SESSION['MergeCompanySelectedCompanyName']);
 	unset($_SESSION['MergeCompanySelectedCompanyID2']);
 }
 
@@ -1303,11 +1302,11 @@ if ((isSet($_POST['action']) and $_POST['action'] == 'Merge') OR
 
 		$companyID = $_SESSION['MergeCompanySelectedCompanyID'];
 
-		if(!isSet($_SESSION['MergeCompanySelectedCompanyName'])){
-			$_SESSION['MergeCompanySelectedCompanyName'] = $_POST['CompanyName'];
+		if(isSet($_POST['CompanyName']) AND $_POST['CompanyName'] != ""){
+			$mergingCompanyName = $_POST['CompanyName'];
+		} else {
+			$mergingCompanyName = "N/A";
 		}
-
-		$mergingCompanyName = $_SESSION['MergeCompanySelectedCompanyName'];
 
 		if(isSet($_SESSION['MergeCompanySelectedCompanyID2'])){
 			$selectedCompanyIDToMergeWith = $_SESSION['MergeCompanySelectedCompanyID2'];
@@ -1411,20 +1410,119 @@ if (isSet($_POST['action']) and $_POST['action'] == 'Confirm Merge'){
 		// We have two company IDs and can start the merging process
 		try
 		{
-			$pdo = connect_to_db();
-			$sql = 'SELECT 	`name`				AS MergeIntoCompanyName
-					FROM 	`company`
-					WHERE	`companyID` = :newCompanyID
-					LIMIT 	1';
+			// Get all the info from the company we're merging and deleting, to keep track of the correct values.
+			$minimumSecondsPerBooking = MINIMUM_BOOKING_DURATION_IN_MINUTES_USED_IN_PRICE_CALCULATIONS * 60; // e.g. 15min = 900s
+			$aboveThisManySecondsToCount = BOOKING_DURATION_IN_MINUTES_USED_BEFORE_INCLUDING_IN_PRICE_CALCULATIONS * 60; // E.g. 5min = 300s
+			$sql = "SELECT 		c.`CompanyID`				AS TheCompanyID,
+								c.`name`					AS OldCompanyName,
+								(
+									SELECT 	`name`
+									FROM	`company`
+									WHERE 	`CompanyID` = :newCompanyID
+								)							AS MergeIntoCompanyName,
+								c.`startDate`				AS StartDate,
+								c.`endDate`					AS EndDate,
+								cr.`minuteAmount`			AS CreditsGivenInMinutes,
+								cr.`monthlyPrice`			AS MonthlyPrice,
+								cr.`overCreditHourPrice`	AS HourPrice,
+								cc.`altMinuteAmount`		AS AlternativeAmount,
+								(
+									SELECT (BIG_SEC_TO_TIME(SUM(
+															IF(
+																(
+																	(
+																		DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
+																		)*86400 
+																	+ 
+																	(
+																		TIME_TO_SEC(b.`actualEndDateTime`) 
+																		- 
+																		TIME_TO_SEC(b.`startDateTime`)
+																		) 
+																) > :aboveThisManySecondsToCount,
+																IF(
+																	(
+																	(
+																		DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
+																		)*86400 
+																	+ 
+																	(
+																		TIME_TO_SEC(b.`actualEndDateTime`) 
+																		- 
+																		TIME_TO_SEC(b.`startDateTime`)
+																		) 
+																) > :minimumSecondsPerBooking, 
+																	(
+																	(
+																		DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
+																		)*86400 
+																	+ 
+																	(
+																		TIME_TO_SEC(b.`actualEndDateTime`) 
+																		- 
+																		TIME_TO_SEC(b.`startDateTime`)
+																		) 
+																), 
+																	:minimumSecondsPerBooking
+																),
+																0
+															)
+									)))	AS BookingTimeUsed
+									FROM 		`booking` b  
+									INNER JOIN 	`company` c 
+									ON 			b.`CompanyID` = c.`CompanyID` 
+									WHERE 		b.`CompanyID` = :oldCompanyID
+									AND 		DATE(b.`actualEndDateTime`) >= c.`startDate`
+									AND 		DATE(b.`actualEndDateTime`) < c.`endDate`
+									AND			b.`mergeNumber` = 0
+								)							AS BookingTimeThisPeriod
+					FROM 		`company` c
+					INNER JOIN 	`companycredits` cc
+					ON 			cc.`CompanyID` = c.`CompanyID`
+					INNER JOIN 	`credits` cr
+					ON			cr.`CreditsID` = cc.`CreditsID`
+					WHERE		c.`CompanyID` = :oldCompanyID
+					LIMIT 		1";
 			$s = $pdo->prepare($sql);
+			$s->bindValue(':minimumSecondsPerBooking', $minimumSecondsPerBooking);
+			$s->bindValue(':aboveThisManySecondsToCount', $aboveThisManySecondsToCount);
+			$s->bindValue(':oldCompanyID', $_SESSION['MergeCompanySelectedCompanyID']);
 			$s->bindValue(':newCompanyID', $_SESSION['MergeCompanySelectedCompanyID2']);
 			$s->execute();
 			$row = $s->fetch(PDO::FETCH_ASSOC);
+			$dateTimeNow = getDatetimeNow();
 
-			$oldCompanyName = $_SESSION['MergeCompanySelectedCompanyName'];
+			if($row['AlternativeAmount'] == NULL){
+				$creditsGivenInMinutes = $row['CreditsGivenInMinutes'];
+			} else {
+				$creditsGivenInMinutes = $row['AlternativeAmount'];
+			}
+
+			$companyID = $row['TheCompanyID'];
+			$startDate = $row['StartDate'];
+			$endDate = $row['EndDate'];
+			$monthlyPrice = $row['MonthlyPrice'];
+			$hourPrice = $row['HourPrice'];
+			$bookingTimeUsedThisMonth = $row['BookingTimeThisPeriod'];
+			$bookingTimeUsedThisMonthInMinutes = convertTimeToMinutes($bookingTimeUsedThisMonth);
+			$displayTotalBookingTimeThisPeriod = convertMinutesToHoursAndMinutes($bookingTimeUsedThisMonthInMinutes);
+			$displayCompanyCredits = convertMinutesToHoursAndMinutes($creditsGivenInMinutes);
+
+			$setAsBilled = FALSE;
+
+			if($bookingTimeUsedThisMonthInMinutes < $creditsGivenInMinutes){
+				if($monthlyPrice == 0 OR $monthlyPrice == NULL){
+					// Company had no fees to pay this month
+					$setAsBilled = TRUE;
+				}
+			}
+
+			$oldCompanyName = $row['OldCompanyName'];
 			$mergeIntoCompanyName = $row['MergeIntoCompanyName'];
 
+			// Begin all the SQL queries we need to go through to merge the two companies.
 			$pdo->beginTransaction();
+
 			// Ignore these updates if they're already an employee in that company
 			$sql = 'UPDATE IGNORE	`employee`
 					SET				`CompanyID` = :CompanyID2
@@ -1462,10 +1560,25 @@ if (isSet($_POST['action']) and $_POST['action'] == 'Confirm Merge'){
 			$s->bindValue(':mergeMessage', $mergeMessage);
 			$s->bindValue(':CompanyID', $_SESSION['MergeCompanySelectedCompanyID']);
 			$s->bindValue(':CompanyID2', $_SESSION['MergeCompanySelectedCompanyID2']);
-			$s->execute();			
-			
-			// Add the current credits as companycreditshistory for the old company, before transferring it to the new company?
-				// TO-DO: 
+			$s->execute();
+
+			// Add the current credits as companycreditshistory for the old company, before transferring it to the new company
+			$sql = "INSERT INTO `companycreditshistory`
+					SET			`CompanyID` = " . $companyID . ",
+								`startDate` = '" . $startDate . "',
+								`endDate` = '" . $endDate . "',
+								`minuteAmount` = " . $creditsGivenInMinutes . ",
+								`monthlyPrice` = " . $monthlyPrice . ",
+								`overCreditHourPrice` = " . $hourPrice;
+
+			if($setAsBilled){
+				$billingDescriptionInformation = 	"This period was Set As Billed automatically at the end of the period due to there being no fees.\n" .
+													"At that time the company had produced a total booking time of: " . $displayTotalBookingTimeThisPeriod .
+													", with a credit given of: " . $displayCompanyCredits . " and a monthly fee of " . convertToCurrency(0) . ".";							
+				$sql .= ", 	`hasBeenBilled` = 1,
+							`billingDescription` = '" . $billingDescriptionInformation . "'";
+			}
+			$pdo->exec($sql);
 
 			// Update companycreditshistory to be a part of the new company, but mark it as a merged history.
 			$sql = 'UPDATE 	`companycreditshistory`
@@ -2330,7 +2443,6 @@ foreach ($result as $row)
 	}
 }
 	unset($_SESSION['MergeCompanySelectedCompanyID']);
-	unset($_SESSION['MergeCompanySelectedCompanyName']);
 	unset($_SESSION['MergeCompanySelectedCompanyID2']);
 
 var_dump($_SESSION); // TO-DO: Remove before uploading

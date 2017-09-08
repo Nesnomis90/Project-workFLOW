@@ -62,9 +62,9 @@
 		<?php if($rightNow) : ?>
 			<h2>Billing Status: Period still in progress.</h2>
 		<?php elseif(isSet($bookingHistory) AND sizeOf($bookingHistory) > 1 AND (!isSet($periodHasBeenBilled) OR $periodHasBeenBilled == 0)) : ?>
-			<h2>Billing Status: This booking has <b style="color:red">NOT BEEN BILLED</b>.</h2>
+			<h2>Billing Status: This period has <b style="color:red">NOT BEEN BILLED</b>.</h2>
 		<?php elseif(isSet($bookingHistory) AND sizeOf($bookingHistory) > 1 AND isSet($periodHasBeenBilled) AND $periodHasBeenBilled == 1) : ?>
-			<h2>Billing Status: This booking has <b style="color:green">BEEN BILLED</b>.</h2><br />
+			<h2>Billing Status: This period has <b style="color:green">BEEN BILLED</b>.</h2><br />
 		<?php endif; ?>
 		
 		<form action="" method="post">
@@ -127,9 +127,9 @@
 				<span>The total booking time charged with after including minimum booking length: <b><?php htmlout($displayTotalBookingTimeUsedInPriceCalculationsThisPeriod); ?></b></span><br />
 			<?php else : ?>
 				<?php if(!isSet($periodHasBeenBilled) OR (isSet($periodHasBeenBilled) AND $periodHasBeenBilled == 0)) : ?>
-					<h2>Billing Status: This booking has <b style="color:red">NOT BEEN BILLED</b>.</h2>
+					<h2>Billing Status: This period has <b style="color:red">NOT BEEN BILLED</b>.</h2>
 				<?php elseif(isSet($periodHasBeenBilled) AND $periodHasBeenBilled == 1) : ?>
-					<h2>Billing Status: This booking has <b style="color:green">BEEN BILLED</b>.</h2><br />
+					<h2>Billing Status: This period has <b style="color:green">BEEN BILLED</b>.</h2><br />
 				<?php endif; ?>
 				<span>Producing a total booking time used this period: <b><?php htmlout($displayTotalBookingTimeThisPeriod); ?></b></span><br />
 				<span>The total booking time charged with after including minimum booking length: <b><?php htmlout($displayTotalBookingTimeUsedInPriceCalculationsThisPeriod); ?></b></span><br />
