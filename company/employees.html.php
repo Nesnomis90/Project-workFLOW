@@ -112,7 +112,7 @@
 			
 				<?php if(isSet($removedEmployees) AND isSet($companyRole) AND $companyRole == "Owner") : ?>
 					<tr>
-						<td colspan="11"><b>The Following Are Previously Employed Users</b></td>
+						<td colspan="11"><b>The Following Are Previously Employed Users With Booking Time</b></td>
 					</tr>
 					<?php foreach($removedEmployees as $employee): ?>
 						<tr>
@@ -130,7 +130,7 @@
 
 				<?php if(isSet($deletedEmployees) AND isSet($companyRole) AND $companyRole == "Owner") : ?>
 					<tr>
-						<td colspan="11"><b>The Following Is A Summation Of Deleted Users</b></td>
+						<td colspan="11"><b>The Following Is A Summation Of Booking Time By Deleted Users</b></td>
 					</tr>
 					<?php foreach($deletedEmployees as $employee): ?>
 						<tr>
