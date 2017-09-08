@@ -91,8 +91,9 @@ function updateBillingDatesForCompanies(){
 
 		if($rowCount > 0) {
 			$minimumSecondsPerBooking = MINIMUM_BOOKING_DURATION_IN_MINUTES_USED_IN_PRICE_CALCULATIONS * 60; // e.g. 15min = 900s
-			$aboveThisManySecondsToCount = BOOKING_DURATION_IN_MINUTES_USED_BEFORE_INCLUDING_IN_PRICE_CALCULATIONS * 60; // E.g. 1min = 60s			
+			$aboveThisManySecondsToCount = BOOKING_DURATION_IN_MINUTES_USED_BEFORE_INCLUDING_IN_PRICE_CALCULATIONS * 60; // E.g. 5min = 300s
 			// There is information to update. Get needed values
+			// 			Change this?
 			$sql = "SELECT 		c.`CompanyID`				AS TheCompanyID,
 								c.`dateTimeCreated`			AS dateTimeCreated,
 								c.`startDate`				AS StartDate,
@@ -149,7 +150,58 @@ function updateBillingDatesForCompanies(){
 									WHERE 		b.`CompanyID` = TheCompanyID
 									AND 		DATE(b.`actualEndDateTime`) >= c.`startDate`
 									AND 		DATE(b.`actualEndDateTime`) < c.`endDate`
-								)							AS BookingTimeThisPeriod								
+									AND			b.`mergeNumber` = 0
+								)							AS BookingTimeThisPeriodFromCompany,
+								(
+									SELECT (BIG_SEC_TO_TIME(SUM(
+															IF(
+																(
+																	(
+																		DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
+																		)*86400 
+																	+ 
+																	(
+																		TIME_TO_SEC(b.`actualEndDateTime`) 
+																		- 
+																		TIME_TO_SEC(b.`startDateTime`)
+																		) 
+																) > :aboveThisManySecondsToCount,
+																IF(
+																	(
+																	(
+																		DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
+																		)*86400 
+																	+ 
+																	(
+																		TIME_TO_SEC(b.`actualEndDateTime`) 
+																		- 
+																		TIME_TO_SEC(b.`startDateTime`)
+																		) 
+																) > :minimumSecondsPerBooking, 
+																	(
+																	(
+																		DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
+																		)*86400 
+																	+ 
+																	(
+																		TIME_TO_SEC(b.`actualEndDateTime`) 
+																		- 
+																		TIME_TO_SEC(b.`startDateTime`)
+																		) 
+																), 
+																	:minimumSecondsPerBooking
+																),
+																0
+															)
+									)))	AS BookingTimeUsed
+									FROM 		`booking` b  
+									INNER JOIN 	`company` c 
+									ON 			b.`CompanyID` = c.`CompanyID` 
+									WHERE 		b.`CompanyID` = TheCompanyID
+									AND 		DATE(b.`actualEndDateTime`) >= c.`startDate`
+									AND 		DATE(b.`actualEndDateTime`) < c.`endDate`
+									AND			b.`mergeNumber` <> 0
+								)							AS BookingTimeThisPeriodFromTransfers
 					FROM 		`company` c
 					INNER JOIN 	`companycredits` cc
 					ON 			cc.`CompanyID` = c.`CompanyID`
@@ -177,20 +229,29 @@ function updateBillingDatesForCompanies(){
 				$endDate = $insert['EndDate'];
 				$monthlyPrice = $insert['MonthlyPrice'];
 				$hourPrice = $insert['HourPrice'];
-				$bookingTimeUsedThisMonth = $insert['BookingTimeThisPeriod'];
-				$bookingTimeUsedThisMonthInMinutes = convertTimeToMinutes($bookingTimeUsedThisMonth);
-				$displayTotalBookingTimeThisPeriod = convertMinutesToHoursAndMinutes($bookingTimeUsedThisMonthInMinutes);
+				$bookingTimeUsedThisPeriodFromCompany = $insert['BookingTimeThisPeriodFromCompany'];
+				$bookingTimeUsedThisPeriodFromCompanyInMinutes = convertTimeToMinutes($bookingTimeUsedThisPeriodFromCompany);
+				$bookingTimeUsedThisPeriodFromTransfers = $insert['BookingTimeThisPeriodFromTransfers'];
+				$bookingTimeUsedThisPeriodFromTransfersInMinutes = convertTimeToMinutes($bookingTimeUsedThisPeriodFromTransfers);
+				$totalBookingTimeUsedThisPeriodInMinutes = $bookingTimeUsedThisPeriodFromCompanyInMinutes + $bookingTimeUsedThisPeriodFromTransfersInMinutes;
+				$displayBookingTimeUsedThisPeriodFromCompany = convertMinutesToHoursAndMinutes($bookingTimeUsedThisPeriodFromCompanyInMinutes);
+				$displayBookingTimeUsedThisPeriodFromTransfers = convertMinutesToHoursAndMinutes($bookingTimeUsedThisPeriodFromTransfersInMinutes);
+				$displayTotalBookingTimeThisPeriod = convertMinutesToHoursAndMinutes($totalBookingTimeUsedThisPeriodInMinutes);
 				$displayCompanyCredits = convertMinutesToHoursAndMinutes($creditsGivenInMinutes);
 
 				$setAsBilled = FALSE;
+				$setAsOverCreditDueToTransfer = FALSE;
 
-				if($bookingTimeUsedThisMonthInMinutes > $creditsGivenInMinutes){
+				if($totalBookingTimeUsedThisPeriodInMinutes > $creditsGivenInMinutes){
 					// Company went over credit this period
 					$companiesOverCredit[] = array(
 													'CompanyID' => $companyID,
 													'StartDate' => $startDate,
 													'EndDate' 	=> $endDate
 													);
+					if($bookingTimeUsedThisPeriodFromCompanyInMinutes < $creditsGivenInMinutes){
+						$setAsOverCreditDueToTransfer = TRUE;
+					}
 				} else {
 					if($monthlyPrice == 0 OR $monthlyPrice == NULL){
 						// Company had no fees to pay this month
@@ -212,6 +273,18 @@ function updateBillingDatesForCompanies(){
 					$sql .= ", 	`hasBeenBilled` = 1,
 								`billingDescription` = '" . $billingDescriptionInformation . "'";
 				}
+
+				if($setAsOverCreditDueToTransfer){
+					$billingDescriptionInformation = 	"This period is only marked as 'over credits' if you include bookings transferred from another company in this period.\n" .
+														"In this period the company had produced a total booking time of: " . $displayTotalBookingTimeThisPeriod .
+														", with a credit given of: " . $displayCompanyCredits . ".\n" .
+														"The booking time made by the company: " . $displayBookingTimeUsedThisPeriodFromCompany . 
+														"\nThe booking time from transfers: " . $displayBookingTimeUsedThisPeriodFromTransfers . 
+														"\nThe transferred bookings will have their own period listed with the exact details, and may have already been billed." .
+														"\nIt is therefore important to double check that the company isn't being unfairly billed twice, due to a merge.";							
+					$sql .= ", 	`billingDescription` = '" . $billingDescriptionInformation . "'";
+				}
+
 				$pdo->exec($sql);
 
 				// We want the system to always have a period from x day to x day of next month. 
@@ -243,7 +316,7 @@ function updateBillingDatesForCompanies(){
 						$emailSubject = "A company went over credit!";
 						$companyID = $companiesOverCredit[0]['CompanyID'];
 						$startDate = $companiesOverCredit[0]['StartDate'];
-						$endDate = $companiesOverCredit[0]['EndDate'];					
+						$endDate = $companiesOverCredit[0]['EndDate'];
 
 						//Link example: http://localhost/admin/companies/?companyID=2&BillingStart=2017-05-15&BillingEnd=2017-06-15
 						$link = "http://$_SERVER[HTTP_HOST]/admin/companies/?companyID=" . $companyID . 

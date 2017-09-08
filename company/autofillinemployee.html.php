@@ -16,11 +16,11 @@
 	<body onload="startTime()">
 		<?php include_once $_SERVER['DOCUMENT_ROOT'] .'/includes/topnav.html.php'; ?>
 
-		<fieldset class="left"><legend>Add An Employee</legend>
+		<fieldset class="left"><legend>Add Employee As Requested</legend>
 			<div class="left">
-				<?php if(isSet($_SESSION['AddEmployeeAsOwnerError'])) :?>
-						<span><b class="feedback"><?php htmlout($_SESSION['AddEmployeeAsOwnerError']); ?></b></span>
-					<?php unset($_SESSION['AddEmployeeAsOwnerError']); ?>
+				<?php if(isSet($_SESSION['AddEmployeeAsRequestedError'])) :?>
+						<span><b class="feedback"><?php htmlout($_SESSION['AddEmployeeAsRequestedError']); ?></b></span>
+					<?php unset($_SESSION['AddEmployeeAsRequestedError']); ?>
 				<?php endif; ?>
 			</div>
 
@@ -46,44 +46,18 @@
 				</div>
 			</fieldset>
 
-			<fieldset class="left"><legend>Create And Add A New User</legend>
+			<fieldset class="left"><legend>User Information</legend>
 				<div>
-					<label>New User Email:</label>
-					<input type="text" name="registerThenAddUserFromEmail" placeholder="Insert New User's Email"
-					value="">
-				</div>
-			</fieldset>	
-
-			<fieldset class="left"><legend>Add Existing User</legend>
-				<div class="left">
-					<?php if(isSet($_SESSION['AddEmployeeAsOwnerSearchResult'])) :?>
-							<span><b class="feedback"><?php htmlout($_SESSION['AddEmployeeAsOwnerSearchResult']); ?></b></span>
-						<?php unset($_SESSION['AddEmployeeAsOwnerSearchResult']); ?>
-					<?php endif; ?>
-				</div>
-
-				<div>
-					<label for="UserID">User:</label>
-					<select name="UserID">
-						<option value="">Select a User</option>
-						<?php foreach($users as $row): ?>
-							<?php if(isSet($selectedUserID) AND $selectedUserID == $row['UserID']) : ?>
-								<option selected="selected" value="<?php htmlout($row['UserID']); ?>"><?php htmlout($row['UserIdentifier']);?></option>
-							<?php else : ?>
-								<option value="<?php htmlout($row['UserID']); ?>"><?php htmlout($row['UserIdentifier']);?></option>
-							<?php endif; ?>
-						<?php endforeach; ?>
-					</select>
-				</div>
-				<div>
-					<label for="usersearchstring">Search for User:</label>
-					<input type="text" name="usersearchstring" 
-					value="<?php htmlout($usersearchstring); ?>">
+					<label>Name: </label>
+					<span><b><?php htmlout($userName); ?></b></span>
+					<label>Email: </label>
+					<span><b><?php htmlout($userEmail); ?></b></span>
+					<input type="hidden" name="UserID" value="<?php htmlout($userID); ?>">
+					<input type="hidden" name="email" value="<?php htmlout($userEmail); ?>">
 				</div>
 			</fieldset>
 
 			<div class="left">
-				<input type="submit" name="action" value="Search">
 				<input type="submit" name="action" value="Confirm Employee">
 				<input type="submit" name="action" value="Cancel">
 			</div>
