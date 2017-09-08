@@ -494,8 +494,8 @@ if(isSet($_POST['action']) AND $_POST['action'] == "Select Company"){
 	$_SESSION['normalUserCompanyIDSelected'] = $selectedCompanyToDisplayID;
 }
 
-// TO-DO: FIX-ME: Needs testing
-if(isSet($_GET['add']) AND $_GET['add'] != ""){
+// Remembers that we came from an auto-fill-in-employee link
+if(isSet($_GET['add'])){
 	$_SESSION['AddEmployeeAsOwnerAutoFillInEmail'] = $_GET['add'];
 	header("Location: .?ID=" . $_SESSION['normalUserCompanyIDSelected'] . "&employees");
 	exit();
@@ -1233,7 +1233,7 @@ if (isSet($_POST['action']) AND $_POST['action'] == 'Confirm Employee')
 
 // If a company owner has used an "add employee"-link sent to their email, after a user requested it.
 if(isSet($_SESSION['AddEmployeeAsOwnerAutoFillInEmail'])){
-	if(empty($_SESSION['AddEmployeeAsOwnerAutoFillInEmail'])){
+	if(empty($_SESSION['AddEmployeeAsOwnerAutoFillInEmail']) OR $_SESSION['AddEmployeeAsOwnerAutoFillInEmail'] == ""){
 		clearAddEmployeeAsOwnerSessions();
 
 		$_SESSION['normalCompanyFeedback'] = "Failed to add employee due to a blank email being submitted.";
@@ -1281,7 +1281,8 @@ if(isSet($_SESSION['AddEmployeeAsOwnerAutoFillInEmail'])){
 		if(!isSet($_SESSION['AddEmployeeAsOwnerUsersArray'])){
 			// We don't have info about users saved. Let's get it
 
-			$sql = "SELECT 	`userID` 	AS UserID,
+			$sql = "SELECT 	COUNT(*)	AS HitCount,
+							`userID` 	AS UserID,
 							`firstname`,
 							`lastname`,
 							`email`,
@@ -1300,15 +1301,15 @@ if(isSet($_SESSION['AddEmployeeAsOwnerAutoFillInEmail'])){
 			$s->execute();
 			$row = $s->fetch(PDO::FETCH_ASSOC);
 
-			$users = array(
-								'UserID' => $row['UserID'],
-								'UserIdentifier' => $row['lastname'] . ', ' . $row['firstname'] . ' - ' . $row['email'],
-								'UserName' => $row['lastname'] . ', ' . $row['firstname'],
-								'UserEmail' => $row['email'],
-								'CompanyName' => $row['CompanyName']
-							);
+			if(isSet($row) AND $row['HitCount'] > 0){
+				$users = array(
+									'UserID' => $row['UserID'],
+									'UserIdentifier' => $row['lastname'] . ', ' . $row['firstname'] . ' - ' . $row['email'],
+									'UserName' => $row['lastname'] . ', ' . $row['firstname'],
+									'UserEmail' => $row['email'],
+									'CompanyName' => $row['CompanyName']
+								);
 
-			if(isSet($users)){
 				$_SESSION['AddEmployeeAsOwnerUsersArray'] = $users;
 			} else {
 				clearAddEmployeeAsOwnerSessions();
