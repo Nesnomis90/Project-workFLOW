@@ -371,7 +371,7 @@ if(isSet($_POST['action']) AND $_POST['action'] == "Request To Join"){
 }
 
 if(isSet($_POST['confirm']) AND $_POST['confirm'] == "Yes, Send The Request"){
-	
+
 	$continueRequest = FALSE;
 
 	if(isSet($_POST['companyID']) AND !empty($_POST['companyID'])){
@@ -380,7 +380,7 @@ if(isSet($_POST['confirm']) AND $_POST['confirm'] == "Yes, Send The Request"){
 	} else {
 		$_SESSION['normalCompanyFeedback'] = "Failed to identify the company you wanted to join, so the process was aborted.";
 	}
-	
+
 	if($continueRequest = TRUE){
 		if(isSet($_POST['requestMessage']) AND !empty($_POST['requestMessage'])){
 			$requestMessage	= $_POST['requestMessage'];

@@ -1660,6 +1660,37 @@ if (isSet($_POST['action']) and $_POST['action'] == 'Confirm Merge'){
 			$s->bindValue(':description', $description);
 			$s->execute();
 
+			$description = 	"The employees in the company: " . $oldCompanyName . 
+							" no longer exists due to being merged." .
+							"\nIt was merged by: " . $_SESSION['LoggedInUserName'];
+
+			$sql = "INSERT INTO `logevent` 
+					SET			`actionID` = 	(
+													SELECT 	`actionID` 
+													FROM 	`logaction`
+													WHERE 	`name` = 'Employee Removed'
+												),
+								`description` = :description";
+			$s = $pdo->prepare($sql);
+			$s->bindValue(':description', $description);
+			$s->execute();
+
+			$description = 	"The employees in the company: " . $oldCompanyName . 
+							" were added into the company: " . $mergeIntoCompanyName .
+							" due to the companies being merged." .
+							"\nIt was merged by: " . $_SESSION['LoggedInUserName'];
+
+			$sql = "INSERT INTO `logevent` 
+					SET			`actionID` = 	(
+													SELECT 	`actionID` 
+													FROM 	`logaction`
+													WHERE 	`name` = 'Employee Added'
+												),
+								`description` = :description";
+			$s = $pdo->prepare($sql);
+			$s->bindValue(':description', $description);
+			$s->execute();			
+			
 			$pdo->commit();
 
 			//Close the connection
