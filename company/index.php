@@ -415,16 +415,12 @@ if(isSet($_POST['confirm']) AND $_POST['confirm'] == "Yes, Send The Request"){
 			$s->execute();
 			$result = $s->fetchAll(PDO::FETCH_ASSOC);
 
-			// TO-DO: Adjust send email logic here?
 			if(isSet($result) AND !empty($result)){
 				foreach($result AS $row){
-					// Check if user wants to receive owner emails
-					if($row['SendOwnerEmail'] == 1){ 
-						// Check if user wants to receive all emails or just the first time booking goes over credit per period
-							// sendEmailOnceOrAlways: 1 = always, sendEmailOnceOrAlways: 0 = once.
-						if($row['SendEmailOnceOrAlways'] == 1){ 
-							$companyOwnerEmails[] = $row['Email'];
-						}
+					// Check if user wants to receive owner emails?
+					// TO-DO: Send regardless?
+					if($row['SendOwnerEmail'] == 1){
+						$companyOwnerEmails[] = $row['Email'];
 					}
 				}
 			}
@@ -444,7 +440,8 @@ if(isSet($_POST['confirm']) AND $_POST['confirm'] == "Yes, Send The Request"){
 		if(isSet($companyOwnerEmails) AND !empty($companyOwnerEmails)){
 			$emailSubject = "A user wants to join your company!";
 
-			$url = $_SERVER['HTTP_HOST'] . "/company/?ID=" . $selectedCompanyToJoinID . "&employees";
+			// TO-DO: Add user info to url and make it auto-fill-in the confirm employee info
+			$url = $_SERVER['HTTP_HOST'] . "/company/?ID=" . $selectedCompanyToJoinID . "&employees&add=" . $_SESSION['email'];
 
 			$emailMessage = 
 			"The user: " . $_SESSION['LoggedInUserName'] .
@@ -470,7 +467,6 @@ if(isSet($_POST['confirm']) AND $_POST['confirm'] == "Yes, Send The Request"){
 			} else {
 				$_SESSION['normalCompanyFeedback'] = "The request couldn't be made, since there were no company owner(s) that wanted to be contacted."; // TO-DO: Remove before uploading.
 			}
-			
 		}
 	}
 	unset($_SESSION['normalCompanyJoinACompany']);
@@ -493,6 +489,12 @@ if(isSet($_POST['action']) AND $_POST['action'] == "Select Company"){
 } elseif(isSet($_GET['ID']) AND !empty($_GET['ID'])) {
 	$selectedCompanyToDisplayID = $_GET['ID'];
 	$_SESSION['normalUserCompanyIDSelected'] = $selectedCompanyToDisplayID;
+}
+
+// TO-DO: FIX-ME: Needs testing
+if(isSet($_GET['add']) AND $_GET['add'] != ""){
+	$_SESSION['refreshAddEmployeeAsOwner'] = TRUE;
+	$_SESSION['AddEmployeeAsOwnerAutoFillInEmail'] = $_GET['add'];
 }
 
 if(isSet($_SESSION['loggedIn']) AND $_SESSION['loggedIn']){
@@ -537,23 +539,23 @@ if (isSet($_POST['action']) AND $_POST['action'] == 'Change Role')
 		}
 
 		// Get employee information
-		$sql = 'SELECT 	u.`userID`					AS UsrID,
-						c.`companyID`				AS TheCompanyID,
-						c.`name`					AS CompanyName,
-						u.`firstName`, 
-						u.`lastName`,
-						cp.`PositionID`,
-						cp.`name`					AS PositionName							
-				FROM 	`company` c 
-				JOIN 	`employee` e
-				ON 		e.CompanyID = c.CompanyID 
-				JOIN 	`companyposition` cp 
-				ON 		cp.PositionID = e.PositionID
-				JOIN 	`user` u 
-				ON 		u.userID = e.UserID
-				WHERE	e.userID = :UserID
-				AND 	e.companyID = :CompanyID
-				LIMIT 	1';
+		$sql = 'SELECT 		u.`userID`					AS UsrID,
+							c.`companyID`				AS TheCompanyID,
+							c.`name`					AS CompanyName,
+							u.`firstName`, 
+							u.`lastName`,
+							cp.`PositionID`,
+							cp.`name`					AS PositionName							
+				FROM 		`company` c 
+				INNER JOIN 	`employee` e
+				ON 			e.CompanyID = c.CompanyID 
+				INNER JOIN 	`companyposition` cp 
+				ON 			cp.PositionID = e.PositionID
+				INNER JOIN 	`user` u 
+				ON 			u.userID = e.UserID
+				WHERE		e.userID = :UserID
+				AND 		e.companyID = :CompanyID
+				LIMIT 		1';
 		$s = $pdo->prepare($sql);
 		$s->bindValue(':UserID', $_POST['UserID']);
 		$s->bindValue(':CompanyID', $_POST['CompanyID']);
@@ -748,8 +750,18 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Add Employee') OR
 {
 	$usersearchstring = '';
 
-	$companyID = $_SESSION['normalUserCompanyIDSelected'];
-	$companyName = $_SESSION['normalUserCompanyNameSelected'];
+	if(isSet($_SESSION['normalUserCompanyIDSelected'], $_SESSION['normalUserCompanyNameSelected'])){
+		$companyID = $_SESSION['normalUserCompanyIDSelected'];
+		$companyName = $_SESSION['normalUserCompanyNameSelected'];
+	} else {
+		clearAddEmployeeAsOwnerSessions();
+
+		$_SESSION['normalCompanyFeedback'] = "Failed to add employee. Try again.";
+
+		$location = "http://$_SERVER[HTTP_HOST]/company/";
+		header("Location: $location");
+		exit();
+	}
 
 	// Check if the call was a form submit or a forced refresh
 	if(isSet($_SESSION['refreshAddEmployeeAsOwner']) AND $_SESSION['refreshAddEmployeeAsOwner']){
@@ -895,6 +907,8 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Add Employee') OR
 
 	var_dump($_SESSION); // TO-DO: remove after testing is done
 
+	// TO-DO: FIX-ME: Add the auto-fill in of the user from add employee link!!!!!
+	
 	// Change to the actual html form template
 	include 'addemployee.html.php';
 	exit();
