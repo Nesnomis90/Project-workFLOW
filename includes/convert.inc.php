@@ -27,14 +27,18 @@ function convertTimeToHoursAndMinutes($time){
 	if(empty($timeMinute)){
 		$timeMinute = 0;
 	}
-	return $timeHour . 'h' . $timeMinute . 'm';	
+	return $timeHour . 'h' . $timeMinute . 'm';
 }
 
 // Takes time xx:yy (x hours and y minutes) and returns minutes
 function convertTimeToMinutes($time){
-	$timeHour = substr($time,0,strpos($time,":"));
-	$timeMinute = substr($time,strpos($time,":")+1, 2);
-	return $timeHour*60 + $timeMinute;	
+	if(isSet($time) AND !empty($time)){
+		$timeHour = substr($time,0,strpos($time,":"));
+		$timeMinute = substr($time,strpos($time,":")+1, 2);
+		return $timeHour*60 + $timeMinute;
+	} else {
+		return 0;
+	}
 }
 
 // Integer minute input to string output
