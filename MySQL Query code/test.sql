@@ -52,6 +52,21 @@ WHERE 	DATE(CURRENT_TIMESTAMP) >= `removeAtDate`
 AND 	`isActive` = 1
 AND		`companyID` <> 0;
 
+SELECT 	COUNT(*)	AS HitCount,
+		`userID` 	AS UserID,
+		`firstname`,
+		`lastname`,
+		`email`,
+		(
+			SELECT	`name`
+			FROM	`company`
+			WHERE	`CompanyID` = 2
+		)			AS CompanyName
+FROM 	`user`
+WHERE	`isActive` > 0
+AND		`email` = 'test@test.com'
+LIMIT 	1;
+
 SELECT 		c.`CompanyID`				AS TheCompanyID,
 			c.`dateTimeCreated`			AS dateTimeCreated,
 			c.`startDate`				AS StartDate,
