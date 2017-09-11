@@ -557,12 +557,21 @@ if(isSet($_GET['activateaccount']) AND $_GET['activateaccount'] != ""){
 	try
 	{
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
-		
+
 		$pdo = connect_to_db();
-		$sql = "UPDATE 	`user`
-				SET		`isActive` = 1,
-						`activationCode` = NULL
-				WHERE 	`userID` = :userID";
+		if($alreadyActive){
+			$sql = "UPDATE 	`user`
+					SET		`activationCode` = NULL,
+							`timeoutAmount` = 0,
+							`loginBlocked` = 0
+					WHERE 	`userID` = :userID";			
+		} else {
+			$sql = "UPDATE 	`user`
+					SET		`isActive` = 1,
+							`activationCode` = NULL
+					WHERE 	`userID` = :userID";
+		}
+
 		$s = $pdo->prepare($sql);
 		$s->bindValue(':userID', $userID);
 		$s->execute();
@@ -578,8 +587,13 @@ if(isSet($_GET['activateaccount']) AND $_GET['activateaccount'] != ""){
 		exit();
 	}
 
-	$_SESSION['normalUserFeedback'] = 	"The account for " . $lastname . ", " . $firstname . " - " . $email . 
-										" has been activated!";
+	if($alreadyActive){
+		$_SESSION['normalUserFeedback'] = 	"The account for " . $lastname . ", " . $firstname . " - " . $email . 
+											" has been re-activated and can now log in again!";	
+	} else {
+		$_SESSION['normalUserFeedback'] = 	"The account for " . $lastname . ", " . $firstname . " - " . $email . 
+											" has been activated and can now log in!";
+	}
 
 	// Add a log event that the account got activated
 	try
@@ -629,18 +643,18 @@ if (isSet($_POST['booking']) and $_POST['booking'] == 'Cancel')
 		try
 		{
 			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
-			
+
 			$pdo = connect_to_db();
 			$sql = 'UPDATE 	`booking` 
 					SET 	`dateTimeCancelled` = CURRENT_TIMESTAMP,
-							`cancellationCode` = NULL				
+							`cancellationCode` = NULL
 					WHERE 	`bookingID` = :id
 					AND		`dateTimeCancelled` IS NULL
 					AND		`actualEndDateTime` IS NULL';
 			$s = $pdo->prepare($sql);
 			$s->bindValue(':id', $_POST['id']);
 			$s->execute();
-			
+
 			//close connection
 			$pdo = null;
 		}
@@ -650,9 +664,9 @@ if (isSet($_POST['booking']) and $_POST['booking'] == 'Cancel')
 			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
 			exit();
 		}
-		
+
 		$_SESSION['normalUserBookingFeedback'] .= "Successfully cancelled the booking";
-		
+
 			// Add a log event that a booking was cancelled
 		try
 		{
@@ -663,9 +677,9 @@ if (isSet($_POST['booking']) and $_POST['booking'] == 'Cancel')
 			} else {
 				$logEventDescription = 'The user: ' . $_SESSION['LoggedInUserName'] . ' cancelled their own booking.';
 			}
-			
+
 			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
-			
+
 			$pdo = connect_to_db();
 			$sql = "INSERT INTO `logevent` 
 					SET			`actionID` = 	(
@@ -677,9 +691,9 @@ if (isSet($_POST['booking']) and $_POST['booking'] == 'Cancel')
 			$s = $pdo->prepare($sql);
 			$s->bindValue(':description', $logEventDescription);
 			$s->execute();
-			
+
 			//Close the connection
-			$pdo = null;		
+			$pdo = null;
 		}
 		catch(PDOException $e)
 		{
@@ -694,11 +708,11 @@ if (isSet($_POST['booking']) and $_POST['booking'] == 'Cancel')
 		// Booking was not active, so no need to cancel it.
 		$_SESSION['normalUserBookingFeedback'] = "Meeting has already been completed. Did not cancel it.";
 	}
-	
+
 	// Load booked meetings list webpage with updated database
-	
+
 	$location = getLocationWeCameFromInUserBooking();
-	
+
 	header($location);
 	exit();	
 }
@@ -713,7 +727,7 @@ if(	(isSet($_SESSION['loggedIn']) AND isSet($_SESSION['LoggedInUserID']) AND
 	try
 	{
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
-		
+
 		$pdo = connect_to_db();
 		$sql = 'SELECT 		b.`userID`										AS BookedUserID,
 							b.`bookingID`,
@@ -744,9 +758,9 @@ if(	(isSet($_SESSION['loggedIn']) AND isSet($_SESSION['LoggedInUserID']) AND
 		$s = $pdo->prepare($sql);
 		$s->bindValue(':userID', $userID);
 		$s->execute();
-		
+
 		$result = $s->fetchAll(PDO::FETCH_ASSOC);
-		
+
 		//Close the connection
 		$pdo = null;
 	}
@@ -768,7 +782,7 @@ if(	(isSet($_SESSION['loggedIn']) AND isSet($_SESSION['LoggedInUserID']) AND
 		$dateOnlyStart = convertDatetimeToFormat($startDateTime,'Y-m-d H:i:s','Y-m-d');
 		$cancelledDateTime = $row['BookingWasCancelledOn'];
 		$createdDateTime = $row['BookingWasCreatedOn'];	
-		
+
 		// Describe the status of the booking based on what info is stored in the database
 		// If not finished and not cancelled = active
 		// If meeting time has passed and finished time has updated (and not been cancelled) = completed

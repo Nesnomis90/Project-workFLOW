@@ -166,6 +166,13 @@ function checkIfUserIsLoggedIn(){
 			return FALSE;
 		}
 
+		// Check if the email submitted belongs to an account that has been blocked from being able to log in
+		if(isUserBlockedFromLogin($email)){
+			$_SESSION['loginError'] = 	"The account you are trying to access has been locked due to too many incorrect login attempts." .
+										"\nTo activate it, follow the instructions sent to your email, or contact an admin.";
+			return FALSE;
+		}
+		
 		// User has filled in both fields, check if login details are correct
 			// Add our custom password salt and compare the finished hash to the database
 		$submittedPassword = $_POST['password'];
@@ -200,19 +207,6 @@ function checkIfUserIsLoggedIn(){
 			unset($_SESSION['loginEmailSubmitted']);
 
 			return TRUE;
-		} elseif($userInfo == "Blocked"){
-			// Correct login info, but the account has been blocked due to too many incorrect login attempts
-			unset($_SESSION['loggedIn']);
-			unset($_SESSION['email']);
-			unset($_SESSION['password']);
-			unset($_SESSION['LoggedInUserID']);
-			unset($_SESSION['LoggedInUserName']);
-
-			// Inform user that account has been blocked
-			$_SESSION['loginError'] = 	"The account you are trying to access has been locked due to too many incorrect login attempts." .
-										"\nTo activate it, follow the instructions sent to your email, or contact an admin.";
-
-			return FALSE;
 		} else {
 			// Wrong log in info.
 			unset($_SESSION['loggedIn']);
@@ -379,13 +373,7 @@ function checkIfUserIsLoggedIn(){
 	// loggedIn = true session variable in the case that user info
 	// has been altered while someone is already logged in with old data
 	if(isSet($_SESSION['loggedIn'])){
-		$userInfo = databaseContainsUser($_SESSION['email'], $_SESSION['password']);
-
-		if($userInfo === TRUE){
-			return TRUE;
-		} else {
-			return FALSE;
-		}
+		return databaseContainsUser($_SESSION['email'], $_SESSION['password']);
 	}
 
 	return FALSE;
@@ -401,8 +389,7 @@ function databaseContainsUser($email, $password){
 		$sql = 'SELECT 	COUNT(*),
 						`userID`,
 						`firstname`,
-						`lastname`,
-						`loginBlocked`
+						`lastname`
 				FROM 	`user`
 				WHERE 	email = :email 
 				AND 	password = :password
@@ -425,7 +412,8 @@ function databaseContainsUser($email, $password){
 
 	$row = $s->fetch();
 	// If we got a hit, then the user info was correct
-	if ($row[0] > 0 AND $row['loginBlocked'] == 0){
+	if ($row[0] > 0){
+
 		if(!isSet($_SESSION['LoggedInUserID'])){
 			$_SESSION['DatabaseContainsUserID'] = $row['userID'];
 		}
@@ -433,12 +421,13 @@ function databaseContainsUser($email, $password){
 		if(!isSet($_SESSION['LoggedInUserName'])){
 			$_SESSION['DatabaseContainsUserName'] = $row['lastname'] . ", " . $row['firstname'];
 		}
+
 		return TRUE;
-	} elseif($row[0] > 0 AND $row['loginBlocked'] == 1){
-		return "Blocked";
+
 	} else {
 		unset($_SESSION['DatabaseContainsUserID']);
-		unset($_SESSION['DatabaseContainsUserName']);	
+		unset($_SESSION['DatabaseContainsUserName']);
+
 		return FALSE;
 	}
 }
@@ -510,6 +499,43 @@ function databaseContainsEmail($email){
 
 	$row = $s->fetch();
 	// If we got a hit, then the email exists in our database
+	if ($row[0] > 0)
+	{
+		return TRUE;
+	}
+	else
+	{
+		return FALSE;
+	}
+}
+
+
+function isUserBlockedFromLogin($email){
+	try
+	{
+		include_once 'db.inc.php';
+		$pdo = connect_to_db();
+		$sql = 'SELECT 	COUNT(*) 
+				FROM 	`user`
+				WHERE 	`email` = :email
+				AND		`loginBlocked` = 1
+				LIMIT 	1';
+		$s = $pdo->prepare($sql);
+		$s->bindValue(':email', $email);
+		$s->execute();
+
+		$pdo = null;
+	}
+	catch (PDOException $e)
+	{
+		$error = 'Error validating account status.';
+		include_once 'error.html.php';
+		$pdo = null;
+		exit();
+	}
+
+	$row = $s->fetch();
+	// If we got a hit, then the user is blocked from being able to log in
 	if ($row[0] > 0)
 	{
 		return TRUE;
