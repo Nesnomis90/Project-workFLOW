@@ -227,9 +227,18 @@ function checkIfUserIsLoggedIn(){
 
 			if(sizeOf($_SESSION['wrongLoginAttempts']) >= MAXIMUM_WRONG_LOGIN_GUESSES){
 				$_SESSION['loginBlocked'] = TRUE;
-				
+
 				// Add to the user's account (from the email used) that someone tried to login to their account and failed
-				
+				increaseLoginTimeouts($email);
+
+				// Check how many timeouts we have now
+				$timeoutAmount = trackLoginTimeouts($email);
+
+				// Block account from logging in, if too many timeouts
+				// Also sends email to user about how to activate account again
+				if($timeoutAmount >= MAXIMUM_WRONG_LOGIN_TIMEOUTS){
+					blockUserLogin($email);
+				}
 			}
 
 			// Calculate remaining login attempts before receiving a timeout
@@ -245,9 +254,6 @@ function checkIfUserIsLoggedIn(){
 			} else {
 				$_SESSION['loginError'] = "The specified email address or password was incorrect.";
 			}
-
-			// Calculate remaining timeouts before blocking the account from logging in.
-
 
 			return FALSE;
 		}
@@ -359,9 +365,10 @@ function checkIfUserIsLoggedIn(){
 	// has been altered while someone is already logged in with old data
 	if(isSet($_SESSION['loggedIn'])){
 		$userInfo = databaseContainsUser($_SESSION['email'], $_SESSION['password']);
+
 		if($userInfo === TRUE){
 			return TRUE;
-		} elseif($userInfo === FALSE OR $userInfo == "Blocked") {
+		} else {
 			return FALSE;
 		}
 	}
@@ -621,12 +628,18 @@ function trackLoginTimeouts($email){
 	{
 		include_once 'db.inc.php';
 		$pdo = connect_to_db();
-		$sql = ''; // TO-DO:
+		$sql = 'SELECT	`timeoutAmount`
+				FROM	`user`
+				WHERE	`email` = :email
+				LIMIT 	1';
 		$s = $pdo->prepare($sql);
 		$s->bindValue(':email', $email);
 		$s->execute();
+		$amount = $s->fetchColumn();
 
 		$pdo = null;
+
+		return $amount;
 	}
 	catch(PDOException $e)
 	{
@@ -635,5 +648,57 @@ function trackLoginTimeouts($email){
 		$pdo = null;
 		exit();	
 	}	
+}
+
+function increaseLoginTimeouts($email){
+	try
+	{
+		include_once 'db.inc.php';
+		$pdo = connect_to_db();
+		$sql = 'UPDATE	`user`
+				SET		`timeoutAmount` = (`timeoutAmount` + 1)
+				WHERE	`email` = :email';
+		$s = $pdo->prepare($sql);
+		$s->bindValue(':email', $email);
+		$s->execute();
+
+		$pdo = null;
+	}
+	catch(PDOException $e)
+	{
+		$error = 'Error updating user timeout amounts.';
+		include_once 'error.html.php';
+		$pdo = null;
+		exit();
+	}
+}
+
+function blockUserLogin($email){
+	try
+	{
+		include_once 'db.inc.php';
+		$pdo = connect_to_db();
+		$sql = 'UPDATE	`user`
+				SET		`loginBlocked` = 1
+				WHERE	`email` = :email
+				LIMIT 	1';
+		$s = $pdo->prepare($sql);
+		$s->bindValue(':email', $email);
+		$s->execute();
+
+		$pdo = null;
+	}
+	catch(PDOException $e)
+	{
+		$error = 'Error blocking user login.';
+		include_once 'error.html.php';
+		$pdo = null;
+		exit();
+	}
+}
+
+function sendEmailAboutLoginBeingBlocked($email){
+	// TO-DO: generate new activation code? or special code for removing being blocked?
+	// Add code to function above aswell...
 }
 ?>
