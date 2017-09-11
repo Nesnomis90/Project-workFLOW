@@ -225,6 +225,8 @@ function checkIfUserIsLoggedIn(){
 			$dateTimeNow = getDatetimeNow();
 			$_SESSION['wrongLoginAttempts'][] = $dateTimeNow;
 
+			$_SESSION['loginError'] = "";
+			
 			if(sizeOf($_SESSION['wrongLoginAttempts']) >= MAXIMUM_WRONG_LOGIN_GUESSES){
 				$_SESSION['loginBlocked'] = TRUE;
 
@@ -237,13 +239,12 @@ function checkIfUserIsLoggedIn(){
 				// Block account from logging in, if too many timeouts
 				// Also sends email to user about how to activate account again
 				if($timeoutAmount >= MAXIMUM_WRONG_LOGIN_TIMEOUTS){
-					
+
 					// Generate new activation code
 					$activationCode = generateActivationCode();
-					
+
 					blockUserLogin($email, $activationCode);
 					sendEmailAboutLoginBeingBlocked($email, $activationCode)
-					
 				}
 			}
 
@@ -252,13 +253,13 @@ function checkIfUserIsLoggedIn(){
 			$attemptsRemaining = MAXIMUM_WRONG_LOGIN_GUESSES - $attemptsSoFar;
 			$timeoutDurationInMinutes = WRONG_LOGIN_GUESS_TIMEOUT_IN_MINUTES;
 			if($attemptsRemaining == 2){
-				$_SESSION['loginError'] = "The specified email address or password was incorrect.\nYou have 2 attempts left to insert the correct login information.";
+				$_SESSION['loginError'] .= "The specified email address or password was incorrect.\nYou have 2 attempts left to insert the correct login information.";
 			} elseif($attemptsRemaining == 1){
-				$_SESSION['loginError'] = "The specified email address or password was incorrect.\nYou have 1 attempt left to insert the correct login information.";
+				$_SESSION['loginError'] .= "The specified email address or password was incorrect.\nYou have 1 attempt left to insert the correct login information.";
 			} elseif($attemptsRemaining == 0){
-				$_SESSION['loginError'] = "The specified email address or password was incorrect.\nYou are now unable to log in for $timeoutDurationInMinutes minutes.";
+				$_SESSION['loginError'] .= "The specified email address or password was incorrect.\nYou are now unable to log in for $timeoutDurationInMinutes minutes.";
 			} else {
-				$_SESSION['loginError'] = "The specified email address or password was incorrect.";
+				$_SESSION['loginError'] .= "The specified email address or password was incorrect.";
 			}
 
 			return FALSE;
