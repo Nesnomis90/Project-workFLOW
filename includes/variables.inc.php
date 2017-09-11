@@ -16,7 +16,7 @@ define('DB_NAME', 'test');
 
 // Cookies
 	// Cookie names we use to identify if the website is accessed locally by a meeting room panel
-	// TO-DO: Change after uploading
+	// TO-DO: Change after uploading?
 define('MEETINGROOM_NAME', 'Temp_Cookie_Name_To_Hold_Meeting_Room_Name'); 
 define('MEETINGROOM_IDCODE', 'Temp_Cookie_Name_To_Hold_Meeting_Room_ID_CODE'); 
 
