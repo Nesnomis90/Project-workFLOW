@@ -450,8 +450,9 @@ if(isSet($_POST['confirm']) AND $_POST['confirm'] == "Yes, Send The Request"){
 			"The user: " . $_SESSION['LoggedInUserName'] .
 			"\nWho can be contacted at: " . $_SESSION['email'] . 
 			"\nHas requested to join your company: " . $companyName .
-			"\n\nIf you want to add this user, log in to the url below and add the user" .
-			"\nLink: " . $url;
+			"\n\nIf you want to add this user, log in to the link below and confirm what company role to give them." .
+			"\nIf you don't want to add this user, just ignore this email." . 
+			"\n\nLink: " . $url;
 
 			$email = $companyOwnerEmails;
 

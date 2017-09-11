@@ -124,6 +124,34 @@ function checkIfUserIsLoggedIn(){
 	// If user is trying to log in
 	if(isSet($_POST['action']) and $_POST['action'] == 'login'){
 
+		if(isSet($_POST['email']) AND $_POST['email'] != ""){
+			// Remember email if it's filled in. Retyping an email is the most annoying thing in the world.
+			$email = trim($_POST['email']);
+			$_SESSION['loginEmailSubmitted'] = $email;
+		}
+
+		// Check if user has filled in the necessary information
+		if (!isSet($_POST['email']) OR $_POST['email'] == '' OR
+			!isSet($_POST['password']) OR $_POST['password'] == ''){
+			// User didn't fill in enough info
+			// Save a custom error message for the user
+			$_SESSION['loginError'] = 'Please fill in both fields';
+			return FALSE;
+		}
+
+		if(!validateUserEmail($email)){
+			$_SESSION['loginError'] = 'Email submitted is not a valid email.';
+			return FALSE;
+		}
+
+		// Check if the email submitted belongs to an account that has been blocked from being able to log in
+		if(isUserBlockedFromLogin($email)){
+			$_SESSION['loginError'] = 	"The account you are trying to access has been locked due to too many incorrect login attempts." .
+										"\nTo activate it, follow the instructions sent to your email, or contact an admin.";
+			return FALSE;
+		}
+
+		// Check if this session is allowed to do any login attempts at the moment
 		if(isSet($_SESSION['wrongLoginAttempts'], $_SESSION['loginBlocked'])){
 			$dateTimeNow = getDatetimeNow();
 			$dateTimeBlocked = end($_SESSION['wrongLoginAttempts']);
@@ -146,32 +174,13 @@ function checkIfUserIsLoggedIn(){
 			return FALSE;
 		}
 
-		if(isSet($_POST['email']) AND $_POST['email'] != ""){
-			// Remember email if it's filled in. Retyping an email is the most annoying thing in the world.
-			$email = trim($_POST['email']);
-			$_SESSION['loginEmailSubmitted'] = $email;
-		}
-
-		// Check if user has filled in the necessary information
-		if (!isSet($_POST['email']) OR $_POST['email'] == '' OR
-			!isSet($_POST['password']) OR $_POST['password'] == ''){
-			// User didn't fill in enough info
-			// Save a custom error message for the user
-			$_SESSION['loginError'] = 'Please fill in both fields';
-			return FALSE;
-		}
-
-		if(!validateUserEmail($email)){
-			$_SESSION['loginError'] = 'Email submitted is not a valid email.';
-			return FALSE;
-		}
-
 		// User has filled in both fields, check if login details are correct
 			// Add our custom password salt and compare the finished hash to the database
 		$submittedPassword = $_POST['password'];
 		$password = hashPassword($submittedPassword);
 
-		if(databaseContainsUser($email, $password)){
+		$userInfo = databaseContainsUser($email, $password);
+		if($userInfo === TRUE){
 			// Correct log in info! Update the session data to know we're logged in
 			if(!isSet($_SESSION['loggedIn'])){
 				$_SESSION['loggedIn'] = TRUE;
@@ -197,6 +206,7 @@ function checkIfUserIsLoggedIn(){
 			unset($_SESSION['DatabaseContainsUserID']);
 			unset($_SESSION['DatabaseContainsUserName']);
 			unset($_SESSION['loginEmailSubmitted']);
+
 			return TRUE;
 		} else {
 			// Wrong log in info.
@@ -207,23 +217,54 @@ function checkIfUserIsLoggedIn(){
 			unset($_SESSION['LoggedInUserName']);
 
 			// Track # of wrong login attempts and limit login if too high.
-			$_SESSION['wrongLoginAttempts'][] = getDatetimeNow();
+			$dateTimeNow = getDatetimeNow();
+			$_SESSION['wrongLoginAttempts'][] = $dateTimeNow;
+
+			$blocked = FALSE;
 
 			if(sizeOf($_SESSION['wrongLoginAttempts']) >= MAXIMUM_WRONG_LOGIN_GUESSES){
 				$_SESSION['loginBlocked'] = TRUE;
+
+				// Add to the user's account (from the email used) that someone tried to login to their account and failed
+				increaseLoginTimeouts($email);
+
+				// Check how many timeouts we have now
+				$timeoutAmount = trackLoginTimeouts($email);
+
+				// Block account from logging in, if too many timeouts
+				// Also sends email to user about how to activate account again
+				$maxTimeouts = MAXIMUM_WRONG_LOGIN_TIMEOUTS;
+				if($timeoutAmount >= $maxTimeouts){
+					$blocked = TRUE;
+
+					// Generate new activation code
+					$activationCode = generateActivationCode();
+
+					blockUserLogin($email, $activationCode);
+					sendEmailAboutLoginBeingBlocked($email, $activationCode);
+				}
 			}
-			$attemptsSoFar = sizeOf($_SESSION['wrongLoginAttempts']);
-			$attemptsRemaining = MAXIMUM_WRONG_LOGIN_GUESSES - $attemptsSoFar;
+
 			$timeoutDurationInMinutes = WRONG_LOGIN_GUESS_TIMEOUT_IN_MINUTES;
-			if($attemptsRemaining == 2){
-				$_SESSION['loginError'] = "The specified email address or password was incorrect.\nYou have 2 attempts left to insert the correct login information.";
-			} elseif($attemptsRemaining == 1){
-				$_SESSION['loginError'] = "The specified email address or password was incorrect.\nYou have 1 attempt left to insert the correct login information.";
-			} elseif($attemptsRemaining == 0){
-				$_SESSION['loginError'] = "The specified email address or password was incorrect.\nYou are now unable to log in for $timeoutDurationInMinutes minutes.";
+
+			if($blocked){
+				$_SESSION['loginError'] .= "\n\nYou are also unable to attempt any log in for $timeoutDurationInMinutes minutes.";
 			} else {
-				$_SESSION['loginError'] = "The specified email address or password was incorrect.";
+				// Calculate remaining login attempts before receiving a timeout
+				$attemptsSoFar = sizeOf($_SESSION['wrongLoginAttempts']);
+				$attemptsRemaining = MAXIMUM_WRONG_LOGIN_GUESSES - $attemptsSoFar;
+
+				if($attemptsRemaining == 2){
+					$_SESSION['loginError'] = "The specified email address or password was incorrect.\nYou have 2 attempts left to insert the correct login information.";
+				} elseif($attemptsRemaining == 1){
+					$_SESSION['loginError'] = "The specified email address or password was incorrect.\nYou have 1 attempt left to insert the correct login information.";
+				} elseif($attemptsRemaining == 0){
+					$_SESSION['loginError'] = "The specified email address or password was incorrect.\nYou are now unable to attempt any log in for $timeoutDurationInMinutes minutes.";
+				} else {
+					$_SESSION['loginError'] = "The specified email address or password was incorrect.";
+				}
 			}
+
 			return FALSE;
 		}
 	}
@@ -335,6 +376,7 @@ function checkIfUserIsLoggedIn(){
 	if(isSet($_SESSION['loggedIn'])){
 		return databaseContainsUser($_SESSION['email'], $_SESSION['password']);
 	}
+
 	return FALSE;
 }
 
@@ -371,21 +413,22 @@ function databaseContainsUser($email, $password){
 
 	$row = $s->fetch();
 	// If we got a hit, then the user info was correct
-	if ($row[0] > 0)
-	{
+	if ($row[0] > 0){
+
 		if(!isSet($_SESSION['LoggedInUserID'])){
 			$_SESSION['DatabaseContainsUserID'] = $row['userID'];
 		}
-		
+
 		if(!isSet($_SESSION['LoggedInUserName'])){
 			$_SESSION['DatabaseContainsUserName'] = $row['lastname'] . ", " . $row['firstname'];
 		}
+
 		return TRUE;
-	}
-	else
-	{
+
+	} else {
 		unset($_SESSION['DatabaseContainsUserID']);
-		unset($_SESSION['DatabaseContainsUserName']);	
+		unset($_SESSION['DatabaseContainsUserName']);
+
 		return FALSE;
 	}
 }
@@ -467,6 +510,43 @@ function databaseContainsEmail($email){
 	}
 }
 
+// Function used to check if email belongs to an account that has been blocked from too many incorrect login attempts
+function isUserBlockedFromLogin($email){
+	try
+	{
+		include_once 'db.inc.php';
+		$pdo = connect_to_db();
+		$sql = 'SELECT 	COUNT(*) 
+				FROM 	`user`
+				WHERE 	`email` = :email
+				AND		`loginBlocked` = 1
+				LIMIT 	1';
+		$s = $pdo->prepare($sql);
+		$s->bindValue(':email', $email);
+		$s->execute();
+
+		$pdo = null;
+	}
+	catch (PDOException $e)
+	{
+		$error = 'Error validating account status.';
+		include_once 'error.html.php';
+		$pdo = null;
+		exit();
+	}
+
+	$row = $s->fetch();
+	// If we got a hit, then the user is blocked from being able to log in
+	if ($row[0] > 0)
+	{
+		return TRUE;
+	}
+	else
+	{
+		return FALSE;
+	}
+}
+
 // Function to check if the booking code submitted already is being used
 function databaseContainsBookingCode($rawBookingCode){
 	$hashedBookingCode = hashBookingCode($rawBookingCode);
@@ -483,7 +563,7 @@ function databaseContainsBookingCode($rawBookingCode){
 		$s = $pdo->prepare($sql);
 		$s->bindValue(':BookingCode', $hashedBookingCode);
 		$s->execute();
-		
+
 		$pdo = null;
 	}
 	catch(PDOException $e)
@@ -582,5 +662,108 @@ function isUserInHouseUser(){
 		return false;
 	}
 	return true;
+}
+
+// Function to keep track of the number of timeouts the account has received and block it from being able to log in if too high
+function trackLoginTimeouts($email){
+	try
+	{
+		include_once 'db.inc.php';
+		$pdo = connect_to_db();
+		$sql = 'SELECT	`timeoutAmount`
+				FROM	`user`
+				WHERE	`email` = :email
+				LIMIT 	1';
+		$s = $pdo->prepare($sql);
+		$s->bindValue(':email', $email);
+		$s->execute();
+		$amount = $s->fetchColumn();
+
+		$pdo = null;
+
+		return $amount;
+	}
+	catch(PDOException $e)
+	{
+		$error = 'Error checking user timeout amounts.';
+		include_once 'error.html.php';
+		$pdo = null;
+		exit();	
+	}	
+}
+
+// Function to increase the amount of times the account has received a login timeout
+function increaseLoginTimeouts($email){
+	try
+	{
+		include_once 'db.inc.php';
+		$pdo = connect_to_db();
+		$sql = 'UPDATE	`user`
+				SET		`timeoutAmount` = (`timeoutAmount` + 1)
+				WHERE	`email` = :email';
+		$s = $pdo->prepare($sql);
+		$s->bindValue(':email', $email);
+		$s->execute();
+
+		$pdo = null;
+	}
+	catch(PDOException $e)
+	{
+		$error = 'Error updating user timeout amounts.';
+		include_once 'error.html.php';
+		$pdo = null;
+		exit();
+	}
+}
+
+// Function to make sure the user can't log in if the account has received too many login timeouts
+function blockUserLogin($email, $activationCode){
+	try
+	{
+		include_once 'db.inc.php';
+		$pdo = connect_to_db();
+		$sql = 'UPDATE	`user`
+				SET		`loginBlocked` = 1,
+						`activationCode` = :activationCode
+				WHERE	`email` = :email
+				LIMIT 	1';
+		$s = $pdo->prepare($sql);
+		$s->bindValue(':email', $email);
+		$s->bindValue(':activationCode', $activationCode);
+		$s->execute();
+
+		$pdo = null;
+	}
+	catch(PDOException $e)
+	{
+		$error = 'Error blocking user login.';
+		include_once 'error.html.php';
+		$pdo = null;
+		exit();
+	}
+}
+
+// The email we send to the user when their account gets blocked from logging in
+function sendEmailAboutLoginBeingBlocked($email, $activationCode){
+
+	$emailSubject = "Your Account Has Been Blocked!";
+
+	$url = $_SERVER['HTTP_HOST'] . "/user/?activateaccount=" . $activationCode;
+
+	$emailMessage = 
+	"Someone has tried to log into your account and failed too many times!\n" .
+	"Therefore your account has been blocked for further login attempts for your account's safety.\n\n" . 
+	"You can activate your account again by going to the link below.\n" . 
+	"Link: " . $url;
+
+	$mailResult = sendEmail($email, $emailSubject, $emailMessage);
+
+	$_SESSION['loginError'] = "The account you tried to access has been blocked from further login attempts.";
+	
+	if(!$mailResult){
+		$_SESSION['loginError'] .= "\n\n[WARNING] System failed to send Email.";
+	}
+
+	$_SESSION['loginError'] .= "\nThis is the email msg we're sending out:\n$emailMessage\nSent to email: $email."; // TO-DO: Remove before uploading
 }
 ?>

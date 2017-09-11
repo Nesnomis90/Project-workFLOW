@@ -367,6 +367,85 @@ if (isSet($_POST['action']) and $_POST['action'] == 'Delete')
 	exit();	
 }
 
+// if admin wants to re-activate an account that has been blocked from being allowed to log in due to too many wrong login attempts
+if (isSet($_POST['action']) and $_POST['action'] == 'Re-Activate'){
+	if(isSet($_POST['id']) AND !empty($_POST['id'])){
+
+		$userID = $_POST['id'];	
+
+		try
+		{
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+
+			$pdo = connect_to_db();
+
+			$sql = 'SELECT 	`loginBlocked`,
+							`email`
+					FROM	`user`
+					WHERE	`userID` = :userID
+					LIMIT 	1';
+			$s = $pdo->prepare($sql);
+			$s->bindValue(':userID', $userID);
+			$s->execute();					
+			$row = $s->fetch(PDO::FETCH_ASSOC);
+			
+			if(isSet($row) AND $row['loginBlocked'] == 1){
+				// User can be re-activated
+
+				$sql = 'UPDATE 	`user`
+						SET		`loginBlocked` = 0,
+								`activationCode` = NULL,
+								`timeoutAmount` = 0
+						WHERE	`userID` = :userID';
+				$s = $pdo->prepare($sql);
+				$s->bindValue(':userID', $userID);
+				$s->execute();
+
+				$_SESSION['UserManagementFeedbackMessage'] = "Successfully re-activated the account.";
+				
+				// Send email to user that the account has been re-activated
+				$emailSubject = "Account Re-Activated";
+
+				$email = $row['email'];
+
+				$emailMessage = 
+				"Your account has been re-activated by an Admin.\n" . 
+				"You are now free to log in to your account again.";
+
+				$mailResult = sendEmail($email, $emailSubject, $emailMessage);
+
+				if(!$mailResult){
+					$_SESSION['UserManagementFeedbackMessage'] .= "\n\n[WARNING] System failed to send Email to user.";
+				}
+
+				$_SESSION['UserManagementFeedbackMessage'] .= "\nThis is the email msg we're sending out: $emailMessage\nSent to: $email."; // TO-DO: Remove after testing
+			} elseif(isSet($row) AND $row['isActive'] == 1) {
+				// User is already active
+				$_SESSION['UserManagementFeedbackMessage'] = "User had already been re-activated";
+			} else {
+				// User not found
+				$_SESSION['UserManagementFeedbackMessage'] = "Could not re-activate user due to it no longer existing";
+			}
+
+			//Close connection
+			$pdo = null;
+		}
+		catch (PDOException $e)
+		{
+			$error = 'Error activating user: ' . $e->getMessage();
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+			$pdo = null;
+			exit();
+		}
+	} else {
+		$_SESSION['UserManagementFeedbackMessage'] = "Could not re-activate user due to a missing identifier";
+	}
+
+	// Load user list webpage with updated database
+	header('Location: .');
+	exit();
+}
+
 // If admin wants to activate an unactivated user
 if (isSet($_POST['action']) and $_POST['action'] == 'Activate'){
 	if(isSet($_POST['id']) AND !empty($_POST['id'])){
@@ -1173,6 +1252,7 @@ try
 						)																					AS WorksFor,
 						u.`create_time`								 										AS DateCreated,
 						u.`isActive`,
+						u.`loginBlocked`,
 						u.`lastActivity`							 										AS LastActive,
 						u.`reduceAccessAtDate`																AS ReduceAccessAtDate
 			FROM 		`user` u
@@ -1216,33 +1296,55 @@ foreach ($result as $row)
 	$userinfo = $row['lastname'] . ', ' . $row['firstname'] . ' - ' . $row['email'];
 	
 	// If user has activated the account
-	if($row['isActive'] == 1){
-		$users[] = array('id' => $row['userID'], 
-						'firstname' => $row['firstname'],
-						'lastname' => $row['lastname'],
-						'email' => $row['email'],
-						'accessname' => $row['AccessName'],
-						'displayname' => $row['displayname'],
-						'bookingdescription' => $row['bookingdescription'],
-						'worksfor' => $row['WorksFor'],
-						'datecreated' => $displayCreatedDateTime,			
-						'lastactive' => $displayLastActiveDateTime,
-						'UserInfo' => $userinfo,
-						'reduceaccess' => $displayReduceAccessAtDate				
-						);
-						
-		$email[] = $row['email'];				
-	} elseif ($row['isActive'] == 0) {
-		$inactiveusers[] = array('id' => $row['userID'], 
-				'firstname' => $row['firstname'],
-				'lastname' => $row['lastname'],
-				'email' => $row['email'],
-				'accessname' => $row['AccessName'],
-				'datecreated' => $displayCreatedDateTime
-				);
+	if($row['loginBlocked'] == 0){
+		if($row['isActive'] == 1){
+			$users[] = array(
+								'id' => $row['userID'], 
+								'firstname' => $row['firstname'],
+								'lastname' => $row['lastname'],
+								'email' => $row['email'],
+								'accessname' => $row['AccessName'],
+								'displayname' => $row['displayname'],
+								'bookingdescription' => $row['bookingdescription'],
+								'worksfor' => $row['WorksFor'],
+								'datecreated' => $displayCreatedDateTime,			
+								'lastactive' => $displayLastActiveDateTime,
+								'UserInfo' => $userinfo,
+								'reduceaccess' => $displayReduceAccessAtDate
+							);
+							
+			$email[] = $row['email'];
+
+		} elseif($row['isActive'] == 0){
+			$inactiveusers[] = array(	
+										'id' => $row['userID'], 
+										'firstname' => $row['firstname'],
+										'lastname' => $row['lastname'],
+										'email' => $row['email'],
+										'accessname' => $row['AccessName'],
+										'datecreated' => $displayCreatedDateTime
+									);
+		}
+	} else {
+		$blockedUsers[] = array(
+									'id' => $row['userID'], 
+									'firstname' => $row['firstname'],
+									'lastname' => $row['lastname'],
+									'email' => $row['email'],
+									'accessname' => $row['AccessName'],
+									'displayname' => $row['displayname'],
+									'bookingdescription' => $row['bookingdescription'],
+									'worksfor' => $row['WorksFor'],
+									'datecreated' => $displayCreatedDateTime,
+									'lastactive' => $displayLastActiveDateTime,
+									'UserInfo' => $userinfo,
+									'reduceaccess' => $displayReduceAccessAtDate
+								);
+
+		$email[] = $row['email'];
 	}
-	
 }
+
 if(isSet($email)){
 	$_SESSION['UserEmailsToBeDisplayed'] = $email;
 }

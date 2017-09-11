@@ -166,7 +166,7 @@ function getWeekInfoBetweenTwoDateTimes($startDateTime, $endDateTime){
 		for($i=$firstWeek; $i<=$lastWeek; $i++){
 			list($startDate, $endDate) = getWeekInfoFromWeekNumberAndYear($i,$firstYear);
 			$weeks[] = array('WeekNumber' => $i, 'StartDate' => $startDate, 'EndDate' => $endDate);
-		}		
+		}
 	}
 
 	return $weeks;
@@ -211,7 +211,6 @@ function getNextValidBookingEndTime($startTimeString){
 
 		$startTimeMinutePart -= 60;
 	}
-
 
 	for($i = 0; $i < 61; ){
 		if($startTimeMinutePart < $i){

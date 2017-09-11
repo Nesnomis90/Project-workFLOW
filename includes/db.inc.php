@@ -9,7 +9,8 @@
 
 //Libraries, functions etc. to include
 require_once 'variables.inc.php';
-include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/magicquotes.inc.php';
+require_once 'access.inc.php';
+require_once 'htmlout.inc.php';
 
 // A global array to keep track of log events that occur before
 // the log event table has been created.
@@ -17,8 +18,7 @@ global $logEventArray;
 $logEventArray = array();
 
 // Function to connect to server and create our wanted database
-function create_db()
-{
+function create_db(){
 	$pdo = null;
 	global $logEventArray;
 
@@ -69,32 +69,31 @@ function create_db()
 }
 
 // Function to connect to an existing database
-function connect_to_db()
-{
+function connect_to_db(){
 	$pdo = null;
 
 	try {
-	//	Create connection with an existing database
-	$pdo = new PDO("mysql:host=".DB_HOST.";dbname=" . DB_NAME, DB_USER, DB_PASSWORD);
-	//	set the PDO error mode to exception
-	$pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-	$pdo->exec('SET NAMES "utf8"');
+		//	Create connection with an existing database
+		$pdo = new PDO("mysql:host=".DB_HOST.";dbname=" . DB_NAME, DB_USER, DB_PASSWORD);
+		//	set the PDO error mode to exception
+		$pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+		$pdo->exec('SET NAMES "utf8"');
 
-	return $pdo; //Return the active connection
-
+		return $pdo; //Return the active connection
 	} 
-catch(PDOException $e)
+	catch(PDOException $e)
 	{
-	$error = 'Unable to connect to the database' . $e->getMessage() . '<br />';
-	include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
-	$pdo = null;	// Close connection
-	exit();
+		$error = 'Unable to connect to the database' . $e->getMessage() . '<br />';
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+		$pdo = null;	// Close connection
+		exit();
 	}
 }
 
 // Function to see if database exists
 function dbExists($pdo, $databaseName){
-	try{
+	try
+	{
 		// Check if the database exists by counting schemas with that name
 		$return = $pdo->query("	SELECT 	COUNT(*) 
 								FROM 	information_schema.SCHEMATA
@@ -111,6 +110,7 @@ function dbExists($pdo, $databaseName){
 		return FALSE;
 	}
 }
+
 // Function to fill in default values for the company subscription (credits) table
 function fillCredits($pdo){
 	try
@@ -137,6 +137,7 @@ function fillCredits($pdo){
 		exit();
 	}
 }
+
 // Function to fill in default values for the Access Level table
 function fillAccessLevel($pdo){
 	try
@@ -233,8 +234,46 @@ function fillLogAction($pdo){
 	}
 }
 
+// Function to fill in default values for the user table
+function fillUser($pdo){
+	try
+	{
+		// Get/set a host email
+		$email = "admin@" . $_SERVER['HTTP_HOST'];
+
+		// Create a default password
+		$defaultPassword = "admin";
+		$password = hashPassword($defaultPassword);
+
+		// Insert the needed values.
+		$sql = "INSERT INTO	`user`
+				SET			`email` = :email,
+							`password` = :password,
+							`AccessID` = (
+											SELECT 	`AccessID`
+											FROM	`accesslevel`
+											WHERE	`AccessName` = 'Admin'
+											LIMIT 	1
+										),
+							`isActive` = 1,
+							`sendAdminEmail` = 1";
+		$s = $pdo->prepare($sql);
+		$s->bindValue(':email', $email);
+		$s->bindValue(':password', $password);
+		$s->execute();
+	} 
+	catch (PDOException $e)
+	{
+		//	Cancels the transaction from going through if something went wrong.
+		$error = 'Encountered an error while trying to insert default values into table credits: ' . $e->getMessage();
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+		$pdo = null;
+		exit();
+	}
+}
+
 // Function to see if database table exists
-function tableExists($pdo, $table) {
+function tableExists($pdo, $table){
 	try {
 		// Run a SELECT query on the selected table
 		$result = $pdo->query("SELECT 1 FROM $table LIMIT 1");
@@ -250,8 +289,7 @@ function tableExists($pdo, $table) {
 }
 
 // Function to create the tables for our database if they don't already exist
-function create_tables()
-{
+function create_tables(){
 	try
 	{
 		// Log event array
@@ -269,8 +307,7 @@ function create_tables()
 		$table = 'accesslevel';
 
 		//Check if table already exists
-		if (!tableExists($conn, $table))
-		{
+		if (!tableExists($conn, $table)){
 			$conn->exec("CREATE TABLE IF NOT EXISTS `$table` (
 						  `AccessID` int(10) unsigned NOT NULL AUTO_INCREMENT,
 						  `AccessName` varchar(255) DEFAULT NULL,
@@ -324,10 +361,10 @@ function create_tables()
 			//User accounts
 		$table = 'user';
 		//Check if table already exists
-		if (!tableExists($conn, $table))
-		{
+		if (!tableExists($conn, $table)){
 			$conn->exec("CREATE TABLE IF NOT EXISTS `$table` (
 						  `userID` int(10) unsigned NOT NULL AUTO_INCREMENT,
+						  `AccessID` int(10) unsigned NOT NULL,
 						  `email` varchar(255) NOT NULL,
 						  `password` char(64) NOT NULL,
 						  `create_time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -337,11 +374,12 @@ function create_tables()
 						  `bookingDescription` text,
 						  `bookingCode` char(64) DEFAULT NULL,
 						  `dateRequested` timestamp NULL DEFAULT NULL,
-						  `AccessID` int(10) unsigned NOT NULL,
 						  `reduceAccessAtDate` date DEFAULT NULL,
 						  `lastCodeUpdate` date DEFAULT NULL,
 						  `lastActivity` timestamp NULL DEFAULT NULL,
 						  `isActive` tinyint(1) unsigned NOT NULL DEFAULT '0',
+						  `loginBlocked` tinyint(1) unsigned NOT NULL DEFAULT '0',
+						  `timeoutAmount` tinyint(2) unsigned NOT NULL DEFAULT '0',
 						  `activationCode` char(64) DEFAULT NULL,
 						  `resetPasswordCode` char(64) DEFAULT NULL,
 						  `sendEmail` tinyint(1) unsigned NOT NULL DEFAULT '1',
@@ -355,6 +393,9 @@ function create_tables()
 						  KEY `FK_AccessID_idx` (`AccessID`),
 						  CONSTRAINT `FK_AccessID` FOREIGN KEY (`AccessID`) REFERENCES `accesslevel` (`AccessID`) ON DELETE NO ACTION ON UPDATE CASCADE
 						) ENGINE=InnoDB DEFAULT CHARSET=utf8");
+
+			//Insert default values for the user table (admin account)
+			fillUser($conn);
 
 			//	Add the creation to log event
 			$sqlLog = '	INSERT INTO `logevent`(`actionID`, `description`) 
@@ -373,14 +414,32 @@ function create_tables()
 			$prevtime = $totaltime;
 			echo '<b>Execution time for creating table ' . $table. ':</b> ' . $time . 's<br />';
 		} else { 
+			//If the table exists, but for some reason has no values in it, then fill it
+			$return = $conn->query("SELECT 	COUNT(*) 
+									FROM 	`user`");
+			$rowCount = $return->fetchColumn();
+			if($rowCount == 0){
+
+				fillUser($conn);
+
+				echo "<b>Inserted default values into $table.</b> <br />";
+
+				$totaltime = microtime(true) - $_SERVER["REQUEST_TIME_FLOAT"];
+				$time = $totaltime - $prevtime;
+				$prevtime = $totaltime;
+				echo '<b>Execution time for filling table ' . $table. ':</b> ' . $time . 's<br />';	
+			} else {
+				// Table already has (some) values in it
+				echo "<b>Table $table already had values in it.</b> <br />";
+			}		
+
 			echo '<b>Table ' . $table. ' already exists</b>.<br />';
 		}
 
 			//Meeting Room
 		$table = 'meetingroom';
 		//Check if table already exists
-		if (!tableExists($conn, $table))
-		{
+		if (!tableExists($conn, $table)){
 			$conn->exec("CREATE TABLE IF NOT EXISTS `$table` (
 						  `meetingRoomID` int(10) unsigned NOT NULL AUTO_INCREMENT,
 						  `name` varchar(255) NOT NULL DEFAULT 'No name set',
@@ -416,8 +475,7 @@ function create_tables()
 			//Company
 		$table = 'company';
 		//Check if table already exists
-		if (!tableExists($conn, $table))
-		{
+		if (!tableExists($conn, $table)){
 			$conn->exec("CREATE TABLE IF NOT EXISTS `$table` (
 						  `CompanyID` int(10) unsigned NOT NULL AUTO_INCREMENT,
 						  `name` varchar(255) NOT NULL,
@@ -454,8 +512,7 @@ function create_tables()
 			//Booking
 		$table = 'booking';
 		//Check if table already exists
-		if (!tableExists($conn, $table))
-		{
+		if (!tableExists($conn, $table)){
 			$conn->exec("CREATE TABLE IF NOT EXISTS `$table` (
 						  `bookingID` int(10) unsigned NOT NULL AUTO_INCREMENT,
 						  `meetingRoomID` int(10) unsigned DEFAULT NULL,
@@ -509,8 +566,7 @@ function create_tables()
 			//Company Position
 		$table = 'companyposition';
 		//Check if table already exists
-		if (!tableExists($conn, $table))
-		{
+		if (!tableExists($conn, $table)){
 			$conn->exec("CREATE TABLE IF NOT EXISTS `$table` (
 						  `PositionID` int(10) unsigned NOT NULL AUTO_INCREMENT,
 						  `name` varchar(255) NOT NULL,
@@ -564,8 +620,7 @@ function create_tables()
 			//Employee
 		$table = 'employee';
 		//Check if table already exists
-		if (!tableExists($conn, $table))
-		{
+		if (!tableExists($conn, $table)){
 			$conn->exec("CREATE TABLE IF NOT EXISTS `$table` (
 						  `CompanyID` int(10) unsigned NOT NULL,
 						  `UserID` int(10) unsigned NOT NULL,
@@ -602,8 +657,7 @@ function create_tables()
 			//Equipment for meeting rooms
 		$table = 'equipment';
 		//Check if table already exists
-		if (!tableExists($conn, $table))
-		{
+		if (!tableExists($conn, $table)){
 			$conn->exec("CREATE TABLE IF NOT EXISTS `$table` (
 						  `EquipmentID` int(10) unsigned NOT NULL AUTO_INCREMENT,
 						  `name` varchar(255) NOT NULL,
@@ -636,8 +690,7 @@ function create_tables()
 			//Log Action
 		$table = 'logaction';
 		//Check if table already exists
-		if (!tableExists($conn, $table))
-		{
+		if (!tableExists($conn, $table)){
 			$conn->exec("CREATE TABLE IF NOT EXISTS `$table` (
 						  `actionID` int(10) unsigned NOT NULL AUTO_INCREMENT,
 						  `name` varchar(255) NOT NULL,
@@ -692,8 +745,7 @@ function create_tables()
 		$table = 'roomequipment';
 		//Check if table already exists
 			// ON DELETE RESTRICT is the same as not having an ON DELETE
-		if (!tableExists($conn, $table))
-		{
+		if (!tableExists($conn, $table)){
 			$conn->exec("CREATE TABLE IF NOT EXISTS `$table` (
 						  `EquipmentID` int(10) unsigned NOT NULL,
 						  `MeetingRoomID` int(10) unsigned NOT NULL,
@@ -728,8 +780,7 @@ function create_tables()
 			//Company booking subscriptions (credits)
 		$table = 'credits';
 		//Check if table already exists
-		if (!tableExists($conn, $table))
-		{
+		if (!tableExists($conn, $table)){
 			$conn->exec("CREATE TABLE IF NOT EXISTS `$table` (
 						  `CreditsID` int(10) unsigned NOT NULL AUTO_INCREMENT,
 						  `name` varchar(255) NOT NULL,
@@ -788,8 +839,7 @@ function create_tables()
 			// Selected credits per company
 		$table = 'companycredits';
 		//Check if table already exists
-		if (!tableExists($conn, $table))
-		{
+		if (!tableExists($conn, $table)){
 			$conn->exec("CREATE TABLE IF NOT EXISTS `$table` (
 						  `CompanyID` int(10) unsigned NOT NULL,
 						  `CreditsID` int(10) unsigned NOT NULL,
@@ -825,8 +875,7 @@ function create_tables()
 			// Credits history per billing month per company
 		$table = 'companycreditshistory';
 		//Check if table already exists
-		if (!tableExists($conn, $table))
-		{
+		if (!tableExists($conn, $table)){
 			$conn->exec("CREATE TABLE IF NOT EXISTS `$table` (
 						  `CompanyID` int(10) unsigned NOT NULL,
 						  `startDate` date NOT NULL,
@@ -864,8 +913,7 @@ function create_tables()
 			// Admin created events
 		$table = 'event';
 		//Check if table already exists
-		if (!tableExists($conn, $table))
-		{
+		if (!tableExists($conn, $table)){
 			$conn->exec("CREATE TABLE IF NOT EXISTS `$table` (
 						  `EventID` int(10) unsigned NOT NULL AUTO_INCREMENT,
 						  `startTime` time NOT NULL,
@@ -902,8 +950,7 @@ function create_tables()
 			// Actual event datetime overview per room
 		$table = 'roomevent';
 		//Check if table already exists
-		if (!tableExists($conn, $table))
-		{
+		if (!tableExists($conn, $table)){
 			$conn->exec("CREATE TABLE IF NOT EXISTS `$table` (
 						  `meetingRoomID` int(10) unsigned NOT NULL,
 						  `EventID` int(10) unsigned NOT NULL,
@@ -938,8 +985,7 @@ function create_tables()
 			//Log Event
 		$table = 'logevent';
 		//Check if table already exists
-		if (!tableExists($conn, $table))
-		{
+		if (!tableExists($conn, $table)){
 			$conn->exec("CREATE TABLE IF NOT EXISTS `$table` (
 						  `logID` int(10) unsigned NOT NULL AUTO_INCREMENT,
 						  `actionID` int(10) unsigned DEFAULT NULL,
@@ -972,20 +1018,21 @@ function create_tables()
 
 		// Store the saved up log events in the now created database
 		if(tableExists($conn,$table)){
-			if(count($logEventArray)>0){
-				foreach($logEventArray as $sqlStatement){
+			if(count($logEventArray) > 0){
+				foreach($logEventArray AS $sqlStatement){
 					$conn->exec($sqlStatement);
 				}
+
 				$logEventArray = array(); //reinitialize it i.e. make it empty	
 				
 				$totaltime = microtime(true) - $_SERVER["REQUEST_TIME_FLOAT"];
 				$time = $totaltime - $prevtime;
 				$prevtime = $totaltime;
 				echo '<b>Execution time for filling in Log Event with database/table creation:</b> ' . $time . 's<br />';
-			}else{
+			} else{
 				echo "<b>There was nothing to add into Log Event</b><br />";
 			}
-		}else{
+		} else{
 			echo "<b>$table does not exist so couldn't start log event procedure</b><br />";
 		}
 

@@ -16,7 +16,7 @@ define('DB_NAME', 'test');
 
 // Cookies
 	// Cookie names we use to identify if the website is accessed locally by a meeting room panel
-	// TO-DO: Change after uploading
+	// TO-DO: Change after uploading?
 define('MEETINGROOM_NAME', 'Temp_Cookie_Name_To_Hold_Meeting_Room_Name'); 
 define('MEETINGROOM_IDCODE', 'Temp_Cookie_Name_To_Hold_Meeting_Room_ID_CODE'); 
 
@@ -26,7 +26,7 @@ define('MEETINGROOM_IDCODE', 'Temp_Cookie_Name_To_Hold_Meeting_Room_ID_CODE');
 //define('DATETIME_DEFAULT_FORMAT_TO_DISPLAY_WITH_SECONDS', 'H:i:s j F Y'); <- What we want
 //define('DATETIME_DEFAULT_FORMAT_TO_DISPLAY', 'H:i j F Y'); <- What we want
 //define('DATE_DEFAULT_FORMAT_TO_DISPLAY', 'j F Y'); <- What we want
-//define('DATE_DEFAULT_FORMAT_TO_DISPLAY_WITHOUT_YEAR', 'j F'); //To-DO: REPLACE WITH ABOVE
+//define('DATE_DEFAULT_FORMAT_TO_DISPLAY_WITHOUT_YEAR', 'j F'); <- What we want
 define('DATETIME_DEFAULT_FORMAT_TO_DISPLAY_WITH_SECONDS', 'F jS Y H:i:s'); //To-DO: REPLACE WITH ABOVE
 define('DATETIME_DEFAULT_FORMAT_TO_DISPLAY', 'F jS Y H:i'); //To-DO: REPLACE WITH ABOVE
 define('DATE_DEFAULT_FORMAT_TO_DISPLAY', 'F jS Y'); //To-DO: REPLACE WITH ABOVE
@@ -64,6 +64,7 @@ define('BOOKING_CODE_LENGTH', 6);
 define('MAXIMUM_BOOKING_CODE_GUESSES', 5);
 define('MAXIMUM_ADMIN_BOOKING_CODE_GUESSES', 3);
 define('MAXIMUM_WRONG_LOGIN_GUESSES', 5);
+define('MAXIMUM_WRONG_LOGIN_TIMEOUTS', 3);
 
 // Numbers we use
 define('MAXIMUM_FLOAT_NUMBER', 65535);
