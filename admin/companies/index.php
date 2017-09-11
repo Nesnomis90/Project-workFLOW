@@ -254,7 +254,7 @@ function sumUpUnbilledPeriods($pdo, $companyID){
 		if($mergeNumber == 0){
 			$mergeStatus = "Period From This Company";
 		} else {
-			$mergeStatus = "Transferred From Another Company";
+			$mergeStatus = "Transferred From Another Company (ID=$mergeNumber)";
 			$numberOfMergedPeriods += 1;
 		}
 
@@ -356,10 +356,10 @@ function calculatePeriodInformation($pdo, $companyID, $BillingStart, $BillingEnd
 	if($companyMinuteCredits == NULL OR $companyMinuteCredits == ""){
 		$companyMinuteCredits = 0;
 	}
-	
+
 		// Format company credits to be displayed
 	$displayCompanyCredits = convertMinutesToHoursAndMinutes($companyMinuteCredits);
-	
+
 	$monthPrice = $row["CreditSubscriptionMonthlyPrice"];
 	if($monthPrice == NULL OR $monthPrice == ""){
 		$monthPrice = 0;
@@ -370,7 +370,7 @@ function calculatePeriodInformation($pdo, $companyID, $BillingStart, $BillingEnd
 	}
 	$overCreditsFee = convertToCurrency($hourPrice) . "/h";
 
-	//Get completed booking history from the current billing period
+	//Get completed booking history from the selected billing period
 	$sql = "SELECT 		(
 							BIG_SEC_TO_TIME(
 								(
@@ -576,7 +576,7 @@ function calculatePeriodInformation($pdo, $companyID, $BillingStart, $BillingEnd
 	}
 	if(!isSet($displayTotalBookingTimeChargedWithAfterCredits)){
 		$displayTotalBookingTimeChargedWithAfterCredits = "N/A";
-	}	
+	}
 	if(!isSet($bookingHistory)){
 		$bookingHistory = array();
 	}
@@ -713,6 +713,11 @@ function validateUserInputs(){
 return array($invalidInput, $validatedCompanyName, $validatedCompanyDateToRemove);
 }
 
+if(isSet($_POST['mergeNumber']) AND $_POST['mergeNumber'] != ""){
+	$_SESSION['BookingHistoryCompanyMergeNumber'] = $_POST['mergeNumber'];
+	// TO-DO: needs more work. We need to decide/put in what happends when we change what company merge number to display from.
+}
+
 // If admin wants to set a period as billed
 if (isSet($_POST['history']) AND $_POST['history'] == "Set As Billed"){
 
@@ -844,6 +849,12 @@ if (isSet($_POST['history']) AND $_POST['history'] == "Next Period"){
 	$_SESSION['BookingHistoryStartDate'] = $startDate;
 	$_SESSION['BookingHistoryEndDate'] = $endDate;	
 
+	$mergedCompanies = FALSE;
+
+	if(isSet($_SESSION['BookingHistoryCompanyInfo']['CompanyMergeNumbers']) AND $_SESSION['BookingHistoryCompanyInfo']['CompanyMergeNumbers'] != 0){
+		$mergedCompanies = TRUE;
+	}
+
 	if(isSet($_SESSION['BookingHistoryCompanyMergeNumber']) AND $_SESSION['BookingHistoryCompanyMergeNumber'] != ""){
 		$mergeNumber = $_SESSION['BookingHistoryCompanyMergeNumber'];
 	} else {
@@ -937,7 +948,13 @@ if (	(isSet($_POST['history']) AND $_POST['history'] == "Previous Period") OR
 	// Save our newly set start/end dates
 	$_SESSION['BookingHistoryStartDate'] = $startDate;
 	$_SESSION['BookingHistoryEndDate'] = $endDate;
-	
+
+	$mergedCompanies = FALSE;
+
+	if(isSet($_SESSION['BookingHistoryCompanyInfo']['CompanyMergeNumbers']) AND $_SESSION['BookingHistoryCompanyInfo']['CompanyMergeNumbers'] != 0){
+		$mergedCompanies = TRUE;
+	}
+
 	if(isSet($_SESSION['BookingHistoryCompanyMergeNumber']) AND $_SESSION['BookingHistoryCompanyMergeNumber'] != ""){
 		$mergeNumber = $_SESSION['BookingHistoryCompanyMergeNumber'];
 	} else {
@@ -1174,7 +1191,14 @@ if ((isSet($_POST['action']) AND $_POST['action'] == "Booking History") OR
 						`dateTimeCreated`		AS CompanyDateTimeCreated,
 						`prevStartDate`			AS CompanyBillingDatePreviousStart,
 						`startDate`				AS CompanyBillingDateStart,
-						`endDate`				AS CompanyBillingDateEnd
+						`endDate`				AS CompanyBillingDateEnd,
+						(
+							SELECT 	COUNT(DISTINCT `mergeNumber`)
+							FROM	`companycreditshistory`
+							WHERE	`companyID` = :CompanyID
+							AND		`mergeNumber` <> 0
+							LIMIT 	1
+						)						AS CompanyMergeNumbers
 				FROM 	`company`
 				WHERE 	`companyID` = :CompanyID
 				LIMIT 	1";
@@ -1184,6 +1208,22 @@ if ((isSet($_POST['action']) AND $_POST['action'] == "Booking History") OR
 		$row = $s->fetch(PDO::FETCH_ASSOC);
 		$_SESSION['BookingHistoryCompanyInfo'] = $row;
 
+		$mergedCompanies = FALSE;
+		
+		if($row['CompanyMergeNumbers'] > 0){
+			$sql = "SELECT 	DISTINCT `mergeNumber`
+					FROM	`companycreditshistory`
+					WHERE	`companyID` = :CompanyID
+					AND		`mergeNumber` <> 0";
+			$s = $pdo->prepare($sql);
+			$s->bindValue(':CompanyID', $companyID);
+			$s->execute();
+			$mergeNumbers = $s->fetchAll();
+			$_SESSION['BookingHistoryCompanyInfo']['CompanyMergeNumbers'] = $mergeNumbers;
+
+			$mergedCompanies = TRUE;
+		}
+		
 		$dateTimeCreated = $row['CompanyDateTimeCreated'];
 		$displayDateTimeCreated = convertDatetimeToFormat($dateTimeCreated,'Y-m-d H:i:s', DATE_DEFAULT_FORMAT_TO_DISPLAY);
 
@@ -1648,7 +1688,7 @@ if (isSet($_POST['action']) and $_POST['action'] == 'Confirm Merge'){
 
 			$description = 	"The company: " . $oldCompanyName . 
 							" no longer exists due to being merged." .
-							"\nIt was removed by: " . $_SESSION['LoggedInUserName'];	
+							"\nIt was removed by: " . $_SESSION['LoggedInUserName'];
 
 			$sql = "INSERT INTO `logevent` 
 					SET			`actionID` = 	(
@@ -1690,7 +1730,7 @@ if (isSet($_POST['action']) and $_POST['action'] == 'Confirm Merge'){
 								`description` = :description";
 			$s = $pdo->prepare($sql);
 			$s->bindValue(':description', $description);
-			$s->execute();			
+			$s->execute();
 			
 			$pdo->commit();
 
@@ -1833,6 +1873,7 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Edit') OR
 		if(isSet($_SESSION['EditCompanyCompanyID'])){
 			$id = $_SESSION['EditCompanyCompanyID'];
 		}
+
 	} else {
 		// Make sure we don't have old values in memory
 		clearEditCompanySessions();
@@ -1860,8 +1901,9 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Edit') OR
 			$error = 'Error fetching company details: ' . $e->getMessage();
 			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
 			$pdo = null;
-			exit();	
-		}	
+			exit();
+		}
+
 		// Create an array with the row information we retrieved
 		$row = $s->fetch(PDO::FETCH_ASSOC);
 		$CompanyName = $row['name'];
@@ -1871,10 +1913,12 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Edit') OR
 		if(!isSet($DateToRemove) OR $DateToRemove == NULL){
 			$DateToRemove = '';
 		}
+
 		$_SESSION['EditCompanyOriginalName'] = $CompanyName;
 		$_SESSION['EditCompanyOriginalRemoveDate'] = $DateToRemove;
 		$_SESSION['EditCompanyCompanyID'] = $id;
 	}
+
 	// Display original values
 	$originalCompanyName = $_SESSION['EditCompanyOriginalName'];
 	$originalDateToDisplay = convertDatetimeToFormat($_SESSION['EditCompanyOriginalRemoveDate'] , 'Y-m-d', DATE_DEFAULT_FORMAT_TO_DISPLAY);

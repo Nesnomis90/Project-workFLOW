@@ -102,6 +102,70 @@
 				<?php endforeach; ?>
 			</table>
 
+			<?php if(isSet($blockedUsers)) : ?>
+			<table>
+				<caption>Blocked Users (Cannot log in)</caption>
+				<tr>
+					<th colspan="3">User Information</th>
+					<th>Website</th>
+					<th colspan="2">Default Booking</th>
+					<th>Works For</th>
+					<th colspan="3">Dates</th>
+					<th colspan="3">Alter User</th>
+				</tr>
+				<tr>
+					<th>First Name</th>
+					<th>Last Name</th>
+					<th>Email</th>
+					<th>Access</th>
+					<th>Name</th>
+					<th>Description</th>
+					<th>Company</th>
+					<th>Created</th>
+					<th>Last Active</th>
+					<th>Reduce Access At</th>
+					<th>Edit</th>
+					<th>Re-Activate</th>
+					<th>Delete</th>
+				</tr>
+				<?php foreach ($blockedUsers as $user): ?>
+					<form action="" method="post">
+						<tr>
+							<td><?php htmlout($user['firstname']); ?></td>
+							<td><?php htmlout($user['lastname']); ?></td>
+							<td><?php htmlout($user['email']); ?></td>
+							<td><?php htmlout($user['accessname']); ?></td>
+							<td style="white-space: pre-wrap;"><?php htmlout($user['displayname']); ?></td>
+							<td style="white-space: pre-wrap;"><?php htmlout($user['bookingdescription']); ?></td>
+							<td style="white-space: pre-wrap;"><?php htmlout($user['worksfor']); ?></td>
+							<td><?php htmlout($user['datecreated']); ?></td>
+							<td><?php htmlout($user['lastactive']); ?></td>
+							<?php if($user['reduceaccess'] == null) :?>
+								<td><p>No Date Set</p></td>
+							<?php elseif($user['reduceaccess'] != null) : ?>
+								<td>
+									<p><?php htmlout($user['reduceaccess']); ?></p>
+									<input type="submit" name="action" value="Cancel Date">
+								</td>
+							<?php endif; ?>
+							<td><input type="submit" name="action" value="Edit"></td>
+							<td><input type="submit" name="action" value="Re-Activate"></td>
+							<td>
+								<?php if(isSet($_SESSION['usersEnableDelete']) AND $_SESSION['usersEnableDelete']) : ?>
+									<input type="submit" name="action" value="Delete">
+								<?php else : ?>
+									<input type="submit" name="disabled" value="Delete" disabled>
+								<?php endif; ?>
+							</td>
+							<input type="hidden" name="id" value="<?php htmlout($user['id']); ?>">
+							<input type="hidden" name="UserInfo" id="UserInfo"
+							value="<?php htmlout($user['UserInfo']); ?>">
+						</tr>
+					</form>
+				<?php endforeach; ?>
+			</table>
+			<?php endif; ?>			
+
 			<?php if(isSet($inactiveusers)) : ?>
 				<table>
 					<caption>Unactivated Users</caption>

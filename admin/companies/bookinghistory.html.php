@@ -33,9 +33,32 @@
 		
 		<h2>For the company: <?php htmlout($CompanyName); ?> (Active Since: <?php htmlout($displayDateTimeCreated); ?>)</h2>
 		
+		<?php if($mergedCompanies) : ?>
+			<h3>This company has bookings transferred from other companies due to a company merge.</h3>
+			<?php if($mergeNumber == 0) : ?>
+				<h3>Currently only displaying bookings made by the company ("Not Billed Periods" always displays all companies).</h3>
+			<?php else : ?>
+				<h3>Currently only displaying bookings transferred from another company (ID=<?php htmlout($mergeNumber); ?> ("Not Billed Periods" always displays all companies).</h3>
+				<form action="" method="post">
+					<input type="hidden" name="mergeNumber" value="0">
+					<input type="submit" value="Change Back To Default">
+				</form>
+			<?php endif; ?>
+			<div class="left">
+				<?php foreach($_SESSION['BookingHistoryCompanyInfo']['CompanyMergeNumbers'] AS $availableMergeNumbers) : ?>
+					<form action="" method="post">
+						<input type="hidden" name="mergeNumber" value="<?php htmlout($availableMergeNumbers[0]); ?>">
+						<input type="submit" value="Change To Bookings Transferred From Company With ID=<?php htmlout($availableMergeNumbers[0]); ?>">
+					</form>
+				<?php endforeach; ?>
+			</div>
+		<?php endif; ?>
+		
 		<?php if(isSet($periodsSummmedUp)) : ?>
 		
-			<h3>The company has <b style="color:red">NOT BILLED PERIODS</b>.</h3>
+			<div class="left">
+				<h3>The company has <b style="color:red">NOT BILLED PERIODS</b>.</h3>
+			</div>
 			
 			<fieldset><legend><b>Not Billed Periods</b></legend>
 			<?php $totalCostForAllPeriodsSummedUp = 0; ?>
