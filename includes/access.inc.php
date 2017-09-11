@@ -225,8 +225,8 @@ function checkIfUserIsLoggedIn(){
 			$dateTimeNow = getDatetimeNow();
 			$_SESSION['wrongLoginAttempts'][] = $dateTimeNow;
 
-			$_SESSION['loginError'] = "";
-			
+			$blocked = FALSE;
+
 			if(sizeOf($_SESSION['wrongLoginAttempts']) >= MAXIMUM_WRONG_LOGIN_GUESSES){
 				$_SESSION['loginBlocked'] = TRUE;
 
@@ -238,28 +238,36 @@ function checkIfUserIsLoggedIn(){
 
 				// Block account from logging in, if too many timeouts
 				// Also sends email to user about how to activate account again
-				if($timeoutAmount >= MAXIMUM_WRONG_LOGIN_TIMEOUTS){
+				$maxTimeouts = MAXIMUM_WRONG_LOGIN_TIMEOUTS;
+				if($timeoutAmount >= $maxTimeouts){
+					$blocked = TRUE;
 
 					// Generate new activation code
 					$activationCode = generateActivationCode();
 
 					blockUserLogin($email, $activationCode);
-					sendEmailAboutLoginBeingBlocked($email, $activationCode)
+					sendEmailAboutLoginBeingBlocked($email, $activationCode);
 				}
 			}
 
-			// Calculate remaining login attempts before receiving a timeout
-			$attemptsSoFar = sizeOf($_SESSION['wrongLoginAttempts']);
-			$attemptsRemaining = MAXIMUM_WRONG_LOGIN_GUESSES - $attemptsSoFar;
 			$timeoutDurationInMinutes = WRONG_LOGIN_GUESS_TIMEOUT_IN_MINUTES;
-			if($attemptsRemaining == 2){
-				$_SESSION['loginError'] .= "The specified email address or password was incorrect.\nYou have 2 attempts left to insert the correct login information.";
-			} elseif($attemptsRemaining == 1){
-				$_SESSION['loginError'] .= "The specified email address or password was incorrect.\nYou have 1 attempt left to insert the correct login information.";
-			} elseif($attemptsRemaining == 0){
-				$_SESSION['loginError'] .= "The specified email address or password was incorrect.\nYou are now unable to log in for $timeoutDurationInMinutes minutes.";
+
+			if($blocked){
+				$_SESSION['loginError'] .= "\n\nYou are also unable to attempt any log in for $timeoutDurationInMinutes minutes.";
 			} else {
-				$_SESSION['loginError'] .= "The specified email address or password was incorrect.";
+				// Calculate remaining login attempts before receiving a timeout
+				$attemptsSoFar = sizeOf($_SESSION['wrongLoginAttempts']);
+				$attemptsRemaining = MAXIMUM_WRONG_LOGIN_GUESSES - $attemptsSoFar;
+
+				if($attemptsRemaining == 2){
+					$_SESSION['loginError'] = "The specified email address or password was incorrect.\nYou have 2 attempts left to insert the correct login information.";
+				} elseif($attemptsRemaining == 1){
+					$_SESSION['loginError'] = "The specified email address or password was incorrect.\nYou have 1 attempt left to insert the correct login information.";
+				} elseif($attemptsRemaining == 0){
+					$_SESSION['loginError'] = "The specified email address or password was incorrect.\nYou are now unable to attempt any log in for $timeoutDurationInMinutes minutes.";
+				} else {
+					$_SESSION['loginError'] = "The specified email address or password was incorrect.";
+				}
 			}
 
 			return FALSE;
