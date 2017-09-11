@@ -237,7 +237,13 @@ function checkIfUserIsLoggedIn(){
 				// Block account from logging in, if too many timeouts
 				// Also sends email to user about how to activate account again
 				if($timeoutAmount >= MAXIMUM_WRONG_LOGIN_TIMEOUTS){
-					blockUserLogin($email);
+					
+					// Generate new activation code
+					$activationCode = generateActivationCode();
+					
+					blockUserLogin($email, $activationCode);
+					sendEmailAboutLoginBeingBlocked($email, $activationCode)
+					
 				}
 			}
 
@@ -673,17 +679,19 @@ function increaseLoginTimeouts($email){
 	}
 }
 
-function blockUserLogin($email){
+function blockUserLogin($email, $activationCode){
 	try
 	{
 		include_once 'db.inc.php';
 		$pdo = connect_to_db();
 		$sql = 'UPDATE	`user`
-				SET		`loginBlocked` = 1
+				SET		`loginBlocked` = 1,
+						`activationCode` = :activationCode
 				WHERE	`email` = :email
 				LIMIT 	1';
 		$s = $pdo->prepare($sql);
 		$s->bindValue(':email', $email);
+		$s->bindValue(':activationCode', $activationCode);
 		$s->execute();
 
 		$pdo = null;
@@ -697,8 +705,26 @@ function blockUserLogin($email){
 	}
 }
 
-function sendEmailAboutLoginBeingBlocked($email){
-	// TO-DO: generate new activation code? or special code for removing being blocked?
-	// Add code to function above aswell...
+function sendEmailAboutLoginBeingBlocked($email, $activationCode){
+
+	$emailSubject = "Your Account Has Been Blocked!";
+
+	$url = $_SERVER['HTTP_HOST'] . "/user/?activateaccount=" . $activationCode;
+
+	$emailMessage = 
+	"Someone has tried to log into your account and failed too many times!\n" .
+	"Therefore your account has been blocked for further login attempts for your account's safety.\n\n" . 
+	"You can activate your account again by going to the link below.\n" . 
+	"Link: " . $url;
+
+	$mailResult = sendEmail($email, $emailSubject, $emailMessage);
+
+	$_SESSION['loginError'] = "The account you tried to access has been blocked from further login attempts.";
+	
+	if(!$mailResult){
+		$_SESSION['loginError'] .= "\n\n[WARNING] System failed to send Email.";
+	}
+
+	$_SESSION['loginError'] .= "\nThis is the email msg we're sending out:\n$emailMessage\nSent to email: $email."; // TO-DO: Remove before uploading
 }
 ?>

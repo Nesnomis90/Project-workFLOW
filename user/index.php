@@ -486,7 +486,7 @@ if(isSet($_GET['resetpassword']) AND !empty($_GET['resetpassword'])){
 }
 
 // Code to execute to activate an account from activation link
-if(isSet($_GET['activateaccount']) AND !empty($_GET['activateaccount'])){
+if(isSet($_GET['activateaccount']) AND $_GET['activateaccount'] != ""){
 
 	$activationCode = $_GET['activateaccount'];
 
@@ -507,10 +507,10 @@ if(isSet($_GET['activateaccount']) AND !empty($_GET['activateaccount'])){
 						`email`,
 						`firstname`,
 						`lastname`,
-						`password`
+						`password`,
+						`isActive`
 				FROM	`user`
 				WHERE 	`activationCode` = :activationCode
-				AND		`isActive` = 0
 				LIMIT 	1";
 		$s = $pdo->prepare($sql);
 		$s->bindValue(':activationCode', $activationCode);
@@ -547,6 +547,13 @@ if(isSet($_GET['activateaccount']) AND !empty($_GET['activateaccount'])){
 	$lastname = $result['lastname'];
 	$hashedPassword = $result['password'];
 
+	$alreadyActive = $result['isActive'];
+	if($alreadyActive == 1){
+		$alreadyActive = TRUE;
+	} else {
+		$alreadyActive = FALSE;
+	}
+
 	try
 	{
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
@@ -578,12 +585,16 @@ if(isSet($_GET['activateaccount']) AND !empty($_GET['activateaccount'])){
 	try
 	{
 		// Save a description with information about the user that was activated
-		
-		$logEventDescription = 	"The account for " . $lastname . ", " . $firstname . " - " . $email . 
-								" has been activated by using the activation link!";
-		
+		if($alreadyActive){
+			$logEventDescription = 	"The account for " . $lastname . ", " . $firstname . " - " . $email . 
+									" has been re-activated, after being blocked from being able to log in, by using the activation link!";			
+		} else {
+			$logEventDescription = 	"The account for " . $lastname . ", " . $firstname . " - " . $email . 
+									" has been activated by using the activation link!";
+		}
+
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
-		
+
 		$pdo = connect_to_db();
 		$sql = "INSERT INTO `logevent`
 				SET			`actionID` = 	(
