@@ -124,28 +124,6 @@ function checkIfUserIsLoggedIn(){
 	// If user is trying to log in
 	if(isSet($_POST['action']) and $_POST['action'] == 'login'){
 
-		if(isSet($_SESSION['wrongLoginAttempts'], $_SESSION['loginBlocked'])){
-			$dateTimeNow = getDatetimeNow();
-			$dateTimeBlocked = end($_SESSION['wrongLoginAttempts']);
-			$timoutInMinutes = convertTwoDateTimesToTimeDifferenceInMinutes($dateTimeBlocked, $dateTimeNow);
-
-			if($timoutInMinutes >= WRONG_LOGIN_GUESS_TIMEOUT_IN_MINUTES){
-				unset($_SESSION['wrongLoginAttempts']);
-				unset($_SESSION['loginBlocked']);
-			} else {
-				$timeoutLeft = WRONG_LOGIN_GUESS_TIMEOUT_IN_MINUTES - $timoutInMinutes;
-			}
-		}
-
-		if(isSet($_SESSION['loginBlocked'])){
-			if($timeoutLeft > 0){
-				$_SESSION['loginError'] = "You are not allowed to attempt a login for another $timeoutLeft minute(s).";
-			} else {
-				$_SESSION['loginError'] = "You are not allowed to attempt a login for another minute.";
-			}
-			return FALSE;
-		}
-
 		if(isSet($_POST['email']) AND $_POST['email'] != ""){
 			// Remember email if it's filled in. Retyping an email is the most annoying thing in the world.
 			$email = trim($_POST['email']);
@@ -170,6 +148,29 @@ function checkIfUserIsLoggedIn(){
 		if(isUserBlockedFromLogin($email)){
 			$_SESSION['loginError'] = 	"The account you are trying to access has been locked due to too many incorrect login attempts." .
 										"\nTo activate it, follow the instructions sent to your email, or contact an admin.";
+			return FALSE;
+		}
+
+		// Check if this session is allowed to do any login attempts at the moment
+		if(isSet($_SESSION['wrongLoginAttempts'], $_SESSION['loginBlocked'])){
+			$dateTimeNow = getDatetimeNow();
+			$dateTimeBlocked = end($_SESSION['wrongLoginAttempts']);
+			$timoutInMinutes = convertTwoDateTimesToTimeDifferenceInMinutes($dateTimeBlocked, $dateTimeNow);
+
+			if($timoutInMinutes >= WRONG_LOGIN_GUESS_TIMEOUT_IN_MINUTES){
+				unset($_SESSION['wrongLoginAttempts']);
+				unset($_SESSION['loginBlocked']);
+			} else {
+				$timeoutLeft = WRONG_LOGIN_GUESS_TIMEOUT_IN_MINUTES - $timoutInMinutes;
+			}
+		}
+
+		if(isSet($_SESSION['loginBlocked'])){
+			if($timeoutLeft > 0){
+				$_SESSION['loginError'] = "You are not allowed to attempt a login for another $timeoutLeft minute(s).";
+			} else {
+				$_SESSION['loginError'] = "You are not allowed to attempt a login for another minute.";
+			}
 			return FALSE;
 		}
 		
