@@ -1523,7 +1523,8 @@ if (isSet($_POST['action']) and $_POST['action'] == 'Confirm Merge'){
 			// Begin all the SQL queries we need to go through to merge the two companies.
 			$pdo->beginTransaction();
 
-			// Ignore these updates if they're already an employee in that company
+			// These updates would cause an duplicate key error on an update, but we ignore that
+			// and just update the users that can be updated (not already employed in the new company)
 			$sql = 'UPDATE IGNORE	`employee`
 					SET				`CompanyID` = :CompanyID2
 					WHERE			`CompanyID` = :CompanyID';

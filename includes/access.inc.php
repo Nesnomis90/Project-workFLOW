@@ -170,8 +170,9 @@ function checkIfUserIsLoggedIn(){
 			// Add our custom password salt and compare the finished hash to the database
 		$submittedPassword = $_POST['password'];
 		$password = hashPassword($submittedPassword);
-
-		if(databaseContainsUser($email, $password)){
+		
+		$userInfo = databaseContainsUser($email, $password);
+		if($userInfo === TRUE){
 			// Correct log in info! Update the session data to know we're logged in
 			if(!isSet($_SESSION['loggedIn'])){
 				$_SESSION['loggedIn'] = TRUE;
@@ -197,7 +198,21 @@ function checkIfUserIsLoggedIn(){
 			unset($_SESSION['DatabaseContainsUserID']);
 			unset($_SESSION['DatabaseContainsUserName']);
 			unset($_SESSION['loginEmailSubmitted']);
+
 			return TRUE;
+		} elseif($userInfo == "Blocked"){
+			// Correct login info, but the account has been blocked due to too many incorrect login attempts
+			unset($_SESSION['loggedIn']);
+			unset($_SESSION['email']);
+			unset($_SESSION['password']);
+			unset($_SESSION['LoggedInUserID']);
+			unset($_SESSION['LoggedInUserName']);
+
+			// Inform user that account has been blocked
+			$_SESSION['loginError'] = 	"The account you are trying to access has been locked due to too many incorrect login attempts." .
+										"\nTo activate it, follow the instructions sent to your email, or contact an admin.";
+
+			return FALSE;
 		} else {
 			// Wrong log in info.
 			unset($_SESSION['loggedIn']);
@@ -207,11 +222,17 @@ function checkIfUserIsLoggedIn(){
 			unset($_SESSION['LoggedInUserName']);
 
 			// Track # of wrong login attempts and limit login if too high.
-			$_SESSION['wrongLoginAttempts'][] = getDatetimeNow();
+			$dateTimeNow = getDatetimeNow();
+			$_SESSION['wrongLoginAttempts'][] = $dateTimeNow;
 
 			if(sizeOf($_SESSION['wrongLoginAttempts']) >= MAXIMUM_WRONG_LOGIN_GUESSES){
 				$_SESSION['loginBlocked'] = TRUE;
+				
+				// Add to the user's account (from the email used) that someone tried to login to their account and failed
+				
 			}
+
+			// Calculate remaining login attempts before receiving a timeout
 			$attemptsSoFar = sizeOf($_SESSION['wrongLoginAttempts']);
 			$attemptsRemaining = MAXIMUM_WRONG_LOGIN_GUESSES - $attemptsSoFar;
 			$timeoutDurationInMinutes = WRONG_LOGIN_GUESS_TIMEOUT_IN_MINUTES;
@@ -224,6 +245,10 @@ function checkIfUserIsLoggedIn(){
 			} else {
 				$_SESSION['loginError'] = "The specified email address or password was incorrect.";
 			}
+
+			// Calculate remaining timeouts before blocking the account from logging in.
+
+
 			return FALSE;
 		}
 	}
@@ -333,8 +358,14 @@ function checkIfUserIsLoggedIn(){
 	// loggedIn = true session variable in the case that user info
 	// has been altered while someone is already logged in with old data
 	if(isSet($_SESSION['loggedIn'])){
-		return databaseContainsUser($_SESSION['email'], $_SESSION['password']);
+		$userInfo = databaseContainsUser($_SESSION['email'], $_SESSION['password']);
+		if($userInfo === TRUE){
+			return TRUE;
+		} elseif($userInfo === FALSE OR $userInfo == "Blocked") {
+			return FALSE;
+		}
 	}
+
 	return FALSE;
 }
 
@@ -348,7 +379,8 @@ function databaseContainsUser($email, $password){
 		$sql = 'SELECT 	COUNT(*),
 						`userID`,
 						`firstname`,
-						`lastname`
+						`lastname`,
+						`loginBlocked`
 				FROM 	`user`
 				WHERE 	email = :email 
 				AND 	password = :password
@@ -371,19 +403,18 @@ function databaseContainsUser($email, $password){
 
 	$row = $s->fetch();
 	// If we got a hit, then the user info was correct
-	if ($row[0] > 0)
-	{
+	if ($row[0] > 0 AND $row['loginBlocked'] == 0){
 		if(!isSet($_SESSION['LoggedInUserID'])){
 			$_SESSION['DatabaseContainsUserID'] = $row['userID'];
 		}
-		
+
 		if(!isSet($_SESSION['LoggedInUserName'])){
 			$_SESSION['DatabaseContainsUserName'] = $row['lastname'] . ", " . $row['firstname'];
 		}
 		return TRUE;
-	}
-	else
-	{
+	} elseif($row[0] > 0 AND $row['loginBlocked'] == 1){
+		return "Blocked";
+	} else {
 		unset($_SESSION['DatabaseContainsUserID']);
 		unset($_SESSION['DatabaseContainsUserName']);	
 		return FALSE;
@@ -483,7 +514,7 @@ function databaseContainsBookingCode($rawBookingCode){
 		$s = $pdo->prepare($sql);
 		$s->bindValue(':BookingCode', $hashedBookingCode);
 		$s->execute();
-		
+
 		$pdo = null;
 	}
 	catch(PDOException $e)
@@ -582,5 +613,27 @@ function isUserInHouseUser(){
 		return false;
 	}
 	return true;
+}
+
+// Function to keep track of the number of timeouts the account has received and block it from being able to log in if too high
+function trackLoginTimeouts($email){
+	try
+	{
+		include_once 'db.inc.php';
+		$pdo = connect_to_db();
+		$sql = ''; // TO-DO:
+		$s = $pdo->prepare($sql);
+		$s->bindValue(':email', $email);
+		$s->execute();
+
+		$pdo = null;
+	}
+	catch(PDOException $e)
+	{
+		$error = 'Error checking user timeout amounts.';
+		include_once 'error.html.php';
+		$pdo = null;
+		exit();	
+	}	
 }
 ?>

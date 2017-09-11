@@ -342,6 +342,8 @@ function create_tables()
 						  `lastCodeUpdate` date DEFAULT NULL,
 						  `lastActivity` timestamp NULL DEFAULT NULL,
 						  `isActive` tinyint(1) unsigned NOT NULL DEFAULT '0',
+						  `loginBlocked` tinyint(1) unsigned NOT NULL DEFAULT '0',
+						  `timeoutAmount` tinyint(2) unsigned NOT NULL DEFAULT '0',
 						  `activationCode` char(64) DEFAULT NULL,
 						  `resetPasswordCode` char(64) DEFAULT NULL,
 						  `sendEmail` tinyint(1) unsigned NOT NULL DEFAULT '1',
