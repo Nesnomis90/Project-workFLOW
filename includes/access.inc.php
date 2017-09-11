@@ -173,12 +173,12 @@ function checkIfUserIsLoggedIn(){
 			}
 			return FALSE;
 		}
-		
+
 		// User has filled in both fields, check if login details are correct
 			// Add our custom password salt and compare the finished hash to the database
 		$submittedPassword = $_POST['password'];
 		$password = hashPassword($submittedPassword);
-		
+
 		$userInfo = databaseContainsUser($email, $password);
 		if($userInfo === TRUE){
 			// Correct log in info! Update the session data to know we're logged in
@@ -510,7 +510,7 @@ function databaseContainsEmail($email){
 	}
 }
 
-
+// Function used to check if email belongs to an account that has been blocked from too many incorrect login attempts
 function isUserBlockedFromLogin($email){
 	try
 	{
@@ -692,6 +692,7 @@ function trackLoginTimeouts($email){
 	}	
 }
 
+// Function to increase the amount of times the account has received a login timeout
 function increaseLoginTimeouts($email){
 	try
 	{
@@ -715,6 +716,7 @@ function increaseLoginTimeouts($email){
 	}
 }
 
+// Function to make sure the user can't log in if the account has received too many login timeouts
 function blockUserLogin($email, $activationCode){
 	try
 	{
@@ -741,6 +743,7 @@ function blockUserLogin($email, $activationCode){
 	}
 }
 
+// The email we send to the user when their account gets blocked from logging in
 function sendEmailAboutLoginBeingBlocked($email, $activationCode){
 
 	$emailSubject = "Your Account Has Been Blocked!";

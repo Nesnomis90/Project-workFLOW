@@ -69,8 +69,7 @@ function create_db()
 }
 
 // Function to connect to an existing database
-function connect_to_db()
-{
+function connect_to_db(){
 	$pdo = null;
 
 	try {
@@ -94,7 +93,8 @@ catch(PDOException $e)
 
 // Function to see if database exists
 function dbExists($pdo, $databaseName){
-	try{
+	try
+	{
 		// Check if the database exists by counting schemas with that name
 		$return = $pdo->query("	SELECT 	COUNT(*) 
 								FROM 	information_schema.SCHEMATA
@@ -111,6 +111,7 @@ function dbExists($pdo, $databaseName){
 		return FALSE;
 	}
 }
+
 // Function to fill in default values for the company subscription (credits) table
 function fillCredits($pdo){
 	try
@@ -137,6 +138,7 @@ function fillCredits($pdo){
 		exit();
 	}
 }
+
 // Function to fill in default values for the Access Level table
 function fillAccessLevel($pdo){
 	try
@@ -229,6 +231,45 @@ function fillLogAction($pdo){
 		$pdo = null;
 		$error = 'Encountered an error while trying to insert default values into table logaction: ' . $e->getMessage();
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+		exit();
+	}
+}
+
+// Function to fill in default values for the user table
+function fillUser($pdo){
+	try
+	{
+		// Get/set a host email
+		$email = "admin@" . $_SERVER['HTTP_HOST'];
+
+		// Create a default password
+		$defaultPassword = "admin";
+		$password = hashPassword($defaultPassword);
+
+		//Insert the needed values.
+		$sql = "INSERT INTO	`user`
+				SET			`email` = :email,
+							`password` = :password,
+							`AccessID` = (
+											SELECT 	`AccessID`
+											FROM	`accesslevel`
+											WHERE	`AccessName` = 'Admin'
+											LIMIT 	1
+										),
+							`isActive` = 1,
+							`sendAdminEmail = 1";
+		$s = $pdo->prepare($sql);
+		$s->bindValue(':email', $email);
+		$s->bindValue(':password', $password);
+		$s->execute();
+	} 
+	catch (PDOException $e)
+	{
+		//	Cancels the transaction from going through if something went wrong.
+		$pdo->rollback();
+		$error = 'Encountered an error while trying to insert default values into table credits: ' . $e->getMessage();
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+		$pdo = null;
 		exit();
 	}
 }
@@ -328,6 +369,7 @@ function create_tables()
 		{
 			$conn->exec("CREATE TABLE IF NOT EXISTS `$table` (
 						  `userID` int(10) unsigned NOT NULL AUTO_INCREMENT,
+						  `AccessID` int(10) unsigned NOT NULL,
 						  `email` varchar(255) NOT NULL,
 						  `password` char(64) NOT NULL,
 						  `create_time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -337,7 +379,6 @@ function create_tables()
 						  `bookingDescription` text,
 						  `bookingCode` char(64) DEFAULT NULL,
 						  `dateRequested` timestamp NULL DEFAULT NULL,
-						  `AccessID` int(10) unsigned NOT NULL,
 						  `reduceAccessAtDate` date DEFAULT NULL,
 						  `lastCodeUpdate` date DEFAULT NULL,
 						  `lastActivity` timestamp NULL DEFAULT NULL,
@@ -358,6 +399,9 @@ function create_tables()
 						  CONSTRAINT `FK_AccessID` FOREIGN KEY (`AccessID`) REFERENCES `accesslevel` (`AccessID`) ON DELETE NO ACTION ON UPDATE CASCADE
 						) ENGINE=InnoDB DEFAULT CHARSET=utf8");
 
+			//Insert default values for the user table (admin account)
+			fillUser($conn);
+
 			//	Add the creation to log event
 			$sqlLog = '	INSERT INTO `logevent`(`actionID`, `description`) 
 						VALUES 		(
@@ -375,6 +419,25 @@ function create_tables()
 			$prevtime = $totaltime;
 			echo '<b>Execution time for creating table ' . $table. ':</b> ' . $time . 's<br />';
 		} else { 
+			//If the table exists, but for some reason has no values in it, then fill it
+			$return = $conn->query("SELECT 	COUNT(*) 
+									FROM 	`user`");
+			$rowCount = $return->fetchColumn();
+			if($rowCount == 0){
+
+				fillUser($conn);
+
+				echo "<b>Inserted default values into $table.</b> <br />";
+
+				$totaltime = microtime(true) - $_SERVER["REQUEST_TIME_FLOAT"];
+				$time = $totaltime - $prevtime;
+				$prevtime = $totaltime;
+				echo '<b>Execution time for filling table ' . $table. ':</b> ' . $time . 's<br />';	
+			} else {
+				// Table already has (some) values in it
+				echo "<b>Table $table already had values in it.</b> <br />";
+			}		
+
 			echo '<b>Table ' . $table. ' already exists</b>.<br />';
 		}
 
