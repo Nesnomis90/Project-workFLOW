@@ -11,21 +11,13 @@
 	<body onload="startTime()">
 
 	<?php include_once $_SERVER['DOCUMENT_ROOT'] .'/includes/topnav.html.php'; ?>
-		
+
 		<div class="left">
 			<?php if(isSet($_SESSION['EmployeeUserFeedback'])) : ?>
 				<span><b class="feedback"><?php htmlout($_SESSION['EmployeeUserFeedback']); ?></b></span>
 				<?php unset($_SESSION['EmployeeUserFeedback']); ?>
 			<?php endif; ?>
 		</div>
-
-		<?php if(isSet($companyRole) AND $companyRole == "Owner") : ?>
-			<form action="" method="post">
-				<div class="left">
-					<input type="submit" name="action" value="Add Employee">
-				</div>			
-			</form>
-		<?php endif; ?>
 
 		<table>
 			<caption>Company Employees</caption>
@@ -57,7 +49,6 @@
 				<?php endif; ?>
 			</tr>
 			<?php if($rowNum > 0) :?>
-
 				<?php foreach ($employees as $employee): ?>
 					<form action="" method="post">
 						<tr>
@@ -88,49 +79,53 @@
 					</form>
 				<?php endforeach; ?>
 			<?php else : ?>
-				<tr><b>There are no employees registered in the database.</b></tr>
-				<tr>
-					<form action="" method="post">
-						<input type="submit" name="action" value="Add Employee">
-					</form>
-				</tr>
+				<tr><b>There are no employees connected to this company.</b></tr>
 			<?php endif; ?>
-			
-				<?php if(isSet($removedEmployees) AND isSet($companyRole) AND $companyRole == "Owner") : ?>
-					<tr>
-						<td colspan="11"><b>The Following Are Previously Employed Users With Booking Time</b></td>
-					</tr>
-					<?php foreach($removedEmployees as $employee): ?>
-						<tr>
-							<td>Removed</td>
-							<td><?php htmlout($employee['firstName']); ?></td>
-							<td><?php htmlout($employee['lastName']); ?></td>
-							<td><?php htmlout($employee['email']); ?></td>
-							<td><?php htmlout($employee['PreviousMonthBookingTimeUsed']); ?></td>
-							<td><?php htmlout($employee['MonthlyBookingTimeUsed']); ?></td>
-							<td><?php htmlout($employee['TotalBookingTimeUsed']); ?></td>
-							<td colspan="3">N/A</td>
-						</tr>
-					<?php endforeach; ?>
-				<?php endif; ?>
 
-				<?php if(isSet($deletedEmployees) AND isSet($companyRole) AND $companyRole == "Owner") : ?>
+			<?php if(isSet($companyRole) AND $companyRole == "Owner") : ?>
+				<form action="" method="post">
 					<tr>
-						<td colspan="11"><b>The Following Is A Summation Of Booking Time By Deleted Users</b></td>
+						<td colspan="11">
+							<input type="hidden" name="action" value="Add Employee">
+							<input type="submit" style="font-size: 150%" value="+">
+						</td>
 					</tr>
-					<?php foreach($deletedEmployees as $employee): ?>
-						<tr>
-							<td>Deleted</td>
-							<td colspan="3">Every Deleted User Summed Together</td>
-							<td><?php htmlout($employee['PreviousMonthBookingTimeUsed']); ?></td>
-							<td><?php htmlout($employee['MonthlyBookingTimeUsed']); ?></td>
-							<td><?php htmlout($employee['TotalBookingTimeUsed']); ?></td>
-							<td colspan="3">N/A</td>
-						</tr>
-					<?php endforeach; ?>
-				<?php endif; ?>
-			</table>
+				</form>
+			<?php endif; ?>
 
-	<?php include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/logout.inc.html.php'; ?>
+			<?php if(isSet($removedEmployees) AND isSet($companyRole) AND $companyRole == "Owner") : ?>
+				<tr>
+					<td colspan="11"><b>The Following Are Previously Employed Users With Booking Time</b></td>
+				</tr>
+				<?php foreach($removedEmployees as $employee): ?>
+					<tr>
+						<td>Removed</td>
+						<td><?php htmlout($employee['firstName']); ?></td>
+						<td><?php htmlout($employee['lastName']); ?></td>
+						<td><?php htmlout($employee['email']); ?></td>
+						<td><?php htmlout($employee['PreviousMonthBookingTimeUsed']); ?></td>
+						<td><?php htmlout($employee['MonthlyBookingTimeUsed']); ?></td>
+						<td><?php htmlout($employee['TotalBookingTimeUsed']); ?></td>
+						<td colspan="3">N/A</td>
+					</tr>
+				<?php endforeach; ?>
+			<?php endif; ?>
+
+			<?php if(isSet($deletedEmployees) AND isSet($companyRole) AND $companyRole == "Owner") : ?>
+				<tr>
+					<td colspan="11"><b>The Following Is A Summation Of Booking Time By Deleted Users</b></td>
+				</tr>
+				<?php foreach($deletedEmployees as $employee): ?>
+					<tr>
+						<td>Deleted</td>
+						<td colspan="3">Every Deleted User Summed Together</td>
+						<td><?php htmlout($employee['PreviousMonthBookingTimeUsed']); ?></td>
+						<td><?php htmlout($employee['MonthlyBookingTimeUsed']); ?></td>
+						<td><?php htmlout($employee['TotalBookingTimeUsed']); ?></td>
+						<td colspan="3">N/A</td>
+					</tr>
+				<?php endforeach; ?>
+			<?php endif; ?>
+		</table>
 	</body>
 </html>
