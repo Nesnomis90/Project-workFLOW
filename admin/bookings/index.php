@@ -334,21 +334,10 @@ function validateUserInputs($FeedbackSessionToUse, $editing, $bookingCompleted){
 	return array($invalidInput, $startDateTime, $endDateTime, $validatedBookingDescription, $validatedDisplayName, $validatedAdminNote);
 }
 
-// If admin wants to be able to delete bookings it needs to enabled first
-if (isSet($_POST['action']) AND $_POST['action'] == "Enable Delete"){
-	$_SESSION['bookingsEnableDelete'] = TRUE;
-	$refreshBookings = TRUE;
-}
-
-// If admin wants to be disable booking deletion
-if (isSet($_POST['action']) AND $_POST['action'] == "Disable Delete"){
-	unset($_SESSION['bookingsEnableDelete']);
-	$refreshBookings = TRUE;
-}
 
 // If admin wants to remove a booked meeting from the database
-if (isSet($_POST['action']) and $_POST['action'] == 'Delete')
-{
+/*
+if (isSet($_POST['action']) and $_POST['action'] == 'Delete'){
 	// Delete selected booked meeting from database
 	try
 	{
@@ -411,7 +400,7 @@ if (isSet($_POST['action']) and $_POST['action'] == 'Delete')
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
 		$pdo = null;
 		exit();
-	}	
+	}
 
 	// Check if the meeting that was removed still was active, if so
 	if(isSet($_POST['BookingStatus']) AND ($_POST['BookingStatus'] == 'Active' OR $_POST['BookingStatus'] == 'Active Today')){
@@ -434,11 +423,12 @@ if (isSet($_POST['action']) and $_POST['action'] == 'Delete')
 		emailUserOnCancelledBooking();
 		clearCancelSessions();
 	}
-	
+
 	// Load booked meetings list webpage with updated database
 	header('Location: .');
 	exit();	
 }
+*/
 
 // If admin does not want to cancel the meeting anyway.
 if(isSet($_POST['action']) AND $_POST['action'] == "Abort Cancel"){

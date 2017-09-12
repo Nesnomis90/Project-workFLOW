@@ -60,7 +60,7 @@
 			<tr>
 				<th colspan="9">Booking Information</th>
 				<th colspan="4">Booked For User</th>
-				<th colspan="3">Alter Booking</th>
+				<th colspan="2">Alter Booking</th>
 			</tr>				
 			<tr>
 				<th>Status</th>
@@ -78,7 +78,6 @@
 				<th>Works For Company</th>
 				<th>Edit</th>					
 				<th>Cancel</th>
-				<th>Delete</th>
 			</tr>
 		<?php if(isSet($bookingsActiveToday)) : ?>						
 			<?php foreach ($bookingsActiveToday AS $booking) : ?>
@@ -99,13 +98,6 @@
 						<td style="white-space: pre-wrap;"><?php htmlout($booking['WorksForCompany']); ?></td>
 						<td><input type="submit" name="action" value="Edit"></td>							
 						<td><input type="submit" name="action" value="Cancel"></td>
-						<td>
-							<?php if(isSet($_SESSION['bookingsEnableDelete']) AND $_SESSION['bookingsEnableDelete']) : ?>
-								<input type="submit" name="action" value="Delete">
-							<?php else : ?>
-								<input type="submit" name="disabled" value="Delete" disabled>
-							<?php endif; ?>
-						</td>
 						<input type="hidden" name="id" value="<?php htmlout($booking['id']); ?>">
 						<input type="hidden" name="UserInfo" id="UserInfo"
 						value="<?php htmlout($booking['UserInfo']); ?>">
@@ -131,7 +123,7 @@
 				<th colspan="9">Booking Information</th>
 				<th colspan="5">Completion Info</th>
 				<th colspan="4">Booked For User</th>
-				<th colspan="3">Alter Booking</th>
+				<th colspan="2">Alter Booking</th>
 			</tr>				
 			<tr>
 				<th>Status</th>
@@ -154,7 +146,6 @@
 				<th>Works For Company</th>
 				<th>Edit</th>					
 				<th>Cancel</th>
-				<th>Delete</th>
 			</tr>
 		<?php if(isSet($bookingsCompletedToday)) : ?>						
 			<?php foreach ($bookingsCompletedToday AS $booking) : ?>
@@ -180,13 +171,6 @@
 						<td style="white-space: pre-wrap;"><?php htmlout($booking['WorksForCompany']); ?></td>
 						<td><input type="submit" name="action" value="Edit"></td>							
 						<td><input type="submit" name="action" value="Cancel"></td>
-						<td>
-							<?php if(isSet($_SESSION['bookingsEnableDelete']) AND $_SESSION['bookingsEnableDelete']) : ?>
-								<input type="submit" name="action" value="Delete">
-							<?php else : ?>
-								<input type="submit" name="disabled" value="Delete" disabled>
-							<?php endif; ?>
-						</td>
 						<input type="hidden" name="id" value="<?php htmlout($booking['id']); ?>">
 						<input type="hidden" name="UserInfo" id="UserInfo"
 						value="<?php htmlout($booking['UserInfo']); ?>">
@@ -207,7 +191,7 @@
 			<tr>
 				<th colspan="9">Booking information</th>
 				<th colspan="4">Connected user information</th>
-				<th colspan="3">Alter Booking</th>
+				<th colspan="2">Alter Booking</th>
 			</tr>				
 			<tr>
 				<th>Status</th>
@@ -225,7 +209,6 @@
 				<th>Works For Company</th>
 				<th>Edit</th>					
 				<th>Cancel</th>
-				<th>Delete</th>
 			</tr>	
 		<?php if(isSet($bookingsFuture)) : ?>						
 			<?php foreach ($bookingsFuture AS $booking) : ?>
@@ -246,13 +229,6 @@
 						<td style="white-space: pre-wrap;"><?php htmlout($booking['WorksForCompany']); ?></td>
 						<td><input type="submit" name="action" value="Edit"></td>							
 						<td><input type="submit" name="action" value="Cancel"></td>
-						<td>
-							<?php if(isSet($_SESSION['bookingsEnableDelete']) AND $_SESSION['bookingsEnableDelete']) : ?>
-								<input type="submit" name="action" value="Delete">
-							<?php else : ?>
-								<input type="submit" name="disabled" value="Delete" disabled>
-							<?php endif; ?>
-						</td>
 						<input type="hidden" name="id" value="<?php htmlout($booking['id']); ?>">
 						<input type="hidden" name="UserInfo" id="UserInfo"
 						value="<?php htmlout($booking['UserInfo']); ?>">
@@ -278,7 +254,7 @@
 				<th colspan="9">Booking information</th>
 				<th colspan="3">Completion Info</th>
 				<th colspan="4">Connected user information</th>
-				<th colspan="3">Alter Booking</th>
+				<th colspan="2">Alter Booking</th>
 			</tr>				
 			<tr>
 				<th>Status</th>
@@ -301,7 +277,6 @@
 				<th>Works For Company</th>
 				<th>Edit</th>					
 				<th>Cancel</th>
-				<th>Delete</th>
 			</tr>	
 		<?php if(isSet($bookingsCompleted)) : ?>						
 			<?php foreach ($bookingsCompleted AS $booking) : ?>
@@ -327,13 +302,6 @@
 						<td style="white-space: pre-wrap;"><?php htmlout($booking['WorksForCompany']); ?></td>
 						<td><input type="submit" name="action" value="Edit"></td>							
 						<td><input type="submit" name="action" value="Cancel"></td>
-						<td>
-							<?php if(isSet($_SESSION['bookingsEnableDelete']) AND $_SESSION['bookingsEnableDelete']) : ?>
-								<input type="submit" name="action" value="Delete">
-							<?php else : ?>
-								<input type="submit" name="disabled" value="Delete" disabled>
-							<?php endif; ?>
-						</td>
 						<input type="hidden" name="id" value="<?php htmlout($booking['id']); ?>">
 						<input type="hidden" name="UserInfo" id="UserInfo"
 						value="<?php htmlout($booking['UserInfo']); ?>">
@@ -355,7 +323,7 @@
 				<th colspan="9">Booking information</th>
 				<th colspan="3">Cancel information</th>
 				<th colspan="4">Booked for user</th>
-				<th colspan="3">Alter Booking</th>
+				<th colspan="2">Alter Booking</th>
 			</tr>				
 			<tr>
 				<th>Status</th>
@@ -376,7 +344,6 @@
 				<th>Works For Company</th>
 				<th>Edit</th>					
 				<th>Cancel</th>
-				<th>Delete</th>
 			</tr>
 		<?php if(isSet($bookingsCancelled)) : ?>				
 			<?php foreach ($bookingsCancelled AS $booking) : ?>
@@ -400,13 +367,6 @@
 						<td style="white-space: pre-wrap;"><?php htmlout($booking['WorksForCompany']); ?></td>
 						<td><input type="submit" name="action" value="Edit"></td>							
 						<td><input type="submit" name="action" value="Cancel"></td>
-						<td>
-							<?php if(isSet($_SESSION['bookingsEnableDelete']) AND $_SESSION['bookingsEnableDelete']) : ?>
-								<input type="submit" name="action" value="Delete">
-							<?php else : ?>
-								<input type="submit" name="disabled" value="Delete" disabled>
-							<?php endif; ?>
-						</td>
 						<input type="hidden" name="id" value="<?php htmlout($booking['id']); ?>">
 						<input type="hidden" name="UserInfo" id="UserInfo"
 						value="<?php htmlout($booking['UserInfo']); ?>">
@@ -429,7 +389,7 @@
 				<th colspan="9">Booking information</th>
 				<th colspan="2">Completion Info</th>
 				<th colspan="4">Connected user information</th>
-				<th colspan="3">Alter Booking</th>
+				<th colspan="2">Alter Booking</th>
 			</tr>				
 			<tr>
 				<th>Status</th>
@@ -449,7 +409,6 @@
 				<th>Works For Company</th>
 				<th>Edit</th>					
 				<th>Cancel</th>
-				<th>Delete</th>
 			</tr>			
 			<?php foreach ($bookingsOther AS $booking) : ?>
 				<form action="" method="post">			
@@ -471,13 +430,6 @@
 						<td style="white-space: pre-wrap;"><?php htmlout($booking['WorksForCompany']); ?></td>
 						<td><input type="submit" name="action" value="Edit"></td>							
 						<td><input type="submit" name="action" value="Cancel"></td>
-						<td>
-							<?php if(isSet($_SESSION['bookingsEnableDelete']) AND $_SESSION['bookingsEnableDelete']) : ?>
-								<input type="submit" name="action" value="Delete">
-							<?php else : ?>
-								<input type="submit" name="disabled" value="Delete" disabled>
-							<?php endif; ?>
-						</td>
 						<input type="hidden" name="id" value="<?php htmlout($booking['id']); ?>">
 						<input type="hidden" name="UserInfo" id="UserInfo"
 						value="<?php htmlout($booking['UserInfo']); ?>">

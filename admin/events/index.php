@@ -30,19 +30,19 @@ function clearAddEventSessions(){
 function rememberAddEventInputs(){
 	if(isSet($_SESSION['AddEventInfoArray'])){
 		$newValues = $_SESSION['AddEventInfoArray'];
-		
+
 		$newValues['StartTime'] =  trimExcessWhitespace($_POST['startTime']);
 		$newValues['EndTime'] =  trimExcessWhitespace($_POST['endTime']);
 		/*
 		$newValues['StartDate'] =  trimExcessWhitespace($_POST['startDate']);
 		$newValues['EndDate'] =  trimExcessWhitespace($_POST['endDate']); 
-		
+
 		Not implemented 
 		*/
-		
+
 		$newValues['EventName'] = trimExcessWhitespace($_POST['eventName']);
 		$newValues['EventDescription'] = trimExcessWhitespaceButLeaveLinefeed($_POST['eventDescription']);
-		
+
 		if(isSet($_POST['daysSelected'])){
 			$_SESSION['AddEventDaysSelected'] = $_POST['daysSelected'];
 		}
@@ -51,7 +51,7 @@ function rememberAddEventInputs(){
 		}
 		if(isSet($_POST['meetingRoomID'])){
 			$_SESSION['AddEventRoomSelectedButNotConfirmed'] = $_POST['meetingRoomID'];
-		}		
+		}
 		if(isSet($_POST['weeksSelected'])){
 			$_SESSION['AddEventWeeksSelected'] = $_POST['weeksSelected'];
 		}
@@ -67,7 +67,7 @@ function rememberAddEventInputs(){
 function validateUserInputs($FeedbackSessionToUse, $editing){
 	// Get user inputs
 	$invalidInput = FALSE;
-	
+
 	if(isSet($_POST['startTime']) AND !$invalidInput){
 		$startTimeString = $_POST['startTime'];
 	} else {
@@ -115,21 +115,21 @@ function validateUserInputs($FeedbackSessionToUse, $editing){
 		$invalidInput = TRUE;
 		$_SESSION[$FeedbackSessionToUse] = "Your submitted event description has illegal characters in it.";
 	}
-	
+
 	// Are values actually filled in?
 	if($validatedStartTime == "" AND $validatedEndTime == "" AND !$invalidInput){
-		
+
 		$_SESSION[$FeedbackSessionToUse] = "You need to fill in a start and an end time for your event.";	
 		$invalidInput = TRUE;
 	} elseif($validatedStartTime != "" AND $validatedEndTime == "" AND !$invalidInput) {
 		$_SESSION[$FeedbackSessionToUse] = "You need to fill in an end time for your event.";	
-		$invalidInput = TRUE;		
+		$invalidInput = TRUE;
 	} elseif($validatedStartTime == "" AND $validatedEndTime != "" AND !$invalidInput){
 		$_SESSION[$FeedbackSessionToUse] = "You need to fill in a start time for your event.";	
-		$invalidInput = TRUE;		
+		$invalidInput = TRUE;
 	}
 	if($validatedEventName == "" AND !$invalidInput){
-		$_SESSION[$FeedbackSessionToUse] = "You need to fill in a name for your event.";	
+		$_SESSION[$FeedbackSessionToUse] = "You need to fill in a name for your event.";
 		$invalidInput = TRUE;
 	}
 	/*	Not implemented
@@ -138,25 +138,25 @@ function validateUserInputs($FeedbackSessionToUse, $editing){
 		$invalidInput = TRUE;
 	}
 	*/
-	
+
 	// Check if input length is allowed
 		// EventName
 	$invalidEventName = isLengthInvalidDisplayName($validatedEventName);
 	if($invalidEventName AND !$invalidInput){
 		$_SESSION[$FeedbackSessionToUse] = "The event name submitted is too long.";	
-		$invalidInput = TRUE;		
-	}	
+		$invalidInput = TRUE;
+	}
 		// EventDescription
 	$invalidEventDescription = isLengthInvalidBookingDescription($validatedEventDescription);
 	if($invalidEventDescription AND !$invalidInput){
 		$_SESSION[$FeedbackSessionToUse] = "The event description submitted is too long.";	
-		$invalidInput = TRUE;		
+		$invalidInput = TRUE;
 	}
-	
+
 	// Check if the time inputs we received are actually time
 	$startTime = correctTimeFormat($validatedStartTime);
 	$endTime = correctTimeFormat($validatedEndTime);
-	
+
 	if (isSet($startTime) AND $startTime === FALSE AND !$invalidInput){
 		$_SESSION[$FeedbackSessionToUse] = "The start time you submitted did not have a correct format. Please try again.";
 		$invalidInput = TRUE;
@@ -165,7 +165,7 @@ function validateUserInputs($FeedbackSessionToUse, $editing){
 		$_SESSION[$FeedbackSessionToUse] = "The end time you submitted did not have a correct format. Please try again.";
 		$invalidInput = TRUE;
 	}
-	
+
 	if($startTime > $endTime AND !$invalidInput){
 		// End time can't be before the start time
 		$_SESSION[$FeedbackSessionToUse] = "The start time can't be later than the end time. Please select a new start time or end time.";
@@ -173,9 +173,9 @@ function validateUserInputs($FeedbackSessionToUse, $editing){
 	}
 	if($endTime == $startTime AND !$invalidInput){
 		$_SESSION[$FeedbackSessionToUse] = "You need to select an end time that is different from your start time.";	
-		$invalidInput = TRUE;				
+		$invalidInput = TRUE;
 	}
-	
+
 	return array($invalidInput, $startTime, $endTime, $validatedEventName, $validatedEventDescription);
 }
 
@@ -196,7 +196,7 @@ if(isSet($_POST['action']) AND $_POST['action'] == "Delete"){
 	try
 	{
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
-		
+
 		$pdo = connect_to_db();
 
 		$sql = 'DELETE FROM `event`
@@ -204,7 +204,7 @@ if(isSet($_POST['action']) AND $_POST['action'] == "Delete"){
 		$s = $pdo->prepare($sql);
 		$s->bindValue(':EventID', $_POST['EventID']);
 		$s->execute();
-			
+
 		//Close connection
 		$pdo = null;
 	}
@@ -213,11 +213,11 @@ if(isSet($_POST['action']) AND $_POST['action'] == "Delete"){
 		$error = 'Error removing event: ' . $e->getMessage();
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
 		$pdo = null;
-		exit();		
+		exit();
 	}
 
 	$_SESSION['EventsUserFeedback'] = "Event Successfully Removed.";
-	
+
 	// Add a log event that the event was removed
 	try
 	{
@@ -230,9 +230,9 @@ if(isSet($_POST['action']) AND $_POST['action'] == "Delete"){
 		} else {
 			$description = 'An event was deleted by: ' . $_SESSION['LoggedInUserName'];
 		}
-		
+
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
-		
+
 		$pdo = connect_to_db();
 		$sql = "INSERT INTO `logevent` 
 				SET			`actionID` = 	(
@@ -244,9 +244,9 @@ if(isSet($_POST['action']) AND $_POST['action'] == "Delete"){
 		$s = $pdo->prepare($sql);
 		$s->bindValue(':description', $description);
 		$s->execute();
-		
+
 		//Close the connection
-		$pdo = null;		
+		$pdo = null;
 	}
 	catch(PDOException $e)
 	{
@@ -254,19 +254,19 @@ if(isSet($_POST['action']) AND $_POST['action'] == "Delete"){
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
 		$pdo = null;
 		exit();
-	}	
+	}
 }
 
 // If admin wants to create a new event
 if(	(isSet($_POST['action']) AND $_POST['action'] == "Create Event") OR
 	(isSet($_SESSION['refreshAddEvent']) AND $_SESSION['refreshAddEvent'])
 	){
-	
+
 	if(isSet($_SESSION['refreshAddEvent'])){
 		// Acknowledge that we hav refreshed the page
 		unset($_SESSION['refreshAddEvent']); 
 	}
-	
+
 	if(!isSet($_SESSION['AddEventInfoArray'])){
 		// Create an array with the row information we want to use
 		$_SESSION['AddEventInfoArray'] = array(
@@ -280,22 +280,22 @@ if(	(isSet($_POST['action']) AND $_POST['action'] == "Create Event") OR
 													'lastDate' => ''
 												);
 	}
-	
+
 	if(!isSet($_SESSION['AddEventMeetingRoomsArray'])){
 		try
 		{
 			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
-			
+
 			$pdo = connect_to_db();
 			// Get name and IDs for meeting rooms
 			$sql = 'SELECT 	`meetingRoomID`,
 							`name` 
 					FROM 	`meetingroom`';
 			$result = $pdo->query($sql);
-				
+
 			//Close connection
 			$pdo = null;
-			
+
 			// Get the rows of information from the query
 			// This will be used to create a dropdown list in HTML
 			foreach($result as $row){
@@ -303,8 +303,8 @@ if(	(isSet($_POST['action']) AND $_POST['action'] == "Create Event") OR
 									'MeetingRoomID' => $row['meetingRoomID'],
 									'MeetingRoomName' => $row['name']
 									);
-			}		
-			
+			}
+
 			$_SESSION['AddEventMeetingRoomsArray'] = $meetingroom;
 		}
 		catch (PDOException $e)
@@ -312,20 +312,19 @@ if(	(isSet($_POST['action']) AND $_POST['action'] == "Create Event") OR
 			$error = 'Error fetching meeting room details: ' . $e->getMessage();
 			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
 			$pdo = null;
-			exit();		
-		}	
+			exit();
+		}
 	}
-	
+
 	// Array for the days of the week
 	$daysOfTheWeek = array('Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday');
-	
+
 	// Array for the remaining weeks this year
 		// TO-DO: test this and fix template for week part
 	$dateNow = getDateNow();
 	$lastDate = '2017-12-28';
 	$weeksOfTheYear = getWeekInfoBetweenTwoDateTimes($dateNow, $lastDate); //Returns week number, start date and end date
-	
-	
+
 	// Set correct output
 	$row = $_SESSION['AddEventInfoArray'];
 	if(isSet($row['StartTime'])){
@@ -363,25 +362,25 @@ if(	(isSet($_POST['action']) AND $_POST['action'] == "Create Event") OR
 	} else {
 		$roomsSelected = array();
 	}	
-	
+
 	if(isSet($_SESSION['AddEventMeetingRoomsArray'])){
 		$meetingroom = $_SESSION['AddEventMeetingRoomsArray'];
 	} else {
 		$meetingroom = array();
 	}
-	
+
 	if(isSet($_SESSION['AddEventRoomSelectedButNotConfirmed'])){
 		$selectedMeetingRoomID = $_SESSION['AddEventRoomSelectedButNotConfirmed'];
 	} else {
 		$selectedMeetingRoomID = "";
 	}
-	
+
 	if(isSet($_SESSION['AddEventWeekSelectedButNotConfirmed'])){
 		$selectedWeekNumber = $_SESSION['AddEventWeekSelectedButNotConfirmed'];
 	} else {
 		$selectedWeekNumber = "";
 	}
-	
+
 	// Give admin feedback on the roomname (if one) or the amount of rooms selected.
 	if(isSet($_SESSION['AddEventRoomsSelected'])){
 		if($_SESSION['AddEventRoomChoiceSelected'] == "Select A Single Room"){
@@ -406,7 +405,7 @@ if(	(isSet($_POST['action']) AND $_POST['action'] == "Create Event") OR
 			}
 		}
 	}
-	
+
 	// Give admin feedback on the week info (if one) or the amount of weeks selected.
 	if(isSet($_SESSION['AddEventWeeksSelected'])){
 		if($_SESSION['AddEventWeekChoiceSelected'] == "Select A Single Week"){
@@ -442,10 +441,10 @@ if(	(isSet($_POST['action']) AND $_POST['action'] == "Create Event") OR
 
 // If admin wants to submit the created event
 if(isSet($_POST['add']) AND $_POST['add'] == "Create Event"){
-	
+
 	// Get valid user inputs
 	list($invalidInput, $startTime, $endTime, $eventName, $eventDescription) = validateUserInputs('AddEventError', FALSE);
-	
+
 	if($invalidInput){
 		rememberAddEventInputs();
 		$_SESSION['refreshAddEvent'] = TRUE;
@@ -475,7 +474,7 @@ if(isSet($_POST['add']) AND $_POST['add'] == "Create Event"){
 			}
 		}
 	}
-	
+
 	// Check if the timeslot(s) is taken for the selected meeting room(s)
 		// What we want to achieve:
 		// 1. Compare all datetimes and meeting room IDs to see if they're "available"
@@ -485,7 +484,7 @@ if(isSet($_POST['add']) AND $_POST['add'] == "Create Event"){
 	{
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 		$pdo = connect_to_db();
-		
+
 		$sql =	" 	SELECT SUM(cnt)	AS HitCount
 					FROM 
 					(
@@ -544,7 +543,7 @@ if(isSet($_POST['add']) AND $_POST['add'] == "Create Event"){
 						)
 					) AS TimeSlotTaken";
 		$s = $pdo->prepare($sql);
-		
+
 		// We have to repeat this for every meeting room and every datetime.
 		$roomsSelected = $_SESSION['AddEventRoomsSelected'];
 		if(!is_array($roomsSelected)){
@@ -556,7 +555,7 @@ if(isSet($_POST['add']) AND $_POST['add'] == "Create Event"){
 		for($i=0; $i < sizeOf($roomsSelected); $i++){
 			$meetingRoomID = $roomsSelected[$i];
 				// Datetimes
-			foreach($dateTimesToCheck AS $dateTimes){		
+			foreach($dateTimesToCheck AS $dateTimes){
 				$startDateTime = $dateTimes['StartDateTime'];
 				$endDateTime = $dateTimes['EndDateTime'];
 				$s->bindValue(':MeetingRoomID', $meetingRoomID);
@@ -583,7 +582,6 @@ if(isSet($_POST['add']) AND $_POST['add'] == "Create Event"){
 			}
 		}
 
-		
 	}
 	catch(PDOException $e)
 	{
@@ -616,7 +614,7 @@ if(isSet($_POST['add']) AND $_POST['add'] == "Create Event"){
 			$s->bindValue(':EndTime', $endTime);
 			$s->bindValue(':FirstDate', $firstDate);
 			$s->bindValue(':LastDate', $lastDate);
-			$s->bindValue(':DaysSelected',$daysSelectedWithLineFeed);	
+			$s->bindValue(':DaysSelected',$daysSelectedWithLineFeed);
 			$s->execute();
 
 			// Insert new events into database
@@ -646,7 +644,7 @@ if(isSet($_POST['add']) AND $_POST['add'] == "Create Event"){
 		$pdo = null;
 		exit();
 	}
-	
+
 	// Display to admin the events that did not get created due to the timeslot being taken
 	if(isSet($timeSlotAvailableInfo) AND sizeOf($timeSlotAvailableInfo) > 0){
 		if(isSet($timeSlotTakenInfo) AND sizeOf($timeSlotTakenInfo) > 0 ){
@@ -670,11 +668,11 @@ if(isSet($_POST['add']) AND $_POST['add'] == "Create Event"){
 														);
 				$lastRoomID = $roomID;
 			}
-			
+
 			$_SESSION['EventsUserFeedback'] = 	"Could not add all the events to the schedule, due to the timeslot being occupied.\n" .
 												"In total " . sizeOf($timeSlotTakenInfo) . " events were not added.\n";
 												"The following dates and meeting rooms were already taken:";
-			
+
 			foreach($timeSlotTakenInfoWithRoomNames AS $event){
 				$_SESSION['EventsUserFeedback'] .= "\nMeeting Room: " . $event['MeetingRoomName'] . 
 													", Start Date: " . convertDatetimeToFormat($event['StartDateTime'], 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY) . 
@@ -684,7 +682,7 @@ if(isSet($_POST['add']) AND $_POST['add'] == "Create Event"){
 		} else {
 			$_SESSION['EventsUserFeedback'] = "Successfully added all events to the schedule.";
 		}
-		
+
 		// Add a log event that an event has been created
 		try
 		{
@@ -717,7 +715,7 @@ if(isSet($_POST['add']) AND $_POST['add'] == "Create Event"){
 			$s->execute();
 
 			//Close the connection
-			$pdo = null;		
+			$pdo = null;
 		}
 		catch(PDOException $e)
 		{
@@ -738,7 +736,7 @@ if(isSet($_POST['add']) AND $_POST['add'] == "Create Event"){
 // If admin wants to decide the amount of weeks to select
 	// A single week (dropdown list)
 if(isSet($_POST['add']) AND $_POST['add'] == "Select A Single Week"){
-	
+
 	$_SESSION['AddEventWeekChoiceSelected'] = "Select A Single Week";
 	rememberAddEventInputs();
 	$_SESSION['refreshAddEvent'] = TRUE;
@@ -747,7 +745,7 @@ if(isSet($_POST['add']) AND $_POST['add'] == "Select A Single Week"){
 }
 	// Multiple meeting rooms (checkboxes)
 if(isSet($_POST['add']) AND $_POST['add'] == "Select Multiple Weeks"){
-	
+
 	$_SESSION['AddEventWeekChoiceSelected'] = "Select Multiple Weeks";
 	rememberAddEventInputs();
 	$_SESSION['refreshAddEvent'] = TRUE;
@@ -756,7 +754,7 @@ if(isSet($_POST['add']) AND $_POST['add'] == "Select Multiple Weeks"){
 }
 	// All meeting rooms
 if(isSet($_POST['add']) AND $_POST['add'] == "Select All Weeks"){
-	
+
 	$_SESSION['AddEventWeeksSelected'] = TRUE;
 	$_SESSION['AddEventWeekChoiceSelected'] = "Select All Weeks";
 	rememberAddEventInputs();
@@ -766,7 +764,7 @@ if(isSet($_POST['add']) AND $_POST['add'] == "Select All Weeks"){
 }
 
 if(isSet($_POST['add']) AND $_POST['add'] == "Confirm Week(s)"){
-	
+
 	rememberAddEventInputs();
 
 	if(isSet($_POST['weeksSelected'])){
@@ -781,7 +779,7 @@ if(isSet($_POST['add']) AND $_POST['add'] == "Confirm Week(s)"){
 		$_SESSION['AddEventWeeksSelected'] = $_POST['weekNumber'];
 		unset($_SESSION['AddEventWeekSelectedButNotConfirmed']);
 	}
-	
+
 	$_SESSION['refreshAddEvent'] = TRUE;
 	header('Location: .');
 	exit();	
@@ -791,7 +789,7 @@ if(isSet($_POST['add']) AND $_POST['add'] == "Confirm Week(s)"){
 if(isSet($_POST['add']) AND $_POST['add'] == "Change Week Selection"){
 
 	rememberAddEventInputs();
-	
+
 	unset($_SESSION['AddEventWeeksSelected']);
 	unset($_SESSION['AddEventWeekChoiceSelected']);
 	$_SESSION['refreshAddEvent'] = TRUE;
@@ -800,24 +798,24 @@ if(isSet($_POST['add']) AND $_POST['add'] == "Change Week Selection"){
 }
 
 if(isSet($_POST['add']) AND $_POST['add'] == "Confirm Day(s)"){
-	
+
 	rememberAddEventInputs();
-	
+
 	if(isSet($_POST['daysSelected']) AND sizeOf($_POST['daysSelected']) > 0){
 		$_SESSION['AddEventDaysConfirmed'] = TRUE;
 	} else {
 		$_SESSION['AddEventError'] = "You need to select at least one day.";
 	}
-	
+
 	$_SESSION['refreshAddEvent'] = TRUE;
 	header('Location: .');
 	exit();	
 }
 
 if(isSet($_POST['add']) AND $_POST['add'] == "Change Day(s)"){
-	
+
 	rememberAddEventInputs();
-	
+
 	unset($_SESSION['AddEventDaysConfirmed']);	
 	$_SESSION['refreshAddEvent'] = TRUE;
 	header('Location: .');
@@ -825,14 +823,14 @@ if(isSet($_POST['add']) AND $_POST['add'] == "Change Day(s)"){
 }
 
 if(isSet($_POST['add']) AND $_POST['add'] == "Confirm Details"){
-	
+
 	list($invalidInput, $startTime, $endTime, $eventName, $eventDescription) = validateUserInputs('AddEventError', FALSE);
-	
+
 	if(!$invalidInput){
 		$_SESSION['AddEventDetailsConfirmed'] = TRUE;
 	}
 	rememberAddEventInputs();
-	
+
 	$_SESSION['refreshAddEvent'] = TRUE;
 	header('Location: .');
 	exit();	
@@ -841,7 +839,7 @@ if(isSet($_POST['add']) AND $_POST['add'] == "Confirm Details"){
 if(isSet($_POST['add']) AND $_POST['add'] == "Change Details"){
 
 	rememberAddEventInputs();
-	
+
 	unset($_SESSION['AddEventDetailsConfirmed']);
 	$_SESSION['refreshAddEvent'] = TRUE;
 	header('Location: .');
@@ -852,7 +850,7 @@ if(isSet($_POST['add']) AND $_POST['add'] == "Change Details"){
 // If admin wants to decide the amount of meeting rooms to select
 	// A single meeting room (dropdown list)
 if(isSet($_POST['add']) AND $_POST['add'] == "Select A Single Room"){
-	
+
 	$_SESSION['AddEventRoomChoiceSelected'] = "Select A Single Room";
 	rememberAddEventInputs();
 	$_SESSION['refreshAddEvent'] = TRUE;
@@ -861,7 +859,7 @@ if(isSet($_POST['add']) AND $_POST['add'] == "Select A Single Room"){
 }
 	// Multiple meeting rooms (checkboxes)
 if(isSet($_POST['add']) AND $_POST['add'] == "Select Multiple Rooms"){
-	
+
 	$_SESSION['AddEventRoomChoiceSelected'] = "Select Multiple Rooms";
 	rememberAddEventInputs();
 	$_SESSION['refreshAddEvent'] = TRUE;
@@ -870,7 +868,7 @@ if(isSet($_POST['add']) AND $_POST['add'] == "Select Multiple Rooms"){
 }
 	// All meeting rooms
 if(isSet($_POST['add']) AND $_POST['add'] == "Select All Rooms"){
-	
+
 	$_SESSION['AddEventRoomsSelected'] = TRUE;
 	$_SESSION['AddEventRoomChoiceSelected'] = "Select All Rooms";
 	rememberAddEventInputs();
@@ -880,7 +878,7 @@ if(isSet($_POST['add']) AND $_POST['add'] == "Select All Rooms"){
 }
 	// To confirm room selection (a room/multiple rooms)
 if(isSet($_POST['add']) AND $_POST['add'] == "Confirm Room(s)"){
-	
+
 	if(isSet($_POST['meetingroom'])){
 		if(sizeOf($_POST['meetingroom']) > 0){
 			$_SESSION['AddEventRoomsSelected'] = $_POST['meetingroom'];
@@ -892,7 +890,7 @@ if(isSet($_POST['add']) AND $_POST['add'] == "Confirm Room(s)"){
 		$_SESSION['AddEventRoomsSelected'] = $_POST['meetingRoomID'];
 		unset($_SESSION['AddEventRoomSelectedButNotConfirmed']);
 	}
-	
+
 	rememberAddEventInputs();
 	$_SESSION['refreshAddEvent'] = TRUE;
 	header('Location: .');
@@ -903,7 +901,7 @@ if(isSet($_POST['add']) AND $_POST['add'] == "Confirm Room(s)"){
 if(isSet($_POST['add']) AND $_POST['add'] == "Change Room Selection"){
 
 	rememberAddEventInputs();
-	
+
 	unset($_SESSION['AddEventRoomsSelected']);
 	unset($_SESSION['AddEventRoomChoiceSelected']);
 	$_SESSION['refreshAddEvent'] = TRUE;
@@ -919,8 +917,7 @@ if(isSet($_POST['add']) AND $_POST['add'] == 'Reset'){
 }
 
 // If admin wants to leave the page and be directed back to the events page again
-if (isSet($_POST['add']) AND $_POST['add'] == 'Cancel'){
-
+if(isSet($_POST['add']) AND $_POST['add'] == 'Cancel'){
 	$_SESSION['EventsUserFeedback'] = "You cancelled your new event.";
 }
 
@@ -928,7 +925,6 @@ if (isSet($_POST['add']) AND $_POST['add'] == 'Cancel'){
 // TO-DO: Change if this ruins having multiple tabs open etc.
 clearAddEventSessions();
 //clearEditEventSessions();
-
 
 // EVENTS OVERVIEW CODE SNIPPET START //
 
@@ -941,7 +937,7 @@ if(isSet($refreshEvents) AND $refreshEvents) {
 try
 {
 	include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
-	
+
 	// Use connect to Database function from db.inc.php
 	$pdo = connect_to_db();
 	$sql = 'SELECT	`EventID`			AS TheEventID,
@@ -980,7 +976,7 @@ try
 	} else {
 		$rowNum = 0;
 	}
-	
+
 	//Close connection
 	$pdo = null;
 }
@@ -993,8 +989,7 @@ catch (PDOException $e)
 }
 
 // Create the array we will go through to display information in HTML
-foreach ($result as $row)
-{
+foreach ($result as $row){
 	// Check if event is over or still active
 	$startDate = $row['StartDate'];
 	$lastDate = $row['LastDate'];
@@ -1012,7 +1007,7 @@ foreach ($result as $row)
 	$daysSelectedWithComma = implode(", ", $daysSelectedArray);
 	$numberOfDaysSelected = sizeOf($daysSelectedArray);
 
-	if($dateNow > $lastDate AND $timeNow > $endTime){
+	if($dateNow > $lastDate OR ($dateNow == $lastDate AND $timeNow > $endTime)){
 		$completed = TRUE;
 	} else {
 		$completed = FALSE;
@@ -1052,7 +1047,7 @@ foreach ($result as $row)
 	$displayableStartTime = convertDatetimeToFormat($startTime, 'H:i:s', TIME_DEFAULT_FORMAT_TO_DISPLAY);
 	$displayableEndTime = convertDatetimeToFormat($endTime, 'H:i:s', TIME_DEFAULT_FORMAT_TO_DISPLAY);
 	$displayableNextStart = convertDatetimeToFormat($nextStart, 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
-	
+
 	// Check if we should list individual meeting rooms or just mention that all have been selected
 	$totalMeetingRooms = $row['TotalMeetingRooms'];
 	$meetingRoomsUsed = $row['UsedMeetingRooms'];
