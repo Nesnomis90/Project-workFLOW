@@ -399,10 +399,9 @@ if(isSet($_POST['confirm']) AND $_POST['confirm'] == "Yes, Send The Request"){
 			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 
 			$pdo = connect_to_db();
-			// TO-DO: Limit the companies to the ones that have owners that want to receive email?
+
 			$sql = 'SELECT		u.`email`					AS Email,
-								u.`sendOwnerEmail`			AS SendOwnerEmail,
-								e.`sendEmailOnceOrAlways`	AS SendEmailOnceOrAlways
+								e.`sendEmail`				AS SendEmail
 					FROM 		`user` u
 					INNER JOIN	`employee` e
 					ON 			e.`UserID` = u.`UserID`
@@ -420,9 +419,8 @@ if(isSet($_POST['confirm']) AND $_POST['confirm'] == "Yes, Send The Request"){
 
 /*			if(isSet($result) AND !empty($result)){
 				foreach($result AS $row){
-					// Check if user wants to receive owner emails?
-					// TO-DO: Send regardless?
-					if($row['SendOwnerEmail'] == 1){
+					// Check if user wants to receive owner emails
+					if($row['SendEmail'] == 1){
 						$companyOwnerEmails[] = $row['Email'];
 					}
 				}

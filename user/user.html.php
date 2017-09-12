@@ -1,6 +1,5 @@
 <!-- This is the HTML form used to display user information to normal users-->
-<?php include_once $_SERVER['DOCUMENT_ROOT'] .
- '/includes/helpers.inc.php'; ?>
+<?php include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/helpers.inc.php'; ?>
 <!DOCTYPE html>
 <html lang="en">
 	<head>
@@ -19,7 +18,7 @@
 				label {
 					width: 220px;
 				}
-			</style>			
+			</style>
 		<?php endif; ?>
 
 		<?php if(isSet($_SESSION['loggedIn'])) : ?>
@@ -29,7 +28,7 @@
 		<?php endif; ?>
 	</head>
 	<body onload="startTime()">
-		<?php include_once $_SERVER['DOCUMENT_ROOT'] .'/includes/topnav.html.php'; ?>
+		<?php include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/topnav.html.php'; ?>
 
 		<div class="left">
 			<?php if(isSet($_SESSION['normalUserFeedback'])) : ?>
@@ -111,7 +110,7 @@
 							<?php elseif($numberOfTotalBookedMeetings == 0) : ?>
 								<span>This will display your meeting statistics if you have any.</span>
 							<?php endif; ?>
-							
+
 							<?php if($accessName == "Admin") : ?>
 								<div>
 									<label>Default Display Name: </label>
@@ -207,56 +206,46 @@
 							<?php if($userIsACompanyOwner) : ?>
 								<div>
 									<label>Company Owner Alert Status: </label>
-									<?php if($originalSendOwnerEmail == 1) : ?>
-										<span><b>Send Me Email Alerts</b></span>
-									<?php elseif($originalSendOwnerEmail == 0) : ?>
-										<span><b>Don't Send Me Email Alerts</b></span>
-									<?php endif; ?>
+									<span><b>----------------------------------</b></span>
 								</div>
 
-								<?php if(isSet($editMode)) : ?>
-									<div>
-										<label>Change Company Owner Alert Status: </label>
-										<select name="sendOwnerEmail">
-											<?php if($sendOwnerEmail == 1) : ?>
-												<option selected="selected" value="1"><b>Send Me Email Alerts</b></option>
-												<option value="0"><b>Don't Send Me Email Alerts</b></option>
-											<?php elseif($sendOwnerEmail == 0) : ?>
-												<option value="1"><b>Send Me Email Alerts</b></option>
-												<option selected="selected" value="0"><b>Don't Send Me Email Alerts</b></option>										
-											<?php endif; ?>
-										</select>
-									</div>
-								<?php endif; ?>
-
-								<?php if($originalSendOwnerEmail == 1) : ?>
-									<div>
-										<?php foreach($worksForArray AS $company) : ?>
-											<?php if($company['CompanyPosition'] == "Owner") : ?>
-												<label>Company: <b><?php htmlout($company['CompanyName']); ?></b></label>
+								<div>
+									<?php foreach($worksForArray AS $company) : ?>
+										<?php if($company['CompanyPosition'] == "Owner") : ?>
+											<label>Company: <b><?php htmlout($company['CompanyName']); ?></b></label>
+											<?php if($company['SendOwnerEmail'] == 1) : ?>
 												<?php if($company['SendEmailOnceOrAlways'] == 1) : ?>
 													<span><b>Send Everytime A Booking Goes Over Credit</b></span>
 												<?php elseif($company['SendEmailOnceOrAlways'] == 0) : ?>
 													<span><b>Only Send First Time A Booking Goes Over Credit</b></span>
 												<?php endif; ?>
-
-												<?php if(isSet($editMode)) : ?>
-													<label>Change <b><?php htmlout($company['CompanyName']); ?></b></label>
-													<select name="sendCompanyID<?php htmlout($company['CompanyID']); ?>Email">
-														<?php if($company['SendEmailOnceOrAlways'] == 1) : ?>
-															<option selected="selected" value="1"><b>Send Everytime A Booking Goes Over Credit</b></option>
-															<option value="0"><b>Only Send First Time A Booking Goes Over Credit</b></option>
-														<?php elseif($company['SendEmailOnceOrAlways'] == 0) : ?>
-															<option value="1"><b>Send Everytime A Booking Goes Over Credit</b></option>
-															<option selected="selected" value="0"><b>Only Send First Time A Booking Goes Over Credit</b></option>
-														<?php endif; ?>
-													</select>
-												<?php endif; ?>
+											<?php else : ?>
+													<span><b>Never Send Emails About Bookings Going Over Credit</b></span>
 											<?php endif; ?>
-										<?php endforeach; ?>
-									</div>
-								<?php endif; ?>
 
+											<?php if(isSet($editMode)) : ?>
+												<label>Change <b><?php htmlout($company['CompanyName']); ?></b></label>
+												<select name="sendCompanyID<?php htmlout($company['CompanyID']); ?>Email">
+												<?php if($company['SendOwnerEmail'] == 1) : ?>
+													<?php if($company['SendEmailOnceOrAlways'] == 1) : ?>
+														<option selected="selected" value="1"><b>Send Everytime A Booking Goes Over Credit</b></option>
+														<option value="0"><b>Only Send First Time A Booking Goes Over Credit</b></option>
+														<option value="Never Send"><b>Never Send Emails About Bookings Going Over Credit</b></option>
+													<?php elseif($company['SendEmailOnceOrAlways'] == 0) : ?>
+														<option value="1"><b>Send Everytime A Booking Goes Over Credit</b></option>
+														<option selected="selected" value="0"><b>Only Send First Time A Booking Goes Over Credit</b></option>
+														<option value="Never Send"><b>Never Send Emails About Bookings Going Over Credit</b></option>
+													<?php endif; ?>
+												<?php else : ?>
+														<option value="1"><b>Send Everytime A Booking Goes Over Credit</b></option>
+														<option value="0"><b>Only Send First Time A Booking Goes Over Credit</b></option>
+														<option selected="selected" value="Never Send"><b>Never Send Emails About Bookings Going Over Credit</b></option>
+												<?php endif; ?>
+												</select>
+											<?php endif; ?>
+										<?php endif; ?>
+									<?php endforeach; ?>
+								</div>
 							<?php endif; ?>
 
 							<?php if($accessName == "Admin") : ?>

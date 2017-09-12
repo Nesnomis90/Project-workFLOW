@@ -3244,7 +3244,7 @@ if ((isSet($_POST['add']) AND $_POST['add'] == "Add Booking") OR
 			$pdo = connect_to_db();
 
 			$sql = 'SELECT		u.`email`					AS Email,
-								u.`sendOwnerEmail`			AS SendOwnerEmail,
+								e.`sendEmail`				AS SendOwnerEmail,
 								e.`sendEmailOnceOrAlways`	AS SendEmailOnceOrAlways
 					FROM 		`user` u
 					INNER JOIN	`employee` e

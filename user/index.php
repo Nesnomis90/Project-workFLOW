@@ -1034,7 +1034,6 @@ if(isSet($_SESSION['loggedIn']) AND isSet($_SESSION['LoggedInUserID'])){
 								u.`create_time`			AS DateTimeCreated,
 								u.`lastActivity`		AS LastActive,
 								u.`sendEmail`			AS SendEmail,
-								u.`sendOwnerEmail`		AS SendOwnerEmail,
 								u.`sendAdminEmail`		AS SendAdminEmail,
 								u.`password`			AS HashedPassword,
 								a.`AccessName`			AS AccessName,
@@ -1090,6 +1089,7 @@ if(isSet($_SESSION['loggedIn']) AND isSet($_SESSION['LoggedInUserID'])){
 			$sql = "SELECT 		cp.`name`					AS CompanyPosition,
 								c.`name`					AS CompanyName,
 								c.`CompanyID`				AS CompanyID,
+								e.`sendEmail`				AS SendOwnerEmail,
 								e.`sendEmailOnceOrAlways`	AS SendEmailOnceOrAlways
 					FROM		`employee` e
 					INNER JOIN	`company` c
@@ -1142,7 +1142,6 @@ if(isSet($_SESSION['loggedIn']) AND isSet($_SESSION['LoggedInUserID'])){
 	$originalBookingDescription = $result['BookingDescription'];
 	$originalSendEmail = $result['SendEmail'];
 	$originalSendAdminEmail = $result['SendAdminEmail'];
-	$originalSendOwnerEmail = $result['SendOwnerEmail'];
 
 	$numberOfTotalBookedMeetings = $result['TotalBookedMeetings'];
 	$numberOfActiveBookedMeetings = $result['ActiveBookedMeetings'];
@@ -1197,9 +1196,7 @@ if(isSet($_POST['action']) AND $_POST['action'] == "Show Code"){
 		$_SESSION['normalUserEditInfoArray']['BookingDescription'] = trimExcessWhitespaceButLeaveLinefeed($_POST['bookingDescription']);
 		$_SESSION['normalUserEditInfoArray']['Email'] = $_POST['email'];
 		$_SESSION['normalUserEditInfoArray']['SendEmail'] = $_POST['sendEmail'];
-		if(isSet($_POST['sendOwnerEmail'])){
-			$_SESSION['normalUserEditInfoArray']['SendOwnerEmail'] = $_POST['sendOwnerEmail'];
-		}			
+		
 		if(isSet($_POST['sendAdminEmail'])){
 			$_SESSION['normalUserEditInfoArray']['SendAdminEmail'] = $_POST['sendAdminEmail'];
 		}		
@@ -1383,9 +1380,7 @@ if(isSet($_POST['action']) AND $_POST['action'] == "Confirm Change"){
 		$_SESSION['normalUserEditInfoArray']['BookingDescription'] = $validatedBookingDescription;
 		$_SESSION['normalUserEditInfoArray']['Email'] = $email;
 		$_SESSION['normalUserEditInfoArray']['SendEmail'] = $_POST['sendEmail'];
-		if(isSet($_POST['sendOwnerEmail'])){
-			$_SESSION['normalUserEditInfoArray']['SendOwnerEmail'] = $_POST['sendOwnerEmail'];
-		}
+
 		if(isSet($_POST['sendAdminEmail'])){
 			$_SESSION['normalUserEditInfoArray']['SendAdminEmail'] = $_POST['sendAdminEmail'];
 		}
@@ -1394,22 +1389,31 @@ if(isSet($_POST['action']) AND $_POST['action'] == "Confirm Change"){
 			$_SESSION['normalUserEditInfoArray']['LastCodeUpdate'] = getDatetimeNow();
 		}
 	}
-	
+
 	if(isSet($_SESSION['normalUserEditWorksForArray'])){
 		foreach($_SESSION['normalUserEditWorksForArray'] AS $company){
 			$post = "sendCompanyID" . $company['CompanyID'] . "Email";
 			if(isSet($_POST[$post])){
+				if($_POST[$post] == "Never Send"){
+					$sendEmailOnceOrAlways = $company['SendEmailOnceOrAlways'];
+					$sendOwnerEmail = 0;
+				} else {
+					$sendEmailOnceOrAlways = $_POST[$post];
+					$sendOwnerEmail = 1;
+				}
 				$newArray = array(
 									'CompanyID' => $company['CompanyID'],
 									'CompanyPosition' => $company['CompanyPosition'],
 									'CompanyName' => $company['CompanyName'],
-									'SendEmailOnceOrAlways' => $_POST[$post]
+									'SendOwnerEmail' => $sendOwnerEmail,
+									'SendEmailOnceOrAlways' => $sendEmailOnceOrAlways
 								);
 			} else {
 				$newArray = array(
 									'CompanyID' => $company['CompanyID'],
 									'CompanyPosition' => $company['CompanyPosition'],
 									'CompanyName' => $company['CompanyName'],
+									'SendOwnerEmail' => $company['SendOwnerEmail'],
 									'SendEmailOnceOrAlways' => $company['SendEmailOnceOrAlways']
 								);
 			}
@@ -1450,7 +1454,6 @@ if(isSet($_POST['action']) AND $_POST['action'] == "Confirm Change"){
 									`displayName` = :displayname,
 									`bookingDescription` = :bookingdescription,
 									`sendEmail` = :sendEmail,
-									`sendOwnerEmail` = :sendOwnerEmail,
 									`sendAdminEmail` = :sendAdminEmail,
 									`bookingCode` = :bookingCode,
 									`lastCodeUpdate` = :LastCodeUpdate,
@@ -1466,7 +1469,6 @@ if(isSet($_POST['action']) AND $_POST['action'] == "Confirm Change"){
 					$s->bindValue(':displayname', $new['DisplayName']);
 					$s->bindValue(':bookingdescription', $new['BookingDescription']);
 					$s->bindValue(':sendEmail', $new['SendEmail']);
-					$s->bindValue(':sendOwnerEmail', $new['SendOwnerEmail']);
 					$s->bindValue(':sendAdminEmail', $new['SendAdminEmail']);
 					$s->bindValue(':bookingCode', $new['BookingCode']);
 					$s->bindValue(':LastCodeUpdate', $new['LastCodeUpdate']);
@@ -1477,14 +1479,17 @@ if(isSet($_POST['action']) AND $_POST['action'] == "Confirm Change"){
 						foreach($_SESSION['normalUserEditWorksForArray'] AS $company){
 							$companyID = $company['CompanyID'];
 							$sendEmailOnceOrAlways = $company['SendEmailOnceOrAlways'];
-							
+							$sendOwnerEmail = $company['SendOwnerEmail'];
+
 							$sql = "UPDATE	`employee`
-									SET		`sendEmailOnceOrAlways` = :sendEmailOnceOrAlways
+									SET		`sendEmailOnceOrAlways` = :sendEmailOnceOrAlways,
+											`sendEmail` = :sendOwnerEmail
 									WHERE	`userID` = :userID
 									AND		`companyID` = :companyID";
 							$s = $pdo->prepare($sql);
 							$s->bindValue(':userID', $_SESSION['LoggedInUserID']);
 							$s->bindValue(':companyID', $companyID);
+							$s->bindValue(':sendOwnerEmail', $sendOwnerEmail);
 							$s->bindValue(':sendEmailOnceOrAlways', $sendEmailOnceOrAlways);
 							$s->execute();
 						}
@@ -1506,6 +1511,7 @@ if(isSet($_POST['action']) AND $_POST['action'] == "Confirm Change"){
 			} else {
 				$_SESSION['normalUserFeedback'] = "No changes were made.";
 			}
+
 			unset($_SESSION['normalUserEditMode']);
 			unset($_SESSION['normalUserEditInfoArray']);
 			unset($_SESSION['normalUserEditWorksForArray']);
@@ -1541,7 +1547,6 @@ if(isSet($_SESSION['normalUserEditMode'])){
 	$displayName = $edit['DisplayName'];
 	$bookingDescription = $edit['BookingDescription'];
 	$sendEmail = $edit['SendEmail'];
-	$sendOwnerEmail = $edit['SendOwnerEmail'];
 	$sendAdminEmail = $edit['SendAdminEmail'];
 }
 
