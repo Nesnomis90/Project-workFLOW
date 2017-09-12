@@ -418,13 +418,20 @@ if(isSet($_POST['confirm']) AND $_POST['confirm'] == "Yes, Send The Request"){
 			$s->execute();
 			$result = $s->fetchAll(PDO::FETCH_ASSOC);
 
-			if(isSet($result) AND !empty($result)){
+/*			if(isSet($result) AND !empty($result)){
 				foreach($result AS $row){
 					// Check if user wants to receive owner emails?
 					// TO-DO: Send regardless?
 					if($row['SendOwnerEmail'] == 1){
 						$companyOwnerEmails[] = $row['Email'];
 					}
+				}
+			}*/
+
+			// We send email to all registered company owners, regardless of what email choices they've made
+			if(isSet($result) AND sizeOf($result) > 0){
+				foreach($result AS $row){
+					$companyOwnerEmails[] = $row['Email'];
 				}
 			}
 
