@@ -88,7 +88,7 @@
 						<th>Ended Early Message</th>
 						<th>Ended Early By</th>
 					</tr>
-					<?php foreach ($bookingsCompleted AS $booking) : ?>
+					<?php foreach($bookingsCompletedToday AS $booking) : ?>
 						<form action="" method="post">
 							<tr>
 								<td><?php htmlout($booking['BookingStatus']);?></td>
