@@ -87,7 +87,7 @@
 					<tr>
 						<td colspan="11">
 							<input type="hidden" name="action" value="Add Employee">
-							<input type="submit" style="font-size: 150%" value="+">
+							<input type="submit" style="font-size: 150%; color: green;" value="+">
 						</td>
 					</tr>
 				</form>
