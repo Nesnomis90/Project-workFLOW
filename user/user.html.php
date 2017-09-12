@@ -16,7 +16,7 @@
 		<?php else : ?>
 			<style>
 				label {
-					width: 220px;
+					width: 260px;
 				}
 			</style>
 		<?php endif; ?>
@@ -42,38 +42,43 @@
 				<fieldset>
 					<form action="" method="post">
 						<fieldset class="left"><legend>User Information:</legend>
-							<div>
-								<label>First Name: </label>
-								<span><?php htmlout($originalFirstName); ?></span>
-							</div>
+
 							<?php if(isSet($editMode)) : ?>
 								<div>
 									<label>Change First Name: </label>
 									<input type="text" name="firstName" value="<?php htmlout($firstName); ?>">
 								</div>
+							<?php else : ?>
+								<div>
+									<label>First Name: </label>
+									<span><?php htmlout($originalFirstName); ?></span>
+								</div>
 							<?php endif; ?>
 
-							<div>
-								<label>Last Name: </label>
-								<span><?php htmlout($originalLastName); ?></span>
-							</div>
 							<?php if(isSet($editMode)) : ?>
 								<div>
 									<label>Change Last Name: </label>
 									<input type="text" name="lastName" value="<?php htmlout($lastName); ?>">
 								</div>
+							<?php else : ?>
+								<div>
+									<label>Last Name: </label>
+									<span><?php htmlout($originalLastName); ?></span>
+								</div>
 							<?php endif; ?>
 
-							<div>
-								<label>Email: </label>
-								<span><?php htmlout($originalEmail); ?></span>
-							</div>
 							<?php if(isSet($editMode)) : ?>
 								<div>
 									<label>Change Email: </label>
 									<input type="text" name="email" value="<?php htmlout($email); ?>">
 								</div>
+							<?php else : ?>
+								<div>
+									<label>Email: </label>
+									<span><?php htmlout($originalEmail); ?></span>
+								</div>
 							<?php endif; ?>
+
 							<div>
 								<label>Company Connection: </label>
 								<span style="white-space: pre-wrap;"><b><?php htmlout($worksFor); ?></b></span>
@@ -113,28 +118,31 @@
 								<?php endif; ?>
 
 								<?php if($accessName == "Admin") : ?>
-									<div>
-										<label>Default Display Name: </label>
-										<span style="white-space: pre-wrap;"><?php htmlout($originalDisplayName); ?></span>
-									</div>
+
 
 									<?php if(isSet($editMode)) : ?>
 										<div>
-											<label>Change Display Name: </label>
+											<label>Default Display Name: </label>
 											<input type="text" name="displayName" value="<?php htmlout($displayName); ?>">
+										</div>
+									<?php else : ?>
+										<div>
+											<label>Default Display Name: </label>
+											<span style="white-space: pre-wrap;"><?php htmlout($originalDisplayName); ?></span>
 										</div>
 									<?php endif; ?>
 
-									<div>
-										<label>Default Booking Description: </label>
-										<span style="white-space: pre-wrap;"><?php htmlout($originalBookingDescription); ?></span>
-									</div>
 
 									<?php if(isSet($editMode)) : ?>
 										<div>
-											<label>Change Booking Description: </label>
+											<label>Default Booking Description: </label>
 											<textarea rows="4" cols="50" name="bookingDescription" style="white-space: pre-wrap;"><?php htmlout($bookingDescription); ?></textarea>
 										</div>
+									<?php else : ?>
+										<div>
+											<label>Default Booking Description: </label>
+											<span style="white-space: pre-wrap;"><?php htmlout($originalBookingDescription); ?></span>
+										</div>									
 									<?php endif; ?>
 								<?php endif; ?>
 
@@ -181,18 +189,38 @@
 								<span style="white-space: pre-wrap;"><?php htmlout($accessDescription); ?></span>
 							</div>
 
-							<div>
-								<label>Account & Meeting Alert Status: </label>
-								<?php if($originalSendEmail == 1) : ?>
-									<span><b>Send Me Email Alerts</b></span>
-								<?php elseif($originalSendEmail == 0) : ?>
-									<span><b>Don't Send Me Email Alerts</b></span>
+							<?php if($accessName == "Admin") : ?>
+
+
+								<?php if(isSet($editMode)) : ?>
+									<div>
+										<label>Admin Information Alert Status: </label>
+										<select name="sendAdminEmail">
+											<?php if($sendAdminEmail == 1) : ?>
+												<option selected="selected" value="1"><b>Send Me Email Alerts</b></option>
+												<option value="0"><b>Don't Send Me Email Alerts</b></option>
+											<?php elseif($sendAdminEmail == 0) : ?>
+												<option value="1"><b>Send Me Email Alerts</b></option>
+												<option selected="selected" value="0"><b>Don't Send Me Email Alerts</b></option>										
+											<?php endif; ?>
+										</select>
+									</div>
+								<?php else : ?>
+									<div>
+										<label>Admin Information Alert Status: </label>
+										<?php if($originalSendAdminEmail == 1) : ?>
+											<span><b>Send Me Email Alerts</b></span>
+										<?php elseif($originalSendAdminEmail == 0) : ?>
+											<span><b>Don't Send Me Email Alerts</b></span>
+										<?php endif; ?>
+									</div>
 								<?php endif; ?>
-							</div>
+							<?php endif; ?>
+
 
 							<?php if(isSet($editMode)) : ?>
 								<div>
-									<label>Change Account & Meeting Alert Status: </label>
+									<label>Account & Meeting Alert Status: </label>
 									<select name="sendEmail">
 										<?php if($sendEmail == 1) : ?>
 											<option selected="selected" value="1"><b>Send Me Email Alerts</b></option>
@@ -202,6 +230,15 @@
 											<option selected="selected" value="0"><b>Don't Send Me Email Alerts</b></option>										
 										<?php endif; ?>
 									</select>
+								</div>
+							<?php else : ?>
+								<div>
+									<label>Account & Meeting Alert Status: </label>
+									<?php if($originalSendEmail == 1) : ?>
+										<span><b>Send Me Email Alerts</b></span>
+									<?php elseif($originalSendEmail == 0) : ?>
+										<span><b>Don't Send Me Email Alerts</b></span>
+									<?php endif; ?>
 								</div>
 							<?php endif; ?>
 
@@ -214,19 +251,8 @@
 								<div>
 									<?php foreach($worksForArray AS $company) : ?>
 										<?php if($company['CompanyPosition'] == "Owner") : ?>
-											<label>Company: <b><?php htmlout($company['CompanyName']); ?></b></label>
-											<?php if($company['SendOwnerEmail'] == 1) : ?>
-												<?php if($company['SendEmailOnceOrAlways'] == 1) : ?>
-													<span><b>Send Everytime A Booking Goes Over Credit</b></span>
-												<?php elseif($company['SendEmailOnceOrAlways'] == 0) : ?>
-													<span><b>Only Send First Time A Booking Goes Over Credit</b></span>
-												<?php endif; ?>
-											<?php else : ?>
-													<span><b>Never Send Emails About Bookings Going Over Credit</b></span>
-											<?php endif; ?>
-
+											<label><b><?php htmlout($company['CompanyName']); ?></b></label>
 											<?php if(isSet($editMode)) : ?>
-												<label>Change <b><?php htmlout($company['CompanyName']); ?></b></label>
 												<select name="sendCompanyID<?php htmlout($company['CompanyID']); ?>Email">
 												<?php if($company['SendOwnerEmail'] == 1) : ?>
 													<?php if($company['SendEmailOnceOrAlways'] == 1) : ?>
@@ -244,36 +270,20 @@
 														<option selected="selected" value="Never Send"><b>Never Send Emails About Bookings Going Over Credit</b></option>
 												<?php endif; ?>
 												</select>
+											<?php else : ?>
+												<?php if($company['SendOwnerEmail'] == 1) : ?>
+													<?php if($company['SendEmailOnceOrAlways'] == 1) : ?>
+														<span><b>Send Everytime A Booking Goes Over Credit</b></span>
+													<?php elseif($company['SendEmailOnceOrAlways'] == 0) : ?>
+														<span><b>Only Send First Time A Booking Goes Over Credit</b></span>
+													<?php endif; ?>
+												<?php else : ?>
+														<span><b>Never Send Emails About Bookings Going Over Credit</b></span>
+												<?php endif; ?>
 											<?php endif; ?>
 										<?php endif; ?>
 									<?php endforeach; ?>
 								</div>
-							<?php endif; ?>
-
-							<?php if($accessName == "Admin") : ?>
-								<div>
-									<label>Admin Information Alert Status: </label>
-									<?php if($originalSendAdminEmail == 1) : ?>
-										<span><b>Send Me Email Alerts</b></span>
-									<?php elseif($originalSendAdminEmail == 0) : ?>
-										<span><b>Don't Send Me Email Alerts</b></span>
-									<?php endif; ?>
-								</div>
-
-								<?php if(isSet($editMode)) : ?>
-									<div>
-										<label>Change Admin Alert Status: </label>
-										<select name="sendAdminEmail">
-											<?php if($sendAdminEmail == 1) : ?>
-												<option selected="selected" value="1"><b>Send Me Email Alerts</b></option>
-												<option value="0"><b>Don't Send Me Email Alerts</b></option>
-											<?php elseif($sendAdminEmail == 0) : ?>
-												<option value="1"><b>Send Me Email Alerts</b></option>
-												<option selected="selected" value="0"><b>Don't Send Me Email Alerts</b></option>										
-											<?php endif; ?>
-										</select>
-									</div>
-								<?php endif; ?>
 							<?php endif; ?>
 
 							<div class="left">
