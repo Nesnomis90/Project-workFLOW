@@ -1,6 +1,5 @@
 <!-- This is the HTML form used for EDITING or ADDING CREDITS information-->
-<?php include_once $_SERVER['DOCUMENT_ROOT'] .
- '/includes/helpers.inc.php'; ?>
+<?php include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/helpers.inc.php'; ?>
 <!DOCTYPE html>
 <html lang="en">
 	<head>
@@ -12,13 +11,11 @@
 			label {
 				width: 250px;
 			}
-		</style>		
+		</style>
 	</head>
 	<body onload="startTime()">
 		<?php include_once $_SERVER['DOCUMENT_ROOT'] .'/includes/admintopnav.html.php'; ?>
 
-
-		
 		<fieldset class="left"><legend><?php htmlout($pageTitle); ?></legend>
 			<div class="left">
 				<?php if(isSet($_SESSION['EditCreditsError'])) :?>
