@@ -19,20 +19,20 @@ function clearAddCreditsSessions(){
 // Function to clear sessions used to remember user inputs on refreshing the edit Credits form
 function clearEditCreditsSessions(){
 	unset($_SESSION['EditCreditsOriginalInfo']);
-	
+
 	unset($_SESSION['EditCreditsName']);
 	unset($_SESSION['EditCreditsDescription']);
 	unset($_SESSION['EditCreditsAmount']);
 	unset($_SESSION['EditCreditsMonthlyPrice']);
 	unset($_SESSION['EditCreditsHourPrice']);
-	
+
 	unset($_SESSION['EditCreditsCreditsID']);
 }
 
 // Function to check if user inputs for credits are correct
 function validateUserInputs(){
 	$invalidInput = FALSE;
-	
+
 	// Get user inputs
 	if(isSet($_POST['CreditsName']) AND !$invalidInput){
 		$creditsName = trim($_POST['CreditsName']);
@@ -71,29 +71,29 @@ function validateUserInputs(){
 	$validatedCreditsAmount = trimAllWhitespace($creditsAmount);
 	$validatedCreditsHourPrice = trimAllWhitespace($creditsHourPrice);
 	$validatedCreditsMonthlyPrice = trimAllWhitespace($creditsMonthlyPrice);
-	
+
 	// Are values actually filled in?
 	if($validatedCreditsName == "" AND !$invalidInput){
-		$_SESSION['EditCreditsError'] = "You need to fill in a name for your credits.";	
-		$invalidInput = TRUE;		
+		$_SESSION['EditCreditsError'] = "You need to fill in a name for your credits.";
+		$invalidInput = TRUE;
 	}
 	if($validatedCreditsDescription == "" AND !$invalidInput){
-		$_SESSION['EditCreditsError'] = "You need to fill in a description for your credits.";	
-		$invalidInput = TRUE;		
+		$_SESSION['EditCreditsError'] = "You need to fill in a description for your credits.";
+		$invalidInput = TRUE;
 	}
 	if($validatedCreditsAmount == "" AND !$invalidInput){
-		$_SESSION['EditCreditsError'] = "You need to fill in a monthly given amount for your credits.";	
+		$_SESSION['EditCreditsError'] = "You need to fill in a monthly given amount for your credits.";
 		$invalidInput = TRUE;
 	}
 	if($validatedCreditsMonthlyPrice == "" AND !$invalidInput){
-		$_SESSION['EditCreditsError'] = "You need to fill in a monthly subscription price for your credits.";	
+		$_SESSION['EditCreditsError'] = "You need to fill in a monthly subscription price for your credits.";
 		$invalidInput = TRUE;
-	}	
+	}
 	if($validatedCreditsHourPrice == "" AND !$invalidInput){
 		$_SESSION['EditCreditsError'] = "You need to fill in an over credits fee (per hour) for your credits.";	
 		$invalidInput = TRUE;
-	}	
-	
+	}
+
 	// Do actual input validation
 	if(validateString($validatedCreditsName) === FALSE AND !$invalidInput){
 		$invalidInput = TRUE;
@@ -111,26 +111,26 @@ function validateUserInputs(){
 		if(validateFloatNumber($validatedCreditsHourPrice) === FALSE AND !$invalidInput){
 			$invalidInput = TRUE;
 			$_SESSION['EditCreditsError'] = "Your submitted hourly over credits fee has illegal characters in it.";
-		}		
+		}
 	}
 	if(validateFloatNumber($validatedCreditsMonthlyPrice) === FALSE AND !$invalidInput){
 		$invalidInput = TRUE;
 		$_SESSION['EditCreditsError'] = "Your submitted monthly subscription price has illegal characters in it.";
-	}	
+	}
 
 	// Check if input length is allowed
 		// Credits Name
 		// Uses same limit as display name (max 255 chars)
 	$invalidCreditsName = isLengthInvalidDisplayName($validatedCreditsName);
 	if($invalidCreditsName AND !$invalidInput){
-		$_SESSION['EditCreditsError'] = "The credits name submitted is too long.";	
-		$invalidInput = TRUE;		
-	}	
+		$_SESSION['EditCreditsError'] = "The credits name submitted is too long.";
+		$invalidInput = TRUE;
+	}
 		// Credits Description // Just use same check as with equipment description
 	$invalidCreditsDescription = isLengthInvalidEquipmentDescription($validatedCreditsDescription);
 	if($invalidCreditsDescription AND !$invalidInput){
-		$_SESSION['EditCreditsError'] = "The credits description submitted is too long.";	
-		$invalidInput = TRUE;		
+		$_SESSION['EditCreditsError'] = "The credits description submitted is too long.";
+		$invalidInput = TRUE;
 	}
 		// Credits Amount
 		// TO-DO: We check the amount in minutes. Does admin also submit in minutes or just hours?
@@ -142,25 +142,25 @@ function validateUserInputs(){
 		// Credits Hourly Price
 	$invalidCreditsHourPrice = isNumberInvalidCreditsHourPrice($validatedCreditsHourPrice);
 	if($invalidCreditsHourPrice AND !$invalidInput){
-		$_SESSION['EditCreditsError'] = "The hourly over credits fee submitted is too big.";	
+		$_SESSION['EditCreditsError'] = "The hourly over credits fee submitted is too big.";
 		$invalidInput = TRUE;
 	}
 		// Credits Monthly Price
 	$invalidCreditsMonthlyPrice = isNumberInvalidCreditsMonthlyPrice($validatedCreditsMonthlyPrice);
 	if($invalidCreditsMonthlyPrice AND !$invalidInput){
-		$_SESSION['EditCreditsError'] = "The monthly subscription price is too big.";	
+		$_SESSION['EditCreditsError'] = "The monthly subscription price is too big.";
 		$invalidInput = TRUE;
 	}
-	
+
 	// Check if the credits already exists (based on name).
 	$nameChanged = TRUE;
 	if(isSet($_SESSION['EditCreditsOriginalInfo'])){
 		$originalCreditsName = strtolower($_SESSION['EditCreditsOriginalInfo']['CreditsName']);
-		$newCreditsName = strtolower($validatedCreditsName);		
+		$newCreditsName = strtolower($validatedCreditsName);
 
 		if($originalCreditsName == $newCreditsName){
 			$nameChanged = FALSE;
-		} 
+		}
 	}
 	if($nameChanged AND !$invalidInput) {
 		// Check if new name is taken
@@ -174,11 +174,11 @@ function validateUserInputs(){
 			$s = $pdo->prepare($sql);
 			$s->bindValue(':creditsName', $validatedCreditsName);		
 			$s->execute();
-			
+
 			$pdo = null;
-			
+
 			$row = $s->fetch();
-			
+
 			if ($row[0] > 0)
 			{
 				// This name is already being used for a credits
@@ -228,7 +228,7 @@ if (isSet($_POST['action']) AND $_POST['action'] == "Disable Delete"){
 if(isSet($_POST['action']) AND $_POST['action'] == 'Delete'){
 	// We have one Credits that's should always be in the table and never deleted
 	// This one is called 'Default'
-	
+
 	if(isSet($_POST['CreditsName']) AND $_POST['CreditsName'] == 'Default'){
 		// We can't delete this one.
 		$_SESSION['CreditsUserFeedback'] = "This Credits cannot be deleted. It is the default given Credits to all new companies.";
@@ -237,7 +237,7 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Delete'){
 		try
 		{
 			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
-			
+
 			$pdo = connect_to_db();
 			$sql = "DELETE FROM `credits` 
 					WHERE 		`CreditsID` = :CreditsID
@@ -245,7 +245,7 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Delete'){
 			$s = $pdo->prepare($sql);
 			$s->bindValue(':CreditsID', $_POST['CreditsID']);
 			$s->execute();
-			
+
 			//close connection
 			$pdo = null;
 		}
@@ -255,17 +255,17 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Delete'){
 			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
 			exit();
 		}
-		
+
 		$_SESSION['CreditsUserFeedback'] = "Successfully removed the Credits.";
-		
+
 		// Add a log event that the Credits has been Deleted
 		try
 		{
 			// Save a description with information about the Credits that was Deleted
 			$description = "The Credits: " . $_POST['CreditsName'] . " was removed by: " . $_SESSION['LoggedInUserName'];
-			
+
 			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
-			
+
 			$pdo = connect_to_db();
 			$sql = "INSERT INTO `logevent` 
 					SET			`actionID` = 	(
@@ -277,9 +277,9 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Delete'){
 			$s = $pdo->prepare($sql);
 			$s->bindValue(':description', $description);
 			$s->execute();
-			
+
 			//Close the connection
-			$pdo = null;		
+			$pdo = null;
 		}
 		catch(PDOException $e)
 		{
@@ -287,9 +287,9 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Delete'){
 			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
 			$pdo = null;
 			exit();
-		}			
+		}
 	}
-	
+
 	// Load company list again
 	header('Location: .');
 	exit();	
@@ -298,11 +298,10 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Delete'){
 // If admin wants to add Credits to the database
 // we load a new html form
 if ((isSet($_POST['action']) AND $_POST['action'] == 'Add Credits') OR
-	(isSet($_SESSION['refreshAddCredits']) AND $_SESSION['refreshAddCredits']))
-{
+	(isSet($_SESSION['refreshAddCredits']) AND $_SESSION['refreshAddCredits'])){
 	// Confirm we've refreshed
 	unset($_SESSION['refreshAddCredits']);
-	
+
 	// Set form variables to be ready for adding values
 	$pageTitle = 'New Credits';
 	$CreditsName = '';
@@ -312,7 +311,7 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Add Credits') OR
 	$CreditsMonthlyPrice = '';
 	$CreditsID = '';
 	$button = 'Confirm Credits';
-	
+
 	if(isSet($_SESSION['AddCreditsDescription'])){
 		$CreditsDescription = $_SESSION['AddCreditsDescription'];
 		unset($_SESSION['AddCreditsDescription']);
@@ -333,23 +332,22 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Add Credits') OR
 		$CreditsMonthlyPrice = $_SESSION['AddCreditsMonthlyPrice'];
 		unset($_SESSION['AddCreditsMonthlyPrice']);
 	}
-	
+
 	var_dump($_SESSION); // TO-DO: remove after testing is done
-	
+
 	// Change form
 	include 'form.html.php';
 	exit();
 }
 
 // When admin has added the needed information and wants to add the Credits
-if (isSet($_POST['action']) AND $_POST['action'] == 'Confirm Credits')
-{
+if(isSet($_POST['action']) AND $_POST['action'] == 'Confirm Credits'){
 	// Validate user inputs
 	list($invalidInput, $validatedCreditsDescription, $validatedCreditsName, $validatedCreditsAmount, $validatedCreditsHourPrice, $validatedCreditsMonthlyPrice) = validateUserInputs();
-	
+
 	// Refresh form on invalid
 	if($invalidInput){
-		
+
 		// Refresh.
 		$_SESSION['AddCreditsDescription'] = $validatedCreditsDescription;
 		$_SESSION['AddCreditsName'] = $validatedCreditsName;
@@ -359,7 +357,7 @@ if (isSet($_POST['action']) AND $_POST['action'] == 'Confirm Credits')
 		
 		$_SESSION['refreshAddCredits'] = TRUE;
 		header('Location: .');
-		exit();			
+		exit();
 	}
 
 	// Add the Credits to the database
@@ -436,9 +434,9 @@ if (isSet($_POST['action']) AND $_POST['action'] == 'Confirm Credits')
 		$s = $pdo->prepare($sql);
 		$s->bindValue(':description', $description);
 		$s->execute();
-		
+
 		//Close the connection
-		$pdo = null;		
+		$pdo = null;
 	}
 	catch(PDOException $e)
 	{
@@ -447,9 +445,9 @@ if (isSet($_POST['action']) AND $_POST['action'] == 'Confirm Credits')
 		$pdo = null;
 		exit();
 	}
-	
+
 	clearAddCreditsSessions();
-	
+
 	// Load Credits list webpage with new Credits
 	header('Location: .');
 	exit();
@@ -457,7 +455,7 @@ if (isSet($_POST['action']) AND $_POST['action'] == 'Confirm Credits')
 
 // If admin wants to null values while adding
 if(isSet($_POST['add']) AND $_POST['add'] == 'Reset'){
-	
+
 	$_SESSION['AddCreditsDescription'] = "";
 	$_SESSION['AddCreditsName'] = "";
 
@@ -475,21 +473,19 @@ if (isSet($_POST['add']) AND $_POST['add'] == 'Cancel'){
 // if admin wants to edit Credits information
 // we load a new html form
 if ((isSet($_POST['action']) AND $_POST['action'] == 'Edit') OR
-	(isSet($_SESSION['refreshEditCredits']) AND $_SESSION['refreshEditCredits']))
-{
-	
+	(isSet($_SESSION['refreshEditCredits']) AND $_SESSION['refreshEditCredits'])){
 	// Check if we're activated by a user or by a forced refresh
 	if(isSet($_SESSION['refreshEditCredits']) AND $_SESSION['refreshEditCredits']){
 		//Confirm we've refreshed
 		unset($_SESSION['refreshEditCredits']);	
-		
+
 		// Get values we had before refresh
 		if(isSet($_SESSION['EditCreditsDescription'])){
 			$CreditsDescription = $_SESSION['EditCreditsDescription'];
 			unset($_SESSION['EditCreditsDescription']);
 		} else {
 			$CreditsDescription = '';
-		}		
+		}
 		if(isSet($_SESSION['EditCreditsName'])){
 			$CreditsName = $_SESSION['EditCreditsName'];
 			unset($_SESSION['EditCreditsName']);
@@ -507,13 +503,13 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Edit') OR
 			unset($_SESSION['EditCreditsMonthlyPrice']);
 		} else {
 			$CreditsMonthlyPrice = 0;
-		}	
+		}
 		if(isSet($_SESSION['EditCreditsHourPrice'])){
 			$CreditsHourPrice = $_SESSION['EditCreditsHourPrice'];
 			unset($_SESSION['EditCreditsHourPrice']);
 		} else {
 			$CreditsHourPrice = '';
-		}			
+		}
 		if(isSet($_SESSION['EditCreditsCreditsID'])){
 			$CreditsID = $_SESSION['EditCreditsCreditsID'];
 		}
@@ -533,15 +529,14 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Edit') OR
 								`overCreditHourPrice`			AS CreditsHourPrice
 					FROM 		`credits`
 					WHERE		`CreditsID` = :CreditsID";
-					
 			$s = $pdo->prepare($sql);
 			$s->bindValue(':CreditsID', $_POST['CreditsID']);
 			$s->execute();
-			
+
 			// Create an array with the row information we retrieved
 			$row = $s->fetch(PDO::FETCH_ASSOC);
 			$_SESSION['EditCreditsOriginalInfo'] = $row;
-			
+
 			// Set the correct information
 			$CreditsID = $row['TheCreditsID'];
 			$CreditsName = $row['CreditsName'];
@@ -549,7 +544,7 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Edit') OR
 			$CreditsAmount = $row['CreditsGivenInMinutes'];
 			$CreditsMonthlyPrice = $row['CreditsMonthlyPrice'];
 			$CreditsHourPrice = $row['CreditsHourPrice'];
-			
+
 			$_SESSION['EditCreditsCreditsID'] = $CreditsID;
 
 			//Close the connection
@@ -561,13 +556,13 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Edit') OR
 			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
 			$pdo = null;
 			exit();
-		}		
+		}
 	}
 
 	// Set always correct information
-	$pageTitle = 'Edit User';	
-	$button = 'Edit Credits';	
-	
+	$pageTitle = 'Edit Credits';
+	$button = 'Edit Credits';
+
 	// Set original values
 	$original = $_SESSION['EditCreditsOriginalInfo'];
 	$originalCreditsName = $original['CreditsName'];
@@ -575,9 +570,9 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Edit') OR
 	$originalCreditsAmount = $original['CreditsGivenInMinutes'];
 	$originalCreditsMonthlyPrice = $original['CreditsMonthlyPrice'];
 	$originalCreditsHourPrice = $original['CreditsHourPrice'];
-	
+
 	var_dump($_SESSION); // TO-DO: remove after testing is done
-	
+
 	// Change to the template we want to use
 	include 'form.html.php';
 	exit();

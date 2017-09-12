@@ -13,14 +13,7 @@
 		<?php include_once $_SERVER['DOCUMENT_ROOT'] .'/includes/admintopnav.html.php'; ?>
 
 		<h1>Manage Company Booking Credits</h1>
-		
-		<div class="left">
-			<?php if(isSet($_SESSION['CreditsUserFeedback'])) : ?>
-				<span class="feedback"><b><?php htmlout($_SESSION['CreditsUserFeedback']); ?></b></span>
-				<?php unset($_SESSION['CreditsUserFeedback']); ?>
-			<?php endif; ?>
-		</div>
-		
+
 		<form action="" method="post">
 			<div class="right">
 				<?php if(isSet($_SESSION['creditsEnableDelete']) AND $_SESSION['creditsEnableDelete']) : ?>
@@ -34,29 +27,35 @@
 					<input type="submit" name="action" value="Enable Delete">
 				<?php endif; ?>
 			</div>
-		<?php if($rowNum>0) :?>
-			<div class="left">
-				<input type="submit" name="action" value="Add Credits">
-			</div>
-			<table>
-				<caption>Available Credits</caption>
-				<tr>
-					<th colspan="6">Credits</th>
-					<th colspan="2">Dates</th>
-					<th colspan="2">Alter Credits</th>
-				</tr>
-				<tr>
-					<th>Name</th>
-					<th>Description</th>
-					<th>Monthly Given Booking Time</th>
-					<th>Monthly Subscription Cost</th>
-					<th>Over Credits Fee</th>
-					<th>Active for # Companies</th>
-					<th>Last Modified</th>
-					<th>Added</th>
-					<th>Edit</th>
-					<th>Delete</th>
-				</tr>
+		</form>
+
+		<div class="left">
+			<?php if(isSet($_SESSION['CreditsUserFeedback'])) : ?>
+				<span class="feedback"><b><?php htmlout($_SESSION['CreditsUserFeedback']); ?></b></span>
+				<?php unset($_SESSION['CreditsUserFeedback']); ?>
+			<?php endif; ?>
+		</div>
+
+		<table>
+			<caption>Available Credits</caption>
+			<tr>
+				<th colspan="6">Credits</th>
+				<th colspan="2">Dates</th>
+				<th colspan="2">Alter Credits</th>
+			</tr>
+			<tr>
+				<th>Name</th>
+				<th>Description</th>
+				<th>Monthly Given Booking Time</th>
+				<th>Monthly Subscription Cost</th>
+				<th>Over Credits Fee</th>
+				<th>Active for # Companies</th>
+				<th>Last Modified</th>
+				<th>Added</th>
+				<th>Edit</th>
+				<th>Delete</th>
+			</tr>
+			<?php if($rowNum>0) :?>
 				<?php foreach ($credits as $row): ?>
 					<form action="" method="post">
 						<tr>
@@ -95,15 +94,22 @@
 						</tr>
 					</form>
 				<?php endforeach; ?>
-			</table>
-		<?php else : ?>
-			<tr><b>There are no Credits registered in the database. This should never occur as the system needs a Credits named Default to function properly.</b></tr>
-			<tr><input type="submit" name="action" value="Add Credits"></tr>
-		<?php endif; ?>
-		</form>
-		
-	<div class="left"><a href="..">Return to CMS home</a></div>
-	
-	<?php include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/logout.inc.html.php'; ?>
+			<?php else : ?>
+				<tr><b>There are no Credits registered in the database. This should never occur as the system needs a Credits named Default to function properly.</b></tr>
+			<?php endif; ?>
+
+			<form action="" method="post">
+				<tr>
+					<td colspan="10">
+						<input type="hidden" name="action" value="Add Credits">
+						<input type="submit" style="font-size: 150%; color: green;" value="+">
+					</td>
+				</tr>
+			</form>	
+
+		</table>
+
+		<div class="left"><a href="..">Return to CMS home</a></div>
+
 	</body>
 </html>

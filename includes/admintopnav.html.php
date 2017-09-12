@@ -23,6 +23,7 @@ if(isSet($_GET['logoutForNav'])){
 		<li><a href="/admin/bookings">Bookings</a></li>
 		<li><a href="/admin/companies">Companies</a></li>
 		<li><a href="/admin/companycredits">Company Credits</a></li>
+		<li><a href="/admin/credits">Credits</a></li>
 		<li><a href="/admin/employees">Employees</a></li>
 		<li><a href="/admin/equipment">Equipment</a></li>
 		<li><a href="/admin/events">Events</a></li>
