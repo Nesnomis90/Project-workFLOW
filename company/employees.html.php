@@ -23,15 +23,7 @@
 			<form action="" method="post">
 				<div class="left">
 					<input type="submit" name="action" value="Add Employee">
-				</div>
-
-				<div class="right">
-					<?php if(isSet($_SESSION['normalEmployeesEnableDelete']) AND $_SESSION['normalEmployeesEnableDelete']) : ?>
-						<input type="submit" name="action" value="Disable Remove">
-					<?php else : ?>
-						<input type="submit" name="action" value="Enable Remove">
-					<?php endif; ?>
-				</div>				
+				</div>			
 			</form>
 		<?php endif; ?>
 
@@ -82,13 +74,7 @@
 							<?php if(isSet($companyRole) AND $companyRole == "Owner") : ?>
 								<?php if($_SESSION['LoggedInUserID'] != $employee['UsrID']) : ?>
 									<td><input type="submit" name="action" value="Change Role"></td>
-									<td>
-										<?php if(isSet($_SESSION['normalEmployeesEnableDelete']) AND $_SESSION['normalEmployeesEnableDelete']) : ?>
-											<input type="submit" name="action" value="Remove">
-										<?php else : ?>
-											<input type="submit" name="disabled" value="Remove" disabled>
-										<?php endif; ?>
-									</td>
+									<td><input type="submit" name="action" value="Remove"></td>
 								<?php else : ?>
 									<td></td>
 									<td></td>

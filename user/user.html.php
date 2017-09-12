@@ -80,93 +80,95 @@
 							</div>
 						</fieldset>
 
-						<fieldset class="left"><legend>Booking Information:</legend>
-							<?php if($numberOfTotalBookedMeetings > 0 AND !isSet($editMode)) : ?>
-								<div>
-									<label>Booked Meetings (Total):</label>
-									<span><a href="?totalBooking"><?php htmlout($numberOfTotalBookedMeetings); ?></a></span>
-								</div>
-
-								<?php if($numberOfActiveBookedMeetings > 0) : ?>
+						<?php if(!isSet($editMode) OR (isSet($editMode) AND isSet($userCanHaveABookingCode)))  : ?>
+							<fieldset class="left"><legend>Booking Information:</legend>
+								<?php if($numberOfTotalBookedMeetings > 0 AND !isSet($editMode)) : ?>
 									<div>
-										<label>Booked Meetings (Active):</label>
-										<span><a href="?activeBooking"><?php htmlout($numberOfActiveBookedMeetings); ?></a></span>
+										<label>Booked Meetings (Total):</label>
+										<span><a href="?totalBooking"><?php htmlout($numberOfTotalBookedMeetings); ?></a></span>
 									</div>
-								<?php endif; ?>
 
-								<?php if($numberOfCompletedBookedMeetings > 0) : ?>
-									<div>
-										<label>Booked Meetings (Completed):</label>
-										<span><a href="?completedBooking"><?php htmlout($numberOfCompletedBookedMeetings); ?></a></span>
-									</div>
-								<?php endif; ?>
-
-								<?php if($numberOfCancelledBookedMeetings > 0) : ?>
-									<div>
-										<label>Booked Meetings (Cancelled):</label>
-										<span><a href="?cancelledBooking"><?php htmlout($numberOfCancelledBookedMeetings); ?></a></span>
-									</div>
-								<?php endif; ?>
-							<?php elseif($numberOfTotalBookedMeetings == 0) : ?>
-								<span>This will display your meeting statistics if you have any.</span>
-							<?php endif; ?>
-
-							<?php if($accessName == "Admin") : ?>
-								<div>
-									<label>Default Display Name: </label>
-									<span style="white-space: pre-wrap;"><?php htmlout($originalDisplayName); ?></span>
-								</div>
-
-								<?php if(isSet($editMode)) : ?>
-									<div>
-										<label>Change Display Name: </label>
-										<input type="text" name="displayName" value="<?php htmlout($displayName); ?>">
-									</div>
-								<?php endif; ?>
-
-								<div>
-									<label>Default Booking Description: </label>
-									<span style="white-space: pre-wrap;"><?php htmlout($originalBookingDescription); ?></span>
-								</div>
-
-								<?php if(isSet($editMode)) : ?>
-									<div>
-										<label>Change Booking Description: </label>
-										<textarea rows="4" cols="50" name="bookingDescription" style="white-space: pre-wrap;"><?php htmlout($bookingDescription); ?></textarea>
-									</div>
-								<?php endif; ?>
-							<?php endif; ?>
-
-							<?php if(isSet($userCanHaveABookingCode)) : ?>
-								<div>
-									<label>Booking Code: </label>
-									<span><b><?php htmlout($bookingCodeStatus); ?></b></span>
-									<?php if(isSet($userHasABookingCode) AND !isSet($showBookingCode)) : ?>
-										<label>Reveal Code: </label><input type="submit" name="action" value="Show Code">
-									<?php elseif(isSet($userHasABookingCode) AND isSet($showBookingCode) AND $showBookingCode) : ?>
-										<label>Reveal Code: </label><span><b><?php htmlout($showBookingCode); ?></b></span>
-									<?php elseif(isSet($userHasABookingCode) AND isSet($showBookingCode) AND $showBookingCode == FALSE) : ?>
-										<label>Reveal Code: </label><span><b>Could not retrieve code.</b></span>
+									<?php if($numberOfActiveBookedMeetings > 0) : ?>
+										<div>
+											<label>Booked Meetings (Active):</label>
+											<span><a href="?activeBooking"><?php htmlout($numberOfActiveBookedMeetings); ?></a></span>
+										</div>
 									<?php endif; ?>
-								</div>
 
-								<?php if(isSet($editMode)) : ?>
+									<?php if($numberOfCompletedBookedMeetings > 0) : ?>
+										<div>
+											<label>Booked Meetings (Completed):</label>
+											<span><a href="?completedBooking"><?php htmlout($numberOfCompletedBookedMeetings); ?></a></span>
+										</div>
+									<?php endif; ?>
+
+									<?php if($numberOfCancelledBookedMeetings > 0) : ?>
+										<div>
+											<label>Booked Meetings (Cancelled):</label>
+											<span><a href="?cancelledBooking"><?php htmlout($numberOfCancelledBookedMeetings); ?></a></span>
+										</div>
+									<?php endif; ?>
+								<?php elseif($numberOfTotalBookedMeetings == 0) : ?>
+									<span>This will display your meeting statistics if you have any.</span>
+								<?php endif; ?>
+
+								<?php if($accessName == "Admin") : ?>
 									<div>
-										<?php if(!isSet($userHasABookingCode)) : ?>
-											<label>Set Your Booking Code: </label>
-										<?php else : ?>
-											<label>Set A New Booking Code: </label>
-										<?php endif; ?>
-										<?php if(isSet($canSetNewCode)) : ?>
-											<input type="number" name="bookingCode" min="1" max="<?php htmlout((10 ** BOOKING_CODE_LENGTH)-1); ?>"
-											placeholder="<?php htmlout(BOOKING_CODE_LENGTH . " digits"); ?>" value="">
-										<?php else : ?>
-											<span><b>You can not set a new booking code before <?php htmlout($displayNextBookingCodeChange); ?></b></span>
+										<label>Default Display Name: </label>
+										<span style="white-space: pre-wrap;"><?php htmlout($originalDisplayName); ?></span>
+									</div>
+
+									<?php if(isSet($editMode)) : ?>
+										<div>
+											<label>Change Display Name: </label>
+											<input type="text" name="displayName" value="<?php htmlout($displayName); ?>">
+										</div>
+									<?php endif; ?>
+
+									<div>
+										<label>Default Booking Description: </label>
+										<span style="white-space: pre-wrap;"><?php htmlout($originalBookingDescription); ?></span>
+									</div>
+
+									<?php if(isSet($editMode)) : ?>
+										<div>
+											<label>Change Booking Description: </label>
+											<textarea rows="4" cols="50" name="bookingDescription" style="white-space: pre-wrap;"><?php htmlout($bookingDescription); ?></textarea>
+										</div>
+									<?php endif; ?>
+								<?php endif; ?>
+
+								<?php if(isSet($userCanHaveABookingCode)) : ?>
+									<div>
+										<label>Booking Code: </label>
+										<span><b><?php htmlout($bookingCodeStatus); ?></b></span>
+										<?php if(isSet($userHasABookingCode) AND !isSet($showBookingCode)) : ?>
+											<label>Reveal Code: </label><input type="submit" name="action" value="Show Code">
+										<?php elseif(isSet($userHasABookingCode) AND isSet($showBookingCode) AND $showBookingCode) : ?>
+											<label>Reveal Code: </label><span><b><?php htmlout($showBookingCode); ?></b></span>
+										<?php elseif(isSet($userHasABookingCode) AND isSet($showBookingCode) AND $showBookingCode == FALSE) : ?>
+											<label>Reveal Code: </label><span><b>Could not retrieve code.</b></span>
 										<?php endif; ?>
 									</div>
+
+									<?php if(isSet($editMode)) : ?>
+										<div>
+											<?php if(!isSet($userHasABookingCode)) : ?>
+												<label>Set Your Booking Code: </label>
+											<?php else : ?>
+												<label>Set A New Booking Code: </label>
+											<?php endif; ?>
+											<?php if(isSet($canSetNewCode)) : ?>
+												<input type="number" name="bookingCode" min="1" max="<?php htmlout((10 ** BOOKING_CODE_LENGTH)-1); ?>"
+												placeholder="<?php htmlout(BOOKING_CODE_LENGTH . " digits"); ?>" value="">
+											<?php else : ?>
+												<span><b>You can not set a new booking code before <?php htmlout($displayNextBookingCodeChange); ?></b></span>
+											<?php endif; ?>
+										</div>
+									<?php endif; ?>
 								<?php endif; ?>
-							<?php endif; ?>
-						</fieldset>
+							</fieldset>
+						<?php endif; ?>
 
 						<fieldset class="left"><legend>Account Information: </legend>
 							<div>
