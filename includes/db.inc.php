@@ -198,7 +198,7 @@ function fillLogAction($pdo){
 		$pdo->exec("INSERT INTO `logaction`(`name`,`description`) VALUES ('Booking Created','The referenced user created a new meeting room booking.')");
 		$pdo->exec("INSERT INTO `logaction`(`name`,`description`) VALUES ('Booking Cancelled','The referenced user cancelled a meeting room booking.')");
 		$pdo->exec("INSERT INTO `logaction`(`name`,`description`) VALUES ('Booking Completed','The referenced booking has been completed.')");
-		$pdo->exec("INSERT INTO `logaction`(`name`,`description`) VALUES ('Booking Removed', 'The referenced booking was removed.')");
+		//$pdo->exec("INSERT INTO `logaction`(`name`,`description`) VALUES ('Booking Removed', 'The referenced booking was removed.')");
 		$pdo->exec("INSERT INTO `logaction`(`name`,`description`) VALUES ('Company Created','The referenced user just created the referenced company.')");
 		$pdo->exec("INSERT INTO `logaction`(`name`,`description`) VALUES ('Company Removed','The referenced company has been removed.')");
 		$pdo->exec("INSERT INTO `logaction`(`name`,`description`) VALUES ('Company Merged','The referenced companies has been merged together.')");
@@ -383,7 +383,6 @@ function create_tables(){
 						  `activationCode` char(64) DEFAULT NULL,
 						  `resetPasswordCode` char(64) DEFAULT NULL,
 						  `sendEmail` tinyint(1) unsigned NOT NULL DEFAULT '1',
-						  `sendOwnerEmail` tinyint(1) unsigned NOT NULL DEFAULT '1',
 						  `sendAdminEmail` tinyint(1) unsigned NOT NULL DEFAULT '0',
 						  PRIMARY KEY (`userID`),
 						  UNIQUE KEY `email_UNIQUE` (`email`),
@@ -626,6 +625,7 @@ function create_tables(){
 						  `UserID` int(10) unsigned NOT NULL,
 						  `PositionID` int(10) unsigned NOT NULL,
 						  `startDateTime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+						  `sendEmail` tinyint(1) unsigned NOT NULL DEFAULT '1',
 						  `sendEmailOnceOrAlways` tinyint(1) unsigned NOT NULL DEFAULT '1' COMMENT 'Once = 0\nAlways = 1',
 						  PRIMARY KEY (`UserID`,`CompanyID`),
 						  KEY `FK_CompanyID_idx` (`CompanyID`),

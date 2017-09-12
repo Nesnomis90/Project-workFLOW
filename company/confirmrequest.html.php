@@ -18,12 +18,12 @@
 
 		<fieldset><legend>Your Request:</legend>
 			<div class="left">
-			<span style="white-space: pre-wrap;"><?php htmlout(
-			"You have chosen to send a request to join the company $companyName." . 
-			"\nWith the message below:\n$requestMessage." .
-			"\nAre you sure you want to send the request?"); ?></span>
-
+				<span style="white-space: pre-wrap;"><?php htmlout(
+				"You have chosen to send a request to join the company $companyName." . 
+				"\nWith the message below:\n$requestMessage." .
+				"\nAre you sure you want to send the request?"); ?></span>
 			</div>
+
 			<div class="left">
 				<form action="" method="post">
 					<input type="hidden" name="companyID" value="<?php htmlout($selectedCompanyToJoinID); ?>">
@@ -33,6 +33,7 @@
 					<input type="submit" name="confirm" value="No, Cancel The Request">
 				</form>
 			</div>
+
 		</fieldset>
 	</body>
 </html>

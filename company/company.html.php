@@ -1,6 +1,5 @@
 <!-- This is the HTML form used for DISPLAYING COMPANY information to connected users-->
-<?php include_once $_SERVER['DOCUMENT_ROOT'] .
- '/includes/helpers.inc.php'; ?>
+<?php include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/helpers.inc.php'; ?>
 <!DOCTYPE html>
 <html lang="en">
 	<head>
@@ -15,9 +14,9 @@
 			<?php else : ?>
 				label {
 					width: 150px;
-				}				
+				}
 			<?php endif; ?>
-		</style>		
+		</style>
 		<?php if(isSet($numberOfCompanies) AND $numberOfCompanies > 1) : ?>
 			<title>Manage Companies</title>
 		<?php elseif(isSet($numberOfCompanies) AND $numberOfCompanies == 1) : ?>
@@ -27,9 +26,9 @@
 		<?php endif; ?>
 	</head>
 	<body onload="startTime()">
-	
+
 	<?php include_once $_SERVER['DOCUMENT_ROOT'] .'/includes/topnav.html.php'; ?>
-	
+
 	<?php if(isSet($_SESSION['loggedIn']) AND $_SESSION['loggedIn'] AND isSet($_SESSION['LoggedInUserID']) AND !empty($_SESSION['LoggedInUserID']) AND !isSet($noAccess)) : ?>
 
 		<fieldset class="left">
@@ -40,7 +39,7 @@
 			<?php elseif(isSet($numberOfCompanies) AND $numberOfCompanies == 0) : ?>
 				<legend>Set Up A Company Connection</legend>
 			<?php endif; ?>
-			
+
 			<div class="left fieldsetIndentReplication">
 				<?php if(isSet($_SESSION['normalCompanyFeedback'])) : ?>
 					<span><b class="feedback"><?php htmlout($_SESSION['normalCompanyFeedback']); ?></b></span>
@@ -72,7 +71,7 @@
 						</div>
 					</fieldset>
 				<?php endif; ?>
-			
+	
 				<?php if(isSet($companyInformation) AND !empty($companyInformation)) : ?>
 					<fieldset class="left"><legend>Company Details:</legend>
 						<div class="left">
@@ -96,7 +95,7 @@
 							<label>Current Period: </label>
 							<span><b><?php htmlout($companyInformation['PeriodInfo']); ?></b></span>
 						</div>
-						
+
 						<div class="left">
 							<label>Credits Given (This Period): </label>
 							<span><b><?php htmlout($companyInformation['CompanyCredits']); ?></b></span>
@@ -107,7 +106,7 @@
 							<?php if(substr($companyInformation['CompanyCreditsRemaining'],0,1) == "-"){$color="red";}else{$color="green";} ?>
 							<span><b style="color: <?php htmlout($color); ?>;"><?php htmlout($companyInformation['CompanyCreditsRemaining']); ?></b></span>
 						</div>
-						
+
 						<div class="left">
 							<label>Monthly Fee (This Period): </label>
 							<span><b><?php htmlout($companyInformation['CreditSubscriptionMonthlyPrice']); ?></b></span>
@@ -138,7 +137,7 @@
 								<label>Booked Meetings (Total):</label>
 								<span><a href="?ID=<?php htmlout($_GET['ID']); ?>&totalBooking"><?php htmlout($numberOfTotalBookedMeetings); ?></a></span>
 							</div>
-							
+
 							<?php if($numberOfActiveBookedMeetings > 0) : ?>
 								<div>
 									<label>Booked Meetings (Active):</label>
@@ -162,7 +161,7 @@
 						<?php endif; ?>	
 					</fieldset>
 				<?php endif; ?>
-			
+
 				<div class="left">
 					<?php if(isSet($_SESSION['normalCompanyJoinACompany'])) : ?>
 						<fieldset class="left">
@@ -215,10 +214,15 @@
 						</fieldset>
 					<?php endif; ?>
 				</div>
-				
+
 				<?php if(!isSet($_SESSION['normalCompanyCreateACompany']) OR !isSet($_SESSION['normalCompanyJoinACompany'])) : ?>
 					<div class="left">
-						<fieldset><legend>Other Choices</legend>
+						<fieldset>
+							<?php if(isSet($numberOfCompanies) AND $numberOfCompanies > 1) : ?>
+								<legend>Other Choices</legend>
+							<?php else : ?>
+								<legend>Your Choices</legend>
+							<?php endif; ?>
 							<?php if(!isSet($_SESSION['normalCompanyJoinACompany'])) : ?>
 								<input type="submit" name="action" value="Join A Company">
 							<?php endif; ?>

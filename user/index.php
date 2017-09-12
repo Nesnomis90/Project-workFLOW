@@ -781,6 +781,7 @@ if(	(isSet($_SESSION['loggedIn']) AND isSet($_SESSION['LoggedInUserID']) AND
 		$dateOnlyCompleted = convertDatetimeToFormat($completedDateTime,'Y-m-d H:i:s','Y-m-d');
 		$dateOnlyStart = convertDatetimeToFormat($startDateTime,'Y-m-d H:i:s','Y-m-d');
 		$cancelledDateTime = $row['BookingWasCancelledOn'];
+		$dateOnlyCancelled = convertDatetimeToFormat($cancelledDateTime,'Y-m-d H:i:s','Y-m-d');
 		$createdDateTime = $row['BookingWasCreatedOn'];	
 
 		// Describe the status of the booking based on what info is stored in the database
@@ -895,7 +896,7 @@ if(	(isSet($_SESSION['loggedIn']) AND isSet($_SESSION['LoggedInUserID']) AND
 											'BookingWasCancelledOn' => $displayCancelledDateTime,
 											'MeetingInfo' => $meetinginfo
 										);
-		}	elseif(($status == "Completed Today" OR $status == "Ended Early Today")AND (isSet($_GET['completedBooking']) OR isSet($_GET['totalBooking']))){
+		} elseif(($status == "Completed Today" OR $status == "Ended Early Today") AND (isSet($_GET['completedBooking']) OR isSet($_GET['totalBooking']))){
 			if($status == "Completed Today"){
 				$cancelledByUserName = "";
 				$cancelMessage = "";
@@ -917,7 +918,7 @@ if(	(isSet($_SESSION['loggedIn']) AND isSet($_SESSION['LoggedInUserID']) AND
 												'CancelMessage' => $cancelMessage,
 												'CancelledByUserName' => $cancelledByUserName
 											);
-		}	elseif($status == "Active" AND (isSet($_GET['activeBooking']) OR isSet($_GET['totalBooking']))){
+		} elseif($status == "Active" AND (isSet($_GET['activeBooking']) OR isSet($_GET['totalBooking']))){
 			$bookingsFuture[] = array(	'id' => $row['bookingID'],
 										'BookingStatus' => $status,
 										'BookedRoomName' => $roomName,
@@ -931,7 +932,7 @@ if(	(isSet($_SESSION['loggedIn']) AND isSet($_SESSION['LoggedInUserID']) AND
 										'BookingWasCancelledOn' => $displayCancelledDateTime,
 										'MeetingInfo' => $meetinginfo
 									);
-		}	elseif(($status == "Completed" OR $status == "Ended Early") AND (isSet($_GET['completedBooking']) OR isSet($_GET['totalBooking']))){	
+		} elseif(($status == "Completed" OR $status == "Ended Early") AND (isSet($_GET['completedBooking']) OR isSet($_GET['totalBooking']))){	
 			if($status == "Completed"){
 				$cancelledByUserName = "";
 				$cancelMessage = "";
@@ -953,7 +954,7 @@ if(	(isSet($_SESSION['loggedIn']) AND isSet($_SESSION['LoggedInUserID']) AND
 											'CancelMessage' => $cancelMessage,
 											'CancelledByUserName' => $cancelledByUserName
 										);
-		}	elseif($status == "Cancelled" AND (isSet($_GET['cancelledBooking']) OR isSet($_GET['totalBooking']))){
+		} elseif($status == "Cancelled" AND (isSet($_GET['cancelledBooking']) OR isSet($_GET['totalBooking']))){
 			$bookingsCancelled[] = array(	'id' => $row['bookingID'],
 											'BookingStatus' => $status,
 											'BookedRoomName' => $roomName,
@@ -969,7 +970,7 @@ if(	(isSet($_SESSION['loggedIn']) AND isSet($_SESSION['LoggedInUserID']) AND
 											'CancelMessage' => $cancelMessage,
 											'CancelledByUserName' => $cancelledByUserName
 										);
-		}	elseif(isSet($_GET['totalBooking'])){
+		} elseif(isSet($_GET['totalBooking'])){
 			$bookingsOther[] = array(	'id' => $row['bookingID'],
 										'BookingStatus' => $status,
 										'BookedRoomName' => $roomName,
@@ -987,7 +988,7 @@ if(	(isSet($_SESSION['loggedIn']) AND isSet($_SESSION['LoggedInUserID']) AND
 	}
 
 	var_dump($_SESSION); // TO-DO: remove after testing is done
-	
+
 	// Create the booking information table in HTML
 	include_once 'bookings.html.php';
 	exit();
@@ -1017,7 +1018,7 @@ if(isSet($_SESSION['loggedIn']) AND isSet($_SESSION['LoggedInUserID'])){
 		try
 		{
 			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
-			
+
 			$pdo = connect_to_db();
 			$sql = 'SELECT 		u.`userID`				AS UserID,
 								u.`email`				AS Email,
@@ -1034,7 +1035,6 @@ if(isSet($_SESSION['loggedIn']) AND isSet($_SESSION['LoggedInUserID'])){
 								u.`create_time`			AS DateTimeCreated,
 								u.`lastActivity`		AS LastActive,
 								u.`sendEmail`			AS SendEmail,
-								u.`sendOwnerEmail`		AS SendOwnerEmail,
 								u.`sendAdminEmail`		AS SendAdminEmail,
 								u.`password`			AS HashedPassword,
 								a.`AccessName`			AS AccessName,
@@ -1082,14 +1082,15 @@ if(isSet($_SESSION['loggedIn']) AND isSet($_SESSION['LoggedInUserID'])){
 			$s = $pdo->prepare($sql);
 			$s->bindValue(':userID', $userID);
 			$s->execute();
-			
+
 			$result = $s->fetch(PDO::FETCH_ASSOC);
 			$_SESSION['normalUserOriginalInfoArray'] = $result;
-			
+
 			// Get employee information
 			$sql = "SELECT 		cp.`name`					AS CompanyPosition,
 								c.`name`					AS CompanyName,
 								c.`CompanyID`				AS CompanyID,
+								e.`sendEmail`				AS SendOwnerEmail,
 								e.`sendEmailOnceOrAlways`	AS SendEmailOnceOrAlways
 					FROM		`employee` e
 					INNER JOIN	`company` c
@@ -1100,10 +1101,10 @@ if(isSet($_SESSION['loggedIn']) AND isSet($_SESSION['LoggedInUserID'])){
 			$s = $pdo->prepare($sql);
 			$s->bindValue(':userID', $userID);
 			$s->execute();
-			
+
 			$worksForArray = $s->fetchAll(PDO::FETCH_ASSOC);
 			$_SESSION['normalUserOriginalWorksForArray'] = $worksForArray;
-			
+
 			//Close the connection
 			$pdo = null;
 		}
@@ -1125,7 +1126,7 @@ if(isSet($_SESSION['loggedIn']) AND isSet($_SESSION['LoggedInUserID'])){
 
 	if($lastCodeUpdateDate !== NULL){
 		$dateNow = getDateNow();
-		$nextBookingCodeChange = $result['NextBookingCodeChange'];		
+		$nextBookingCodeChange = $result['NextBookingCodeChange'];
 		if($dateNow > $nextBookingCodeChange){
 			$canSetNewCode = TRUE;
 		} else {
@@ -1142,17 +1143,16 @@ if(isSet($_SESSION['loggedIn']) AND isSet($_SESSION['LoggedInUserID'])){
 	$originalBookingDescription = $result['BookingDescription'];
 	$originalSendEmail = $result['SendEmail'];
 	$originalSendAdminEmail = $result['SendAdminEmail'];
-	$originalSendOwnerEmail = $result['SendOwnerEmail'];
 
 	$numberOfTotalBookedMeetings = $result['TotalBookedMeetings'];
 	$numberOfActiveBookedMeetings = $result['ActiveBookedMeetings'];
 	$numberOfCompletedBookedMeetings = $result['CompletedBookedMeetings'];
 	$numberOfCancelledBookedMeetings = $result['CancelledBookedMeetings'];
-	
+
 	$accessName = $result['AccessName'];
 	$accessDescription = $result['AccessDescription'];
 	$originalBookingCode = $result['BookingCode'];
-	
+
 	$userIsACompanyOwner = FALSE;
 	if(!isSet($worksForArray) OR (isSet($worksForArray) AND empty($worksForArray))){
 		$worksFor = "You have no company connection.";
@@ -1197,19 +1197,17 @@ if(isSet($_POST['action']) AND $_POST['action'] == "Show Code"){
 		$_SESSION['normalUserEditInfoArray']['BookingDescription'] = trimExcessWhitespaceButLeaveLinefeed($_POST['bookingDescription']);
 		$_SESSION['normalUserEditInfoArray']['Email'] = $_POST['email'];
 		$_SESSION['normalUserEditInfoArray']['SendEmail'] = $_POST['sendEmail'];
-		if(isSet($_POST['sendOwnerEmail'])){
-			$_SESSION['normalUserEditInfoArray']['SendOwnerEmail'] = $_POST['sendOwnerEmail'];
-		}			
+
 		if(isSet($_POST['sendAdminEmail'])){
 			$_SESSION['normalUserEditInfoArray']['SendAdminEmail'] = $_POST['sendAdminEmail'];
-		}		
+		}
 	}
 }
 
 if(isSet($_POST['action']) AND $_POST['action'] == "Confirm Change"){
 	// Do input validation
 	$invalidInput = FALSE;
-	
+
 	// Get user inputs
 		// Firstname
 	if(isSet($_POST['firstName'])){
@@ -1218,7 +1216,7 @@ if(isSet($_POST['action']) AND $_POST['action'] == "Confirm Change"){
 	} elseif(!$invalidInput) {
 		$_SESSION['normalUserFeedback'] = "Your account needs to have a first name.";
 		$invalidInput = TRUE;
-	}	
+	}
 		// Lastname
 	if(isSet($_POST['lastName'])){
 		$lastname = $_POST['lastName'];
@@ -1226,7 +1224,7 @@ if(isSet($_POST['action']) AND $_POST['action'] == "Confirm Change"){
 	} elseif(!$invalidInput) {
 		$_SESSION['normalUserFeedback'] = "Your account needs to have a last name.";
 		$invalidInput = TRUE;
-	}		
+	}
 		// Email
 	if(isSet($_POST['email'])){
 		$email = $_POST['email'];
@@ -1260,40 +1258,40 @@ if(isSet($_POST['action']) AND $_POST['action'] == "Confirm Change"){
 	if(isSet($bookingCode)){
 		$validatedBookingCode = trimAllWhitespace($bookingCode);
 	}
-	
+
 	// Do actual input validation
 		// First Name
 	if(validateNames($validatedFirstname) === FALSE AND !$invalidInput){
 		$_SESSION['normalUserFeedback'] = "The first name submitted contains illegal characters.";
-		$invalidInput = TRUE;		
+		$invalidInput = TRUE;
 	}
 	if(strlen($validatedFirstname) < 1 AND !$invalidInput){
 		$_SESSION['normalUserFeedback'] = "You need to submit a first name.";
-		$invalidInput = TRUE;	
-	}	
+		$invalidInput = TRUE;
+	}
 		// Last Name
 	if(validateNames($validatedLastname) === FALSE AND !$invalidInput){
 		$_SESSION['normalUserFeedback'] = "The last name submitted contains illegal characters.";
-		$invalidInput = TRUE;			
+		$invalidInput = TRUE;
 	}
 	if(strlen($validatedLastname) < 1 AND !$invalidInput){
 		$_SESSION['normalUserFeedback'] = "You need to submit a last name.";
-		$invalidInput = TRUE;	
-	}	
+		$invalidInput = TRUE;
+	}
 		// Email
 	if(strlen($email) < 1 AND !$invalidInput){
 		$_SESSION['normalUserFeedback'] = "You need to submit an email.";
 		$invalidInput = TRUE;
-	}	
+	}
 	if(!validateUserEmail($email) AND !$invalidInput){
 		$_SESSION['normalUserFeedback'] = "The email submitted is not a valid email.";
 		$invalidInput = TRUE;
-	}	
+	}
 	if(strlen($email) < 3 AND !$invalidInput){
 		$_SESSION['normalUserFeedback'] = "You need to submit an actual email.";
 		$invalidInput = TRUE;
 	}
-	
+
 		// Display Name
 	if(validateString($validatedDisplayName) === FALSE AND !$invalidInput){
 		$invalidInput = TRUE;
@@ -1302,37 +1300,37 @@ if(isSet($_POST['action']) AND $_POST['action'] == "Confirm Change"){
 	$invalidDisplayName = isLengthInvalidDisplayName($validatedDisplayName);
 	if($invalidDisplayName AND !$invalidInput){
 		$_SESSION['normalUserFeedback'] = "The displayName submitted is too long.";	
-		$invalidInput = TRUE;		
-	}		
+		$invalidInput = TRUE;
+	}
 		// Booking Description
 	if(validateString($validatedBookingDescription) === FALSE AND !$invalidInput){
 		$_SESSION['normalUserFeedback'] = "Your submitted booking description has illegal characters in it.";
 		$invalidInput = TRUE;
-	}	
+	}
 	$invalidBookingDescription = isLengthInvalidBookingDescription($validatedBookingDescription);
 	if($invalidBookingDescription AND !$invalidInput){
 		$_SESSION['normalUserFeedback'] = "The booking description submitted is too long.";	
-		$invalidInput = TRUE;		
+		$invalidInput = TRUE;
 	}
 	if(isSet($validatedBookingCode)){
 			// Booking Code
 		if(validateIntegerNumber($validatedBookingCode) === FALSE AND !$invalidInput){
 			$invalidInput = TRUE;
-			$_SESSION['normalUserFeedback'] = "Your submitted booking code has illegal characters in it.";		
+			$_SESSION['normalUserFeedback'] = "Your submitted booking code has illegal characters in it.";
 		}
 			// Check if booking code is a legit format (correct amount of digits)
 		if(isNumberInvalidBookingCode($validatedBookingCode) === TRUE AND !$invalidInput){
 			$invalidInput = TRUE;
-			$_SESSION['normalUserFeedback'] = "The booking code you selected is not valid.";		
+			$_SESSION['normalUserFeedback'] = "The booking code you selected is not valid.";
 		}
-		
+
 		// Check if booking code submitted already exists
 		if(databaseContainsBookingCode($validatedBookingCode) === TRUE AND !$invalidInput){
-			$_SESSION['normalUserFeedback'] = "The booking code you selected is not valid.";	
+			$_SESSION['normalUserFeedback'] = "The booking code you selected is not valid.";
 			$invalidInput = TRUE;
 		}
 	}
-	
+
 	// Check if the submitted email has already been used
 	$originalEmail = $_SESSION['normalUserOriginalInfoArray']['Email'];
 	// no need to check if our own email exists in the database
@@ -1383,9 +1381,7 @@ if(isSet($_POST['action']) AND $_POST['action'] == "Confirm Change"){
 		$_SESSION['normalUserEditInfoArray']['BookingDescription'] = $validatedBookingDescription;
 		$_SESSION['normalUserEditInfoArray']['Email'] = $email;
 		$_SESSION['normalUserEditInfoArray']['SendEmail'] = $_POST['sendEmail'];
-		if(isSet($_POST['sendOwnerEmail'])){
-			$_SESSION['normalUserEditInfoArray']['SendOwnerEmail'] = $_POST['sendOwnerEmail'];
-		}
+
 		if(isSet($_POST['sendAdminEmail'])){
 			$_SESSION['normalUserEditInfoArray']['SendAdminEmail'] = $_POST['sendAdminEmail'];
 		}
@@ -1394,22 +1390,31 @@ if(isSet($_POST['action']) AND $_POST['action'] == "Confirm Change"){
 			$_SESSION['normalUserEditInfoArray']['LastCodeUpdate'] = getDatetimeNow();
 		}
 	}
-	
+
 	if(isSet($_SESSION['normalUserEditWorksForArray'])){
 		foreach($_SESSION['normalUserEditWorksForArray'] AS $company){
 			$post = "sendCompanyID" . $company['CompanyID'] . "Email";
 			if(isSet($_POST[$post])){
+				if($_POST[$post] == "Never Send"){
+					$sendEmailOnceOrAlways = $company['SendEmailOnceOrAlways'];
+					$sendOwnerEmail = 0;
+				} else {
+					$sendEmailOnceOrAlways = $_POST[$post];
+					$sendOwnerEmail = 1;
+				}
 				$newArray = array(
 									'CompanyID' => $company['CompanyID'],
 									'CompanyPosition' => $company['CompanyPosition'],
 									'CompanyName' => $company['CompanyName'],
-									'SendEmailOnceOrAlways' => $_POST[$post]
+									'SendOwnerEmail' => $sendOwnerEmail,
+									'SendEmailOnceOrAlways' => $sendEmailOnceOrAlways
 								);
 			} else {
 				$newArray = array(
 									'CompanyID' => $company['CompanyID'],
 									'CompanyPosition' => $company['CompanyPosition'],
 									'CompanyName' => $company['CompanyName'],
+									'SendOwnerEmail' => $company['SendOwnerEmail'],
 									'SendEmailOnceOrAlways' => $company['SendEmailOnceOrAlways']
 								);
 			}
@@ -1450,7 +1455,6 @@ if(isSet($_POST['action']) AND $_POST['action'] == "Confirm Change"){
 									`displayName` = :displayname,
 									`bookingDescription` = :bookingdescription,
 									`sendEmail` = :sendEmail,
-									`sendOwnerEmail` = :sendOwnerEmail,
 									`sendAdminEmail` = :sendAdminEmail,
 									`bookingCode` = :bookingCode,
 									`lastCodeUpdate` = :LastCodeUpdate,
@@ -1466,7 +1470,6 @@ if(isSet($_POST['action']) AND $_POST['action'] == "Confirm Change"){
 					$s->bindValue(':displayname', $new['DisplayName']);
 					$s->bindValue(':bookingdescription', $new['BookingDescription']);
 					$s->bindValue(':sendEmail', $new['SendEmail']);
-					$s->bindValue(':sendOwnerEmail', $new['SendOwnerEmail']);
 					$s->bindValue(':sendAdminEmail', $new['SendAdminEmail']);
 					$s->bindValue(':bookingCode', $new['BookingCode']);
 					$s->bindValue(':LastCodeUpdate', $new['LastCodeUpdate']);
@@ -1477,14 +1480,17 @@ if(isSet($_POST['action']) AND $_POST['action'] == "Confirm Change"){
 						foreach($_SESSION['normalUserEditWorksForArray'] AS $company){
 							$companyID = $company['CompanyID'];
 							$sendEmailOnceOrAlways = $company['SendEmailOnceOrAlways'];
-							
+							$sendOwnerEmail = $company['SendOwnerEmail'];
+
 							$sql = "UPDATE	`employee`
-									SET		`sendEmailOnceOrAlways` = :sendEmailOnceOrAlways
+									SET		`sendEmailOnceOrAlways` = :sendEmailOnceOrAlways,
+											`sendEmail` = :sendOwnerEmail
 									WHERE	`userID` = :userID
 									AND		`companyID` = :companyID";
 							$s = $pdo->prepare($sql);
 							$s->bindValue(':userID', $_SESSION['LoggedInUserID']);
 							$s->bindValue(':companyID', $companyID);
+							$s->bindValue(':sendOwnerEmail', $sendOwnerEmail);
 							$s->bindValue(':sendEmailOnceOrAlways', $sendEmailOnceOrAlways);
 							$s->execute();
 						}
@@ -1506,6 +1512,7 @@ if(isSet($_POST['action']) AND $_POST['action'] == "Confirm Change"){
 			} else {
 				$_SESSION['normalUserFeedback'] = "No changes were made.";
 			}
+
 			unset($_SESSION['normalUserEditMode']);
 			unset($_SESSION['normalUserEditInfoArray']);
 			unset($_SESSION['normalUserEditWorksForArray']);
@@ -1541,7 +1548,6 @@ if(isSet($_SESSION['normalUserEditMode'])){
 	$displayName = $edit['DisplayName'];
 	$bookingDescription = $edit['BookingDescription'];
 	$sendEmail = $edit['SendEmail'];
-	$sendOwnerEmail = $edit['SendOwnerEmail'];
 	$sendAdminEmail = $edit['SendAdminEmail'];
 }
 

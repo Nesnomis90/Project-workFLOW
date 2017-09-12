@@ -23,7 +23,7 @@
 				<?php unset($_SESSION['AddCreateBookingError']); ?>
 			<?php endif; ?>
 			</div>
-			
+
 			<form action="" method="post">
 				<div class="left">
 					<label for="userInformation">Welcome </label>
@@ -37,7 +37,7 @@
 							<?php if($row['meetingRoomID']==$_GET['meetingroom']):?>
 								<span><b><?php htmlout($row['meetingRoomName']);?></b></span>
 							<?php endif;?>
-						<?php endforeach; ?>					
+						<?php endforeach; ?>
 					<?php else : ?>
 						<select name="meetingRoomID" id="meetingRoomID">
 							<?php foreach($meetingroom as $row): ?> 
@@ -67,7 +67,7 @@
 						placeholder="date hh:mm:ss"
 						value="<?php htmlout($startDateTime); ?>">
 						<input type="submit" name="add" value="Increase Start By Minimum">
-						<input type="submit" name="add" value="Start Booking Immediately">				
+						<input type="submit" name="add" value="Start Booking Immediately">
 					<?php endif; ?>
 				</div>
 
@@ -148,9 +148,8 @@
 					<?php if($access != "Admin") : ?>
 						<span><b><?php htmlout($displayName); ?></b></span>
 					<?php else : ?>
-						<input type="text" name="displayName" id="displayName" 
-						value="<?php htmlout($displayName); ?>">
-						<input type="submit" name="add" value="Get Default Display Name">					
+						<input type="text" name="displayName" value="<?php htmlout($displayName); ?>">
+						<input type="submit" name="add" value="Get Default Display Name">
 					<?php endif; ?>
 				</div>
 
@@ -159,7 +158,7 @@
 					<?php if($access != "Admin") : ?>
 						<span><b><?php htmlout($description); ?></b></span>
 					<?php else : ?>
-						<textarea rows="4" cols="50" name="description" id="description"><?php htmlout($description); ?></textarea>
+						<textarea rows="4" cols="50" name="description"><?php htmlout($description); ?></textarea>
 						<input type="submit" name="add" value="Get Default Booking Description">
 					<?php endif; ?>
 				</div>

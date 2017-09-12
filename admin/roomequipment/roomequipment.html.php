@@ -14,13 +14,23 @@
 
 		<h1>Manage Equipment in Meeting Rooms</h1>
 
+		<form action="" method="post">
+			<div class="right">
+				<?php if(isSet($_SESSION['roomequipmentEnableDelete']) AND $_SESSION['roomequipmentEnableDelete']) : ?>
+					<input type="submit" name="action" value="Disable Remove">
+				<?php else : ?>
+					<input type="submit" name="action" value="Enable Remove">
+				<?php endif; ?>
+			</div>
+		</form>
+
 		<?php if(isSet($_SESSION['RoomEquipmentUserFeedback'])) : ?>
 			<div class="left">
 				<span><b class="feedback"><?php htmlout($_SESSION['RoomEquipmentUserFeedback']); ?></b></span>
 				<?php unset($_SESSION['RoomEquipmentUserFeedback']); ?>
 			</div>
 		<?php endif; ?>
-		
+
 		<?php $goto = "http://$_SERVER[HTTP_HOST]/admin/meetingrooms/"; ?>
 		<?php if(isSet($_GET['Meetingroom'])) :?>
 			<form action="<?php htmlout($goto); ?>" method="post">
@@ -30,37 +40,26 @@
 			<form action="<?php htmlout($goto); ?>" method="post">
 				<input type="submit" value="Get All Room Equipment">
 			</form>
-		<?php endif; ?>		
-		<form action="" method="post">
-			<div>
-				<?php if(isSet($_SESSION['roomequipmentEnableDelete']) AND $_SESSION['roomequipmentEnableDelete']) : ?>
-					<input type="submit" name="action" value="Disable Remove">
-				<?php else : ?>
-					<input type="submit" name="action" value="Enable Remove">
-				<?php endif; ?>
-			</div>
-		</form>
-		<?php if($rowNum>0) :?>
-		<form action="" method="post">
-			<input type="submit" name="action" value="Add Room Equipment">
-		</form>
-			<table id="roomequipmenttable">
-				<caption>Meeting Room Equipment</caption>
-				<tr>
-					<th colspan="3">Equipment</th>
-					<th>Meeting Room</th>
-					<th>Date</th>
-					<th colspan=2">Alter Room Equipment</th>
-				</tr>
-				<tr>
-					<th>Name</th>
-					<th>Description</th>
-					<th>Amount</th>
-					<th>Name</th>
-					<th>Added At</th>
-					<th>Change Amount</th>
-					<th>Remove</th>
-				</tr>
+		<?php endif; ?>
+
+		<table>
+			<caption>Meeting Room Equipment</caption>
+			<tr>
+				<th colspan="3">Equipment</th>
+				<th>Meeting Room</th>
+				<th>Date</th>
+				<th colspan=2">Alter Room Equipment</th>
+			</tr>
+			<tr>
+				<th>Name</th>
+				<th>Description</th>
+				<th>Amount</th>
+				<th>Name</th>
+				<th>Added At</th>
+				<th>Change Amount</th>
+				<th>Remove</th>
+			</tr>
+			<?php if($rowNum>0) :?>
 				<?php foreach ($roomequipment as $row): ?>
 					<form action="" method="post">
 						<tr>
@@ -88,16 +87,21 @@
 						</tr>
 					</form>
 				<?php endforeach; ?>
-			</table>
-		<?php else : ?>
-			<tr><b>There are no equipment for any meeting rooms registered in the database.</b></tr>
-			<tr>
-				<form action="" method="post">
-					<input type="submit" name="action" value="Add Room Equipment">
-				</form>
-			</tr>
-		<?php endif; ?>
+			<?php else : ?>
+				<tr><b>There are no equipment for any meeting rooms registered in the database.</b></tr>
+			<?php endif; ?>
+
+			<form action="" method="post">
+				<tr>
+					<td colspan="7">
+						<input type="hidden" name="action" value="Add Room Equipment">
+						<input type="submit" style="font-size: 150%; color: green;" value="+">
+					</td>
+				</tr>
+			</form>
+
+		</table>
+
 		<p><a href="..">Return to CMS home</a></p>
-	<?php include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/logout.inc.html.php'; ?>
 	</body>
 </html>

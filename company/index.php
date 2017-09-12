@@ -34,16 +34,6 @@ if(isSet($_SESSION['loggedIn']) AND $_SESSION['loggedIn'] AND isSet($_SESSION['L
 	exit();
 }
 
-// If admin wants to be able to delete companies it needs to enabled first
-if (isSet($_POST['action']) AND $_POST['action'] == "Enable Remove"){
-	$_SESSION['normalEmployeesEnableDelete'] = TRUE;
-}
-
-// If admin wants to be disable company deletion
-if (isSet($_POST['action']) AND $_POST['action'] == "Disable Remove"){
-	unset($_SESSION['normalEmployeesEnableDelete']);
-}
-
 unsetSessionsFromUserManagement();
 
 if(isSet($_SESSION['normalCompanyCreateACompany']) AND $_SESSION['normalCompanyCreateACompany'] == "Invalid"){
@@ -399,10 +389,9 @@ if(isSet($_POST['confirm']) AND $_POST['confirm'] == "Yes, Send The Request"){
 			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 
 			$pdo = connect_to_db();
-			// TO-DO: Limit the companies to the ones that have owners that want to receive email?
+
 			$sql = 'SELECT		u.`email`					AS Email,
-								u.`sendOwnerEmail`			AS SendOwnerEmail,
-								e.`sendEmailOnceOrAlways`	AS SendEmailOnceOrAlways
+								e.`sendEmail`				AS SendEmail
 					FROM 		`user` u
 					INNER JOIN	`employee` e
 					ON 			e.`UserID` = u.`UserID`
@@ -418,13 +407,19 @@ if(isSet($_POST['confirm']) AND $_POST['confirm'] == "Yes, Send The Request"){
 			$s->execute();
 			$result = $s->fetchAll(PDO::FETCH_ASSOC);
 
-			if(isSet($result) AND !empty($result)){
+/*			if(isSet($result) AND !empty($result)){
 				foreach($result AS $row){
-					// Check if user wants to receive owner emails?
-					// TO-DO: Send regardless?
-					if($row['SendOwnerEmail'] == 1){
+					// Check if user wants to receive owner emails
+					if($row['SendEmail'] == 1){
 						$companyOwnerEmails[] = $row['Email'];
 					}
+				}
+			}*/
+
+			// We send email to all registered company owners, regardless of what email choices they've made
+			if(isSet($result) AND sizeOf($result) > 0){
+				foreach($result AS $row){
+					$companyOwnerEmails[] = $row['Email'];
 				}
 			}
 
@@ -599,8 +594,7 @@ if (isSet($_POST['action']) AND $_POST['action'] == 'Change Role')
 }
 
 // Perform the actual database update of the edited information
-if (isSet($_POST['action']) AND $_POST['action'] == 'Confirm Role')
-{
+if(isSet($_POST['action']) AND $_POST['action'] == 'Confirm Role'){
 	// Check if anything actually changed
 	$theSelectedPositionID = $_POST['PositionID'];
 	$NumberOfChanges = 0;
@@ -629,7 +623,7 @@ if (isSet($_POST['action']) AND $_POST['action'] == 'Confirm Role')
 				$s->bindValue(':UserID', $_POST['UserID']);
 				$s->bindValue(':LoggedInUserID', $_SESSION['LoggedInUserID']);
 				$s->bindValue(':PositionID', $theSelectedPositionID);
-				$s->execute(); 
+				$s->execute();
 
 				//close connection
 				$pdo = null;
@@ -649,7 +643,7 @@ if (isSet($_POST['action']) AND $_POST['action'] == 'Confirm Role')
 	} else {
 		$_SESSION['EmployeeUserFeedback'] = "No changes were made since you tried to alter your own role.";
 	}
- 
+
 	clearEditEmployeeAsOwnerSessions();
 
 	$TheCompanyID = $_SESSION['normalUserCompanyIDSelected'];
@@ -658,23 +652,63 @@ if (isSet($_POST['action']) AND $_POST['action'] == 'Confirm Role')
 	exit();
 }
 
-// If company owner wants to remove an employee from their company
+// If company owner does not want to remove the employee after all
+if(isSet($_POST['remove']) AND $_POST['remove'] == "Cancel"){
+	$_SESSION['EmployeeUserFeedback'] = "Cancelled the remove employee process.";
+	
+	$TheCompanyID = $_GET['ID'];
+	$location = "http://$_SERVER[HTTP_HOST]/company/?ID=" . $TheCompanyID . "&employees";
+	header("Location: $location");
+	exit();
+}
+
+// If company owner wants to remove an employee from their company, we send them to a confirmation page
 if(isSet($_POST['action']) AND $_POST['action'] == 'Remove'){
-	// Remove employee connection in database
+	$userName = $_POST['UserName'];
+	$companyName = $_POST['CompanyName'];
+	$userID = $_POST['UserID'];
+	$companyID = $_POST['CompanyID'];
+
+	var_dump($_SESSION); // TO-DO: Remove before uploading
+
+	include_once 'confirmremoveemployee.html.php';
+	exit();
+}
+
+// If company owner wants to remove an employee from their company
+if(isSet($_POST['remove']) AND $_POST['remove'] == 'Remove Employee'){
+
+	$userName = $_POST['UserName'];
+	$companyName = $_POST['CompanyName'];
+	$userID = $_POST['UserID'];
+	$companyID = $_POST['CompanyID'];	
+
+	$submittedPassword = $_POST['password'];
+	$hashedSubmittedPassword = hashPassword($submittedPassword);
+
+	if($submittedPassword == ""){
+		$feedback = "You need to fill in your password.";
+
+		var_dump($_SESSION); // TO-DO: Remove before uploading
+
+		include_once 'confirmremoveemployee.html.php';
+		exit();
+	}
+
+	// See if the password submitted is correct
 	try
 	{
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 
 		$pdo = connect_to_db();
-		$sql = 'DELETE FROM `employee` 
-				WHERE 		`companyID` = :CompanyID
-				AND 		`userID` = :UserID
-				AND 		`userID` <> :LoggedInUserID';
+		$sql = 'SELECT 	`password`
+				FROM	`user`
+				WHERE	`userID` = :LoggedInUserID
+				LIMIT 	1';
 		$s = $pdo->prepare($sql);
-		$s->bindValue(':CompanyID', $_POST['CompanyID']);
-		$s->bindValue(':UserID', $_POST['UserID']);
 		$s->bindValue(':LoggedInUserID', $_SESSION['LoggedInUserID']);
 		$s->execute();
+		$realPassword = $s->fetchColumn();
 	}
 	catch (PDOException $e)
 	{
@@ -683,45 +717,75 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Remove'){
 		exit();
 	}
 
-	$_SESSION['EmployeeUserFeedback'] = "Successfully removed the employee.";
+	if($hashedSubmittedPassword == $realPassword){
+		// Remove employee connection in database
+		try
+		{
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 
-	// Add a log event that an employee was removed from a company
-	try
-	{
-		// Save a description with information about the employee that was removed
-		// from the company.
-		$userName = $_POST['UserName'];
-		if(empty($userName) OR $userName == ", "){
-			$userName = "N/A";
+			$pdo = connect_to_db();
+			$sql = 'DELETE FROM `employee` 
+					WHERE 		`companyID` = :CompanyID
+					AND 		`userID` = :UserID
+					AND 		`userID` <> :LoggedInUserID';
+			$s = $pdo->prepare($sql);
+			$s->bindValue(':CompanyID', $companyID);
+			$s->bindValue(':UserID', $userID);
+			$s->bindValue(':LoggedInUserID', $_SESSION['LoggedInUserID']);
+			$s->execute();
 		}
-		$companyName = $_POST['CompanyName'];
-		if(empty($companyName)){
-			$companyName = "N/A";
+		catch (PDOException $e)
+		{
+			$error = 'Error deleting employee connection: ' . $e->getMessage();
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+			exit();
 		}
 
-		$logEventDescription = 'The user: ' . $userName . 
-		' was removed from the company: ' . $companyName . 
-		".\nRemoved by: " . $_SESSION['LoggedInUserName'];
+		$_SESSION['EmployeeUserFeedback'] = "Successfully removed the employee.";
 
-		$sql = "INSERT INTO `logevent` 
-				SET			`actionID` = 	(
-												SELECT 	`actionID` 
-												FROM 	`logaction`
-												WHERE 	`name` = 'Employee Removed'
-											),
-							`description` = :description";
-		$s = $pdo->prepare($sql);	
-		$s->bindValue(':description', $logEventDescription);
-		$s->execute();
+		// Add a log event that an employee was removed from a company
+		try
+		{
+			// Save a description with information about the employee that was removed
+			// from the company.
+			if(empty($userName) OR $userName == ", "){
+				$userName = "N/A";
+			}
+			if(empty($companyName)){
+				$companyName = "N/A";
+			}
 
-		//Close the connection
-		$pdo = null;
-	}
-	catch(PDOException $e)
-	{
-		$error = 'Error adding log event to database: ' . $e->getMessage();
-		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
-		$pdo = null;
+			$logEventDescription = 'The user: ' . $userName . 
+			' was removed from the company: ' . $companyName . 
+			".\nRemoved by: " . $_SESSION['LoggedInUserName'];
+
+			$sql = "INSERT INTO `logevent` 
+					SET			`actionID` = 	(
+													SELECT 	`actionID` 
+													FROM 	`logaction`
+													WHERE 	`name` = 'Employee Removed'
+												),
+								`description` = :description";
+			$s = $pdo->prepare($sql);
+			$s->bindValue(':description', $logEventDescription);
+			$s->execute();
+
+			//Close the connection
+			$pdo = null;
+		}
+		catch(PDOException $e)
+		{
+			$error = 'Error adding log event to database: ' . $e->getMessage();
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+			$pdo = null;
+			exit();
+		}
+	} else {
+		$feedback = "Incorrect Password. Try Again.";
+
+		var_dump($_SESSION); // TO-DO: Remove before uploading
+
+		include_once 'confirmremoveemployee.html.php';
 		exit();
 	}
 
@@ -2842,7 +2906,7 @@ if(isSet($selectedCompanyToDisplayID) AND !empty($selectedCompanyToDisplayID)){
 	$dateToRemoveToDisplay = convertDatetimeToFormat($dateToRemove, 'Y-m-d', DATE_DEFAULT_FORMAT_TO_DISPLAY);
 	$periodStartDateDisplay = convertDatetimeToFormat($periodStartDate, 'Y-m-d', DATE_DEFAULT_FORMAT_TO_DISPLAY);
 	$periodEndDateDisplay = convertDatetimeToFormat($periodEndDate, 'Y-m-d', DATE_DEFAULT_FORMAT_TO_DISPLAY);
-	$periodInfo = $periodStartDateDisplay . " - " . $periodEndDateDisplay;
+	$periodInfo = $periodStartDateDisplay . " up to " . $periodEndDateDisplay;
 
 	$numberOfTotalBookedMeetings = $row['TotalBookedMeetings'];
 	$numberOfActiveBookedMeetings = $row['ActiveBookedMeetings'];

@@ -206,7 +206,7 @@ function rememberEditCreateBookingInputs(){
 			$newValues['BookingDescription'] = trimExcessWhitespaceButLeaveLinefeed($_POST['description']);
 		}
 
-		$_SESSION['EditCreateBookingInfoArray'] = $newValues;			
+		$_SESSION['EditCreateBookingInfoArray'] = $newValues;
 	}
 }
 
@@ -2242,13 +2242,13 @@ if(	((isSet($_POST['action']) AND $_POST['action'] == 'Create Meeting')) OR
 				exit();
 			}
 			// Set default booking display name and booking description
-			if(!isSet($result['displayname'])){
+			if(isSet($result['displayname'])){
 				$displayName = $result['displayname'];
 			} else {
 				$displayName = "";
 			}
 
-			if(!isSet($result['bookingdescription'])){
+			if(isSet($result['bookingdescription'])){
 				$description = $result['bookingdescription'];
 			} else {
 				$description = "";
@@ -2347,10 +2347,10 @@ if(	((isSet($_POST['action']) AND $_POST['action'] == 'Create Meeting')) OR
 
 		$_SESSION['AddCreateBookingInfoArray']['UserDefaultBookingDescription'] = $description;
 		$_SESSION['AddCreateBookingInfoArray']['UserDefaultDisplayName'] = $displayName;
-		$_SESSION['AddCreateBookingInfoArray']['UserFirstname'] = $firstname;	
+		$_SESSION['AddCreateBookingInfoArray']['UserFirstname'] = $firstname;
 		$_SESSION['AddCreateBookingInfoArray']['UserLastname'] = $lastname;
 		$_SESSION['AddCreateBookingInfoArray']['BookedBy'] = $firstname . " " . $lastname;
-		$_SESSION['AddCreateBookingInfoArray']['UserEmail'] = $email;	
+		$_SESSION['AddCreateBookingInfoArray']['UserEmail'] = $email;
 		$_SESSION['AddCreateBookingInfoArray']['TheUserID'] = $SelectedUserID;
 		$_SESSION['AddCreateBookingInfoArray']['sendEmail'] = $sendEmail;
 		$_SESSION['AddCreateBookingInfoArray']['Access'] = $access;
@@ -2759,8 +2759,7 @@ if(	((isSet($_POST['action']) AND $_POST['action'] == 'Create Meeting')) OR
 
 // When the user has added the needed information and wants to add the booking
 if ((isSet($_POST['add']) AND $_POST['add'] == "Add Booking") OR 
-	(isSet($_SESSION['refreshAddCreateBookingConfirmed']) AND $_SESSION['refreshAddCreateBookingConfirmed']))
-{
+	(isSet($_SESSION['refreshAddCreateBookingConfirmed']) AND $_SESSION['refreshAddCreateBookingConfirmed'])){
 	// Validate user inputs
 	if(!isSet($_SESSION['refreshAddCreateBookingConfirmed'])){
 		list($invalidInput, $startDateTime, $endDateTime, $bknDscrptn, $dspname, $bookingCode) = validateUserInputs('AddCreateBookingError', FALSE);
@@ -2793,6 +2792,14 @@ if ((isSet($_POST['add']) AND $_POST['add'] == "Add Booking") OR
 		} else {
 			// TO-DO: Give error since there's no companyID?
 			$companyID = NULL;
+		}
+
+		if(!isSet($dspname) OR ($dspname == "" AND !empty($_SESSION['AddCreateBookingInfoArray']['BookedBy']))){
+			$dspname = $_SESSION['AddCreateBookingInfoArray']['BookedBy'];
+		}
+
+		if(!isSet($bknDscrptn) OR ($bknDscrptn == "" AND !empty($_SESSION["AddCreateBookingInfoArray"]["BookingDescription"]))){
+			$bknDscrptn = $_SESSION["AddCreateBookingInfoArray"]["BookingDescription"];
 		}
 
 		$_SESSION['AddCreateBookingInfoArray']['TheCompanyID'] = $companyID;
@@ -3088,11 +3095,11 @@ if ((isSet($_POST['add']) AND $_POST['add'] == "Add Booking") OR
 
 	unset($_SESSION['AddCreateBookingStartImmediately']);
 
-	if(!isSet($dspname) OR (empty($dspname) AND !empty($_SESSION["AddCreateBookingInfoArray"]["BookedBy"]))){
-		$dspname = $_SESSION["AddCreateBookingInfoArray"]["BookedBy"];
+	if(!isSet($dspname) OR ($dspname == "" AND !empty($_SESSION['AddCreateBookingInfoArray']['BookedBy']))){
+		$dspname = $_SESSION['AddCreateBookingInfoArray']['BookedBy'];
 	}
 
-	if(!isSet($bknDscrptn) OR (empty($bknDscrptn) AND !empty($_SESSION["AddCreateBookingInfoArray"]["BookingDescription"]))){
+	if(!isSet($bknDscrptn) OR ($bknDscrptn == "" AND !empty($_SESSION["AddCreateBookingInfoArray"]["BookingDescription"]))){
 		$bknDscrptn = $_SESSION["AddCreateBookingInfoArray"]["BookingDescription"];
 	}
 
@@ -3244,7 +3251,7 @@ if ((isSet($_POST['add']) AND $_POST['add'] == "Add Booking") OR
 			$pdo = connect_to_db();
 
 			$sql = 'SELECT		u.`email`					AS Email,
-								u.`sendOwnerEmail`			AS SendOwnerEmail,
+								e.`sendEmail`				AS SendOwnerEmail,
 								e.`sendEmailOnceOrAlways`	AS SendEmailOnceOrAlways
 					FROM 		`user` u
 					INNER JOIN	`employee` e
