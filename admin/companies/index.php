@@ -16,6 +16,7 @@ function clearBookingHistorySessions(){
 	unset($_SESSION['BookingHistoryEndDate']);
 	unset($_SESSION['BookingHistoryCompanyInfo']);
 	unset($_SESSION['BookingHistoryCompanyMergeNumber']);
+	unset($_SESSION['BookingHistoryDisplayWithMerged']);
 }
 
 // Function to clear sessions used to remember user inputs on refreshing the add company form
@@ -431,6 +432,7 @@ function calculatePeriodInformation($pdo, $companyID, $BillingStart, $BillingEnd
 						b.`actualEndDateTime`	AS BookingCompletedDatetime,
 						b.`adminNote`			AS AdminNote,
 						b.`cancelMessage`		AS CancelMessage,
+						b.`mergeNumber`			AS MergeNumber,
 						(
 							IF(b.`userID` IS NULL, NULL, (SELECT `firstName` FROM `user` WHERE `userID` = b.`userID`))
 						)						AS UserFirstname,
@@ -447,8 +449,14 @@ function calculatePeriodInformation($pdo, $companyID, $BillingStart, $BillingEnd
 			WHERE   	b.`CompanyID` = :CompanyID
 			AND 		b.`actualEndDateTime` IS NOT NULL
 			AND         DATE(b.`actualEndDateTime`) >= :startDate
-			AND         DATE(b.`actualEndDateTime`) < :endDate
-			AND			b.`mergeNumber` = :mergeNumber";
+			AND         DATE(b.`actualEndDateTime`) < :endDate";
+
+	if(!isSet($_SESSION['BookingHistoryDisplayWithMerged'])){
+		$sql .= " AND	b.`mergeNumber` = :mergeNumber";
+		$includeMerged = FALSE;
+	} else {
+		$includeMerged = TRUE;
+	}
 
 	$minimumSecondsPerBooking = MINIMUM_BOOKING_DURATION_IN_MINUTES_USED_IN_PRICE_CALCULATIONS * 60; // e.g. 15min = 900s
 	$aboveThisManySecondsToCount = BOOKING_DURATION_IN_MINUTES_USED_BEFORE_INCLUDING_IN_PRICE_CALCULATIONS * 60; // e.g. 1min = 60s
@@ -456,15 +464,21 @@ function calculatePeriodInformation($pdo, $companyID, $BillingStart, $BillingEnd
 	$s->bindValue(':CompanyID', $companyID);
 	$s->bindValue(':startDate', $BillingStart);
 	$s->bindValue(':endDate', $BillingEnd);
-	$s->bindValue(':mergeNumber', $mergeNumber);
+	if(!$includeMerged){
+		$s->bindValue(':mergeNumber', $mergeNumber);
+	}
 	$s->bindValue(':minimumSecondsPerBooking', $minimumSecondsPerBooking);
-	$s->bindValue(':aboveThisManySecondsToCount', $aboveThisManySecondsToCount);	
+	$s->bindValue(':aboveThisManySecondsToCount', $aboveThisManySecondsToCount);
 	$s->execute();
 	$result = $s->fetchAll(PDO::FETCH_ASSOC);
 
 	$totalBookingTimeThisPeriod = 0;
 	$totalBookingTimeUsedInPriceCalculations = 0;
+	$totalBookingTimeThisPeriodIncludingMerged = 0;
+	$totalBookingTimeUsedInPriceCalculationsIncludingMerged = 0;
 	foreach($result AS $row){
+
+		$mergeNumber = $row['MergeNumber'];
 
 		// Format dates to display
 		$startDateTime = convertDatetimeToFormat($row['BookingStartedDatetime'], 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
@@ -478,8 +492,13 @@ function calculatePeriodInformation($pdo, $companyID, $BillingStart, $BillingEnd
 		$bookingTimeUsedInPriceCalculations = convertTimeToMinutes($row['BookingTimeCharged']);
 		$displayBookingTimeUsedInPriceCalculations = convertTimeToHoursAndMinutes($row['BookingTimeCharged']);
 
-		$totalBookingTimeThisPeriod += $bookingTimeUsed;
-		$totalBookingTimeUsedInPriceCalculations += $bookingTimeUsedInPriceCalculations;
+		$totalBookingTimeThisPeriodIncludingMerged += $bookingTimeUsed;
+		$totalBookingTimeUsedInPriceCalculationsIncludingMerged += $bookingTimeUsedInPriceCalculations;
+		
+		if($mergeNumber == 0){
+			$totalBookingTimeThisPeriod += $bookingTimeUsed;
+			$totalBookingTimeUsedInPriceCalculations += $bookingTimeUsedInPriceCalculations;			
+		}
 
 		if($row['UserLastname'] == NULL){
 			$userInformation = "<deleted user>";
@@ -501,6 +520,7 @@ function calculatePeriodInformation($pdo, $companyID, $BillingStart, $BillingEnd
 		} else {
 			$cancelMessage = $row['CancelMessage'];
 		}
+
 		$bookingHistory[] = array(
 									'BookingPeriod' => $bookingPeriod,
 									'UserInformation' => $userInformation,
@@ -554,6 +574,7 @@ function calculatePeriodInformation($pdo, $companyID, $BillingStart, $BillingEnd
 		$totalBookingCostThisMonth = convertToCurrency($monthPrice);
 		$companyMinuteCreditsRemaining = $companyMinuteCredits;
 	}
+
 	$displayCompanyCreditsRemaining = convertMinutesToHoursAndMinutes($companyMinuteCreditsRemaining);
 	$displayMonthPrice = convertToCurrency($monthPrice);
 	$displayTotalBookingTimeThisPeriod = convertMinutesToHoursAndMinutes($totalBookingTimeThisPeriod);
@@ -713,13 +734,100 @@ function validateUserInputs(){
 return array($invalidInput, $validatedCompanyName, $validatedCompanyDateToRemove);
 }
 
+function refreshBookingHistory(){
+	$companyID = $_SESSION['BookingHistoryCompanyInfo']['CompanyID'];
+	$CompanyName = $_SESSION['BookingHistoryCompanyInfo']['CompanyName'];
+
+	// Remember information
+	$NextPeriod = $_POST['nextPeriod'];
+	$PreviousPeriod = $_POST['previousPeriod'];
+	$BillingStart = $_POST['billingStart'];
+	$BillingEnd = $_POST['billingEnd'];
+
+	$mergedCompanies = FALSE;
+
+	if(isSet($_SESSION['BookingHistoryCompanyInfo']['CompanyMergeNumbers']) AND $_SESSION['BookingHistoryCompanyInfo']['CompanyMergeNumbers'] != 0){
+		$mergedCompanies = TRUE;
+	}
+
+	if(isSet($_SESSION['BookingHistoryCompanyMergeNumber']) AND $_SESSION['BookingHistoryCompanyMergeNumber'] != ""){
+		$mergeNumber = $_SESSION['BookingHistoryCompanyMergeNumber'];
+	} else {
+		unset($_SESSION['BookingHistoryCompanyMergeNumber']);
+		$mergeNumber = 0;
+	}
+
+	// Get booking history for the selected company
+	try
+	{
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+		$pdo = connect_to_db();	
+
+		// Format billing dates
+		$displayBillingStart = convertDatetimeToFormat($BillingStart , 'Y-m-d', DATE_DEFAULT_FORMAT_TO_DISPLAY);
+		$displayBillingEnd = convertDatetimeToFormat($BillingEnd , 'Y-m-d', DATE_DEFAULT_FORMAT_TO_DISPLAY);
+		$BillingPeriod = $displayBillingStart . " up to " . $displayBillingEnd . ".";	
+
+		// rightNow decides if we use the companycreditshistory or the credits/companycredits information
+		if($NextPeriod){
+			$rightNow = FALSE;
+		} else {
+			$rightNow = TRUE;
+		}
+
+		list(	$bookingHistory, $displayCompanyCredits, $displayCompanyCreditsRemaining, $displayOverCreditsTimeUsed, 
+				$displayMonthPrice, $displayTotalBookingTimeThisPeriod, $displayOverFeeCostThisMonth, $overCreditsFee,
+				$bookingCostThisMonth, $totalBookingCostThisMonth, $companyMinuteCreditsRemaining, $actualTimeOverCreditsInMinutes, 
+				$periodHasBeenBilled, $billingDescription, $displayTotalBookingTimeUsedInPriceCalculationsThisPeriod, 
+				$displayTotalBookingTimeChargedWithAfterCredits)
+		= calculatePeriodInformation($pdo, $companyID, $BillingStart, $BillingEnd, $rightNow, $mergeNumber);
+
+		// Sum up periods that are not set as billed
+		list($periodsSummmedUp, $displayMergeStatus) = sumUpUnbilledPeriods($pdo, $companyID);
+		if($periodsSummmedUp === FALSE){
+			// No periods not set as billed
+			unset($periodsSummmedUp);
+		}
+
+		$pdo = NULL;
+	}
+	catch (PDOException $e)
+	{
+		$error = 'Error refreshing booking history: ' . $e->getMessage();
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+		$pdo = null;
+		exit();
+	}
+
+	$displayDateTimeCreated = $_SESSION['BookingHistoryCompanyInfo']['CompanyDateTimeCreated'];
+
+	var_dump($_SESSION); // TO-DO: Remove before uploading
+
+	include_once 'bookinghistory.html.php';
+	exit();
+}
+
+if(isSet($_POST['history']) AND $_POST['history'] == "Include Transferred Bookings"){
+	$_SESSION['BookingHistoryDisplayWithMerged'] = TRUE;
+	unset($_SESSION['BookingHistoryCompanyMergeNumber']);
+
+	refreshBookingHistory();
+}
+
+if(isSet($_POST['history']) AND $_POST['history'] == "Exclude Transferred Bookings"){
+	unset($_SESSION['BookingHistoryDisplayWithMerged']);
+	unset($_SESSION['BookingHistoryCompanyMergeNumber']);
+
+	refreshBookingHistory();
+}
+
 if(isSet($_POST['mergeNumber']) AND $_POST['mergeNumber'] != ""){
 	$_SESSION['BookingHistoryCompanyMergeNumber'] = $_POST['mergeNumber'];
 	// TO-DO: needs more work. We need to decide/put in what happends when we change what company merge number to display from.
 }
 
 // If admin wants to set a period as billed
-if (isSet($_POST['history']) AND $_POST['history'] == "Set As Billed"){
+if(isSet($_POST['history']) AND $_POST['history'] == "Set As Billed"){
 
 	$companyID = $_SESSION['BookingHistoryCompanyInfo']['CompanyID'];
 	$CompanyName = $_SESSION['BookingHistoryCompanyInfo']['CompanyName'];
@@ -729,7 +837,7 @@ if (isSet($_POST['history']) AND $_POST['history'] == "Set As Billed"){
 	$PreviousPeriod = $_POST['previousPeriod'];
 	$BillingStart = $_POST['billingStart'];
 	$BillingEnd = $_POST['billingEnd'];
-	
+
 	if(isSet($_SESSION['BookingHistoryCompanyMergeNumber']) AND $_SESSION['BookingHistoryCompanyMergeNumber'] != ""){
 		$mergeNumber = $_SESSION['BookingHistoryCompanyMergeNumber'];
 	} else {
@@ -829,11 +937,11 @@ if (isSet($_POST['history']) AND $_POST['history'] == "Set As Billed"){
 }
 
 // If admin wants to see the booking history of the period after the currently shown one
-if (isSet($_POST['history']) AND $_POST['history'] == "Next Period"){
+if(isSet($_POST['history']) AND $_POST['history'] == "Next Period"){
 	
 	// Get company information
 	$companyID = $_SESSION['BookingHistoryCompanyInfo']['CompanyID'];
-	$CompanyName = $_SESSION['BookingHistoryCompanyInfo']['CompanyName'];		
+	$CompanyName = $_SESSION['BookingHistoryCompanyInfo']['CompanyName'];
 	$companyCreationDate = $_SESSION['BookingHistoryCompanyInfo']['CompanyDateCreated'];
 	$companyBillingDateEnd = $_SESSION['BookingHistoryCompanyInfo']['CompanyBillingDateEnd'];
 	date_default_timezone_set(DATE_DEFAULT_TIMEZONE);
@@ -922,7 +1030,7 @@ if (isSet($_POST['history']) AND $_POST['history'] == "Next Period"){
 }
 
 // If admin wants to see the booking history of the period before the currently shown one
-if (	(isSet($_POST['history']) AND $_POST['history'] == "Previous Period") OR 
+if(	(isSet($_POST['history']) AND $_POST['history'] == "Previous Period") OR 
 		(isSet($_POST['history']) AND $_POST['history'] == "First Period")){
 
 	date_default_timezone_set(DATE_DEFAULT_TIMEZONE);	
@@ -1223,7 +1331,7 @@ if ((isSet($_POST['action']) AND $_POST['action'] == "Booking History") OR
 
 			$mergedCompanies = TRUE;
 		}
-		
+
 		$dateTimeCreated = $row['CompanyDateTimeCreated'];
 		$displayDateTimeCreated = convertDatetimeToFormat($dateTimeCreated,'Y-m-d H:i:s', DATE_DEFAULT_FORMAT_TO_DISPLAY);
 
@@ -2211,7 +2319,7 @@ try
 	$minimumSecondsPerBooking = MINIMUM_BOOKING_DURATION_IN_MINUTES_USED_IN_PRICE_CALCULATIONS * 60; // e.g. 15min = 900s
 	$aboveThisManySecondsToCount = BOOKING_DURATION_IN_MINUTES_USED_BEFORE_INCLUDING_IN_PRICE_CALCULATIONS * 60; // E.g. 1min = 60s
 
-	$sql = "SELECT 		c.companyID 										AS CompID,
+	$sql = "SELECT 		c.`companyID` 										AS CompID,
 						c.`name` 											AS CompanyName,
 						c.`dateTimeCreated`									AS DatetimeCreated,
 						c.`removeAtDate`									AS DeletionDate,
@@ -2370,7 +2478,7 @@ try
 						cr.`minuteAmount`									AS CreditSubscriptionMinuteAmount,
 						cr.`monthlyPrice`									AS CreditSubscriptionMonthlyPrice,
 						cr.`overCreditHourPrice`							AS CreditSubscriptionHourPrice,
-						COUNT(c.`CompanyID`)								AS CompanyCreditsHistoryPeriods,
+						COUNT(cch.`CompanyID`)								AS CompanyCreditsHistoryPeriods,
 						SUM(cch.`hasBeenBilled`)							AS CompanyCreditsHistoryPeriodsSetAsBilled
 			FROM 		`company` c
 			LEFT JOIN	`companycredits` cc
@@ -2403,14 +2511,13 @@ catch (PDOException $e)
 }
 
 // Create an array with the actual key/value pairs we want to use in our HTML
-foreach ($result as $row)
-{	
+foreach($result as $row){
 	// Calculate and display company booking time details
 	if($row['PreviousMonthCompanyWideBookingTimeUsed'] == null){
 		$PrevMonthTimeUsed = 'N/A';
 	} else {
 		$PrevMonthTimeUsed = convertTimeToHoursAndMinutes($row['PreviousMonthCompanyWideBookingTimeUsed']);
-	}	
+	}
 
 	if($row['MonthlyCompanyWideBookingTimeUsed'] == null){
 		$MonthlyTimeUsed = 'N/A';
@@ -2423,7 +2530,7 @@ foreach ($result as $row)
 	} else {
 		$TotalTimeUsed = convertTimeToHoursAndMinutes($row['TotalCompanyWideBookingTimeUsed']);	
 	}
-	
+
 	// Calculate and display company booking subscription details
 	if(!empty($row["CompanyAlternativeMinuteAmount"])){
 		$companyMinuteCredits = $row["CompanyAlternativeMinuteAmount"];
@@ -2434,7 +2541,7 @@ foreach ($result as $row)
 	}
 		// Format company credits to be displayed
 	$displayCompanyCredits = convertMinutesToHoursAndMinutes($companyMinuteCredits);
-	
+
 	$monthPrice = $row["CreditSubscriptionMonthlyPrice"];
 	if($monthPrice == NULL OR $monthPrice == ""){
 		$monthPrice = 0;
@@ -2468,20 +2575,20 @@ foreach ($result as $row)
 	$isActive = ($row['CompanyActivated'] == 1);
 	$dateTimeCreatedToDisplay = convertDatetimeToFormat($dateCreated, 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
 	$dateToRemoveToDisplay = convertDatetimeToFormat($dateToRemove, 'Y-m-d', DATE_DEFAULT_FORMAT_TO_DISPLAY);	
-	
+
 		// Get Period Status information
-	if(isSet($row['CompanyCreditsHistoryPeriods']) AND $row['CompanyCreditsHistoryPeriods'] != NULL){
+	if(isSet($row['CompanyCreditsHistoryPeriods']) AND $row['CompanyCreditsHistoryPeriods'] != ""){
 		$totalPeriods = $row['CompanyCreditsHistoryPeriods'];
 	} else {
 		$totalPeriods = 0;
 	}
-	if(isSet($row['CompanyCreditsHistoryPeriodsSetAsBilled']) AND $row['CompanyCreditsHistoryPeriodsSetAsBilled'] != NULL){
+	if(isSet($row['CompanyCreditsHistoryPeriodsSetAsBilled']) AND $row['CompanyCreditsHistoryPeriodsSetAsBilled'] != ""){
 		$billedPeriods = $row['CompanyCreditsHistoryPeriodsSetAsBilled'];
 	} else {
 		$billedPeriods = 0;
 	}
 	$notBilledPeriods = $totalPeriods - $billedPeriods;
-	
+
 	if($isActive){
 		$companies[] = array(
 								'id' => $row['CompID'], 
@@ -2506,7 +2613,7 @@ foreach ($result as $row)
 										'id' => $row['CompID'], 
 										'CompanyName' => $row['CompanyName'],
 										'DatetimeCreated' => $dateTimeCreatedToDisplay
-									);		
+									);
 	} elseif(!$isActive AND $dateToRemove != "" AND $dateToRemove != NULL){
 		$inactivecompanies[] = array(
 										'id' => $row['CompID'], 
@@ -2515,7 +2622,7 @@ foreach ($result as $row)
 										'TotalCompanyWideBookingTimeUsed' => $TotalTimeUsed,
 										'DeletionDate' => $dateToRemoveToDisplay,
 										'DatetimeCreated' => $dateTimeCreatedToDisplay
-									);		
+									);
 	}
 }
 	unset($_SESSION['MergeCompanySelectedCompanyID']);

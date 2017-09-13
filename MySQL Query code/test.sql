@@ -182,7 +182,7 @@ INNER JOIN 	`credits` cr
 ON			cr.`CreditsID` = cc.`CreditsID`
 WHERE		c.`CompanyID` = 68;
 
-SELECT 		c.companyID 										AS CompID,
+SELECT 		c.`companyID` 										AS CompID,
 			c.`name` 											AS CompanyName,
 			c.`dateTimeCreated`									AS DatetimeCreated,
 			c.`removeAtDate`									AS DeletionDate,
@@ -198,7 +198,7 @@ SELECT 		c.companyID 										AS CompID,
 			cr.`minuteAmount`									AS CreditSubscriptionMinuteAmount,
 			cr.`monthlyPrice`									AS CreditSubscriptionMonthlyPrice,
 			cr.`overCreditHourPrice`							AS CreditSubscriptionHourPrice,
-			COUNT(c.`CompanyID`)								AS CompanyCreditsHistoryPeriods,
+			COUNT(cch.`CompanyID`)								AS CompanyCreditsHistoryPeriods,
 			SUM(cch.`hasBeenBilled`)							AS CompanyCreditsHistoryPeriodsSetAsBilled
 FROM 		`company` c
 LEFT JOIN	`companycredits` cc

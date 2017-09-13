@@ -119,7 +119,6 @@
 
 								<?php if($accessName == "Admin") : ?>
 
-
 									<?php if(isSet($editMode)) : ?>
 										<div>
 											<label>Default Display Name: </label>
@@ -132,7 +131,6 @@
 										</div>
 									<?php endif; ?>
 
-
 									<?php if(isSet($editMode)) : ?>
 										<div>
 											<label>Default Booking Description: </label>
@@ -142,7 +140,7 @@
 										<div>
 											<label>Default Booking Description: </label>
 											<span style="white-space: pre-wrap;"><?php htmlout($originalBookingDescription); ?></span>
-										</div>									
+										</div>
 									<?php endif; ?>
 								<?php endif; ?>
 
@@ -191,7 +189,6 @@
 
 							<?php if($accessName == "Admin") : ?>
 
-
 								<?php if(isSet($editMode)) : ?>
 									<div>
 										<label>Admin Information Alert Status: </label>
@@ -216,7 +213,6 @@
 									</div>
 								<?php endif; ?>
 							<?php endif; ?>
-
 
 							<?php if(isSet($editMode)) : ?>
 								<div>
@@ -245,7 +241,7 @@
 							<?php if($userIsACompanyOwner) : ?>
 								<div>
 									<label>Company Owner Alert Status: </label>
-									<span><b>----------------------------------</b></span>
+									<span><b>-----------------------------------</b></span>
 								</div>
 
 								<div>
