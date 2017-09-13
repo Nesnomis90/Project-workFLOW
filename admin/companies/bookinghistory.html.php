@@ -23,60 +23,58 @@
 		<?php include_once $_SERVER['DOCUMENT_ROOT'] .'/includes/admintopnav.html.php'; ?>
 
 		<div class="left">
-			<form action="" method="post">
-				<input type="submit" name="history" value="Return To Companies">
-			</form>
-		</div>
-
-		<div class="left">
 			<h1>Booking History</h1>
 
 			<h2>For the company: <?php htmlout($CompanyName); ?> (Active Since: <?php htmlout($displayDateTimeCreated); ?>)</h2>
 		</div>
 
 		<?php if($mergedCompanies) : ?>
-			<div class="left">
-				<h3>This company has bookings transferred from other companies due to a company merge.</h3>
-				<?php if($mergeNumber == 0) : ?>
-					<h3>Currently only displaying bookings made for the selected company. "Not Billed Periods" always includes transferred bookings.</h3>
-				<?php else : ?>
-					<h3>Currently only displaying bookings transferred from another company (ID=<?php htmlout($mergeNumber); ?>). "Not Billed Periods" always includes transferred bookings.</h3>
-					<form action="" method="post">
-						<input type="hidden" name="changeToMergeNumber" value="0">
-						<input type="submit" value="Change Back To Default">
-					</form>
-				<?php endif; ?>
-			</div>
+		<div class="left">
+			<fieldset><legend><b>Merged Companies</b></legend>
+				<div class="left">
+					<span>This company has bookings transferred from other companies due to a company merge.</span>
+					<?php if($mergeNumber == 0) : ?>
+						<span style="clear:both;">Currently only displaying bookings made for the selected company. "Not Billed Periods" always includes transferred bookings.</span>
+					<?php else : ?>
+						<span style="clear:both;">Currently only displaying bookings transferred from another company (ID=<?php htmlout($mergeNumber); ?>). "Not Billed Periods" always includes transferred bookings.</span>
+						<form action="" method="post">
+							<input type="hidden" name="changeToMergeNumber" value="0">
+							<input type="submit" value="Change Back To Default">
+						</form>
+					<?php endif; ?>
+				</div>
 
-			<div class="left">
-				<?php foreach($_SESSION['BookingHistoryCompanyInfo']['CompanyMergeNumbers'] AS $availableMergeNumbers) : ?>
-					<form action="" method="post">
-						<input type="hidden" name="changeToMergeNumber" value="<?php htmlout($availableMergeNumbers[0]); ?>">
-						<input type="submit" value="Change To Bookings Transferred From Company With ID=<?php htmlout($availableMergeNumbers[0]); ?>">
-					</form>
-				<?php endforeach; ?>
-			</div>
-			<?php if(isSet($_SESSION['BookingHistoryDisplayWithMerged'])) : ?>
 				<div class="left">
-					<form action="" method="post">
-						<input type="hidden" name="nextPeriod" value="<?php htmlout($NextPeriod); ?>">
-						<input type="hidden" name="previousPeriod" value="<?php htmlout($PreviousPeriod); ?>">
-						<input type="hidden" name="billingStart" value="<?php htmlout($BillingStart); ?>">
-						<input type="hidden" name="billingEnd" value="<?php htmlout($BillingEnd); ?>">
-						<input type="submit" name="history" value="Exclude Transferred Bookings">
-					</form>
+					<?php foreach($_SESSION['BookingHistoryCompanyInfo']['CompanyMergeNumbers'] AS $availableMergeNumbers) : ?>
+						<form action="" method="post">
+							<input type="hidden" name="changeToMergeNumber" value="<?php htmlout($availableMergeNumbers[0]); ?>">
+							<input type="submit" value="Look at periods from the merged company (ID=<?php htmlout($availableMergeNumbers[0]); ?>)">
+						</form>
+					<?php endforeach; ?>
 				</div>
-			<?php else : ?>
-				<div class="left">
-					<form action="" method="post">
-						<input type="hidden" name="nextPeriod" value="<?php htmlout($NextPeriod); ?>">
-						<input type="hidden" name="previousPeriod" value="<?php htmlout($PreviousPeriod); ?>">
-						<input type="hidden" name="billingStart" value="<?php htmlout($BillingStart); ?>">
-						<input type="hidden" name="billingEnd" value="<?php htmlout($BillingEnd); ?>">
-						<input type="submit" name="history" value="Include Transferred Bookings">
-					</form>
-				</div>
-			<?php endif; ?>
+				<?php if(isSet($_SESSION['BookingHistoryDisplayWithMerged'])) : ?>
+					<div class="left">
+						<form action="" method="post">
+							<input type="hidden" name="nextPeriod" value="<?php htmlout($NextPeriod); ?>">
+							<input type="hidden" name="previousPeriod" value="<?php htmlout($PreviousPeriod); ?>">
+							<input type="hidden" name="billingStart" value="<?php htmlout($BillingStart); ?>">
+							<input type="hidden" name="billingEnd" value="<?php htmlout($BillingEnd); ?>">
+							<input type="submit" name="history" value="Exclude Transferred Bookings">
+						</form>
+					</div>
+				<?php else : ?>
+					<div class="left">
+						<form action="" method="post">
+							<input type="hidden" name="nextPeriod" value="<?php htmlout($NextPeriod); ?>">
+							<input type="hidden" name="previousPeriod" value="<?php htmlout($PreviousPeriod); ?>">
+							<input type="hidden" name="billingStart" value="<?php htmlout($BillingStart); ?>">
+							<input type="hidden" name="billingEnd" value="<?php htmlout($BillingEnd); ?>">
+							<input type="submit" name="history" value="Include Transferred Bookings">
+						</form>
+					</div>
+				<?php endif; ?>
+			</fieldset>
+		</div>
 		<?php endif; ?>
 
 		<?php if(isSet($lookingAtASpecificMergedPeriod) AND $lookingAtASpecificMergedPeriod) : ?>

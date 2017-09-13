@@ -2672,11 +2672,6 @@ if(isSet($_POST['merge']) AND $_POST['merge'] == 'Cancel'){
 	$_SESSION['CompanyUserFeedback'] = "You cancelled your company merging.";
 }
 
-if(isSet($_POST['history']) AND $_POST['history'] == 'Return To Companies'){
-	$refreshcompanies = TRUE;
-	clearBookingHistorySessions();
-}
-
 if(isSet($refreshcompanies) AND $refreshcompanies) {
 	// TO-DO: Add code that should occur on a refresh
 	unset($refreshcompanies);

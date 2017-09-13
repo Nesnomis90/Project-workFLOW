@@ -5,7 +5,7 @@
 	<head>
 		<meta charset="utf-8">
 		<link rel="stylesheet" type="text/css" href="/CSS/myCSS.css">
-		<script src="/scripts/myFunctions.js"></script>		
+		<script src="/scripts/myFunctions.js"></script>
 		<title>Booking History</title>
 		<style>
 			label {
@@ -20,12 +20,8 @@
 		<?php include_once $_SERVER['DOCUMENT_ROOT'] .'/includes/admintopnav.html.php'; ?>
 
 		<div class="left">
-			<form action="" method="post">
-				<input type="submit" name="history" value="Return To Companies">
-			</form>
+			<h1>Booking History</h1>
 		</div>
-
-		<h1>Booking History</h1>
 
 		<div class="left">
 			<form action="" method="post">
