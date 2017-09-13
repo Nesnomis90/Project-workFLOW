@@ -245,7 +245,7 @@
 				<?php elseif(!$rightNow AND $periodHasBeenBilled == 1) : ?>
 					<label class="description" for="billingDescriptionDisabled">Billing Description: </label>
 					<textarea name="billingDescriptionDisabled" id="billingDescriptionDisabled" 
-					rows="4" cols="50" disabled><?php htmlout($billingDescription); ?></textarea>
+					rows="8" cols="100" disabled><?php htmlout($billingDescription); ?></textarea>
 				<?php endif; ?>
 			</div>
 		</fieldset>
