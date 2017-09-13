@@ -315,7 +315,7 @@ function sumUpUnbilledPeriods($pdo, $companyID){
 }
 
 // Function to check if the company has unbilled periods and then sums them up and displays the total 
-function displayAllPeriodsFromMergedNumber($pdo, $companyID, $mergedNumber){
+function displayAllPeriodsFromMergedNumber($pdo, $companyID, $mergeNumber){
 
 	$minimumSecondsPerBooking = MINIMUM_BOOKING_DURATION_IN_MINUTES_USED_IN_PRICE_CALCULATIONS * 60; // e.g. 15min = 900s
 	$aboveThisManySecondsToCount = BOOKING_DURATION_IN_MINUTES_USED_BEFORE_INCLUDING_IN_PRICE_CALCULATIONS * 60; // e.g. 5min = 300s
@@ -325,6 +325,7 @@ function displayAllPeriodsFromMergedNumber($pdo, $companyID, $mergedNumber){
 		$sql = "SELECT		StartDate, 
 							EndDate,
 							CompanyMergeNumber,
+							BillingStatus,
 							CreditSubscriptionMonthlyPrice,
 							CreditSubscriptionHourPrice,
 							CreditsGivenInSeconds/60							AS CreditSubscriptionMinuteAmount,
@@ -355,6 +356,7 @@ function displayAllPeriodsFromMergedNumber($pdo, $companyID, $mergedNumber){
 								cch.`monthlyPrice`								AS CreditSubscriptionMonthlyPrice,
 								cch.`overCreditHourPrice`						AS CreditSubscriptionHourPrice,
 								cch.`mergeNumber`								AS CompanyMergeNumber,
+								cch.`hasBeenBilled`								AS BillingStatus,
 								(
 									SELECT (IFNULL(SUM(
 										IF(
@@ -420,6 +422,7 @@ function displayAllPeriodsFromMergedNumber($pdo, $companyID, $mergedNumber){
 		$sql = "SELECT		StartDate, 
 							EndDate,
 							CompanyMergeNumber,
+							BillingStatus,
 							CreditSubscriptionMonthlyPrice,
 							CreditSubscriptionHourPrice,
 							CreditsGivenInSeconds/60							AS CreditSubscriptionMinuteAmount,
@@ -446,6 +449,7 @@ function displayAllPeriodsFromMergedNumber($pdo, $companyID, $mergedNumber){
 								cch.`monthlyPrice`								AS CreditSubscriptionMonthlyPrice,
 								cch.`overCreditHourPrice`						AS CreditSubscriptionHourPrice,
 								cch.`mergeNumber`								AS CompanyMergeNumber,
+								cch.`hasBeenBilled`								AS BillingStatus,
 								(
 									SELECT (IFNULL(SUM(
 										IF(
@@ -555,6 +559,7 @@ function displayAllPeriodsFromMergedNumber($pdo, $companyID, $mergedNumber){
 		$allPeriodsFromMergedNumber[] = array(
 										'MergeStatus' => $mergeStatus,
 										'MergeNumber' => $mergeNumber,
+										'BillingStatus' => $row['BillingStatus'],
 										'DisplayStartDate' => $displayStartDate,
 										'DisplayEndDate' => $displayEndDate,
 										'StartDate' => $startDate,
@@ -1094,36 +1099,35 @@ if(isSet($_POST['history']) AND $_POST['history'] == "Exclude Transferred Bookin
 	refreshBookingHistory();
 }
 
-if(isSet($_POST['mergeNumber']) AND $_POST['mergeNumber'] != ""){
+if(isSet($_POST['changeToMergeNumber']) AND $_POST['changeToMergeNumber'] != ""){
 
-	if(isSet($_POST['mergeNumber']) AND $_POST['mergeNumber'] != ""){
-		//$_SESSION['BookingHistoryCompanyMergeNumber'] = $_POST['mergeNumber'];
-		$mergedNumber = $_POST['mergeNumber'];
+	$mergeNumber = $_POST['changeToMergeNumber'];
+	$_SESSION['BookingHistoryCompanyMergeNumber'] = $mergeNumber;
+	$companyID = $_SESSION['BookingHistoryCompanyInfo']['CompanyID'];
 
-		// Get all periods (billed and not billed) from the selected merged company
-		try
-		{
-			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
-			$pdo = connect_to_db();
-		
-			list($displayAllPeriodsFromMergedNumber, $displayMergeStatus) = displayAllPeriodsFromMergedNumber($pdo, $companyID, $mergedNumber);
-			if($displayAllPeriodsFromMergedNumber === FALSE){
-				// No periods not set as billed
-				unset($displayAllPeriodsFromMergedNumber);
-			}
+	// Get all periods (billed and not billed) from the selected merged company
+	try
+	{
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+		$pdo = connect_to_db();
+
+		list($displayAllPeriodsFromMergedNumber, $displayMergeStatus) = displayAllPeriodsFromMergedNumber($pdo, $companyID, $mergeNumber);
+		if($displayAllPeriodsFromMergedNumber === FALSE){
+			// No periods found, for some reason
+			unset($displayAllPeriodsFromMergedNumber);
 		}
-		catch (PDOException $e)
-		{
-			$error = 'Error fetching company booking history: ' . $e->getMessage();
-			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
-			$pdo = null;
-			exit();
-		}
+	}
+	catch (PDOException $e)
+	{
+		$error = 'Error fetching company booking history: ' . $e->getMessage();
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+		$pdo = null;
+		exit();
 	}
 
 	var_dump($_SESSION); // TO-DO: Remove before uploading
 
-	include_once 'bookinghistory.html.php';
+	include_once 'bookinghistoryperiodsonly.html.php';
 	exit();
 }
 
@@ -1134,7 +1138,9 @@ if(isSet($_POST['history']) AND $_POST['history'] == "Go To This Period"){
 	$BillingStart = $_POST['startDate'];
 	$BillingEnd = $_POST['endDate'];
 	$mergeNumber = $_POST['mergeNumber'];
-	
+
+	$_SESSION['BookingHistoryCompanyMergeNumber'] = $mergeNumber;
+
 	// Get booking history for the selected company in the selected period
 	try
 	{
@@ -1187,13 +1193,6 @@ if(isSet($_POST['history']) AND $_POST['history'] == "Go To This Period"){
 				$displayTotalBookingTimeChargedWithAfterCredits)
 		= calculatePeriodInformation($pdo, $companyID, $BillingStart, $BillingEnd, $rightNow, $mergeNumber);
 
-		// Sum up periods that are not set as billed
-		list($periodsSummmedUp, $displayMergeStatus) = sumUpUnbilledPeriods($pdo, $companyID);
-		if($periodsSummmedUp === FALSE){
-			// No periods not set as billed
-			unset($periodsSummmedUp);
-		}
-
 		$pdo = NULL;
 	}
 	catch (PDOException $e)
@@ -1224,6 +1223,8 @@ if(isSet($_POST['history']) AND $_POST['history'] == "Set As Billed"){
 
 	if(isSet($_SESSION['BookingHistoryCompanyMergeNumber']) AND $_SESSION['BookingHistoryCompanyMergeNumber'] != ""){
 		$mergeNumber = $_SESSION['BookingHistoryCompanyMergeNumber'];
+		$mergedCompanies = FALSE;
+		$lookingAtASpecificMergedPeriod = TRUE;
 	} else {
 		unset($_SESSION['BookingHistoryCompanyMergeNumber']);
 		$mergeNumber = 0;
@@ -1248,12 +1249,7 @@ if(isSet($_POST['history']) AND $_POST['history'] == "Set As Billed"){
 		$displayBillingEnd = convertDatetimeToFormat($BillingEnd , 'Y-m-d', DATE_DEFAULT_FORMAT_TO_DISPLAY);
 		$BillingPeriod = $displayBillingStart . " up to " . $displayBillingEnd . ".";	
 
-		// rightNow decides if we use the companycreditshistory or the credits/companycredits information
-		if($NextPeriod){
-			$rightNow = FALSE;
-		} else {
-			$rightNow = TRUE;
-		}
+		$rightNow = FALSE;
 
 		list(	$bookingHistory, $displayCompanyCredits, $displayCompanyCreditsRemaining, $displayOverCreditsTimeUsed, 
 				$displayMonthPrice, $displayTotalBookingTimeThisPeriod, $displayOverFeeCostThisMonth, $overCreditsFee,
@@ -1264,20 +1260,13 @@ if(isSet($_POST['history']) AND $_POST['history'] == "Set As Billed"){
 
 		// Update period as billed relevant information and admin inputs
 
-			// Create the description to save for this period
-		if($actualTimeOverCreditsInMinutes != "") {
-			$timeUsedForCalculatingPrice = $actualTimeOverCreditsInMinutes . "m";
-		} else {
-			$timeUsedForCalculatingPrice = "None";
-		}
-
 		$dateTimeNow = getDatetimeNow();
 		$displayDateTimeNow = convertDatetimeToFormat($dateTimeNow , 'Y-m-d H:i:s', DATE_DEFAULT_FORMAT_TO_DISPLAY);
 		$billingDescriptionInformation = 	"This period was Set As Billed on " . $displayDateTimeNow .
 											" by the user " . $_SESSION['LoggedInUserName'] .
-											".\nAt that time the company had produced a total booking time of: " . $displayTotalBookingTimeThisPeriod .
+											".\nAt that time the company had produced a total booking time of: " . $displayTotalBookingTimeUsedInPriceCalculationsThisPeriod .
 											", with a credit given of: " . $displayCompanyCredits . " resulting in excess use of: " . $displayOverCreditsTimeUsed . 
-											" (billed as " . $timeUsedForCalculatingPrice . ").\nThe montly fee was set as " . $displayMonthPrice . 
+											" (billed as " . $displayTotalBookingTimeChargedWithAfterCredits . ").\nThe montly fee was set as " . $displayMonthPrice . 
 											".\nResulting in a total billing cost that period of " . $bookingCostThisMonth . " = " . $totalBookingCostThisMonth . 
 											".\nAdditional information submitted by Admin:\n" . $billingDescriptionAdminAddition;
 		if(substr($billingDescriptionInformation,-1) != "."){
@@ -1672,7 +1661,9 @@ if ((isSet($_POST['action']) AND $_POST['action'] == "Booking History") OR
 		$companyID = $_POST['id'];
 	}
 
-	if($_POST['action'] == "Booking History" OR $_POST['history'] == "Display Default"){
+	if(	(isSet($_POST['action']) AND $_POST['action'] == "Booking History") OR 
+		(isSet($_POST['history']) AND $_POST['history'] == "Display Default")
+		){
 		unset($_SESSION['BookingHistoryCompanyMergeNumber']);
 	}
 

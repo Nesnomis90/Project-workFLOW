@@ -1,6 +1,5 @@
 <!-- This is the HTML form used for DISPLAYING an overview of a COMPANY's BOOKING HISTORY in detail-->
-<?php include_once $_SERVER['DOCUMENT_ROOT'] .
- '/includes/helpers.inc.php'; ?>
+<?php include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/helpers.inc.php'; ?>
 <!DOCTYPE html>
 <html lang="en">
 	<head>
@@ -40,14 +39,14 @@
 			<?php else : ?>
 				<h3>Currently only displaying bookings transferred from another company (ID=<?php htmlout($mergeNumber); ?>). "Not Billed Periods" always includes transferred bookings.</h3>
 				<form action="" method="post">
-					<input type="hidden" name="mergeNumber" value="0">
+					<input type="hidden" name="changeToMergeNumber" value="0">
 					<input type="submit" value="Change Back To Default">
 				</form>
 			<?php endif; ?>
 			<div class="left">
 				<?php foreach($_SESSION['BookingHistoryCompanyInfo']['CompanyMergeNumbers'] AS $availableMergeNumbers) : ?>
 					<form action="" method="post">
-						<input type="hidden" name="mergeNumber" value="<?php htmlout($availableMergeNumbers[0]); ?>">
+						<input type="hidden" name="changeToMergeNumber" value="<?php htmlout($availableMergeNumbers[0]); ?>">
 						<input type="submit" value="Change To Bookings Transferred From Company With ID=<?php htmlout($availableMergeNumbers[0]); ?>">
 					</form>
 				<?php endforeach; ?>
