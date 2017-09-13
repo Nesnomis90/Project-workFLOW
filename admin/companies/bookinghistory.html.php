@@ -228,7 +228,6 @@
 			<?php else : ?>
 				<span>Resulting in the total cost this period of: <b><?php htmlout($bookingCostThisMonth); ?></b> = <b style="color:<?php htmlout($color); ?>"><?php htmlout($totalBookingCostThisMonth); ?></b></span>
 			<?php endif; ?>
-		</div>
 
 			<div class="left">
 				<?php if(!$rightNow AND (!isSet($periodHasBeenBilled) OR $periodHasBeenBilled == 0)) : ?>
@@ -248,7 +247,8 @@
 					rows="8" cols="100" disabled><?php htmlout($billingDescription); ?></textarea>
 				<?php endif; ?>
 			</div>
-		</fieldset>
+			</fieldset>
+		</div>
 
 	<div class="left"><a href="..">Return to CMS home</a></div>
 
