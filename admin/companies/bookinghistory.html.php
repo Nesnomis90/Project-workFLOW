@@ -38,7 +38,7 @@
 			<?php if($mergeNumber == 0) : ?>
 				<h3>Currently only displaying bookings made by the company ("Not Billed Periods" always displays all companies).</h3>
 			<?php else : ?>
-				<h3>Currently only displaying bookings transferred from another company (ID=<?php htmlout($mergeNumber); ?> ("Not Billed Periods" always displays all companies).</h3>
+				<h3>Currently only displaying bookings transferred from another company (ID=<?php htmlout($mergeNumber); ?>). "Not Billed Periods" always displays all companies.</h3>
 				<form action="" method="post">
 					<input type="hidden" name="mergeNumber" value="0">
 					<input type="submit" value="Change Back To Default">
@@ -74,6 +74,14 @@
 				</div>
 			<?php endif; ?>
 		<?php endif; ?>
+		
+		<?php if(isSet($lookingAtASpecificMergedPeriod) AND $lookingAtASpecificMergedPeriod) : ?>
+			<div class="left">
+				<form action="" method="post">
+					<input type="submit" name="history" value="Display Default">
+				</form>
+			</div>
+		<?php endif; ?>
 
 		<?php if(isSet($periodsSummmedUp)) : ?>
 
@@ -84,17 +92,28 @@
 			<fieldset><legend><b>Not Billed Periods</b></legend>
 			<?php $totalCostForAllPeriodsSummedUp = 0; ?>
 			<?php foreach($periodsSummmedUp AS $period) : ?>
-				<fieldset><legend><b><?php htmlout($period['StartDate'] . " up to " . $period['EndDate']); ?></b></legend>
-					<?php if($displayMergeStatus) : ?>
-						<label class="notBilled">Period Info:</label><span><b><?php htmlout($period['MergeStatus']); ?></b></span>
-					<?php endif; ?>
-					<label class="notBilled">Credits Given:</label><span><b><?php htmlout($period['CreditsGiven']); ?></b></span>
-					<label class="notBilled">Booking Time Charged:</label><span><b><?php htmlout($period['BookingTimeCharged']); ?></b></span>
-					<label class="notBilled">Excess Booking Time:</label><span><b><?php htmlout($period['OverCreditsTimeExact']); ?></b></span>
-					<label class="notBilled">Excess Time Charged:</label><span><b><?php htmlout($period['OverCreditsTimeCharged']); ?></b></span>
-					<label class="notBilled">Cost (Subscription + Excess Booking Time):</label><span><b><?php htmlout($period['TotalBookingCostThisMonthAsParts']); ?></b></span>
-					<label class="notBilled">Cost (Total):</label><span><b style="color:red"><?php htmlout($period['TotalBookingCostThisMonth']); ?></b></span>
-					<?php $totalCostForAllPeriodsSummedUp += $period['TotalBookingCostThisMonthJustNumber']; ?>
+				<fieldset><legend><b><?php htmlout($period['DisplayStartDate'] . " up to " . $period['DisplayEndDate']); ?></b></legend>
+					<form action="" method="post">
+						<div class="left">
+							<?php if($displayMergeStatus) : ?>
+								<label class="notBilled">Period Info:</label><span><b><?php htmlout($period['MergeStatus']); ?></b></span>
+							<?php endif; ?>
+							<label class="notBilled">Credits Given:</label><span><b><?php htmlout($period['CreditsGiven']); ?></b></span>
+							<label class="notBilled">Booking Time Charged:</label><span><b><?php htmlout($period['BookingTimeCharged']); ?></b></span>
+							<label class="notBilled">Excess Booking Time:</label><span><b><?php htmlout($period['OverCreditsTimeExact']); ?></b></span>
+							<label class="notBilled">Excess Time Charged:</label><span><b><?php htmlout($period['OverCreditsTimeCharged']); ?></b></span>
+							<label class="notBilled">Cost (Subscription + Excess Booking Time):</label><span><b><?php htmlout($period['TotalBookingCostThisMonthAsParts']); ?></b></span>
+							<label class="notBilled">Cost (Total):</label><span><b style="color:red"><?php htmlout($period['TotalBookingCostThisMonth']); ?></b></span>
+							<?php $totalCostForAllPeriodsSummedUp += $period['TotalBookingCostThisMonthJustNumber']; ?>
+						</div>
+
+						<div class="left">
+							<input type="hidden" name="startDate" value="<?php htmlout($period['StartDate']); ?>">
+							<input type="hidden" name="endDate" value="<?php htmlout($period['EndDate']); ?>">
+							<input type="hidden" name="mergeNumber" value="<?php htmlout($period['MergeNumber']); ?>">
+							<input type="submit" name="history" value="Go To This Period">
+						</div>
+					</form>
 				</fieldset>
 			<?php endforeach; ?>
 				<div class="fieldsetIndentReplication">
@@ -117,7 +136,7 @@
 					<input type="submit" name="history" value="First Period">
 					<input type="submit" name="history" value="Previous Period">
 				<?php else : ?>
-					<input type="submit" name="disabled" value="First Period" disabled>				
+					<input type="submit" name="disabled" value="First Period" disabled>
 					<input type="submit" name="disabled" value="Previous Period" disabled>
 				<?php endif; ?>
 			</div>
