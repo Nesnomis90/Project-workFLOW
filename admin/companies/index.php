@@ -1381,6 +1381,10 @@ if ((isSet($_POST['action']) AND $_POST['action'] == "Booking History") OR
 		$companyID = $_POST['id'];
 	}
 
+	if($_POST['action'] == "Booking History" OR $_POST['history'] == "Display Default"){
+		unset($_SESSION['BookingHistoryCompanyMergeNumber']);
+	}
+
 	// Get booking history for the selected company
 	try
 	{

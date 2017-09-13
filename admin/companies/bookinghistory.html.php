@@ -36,9 +36,9 @@
 		<?php if($mergedCompanies) : ?>
 			<h3>This company has bookings transferred from other companies due to a company merge.</h3>
 			<?php if($mergeNumber == 0) : ?>
-				<h3>Currently only displaying bookings made by the company ("Not Billed Periods" always displays all companies).</h3>
+				<h3>Currently only displaying bookings made for the selected company. "Not Billed Periods" always includes transferred bookings.</h3>
 			<?php else : ?>
-				<h3>Currently only displaying bookings transferred from another company (ID=<?php htmlout($mergeNumber); ?>). "Not Billed Periods" always displays all companies.</h3>
+				<h3>Currently only displaying bookings transferred from another company (ID=<?php htmlout($mergeNumber); ?>). "Not Billed Periods" always includes transferred bookings.</h3>
 				<form action="" method="post">
 					<input type="hidden" name="mergeNumber" value="0">
 					<input type="submit" value="Change Back To Default">
