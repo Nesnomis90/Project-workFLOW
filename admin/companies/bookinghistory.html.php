@@ -28,21 +28,26 @@
 			</form>
 		</div>
 
-		<h1>Booking History</h1>
+		<div class="left">
+			<h1>Booking History</h1>
 
-		<h2>For the company: <?php htmlout($CompanyName); ?> (Active Since: <?php htmlout($displayDateTimeCreated); ?>)</h2>
+			<h2>For the company: <?php htmlout($CompanyName); ?> (Active Since: <?php htmlout($displayDateTimeCreated); ?>)</h2>
+		</div>
 
 		<?php if($mergedCompanies) : ?>
-			<h3>This company has bookings transferred from other companies due to a company merge.</h3>
-			<?php if($mergeNumber == 0) : ?>
-				<h3>Currently only displaying bookings made for the selected company. "Not Billed Periods" always includes transferred bookings.</h3>
-			<?php else : ?>
-				<h3>Currently only displaying bookings transferred from another company (ID=<?php htmlout($mergeNumber); ?>). "Not Billed Periods" always includes transferred bookings.</h3>
-				<form action="" method="post">
-					<input type="hidden" name="changeToMergeNumber" value="0">
-					<input type="submit" value="Change Back To Default">
-				</form>
-			<?php endif; ?>
+			<div class="left">
+				<h3>This company has bookings transferred from other companies due to a company merge.</h3>
+				<?php if($mergeNumber == 0) : ?>
+					<h3>Currently only displaying bookings made for the selected company. "Not Billed Periods" always includes transferred bookings.</h3>
+				<?php else : ?>
+					<h3>Currently only displaying bookings transferred from another company (ID=<?php htmlout($mergeNumber); ?>). "Not Billed Periods" always includes transferred bookings.</h3>
+					<form action="" method="post">
+						<input type="hidden" name="changeToMergeNumber" value="0">
+						<input type="submit" value="Change Back To Default">
+					</form>
+				<?php endif; ?>
+			</div>
+
 			<div class="left">
 				<?php foreach($_SESSION['BookingHistoryCompanyInfo']['CompanyMergeNumbers'] AS $availableMergeNumbers) : ?>
 					<form action="" method="post">
@@ -73,7 +78,7 @@
 				</div>
 			<?php endif; ?>
 		<?php endif; ?>
-		
+
 		<?php if(isSet($lookingAtASpecificMergedPeriod) AND $lookingAtASpecificMergedPeriod) : ?>
 			<div class="left">
 				<form action="" method="post">
@@ -88,46 +93,51 @@
 				<h3>The company has <b style="color:red">NOT BILLED PERIODS</b>.</h3>
 			</div>
 
-			<fieldset><legend><b>Not Billed Periods</b></legend>
-			<?php $totalCostForAllPeriodsSummedUp = 0; ?>
-			<?php foreach($periodsSummmedUp AS $period) : ?>
-				<fieldset><legend><b><?php htmlout($period['DisplayStartDate'] . " up to " . $period['DisplayEndDate']); ?></b></legend>
-					<form action="" method="post">
-						<div class="left">
-							<?php if($displayMergeStatus) : ?>
-								<label class="notBilled">Period Info:</label><span><b><?php htmlout($period['MergeStatus']); ?></b></span>
-							<?php endif; ?>
-							<label class="notBilled">Credits Given:</label><span><b><?php htmlout($period['CreditsGiven']); ?></b></span>
-							<label class="notBilled">Booking Time Charged:</label><span><b><?php htmlout($period['BookingTimeCharged']); ?></b></span>
-							<label class="notBilled">Excess Booking Time:</label><span><b><?php htmlout($period['OverCreditsTimeExact']); ?></b></span>
-							<label class="notBilled">Excess Time Charged:</label><span><b><?php htmlout($period['OverCreditsTimeCharged']); ?></b></span>
-							<label class="notBilled">Cost (Subscription + Excess Booking Time):</label><span><b><?php htmlout($period['TotalBookingCostThisMonthAsParts']); ?></b></span>
-							<label class="notBilled">Cost (Total):</label><span><b style="color:red"><?php htmlout($period['TotalBookingCostThisMonth']); ?></b></span>
-							<?php $totalCostForAllPeriodsSummedUp += $period['TotalBookingCostThisMonthJustNumber']; ?>
-						</div>
+			<div class="left">
+				<fieldset><legend><b>Not Billed Periods</b></legend>
+				<?php $totalCostForAllPeriodsSummedUp = 0; ?>
+				<?php foreach($periodsSummmedUp AS $period) : ?>
+					<fieldset><legend><b><?php htmlout($period['DisplayStartDate'] . " up to " . $period['DisplayEndDate']); ?></b></legend>
+						<form action="" method="post">
+							<div class="left">
+								<?php if($displayMergeStatus) : ?>
+									<label class="notBilled">Period Info:</label><span><b><?php htmlout($period['MergeStatus']); ?></b></span>
+								<?php endif; ?>
+								<label class="notBilled">Credits Given:</label><span><b><?php htmlout($period['CreditsGiven']); ?></b></span>
+								<label class="notBilled">Booking Time Charged:</label><span><b><?php htmlout($period['BookingTimeCharged']); ?></b></span>
+								<label class="notBilled">Excess Booking Time:</label><span><b><?php htmlout($period['OverCreditsTimeExact']); ?></b></span>
+								<label class="notBilled">Excess Time Charged:</label><span><b><?php htmlout($period['OverCreditsTimeCharged']); ?></b></span>
+								<label class="notBilled">Cost (Subscription + Excess Booking Time):</label><span><b><?php htmlout($period['TotalBookingCostThisMonthAsParts']); ?></b></span>
+								<label class="notBilled">Cost (Total):</label><span><b style="color:red"><?php htmlout($period['TotalBookingCostThisMonth']); ?></b></span>
+								<?php $totalCostForAllPeriodsSummedUp += $period['TotalBookingCostThisMonthJustNumber']; ?>
+							</div>
 
-						<div class="left">
-							<input type="hidden" name="startDate" value="<?php htmlout($period['StartDate']); ?>">
-							<input type="hidden" name="endDate" value="<?php htmlout($period['EndDate']); ?>">
-							<input type="hidden" name="mergeNumber" value="<?php htmlout($period['MergeNumber']); ?>">
-							<input type="submit" name="history" value="Go To This Period">
-						</div>
-					</form>
+							<div class="left">
+								<input type="hidden" name="startDate" value="<?php htmlout($period['StartDate']); ?>">
+								<input type="hidden" name="endDate" value="<?php htmlout($period['EndDate']); ?>">
+								<input type="hidden" name="mergeNumber" value="<?php htmlout($period['MergeNumber']); ?>">
+								<input type="submit" name="history" value="Go To This Period">
+							</div>
+						</form>
+					</fieldset>
+				<?php endforeach; ?>
+					<div class="fieldsetIndentReplication">
+						<label class="notBilled">Total Cost All Periods:</label><span><b style="color:red"><?php htmlout(convertToCurrency($totalCostForAllPeriodsSummedUp)); ?></b></span>
+					</div>
 				</fieldset>
-			<?php endforeach; ?>
-				<div class="fieldsetIndentReplication">
-					<label class="notBilled">Total Cost All Periods:</label><span><b style="color:red"><?php htmlout(convertToCurrency($totalCostForAllPeriodsSummedUp)); ?></b></span>
-				</div>
-			</fieldset>
+			</div>
+
 		<?php endif; ?>
 
-		<?php if($rightNow) : ?>
-			<h2>Billing Status: Period still in progress.</h2>
-		<?php elseif(isSet($bookingHistory) AND sizeOf($bookingHistory) > 1 AND (!isSet($periodHasBeenBilled) OR $periodHasBeenBilled == 0)) : ?>
-			<h2>Billing Status: This period has <b style="color:red">NOT BEEN BILLED</b>.</h2>
-		<?php elseif(isSet($bookingHistory) AND sizeOf($bookingHistory) > 1 AND isSet($periodHasBeenBilled) AND $periodHasBeenBilled == 1) : ?>
-			<h2>Billing Status: This period has <b style="color:green">BEEN BILLED</b>.</h2><br />
-		<?php endif; ?>
+		<div class="left">
+			<?php if($rightNow) : ?>
+				<h2>Billing Status: Period still in progress.</h2>
+			<?php elseif(isSet($bookingHistory) AND sizeOf($bookingHistory) > 1 AND (!isSet($periodHasBeenBilled) OR $periodHasBeenBilled == 0)) : ?>
+				<h2>Billing Status: This period has <b style="color:red">NOT BEEN BILLED</b>.</h2>
+			<?php elseif(isSet($bookingHistory) AND sizeOf($bookingHistory) > 1 AND isSet($periodHasBeenBilled) AND $periodHasBeenBilled == 1) : ?>
+				<h2>Billing Status: This period has <b style="color:green">BEEN BILLED</b>.</h2><br />
+			<?php endif; ?>
+		</div>
 
 		<form action="" method="post">
 			<div class="left">
@@ -222,22 +232,24 @@
 			<?php endif; ?>
 		</div>
 
-		<?php if(!$rightNow AND (!isSet($periodHasBeenBilled) OR $periodHasBeenBilled == 0)) : ?>
-			<form action="" method="post">
-				<label class="description" for="billingDescription">Billing Description: </label>
-				<textarea name="billingDescription" id="billingDescription" rows="4" cols="50"
-				placeholder="Type in any additional information you'd like to see when viewing this period later."></textarea>
-				<input type="hidden" name="nextPeriod" value="<?php htmlout($NextPeriod); ?>">
-				<input type="hidden" name="previousPeriod" value="<?php htmlout($PreviousPeriod); ?>">
-				<input type="hidden" name="billingStart" value="<?php htmlout($BillingStart); ?>">
-				<input type="hidden" name="billingEnd" value="<?php htmlout($BillingEnd); ?>"><br />
-				<input type="submit" name="history" value="Set As Billed">
-			</form>
-		<?php elseif(!$rightNow AND $periodHasBeenBilled == 1) : ?>
-			<label class="description" for="billingDescriptionDisabled">Billing Description: </label>
-			<textarea name="billingDescriptionDisabled" id="billingDescriptionDisabled" 
-			rows="4" cols="50" disabled><?php htmlout($billingDescription); ?></textarea>
-		<?php endif; ?>
+			<div class="left">
+				<?php if(!$rightNow AND (!isSet($periodHasBeenBilled) OR $periodHasBeenBilled == 0)) : ?>
+					<form action="" method="post">
+						<label class="description" for="billingDescription">Billing Description: </label>
+						<textarea name="billingDescription" id="billingDescription" rows="4" cols="50"
+						placeholder="Type in any additional information you'd like to see when viewing this period later."></textarea>
+						<input type="hidden" name="nextPeriod" value="<?php htmlout($NextPeriod); ?>">
+						<input type="hidden" name="previousPeriod" value="<?php htmlout($PreviousPeriod); ?>">
+						<input type="hidden" name="billingStart" value="<?php htmlout($BillingStart); ?>">
+						<input type="hidden" name="billingEnd" value="<?php htmlout($BillingEnd); ?>"><br />
+						<input type="submit" name="history" value="Set As Billed">
+					</form>
+				<?php elseif(!$rightNow AND $periodHasBeenBilled == 1) : ?>
+					<label class="description" for="billingDescriptionDisabled">Billing Description: </label>
+					<textarea name="billingDescriptionDisabled" id="billingDescriptionDisabled" 
+					rows="4" cols="50" disabled><?php htmlout($billingDescription); ?></textarea>
+				<?php endif; ?>
+			</div>
 		</fieldset>
 
 	<div class="left"><a href="..">Return to CMS home</a></div>

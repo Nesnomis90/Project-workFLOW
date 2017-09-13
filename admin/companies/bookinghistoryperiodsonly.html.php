@@ -41,19 +41,21 @@
 				<fieldset><legend><b><?php htmlout($period['DisplayStartDate'] . " up to " . $period['DisplayEndDate']); ?></b></legend>
 					<form action="" method="post">
 						<div class="left">
+							<?php if($period['BillingStatus'] == 0) : ?>
+								<?php $color = "red"; ?>
+								<label class="notBilled">Billing Status: </label><span style="color: red;">This period has NOT BEEN SET AS BILLED.</span>
+								<?php $totalCostForAllPeriodsSummedUp += $period['TotalBookingCostThisMonthJustNumber']; ?>
+							<?php else : ?>
+								<?php $color = "green"; ?>
+								<label class="notBilled">Billing Status: </label><span style="color: green;">This period has BEEN SET AS BILLED.</span>
+							<?php endif; ?>
 							<label class="notBilled">Period Info:</label><span><b><?php htmlout($period['MergeStatus']); ?></b></span>
 							<label class="notBilled">Credits Given:</label><span><b><?php htmlout($period['CreditsGiven']); ?></b></span>
 							<label class="notBilled">Booking Time Charged:</label><span><b><?php htmlout($period['BookingTimeCharged']); ?></b></span>
 							<label class="notBilled">Excess Booking Time:</label><span><b><?php htmlout($period['OverCreditsTimeExact']); ?></b></span>
 							<label class="notBilled">Excess Time Charged:</label><span><b><?php htmlout($period['OverCreditsTimeCharged']); ?></b></span>
 							<label class="notBilled">Cost (Subscription + Excess Booking Time):</label><span><b><?php htmlout($period['TotalBookingCostThisMonthAsParts']); ?></b></span>
-							<label class="notBilled">Cost (Total):</label><span><b style="color:red"><?php htmlout($period['TotalBookingCostThisMonth']); ?></b></span>
-							<?php if($period['BillingStatus'] == 0) : ?>
-								<label class="notBilled">Billing Status: </label><span style="color: red;">This period has NOT BEEN SET AS BILLED.</span>
-								<?php $totalCostForAllPeriodsSummedUp += $period['TotalBookingCostThisMonthJustNumber']; ?>
-							<?php else : ?>
-								<label class="notBilled">Billing Status: </label><span style="color: green;">This period has BEEN SET AS BILLED.</span>
-							<?php endif; ?>
+							<label class="notBilled">Cost (Total):</label><span><b style="color:<?php htmlout($color); ?>"><?php htmlout($period['TotalBookingCostThisMonth']); ?></b></span>
 						</div>
 
 						<div class="left">
