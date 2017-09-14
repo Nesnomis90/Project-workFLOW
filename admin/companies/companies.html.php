@@ -21,16 +21,6 @@
 			<?php endif; ?>
 		</div>
 
-		<form action="" method="post">
-			<div class="right">
-				<?php if(isSet($_SESSION['companiesEnableDelete']) AND $_SESSION['companiesEnableDelete']) : ?>
-					<input type="submit" name="action" value="Disable Delete">
-				<?php else : ?>
-					<input type="submit" name="action" value="Enable Delete">
-				<?php endif; ?>
-			</div>
-		</form>
-		
 		<?php if($rowNum>0) :?>
 			<form action="" method="post">
 				<div class="left">
@@ -91,7 +81,7 @@
 									<input type="submit" value="Credits">
 									<input type="hidden" name="Company" value="<?php htmlout($company['id']); ?>">
 								</td>
-							</form>								
+							</form>
 								<td><?php htmlout($company['CreditSubscriptionName']); ?></td>
 								<td><?php htmlout($company['CompanyCredits']); ?></td>
 								<td>
@@ -109,14 +99,14 @@
 							<form action="" method="post">
 								<td><input type="submit" name="action" value="Booking History"></td>
 								<td><?php htmlout($company['TotalPeriods']); ?></td>
-								<td><?php htmlout($company['BilledPeriods']); ?></td>								
+								<td><?php htmlout($company['BilledPeriods']); ?></td>
 								<td>
 									<?php if($company['NotBilledPeriods'] > 0) : ?>
 										<span style="color:red"><?php htmlout($company['NotBilledPeriods']); ?></span>
 									<?php else : ?>
 										<span style="color:green"><?php htmlout($company['NotBilledPeriods']); ?></span>
 									<?php endif; ?>
-								</td>								
+								</td>
 								<?php if($company['DeletionDate'] == null) :?>
 										<td>
 											<p>No Date Set</p>
@@ -130,15 +120,8 @@
 								<td><?php htmlout($company['DatetimeCreated']); ?></td>		
 								<td><input type="submit" name="action" value="Merge"></td>
 								<td><input type="submit" name="action" value="Edit"></td>
-								<td>
-									<?php if(isSet($_SESSION['companiesEnableDelete']) AND $_SESSION['companiesEnableDelete']) : ?>
-										<input type="submit" name="action" value="Delete">
-									<?php else : ?>
-										<input type="submit" name="disabled" value="Delete" disabled>
-									<?php endif; ?>
-								</td>
-								<input type="hidden" id="CompanyName" name="CompanyName" 
-									value="<?php htmlout($company['CompanyName']); ?>">
+								<td><input type="submit" name="action" value="Delete"></td>
+								<input type="hidden" name="CompanyName" value="<?php htmlout($company['CompanyName']); ?>">
 								<input type="hidden" name="id" value="<?php htmlout($company['id']); ?>">
 							</form>
 						</tr>
@@ -147,7 +130,7 @@
 					<tr><td colspan="21"><b>There are no active companies</b></td></tr>
 				<?php endif; ?>
 			</table>
-			
+
 			<?php if(isSet($unactivedcompanies)) : ?>
 				<table>
 					<caption>Unactivated New Companies</caption>
@@ -155,7 +138,7 @@
 						<th>Company</th>
 						<th>Date</th>
 						<th colspan="2">Alter Company</th>
-					</tr>				
+					</tr>
 					<tr>
 						<th>Name</th>
 						<th>Created</th>
@@ -165,27 +148,18 @@
 					<?php foreach ($unactivedcompanies as $company): ?>
 						<tr>
 							<form action="" method="post">
-								<td>
-									<?php htmlout($company['CompanyName']); ?>
-									<input type="hidden" id="CompanyName" name="CompanyName" 
-									value="<?php htmlout($company['CompanyName']); ?>"> 
-								</td>
-								<td><?php htmlout($company['DatetimeCreated']); ?></td>							
+								<td><?php htmlout($company['CompanyName']); ?></td>
+								<td><?php htmlout($company['DatetimeCreated']); ?></td>
 								<td><input type="submit" name="action" value="Activate"></td>
-								<td>
-									<?php if(isSet($_SESSION['companiesEnableDelete']) AND $_SESSION['companiesEnableDelete']) : ?>
-										<input type="submit" name="action" value="Delete">
-									<?php else : ?>
-										<input type="submit" name="disabled" value="Delete" disabled>
-									<?php endif; ?>
-								</td>
+								<td><input type="submit" name="action" value="Delete"></td>
+								<input type="hidden" id="CompanyName" name="CompanyName" value="<?php htmlout($company['CompanyName']); ?>">
 								<input type="hidden" name="id" value="<?php htmlout($company['id']); ?>">
 							</form>
 						</tr>
 					<?php endforeach; ?>
 				</table>
 			<?php endif; ?>
-			
+
 			<?php if(isSet($inactivecompanies)) : ?>
 				<table>
 					<caption>Inactive Old Companies</caption>
@@ -194,11 +168,11 @@
 						<th colspan="2">Booking Time Used</th>
 						<th colspan="2">Dates</th>
 						<th colspan="2">Alter Company</th>
-					</tr>				
+					</tr>
 					<tr>
 						<th>Name</th>
 						<th>This Month</th>
-						<th>All Time</th>						
+						<th>All Time</th>
 						<th>Created</th>
 						<th>Made Inactive</th>
 						<th>Activate</th>
@@ -207,13 +181,9 @@
 					<?php foreach ($inactivecompanies as $company): ?>
 						<tr>
 							<form action="" method="post">
-								<td>
-									<?php htmlout($company['CompanyName']); ?>
-									<input type="hidden" id="CompanyName" name="CompanyName" 
-									value="<?php htmlout($company['CompanyName']); ?>"> 
-								</td>
+								<td><?php htmlout($company['CompanyName']); ?></td>
 								<td><?php htmlout($company['MonthlyCompanyWideBookingTimeUsed']); ?></td>
-								<td><?php htmlout($company['TotalCompanyWideBookingTimeUsed']); ?></td>								
+								<td><?php htmlout($company['TotalCompanyWideBookingTimeUsed']); ?></td>
 								<td><?php htmlout($company['DatetimeCreated']); ?></td>
 								<td><?php htmlout($company['DeletionDate']); ?></td>
 								<td><input type="submit" name="action" value="Activate"></td>
@@ -224,13 +194,14 @@
 										<input type="submit" name="disabled" value="Delete" disabled>
 									<?php endif; ?>
 								</td>
+								<input type="hidden" id="CompanyName" name="CompanyName" value="<?php htmlout($company['CompanyName']); ?>"> 
 								<input type="hidden" name="id" value="<?php htmlout($company['id']); ?>">
 							</form>
 						</tr>
 					<?php endforeach; ?>
 				</table>
 			<?php endif; ?>
-			
+
 		<?php else : ?>
 			<tr><b>There are no companies registered in the database.</b></tr>
 			<tr>
@@ -242,6 +213,5 @@
 
 	<div class="left"><a href="..">Return to CMS home</a></div>
 
-	<?php include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/logout.inc.html.php'; ?>
 	</body>
 </html>

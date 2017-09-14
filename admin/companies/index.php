@@ -1777,18 +1777,6 @@ if ((isSet($_POST['action']) AND $_POST['action'] == "Booking History") OR
 	exit();
 }
 
-// If admin wants to be able to delete companies it needs to enabled first
-if (isSet($_POST['action']) AND $_POST['action'] == "Enable Delete"){
-	$_SESSION['companiesEnableDelete'] = TRUE;
-	$refreshcompanies = TRUE;
-}
-
-// If admin wants to be disable company deletion
-if (isSet($_POST['action']) AND $_POST['action'] == "Disable Delete"){
-	unset($_SESSION['companiesEnableDelete']);
-	$refreshcompanies = TRUE;
-}
-
 // If admin wants to activate a registered company
 if (isSet($_POST['action']) AND $_POST['action'] == 'Activate') {
 	// Update selected company in database to be active
@@ -2244,8 +2232,10 @@ if (isSet($_POST['action']) and $_POST['action'] == 'Confirm Merge'){
 }
 
 // If admin wants to remove a company from the database
-if (isSet($_POST['action']) and $_POST['action'] == 'Delete')
-{
+if(isSet($_POST['action']) and $_POST['action'] == 'Delete'){
+
+	$companyID = $_POST['id'];
+
 	// Delete selected company from database
 	try
 	{
@@ -2255,7 +2245,7 @@ if (isSet($_POST['action']) and $_POST['action'] == 'Delete')
 		$sql = 'DELETE FROM `company` 
 				WHERE 		`companyID` = :id';
 		$s = $pdo->prepare($sql);
-		$s->bindValue(':id', $_POST['id']);
+		$s->bindValue(':id', $companyID);
 		$s->execute();
 
 		//close connection
