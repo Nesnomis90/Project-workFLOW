@@ -49,7 +49,7 @@
 				<th>Monthly Given Booking Time</th>
 				<th>Monthly Subscription Cost</th>
 				<th>Over Credits Fee</th>
-				<th>Active for # Companies</th>
+				<th>Active for # of Companies</th>
 				<th>Last Modified</th>
 				<th>Added</th>
 				<th>Edit</th>

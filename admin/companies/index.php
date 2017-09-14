@@ -2386,7 +2386,7 @@ if(isSet($_POST['confirmdelete']) AND $_POST['confirmdelete'] == "Yes, Delete Th
 
 	// Load company list webpage with updated database
 	header('Location: .');
-	exit();	
+	exit();
 }
 
 if(isSet($_POST['confirmdelete']) AND $_POST['confirmdelete'] == "No, Cancel The Delete"){
@@ -2958,7 +2958,8 @@ try
 			ON			cr.`CreditsID` = cc.`CreditsID`
 			LEFT JOIN 	`companycreditshistory` cch
 			ON 			cch.`CompanyID` = c.`CompanyID`
-			GROUP BY 	c.`CompanyID`";
+			GROUP BY 	c.`CompanyID`
+			ORDER BY 	c.`name`";
 	$s = $pdo->prepare($sql);
 	$s->bindValue(':minimumSecondsPerBooking', $minimumSecondsPerBooking);
 	$s->bindValue(':aboveThisManySecondsToCount', $aboveThisManySecondsToCount);
@@ -3096,8 +3097,9 @@ foreach($result as $row){
 									);
 	}
 }
-	unset($_SESSION['MergeCompanySelectedCompanyID']);
-	unset($_SESSION['MergeCompanySelectedCompanyID2']);
+
+unset($_SESSION['MergeCompanySelectedCompanyID']);
+unset($_SESSION['MergeCompanySelectedCompanyID2']);
 
 var_dump($_SESSION); // TO-DO: Remove before uploading
 

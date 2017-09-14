@@ -436,13 +436,13 @@ if(isSet($refreshCompanyCredits) AND $refreshCompanyCredits){
 clearEditCompanyCreditsSessions();
 
 // Get only information from the specific company
-if(isSet($_GET['Company'])){	
+if(isSet($_GET['Company'])){
 	try
 	{
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 
 		$pdo = connect_to_db();
-		
+
 		$sql = 'SELECT 			c.`CompanyID`									AS TheCompanyID,
 								c.`name`										AS CompanyName,
 								c.`startDate`									AS CompanyBillingMonthStart,
@@ -470,7 +470,7 @@ if(isSet($_GET['Company'])){
 
 		$result = $s->fetchAll(PDO::FETCH_ASSOC);
 		$rowNum = sizeOf($result);
-		
+
 		//close connection
 		$pdo = null;
 	}
@@ -489,7 +489,7 @@ if(!isSet($_GET['Company'])){
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 
 		$pdo = connect_to_db();
-		
+
 		$sql = "SELECT 			c.`CompanyID`									AS TheCompanyID,
 								c.`name`										AS CompanyName,
 								c.`startDate`									AS CompanyBillingMonthStart,
@@ -509,16 +509,15 @@ if(!isSet($_GET['Company'])){
 				INNER JOIN 		`credits` cr
 				ON 				cr.`CreditsID` = cc.`CreditsID`
 				WHERE 			c.`isActive` > 0
-				ORDER BY		UNIX_TIMESTAMP(cc.`datetimeAdded`)
-				DESC";
-				
+				ORDER BY		c.`name`";
+
 		$return = $pdo->query($sql);
 		$result = $return->fetchAll(PDO::FETCH_ASSOC);
 		$rowNum = sizeOf($result);
-		
+
 		//close connection
 		$pdo = null;
-			
+
 	}
 	catch (PDOException $e)
 	{
@@ -526,7 +525,7 @@ if(!isSet($_GET['Company'])){
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
 		exit();
 	}
-}	
+}
 
 // Create an array with the actual key/value pairs we want to use in our HTML	
 foreach($result AS $row){
@@ -548,7 +547,7 @@ foreach($result AS $row){
 		$creditsGiven = convertMinutesToHoursAndMinutes($row['CreditsGivenInMinutes']);
 		$alternativeCredits = "No";
 	}
-		
+
 	// Format what over fee rate we're using (hourly or minute by minute)
 	$creditsHourPrice = $row['CreditsHourPrice'];
 	if($creditsHourPrice != NULL) {
@@ -556,15 +555,15 @@ foreach($result AS $row){
 	} else {
 		$creditsOverCreditsFee = "Error, not set.";
 	}
-	
+
 	$creditsMonthlyPrice = convertToCurrency($row['CreditsMonthlyPrice']);
-	
+
 	// Create an array with the actual key/value pairs we want to use in our HTML
 	$companycredits[] = array(
 							'TheCompanyID' => $row['TheCompanyID'],
 							'CompanyName' => $row['CompanyName'],
 							'CompanyBillingMonthStart' => $displayCompanyBillingMonthStart,
-							'CompanyBillingMonthEnd' => $displayCompanyBillingMonthEnd,						
+							'CompanyBillingMonthEnd' => $displayCompanyBillingMonthEnd,
 							'CreditsID' => $row['CreditsID'],
 							'CreditsName' => $row['CreditsName'],
 							'CreditsDescription' => $row['CreditsDescription'],
