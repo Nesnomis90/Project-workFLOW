@@ -2235,7 +2235,7 @@ if (isSet($_POST['action']) and $_POST['action'] == 'Confirm Merge'){
 if(isSet($_POST['action']) and $_POST['action'] == 'Delete'){
 
 	$companyID = $_POST['CompanyID'];
-	$companyName = $_POST['CompanyName']
+	$companyName = $_POST['CompanyName'];
 
 	var_dump($_SESSION); // TO-DO: Remove before uploading
 
@@ -2279,7 +2279,7 @@ if(isSet($_POST['confirmdelete']) AND $_POST['confirmdelete'] == "Yes, Delete Th
 		$pdo = connect_to_db();
 		$sql = 'SELECT	`password`
 				FROM	`user`
-				WHERE	`userID` = :userID`
+				WHERE	`userID` = :userID
 				LIMIT 	1';
 		$s = $pdo->prepare($sql);
 		$s->bindValue(':userID', $_SESSION['LoggedInUserID']);
@@ -2307,7 +2307,7 @@ if(isSet($_POST['confirmdelete']) AND $_POST['confirmdelete'] == "Yes, Delete Th
 	}
 
 	// Remove the company's active/future bookings
-	// The rest will cascade the companyID to null
+	// The rest will be set companyID to null from FK being deleted
 	try
 	{
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
@@ -2354,7 +2354,7 @@ if(isSet($_POST['confirmdelete']) AND $_POST['confirmdelete'] == "Yes, Delete Th
 	try
 	{
 		// Save a description with information about the meeting room that was removed
-		$description = 	"The company: " . $companyName . " no longer exists." .
+		$description = 	"The company: $companyName no longer exists." .
 						"\nIt was removed by: " . $_SESSION['LoggedInUserName'];
 
 		$sql = "INSERT INTO `logevent` 
@@ -2382,7 +2382,7 @@ if(isSet($_POST['confirmdelete']) AND $_POST['confirmdelete'] == "Yes, Delete Th
 		exit();
 	}
 
-	$_SESSION['CompanyUserFeedback'] = "Successfully removed the company!";
+	$_SESSION['CompanyUserFeedback'] = "Successfully removed the company $companyName!";
 
 	// Load company list webpage with updated database
 	header('Location: .');
