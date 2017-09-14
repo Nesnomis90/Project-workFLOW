@@ -82,8 +82,8 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Remove'){
 	{
 		// Save a description with information about the employee that was removed
 		// from the company.
-		$logEventDescription = 'The user: ' . $_POST['UserName'] . 
-		' was removed from the company: ' . $_POST['CompanyName'] . 
+		$logEventDescription = "The user: " . $_POST['UserName'] . 
+		" was removed from the company: " . $_POST['CompanyName'] . 
 		".\nRemoved by: " . $_SESSION['LoggedInUserName'];
 
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
@@ -589,9 +589,9 @@ if (isSet($_POST['action']) AND $_POST['action'] == 'Confirm Employee')
 		
 		// Save a description with information about the employee that was added
 		// to the company.
-		$logEventDescription = 'The user: ' . $userinfo . 
-		'\nWas added to the company: ' . $companyinfo . 
-		'\nAnd was given the position: ' . $positioninfo . 
+		$logEventDescription = "The user: " . $userinfo . 
+		"\nWas added to the company: " . $companyinfo . 
+		"\nAnd was given the position: " . $positioninfo . 
 		".\nAdded by : " . $_SESSION['LoggedInUserName'];
 		
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
