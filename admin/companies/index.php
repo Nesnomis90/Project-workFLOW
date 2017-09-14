@@ -2244,11 +2244,23 @@ if(isSet($_POST['action']) and $_POST['action'] == 'Delete'){
 }
 
 if(isSet($_POST['confirmdelete']) AND $_POST['confirmdelete'] == "Yes, Delete The Company"){
-	
+
+	if(	(!isSet($_POST['CompanyID'], $_POST['CompanyName'])) OR 
+		(isSet($_POST['CompanyID'], $_POST['CompanyName']) AND ($_POST['CompanyID'] == "" OR $_POST['CompanyName'] == ""))){
+		$_SESSION['CompanyUserFeedback'] = "Could not delete the company due to a missing identifier.";
+
+		// Load company list webpage with updated database
+		header('Location: .');
+		exit();
+	}
+
+	$companyID = $_POST['CompanyID'];
+	$companyName = $_POST['CompanyName'];
+
 	// Check if password is submitted
 	if(!isSet($_POST['password']) OR (isSet($_POST['password']) AND $_POST['password'] == "")){
-		$companyID = $_POST['CompanyID'];
-		$companyName = $_POST['CompanyName']
+
+		$wrongPassword = "You need to fill in your password.";
 
 		var_dump($_SESSION); // TO-DO: Remove before uploading
 
@@ -2256,38 +2268,95 @@ if(isSet($_POST['confirmdelete']) AND $_POST['confirmdelete'] == "Yes, Delete Th
 		exit();
 	}
 
-	// Delete selected company from database
+	$submittedPassword = $_POST['password'];
+	$hashedPassword = hashPassword($submittedPassword);
+
+	// Check if password is correct
 	try
 	{
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 
 		$pdo = connect_to_db();
-		$sql = 'DELETE FROM `company` 
-				WHERE 		`companyID` = :CompanyID';
+		$sql = 'SELECT	`password`
+				FROM	`user`
+				WHERE	`userID` = :userID`
+				LIMIT 	1';
 		$s = $pdo->prepare($sql);
-		$s->bindValue(':CompanyID', $companyID);
+		$s->bindValue(':userID', $_SESSION['LoggedInUserID']);
 		$s->execute();
+
+		$correctPassword = $s->fetchColumn();
 
 		//close connection
 		$pdo = null;
 	}
 	catch (PDOException $e)
 	{
-		$error = 'Error getting company to delete: ' . $e->getMessage();
+		$error = 'Error confirming password: ' . $e->getMessage();
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
 		exit();
 	}
 
-	$_SESSION['CompanyUserFeedback'] = "Successfully removed the company!";
+	if($hashedPassword != $correctPassword){
+		$wrongPassword = "The password you submitted is incorrect.";
+
+		var_dump($_SESSION); // TO-DO: Remove before uploading
+
+		include_once 'confirmdelete.html.php';
+		exit();
+	}
+
+	// Remove the company's active/future bookings
+	// The rest will cascade the companyID to null
+	try
+	{
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+
+		$pdo = connect_to_db();
+		$pdo->beginTransaction();
+		$sql = 'DELETE FROM `booking` 
+				WHERE 		`companyID` = :CompanyID
+				AND			`dateTimeCancelled` IS NULL
+				AND			`actualEndDateTime` IS NULL
+				AND			`endDateTime` > CURRENT_TIMESTAMP';
+		$s = $pdo->prepare($sql);
+		$s->bindValue(':CompanyID', $companyID);
+		$s->execute();
+	}
+	catch (PDOException $e)
+	{
+		$pdo->rollback();
+		$error = 'Error deleting active bookings: ' . $e->getMessage();
+		$pdo = null;
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+		exit();
+	}
+
+	// Delete selected company from database
+	try
+	{
+		$sql = 'DELETE FROM `company` 
+				WHERE 		`companyID` = :CompanyID';
+		$s = $pdo->prepare($sql);
+		$s->bindValue(':CompanyID', $companyID);
+		$s->execute();
+	}
+	catch (PDOException $e)
+	{
+		$pdo->rollback();
+		$error = 'Error deleting company: ' . $e->getMessage();
+		$pdo = null;
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+		exit();
+	}
 
 	// Add a log event that a company was removed
 	try
 	{
 		// Save a description with information about the meeting room that was removed
-		$description = 	"The company: " . $_POST['CompanyName'] . " no longer exists." .
+		$description = 	"The company: " . $companyName . " no longer exists." .
 						"\nIt was removed by: " . $_SESSION['LoggedInUserName'];
 
-		$pdo = connect_to_db();
 		$sql = "INSERT INTO `logevent` 
 				SET			`actionID` = 	(
 												SELECT 	`actionID` 
@@ -2299,16 +2368,21 @@ if(isSet($_POST['confirmdelete']) AND $_POST['confirmdelete'] == "Yes, Delete Th
 		$s->bindValue(':description', $description);
 		$s->execute();
 
+		$pdo->commit();
+
 		//Close the connection
 		$pdo = null;
 	}
 	catch(PDOException $e)
 	{
+		$pdo->rollback();
 		$error = 'Error adding log event to database: ' . $e->getMessage();
-		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
 		$pdo = null;
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
 		exit();
 	}
+
+	$_SESSION['CompanyUserFeedback'] = "Successfully removed the company!";
 
 	// Load company list webpage with updated database
 	header('Location: .');

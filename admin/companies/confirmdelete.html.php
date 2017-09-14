@@ -22,8 +22,14 @@
 				"\nThis will permanently remove all information about the company and remove all its active bookings." .
 				"\n\nAre you sure you want to delete this company?"); ?></span>	
 			</div>
+			<?php if(isSet($wrongPassword)) : ?>
+			<div class="left">
+				<span class="warning"><?php htmlout($wrongPassword); ?></span>
+			</div>
+			<?php endif; ?>
 			<div class="left">
 				<form action="" method="post">
+					<label>Confirm with Password: </label>
 					<?php if(isSet($wrongPassword)) : ?>
 						<input type="password" name="password" class="fillOut">
 					<?php else : ?>
