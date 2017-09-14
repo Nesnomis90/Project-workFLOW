@@ -1,5 +1,7 @@
 <?php
-session_start();
+if(session_status() == PHP_SESSION_NONE) {
+    session_start();
+}
 
 if(isSet($_GET['logoutForNav'])){
 	// Same stuff we do on logout in access
@@ -28,10 +30,10 @@ if(isSet($_GET['logoutForNav'])){
 		<li><a href="/admin/equipment">Equipment</a></li>
 		<li><a href="/admin/events">Events</a></li>
 		<li><a href="/admin/logevents">Log Events</a></li>
-		<li><a href="/admin/meetingrooms">Meeting Rooms</a></li>		
+		<li><a href="/admin/meetingrooms">Meeting Rooms</a></li>
 		<li><a href="/admin/roomequipment">Room Equipment</a></li>
 		<li><a href="/admin/users">Users</a></li>
-		
+
 		<li><b id="Clock"></b></li>
 		<li style="float:right;"><a href="?logoutForNav">Log Out</a></li>
 	</ul>

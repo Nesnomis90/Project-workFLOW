@@ -1,5 +1,6 @@
 <!-- This is the HTML form used for all users in COMPANY to confirm that they want to create request to join a company -->
 <?php include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/helpers.inc.php'; ?>
+<?php include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/navcheck.inc.php'; ?>
 <!DOCTYPE html>
 <html lang="en">
 	<head>
