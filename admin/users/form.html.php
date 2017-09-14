@@ -39,9 +39,7 @@
 				<?php endif; ?>
 				<div>
 					<label for="firstname">Set New First Name: </label>
-					<input type="text" name="firstname" id="firstname" 
-					placeholder="Enter First Name"
-					value="<?php htmlout($firstname); ?>">
+					<input type="text" name="firstname" placeholder="Enter First Name" value="<?php htmlout($firstname); ?>">
 				</div>
 
 				<?php if($action == 'editform') : ?>
@@ -53,9 +51,7 @@
 
 				<div>
 					<label for="lastname">Set New Last Name: </label>
-					<input type="text" name="lastname" id="lastname" 
-					placeholder="Enter Last Name"
-					value="<?php htmlout($lastname); ?>">
+					<input type="text" name="lastname" placeholder="Enter Last Name" value="<?php htmlout($lastname); ?>">
 				</div>
 
 				<?php if($action == 'editform') : ?>
@@ -67,9 +63,7 @@
 
 				<div>
 					<label for="email">Set New Email: </label>
-					<input type="text" name="email" id="email" 
-					placeholder="Enter Email"
-					value="<?php htmlout($email); ?>">
+					<input type="text" name="email" placeholder="Enter Email" value="<?php htmlout($email); ?>">
 				</div>
 
 				<?php if($action == 'addform') : ?>
@@ -80,16 +74,12 @@
 				<?php elseif($action == 'editform') : ?>
 					<div>
 						<label for="password">Password:</label>
-						<input type="password" name="password" id="password"
-						placeholder="Set New Password"
-						value="<?php htmlout($password);?>">
+						<input type="password" name="password" placeholder="Set New Password" value="<?php htmlout($password);?>">
 					</div>
 
 					<div>
 						<label for="confirmpassword">Password:</label>
-						<input type="password" name="confirmpassword" id="confirmpassword"
-						placeholder="Repeat New Password"
-						value="<?php htmlout($confirmpassword);?>">
+						<input type="password" name="confirmpassword" placeholder="Repeat New Password" value="<?php htmlout($confirmpassword);?>">
 					</div>
 				<?php endif; ?>
 
@@ -102,17 +92,12 @@
 
 				<div>
 					<label for="accessID">Set New Access: </label>
-						<select name="accessID" id="accessID">
+						<select name="accessID">
 							<?php foreach($access as $row): ?> 
 								<?php if($row['accessID']==$accessID):?>
-									<option selected="selected" 
-											value=<?php htmlout($row['accessID']); ?>>
-											<?php htmlout($row['accessname']);?>
-									</option>
+									<option selected="selected" value=<?php htmlout($row['accessID']); ?>><?php htmlout($row['accessname']);?></option>
 								<?php else : ?>
-									<option value=<?php htmlout($row['accessID']); ?>>
-											<?php htmlout($row['accessname']);?>
-									</option>
+									<option value=<?php htmlout($row['accessID']); ?>><?php htmlout($row['accessname']);?></option>
 								<?php endif;?>
 							<?php endforeach; ?>
 						</select>
@@ -130,9 +115,7 @@
 
 					<div>
 						<label for="displayname">Set New Display Name: </label>
-						<input type="text" name="displayname" id="displayname"
-						placeholder="Enter A Display Name"
-						value="<?php htmlout($displayname); ?>">
+						<input type="text" name="displayname" placeholder="Enter A Display Name" value="<?php htmlout($displayname); ?>">
 					</div>
 
 					<div>
@@ -146,8 +129,7 @@
 
 					<div>
 						<label class="description" for="bookingdescription">Set New Booking Description: </label>
-						<textarea rows="4" cols="50" name="bookingdescription" id="bookingdescription"
-						placeholder="Enter A Booking Description" style="white-space: pre-wrap;"><?php htmlout($bookingdescription); ?></textarea>
+						<textarea rows="4" cols="50" name="bookingdescription" placeholder="Enter A Booking Description" style="white-space: pre-wrap;"><?php htmlout($bookingdescription); ?></textarea>
 					</div>
 
 					<div>
@@ -161,13 +143,12 @@
 
 					<div>
 						<label for="ReduceAccessAtDate">Set New Date to Reduce Access: </label>
-						<input type="text" name="ReduceAccessAtDate" id="ReduceAccessAtDate"
-						value="<?php htmlout($reduceAccessAtDate); ?>">
+						<input type="text" name="ReduceAccessAtDate" value="<?php htmlout($reduceAccessAtDate); ?>">
 					</div>
 				<?php endif; ?>
 
 				<div class="left">
-					<input type="hidden" name="id" value="<?php htmlout($id); ?>">
+					<input type="hidden" name="UserID" value="<?php htmlout($userID); ?>">
 					<input type="submit" name="action" value="<?php htmlout($button); ?>">
 					<?php if($action == 'addform') :?>
 						<input type="submit" name="add" value="Reset">

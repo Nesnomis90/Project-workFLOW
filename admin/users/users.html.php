@@ -1,6 +1,5 @@
 <!-- This is the HTML form used for DISPLAYING a list of USER information-->
-<?php include_once $_SERVER['DOCUMENT_ROOT'] .
- '/includes/helpers.inc.php'; ?>
+<?php include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/helpers.inc.php'; ?>
 <!DOCTYPE html>
 <html lang="en">
 	<head>
@@ -29,15 +28,6 @@
 		<div class="left">
 			<form action="?add" method="post">
 				<input type="submit" name="action" value="Create User">
-			</form>
-		</div>
-		<div class="right">
-			<form action="" method="post">
-				<?php if(isSet($_SESSION['usersEnableDelete']) AND $_SESSION['usersEnableDelete']) : ?>
-					<input type="submit" name="action" value="Disable Delete">
-				<?php else : ?>
-					<input type="submit" name="action" value="Enable Delete">
-				<?php endif; ?>
 			</form>
 		</div>
 
@@ -87,16 +77,9 @@
 								</td>
 							<?php endif; ?>
 							<td><input type="submit" name="action" value="Edit"></td>
-							<td>
-								<?php if(isSet($_SESSION['usersEnableDelete']) AND $_SESSION['usersEnableDelete']) : ?>
-									<input type="submit" name="action" value="Delete">
-								<?php else : ?>
-									<input type="submit" name="disabled" value="Delete" disabled>
-								<?php endif; ?>
-							</td>
-							<input type="hidden" name="id" value="<?php htmlout($user['id']); ?>">
-							<input type="hidden" name="UserInfo" id="UserInfo"
-							value="<?php htmlout($user['UserInfo']); ?>">
+							<td><input type="submit" name="action" value="Delete"></td>
+							<input type="hidden" name="UserID" value="<?php htmlout($user['UserID']); ?>">
+							<input type="hidden" name="UserInfo" value="<?php htmlout($user['UserInfo']); ?>">
 						</tr>
 					</form>
 				<?php endforeach; ?>
@@ -150,21 +133,14 @@
 							<?php endif; ?>
 							<td><input type="submit" name="action" value="Edit"></td>
 							<td><input type="submit" name="action" value="Re-Activate"></td>
-							<td>
-								<?php if(isSet($_SESSION['usersEnableDelete']) AND $_SESSION['usersEnableDelete']) : ?>
-									<input type="submit" name="action" value="Delete">
-								<?php else : ?>
-									<input type="submit" name="disabled" value="Delete" disabled>
-								<?php endif; ?>
-							</td>
-							<input type="hidden" name="id" value="<?php htmlout($user['id']); ?>">
-							<input type="hidden" name="UserInfo" id="UserInfo"
-							value="<?php htmlout($user['UserInfo']); ?>">
+							<td><input type="submit" name="action" value="Delete"></td>
+							<input type="hidden" name="UserID" value="<?php htmlout($user['UserID']); ?>">
+							<input type="hidden" name="UserInfo" value="<?php htmlout($user['UserInfo']); ?>">
 						</tr>
 					</form>
 				<?php endforeach; ?>
 			</table>
-			<?php endif; ?>			
+			<?php endif; ?>
 
 			<?php if(isSet($inactiveusers)) : ?>
 				<table>
@@ -193,14 +169,9 @@
 							<td><?php htmlout($user['accessname']); ?></td>
 							<td><?php htmlout($user['datecreated']); ?></td>
 							<td><input type="submit" name="action" value="Activate"></td>
-							<td>
-								<?php if(isSet($_SESSION['usersEnableDelete']) AND $_SESSION['usersEnableDelete']) : ?>
-									<input type="submit" name="action" value="Delete">
-								<?php else : ?>
-									<input type="submit" name="disabled" value="Delete" disabled>
-								<?php endif; ?>
-							</td>
-							<input type="hidden" name="id" value="<?php htmlout($user['id']); ?>">
+							<td><input type="submit" name="action" value="Delete"></td>
+							<input type="hidden" name="UserID" value="<?php htmlout($user['UserID']); ?>">
+							<input type="hidden" name="UserInfo" value="<?php htmlout($user['UserInfo']); ?>">
 						</tr>
 					</form>
 					<?php endforeach; ?>
@@ -213,6 +184,5 @@
 
 	<div class="left"><a href="/admin/">Return to CMS home</a></div>
 
-	<?php include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/logout.inc.html.php'; ?>
 	</body>
 </html>

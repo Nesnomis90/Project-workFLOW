@@ -2292,6 +2292,7 @@ if(isSet($_POST['confirmdelete']) AND $_POST['confirmdelete'] == "Yes, Delete Th
 	}
 	catch (PDOException $e)
 	{
+		$pdo = null;
 		$error = 'Error confirming password: ' . $e->getMessage();
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
 		exit();
