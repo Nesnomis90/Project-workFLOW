@@ -172,7 +172,7 @@ function validateUserInputs(){
 					FROM 	`credits`
 					WHERE 	`name`= :creditsName';
 			$s = $pdo->prepare($sql);
-			$s->bindValue(':creditsName', $validatedCreditsName);		
+			$s->bindValue(':creditsName', $validatedCreditsName);
 			$s->execute();
 
 			$pdo = null;

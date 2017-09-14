@@ -47,7 +47,7 @@
 				<th>List</th>
 				<th>Amount</th>
 				<th>List</th>
-				<th>Active</th>
+				<th>Booked</th>
 				<th>Completed</th>
 				<th>Cancelled</th>
 				<th>Name</th>
