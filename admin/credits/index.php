@@ -172,7 +172,7 @@ function validateUserInputs(){
 					FROM 	`credits`
 					WHERE 	`name`= :creditsName';
 			$s = $pdo->prepare($sql);
-			$s->bindValue(':creditsName', $validatedCreditsName);		
+			$s->bindValue(':creditsName', $validatedCreditsName);
 			$s->execute();
 
 			$pdo = null;
@@ -233,40 +233,64 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Delete'){
 		// We can't delete this one.
 		$_SESSION['CreditsUserFeedback'] = "This Credits cannot be deleted. It is the default given Credits to all new companies.";
 	} else {
-		// Delete credits from database
+
+		$creditsName = $_POST['CreditsName'];
+		$creditsID = $_POST['CreditsID'];
+
+		// Set all companies to default subscription if they are currently using the one being deleted
 		try
 		{
 			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 
 			$pdo = connect_to_db();
+			$pdo->beginTransaction();
+			$sql = "UPDATE	`companycredits`
+					SET		`CreditsID` = 	(
+												SELECT	`CreditsID`
+												FROM	`credits`
+												WHERE	`name` = 'Default'
+												LIMIT 	1
+											),
+							`lastModified` = CURRENT_TIMESTAMP
+					WHERE 	`CreditsID` = :CreditsID";
+			$s = $pdo->prepare($sql);
+			$s->bindValue(':CreditsID', $creditsID);
+			$s->execute();
+		}
+		catch (PDOException $e)
+		{
+			$pdo->rollBack();
+			$pdo = null;
+			$error = 'Error giving companies default Credits: ' . $e->getMessage();
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+			exit();
+		}
+
+		// Delete credits from database
+		try
+		{
 			$sql = "DELETE FROM `credits` 
 					WHERE 		`CreditsID` = :CreditsID
 					AND			`name` != 'Default'";
 			$s = $pdo->prepare($sql);
-			$s->bindValue(':CreditsID', $_POST['CreditsID']);
+			$s->bindValue(':CreditsID', $creditsID);
 			$s->execute();
-
-			//close connection
-			$pdo = null;
 		}
 		catch (PDOException $e)
 		{
+			$pdo->rollBack();
+			$pdo = null;
 			$error = 'Error removing Credits: ' . $e->getMessage();
 			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
 			exit();
 		}
 
-		$_SESSION['CreditsUserFeedback'] = "Successfully removed the Credits.";
-
 		// Add a log event that the Credits has been Deleted
 		try
 		{
 			// Save a description with information about the Credits that was Deleted
-			$description = "The Credits: " . $_POST['CreditsName'] . " was removed by: " . $_SESSION['LoggedInUserName'];
+			$description = "The Credits: $creditsName was removed by: " . $_SESSION['LoggedInUserName'];
 
-			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
-
-			$pdo = connect_to_db();
 			$sql = "INSERT INTO `logevent` 
 					SET			`actionID` = 	(
 													SELECT 	`actionID` 
@@ -278,11 +302,14 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Delete'){
 			$s->bindValue(':description', $description);
 			$s->execute();
 
+			$pdo->commit();
+
 			//Close the connection
 			$pdo = null;
 		}
 		catch(PDOException $e)
 		{
+			$pdo->rollBack();
 			$error = 'Error adding log event to database: ' . $e->getMessage();
 			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
 			$pdo = null;
@@ -290,9 +317,11 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Delete'){
 		}
 	}
 
+	$_SESSION['CreditsUserFeedback'] = "Successfully removed the Credits $creditsName!";
+
 	// Load company list again
 	header('Location: .');
-	exit();	
+	exit();
 }
 
 // If admin wants to add Credits to the database
@@ -723,7 +752,7 @@ try
 	include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 
 	$pdo = connect_to_db();
-	
+
 	$sql = "SELECT 		cr.`CreditsID`									AS TheCreditsID,
 						cr.`name`										AS CreditsName,
 						cr.`description`								AS CreditsDescription,
@@ -732,16 +761,14 @@ try
 						cr.`overCreditHourPrice`						AS CreditsHourPrice,
 						cr.`lastModified`								AS CreditsLastModified,
 						cr.`datetimeAdded`								AS DateTimeAdded,
-						UNIX_TIMESTAMP(cr.`datetimeAdded`)				AS OrderByDate,
 						(
 							SELECT 	COUNT(cc.`CreditsID`)
 							FROM 	`companycredits` cc
 							WHERE 	cc.`CreditsID` = TheCreditsID
 						)												AS CreditsIsUsedByThisManyCompanies
 			FROM 		`credits` cr
-			ORDER BY	OrderByDate
-			DESC";
-			
+			ORDER BY	cr.`name`";
+
 	$return = $pdo->query($sql);
 	$result = $return->fetchAll(PDO::FETCH_ASSOC);
 	if(isSet($result)){
@@ -751,24 +778,23 @@ try
 	}
 	//close connection
 	$pdo = null;
-		
 }
 catch (PDOException $e)
 {
 	$error = 'Error getting Credits information: ' . $e->getMessage();
 	include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
 	exit();
-}	
+}
 
 // Create an array with the actual key/value pairs we want to use in our HTML	
 foreach($result AS $row){
-	
+
 	// Format datetimes
 	$addedDateTime = $row['DateTimeAdded'];
 	$modifiedDateTime = $row['CreditsLastModified'];
 	$displayAddedDateTime = convertDatetimeToFormat($addedDateTime , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
 	$displayModifiedDateTime = convertDatetimeToFormat($modifiedDateTime , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
-	
+
 	// Format Credits (From minutes to hours and minutes)
 	$creditsGivenInMinutes = $row['CreditsGivenInMinutes'];
 	if($creditsGivenInMinutes > 59){
@@ -780,7 +806,7 @@ foreach($result AS $row){
 	} else {
 		$creditsGiven = 'None';
 	}
-	
+
 	// Format what over fee rate we're using (hourly or minute by minute)
 	$creditsHourPrice = $row['CreditsHourPrice'];
 	if($creditsHourPrice != NULL){
@@ -788,9 +814,9 @@ foreach($result AS $row){
 	} else {
 		$creditsOverCreditsFee = "Error, not set.";
 	}
-	
+
 	$creditsMonthlyPrice = convertToCurrency($row['CreditsMonthlyPrice']);
-	
+
 	// Create an array with the actual key/value pairs we want to use in our HTML
 	$credits[] = array(
 							'TheCreditsID' => $row['TheCreditsID'],

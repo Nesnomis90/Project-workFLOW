@@ -15,7 +15,7 @@ function clearAddEmployeeAsOwnerSessions(){
 
 	unset($_SESSION['AddEmployeeAsOwnerCompanyPositionArray']);
 	unset($_SESSION['AddEmployeeAsOwnerUsersArray']);
-	
+
 	unset($_SESSION['AddEmployeeAsOwnerAutoFillInEmail']);
 }
 // Function to clear sessions used to remember user inputs on refreshing the edit employee form
@@ -125,7 +125,6 @@ if(isSet($_POST['action']) AND $_POST['action'] == "Confirm"){
 		}
 	}
 
-
 	if(!$invalidInput){
 		// Create Company
 		try
@@ -137,7 +136,7 @@ if(isSet($_POST['action']) AND $_POST['action'] == "Confirm"){
 			$s = $pdo->prepare($sql);
 			$s->bindValue(':CompanyName', $validatedCompanyName);
 			$s->execute();
-			
+
 			$lastCompanyID = $pdo->lastInsertId();
 		}
 		catch (PDOException $e)
@@ -147,7 +146,7 @@ if(isSet($_POST['action']) AND $_POST['action'] == "Confirm"){
 			$pdo = null;
 			exit();
 		}
-		
+
 		$_SESSION['normalCompanyFeedback'] = "Successfully added the company: " . $validatedCompanyName . ".";
 
 			// Give the company the default subscription
@@ -917,7 +916,9 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Add Employee') OR
 					$sqladd = " AND (`firstname` LIKE :search
 								OR `lastname` LIKE :search
 								OR `email` LIKE :search)";
-					$sql = $sql . $sqladd;
+					$sql .= $sqladd;
+
+					$sql .= " ORDER BY `lastname`";
 
 					$finalusersearchstring = '%' . $usersearchstring . '%';
 
@@ -927,6 +928,9 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Add Employee') OR
 					$s->execute();
 					$result = $s->fetchAll(PDO::FETCH_ASSOC);
 				} else {
+
+					$sql .= " ORDER BY `lastname`";
+
 					$s = $pdo->prepare($sql);
 					$s->bindValue(':CompanyID', $companyID);
 					$s->execute();
@@ -2173,7 +2177,8 @@ try
 			ON 			e.`CompanyID` = c.`CompanyID`
 			INNER JOIN	`user` u
 			ON			u.`UserID` = e.`UserID`
-			AND			u.`UserID` = :UserID";
+			AND			u.`UserID` = :UserID
+			ORDER BY	c.`name`";
 	$s = $pdo->prepare($sql);
 	$s->bindValue(':UserID', $_SESSION['LoggedInUserID']);
 	$s->execute();
@@ -2225,15 +2230,16 @@ if(isSet($selectedCompanyToDisplayID) OR (isSet($selectedCompanyToDisplayID) AND
 // Get a list of all companies that the user does not already work in
 try
 {
-	$sql = "SELECT 	c.`CompanyID`	AS CompanyID,
-					c.`name`		AS CompanyName
-			FROM	`company` c
-			WHERE	`companyID`
-			NOT IN	(
-						SELECT 	`companyID`
-						FROM	`employee`
-						WHERE	`userID` = :userID
-					)";
+	$sql = "SELECT 		c.`CompanyID`	AS CompanyID,
+						c.`name`		AS CompanyName
+			FROM		`company` c
+			WHERE		`companyID`
+			NOT IN		(
+							SELECT 	`companyID`
+							FROM	`employee`
+							WHERE	`userID` = :userID
+						)
+			ORDER BY	c.`name`";
 	$s = $pdo->prepare($sql);
 	$s->bindValue(":userID", $_SESSION['LoggedInUserID']);
 	$s->execute();

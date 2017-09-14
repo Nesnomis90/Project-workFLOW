@@ -233,8 +233,7 @@
 				<?php if(!$rightNow AND (!isSet($periodHasBeenBilled) OR $periodHasBeenBilled == 0)) : ?>
 					<form action="" method="post">
 						<label class="description" for="billingDescription">Billing Description: </label>
-						<textarea name="billingDescription" id="billingDescription" rows="4" cols="50"
-						placeholder="Type in any additional information you'd like to see when viewing this period later."></textarea>
+						<textarea name="billingDescription" rows="4" cols="50" placeholder="Type in any additional information you'd like to see when viewing this period later."></textarea>
 						<input type="hidden" name="nextPeriod" value="<?php htmlout($NextPeriod); ?>">
 						<input type="hidden" name="previousPeriod" value="<?php htmlout($PreviousPeriod); ?>">
 						<input type="hidden" name="billingStart" value="<?php htmlout($BillingStart); ?>">
@@ -243,8 +242,7 @@
 					</form>
 				<?php elseif(!$rightNow AND $periodHasBeenBilled == 1) : ?>
 					<label class="description" for="billingDescriptionDisabled">Billing Description: </label>
-					<textarea name="billingDescriptionDisabled" id="billingDescriptionDisabled" 
-					rows="8" cols="100" disabled><?php htmlout($billingDescription); ?></textarea>
+					<textarea name="billingDescriptionDisabled" rows="8" cols="100" disabled><?php htmlout($billingDescription); ?></textarea>
 				<?php endif; ?>
 			</div>
 			</fieldset>

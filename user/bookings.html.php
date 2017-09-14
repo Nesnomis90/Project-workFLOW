@@ -1,5 +1,6 @@
 <!--This is the HTML form for DISPLAYING a list of BOOKINGS for individual users-->
 <?php include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/helpers.inc.php'; ?>
+<?php include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/navcheck.inc.php'; ?>
 <!DOCTYPE html>
 <html lang="en">
 	<head>

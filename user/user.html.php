@@ -1,25 +1,17 @@
 <!-- This is the HTML form used to display user information to normal users-->
 <?php include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/helpers.inc.php'; ?>
+<?php include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/navcheck.inc.php'; ?>
 <!DOCTYPE html>
 <html lang="en">
 	<head>
 		<meta charset="utf-8">
 		<link rel="stylesheet" type="text/css" href="/CSS/myCSS.css">
 		<script src="/scripts/myFunctions.js"></script>	
-
-		<?php if(isSet($editMode)) : ?>
-			<style>
-				label {
-					width: 260px;
-				}
-			</style>
-		<?php else : ?>
-			<style>
-				label {
-					width: 260px;
-				}
-			</style>
-		<?php endif; ?>
+		<style>
+			label {
+				width: 260px;
+			}
+		</style>
 
 		<?php if(isSet($_SESSION['loggedIn'])) : ?>
 			<title>Your User Information</title>

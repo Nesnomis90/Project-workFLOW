@@ -283,63 +283,134 @@ if (isSet($_POST['action']) AND $_POST['action'] == "Select Separator Char"){
 	exit();
 }
 
+// If admin wants to remove a company from the database
+if(isSet($_POST['action']) and $_POST['action'] == 'Delete'){
 
+	$userID = $_POST['UserID'];
+	$userInfo = $_POST['UserInfo'];
 
-// If admin wants to be able to delete users it needs to enabled first
-if (isSet($_POST['action']) AND $_POST['action'] == "Enable Delete"){
-	$_SESSION['usersEnableDelete'] = TRUE;
-	$refreshUsers = TRUE;
-}
+	var_dump($_SESSION); // TO-DO: Remove before uploading
 
-// If admin wants to be disable user deletion
-if (isSet($_POST['action']) AND $_POST['action'] == "Disable Delete"){
-	unset($_SESSION['usersEnableDelete']);
-	$refreshUsers = TRUE;
+	include_once 'confirmdelete.html.php';
+	exit();
 }
 
 // If admin wants to remove a user from the database
-if (isSet($_POST['action']) and $_POST['action'] == 'Delete')
-{
-	include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+if(isSet($_POST['confirmdelete']) AND $_POST['confirmdelete'] == "Yes, Delete The User"){
 
-	// Delete selected user from database
+	if(	(!isSet($_POST['UserID'], $_POST['UserInfo'])) OR 
+		(isSet($_POST['UserID'], $_POST['UserInfo']) AND ($_POST['UserID'] == "" OR $_POST['UserInfo'] == ""))){
+		$_SESSION['UserManagementFeedbackMessage'] = "Could not delete the user due to a missing identifier.";
+
+		// Load company list webpage with updated database
+		header('Location: .');
+		exit();
+	}
+
+	$userID = $_POST['UserID'];
+	$userInfo = $_POST['UserInfo'];
+
+	// Check if password is submitted
+	if(!isSet($_POST['password']) OR (isSet($_POST['password']) AND $_POST['password'] == "")){
+
+		$wrongPassword = "You need to fill in your password.";
+
+		var_dump($_SESSION); // TO-DO: Remove before uploading
+
+		include_once 'confirmdelete.html.php';
+		exit();
+	}
+
+	$submittedPassword = $_POST['password'];
+	$hashedPassword = hashPassword($submittedPassword);
+
+	// Check if password is correct
 	try
 	{
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+
 		$pdo = connect_to_db();
-		$sql = 'DELETE FROM `user` 
-				WHERE 		`userID` = :id';
+		$sql = 'SELECT	`password`
+				FROM	`user`
+				WHERE	`userID` = :userID
+				LIMIT 	1';
 		$s = $pdo->prepare($sql);
-		$s->bindValue(':id', $_POST['id']);
+		$s->bindValue(':userID', $_SESSION['LoggedInUserID']);
 		$s->execute();
-		
+
+		$correctPassword = $s->fetchColumn();
+
 		//close connection
 		$pdo = null;
 	}
 	catch (PDOException $e)
 	{
+		$pdo = null;
+		$error = 'Error confirming password: ' . $e->getMessage();
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+		exit();
+	}
+
+	if($hashedPassword != $correctPassword){
+		$wrongPassword = "The password you submitted is incorrect.";
+
+		var_dump($_SESSION); // TO-DO: Remove before uploading
+
+		include_once 'confirmdelete.html.php';
+		exit();
+	}
+
+	// Remove the user's active/future bookings
+	// The rest will be set userID to null from FK being deleted
+	try
+	{
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+
+		$pdo = connect_to_db();
+		$pdo->beginTransaction();
+		$sql = 'DELETE FROM `booking` 
+				WHERE 		`userID` = :UserID
+				AND			`dateTimeCancelled` IS NULL
+				AND			`actualEndDateTime` IS NULL
+				AND			`endDateTime` > CURRENT_TIMESTAMP';
+		$s = $pdo->prepare($sql);
+		$s->bindValue(':UserID', $userID);
+		$s->execute();
+	}
+	catch (PDOException $e)
+	{
+		$pdo->rollback();
+		$error = 'Error deleting active bookings: ' . $e->getMessage();
+		$pdo = null;
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+		exit();
+	}
+
+	// Delete selected user from database
+	try
+	{
+		$sql = 'DELETE FROM `user` 
+				WHERE 		`userID` = :userID';
+		$s = $pdo->prepare($sql);
+		$s->bindValue(':userID', $userID);
+		$s->execute();
+	}
+	catch (PDOException $e)
+	{
+		$pdo->rollBack();
+		$pdo = null;
 		$error = 'Error getting user to delete: ' . $e->getMessage();
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
 		exit();
 	}
-	
-	$_SESSION['UserManagementFeedbackMessage'] = "User Successfully Removed.";
-	
+
 	// Add a log event that a user account was removed
 	try
 	{
 		// Save a description with information about the user that was removed
-		
-		$description = "N/A";
-		if(isSet($_POST['UserInfo'])){
-			$description = 'The User: ' . $_POST['UserInfo'] . 
-			' was deleted by: ' . $_SESSION['LoggedInUserName'];
-		} else {
-			$description = 'An unactivated User was deleted by: ' . $_SESSION['LoggedInUserName'];
-		}
-		
-		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
-		
-		$pdo = connect_to_db();
+
+		$description = "The User: $userInfo was deleted by: " . $_SESSION['LoggedInUserName'];
+
 		$sql = "INSERT INTO `logevent` 
 				SET			`actionID` = 	(
 												SELECT 	`actionID` 
@@ -350,18 +421,32 @@ if (isSet($_POST['action']) and $_POST['action'] == 'Delete')
 		$s = $pdo->prepare($sql);
 		$s->bindValue(':description', $description);
 		$s->execute();
-		
+
+		$pdo->commit();
+
 		//Close the connection
-		$pdo = null;		
+		$pdo = null;
 	}
 	catch(PDOException $e)
 	{
+		$pdo->rollBack();
 		$error = 'Error adding log event to database: ' . $e->getMessage();
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
 		$pdo = null;
 		exit();
-	}	
-	
+	}
+
+	$_SESSION['UserManagementFeedbackMessage'] = "Successfully removed the user $userInfo.";
+
+	// Load user list webpage with updated database
+	header('Location: .');
+	exit();
+}
+
+if(isSet($_POST['confirmdelete']) AND $_POST['confirmdelete'] == "No, Cancel The Delete"){
+
+	$_SESSION['UserManagementFeedbackMessage'] = "Cancelled the deletion process.";
+
 	// Load user list webpage with updated database
 	header('Location: .');
 	exit();	
@@ -369,9 +454,9 @@ if (isSet($_POST['action']) and $_POST['action'] == 'Delete')
 
 // if admin wants to re-activate an account that has been blocked from being allowed to log in due to too many wrong login attempts
 if (isSet($_POST['action']) and $_POST['action'] == 'Re-Activate'){
-	if(isSet($_POST['id']) AND !empty($_POST['id'])){
+	if(isSet($_POST['UserID']) AND !empty($_POST['UserID'])){
 
-		$userID = $_POST['id'];	
+		$userID = $_POST['UserID'];	
 
 		try
 		{
@@ -448,9 +533,9 @@ if (isSet($_POST['action']) and $_POST['action'] == 'Re-Activate'){
 
 // If admin wants to activate an unactivated user
 if (isSet($_POST['action']) and $_POST['action'] == 'Activate'){
-	if(isSet($_POST['id']) AND !empty($_POST['id'])){
+	if(isSet($_POST['UserID']) AND !empty($_POST['UserID'])){
 
-		$userID = $_POST['id'];	
+		$userID = $_POST['UserID'];	
 
 		try
 		{
@@ -596,7 +681,7 @@ if (isSet($_GET['add']) OR (isSet($_SESSION['refreshAddUser']) AND $_SESSION['re
 	$pageTitle = 'New User';
 	$action = 'addform';
 	$button = 'Add User';	
-	$id = '';
+	$userID = '';
 	$displayname = '';
 	$bookingdescription = '';	
 	
@@ -801,7 +886,7 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Edit') OR
 		unset($_SESSION['EditUserChangedEmail']);
 		$accessID = $_SESSION['EditUserChangedAccessID'];
 		unset($_SESSION['EditUserChangedAccessID']);
-		$id = $_SESSION['EditUserOriginalUserID'];
+		$userID = $_SESSION['EditUserOriginalUserID'];
 		$displayname = $_SESSION['EditUserChangedDisplayname'];
 		unset($_SESSION['EditUserChangedDisplayname']);
 		$bookingdescription = $_SESSION['EditUserChangedBookingDescription'];
@@ -831,9 +916,9 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Edit') OR
 					FROM 	`user` u
 					JOIN 	`accesslevel` a
 					ON 		a.accessID = u.accessID
-					WHERE 	u.`userID` = :id';
+					WHERE 	u.`userID` = :UserID';
 			$s = $pdo->prepare($sql);
-			$s->bindValue(':id', $_POST['id']);
+			$s->bindValue(':UserID', $_POST['UserID']);
 			$s->execute();
 			
 			// Get name and IDs for access level
@@ -872,7 +957,7 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Edit') OR
 		$email = $row['email'];
 		$accessID = $row['accessID'];
 		$accessName = $row['accessname'];
-		$id = $row['userID'];
+		$userID = $row['userID'];
 		$displayname = $row['displayname'];
 		$bookingdescription = $row['bookingdescription'];
 		$reduceAccessAtDate = $row['reduceAccessAtDate'];
@@ -891,7 +976,7 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Edit') OR
 		$_SESSION['EditUserOriginaReduceAccessAtDate'] = $reduceAccessAtDate;
 		$_SESSION['EditUserOriginaAccessName'] = $accessName;
 		
-		$_SESSION['EditUserOriginalUserID'] = $id;
+		$_SESSION['EditUserOriginalUserID'] = $userID;
 		$_SESSION['EditUserAccessList'] = $access;
 	}
 	// Display original values
@@ -1046,10 +1131,10 @@ if (isSet($_GET['editform'])AND isSet($_POST['action']) AND $_POST['action'] == 
 								displayname = :displayname,
 								bookingdescription = :bookingdescription,
 								reduceAccessAtDate = :reduceAccessAtDate
-						WHERE 	userID = :id';
+						WHERE 	userID = :UserID';
 						
 				$s = $pdo->prepare($sql);
-				$s->bindValue(':id', $_POST['id']);
+				$s->bindValue(':UserID', $_POST['UserID']);
 				$s->bindValue(':firstname', $validatedFirstname);
 				$s->bindValue(':lastname', $validatedLastname);
 				$s->bindValue(':email', $email);
@@ -1074,10 +1159,10 @@ if (isSet($_GET['editform'])AND isSet($_POST['action']) AND $_POST['action'] == 
 								accessID = :accessID,
 								displayname = :displayname,
 								bookingdescription = :bookingdescription
-						WHERE 	userID = :id';
+						WHERE 	userID = :UserID';
 						
 				$s = $pdo->prepare($sql);
-				$s->bindValue(':id', $_POST['id']);
+				$s->bindValue(':UserID', $_POST['UserID']);
 				$s->bindValue(':firstname', $validatedFirstname);
 				$s->bindValue(':lastname', $validatedLastname);
 				$s->bindValue(':email', $email);
@@ -1098,10 +1183,10 @@ if (isSet($_GET['editform'])AND isSet($_POST['action']) AND $_POST['action'] == 
 								displayname = :displayname,
 								bookingdescription = :bookingdescription,
 								reduceAccessAtDate = :reduceAccessAtDate
-						WHERE 	userID = :id';
+						WHERE 	userID = :UserID';
 						
 				$s = $pdo->prepare($sql);
-				$s->bindValue(':id', $_POST['id']);
+				$s->bindValue(':UserID', $_POST['UserID']);
 				$s->bindValue(':firstname', $validatedFirstname);
 				$s->bindValue(':lastname', $validatedLastname);
 				$s->bindValue(':email', $email);
@@ -1121,10 +1206,10 @@ if (isSet($_GET['editform'])AND isSet($_POST['action']) AND $_POST['action'] == 
 								accessID = :accessID,
 								displayname = :displayname,
 								bookingdescription = :bookingdescription
-						WHERE 	userID = :id';
+						WHERE 	userID = :UserID';
 						
 				$s = $pdo->prepare($sql);
-				$s->bindValue(':id', $_POST['id']);
+				$s->bindValue(':UserID', $_POST['UserID']);
 				$s->bindValue(':firstname', $validatedFirstname);
 				$s->bindValue(':lastname', $validatedLastname);
 				$s->bindValue(':email', $email);
@@ -1193,9 +1278,9 @@ if (isSet($_POST['action']) AND $_POST['action'] == 'Cancel Date')
 		$pdo = connect_to_db();
 		$sql = 'UPDATE 	`user` 
 				SET		`reduceAccessAtDate` = NULL
-				WHERE 	userID = :id';
+				WHERE 	userID = :UserID';
 		$s = $pdo->prepare($sql);
-		$s->bindValue(':id', $_POST['id']);
+		$s->bindValue(':UserID', $_POST['UserID']);
 		$s->execute();
 		
 		//close connection
@@ -1258,8 +1343,7 @@ try
 			FROM 		`user` u
 			INNER JOIN	`accesslevel` a
 			ON 			u.`AccessID` = a.`AccessID`
-			ORDER BY 	u.`userID`
-			DESC';
+			ORDER BY 	a.`AccessName`, u.`lastname`';
 	$return = $pdo->query($sql);
 	$result = $return->fetchAll(PDO::FETCH_ASSOC);
 	if(isSet($result)){
@@ -1280,8 +1364,7 @@ catch (PDOException $e)
 }
 
 // Create an array with the actual key/value pairs we want to use in our HTML
-foreach ($result as $row)
-{
+foreach($result as $row){
 	$createdDateTime = $row['DateCreated'];
 	$lastActiveDateTime = $row['LastActive'];
 	$displayCreatedDateTime = convertDatetimeToFormat($createdDateTime, 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
@@ -1292,14 +1375,14 @@ foreach ($result as $row)
 	} else {
 		$displayReduceAccessAtDate = NULL;
 	}
-	
+
 	$userinfo = $row['lastname'] . ', ' . $row['firstname'] . ' - ' . $row['email'];
-	
+
 	// If user has activated the account
 	if($row['loginBlocked'] == 0){
 		if($row['isActive'] == 1){
 			$users[] = array(
-								'id' => $row['userID'], 
+								'UserID' => $row['userID'], 
 								'firstname' => $row['firstname'],
 								'lastname' => $row['lastname'],
 								'email' => $row['email'],
@@ -1307,7 +1390,7 @@ foreach ($result as $row)
 								'displayname' => $row['displayname'],
 								'bookingdescription' => $row['bookingdescription'],
 								'worksfor' => $row['WorksFor'],
-								'datecreated' => $displayCreatedDateTime,			
+								'datecreated' => $displayCreatedDateTime,
 								'lastactive' => $displayLastActiveDateTime,
 								'UserInfo' => $userinfo,
 								'reduceaccess' => $displayReduceAccessAtDate
@@ -1317,17 +1400,18 @@ foreach ($result as $row)
 
 		} elseif($row['isActive'] == 0){
 			$inactiveusers[] = array(	
-										'id' => $row['userID'], 
+										'UserID' => $row['userID'], 
 										'firstname' => $row['firstname'],
 										'lastname' => $row['lastname'],
 										'email' => $row['email'],
 										'accessname' => $row['AccessName'],
+										'UserInfo' => $userinfo,
 										'datecreated' => $displayCreatedDateTime
 									);
 		}
 	} else {
 		$blockedUsers[] = array(
-									'id' => $row['userID'], 
+									'UserID' => $row['userID'], 
 									'firstname' => $row['firstname'],
 									'lastname' => $row['lastname'],
 									'email' => $row['email'],

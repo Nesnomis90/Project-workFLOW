@@ -33,9 +33,7 @@
 				<?php endif; ?>
 				<div>
 					<label for="CompanyName">Set a new Company Name: </label>
-					<input type="text" name="CompanyName" id="CompanyName" 
-					placeholder="Enter A Company Name"
-					value="<?php htmlout($CompanyName); ?>">
+					<input type="text" name="CompanyName" placeholder="Enter A Company Name" value="<?php htmlout($CompanyName); ?>">
 				</div>
 				<?php if ($ShowDateToRemove) :?>
 					<div>
@@ -48,12 +46,11 @@
 					</div>
 					<div>
 						<label for="DateToRemove">Set a new Date to Remove: </label>
-						<input type="text" name="DateToRemove" id="DateToRemove"
-						value="<?php htmlout($DateToRemove); ?>">
+						<input type="text" name="DateToRemove" value="<?php htmlout($DateToRemove); ?>">
 					</div>
 				<?php endif; ?>
 				<div class="left">
-					<input type="hidden" name="id" value="<?php htmlout($id); ?>">
+					<input type="hidden" name="CompanyID" value="<?php htmlout($CompanyID); ?>">
 					<input type="submit" name="action" value="<?php htmlout($button); ?>">
 					<?php if($button == 'Edit Company') : ?>
 						<input type="submit" name="edit" value="Reset">
