@@ -1258,8 +1258,7 @@ try
 			FROM 		`user` u
 			INNER JOIN	`accesslevel` a
 			ON 			u.`AccessID` = a.`AccessID`
-			ORDER BY 	u.`userID`
-			DESC';
+			ORDER BY 	a.`AccessName`, u.`lastname`';
 	$return = $pdo->query($sql);
 	$result = $return->fetchAll(PDO::FETCH_ASSOC);
 	if(isSet($result)){
@@ -1280,8 +1279,7 @@ catch (PDOException $e)
 }
 
 // Create an array with the actual key/value pairs we want to use in our HTML
-foreach ($result as $row)
-{
+foreach($result as $row){
 	$createdDateTime = $row['DateCreated'];
 	$lastActiveDateTime = $row['LastActive'];
 	$displayCreatedDateTime = convertDatetimeToFormat($createdDateTime, 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
@@ -1292,9 +1290,9 @@ foreach ($result as $row)
 	} else {
 		$displayReduceAccessAtDate = NULL;
 	}
-	
+
 	$userinfo = $row['lastname'] . ', ' . $row['firstname'] . ' - ' . $row['email'];
-	
+
 	// If user has activated the account
 	if($row['loginBlocked'] == 0){
 		if($row['isActive'] == 1){
@@ -1307,7 +1305,7 @@ foreach ($result as $row)
 								'displayname' => $row['displayname'],
 								'bookingdescription' => $row['bookingdescription'],
 								'worksfor' => $row['WorksFor'],
-								'datecreated' => $displayCreatedDateTime,			
+								'datecreated' => $displayCreatedDateTime,
 								'lastactive' => $displayLastActiveDateTime,
 								'UserInfo' => $userinfo,
 								'reduceaccess' => $displayReduceAccessAtDate
