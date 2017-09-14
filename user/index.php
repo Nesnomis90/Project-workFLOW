@@ -634,8 +634,7 @@ if(isSet($_GET['activateaccount']) AND $_GET['activateaccount'] != ""){
 }
 
 // If admin wants to cancel a scheduled booked meeting (instead of deleting)
-if (isSet($_POST['booking']) and $_POST['booking'] == 'Cancel')
-{
+if(isSet($_POST['booking']) and $_POST['booking'] == 'Cancel'){
 	// Only cancel if booking is currently active
 	if(	isSet($_POST['BookingStatus']) AND  
 		($_POST['BookingStatus'] == 'Active' OR $_POST['BookingStatus'] == 'Active Today')){	
@@ -1097,7 +1096,8 @@ if(isSet($_SESSION['loggedIn']) AND isSet($_SESSION['LoggedInUserID'])){
 					ON			c.`CompanyID` = e.`CompanyID`
 					INNER JOIN	`companyposition` cp
 					ON			e.`PositionID` = cp.`PositionID`
-					WHERE		e.`userID` = :userID";
+					WHERE		e.`userID` = :userID
+					ORDER BY 	cp.`name`, c.`name`";
 			$s = $pdo->prepare($sql);
 			$s->bindValue(':userID', $userID);
 			$s->execute();
