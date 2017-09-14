@@ -288,9 +288,10 @@ if(	(isSet($_POST['action']) AND $_POST['action'] == "Create Event") OR
 
 			$pdo = connect_to_db();
 			// Get name and IDs for meeting rooms
-			$sql = 'SELECT 	`meetingRoomID`,
-							`name` 
-					FROM 	`meetingroom`';
+			$sql = 'SELECT 		`meetingRoomID`,
+								`name` 
+					FROM 		`meetingroom`
+					ORDER BY	`name`';
 			$result = $pdo->query($sql);
 
 			//Close connection
@@ -361,7 +362,7 @@ if(	(isSet($_POST['action']) AND $_POST['action'] == "Create Event") OR
 		$roomsSelected = $_SESSION['AddEventRoomsSelected'];
 	} else {
 		$roomsSelected = array();
-	}	
+	}
 
 	if(isSet($_SESSION['AddEventMeetingRoomsArray'])){
 		$meetingroom = $_SESSION['AddEventMeetingRoomsArray'];
@@ -428,7 +429,7 @@ if(	(isSet($_POST['action']) AND $_POST['action'] == "Create Event") OR
 				foreach($weeksOfTheYear AS $week){
 					$weekNumbers[] = $week['WeekNumber'];
 				}
-				$_SESSION['AddEventWeeksSelected'] = $weekNumbers;				
+				$_SESSION['AddEventWeeksSelected'] = $weekNumbers;
 			}
 		}
 	}
@@ -940,35 +941,36 @@ try
 
 	// Use connect to Database function from db.inc.php
 	$pdo = connect_to_db();
-	$sql = 'SELECT	`EventID`			AS TheEventID,
-					`startTime`			AS StartTime,
-					`endTime`			AS EndTime,
-					`name`				AS EventName,
-					`description`		AS EventDescription,
-					`dateTimeCreated`	AS DateTimeCreated,
-					`startDate`			AS StartDate,
-					`lastDate`			AS LastDate,
-					`daysSelected`		AS DaysSelected,
-					(
-						SELECT 		GROUP_CONCAT(DISTINCT m.`name` separator ",\n")
-						FROM		`roomevent` rev
-						INNER JOIN 	`meetingroom` m
-						ON			rev.`meetingRoomID` = m.`meetingRoomID`
-						WHERE		rev.`EventID` = TheEventID
-					)					AS UsedMeetingRooms,
-					(
-						SELECT 	COUNT(*)
-						FROM 	`meetingroom`
-					)					AS TotalMeetingRooms,
-					(
-						SELECT 	`startDateTime`
-						FROM 	`roomevent`
-						WHERE	`EventID` = TheEventID
-						AND 	`startDateTime` > CURRENT_TIMESTAMP
-						ORDER BY UNIX_TIMESTAMP(`startDateTime`) ASC
-						LIMIT 1
-					) 					AS NextStart
-			FROM 	`event`';
+	$sql = 'SELECT		`EventID`			AS TheEventID,
+						`startTime`			AS StartTime,
+						`endTime`			AS EndTime,
+						`name`				AS EventName,
+						`description`		AS EventDescription,
+						`dateTimeCreated`	AS DateTimeCreated,
+						`startDate`			AS StartDate,
+						`lastDate`			AS LastDate,
+						`daysSelected`		AS DaysSelected,
+						(
+							SELECT 		GROUP_CONCAT(DISTINCT m.`name` separator ",\n")
+							FROM		`roomevent` rev
+							INNER JOIN 	`meetingroom` m
+							ON			rev.`meetingRoomID` = m.`meetingRoomID`
+							WHERE		rev.`EventID` = TheEventID
+						)					AS UsedMeetingRooms,
+						(
+							SELECT 	COUNT(*)
+							FROM 	`meetingroom`
+						)					AS TotalMeetingRooms,
+						(
+							SELECT 	`startDateTime`
+							FROM 	`roomevent`
+							WHERE	`EventID` = TheEventID
+							AND 	`startDateTime` > CURRENT_TIMESTAMP
+							ORDER BY UNIX_TIMESTAMP(`startDateTime`) ASC
+							LIMIT 1
+						) 					AS NextStart
+			FROM 		`event`
+			ORDER BY	`name`';
 	$return = $pdo->query($sql);
 	$result = $return->fetchAll(PDO::FETCH_ASSOC);
 	if(isSet($result)){
@@ -989,7 +991,7 @@ catch (PDOException $e)
 }
 
 // Create the array we will go through to display information in HTML
-foreach ($result as $row){
+foreach($result as $row){
 	// Check if event is over or still active
 	$startDate = $row['StartDate'];
 	$lastDate = $row['LastDate'];
