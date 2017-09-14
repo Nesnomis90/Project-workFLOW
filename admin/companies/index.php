@@ -1658,7 +1658,7 @@ if ((isSet($_POST['action']) AND $_POST['action'] == "Booking History") OR
 	if(isSet($_SESSION['BookingHistoryCompanyInfo'])){
 		$companyID = $_SESSION['BookingHistoryCompanyInfo']['CompanyID'];
 	} else {
-		$companyID = $_POST['id'];
+		$companyID = $_POST['CompanyID'];
 	}
 
 	if(	(isSet($_POST['action']) AND $_POST['action'] == "Booking History") OR 
@@ -1788,9 +1788,9 @@ if (isSet($_POST['action']) AND $_POST['action'] == 'Activate') {
 		$sql = 'UPDATE 	`company`
 				SET		`isActive` = 1,
 						`removeAtDate` = NULL
-				WHERE 	`companyID` = :id';
+				WHERE 	`companyID` = :CompanyID';
 		$s = $pdo->prepare($sql);
-		$s->bindValue(':id', $_POST['id']);
+		$s->bindValue(':CompanyID', $_POST['CompanyID']);
 		$s->execute();
 
 		//close connection
@@ -1811,10 +1811,10 @@ if ((isSet($_POST['action']) and $_POST['action'] == 'Merge') OR
 
 	unset($_SESSION['refreshMergeCompany']);
 
-	if((isSet($_POST['id']) AND !empty($_POST['id'])) OR isSet($_SESSION['MergeCompanySelectedCompanyID'])){
+	if((isSet($_POST['CompanyID']) AND !empty($_POST['CompanyID'])) OR isSet($_SESSION['MergeCompanySelectedCompanyID'])){
 
 		if(!isSet($_SESSION['MergeCompanySelectedCompanyID'])){
-			$_SESSION['MergeCompanySelectedCompanyID'] = $_POST['id'];
+			$_SESSION['MergeCompanySelectedCompanyID'] = $_POST['CompanyID'];
 		}
 
 		$companyID = $_SESSION['MergeCompanySelectedCompanyID'];
@@ -1837,9 +1837,9 @@ if ((isSet($_POST['action']) and $_POST['action'] == 'Merge') OR
 			$sql = 'SELECT	`CompanyID`		AS CompanyID,
 							`name`			AS CompanyName
 					FROM	`company`
-					WHERE 	`companyID` != :id';
+					WHERE 	`companyID` != :CompanyID';
 			$s = $pdo->prepare($sql);
-			$s->bindValue(':id', $companyID);
+			$s->bindValue(':CompanyID', $companyID);
 			$s->execute();
 			$companies = $s->fetchAll(PDO::FETCH_ASSOC);
 
@@ -2234,7 +2234,27 @@ if (isSet($_POST['action']) and $_POST['action'] == 'Confirm Merge'){
 // If admin wants to remove a company from the database
 if(isSet($_POST['action']) and $_POST['action'] == 'Delete'){
 
-	$companyID = $_POST['id'];
+	$companyID = $_POST['CompanyID'];
+	$companyName = $_POST['CompanyName']
+
+	var_dump($_SESSION); // TO-DO: Remove before uploading
+
+	include_once 'confirmdelete.html.php';
+	exit();
+}
+
+if(isSet($_POST['confirmdelete']) AND $_POST['confirmdelete'] == "Yes, Delete The Company"){
+	
+	// Check if password is submitted
+	if(!isSet($_POST['password']) OR (isSet($_POST['password']) AND $_POST['password'] == "")){
+		$companyID = $_POST['CompanyID'];
+		$companyName = $_POST['CompanyName']
+
+		var_dump($_SESSION); // TO-DO: Remove before uploading
+
+		include_once 'confirmdelete.html.php';
+		exit();
+	}
 
 	// Delete selected company from database
 	try
@@ -2243,9 +2263,9 @@ if(isSet($_POST['action']) and $_POST['action'] == 'Delete'){
 
 		$pdo = connect_to_db();
 		$sql = 'DELETE FROM `company` 
-				WHERE 		`companyID` = :id';
+				WHERE 		`companyID` = :CompanyID';
 		$s = $pdo->prepare($sql);
-		$s->bindValue(':id', $companyID);
+		$s->bindValue(':CompanyID', $companyID);
 		$s->execute();
 
 		//close connection
@@ -2295,11 +2315,21 @@ if(isSet($_POST['action']) and $_POST['action'] == 'Delete'){
 	exit();	
 }
 
+if(isSet($_POST['confirmdelete']) AND $_POST['confirmdelete'] == "No, Cancel The Delete"){
+
+	$_SESSION['CompanyUserFeedback'] = "Cancelled the deletion process.";
+
+	// Load company list webpage with updated database
+	header('Location: .');
+	exit();	
+}
+
 // If admin wants to add a company to the database
 // we load a new html form
 if ((isSet($_POST['action']) AND $_POST['action'] == 'Create Company') OR 
-	(isSet($_SESSION['refreshAddCompany']) AND $_SESSION['refreshAddCompany']))
-{	
+	(isSet($_SESSION['refreshAddCompany']) AND $_SESSION['refreshAddCompany'])
+	){
+
 	// Check if it was a user input or a forced refresh
 	if(isSet($_SESSION['refreshAddCompany']) AND $_SESSION['refreshAddCompany']){
 		//	Ackowledge that we have refreshed
@@ -2312,7 +2342,7 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Create Company') OR
 	// Set always correct values
 	$pageTitle = 'New Company';
 	$button = 'Add Company';
-	$id = '';
+	$CompanyID = '';
 
 	if(isSet($_SESSION['AddCompanyCompanyName'])){
 		$CompanyName = $_SESSION['AddCompanyCompanyName'];
@@ -2335,8 +2365,9 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Create Company') OR
 // if admin wants to edit company information
 // we load a new html form
 if ((isSet($_POST['action']) AND $_POST['action'] == 'Edit') OR 
-	(isSet($_SESSION['refreshEditCompany']) AND $_SESSION['refreshEditCompany']))
-{
+	(isSet($_SESSION['refreshEditCompany']) AND $_SESSION['refreshEditCompany'])
+	){
+
 	// Check if it was a user input or a forced refresh
 	if(isSet($_SESSION['refreshEditCompany']) AND $_SESSION['refreshEditCompany']){
 		//	Acknowledge that we have refreshed
@@ -2350,7 +2381,7 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Edit') OR
 		}
 
 		if(isSet($_SESSION['EditCompanyCompanyID'])){
-			$id = $_SESSION['EditCompanyCompanyID'];
+			$CompanyID = $_SESSION['EditCompanyCompanyID'];
 		}
 
 	} else {
@@ -2367,9 +2398,9 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Edit') OR
 							`name`,
 							`removeAtDate`
 					FROM 	`company`
-					WHERE 	`companyID` = :id';
+					WHERE 	`companyID` = :CompanyID';
 			$s = $pdo->prepare($sql);
-			$s->bindValue(':id', $_POST['id']);
+			$s->bindValue(':CompanyID', $_POST['CompanyID']);
 			$s->execute();
 
 			//Close connection
@@ -2387,7 +2418,7 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Edit') OR
 		$row = $s->fetch(PDO::FETCH_ASSOC);
 		$CompanyName = $row['name'];
 		$DateToRemove = $row['removeAtDate'];
-		$id = $row['companyID'];
+		$CompanyID = $row['companyID'];
 
 		if(!isSet($DateToRemove) OR $DateToRemove == NULL){
 			$DateToRemove = '';
@@ -2395,7 +2426,7 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Edit') OR
 
 		$_SESSION['EditCompanyOriginalName'] = $CompanyName;
 		$_SESSION['EditCompanyOriginalRemoveDate'] = $DateToRemove;
-		$_SESSION['EditCompanyCompanyID'] = $id;
+		$_SESSION['EditCompanyCompanyID'] = $CompanyID;
 	}
 
 	// Display original values
@@ -2425,8 +2456,8 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Edit') OR
 }
 
 // When admin has added the needed information and wants to add the company
-if (isSet($_POST['action']) AND $_POST['action'] == 'Add Company')
-{
+if(isSet($_POST['action']) AND $_POST['action'] == 'Add Company'){
+
 	list($invalidInput, $validatedCompanyName, $validatedCompanyDateToRemove) = validateUserInputs();
 
 	// Refresh form on invalid
@@ -2569,14 +2600,14 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Edit Company'))
 			$sql = 'UPDATE 	`company` 
 					SET		`removeAtDate` = :removeAtDate,
 							`name` = :name
-					WHERE 	`companyID` = :id';
+					WHERE 	`companyID` = :CompanyID';
 
 			if ($validatedCompanyDateToRemove == ''){
 				$validatedCompanyDateToRemove = null;
 			}
 
 			$s = $pdo->prepare($sql);
-			$s->bindValue(':id', $_POST['id']);
+			$s->bindValue(':CompanyID', $_POST['CompanyID']);
 			$s->bindValue(':removeAtDate', $validatedCompanyDateToRemove);
 			$s->bindValue(':name', $validatedCompanyName);
 			$s->execute();
@@ -2615,9 +2646,9 @@ if (isSet($_POST['action']) AND $_POST['action'] == 'Cancel Date')
 		$pdo = connect_to_db();
 		$sql = 'UPDATE 	`company` 
 				SET		`removeAtDate` = NULL
-				WHERE 	`companyID` = :id';
+				WHERE 	`companyID` = :CompanyID';
 		$s = $pdo->prepare($sql);
-		$s->bindValue(':id', $_POST['id']);
+		$s->bindValue(':CompanyID', $_POST['CompanyID']);
 		$s->execute();
 
 		//close connection
@@ -2957,7 +2988,7 @@ foreach($result as $row){
 
 	if($isActive){
 		$companies[] = array(
-								'id' => $row['CompID'], 
+								'CompanyID' => $row['CompID'], 
 								'CompanyName' => $row['CompanyName'],
 								'NumberOfEmployees' => $row['NumberOfEmployees'],
 								'PreviousMonthCompanyWideBookingTimeUsed' => $PrevMonthTimeUsed,
@@ -2976,13 +3007,13 @@ foreach($result as $row){
 							);
 	} elseif(!$isActive AND ($dateToRemove == "" OR $dateToRemove == NULL)) {
 		$unactivedcompanies[] = array(
-										'id' => $row['CompID'], 
+										'CompanyID' => $row['CompID'], 
 										'CompanyName' => $row['CompanyName'],
 										'DatetimeCreated' => $dateTimeCreatedToDisplay
 									);
 	} elseif(!$isActive AND $dateToRemove != "" AND $dateToRemove != NULL){
 		$inactivecompanies[] = array(
-										'id' => $row['CompID'], 
+										'CompanyID' => $row['CompID'], 
 										'CompanyName' => $row['CompanyName'],
 										'MonthlyCompanyWideBookingTimeUsed' => $MonthlyTimeUsed,
 										'TotalCompanyWideBookingTimeUsed' => $TotalTimeUsed,

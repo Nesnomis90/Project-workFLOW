@@ -64,22 +64,22 @@
 				<?php if (isSet($companies)) : ?>
 					<?php foreach ($companies as $company): ?>
 						<tr>
-							<?php $goto = "http://$_SERVER[HTTP_HOST]/admin/employees/?Company=" . $company['id'];?>
+							<?php $goto = "http://$_SERVER[HTTP_HOST]/admin/employees/?Company=" . $company['CompanyID'];?>
 							<form action="<?php htmlout($goto) ;?>" method="post">
 								<td>
 									<input type="submit" value="Employees">
-									<input type="hidden" name="Company" value="<?php htmlout($company['id']); ?>">
+									<input type="hidden" name="Company" value="<?php htmlout($company['CompanyID']); ?>">
 								</td>
 							</form>
 								<td><?php htmlout($company['NumberOfEmployees']); ?></td>
 								<td>
 									<?php htmlout($company['CompanyName']); ?> 
 								</td>
-							<?php $goto = "http://$_SERVER[HTTP_HOST]/admin/companycredits/?Company=" . $company['id'];?>
+							<?php $goto = "http://$_SERVER[HTTP_HOST]/admin/companycredits/?Company=" . $company['CompanyID'];?>
 							<form action="<?php htmlout($goto) ;?>" method="post">
 								<td>
 									<input type="submit" value="Credits">
-									<input type="hidden" name="Company" value="<?php htmlout($company['id']); ?>">
+									<input type="hidden" name="Company" value="<?php htmlout($company['CompanyID']); ?>">
 								</td>
 							</form>
 								<td><?php htmlout($company['CreditSubscriptionName']); ?></td>
@@ -122,7 +122,7 @@
 								<td><input type="submit" name="action" value="Edit"></td>
 								<td><input type="submit" name="action" value="Delete"></td>
 								<input type="hidden" name="CompanyName" value="<?php htmlout($company['CompanyName']); ?>">
-								<input type="hidden" name="id" value="<?php htmlout($company['id']); ?>">
+								<input type="hidden" name="CompanyID" value="<?php htmlout($company['CompanyID']); ?>">
 							</form>
 						</tr>
 					<?php endforeach; ?>
@@ -152,8 +152,8 @@
 								<td><?php htmlout($company['DatetimeCreated']); ?></td>
 								<td><input type="submit" name="action" value="Activate"></td>
 								<td><input type="submit" name="action" value="Delete"></td>
-								<input type="hidden" id="CompanyName" name="CompanyName" value="<?php htmlout($company['CompanyName']); ?>">
-								<input type="hidden" name="id" value="<?php htmlout($company['id']); ?>">
+								<input type="hidden" name="CompanyName" value="<?php htmlout($company['CompanyName']); ?>">
+								<input type="hidden" name="CompanyID" value="<?php htmlout($company['CompanyID']); ?>">
 							</form>
 						</tr>
 					<?php endforeach; ?>
@@ -194,8 +194,8 @@
 										<input type="submit" name="disabled" value="Delete" disabled>
 									<?php endif; ?>
 								</td>
-								<input type="hidden" id="CompanyName" name="CompanyName" value="<?php htmlout($company['CompanyName']); ?>"> 
-								<input type="hidden" name="id" value="<?php htmlout($company['id']); ?>">
+								<input type="hidden" name="CompanyName" value="<?php htmlout($company['CompanyName']); ?>"> 
+								<input type="hidden" name="CompanyID" value="<?php htmlout($company['CompanyID']); ?>">
 							</form>
 						</tr>
 					<?php endforeach; ?>

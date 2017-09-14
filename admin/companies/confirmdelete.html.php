@@ -14,7 +14,7 @@
 		</style>
 	</head>
 	<body onload="startTime()">
-		<?php include_once $_SERVER['DOCUMENT_ROOT'] .'/includes/admintopnav.html.php'; ?>
+		<?php include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/admintopnav.html.php'; ?>
 
 		<fieldset><legend>Warning!</legend>
 			<div class="left">
@@ -24,8 +24,15 @@
 			</div>
 			<div class="left">
 				<form action="" method="post">
+					<?php if(isSet($wrongPassword)) : ?>
+						<input type="password" name="password" class="fillOut">
+					<?php else : ?>
+						<input type="password" name="password">
+					<?php endif; ?>
 					<input type="submit" name="confirmdelete" value="Yes, Delete The Company">
 					<input type="submit" name="confirmdelete" value="No, Cancel The Delete">
+					<input type="hidden" name="CompanyName" value="<?php htmlout($companyName); ?>">
+					<input type="hidden" name="CompanyID" value="<?php htmlout($companyID); ?>">
 				</form>
 			</div>
 		</fieldset>
