@@ -37,8 +37,6 @@
 			<div>
 		<?php endif; ?>
 
-		<div class="left"><h1>Meeting Room</h1></div>
-
 		<div class="left">
 			<form action="" method="post">
 				<?php if(isSet($_SESSION['DefaultMeetingRoomInfo'])) : ?>
@@ -147,7 +145,5 @@
 				<div class="left"><h2>There are no meeting rooms.</h2></div>
 			<?php endif; ?>
 		<?php endif; ?>
-
-		<?php include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/logout.inc.html.php'; ?>
 	</body>
 </html>

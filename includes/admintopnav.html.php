@@ -1,18 +1,6 @@
 <?php
-if(session_status() == PHP_SESSION_NONE) {
-    session_start();
-}
+require_once 'adminnavcheck.inc.php';
 
-if(isSet($_GET['logoutForNav'])){
-	// Same stuff we do on logout in access
-	unset($_SESSION['loggedIn']);
-	unset($_SESSION['email']);
-	unset($_SESSION['password']);
-	unset($_SESSION['LoggedInUserID']);
-	unset($_SESSION['LoggedInUserName']);
-	header("Location: /");
-	exit();
-}
 /*	<script src="/scripts/myFunctions.js"></script>
 	<body onload="startTime()">
 		<?php include_once $_SERVER['DOCUMENT_ROOT'] .'/includes/admintopnav.html.php'; ?>

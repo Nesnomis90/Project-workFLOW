@@ -2,11 +2,10 @@
 if(session_status() == PHP_SESSION_NONE) {
     session_start();
 }
-// Make sure we don't have any admin sessions still around when not browsing admin pages.
 
 function getLocationWeCameFrom(){
 	$pathWeCameFrom = $_SERVER['PHP_SELF'];
-	$pathWithoutPHPFile = substr($pathWeCameFrom, 0, strrpos($pathWeCameFrom,'/'));	
+	$pathWithoutPHPFile = substr($pathWeCameFrom, 0, strrpos($pathWeCameFrom,'/'));
 	$location = "Location: " . $pathWithoutPHPFile;
 
 	if(isSet($_GET['meetingroom'])){
@@ -22,7 +21,7 @@ function getLocationWeCameFrom(){
 		$CompanyID = $_GET['ID'];
 		$location .= "?ID=" . $CompanyID;
 		if(isSet($_GET['employees'])){
-			$location .= "&employees";	
+			$location .= "&employees";
 		}
 	}
 
@@ -35,7 +34,7 @@ if(isSet($_GET['loginForNav'])){
 	// Refresh page without get parameters
 	$location = getLocationWeCameFrom();
 	header($location);
-	exit();	
+	exit();
 }
 
 if(isSet($_GET['logoutForNav'])){

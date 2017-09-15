@@ -1,5 +1,6 @@
 <!-- This is the HTML form used by ADMIN in USERS to confirm that they want to DELETE A USER -->
 <?php include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/helpers.inc.php'; ?>
+<?php include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/adminnavcheck.inc.php'; ?>
 <!DOCTYPE html>
 <html lang="en">
 	<head>

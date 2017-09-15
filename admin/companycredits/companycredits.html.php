@@ -1,6 +1,6 @@
 <!-- This is the HTML form used for DISPLAYING a list of COMPANYCREDITS-->
-<?php include_once $_SERVER['DOCUMENT_ROOT'] .
- '/includes/helpers.inc.php'; ?>
+<?php include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/helpers.inc.php'; ?>
+<?php include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/adminnavcheck.inc.php'; ?>
 <!DOCTYPE html>
 <html lang="en">
 	<head>
@@ -13,12 +13,12 @@
 		<?php include_once $_SERVER['DOCUMENT_ROOT'] .'/includes/admintopnav.html.php'; ?>
 
 		<h1>Manage Credits for Companies</h1>
-		
+
 		<?php if(isSet($_SESSION['CompanyCreditsUserFeedback'])) : ?>
 			<span><b class="feedback"><?php htmlout($_SESSION['CompanyCreditsUserFeedback']); ?></b></span>
 			<?php unset($_SESSION['CompanyCreditsUserFeedback']); ?>
 		<?php endif; ?>
-		
+
 		<?php $goto = "http://$_SERVER[HTTP_HOST]/admin/companies/"; ?>
 		<?php if(isSet($_GET['Company'])) :?>
 			<form action="<?php htmlout($goto); ?>" method="post">
@@ -29,8 +29,8 @@
 				<input type="submit" value="Get All Company Credits">
 			</form>
 		<?php endif; ?>
-		
-		<table id="companycreditstable">
+
+		<table>
 			<caption>Company Credits</caption>
 			<tr>
 				<th colspan="3">Company</th>
@@ -52,7 +52,7 @@
 				<th>Added</th>
 				<th>Edit</th>
 			</tr>
-		<?php if($rowNum>0) :?>				
+		<?php if($rowNum>0) :?>
 				<?php foreach ($companycredits as $row): ?>
 					<form action="" method="post">
 						<tr>
@@ -85,9 +85,8 @@
 			<tr><td colspan="12"><b>There are no credits for any companies registered in the database. This should only occur if there are no companies registered.</b></td></tr>
 		<?php endif; ?>
 		</table>
-		
+
 	<div class="left"><a href="..">Return to CMS home</a></div>
-		
-	<?php include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/logout.inc.html.php'; ?>
+
 	</body>
 </html>

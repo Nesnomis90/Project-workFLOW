@@ -1,6 +1,6 @@
 <!-- This is the HTML form used for DISPLAYING a list of CREDITS-->
-<?php include_once $_SERVER['DOCUMENT_ROOT'] .
- '/includes/helpers.inc.php'; ?>
+<?php include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/helpers.inc.php'; ?>
+<?php include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/adminnavcheck.inc.php'; ?>
 <!DOCTYPE html>
 <html lang="en">
 	<head>
@@ -109,7 +109,6 @@
 
 		</table>
 
-		<div class="left"><a href="..">Return to CMS home</a></div>
-
+	<div class="left"><a href="..">Return to CMS home</a></div>
 	</body>
 </html>
