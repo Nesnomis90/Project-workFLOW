@@ -1397,7 +1397,7 @@ if(isSet($_POST['confirmadd']) AND $_POST['confirmadd'] == "Cancel"){
 }
 
 // If a company owner has used an "add employee"-link sent to their email, after a user requested it.
-if(isSet($_SESSION['AddEmployeeAsOwnerAutoFillInEmail'])){
+if(isSet($_SESSION['AddEmployeeAsOwnerAutoFillInEmail'], $_SESSION['normalUserCompanyIDSelected'])){
 	if(empty($_SESSION['AddEmployeeAsOwnerAutoFillInEmail']) OR $_SESSION['AddEmployeeAsOwnerAutoFillInEmail'] == ""){
 		clearAddEmployeeAsOwnerSessions();
 
@@ -1442,6 +1442,7 @@ if(isSet($_SESSION['AddEmployeeAsOwnerAutoFillInEmail'])){
 			$_SESSION['normalUserCompanyNameSelected'] = $userResult['CompanyName'];
 		} else {
 			$noAccess = TRUE;
+			unset($_SESSION['AddEmployeeAsOwnerAutoFillInEmail']);
 
 			var_dump($_SESSION); // TO-DO: remove after testing is done	
 
