@@ -1120,14 +1120,15 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Confirm Employee'){
 if(isSet($_POST['confirmadd']) AND $_POST['confirmadd'] == "Add Employee"){
 
 	$positionID = $_POST['PositionID'];
-	$userName = $_POST['UserName'];
-	$userID = $_POST['UserID'];
 	$email = $_POST['Email'];
+	$userID = $_POST['UserID'];
 	$companyName = $_POST['CompanyName'];
 	$companyID = $_POST['CompanyID'];
 	$createUser = $_POST['CreateUser'];
-	
-	//email and username undefined
+
+	if(isSet($_POST['UserName']) AND $_POST['UserName'] != ""){
+		$userName = $_POST['UserName'];
+	}
 
 	// Check if password is submitted
 	if(!isSet($_POST['password']) OR (isSet($_POST['password']) AND $_POST['password'] == "")){
