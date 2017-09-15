@@ -25,7 +25,7 @@
 					</div>
 				<?php endif; ?>
 				<form action="" method="post">
-				<?php if(isSet($email)) : ?>
+				<?php if(isSet($createUser) AND $createUser) : ?>
 					<div>
 						<span style="white-space: pre-wrap;"><?php htmlout(
 						"You have selected to add a new user to the company $companyName." . 

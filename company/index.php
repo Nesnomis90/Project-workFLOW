@@ -1263,10 +1263,10 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Confirm Employee'){
 
 		// Save a description with information about the employee that was added
 		// to the company.
-		$logEventDescription = 'The user: ' . $userinfo . 
-		' was added to the company: ' . $companyName . 
-		' and was given the position: ' . $positioninfo . ".\nAdded by : " .
-		$_SESSION['LoggedInUserName'];
+		$logEventDescription = "The user: $userinfo" . 
+		"\nwas added to the company: $companyName" .
+		"\nand was given the position: $positioninfo" . 
+		"\nAdded by : " . $_SESSION['LoggedInUserName'];
 
 		$sql = "INSERT INTO `logevent` 
 				SET			`actionID` = 	(
