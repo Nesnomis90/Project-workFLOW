@@ -989,8 +989,7 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Add Employee') OR
 }
 
 // When admin has added the needed information and wants to add an employee connection
-if (isSet($_POST['action']) AND $_POST['action'] == 'Confirm Employee')
-{
+if(isSet($_POST['action']) AND $_POST['action'] == 'Confirm Employee'){
 	
 	// Get company info
 	$companyID = $_SESSION['normalUserCompanyIDSelected'];
@@ -1183,7 +1182,7 @@ if (isSet($_POST['action']) AND $_POST['action'] == 'Confirm Employee')
 		$s = $pdo->prepare($sql);
 		$s->bindValue(':CompanyID', $companyID);
 		$s->bindValue(':UserID', $userID);
-		$s->bindValue(':PositionID', $_POST['PositionID']);		
+		$s->bindValue(':PositionID', $_POST['PositionID']);
 		$s->execute();
 	}
 	catch (PDOException $e)

@@ -15,9 +15,9 @@
 		</style>
 	</head>
 	<body onload="startTime()">
-	
+
 		<?php include_once $_SERVER['DOCUMENT_ROOT'] .'/includes/topnav.html.php'; ?>
-	
+
 		<?php if(isSet($_SESSION['DefaultMeetingRoomInfo']) AND !isSet($defaultMeetingRoomFeedback)) : ?>
 			<div class="left">
 				<form action="" method="post">
