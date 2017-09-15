@@ -1417,6 +1417,38 @@ if(isSet($_SESSION['AddEmployeeAsOwnerAutoFillInEmail'])){
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 		$pdo = connect_to_db();
 
+		// First check if the user making the call is actually in the company. If not, we won't display anything.
+		// Also doubles as the company role check to decide what should be displayed.
+		$sql = "SELECT 		COUNT(*) 	AS HitCount,
+							cp.`name` 	AS CompanyPosition,
+							c.`name`	AS CompanyName
+				FROM 		`employee` e
+				INNER JOIN 	`companyposition` cp
+				ON 			cp.`PositionID` = e.`PositionID`
+				INNER JOIN 	`company` c
+				ON			c.`CompanyID` = e.`CompanyID`
+				WHERE		e.`CompanyID` = :CompanyID
+				AND 		e.`UserID` = :UserID
+				LIMIT 		1";
+		$s = $pdo->prepare($sql);
+		$s->bindValue(":CompanyID", $_SESSION['normalUserCompanyIDSelected']);
+		$s->bindValue(":UserID", $_SESSION['LoggedInUserID']);
+		$s->execute();
+
+		$userResult = $s->fetch(PDO::FETCH_ASSOC);
+
+		if(isSet($userResult) AND $userResult['HitCount'] > 0){
+			$companyRole = $userResult['CompanyPosition'];
+			$_SESSION['normalUserCompanyNameSelected'] = $userResult['CompanyName'];
+		} else {
+			$noAccess = TRUE;
+
+			var_dump($_SESSION); // TO-DO: remove after testing is done	
+
+			include_once 'company.html.php';
+			exit();
+		}
+
 			// Company Positions
 		//Only get info if we haven't gotten it before
 		if(!isSet($_SESSION['AddEmployeeAsOwnerCompanyPositionArray'])){
@@ -2323,7 +2355,7 @@ if(isSet($selectedCompanyToDisplayID) OR (isSet($selectedCompanyToDisplayID) AND
 	}
 }
 
-// Get a list of all companies that the user does not already work in
+// Get a list of all companies that the user does not already work in, that can be requested to join(has an owner)
 try
 {
 	$sql = "SELECT 		c.`CompanyID`	AS CompanyID,
@@ -2334,6 +2366,11 @@ try
 							SELECT 	`companyID`
 							FROM	`employee`
 							WHERE	`userID` = :userID
+						)
+			AND			`companyID`
+			IN			(
+							SELECT 	`companyID`
+							FROM	`employee`
 						)
 			ORDER BY	c.`name`";
 	$s = $pdo->prepare($sql);
