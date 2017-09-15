@@ -19,9 +19,9 @@
 
 		<fieldset><legend>Employee You Want To Add:</legend>
 			<div class="left">
-				<?php if(isSet($feedback)) : ?>
+				<?php if(isSet($wrongPassword)) : ?>
 					<div>
-						<span class="warning"><?php htmlout($feedback); ?></span>
+						<span class="warning"><?php htmlout($wrongPassword); ?></span>
 					</div>
 				<?php endif; ?>
 				<form action="" method="post">
@@ -45,7 +45,7 @@
 				<?php endif; ?>
 					<div>
 						<label>Confirm With Password: </label>
-						<?php if(isSet($feedback)) : ?>
+						<?php if(isSet($wrongPassword)) : ?>
 							<input type="password" name="password" class="fillOut">
 						<?php else : ?>
 							<input type="password" name="password">
@@ -57,6 +57,8 @@
 						<input type="hidden" name="CompanyName" value="<?php htmlout($companyName); ?>">
 						<input type="hidden" name="UserName" value="<?php htmlout($userName); ?>">
 						<input type="hidden" name="Email" value="<?php htmlout($email); ?>">
+						<input type="hidden" name="PositionID" value="<?php htmlout($positionID); ?>">
+						<input type="hidden" name="CreateUser" value="<?php htmlout($createUser); ?>">
 						<input type="submit" name="confirmadd" value="Add Employee">
 						<input type="submit" name="confirmadd" value="Cancel">
 					</div>
