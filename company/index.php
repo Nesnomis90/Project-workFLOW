@@ -942,7 +942,8 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Add Employee') OR
 				foreach($result as $row){
 					$users[] = array(
 										'UserID' => $row['UserID'],
-										'UserIdentifier' => $row['lastname'] . ', ' . $row['firstname'] . ' - ' . $row['email']
+										'UserIdentifier' => $row['lastname'] . ', ' . $row['firstname'] . ' - ' . $row['email'],
+										'UserName' => $row['lastname'] . ', ' . $row['firstname']
 									);
 				}
 				if(isSet($users)){
@@ -955,7 +956,6 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Add Employee') OR
 				if(isSet($_SESSION['AddEmployeeAsOwnerShowSearchResults']) AND $_SESSION['AddEmployeeAsOwnerShowSearchResults']){
 					$_SESSION['AddEmployeeAsOwnerSearchResult'] = "The search result found $usersFound users";
 				}
-
 			} else {
 				$users = $_SESSION['AddEmployeeAsOwnerUsersArray'];
 			}
@@ -989,9 +989,8 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Add Employee') OR
 }
 
 // When admin has added the needed information and wants to add an employee connection
-if (isSet($_POST['action']) AND $_POST['action'] == 'Confirm Employee')
-{
-	
+if(isSet($_POST['action']) AND $_POST['action'] == 'Confirm Employee'){
+
 	// Get company info
 	$companyID = $_SESSION['normalUserCompanyIDSelected'];
 	$companyName = $_SESSION['normalUserCompanyNameSelected'];
@@ -1041,8 +1040,8 @@ if (isSet($_POST['action']) AND $_POST['action'] == 'Confirm Employee')
 		} else {
 			$invalidInput = TRUE;
 		}
-		if($_POST['email'] AND $_POST['email'] != ""){
-			$email = $_POST['email'];
+		if($_POST['Email'] AND $_POST['Email'] != ""){
+			$email = $_POST['Email'];
 		} else {
 			$invalidInput = TRUE;
 		}
@@ -1058,15 +1057,146 @@ if (isSet($_POST['action']) AND $_POST['action'] == 'Confirm Employee')
 		}
 	}
 
+	$positionID = $_POST['PositionID'];
+
 	// Check if the employee connection already exists for the user and company.
 	try
 	{
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 		$pdo = connect_to_db();
+		
+		if(!$createUser){
+			$sql = 'SELECT 	COUNT(*) 
+					FROM 	`employee`
+					WHERE 	`CompanyID`= :CompanyID
+					AND 	`UserID` = :UserID';
+			$s = $pdo->prepare($sql);
+			$s->bindValue(':CompanyID', $companyID);
+			$s->bindValue(':UserID', $userID);
+			$s->execute();
 
-		// If we're creating a new user, we give it the same access level as the company owner has. (Normal or in-house).
-		if($createUser){
+			$row = $s->fetch();
+			$pdo = null;
+			if($row[0] > 0){
+				if(!isSet($_SESSION['AddEmployeeAsOwnerAutoFillInEmail'])){
+					// This user and company combination already exists in our database
+					// This means the user is already an employee in the company!
+					$_SESSION['AddEmployeeAsOwnerError'] = "The selected user is already an employee in your company!";
+					$_SESSION['AddEmployeeAsOwnerSelectedUserID'] = $userID;
+					$_SESSION['AddEmployeeAsOwnerSelectedPositionID'] = $positionID;
+					$_SESSION['refreshAddEmployeeAsOwner'] = TRUE;
+					$_SESSION['AddEmployeeAsOwnerUserSearch'] = trimExcessWhitespace($_POST['usersearchstring']);
 
+					$TheCompanyID = $_SESSION['normalUserCompanyIDSelected'];
+					$location = "http://$_SERVER[HTTP_HOST]/company/?ID=" . $TheCompanyID . "&employees";
+					header("Location: $location");
+					exit();
+				} else {
+					clearAddEmployeeAsOwnerSessions();
+
+					$_SESSION['normalCompanyFeedback'] = "The user is already an employee in your company.";
+
+					$location = "http://$_SERVER[HTTP_HOST]/company/";
+					header("Location: $location");
+					exit();
+				}
+			}
+		}
+	}
+	catch (PDOException $e)
+	{
+		$pdo = null;
+		$error = 'Error searching for employee connection.' . $e->getMessage();
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+		exit();
+	}
+
+	if(!$createUser){
+		if(sizeOf($_SESSION['AddEmployeeAsOwnerUsersArray'][0]) > 1){
+			foreach($_SESSION['AddEmployeeAsOwnerUsersArray'] AS $user){
+				if($user['UserID'] == $userID){
+					$userName = $user['UserName'];
+				}
+			}
+		} else {
+			$userName = $_SESSION['AddEmployeeAsOwnerUsersArray']['UserName'];
+		}
+	}
+
+	var_dump($_SESSION);	// TO-DO: Remove before uploading
+
+	include_once 'confirmaddemployee.html.php';
+	exit();
+}
+
+if(isSet($_POST['confirmadd']) AND $_POST['confirmadd'] == "Add Employee"){
+
+	$positionID = $_POST['PositionID'];
+	$userID = $_POST['UserID'];
+	$companyName = $_POST['CompanyName'];
+	$companyID = $_POST['CompanyID'];
+	$createUser = $_POST['CreateUser'];
+
+	if($createUser){
+		$email = $_POST['Email'];
+	} else {
+		$userName = $_POST['UserName'];
+	}
+
+	// Check if password is submitted
+	if(!isSet($_POST['password']) OR (isSet($_POST['password']) AND $_POST['password'] == "")){
+
+		$wrongPassword = "You need to fill in your password.";
+
+		var_dump($_SESSION); // TO-DO: Remove before uploading
+
+		include_once 'confirmaddemployee.html.php';
+		exit();
+	}
+
+	$submittedPassword = $_POST['password'];
+	$hashedPassword = hashPassword($submittedPassword);
+
+	// Check if password is correct
+	try
+	{
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+
+		$pdo = connect_to_db();
+		$sql = 'SELECT	`password`
+				FROM	`user`
+				WHERE	`userID` = :userID
+				LIMIT 	1';
+		$s = $pdo->prepare($sql);
+		$s->bindValue(':userID', $_SESSION['LoggedInUserID']);
+		$s->execute();
+
+		$correctPassword = $s->fetchColumn();
+	}
+	catch (PDOException $e)
+	{
+		$pdo = null;
+		$error = 'Error confirming password: ' . $e->getMessage();
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+		exit();
+	}
+
+	if($hashedPassword != $correctPassword){
+		$wrongPassword = "The password you submitted is incorrect.";
+
+		var_dump($_SESSION); // TO-DO: Remove before uploading
+
+		include_once 'confirmaddemployee.html.php';
+		exit();
+	}
+
+	// Start doing all the database updates to create user/add user as employee
+	$pdo->beginTransaction();
+
+	// Create new user if we're doing that.
+	if($createUser){
+		try
+		{
 			//Generate activation code
 			$activationcode = generateActivationCode();
 
@@ -1126,51 +1256,15 @@ if (isSet($_POST['action']) AND $_POST['action'] == 'Confirm Employee')
 			}
 
 			$_SESSION['EmployeeUserFeedback'] .= "\nThis is the email msg we're sending out:\n$emailMessage.\nSent to: $email."; // TO-DO: Remove after testing	
-		} else {
-			$sql = 'SELECT 	COUNT(*) 
-					FROM 	`employee`
-					WHERE 	`CompanyID`= :CompanyID
-					AND 	`UserID` = :UserID';
-			$s = $pdo->prepare($sql);
-			$s->bindValue(':CompanyID', $companyID);
-			$s->bindValue(':UserID', $userID);
-			$s->execute();
-
-			$row = $s->fetch();
-
-			if ($row[0] > 0)
-			{
-				if(!isSet($_SESSION['AddEmployeeAsOwnerAutoFillInEmail'])){
-					// This user and company combination already exists in our database
-					// This means the user is already an employee in the company!
-					$_SESSION['AddEmployeeAsOwnerError'] = "The selected user is already an employee in your company!";
-					$_SESSION['AddEmployeeAsOwnerSelectedUserID'] = $userID;
-					$_SESSION['AddEmployeeAsOwnerSelectedPositionID'] = $_POST['PositionID'];
-					$_SESSION['refreshAddEmployeeAsOwner'] = TRUE;
-					$_SESSION['AddEmployeeAsOwnerUserSearch'] = trimExcessWhitespace($_POST['usersearchstring']);
-
-					$TheCompanyID = $_SESSION['normalUserCompanyIDSelected'];
-					$location = "http://$_SERVER[HTTP_HOST]/company/?ID=" . $TheCompanyID . "&employees";
-					header("Location: $location");
-					exit();
-				} else {
-					clearAddEmployeeAsOwnerSessions();
-
-					$_SESSION['normalCompanyFeedback'] = "The user is already an employee in your company.";
-
-					$location = "http://$_SERVER[HTTP_HOST]/company/";
-					header("Location: $location");
-					exit();
-				}
-			}
 		}
-	}
-	catch (PDOException $e)
-	{
-		$error = 'Error searching for employee connection.' . $e->getMessage();
-		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
-		$pdo = null;
-		exit();
+		catch (PDOException $e)
+		{
+			$pdo->rollBack();
+			$pdo = null;
+			$error = 'Error creating new user: ' . $e->getMessage();
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+			exit();
+		}
 	}
 
 	// Add the new employee connection to the database
@@ -1183,21 +1277,16 @@ if (isSet($_POST['action']) AND $_POST['action'] == 'Confirm Employee')
 		$s = $pdo->prepare($sql);
 		$s->bindValue(':CompanyID', $companyID);
 		$s->bindValue(':UserID', $userID);
-		$s->bindValue(':PositionID', $_POST['PositionID']);		
+		$s->bindValue(':PositionID', $positionID);
 		$s->execute();
 	}
 	catch (PDOException $e)
 	{
+		$pdo->rollBack();
+		$pdo = null;
 		$error = 'Error creating employee connection in database: ' . $e->getMessage();
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
-		$pdo = null;
 		exit();
-	}
-
-	if($createUser){
-		$_SESSION['EmployeeUserFeedback'] .= "\nSuccessfully created the user and added it as an employee.";
-	} else {
-		$_SESSION['EmployeeUserFeedback'] .= "\nSuccessfully added the employee.";
 	}
 
 	if($createUser){
@@ -1223,9 +1312,10 @@ if (isSet($_POST['action']) AND $_POST['action'] == 'Confirm Employee')
 		}
 		catch(PDOException $e)
 		{
+			$pdo->rollBack();
+			$pdo = null;
 			$error = 'Error adding log event to database: ' . $e->getMessage();
 			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
-			$pdo = null;
 			exit();
 		}
 	}
@@ -1254,7 +1344,7 @@ if (isSet($_POST['action']) AND $_POST['action'] == 'Confirm Employee')
 		// Get selected position name
 		if(isSet($_SESSION['AddEmployeeAsOwnerCompanyPositionArray'])){
 			foreach($_SESSION['AddEmployeeAsOwnerCompanyPositionArray'] AS $row){
-				if($row['PositionID'] == $_POST['PositionID']){
+				if($row['PositionID'] == $positionID){
 					$positioninfo = $row['CompanyPositionName'];
 					break;
 				}
@@ -1264,10 +1354,10 @@ if (isSet($_POST['action']) AND $_POST['action'] == 'Confirm Employee')
 
 		// Save a description with information about the employee that was added
 		// to the company.
-		$logEventDescription = 'The user: ' . $userinfo . 
-		' was added to the company: ' . $companyName . 
-		' and was given the position: ' . $positioninfo . ".\nAdded by : " .
-		$_SESSION['LoggedInUserName'];
+		$logEventDescription = "The user: $userinfo" . 
+		"\nwas added to the company: $companyName" .
+		"\nand was given the position: $positioninfo" . 
+		"\nAdded by : " . $_SESSION['LoggedInUserName'];
 
 		$sql = "INSERT INTO `logevent` 
 				SET			`actionID` = 	(
@@ -1280,15 +1370,24 @@ if (isSet($_POST['action']) AND $_POST['action'] == 'Confirm Employee')
 		$s->bindValue(':description', $logEventDescription);
 		$s->execute();
 
+		$pdo->commit();
+
 		//Close the connection
 		$pdo = null;
 	}
 	catch(PDOException $e)
 	{
+		$pdo->rollBack();
+		$pdo = null;
 		$error = 'Error adding log event to database: ' . $e->getMessage();
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
-		$pdo = null;
 		exit();
+	}
+
+	if($createUser){
+		$_SESSION['EmployeeUserFeedback'] .= "\nSuccessfully created the user and added it as an employee.";
+	} else {
+		$_SESSION['EmployeeUserFeedback'] .= "\nSuccessfully added the employee.";
 	}
 
 	clearAddEmployeeAsOwnerSessions();
@@ -1300,8 +1399,18 @@ if (isSet($_POST['action']) AND $_POST['action'] == 'Confirm Employee')
 	exit();
 }
 
+if(isSet($_POST['confirmadd']) AND $_POST['confirmadd'] == "Cancel"){
+	clearAddEmployeeAsOwnerSessions();
+
+	$_SESSION['normalCompanyFeedback'] = "Cancelled the add employee process.";
+
+	$location = "http://$_SERVER[HTTP_HOST]/company/";
+	header("Location: $location");
+	exit();
+}
+
 // If a company owner has used an "add employee"-link sent to their email, after a user requested it.
-if(isSet($_SESSION['AddEmployeeAsOwnerAutoFillInEmail'])){
+if(isSet($_SESSION['AddEmployeeAsOwnerAutoFillInEmail'], $_SESSION['normalUserCompanyIDSelected'])){
 	if(empty($_SESSION['AddEmployeeAsOwnerAutoFillInEmail']) OR $_SESSION['AddEmployeeAsOwnerAutoFillInEmail'] == ""){
 		clearAddEmployeeAsOwnerSessions();
 
@@ -1320,6 +1429,39 @@ if(isSet($_SESSION['AddEmployeeAsOwnerAutoFillInEmail'])){
 		// Get all users and companypositions so owner can search/choose from them
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 		$pdo = connect_to_db();
+
+		// First check if the user making the call is actually in the company. If not, we won't display anything.
+		// Also doubles as the company role check to decide what should be displayed.
+		$sql = "SELECT 		COUNT(*) 	AS HitCount,
+							cp.`name` 	AS CompanyPosition,
+							c.`name`	AS CompanyName
+				FROM 		`employee` e
+				INNER JOIN 	`companyposition` cp
+				ON 			cp.`PositionID` = e.`PositionID`
+				INNER JOIN 	`company` c
+				ON			c.`CompanyID` = e.`CompanyID`
+				WHERE		e.`CompanyID` = :CompanyID
+				AND 		e.`UserID` = :UserID
+				LIMIT 		1";
+		$s = $pdo->prepare($sql);
+		$s->bindValue(":CompanyID", $_SESSION['normalUserCompanyIDSelected']);
+		$s->bindValue(":UserID", $_SESSION['LoggedInUserID']);
+		$s->execute();
+
+		$userResult = $s->fetch(PDO::FETCH_ASSOC);
+
+		if(isSet($userResult) AND $userResult['HitCount'] > 0){
+			$companyRole = $userResult['CompanyPosition'];
+			$_SESSION['normalUserCompanyNameSelected'] = $userResult['CompanyName'];
+		} else {
+			$noAccess = TRUE;
+			unset($_SESSION['AddEmployeeAsOwnerAutoFillInEmail']);
+
+			var_dump($_SESSION); // TO-DO: remove after testing is done	
+
+			include_once 'company.html.php';
+			exit();
+		}
 
 			// Company Positions
 		//Only get info if we haven't gotten it before
@@ -2227,18 +2369,24 @@ if(isSet($selectedCompanyToDisplayID) OR (isSet($selectedCompanyToDisplayID) AND
 	}
 }
 
-// Get a list of all companies that the user does not already work in
+// Get a list of all companies that the user does not already work in, that can be requested to join(has an owner)
 try
 {
 	$sql = "SELECT 		c.`CompanyID`	AS CompanyID,
 						c.`name`		AS CompanyName
 			FROM		`company` c
-			WHERE		`companyID`
+			INNER JOIN	`employee` e
+			ON			e.`CompanyID` = c.`CompanyID`
+			INNER JOIN	`companyposition` cp
+			ON			cp.`PositionID` = e.`PositionID`
+			WHERE		cp.`name` = 'Owner'
+			AND 		c.`companyID`
 			NOT IN		(
 							SELECT 	`companyID`
 							FROM	`employee`
 							WHERE	`userID` = :userID
 						)
+			GROUP BY	c.`CompanyID`
 			ORDER BY	c.`name`";
 	$s = $pdo->prepare($sql);
 	$s->bindValue(":userID", $_SESSION['LoggedInUserID']);

@@ -15,7 +15,7 @@
 		</style>
 	</head>
 	<body onload="startTime()">
-		<?php include_once $_SERVER['DOCUMENT_ROOT'] .'/includes/topnav.html.php'; ?>
+		<?php include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/topnav.html.php'; ?>
 
 		<fieldset class="left"><legend>Add An Employee</legend>
 			<div class="left">
@@ -53,7 +53,7 @@
 					<input type="text" name="registerThenAddUserFromEmail" placeholder="Insert New User's Email"
 					value="">
 				</div>
-			</fieldset>	
+			</fieldset>
 
 			<fieldset class="left"><legend>Add Existing User</legend>
 				<div class="left">

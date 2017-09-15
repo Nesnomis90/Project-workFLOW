@@ -1,5 +1,6 @@
 <!-- This is the HTML form used for CHANGING an EMPLOYEE ROLE-->
 <?php include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/helpers.inc.php'; ?>
+<?php include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/adminnavcheck.inc.php'; ?>
 <!DOCTYPE html>
 <html lang="en">
 	<head>
@@ -57,7 +58,5 @@
 		</fieldset>
 		
 	<div class="left"><a href="..">Return to CMS home</a></div>
-	
-	<?php include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/logout.inc.html.php'; ?>
 	</body>
 </html>

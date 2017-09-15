@@ -53,8 +53,9 @@
 					<span><b><?php htmlout($userName); ?></b></span>
 					<label>Email: </label>
 					<span><b><?php htmlout($userEmail); ?></b></span>
+					<input type="hidden" name="UserName" value="<?php htmlout($userName); ?>">
 					<input type="hidden" name="UserID" value="<?php htmlout($userID); ?>">
-					<input type="hidden" name="email" value="<?php htmlout($userEmail); ?>">
+					<input type="hidden" name="Email" value="<?php htmlout($userEmail); ?>">
 				</div>
 			</fieldset>
 

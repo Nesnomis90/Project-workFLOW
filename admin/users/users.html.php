@@ -1,5 +1,6 @@
 <!-- This is the HTML form used for DISPLAYING a list of USER information-->
 <?php include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/helpers.inc.php'; ?>
+<?php include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/adminnavcheck.inc.php'; ?>
 <!DOCTYPE html>
 <html lang="en">
 	<head>
@@ -183,6 +184,5 @@
 		<?php endif; ?>
 
 	<div class="left"><a href="/admin/">Return to CMS home</a></div>
-
 	</body>
 </html>

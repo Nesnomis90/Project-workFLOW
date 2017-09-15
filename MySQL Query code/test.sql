@@ -52,6 +52,23 @@ WHERE 	DATE(CURRENT_TIMESTAMP) >= `removeAtDate`
 AND 	`isActive` = 1
 AND		`companyID` <> 0;
 
+SELECT 		c.`CompanyID`	AS CompanyID,
+			c.`name`		AS CompanyName
+FROM		`company` c
+INNER JOIN	`employee` e
+ON			e.`CompanyID` = c.`CompanyID`
+INNER JOIN	`companyposition` cp
+ON			cp.`PositionID` = e.`PositionID`
+WHERE		cp.`name` = 'Owner'
+AND 		c.`companyID`
+NOT IN		(
+				SELECT 	`companyID`
+				FROM	`employee`
+				WHERE	`userID` = 28
+			)
+GROUP BY	c.`CompanyID`
+ORDER BY	c.`name`;
+
 SELECT 	COUNT(*)	AS HitCount,
 		`userID` 	AS UserID,
 		`firstname`,
