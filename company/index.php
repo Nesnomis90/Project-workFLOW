@@ -942,7 +942,8 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Add Employee') OR
 				foreach($result as $row){
 					$users[] = array(
 										'UserID' => $row['UserID'],
-										'UserIdentifier' => $row['lastname'] . ', ' . $row['firstname'] . ' - ' . $row['email']
+										'UserIdentifier' => $row['lastname'] . ', ' . $row['firstname'] . ' - ' . $row['email'],
+										'UserName' => $row['lastname'] . ', ' . $row['firstname']
 									);
 				}
 				if(isSet($users)){
@@ -955,7 +956,6 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Add Employee') OR
 				if(isSet($_SESSION['AddEmployeeAsOwnerShowSearchResults']) AND $_SESSION['AddEmployeeAsOwnerShowSearchResults']){
 					$_SESSION['AddEmployeeAsOwnerSearchResult'] = "The search result found $usersFound users";
 				}
-
 			} else {
 				$users = $_SESSION['AddEmployeeAsOwnerUsersArray'];
 			}
@@ -1040,8 +1040,8 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Confirm Employee'){
 		} else {
 			$invalidInput = TRUE;
 		}
-		if($_POST['email'] AND $_POST['email'] != ""){
-			$email = $_POST['email'];
+		if($_POST['Email'] AND $_POST['Email'] != ""){
+			$email = $_POST['Email'];
 		} else {
 			$invalidInput = TRUE;
 		}
@@ -1111,6 +1111,18 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Confirm Employee'){
 		exit();
 	}
 
+	if(!$createUser){
+		if(sizeOf($_SESSION['AddEmployeeAsOwnerUsersArray'][0]) > 1){
+			foreach($_SESSION['AddEmployeeAsOwnerUsersArray'] AS $user){
+				if($user['UserID'] == $userID){
+					$userName = $user['UserName'];
+				}
+			}
+		} else {
+			$userName = $_SESSION['AddEmployeeAsOwnerUsersArray']['UserName'];
+		}
+	}
+
 	var_dump($_SESSION);	// TO-DO: Remove before uploading
 
 	include_once 'confirmaddemployee.html.php';
@@ -1120,13 +1132,14 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Confirm Employee'){
 if(isSet($_POST['confirmadd']) AND $_POST['confirmadd'] == "Add Employee"){
 
 	$positionID = $_POST['PositionID'];
-	$email = $_POST['Email'];
 	$userID = $_POST['UserID'];
 	$companyName = $_POST['CompanyName'];
 	$companyID = $_POST['CompanyID'];
 	$createUser = $_POST['CreateUser'];
 
-	if(isSet($_POST['UserName']) AND $_POST['UserName'] != ""){
+	if($createUser){
+		$email = $_POST['Email'];
+	} else {
 		$userName = $_POST['UserName'];
 	}
 
@@ -2362,17 +2375,18 @@ try
 	$sql = "SELECT 		c.`CompanyID`	AS CompanyID,
 						c.`name`		AS CompanyName
 			FROM		`company` c
-			WHERE		`companyID`
+			INNER JOIN	`employee` e
+			ON			e.`CompanyID` = c.`CompanyID`
+			INNER JOIN	`companyposition` cp
+			ON			cp.`PositionID` = e.`PositionID`
+			WHERE		cp.`name` = 'Owner'
+			AND 		c.`companyID`
 			NOT IN		(
 							SELECT 	`companyID`
 							FROM	`employee`
 							WHERE	`userID` = :userID
 						)
-			AND			`companyID`
-			IN			(
-							SELECT 	`companyID`
-							FROM	`employee`
-						)
+			GROUP BY	c.`CompanyID`
 			ORDER BY	c.`name`";
 	$s = $pdo->prepare($sql);
 	$s->bindValue(":userID", $_SESSION['LoggedInUserID']);

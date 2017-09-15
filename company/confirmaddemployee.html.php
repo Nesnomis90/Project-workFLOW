@@ -25,7 +25,7 @@
 					</div>
 				<?php endif; ?>
 				<form action="" method="post">
-				<?php if(isSet($createUser) AND $createUser) : ?>
+				<?php if($createUser) : ?>
 					<div>
 						<span style="white-space: pre-wrap;"><?php htmlout(
 						"You have selected to add a new user to the company $companyName." . 
@@ -55,8 +55,11 @@
 						<input type="hidden" name="CompanyID" value="<?php htmlout($companyID); ?>">
 						<input type="hidden" name="UserID" value="<?php htmlout($userID); ?>">
 						<input type="hidden" name="CompanyName" value="<?php htmlout($companyName); ?>">
-						<input type="hidden" name="UserName" value="<?php htmlout($userName); ?>">
-						<input type="hidden" name="Email" value="<?php htmlout($email); ?>">
+						<?php if($createUser) : ?>
+							<input type="hidden" name="Email" value="<?php htmlout($email); ?>">
+						<?php else : ?>
+							<input type="hidden" name="UserName" value="<?php htmlout($userName); ?>">
+						<?php endif; ?>
 						<input type="hidden" name="PositionID" value="<?php htmlout($positionID); ?>">
 						<input type="hidden" name="CreateUser" value="<?php htmlout($createUser); ?>">
 						<input type="submit" name="confirmadd" value="Add Employee">
