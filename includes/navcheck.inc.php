@@ -44,6 +44,7 @@ if(isSet($_GET['logoutForNav'])){
 	unset($_SESSION['password']);
 	unset($_SESSION['LoggedInUserID']);
 	unset($_SESSION['LoggedInUserName']);
+	unset($_SESSION['loginEmailSubmitted']);
 	// Refresh page without get parameters
 	$location = getLocationWeCameFrom();
 
