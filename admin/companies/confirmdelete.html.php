@@ -1,6 +1,4 @@
 <!-- This is the HTML form used by ADMIN in COMPANIES to confirm that they want to DELETE A COMPANY -->
-<?php include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/helpers.inc.php'; ?>
-<?php include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/adminnavcheck.inc.php'; ?>
 <!DOCTYPE html>
 <html lang="en">
 	<head>

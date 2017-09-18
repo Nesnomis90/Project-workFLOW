@@ -1,5 +1,4 @@
 <!-- This is the HTML form used for identifying user with their BOOKING CODE -->
-<?php include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/helpers.inc.php'; ?>
 <!DOCTYPE html>
 <html lang="en">
 	<head>

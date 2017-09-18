@@ -1,8 +1,9 @@
 <?php 
 // This is the index file for the COMPANIES folder
-session_start();
+
 // Include functions
-include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/helpers.inc.php';
+include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/helpers.inc.php'; // Starts session if not already started
+include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/adminnavcheck.inc.php';
 include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/magicquotes.inc.php';
 
 // CHECK IF USER TRYING TO ACCESS THIS IS IN FACT THE ADMIN!
@@ -2424,9 +2425,6 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Create Company') OR
 		unset($_SESSION['AddCompanyCompanyName']);
 	}
 
-	// We want a reset all fields button while adding a new company
-	$reset = 'reset';
-
 	// We don't need to see date to remove when adding a new company
 	$ShowDateToRemove = FALSE;
 
@@ -2518,8 +2516,6 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Edit') OR
 	$pageTitle = 'Edit Company';
 	$button = 'Edit Company';
 
-	// Don't want a reset button to blank all fields while editing
-	$reset = 'hidden';
 	// Want to see date to remove while editing
 	$ShowDateToRemove = TRUE;
 

@@ -1,7 +1,4 @@
 <?php
-if(session_status() == PHP_SESSION_NONE) {
-    session_start();
-}
 
 if(isSet($_GET['logoutForNav'])){
 	// Same stuff we do on logout in access
@@ -10,6 +7,7 @@ if(isSet($_GET['logoutForNav'])){
 	unset($_SESSION['password']);
 	unset($_SESSION['LoggedInUserID']);
 	unset($_SESSION['LoggedInUserName']);
+	unset($_SESSION['loginEmailSubmitted']);
 	header("Location: /");
 	exit();
 }

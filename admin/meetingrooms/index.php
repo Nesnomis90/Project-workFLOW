@@ -2,7 +2,8 @@
 // This is the index file for the MEETING ROOMS folder
 
 // Include functions
-include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/helpers.inc.php';
+include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/helpers.inc.php'; // Starts session if not already started
+include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/adminnavcheck.inc.php';
 include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/magicquotes.inc.php';
 
 // CHECK IF USER TRYING TO ACCESS THIS IS IN FACT THE ADMIN!
@@ -24,7 +25,6 @@ function clearAddMeetingRoomSessions(){
 // Function to clear sessions used to remember user inputs on refreshing the edit meeting room form
 function clearEditMeetingRoomSessions(){
 	unset($_SESSION['EditMeetingRoomOriginalInfo']);
-	
 	unset($_SESSION['EditMeetingRoomDescription']);
 	unset($_SESSION['EditMeetingRoomName']);
 	unset($_SESSION['EditMeetingRoomCapacity']);
@@ -116,7 +116,7 @@ function validateUserInputs(){
 		// MeetingRoomDescription
 	$invalidMeetingRoomDescription = isLengthInvalidMeetingRoomDescription($validatedMeetingRoomDescription);
 	if($invalidMeetingRoomDescription AND !$invalidInput){
-		$_SESSION['AddMeetingRoomError'] = "The meeting room description submitted is too long.";	
+		$_SESSION['AddMeetingRoomError'] = "The meeting room description submitted is too long.";
 		$invalidInput = TRUE;
 	}
 		// MeetingRoomLocation
@@ -161,10 +161,9 @@ function validateUserInputs(){
 				{
 					// This name is already being used for a meeting room
 
-					$_SESSION['AddMeetingRoomError'] = "The name: " . $validatedMeetingRoomName . " is already used for a meeting room!";
+					$_SESSION['AddMeetingRoomError'] = "The name: $validatedMeetingRoomName is already used for a meeting room!";
 					$invalidInput = TRUE;
 				}
-				// Meeting room name hasn't been used before
 			}
 			catch (PDOException $e)
 			{
@@ -172,8 +171,8 @@ function validateUserInputs(){
 				include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
 				$pdo = null;
 				exit();
-			}	
-		}	
+			}
+		}
 	}
 return array($invalidInput, $validatedMeetingRoomDescription, $validatedMeetingRoomName, $validatedMeetingRoomCapacity, $validatedMeetingRoomLocation);
 }
@@ -305,6 +304,8 @@ if ((isSet($_POST['action']) AND $_POST['action'] == "Create Meeting Room") OR
 	$button = 'Add Room';
 	$meetingRoomID = '';
 
+	var_dump($_SESSION); // TO-DO: Remove before uploading.
+	
 	// Change form
 	include 'form.html.php';
 	exit();
@@ -367,8 +368,6 @@ if((isSet($_POST['action']) AND $_POST['action'] == "Add Room")){
 		// Add a log event that a meeting room was added
 	try
 	{
-		session_start();
-
 		// Save a description with information about the meeting room that was added
 		$logEventDescription = "New meeting room: " . $validatedMeetingRoomName . ",\nwith capacity: " . 
 		$validatedMeetingRoomCapacity . "\nand description: " . $validatedMeetingRoomDescription . 
@@ -512,8 +511,8 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Edit') OR
 	$originalMeetingRoomDescription = $_SESSION['EditMeetingRoomOriginalInfo']['MeetingRoomDescription'];
 	$originalMeetingRoomLocation = $_SESSION['EditMeetingRoomOriginalInfo']['MeetingRoomLocation'];
 
-	// Don't want a reset button to blank all fields while editing
-	$reset = 'hidden';
+	var_dump($_SESSION); // TO-DO: Remove before uploading.
+
 	include 'form.html.php';
 	exit();
 }

@@ -1,5 +1,4 @@
 <!-- This is the HTML form used for all users in BOOKING to confirm that they want to create a meeting if it makes the company go over their free booking time -->
-<?php include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/helpers.inc.php'; ?>
 <!DOCTYPE html>
 <html lang="en">
 	<head>

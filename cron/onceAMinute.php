@@ -35,8 +35,7 @@ function updateCompletedBookings(){
 	}
 }
 
-// Check if a meeting is about to start and alert the user by sending an email
-// FIX-ME: PHP script only runs for 30 sec before cancelling. What if we have to send a lot of emails?
+// Check if a meeting is about to start and alert the user by "sending an email" e.g. adding it to the email queue.
 function alertUserThatMeetingIsAboutToStart(){
 	try
 	{
@@ -55,7 +54,7 @@ function alertUserThatMeetingIsAboutToStart(){
 								SELECT 	`name`
 								FROM 	`meetingroom`
 								WHERE 	`meetingRoomID` = b.`meetingRoomID`
-							)							AS MeetingRoomName,			
+							)							AS MeetingRoomName,
 							(
 								SELECT 	`name`
 								FROM 	`company`
@@ -80,12 +79,12 @@ function alertUserThatMeetingIsAboutToStart(){
 				AND 		DATE_ADD(b.`dateTimeCreated`, INTERVAL :waitMinutes MINUTE) < CURRENT_TIMESTAMP
 				AND			b.`emailSent` = 0
 				AND			u.`sendEmail` = 1
-				AND			b.`bookingID` <> 0";		
+				AND			b.`bookingID` <> 0";
 		$s = $pdo->prepare($sql);
 		$s->bindValue(':bufferMinutes', TIME_LEFT_IN_MINUTES_UNTIL_MEETING_STARTS_BEFORE_SENDING_EMAIL);
 		$s->bindValue(':waitMinutes', MINIMUM_TIME_PASSED_IN_MINUTES_AFTER_CREATING_BOOKING_BEFORE_SENDING_EMAIL);
 		$s->execute();
-		
+
 		$result = $s->fetchAll(PDO::FETCH_ASSOC);
 		if(isSet($result)){
 			$rowNum = sizeOf($result);
@@ -113,54 +112,161 @@ function alertUserThatMeetingIsAboutToStart(){
 			echo "Number of users to Alert: $numberOfUsersToAlert";	// TO-DO: Remove before uploading.
 			echo "<br />";
 
-			foreach($upcomingMeetingsNotAlerted AS $row){
-				$emailSubject = "Upcoming Meeting Info!";
+			try
+			{
+				include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 
-				$displayStartDate = convertDatetimeToFormat($row['StartDate'] , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
-				$displayEndDate = convertDatetimeToFormat($row['EndDate'], 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
+				if(!isSet($pdo)){
+					$pdo = connect_to_db();
+				}
 
-				$emailMessage = 
-				"You have a booked meeting starting soon!\n" . 
-				"Your booked Meeting Room: " . $row['MeetingRoomName'] . ".\n" . 
-				"Your booked Start Time: " . $displayStartDate . ".\n" .
-				"Your booked End Time: " . $displayEndDate . ".\n\n" .
-				"If you wish to cancel your meeting, or just end it early, you can easily do so by clicking the link given below.\n" .
-				"Click this link to cancel your booked meeting: " . $_SERVER['HTTP_HOST'] . 
-				"/booking/?cancellationcode=" . $row['CancelCode'];
+				$pdo->beginTransaction();
 
-				$email = $row['UserEmail'];
+				foreach($upcomingMeetingsNotAlerted AS $row){
+					$emailSubject = "Upcoming Meeting Info!";
+
+					$displayStartDate = convertDatetimeToFormat($row['StartDate'] , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
+					$displayEndDate = convertDatetimeToFormat($row['EndDate'], 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
+
+					$emailMessage = 
+					"You have a booked meeting starting soon!\n" . 
+					"Your booked Meeting Room: " . $row['MeetingRoomName'] . ".\n" . 
+					"Your booked Start Time: " . $displayStartDate . ".\n" .
+					"Your booked End Time: " . $displayEndDate . ".\n\n" .
+					"If you wish to cancel your meeting, or just end it early, you can easily do so by clicking the link given below.\n" .
+					"Click this link to cancel your booked meeting: " . $_SERVER['HTTP_HOST'] . 
+					"/booking/?cancellationcode=" . $row['CancelCode'];
+
+					$email = $row['UserEmail'];
+
+					$mailResult = sendEmail($email, $emailSubject, $emailMessage);
+
+					// Instead of sending the email here, we store them in the database to send them later instead.
+					// That way, we can limit the amount of email being sent out easier.
+					// Store email to be sent out later
+					$sql = 'INSERT INTO	`email`
+							SET			`subject` = :subject,
+										`message` = :message,
+										`receivers` = :receivers,
+										`dateTimeRemove` = DATE_ADD(CURRENT_TIMESTAMP, INTERVAL 1 HOUR);';
+					$s = $pdo->prepare($sql);
+					$s->bindValue(':subject', $emailSubject);
+					$s->bindValue(':message', $emailMessage);
+					$s->bindValue(':receivers', $email);
+					$s->execute();
+
+					// Update booking that we've "sent" an email to the user 
+					$sql = "UPDATE 	`booking`
+							SET		`emailSent` = 1
+							WHERE	`bookingID` = :bookingID";
+					$s = $pdo->prepare($sql);
+					$s->bindValue(':bookingID', $row['TheBookingID']);
+					$s->execute();
+				}
+
+				$pdo->commit();
+			}
+			catch(PDOException $e)
+			{
+				$pdo->rollBack();
+				$pdo = null;
+				return FALSE;
+			}
+		}
+		return TRUE;
+	}
+	catch(PDOException $e)
+	{
+		$pdo = null;
+		return FALSE;
+	}
+}
+
+// Remove emails that have been stored further than the dateTimeRemove set when it went into the queue.
+// In theory this should never occur, since every email should be deleted from queue on being sent.
+function removeOldEmailsFromQueue(){
+	try
+	{
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+
+		if(!isSet($pdo)){
+			$pdo = connect_to_db();
+		}
+
+		$sql = "DELETE FROM	`email`
+				WHERE		`dateTimeRemove` < CURRENT_TIMESTAMP
+				AND			`emailID` <> 0";
+		$pdo->query($sql);
+
+		return TRUE;
+	}
+	catch(PDOException $e)
+	{
+		$pdo = null;
+		return FALSE;
+	}	
+}
+
+// Check our saved emails and attempt to send as many as we have limited ourselves to
+// Always get the freshest stored emails first.
+// TO-DO: Change from DESC to ASC (or nothing) if this doesn't work well
+function checkEmailQueue(){
+	try
+	{
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+
+		if(!isSet($pdo)){
+			$pdo = connect_to_db();
+		}
+
+		$sql = "SELECT		`emailID`	AS TheEmailID,
+							`subject`	AS EmailSubject,
+							`message`	AS EmailMessage,
+							`receivers`	AS EmailsToSendTo
+				FROM		`email`
+				ORDER BY	UNIX_TIMESTAMP(`dateTimeAdded`) DESC
+				LIMIT		:limitEmailsToSendAtOnce";
+		$s = $pdo->prepare($sql);
+		$s->bindValue(':limitEmailsToSendAtOnce', MAX_NUMBER_OF_EMAILS_TO_SEND_AT_ONCE);
+		$s->execute();
+
+		$emailsToSendOut = $s->fetchAll(PDO::FETCH_ASSOC);
+		if(isSet($emailsToSendOut)){
+			$numberOfEmailsInQueue = sizeOf($emailsToSendOut);
+		} else {
+			$numberOfEmailsInQueue  = 0;
+		}
+
+		echo "Number of emails to send out: $numberOfEmailsInQueue";	// TO-DO: Remove before uploading.
+		echo "<br />";
+
+		if($numberOfEmailsInQueue > 0){
+
+			foreach($emailsToSendOut AS $queue){
+				$emailSubject = $queue['EmailSubject'];
+
+				$emailMessage = $queue['EmailMessage'];
+
+				$emailAsText = $queue['EmailsToSendTo'];
+				$email = explode(", ", $emailAsText); //sendEmail takes array as input. We store it as text
 
 				$mailResult = sendEmail($email, $emailSubject, $emailMessage);
 
-				echo "Email being sent out about a meeting starting soon: $emailMessage";	// TO-DO: Remove before uploading
-				echo "<br />";
-				echo "Email is being sent to: $email";
-				echo "<br />";
-
 				if($mailResult){
-					// Update booking that we've "sent" an email to the user 
-					try
-					{
-						include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
-						
-						if(!isSet($pdo)){
-							$pdo = connect_to_db();
-						}
-						$sql = "UPDATE 	`booking`
-								SET		`emailSent` = 1
-								WHERE	`bookingID` = :bookingID";
-						$s = $pdo->prepare($sql);
-						$s->bindValue(':bookingID', $row['TheBookingID']);
-						$s->execute();
-					}
-					catch(PDOException $e)
-					{
-						$pdo = null;
-						return FALSE;
-					}
+					
+					echo "Succesfully sent email to $emailAsText.\nEmail message sent out was: $emailMessage"; // TO-DO: Remove before uploading
+					echo "<br />";
+
+					// Email has been succesfully prepared, so we don't need to have it in the queue anymore.
+					$sql = "DELETE FROM `email`
+							WHERE		`emailID` = :emailID";
+					$s = $pdo->prepare($sql);
+					$s->bindValue(':emailID', $queue['TheEmailID']);
+					$s->execute();
 				}
 			}
 		}
+
 		return TRUE;
 	}
 	catch(PDOException $e)
@@ -174,6 +280,8 @@ function alertUserThatMeetingIsAboutToStart(){
 	// Run our SQL functions
 $updatedCompletedBookings = updateCompletedBookings();
 $alertedUserOnMeetingStart = alertUserThatMeetingIsAboutToStart();
+$checkedEmailQueue = checkEmailQueue();
+$removedOldEmailsFromQueue = removeOldEmailsFromQueue();
 
 $repetition = 3;
 $sleepTime = 1; // Second(s)
@@ -186,13 +294,13 @@ if(!$updatedCompletedBookings){
 		$success = updateCompletedBookings();
 		if($success){
 			echo "Successfully Updated Completed Bookings";	// TO-DO: Remove before uploading.
-			echo "<br />";	
+			echo "<br />";
 			break;
 		}
 	}
 	unset($success);
 	echo "Failed To Update Completed Bookings";	// TO-DO: Remove before uploading.
-	echo "<br />";	
+	echo "<br />";
 } else {
 	echo "Successfully Updated Completed Bookings";	// TO-DO: Remove before uploading.
 	echo "<br />";
@@ -203,16 +311,43 @@ if(!$alertedUserOnMeetingStart){
 		sleep($sleepTime);
 		$success = alertUserThatMeetingIsAboutToStart();
 		if($success){
-			echo "Successfully Sent Emails To User(s) That Meeting Is Starting Soon";	// TO-DO: Remove before uploading.
+			echo "Successfully Added Emails To Queue About Meetings Starting Soon";	// TO-DO: Remove before uploading.
 			echo "<br />";
 			break;
 		}
 	}
 	unset($success);
-	echo "Failed To Send Emails To User(s) That Meeting Is Starting Soon";	// TO-DO: Remove before uploading.
-	echo "<br />";	
+	echo "Failed To Add Emails To Queue About Meetings Starting Soon";	// TO-DO: Remove before uploading.
+	echo "<br />";
 } else {
-	echo "Successfully Sent Emails To User(s) That Meeting Is Starting Soon";	// TO-DO: Remove before uploading.
+	echo "Successfully Added Emails To Queue About Meetings Starting Soon";	// TO-DO: Remove before uploading.
+	echo "<br />";
+}
+
+if(!$checkedEmailQueue){
+	for($i = 0; $i < $repetition; $i++){
+		sleep($sleepTime);
+		$success = checkEmailQueue();
+		if($success){
+			echo "Successfully Checked Email Queue And Sent Emails If There Were Any";	// TO-DO: Remove before uploading.
+			echo "<br />";
+			break;
+		}
+	}
+	unset($success);
+	echo "Failed To Check Email Queue And Send Emails";	// TO-DO: Remove before uploading.
+	echo "<br />";
+} else {
+	echo "Successfully Checked Email Queue And Sent Emails If There Were Any";	// TO-DO: Remove before uploading.
+	echo "<br />";
+}
+
+// No need to try to repeat this.
+if(!$removedOldEmailsFromQueue){
+	echo "Failed To Check Email Queue And Remove Old Emails";	// TO-DO: Remove before uploading.
+	echo "<br />";
+} else {
+	echo "Successfully Checked Email Queue And Removed Old Emails";	// TO-DO: Remove before uploading.
 	echo "<br />";
 }
 

@@ -1,6 +1,4 @@
 <!-- This is the HTML form used to display booking information to normal users-->
-<?php include_once $_SERVER['DOCUMENT_ROOT'] .
- '/includes/helpers.inc.php'; ?>
 <!DOCTYPE html>
 <html lang="en">
 	<head>
@@ -277,6 +275,5 @@
 			</form>		
 		<?php endif; ?>
 
-		<?php include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/logout.inc.html.php'; ?>
 	</body>
 </html>

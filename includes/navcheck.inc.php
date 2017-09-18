@@ -1,8 +1,4 @@
 <?php
-if(session_status() == PHP_SESSION_NONE) {
-    session_start();
-}
-
 function getLocationWeCameFrom(){
 	$pathWeCameFrom = $_SERVER['PHP_SELF'];
 	$pathWithoutPHPFile = substr($pathWeCameFrom, 0, strrpos($pathWeCameFrom,'/'));
@@ -44,6 +40,7 @@ if(isSet($_GET['logoutForNav'])){
 	unset($_SESSION['password']);
 	unset($_SESSION['LoggedInUserID']);
 	unset($_SESSION['LoggedInUserName']);
+	unset($_SESSION['loginEmailSubmitted']);
 	// Refresh page without get parameters
 	$location = getLocationWeCameFrom();
 

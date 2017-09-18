@@ -9,7 +9,7 @@
 //			When sending an email, it must contain a From header.
 //
 // Return value: Returns TRUE on success or FALSE on failure. 
-// 				Note: Keep in mind that even if the email was accepted for delivery, 
+// 				Note: Keep in mind that even if the email was accepted for delivery,
 //				it does NOT mean the email is actually sent and received!
 
 
@@ -18,8 +18,8 @@
 // Returns TRUE if prepared, FALSE if not prepared.
 // TO-DO: Untested with proper php.ini settings
 function sendEmail($toEmail, $subject, $message){
-	
-	// Check if the email(s) is(are) a valid email	
+
+	// Check if the email(s) is(are) a valid email
 	if(is_Array($toEmail)){
 		for($i=0; $i<sizeOf($toEmail); $i++){
 			if(validateUserEmail($toEmail[$i])){
@@ -31,7 +31,7 @@ function sendEmail($toEmail, $subject, $message){
 			$validEmail[] = $toEmail;
 		}
 	}
-	
+
 	// Prepare email to be sent with valid email(s)
 	if(isSet($validEmail) AND sizeOf($validEmail) > 0){
 
@@ -101,16 +101,16 @@ function validateUserEmail($email){
 
 	Email verification links should only satisfy the requirement of verify email address ownership and should not provide the user with an authenticated session (e.g. the user must still authenticate as normal to access the application).
 	Email verification codes must expire after the first use or expire after 8 hours if not used.*/
-	
+
 	// To avoid email injection the emails can't have \n\r in them.
 	if(preg_match('/\r|\n/',$email)){
 		return FALSE;
 	}
-	
+
 	// Check for the presence of at least one @ symbol
 	if(strpos($email, '@') !== FALSE) {
 		// Email contains an @
-		
+
 		// Check that the local-part is no longer than 64 octets (64x8 bit = 64 byte)
 			// Get local-part based on last occurance of @-symbol
 		$local = substr($email, 0, strrpos($email, "@"));
@@ -124,16 +124,16 @@ function validateUserEmail($email){
 			// domain is bigger than 255 octets
 			return FALSE;
 		}
-		
+
 		// Email needs at least a local and a domain part, so *@* minimum.
 		if(strlen($local) == 0 OR strlen($domain) == 0){
 			// missing a local or domain part
 			return FALSE;
 		}
-		
+
 		// Email seems valid. Now we can at least try sending a verification email
 		return TRUE;
-		
+
 	} else {
 		// No @ found, invalid email.
 		return FALSE;

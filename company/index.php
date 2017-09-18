@@ -1,10 +1,16 @@
 <?php 
 // This is the index file for the company folder (all users)
-session_start();
 
 // Include functions
-include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/helpers.inc.php';
+include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/helpers.inc.php'; // Starts session if not already started
+include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/navcheck.inc.php';
 include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/magicquotes.inc.php';
+
+// Make sure we don't have any pointless sessions active
+unsetSessionsFromAdmin();
+unsetSessionsFromUserManagement();
+unsetSessionsFromBookingManagement();
+unsetSessionsFromMeetingroomManagement();
 
 // Function to clear sessions used to remember user inputs on refreshing the add employee form
 function clearAddEmployeeAsOwnerSessions(){
@@ -24,8 +30,7 @@ function clearEditEmployeeAsOwnerSessions(){
 }
 
 // Make sure logout works properly and that we check if their login details are up-to-date
-if(isSet($_SESSION['loggedIn']) AND $_SESSION['loggedIn'] AND isSet($_SESSION['LoggedInUserID']) AND !empty($_SESSION['LoggedInUserID'])){
-	$gotoPage = ".";
+if(isSet($_SESSION['loggedIn'])){
 	userIsLoggedIn();
 } else {
 	var_dump($_SESSION); // TO-DO: remove after testing is done	
@@ -33,8 +38,6 @@ if(isSet($_SESSION['loggedIn']) AND $_SESSION['loggedIn'] AND isSet($_SESSION['L
 	include_once 'company.html.php';
 	exit();
 }
-
-unsetSessionsFromUserManagement();
 
 if(isSet($_SESSION['normalCompanyCreateACompany']) AND $_SESSION['normalCompanyCreateACompany'] == "Invalid"){
 	$_SESSION['normalCompanyCreateACompany'] = TRUE;
@@ -276,12 +279,42 @@ if(isSet($_POST['action']) AND $_POST['action'] == "Confirm"){
 
 				$mailResult = sendEmail($email, $emailSubject, $emailMessage);
 
+				$email = implode($email,", ");
+
 				if(!$mailResult){
 					$_SESSION['normalCompanyFeedback'] .= "\n\n[WARNING] System failed to send Email to Admin.";
-					// TO-DO: FIX-ME: What to do if the mail doesn't want to send?
-					// Store it somewhere and have a cron try to send emails?
+
+					// Email failed to be prepared. Store it in database to try again later
+					try
+					{
+						include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+
+						$pdo = connect_to_db();
+						$sql = 'INSERT INTO	`email`
+								SET			`subject` = :subject,
+											`message` = :message,
+											`receivers` = :receivers,
+											`dateTimeRemove` = DATE_ADD(CURRENT_TIMESTAMP, INTERVAL 7 DAY);';
+						$s = $pdo->prepare($sql);
+						$s->bindValue(':subject', $emailSubject);
+						$s->bindValue(':message', $emailMessage);
+						$s->bindValue(':receivers', $email);
+						$s->execute();
+
+						//close connection
+						$pdo = null;
+					}
+					catch (PDOException $e)
+					{
+						$error = 'Error storing email: ' . $e->getMessage();
+						include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+						$pdo = null;
+						exit();
+					}
+
+					$_SESSION['normalCompanyFeedback'] .= "\nEmail to be sent has been stored and will be attempted to be sent again later.";
 				}
-				$email = implode($email,", ");
+
 				$_SESSION['normalCompanyFeedback'] .= "\nThis is the email msg we're sending out:\n$emailMessage.\nSent to email(s): $email."; // TO-DO: Remove after testing				
 			}
 			// close connection
@@ -452,11 +485,41 @@ if(isSet($_POST['confirm']) AND $_POST['confirm'] == "Yes, Send The Request"){
 
 			$mailResult = sendEmail($email, $emailSubject, $emailMessage);
 
+			$email = implode(", ", $email);
+
 			if(!$mailResult){
 				$_SESSION['normalCompanyFeedback'] .= "\n\n[WARNING] System failed to send Email to user(s).";
-			}
 
-			$email = implode(", ", $email);
+				// Email failed to be prepared. Store it in database to try again later
+				try
+				{
+					include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+
+					$pdo = connect_to_db();
+					$sql = 'INSERT INTO	`email`
+							SET			`subject` = :subject,
+										`message` = :message,
+										`receivers` = :receivers,
+										`dateTimeRemove` = DATE_ADD(CURRENT_TIMESTAMP, INTERVAL 7 DAY);';
+					$s = $pdo->prepare($sql);
+					$s->bindValue(':subject', $emailSubject);
+					$s->bindValue(':message', $emailMessage);
+					$s->bindValue(':receivers', $email);
+					$s->execute();
+
+					//close connection
+					$pdo = null;
+				}
+				catch (PDOException $e)
+				{
+					$error = 'Error storing email: ' . $e->getMessage();
+					include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+					$pdo = null;
+					exit();
+				}
+
+				$_SESSION['normalCompanyFeedback'] .= "\nEmail to be sent has been stored and will be attempted to be sent again later.";
+			}
 
 			$_SESSION['normalCompanyFeedback'] .= "\nThis is the email msg we're sending out:\n$emailMessage\nSent to email: $email."; // TO-DO: Remove before uploading			
 		} else {
@@ -1253,6 +1316,36 @@ if(isSet($_POST['confirmadd']) AND $_POST['confirmadd'] == "Add Employee"){
 
 			if(!$mailResult){
 				$_SESSION['EmployeeUserFeedback'] .= "\n[WARNING] System failed to send Email to user.";
+
+				// Email failed to be prepared. Store it in database to try again later
+				try
+				{
+					include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+
+					$pdo = connect_to_db();
+					$sql = 'INSERT INTO	`email`
+							SET			`subject` = :subject,
+										`message` = :message,
+										`receivers` = :receivers,
+										`dateTimeRemove` = DATE_ADD(CURRENT_TIMESTAMP, INTERVAL 7 DAY);';
+					$s = $pdo->prepare($sql);
+					$s->bindValue(':subject', $emailSubject);
+					$s->bindValue(':message', $emailMessage);
+					$s->bindValue(':receivers', $email);
+					$s->execute();
+
+					//close connection
+					$pdo = null;
+				}
+				catch (PDOException $e)
+				{
+					$error = 'Error storing email: ' . $e->getMessage();
+					include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+					$pdo = null;
+					exit();
+				}
+
+				$_SESSION['EmployeeUserFeedback'] .= "\nEmail to be sent has been stored and will be attempted to be sent again later.";
 			}
 
 			$_SESSION['EmployeeUserFeedback'] .= "\nThis is the email msg we're sending out:\n$emailMessage.\nSent to: $email."; // TO-DO: Remove after testing	

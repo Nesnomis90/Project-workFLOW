@@ -1,14 +1,19 @@
 <?php 
 // This is the index file for the user folder (all users)
-session_start();
 
 // Include functions
-include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/helpers.inc.php';
+include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/helpers.inc.php'; // Starts session if not already started
+include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/navcheck.inc.php';
 include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/magicquotes.inc.php';
+
+// Make sure we don't have any pointless sessions active
+unsetSessionsFromAdmin();
+unsetSessionsFromBookingManagement();
+unsetSessionsFromCompanyManagement();
+unsetSessionsFromMeetingroomManagement();
 
 // Make sure logout works properly and that we check if their login details are up-to-date
 if(isSet($_SESSION['loggedIn'])){
-	$gotoPage = ".";
 	userIsLoggedIn();
 }
 
@@ -276,7 +281,7 @@ if(isSet($_POST['register']) AND $_POST['register'] == "Register Account"){
 	$emailSubject = "Account Activation Link";
 
 	$emailMessage = 
-	"Your account has been created.\n" .
+	"Your account has been successfully created!\n" .
 	"Before you can log in you need to activate your account.\n" .
 	"If the account isn't activated within 8 hours, it is removed.\n" .
 	"Click this link to activate your account: " . $_SERVER['HTTP_HOST'] . 
@@ -290,6 +295,36 @@ if(isSet($_POST['register']) AND $_POST['register'] == "Register Account"){
 		} else {
 			$_SESSION['registerUserFeedback'] = "\n[WARNING] System failed to send Email to user.";
 		}
+
+		// Email failed to be prepared. Store it in database to try again later
+		try
+		{
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+
+			$pdo = connect_to_db();
+			$sql = 'INSERT INTO	`email`
+					SET			`subject` = :subject,
+								`message` = :message,
+								`receivers` = :receivers,
+								`dateTimeRemove` = DATE_ADD(CURRENT_TIMESTAMP, INTERVAL 8 HOUR);';
+			$s = $pdo->prepare($sql);
+			$s->bindValue(':subject', $emailSubject);
+			$s->bindValue(':message', $emailMessage);
+			$s->bindValue(':receivers', $email);
+			$s->execute();
+
+			//close connection
+			$pdo = null;
+		}
+		catch (PDOException $e)
+		{
+			$error = 'Error storing email: ' . $e->getMessage();
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+			$pdo = null;
+			exit();
+		}
+
+		$_SESSION['registerUserFeedback'] .= "\nEmail to be sent has been stored and will be attempted to be sent again later.";	
 	}
 
 	$_SESSION['registerUserFeedback'] .= "\nThis is the email msg we're sending out:\n$emailMessage.\nSent to: $email."; // TO-DO: Remove before uploading	

@@ -2,7 +2,8 @@
 // This is the index file for the USERS folder
 
 // Include functions
-include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/helpers.inc.php';
+include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/helpers.inc.php'; // Starts session if not already started
+include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/adminnavcheck.inc.php';
 include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/magicquotes.inc.php';
 
 // CHECK IF USER TRYING TO ACCESS THIS IS IN FACT THE ADMIN!
@@ -501,6 +502,36 @@ if (isSet($_POST['action']) and $_POST['action'] == 'Re-Activate'){
 
 				if(!$mailResult){
 					$_SESSION['UserManagementFeedbackMessage'] .= "\n\n[WARNING] System failed to send Email to user.";
+
+					// Email failed to be prepared. Store it in database to try again later
+					try
+					{
+						include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+
+						$pdo = connect_to_db();
+						$sql = 'INSERT INTO	`email`
+								SET			`subject` = :subject,
+											`message` = :message,
+											`receivers` = :receivers,
+											`dateTimeRemove` = DATE_ADD(CURRENT_TIMESTAMP, INTERVAL 7 DAY);';
+						$s = $pdo->prepare($sql);
+						$s->bindValue(':subject', $emailSubject);
+						$s->bindValue(':message', $emailMessage);
+						$s->bindValue(':receivers', $email);
+						$s->execute();
+
+						//close connection
+						$pdo = null;
+					}
+					catch (PDOException $e)
+					{
+						$error = 'Error storing email: ' . $e->getMessage();
+						include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+						$pdo = null;
+						exit();
+					}
+
+					$_SESSION['UserManagementFeedbackMessage'] .= "\nEmail to be sent has been stored and will be attempted to be sent again later.";
 				}
 
 				$_SESSION['UserManagementFeedbackMessage'] .= "\nThis is the email msg we're sending out: $emailMessage\nSent to: $email."; // TO-DO: Remove after testing
@@ -580,6 +611,36 @@ if (isSet($_POST['action']) and $_POST['action'] == 'Activate'){
 
 				if(!$mailResult){
 					$_SESSION['UserManagementFeedbackMessage'] .= "\n\n[WARNING] System failed to send Email to user.";
+
+					// Email failed to be prepared. Store it in database to try again later
+					try
+					{
+						include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+
+						$pdo = connect_to_db();
+						$sql = 'INSERT INTO	`email`
+								SET			`subject` = :subject,
+											`message` = :message,
+											`receivers` = :receivers,
+											`dateTimeRemove` = DATE_ADD(CURRENT_TIMESTAMP, INTERVAL 7 DAY);';
+						$s = $pdo->prepare($sql);
+						$s->bindValue(':subject', $emailSubject);
+						$s->bindValue(':message', $emailMessage);
+						$s->bindValue(':receivers', $email);
+						$s->execute();
+
+						//close connection
+						$pdo = null;
+					}
+					catch (PDOException $e)
+					{
+						$error = 'Error storing email: ' . $e->getMessage();
+						include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+						$pdo = null;
+						exit();
+					}
+
+					$_SESSION['UserManagementFeedbackMessage'] .= "\nEmail to be sent has been stored and will be attempted to be sent again later.";
 				}
 
 				$_SESSION['UserManagementFeedbackMessage'] .= "\nThis is the email msg we're sending out: $emailMessage\nSent to: $email."; // TO-DO: Remove after testing
@@ -612,22 +673,21 @@ if (isSet($_POST['action']) and $_POST['action'] == 'Activate'){
 
 // If admin wants to add a user to the database
 // we load a new html form
-if (isSet($_GET['add']) OR (isSet($_SESSION['refreshAddUser']) AND $_SESSION['refreshAddUser']))
-{	
+if(isSet($_GET['add']) OR (isSet($_SESSION['refreshAddUser']) AND $_SESSION['refreshAddUser'])){
 	unset($_SESSION['UserEmailsToBeDisplayed']);
 
 	// Check if the call was /?add/ or a forced refresh
 	if(isSet($_SESSION['refreshAddUser']) AND $_SESSION['refreshAddUser']){
 		// Acknowledge that we have refreshed the form
 		unset($_SESSION['refreshAddUser']);
-		
+
 		// Set correct values
 		$access = $_SESSION['AddNewUserAccessArray'];
 		$generatedPassword = $_SESSION['AddNewUserGeneratedPassword'];
 	} else {
 		// Make sure we don't have any remembered values in memory
 		clearAddUserSessions();
-		
+
 		// Get name and IDs for access level
 		// Admin needs to give a new user a specific access.
 		try
@@ -640,7 +700,7 @@ if (isSet($_GET['add']) OR (isSet($_SESSION['refreshAddUser']) AND $_SESSION['re
 					FROM 	`accesslevel`';
 			$return = $pdo->query($sql);
 			$result = $return->fetchAll(PDO::FETCH_ASSOC);
-			
+
 			// Get the rows of information from the query
 			// This will be used to create a dropdown list in HTML
 			foreach($result as $row){
@@ -652,7 +712,7 @@ if (isSet($_GET['add']) OR (isSet($_SESSION['refreshAddUser']) AND $_SESSION['re
 					$_SESSION['AddNewUserDefaultAccessID'] = $row['accessID'];
 				}
 			}
-			
+
 			//Close connection
 			$pdo = null;
 		}
@@ -661,30 +721,30 @@ if (isSet($_GET['add']) OR (isSet($_SESSION['refreshAddUser']) AND $_SESSION['re
 			$error = 'Error getting access level info from database: ' . $e->getMessage();
 			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
 			$pdo = null;
-			exit();		
+			exit();	
 		}
-		
+
 		// Generate password for user
 		$generatedPassword = generateUserPassword(MINIMUM_PASSWORD_LENGTH);
-		
+
 		// Set correct values
 		$_SESSION['AddNewUserAccessArray'] = $access;
 		$_SESSION['AddNewUserGeneratedPassword'] = $generatedPassword;
 	}
-	
+
 	// Set initial values
 	$firstname = '';
 	$lastname = '';
-	$email = '';	
-	
+	$email = '';
+
 	// Set always correct values
 	$pageTitle = 'New User';
 	$action = 'addform';
-	$button = 'Add User';	
+	$button = 'Add User';
 	$userID = '';
 	$displayname = '';
-	$bookingdescription = '';	
-	
+	$bookingdescription = '';
+
 	// If we refreshed and want to keep the same values
 	if(isSet($_SESSION['AddNewUserFirstname'])){
 		$firstname = $_SESSION['AddNewUserFirstname'];
@@ -693,57 +753,56 @@ if (isSet($_GET['add']) OR (isSet($_SESSION['refreshAddUser']) AND $_SESSION['re
 	if(isSet($_SESSION['AddNewUserLastname'])){
 		$lastname = $_SESSION['AddNewUserLastname'];
 		unset($_SESSION['AddNewUserLastname']);		
-	}	
+	}
 	if(isSet($_SESSION['AddNewUserEmail'])){
 		$email = $_SESSION['AddNewUserEmail'];
 		unset($_SESSION['AddNewUserEmail']);		
-	}	
+	}
 	if(isSet($_SESSION['AddNewUserSelectedAccess'])){
 		$accessID = $_SESSION['AddNewUserSelectedAccess'];
 		unset($_SESSION['AddNewUserSelectedAccess']);		
 	} else {
 		$accessID = $_SESSION['AddNewUserDefaultAccessID'];
 	}
-	
+
 	var_dump($_SESSION); // TO-DO: remove after testing is done
-	
+
 	// Change to the actual html form template
 	include 'form.html.php';
 	exit();
 }
 
 // When admin has added the needed information and wants to add the user
-if (isSet($_GET['addform']) AND isSet($_POST['action']) AND $_POST['action'] == 'Add User')
-{
+if(isSet($_GET['addform']) AND isSet($_POST['action']) AND $_POST['action'] == 'Add User'){
 	// Validate user inputs
 	list($invalidInput, $email, $validatedFirstname, $validatedLastname, $validatedBookingDescription, $validatedDisplayName, $validatedReduceAccessAtDate) = validateUserInputs('AddNewUserError');	
-	
+
 	if($invalidInput){
 		// Let's remember the info the admin submitted
 		$_SESSION['AddNewUserFirstname'] = $validatedFirstname;
 		$_SESSION['AddNewUserLastname'] = $validatedLastname;
 		$_SESSION['AddNewUserEmail'] = $email;
 		$_SESSION['AddNewUserSelectedAccess'] = $_POST['accessID'];	
-		
+
 		// Let's refresh the add template
 		$_SESSION['refreshAddUser'] = TRUE;
 		header('Location: .');
 		exit();
 	}
-	
+
 	// The email has NOT been used before and all inputs are valid, so we can create the new user!
 	try
 	{
 		// Add the user to the database
-		
+
 		//Generate activation code
 		$activationcode = generateActivationCode();
-		
+
 		// Hash the user generated password
 		$hashedPassword = hashPassword($_SESSION['AddNewUserGeneratedPassword']);
-		
+
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
-		
+
 		$pdo = connect_to_db();
 		$sql = 'INSERT INTO `user` 
 				SET			`firstname` = :firstname,
@@ -754,7 +813,7 @@ if (isSet($_GET['addform']) AND isSet($_POST['action']) AND $_POST['action'] == 
 							`email` = :email';
 		$s = $pdo->prepare($sql);
 		$s->bindValue(':firstname', $validatedFirstname);
-		$s->bindValue(':lastname', $validatedLastname);		
+		$s->bindValue(':lastname', $validatedLastname);
 		$s->bindValue(':accessID', $_POST['accessID']);
 		$s->bindValue(':password', $hashedPassword);
 		$s->bindValue(':activationcode', $activationcode);
@@ -771,15 +830,14 @@ if (isSet($_GET['addform']) AND isSet($_POST['action']) AND $_POST['action'] == 
 		$pdo = null;
 		exit();
 	}
-	
-	$_SESSION['UserManagementFeedbackMessage'] = 
-	"User Successfully Created. It is currently inactive and unable to log in.";
-		
+
+	$_SESSION['UserManagementFeedbackMessage'] = "User Successfully Created. It is currently inactive and unable to log in.";
+
 	// Add a log event that a user has been created
 	try
 	{
 		// Save a description with information about the user that was added
-		
+
 		$description = "N/A";
 		$userinfo = $validatedLastname . ', ' . $validatedFirstname . ' - ' . $email;
 		if(isSet($_SESSION['LoggedInUserName'])){
@@ -789,7 +847,7 @@ if (isSet($_GET['addform']) AND isSet($_POST['action']) AND $_POST['action'] == 
 		}
 
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
-		
+
 		$pdo = connect_to_db();
 		$sql = "INSERT INTO `logevent` 
 				SET			`actionID` = 	(
@@ -801,9 +859,9 @@ if (isSet($_GET['addform']) AND isSet($_POST['action']) AND $_POST['action'] == 
 		$s = $pdo->prepare($sql);
 		$s->bindValue(':description', $description);
 		$s->execute();
-		
+
 		//Close the connection
-		$pdo = null;		
+		$pdo = null;
 	}
 	catch(PDOException $e)
 	{
@@ -811,7 +869,7 @@ if (isSet($_GET['addform']) AND isSet($_POST['action']) AND $_POST['action'] == 
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
 		$pdo = null;
 		exit();
-	}	
+	}
 
 	// Send user an email with the activation code
 		// TO-DO: This is UNTESTED since we don't have php.ini set up to actually send email
@@ -832,6 +890,36 @@ if (isSet($_GET['addform']) AND isSet($_POST['action']) AND $_POST['action'] == 
 
 	if(!$mailResult){
 		$_SESSION['UserManagementFeedbackMessage'] .= "\n[WARNING] System failed to send Email to user.";
+
+		// Email failed to be prepared. Store it in database to try again later
+		try
+		{
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+
+			$pdo = connect_to_db();
+			$sql = 'INSERT INTO	`email`
+					SET			`subject` = :subject,
+								`message` = :message,
+								`receivers` = :receivers,
+								`dateTimeRemove` = DATE_ADD(CURRENT_TIMESTAMP, INTERVAL 8 HOUR);';
+			$s = $pdo->prepare($sql);
+			$s->bindValue(':subject', $emailSubject);
+			$s->bindValue(':message', $emailMessage);
+			$s->bindValue(':receivers', $email);
+			$s->execute();
+
+			//close connection
+			$pdo = null;
+		}
+		catch (PDOException $e)
+		{
+			$error = 'Error storing email: ' . $e->getMessage();
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+			$pdo = null;
+			exit();
+		}
+
+		$_SESSION['UserManagementFeedbackMessage'] .= "\nEmail to be sent has been stored and will be attempted to be sent again later.";
 	}
 
 	$_SESSION['UserManagementFeedbackMessage'] .= "\nThis is the email msg we're sending out: $emailMessage\nSent to: $email."; // TO-DO: Remove after testing	
@@ -845,20 +933,20 @@ if (isSet($_GET['addform']) AND isSet($_POST['action']) AND $_POST['action'] == 
 }
 
 // If admin wants to null values while adding
-if (isSet($_POST['add']) AND $_POST['add'] == "Reset"){
+if(isSet($_POST['add']) AND $_POST['add'] == "Reset"){
 
 	$_SESSION['AddNewUserFirstname'] = "";
 	$_SESSION['AddNewUserLastname'] = "";
 	$_SESSION['AddNewUserEmail'] = "";
 	$_SESSION['AddNewUserSelectedAccess'] = $_SESSION['AddNewUserDefaultAccessID'];
-	
+
 	$_SESSION['refreshAddUser'] = TRUE;
 	header('Location: .');
-	exit();		
+	exit();
 }
 
 // If admin wants to leave the page and be directed back to the user page again
-if (isSet($_POST['add']) AND $_POST['add'] == 'Cancel'){
+if(isSet($_POST['add']) AND $_POST['add'] == 'Cancel'){
 
 	$_SESSION['UserManagementFeedbackMessage'] = "You cancelled your user creation.";
 	header("Location: /admin/users");
@@ -867,16 +955,17 @@ if (isSet($_POST['add']) AND $_POST['add'] == 'Cancel'){
 
 // if admin wants to edit user information
 // we load a new html form
-if ((isSet($_POST['action']) AND $_POST['action'] == 'Edit') OR 
-(isSet($_SESSION['refreshEditUser'])) AND $_SESSION['refreshEditUser'])
-{
+if 	((isSet($_POST['action']) AND $_POST['action'] == 'Edit') OR 
+	((isSet($_SESSION['refreshEditUser'])) AND $_SESSION['refreshEditUser'])
+	){
+
 	unset($_SESSION['UserEmailsToBeDisplayed']);
-	
+
 		// Check if the call was edit button or a forced refresh
 	if(isSet($_SESSION['refreshEditUser']) AND $_SESSION['refreshEditUser']){
 		// Acknowledge that we have refreshed the form
 		unset($_SESSION['refreshEditUser']);
-	
+
 		// Set the information back to what it was before the refresh
 		$firstname = $_SESSION['EditUserChangedFirstname'];
 		unset($_SESSION['EditUserChangedFirstname']);
@@ -891,18 +980,18 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Edit') OR
 		unset($_SESSION['EditUserChangedDisplayname']);
 		$bookingdescription = $_SESSION['EditUserChangedBookingDescription'];
 		unset($_SESSION['EditUserChangedBookingDescription']);
-		
+
 		$access = $_SESSION['EditUserAccessList'];
-		
+
 	} else {
-		
+
 		// Make sure we don't come in with old info in memory
 		clearEditUserSessions();
 		// Get information from database again on the selected user
 		try
 		{
 			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
-			
+
 			$pdo = connect_to_db();
 			$sql = 'SELECT 	u.`userID`, 
 							u.`firstname`, 
@@ -920,14 +1009,14 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Edit') OR
 			$s = $pdo->prepare($sql);
 			$s->bindValue(':UserID', $_POST['UserID']);
 			$s->execute();
-			
+
 			// Get name and IDs for access level
 			$sql = 'SELECT 	`accessID`,
 							`accessname` 
 					FROM 	`accesslevel`';
 			$return = $pdo->query($sql);
 			$result = $return->fetchAll(PDO::FETCH_ASSOC);
-			
+
 			// Get the rows of information from the query
 			// This will be used to create a dropdown list in HTML
 			foreach($result as $row){
@@ -936,7 +1025,7 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Edit') OR
 									'accessname' => $row['accessname']
 									);
 			}
-			
+
 			//Close the connection
 			$pdo = null;
 		}
@@ -947,10 +1036,10 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Edit') OR
 			$pdo = null;
 			exit();
 		}
-		
+
 		// Create an array with the row information we retrieved
 		$row = $s->fetch();
-		
+
 		// Set the correct information
 		$firstname = $row['firstname'];
 		$lastname = $row['lastname'];
@@ -961,11 +1050,11 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Edit') OR
 		$displayname = $row['displayname'];
 		$bookingdescription = $row['bookingdescription'];
 		$reduceAccessAtDate = $row['reduceAccessAtDate'];
-	
+
 		if(!isSet($reduceAccessAtDate)){
 			$reduceAccessAtDate = '';
 		}
-	
+
 		// Remember the original values we retrieved.
 		$_SESSION['EditUserOriginalFirstName'] = $firstname;
 		$_SESSION['EditUserOriginalLastName'] = $lastname;
@@ -975,7 +1064,7 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Edit') OR
 		$_SESSION['EditUserOriginaBookingDescription'] = $bookingdescription;
 		$_SESSION['EditUserOriginaReduceAccessAtDate'] = $reduceAccessAtDate;
 		$_SESSION['EditUserOriginaAccessName'] = $accessName;
-		
+
 		$_SESSION['EditUserOriginalUserID'] = $userID;
 		$_SESSION['EditUserAccessList'] = $access;
 	}
@@ -987,31 +1076,30 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Edit') OR
 	} else {
 		$reduceAccessAtDate = $originalDateToDisplay;
 	}
-	
+
 	// Set the correct information
 	$pageTitle = 'Edit User';
 	$action = 'editform';
 	$button = 'Edit User';
 	$password = '';
 	$confirmpassword = '';
-	
+
 	$originalFirstName = $_SESSION['EditUserOriginalFirstName'];
 	$originalLastName = $_SESSION['EditUserOriginalLastName'];
 	$originalEmail = $_SESSION['EditUserOriginaEmail'];
 	$originalDisplayName = $_SESSION['EditUserOriginaDisplayName'];
 	$originalBookingDescription = $_SESSION['EditUserOriginaBookingDescription'];
 	$originalAccessName = $_SESSION['EditUserOriginaAccessName'];
-		
+
 	var_dump($_SESSION); // TO-DO: remove after testing is done	
-		
+
 	// Change to the actual form we want to use
 	include 'form.html.php';
 	exit();
 }
 
 // Perform the actual database update of the edited information
-if (isSet($_GET['editform'])AND isSet($_POST['action']) AND $_POST['action'] == 'Edit User')
-{
+if(isSet($_GET['editform'])AND isSet($_POST['action']) AND $_POST['action'] == 'Edit User'){
 		// Validate user inputs
 	list($invalidInput, $email, $validatedFirstname, $validatedLastname, $validatedBookingDescription, $validatedDisplayName, $validatedReduceAccessAtDate) = validateUserInputs('AddNewUserError');
 
@@ -1019,7 +1107,7 @@ if (isSet($_GET['editform'])AND isSet($_POST['action']) AND $_POST['action'] == 
 	$NumberOfChanges = 0;
 	$changePassword = FALSE;
 	$changedReduceAccessAtDate = FALSE;
-	
+
 	// Check if user is trying to set a new password
 	// And if so, check if both fields are filled in and match each other
 	if(isSet($_POST['password'])){
@@ -1030,17 +1118,17 @@ if (isSet($_GET['editform'])AND isSet($_POST['action']) AND $_POST['action'] == 
 	}
 	$minimumPasswordLength = MINIMUM_PASSWORD_LENGTH;
 	if(($password != '' OR $confirmPassword != '') AND !$invalidInput){
-			
+
 		if($password == $confirmPassword){
 			// Both passwords match, hopefully that means it's the correct password the user wanted to submit
 
 				if(strlen(utf8_decode($password)) < $minimumPasswordLength){
 					$_SESSION['AddNewUserError'] = "The submitted password is not long enough. You are required to make it at least $minimumPasswordLength characters long.";
-					$invalidInput = TRUE;			
+					$invalidInput = TRUE;
 				} else {
 					// Both passwords were the same. They were not empty and they were longer than the minimum requirement
 					$NumberOfChanges++;
-					$changePassword = TRUE;				
+					$changePassword = TRUE;
 				}
 		} else {
 			$_SESSION['AddNewUserError'] = "Password and Confirm Password did not match.";
@@ -1057,61 +1145,47 @@ if (isSet($_GET['editform'])AND isSet($_POST['action']) AND $_POST['action'] == 
 		$_SESSION['EditUserChangedEmail'] = $email;
 		$_SESSION['EditUserChangedAccessID'] = $_POST['accessID'];
 		$_SESSION['EditUserChangedDisplayname'] = $validatedDisplayName;
-		$_SESSION['EditUserChangedBookingDescription'] = $validatedBookingDescription;	
+		$_SESSION['EditUserChangedBookingDescription'] = $validatedBookingDescription;
 		$_SESSION['EditUserChangedReduceAccessAtDate'] = $validatedReduceAccessAtDate;
-		
+
 		// Let's refresh the edit template
 		$_SESSION['refreshEditUser'] = TRUE;
 		header('Location: .');
 		exit();
 	}
-		
+
 		// Check against the values we retrieved before loading the page
-	if ( isSet($_SESSION['EditUserOriginalFirstName']) AND 
-	$validatedFirstname != $_SESSION['EditUserOriginalFirstName'])
-	{
+	if(isSet($_SESSION['EditUserOriginalFirstName']) AND $validatedFirstname != $_SESSION['EditUserOriginalFirstName']){
 		$NumberOfChanges++;
 		unset($_SESSION['EditUserOriginalFirstName']);
 	}
-	if ( isSet($_SESSION['EditUserOriginalLastName']) AND 
-	$validatedLastname != $_SESSION['EditUserOriginalLastName'])
-	{
+	if(isSet($_SESSION['EditUserOriginalLastName']) AND $validatedLastname != $_SESSION['EditUserOriginalLastName']){
 		$NumberOfChanges++;
 		unset($_SESSION['EditUserOriginalLastName']);
 	}
-	if ( isSet($_SESSION['EditUserOriginaEmail']) AND 
-	$email != $_SESSION['EditUserOriginaEmail'])
-	{
+	if(isSet($_SESSION['EditUserOriginaEmail']) AND $email != $_SESSION['EditUserOriginaEmail']){
 		$NumberOfChanges++;
 		unset($_SESSION['EditUserOriginaEmail']);
 	}
-	if ( isSet($_SESSION['EditUserOriginaAccessID']) AND 
-	$_POST['accessID'] != $_SESSION['EditUserOriginaAccessID'])
-	{
+	if(isSet($_SESSION['EditUserOriginaAccessID']) AND $_POST['accessID'] != $_SESSION['EditUserOriginaAccessID']){
 		$NumberOfChanges++;
 		unset($_SESSION['EditUserOriginaAccessID']);
 	}
-	if ( isSet($_SESSION['EditUserOriginaDisplayName']) AND 
-	$validatedDisplayName != $_SESSION['EditUserOriginaDisplayName'])
-	{
+	if(isSet($_SESSION['EditUserOriginaDisplayName']) AND $validatedDisplayName != $_SESSION['EditUserOriginaDisplayName']){
 		$NumberOfChanges++;
 		unset($_SESSION['EditUserOriginaDisplayName']);
-	}	
-	if ( isSet($_SESSION['EditUserOriginaBookingDescription']) AND 
-	$validatedBookingDescription != $_SESSION['EditUserOriginaBookingDescription'])
-	{
+	}
+	if(isSet($_SESSION['EditUserOriginaBookingDescription']) AND $validatedBookingDescription != $_SESSION['EditUserOriginaBookingDescription']){
 		$NumberOfChanges++;
 		unset($_SESSION['EditUserOriginaBookingDescription']);
 	}
-	if ( isSet($_SESSION['EditUserOriginaReduceAccessAtDate']) AND 
-	$validatedReduceAccessAtDate != $_SESSION['EditUserOriginaReduceAccessAtDate'])
-	{
+	if(isSet($_SESSION['EditUserOriginaReduceAccessAtDate']) AND $validatedReduceAccessAtDate != $_SESSION['EditUserOriginaReduceAccessAtDate']){
 		$changedReduceAccessAtDate = TRUE;
 		$NumberOfChanges++;
 		unset($_SESSION['EditUserOriginaReduceAccessAtDate']);
 	}
 
-	if ($NumberOfChanges > 0){
+	if($NumberOfChanges > 0){
 		// We actually have something to update!	
 		try
 		{
@@ -1119,7 +1193,7 @@ if (isSet($_GET['editform'])AND isSet($_POST['action']) AND $_POST['action'] == 
 				// Update user info (new password and date)
 				$newPassword = $password;
 				$hashedNewPassword = hashPassword($newPassword);
-				
+
 				include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 				$pdo = connect_to_db();
 				$sql = 'UPDATE `user` SET
@@ -1132,7 +1206,7 @@ if (isSet($_GET['editform'])AND isSet($_POST['action']) AND $_POST['action'] == 
 								bookingdescription = :bookingdescription,
 								reduceAccessAtDate = :reduceAccessAtDate
 						WHERE 	userID = :UserID';
-						
+
 				$s = $pdo->prepare($sql);
 				$s->bindValue(':UserID', $_POST['UserID']);
 				$s->bindValue(':firstname', $validatedFirstname);
@@ -1143,12 +1217,12 @@ if (isSet($_GET['editform'])AND isSet($_POST['action']) AND $_POST['action'] == 
 				$s->bindValue(':displayname', $validatedDisplayName);
 				$s->bindValue(':bookingdescription', $validatedBookingDescription);
 				$s->bindValue(':reduceAccessAtDate', $validatedReduceAccessAtDate);
-				$s->execute();			
+				$s->execute();
 			} elseif($changePassword AND !$changedReduceAccessAtDate) {
 				// Update user info (no new date)
 				$newPassword = $password;
 				$hashedNewPassword = hashPassword($newPassword);
-				
+
 				include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 				$pdo = connect_to_db();
 				$sql = 'UPDATE `user` SET
@@ -1160,7 +1234,7 @@ if (isSet($_GET['editform'])AND isSet($_POST['action']) AND $_POST['action'] == 
 								displayname = :displayname,
 								bookingdescription = :bookingdescription
 						WHERE 	userID = :UserID';
-						
+
 				$s = $pdo->prepare($sql);
 				$s->bindValue(':UserID', $_POST['UserID']);
 				$s->bindValue(':firstname', $validatedFirstname);
@@ -1170,7 +1244,7 @@ if (isSet($_GET['editform'])AND isSet($_POST['action']) AND $_POST['action'] == 
 				$s->bindValue(':accessID', $_POST['accessID']);
 				$s->bindValue(':displayname', $validatedDisplayName);
 				$s->bindValue(':bookingdescription', $validatedBookingDescription);
-				$s->execute();					
+				$s->execute();
 			} elseif(!$changePassword AND $changedReduceAccessAtDate){
 				// Update user info (no new password)
 				include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
@@ -1184,7 +1258,7 @@ if (isSet($_GET['editform'])AND isSet($_POST['action']) AND $_POST['action'] == 
 								bookingdescription = :bookingdescription,
 								reduceAccessAtDate = :reduceAccessAtDate
 						WHERE 	userID = :UserID';
-						
+
 				$s = $pdo->prepare($sql);
 				$s->bindValue(':UserID', $_POST['UserID']);
 				$s->bindValue(':firstname', $validatedFirstname);
@@ -1194,7 +1268,7 @@ if (isSet($_GET['editform'])AND isSet($_POST['action']) AND $_POST['action'] == 
 				$s->bindValue(':displayname', $validatedDisplayName);
 				$s->bindValue(':bookingdescription', $validatedBookingDescription);
 				$s->bindValue(':reduceAccessAtDate', $validatedReduceAccessAtDate);
-				$s->execute();					
+				$s->execute();
 			} elseif(!$changePassword AND !$changedReduceAccessAtDate){
 				// Update user info (no new password and no new date)
 				include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
@@ -1207,7 +1281,7 @@ if (isSet($_GET['editform'])AND isSet($_POST['action']) AND $_POST['action'] == 
 								displayname = :displayname,
 								bookingdescription = :bookingdescription
 						WHERE 	userID = :UserID';
-						
+
 				$s = $pdo->prepare($sql);
 				$s->bindValue(':UserID', $_POST['UserID']);
 				$s->bindValue(':firstname', $validatedFirstname);
@@ -1216,9 +1290,9 @@ if (isSet($_GET['editform'])AND isSet($_POST['action']) AND $_POST['action'] == 
 				$s->bindValue(':accessID', $_POST['accessID']);
 				$s->bindValue(':displayname', $validatedDisplayName);
 				$s->bindValue(':bookingdescription', $validatedBookingDescription);
-				$s->execute();						
+				$s->execute();
 			}
-				
+
 			// Close the connection
 			$pdo = Null;
 		}
@@ -1229,22 +1303,22 @@ if (isSet($_GET['editform'])AND isSet($_POST['action']) AND $_POST['action'] == 
 			$pdo = null;
 			exit();
 		}
-		
-		$_SESSION['UserManagementFeedbackMessage'] = "User Successfully Updated.";		
-	} else {		
+
+		$_SESSION['UserManagementFeedbackMessage'] = "User Successfully Updated.";
+	} else {
 		$_SESSION['UserManagementFeedbackMessage'] = "No changes were made.";
 	}
-	
+
 	// No need to remember values anymore
 	clearEditUserSessions();
-	
+
 	// Load user list webpage with updated database
 	header('Location: .');
 	exit();
 }
 
 // If admin wants to change the values back to the original values while editing
-if (isSet($_POST['edit']) AND $_POST['edit'] == "Reset"){
+if(isSet($_POST['edit']) AND $_POST['edit'] == "Reset"){
 
 	$_SESSION['EditUserChangedFirstname'] = $_SESSION['EditUserOriginalFirstName'];
 	$_SESSION['EditUserChangedLastname'] = $_SESSION['EditUserOriginalLastName'];
@@ -1253,14 +1327,14 @@ if (isSet($_POST['edit']) AND $_POST['edit'] == "Reset"){
 	$_SESSION['EditUserChangedDisplayname'] = $_SESSION['EditUserOriginaDisplayName'];
 	$_SESSION['EditUserChangedBookingDescription'] = $_SESSION['EditUserOriginaBookingDescription'];
 	$_SESSION['EditUserChangedReduceAccessAtDate'] = $_SESSION['EditUserOriginaReduceAccessAtDate'];
-	
+
 	$_SESSION['refreshEditUser'] = TRUE;
 	header('Location: .');
-	exit();		
+	exit();
 }
 
 // If admin wants to leave the page and be directed back to the user page again
-if (isSet($_POST['edit']) AND $_POST['edit'] == 'Cancel'){
+if(isSet($_POST['edit']) AND $_POST['edit'] == 'Cancel'){
 
 	$_SESSION['UserManagementFeedbackMessage'] = "You cancelled your user editing.";
 	header("Location: /admin/users");
@@ -1268,13 +1342,12 @@ if (isSet($_POST['edit']) AND $_POST['edit'] == 'Cancel'){
 }
 
 // if admin wants to cancel the date to reduce access
-if (isSet($_POST['action']) AND $_POST['action'] == 'Cancel Date')
-{
+if(isSet($_POST['action']) AND $_POST['action'] == 'Cancel Date'){
 	// Update selected user by making date to reduce access null	
 	try
 	{
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
-		
+
 		$pdo = connect_to_db();
 		$sql = 'UPDATE 	`user` 
 				SET		`reduceAccessAtDate` = NULL
@@ -1282,20 +1355,20 @@ if (isSet($_POST['action']) AND $_POST['action'] == 'Cancel Date')
 		$s = $pdo->prepare($sql);
 		$s->bindValue(':UserID', $_POST['UserID']);
 		$s->execute();
-		
+
 		//close connection
-		$pdo = null;	
+		$pdo = null;
 	}
 	catch (PDOException $e)
 	{
 		$error = 'Error cancelling reduce access date: ' . $e->getMessage();
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
 		$pdo = null;
-		exit();		
+		exit();
 	}
-	
+
 	$_SESSION['UserManagementFeedbackMessage'] = "Successfully removed the reduce access at date from the user: " . $_POST['UserInfo'] . ".";
-	
+
 	// Load user list webpage with updated database
 	header('Location: .');
 	exit();
@@ -1303,7 +1376,7 @@ if (isSet($_POST['action']) AND $_POST['action'] == 'Cancel Date')
 
 // End of user input code snippets
 
-if (isSet($refreshUsers) AND $refreshUsers){
+if(isSet($refreshUsers) AND $refreshUsers){
 	// TO-DO: Add code that should occur on a refresh
 	unset($refreshUsers);
 }

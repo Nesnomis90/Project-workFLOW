@@ -1,17 +1,18 @@
 <?php 
 // This is the index file for the meeting room folder (all users)
-session_start();
 
 // Include functions
-include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/helpers.inc.php';
+include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/helpers.inc.php'; // Starts session if not already started
+include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/navcheck.inc.php';
 include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/magicquotes.inc.php';
 
+unsetSessionsFromAdmin();
 unsetSessionsFromCompanyManagement();
 unsetSessionsFromUserManagement();
+unsetSessionsFromBookingManagement();
 
 // Make sure logout works properly and that we check if their login details are up-to-date
 if(isSet($_SESSION['loggedIn'])){
-	$gotoPage = ".";
 	userIsLoggedIn();
 }
 
