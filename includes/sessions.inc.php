@@ -217,9 +217,12 @@ function unsetSessionsFromBookingManagement(){
 	unset($_SESSION['bookingCodeUserID']);
 }
 
+function unsetSessionsFromMeetingroomManagement(){
+	unset($_SESSION['SetDefaultRoom']);
+}
+
 // Removes all stored info e.g. logs out user
 function destroySession(){
-	session_start();
 	// Unset all of the session variables.
 	$_SESSION = array();
 

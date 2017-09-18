@@ -1,7 +1,4 @@
 <?php
-if(session_status() == PHP_SESSION_NONE) {
-    session_start();
-}
 
 if(isSet($_GET['logoutForNav'])){
 	// Same stuff we do on logout in access

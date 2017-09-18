@@ -2,8 +2,8 @@
 // This is the index file for the EQUIPMENT folder
 
 // Include functions
-include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/adminnavcheck.inc.php'; // Starts session if not already started
-include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/helpers.inc.php';
+include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/helpers.inc.php'; // Starts session if not already started
+include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/adminnavcheck.inc.php';
 include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/magicquotes.inc.php';
 
 // CHECK IF USER TRYING TO ACCESS THIS IS IN FACT THE ADMIN!

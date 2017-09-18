@@ -2,14 +2,15 @@
 // This is the index file for the company folder (all users)
 
 // Include functions
-include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/navcheck.inc.php'; // Starts session if not already started
-include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/helpers.inc.php';
+include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/helpers.inc.php'; // Starts session if not already started
+include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/navcheck.inc.php';
 include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/magicquotes.inc.php';
 
 // Make sure we don't have any pointless sessions active
 unsetSessionsFromAdmin();
 unsetSessionsFromUserManagement();
 unsetSessionsFromBookingManagement();
+unsetSessionsFromMeetingroomManagement();
 
 // Function to clear sessions used to remember user inputs on refreshing the add employee form
 function clearAddEmployeeAsOwnerSessions(){

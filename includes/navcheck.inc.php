@@ -1,8 +1,4 @@
 <?php
-if(session_status() == PHP_SESSION_NONE) {
-    session_start();
-}
-
 function getLocationWeCameFrom(){
 	$pathWeCameFrom = $_SERVER['PHP_SELF'];
 	$pathWithoutPHPFile = substr($pathWeCameFrom, 0, strrpos($pathWeCameFrom,'/'));

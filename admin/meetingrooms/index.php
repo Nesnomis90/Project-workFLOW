@@ -2,8 +2,8 @@
 // This is the index file for the MEETING ROOMS folder
 
 // Include functions
-include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/adminnavcheck.inc.php'; // Starts session if not already started
-include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/helpers.inc.php';
+include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/helpers.inc.php'; // Starts session if not already started
+include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/adminnavcheck.inc.php';
 include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/magicquotes.inc.php';
 
 // CHECK IF USER TRYING TO ACCESS THIS IS IN FACT THE ADMIN!
@@ -368,8 +368,6 @@ if((isSet($_POST['action']) AND $_POST['action'] == "Add Room")){
 		// Add a log event that a meeting room was added
 	try
 	{
-		session_start();
-
 		// Save a description with information about the meeting room that was added
 		$logEventDescription = "New meeting room: " . $validatedMeetingRoomName . ",\nwith capacity: " . 
 		$validatedMeetingRoomCapacity . "\nand description: " . $validatedMeetingRoomDescription . 

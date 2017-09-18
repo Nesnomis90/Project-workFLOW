@@ -1,6 +1,11 @@
 <?php
 // The whole collection of all the extra functions we have made
 
+// Start session if not already started
+if(session_status() == PHP_SESSION_NONE) {
+    session_start();
+}
+
 // Include all functions
 require_once 'access.inc.php';
 require_once 'mail.inc.php';

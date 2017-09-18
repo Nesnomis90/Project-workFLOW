@@ -2,14 +2,15 @@
 // This is the index file for the user folder (all users)
 
 // Include functions
-include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/navcheck.inc.php'; // Starts session if not already started
-include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/helpers.inc.php';
+include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/helpers.inc.php'; // Starts session if not already started
+include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/navcheck.inc.php';
 include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/magicquotes.inc.php';
 
 // Make sure we don't have any pointless sessions active
 unsetSessionsFromAdmin();
 unsetSessionsFromBookingManagement();
 unsetSessionsFromCompanyManagement();
+unsetSessionsFromMeetingroomManagement();
 
 // Make sure logout works properly and that we check if their login details are up-to-date
 if(isSet($_SESSION['loggedIn'])){
