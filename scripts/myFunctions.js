@@ -9,13 +9,13 @@ function startTime(){
 	var s = today.getSeconds();
 	m = checkTime(m);
 	s = checkTime(s);
-	
+
 	// Define what ID we should update
 	var clockDiv = document.getElementById('Clock');
-	
+
 	// Set new text (time)
 	clockDiv.innerHTML = dateWithDayName + " " + h + ":" + m + ":" + s;
-	
+
 	// Update every 0.5s
 	var t = setTimeout(startTime, 500);
 }
@@ -24,6 +24,6 @@ function startTime(){
 function checkTime(i){
     if (i < 10){
 		i = "0" + i
-	};  
+	};
     return i;
 }
