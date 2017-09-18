@@ -1,8 +1,8 @@
 <?php
 // This is the Index file for the LOG EVENTS folder
-session_start();
 
 // Include functions
+include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/adminnavcheck.inc.php'; // Starts session if not already started
 include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/helpers.inc.php';
 include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/magicquotes.inc.php';
 

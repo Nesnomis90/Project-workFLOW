@@ -108,12 +108,11 @@ function updateUserActivity(){
 
 // returns TRUE if user is logged in and updates the database with their last active timestamp
 function userIsLoggedIn(){
-	session_start(); // Do not remove this
 	$isLoggedIn = checkIfUserIsLoggedIn();
 	if($isLoggedIn === TRUE){
 		updateUserActivity();
 		return TRUE;
-	} elseif($isLoggedIn === FALSE){
+	} else {
 		return FALSE;
 	}
 }
@@ -354,17 +353,14 @@ function checkIfUserIsLoggedIn(){
 	}
 
 	// If user wants to log out
-	if(isSet($_POST['action']) and $_POST['action'] == 'logout')
-	{
+	/* See navcheck.inc.php and adminnavcheck.inc.php
 		unset($_SESSION['loggedIn']);
 		unset($_SESSION['email']);
 		unset($_SESSION['password']);
 		unset($_SESSION['LoggedInUserID']);
 		unset($_SESSION['LoggedInUserName']);
 		unset($_SESSION['loginEmailSubmitted']);
-		header('Location: ' . $_POST['goto']);
-		exit();
-	}
+	*/
 
 	// The user is in a session that was previously logged in
 	// Let's check if the user STILL EXISTS in the database

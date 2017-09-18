@@ -1,7 +1,6 @@
 <?php
 require_once 'navcheck.inc.php';
 // Make sure we don't have any admin sessions still around when not browsing admin pages.
-unsetSessionsFromAdmin(); // TO-DO: Remove if stuff gets broken.
 
 // Set the correct query links in href
 $loginForNav = "?loginForNav";

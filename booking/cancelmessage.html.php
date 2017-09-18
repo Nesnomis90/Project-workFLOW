@@ -1,5 +1,4 @@
 <!-- This is the HTML form used for ADMINS in BOOKING to add a feedback message to users when cancelling their bookings -->
-<?php include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/helpers.inc.php'; ?>
 <!DOCTYPE html>
 <html lang="en">
 	<head>

@@ -164,7 +164,9 @@ function unsetSessionsFromAdmin(){
 // Remove all sessions used by all users in user management
 function unsetSessionsFromUserManagement(){
 	unset($_SESSION['normalUserOriginalInfoArray']);
+	unset($_SESSION['normalUserOriginalWorksForArray']);
 	unset($_SESSION['normalUserEditInfoArray']);
+	unset($_SESSION['normalUserEditWorksForArray']);
 	unset($_SESSION['normalUserEditMode']);
 }
 

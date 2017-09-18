@@ -1,5 +1,3 @@
-<?php include_once $_SERVER['DOCUMENT_ROOT'] .
-'/includes/helpers.inc.php'; ?>
 <!DOCTYPE html>
 <html lang="en">
 	<head>
@@ -10,5 +8,4 @@
 		<h1>Access Denied</h1>
 		<p><?php htmlout($error); ?></p>
 	</body>
-	<?php include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/logout.inc.html.php'; ?>
 </html>

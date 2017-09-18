@@ -2,6 +2,7 @@
 // This is the index file for the MEETING ROOMS folder
 
 // Include functions
+include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/adminnavcheck.inc.php'; // Starts session if not already started
 include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/helpers.inc.php';
 include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/magicquotes.inc.php';
 

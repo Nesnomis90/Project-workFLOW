@@ -1,6 +1,4 @@
 <!-- This is the HTML form used for COMPANY OWNERS to confirm that they want to ADD AN EMPLOYEE -->
-<?php include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/helpers.inc.php'; ?>
-<?php include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/navcheck.inc.php'; ?>
 <!DOCTYPE html>
 <html lang="en">
 	<head>

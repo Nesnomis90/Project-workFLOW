@@ -1,8 +1,8 @@
 <?php 
 // This is the index file for the company folder (all users)
-session_start();
 
 // Include functions
+include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/navcheck.inc.php'; // Starts session if not already started
 include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/helpers.inc.php';
 include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/magicquotes.inc.php';
 
@@ -25,7 +25,6 @@ function clearEditEmployeeAsOwnerSessions(){
 
 // Make sure logout works properly and that we check if their login details are up-to-date
 if(isSet($_SESSION['loggedIn']) AND $_SESSION['loggedIn'] AND isSet($_SESSION['LoggedInUserID']) AND !empty($_SESSION['LoggedInUserID'])){
-	$gotoPage = ".";
 	userIsLoggedIn();
 } else {
 	var_dump($_SESSION); // TO-DO: remove after testing is done	
@@ -34,6 +33,7 @@ if(isSet($_SESSION['loggedIn']) AND $_SESSION['loggedIn'] AND isSet($_SESSION['L
 	exit();
 }
 
+unsetSessionsFromAdmin();
 unsetSessionsFromUserManagement();
 
 if(isSet($_SESSION['normalCompanyCreateACompany']) AND $_SESSION['normalCompanyCreateACompany'] == "Invalid"){

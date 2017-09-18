@@ -1,6 +1,4 @@
 <!--This is the HTML form for DISPLAYING a list of BOOKINGS for a company-->
-<?php include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/helpers.inc.php'; ?>
-<?php include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/navcheck.inc.php'; ?>
 <!DOCTYPE html>
 <html lang="en">
 	<head>
@@ -390,6 +388,5 @@
 			<h1>This information can only be accessed if logged in.</h1>
 		<?php endif; ?>
 
-	<?php include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/logout.inc.html.php'; ?>
 	</body>
 </html>
