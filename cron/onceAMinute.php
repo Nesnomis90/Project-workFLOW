@@ -55,7 +55,7 @@ function alertUserThatMeetingIsAboutToStart(){
 								SELECT 	`name`
 								FROM 	`meetingroom`
 								WHERE 	`meetingRoomID` = b.`meetingRoomID`
-							)							AS MeetingRoomName,			
+							)							AS MeetingRoomName,
 							(
 								SELECT 	`name`
 								FROM 	`company`
@@ -80,12 +80,12 @@ function alertUserThatMeetingIsAboutToStart(){
 				AND 		DATE_ADD(b.`dateTimeCreated`, INTERVAL :waitMinutes MINUTE) < CURRENT_TIMESTAMP
 				AND			b.`emailSent` = 0
 				AND			u.`sendEmail` = 1
-				AND			b.`bookingID` <> 0";		
+				AND			b.`bookingID` <> 0";
 		$s = $pdo->prepare($sql);
 		$s->bindValue(':bufferMinutes', TIME_LEFT_IN_MINUTES_UNTIL_MEETING_STARTS_BEFORE_SENDING_EMAIL);
 		$s->bindValue(':waitMinutes', MINIMUM_TIME_PASSED_IN_MINUTES_AFTER_CREATING_BOOKING_BEFORE_SENDING_EMAIL);
 		$s->execute();
-		
+
 		$result = $s->fetchAll(PDO::FETCH_ASSOC);
 		if(isSet($result)){
 			$rowNum = sizeOf($result);
@@ -186,13 +186,13 @@ if(!$updatedCompletedBookings){
 		$success = updateCompletedBookings();
 		if($success){
 			echo "Successfully Updated Completed Bookings";	// TO-DO: Remove before uploading.
-			echo "<br />";	
+			echo "<br />";
 			break;
 		}
 	}
 	unset($success);
 	echo "Failed To Update Completed Bookings";	// TO-DO: Remove before uploading.
-	echo "<br />";	
+	echo "<br />";
 } else {
 	echo "Successfully Updated Completed Bookings";	// TO-DO: Remove before uploading.
 	echo "<br />";
@@ -210,7 +210,7 @@ if(!$alertedUserOnMeetingStart){
 	}
 	unset($success);
 	echo "Failed To Send Emails To User(s) That Meeting Is Starting Soon";	// TO-DO: Remove before uploading.
-	echo "<br />";	
+	echo "<br />";
 } else {
 	echo "Successfully Sent Emails To User(s) That Meeting Is Starting Soon";	// TO-DO: Remove before uploading.
 	echo "<br />";
