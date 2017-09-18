@@ -1218,14 +1218,15 @@ if(isSet($_GET['Company']) AND $_GET['Company'] != ""){
 							AND 		b.`companyID` = :CompanyID
 							AND 		c.`CompanyID` = b.`companyID`
 						) 							AS TotalBookingTimeUsed							
-				FROM 	`company` c 
-				JOIN 	`employee` e
-				ON 		e.CompanyID = c.CompanyID 
-				JOIN 	`companyposition` cp 
-				ON 		cp.PositionID = e.PositionID
-				JOIN 	`user` u 
-				ON 		u.userID = e.UserID 
-				WHERE 	c.`companyID` = :CompanyID";
+				FROM 		`company` c 
+				INNER JOIN 	`employee` e
+				ON 			e.CompanyID = c.CompanyID 
+				INNER JOIN 	`companyposition` cp 
+				ON 			cp.PositionID = e.PositionID
+				INNER JOIN 	`user` u 
+				ON 			u.userID = e.UserID 
+				WHERE 		c.`companyID` = :CompanyID
+				ORDER BY	cp.`PositionID`";
 		$minimumSecondsPerBooking = MINIMUM_BOOKING_DURATION_IN_MINUTES_USED_IN_PRICE_CALCULATIONS * 60; // e.g. 15min = 900s
 		$aboveThisManySecondsToCount = BOOKING_DURATION_IN_MINUTES_USED_BEFORE_INCLUDING_IN_PRICE_CALCULATIONS * 60; // E.g. 1min = 60s				
 		$s = $pdo->prepare($sql);
@@ -1403,13 +1404,14 @@ if(isSet($_GET['Company']) AND $_GET['Company'] != ""){
 							AND 		b.`userID` = UsrID
 						)														AS TotalBookingTimeUsed
 				FROM 		`company` c
-				JOIN 		`booking` b
+				INNER JOIN 	`booking` b
 				ON 			c.`companyID` = b.`companyID`
-				JOIN 		`user` u 
+				INNER JOIN 	`user` u 
 				ON 			u.userID = b.UserID 
 				WHERE 		c.`companyID` = :CompanyID
 				AND 		b.`userID` NOT IN (SELECT `userID` FROM employee WHERE `CompanyID` = :CompanyID)
-				GROUP BY 	UsrID";
+				GROUP BY 	UsrID
+				ORDER BY 	u.`lastName`";
 		$s = $pdo->prepare($sql);
 		$s->bindValue(':CompanyID', $_GET['Company']);
 		$s->bindValue(':minimumSecondsPerBooking', $minimumSecondsPerBooking);
@@ -1713,7 +1715,6 @@ if(!isSet($_GET['Company'])){
 							u.`email`,
 							cp.`name`										AS PositionName, 
 							e.`startDateTime`								AS StartDateTime,
-							UNIX_TIMESTAMP(e.`startDateTime`)				AS OrderByDate,
 							(
 								SELECT (BIG_SEC_TO_TIME(SUM(
 														IF(
@@ -1884,8 +1885,7 @@ if(!isSet($_GET['Company'])){
 				ON 			cp.PositionID = e.PositionID
 				JOIN 		`user` u 
 				ON 			u.userID = e.UserID
-				ORDER BY 	CompanyName ASC,
-							OrderByDate DESC";
+				ORDER BY 	c.`name`, cp.`PositionID`";
 		$minimumSecondsPerBooking = MINIMUM_BOOKING_DURATION_IN_MINUTES_USED_IN_PRICE_CALCULATIONS * 60; // e.g. 15min = 900s
 		$aboveThisManySecondsToCount = BOOKING_DURATION_IN_MINUTES_USED_BEFORE_INCLUDING_IN_PRICE_CALCULATIONS * 60; // E.g. 1min = 60s				
 		$s = $pdo->prepare($sql);
