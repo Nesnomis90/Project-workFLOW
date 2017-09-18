@@ -113,52 +113,59 @@ function alertUserThatMeetingIsAboutToStart(){
 			echo "Number of users to Alert: $numberOfUsersToAlert";	// TO-DO: Remove before uploading.
 			echo "<br />";
 
-			foreach($upcomingMeetingsNotAlerted AS $row){
-				$emailSubject = "Upcoming Meeting Info!";
+			try
+			{
+				include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+				$pdo = connect_to_db();
+				$pdo->beginTransaction();
 
-				$displayStartDate = convertDatetimeToFormat($row['StartDate'] , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
-				$displayEndDate = convertDatetimeToFormat($row['EndDate'], 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
+				foreach($upcomingMeetingsNotAlerted AS $row){
+					$emailSubject = "Upcoming Meeting Info!";
 
-				$emailMessage = 
-				"You have a booked meeting starting soon!\n" . 
-				"Your booked Meeting Room: " . $row['MeetingRoomName'] . ".\n" . 
-				"Your booked Start Time: " . $displayStartDate . ".\n" .
-				"Your booked End Time: " . $displayEndDate . ".\n\n" .
-				"If you wish to cancel your meeting, or just end it early, you can easily do so by clicking the link given below.\n" .
-				"Click this link to cancel your booked meeting: " . $_SERVER['HTTP_HOST'] . 
-				"/booking/?cancellationcode=" . $row['CancelCode'];
+					$displayStartDate = convertDatetimeToFormat($row['StartDate'] , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
+					$displayEndDate = convertDatetimeToFormat($row['EndDate'], 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
 
-				$email = $row['UserEmail'];
+					$emailMessage = 
+					"You have a booked meeting starting soon!\n" . 
+					"Your booked Meeting Room: " . $row['MeetingRoomName'] . ".\n" . 
+					"Your booked Start Time: " . $displayStartDate . ".\n" .
+					"Your booked End Time: " . $displayEndDate . ".\n\n" .
+					"If you wish to cancel your meeting, or just end it early, you can easily do so by clicking the link given below.\n" .
+					"Click this link to cancel your booked meeting: " . $_SERVER['HTTP_HOST'] . 
+					"/booking/?cancellationcode=" . $row['CancelCode'];
 
-				$mailResult = sendEmail($email, $emailSubject, $emailMessage);
+					$email = $row['UserEmail'];
 
-				echo "Email being sent out about a meeting starting soon: $emailMessage";	// TO-DO: Remove before uploading
-				echo "<br />";
-				echo "Email is being sent to: $email";
-				echo "<br />";
+					$mailResult = sendEmail($email, $emailSubject, $emailMessage);
 
-				if($mailResult){
+					// Instead of sending the email here, we store them in the database to send them later instead.
+					// That way, we can limit the amount of email being sent out easier.
+					// Store email to be sent out later
+					$sql = 'INSERT INTO	`email`
+							SET			`subject` = :subject,
+										`message` = :message,
+										`receivers` = :receivers,
+										`dateTimeRemove` = DATE_ADD(CURRENT_TIMESTAMP, INTERVAL 1 HOUR);';
+					$s = $pdo->prepare($sql);
+					$s->bindValue(':subject', $emailSubject);
+					$s->bindValue(':message', $emailMessage);
+					$s->bindValue(':receivers', $email);
+					$s->execute();
+
 					// Update booking that we've "sent" an email to the user 
-					try
-					{
-						include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
-						
-						if(!isSet($pdo)){
-							$pdo = connect_to_db();
-						}
-						$sql = "UPDATE 	`booking`
-								SET		`emailSent` = 1
-								WHERE	`bookingID` = :bookingID";
-						$s = $pdo->prepare($sql);
-						$s->bindValue(':bookingID', $row['TheBookingID']);
-						$s->execute();
-					}
-					catch(PDOException $e)
-					{
-						$pdo = null;
-						return FALSE;
-					}
+					$sql = "UPDATE 	`booking`
+							SET		`emailSent` = 1
+							WHERE	`bookingID` = :bookingID";
+					$s = $pdo->prepare($sql);
+					$s->bindValue(':bookingID', $row['TheBookingID']);
+					$s->execute();
 				}
+
+			catch(PDOException $e)
+			{
+				$pdo->rollBack();
+				$pdo = null;
+				return FALSE;
 			}
 		}
 		return TRUE;

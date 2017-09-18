@@ -372,9 +372,21 @@ function updateBillingDatesForCompanies(){
 					if(isSet($email)){
 						$mailResult = sendEmail($email, $emailSubject, $emailMessage);
 
+						$email = implode(", ", $email);
+
 						if(!$mailResult){
-							// TO-DO: FIX-ME: What to do if the mail doesn't want to send?
-							// Store it somewhere and have another cron try to send emails?
+							// Email failed to be prepared. Store it in database to try again later
+
+							$sql = 'INSERT INTO	`email`
+									SET			`subject` = :subject,
+												`message` = :message,
+												`receivers` = :receivers,
+												`dateTimeRemove` = DATE_ADD(CURRENT_TIMESTAMP, INTERVAL 7 DAY);';
+							$s = $pdo->prepare($sql);
+							$s->bindValue(':subject', $emailSubject);
+							$s->bindValue(':message', $emailMessage);
+							$s->bindValue(':receivers', $email);
+							$s->execute();
 						}
 					}
 				}
@@ -384,6 +396,7 @@ function updateBillingDatesForCompanies(){
 				return FALSE;
 			}
 		}
+
 		//Close the connection
 		$pdo = null;
 		return TRUE;
