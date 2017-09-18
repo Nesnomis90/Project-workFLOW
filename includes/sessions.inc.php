@@ -178,6 +178,45 @@ function unsetSessionsFromCompanyManagement(){
 	unset($_SESSION['normalCompanyJoinACompany']);
 }
 
+function unsetSessionsFromBookingManagement(){
+	unset($_SESSION['AddCreateBookingInfoArray']);
+	unset($_SESSION['AddCreateBookingChangeUser']);
+	unset($_SESSION['AddCreateBookingUsersArray']);
+	unset($_SESSION['AddCreateBookingOriginalInfoArray']);
+	unset($_SESSION['AddCreateBookingMeetingRoomsArray']);	
+	unset($_SESSION['AddCreateBookingUserSearch']);
+	unset($_SESSION['AddCreateBookingSelectedNewUser']);
+	unset($_SESSION['AddCreateBookingSelectedACompany']);	
+	unset($_SESSION['AddCreateBookingDisplayCompanySelect']);
+	unset($_SESSION['AddCreateBookingCompanyArray']);
+	unset($_SESSION['AddCreateBookingStartImmediately']);
+
+	unset($_SESSION['EditCreateBookingInfoArray']);
+	unset($_SESSION['EditCreateBookingChangeUser']);
+	unset($_SESSION['EditCreateBookingUsersArray']);
+	unset($_SESSION['EditCreateBookingOriginalInfoArray']);
+	unset($_SESSION['EditCreateBookingMeetingRoomsArray']);	
+	unset($_SESSION['EditCreateBookingUserSearch']);
+	unset($_SESSION['EditCreateBookingSelectedNewUser']);
+	unset($_SESSION['EditCreateBookingSelectACompany']);
+	unset($_SESSION['EditCreateBookingDisplayCompanySelect']);
+	unset($_SESSION['EditCreateBookingLoggedInUserInformation']);
+	unset($_SESSION["EditCreateBookingOriginalBookingID"]);
+
+	unset($_SESSION['changeRoomChangedBy']);
+	unset($_SESSION['changeRoomChangedByUser']);
+	unset($_SESSION['changeToMeetingRoomID']);
+	unset($_SESSION['changeRoomOriginalBookingValues']);
+	unset($_SESSION['changeRoomOriginalValues']);
+	unset($_SESSION['continueChangeRoom']);
+	unset($_SESSION['changeToOccupiedRoomBookingID']);
+	unset($_SESSION['cancelBookingOriginalValues']);
+
+	unset($_SESSION['refreshAddCreateBookingConfirmed']);
+
+	unset($_SESSION['bookingCodeUserID']);
+}
+
 // Removes all stored info e.g. logs out user
 function destroySession(){
 	session_start();

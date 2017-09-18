@@ -9,6 +9,7 @@ include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/magicquotes.inc.php';
 unsetSessionsFromAdmin();
 unsetSessionsFromCompanyManagement();
 unsetSessionsFromUserManagement();
+unsetSessionsFromBookingManagement();
 
 // Make sure logout works properly and that we check if their login details are up-to-date
 if(isSet($_SESSION['loggedIn'])){

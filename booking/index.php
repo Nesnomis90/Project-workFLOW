@@ -63,9 +63,10 @@ function clearChangeBookingSessions(){
 	unset($_SESSION['changeRoomOriginalBookingValues']);
 	unset($_SESSION['changeRoomOriginalValues']);
 	unset($_SESSION['continueChangeRoom']);
-	unset($_SESSION['bookingCodeUserID']);
-	unset($_SESSION['changeToOccupiedRoomBookingID']);	
+	unset($_SESSION['changeToOccupiedRoomBookingID']);
 	unset($_SESSION['cancelBookingOriginalValues']);
+
+	unset($_SESSION['bookingCodeUserID']);
 
 	unset($_SESSION['normalUserOriginalInfoArray']); // Make sure we get up-to-date user values after doing bookings
 }

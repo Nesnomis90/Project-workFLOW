@@ -6,6 +6,11 @@ include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/navcheck.inc.php'; // Starts
 include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/helpers.inc.php';
 include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/magicquotes.inc.php';
 
+// Make sure we don't have any pointless sessions active
+unsetSessionsFromAdmin();
+unsetSessionsFromBookingManagement();
+unsetSessionsFromCompanyManagement();
+
 // Make sure logout works properly and that we check if their login details are up-to-date
 if(isSet($_SESSION['loggedIn'])){
 	userIsLoggedIn();

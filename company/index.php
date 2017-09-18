@@ -9,6 +9,7 @@ include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/magicquotes.inc.php';
 // Make sure we don't have any pointless sessions active
 unsetSessionsFromAdmin();
 unsetSessionsFromUserManagement();
+unsetSessionsFromBookingManagement();
 
 // Function to clear sessions used to remember user inputs on refreshing the add employee form
 function clearAddEmployeeAsOwnerSessions(){
