@@ -10,7 +10,6 @@ if (!isUserAdmin()){
 }
 
 include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
-
 // Make sure our database and tables exist
 // ATTEMPT TO CREATE DATABASE AND TABLES
 create_db();

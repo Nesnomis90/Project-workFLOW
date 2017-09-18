@@ -54,8 +54,6 @@ function create_db(){
 			$output = '<b>Database: ' . DB_NAME . ' already exists.</b><br />';
 		}
 
-		include $_SERVER['DOCUMENT_ROOT'] . '/includes/output.html.php';
-
 		//Closing the connection
 		$pdo = null;
 	} 
