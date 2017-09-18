@@ -307,6 +307,36 @@ function emailUserOnCancelledBooking(){
 
 			if(!$mailResult){
 				$_SESSION['normalBookingFeedback'] .= "\n\n[WARNING] System failed to send Email to user.";
+
+				// Email failed to be prepared. Store it in database to try again later
+				try
+				{
+					include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+
+					$pdo = connect_to_db();
+					$sql = 'INSERT INTO	`email`
+							SET			`subject` = :subject,
+										`message` = :message,
+										`receivers` = :receivers,
+										`dateTimeRemove` = DATE_ADD(CURRENT_TIMESTAMP, INTERVAL 1 DAY);';
+					$s = $pdo->prepare($sql);
+					$s->bindValue(':subject', $emailSubject);
+					$s->bindValue(':message', $emailMessage);
+					$s->bindValue(':receivers', $email);
+					$s->execute();
+
+					//close connection
+					$pdo = null;
+				}
+				catch (PDOException $e)
+				{
+					$error = 'Error storing email: ' . $e->getMessage();
+					include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+					$pdo = null;
+					exit();
+				}
+
+				$_SESSION['normalBookingFeedback'] .= "\nEmail to be sent has been stored and will be attempted to be sent again later.";
 			}
 
 			$_SESSION['normalBookingFeedback'] .= "\nThis is the email msg we're sending out:\n$emailMessage\nSent to email: $email."; // TO-DO: Remove after testing
@@ -1764,6 +1794,36 @@ if ((isSet($_POST['changeroom']) and $_POST['changeroom'] == 'Confirm Change') O
 
 				if(!$mailResult){
 					$_SESSION['normalBookingFeedback'] .= "\n\n[WARNING] System failed to send Email to user.";
+
+					// Email failed to be prepared. Store it in database to try again later
+					try
+					{
+						include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+
+						$pdo = connect_to_db();
+						$sql = 'INSERT INTO	`email`
+								SET			`subject` = :subject,
+											`message` = :message,
+											`receivers` = :receivers,
+											`dateTimeRemove` = DATE_ADD(CURRENT_TIMESTAMP, INTERVAL 7 DAY);';
+						$s = $pdo->prepare($sql);
+						$s->bindValue(':subject', $emailSubject);
+						$s->bindValue(':message', $emailMessage);
+						$s->bindValue(':receivers', $email);
+						$s->execute();
+
+						//close connection
+						$pdo = null;
+					}
+					catch (PDOException $e)
+					{
+						$error = 'Error storing email: ' . $e->getMessage();
+						include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+						$pdo = null;
+						exit();
+					}
+
+					$_SESSION['normalBookingFeedback'] .= "\nEmail to be sent has been stored and will be attempted to be sent again later.";
 				}
 
 				$_SESSION['normalBookingFeedback'] .= "\nThis is the email msg we're sending out:\n$emailMessage\nSent to email: $email."; // TO-DO: Remove after testing	
@@ -1801,6 +1861,36 @@ if ((isSet($_POST['changeroom']) and $_POST['changeroom'] == 'Confirm Change') O
 
 				if(!$mailResult){
 					$_SESSION['normalBookingFeedback'] .= "\n\n[WARNING] System failed to send Email to user.";
+
+					// Email failed to be prepared. Store it in database to try again later
+					try
+					{
+						include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+
+						$pdo = connect_to_db();
+						$sql = 'INSERT INTO	`email`
+								SET			`subject` = :subject,
+											`message` = :message,
+											`receivers` = :receivers,
+											`dateTimeRemove` = DATE_ADD(CURRENT_TIMESTAMP, INTERVAL 7 DAY);';
+						$s = $pdo->prepare($sql);
+						$s->bindValue(':subject', $emailSubject);
+						$s->bindValue(':message', $emailMessage);
+						$s->bindValue(':receivers', $email);
+						$s->execute();
+
+						//close connection
+						$pdo = null;
+					}
+					catch (PDOException $e)
+					{
+						$error = 'Error storing email: ' . $e->getMessage();
+						include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+						$pdo = null;
+						exit();
+					}
+
+					$_SESSION['normalBookingFeedback'] .= "\nEmail to be sent has been stored and will be attempted to be sent again later.";
 				}
 
 				$_SESSION['normalBookingFeedback'] .= "\nThis is the email msg we're sending out:\n$emailMessage\nSent to email: $email."; // TO-DO: Remove after testing	
@@ -1975,6 +2065,36 @@ if ((isSet($_POST['changeroom']) and $_POST['changeroom'] == 'Confirm Change') O
 
 				if(!$mailResult){
 					$_SESSION['normalBookingFeedback'] .= "\n\n[WARNING] System failed to send Email to user.";
+
+					// Email failed to be prepared. Store it in database to try again later
+					try
+					{
+						include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+
+						$pdo = connect_to_db();
+						$sql = 'INSERT INTO	`email`
+								SET			`subject` = :subject,
+											`message` = :message,
+											`receivers` = :receivers,
+											`dateTimeRemove` = DATE_ADD(CURRENT_TIMESTAMP, INTERVAL 7 DAY);';
+						$s = $pdo->prepare($sql);
+						$s->bindValue(':subject', $emailSubject);
+						$s->bindValue(':message', $emailMessage);
+						$s->bindValue(':receivers', $email);
+						$s->execute();
+
+						//close connection
+						$pdo = null;
+					}
+					catch (PDOException $e)
+					{
+						$error = 'Error storing email: ' . $e->getMessage();
+						include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+						$pdo = null;
+						exit();
+					}
+
+					$_SESSION['normalBookingFeedback'] .= "\nEmail to be sent has been stored and will be attempted to be sent again later.";
 				}
 
 				$_SESSION['normalBookingFeedback'] .= "\nThis is the email msg we're sending out:\n$emailMessage.\nSent to email: $email."; // TO-DO: Remove after testing	
@@ -2054,8 +2174,7 @@ if(isSet($_POST['action']) AND $_POST['action'] == "Remove Timeout"){
 		//Close connection
 		$pdo = null;
 
-		if ($row['HitCount'] > 0)
-		{
+		if($row['HitCount'] > 0){
 			unset($_SESSION['bookingCodeGuesses']);
 			unset($_SESSION['adminBookingCodeGuesses']);
 			$_SESSION['confirmBookingCodeError'] = "Successfully removed timeout.";
@@ -2607,7 +2726,7 @@ if(	((isSet($_POST['action']) AND $_POST['action'] == 'Create Meeting')) OR
 		// are connected to more than 1 company.
 		// If not we just store the companyID in a hidden form field
 		if(isSet($company)){
-			if (sizeOf($company)>1){
+			if(sizeOf($company) > 1){
 				// User is in multiple companies
 
 				$_SESSION['AddCreateBookingDisplayCompanySelect'] = TRUE;
@@ -2624,7 +2743,7 @@ if(	((isSet($_POST['action']) AND $_POST['action'] == 'Create Meeting')) OR
 				$_SESSION['AddCreateBookingInfoArray']['HourPriceOverCredit'] = $company[0]['HourPriceOverCredit'];
 				$_SESSION['AddCreateBookingInfoArray']['BookingDescription'] = "Booked for " . $company[0]['companyName'];
 			}
-		} else{
+		} else {
 			// User is NOT in a company
 
 			$_SESSION['AddCreateBookingSelectedACompany'] = TRUE;
@@ -3236,6 +3355,36 @@ if ((isSet($_POST['add']) AND $_POST['add'] == "Add Booking") OR
 
 		if(!$mailResult){
 			$_SESSION['normalBookingFeedback'] .= "\n\n[WARNING] System failed to send Email to user.";
+
+			// Email failed to be prepared. Store it in database to try again later
+			try
+			{
+				include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+
+				$pdo = connect_to_db();
+				$sql = 'INSERT INTO	`email`
+						SET			`subject` = :subject,
+									`message` = :message,
+									`receivers` = :receivers,
+									`dateTimeRemove` = DATE_ADD(CURRENT_TIMESTAMP, INTERVAL 7 DAY);';
+				$s = $pdo->prepare($sql);
+				$s->bindValue(':subject', $emailSubject);
+				$s->bindValue(':message', $emailMessage);
+				$s->bindValue(':receivers', $email);
+				$s->execute();
+
+				//close connection
+				$pdo = null;
+			}
+			catch (PDOException $e)
+			{
+				$error = 'Error storing email: ' . $e->getMessage();
+				include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+				$pdo = null;
+				exit();
+			}
+
+			$_SESSION['normalBookingFeedback'] .= "\nEmail to be sent has been stored and will be attempted to be sent again later.";
 		}
 
 		$_SESSION['normalBookingFeedback'] .= "\nThis is the email msg we're sending out:\n$emailMessage.\nSent to email: $email."; // TO-DO: Remove before uploading
@@ -3318,11 +3467,42 @@ if ((isSet($_POST['add']) AND $_POST['add'] == "Add Booking") OR
 
 			$mailResult = sendEmail($email, $emailSubject, $emailMessage);
 
+			$email = implode(", ", $email);
+
 			if(!$mailResult){
 				$_SESSION['normalBookingFeedback'] .= "\n\n[WARNING] System failed to send Email to user(s).";
+
+				// Email failed to be prepared. Store it in database to try again later
+				try
+				{
+					include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+
+					$pdo = connect_to_db();
+					$sql = 'INSERT INTO	`email`
+							SET			`subject` = :subject,
+										`message` = :message,
+										`receivers` = :receivers,
+										`dateTimeRemove` = DATE_ADD(CURRENT_TIMESTAMP, INTERVAL 1 DAY);';
+					$s = $pdo->prepare($sql);
+					$s->bindValue(':subject', $emailSubject);
+					$s->bindValue(':message', $emailMessage);
+					$s->bindValue(':receivers', $email);
+					$s->execute();
+
+					//close connection
+					$pdo = null;
+				}
+				catch (PDOException $e)
+				{
+					$error = 'Error storing email: ' . $e->getMessage();
+					include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+					$pdo = null;
+					exit();
+				}
+
+				$_SESSION['normalBookingFeedback'] .= "\nEmail to be sent has been stored and will be attempted to be sent again later.";
 			}
 
-			$email = implode(", ", $email);
 			$_SESSION['normalBookingFeedback'] .= "\nThis is the email msg we're sending out:\n$emailMessage\nSent to email: $email."; // TO-DO: Remove before uploading			
 		} else {
 			$_SESSION['normalBookingFeedback'] .= "\n\nNo Company Owners were sent an email about the booking going over booking."; // TO-DO: Remove before uploading.

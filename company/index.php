@@ -279,12 +279,42 @@ if(isSet($_POST['action']) AND $_POST['action'] == "Confirm"){
 
 				$mailResult = sendEmail($email, $emailSubject, $emailMessage);
 
+				$email = implode($email,", ");
+
 				if(!$mailResult){
 					$_SESSION['normalCompanyFeedback'] .= "\n\n[WARNING] System failed to send Email to Admin.";
-					// TO-DO: FIX-ME: What to do if the mail doesn't want to send?
-					// Store it somewhere and have a cron try to send emails?
+
+					// Email failed to be prepared. Store it in database to try again later
+					try
+					{
+						include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+
+						$pdo = connect_to_db();
+						$sql = 'INSERT INTO	`email`
+								SET			`subject` = :subject,
+											`message` = :message,
+											`receivers` = :receivers,
+											`dateTimeRemove` = DATE_ADD(CURRENT_TIMESTAMP, INTERVAL 7 DAY);';
+						$s = $pdo->prepare($sql);
+						$s->bindValue(':subject', $emailSubject);
+						$s->bindValue(':message', $emailMessage);
+						$s->bindValue(':receivers', $email);
+						$s->execute();
+
+						//close connection
+						$pdo = null;
+					}
+					catch (PDOException $e)
+					{
+						$error = 'Error storing email: ' . $e->getMessage();
+						include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+						$pdo = null;
+						exit();
+					}
+
+					$_SESSION['normalCompanyFeedback'] .= "\nEmail to be sent has been stored and will be attempted to be sent again later.";
 				}
-				$email = implode($email,", ");
+
 				$_SESSION['normalCompanyFeedback'] .= "\nThis is the email msg we're sending out:\n$emailMessage.\nSent to email(s): $email."; // TO-DO: Remove after testing				
 			}
 			// close connection
@@ -455,11 +485,41 @@ if(isSet($_POST['confirm']) AND $_POST['confirm'] == "Yes, Send The Request"){
 
 			$mailResult = sendEmail($email, $emailSubject, $emailMessage);
 
+			$email = implode(", ", $email);
+
 			if(!$mailResult){
 				$_SESSION['normalCompanyFeedback'] .= "\n\n[WARNING] System failed to send Email to user(s).";
-			}
 
-			$email = implode(", ", $email);
+				// Email failed to be prepared. Store it in database to try again later
+				try
+				{
+					include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+
+					$pdo = connect_to_db();
+					$sql = 'INSERT INTO	`email`
+							SET			`subject` = :subject,
+										`message` = :message,
+										`receivers` = :receivers,
+										`dateTimeRemove` = DATE_ADD(CURRENT_TIMESTAMP, INTERVAL 7 DAY);';
+					$s = $pdo->prepare($sql);
+					$s->bindValue(':subject', $emailSubject);
+					$s->bindValue(':message', $emailMessage);
+					$s->bindValue(':receivers', $email);
+					$s->execute();
+
+					//close connection
+					$pdo = null;
+				}
+				catch (PDOException $e)
+				{
+					$error = 'Error storing email: ' . $e->getMessage();
+					include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+					$pdo = null;
+					exit();
+				}
+
+				$_SESSION['normalCompanyFeedback'] .= "\nEmail to be sent has been stored and will be attempted to be sent again later.";
+			}
 
 			$_SESSION['normalCompanyFeedback'] .= "\nThis is the email msg we're sending out:\n$emailMessage\nSent to email: $email."; // TO-DO: Remove before uploading			
 		} else {
@@ -1256,6 +1316,36 @@ if(isSet($_POST['confirmadd']) AND $_POST['confirmadd'] == "Add Employee"){
 
 			if(!$mailResult){
 				$_SESSION['EmployeeUserFeedback'] .= "\n[WARNING] System failed to send Email to user.";
+
+				// Email failed to be prepared. Store it in database to try again later
+				try
+				{
+					include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+
+					$pdo = connect_to_db();
+					$sql = 'INSERT INTO	`email`
+							SET			`subject` = :subject,
+										`message` = :message,
+										`receivers` = :receivers,
+										`dateTimeRemove` = DATE_ADD(CURRENT_TIMESTAMP, INTERVAL 7 DAY);';
+					$s = $pdo->prepare($sql);
+					$s->bindValue(':subject', $emailSubject);
+					$s->bindValue(':message', $emailMessage);
+					$s->bindValue(':receivers', $email);
+					$s->execute();
+
+					//close connection
+					$pdo = null;
+				}
+				catch (PDOException $e)
+				{
+					$error = 'Error storing email: ' . $e->getMessage();
+					include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+					$pdo = null;
+					exit();
+				}
+
+				$_SESSION['EmployeeUserFeedback'] .= "\nEmail to be sent has been stored and will be attempted to be sent again later.";
 			}
 
 			$_SESSION['EmployeeUserFeedback'] .= "\nThis is the email msg we're sending out:\n$emailMessage.\nSent to: $email."; // TO-DO: Remove after testing	
