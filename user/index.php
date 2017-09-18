@@ -295,6 +295,36 @@ if(isSet($_POST['register']) AND $_POST['register'] == "Register Account"){
 		} else {
 			$_SESSION['registerUserFeedback'] = "\n[WARNING] System failed to send Email to user.";
 		}
+
+		// Email failed to be prepared. Store it in database to try again later
+		try
+		{
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+
+			$pdo = connect_to_db();
+			$sql = 'INSERT INTO	`email`
+					SET			`subject` = :subject,
+								`message` = :message,
+								`receivers` = :receivers,
+								`dateTimeRemove` = DATE_ADD(CURRENT_TIMESTAMP, INTERVAL 8 HOUR);';
+			$s = $pdo->prepare($sql);
+			$s->bindValue(':subject', $emailSubject);
+			$s->bindValue(':message', $emailMessage);
+			$s->bindValue(':receivers', $email);
+			$s->execute();
+
+			//close connection
+			$pdo = null;
+		}
+		catch (PDOException $e)
+		{
+			$error = 'Error storing email: ' . $e->getMessage();
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+			$pdo = null;
+			exit();
+		}
+
+		$_SESSION['registerUserFeedback'] .= "\nEmail to be sent has been stored and will be attempted to be sent again later.";	
 	}
 
 	$_SESSION['registerUserFeedback'] .= "\nThis is the email msg we're sending out:\n$emailMessage.\nSent to: $email."; // TO-DO: Remove before uploading	

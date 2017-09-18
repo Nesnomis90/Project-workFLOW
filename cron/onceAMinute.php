@@ -161,6 +161,8 @@ function alertUserThatMeetingIsAboutToStart(){
 					$s->execute();
 				}
 
+				$pdo->commit();
+
 			catch(PDOException $e)
 			{
 				$pdo->rollBack();

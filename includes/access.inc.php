@@ -329,6 +329,36 @@ function checkIfUserIsLoggedIn(){
 					
 					if(!$mailResult){
 						$_SESSION['forgottenPasswordError'] .= "\n\n[WARNING] System failed to send Email.";
+
+						// Email failed to be prepared. Store it in database to try again later
+						try
+						{
+							include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+
+							$pdo = connect_to_db();
+							$sql = 'INSERT INTO	`email`
+									SET			`subject` = :subject,
+												`message` = :message,
+												`receivers` = :receivers,
+												`dateTimeRemove` = DATE_ADD(CURRENT_TIMESTAMP, INTERVAL 7 DAY);';
+							$s = $pdo->prepare($sql);
+							$s->bindValue(':subject', $emailSubject);
+							$s->bindValue(':message', $emailMessage);
+							$s->bindValue(':receivers', $email);
+							$s->execute();
+
+							//close connection
+							$pdo = null;
+						}
+						catch (PDOException $e)
+						{
+							$error = 'Error storing email: ' . $e->getMessage();
+							include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+							$pdo = null;
+							exit();
+						}
+
+						$_SESSION['forgottenPasswordError'] .= "\nEmail to be sent has been stored and will be attempted to be sent again later.";
 					}
 
 					$_SESSION['forgottenPasswordError'] .= "\nThis is the email msg we're sending out:\n$emailMessage\nSent to email: $email."; // TO-DO: Remove before uploading
@@ -758,6 +788,36 @@ function sendEmailAboutLoginBeingBlocked($email, $activationCode){
 	
 	if(!$mailResult){
 		$_SESSION['loginError'] .= "\n\n[WARNING] System failed to send Email.";
+
+		// Email failed to be prepared. Store it in database to try again later
+		try
+		{
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+
+			$pdo = connect_to_db();
+			$sql = 'INSERT INTO	`email`
+					SET			`subject` = :subject,
+								`message` = :message,
+								`receivers` = :receivers,
+								`dateTimeRemove` = DATE_ADD(CURRENT_TIMESTAMP, INTERVAL 7 DAY);';
+			$s = $pdo->prepare($sql);
+			$s->bindValue(':subject', $emailSubject);
+			$s->bindValue(':message', $emailMessage);
+			$s->bindValue(':receivers', $email);
+			$s->execute();
+
+			//close connection
+			$pdo = null;
+		}
+		catch (PDOException $e)
+		{
+			$error = 'Error storing email: ' . $e->getMessage();
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+			$pdo = null;
+			exit();
+		}
+
+		$_SESSION['loginError'] .= "\nEmail to be sent has been stored and will be attempted to be sent again later.";		
 	}
 
 	$_SESSION['loginError'] .= "\nThis is the email msg we're sending out:\n$emailMessage\nSent to email: $email."; // TO-DO: Remove before uploading

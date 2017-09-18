@@ -318,7 +318,7 @@ function emailUserOnCancelledBooking(){
 							SET			`subject` = :subject,
 										`message` = :message,
 										`receivers` = :receivers,
-										`dateTimeRemove` = DATE_ADD(CURRENT_TIMESTAMP, INTERVAL 1 DAY);';
+										`dateTimeRemove` = DATE_ADD(CURRENT_TIMESTAMP, INTERVAL 7 DAY);';
 					$s = $pdo->prepare($sql);
 					$s->bindValue(':subject', $emailSubject);
 					$s->bindValue(':message', $emailMessage);
@@ -3482,7 +3482,7 @@ if ((isSet($_POST['add']) AND $_POST['add'] == "Add Booking") OR
 							SET			`subject` = :subject,
 										`message` = :message,
 										`receivers` = :receivers,
-										`dateTimeRemove` = DATE_ADD(CURRENT_TIMESTAMP, INTERVAL 1 DAY);';
+										`dateTimeRemove` = DATE_ADD(CURRENT_TIMESTAMP, INTERVAL 7 DAY);';
 					$s = $pdo->prepare($sql);
 					$s->bindValue(':subject', $emailSubject);
 					$s->bindValue(':message', $emailMessage);
