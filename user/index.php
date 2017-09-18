@@ -281,7 +281,7 @@ if(isSet($_POST['register']) AND $_POST['register'] == "Register Account"){
 	$emailSubject = "Account Activation Link";
 
 	$emailMessage = 
-	"Your account has been created.\n" .
+	"Your account has been successfully created!\n" .
 	"Before you can log in you need to activate your account.\n" .
 	"If the account isn't activated within 8 hours, it is removed.\n" .
 	"Click this link to activate your account: " . $_SERVER['HTTP_HOST'] . 
