@@ -352,7 +352,6 @@ function correctDatetimeFormat($wrongDatetimeString){
 	$wrongDatetimeString = preg_replace('/[\.\/\,_;]+/','-', $wrongDatetimeString);
 
 	// Check that we only have legal characters before checking if the format is correct
-	// This should be done before calling this function
 	if(validateDateTimeString($wrongDatetimeString) === FALSE){
 		return FALSE;
 	}
@@ -360,34 +359,65 @@ function correctDatetimeFormat($wrongDatetimeString){
 	// Reduce number of validateDatetimeWithFormat by replacing spaces and leading 0s
 	$spacesInDatetimeString = substr_count($wrongDatetimeString, ' ');
 	$dashesInDatetimeString = substr_count($wrongDatetimeString, '-');
+	$colonsInDatetimeString = substr_count($wrongDatetimeString, ':');
 
 	$totalDividersInDatetimeString = $spacesInDatetimeString + $dashesInDatetimeString;
 
-	if ($spacesInDatetimeString > 0 AND $totalDividersInDatetimeString < 3){
-		$datePart = $wrongDatetimeString;
-	} elseif($spacesInDatetimeString > 0 AND $totalDividersInDatetimeString > 2) {
-		$datePart = substr($wrongDatetimeString, 0, strrpos($wrongDatetimeString, " "));
-		$timePart = substr(strrchr($wrongDatetimeString, " "), 0);
+	if($colonsInDatetimeString == 0 AND $totalDividersInDatetimeString > 2){
+		// With no colon submitted, and a time portion is submitted, the time isn't identified properly.
+		// So we can't accurately decide the datetime format is being used
+		return FALSE;
 	}
 
-	// change spaces in date part
-	$datePart = str_replace(' ', '-',$datePart);
+	// Check if date or time is submitted first, to put it into the correct formats we're checking against
+	// Standard is date then time. But wanted display date can be time then date.
+	// 'H:i j F Y' = 12:15 3 March 2017
+	$timeExists = FALSE;
+	$timeFirst = FALSE;
 
-	// Remove leading zeros
+	// There has to be a time element involved if there's a colon submitted. 
+	// There could also be a time element involved if there's more than 2 dividers, but then we have no idea if the time or date is first
+	if($colonsInDatetimeString > 0){
+		$timeExists = TRUE;
+
+		if(strpos($wrongDatetimeString, ":") < 3){
+			$timeFirst = TRUE;
+		}
+	}
+
+	if($timeExists AND $timeFirst){
+		$firstSpacePos = strpos($wrongDatetimeString, " ");
+		$datePart = substr($wrongDatetimeString, $firstSpacePos + 1); //+1 to not include the space
+		$timePart = substr($wrongDatetimeString, 0, $firstSpacePos);
+	} elseif($timeExists AND !$timeFirst){
+		$lastSpacePos = strrpos($wrongDatetimeString, " ");
+		$timePart = substr($wrongDatetimeString, $lastSpacePos + 1); //+1 to not include the space
+		$datePart = substr($wrongDatetimeString, 0, $lastSpacePos);
+	} elseif(!$timeExists){
+		$datePart = $wrongDatetimeString;
+	}
+
+	// change spaces in date part, if there are any
+	$datePart = str_replace(' ', '-', $datePart);
+
+	// Remove leading zeros e.g. March 07 03 to March 7 3.
 	$datePartWithLeadingZeros = explode('-', $datePart);
 
 	foreach($datePartWithLeadingZeros AS $number){
 		$datePartWithoutLeadingZerosArray[] = ltrim($number, '0');
 	}
 
-	$datePartWithoutLeadingZeros = implode('-',$datePartWithoutLeadingZerosArray);
+	$datePartWithoutLeadingZeros = implode('-', $datePartWithoutLeadingZerosArray);
 
 	$datePartWithNoSpacesOrLeadingZeros = $datePartWithoutLeadingZeros;
 
-	if(!isSet($timePart)){
-		$timePart = "";
-	}
-	$wrongDatetimeString = $datePartWithNoSpacesOrLeadingZeros . $timePart;
+	if($timeExists AND $timeFirst){
+		$wrongDatetimeString = $timePart . " " . $datePartWithNoSpacesOrLeadingZeros;
+	} elseif($timeExists AND !$timeFirst){
+		$wrongDatetimeString = $datePartWithNoSpacesOrLeadingZeros . " " . $timePart;
+	} elseif(!$timeExists){
+		$wrongDatetimeString = $datePartWithNoSpacesOrLeadingZeros;
+	}	
 
 	if(validateDatetimeWithFormat($wrongDatetimeString, 'Y-n-j H:i:s')){
 		$wrongDatetime = date_create_from_format('Y-n-j H:i:s', $wrongDatetimeString);
