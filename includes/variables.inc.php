@@ -23,14 +23,14 @@ define('MEETINGROOM_IDCODE', 'Temp_Cookie_Name_To_Hold_Meeting_Room_ID_CODE');
 // Datetime
 	// Define the default date and datetime format we want to use
 	// Also the default timezone we use for our datetime functions
-//define('DATETIME_DEFAULT_FORMAT_TO_DISPLAY_WITH_SECONDS', 'H:i:s j F Y'); <- What we want
-//define('DATETIME_DEFAULT_FORMAT_TO_DISPLAY', 'H:i j F Y'); <- What we want
-//define('DATE_DEFAULT_FORMAT_TO_DISPLAY', 'j F Y'); <- What we want
-//define('DATE_DEFAULT_FORMAT_TO_DISPLAY_WITHOUT_YEAR', 'j F'); <- What we want
-define('DATETIME_DEFAULT_FORMAT_TO_DISPLAY_WITH_SECONDS', 'F jS Y H:i:s'); //To-DO: REPLACE WITH ABOVE
-define('DATETIME_DEFAULT_FORMAT_TO_DISPLAY', 'F jS Y H:i'); //To-DO: REPLACE WITH ABOVE
-define('DATE_DEFAULT_FORMAT_TO_DISPLAY', 'F jS Y'); //To-DO: REPLACE WITH ABOVE
-define('DATE_DEFAULT_FORMAT_TO_DISPLAY_WITHOUT_YEAR', 'F jS'); //To-DO: REPLACE WITH ABOVE
+define('DATETIME_DEFAULT_FORMAT_TO_DISPLAY_WITH_SECONDS', 'H:i:s j F Y'); //<- What we want
+define('DATETIME_DEFAULT_FORMAT_TO_DISPLAY', 'H:i j F Y'); //<- What we want
+define('DATE_DEFAULT_FORMAT_TO_DISPLAY', 'j F Y'); //<- What we want
+define('DATE_DEFAULT_FORMAT_TO_DISPLAY_WITHOUT_YEAR', 'j F'); //<- What we want
+//define('DATETIME_DEFAULT_FORMAT_TO_DISPLAY_WITH_SECONDS', 'F jS Y H:i:s'); //To-DO: REPLACE WITH ABOVE
+//define('DATETIME_DEFAULT_FORMAT_TO_DISPLAY', 'F jS Y H:i'); //To-DO: REPLACE WITH ABOVE
+//define('DATE_DEFAULT_FORMAT_TO_DISPLAY', 'F jS Y'); //To-DO: REPLACE WITH ABOVE
+//define('DATE_DEFAULT_FORMAT_TO_DISPLAY_WITHOUT_YEAR', 'F jS'); //To-DO: REPLACE WITH ABOVE
 define('TIME_DEFAULT_FORMAT_TO_DISPLAY', 'H:i');
 define('DATE_DEFAULT_TIMEZONE', 'Europe/Oslo');
 
