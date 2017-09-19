@@ -352,7 +352,6 @@ function correctDatetimeFormat($wrongDatetimeString){
 	$wrongDatetimeString = preg_replace('/[\.\/\,_;]+/','-', $wrongDatetimeString);
 
 	// Check that we only have legal characters before checking if the format is correct
-	// This should be done before calling this function
 	if(validateDateTimeString($wrongDatetimeString) === FALSE){
 		return FALSE;
 	}
@@ -360,181 +359,242 @@ function correctDatetimeFormat($wrongDatetimeString){
 	// Reduce number of validateDatetimeWithFormat by replacing spaces and leading 0s
 	$spacesInDatetimeString = substr_count($wrongDatetimeString, ' ');
 	$dashesInDatetimeString = substr_count($wrongDatetimeString, '-');
+	$colonsInDatetimeString = substr_count($wrongDatetimeString, ':');
 
 	$totalDividersInDatetimeString = $spacesInDatetimeString + $dashesInDatetimeString;
 
-	if ($spacesInDatetimeString > 0 AND $totalDividersInDatetimeString < 3){
-		$datePart = $wrongDatetimeString;
-	} elseif($spacesInDatetimeString > 0 AND $totalDividersInDatetimeString > 2) {
-		$datePart = substr($wrongDatetimeString, 0, strrpos($wrongDatetimeString, " "));
-		$timePart = substr(strrchr($wrongDatetimeString, " "), 0);
+	if($colonsInDatetimeString == 0 AND $totalDividersInDatetimeString > 2){
+		// With no colon submitted, and a time portion is submitted, the time isn't identified properly.
+		// So we can't accurately decide the datetime format is being used
+		return FALSE;
 	}
 
-	// change spaces in date part
-	$datePart = str_replace(' ', '-',$datePart);
+	// Check if date or time is submitted first, to put it into the correct formats we're checking against
+	// Standard is date then time. But wanted display date can be time then date.
+	// 'H:i j F Y' = 12:15 3 March 2017
+	$timeExists = FALSE;
+	$timeFirst = FALSE;
 
-	// Remove leading zeros
+	// There has to be a time element involved if there's a colon submitted. 
+	// There could also be a time element involved if there's more than 2 dividers, but then we have no idea if the time or date is first
+	if($colonsInDatetimeString > 0){
+		$timeExists = TRUE;
+
+		if(strpos($wrongDatetimeString, ":") < 3){
+			$timeFirst = TRUE;
+		}
+	}
+
+	if($timeExists AND $timeFirst){
+		$firstSpacePos = strpos($wrongDatetimeString, " ");
+		$datePart = substr($wrongDatetimeString, $firstSpacePos + 1); //+1 to not include the space
+		$timePart = substr($wrongDatetimeString, 0, $firstSpacePos);
+	} elseif($timeExists AND !$timeFirst){
+		$lastSpacePos = strrpos($wrongDatetimeString, " ");
+		$timePart = substr($wrongDatetimeString, $lastSpacePos + 1); //+1 to not include the space
+		$datePart = substr($wrongDatetimeString, 0, $lastSpacePos);
+	} elseif(!$timeExists){
+		$datePart = $wrongDatetimeString;
+	}
+
+	// change spaces in date part, if there are any
+	$datePart = str_replace(' ', '-', $datePart);
+
+	// Remove leading zeros e.g. March 07 03 to March 7 3.
 	$datePartWithLeadingZeros = explode('-', $datePart);
 
 	foreach($datePartWithLeadingZeros AS $number){
 		$datePartWithoutLeadingZerosArray[] = ltrim($number, '0');
 	}
 
-	$datePartWithoutLeadingZeros = implode('-',$datePartWithoutLeadingZerosArray);
+	$datePartWithoutLeadingZeros = implode('-', $datePartWithoutLeadingZerosArray);
 
 	$datePartWithNoSpacesOrLeadingZeros = $datePartWithoutLeadingZeros;
 
-	if(!isSet($timePart)){
-		$timePart = "";
-	}
-	$wrongDatetimeString = $datePartWithNoSpacesOrLeadingZeros . $timePart;
+	if($timeExists AND $timeFirst){
+		$wrongDatetimeString = $timePart . " " . $datePartWithNoSpacesOrLeadingZeros;
 
-	if(validateDatetimeWithFormat($wrongDatetimeString, 'Y-n-j H:i:s')){
-		$wrongDatetime = date_create_from_format('Y-n-j H:i:s', $wrongDatetimeString);
-		$correctDatetime = DATE_FORMAT($wrongDatetime,'Y-m-d H:i:s');
-		return $correctDatetime;
-	}
-	if(validateDatetimeWithFormat($wrongDatetimeString, 'Y-n-j H:i')){
-		$wrongDatetime = date_create_from_format('Y-n-j H:i', $wrongDatetimeString);
-		$correctDatetime = DATE_FORMAT($wrongDatetime,'Y-m-d H:i:s');
-		return $correctDatetime;
-	}
-	if(validateDatetimeWithFormat($wrongDatetimeString, 'Y-n-j H')){
-		$wrongDatetime = date_create_from_format('Y-n-j H', $wrongDatetimeString);
-		$correctDatetime = DATE_FORMAT($wrongDatetime,'Y-m-d H:i:s');
-		return $correctDatetime;
-	}
-	if(validateDatetimeWithFormat($wrongDatetimeString, 'Y-n-j')){		
-		$wrongDatetime = date_create_from_format('Y-n-j', $wrongDatetimeString);
-		$correctDatetime = DATE_FORMAT($wrongDatetime,'Y-m-d H:i:s');
-		return $correctDatetime;
-	}
+		if(validateDatetimeWithFormat($wrongDatetimeString, 'H:i:s Y-n-j')){
+			$wrongDatetime = date_create_from_format('H:i:s Y-n-j', $wrongDatetimeString);
+			$correctDatetime = DATE_FORMAT($wrongDatetime,'Y-m-d H:i:s');
+			return $correctDatetime;
+		}
+		if(validateDatetimeWithFormat($wrongDatetimeString, 'H:i Y-n-j')){
+			$wrongDatetime = date_create_from_format('H:i Y-n-j', $wrongDatetimeString);
+			$correctDatetime = DATE_FORMAT($wrongDatetime,'Y-m-d H:i:s');
+			return $correctDatetime;
+		}
+		if (validateDatetimeWithFormat($wrongDatetimeString, 'H:i:s j-n-Y')){
+			$wrongDatetime = date_create_from_format('H:i:s j-n-Y', $wrongDatetimeString);
+			$correctDatetime = DATE_FORMAT($wrongDatetime,'Y-m-d H:i:s');
+			return $correctDatetime;
+		}
+		if (validateDatetimeWithFormat($wrongDatetimeString, 'H:i j-n-Y')){
+			$wrongDatetime = date_create_from_format('H:i j-n-Y', $wrongDatetimeString);
+			$correctDatetime = DATE_FORMAT($wrongDatetime,'Y-m-d H:i:s');
+			return $correctDatetime;
+		}
+		if (validateDatetimeWithFormat($wrongDatetimeString, 'H:i:s j-M-Y')){
+			$wrongDatetime = date_create_from_format('H:i:s j-M-Y', $wrongDatetimeString);
+			$correctDatetime = DATE_FORMAT($wrongDatetime,'Y-m-d H:i:s');
+			return $correctDatetime;
+		}
+		if (validateDatetimeWithFormat($wrongDatetimeString, 'H:i j-M-Y')){
+			$wrongDatetime = date_create_from_format('H:i j-M-Y', $wrongDatetimeString);
+			$correctDatetime = DATE_FORMAT($wrongDatetime,'Y-m-d H:i:s');
+			return $correctDatetime;
+		}
+		if (validateDatetimeWithFormat($wrongDatetimeString, 'H:i:s j-F-Y')){
+			$wrongDatetime = date_create_from_format('H:i:s j-F-Y', $wrongDatetimeString);
+			$correctDatetime = DATE_FORMAT($wrongDatetime,'Y-m-d H:i:s');
+			return $correctDatetime;
+		}
+		if (validateDatetimeWithFormat($wrongDatetimeString, 'H:i j-F-Y')){
+			$wrongDatetime = date_create_from_format('H:i j-F-Y', $wrongDatetimeString);
+			$correctDatetime = DATE_FORMAT($wrongDatetime,'Y-m-d H:i:s');
+			return $correctDatetime;
+		}
+		if (validateDatetimeWithFormat($wrongDatetimeString, 'H:i:s jS-F-Y')){
+			$wrongDatetime = date_create_from_format('H:i:s jS-F-Y', $wrongDatetimeString);
+			$correctDatetime = DATE_FORMAT($wrongDatetime,'Y-m-d H:i:s');
+			return $correctDatetime;
+		}
+		if (validateDatetimeWithFormat($wrongDatetimeString, 'H:i jS-F-Y')){
+			$wrongDatetime = date_create_from_format('H:i jS-F-Y', $wrongDatetimeString);
+			$correctDatetime = DATE_FORMAT($wrongDatetime,'Y-m-d H:i:s');
+			return $correctDatetime;
+		}
+		if (validateDatetimeWithFormat($wrongDatetimeString, 'H:i:s F-j-Y')){
+			$wrongDatetime = date_create_from_format('H:i:s F-j-Y', $wrongDatetimeString);
+			$correctDatetime = DATE_FORMAT($wrongDatetime,'Y-m-d H:i:s');
+			return $correctDatetime;
+		}
+		if (validateDatetimeWithFormat($wrongDatetimeString, 'H:i F-j-Y')){
+			$wrongDatetime = date_create_from_format('H:i F-j-Y', $wrongDatetimeString);
+			$correctDatetime = DATE_FORMAT($wrongDatetime,'Y-m-d H:i:s');
+			return $correctDatetime;
+		}
+		if (validateDatetimeWithFormat($wrongDatetimeString, 'H:i:s F-jS-Y')){
+			$wrongDatetime = date_create_from_format('H:i:s F-jS-Y', $wrongDatetimeString);
+			$correctDatetime = DATE_FORMAT($wrongDatetime,'Y-m-d H:i:s');
+			return $correctDatetime;
+		}
+		if (validateDatetimeWithFormat($wrongDatetimeString, 'H:i F-jS-Y')){
+			$wrongDatetime = date_create_from_format('H:i F-jS-Y', $wrongDatetimeString);
+			$correctDatetime = DATE_FORMAT($wrongDatetime,'Y-m-d H:i:s');
+			return $correctDatetime;
+		}		
+	} elseif($timeExists AND !$timeFirst){
+		$wrongDatetimeString = $datePartWithNoSpacesOrLeadingZeros . " " . $timePart;
 
-	if (validateDatetimeWithFormat($wrongDatetimeString, 'j-n-Y H:i:s')){
-		$wrongDatetime = date_create_from_format('j-n-Y H:i:s', $wrongDatetimeString);
-		$correctDatetime = DATE_FORMAT($wrongDatetime,'Y-m-d H:i:s');
-		return $correctDatetime;
-	}
-	if (validateDatetimeWithFormat($wrongDatetimeString, 'j-n-Y H:i')){
-		$wrongDatetime = date_create_from_format('j-n-Y H:i', $wrongDatetimeString);
-		$correctDatetime = DATE_FORMAT($wrongDatetime,'Y-m-d H:i:s');
-		return $correctDatetime;
-	}
-	if (validateDatetimeWithFormat($wrongDatetimeString, 'j-n-Y H')){
-		$wrongDatetime = date_create_from_format('j-n-Y H', $wrongDatetimeString);
-		$correctDatetime = DATE_FORMAT($wrongDatetime,'Y-m-d H:i:s');
-		return $correctDatetime;
-	}
-	if (validateDatetimeWithFormat($wrongDatetimeString, 'j-n-Y')){	
-		$wrongDatetime = date_create_from_format('j-n-Y', $wrongDatetimeString);
-		$correctDatetime = DATE_FORMAT($wrongDatetime,'Y-m-d H:i:s');
-		return $correctDatetime;
-	}
+		if(validateDatetimeWithFormat($wrongDatetimeString, 'Y-n-j H:i:s')){
+			$wrongDatetime = date_create_from_format('Y-n-j H:i:s', $wrongDatetimeString);
+			$correctDatetime = DATE_FORMAT($wrongDatetime,'Y-m-d H:i:s');
+			return $correctDatetime;
+		}
+		if(validateDatetimeWithFormat($wrongDatetimeString, 'Y-n-j H:i')){
+			$wrongDatetime = date_create_from_format('Y-n-j H:i', $wrongDatetimeString);
+			$correctDatetime = DATE_FORMAT($wrongDatetime,'Y-m-d H:i:s');
+			return $correctDatetime;
+		}
+		if (validateDatetimeWithFormat($wrongDatetimeString, 'j-n-Y H:i:s')){
+			$wrongDatetime = date_create_from_format('j-n-Y H:i:s', $wrongDatetimeString);
+			$correctDatetime = DATE_FORMAT($wrongDatetime,'Y-m-d H:i:s');
+			return $correctDatetime;
+		}
+		if (validateDatetimeWithFormat($wrongDatetimeString, 'j-n-Y H:i')){
+			$wrongDatetime = date_create_from_format('j-n-Y H:i', $wrongDatetimeString);
+			$correctDatetime = DATE_FORMAT($wrongDatetime,'Y-m-d H:i:s');
+			return $correctDatetime;
+		}
+		if (validateDatetimeWithFormat($wrongDatetimeString, 'j-M-Y H:i:s')){
+			$wrongDatetime = date_create_from_format('j-M-Y H:i:s', $wrongDatetimeString);
+			$correctDatetime = DATE_FORMAT($wrongDatetime,'Y-m-d H:i:s');
+			return $correctDatetime;
+		}
+		if (validateDatetimeWithFormat($wrongDatetimeString, 'j-M-Y H:i')){
+			$wrongDatetime = date_create_from_format('j-M-Y H:i', $wrongDatetimeString);
+			$correctDatetime = DATE_FORMAT($wrongDatetime,'Y-m-d H:i:s');
+			return $correctDatetime;
+		}
+		if (validateDatetimeWithFormat($wrongDatetimeString, 'j-F-Y H:i:s')){
+			$wrongDatetime = date_create_from_format('j-F-Y H:i:s', $wrongDatetimeString);
+			$correctDatetime = DATE_FORMAT($wrongDatetime,'Y-m-d H:i:s');
+			return $correctDatetime;
+		}
+		if (validateDatetimeWithFormat($wrongDatetimeString, 'j-F-Y H:i')){
+			$wrongDatetime = date_create_from_format('j-F-Y H:i', $wrongDatetimeString);
+			$correctDatetime = DATE_FORMAT($wrongDatetime,'Y-m-d H:i:s');
+			return $correctDatetime;
+		}
+		if (validateDatetimeWithFormat($wrongDatetimeString, 'jS-F-Y H:i:s')){
+			$wrongDatetime = date_create_from_format('jS-F-Y H:i:s', $wrongDatetimeString);
+			$correctDatetime = DATE_FORMAT($wrongDatetime,'Y-m-d H:i:s');
+			return $correctDatetime;
+		}
+		if (validateDatetimeWithFormat($wrongDatetimeString, 'jS-F-Y H:i')){
+			$wrongDatetime = date_create_from_format('jS-F-Y H:i', $wrongDatetimeString);
+			$correctDatetime = DATE_FORMAT($wrongDatetime,'Y-m-d H:i:s');
+			return $correctDatetime;
+		}
+		if (validateDatetimeWithFormat($wrongDatetimeString, 'F-j-Y H:i:s')){
+			$wrongDatetime = date_create_from_format('F-j-Y H:i:s', $wrongDatetimeString);
+			$correctDatetime = DATE_FORMAT($wrongDatetime,'Y-m-d H:i:s');
+			return $correctDatetime;
+		}
+		if (validateDatetimeWithFormat($wrongDatetimeString, 'F-j-Y H:i')){
+			$wrongDatetime = date_create_from_format('F-j-Y H:i', $wrongDatetimeString);
+			$correctDatetime = DATE_FORMAT($wrongDatetime,'Y-m-d H:i:s');
+			return $correctDatetime;
+		}
+		if (validateDatetimeWithFormat($wrongDatetimeString, 'F-jS-Y H:i:s')){
+			$wrongDatetime = date_create_from_format('F-jS-Y H:i:s', $wrongDatetimeString);
+			$correctDatetime = DATE_FORMAT($wrongDatetime,'Y-m-d H:i:s');
+			return $correctDatetime;
+		}
+		if (validateDatetimeWithFormat($wrongDatetimeString, 'F-jS-Y H:i')){
+			$wrongDatetime = date_create_from_format('F-jS-Y H:i', $wrongDatetimeString);
+			$correctDatetime = DATE_FORMAT($wrongDatetime,'Y-m-d H:i:s');
+			return $correctDatetime;
+		}		
+	} elseif(!$timeExists){
+		$wrongDatetimeString = $datePartWithNoSpacesOrLeadingZeros;
 
-	if (validateDatetimeWithFormat($wrongDatetimeString, 'j-M-Y H:i:s')){
-		$wrongDatetime = date_create_from_format('j-M-Y H:i:s', $wrongDatetimeString);
-		$correctDatetime = DATE_FORMAT($wrongDatetime,'Y-m-d H:i:s');
-		return $correctDatetime;
-	}
-	if (validateDatetimeWithFormat($wrongDatetimeString, 'j-M-Y H:i')){
-		$wrongDatetime = date_create_from_format('j-M-Y H:i', $wrongDatetimeString);
-		$correctDatetime = DATE_FORMAT($wrongDatetime,'Y-m-d H:i:s');
-		return $correctDatetime;
-	}
-	if (validateDatetimeWithFormat($wrongDatetimeString, 'j-M-Y H')){
-		$wrongDatetime = date_create_from_format('j-M-Y H', $wrongDatetimeString);
-		$correctDatetime = DATE_FORMAT($wrongDatetime,'Y-m-d H:i:s');
-		return $correctDatetime;
-	}
-
-	if (validateDatetimeWithFormat($wrongDatetimeString, 'j-M-Y')){	
-		$wrongDatetime = date_create_from_format('j-M-Y', $wrongDatetimeString);
-		$correctDatetime = DATE_FORMAT($wrongDatetime,'Y-m-d H:i:s');
-		return $correctDatetime;
-	}
-
-	if (validateDatetimeWithFormat($wrongDatetimeString, 'j-F-Y H:i:s')){
-		$wrongDatetime = date_create_from_format('j-F-Y H:i:s', $wrongDatetimeString);
-		$correctDatetime = DATE_FORMAT($wrongDatetime,'Y-m-d H:i:s');
-		return $correctDatetime;
-	}
-	if (validateDatetimeWithFormat($wrongDatetimeString, 'j-F-Y H:i')){
-		$wrongDatetime = date_create_from_format('j-F-Y H:i', $wrongDatetimeString);
-		$correctDatetime = DATE_FORMAT($wrongDatetime,'Y-m-d H:i:s');
-		return $correctDatetime;
-	}
-	if (validateDatetimeWithFormat($wrongDatetimeString, 'j-F-Y H')){
-		$wrongDatetime = date_create_from_format('j-F-Y H', $wrongDatetimeString);
-		$correctDatetime = DATE_FORMAT($wrongDatetime,'Y-m-d H:i:s');
-		return $correctDatetime;
-	}
-	if (validateDatetimeWithFormat($wrongDatetimeString, 'j-F-Y')){
-		$wrongDatetime = date_create_from_format('j-F-Y', $wrongDatetimeString);
-		$correctDatetime = DATE_FORMAT($wrongDatetime,'Y-m-d H:i:s');
-		return $correctDatetime;
-	}
-
-	if (validateDatetimeWithFormat($wrongDatetimeString, 'jS-F-Y H:i:s')){
-		$wrongDatetime = date_create_from_format('jS-F-Y H:i:s', $wrongDatetimeString);
-		$correctDatetime = DATE_FORMAT($wrongDatetime,'Y-m-d H:i:s');
-		return $correctDatetime;
-	}
-	if (validateDatetimeWithFormat($wrongDatetimeString, 'jS-F-Y H:i')){
-		$wrongDatetime = date_create_from_format('jS-F-Y H:i', $wrongDatetimeString);
-		$correctDatetime = DATE_FORMAT($wrongDatetime,'Y-m-d H:i:s');
-		return $correctDatetime;
-	}
-	if (validateDatetimeWithFormat($wrongDatetimeString, 'jS-F-Y H')){
-		$wrongDatetime = date_create_from_format('jS-F-Y H', $wrongDatetimeString);
-		$correctDatetime = DATE_FORMAT($wrongDatetime,'Y-m-d H:i:s');
-		return $correctDatetime;
-	}
-	if (validateDatetimeWithFormat($wrongDatetimeString, 'jS-F-Y')){
-		$wrongDatetime = date_create_from_format('jS-F-Y', $wrongDatetimeString);
-		$correctDatetime = DATE_FORMAT($wrongDatetime,'Y-m-d H:i:s');
-		return $correctDatetime;
-	}
-
-	if (validateDatetimeWithFormat($wrongDatetimeString, 'F-j-Y H:i:s')){
-		$wrongDatetime = date_create_from_format('F-j-Y H:i:s', $wrongDatetimeString);
-		$correctDatetime = DATE_FORMAT($wrongDatetime,'Y-m-d H:i:s');
-		return $correctDatetime;
-	}
-	if (validateDatetimeWithFormat($wrongDatetimeString, 'F-j-Y H:i')){
-		$wrongDatetime = date_create_from_format('F-j-Y H:i', $wrongDatetimeString);
-		$correctDatetime = DATE_FORMAT($wrongDatetime,'Y-m-d H:i:s');
-		return $correctDatetime;
-	}
-	if (validateDatetimeWithFormat($wrongDatetimeString, 'F-j-Y H')){
-		$wrongDatetime = date_create_from_format('F-j-Y H', $wrongDatetimeString);
-		$correctDatetime = DATE_FORMAT($wrongDatetime,'Y-m-d H:i:s');
-		return $correctDatetime;
-	}
-	if (validateDatetimeWithFormat($wrongDatetimeString, 'F-j-Y')){
-		$wrongDatetime = date_create_from_format('F-j-Y', $wrongDatetimeString);
-		$correctDatetime = DATE_FORMAT($wrongDatetime,'Y-m-d H:i:s');
-		return $correctDatetime;
-	}
-
-	if (validateDatetimeWithFormat($wrongDatetimeString, 'F-jS-Y H:i:s')){
-		$wrongDatetime = date_create_from_format('F-jS-Y H:i:s', $wrongDatetimeString);
-		$correctDatetime = DATE_FORMAT($wrongDatetime,'Y-m-d H:i:s');
-		return $correctDatetime;
-	}
-	if (validateDatetimeWithFormat($wrongDatetimeString, 'F-jS-Y H:i')){
-		$wrongDatetime = date_create_from_format('F-jS-Y H:i', $wrongDatetimeString);
-		$correctDatetime = DATE_FORMAT($wrongDatetime,'Y-m-d H:i:s');
-		return $correctDatetime;
-	}
-	if (validateDatetimeWithFormat($wrongDatetimeString, 'F-jS-Y H')){
-		$wrongDatetime = date_create_from_format('F-jS-Y H', $wrongDatetimeString);
-		$correctDatetime = DATE_FORMAT($wrongDatetime,'Y-m-d H:i:s');
-		return $correctDatetime;
-	}
-	if (validateDatetimeWithFormat($wrongDatetimeString, 'F-jS-Y')){
-		$wrongDatetime = date_create_from_format('F-jS-Y', $wrongDatetimeString);
-		$correctDatetime = DATE_FORMAT($wrongDatetime,'Y-m-d H:i:s');
-		return $correctDatetime;
+		if(validateDatetimeWithFormat($wrongDatetimeString, 'Y-n-j')){
+			$wrongDatetime = date_create_from_format('Y-n-j', $wrongDatetimeString);
+			$correctDatetime = DATE_FORMAT($wrongDatetime,'Y-m-d H:i:s');
+			return $correctDatetime;
+		}
+		if (validateDatetimeWithFormat($wrongDatetimeString, 'j-n-Y')){	
+			$wrongDatetime = date_create_from_format('j-n-Y', $wrongDatetimeString);
+			$correctDatetime = DATE_FORMAT($wrongDatetime,'Y-m-d H:i:s');
+			return $correctDatetime;
+		}
+		if (validateDatetimeWithFormat($wrongDatetimeString, 'j-M-Y')){	
+			$wrongDatetime = date_create_from_format('j-M-Y', $wrongDatetimeString);
+			$correctDatetime = DATE_FORMAT($wrongDatetime,'Y-m-d H:i:s');
+			return $correctDatetime;
+		}
+		if (validateDatetimeWithFormat($wrongDatetimeString, 'j-F-Y')){
+			$wrongDatetime = date_create_from_format('j-F-Y', $wrongDatetimeString);
+			$correctDatetime = DATE_FORMAT($wrongDatetime,'Y-m-d H:i:s');
+			return $correctDatetime;
+		}
+		if (validateDatetimeWithFormat($wrongDatetimeString, 'jS-F-Y')){
+			$wrongDatetime = date_create_from_format('jS-F-Y', $wrongDatetimeString);
+			$correctDatetime = DATE_FORMAT($wrongDatetime,'Y-m-d H:i:s');
+			return $correctDatetime;
+		}
+		if (validateDatetimeWithFormat($wrongDatetimeString, 'F-j-Y')){
+			$wrongDatetime = date_create_from_format('F-j-Y', $wrongDatetimeString);
+			$correctDatetime = DATE_FORMAT($wrongDatetime,'Y-m-d H:i:s');
+			return $correctDatetime;
+		}
+		if (validateDatetimeWithFormat($wrongDatetimeString, 'F-jS-Y')){
+			$wrongDatetime = date_create_from_format('F-jS-Y', $wrongDatetimeString);
+			$correctDatetime = DATE_FORMAT($wrongDatetime,'Y-m-d H:i:s');
+			return $correctDatetime;
+		}
 	}
 
 	// If no valid hit, return FALSE
