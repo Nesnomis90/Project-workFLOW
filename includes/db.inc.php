@@ -311,8 +311,8 @@ function create_tables(){
 					  `subject` varchar(255) NOT NULL,
 					  `message` text NOT NULL,
 					  `receivers` text NOT NULL,
-					  `dateTimeAdded` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
-					  `dateTimeRemove` datetime DEFAULT NULL,
+					  `dateTimeAdded` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+					  `dateTimeRemove` timestamp DEFAULT NULL,
 					  PRIMARY KEY (`emailID`)
 					) ENGINE=InnoDB DEFAULT CHARSET=utf8");
 
@@ -703,6 +703,77 @@ function create_tables(){
 						  `datetimeAdded` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
 						  PRIMARY KEY (`EquipmentID`),
 						  UNIQUE KEY `name_UNIQUE` (`name`)
+						) ENGINE=InnoDB DEFAULT CHARSET=utf8");
+
+			//	Add the creation to log event
+			$sqlLog = '	INSERT INTO `logevent`(`actionID`, `description`) 
+						VALUES 		(
+										(
+										SELECT 	`actionID` 
+										FROM 	`logaction`
+										WHERE 	`name` = "Table Created"
+										), 
+									"The table ' . $table . ' was created automatically by the PHP script.\nThis should only occur once, at the very start of the log events."
+									)';
+			$logEventArray[] = $sqlLog;
+
+			$totaltime = microtime(true) - $_SERVER["REQUEST_TIME_FLOAT"];
+			$time = $totaltime - $prevtime;
+			$prevtime = $totaltime;
+			echo '<b>Execution time for creating table ' . $table. ':</b> ' . $time . 's<br />';
+		} else { 
+			echo '<b>Table ' . $table. ' already exists</b>.<br />';
+		}
+
+			//Equipment for meeting rooms
+		$table = 'extra';
+		//Check if table already exists
+		if(!tableExists($conn, $table)){
+			$conn->exec("CREATE TABLE IF NOT EXISTS `$table` (
+						  `extraID` int(10) unsigned NOT NULL AUTO_INCREMENT,
+						  `name` varchar(255) NOT NULL,
+						  `description` text NOT NULL,
+						  `price` smallint(5) unsigned NOT NULL DEFAULT '0',
+						  `isAlternative` tinyint(1) unsigned NOT NULL DEFAULT '0',
+						  `dateTimeAdded` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+						  PRIMARY KEY (`extraID`),
+						  UNIQUE KEY `name_UNIQUE` (`name`)
+						) ENGINE=InnoDB DEFAULT CHARSET=utf8");
+
+			//	Add the creation to log event
+			$sqlLog = '	INSERT INTO `logevent`(`actionID`, `description`) 
+						VALUES 		(
+										(
+										SELECT 	`actionID` 
+										FROM 	`logaction`
+										WHERE 	`name` = "Table Created"
+										), 
+									"The table ' . $table . ' was created automatically by the PHP script.\nThis should only occur once, at the very start of the log events."
+									)';
+			$logEventArray[] = $sqlLog;
+
+			$totaltime = microtime(true) - $_SERVER["REQUEST_TIME_FLOAT"];
+			$time = $totaltime - $prevtime;
+			$prevtime = $totaltime;
+			echo '<b>Execution time for creating table ' . $table. ':</b> ' . $time . 's<br />';
+		} else { 
+			echo '<b>Table ' . $table. ' already exists</b>.<br />';
+		}
+
+			//Equipment for meeting rooms
+		$table = 'extraorders';
+		//Check if table already exists
+		if(!tableExists($conn, $table)){
+			$conn->exec("CREATE TABLE IF NOT EXISTS `$table` (
+						  `extraID` int(10) unsigned NOT NULL,
+						  `bookingID` int(10) unsigned NOT NULL,
+						  `amount` tinyint(3) unsigned NOT NULL DEFAULT '1',
+						  `approvedForPurchase` tinyint(1) unsigned NOT NULL DEFAULT '0',
+						  `purchased` tinyint(1) unsigned NOT NULL DEFAULT '0',
+						  PRIMARY KEY (`extraID`,`bookingID`),
+						  KEY `FK_BookingID_idx` (`bookingID`),
+						  CONSTRAINT `FK_BookingID` FOREIGN KEY (`bookingID`) REFERENCES `booking` (`bookingID`) ON DELETE CASCADE ON UPDATE CASCADE,
+						  CONSTRAINT `FK_ExtraID` FOREIGN KEY (`extraID`) REFERENCES `extra` (`extraID`) ON DELETE CASCADE ON UPDATE CASCADE
 						) ENGINE=InnoDB DEFAULT CHARSET=utf8");
 
 			//	Add the creation to log event
