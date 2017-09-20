@@ -145,6 +145,7 @@ function fillAccessLevel($pdo){
 		$pdo->exec("INSERT INTO `accesslevel`(`AccessName`, `Description`) VALUES ('Admin', 'Full access to all website pages, company information and user information.')");
 		$pdo->exec("INSERT INTO `accesslevel`(`AccessName`, `Description`) VALUES ('In-House User', 'Access to assign a booking code and use it to book meeting(s) locally.')");
 		$pdo->exec("INSERT INTO `accesslevel`(`AccessName`, `Description`) VALUES ('Normal User', 'Access to browse meeting room schedules, with limited information, and create meeting(s) with an active company connection.')");
+		$pdo->exec("INSERT INTO `accesslevel`(`AccessName`, `Description`) VALUES ('Kitchen Staff', 'Access to browse meeting room schedules and see what has been ordered.')");
 
 		// Commit the transaction
 		$pdo->commit();
@@ -725,7 +726,7 @@ function create_tables(){
 			echo '<b>Table ' . $table. ' already exists</b>.<br />';
 		}
 
-			//Equipment for meeting rooms
+			//extras users can choose from to order
 		$table = 'extra';
 		//Check if table already exists
 		if(!tableExists($conn, $table)){
@@ -736,6 +737,7 @@ function create_tables(){
 						  `price` smallint(5) unsigned NOT NULL DEFAULT '0',
 						  `isAlternative` tinyint(1) unsigned NOT NULL DEFAULT '0',
 						  `dateTimeAdded` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+						  `dateTimeUpdated` timestamp NULL DEFAULT NULL,
 						  PRIMARY KEY (`extraID`),
 						  UNIQUE KEY `name_UNIQUE` (`name`)
 						) ENGINE=InnoDB DEFAULT CHARSET=utf8");
@@ -760,20 +762,62 @@ function create_tables(){
 			echo '<b>Table ' . $table. ' already exists</b>.<br />';
 		}
 
-			//Equipment for meeting rooms
+			//the order describing what extra items the user wants for their booked meeting
+		$table = 'orders';
+		//Check if table already exists
+		if(!tableExists($conn, $table)){
+			$conn->exec("CREATE TABLE IF NOT EXISTS `$table` (
+						  `orderID` int(10) unsigned NOT NULL AUTO_INCREMENT,
+						  `orderDescription` text,
+						  `orderFeedback` text,
+						  `dateTimeCreated` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+						  `dateTimeUpdated` timestamp NULL DEFAULT NULL,
+						  `orderApprovedByUser` tinyint(1) unsigned NOT NULL DEFAULT '1',
+						  `orderApprovedByAdmin` tinyint(1) unsigned NOT NULL DEFAULT '0',
+						  `orderApprovedByStaff` tinyint(1) unsigned NOT NULL DEFAULT '0',
+						  `approvedByUserID` int(10) unsigned DEFAULT NULL,
+						  `dateTimeApproved` timestamp NULL DEFAULT NULL,
+						  PRIMARY KEY (`orderID`),
+						  KEY `FK_UserID3_idx` (`approvedByUserID`),
+						  CONSTRAINT `FK_UserID3` FOREIGN KEY (`approvedByUserID`) REFERENCES `user` (`userID`) ON DELETE SET NULL ON UPDATE CASCADE
+						) ENGINE=InnoDB DEFAULT CHARSET=utf8");
+
+			//	Add the creation to log event
+			$sqlLog = '	INSERT INTO `logevent`(`actionID`, `description`) 
+						VALUES 		(
+										(
+										SELECT 	`actionID` 
+										FROM 	`logaction`
+										WHERE 	`name` = "Table Created"
+										), 
+									"The table ' . $table . ' was created automatically by the PHP script.\nThis should only occur once, at the very start of the log events."
+									)';
+			$logEventArray[] = $sqlLog;
+
+			$totaltime = microtime(true) - $_SERVER["REQUEST_TIME_FLOAT"];
+			$time = $totaltime - $prevtime;
+			$prevtime = $totaltime;
+			echo '<b>Execution time for creating table ' . $table. ':</b> ' . $time . 's<br />';
+		} else { 
+			echo '<b>Table ' . $table. ' already exists</b>.<br />';
+		}		
+		
+			//extras in the order made
 		$table = 'extraorders';
 		//Check if table already exists
 		if(!tableExists($conn, $table)){
 			$conn->exec("CREATE TABLE IF NOT EXISTS `$table` (
 						  `extraID` int(10) unsigned NOT NULL,
-						  `bookingID` int(10) unsigned NOT NULL,
+						  `orderID` int(10) unsigned NOT NULL,
 						  `amount` tinyint(3) unsigned NOT NULL DEFAULT '1',
 						  `approvedForPurchase` tinyint(1) unsigned NOT NULL DEFAULT '0',
 						  `purchased` tinyint(1) unsigned NOT NULL DEFAULT '0',
-						  PRIMARY KEY (`extraID`,`bookingID`),
-						  KEY `FK_BookingID_idx` (`bookingID`),
-						  CONSTRAINT `FK_BookingID` FOREIGN KEY (`bookingID`) REFERENCES `booking` (`bookingID`) ON DELETE CASCADE ON UPDATE CASCADE,
-						  CONSTRAINT `FK_ExtraID` FOREIGN KEY (`extraID`) REFERENCES `extra` (`extraID`) ON DELETE CASCADE ON UPDATE CASCADE
+						  `alternativePrice` smallint(5) unsigned DEFAULT NULL,
+						  `alternativeDescription` text,
+						  PRIMARY KEY (`extraID`,`orderID`),
+						  KEY `FK_OrderID2_idx` (`orderID`),
+						  CONSTRAINT `FK_ExtraID` FOREIGN KEY (`extraID`) REFERENCES `extra` (`extraID`) ON DELETE CASCADE ON UPDATE CASCADE,
+						  CONSTRAINT `FK_OrderID2` FOREIGN KEY (`orderID`) REFERENCES `orders` (`orderID`) ON DELETE CASCADE ON UPDATE CASCADE
 						) ENGINE=InnoDB DEFAULT CHARSET=utf8");
 
 			//	Add the creation to log event
