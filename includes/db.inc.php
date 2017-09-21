@@ -806,8 +806,8 @@ function create_tables(){
 			echo '<b>Execution time for creating table ' . $table. ':</b> ' . $time . 's<br />';
 		} else { 
 			echo '<b>Table ' . $table. ' already exists</b>.<br />';
-		}		
-		
+		}
+
 			//extras in the order made
 		$table = 'extraorders';
 		//Check if table already exists
