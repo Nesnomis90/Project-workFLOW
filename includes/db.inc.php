@@ -781,6 +781,8 @@ function create_tables(){
 						  `orderApprovedByStaff` tinyint(1) unsigned NOT NULL DEFAULT '0',
 						  `approvedByUserID` int(10) unsigned DEFAULT NULL,
 						  `dateTimeApproved` timestamp NULL DEFAULT NULL,
+						  `priceCharged` smallint(5) unsigned DEFAULT NULL,
+						  `adminNote` text,
 						  PRIMARY KEY (`orderID`),
 						  KEY `FK_UserID3_idx` (`approvedByUserID`),
 						  CONSTRAINT `FK_UserID3` FOREIGN KEY (`approvedByUserID`) REFERENCES `user` (`userID`) ON DELETE SET NULL ON UPDATE CASCADE
@@ -814,14 +816,20 @@ function create_tables(){
 						  `extraID` int(10) unsigned NOT NULL,
 						  `orderID` int(10) unsigned NOT NULL,
 						  `amount` tinyint(3) unsigned NOT NULL DEFAULT '1',
-						  `approvedForPurchase` tinyint(1) unsigned NOT NULL DEFAULT '0',
-						  `purchased` tinyint(1) unsigned NOT NULL DEFAULT '0',
+						  `approvedForPurchase` timestamp NULL DEFAULT NULL,
+						  `approvedByUserID` int(10) unsigned DEFAULT NULL,
+						  `purchased` timestamp NULL DEFAULT NULL,
+						  `purchasedByUserID` int(10) unsigned DEFAULT NULL,
 						  `alternativePrice` smallint(5) unsigned DEFAULT NULL,
 						  `alternativeDescription` text,
 						  PRIMARY KEY (`extraID`,`orderID`),
 						  KEY `FK_OrderID2_idx` (`orderID`),
+						  KEY `FK_UserID5_idx` (`approvedByUserID`),
+						  KEY `FK_UserID6_idx` (`purchasedByUserID`),
 						  CONSTRAINT `FK_ExtraID` FOREIGN KEY (`extraID`) REFERENCES `extra` (`extraID`) ON DELETE CASCADE ON UPDATE CASCADE,
-						  CONSTRAINT `FK_OrderID2` FOREIGN KEY (`orderID`) REFERENCES `orders` (`orderID`) ON DELETE CASCADE ON UPDATE CASCADE
+						  CONSTRAINT `FK_OrderID2` FOREIGN KEY (`orderID`) REFERENCES `orders` (`orderID`) ON DELETE CASCADE ON UPDATE CASCADE,
+						  CONSTRAINT `FK_UserID5` FOREIGN KEY (`approvedByUserID`) REFERENCES `user` (`userID`) ON DELETE SET NULL ON UPDATE CASCADE,
+						  CONSTRAINT `FK_UserID6` FOREIGN KEY (`purchasedByUserID`) REFERENCES `user` (`userID`) ON DELETE SET NULL ON UPDATE CASCADE
 						) ENGINE=InnoDB DEFAULT CHARSET=utf8");
 
 			//	Add the creation to log event
