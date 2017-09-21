@@ -197,7 +197,6 @@ function fillLogAction($pdo){
 		$pdo->exec("INSERT INTO `logaction`(`name`,`description`) VALUES ('Booking Created','The referenced user created a new meeting room booking.')");
 		$pdo->exec("INSERT INTO `logaction`(`name`,`description`) VALUES ('Booking Cancelled','The referenced user cancelled a meeting room booking.')");
 		$pdo->exec("INSERT INTO `logaction`(`name`,`description`) VALUES ('Booking Completed','The referenced booking has been completed.')");
-		//$pdo->exec("INSERT INTO `logaction`(`name`,`description`) VALUES ('Booking Removed', 'The referenced booking was removed.')");
 		$pdo->exec("INSERT INTO `logaction`(`name`,`description`) VALUES ('Company Created','The referenced user just created the referenced company.')");
 		$pdo->exec("INSERT INTO `logaction`(`name`,`description`) VALUES ('Company Removed','The referenced company has been removed.')");
 		$pdo->exec("INSERT INTO `logaction`(`name`,`description`) VALUES ('Company Merged','The referenced companies has been merged together.')");
@@ -213,8 +212,12 @@ function fillLogAction($pdo){
 		$pdo->exec("INSERT INTO `logaction`(`name`,`description`) VALUES ('Equipment Removed','The referenced equipment was removed.')");
 		$pdo->exec("INSERT INTO `logaction`(`name`,`description`) VALUES ('Event Created', 'The referenced event was created for the referenced week(s).')");
 		$pdo->exec("INSERT INTO `logaction`(`name`,`description`) VALUES ('Event Removed', 'The referenced event and all its scheduled week(s) were removed.')");
+		$pdo->exec("INSERT INTO `logaction`(`name`,`description`) VALUES ('Extra Added', 'The referenced extra was added.')");
+		$pdo->exec("INSERT INTO `logaction`(`name`,`description`) VALUES ('Extra Removed', 'The referenced extra was removed.')");
 		$pdo->exec("INSERT INTO `logaction`(`name`,`description`) VALUES ('Meeting Room Added', 'The referenced meeting room was added.')");
 		$pdo->exec("INSERT INTO `logaction`(`name`,`description`) VALUES ('Meeting Room Removed', 'The referenced meeting room was removed.')");
+		$pdo->exec("INSERT INTO `logaction`(`name`,`description`) VALUES ('Order Cancelled', 'The referenced order was cancelled.')");
+		$pdo->exec("INSERT INTO `logaction`(`name`,`description`) VALUES ('Order Created', 'The referenced order was created.')");
 		$pdo->exec("INSERT INTO `logaction`(`name`,`description`) VALUES ('Room Equipment Added', 'The referenced equipment was added into the referenced meeting room with the referenced amount.')");
 		$pdo->exec("INSERT INTO `logaction`(`name`,`description`) VALUES ('Room Equipment Removed', 'The referenced equipment was removed from the referenced meeting room.')");
 
@@ -273,7 +276,8 @@ function fillUser($pdo){
 
 // Function to see if database table exists
 function tableExists($pdo, $table){
-	try {
+	try
+	{
 		// Run a SELECT query on the selected table
 		$result = $pdo->query("SELECT 1 FROM $table LIMIT 1");
 		// The result will either be FALSE (no table found) or a PDOSTATEMENT Object (table found)
@@ -777,6 +781,8 @@ function create_tables(){
 						  `orderApprovedByStaff` tinyint(1) unsigned NOT NULL DEFAULT '0',
 						  `approvedByUserID` int(10) unsigned DEFAULT NULL,
 						  `dateTimeApproved` timestamp NULL DEFAULT NULL,
+						  `priceCharged` smallint(5) unsigned DEFAULT NULL,
+						  `adminNote` text,
 						  PRIMARY KEY (`orderID`),
 						  KEY `FK_UserID3_idx` (`approvedByUserID`),
 						  CONSTRAINT `FK_UserID3` FOREIGN KEY (`approvedByUserID`) REFERENCES `user` (`userID`) ON DELETE SET NULL ON UPDATE CASCADE
@@ -800,8 +806,8 @@ function create_tables(){
 			echo '<b>Execution time for creating table ' . $table. ':</b> ' . $time . 's<br />';
 		} else { 
 			echo '<b>Table ' . $table. ' already exists</b>.<br />';
-		}		
-		
+		}
+
 			//extras in the order made
 		$table = 'extraorders';
 		//Check if table already exists
@@ -810,14 +816,20 @@ function create_tables(){
 						  `extraID` int(10) unsigned NOT NULL,
 						  `orderID` int(10) unsigned NOT NULL,
 						  `amount` tinyint(3) unsigned NOT NULL DEFAULT '1',
-						  `approvedForPurchase` tinyint(1) unsigned NOT NULL DEFAULT '0',
-						  `purchased` tinyint(1) unsigned NOT NULL DEFAULT '0',
+						  `approvedForPurchase` timestamp NULL DEFAULT NULL,
+						  `approvedByUserID` int(10) unsigned DEFAULT NULL,
+						  `purchased` timestamp NULL DEFAULT NULL,
+						  `purchasedByUserID` int(10) unsigned DEFAULT NULL,
 						  `alternativePrice` smallint(5) unsigned DEFAULT NULL,
 						  `alternativeDescription` text,
 						  PRIMARY KEY (`extraID`,`orderID`),
 						  KEY `FK_OrderID2_idx` (`orderID`),
+						  KEY `FK_UserID5_idx` (`approvedByUserID`),
+						  KEY `FK_UserID6_idx` (`purchasedByUserID`),
 						  CONSTRAINT `FK_ExtraID` FOREIGN KEY (`extraID`) REFERENCES `extra` (`extraID`) ON DELETE CASCADE ON UPDATE CASCADE,
-						  CONSTRAINT `FK_OrderID2` FOREIGN KEY (`orderID`) REFERENCES `orders` (`orderID`) ON DELETE CASCADE ON UPDATE CASCADE
+						  CONSTRAINT `FK_OrderID2` FOREIGN KEY (`orderID`) REFERENCES `orders` (`orderID`) ON DELETE CASCADE ON UPDATE CASCADE,
+						  CONSTRAINT `FK_UserID5` FOREIGN KEY (`approvedByUserID`) REFERENCES `user` (`userID`) ON DELETE SET NULL ON UPDATE CASCADE,
+						  CONSTRAINT `FK_UserID6` FOREIGN KEY (`purchasedByUserID`) REFERENCES `user` (`userID`) ON DELETE SET NULL ON UPDATE CASCADE
 						) ENGINE=InnoDB DEFAULT CHARSET=utf8");
 
 			//	Add the creation to log event

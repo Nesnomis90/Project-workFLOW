@@ -17,6 +17,7 @@ require_once 'adminnavcheck.inc.php';
 		<li><a href="/admin/employees">Employees</a></li>
 		<li><a href="/admin/equipment">Equipment</a></li>
 		<li><a href="/admin/events">Events</a></li>
+		<li><a href="/admin/extra">Events</a></li>
 		<li><a href="/admin/logevents">Log Events</a></li>
 		<li><a href="/admin/meetingrooms">Meeting Rooms</a></li>
 		<li><a href="/admin/roomequipment">Room Equipment</a></li>

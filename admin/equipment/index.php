@@ -110,8 +110,7 @@ function validateUserInputs(){
 
 			$row = $s->fetch();
 
-			if ($row[0] > 0)
-			{
+			if($row[0] > 0){
 				// This name is already being used for an equipment
 				$_SESSION['AddEquipmentError'] = "There is already an equipment with the name: " . $validatedEquipmentName . "!";
 				$invalidInput = TRUE;

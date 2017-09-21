@@ -20,7 +20,6 @@ $checkboxes = array(
 						array('Booking Cancelled', 				'Booking Cancelled', 		FALSE, 			FALSE),
 						array('Booking Completed', 				'Booking Completed', 		FALSE, 			FALSE),
 						array('Booking Created', 				'Booking Created', 			TRUE, 			FALSE),
-						//array('Booking Removed', 				'Booking Removed', 			TRUE, 			FALSE),
 						array('Company Created', 				'Company Created', 			FALSE, 			FALSE),
 						array('Company Merged', 				'Company Merged', 			FALSE, 			FALSE),
 						array('Company Removed', 				'Company Removed', 			FALSE, 			FALSE),
@@ -36,8 +35,12 @@ $checkboxes = array(
 						array('Equipment Removed', 				'Equipment Removed', 		TRUE, 			FALSE),
 						array('Event Created', 					'Event Created', 			FALSE,			FALSE),
 						array('Event Removed', 					'Event Removed', 			TRUE, 			FALSE),
+						array('Extra Added', 					'Extra Added', 				FALSE,			FALSE),
+						array('Extra Removed', 					'Extra Removed', 			TRUE, 			FALSE),
 						array('Meeting Room Added', 			'Meeting Room Added', 		FALSE, 			FALSE),
 						array('Meeting Room Removed', 			'Meeting Room Removed', 	TRUE, 			FALSE),
+						array('Order Cancelled', 				'Order Cancelled', 			FALSE, 			FALSE),
+						array('Order Created', 					'Order Created', 			TRUE, 			FALSE),
 						array('Room Equipment Added',			'Room Equipment Added',		FALSE, 			FALSE),
 						array('Room Equipment Removed', 		'Room Equipment Removed', 	TRUE, 			FALSE)
 					);
