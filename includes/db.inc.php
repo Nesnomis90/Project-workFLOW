@@ -197,7 +197,6 @@ function fillLogAction($pdo){
 		$pdo->exec("INSERT INTO `logaction`(`name`,`description`) VALUES ('Booking Created','The referenced user created a new meeting room booking.')");
 		$pdo->exec("INSERT INTO `logaction`(`name`,`description`) VALUES ('Booking Cancelled','The referenced user cancelled a meeting room booking.')");
 		$pdo->exec("INSERT INTO `logaction`(`name`,`description`) VALUES ('Booking Completed','The referenced booking has been completed.')");
-		//$pdo->exec("INSERT INTO `logaction`(`name`,`description`) VALUES ('Booking Removed', 'The referenced booking was removed.')");
 		$pdo->exec("INSERT INTO `logaction`(`name`,`description`) VALUES ('Company Created','The referenced user just created the referenced company.')");
 		$pdo->exec("INSERT INTO `logaction`(`name`,`description`) VALUES ('Company Removed','The referenced company has been removed.')");
 		$pdo->exec("INSERT INTO `logaction`(`name`,`description`) VALUES ('Company Merged','The referenced companies has been merged together.')");
@@ -213,8 +212,12 @@ function fillLogAction($pdo){
 		$pdo->exec("INSERT INTO `logaction`(`name`,`description`) VALUES ('Equipment Removed','The referenced equipment was removed.')");
 		$pdo->exec("INSERT INTO `logaction`(`name`,`description`) VALUES ('Event Created', 'The referenced event was created for the referenced week(s).')");
 		$pdo->exec("INSERT INTO `logaction`(`name`,`description`) VALUES ('Event Removed', 'The referenced event and all its scheduled week(s) were removed.')");
+		$pdo->exec("INSERT INTO `logaction`(`name`,`description`) VALUES ('Extra Added', 'The referenced extra was added.')");
+		$pdo->exec("INSERT INTO `logaction`(`name`,`description`) VALUES ('Extra Removed', 'The referenced extra was removed.')");
 		$pdo->exec("INSERT INTO `logaction`(`name`,`description`) VALUES ('Meeting Room Added', 'The referenced meeting room was added.')");
 		$pdo->exec("INSERT INTO `logaction`(`name`,`description`) VALUES ('Meeting Room Removed', 'The referenced meeting room was removed.')");
+		$pdo->exec("INSERT INTO `logaction`(`name`,`description`) VALUES ('Order Cancelled', 'The referenced order was cancelled.')");
+		$pdo->exec("INSERT INTO `logaction`(`name`,`description`) VALUES ('Order Created', 'The referenced order was created.')");
 		$pdo->exec("INSERT INTO `logaction`(`name`,`description`) VALUES ('Room Equipment Added', 'The referenced equipment was added into the referenced meeting room with the referenced amount.')");
 		$pdo->exec("INSERT INTO `logaction`(`name`,`description`) VALUES ('Room Equipment Removed', 'The referenced equipment was removed from the referenced meeting room.')");
 
@@ -273,7 +276,8 @@ function fillUser($pdo){
 
 // Function to see if database table exists
 function tableExists($pdo, $table){
-	try {
+	try
+	{
 		// Run a SELECT query on the selected table
 		$result = $pdo->query("SELECT 1 FROM $table LIMIT 1");
 		// The result will either be FALSE (no table found) or a PDOSTATEMENT Object (table found)
