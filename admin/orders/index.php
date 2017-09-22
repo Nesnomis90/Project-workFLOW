@@ -339,7 +339,7 @@ try
 							WHERE	`userID` = o.`approvedByUserID`
 							LIMIT 	1
 						)							AS OrderApprovedByUserName,
-						COUNT(eo.`extraID`)			AS OrderAmount,
+						COUNT(eo.`extraID`)			AS OrderExtraAmount,
 						b.`startDateTime`			AS OrderStartDateTime,
 						b.`endDateTime`				AS OrderEndDateTime,
 						b.`actualEndDateTime`		AS OrderBookingCompleted,
@@ -416,28 +416,46 @@ foreach($result AS $row){
 
 	$orderStatus = "N/A";
 
+	if($row['OrderPriceCharged'] != NULL){
+		$priceCharged = $row['OrderPriceCharged'];
+		$displayPriceCharged = convertToCurrency($priceCharged);
+	} else {
+		$displayPriceCharged = "N/A";
+	}
+
 	if($orderIsApproved){
 		if($row['OrderBookingCompleted'] != NULL){
 			$orderStatus = "Completed";
 		} elseif($row['DateTimeCancelled'] != NULL OR $row['OrderBookingCancelled'] != NULL){
 			$orderStatus = "Cancelled";
+		} else {
+			$orderStatus = "Approved";
 		}
 	} else {
-		$orderStatus = "Not Approved";
+		if($row['OrderBookingCompleted'] != NULL){
+			$orderStatus = "Ended without being approved.";
+		} elseif($row['DateTimeCancelled'] != NULL OR $row['OrderBookingCancelled'] != NULL){
+			$orderStatus = "Cancelled";
+		} else {
+			$orderStatus = "Not Approved";
+		}
 	}
-
 
 	// Create an array with the actual key/value pairs we want to use in our HTML
 	$order[] = array(
-							'TheOrderID' => $row['TheOrderID'],
-							'OrderStatus' => $orderStatus,
-							'OrderFeedback' => $row['OrderFeedback'],
-							'OrderPrice' => $displayPrice,
-							'OrderType' => $displayOrderType,
-							'DateTimeAdded' => $displayDateTimeAdded,
-							'DateTimeUpdated' => $displayDateTimeUpdated,
-							'OrderIsInThisManyActiveOrders' => $row['OrderIsInThisManyActiveOrders']
-						);
+						'TheOrderID' => $row['TheOrderID'],
+						'OrderStatus' => $orderStatus,
+						'OrderDescription' => $row['OrderDescription'],
+						'OrderFeedback' => $row['OrderFeedback'],
+						'OrderStartTime' => $displayDateTimeStart,
+						'OrderEndTime' => $displayDateTimeEnd,
+						'DateTimeCreated' => $displayDateTimeCreated,
+						'DateTimeUpdated' => $displayDateTimeUpdated,
+						'DateTimeCancelled' => $displayDateTimeCancelled,
+						'OrderExtraAmount' => $row['OrderExtraAmount'],
+						'OrderAdminNote' => $row['OrderAdminNote'],
+						'OrderPriceCharged' => $displayPriceCharged
+					);
 }
 
 var_dump($_SESSION); // TO-DO: remove after testing is done
