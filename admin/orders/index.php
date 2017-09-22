@@ -118,6 +118,7 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Edit') OR
 			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 			$pdo = connect_to_db();
 			$sql = "SELECT 		`orderID`				AS TheOrderID,
+								`orderDescription`		AS OrderDescription,
 								`orderFeedback`			AS OrderFeedback,
 								`orderApprovedByAdmin`	AS OrderApprovedByAdmin,
 								`orderApprovedByStaff` 	AS OrderApprovedByStaff,
@@ -152,22 +153,19 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Edit') OR
 		}
 		catch (PDOException $e)
 		{
-			$error = 'Error fetching meeting room details.';
+			$error = 'Error fetching order details.';
 			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
 			$pdo = null;
 			exit();
 		}
 	}
 
-	// Set always correct information
-	$pageTitle = 'Edit Order';
-	$button = 'Edit Order';	
-
 	// Set original values
-	$originalOrderName = $_SESSION['EditOrderOriginalInfo']['OrderName'];
 	$originalOrderFeedback = $_SESSION['EditOrderOriginalInfo']['OrderFeedback'];
 	$originalOrderAdminNote = $_SESSION['EditOrderOriginalInfo']['OrderAdminNote'];
 	$originalOrderIsApproved = $_SESSION['EditOrderOriginalInfo']['OrderIsApproved'];
+	$originalOrderDescription = $_SESSION['EditOrderOriginalInfo']['OrderDescription'];
+	$originalOrderContent = $_SESSION['EditOrderOriginalInfo']['OrderContent'];
 
 	var_dump($_SESSION); // TO-DO: remove after testing is done
 
@@ -321,38 +319,40 @@ try
 	include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 
 	$pdo = connect_to_db();
-	$sql = 'SELECT 		o.`orderID`					AS TheOrderID,
-						o.`orderDescription`		AS OrderDescription,
-						o.`orderFeedback`			AS OrderFeedback,
-						o.`dateTimeCreated`			AS DateTimeCreated,
-						o.`dateTimeUpdated`			AS DateTimeUpdated,
-						o.`dateTimeApproved`		AS DateTimeApproved,
-						o.`dateTimeCancelled`		AS DateTimeCancelled
-						o.`orderApprovedByUser`		AS OrderApprovedByUser,
-						o.`orderApprovedByAdmin`	AS OrderApprovedByAdmin,
-						o.`orderApprovedByStaff`	AS OrderApprovedByStaff,
-						o.`priceCharged`			AS OrderPriceCharged,
-						o.`adminNote`				AS OrderAdminNote,
+	$sql = 'SELECT 		o.`orderID`							AS TheOrderID,
+						o.`orderDescription`				AS OrderDescription,
+						o.`orderFeedback`					AS OrderFeedback,
+						o.`dateTimeCreated`					AS DateTimeCreated,
+						o.`dateTimeUpdated`					AS DateTimeUpdated,
+						o.`dateTimeApproved`				AS DateTimeApproved,
+						o.`dateTimeCancelled`				AS DateTimeCancelled,
+						o.`orderApprovedByUser`				AS OrderApprovedByUser,
+						o.`orderApprovedByAdmin`			AS OrderApprovedByAdmin,
+						o.`orderApprovedByStaff`			AS OrderApprovedByStaff,
+						o.`priceCharged`					AS OrderPriceCharged,
+						o.`adminNote`						AS OrderAdminNote,
 						(
 							SELECT 	CONCAT_WS(", ",`lastname`, `firstname`)
 							FROM	`user`
 							WHERE	`userID` = o.`approvedByUserID`
 							LIMIT 	1
-						)							AS OrderApprovedByUserName,
-						COUNT(eo.`extraID`)			AS OrderExtraAmount,
-						b.`startDateTime`			AS OrderStartDateTime,
-						b.`endDateTime`				AS OrderEndDateTime,
-						b.`actualEndDateTime`		AS OrderBookingCompleted,
-						b.`dateTimeCancelled`		AS OrderBookingCancelled,
+						)									AS OrderApprovedByUserName,
+						GROUP_CONCAT(ex.`name`, "\n")		AS OrderContent,
+						b.`startDateTime`					AS OrderStartDateTime,
+						b.`endDateTime`						AS OrderEndDateTime,
+						b.`actualEndDateTime`				AS OrderBookingCompleted,
+						b.`dateTimeCancelled`				AS OrderBookingCancelled,
 						(
 							SELECT 	`name`
 							FROM	`meetingroom`
 							WHERE	`meetingRoomID` = b.`meetingRoomID`
 							LIMIT 	1
-						)							AS OrderRoomName
+						)									AS OrderRoomName
 			FROM 		`orders` o
 			INNER JOIN	`extraorders` eo
 			ON 			eo.`orderID` = o.`orderID`
+			INNER JOIN 	`extra` ex
+			ON 			eo.`extraID` = ex.`extraID`
 			INNER JOIN	`booking` b
 			ON 			b.`orderID` = o.`orderID`
 			GROUP BY	o.`orderID`';
@@ -452,7 +452,7 @@ foreach($result AS $row){
 						'DateTimeCreated' => $displayDateTimeCreated,
 						'DateTimeUpdated' => $displayDateTimeUpdated,
 						'DateTimeCancelled' => $displayDateTimeCancelled,
-						'OrderExtraAmount' => $row['OrderExtraAmount'],
+						'OrderContent' => $row['OrderContent'],
 						'OrderAdminNote' => $row['OrderAdminNote'],
 						'OrderPriceCharged' => $displayPriceCharged
 					);
@@ -461,5 +461,5 @@ foreach($result AS $row){
 var_dump($_SESSION); // TO-DO: remove after testing is done
 
 // Create the Order list in HTML
-include_once 'order.html.php';
+include_once 'orders.html.php';
 ?>

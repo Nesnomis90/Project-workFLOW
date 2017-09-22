@@ -5,12 +5,12 @@
 		<meta charset="utf-8">
 		<link rel="stylesheet" type="text/css" href="/CSS/myCSS.css">
 		<script src="/scripts/myFunctions.js"></script>
-		<title>Manage Booking Order</title>
+		<title>Manage Orders</title>
 	</head>
 	<body onload="startTime()">
 		<?php include_once $_SERVER['DOCUMENT_ROOT'] .'/includes/admintopnav.html.php'; ?>
 
-		<h1>Manage Booking Order</h1>
+		<h1>Manage Orders</h1>
 
 		<div class="left">
 			<?php if(isSet($_SESSION['OrderUserFeedback'])) : ?>
@@ -63,7 +63,7 @@
 					</form>
 				<?php endforeach; ?>
 			<?php else : ?>
-				<tr><td colspan="13"><b>There are no Order registered in the database.</b></td></tr>
+				<tr><td colspan="13"><b>There are no orders registered in the database.</b></td></tr>
 			<?php endif; ?>
 		</table>
 		<p><a href="/admin/">Return to CMS home</a></p>
