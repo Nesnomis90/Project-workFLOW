@@ -1,4 +1,4 @@
-<!-- This is the HTML form used for EDITING or ADDING Order information-->
+<!-- This is the HTML form used for EDITING Order information-->
 <!DOCTYPE html>
 <html lang="en">
 	<head>

@@ -117,7 +117,7 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Edit') OR
 		{
 			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 			$pdo = connect_to_db();
-			$sql = "SELECT 		`orderID`				AS TheOrderID,
+			$sql = 'SELECT 		`orderID`				AS TheOrderID,
 								`orderDescription`		AS OrderDescription,
 								`orderFeedback`			AS OrderFeedback,
 								`orderApprovedByAdmin`	AS OrderApprovedByAdmin,
@@ -125,7 +125,7 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Edit') OR
 								`adminNote`				AS OrderAdminNote
 					FROM 		`order`
 					WHERE		`orderID` = :OrderID
-					LIMIT 		1";
+					LIMIT 		1';
 
 			$s = $pdo->prepare($sql);
 			$s->bindValue(':OrderID', $_POST['OrderID']);
@@ -148,6 +148,33 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Edit') OR
 			$_SESSION['EditOrderOriginalInfo']['OrderIsApproved'] = $orderIsApproved;
 			$_SESSION['EditOrderOrderID'] = $orderID;
 
+			$sql = 'SELECT 		ex.`name`												AS ExtraName,
+								eo.`amount`												AS ExtraAmount,
+								IFNULL(eo.`alternativePrice`, ex.`price`)				AS ExtraPrice,
+								IFNULL(eo.`alternativeDescription`, ex.`description`)	AS ExtraDescription,
+					FROM 		`extraorders` eo
+					INNER JOIN	`extra` ex
+					ON 			ex.`extraID` = eo.`extraID`
+					WHERE		eo.`orderID` = :OrderID';
+			$s = $pdo->prepare($sql);
+			$s->bindValue(':OrderID', $_POST['OrderID']);
+			$s->execute();
+
+			$result = $s->fetchAll(PDO::FETCH_ASSOC);
+			foreach($result AS $extra){
+				$extraName = $extra['ExtraName'];
+				$extraAmount = $extra['ExtraAmount'];
+				$extraPrice = convertToCurrency($extra['ExtraPrice']);
+				$extraDescription = $extra['ExtraDescription'];
+
+				if(!isSet($orderContent)){
+					$orderContent = "$extraAmount of $extraName ($extraDescription) at $extraPrice each.";
+				} else {
+					$orderContent .= "\n$extraAmount of $extraName ($extraDescription) at $extraPrice each.";
+				}
+			}
+
+			$_SESSION['EditOrderOriginalInfo']['OrderContent'] = $orderContent;
 			//Close the connection
 			$pdo = null;
 		}
@@ -190,7 +217,7 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Edit Order'){
 		$_SESSION['refreshEditOrder'] = TRUE;
 		header('Location: .');
 		exit();
-	}	
+	}
 
 	// Check if values have actually changed
 	$numberOfChanges = 0;
@@ -240,7 +267,7 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Edit Order'){
 								`dateTimeApproved` = CURRENT_TIMESTAMP,
 								`approvedByUserID` = :approvedByUserID,
 								`adminNote` = :adminNote
-						WHERE 	orderID = :OrderID';
+						WHERE 	`orderID` = :OrderID';
 				$s = $pdo->prepare($sql);
 				$s->bindValue(':OrderID', $_POST['OrderID']);
 				$s->bindValue(':OrderFeedback', $validatedOrderFeedback);
@@ -256,7 +283,7 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Edit Order'){
 								`orderApprovedByStaff` = :approvedByStaff,
 								`dateTimeUpdated` = CURRENT_TIMESTAMP,
 								`adminNote` = :adminNote
-						WHERE 	orderID = :OrderID';
+						WHERE 	`orderID` = :OrderID';
 				$s = $pdo->prepare($sql);
 				$s->bindValue(':OrderID', $_POST['OrderID']);
 				$s->bindValue(':OrderFeedback', $validatedOrderFeedback);
@@ -319,35 +346,35 @@ try
 	include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 
 	$pdo = connect_to_db();
-	$sql = 'SELECT 		o.`orderID`							AS TheOrderID,
-						o.`orderDescription`				AS OrderDescription,
-						o.`orderFeedback`					AS OrderFeedback,
-						o.`dateTimeCreated`					AS DateTimeCreated,
-						o.`dateTimeUpdated`					AS DateTimeUpdated,
-						o.`dateTimeApproved`				AS DateTimeApproved,
-						o.`dateTimeCancelled`				AS DateTimeCancelled,
-						o.`orderApprovedByUser`				AS OrderApprovedByUser,
-						o.`orderApprovedByAdmin`			AS OrderApprovedByAdmin,
-						o.`orderApprovedByStaff`			AS OrderApprovedByStaff,
-						o.`priceCharged`					AS OrderPriceCharged,
-						o.`adminNote`						AS OrderAdminNote,
+	$sql = 'SELECT 		o.`orderID`										AS TheOrderID,
+						o.`orderDescription`							AS OrderDescription,
+						o.`orderFeedback`								AS OrderFeedback,
+						o.`dateTimeCreated`								AS DateTimeCreated,
+						o.`dateTimeUpdated`								AS DateTimeUpdated,
+						o.`dateTimeApproved`							AS DateTimeApproved,
+						o.`dateTimeCancelled`							AS DateTimeCancelled,
+						o.`orderApprovedByUser`							AS OrderApprovedByUser,
+						o.`orderApprovedByAdmin`						AS OrderApprovedByAdmin,
+						o.`orderApprovedByStaff`						AS OrderApprovedByStaff,
+						o.`priceCharged`								AS OrderPriceCharged,
+						o.`adminNote`									AS OrderAdminNote,
 						(
 							SELECT 	CONCAT_WS(", ",`lastname`, `firstname`)
 							FROM	`user`
 							WHERE	`userID` = o.`approvedByUserID`
 							LIMIT 	1
-						)									AS OrderApprovedByUserName,
-						GROUP_CONCAT(ex.`name`, "\n")		AS OrderContent,
-						b.`startDateTime`					AS OrderStartDateTime,
-						b.`endDateTime`						AS OrderEndDateTime,
-						b.`actualEndDateTime`				AS OrderBookingCompleted,
-						b.`dateTimeCancelled`				AS OrderBookingCancelled,
+						)												AS OrderApprovedByUserName,
+						GROUP_CONCAT(CONCAT_WS("\n", ex.`name`))		AS OrderContent,
+						b.`startDateTime`								AS OrderStartDateTime,
+						b.`endDateTime`									AS OrderEndDateTime,
+						b.`actualEndDateTime`							AS OrderBookingCompleted,
+						b.`dateTimeCancelled`							AS OrderBookingCancelled,
 						(
 							SELECT 	`name`
 							FROM	`meetingroom`
 							WHERE	`meetingRoomID` = b.`meetingRoomID`
 							LIMIT 	1
-						)									AS OrderRoomName
+						)												AS OrderRoomName
 			FROM 		`orders` o
 			INNER JOIN	`extraorders` eo
 			ON 			eo.`orderID` = o.`orderID`

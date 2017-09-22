@@ -52,30 +52,6 @@ WHERE 	DATE(CURRENT_TIMESTAMP) >= `removeAtDate`
 AND 	`isActive` = 1
 AND		`companyID` <> 0;
 
-SELECT 		o.`orderID`					AS TheOrderID,
-			o.`orderDescription`		AS OrderDescription,
-			o.`orderFeedback`			AS OrderFeedback,
-			o.`dateTimeCreated`			AS DateTimeCreated,
-			o.`dateTimeUpdated`			AS DateTimeUpdated,
-			o.`dateTimeApproved`		AS DateTimeApproved,
-			o.`orderApprovedByUser`		AS OrderApprovedByUser,
-			o.`orderApprovedByAdmin`	AS OrderApprovedByAdmin,
-			o.`orderApprovedByStaff`	AS OrderApprovedByStaff,
-			o.`priceCharged`			AS OrderPriceCharged,
-			o.`adminNote`				AS OrderAdminNote,
-            
-			(
-				SELECT 	CONCAT_WS(", ",`lastname`, `firstname`)
-				FROM	`user`
-				WHERE	`userID` = o.`approvedByUserID`
-				LIMIT 	1
-			)							AS OrderApprovedByUserName,
-			COUNT(eo.`extraID`)			AS OrderAmount
-FROM 		`orders` o
-INNER JOIN	`extraorders` eo
-ON 			eo.`orderID` = o.`orderID`
-GROUP BY	o.`orderID`;
-
 SELECT 		c.`CompanyID`	AS CompanyID,
 			c.`name`		AS CompanyName
 FROM		`company` c
