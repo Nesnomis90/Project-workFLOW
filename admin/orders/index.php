@@ -117,14 +117,15 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Edit') OR
 		{
 			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 			$pdo = connect_to_db();
-			$sql = "SELECT 		`orderID`				AS TheOrderID,
+			$sql = 'SELECT 		`orderID`				AS TheOrderID,
+								`orderDescription`		AS OrderDescription,
 								`orderFeedback`			AS OrderFeedback,
 								`orderApprovedByAdmin`	AS OrderApprovedByAdmin,
 								`orderApprovedByStaff` 	AS OrderApprovedByStaff,
 								`adminNote`				AS OrderAdminNote
 					FROM 		`order`
 					WHERE		`orderID` = :OrderID
-					LIMIT 		1";
+					LIMIT 		1';
 
 			$s = $pdo->prepare($sql);
 			$s->bindValue(':OrderID', $_POST['OrderID']);
@@ -147,27 +148,51 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Edit') OR
 			$_SESSION['EditOrderOriginalInfo']['OrderIsApproved'] = $orderIsApproved;
 			$_SESSION['EditOrderOrderID'] = $orderID;
 
+			$sql = 'SELECT 		ex.`name`												AS ExtraName,
+								eo.`amount`												AS ExtraAmount,
+								IFNULL(eo.`alternativePrice`, ex.`price`)				AS ExtraPrice,
+								IFNULL(eo.`alternativeDescription`, ex.`description`)	AS ExtraDescription,
+					FROM 		`extraorders` eo
+					INNER JOIN	`extra` ex
+					ON 			ex.`extraID` = eo.`extraID`
+					WHERE		eo.`orderID` = :OrderID';
+			$s = $pdo->prepare($sql);
+			$s->bindValue(':OrderID', $_POST['OrderID']);
+			$s->execute();
+
+			$result = $s->fetchAll(PDO::FETCH_ASSOC);
+			foreach($result AS $extra){
+				$extraName = $extra['ExtraName'];
+				$extraAmount = $extra['ExtraAmount'];
+				$extraPrice = convertToCurrency($extra['ExtraPrice']);
+				$extraDescription = $extra['ExtraDescription'];
+
+				if(!isSet($orderContent)){
+					$orderContent = "$extraAmount of $extraName ($extraDescription) at $extraPrice each.";
+				} else {
+					$orderContent .= "\n$extraAmount of $extraName ($extraDescription) at $extraPrice each.";
+				}
+			}
+
+			$_SESSION['EditOrderOriginalInfo']['OrderContent'] = $orderContent;
 			//Close the connection
 			$pdo = null;
 		}
 		catch (PDOException $e)
 		{
-			$error = 'Error fetching meeting room details.';
+			$error = 'Error fetching order details.';
 			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
 			$pdo = null;
 			exit();
 		}
 	}
 
-	// Set always correct information
-	$pageTitle = 'Edit Order';
-	$button = 'Edit Order';	
-
 	// Set original values
-	$originalOrderName = $_SESSION['EditOrderOriginalInfo']['OrderName'];
 	$originalOrderFeedback = $_SESSION['EditOrderOriginalInfo']['OrderFeedback'];
 	$originalOrderAdminNote = $_SESSION['EditOrderOriginalInfo']['OrderAdminNote'];
 	$originalOrderIsApproved = $_SESSION['EditOrderOriginalInfo']['OrderIsApproved'];
+	$originalOrderDescription = $_SESSION['EditOrderOriginalInfo']['OrderDescription'];
+	$originalOrderContent = $_SESSION['EditOrderOriginalInfo']['OrderContent'];
 
 	var_dump($_SESSION); // TO-DO: remove after testing is done
 
@@ -192,7 +217,7 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Edit Order'){
 		$_SESSION['refreshEditOrder'] = TRUE;
 		header('Location: .');
 		exit();
-	}	
+	}
 
 	// Check if values have actually changed
 	$numberOfChanges = 0;
@@ -242,7 +267,7 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Edit Order'){
 								`dateTimeApproved` = CURRENT_TIMESTAMP,
 								`approvedByUserID` = :approvedByUserID,
 								`adminNote` = :adminNote
-						WHERE 	orderID = :OrderID';
+						WHERE 	`orderID` = :OrderID';
 				$s = $pdo->prepare($sql);
 				$s->bindValue(':OrderID', $_POST['OrderID']);
 				$s->bindValue(':OrderFeedback', $validatedOrderFeedback);
@@ -258,7 +283,7 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Edit Order'){
 								`orderApprovedByStaff` = :approvedByStaff,
 								`dateTimeUpdated` = CURRENT_TIMESTAMP,
 								`adminNote` = :adminNote
-						WHERE 	orderID = :OrderID';
+						WHERE 	`orderID` = :OrderID';
 				$s = $pdo->prepare($sql);
 				$s->bindValue(':OrderID', $_POST['OrderID']);
 				$s->bindValue(':OrderFeedback', $validatedOrderFeedback);
@@ -319,38 +344,44 @@ clearEditOrderSessions();
 try
 {
 	include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
- // TO-DO: FIX-ME: work in progress...
+
 	$pdo = connect_to_db();
-	$sql = 'SELECT 		o.`orderID`					AS TheOrderID,
-						o.`orderDescription`		AS OrderDescription,
-						o.`orderFeedback`			AS OrderFeedback,
-						o.`dateTimeCreated`			AS DateTimeCreated,
-						o.`dateTimeUpdated`			AS DateTimeUpdated,
-						o.`dateTimeApproved`		AS DateTimeApproved,
-						o.`orderApprovedByUser`		AS OrderApprovedByUser,
-						o.`orderApprovedByAdmin`	AS OrderApprovedByAdmin,
-						o.`orderApprovedByStaff`	AS OrderApprovedByStaff,
-						o.`priceCharged`			AS OrderPriceCharged,
-						o.`adminNote`				AS OrderAdminNote,
+	$sql = 'SELECT 		o.`orderID`										AS TheOrderID,
+						o.`orderDescription`							AS OrderDescription,
+						o.`orderFeedback`								AS OrderFeedback,
+						o.`dateTimeCreated`								AS DateTimeCreated,
+						o.`dateTimeUpdated`								AS DateTimeUpdated,
+						o.`dateTimeApproved`							AS DateTimeApproved,
+						o.`dateTimeCancelled`							AS DateTimeCancelled,
+						o.`orderApprovedByUser`							AS OrderApprovedByUser,
+						o.`orderApprovedByAdmin`						AS OrderApprovedByAdmin,
+						o.`orderApprovedByStaff`						AS OrderApprovedByStaff,
+						o.`priceCharged`								AS OrderPriceCharged,
+						o.`adminNote`									AS OrderAdminNote,
 						(
 							SELECT 	CONCAT_WS(", ",`lastname`, `firstname`)
 							FROM	`user`
 							WHERE	`userID` = o.`approvedByUserID`
 							LIMIT 	1
-						)							AS OrderApprovedByUserName,
-						u.`lastName`				AS UserLastName,
-						GCONCAT_WS(	"\n", 
-									CONCAT_WS(" with description: ", 
-										CONCAT_WS(" of ", 
-											ex.`amount`, 
-											ex.`name`)
-											)
-									)				AS OrderContent
+						)												AS OrderApprovedByUserName,
+						GROUP_CONCAT(CONCAT_WS("\n", ex.`name`))		AS OrderContent,
+						b.`startDateTime`								AS OrderStartDateTime,
+						b.`endDateTime`									AS OrderEndDateTime,
+						b.`actualEndDateTime`							AS OrderBookingCompleted,
+						b.`dateTimeCancelled`							AS OrderBookingCancelled,
+						(
+							SELECT 	`name`
+							FROM	`meetingroom`
+							WHERE	`meetingRoomID` = b.`meetingRoomID`
+							LIMIT 	1
+						)												AS OrderRoomName
 			FROM 		`orders` o
 			INNER JOIN	`extraorders` eo
 			ON 			eo.`orderID` = o.`orderID`
-			INNER JOIN	`extra` ex
-			ON			ex.`extraID` = eo.`extraID`
+			INNER JOIN 	`extra` ex
+			ON 			eo.`extraID` = ex.`extraID`
+			INNER JOIN	`booking` b
+			ON 			b.`orderID` = o.`orderID`
 			GROUP BY	o.`orderID`';
 
 	$return = $pdo->query($sql);
@@ -373,38 +404,89 @@ catch (PDOException $e)
 
 // Create an array with the actual key/value pairs we want to use in our HTML
 foreach($result AS $row){
-	// TO-DO: FIX-ME: not touched yet.
-	$dateTimeAdded = $row['DateTimeAdded'];
-	$displayDateTimeAdded = convertDatetimeToFormat($dateTimeAdded , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
+
+	$dateTimeCreated = $row['DateTimeCreated'];
+	$displayDateTimeCreated = convertDatetimeToFormat($dateTimeCreated , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
 	$dateTimeUpdated = $row['DateTimeUpdated'];
 	$displayDateTimeUpdated = convertDatetimeToFormat($dateTimeUpdated , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
-
-	$orderIsApproved = $row['OrderIsApproved'];
-	
-	if($orderIsApproved == 1){
-		$displayOrderType = "Alternative";
+	$dateTimeStart = $row['OrderStartDateTime'];
+	$displayDateTimeStart = convertDatetimeToFormat($dateTimeStart , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
+	$dateTimeEnd = $row['OrderEndDateTime'];
+	$displayDateTimeEnd = convertDatetimeToFormat($dateTimeEnd , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
+	if($row['DateTimeCancelled'] != NULL){
+		$dateTimeCancelled = $row['DateTimeCancelled'];
+		$displayDateTimeCancelled = convertDatetimeToFormat($dateTimeCancelled , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
+	} elseif($row['OrderBookingCancelled'] != NULL){
+		$dateTimeCancelled = $row['OrderBookingCancelled'];
+		$displayDateTimeCancelled = convertDatetimeToFormat($dateTimeCancelled , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
 	} else {
-		$displayOrderType = "Normal";
+		$displayDateTimeCancelled = "";
 	}
 
-	$price = $row['OrderPrice'];
-	$displayPrice = convertToCurrency($price);
+	if($row['OrderApprovedByAdmin'] == 1 OR $row['OrderApprovedByStaff'] == 1){
+		$orderIsApproved = TRUE;
+		if(!empty($row['OrderApprovedByUserName'])){
+			$orderApprovedBy = $row['OrderApprovedByUserName'];
+		} else {
+			$orderApprovedBy = "N/A - Deleted User";
+		}
+	} else {
+		$orderIsApproved = FALSE;
+		$orderApprovedBy = "Not Approved";
+	}
+
+	if(!empty($row['OrderRoomName'])){
+		$orderRoomName = $row['OrderRoomName'];
+	} else {
+		$orderRoomName = "N/A - Deleted Room";
+	}
+
+	$orderStatus = "N/A";
+
+	if($row['OrderPriceCharged'] != NULL){
+		$priceCharged = $row['OrderPriceCharged'];
+		$displayPriceCharged = convertToCurrency($priceCharged);
+	} else {
+		$displayPriceCharged = "N/A";
+	}
+
+	if($orderIsApproved){
+		if($row['OrderBookingCompleted'] != NULL){
+			$orderStatus = "Completed";
+		} elseif($row['DateTimeCancelled'] != NULL OR $row['OrderBookingCancelled'] != NULL){
+			$orderStatus = "Cancelled";
+		} else {
+			$orderStatus = "Approved";
+		}
+	} else {
+		if($row['OrderBookingCompleted'] != NULL){
+			$orderStatus = "Ended without being approved.";
+		} elseif($row['DateTimeCancelled'] != NULL OR $row['OrderBookingCancelled'] != NULL){
+			$orderStatus = "Cancelled";
+		} else {
+			$orderStatus = "Not Approved";
+		}
+	}
 
 	// Create an array with the actual key/value pairs we want to use in our HTML
 	$order[] = array(
-							'TheOrderID' => $row['TheOrderID'],
-							'OrderName' => $row['OrderName'],
-							'OrderFeedback' => $row['OrderFeedback'],
-							'OrderPrice' => $displayPrice,
-							'OrderType' => $displayOrderType,
-							'DateTimeAdded' => $displayDateTimeAdded,
-							'DateTimeUpdated' => $displayDateTimeUpdated,
-							'OrderIsInThisManyActiveOrders' => $row['OrderIsInThisManyActiveOrders']
-						);
+						'TheOrderID' => $row['TheOrderID'],
+						'OrderStatus' => $orderStatus,
+						'OrderDescription' => $row['OrderDescription'],
+						'OrderFeedback' => $row['OrderFeedback'],
+						'OrderStartTime' => $displayDateTimeStart,
+						'OrderEndTime' => $displayDateTimeEnd,
+						'DateTimeCreated' => $displayDateTimeCreated,
+						'DateTimeUpdated' => $displayDateTimeUpdated,
+						'DateTimeCancelled' => $displayDateTimeCancelled,
+						'OrderContent' => $row['OrderContent'],
+						'OrderAdminNote' => $row['OrderAdminNote'],
+						'OrderPriceCharged' => $displayPriceCharged
+					);
 }
 
 var_dump($_SESSION); // TO-DO: remove after testing is done
 
 // Create the Order list in HTML
-include_once 'order.html.php';
+include_once 'orders.html.php';
 ?>
