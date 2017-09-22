@@ -319,7 +319,7 @@ clearEditOrderSessions();
 try
 {
 	include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
- // TO-DO: FIX-ME: work in progress...
+
 	$pdo = connect_to_db();
 	$sql = 'SELECT 		o.`orderID`					AS TheOrderID,
 						o.`orderDescription`		AS OrderDescription,
@@ -338,19 +338,16 @@ try
 							WHERE	`userID` = o.`approvedByUserID`
 							LIMIT 	1
 						)							AS OrderApprovedByUserName,
-						u.`lastName`				AS UserLastName,
-						GCONCAT_WS(	"\n", 
-									CONCAT_WS(" with description: ", 
-										CONCAT_WS(" of ", 
-											ex.`amount`, 
-											ex.`name`)
-											)
-									)				AS OrderContent
+						COUNT(eo.`extraID`)			AS OrderAmount,
+						b.`startDateTime`			AS OrderStartDateTime,
+						b.`endDateTime`				AS OrderEndDateTime,
+						b.`actualEndDateTime`		AS OrderBookingCompleted,
+						b.`dateTimeCancelled`		AS OrderBookingCancelled
 			FROM 		`orders` o
 			INNER JOIN	`extraorders` eo
 			ON 			eo.`orderID` = o.`orderID`
-			INNER JOIN	`extra` ex
-			ON			ex.`extraID` = eo.`extraID`
+			INNER JOIN	`booking` b
+			ON 			b.`orderID` = o.`orderID`
 			GROUP BY	o.`orderID`';
 
 	$return = $pdo->query($sql);
@@ -373,22 +370,25 @@ catch (PDOException $e)
 
 // Create an array with the actual key/value pairs we want to use in our HTML
 foreach($result AS $row){
-	// TO-DO: FIX-ME: not touched yet.
-	$dateTimeAdded = $row['DateTimeAdded'];
-	$displayDateTimeAdded = convertDatetimeToFormat($dateTimeAdded , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
+
+	$dateTimeCreated = $row['DateTimeCreated'];
+	$displayDateTimeCreated = convertDatetimeToFormat($dateTimeCreated , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
 	$dateTimeUpdated = $row['DateTimeUpdated'];
 	$displayDateTimeUpdated = convertDatetimeToFormat($dateTimeUpdated , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
 
-	$orderIsApproved = $row['OrderIsApproved'];
-	
-	if($orderIsApproved == 1){
-		$displayOrderType = "Alternative";
-	} else {
-		$displayOrderType = "Normal";
-	}
+	$orderIsApproved = FALSE;
+	$orderApprovedBy = "Not Approved";
 
-	$price = $row['OrderPrice'];
-	$displayPrice = convertToCurrency($price);
+	if($row['OrderApprovedByAdmin'] == 1 OR $row['OrderApprovedByStaff'] == 1){
+		$orderIsApproved = TRUE;
+		if(!empty($row['OrderApprovedByUserName']) AND $row['OrderApprovedByUserName'] != ""){
+			$orderApprovedBy = $row['OrderApprovedByUserName'];
+		} else {
+			$orderApprovedBy = "N/A - Deleted User";
+		}
+	}
+	
+	
 
 	// Create an array with the actual key/value pairs we want to use in our HTML
 	$order[] = array(
