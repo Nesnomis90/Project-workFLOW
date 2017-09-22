@@ -327,6 +327,7 @@ try
 						o.`dateTimeCreated`			AS DateTimeCreated,
 						o.`dateTimeUpdated`			AS DateTimeUpdated,
 						o.`dateTimeApproved`		AS DateTimeApproved,
+						o.`dateTimeCancelled`		AS DateTimeCancelled
 						o.`orderApprovedByUser`		AS OrderApprovedByUser,
 						o.`orderApprovedByAdmin`	AS OrderApprovedByAdmin,
 						o.`orderApprovedByStaff`	AS OrderApprovedByStaff,
@@ -342,7 +343,13 @@ try
 						b.`startDateTime`			AS OrderStartDateTime,
 						b.`endDateTime`				AS OrderEndDateTime,
 						b.`actualEndDateTime`		AS OrderBookingCompleted,
-						b.`dateTimeCancelled`		AS OrderBookingCancelled
+						b.`dateTimeCancelled`		AS OrderBookingCancelled,
+						(
+							SELECT 	`name`
+							FROM	`meetingroom`
+							WHERE	`meetingRoomID` = b.`meetingRoomID`
+							LIMIT 	1
+						)							AS OrderRoomName
 			FROM 		`orders` o
 			INNER JOIN	`extraorders` eo
 			ON 			eo.`orderID` = o.`orderID`
@@ -375,25 +382,55 @@ foreach($result AS $row){
 	$displayDateTimeCreated = convertDatetimeToFormat($dateTimeCreated , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
 	$dateTimeUpdated = $row['DateTimeUpdated'];
 	$displayDateTimeUpdated = convertDatetimeToFormat($dateTimeUpdated , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
-
-	$orderIsApproved = FALSE;
-	$orderApprovedBy = "Not Approved";
+	$dateTimeStart = $row['OrderStartDateTime'];
+	$displayDateTimeStart = convertDatetimeToFormat($dateTimeStart , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
+	$dateTimeEnd = $row['OrderEndDateTime'];
+	$displayDateTimeEnd = convertDatetimeToFormat($dateTimeEnd , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
+	if($row['DateTimeCancelled'] != NULL){
+		$dateTimeCancelled = $row['DateTimeCancelled'];
+		$displayDateTimeCancelled = convertDatetimeToFormat($dateTimeCancelled , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
+	} elseif($row['OrderBookingCancelled'] != NULL){
+		$dateTimeCancelled = $row['OrderBookingCancelled'];
+		$displayDateTimeCancelled = convertDatetimeToFormat($dateTimeCancelled , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
+	} else {
+		$displayDateTimeCancelled = "";
+	}
 
 	if($row['OrderApprovedByAdmin'] == 1 OR $row['OrderApprovedByStaff'] == 1){
 		$orderIsApproved = TRUE;
-		if(!empty($row['OrderApprovedByUserName']) AND $row['OrderApprovedByUserName'] != ""){
+		if(!empty($row['OrderApprovedByUserName'])){
 			$orderApprovedBy = $row['OrderApprovedByUserName'];
 		} else {
 			$orderApprovedBy = "N/A - Deleted User";
 		}
+	} else {
+		$orderIsApproved = FALSE;
+		$orderApprovedBy = "Not Approved";
 	}
-	
-	
+
+	if(!empty($row['OrderRoomName'])){
+		$orderRoomName = $row['OrderRoomName'];
+	} else {
+		$orderRoomName = "N/A - Deleted Room";
+	}
+
+	$orderStatus = "N/A";
+
+	if($orderIsApproved){
+		if($row['OrderBookingCompleted'] != NULL){
+			$orderStatus = "Completed";
+		} elseif($row['DateTimeCancelled'] != NULL OR $row['OrderBookingCancelled'] != NULL){
+			$orderStatus = "Cancelled";
+		}
+	} else {
+		$orderStatus = "Not Approved";
+	}
+
 
 	// Create an array with the actual key/value pairs we want to use in our HTML
 	$order[] = array(
 							'TheOrderID' => $row['TheOrderID'],
-							'OrderName' => $row['OrderName'],
+							'OrderStatus' => $orderStatus,
 							'OrderFeedback' => $row['OrderFeedback'],
 							'OrderPrice' => $displayPrice,
 							'OrderType' => $displayOrderType,
