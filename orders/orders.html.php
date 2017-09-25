@@ -8,9 +8,11 @@
 		<title>Manage Orders</title>
 	</head>
 	<body onload="startTime()">
-		<?php include_once $_SERVER['DOCUMENT_ROOT'] .'/includes/topnav.html.php'; ?>
-
-		<h1>Manage Orders</h1>
+		<?php if($accessRole == "Admin") : ?>
+			<?php include_once $_SERVER['DOCUMENT_ROOT'] .'/includes/topnav.html.php'; ?>
+		<?php else : ?>
+			<?php include_once $_SERVER['DOCUMENT_ROOT'] .'/includes/stafftopnav.html.php'; ?>
+		<?php endif; ?>
 
 		<div class="left">
 			<?php if(isSet($_SESSION['OrderStaffFeedback'])) : ?>
@@ -23,8 +25,9 @@
 			<caption>Active Orders</caption>
 			<tr>
 				<th colspan="4">Order</th>
-				<th colspan="2">Date</th>
-				<th colspan="1">Alter Order</th>
+				<th colspan="4">Date</th>
+				<th colspan="2">Approved By</th>
+				<th colspan="1">Full Information</th>
 			</tr>
 			<tr>
 				<th>Status</th>
@@ -33,7 +36,11 @@
 				<th>Feedback</th>
 				<th>Start</th>
 				<th>End</th>
-				<th>Edit</th>
+				<th>Created</th>
+				<th>Last Update</th>
+				<th>User</th>
+				<th>Staff</th>
+				<th>Details</th>
 			</tr>
 			<?php if($rowNum > 0) : ?>
 				<?php foreach($order as $row): ?>
@@ -45,13 +52,17 @@
 							<td style="white-space: pre-wrap;"><?php htmlout($row['OrderFeedback']); ?></td>
 							<td><?php htmlout($row['OrderStartTime']); ?></td>
 							<td><?php htmlout($row['OrderEndTime']); ?></td>
-							<td><input type="submit" name="action" value="Edit"></td>
+							<td><?php htmlout($row['DateTimeCreated']); ?></td>
+							<td><?php htmlout($row['DateTimeUpdated']); ?></td>
+							<td><?php htmlout($row['OrderApprovedByUser']); ?></td>
+							<td><?php htmlout($row['OrderApprovedByStaff']); ?></td>
+							<td><input type="submit" name="action" value="Details"></td>
 							<input type="hidden" name="OrderID" value="<?php htmlout($row['TheOrderID']); ?>">
 						</tr>
 					</form>
 				<?php endforeach; ?>
 			<?php else : ?>
-				<tr><td colspan="11"><b>There are no active orders.</b></td></tr>
+				<tr><td colspan="7"><b>There are no active orders.</b></td></tr>
 			<?php endif; ?>
 		</table>
 	</body>

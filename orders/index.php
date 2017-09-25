@@ -8,17 +8,18 @@ include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/magicquotes.inc.php';
 
 // CHECK IF USER TRYING TO ACCESS THIS IS IN FACT THE ADMIN!
 
+if(!userIsLoggedIn()){
+	// Not logged in. Send user a login prompt.
+	include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/login.html.php';
+	exit();
+}
+
 if(userHasAccess('Staff')){
 	$accessRole = "Staff";
 	exit();
 } elseif(userHasAccess('Admin')) {
 	$accessRole = "Admin";
 } else {
-	if(!userIsLoggedIn()){
-		// Not logged in. Send user a login prompt.
-		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/login.html.php';
-		exit();
-	}
 	$error = 'You do not have the access level to view this page.';
 	include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/accessdenied.html.php';
 	exit();
@@ -328,6 +329,7 @@ try
 {
 	include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 
+	// Only retrieves info of orders that are not cancelled, completed and have a meeting room attached.
 	$pdo = connect_to_db();
 	$sql = 'SELECT 		o.`orderID`										AS TheOrderID,
 						o.`orderDescription`							AS OrderDescription,
@@ -340,14 +342,7 @@ try
 						GROUP_CONCAT(CONCAT_WS("\n", ex.`name`))		AS OrderContent,
 						b.`startDateTime`								AS OrderStartDateTime,
 						b.`endDateTime`									AS OrderEndDateTime,
-						b.`actualEndDateTime`							AS OrderBookingCompleted,
-						b.`dateTimeCancelled`							AS OrderBookingCancelled,
-						(
-							SELECT 	`name`
-							FROM	`meetingroom`
-							WHERE	`meetingRoomID` = b.`meetingRoomID`
-							LIMIT 	1
-						)												AS OrderRoomName
+						m.`name`										AS OrderRoomName
 			FROM 		`orders` o
 			INNER JOIN	`extraorders` eo
 			ON 			eo.`orderID` = o.`orderID`
@@ -355,6 +350,11 @@ try
 			ON 			eo.`extraID` = ex.`extraID`
 			INNER JOIN	`booking` b
 			ON 			b.`orderID` = o.`orderID`
+			INNER JOIN	`meetingroom` m
+			ON 			m.`meetingRoomID` = b.`meetingRoomID`
+			WHERE		o.`dateTimeCancelled` IS NULL
+			AND			b.`dateTimeCancelled` IS NULL
+			AND			b.`actualEndDateTime` IS NULL
 			GROUP BY	o.`orderID`';
 
 	$return = $pdo->query($sql);
@@ -380,29 +380,44 @@ foreach($result AS $row){
 
 	$dateTimeCreated = $row['DateTimeCreated'];
 	$displayDateTimeCreated = convertDatetimeToFormat($dateTimeCreated , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
-	$dateTimeUpdated = $row['DateTimeUpdated'];
-	$displayDateTimeUpdated = convertDatetimeToFormat($dateTimeUpdated , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
+	if(!empty($row['DateTimeUpdated'])){
+		$dateTimeUpdated = $row['DateTimeUpdated'];
+		$displayDateTimeUpdated = convertDatetimeToFormat($dateTimeUpdated , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);		
+	} else {
+		$displayDateTimeUpdated = "N/A";
+	}
+
 	$dateTimeStart = $row['OrderStartDateTime'];
 	$displayDateTimeStart = convertDatetimeToFormat($dateTimeStart , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
 	$dateTimeEnd = $row['OrderEndDateTime'];
 	$displayDateTimeEnd = convertDatetimeToFormat($dateTimeEnd , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
 
 	if($row['OrderApprovedByAdmin'] == 1 OR $row['OrderApprovedByStaff'] == 1){
-		$orderIsApproved = TRUE;
+		$orderIsApprovedByStaff = TRUE;
+		$displayOrderApprovedByStaff = "Yes";
 	} else {
-		$orderIsApproved = FALSE;
+		$orderIsApprovedByStaff = FALSE;
+		$displayOrderApprovedByStaff = "No";
 	}
 
-	if(!empty($row['OrderRoomName'])){
-		$orderRoomName = $row['OrderRoomName'];
+	if($row['OrderApprovedByUser'] == 1){
+		$orderIsApprovedByUser = TRUE;
+		$displayOrderApprovedByUser = "Yes";
 	} else {
-		$orderRoomName = "N/A - Deleted Room";
+		$orderIsApprovedByUser = FALSE;
+		$displayOrderApprovedByUser = "No";
 	}
+
+	$orderRoomName = $row['OrderRoomName'];
 
 	$orderStatus = "N/A";
 
-	if($orderIsApproved){
+	if($orderIsApprovedByStaff AND $orderIsApprovedByUser){
 		$orderStatus = "Approved";
+	} elseif($orderIsApprovedByStaff AND !$orderIsApprovedByUser) {
+		$orderStatus = "Pending User Approval";
+	} elseif(!$orderIsApprovedByStaff AND $orderIsApprovedByUser) {
+		$orderStatus = "Pending Staff Approval";
 	} else {
 		$orderStatus = "Not Approved";
 	}
@@ -417,7 +432,9 @@ foreach($result AS $row){
 						'OrderEndTime' => $displayDateTimeEnd,
 						'DateTimeCreated' => $displayDateTimeCreated,
 						'DateTimeUpdated' => $displayDateTimeUpdated,
-						'OrderContent' => $row['OrderContent']
+						'OrderContent' => $row['OrderContent'],
+						'OrderApprovedByUser' => $displayOrderApprovedByUser,
+						'OrderApprovedByStaff' => $displayOrderApprovedByStaff
 					);
 }
 

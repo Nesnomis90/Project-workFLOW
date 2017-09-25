@@ -407,8 +407,12 @@ foreach($result AS $row){
 
 	$dateTimeCreated = $row['DateTimeCreated'];
 	$displayDateTimeCreated = convertDatetimeToFormat($dateTimeCreated , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
-	$dateTimeUpdated = $row['DateTimeUpdated'];
-	$displayDateTimeUpdated = convertDatetimeToFormat($dateTimeUpdated , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
+	if(!empty($row['DateTimeUpdated'])){
+		$dateTimeUpdated = $row['DateTimeUpdated'];
+		$displayDateTimeUpdated = convertDatetimeToFormat($dateTimeUpdated , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);		
+	} else {
+		$displayDateTimeUpdated = "N/A";
+	}
 	$dateTimeStart = $row['OrderStartDateTime'];
 	$displayDateTimeStart = convertDatetimeToFormat($dateTimeStart , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
 	$dateTimeEnd = $row['OrderEndDateTime'];
