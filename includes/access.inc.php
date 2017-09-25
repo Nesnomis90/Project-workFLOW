@@ -439,7 +439,7 @@ function databaseContainsUser($email, $password){
 
 	$row = $s->fetch();
 	// If we got a hit, then the user info was correct
-	if ($row[0] > 0){
+	if($row[0] > 0){
 
 		if(!isSet($_SESSION['LoggedInUserID'])){
 			$_SESSION['DatabaseContainsUserID'] = $row['userID'];
@@ -488,13 +488,10 @@ function userHasAccess($access){
 	}
 
 	$row = $s->fetch();
-	if ($row[0] > 0)
-	{
+	if($row[0] > 0){
 		// User has the access we were looking for!
 		return TRUE;
-	}
-	else
-	{
+	} else {
 		// User does NOT have the access needed.
 		return FALSE;
 	}
@@ -526,12 +523,9 @@ function databaseContainsEmail($email){
 
 	$row = $s->fetch();
 	// If we got a hit, then the email exists in our database
-	if ($row[0] > 0)
-	{
+	if($row[0] > 0){
 		return TRUE;
-	}
-	else
-	{
+	} else {
 		return FALSE;
 	}
 }
@@ -563,12 +557,9 @@ function isUserBlockedFromLogin($email){
 
 	$row = $s->fetch();
 	// If we got a hit, then the user is blocked from being able to log in
-	if ($row[0] > 0)
-	{
+	if($row[0] > 0){
 		return TRUE;
-	}
-	else
-	{
+	} else {
 		return FALSE;
 	}
 }
@@ -602,8 +593,7 @@ function databaseContainsBookingCode($rawBookingCode){
 
 	$row = $s->fetch();
 	// If we got a hit, then the booking code exists in our database
-	if ($row[0] > 0)
-	{
+	if($row[0] > 0){
 		return TRUE;
 	}
 	else
@@ -641,15 +631,13 @@ function revealBookingCode($bookingCode){
 // Function to make sure user is Admin
 function isUserAdmin(){
 		// Check if user is logged in
-	if (!userIsLoggedIn())
-	{
+	if(!userIsLoggedIn()){
 		// Not logged in. Send user a login prompt.
 		include_once 'login.html.php';
 		exit();
 	}
 		// Check if user has Admin access
-	if (!userHasAccess('Admin'))
-	{
+	if(!userHasAccess('Admin')){
 		// User is NOT ADMIN.
 		$error = 'Only Admin may access this page.';
 		include_once 'accessdenied.html.php';
@@ -661,31 +649,10 @@ function isUserAdmin(){
 // Function to make sure only users can access this
 function makeUserLogIn(){
 		// Check if user is logged in
-	if (!userIsLoggedIn())
-	{
+	if(!userIsLoggedIn()){
 		// Not logged in. Send user a login prompt.
 		include_once 'login.html.php';
 		exit();
-	}
-	return true;
-}
-
-// Function to make sure user is In-House User
-function isUserInHouseUser(){
-	// Check if user is logged in
-	if (!userIsLoggedIn())
-	{
-		// Not logged in. Send user a login prompt.
-		include_once 'login.html.php';
-		exit();
-	}
-		// Check if user has In-House User access
-	if (!userHasAccess('In-House User'))
-	{
-		// User is NOT IN-HOUSE USER.
-		$error = 'Only In-House Users can access this page.';
-		include_once 'accessdenied.html.php';
-		return false;
 	}
 	return true;
 }

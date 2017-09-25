@@ -36,23 +36,28 @@
 				</div>
 
 				<div>
-					<label>Order Description: </label>
-					<span><b><?php htmlout($originalOrderDescription); ?></b></span>
+					<label>Order User Notes: </label>
+					<span style="white-space: pre-wrap;"><b><?php htmlout($originalOrderUserNotes); ?></b></span>
 				</div>
 
 				<div>
-					<label>Original Order Feedback: </label>
-					<span><b><?php htmlout($originalOrderFeedback); ?></b></span>
+					<label>Messages Received From User: </label>
+					<span style="white-space: pre-wrap;"><b><?php htmlout($originalOrderCommunicationFromUser); ?></b></span>
+				</div>				
+				
+				<div>
+					<label>Messages Sent To User: </label>
+					<span style="white-space: pre-wrap;"><b><?php htmlout($originalOrderCommunicationToUser); ?></b></span>
 				</div>
 
 				<div>
-					<label class="description">Set New Order Feedback: </label>
-						<textarea rows="4" cols="50" name="OrderFeedback" placeholder="Enter Order Feedback"><?php htmlout($orderFeedback); ?></textarea>
+					<label class="description">Send New Message To User: </label>
+						<textarea rows="4" cols="50" name="OrderCommunicationToUser" placeholder="Enter Messages To User"><?php htmlout($orderCommunicationToUser); ?></textarea>
 				</div>
 
 				<div>
 					<label>Original Admin Note: </label>
-					<span><b><?php htmlout($originalOrderAdminNote); ?></b></span>
+					<span style="white-space: pre-wrap;"><b><?php htmlout($originalOrderAdminNote); ?></b></span>
 				</div>
 
 				<div>

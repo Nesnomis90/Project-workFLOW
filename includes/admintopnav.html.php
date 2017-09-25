@@ -20,6 +20,7 @@ require_once 'adminnavcheck.inc.php';
 		<li><a href="/admin/extra">Events</a></li>
 		<li><a href="/admin/logevents">Log Events</a></li>
 		<li><a href="/admin/meetingrooms">Meeting Rooms</a></li>
+		<li><a href="/admin/orders">Meeting Orders</a></li>
 		<li><a href="/admin/roomequipment">Room Equipment</a></li>
 		<li><a href="/admin/users">Users</a></li>
 
