@@ -16,7 +16,6 @@ if(!userIsLoggedIn()){
 
 if(userHasAccess('Staff')){
 	$accessRole = "Staff";
-	exit();
 } elseif(userHasAccess('Admin')) {
 	$accessRole = "Admin";
 } else {
