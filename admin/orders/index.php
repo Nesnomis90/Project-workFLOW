@@ -14,7 +14,7 @@ if (!isUserAdmin()){
 // Function to clear sessions used to remember user inputs on refreshing the edit Order form
 function clearEditOrderSessions(){
 	unset($_SESSION['EditOrderOriginalInfo']);
-	unset($_SESSION['EditOrderFeedback']);
+	unset($_SESSION['EditOrderCommunicationToUser']);
 	unset($_SESSION['EditOrderAdminNote']);
 	unset($_SESSION['EditOrderIsApproved']);
 	unset($_SESSION['EditOrderOrderID']);
@@ -25,11 +25,11 @@ function validateUserInputs(){
 	$invalidInput = FALSE;
 
 	// Get user inputs
-	if(isSet($_POST['OrderFeedback']) AND !$invalidInput){
-		$orderFeedback = trim($_POST['OrderFeedback']);
+	if(isSet($_POST['OrderCommunicationToUser']) AND !$invalidInput){
+		$orderCommunicationToUser = trim($_POST['OrderCommunicationToUser']);
 	} else {
 		// Doesn't need to be set.
-		$orderFeedback = NULL;
+		$orderCommunicationToUser = "";
 	}
 	if(isSet($_POST['AdminNote']) AND !$invalidInput){
 		$adminNote = trim($_POST['AdminNote']);
@@ -44,7 +44,7 @@ function validateUserInputs(){
 	}
 
 	// Remove excess whitespace and prepare strings for validation
-	$validatedOrderFeedback = trimExcessWhitespaceButLeaveLinefeed($orderFeedback);
+	$validatedOrderCommunicationToUser = trimExcessWhitespaceButLeaveLinefeed($orderCommunicationToUser);
 	$validatedAdminNote = trimExcessWhitespaceButLeaveLinefeed($adminNote);
 	$validatedIsApproved = $orderIsApproved;
 
@@ -53,15 +53,15 @@ function validateUserInputs(){
 		$invalidInput = TRUE;
 		$_SESSION['AddOrderError'] = "Your submitted Admin Note has illegal characters in it.";
 	}
-	if(validateString($validatedOrderFeedback) === FALSE AND !$invalidInput){
+	if(validateString($validatedOrderCommunicationToUser) === FALSE AND !$invalidInput){
 		$invalidInput = TRUE;
 		$_SESSION['AddOrderError'] = "Your submitted Order feedback has illegal characters in it.";
 	}
 
 	// Check if input length is allowed
-		// OrderFeedback
-	$invalidOrderFeedback = isLengthInvalidEquipmentDescription($validatedOrderFeedback);
-	if($invalidOrderFeedback AND !$invalidInput){
+		// OrderCommunicationToUser
+	$invalidOrderCommunicationToUser = isLengthInvalidEquipmentDescription($validatedOrderCommunicationToUser);
+	if($invalidOrderCommunicationToUser AND !$invalidInput){
 		$_SESSION['AddOrderError'] = "The order feedback submitted is too long.";
 		$invalidInput = TRUE;
 	}
@@ -72,7 +72,7 @@ function validateUserInputs(){
 		$invalidInput = TRUE;
 	}
 
-	return array($invalidInput, $validatedOrderFeedback, $validatedAdminNote, $validatedIsApproved);
+	return array($invalidInput, $validatedOrderCommunicationToUser, $validatedAdminNote, $validatedIsApproved);
 }
 
 // if admin wants to edit Order information
@@ -87,17 +87,17 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Edit') OR
 		unset($_SESSION['refreshEditOrder']);	
 
 		// Get values we had before refresh
-		if(isSet($_SESSION['EditOrderFeedback'])){
-			$orderFeedback = $_SESSION['EditOrderFeedback'];
-			unset($_SESSION['EditOrderFeedback']);
+		if(isSet($_SESSION['EditOrderCommunicationToUser'])){
+			$orderCommunicationToUser = $_SESSION['EditOrderCommunicationToUser'];
+			unset($_SESSION['EditOrderCommunicationToUser']);
 		} else {
-			$orderFeedback = '';
+			$orderCommunicationToUser = "";
 		}
 		if(isSet($_SESSION['EditOrderAdminNote'])){
 			$orderAdminNote = $_SESSION['EditOrderAdminNote'];
 			unset($_SESSION['EditOrderAdminNote']);
 		} else {
-			$orderAdminNote = '';
+			$orderAdminNote = "";
 		}
 		if(isSet($_SESSION['EditOrderIsApproved'])){
 			$orderIsApproved = $_SESSION['EditOrderIsApproved'];
@@ -117,12 +117,13 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Edit') OR
 		{
 			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 			$pdo = connect_to_db();
-			$sql = 'SELECT 		`orderID`				AS TheOrderID,
-								`orderDescription`		AS OrderDescription,
-								`orderFeedback`			AS OrderFeedback,
-								`orderApprovedByAdmin`	AS OrderApprovedByAdmin,
-								`orderApprovedByStaff` 	AS OrderApprovedByStaff,
-								`adminNote`				AS OrderAdminNote
+			$sql = 'SELECT 		`orderID`						AS TheOrderID,
+								`orderUserNotes`				AS OrderUserNotes,
+								`orderCommunicationToUser`		AS OrderCommunicationToUser,
+								`orderCommunicationFromUser`	AS OrderCommunicationFromUser,
+								`orderApprovedByAdmin`			AS OrderApprovedByAdmin,
+								`orderApprovedByStaff` 			AS OrderApprovedByStaff,
+								`adminNote`						AS OrderAdminNote
 					FROM 		`order`
 					WHERE		`orderID` = :OrderID
 					LIMIT 		1';
@@ -137,7 +138,6 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Edit') OR
 
 			// Set the correct information
 			$orderID = $row['TheOrderID'];
-			$orderFeedback = $row['OrderFeedback'];
 			$orderAdminNote = $row['OrderAdminNote'];
 
 			if($row['OrderApprovedByAdmin'] == 1 OR $row['OrderApprovedByStaff'] == 1){
@@ -188,10 +188,11 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Edit') OR
 	}
 
 	// Set original values
-	$originalOrderFeedback = $_SESSION['EditOrderOriginalInfo']['OrderFeedback'];
+	$originalOrderCommunicationToUser = $_SESSION['EditOrderOriginalInfo']['OrderCommunicationToUser'];
+	$originalOrderCommunicationFromUser = $_SESSION['EditOrderOriginalInfo']['OrderCommunicationFromUser'];
 	$originalOrderAdminNote = $_SESSION['EditOrderOriginalInfo']['OrderAdminNote'];
 	$originalOrderIsApproved = $_SESSION['EditOrderOriginalInfo']['OrderIsApproved'];
-	$originalOrderDescription = $_SESSION['EditOrderOriginalInfo']['OrderDescription'];
+	$originalOrderUserNotes = $_SESSION['EditOrderOriginalInfo']['OrderUserNotes'];
 	$originalOrderContent = $_SESSION['EditOrderOriginalInfo']['OrderContent'];
 
 	var_dump($_SESSION); // TO-DO: remove after testing is done
@@ -204,13 +205,13 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Edit') OR
 // Perform the actual database update of the edited information
 if(isSet($_POST['action']) AND $_POST['action'] == 'Edit Order'){
 	// Validate user inputs
-	list($invalidInput, $validatedOrderFeedback, $validatedAdminNote, $validatedIsApproved) = validateUserInputs();
+	list($invalidInput, $validatedOrderCommunicationToUser, $validatedAdminNote, $validatedIsApproved) = validateUserInputs();
 
 	// Refresh form on invalid
 	if($invalidInput){
 
 		// Refresh.
-		$_SESSION['EditOrderFeedback'] = $validatedOrderFeedback;
+		$_SESSION['EditOrderCommunicationToUser'] = $validatedOrderCommunicationToUser;
 		$_SESSION['EditOrderAdminNote'] = $validatedAdminNote;
 		$_SESSION['EditOrderIsApproved'] = $validatedIsApproved;
 
@@ -225,12 +226,20 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Edit Order'){
 		$original = $_SESSION['EditOrderOriginalInfo'];
 		unset($_SESSION['EditOrderOriginalInfo']);
 
-		if($original['OrderFeedback'] != $validatedOrderFeedback){
+		$messageAdded = FALSE;
+		if($validatedOrderCommunicationToUser != ""){
 			$numberOfChanges++;
+			$messageAdded = TRUE;
+
+			$dateTimeNow = getDatetimeNow();
+			$displayDateTimeNow = convertDatetimeToFormat($dateTimeNow, 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
+			$fullOrderCommunicationToUser = $original['OrderCommunicationToUser'] . "\n\n$displayDateTimeNow " . $validatedOrderCommunicationToUser;
 		}
+
 		if($original['OrderAdminNote'] != $validatedAdminNote){
 			$numberOfChanges++;
 		}
+
 		$setAsApproved = FALSE;
 		if($original['OrderIsApproved'] != $validatedIsApproved){
 			$numberOfChanges++;
@@ -258,38 +267,74 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Edit Order'){
 		{
 			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 			$pdo = connect_to_db();
-			if($setAsApproved){
+			if($setAsApproved AND $messageAdded){
 				$sql = 'UPDATE 	`orders`
-						SET		`orderFeedback` = :OrderFeedback,
+						SET		`orderCommunicationToUser` = :OrderCommunicationToUser,
 								`orderApprovedByAdmin` = :approvedByAdmin,
 								`orderApprovedByStaff` = :approvedByStaff,
 								`dateTimeUpdated` = CURRENT_TIMESTAMP,
 								`dateTimeApproved` = CURRENT_TIMESTAMP,
-								`approvedByUserID` = :approvedByUserID,
 								`adminNote` = :adminNote
+								`approvedByUserID` = :approvedByUserID
 						WHERE 	`orderID` = :OrderID';
 				$s = $pdo->prepare($sql);
 				$s->bindValue(':OrderID', $_POST['OrderID']);
-				$s->bindValue(':OrderFeedback', $validatedOrderFeedback);
+				$s->bindValue(':OrderCommunicationToUser', $fullOrderCommunicationToUser);
 				$s->bindValue(':approvedByAdmin', $approvedByAdmin);
 				$s->bindValue(':approvedByStaff', $approvedByStaff);
 				$s->bindValue(':adminNote', $validatedAdminNote);
 				$s->bindValue(':approvedByUserID', $_SESSION['LoggedInUserID']);
 				$s->execute();
-			} else {
+			} elseif($setAsApproved AND !$messageAdded){
 				$sql = 'UPDATE 	`orders`
-						SET		`orderFeedback` = :OrderFeedback,
+						SET		`orderCommunicationToUser` = :OrderCommunicationToUser,
 								`orderApprovedByAdmin` = :approvedByAdmin,
 								`orderApprovedByStaff` = :approvedByStaff,
 								`dateTimeUpdated` = CURRENT_TIMESTAMP,
+								`dateTimeApproved` = CURRENT_TIMESTAMP,
 								`adminNote` = :adminNote
+								`approvedByUserID` = :approvedByUserID
 						WHERE 	`orderID` = :OrderID';
 				$s = $pdo->prepare($sql);
 				$s->bindValue(':OrderID', $_POST['OrderID']);
-				$s->bindValue(':OrderFeedback', $validatedOrderFeedback);
 				$s->bindValue(':approvedByAdmin', $approvedByAdmin);
 				$s->bindValue(':approvedByStaff', $approvedByStaff);
 				$s->bindValue(':adminNote', $validatedAdminNote);
+				$s->bindValue(':approvedByUserID', $_SESSION['LoggedInUserID']);
+				$s->execute();
+			} elseif(!$setAsApproved AND $messageAdded){
+				$sql = 'UPDATE 	`orders`
+						SET		`orderCommunicationToUser` = :OrderCommunicationToUser,
+								`orderApprovedByAdmin` = :approvedByAdmin,
+								`orderApprovedByStaff` = :approvedByStaff,
+								`dateTimeUpdated` = CURRENT_TIMESTAMP,
+								`dateTimeApproved` = NULL,
+								`adminNote` = :adminNote
+								`approvedByUserID` = :approvedByUserID
+						WHERE 	`orderID` = :OrderID';
+				$s = $pdo->prepare($sql);
+				$s->bindValue(':OrderID', $_POST['OrderID']);
+				$s->bindValue(':OrderCommunicationToUser', $fullOrderCommunicationToUser);
+				$s->bindValue(':approvedByAdmin', $approvedByAdmin);
+				$s->bindValue(':approvedByStaff', $approvedByStaff);
+				$s->bindValue(':adminNote', $validatedAdminNote);
+				$s->bindValue(':approvedByUserID', NULL);
+				$s->execute();
+			} else {
+				$sql = 'UPDATE 	`orders`
+						SET		`orderApprovedByAdmin` = :approvedByAdmin,
+								`orderApprovedByStaff` = :approvedByStaff,
+								`dateTimeUpdated` = CURRENT_TIMESTAMP,
+								`dateTimeApproved` = NULL,
+								`adminNote` = :adminNote
+								`approvedByUserID` = :approvedByUserID
+						WHERE 	`orderID` = :OrderID';
+				$s = $pdo->prepare($sql);
+				$s->bindValue(':OrderID', $_POST['OrderID']);
+				$s->bindValue(':approvedByAdmin', $approvedByAdmin);
+				$s->bindValue(':approvedByStaff', $approvedByStaff);
+				$s->bindValue(':adminNote', $validatedAdminNote);
+				$s->bindValue(':approvedByUserID', NULL);
 				$s->execute();
 			}
 
@@ -347,8 +392,9 @@ try
 
 	$pdo = connect_to_db();
 	$sql = 'SELECT 		o.`orderID`										AS TheOrderID,
-						o.`orderDescription`							AS OrderDescription,
-						o.`orderFeedback`								AS OrderFeedback,
+						o.`orderUserNotes`								AS OrderUserNotes,
+						o.`orderCommunicationToUser`					AS OrderCommunicationToUser,
+						o.`orderCommunicationFromUser`					AS OrderCommunicationFromUser,
 						o.`dateTimeCreated`								AS DateTimeCreated,
 						o.`dateTimeUpdated`								AS DateTimeUpdated,
 						o.`dateTimeApproved`							AS DateTimeApproved,
@@ -429,6 +475,8 @@ foreach($result AS $row){
 
 	if($row['OrderApprovedByAdmin'] == 1 OR $row['OrderApprovedByStaff'] == 1){
 		$orderIsApproved = TRUE;
+		$orderIsApprovedByStaff = TRUE;
+		$displayOrderApprovedByStaff = "Yes";
 		if(!empty($row['OrderApprovedByUserName'])){
 			$orderApprovedBy = $row['OrderApprovedByUserName'];
 		} else {
@@ -436,16 +484,24 @@ foreach($result AS $row){
 		}
 	} else {
 		$orderIsApproved = FALSE;
-		$orderApprovedBy = "Not Approved";
+		$orderIsApprovedByStaff = FALSE;
+		$displayOrderApprovedByStaff = "No";
+		$orderApprovedBy = "";
 	}
 
+	if($row['OrderApprovedByUser'] == 1){
+		$orderIsApprovedByUser = TRUE;
+		$displayOrderApprovedByUser = "Yes";
+	} else {
+		$orderIsApprovedByUser = FALSE;
+		$displayOrderApprovedByUser = "No";
+	}	
+	
 	if(!empty($row['OrderRoomName'])){
 		$orderRoomName = $row['OrderRoomName'];
 	} else {
 		$orderRoomName = "N/A - Deleted Room";
 	}
-
-	$orderStatus = "N/A";
 
 	if($row['OrderPriceCharged'] != NULL){
 		$priceCharged = $row['OrderPriceCharged'];
@@ -454,21 +510,27 @@ foreach($result AS $row){
 		$displayPriceCharged = "N/A";
 	}
 
+	if($orderIsApprovedByStaff AND $orderIsApprovedByUser){
+		$orderStatus = "Approved";
+	} elseif($orderIsApprovedByStaff AND !$orderIsApprovedByUser) {
+		$orderStatus = "Pending User Approval";
+	} elseif(!$orderIsApprovedByStaff AND $orderIsApprovedByUser) {
+		$orderStatus = "Pending Staff Approval";
+	} else {
+		$orderStatus = "Not Approved";
+	}	
+
 	if($orderIsApproved){
 		if($row['OrderBookingCompleted'] != NULL){
 			$orderStatus = "Completed";
 		} elseif($row['DateTimeCancelled'] != NULL OR $row['OrderBookingCancelled'] != NULL){
 			$orderStatus = "Cancelled";
-		} else {
-			$orderStatus = "Approved";
 		}
 	} else {
 		if($row['OrderBookingCompleted'] != NULL){
 			$orderStatus = "Ended without being approved.";
 		} elseif($row['DateTimeCancelled'] != NULL OR $row['OrderBookingCancelled'] != NULL){
 			$orderStatus = "Cancelled";
-		} else {
-			$orderStatus = "Not Approved";
 		}
 	}
 
@@ -476,8 +538,9 @@ foreach($result AS $row){
 	$order[] = array(
 						'TheOrderID' => $row['TheOrderID'],
 						'OrderStatus' => $orderStatus,
-						'OrderDescription' => $row['OrderDescription'],
-						'OrderFeedback' => $row['OrderFeedback'],
+						'OrderUserNotes' => $row['OrderUserNotes'],
+						'OrderCommunicationToUser' => $row['OrderCommunicationToUser'],
+						'OrderCommunicationFromUser' => $row['OrderCommunicationFromUser'],
 						'OrderStartTime' => $displayDateTimeStart,
 						'OrderEndTime' => $displayDateTimeEnd,
 						'DateTimeCreated' => $displayDateTimeCreated,
@@ -485,7 +548,10 @@ foreach($result AS $row){
 						'DateTimeCancelled' => $displayDateTimeCancelled,
 						'OrderContent' => $row['OrderContent'],
 						'OrderAdminNote' => $row['OrderAdminNote'],
-						'OrderPriceCharged' => $displayPriceCharged
+						'OrderPriceCharged' => $displayPriceCharged,
+						'OrderApprovedByUser' => $displayOrderApprovedByUser,
+						'OrderApprovedByStaff' => $displayOrderApprovedByStaff,
+						'OrderApprovedByName' => $orderApprovedBy
 					);
 }
 

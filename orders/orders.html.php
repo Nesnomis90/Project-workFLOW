@@ -24,7 +24,8 @@
 		<table>
 			<caption>Active Orders</caption>
 			<tr>
-				<th colspan="4">Order</th>
+				<th colspan="3">Order</th>
+				<th colspan="2">Communication</th>
 				<th colspan="4">Date</th>
 				<th colspan="2">Approved By</th>
 				<th colspan="1">Full Information</th>
@@ -32,11 +33,12 @@
 			<tr>
 				<th>Status</th>
 				<th>Content</th>
-				<th>Description</th>
-				<th>Feedback</th>
-				<th>Start</th>
-				<th>End</th>
-				<th>Created</th>
+				<th>User Notes</th>
+				<th>To User</th>
+				<th>From User</th>
+				<th>Meeting Start</th>
+				<th>Meeting End</th>
+				<th>Created At</th>
 				<th>Last Update</th>
 				<th>User</th>
 				<th>Staff</th>
@@ -48,8 +50,9 @@
 						<tr>
 							<td><?php htmlout($row['OrderStatus']); ?></td>
 							<td style="white-space: pre-wrap;"><?php htmlout($row['OrderContent']); ?></td>
-							<td style="white-space: pre-wrap;"><?php htmlout($row['OrderDescription']); ?></td>
-							<td style="white-space: pre-wrap;"><?php htmlout($row['OrderFeedback']); ?></td>
+							<td style="white-space: pre-wrap;"><?php htmlout($row['OrderUserNotes']); ?></td>
+							<td style="white-space: pre-wrap;"><?php htmlout($row['OrderCommunicationToUser']); ?></td>
+							<td style="white-space: pre-wrap;"><?php htmlout($row['OrderCommunicationFromUser']); ?></td>
 							<td><?php htmlout($row['OrderStartTime']); ?></td>
 							<td><?php htmlout($row['OrderEndTime']); ?></td>
 							<td><?php htmlout($row['DateTimeCreated']); ?></td>
@@ -62,7 +65,7 @@
 					</form>
 				<?php endforeach; ?>
 			<?php else : ?>
-				<tr><td colspan="7"><b>There are no active orders.</b></td></tr>
+				<tr><td colspan="12"><b>There are no active orders.</b></td></tr>
 			<?php endif; ?>
 		</table>
 	</body>

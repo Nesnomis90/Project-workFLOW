@@ -22,22 +22,29 @@
 		<table>
 			<caption>Available Order</caption>
 			<tr>
-				<th colspan="6">Order</th>
-				<th colspan="5">Date</th>
+				<th colspan="5">Order</th>
+				<th colspan="2">Communication</th>
+				<th colspan="6">Date</th>
+				<th colspan="3">Approved By</th>
 				<th colspan="2">Alter Order</th>
 			</tr>
 			<tr>
 				<th>Status</th>
 				<th>Content</th>
-				<th>Description</th>
-				<th>Feedback</th>
+				<th>User Notes</th>
 				<th>Admin Note</th>
 				<th>Final Price</th>
-				<th>Start</th>
-				<th>End</th>
-				<th>Created</th>
+				<th>To User</th>
+				<th>From User</th>
+				<th>Meeting Start</th>
+				<th>Meeting End</th>
+				<th>Created At</th>
+				<th>Approved At</th>
 				<th>Last Update</th>
-				<th>Cancelled</th>
+				<th>Cancelled At</th>
+				<th>User</th>
+				<th>Staff</th>
+				<th>Staff Name</th>
 				<th>Edit</th>
 				<th>Cancel</th>
 			</tr>
@@ -47,15 +54,20 @@
 						<tr>
 							<td><?php htmlout($row['OrderStatus']); ?></td>
 							<td style="white-space: pre-wrap;"><?php htmlout($row['OrderContent']); ?></td>
-							<td style="white-space: pre-wrap;"><?php htmlout($row['OrderDescription']); ?></td>
-							<td style="white-space: pre-wrap;"><?php htmlout($row['OrderFeedback']); ?></td>
+							<td style="white-space: pre-wrap;"><?php htmlout($row['OrderUserNotes']); ?></td>
 							<td style="white-space: pre-wrap;"><?php htmlout($row['OrderAdminNote']); ?></td>
 							<td><?php htmlout($row['OrderPriceCharged']); ?></td>
+							<td style="white-space: pre-wrap;"><?php htmlout($row['OrderCommunicationToUser']); ?></td>
+							<td style="white-space: pre-wrap;"><?php htmlout($row['OrderCommunicationFromUser']); ?></td>
 							<td><?php htmlout($row['OrderStartTime']); ?></td>
 							<td><?php htmlout($row['OrderEndTime']); ?></td>
 							<td><?php htmlout($row['DateTimeCreated']); ?></td>
+							<td><?php htmlout($row['DateTimeApproved']); ?></td>
 							<td><?php htmlout($row['DateTimeUpdated']); ?></td>
 							<td><?php htmlout($row['DateTimeCancelled']); ?></td>
+							<td><?php htmlout($row['OrderApprovedByUser']); ?></td>
+							<td><?php htmlout($row['OrderApprovedByStaff']); ?></td>
+							<td><?php htmlout($row['OrderApprovedByName']); ?></td>
 							<td><input type="submit" name="action" value="Edit"></td>
 							<td><input type="submit" name="action" value="Cancel"></td>
 							<input type="hidden" name="OrderID" value="<?php htmlout($row['TheOrderID']); ?>">
@@ -63,7 +75,7 @@
 					</form>
 				<?php endforeach; ?>
 			<?php else : ?>
-				<tr><td colspan="13"><b>There are no orders registered in the database.</b></td></tr>
+				<tr><td colspan="18"><b>There are no orders registered in the database.</b></td></tr>
 			<?php endif; ?>
 		</table>
 		<div class="left"><a href="/admin/">Return to CMS home</a></div>

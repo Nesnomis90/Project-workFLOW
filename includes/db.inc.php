@@ -772,8 +772,9 @@ function create_tables(){
 		if(!tableExists($conn, $table)){
 			$conn->exec("CREATE TABLE IF NOT EXISTS `$table` (
 						  `orderID` int(10) unsigned NOT NULL AUTO_INCREMENT,
-						  `orderDescription` text,
-						  `orderFeedback` text,
+						  `orderUserNotes` text,
+						  `orderCommunicationFromUser` text,
+						  `orderCommunicationToUser` text,
 						  `orderApprovedByUser` tinyint(1) unsigned NOT NULL DEFAULT '1',
 						  `orderApprovedByAdmin` tinyint(1) unsigned NOT NULL DEFAULT '0',
 						  `orderApprovedByStaff` tinyint(1) unsigned NOT NULL DEFAULT '0',
