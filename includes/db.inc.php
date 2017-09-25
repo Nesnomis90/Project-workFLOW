@@ -143,9 +143,9 @@ function fillAccessLevel($pdo){
 		//Insert the needed values.
 		$pdo->beginTransaction();
 		$pdo->exec("INSERT INTO `accesslevel`(`AccessName`, `Description`) VALUES ('Admin', 'Full access to all website pages, company information and user information.')");
+		$pdo->exec("INSERT INTO `accesslevel`(`AccessName`, `Description`) VALUES ('Staff', 'Access to browse meeting room schedules and browse orders made.')");
 		$pdo->exec("INSERT INTO `accesslevel`(`AccessName`, `Description`) VALUES ('In-House User', 'Access to assign a booking code and use it to book meeting(s) locally.')");
 		$pdo->exec("INSERT INTO `accesslevel`(`AccessName`, `Description`) VALUES ('Normal User', 'Access to browse meeting room schedules, with limited information, and create meeting(s) with an active company connection.')");
-		$pdo->exec("INSERT INTO `accesslevel`(`AccessName`, `Description`) VALUES ('Kitchen Staff', 'Access to browse meeting room schedules and see what has been ordered.')");
 
 		// Commit the transaction
 		$pdo->commit();

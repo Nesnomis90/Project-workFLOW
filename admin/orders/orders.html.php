@@ -20,7 +20,7 @@
 		</div>
 
 		<table>
-			<caption>Available Order</caption>
+			<caption>Order History</caption>
 			<tr>
 				<th colspan="5">Order</th>
 				<th colspan="2">Communication</th>
