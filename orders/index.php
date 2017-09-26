@@ -28,7 +28,6 @@ if(userHasAccess('Staff')){
 function clearEditStaffOrderSessions(){
 	unset($_SESSION['EditStaffOrderOriginalInfo']);
 	unset($_SESSION['EditStaffOrderCommunicationToUser']);
-	unset($_SESSION['EditStaffOrderAdminNote']);
 	unset($_SESSION['EditStaffOrderIsApproved']);
 	unset($_SESSION['EditStaffOrderOrderID']);
 }
@@ -155,9 +154,14 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Details') OR
 			}
 
 			$dateTimeCreated = $row['DateTimeCreated'];
-			$displayDateTimeCreated = convertDatetimeToFormat($dateTimeCreated , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);;
-			$dateTimeUpdated = $row['DateTimeUpdated'];
-			$displayDateTimeUpdated = convertDatetimeToFormat($dateTimeUpdated , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);;
+			$displayDateTimeCreated = convertDatetimeToFormat($dateTimeCreated , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
+
+			if(!empty($row['DateTimeUpdated'])){
+				$dateTimeUpdated = $row['DateTimeUpdated'];
+				$displayDateTimeUpdated = convertDatetimeToFormat($dateTimeUpdated , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);				
+			} else {
+				$displayDateTimeUpdated = "N/A";
+			}
 
 			$_SESSION['EditStaffOrderOriginalInfo']['OrderIsApproved'] = $orderIsApproved;
 			$_SESSION['EditStaffOrderOriginalInfo']['DateTimeCreated'] = $displayDateTimeCreated;
@@ -267,8 +271,8 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Details') OR
 
 	if(!isSet($orderCommunicationToUser)){
 		$orderCommunicationToUser = "";
-	}	
-	
+	}
+
 	var_dump($_SESSION); // TO-DO: remove after testing is done
 
 	// Change to the template we want to use
@@ -277,10 +281,12 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Details') OR
 }
 
 // Perform the actual database update of the edited information
-if(isSet($_POST['action']) AND $_POST['action'] == 'Confirm Changes'){
+if(isSet($_POST['action']) AND $_POST['action'] == 'Submit Changes'){
 	// Validate user inputs
 	list($invalidInput, $validatedOrderCommunicationToUser, $validatedIsApproved) = validateUserInputs();
 
+	// TO-DO: Add a way to check all checkmarks. Also $setAsPurchased
+	
 	// Refresh form on invalid
 	if($invalidInput){
 

@@ -6,7 +6,7 @@
 		<link rel="stylesheet" type="text/css" href="/CSS/myCSS.css">
 		<style>
 			label {
-				width: 250px;
+				width: 210px;
 			}
 			#extraTable table th,tr,td {
 				
