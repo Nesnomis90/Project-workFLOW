@@ -52,6 +52,33 @@ WHERE 	DATE(CURRENT_TIMESTAMP) >= `removeAtDate`
 AND 	`isActive` = 1
 AND		`companyID` <> 0;
 
+SELECT 		o.`orderID`										AS TheOrderID,
+			o.`orderUserNotes`								AS OrderUserNotes,
+			o.`orderCommunicationToUser`					AS OrderCommunicationToUser,
+			o.`orderCommunicationFromUser`					AS OrderCommunicationFromUser,
+			o.`dateTimeCreated`								AS DateTimeCreated,
+			o.`dateTimeUpdated`								AS DateTimeUpdated,
+			o.`orderApprovedByUser`							AS OrderApprovedByUser,
+			o.`orderApprovedByAdmin`						AS OrderApprovedByAdmin,
+			o.`orderApprovedByStaff`						AS OrderApprovedByStaff,
+			GROUP_CONCAT(ex.`name` SEPARATOR "\n")			AS OrderContent,
+			b.`startDateTime`								AS OrderStartDateTime,
+			b.`endDateTime`									AS OrderEndDateTime,
+			m.`name`										AS OrderRoomName
+FROM 		`orders` o
+INNER JOIN	`extraorders` eo
+ON 			eo.`orderID` = o.`orderID`
+INNER JOIN 	`extra` ex
+ON 			eo.`extraID` = ex.`extraID`
+INNER JOIN	`booking` b
+ON 			b.`orderID` = o.`orderID`
+INNER JOIN	`meetingroom` m
+ON 			m.`meetingRoomID` = b.`meetingRoomID`
+WHERE		o.`dateTimeCancelled` IS NULL
+AND			b.`dateTimeCancelled` IS NULL
+AND			b.`actualEndDateTime` IS NULL
+GROUP BY	o.`orderID`;
+
 SELECT 		c.`CompanyID`	AS CompanyID,
 			c.`name`		AS CompanyName
 FROM		`company` c

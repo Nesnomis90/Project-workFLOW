@@ -28,9 +28,9 @@ if(userHasAccess('Staff')){
 function clearEditStaffOrderSessions(){
 	unset($_SESSION['EditStaffOrderOriginalInfo']);
 	unset($_SESSION['EditStaffOrderCommunicationToUser']);
-	unset($_SESSION['EditStaffOrderAdminNote']);
 	unset($_SESSION['EditStaffOrderIsApproved']);
 	unset($_SESSION['EditStaffOrderOrderID']);
+	unset($_SESSION['EditStaffOrderExtraOrdered']);
 }
 
 // Function to check if user inputs for Order are correct
@@ -45,7 +45,54 @@ function validateUserInputs(){
 		$orderCommunicationToUser = NULL;
 	}
 
-	if(isSet($_POST['isApproved']) AND $_POST['isApproved'] == 1 AND !$invalidInput){
+	if(isSet($_SESSION['EditStaffOrderExtraOrdered'])){
+		if(isSet($_POST['isApprovedForPurchase'])){
+			$isApprovedForPurchaseArray = $_POST['isApprovedForPurchase'];
+			foreach($_SESSION['EditStaffOrderExtraOrdered'] AS &$extra){
+				$isApprovedForPurchaseUpdated = FALSE;
+				for($i=0; $i<sizeOf($isApprovedForPurchaseArray); $i++){
+					if($extra['ExtraID'] == $isApprovedForPurchaseArray[$i]){
+						$extra['ExtraBooleanApprovedForPurchase'] = 1;
+						$isApprovedForPurchaseUpdated = TRUE;
+						break;
+					}
+				}
+				if(!$isApprovedForPurchaseUpdated){
+					$extra['ExtraBooleanApprovedForPurchase'] = 0;
+				}
+				unset($extra); // destroy reference.
+			}
+		} else {
+			foreach($_SESSION['EditStaffOrderExtraOrdered'] AS &$extra){
+				$extra['ExtraBooleanApprovedForPurchase'] = 0;
+				unset($extra); // destroy reference.
+			}
+		}
+		if(isSet($_POST['isPurchased'])){
+			$isPurchasedArray = $_POST['isPurchased'];
+			foreach($_SESSION['EditStaffOrderExtraOrdered'] AS &$extra){
+				$isPurchasedUpdated = FALSE;
+				for($i=0; $i<sizeOf($isPurchasedArray); $i++){
+					if($extra['ExtraID'] == $isPurchasedArray[$i]){
+						$extra['ExtraBooleanPurchased'] = 1;
+						$isPurchasedUpdated = TRUE;
+						break;
+					}
+				}
+				if(!$isPurchasedUpdated){
+					$extra['ExtraBooleanPurchased'] = 0;
+				}
+				unset($extra); // destroy reference.
+			}
+		} else {
+			foreach($_SESSION['EditStaffOrderExtraOrdered'] AS &$extra){
+				$extra['ExtraBooleanPurchased'] = 0;
+				unset($extra); // destroy reference.
+			}
+		}
+	}
+
+	if(isSet($_POST['isApproved']) AND $_POST['isApproved'] == 1){
 		$orderIsApproved = 1;
 	} else {
 		$orderIsApproved = 0;
@@ -58,20 +105,19 @@ function validateUserInputs(){
 	// Do actual input validation
 	if(validateString($validatedOrderCommunicationToUser) === FALSE AND !$invalidInput){
 		$invalidInput = TRUE;
-		$_SESSION['AddOrderError'] = "Your submitted Order feedback has illegal characters in it.";
+		$_SESSION['OrderStaffDetailsFeedback'] = "Your submitted message to the user has illegal characters in it.";
 	}
 
 	// Check if input length is allowed
 		// OrderCommunicationToUser
 	$invalidOrderCommunicationToUser = isLengthInvalidEquipmentDescription($validatedOrderCommunicationToUser);
 	if($invalidOrderCommunicationToUser AND !$invalidInput){
-		$_SESSION['AddOrderError'] = "The order feedback submitted is too long.";
+		$_SESSION['OrderStaffDetailsFeedback'] = "Your submitted message to the user is too long.";
 		$invalidInput = TRUE;
 	}
 
 	return array($invalidInput, $validatedOrderCommunicationToUser, $validatedIsApproved);
 }
-
 
 // if staff wants to edit Order information
 // we load a new html form
@@ -122,7 +168,6 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Details') OR
 								o.`orderApprovedByUser`							AS OrderApprovedByUser,
 								o.`orderApprovedByAdmin`						AS OrderApprovedByAdmin,
 								o.`orderApprovedByStaff`						AS OrderApprovedByStaff,
-								GROUP_CONCAT(CONCAT_WS("\n", ex.`name`))		AS OrderContent,
 								b.`startDateTime`								AS OrderStartDateTime,
 								b.`endDateTime`									AS OrderEndDateTime,
 								m.`name`										AS OrderRoomName
@@ -148,7 +193,6 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Details') OR
 
 			// Set the correct information
 			$orderID = $row['TheOrderID'];
-			$orderCommunicationToUser = $row['OrderCommunicationToUser'];
 
 			if($row['OrderApprovedByAdmin'] == 1 OR $row['OrderApprovedByStaff'] == 1){
 				$orderIsApproved = 1;
@@ -156,10 +200,23 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Details') OR
 				$orderIsApproved = 0;
 			}
 
+			$dateTimeCreated = $row['DateTimeCreated'];
+			$displayDateTimeCreated = convertDatetimeToFormat($dateTimeCreated , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
+
+			if(!empty($row['DateTimeUpdated'])){
+				$dateTimeUpdated = $row['DateTimeUpdated'];
+				$displayDateTimeUpdated = convertDatetimeToFormat($dateTimeUpdated , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);				
+			} else {
+				$displayDateTimeUpdated = "N/A";
+			}
+
 			$_SESSION['EditStaffOrderOriginalInfo']['OrderIsApproved'] = $orderIsApproved;
+			$_SESSION['EditStaffOrderOriginalInfo']['DateTimeCreated'] = $displayDateTimeCreated;
+			$_SESSION['EditStaffOrderOriginalInfo']['DateTimeUpdated'] = $displayDateTimeUpdated;
 			$_SESSION['EditStaffOrderOrderID'] = $orderID;
 
-			$sql = 'SELECT 		ex.`name`												AS ExtraName,
+			$sql = 'SELECT 		ex.`extraID` 											AS ExtraID,
+								ex.`name`												AS ExtraName,
 								eo.`amount`												AS ExtraAmount,
 								IFNULL(eo.`alternativePrice`, ex.`price`)				AS ExtraPrice,
 								IFNULL(eo.`alternativeDescription`, ex.`description`)	AS ExtraDescription,
@@ -189,8 +246,10 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Details') OR
 				$extraAmount = $extra['ExtraAmount'];
 				$extraPrice = convertToCurrency($extra['ExtraPrice']);
 				$extraDescription = $extra['ExtraDescription'];
+				$extraID = $extra['ExtraID'];
 
 				if($extra['ExtraDateTimePurchased'] != NULL){
+					$booleanPurchased = 1;
 					$dateTimePurchased = $extra['ExtraDateTimePurchased'];
 					$displayDateTimePurchased = convertDatetimeToFormat($dateTimePurchased , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
 					if($extra['ExtraPurchasedByUser'] != NULL){
@@ -201,22 +260,26 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Details') OR
 				} else {
 					$displayDateTimePurchased = "";
 					$displayPurchasedByUser = "";
+					$booleanPurchased = 0;
 				}
 
 				if($extra['ExtraDateTimeApprovedForPurchase'] != NULL){
+					$booleanApprovedForPurchase = 1;
 					$dateTimeApprovedForPurchase = $extra['ExtraDateTimeApprovedForPurchase'];
 					$displayDateTimeApprovedForPurchase = convertDatetimeToFormat($dateTimeApprovedForPurchase , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
 					if($extra['ExtraApprovedForPurchaseByUser'] != NULL){
-						$displayApprovedForPurchaseByUser= $extra['ExtraApprovedForPurchaseByUser'];
+						$displayApprovedForPurchaseByUser = $extra['ExtraApprovedForPurchaseByUser'];
 					} else {
 						$displayApprovedForPurchaseByUser = "N/A - Deleted User";
 					}
 				} else {
+					$booleanApprovedForPurchase = 0;
 					$displayDateTimeApprovedForPurchase = "";
 					$displayApprovedForPurchaseByUser = "";
 				}
 
 				$extraOrdered[] = array(
+											'ExtraID' => $extraID,
 											'ExtraName' => $extraName,
 											'ExtraAmount' => $extraAmount,
 											'ExtraPrice' => $extraPrice,
@@ -224,17 +287,20 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Details') OR
 											'ExtraDateTimePurchased' => $displayDateTimePurchased,
 											'ExtraPurchasedByUser' => $displayPurchasedByUser,
 											'ExtraDateTimeApprovedForPurchase' => $displayDateTimeApprovedForPurchase,
-											'ExtraApprovedForPurchaseByUser' => $displayApprovedForPurchaseByUser
+											'ExtraApprovedForPurchaseByUser' => $displayApprovedForPurchaseByUser,
+											'ExtraBooleanApprovedForPurchase' => $booleanApprovedForPurchase,
+											'ExtraBooleanPurchased' => $booleanPurchased
 										);
 			}
 
 			$_SESSION['EditStaffOrderOriginalInfo']['ExtraOrdered'] = $extraOrdered;
+			$_SESSION['EditStaffOrderExtraOrdered'] = $extraOrdered;
 			//Close the connection
 			$pdo = null;
 		}
 		catch (PDOException $e)
 		{
-			$error = 'Error fetching order details.';
+			$error = 'Error fetching order details.' . $e->getMessage();
 			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
 			$pdo = null;
 			exit();
@@ -243,19 +309,33 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Details') OR
 
 	// Set original values
 	$originalOrderCommunicationToUser = $_SESSION['EditStaffOrderOriginalInfo']['OrderCommunicationToUser'];
+	$originalOrderCommunicationFromUser = $_SESSION['EditStaffOrderOriginalInfo']['OrderCommunicationFromUser'];
 	$originalOrderIsApproved = $_SESSION['EditStaffOrderOriginalInfo']['OrderIsApproved'];
 	$originalOrderUserNotes = $_SESSION['EditStaffOrderOriginalInfo']['OrderUserNotes'];
-	$originalOrderContent = $_SESSION['EditStaffOrderOriginalInfo']['OrderContent'];
+	$originalOrderCreated = $_SESSION['EditStaffOrderOriginalInfo']['DateTimeCreated'];
+	$originalOrderUpdated = $_SESSION['EditStaffOrderOriginalInfo']['DateTimeUpdated'];
+
+	if($originalOrderCommunicationToUser == ""){
+		$originalOrderCommunicationToUser = "No messages sent to user.";
+	}
+
+	if($originalOrderCommunicationFromUser == ""){
+		$originalOrderCommunicationFromUser = "No messages received from user.";
+	}
+
+	if(!isSet($orderCommunicationToUser)){
+		$orderCommunicationToUser = "";
+	}
 
 	var_dump($_SESSION); // TO-DO: remove after testing is done
 
 	// Change to the template we want to use
-	include 'editorder.html.php';
+	include 'details.html.php';
 	exit();
 }
 
 // Perform the actual database update of the edited information
-if(isSet($_POST['action']) AND $_POST['action'] == 'Confirm Changes'){
+if(isSet($_POST['action']) AND $_POST['action'] == 'Submit Changes'){
 	// Validate user inputs
 	list($invalidInput, $validatedOrderCommunicationToUser, $validatedIsApproved) = validateUserInputs();
 
@@ -284,7 +364,7 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Confirm Changes'){
 
 			$dateTimeNow = getDatetimeNow();
 			$displayDateTimeNow = convertDatetimeToFormat($dateTimeNow, 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
-			$fullOrderCommunicationToUser = $original['OrderCommunicationToUser'] . "\n\n$displayDateTimeNow " . $validatedOrderCommunicationToUser;
+			$fullOrderCommunicationToUser = $original['OrderCommunicationToUser'] . "$displayDateTimeNow:\n" . $validatedOrderCommunicationToUser . "\n\n";
 		}
 
 		$setAsApproved = FALSE;
@@ -308,15 +388,27 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Confirm Changes'){
 			$approvedByAdmin = $original['OrderApprovedByAdmin'];
 			$approvedByStaff = $original['OrderApprovedByStaff'];
 		}
-		unset($original);
 	}
 
+	$extraChanged = FALSE;
+	if($original['ExtraOrdered'] != $_SESSION['EditStaffOrderExtraOrdered']){
+		$numberOfChanges++;
+		$extraChanged = TRUE;
+	}
+
+	$orderID = $_POST['OrderID'];
+	
 	if($numberOfChanges > 0){
 		// Some changes were made, let's update!
 		try
 		{
 			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 			$pdo = connect_to_db();
+
+			if($extraChanged){
+				$pdo->beginTransaction();
+			}
+
 			if($setAsApproved AND $messageAdded){
 				$sql = 'UPDATE 	`orders`
 						SET		`orderCommunicationToUser` = :OrderCommunicationToUser,
@@ -327,7 +419,7 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Confirm Changes'){
 								`approvedByUserID` = :approvedByUserID
 						WHERE 	`orderID` = :OrderID';
 				$s = $pdo->prepare($sql);
-				$s->bindValue(':OrderID', $_POST['OrderID']);
+				$s->bindValue(':OrderID', $orderID);
 				$s->bindValue(':OrderCommunicationToUser', $fullOrderCommunicationToUser);
 				$s->bindValue(':approvedByAdmin', $approvedByAdmin);
 				$s->bindValue(':approvedByStaff', $approvedByStaff);
@@ -343,7 +435,7 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Confirm Changes'){
 								`approvedByUserID` = :approvedByUserID
 						WHERE 	`orderID` = :OrderID';
 				$s = $pdo->prepare($sql);
-				$s->bindValue(':OrderID', $_POST['OrderID']);
+				$s->bindValue(':OrderID', $orderID);
 				$s->bindValue(':approvedByAdmin', $approvedByAdmin);
 				$s->bindValue(':approvedByStaff', $approvedByStaff);
 				$s->bindValue(':approvedByUserID', $_SESSION['LoggedInUserID']);
@@ -355,14 +447,13 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Confirm Changes'){
 								`orderApprovedByStaff` = :approvedByStaff,
 								`dateTimeUpdated` = CURRENT_TIMESTAMP,
 								`dateTimeApproved` = NULL,
-								`approvedByUserID` = :approvedByUserID
+								`approvedByUserID` = NULL
 						WHERE 	`orderID` = :OrderID';
 				$s = $pdo->prepare($sql);
-				$s->bindValue(':OrderID', $_POST['OrderID']);
+				$s->bindValue(':OrderID', $orderID);
 				$s->bindValue(':OrderCommunicationToUser', $fullOrderCommunicationToUser);
 				$s->bindValue(':approvedByAdmin', $approvedByAdmin);
 				$s->bindValue(':approvedByStaff', $approvedByStaff);
-				$s->bindValue(':approvedByUserID', NULL);
 				$s->execute();
 			} else {
 				$sql = 'UPDATE 	`orders`
@@ -370,14 +461,124 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Confirm Changes'){
 								`orderApprovedByStaff` = :approvedByStaff,
 								`dateTimeUpdated` = CURRENT_TIMESTAMP,
 								`dateTimeApproved` = NULL,
-								`approvedByUserID` = :approvedByUserID
+								`approvedByUserID` = NULL
 						WHERE 	`orderID` = :OrderID';
 				$s = $pdo->prepare($sql);
-				$s->bindValue(':OrderID', $_POST['OrderID']);
+				$s->bindValue(':OrderID', $orderID);
 				$s->bindValue(':approvedByAdmin', $approvedByAdmin);
 				$s->bindValue(':approvedByStaff', $approvedByStaff);
-				$s->bindValue(':approvedByUserID', NULL);
 				$s->execute();
+			}
+
+			if($extraChanged){
+				// Update extraorders table
+				foreach($_SESSION['EditStaffOrderExtraOrdered'] AS $key => $extra){
+					$extraID = $extra['ExtraID'];
+					$extraBooleanApprovedForPurchase = $extra['ExtraBooleanApprovedForPurchase'];
+					$extraBooleanPurchased = $extra['ExtraBooleanPurchased'];
+					$updateApprovedForPurchase = FALSE;
+					$updatePurchased = FALSE;
+					// update if the values actually changed
+					if($original['ExtraOrdered'][$key]['ExtraBooleanApprovedForPurchase'] != $extraBooleanApprovedForPurchase){
+						$updateApprovedForPurchase = TRUE;
+					}
+					if($original['ExtraOrdered'][$key]['ExtraBooleanPurchased'] != $extraBooleanPurchased){
+						$updatePurchased = TRUE;
+					}
+
+					if($extraBooleanApprovedForPurchase == 1){
+						$approvedByUserID = $_SESSION['LoggedInUserID'];
+					} else {
+						$approvedByUserID = NULL;
+					}
+
+					if($extraBooleanPurchased == 1){
+						$purchasedByUserID = $_SESSION['LoggedInUserID'];
+					} else {
+						$purchasedByUserID = NULL;
+					}
+
+					if($updateApprovedForPurchase AND $updatePurchased){
+						if($extraBooleanApprovedForPurchase == 1 AND $extraBooleanPurchased == 1){
+							$sql = "UPDATE	`extraorders`
+									SET		`approvedForPurchase` = CURRENT_TIMESTAMP,
+											`approvedByUserID` = :approvedByUserID,
+											`purchased` = CURRENT_TIMESTAMP,
+											`purchasedByUserID` = :purchasedByUserID
+									WHERE	`orderID` = :OrderID
+									AND		`extraID` = :ExtraID";
+						} elseif($extraBooleanApprovedForPurchase == 1 AND $extraBooleanPurchased == 0){
+							$sql = "UPDATE	`extraorders`
+									SET		`approvedForPurchase` = CURRENT_TIMESTAMP,
+											`approvedByUserID` = :approvedByUserID,
+											`purchased` = NULL,
+											`purchasedByUserID` = :purchasedByUserID
+									WHERE	`orderID` = :OrderID
+									AND		`extraID` = :ExtraID";
+						} elseif($extraBooleanApprovedForPurchase == 0 AND $extraBooleanPurchased == 1){
+							$sql = "UPDATE	`extraorders`
+									SET		`approvedForPurchase` = NULL,
+											`approvedByUserID` = :approvedByUserID,
+											`purchased` = CURRENT_TIMESTAMP,
+											`purchasedByUserID` = :purchasedByUserID
+									WHERE	`orderID` = :OrderID
+									AND		`extraID` = :ExtraID";
+						} else {
+							$sql = "UPDATE	`extraorders`
+									SET		`approvedForPurchase` = NULL,
+											`approvedByUserID` = :approvedByUserID,
+											`purchased` = NULL,
+											`purchasedByUserID` = :purchasedByUserID
+									WHERE	`orderID` = :OrderID
+									AND		`extraID` = :ExtraID";
+						}
+						$s = $pdo->prepare($sql);
+						$s->bindValue(':OrderID', $orderID);
+						$s->bindValue(':ExtraID', $extraID);
+						$s->bindValue(':approvedByUserID', $approvedByUserID);
+						$s->bindValue(':purchasedByUserID', $purchasedByUserID);
+						$s->execute();
+					} elseif($updateApprovedForPurchase AND !$updatePurchased){
+						if($extraBooleanApprovedForPurchase == 1){
+							$sql = "UPDATE	`extraorders`
+									SET		`approvedForPurchase` = CURRENT_TIMESTAMP,
+											`approvedByUserID` = :approvedByUserID
+									WHERE	`orderID` = :OrderID
+									AND		`extraID` = :ExtraID";
+						} else {
+							$sql = "UPDATE	`extraorders`
+									SET		`approvedForPurchase` = NULL,
+											`approvedByUserID` = :approvedByUserID
+									WHERE	`orderID` = :OrderID
+									AND		`extraID` = :ExtraID";
+						}
+						$s = $pdo->prepare($sql);
+						$s->bindValue(':OrderID', $orderID);
+						$s->bindValue(':ExtraID', $extraID);
+						$s->bindValue(':approvedByUserID', $approvedByUserID);
+						$s->execute();
+					} elseif(!$updateApprovedForPurchase AND $updatePurchased){
+						if($extraBooleanPurchased == 1){
+							$sql = "UPDATE	`extraorders`
+									SET		`purchased` = CURRENT_TIMESTAMP,
+											`purchasedByUserID` = :purchasedByUserID
+									WHERE	`orderID` = :OrderID
+									AND		`extraID` = :ExtraID";
+						} else {
+							$sql = "UPDATE	`extraorders`
+									SET		`purchased` = NULL,
+											`purchasedByUserID` = :purchasedByUserID
+									WHERE	`orderID` = :OrderID
+									AND		`extraID` = :ExtraID";
+						}
+						$s = $pdo->prepare($sql);
+						$s->bindValue(':OrderID', $orderID);
+						$s->bindValue(':ExtraID', $extraID);
+						$s->bindValue(':purchasedByUserID', $purchasedByUserID);
+						$s->execute();
+					}
+				}
+				$pdo->commit();
 			}
 
 			// Close the connection
@@ -395,7 +596,7 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Confirm Changes'){
 	} else {
 		$_SESSION['OrderStaffFeedback'] = "No changes were made to the Order.";
 	}
-
+	
 	clearEditStaffOrderSessions();
 
 	// Load Order list webpage
@@ -443,7 +644,7 @@ try
 						o.`orderApprovedByUser`							AS OrderApprovedByUser,
 						o.`orderApprovedByAdmin`						AS OrderApprovedByAdmin,
 						o.`orderApprovedByStaff`						AS OrderApprovedByStaff,
-						GROUP_CONCAT(CONCAT_WS("\n", ex.`name`))		AS OrderContent,
+						GROUP_CONCAT(ex.`name` SEPARATOR "\n")			AS OrderContent,
 						b.`startDateTime`								AS OrderStartDateTime,
 						b.`endDateTime`									AS OrderEndDateTime,
 						m.`name`										AS OrderRoomName

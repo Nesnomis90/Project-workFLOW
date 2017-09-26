@@ -2,18 +2,18 @@
 	This is the CSS we use in our HTML
 	To include it we add this to our header
 	<link rel="stylesheet" type="text/css" href="/CSS/myCSS.css">
-	
+
 	Keep in mind that the sequence is important.
 	e.g. tr:hover is last in the tr sequence because it should always overwrite.
 */
 
 	/* CSS for the body of the webpages START*/	
 	/* CSS for the body of the webpages END*/
-	
+
 	/* CSS for the headings of the webpages START*/
 
 	/* CSS for the headings of the webpages END*/
-	
+
 	/* CSS for all the textarea input START */
 textarea{background-color: white;}
 
@@ -47,7 +47,7 @@ input[type=password]:focus{
 }
 input[type=password][disabled]{background-color: #EBEBE4;}
 	/* CSS for all the non-textfield input text END */
-	
+
 	/* CSS for all the number inputs START */
 input[type=number]{background-color: white;}
 
@@ -59,7 +59,7 @@ input[type=number]:focus{
 }
 input[type=number][disabled]{background-color: #EBEBE4;}
 
-	/* CSS for all the number inputs input text END */	
+	/* CSS for all the number inputs input text END */
 
 	/* CSS for all the submit buttons START */
 input[type=submit]:hover{box-shadow: 2px 2px 2px #888888;}
@@ -71,7 +71,7 @@ input{
 }
 textarea{
 	display: inline-block;
-	float: left;	
+	float: left;
 }
 label{
     display: inline-block;
@@ -92,13 +92,13 @@ span{
 	display:inline-block;
 	float: left;
 }
-	/* CSS for all the fieldsets START */	
+	/* CSS for all the fieldsets START */
 fieldset {
 	position: relative;
 	display: inline-block; /* Only makes the formfield as wide as the content */
 }
 	/* CSS for all the fieldsets END */
-	
+
 	/* CSS for all the tables START */
 table {
 	font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
