@@ -63,7 +63,7 @@
 				</div>
 
 				<div>
-					<label>Original Order Approval: </label>
+					<label>Order Approval Status: </label>
 					<?php if($originalOrderIsApproved == 1) : ?>
 						<span><b><?php htmlout("Order Approved"); ?></b></span>
 					<?php else : ?>
