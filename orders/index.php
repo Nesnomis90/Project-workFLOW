@@ -122,7 +122,6 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Details') OR
 								o.`orderApprovedByUser`							AS OrderApprovedByUser,
 								o.`orderApprovedByAdmin`						AS OrderApprovedByAdmin,
 								o.`orderApprovedByStaff`						AS OrderApprovedByStaff,
-								GROUP_CONCAT(CONCAT_WS("\n", ex.`name`))		AS OrderContent,
 								b.`startDateTime`								AS OrderStartDateTime,
 								b.`endDateTime`									AS OrderEndDateTime,
 								m.`name`										AS OrderRoomName
@@ -156,10 +155,18 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Details') OR
 				$orderIsApproved = 0;
 			}
 
+			$dateTimeCreated = $row['DateTimeCreated'];
+			$displayDateTimeCreated = convertDatetimeToFormat($dateTimeCreated , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);;
+			$dateTimeUpdated = $row['DateTimeUpdated'];
+			$displayDateTimeUpdated = convertDatetimeToFormat($dateTimeUpdated , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);;
+
 			$_SESSION['EditStaffOrderOriginalInfo']['OrderIsApproved'] = $orderIsApproved;
+			$_SESSION['EditStaffOrderOriginalInfo']['DateTimeCreated'] = $displayDateTimeCreated;
+			$_SESSION['EditStaffOrderOriginalInfo']['DateTimeUpdated'] = $displayDateTimeUpdated;
 			$_SESSION['EditStaffOrderOrderID'] = $orderID;
 
-			$sql = 'SELECT 		ex.`name`												AS ExtraName,
+			$sql = 'SELECT 		ex.`extraID` 											AS ExtraID
+								ex.`name`												AS ExtraName,
 								eo.`amount`												AS ExtraAmount,
 								IFNULL(eo.`alternativePrice`, ex.`price`)				AS ExtraPrice,
 								IFNULL(eo.`alternativeDescription`, ex.`description`)	AS ExtraDescription,
@@ -189,6 +196,7 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Details') OR
 				$extraAmount = $extra['ExtraAmount'];
 				$extraPrice = convertToCurrency($extra['ExtraPrice']);
 				$extraDescription = $extra['ExtraDescription'];
+				$extraID = $extra['ExtraID'];
 
 				if($extra['ExtraDateTimePurchased'] != NULL){
 					$dateTimePurchased = $extra['ExtraDateTimePurchased'];
@@ -217,6 +225,7 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Details') OR
 				}
 
 				$extraOrdered[] = array(
+											'ExtraID' => $extraID,
 											'ExtraName' => $extraName,
 											'ExtraAmount' => $extraAmount,
 											'ExtraPrice' => $extraPrice,
@@ -245,12 +254,13 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Details') OR
 	$originalOrderCommunicationToUser = $_SESSION['EditStaffOrderOriginalInfo']['OrderCommunicationToUser'];
 	$originalOrderIsApproved = $_SESSION['EditStaffOrderOriginalInfo']['OrderIsApproved'];
 	$originalOrderUserNotes = $_SESSION['EditStaffOrderOriginalInfo']['OrderUserNotes'];
-	$originalOrderContent = $_SESSION['EditStaffOrderOriginalInfo']['OrderContent'];
+	$originalOrderCreated = $_SESSION['EditStaffOrderOriginalInfo']['DateTimeCreated'];
+	$originalOrderUpdated = $_SESSION['EditStaffOrderOriginalInfo']['DateTimeUpdated'];
 
 	var_dump($_SESSION); // TO-DO: remove after testing is done
 
 	// Change to the template we want to use
-	include 'editorder.html.php';
+	include 'details.html.php';
 	exit();
 }
 
