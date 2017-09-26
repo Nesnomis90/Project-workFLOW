@@ -99,19 +99,19 @@
 							<td><?php htmlout($row['ExtraAmount']); ?></td>
 							<td><?php htmlout($row['ExtraPrice']); ?></td>
 							<td>
-								<?php if(!empty($row['ExtraDateTimeApprovedForPurchase'])) : ?>
-									<label><input type="checkbox" name="isApproved<?php htmlout($row['ExtraID']); ?>" value="1" checked>Approved</label>
+								<?php if($row['ExtraBooleanApprovedForPurchase'] == 1) : ?>
+									<label style="width: auto;"><input type="checkbox" name="isApprovedForPurchase[]" value="<?php htmlout($row['ExtraID']); ?>" checked>Approved</label>
 								<?php else : ?>
-									<label><input type="checkbox" name="isApproved<?php htmlout($row['ExtraID']); ?>" value="1">Approved</label>
+									<label style="width: auto;"><input type="checkbox" name="isApprovedForPurchase[]" value="<?php htmlout($row['ExtraID']); ?>">Approved</label>
 								<?php endif; ?>
 							</td>
 							<td><?php htmlout($row['ExtraApprovedForPurchaseByUser']); ?></td>
 							<td><?php htmlout($row['ExtraDateTimeApprovedForPurchase']); ?></td>
 							<td>
-								<?php if(!empty($row['ExtraDateTimePurchased'])) : ?>
-									<label><input type="checkbox" name="isPurchased<?php htmlout($row['ExtraID']); ?>" value="1" checked>Purchased</label>
+								<?php if($row['ExtraBooleanPurchased'] == 1) : ?>
+									<label style="width: auto;"><input type="checkbox" name="isPurchased[]" value="<?php htmlout($row['ExtraID']); ?>" checked>Purchased</label>
 								<?php else : ?>
-									<label><input type="checkbox" name="isPurchased<?php htmlout($row['ExtraID']); ?>" value="1">Purchased</label>
+									<label style="width: auto;"><input type="checkbox" name="isPurchased[]" value="<?php htmlout($row['ExtraID']); ?>">Purchased</label>
 								<?php endif; ?>
 							</td>
 							<td><?php htmlout($row['ExtraPurchasedByUser']); ?></td>

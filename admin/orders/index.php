@@ -37,7 +37,7 @@ function validateUserInputs(){
 		// Doesn't need to be set.
 		$adminNote = NULL;
 	}
-	if(isSet($_POST['isApproved']) AND $_POST['isApproved'] == 1 AND !$invalidInput){
+	if(isSet($_POST['isApproved']) AND $_POST['isApproved'] == 1){
 		$orderIsApproved = 1;
 	} else {
 		$orderIsApproved = 0;
@@ -55,14 +55,14 @@ function validateUserInputs(){
 	}
 	if(validateString($validatedOrderCommunicationToUser) === FALSE AND !$invalidInput){
 		$invalidInput = TRUE;
-		$_SESSION['AddOrderError'] = "Your submitted Order feedback has illegal characters in it.";
+		$_SESSION['AddOrderError'] = "Your submitted message to the user has illegal characters in it.";
 	}
 
 	// Check if input length is allowed
 		// OrderCommunicationToUser
 	$invalidOrderCommunicationToUser = isLengthInvalidEquipmentDescription($validatedOrderCommunicationToUser);
 	if($invalidOrderCommunicationToUser AND !$invalidInput){
-		$_SESSION['AddOrderError'] = "The order feedback submitted is too long.";
+		$_SESSION['AddOrderError'] = "Your submitted message to the user is too long.";
 		$invalidInput = TRUE;
 	}
 		// AdminNote
@@ -245,7 +245,7 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Edit Order'){
 
 			$dateTimeNow = getDatetimeNow();
 			$displayDateTimeNow = convertDatetimeToFormat($dateTimeNow, 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
-			$fullOrderCommunicationToUser = $original['OrderCommunicationToUser'] . "\n\n$displayDateTimeNow " . $validatedOrderCommunicationToUser;
+			$fullOrderCommunicationToUser = $original['OrderCommunicationToUser'] . "$displayDateTimeNow:\n" . $validatedOrderCommunicationToUser . "\n\n";
 		}
 
 		if($original['OrderAdminNote'] != $validatedAdminNote){

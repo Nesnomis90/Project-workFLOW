@@ -10,11 +10,11 @@ function convertDatetimeToFormat($oldDatetimeString, $oldformat, $format){
 	// 'F jS Y H:i' = March 3rd 2017 12:15
 	// 'H:i j F Y' = 12:15 3 March 2017
 	date_default_timezone_set(DATE_DEFAULT_TIMEZONE);
-	
+
 	if(validateDatetimeWithFormat($oldDatetimeString, $oldformat)){
 		$oldDatetime = date_create_from_format($oldformat, $oldDatetimeString);
 		$newDatetime= DATE_FORMAT($oldDatetime , $format);
-		
+
 		return $newDatetime;
 	} else {
 		return FALSE;
