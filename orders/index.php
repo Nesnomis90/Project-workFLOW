@@ -147,7 +147,6 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Details') OR
 
 			// Set the correct information
 			$orderID = $row['TheOrderID'];
-			$orderCommunicationToUser = $row['OrderCommunicationToUser'];
 
 			if($row['OrderApprovedByAdmin'] == 1 OR $row['OrderApprovedByStaff'] == 1){
 				$orderIsApproved = 1;
@@ -165,7 +164,7 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Details') OR
 			$_SESSION['EditStaffOrderOriginalInfo']['DateTimeUpdated'] = $displayDateTimeUpdated;
 			$_SESSION['EditStaffOrderOrderID'] = $orderID;
 
-			$sql = 'SELECT 		ex.`extraID` 											AS ExtraID
+			$sql = 'SELECT 		ex.`extraID` 											AS ExtraID,
 								ex.`name`												AS ExtraName,
 								eo.`amount`												AS ExtraAmount,
 								IFNULL(eo.`alternativePrice`, ex.`price`)				AS ExtraPrice,
@@ -243,7 +242,7 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Details') OR
 		}
 		catch (PDOException $e)
 		{
-			$error = 'Error fetching order details.';
+			$error = 'Error fetching order details.' . $e->getMessage();
 			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
 			$pdo = null;
 			exit();
@@ -252,11 +251,24 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Details') OR
 
 	// Set original values
 	$originalOrderCommunicationToUser = $_SESSION['EditStaffOrderOriginalInfo']['OrderCommunicationToUser'];
+	$originalOrderCommunicationFromUser = $_SESSION['EditStaffOrderOriginalInfo']['OrderCommunicationFromUser'];
 	$originalOrderIsApproved = $_SESSION['EditStaffOrderOriginalInfo']['OrderIsApproved'];
 	$originalOrderUserNotes = $_SESSION['EditStaffOrderOriginalInfo']['OrderUserNotes'];
 	$originalOrderCreated = $_SESSION['EditStaffOrderOriginalInfo']['DateTimeCreated'];
 	$originalOrderUpdated = $_SESSION['EditStaffOrderOriginalInfo']['DateTimeUpdated'];
 
+	if($originalOrderCommunicationToUser == ""){
+		$originalOrderCommunicationToUser = "No messages sent to user.";
+	}
+
+	if($originalOrderCommunicationFromUser == ""){
+		$originalOrderCommunicationFromUser = "No messages received from user.";
+	}
+
+	if(!isSet($orderCommunicationToUser)){
+		$orderCommunicationToUser = "";
+	}	
+	
 	var_dump($_SESSION); // TO-DO: remove after testing is done
 
 	// Change to the template we want to use
@@ -453,7 +465,7 @@ try
 						o.`orderApprovedByUser`							AS OrderApprovedByUser,
 						o.`orderApprovedByAdmin`						AS OrderApprovedByAdmin,
 						o.`orderApprovedByStaff`						AS OrderApprovedByStaff,
-						GROUP_CONCAT(CONCAT_WS("\n", ex.`name`))		AS OrderContent,
+						GROUP_CONCAT(ex.`name` SEPARATOR "\n")			AS OrderContent,
 						b.`startDateTime`								AS OrderStartDateTime,
 						b.`endDateTime`									AS OrderEndDateTime,
 						m.`name`										AS OrderRoomName

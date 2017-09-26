@@ -52,7 +52,7 @@
 
 				<div>
 					<label class="description">Send New Message To User: </label>
-						<textarea rows="4" cols="50" name="OrderCommunicationToUser" placeholder="Enter Messages To User"><?php htmlout($orderCommunicationToUser); ?></textarea>
+						<textarea rows="4" cols="50" name="OrderCommunicationToUser" placeholder="Enter New Message To User"><?php htmlout($orderCommunicationToUser); ?></textarea>
 				</div>
 
 				<div>

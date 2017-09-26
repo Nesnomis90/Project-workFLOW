@@ -124,7 +124,7 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Edit') OR
 								`orderApprovedByAdmin`			AS OrderApprovedByAdmin,
 								`orderApprovedByStaff` 			AS OrderApprovedByStaff,
 								`adminNote`						AS OrderAdminNote
-					FROM 		`order`
+					FROM 		`orders`
 					WHERE		`orderID` = :OrderID
 					LIMIT 		1';
 
@@ -151,7 +151,7 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Edit') OR
 			$sql = 'SELECT 		ex.`name`												AS ExtraName,
 								eo.`amount`												AS ExtraAmount,
 								IFNULL(eo.`alternativePrice`, ex.`price`)				AS ExtraPrice,
-								IFNULL(eo.`alternativeDescription`, ex.`description`)	AS ExtraDescription,
+								IFNULL(eo.`alternativeDescription`, ex.`description`)	AS ExtraDescription
 					FROM 		`extraorders` eo
 					INNER JOIN	`extra` ex
 					ON 			ex.`extraID` = eo.`extraID`
@@ -180,7 +180,7 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Edit') OR
 		}
 		catch (PDOException $e)
 		{
-			$error = 'Error fetching order details.';
+			$error = 'Error fetching order details: ' . $e->getMessage();
 			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
 			$pdo = null;
 			exit();
@@ -194,6 +194,18 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Edit') OR
 	$originalOrderIsApproved = $_SESSION['EditOrderOriginalInfo']['OrderIsApproved'];
 	$originalOrderUserNotes = $_SESSION['EditOrderOriginalInfo']['OrderUserNotes'];
 	$originalOrderContent = $_SESSION['EditOrderOriginalInfo']['OrderContent'];
+
+	if($originalOrderCommunicationToUser == ""){
+		$originalOrderCommunicationToUser = "No messages sent to user.";
+	}
+
+	if($originalOrderCommunicationFromUser == ""){
+		$originalOrderCommunicationFromUser = "No messages received from user.";
+	}
+
+	if(!isSet($orderCommunicationToUser)){
+		$orderCommunicationToUser = "";
+	}
 
 	var_dump($_SESSION); // TO-DO: remove after testing is done
 
@@ -410,7 +422,7 @@ try
 							WHERE	`userID` = o.`approvedByUserID`
 							LIMIT 	1
 						)												AS OrderApprovedByUserName,
-						GROUP_CONCAT(CONCAT_WS("\n", ex.`name`))		AS OrderContent,
+						GROUP_CONCAT(ex.`name` SEPARATOR "\n")			AS OrderContent,
 						b.`startDateTime`								AS OrderStartDateTime,
 						b.`endDateTime`									AS OrderEndDateTime,
 						b.`actualEndDateTime`							AS OrderBookingCompleted,
@@ -482,11 +494,14 @@ foreach($result AS $row){
 		} else {
 			$orderApprovedBy = "N/A - Deleted User";
 		}
+		$dateTimeApproved = $row['DateTimeApproved'];
+		$displayDateTimeApproved = convertDatetimeToFormat($dateTimeApproved , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
 	} else {
 		$orderIsApproved = FALSE;
 		$orderIsApprovedByStaff = FALSE;
 		$displayOrderApprovedByStaff = "No";
 		$orderApprovedBy = "";
+		$displayDateTimeApproved = "";
 	}
 
 	if($row['OrderApprovedByUser'] == 1){
@@ -543,6 +558,7 @@ foreach($result AS $row){
 						'OrderCommunicationFromUser' => $row['OrderCommunicationFromUser'],
 						'OrderStartTime' => $displayDateTimeStart,
 						'OrderEndTime' => $displayDateTimeEnd,
+						'DateTimeApproved' => $displayDateTimeApproved,
 						'DateTimeCreated' => $displayDateTimeCreated,
 						'DateTimeUpdated' => $displayDateTimeUpdated,
 						'DateTimeCancelled' => $displayDateTimeCancelled,

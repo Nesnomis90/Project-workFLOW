@@ -5,6 +5,9 @@
 		<meta charset="utf-8">
 		<link rel="stylesheet" type="text/css" href="/CSS/myCSS.css">
 		<style>
+			label {
+				width: 250px;
+			}
 			#extraTable table th,tr,td {
 				
 			}
@@ -56,7 +59,7 @@
 
 				<div>
 					<label class="description">Send New Message To User: </label>
-					<textarea rows="4" cols="50" name="OrderCommunicationToUser" placeholder="Enter Messages To User"><?php htmlout($orderCommunicationToUser); ?></textarea>
+					<textarea rows="4" cols="50" name="OrderCommunicationToUser" placeholder="Enter New Message To User"><?php htmlout($orderCommunicationToUser); ?></textarea>
 				</div>
 
 				<div>
@@ -97,18 +100,18 @@
 							<td><?php htmlout($row['ExtraPrice']); ?></td>
 							<td>
 								<?php if(!empty($row['ExtraDateTimeApprovedForPurchase'])) : ?>
-									<label><input type="checkbox" name="isApproved<?php htmlout(($row['ExtraID']); ?>" value="1" checked>Approved</label>
+									<label><input type="checkbox" name="isApproved<?php htmlout($row['ExtraID']); ?>" value="1" checked>Approved</label>
 								<?php else : ?>
-									<label><input type="checkbox" name="isApproved<?php htmlout(($row['ExtraID']); ?>" value="1">Approved</label>
+									<label><input type="checkbox" name="isApproved<?php htmlout($row['ExtraID']); ?>" value="1">Approved</label>
 								<?php endif; ?>
 							</td>
 							<td><?php htmlout($row['ExtraApprovedForPurchaseByUser']); ?></td>
 							<td><?php htmlout($row['ExtraDateTimeApprovedForPurchase']); ?></td>
 							<td>
 								<?php if(!empty($row['ExtraDateTimePurchased'])) : ?>
-									<label><input type="checkbox" name="isPurchased<?php htmlout(($row['ExtraID']); ?>" value="1" checked>Purchased</label>
+									<label><input type="checkbox" name="isPurchased<?php htmlout($row['ExtraID']); ?>" value="1" checked>Purchased</label>
 								<?php else : ?>
-									<label><input type="checkbox" name="isPurchased<?php htmlout(($row['ExtraID']); ?>" value="1">Purchased</label>
+									<label><input type="checkbox" name="isPurchased<?php htmlout($row['ExtraID']); ?>" value="1">Purchased</label>
 								<?php endif; ?>
 							</td>
 							<td><?php htmlout($row['ExtraPurchasedByUser']); ?></td>
