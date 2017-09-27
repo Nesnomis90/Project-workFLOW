@@ -644,7 +644,8 @@ try
 						o.`orderApprovedByUser`							AS OrderApprovedByUser,
 						o.`orderApprovedByAdmin`						AS OrderApprovedByAdmin,
 						o.`orderApprovedByStaff`						AS OrderApprovedByStaff,
-						GROUP_CONCAT(ex.`name` SEPARATOR "\n")			AS OrderContent,
+						GROUP_CONCAT(eo.`amount`, " - ", ex.`name` 
+							SEPARATOR "\n")								AS OrderContent,
 						b.`startDateTime`								AS OrderStartDateTime,
 						b.`endDateTime`									AS OrderEndDateTime,
 						m.`name`										AS OrderRoomName

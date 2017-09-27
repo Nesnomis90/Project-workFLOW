@@ -422,7 +422,8 @@ try
 							WHERE	`userID` = o.`approvedByUserID`
 							LIMIT 	1
 						)												AS OrderApprovedByUserName,
-						GROUP_CONCAT(ex.`name` SEPARATOR "\n")			AS OrderContent,
+						GROUP_CONCAT(eo.`amount`, " - ", ex.`name` 
+							SEPARATOR "\n")								AS OrderContent,
 						b.`startDateTime`								AS OrderStartDateTime,
 						b.`endDateTime`									AS OrderEndDateTime,
 						b.`actualEndDateTime`							AS OrderBookingCompleted,
