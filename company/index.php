@@ -3060,10 +3060,12 @@ if(isSet($selectedCompanyToDisplayID) AND !empty($selectedCompanyToDisplayID)){
 								LIMIT 		1
 							)													AS CompanyRole
 				FROM 		`company` c
-				LEFT JOIN	`companycredits` cc
+				LEFT JOIN	(				
+											`companycredits` cc
+								INNER JOIN	`credits` cr
+								ON			cr.`CreditsID` = cc.`CreditsID`
+							)
 				ON			c.`CompanyID` = cc.`CompanyID`
-				LEFT JOIN	`credits` cr
-				ON			cr.`CreditsID` = cc.`CreditsID`
 				WHERE		c.`CompanyID` = :CompanyID
 				GROUP BY 	c.`CompanyID`
 				LIMIT 		1";

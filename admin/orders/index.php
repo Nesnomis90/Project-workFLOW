@@ -287,7 +287,7 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Edit Order'){
 								`dateTimeUpdated` = CURRENT_TIMESTAMP,
 								`dateTimeApproved` = CURRENT_TIMESTAMP,
 								`adminNote` = :adminNote
-								`approvedByUserID` = :approvedByUserID
+								`orderApprovedByUserID` = :orderApprovedByUserID
 						WHERE 	`orderID` = :OrderID';
 				$s = $pdo->prepare($sql);
 				$s->bindValue(':OrderID', $_POST['OrderID']);
@@ -295,7 +295,7 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Edit Order'){
 				$s->bindValue(':approvedByAdmin', $approvedByAdmin);
 				$s->bindValue(':approvedByStaff', $approvedByStaff);
 				$s->bindValue(':adminNote', $validatedAdminNote);
-				$s->bindValue(':approvedByUserID', $_SESSION['LoggedInUserID']);
+				$s->bindValue(':orderApprovedByUserID', $_SESSION['LoggedInUserID']);
 				$s->execute();
 			} elseif($setAsApproved AND !$messageAdded){
 				$sql = 'UPDATE 	`orders`
@@ -305,14 +305,14 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Edit Order'){
 								`dateTimeUpdated` = CURRENT_TIMESTAMP,
 								`dateTimeApproved` = CURRENT_TIMESTAMP,
 								`adminNote` = :adminNote
-								`approvedByUserID` = :approvedByUserID
+								`orderApprovedByUserID` = :orderApprovedByUserID
 						WHERE 	`orderID` = :OrderID';
 				$s = $pdo->prepare($sql);
 				$s->bindValue(':OrderID', $_POST['OrderID']);
 				$s->bindValue(':approvedByAdmin', $approvedByAdmin);
 				$s->bindValue(':approvedByStaff', $approvedByStaff);
 				$s->bindValue(':adminNote', $validatedAdminNote);
-				$s->bindValue(':approvedByUserID', $_SESSION['LoggedInUserID']);
+				$s->bindValue(':orderApprovedByUserID', $_SESSION['LoggedInUserID']);
 				$s->execute();
 			} elseif(!$setAsApproved AND $messageAdded){
 				$sql = 'UPDATE 	`orders`
@@ -322,7 +322,7 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Edit Order'){
 								`dateTimeUpdated` = CURRENT_TIMESTAMP,
 								`dateTimeApproved` = NULL,
 								`adminNote` = :adminNote
-								`approvedByUserID` = :approvedByUserID
+								`orderApprovedByUserID` = :orderApprovedByUserID
 						WHERE 	`orderID` = :OrderID';
 				$s = $pdo->prepare($sql);
 				$s->bindValue(':OrderID', $_POST['OrderID']);
@@ -330,7 +330,7 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Edit Order'){
 				$s->bindValue(':approvedByAdmin', $approvedByAdmin);
 				$s->bindValue(':approvedByStaff', $approvedByStaff);
 				$s->bindValue(':adminNote', $validatedAdminNote);
-				$s->bindValue(':approvedByUserID', NULL);
+				$s->bindValue(':orderApprovedByUserID', NULL);
 				$s->execute();
 			} else {
 				$sql = 'UPDATE 	`orders`
@@ -339,14 +339,14 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Edit Order'){
 								`dateTimeUpdated` = CURRENT_TIMESTAMP,
 								`dateTimeApproved` = NULL,
 								`adminNote` = :adminNote
-								`approvedByUserID` = :approvedByUserID
+								`orderApprovedByUserID` = :orderApprovedByUserID
 						WHERE 	`orderID` = :OrderID';
 				$s = $pdo->prepare($sql);
 				$s->bindValue(':OrderID', $_POST['OrderID']);
 				$s->bindValue(':approvedByAdmin', $approvedByAdmin);
 				$s->bindValue(':approvedByStaff', $approvedByStaff);
 				$s->bindValue(':adminNote', $validatedAdminNote);
-				$s->bindValue(':approvedByUserID', NULL);
+				$s->bindValue(':orderApprovedByUserID', NULL);
 				$s->execute();
 			}
 
@@ -414,15 +414,16 @@ try
 						o.`orderApprovedByUser`							AS OrderApprovedByUser,
 						o.`orderApprovedByAdmin`						AS OrderApprovedByAdmin,
 						o.`orderApprovedByStaff`						AS OrderApprovedByStaff,
-						o.`priceCharged`								AS OrderPriceCharged,
+						o.`orderFinalPrice`								AS OrderFinalPrice,
 						o.`adminNote`									AS OrderAdminNote,
 						(
 							SELECT 	CONCAT_WS(", ",`lastname`, `firstname`)
 							FROM	`user`
-							WHERE	`userID` = o.`approvedByUserID`
+							WHERE	`userID` = o.`orderApprovedByUserID`
 							LIMIT 	1
 						)												AS OrderApprovedByUserName,
-						GROUP_CONCAT(ex.`name` SEPARATOR "\n")			AS OrderContent,
+						GROUP_CONCAT(ex.`name`, " (", eo.`amount`, ")"
+							SEPARATOR "\n")								AS OrderContent,
 						b.`startDateTime`								AS OrderStartDateTime,
 						b.`endDateTime`									AS OrderEndDateTime,
 						b.`actualEndDateTime`							AS OrderBookingCompleted,
@@ -518,11 +519,11 @@ foreach($result AS $row){
 		$orderRoomName = "N/A - Deleted Room";
 	}
 
-	if($row['OrderPriceCharged'] != NULL){
-		$priceCharged = $row['OrderPriceCharged'];
-		$displayPriceCharged = convertToCurrency($priceCharged);
+	if($row['OrderFinalPrice'] != NULL){
+		$orderFinalPrice = $row['OrderFinalPrice'];
+		$displayOrderFinalPrice = convertToCurrency($orderFinalPrice);
 	} else {
-		$displayPriceCharged = "N/A";
+		$displayOrderFinalPrice = "N/A";
 	}
 
 	if($orderIsApprovedByStaff AND $orderIsApprovedByUser){
@@ -564,7 +565,7 @@ foreach($result AS $row){
 						'DateTimeCancelled' => $displayDateTimeCancelled,
 						'OrderContent' => $row['OrderContent'],
 						'OrderAdminNote' => $row['OrderAdminNote'],
-						'OrderPriceCharged' => $displayPriceCharged,
+						'OrderFinalPrice' => $displayOrderFinalPrice,
 						'OrderApprovedByUser' => $displayOrderApprovedByUser,
 						'OrderApprovedByStaff' => $displayOrderApprovedByStaff,
 						'OrderApprovedByName' => $orderApprovedBy

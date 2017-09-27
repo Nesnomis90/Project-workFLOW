@@ -52,11 +52,11 @@
 				<?php foreach($order as $row): ?>
 					<form action="" method="post">
 						<tr>
-							<td><?php htmlout($row['OrderStatus']); ?></td>
+							<td style="white-space: pre-wrap;"><?php htmlout($row['OrderStatus']); ?></td><?php htmlout($row['OrderStatus']); ?></td>
 							<td style="white-space: pre-wrap;"><?php htmlout($row['OrderContent']); ?></td>
 							<td style="white-space: pre-wrap;"><?php htmlout($row['OrderUserNotes']); ?></td>
 							<td style="white-space: pre-wrap;"><?php htmlout($row['OrderAdminNote']); ?></td>
-							<td><?php htmlout($row['OrderPriceCharged']); ?></td>
+							<td><?php htmlout($row['OrderFinalPrice']); ?></td>
 							<td style="white-space: pre-wrap;"><?php htmlout($row['OrderCommunicationToUser']); ?></td>
 							<td style="white-space: pre-wrap;"><?php htmlout($row['OrderCommunicationFromUser']); ?></td>
 							<td><?php htmlout($row['OrderStartTime']); ?></td>

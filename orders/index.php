@@ -230,7 +230,7 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Details') OR
 								(
 									SELECT 	CONCAT_WS(", ", u.`lastname`, u.`firstname`)
 									FROM	`user` u
-									WHERE	u.`userID` = eo.`approvedByUserID`
+									WHERE	u.`userID` = eo.`orderApprovedByUserID`
 								)														AS ExtraApprovedForPurchaseByUser
 					FROM 		`extraorders` eo
 					INNER JOIN	`extra` ex
@@ -416,14 +416,14 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Submit Changes'){
 								`orderApprovedByStaff` = :approvedByStaff,
 								`dateTimeUpdated` = CURRENT_TIMESTAMP,
 								`dateTimeApproved` = CURRENT_TIMESTAMP,
-								`approvedByUserID` = :approvedByUserID
+								`orderApprovedByUserID` = :orderApprovedByUserID
 						WHERE 	`orderID` = :OrderID';
 				$s = $pdo->prepare($sql);
 				$s->bindValue(':OrderID', $orderID);
 				$s->bindValue(':OrderCommunicationToUser', $fullOrderCommunicationToUser);
 				$s->bindValue(':approvedByAdmin', $approvedByAdmin);
 				$s->bindValue(':approvedByStaff', $approvedByStaff);
-				$s->bindValue(':approvedByUserID', $_SESSION['LoggedInUserID']);
+				$s->bindValue(':orderApprovedByUserID', $_SESSION['LoggedInUserID']);
 				$s->execute();
 			} elseif($setAsApproved AND !$messageAdded){
 				$sql = 'UPDATE 	`orders`
@@ -432,13 +432,13 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Submit Changes'){
 								`orderApprovedByStaff` = :approvedByStaff,
 								`dateTimeUpdated` = CURRENT_TIMESTAMP,
 								`dateTimeApproved` = CURRENT_TIMESTAMP,
-								`approvedByUserID` = :approvedByUserID
+								`orderApprovedByUserID` = :orderApprovedByUserID
 						WHERE 	`orderID` = :OrderID';
 				$s = $pdo->prepare($sql);
 				$s->bindValue(':OrderID', $orderID);
 				$s->bindValue(':approvedByAdmin', $approvedByAdmin);
 				$s->bindValue(':approvedByStaff', $approvedByStaff);
-				$s->bindValue(':approvedByUserID', $_SESSION['LoggedInUserID']);
+				$s->bindValue(':orderApprovedByUserID', $_SESSION['LoggedInUserID']);
 				$s->execute();
 			} elseif(!$setAsApproved AND $messageAdded){
 				$sql = 'UPDATE 	`orders`
@@ -447,7 +447,7 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Submit Changes'){
 								`orderApprovedByStaff` = :approvedByStaff,
 								`dateTimeUpdated` = CURRENT_TIMESTAMP,
 								`dateTimeApproved` = NULL,
-								`approvedByUserID` = NULL
+								`orderApprovedByUserID` = NULL
 						WHERE 	`orderID` = :OrderID';
 				$s = $pdo->prepare($sql);
 				$s->bindValue(':OrderID', $orderID);
@@ -461,7 +461,7 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Submit Changes'){
 								`orderApprovedByStaff` = :approvedByStaff,
 								`dateTimeUpdated` = CURRENT_TIMESTAMP,
 								`dateTimeApproved` = NULL,
-								`approvedByUserID` = NULL
+								`orderApprovedByUserID` = NULL
 						WHERE 	`orderID` = :OrderID';
 				$s = $pdo->prepare($sql);
 				$s->bindValue(':OrderID', $orderID);
@@ -487,9 +487,9 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Submit Changes'){
 					}
 
 					if($extraBooleanApprovedForPurchase == 1){
-						$approvedByUserID = $_SESSION['LoggedInUserID'];
+						$orderApprovedByUserID = $_SESSION['LoggedInUserID'];
 					} else {
-						$approvedByUserID = NULL;
+						$orderApprovedByUserID = NULL;
 					}
 
 					if($extraBooleanPurchased == 1){
@@ -502,7 +502,7 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Submit Changes'){
 						if($extraBooleanApprovedForPurchase == 1 AND $extraBooleanPurchased == 1){
 							$sql = "UPDATE	`extraorders`
 									SET		`approvedForPurchase` = CURRENT_TIMESTAMP,
-											`approvedByUserID` = :approvedByUserID,
+											`orderApprovedByUserID` = :orderApprovedByUserID,
 											`purchased` = CURRENT_TIMESTAMP,
 											`purchasedByUserID` = :purchasedByUserID
 									WHERE	`orderID` = :OrderID
@@ -510,7 +510,7 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Submit Changes'){
 						} elseif($extraBooleanApprovedForPurchase == 1 AND $extraBooleanPurchased == 0){
 							$sql = "UPDATE	`extraorders`
 									SET		`approvedForPurchase` = CURRENT_TIMESTAMP,
-											`approvedByUserID` = :approvedByUserID,
+											`orderApprovedByUserID` = :orderApprovedByUserID,
 											`purchased` = NULL,
 											`purchasedByUserID` = :purchasedByUserID
 									WHERE	`orderID` = :OrderID
@@ -518,7 +518,7 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Submit Changes'){
 						} elseif($extraBooleanApprovedForPurchase == 0 AND $extraBooleanPurchased == 1){
 							$sql = "UPDATE	`extraorders`
 									SET		`approvedForPurchase` = NULL,
-											`approvedByUserID` = :approvedByUserID,
+											`orderApprovedByUserID` = :orderApprovedByUserID,
 											`purchased` = CURRENT_TIMESTAMP,
 											`purchasedByUserID` = :purchasedByUserID
 									WHERE	`orderID` = :OrderID
@@ -526,7 +526,7 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Submit Changes'){
 						} else {
 							$sql = "UPDATE	`extraorders`
 									SET		`approvedForPurchase` = NULL,
-											`approvedByUserID` = :approvedByUserID,
+											`orderApprovedByUserID` = :orderApprovedByUserID,
 											`purchased` = NULL,
 											`purchasedByUserID` = :purchasedByUserID
 									WHERE	`orderID` = :OrderID
@@ -535,27 +535,27 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Submit Changes'){
 						$s = $pdo->prepare($sql);
 						$s->bindValue(':OrderID', $orderID);
 						$s->bindValue(':ExtraID', $extraID);
-						$s->bindValue(':approvedByUserID', $approvedByUserID);
+						$s->bindValue(':orderApprovedByUserID', $orderApprovedByUserID);
 						$s->bindValue(':purchasedByUserID', $purchasedByUserID);
 						$s->execute();
 					} elseif($updateApprovedForPurchase AND !$updatePurchased){
 						if($extraBooleanApprovedForPurchase == 1){
 							$sql = "UPDATE	`extraorders`
 									SET		`approvedForPurchase` = CURRENT_TIMESTAMP,
-											`approvedByUserID` = :approvedByUserID
+											`orderApprovedByUserID` = :orderApprovedByUserID
 									WHERE	`orderID` = :OrderID
 									AND		`extraID` = :ExtraID";
 						} else {
 							$sql = "UPDATE	`extraorders`
 									SET		`approvedForPurchase` = NULL,
-											`approvedByUserID` = :approvedByUserID
+											`orderApprovedByUserID` = :orderApprovedByUserID
 									WHERE	`orderID` = :OrderID
 									AND		`extraID` = :ExtraID";
 						}
 						$s = $pdo->prepare($sql);
 						$s->bindValue(':OrderID', $orderID);
 						$s->bindValue(':ExtraID', $extraID);
-						$s->bindValue(':approvedByUserID', $approvedByUserID);
+						$s->bindValue(':orderApprovedByUserID', $orderApprovedByUserID);
 						$s->execute();
 					} elseif(!$updateApprovedForPurchase AND $updatePurchased){
 						if($extraBooleanPurchased == 1){
@@ -637,17 +637,46 @@ try
 	$pdo = connect_to_db();
 	$sql = 'SELECT 		o.`orderID`										AS TheOrderID,
 						o.`orderUserNotes`								AS OrderUserNotes,
-						o.`orderCommunicationToUser`					AS OrderCommunicationToUser,
-						o.`orderCommunicationFromUser`					AS OrderCommunicationFromUser,
 						o.`dateTimeCreated`								AS DateTimeCreated,
 						o.`dateTimeUpdated`								AS DateTimeUpdated,
 						o.`orderApprovedByUser`							AS OrderApprovedByUser,
 						o.`orderApprovedByAdmin`						AS OrderApprovedByAdmin,
 						o.`orderApprovedByStaff`						AS OrderApprovedByStaff,
-						GROUP_CONCAT(ex.`name` SEPARATOR "\n")			AS OrderContent,
+						o.`orderChangedByUser`							AS OrderChangedByUser,
+						o.`orderChangedByStaff`							AS OrderChangedByStaff,
+						o.`orderNewMessageFromUser`						AS OrderNewMessageFromUser,
+						o.`orderNewMessageFromStaff`					AS OrderNewMessageFromStaff,
+						GROUP_CONCAT(ex.`name`, " (", eo.`amount`, ")"
+							SEPARATOR "\n")								AS OrderContent,
 						b.`startDateTime`								AS OrderStartDateTime,
 						b.`endDateTime`									AS OrderEndDateTime,
-						m.`name`										AS OrderRoomName
+						m.`name`										AS OrderRoomName,
+						c.`name`										AS OrderBookedFor,
+						COUNT(eo.`extraID`)								AS OrderExtrasOrdered,
+						COUNT(eo.`approvedForPurchase`)					AS OrderExtrasApproved,
+						COUNT(eo.`purchased`)							AS OrderExtrasPurchased,
+						(
+							SELECT	COUNT(om.`messageID`)
+							FROM	`ordermessages` om
+							WHERE	om.`orderID` = o.`orderID`
+							LIMIT 	1
+						)												AS OrderMessagesSent,
+						(
+							SELECT		om.`message`
+							FROM		`ordermessages` om
+							WHERE		om.`orderID` = o.`orderID`
+							AND			om.`sentByStaff` = 1
+							ORDER BY	om.`dateTimeAdded` DESC
+							LIMIT 	1
+						)												AS OrderLastMessageFromStaff,
+						(
+							SELECT		om.`message`
+							FROM		`ordermessages` om
+							WHERE		om.`orderID` = o.`orderID`
+							AND			om.`sentByUser` = 1
+							ORDER BY	om.`dateTimeAdded` DESC
+							LIMIT 	1
+						)												AS OrderLastMessageFromUser
 			FROM 		`orders` o
 			INNER JOIN	`extraorders` eo
 			ON 			eo.`orderID` = o.`orderID`
@@ -657,9 +686,12 @@ try
 			ON 			b.`orderID` = o.`orderID`
 			INNER JOIN	`meetingroom` m
 			ON 			m.`meetingRoomID` = b.`meetingRoomID`
+			INNER JOIN 	`company` c
+			ON 			c.`companyID` = b.`companyID`
 			WHERE		o.`dateTimeCancelled` IS NULL
 			AND			b.`dateTimeCancelled` IS NULL
 			AND			b.`actualEndDateTime` IS NULL
+			AND			b.`orderID` IS NOT NULL
 			GROUP BY	o.`orderID`';
 
 	$return = $pdo->query($sql);
@@ -687,9 +719,11 @@ foreach($result AS $row){
 	$displayDateTimeCreated = convertDatetimeToFormat($dateTimeCreated , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
 	if(!empty($row['DateTimeUpdated'])){
 		$dateTimeUpdated = $row['DateTimeUpdated'];
-		$displayDateTimeUpdated = convertDatetimeToFormat($dateTimeUpdated , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);		
+		$displayDateTimeUpdated = convertDatetimeToFormat($dateTimeUpdated , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
+		$newOrder = FALSE;
 	} else {
 		$displayDateTimeUpdated = "N/A";
+		$newOrder = TRUE;
 	}
 
 	$dateTimeStart = $row['OrderStartDateTime'];
@@ -713,18 +747,49 @@ foreach($result AS $row){
 		$displayOrderApprovedByUser = "No";
 	}
 
-	$orderRoomName = $row['OrderRoomName'];
+	$orderMessagesSent = $row['OrderMessagesSent'];
+	$orderNewMessageFromUser = $row['OrderNewMessageFromUser'];
+	$orderNewMessageFromStaff = $row['OrderNewMessageFromStaff'];
+	$orderChangedByUser = $row['OrderChangedByUser'];
+	$orderChangedByStaff = $row['OrderChangedByStaff'];
+	$extrasOrdered = $row['OrderExtrasOrdered'];
+	$extrasApproved = $row['OrderExtrasApproved'];
+	$extrasPurchased = $row['OrderExtrasPurchased'];
 
-	$orderStatus = "N/A";
+	if($orderNewMessageFromStaff == 1 AND $orderNewMessageFromUser == 1){
+		$messageStatus = "New Message From User\nMessage Sent To User Not Seen Yet";
+	} elseif($orderNewMessageFromStaff == 1 AND $orderNewMessageFromUser == 0){
+		$messageStatus = "Message Sent To User Not Seen Yet";
+	} elseif($orderNewMessageFromStaff == 0 AND $orderNewMessageFromUser == 1) {
+		$messageStatus = "New Message From User";
+	} elseif($orderMessagesSent > 0) {
+		$messageStatus = "All Messages Seen";
+	} else {
+		$messageStatus = "No Messages Sent";
+	}
 
-	if($orderIsApprovedByStaff AND $orderIsApprovedByUser){
+	if($newOrder){
+		$orderStatus = "New Order\nPending Staff Approval";
+	} elseif($orderIsApprovedByStaff AND $orderIsApprovedByUser){
 		$orderStatus = "Approved";
 	} elseif($orderIsApprovedByStaff AND !$orderIsApprovedByUser) {
-		$orderStatus = "Pending User Approval";
+		$orderStatus = "Order Changed\nPending User Approval";
 	} elseif(!$orderIsApprovedByStaff AND $orderIsApprovedByUser) {
-		$orderStatus = "Pending Staff Approval";
+		$orderStatus = "Order Changed\nPending Staff Approval";
 	} else {
-		$orderStatus = "Not Approved";
+		$orderStatus = "Order Changed\nPending Staff\nPending User Approval";
+	}
+
+	if(!empty($row['OrderLastMessageFromUser'])){
+		$displayLastMessageFromUser = $row['OrderLastMessageFromUser'];
+	} else {
+		$displayLastMessageFromUser = "";
+	}
+
+	if(!empty($row['OrderLastMessageFromStaff'])){
+		$displayLastMessageFromStaff = $row['OrderLastMessageFromStaff'];
+	} else {
+		$displayLastMessageFromStaff = "";
 	}
 
 	// Create an array with the actual key/value pairs we want to use in our HTML
@@ -732,15 +797,18 @@ foreach($result AS $row){
 						'TheOrderID' => $row['TheOrderID'],
 						'OrderStatus' => $orderStatus,
 						'OrderUserNotes' => $row['OrderUserNotes'],
-						'OrderCommunicationToUser' => $row['OrderCommunicationToUser'],
-						'OrderCommunicationFromUser' => $row['OrderCommunicationFromUser'],
+						'OrderMessageStatus' => $messageStatus,
+						'OrderLastMessageFromUser' => $displayLastMessageFromUser,
+						'OrderLastMessageFromStaff' => $displayLastMessageFromStaff,
 						'OrderStartTime' => $displayDateTimeStart,
 						'OrderEndTime' => $displayDateTimeEnd,
 						'DateTimeCreated' => $displayDateTimeCreated,
 						'DateTimeUpdated' => $displayDateTimeUpdated,
 						'OrderContent' => $row['OrderContent'],
 						'OrderApprovedByUser' => $displayOrderApprovedByUser,
-						'OrderApprovedByStaff' => $displayOrderApprovedByStaff
+						'OrderApprovedByStaff' => $displayOrderApprovedByStaff,
+						'OrderRoomName' => $row['OrderRoomName'],
+						'OrderBookedFor' => $row['OrderBookedFor']
 					);
 }
 

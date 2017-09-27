@@ -2946,16 +2946,25 @@ try
 						cr.`minuteAmount`									AS CreditSubscriptionMinuteAmount,
 						cr.`monthlyPrice`									AS CreditSubscriptionMonthlyPrice,
 						cr.`overCreditHourPrice`							AS CreditSubscriptionHourPrice,
-						COUNT(cch.`CompanyID`)								AS CompanyCreditsHistoryPeriods,
-						SUM(cch.`hasBeenBilled`)							AS CompanyCreditsHistoryPeriodsSetAsBilled
+						(
+							SELECT 	COUNT(cch.`CompanyID`)
+							FROM 	`companycreditshistory` cch
+							WHERE	cch.`CompanyID` = CompID
+							LIMIT 	1
+						)													AS CompanyCreditsHistoryPeriods,
+						(
+							SELECT 	SUM(cch.`hasBeenBilled`)
+							FROM 	`companycreditshistory` cch
+							WHERE	cch.`CompanyID` = CompID
+							LIMIT 	1
+						)													AS CompanyCreditsHistoryPeriodsSetAsBilled
 			FROM 		`company` c
-			LEFT JOIN	`companycredits` cc
+			LEFT JOIN	(
+										`companycredits` cc
+							INNER JOIN	`credits` cr
+							ON			cr.`CreditsID` = cc.`CreditsID`
+						)
 			ON			c.`CompanyID` = cc.`CompanyID`
-			LEFT JOIN	`credits` cr
-			ON			cr.`CreditsID` = cc.`CreditsID`
-			LEFT JOIN 	`companycreditshistory` cch
-			ON 			cch.`CompanyID` = c.`CompanyID`
-			GROUP BY 	c.`CompanyID`
 			ORDER BY 	c.`name`";
 	$s = $pdo->prepare($sql);
 	$s->bindValue(':minimumSecondsPerBooking', $minimumSecondsPerBooking);
