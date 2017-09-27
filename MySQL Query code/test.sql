@@ -4,6 +4,7 @@ USE meetingflow;
 SHOW WARNINGS;
 SELECT CURRENT_TIMESTAMP;
 SELECT @@version;
+SHOW indexes from `booking`;
 /*PDO::FETCH_ASSOC*/
 
 INSERT INTO `companycreditshistory`
@@ -53,19 +54,53 @@ WHERE 	DATE(CURRENT_TIMESTAMP) >= `removeAtDate`
 AND 	`isActive` = 1
 AND		`companyID` <> 0;
 
+INSERT INTO `ordermessages`
+SET 		`orderID` = 1,
+			`message` = "Newest Test Message From Staff",
+            `sentByStaff` = 1;
+
 SELECT 		o.`orderID`										AS TheOrderID,
 			o.`orderUserNotes`								AS OrderUserNotes,
-			o.`orderCommunicationToUser`					AS OrderCommunicationToUser,
-			o.`orderCommunicationFromUser`					AS OrderCommunicationFromUser,
 			o.`dateTimeCreated`								AS DateTimeCreated,
 			o.`dateTimeUpdated`								AS DateTimeUpdated,
 			o.`orderApprovedByUser`							AS OrderApprovedByUser,
 			o.`orderApprovedByAdmin`						AS OrderApprovedByAdmin,
 			o.`orderApprovedByStaff`						AS OrderApprovedByStaff,
-			GROUP_CONCAT(eo.`amount`, " - ", ex.`name` SEPARATOR "\n")			AS OrderContent,
+			o.`orderChangedByUser`							AS OrderChangedByUser,
+			o.`orderChangedByStaff`							AS OrderChangedByStaff,
+			o.`orderNewMessageFromUser`						AS OrderNewMessageFromUser,
+			o.`orderNewMessageFromStaff`					AS OrderNewMessageFromStaff,
+			GROUP_CONCAT(ex.`name`, " (", eo.`amount`, ")"
+				SEPARATOR "\n")								AS OrderContent,
 			b.`startDateTime`								AS OrderStartDateTime,
 			b.`endDateTime`									AS OrderEndDateTime,
-			m.`name`										AS OrderRoomName
+			m.`name`										AS OrderRoomName,
+			c.`name`										AS OrderBookedFor,
+			COUNT(eo.`extraID`)								AS OrderExtrasOrdered,
+			COUNT(eo.`approvedForPurchase`)					AS OrderExtrasApproved,
+			COUNT(eo.`purchased`)							AS OrderExtrasPurchased,
+			(
+				SELECT	COUNT(om.`messageID`)
+                FROM	`ordermessages` om
+                WHERE	om.`orderID` = o.`orderID`
+                LIMIT 	1
+            )												AS OrderMessagesSent,
+			(
+				SELECT		om.`message`
+                FROM		`ordermessages` om
+                WHERE		om.`orderID` = o.`orderID`
+                AND			om.`sentByStaff` = 1
+                ORDER BY	om.`dateTimeAdded` DESC
+                LIMIT 	1
+			)												AS OrderLastMessageFromStaff,
+			(
+				SELECT		om.`message`
+                FROM		`ordermessages` om
+                WHERE		om.`orderID` = o.`orderID`
+                AND			om.`sentByUser` = 1
+                ORDER BY	om.`dateTimeAdded` DESC
+                LIMIT 	1
+			)												AS OrderLastMessageFromUser
 FROM 		`orders` o
 INNER JOIN	`extraorders` eo
 ON 			eo.`orderID` = o.`orderID`
@@ -75,13 +110,28 @@ INNER JOIN	`booking` b
 ON 			b.`orderID` = o.`orderID`
 INNER JOIN	`meetingroom` m
 ON 			m.`meetingRoomID` = b.`meetingRoomID`
+INNER JOIN 	`company` c
+ON 			c.`companyID` = b.`companyID`
 WHERE		o.`dateTimeCancelled` IS NULL
 AND			b.`dateTimeCancelled` IS NULL
 AND			b.`actualEndDateTime` IS NULL
+AND			b.`orderID` IS NOT NULL
 GROUP BY	o.`orderID`;
 
+SELECT		om.`message`									AS OrderMessage,
+			om.`sentByStaff`								AS SentByStaff,
+			om.`sentByUser`									AS SentByUser,
+			om.`messageSeen`								AS MessageSeen,
+            om.`dateTimeAdded`								AS DateTimeAdded,
+			CONCAT_WS(", ", u.`lastname`, u.`firstname`)	AS MessageFrom
+FROM 		`ordermessages` om
+LEFT JOIN	`user` u
+ON 			u.`userID` = om.`messageFromUserID`
+WHERE		om.`orderID` = :SomeOrderID;
+
 SELECT 		c.`CompanyID`	AS CompanyID,
-			c.`name`		AS CompanyName
+			c.`name`		AS CompanyName,
+            c.`dateTimeCreated`
 FROM		`company` c
 INNER JOIN	`employee` e
 ON			e.`CompanyID` = c.`CompanyID`
@@ -95,7 +145,7 @@ NOT IN		(
 				WHERE	`userID` = 28
 			)
 GROUP BY	c.`CompanyID`
-ORDER BY	c.`name`;
+ORDER BY	c.`dateTimeCreated` DESC;
 
 SELECT 	COUNT(*)	AS HitCount,
 		`userID` 	AS UserID,

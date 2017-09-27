@@ -3,6 +3,21 @@ require_once 'variables.inc.php';
 // This is a collection of functions we use to check if user inputs are OK
 
 // Function to check if variables are too big for MySQL or our liking
+
+	//Order Messages
+// Returns TRUE on invalid, FALSE on valid
+function isLengthInvalidOrderMessage($orderMessage){
+	// utf8 maximum of 21,844 characters (MySQL VARCHAR(21844))
+	// Due to max column size limitations we've set it to VARCHAR(20000)
+
+	$orderMessageLength = strlen(utf8_decode($orderMessage));
+	$orderMessageMaxLength = 20000; // TO-DO: Adjust max length if needed.
+	if($orderMessageLength > $orderMessageMaxLength){
+		return TRUE;
+	}
+	return FALSE;
+}
+
 	//Display Names
 // Returns TRUE on invalid, FALSE on valid
 function isLengthInvalidDisplayName($displayName){
@@ -11,7 +26,7 @@ function isLengthInvalidDisplayName($displayName){
 	$dspnameLength = strlen(utf8_decode($displayName));
 	$dspnameMaxLength = 255; // TO-DO: Adjust max length if needed.
 	if($dspnameLength > $dspnameMaxLength){	
-		return TRUE;	
+		return TRUE;
 	}
 	return FALSE;
 }
@@ -23,7 +38,7 @@ function isLengthInvalidBookingDescription($bookingDescription){
 	$bknDscrptnLength = strlen(utf8_decode($bookingDescription));
 	$bknDscrptnMaxLength = 500; // TO-DO: Adjust max length if needed.
 	if($bknDscrptnLength > $bknDscrptnMaxLength){
-		return TRUE;	
+		return TRUE;
 	}
 	return FALSE;
 }
@@ -36,7 +51,7 @@ function isLengthInvalidEquipmentDescription($equipmentDescription){
 	$eqpmntDscrptnLength = strlen(utf8_decode($equipmentDescription));
 	$eqpmntDscrptnMaxLength = 500; // TO-DO: Adjust max length if needed.
 	if($eqpmntDscrptnLength > $eqpmntDscrptnMaxLength){
-		return TRUE;	
+		return TRUE;
 	}
 	return FALSE;
 }
@@ -49,7 +64,7 @@ function isLengthInvalidMeetingRoomDescription($meetingRoomDescription){
 	$mtngrmDscrptnLength = strlen(utf8_decode($meetingRoomDescription));
 	$mtngrmDscrptnMaxLength = 500; // TO-DO: Adjust max length if needed.
 	if($mtngrmDscrptnLength > $mtngrmDscrptnMaxLength){
-		return TRUE;	
+		return TRUE;
 	}
 	return FALSE;
 }
@@ -62,7 +77,7 @@ function isLengthInvalidMeetingRoomLocation($meetingRoomCapacity){
 	$mtngrmCapacityLength = strlen(utf8_decode($meetingRoomCapacity));
 	$mtngrmCapacityMaxLength = 500; // TO-DO: Adjust max length if needed.
 	if($mtngrmCapacityLength > $mtngrmCapacityMaxLength){
-		return TRUE;	
+		return TRUE;
 	}
 	return FALSE;
 }

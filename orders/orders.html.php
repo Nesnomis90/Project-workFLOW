@@ -25,7 +25,7 @@
 			<caption>Active Orders</caption>
 			<tr>
 				<th colspan="8">Order</th>
-				<th colspan="2">Communication</th>
+				<th colspan="3">Messages</th>
 				<th colspan="4">Meeting</th>
 			</tr>
 			<tr>
@@ -37,8 +37,9 @@
 				<th>Created At</th>
 				<th>Last Update</th>
 				<th>Details</th>
-				<th>To User</th>
-				<th>From User</th>
+				<th>Status</th>
+				<th>Last Message To User</th>
+				<th>Last Message From User</th>
 				<th>Room Name</th>
 				<th>Start</th>
 				<th>End</th>
@@ -56,8 +57,9 @@
 							<td><?php htmlout($row['DateTimeCreated']); ?></td>
 							<td><?php htmlout($row['DateTimeUpdated']); ?></td>
 							<td><input type="submit" name="action" value="Details"></td>
-							<td style="white-space: pre-wrap;"><?php htmlout($row['OrderCommunicationToUser']); ?></td>
-							<td style="white-space: pre-wrap;"><?php htmlout($row['OrderCommunicationFromUser']); ?></td>
+							<td style="white-space: pre-wrap;"><?php htmlout($row['OrderMessageStatus']); ?></td>
+							<td style="white-space: pre-wrap;"><?php htmlout($row['OrderLastMessageFromStaff']); ?></td>
+							<td style="white-space: pre-wrap;"><?php htmlout($row['OrderLastMessageFromUser']); ?></td>
 							<td><?php htmlout($row['OrderRoomName']); ?></td>
 							<td><?php htmlout($row['OrderStartTime']); ?></td>
 							<td><?php htmlout($row['OrderEndTime']); ?></td>
@@ -67,7 +69,7 @@
 					</form>
 				<?php endforeach; ?>
 			<?php else : ?>
-				<tr><td colspan="14"><b>There are no active orders.</b></td></tr>
+				<tr><td colspan="15"><b>There are no active orders.</b></td></tr>
 			<?php endif; ?>
 		</table>
 	</body>
