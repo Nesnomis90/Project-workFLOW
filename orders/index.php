@@ -731,13 +731,13 @@ foreach($result AS $row){
 	if($newOrder){
 		$orderStatus = "New Order\nPending Staff Approval";
 	} elseif($orderIsApprovedByStaff AND $orderIsApprovedByUser){
-		$orderStatus = "Approved"; // TO-DO: Fix this by checking for order/approved/purchased etc 
+		$orderStatus = "Approved";
 	} elseif($orderIsApprovedByStaff AND !$orderIsApprovedByUser) {
-		$orderStatus = "Pending User Approval";
+		$orderStatus = "Order Changed\nPending User Approval";
 	} elseif(!$orderIsApprovedByStaff AND $orderIsApprovedByUser) {
-		$orderStatus = "Pending Staff Approval";
+		$orderStatus = "Order Changed\nPending Staff Approval";
 	} else {
-		$orderStatus = "Not Approved";
+		$orderStatus = "Order Changed\nPending Staff\nPending User Approval";
 	}
 
 	// Create an array with the actual key/value pairs we want to use in our HTML

@@ -48,7 +48,7 @@
 				<?php foreach($order as $row): ?>
 					<form action="" method="post">
 						<tr>
-							<td><?php htmlout($row['OrderStatus']); ?></td>
+							<td style="white-space: pre-wrap;"><?php htmlout($row['OrderStatus']); ?></td>
 							<td><?php htmlout($row['OrderApprovedByUser']); ?></td>
 							<td><?php htmlout($row['OrderApprovedByStaff']); ?></td>
 							<td style="white-space: pre-wrap;"><?php htmlout($row['OrderContent']); ?></td>
