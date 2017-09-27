@@ -644,11 +644,15 @@ try
 						o.`orderApprovedByUser`							AS OrderApprovedByUser,
 						o.`orderApprovedByAdmin`						AS OrderApprovedByAdmin,
 						o.`orderApprovedByStaff`						AS OrderApprovedByStaff,
-						GROUP_CONCAT(eo.`amount`, " - ", ex.`name` 
+						GROUP_CONCAT(ex.`name`, "(", eo.`amount`, ")"
 							SEPARATOR "\n")								AS OrderContent,
 						b.`startDateTime`								AS OrderStartDateTime,
 						b.`endDateTime`									AS OrderEndDateTime,
-						m.`name`										AS OrderRoomName
+						m.`name`										AS OrderRoomName,
+						c.`name`										AS OrderBookedFor,
+						COUNT(eo.`extraID`)								AS OrderExtrasOrdered,
+						COUNT(eo.`approvedForPurchase`)					AS OrderExtrasApproved,
+						COUNT(eo.`purchased`)							AS OrderExtrasPurchased
 			FROM 		`orders` o
 			INNER JOIN	`extraorders` eo
 			ON 			eo.`orderID` = o.`orderID`
@@ -658,6 +662,8 @@ try
 			ON 			b.`orderID` = o.`orderID`
 			INNER JOIN	`meetingroom` m
 			ON 			m.`meetingRoomID` = b.`meetingRoomID`
+			INNER JOIN 	`company` c
+			ON 			c.`companyID` = b.`companyID`
 			WHERE		o.`dateTimeCancelled` IS NULL
 			AND			b.`dateTimeCancelled` IS NULL
 			AND			b.`actualEndDateTime` IS NULL
@@ -688,9 +694,11 @@ foreach($result AS $row){
 	$displayDateTimeCreated = convertDatetimeToFormat($dateTimeCreated , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
 	if(!empty($row['DateTimeUpdated'])){
 		$dateTimeUpdated = $row['DateTimeUpdated'];
-		$displayDateTimeUpdated = convertDatetimeToFormat($dateTimeUpdated , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);		
+		$displayDateTimeUpdated = convertDatetimeToFormat($dateTimeUpdated , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
+		$newOrder = FALSE;
 	} else {
 		$displayDateTimeUpdated = "N/A";
+		$newOrder = TRUE;
 	}
 
 	$dateTimeStart = $row['OrderStartDateTime'];
@@ -714,12 +722,16 @@ foreach($result AS $row){
 		$displayOrderApprovedByUser = "No";
 	}
 
-	$orderRoomName = $row['OrderRoomName'];
+	$extrasOrdered = $row['OrderExtrasOrdered'];
+	$extrasApproved = $row['OrderExtrasApproved'];
+	$extrasPurchased = $row['OrderExtrasPurchased'];
 
 	$orderStatus = "N/A";
 
-	if($orderIsApprovedByStaff AND $orderIsApprovedByUser){
-		$orderStatus = "Approved";
+	if($newOrder){
+		$orderStatus = "New Order\nPending Staff Approval";
+	} elseif($orderIsApprovedByStaff AND $orderIsApprovedByUser){
+		$orderStatus = "Approved"; // TO-DO: Fix this by checking for order/approved/purchased etc 
 	} elseif($orderIsApprovedByStaff AND !$orderIsApprovedByUser) {
 		$orderStatus = "Pending User Approval";
 	} elseif(!$orderIsApprovedByStaff AND $orderIsApprovedByUser) {
@@ -741,7 +753,9 @@ foreach($result AS $row){
 						'DateTimeUpdated' => $displayDateTimeUpdated,
 						'OrderContent' => $row['OrderContent'],
 						'OrderApprovedByUser' => $displayOrderApprovedByUser,
-						'OrderApprovedByStaff' => $displayOrderApprovedByStaff
+						'OrderApprovedByStaff' => $displayOrderApprovedByStaff,
+						'OrderRoomName' => $row['OrderRoomName'],
+						'OrderBookedFor' => $row['OrderBookedFor']
 					);
 }
 

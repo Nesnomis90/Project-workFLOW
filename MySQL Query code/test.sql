@@ -3,6 +3,7 @@ SET NAMES utf8;
 USE meetingflow;
 SHOW WARNINGS;
 SELECT CURRENT_TIMESTAMP;
+SELECT @@version;
 /*PDO::FETCH_ASSOC*/
 
 INSERT INTO `companycreditshistory`

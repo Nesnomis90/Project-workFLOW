@@ -24,48 +24,50 @@
 		<table>
 			<caption>Active Orders</caption>
 			<tr>
-				<th colspan="3">Order</th>
+				<th colspan="8">Order</th>
 				<th colspan="2">Communication</th>
-				<th colspan="4">Date</th>
-				<th colspan="2">Approved By</th>
-				<th colspan="1">Full Information</th>
+				<th colspan="4">Meeting</th>
 			</tr>
 			<tr>
 				<th>Status</th>
+				<th>Approved By User</th>
+				<th>Approved By Staff</th>
 				<th>Content</th>
 				<th>User Notes</th>
-				<th>To User</th>
-				<th>From User</th>
-				<th>Meeting Start</th>
-				<th>Meeting End</th>
 				<th>Created At</th>
 				<th>Last Update</th>
-				<th>User</th>
-				<th>Staff</th>
 				<th>Details</th>
+				<th>To User</th>
+				<th>From User</th>
+				<th>Room Name</th>
+				<th>Start</th>
+				<th>End</th>
+				<th>Booked For</th>
 			</tr>
 			<?php if($rowNum > 0) : ?>
 				<?php foreach($order as $row): ?>
 					<form action="" method="post">
 						<tr>
 							<td><?php htmlout($row['OrderStatus']); ?></td>
-							<td style="white-space: pre-wrap;"><?php htmlout($row['OrderContent']); ?></td>
-							<td style="white-space: pre-wrap;"><?php htmlout($row['OrderUserNotes']); ?></td>
-							<td style="white-space: pre-wrap;"><?php htmlout($row['OrderCommunicationToUser']); ?></td>
-							<td style="white-space: pre-wrap;"><?php htmlout($row['OrderCommunicationFromUser']); ?></td>
-							<td><?php htmlout($row['OrderStartTime']); ?></td>
-							<td><?php htmlout($row['OrderEndTime']); ?></td>
-							<td><?php htmlout($row['DateTimeCreated']); ?></td>
-							<td><?php htmlout($row['DateTimeUpdated']); ?></td>
 							<td><?php htmlout($row['OrderApprovedByUser']); ?></td>
 							<td><?php htmlout($row['OrderApprovedByStaff']); ?></td>
+							<td style="white-space: pre-wrap;"><?php htmlout($row['OrderContent']); ?></td>
+							<td style="white-space: pre-wrap;"><?php htmlout($row['OrderUserNotes']); ?></td>
+							<td><?php htmlout($row['DateTimeCreated']); ?></td>
+							<td><?php htmlout($row['DateTimeUpdated']); ?></td>
 							<td><input type="submit" name="action" value="Details"></td>
+							<td style="white-space: pre-wrap;"><?php htmlout($row['OrderCommunicationToUser']); ?></td>
+							<td style="white-space: pre-wrap;"><?php htmlout($row['OrderCommunicationFromUser']); ?></td>
+							<td><?php htmlout($row['OrderRoomName']); ?></td>
+							<td><?php htmlout($row['OrderStartTime']); ?></td>
+							<td><?php htmlout($row['OrderEndTime']); ?></td>
+							<td><?php htmlout($row['OrderBookedFor']); ?></td>
 							<input type="hidden" name="OrderID" value="<?php htmlout($row['TheOrderID']); ?>">
 						</tr>
 					</form>
 				<?php endforeach; ?>
 			<?php else : ?>
-				<tr><td colspan="12"><b>There are no active orders.</b></td></tr>
+				<tr><td colspan="14"><b>There are no active orders.</b></td></tr>
 			<?php endif; ?>
 		</table>
 	</body>
