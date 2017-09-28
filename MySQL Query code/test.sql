@@ -70,6 +70,25 @@ SELECT 		o.`orderID`										AS TheOrderID,
 			o.`orderChangedByStaff`							AS OrderChangedByStaff,
 			o.`orderNewMessageFromUser`						AS OrderNewMessageFromUser,
 			o.`orderNewMessageFromStaff`					AS OrderNewMessageFromStaff,
+			b.`startDateTime`								AS OrderStartDateTime,
+			b.`endDateTime`									AS OrderEndDateTime
+FROM 		`orders` o
+INNER JOIN	`booking` b
+ON 			b.`orderID` = o.`orderID`
+WHERE		o.`orderID` = 1
+LIMIT 		1;
+
+SELECT 		o.`orderID`										AS TheOrderID,
+			o.`orderUserNotes`								AS OrderUserNotes,
+			o.`dateTimeCreated`								AS DateTimeCreated,
+			o.`dateTimeUpdated`								AS DateTimeUpdated,
+			o.`orderApprovedByUser`							AS OrderApprovedByUser,
+			o.`orderApprovedByAdmin`						AS OrderApprovedByAdmin,
+			o.`orderApprovedByStaff`						AS OrderApprovedByStaff,
+			o.`orderChangedByUser`							AS OrderChangedByUser,
+			o.`orderChangedByStaff`							AS OrderChangedByStaff,
+			o.`orderNewMessageFromUser`						AS OrderNewMessageFromUser,
+			o.`orderNewMessageFromStaff`					AS OrderNewMessageFromStaff,
 			GROUP_CONCAT(ex.`name`, " (", eo.`amount`, ")"
 				SEPARATOR "\n")								AS OrderContent,
 			b.`startDateTime`								AS OrderStartDateTime,

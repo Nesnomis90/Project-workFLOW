@@ -78,7 +78,7 @@
 					</form>
 				<?php endforeach; ?>
 			<?php else : ?>
-				<tr><td colspan="18"><b>There are no orders registered in the database.</b></td></tr>
+				<tr><td colspan="21"><b>There are no orders registered in the database.</b></td></tr>
 			<?php endif; ?>
 		</table>
 		<div class="left"><a href="/admin/">Return to CMS home</a></div>

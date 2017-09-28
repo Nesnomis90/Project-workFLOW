@@ -164,31 +164,21 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Details') OR
 		{
 			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 			$pdo = connect_to_db();
-			$sql = 'SELECT 		o.`orderID`										AS TheOrderID,
-								o.`orderUserNotes`								AS OrderUserNotes,
-								o.`dateTimeCreated`								AS DateTimeCreated,
-								o.`dateTimeUpdated`								AS DateTimeUpdated,
-								o.`orderApprovedByUser`							AS OrderApprovedByUser,
-								o.`orderApprovedByAdmin`						AS OrderApprovedByAdmin,
-								o.`orderApprovedByStaff`						AS OrderApprovedByStaff,
-								o.`orderChangedByUser`							AS OrderChangedByUser,
-								o.`orderChangedByStaff`							AS OrderChangedByStaff,
-								o.`orderNewMessageFromUser`						AS OrderNewMessageFromUser,
-								o.`orderNewMessageFromStaff`					AS OrderNewMessageFromStaff,
-								b.`startDateTime`								AS OrderStartDateTime,
-								b.`endDateTime`									AS OrderEndDateTime,
-								m.`name`										AS OrderRoomName
-					FROM 		`orders` o
-					INNER JOIN	`extraorders` eo
-					ON 			eo.`orderID` = o.`orderID`
-					INNER JOIN 	`extra` ex
-					ON 			eo.`extraID` = ex.`extraID`
-					INNER JOIN	`booking` b
-					ON 			b.`orderID` = o.`orderID`
-					INNER JOIN	`meetingroom` m
-					ON 			m.`meetingRoomID` = b.`meetingRoomID`
-					WHERE		o.`orderID` = :OrderID
-					GROUP BY	o.`orderID`';
+
+			$sql = 'SELECT 		o.`orderID`						AS TheOrderID,
+								o.`orderUserNotes`				AS OrderUserNotes,
+								o.`dateTimeCreated`				AS DateTimeCreated,
+								o.`dateTimeUpdated`				AS DateTimeUpdated,
+								o.`orderApprovedByUser`			AS OrderApprovedByUser,
+								o.`orderApprovedByAdmin`		AS OrderApprovedByAdmin,
+								o.`orderApprovedByStaff`		AS OrderApprovedByStaff,
+								o.`orderChangedByUser`			AS OrderChangedByUser,
+								o.`orderChangedByStaff`			AS OrderChangedByStaff,
+								o.`orderNewMessageFromUser`		AS OrderNewMessageFromUser,
+								o.`orderNewMessageFromStaff`	AS OrderNewMessageFromStaff
+					FROM 		`orders`
+					WHERE		`orderID` = :OrderID
+					LIMIT 		1';
 
 			$s = $pdo->prepare($sql);
 			$s->bindValue(':OrderID', $orderID);
