@@ -7,6 +7,7 @@ include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/magicquotes.inc.php';
 // Cron does 1 run per minute (fastest)
 
 // Update completed bookings
+// Untested with new order update functions.
 function updateCompletedBookings(){
 	try
 	{
@@ -16,20 +17,74 @@ function updateCompletedBookings(){
 			$pdo = connect_to_db();
 		}
 
-		$sql = "UPDATE 	`booking`
-				SET		`actualEndDateTime` = `endDateTime`,
-						`cancellationCode` = NULL,
-						`emailSent` = 1
-				WHERE 	CURRENT_TIMESTAMP > `endDateTime`
+		$sql = "SELECT 	MIN(`bookingID`)
+				FROM 	`booking`
+				WHERE 	CURRENT_TIMESTAMP >= `endDateTime`
 				AND 	`actualEndDateTime` IS NULL
 				AND 	`dateTimeCancelled` IS NULL
-				AND		`bookingID` <> 0";
-		$pdo->exec($sql);
+				LIMIT 	1";
+		$return = $pdo->query($sql);
+		$minBookingID = $return->fetchColumn();
+
+		if(!empty($minBookingID) AND $minBookingID > 0){
+			// There are completed bookings that needs to be updated
+			// Minimize query time by using index search provided by the lowest bookingID found earlier.
+			$sql = "SELECT 	`bookingID`	AS BookingID,
+							`orderID` 	AS OrderID
+					FROM 	`booking`
+					WHERE 	CURRENT_TIMESTAMP >= `endDateTime`
+					AND 	`actualEndDateTime` IS NULL
+					AND 	`dateTimeCancelled` IS NULL
+					AND		`bookingID` >= :minBookingID";
+			$s = $pdo->prepare($sql);
+			$s->bindValue(':minBookingID', $minBookingID);
+			$s->execute();
+			$result = $s->fetchAll(PDO::FETCH_ASSOC);	
+
+			$pdo->beginTransaction();
+
+			foreach($result AS $booking){
+				$bookingID = $booking['BookingID'];
+				$orderID = $booking['OrderID'];
+
+				$sql = "UPDATE 	`booking`
+						SET		`actualEndDateTime` = `endDateTime`,
+								`cancellationCode` = NULL,
+								`emailSent` = 1
+						WHERE 	CURRENT_TIMESTAMP > `endDateTime`
+						AND 	`actualEndDateTime` IS NULL
+						AND 	`dateTimeCancelled` IS NULL
+						AND		`bookingID` = :BookingID";
+				$s = $pdo->prepare($sql);
+				$s->bindValue(':BookingID', $bookingID);
+				$s->execute();
+
+				if(!empty($orderID)){
+					// only update if it hasn't already been updated i.e. finalPrice is still null.
+					$sql = "UPDATE	`orders`
+							SET		`orderFinalPrice` = (
+															SELECT		SUM(IFNULL(eo.`alternativePrice`, ex.`price`) * eo.`amount`) AS FullPrice
+															FROM		`extra` ex
+															INNER JOIN 	`extraorders` eo
+															ON 			ex.`extraID` = eo.`extraID`
+															WHERE		eo.`orderID` = :OrderID
+														)
+							WHERE	`orderID` = :OrderID
+							AND		`orderFinalPrice` IS NULL";
+					$s = $pdo->prepare($sql);
+					$s->bindValue(':OrderID', $orderID);
+					$s->execute();
+				}
+			}
+
+			$pdo->commit();
+		}
 
 		return TRUE;
 	}
 	catch(PDOException $e)
 	{
+		$pdo->rollBack();
 		$pdo = null;
 		return FALSE;
 	}
@@ -78,8 +133,7 @@ function alertUserThatMeetingIsAboutToStart(){
 				AND			b.`cancellationCode` IS NOT NULL
 				AND 		DATE_ADD(b.`dateTimeCreated`, INTERVAL :waitMinutes MINUTE) < CURRENT_TIMESTAMP
 				AND			b.`emailSent` = 0
-				AND			u.`sendEmail` = 1
-				AND			b.`bookingID` <> 0";
+				AND			u.`sendEmail` = 1";
 		$s = $pdo->prepare($sql);
 		$s->bindValue(':bufferMinutes', TIME_LEFT_IN_MINUTES_UNTIL_MEETING_STARTS_BEFORE_SENDING_EMAIL);
 		$s->bindValue(':waitMinutes', MINIMUM_TIME_PASSED_IN_MINUTES_AFTER_CREATING_BOOKING_BEFORE_SENDING_EMAIL);

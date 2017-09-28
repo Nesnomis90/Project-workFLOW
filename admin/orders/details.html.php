@@ -1,9 +1,11 @@
-<!-- This is the HTML form used for DISPLAYING a list of DETAILS for a selected ORDER for STAFF users-->
+<!-- This is the HTML form used for EDITING Order information-->
 <!DOCTYPE html>
 <html lang="en">
 	<head>
 		<meta charset="utf-8">
 		<link rel="stylesheet" type="text/css" href="/CSS/myCSS.css">
+		<script src="/scripts/myFunctions.js"></script>
+		<title>Order Details</title>
 		<style>
 			label {
 				width: 210px;
@@ -15,23 +17,16 @@
 				width: auto;
 			}
 		</style>
-		<script src="/scripts/myFunctions.js"></script>
-		<title>Order Details</title>
 	</head>
 	<body onload="startTime()">
-		<?php if($accessRole == "Admin") : ?>
-			<?php include_once $_SERVER['DOCUMENT_ROOT'] .'/includes/topnav.html.php'; ?>
-		<?php else : ?>
-			<?php include_once $_SERVER['DOCUMENT_ROOT'] .'/includes/stafftopnav.html.php'; ?>
-		<?php endif; ?>
+		<?php include_once $_SERVER['DOCUMENT_ROOT'] .'/includes/admintopnav.html.php'; ?>
 
 		<form action="" method="post">
-			<fieldset><legend>Order Details:</legend>
-
-				<div class="left">
-					<?php if(isSet($_SESSION['OrderStaffDetailsFeedback'])) : ?>
-						<span><b class="feedback"><?php htmlout($_SESSION['OrderStaffDetailsFeedback']); ?></b></span>
-						<?php unset($_SESSION['OrderStaffDetailsFeedback']); ?>
+			<fieldset><legend>Order Details</legend>
+				<div>
+					<?php if(isSet($_SESSION['AddOrderError'])) :?>
+						<span><b class="feedback"><?php htmlout($_SESSION['AddOrderError']); ?></b></span>
+						<?php unset($_SESSION['AddOrderError']); ?>
 					<?php endif; ?>
 				</div>
 
@@ -61,7 +56,17 @@
 				</div>
 
 				<div>
-					<label>Order Approval Status: </label>
+					<label>Original Admin Note: </label>
+					<span style="white-space: pre-wrap;"><b><?php htmlout($originalOrderAdminNote); ?></b></span>
+				</div>
+
+				<div>
+					<label class="description">Set New Admin Note: </label>
+						<textarea rows="4" cols="50" name="AdminNote" placeholder="Enter Admin Note"><?php htmlout($orderAdminNote); ?></textarea>
+				</div>
+
+				<div>
+					<label>Original Order Approval: </label>
 					<?php if($originalOrderIsApproved == 1) : ?>
 						<span><b><?php htmlout("Order Approved"); ?></b></span>
 					<?php else : ?>

@@ -31,6 +31,7 @@ function clearEditStaffOrderSessions(){
 	unset($_SESSION['EditStaffOrderIsApproved']);
 	unset($_SESSION['EditStaffOrderOrderID']);
 	unset($_SESSION['EditStaffOrderExtraOrdered']);
+	unset($_SESSION['EditStaffOrderOrderMessages']);
 }
 
 // Function to check if user inputs for Order are correct
@@ -110,7 +111,7 @@ function validateUserInputs(){
 
 	// Check if input length is allowed
 		// OrderCommunicationToUser
-	$invalidOrderCommunicationToUser = isLengthInvalidEquipmentDescription($validatedOrderCommunicationToUser);
+	$invalidOrderCommunicationToUser = isLengthInvalidOrderMessage($validatedOrderCommunicationToUser);
 	if($invalidOrderCommunicationToUser AND !$invalidInput){
 		$_SESSION['OrderStaffDetailsFeedback'] = "Your submitted message to the user is too long.";
 		$invalidInput = TRUE;
@@ -149,50 +150,43 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Details') OR
 		if(isSet($_SESSION['EditStaffOrderExtraOrdered'])){
 			$extraOrdered = $_SESSION['EditStaffOrderExtraOrdered'];
 		}
-
+		if(isSet($_SESSION['EditStaffOrderOrderMessages'])){
+			$orderMessages = $_SESSION['EditStaffOrderOrderMessages'];
+		}
 	} else {
 		// Make sure we don't have any remembered values in memory
 		clearEditStaffOrderSessions();
+
+		$orderID = $_POST['OrderID'];
 
 		// Get information from database again on the selected order
 		try
 		{
 			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 			$pdo = connect_to_db();
-			$sql = 'SELECT 		o.`orderID`										AS TheOrderID,
-								o.`orderUserNotes`								AS OrderUserNotes,
-								o.`orderCommunicationToUser`					AS OrderCommunicationToUser,
-								o.`orderCommunicationFromUser`					AS OrderCommunicationFromUser,
-								o.`dateTimeCreated`								AS DateTimeCreated,
-								o.`dateTimeUpdated`								AS DateTimeUpdated,
-								o.`orderApprovedByUser`							AS OrderApprovedByUser,
-								o.`orderApprovedByAdmin`						AS OrderApprovedByAdmin,
-								o.`orderApprovedByStaff`						AS OrderApprovedByStaff,
-								b.`startDateTime`								AS OrderStartDateTime,
-								b.`endDateTime`									AS OrderEndDateTime,
-								m.`name`										AS OrderRoomName
-					FROM 		`orders` o
-					INNER JOIN	`extraorders` eo
-					ON 			eo.`orderID` = o.`orderID`
-					INNER JOIN 	`extra` ex
-					ON 			eo.`extraID` = ex.`extraID`
-					INNER JOIN	`booking` b
-					ON 			b.`orderID` = o.`orderID`
-					INNER JOIN	`meetingroom` m
-					ON 			m.`meetingRoomID` = b.`meetingRoomID`
-					WHERE		o.`orderID` = :OrderID
-					GROUP BY	o.`orderID`';
+
+			$sql = 'SELECT 		`orderID`					AS TheOrderID,
+								`orderUserNotes`			AS OrderUserNotes,
+								`dateTimeCreated`			AS DateTimeCreated,
+								`dateTimeUpdated`			AS DateTimeUpdated,
+								`orderApprovedByUser`		AS OrderApprovedByUser,
+								`orderApprovedByAdmin`		AS OrderApprovedByAdmin,
+								`orderApprovedByStaff`		AS OrderApprovedByStaff,
+								`orderChangedByUser`		AS OrderChangedByUser,
+								`orderChangedByStaff`		AS OrderChangedByStaff,
+								`orderNewMessageFromUser`	AS OrderNewMessageFromUser,
+								`orderNewMessageFromStaff`	AS OrderNewMessageFromStaff
+					FROM 		`orders`
+					WHERE		`orderID` = :OrderID
+					LIMIT 		1';
 
 			$s = $pdo->prepare($sql);
-			$s->bindValue(':OrderID', $_POST['OrderID']);
+			$s->bindValue(':OrderID', $orderID);
 			$s->execute();
 
 			// Create an array with the row information we retrieved
 			$row = $s->fetch(PDO::FETCH_ASSOC);
 			$_SESSION['EditStaffOrderOriginalInfo'] = $row;
-
-			// Set the correct information
-			$orderID = $row['TheOrderID'];
 
 			if($row['OrderApprovedByAdmin'] == 1 OR $row['OrderApprovedByStaff'] == 1){
 				$orderIsApproved = 1;
@@ -215,6 +209,7 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Details') OR
 			$_SESSION['EditStaffOrderOriginalInfo']['DateTimeUpdated'] = $displayDateTimeUpdated;
 			$_SESSION['EditStaffOrderOrderID'] = $orderID;
 
+			// Get information about the extras ordered
 			$sql = 'SELECT 		ex.`extraID` 											AS ExtraID,
 								ex.`name`												AS ExtraName,
 								eo.`amount`												AS ExtraAmount,
@@ -230,14 +225,14 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Details') OR
 								(
 									SELECT 	CONCAT_WS(", ", u.`lastname`, u.`firstname`)
 									FROM	`user` u
-									WHERE	u.`userID` = eo.`orderApprovedByUserID`
+									WHERE	u.`userID` = eo.`approvedByUserID`
 								)														AS ExtraApprovedForPurchaseByUser
 					FROM 		`extraorders` eo
 					INNER JOIN	`extra` ex
 					ON 			ex.`extraID` = eo.`extraID`
 					WHERE		eo.`orderID` = :OrderID';
 			$s = $pdo->prepare($sql);
-			$s->bindValue(':OrderID', $_POST['OrderID']);
+			$s->bindValue(':OrderID', $orderID);
 			$s->execute();
 
 			$result = $s->fetchAll(PDO::FETCH_ASSOC);
@@ -295,6 +290,81 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Details') OR
 
 			$_SESSION['EditStaffOrderOriginalInfo']['ExtraOrdered'] = $extraOrdered;
 			$_SESSION['EditStaffOrderExtraOrdered'] = $extraOrdered;
+
+			// Get information about messages sent to/from user
+			$sql = 'SELECT	`messageID`		AS OrderMessageID,
+							`message`		AS OrderMessage,
+							`sentByStaff`	AS OrderMessageSentByStaff,
+							`sentByUser`	AS OrderMessageSentByUser,
+							`messageSeen`	AS OrderMessageSeen,
+							`dateTimeAdded`	AS OrderMessageDateTimeAdded
+					FROM	`ordermessages`
+					WHERE	`orderID` = :OrderID';
+
+			$s = $pdo->prepare($sql);
+			$s->bindValue(':OrderID', $orderID);
+			$s->execute();
+
+			$result = $s->fetchAll(PDO::FETCH_ASSOC);
+
+			$pdo->beginTransaction();
+
+			$orderMessages = "";
+			foreach($result AS $message){
+
+				$messageID = $message['OrderMessageID'];
+				$messageOnly = $message['OrderMessage'];
+				$sentByStaff = $message['OrderMessageSentByStaff'];
+				$sentByUser = $message['OrderMessageSentByUser'];
+				if($sentByStaff == 1){
+					$messageAddFrom = "(Staff)";
+				} elseif($sentByUser == 1){
+					$messageAddFrom = "(User)";
+				} else {
+					$messageAddFrom = "(Unknown)";
+				}
+
+				$messageSeen = $message['OrderMessageSeen'];
+				if($messageSeen == 0 AND $sentByUser == 1){
+					$messageAddSeen = "NEW MESSAGE ";
+				} elseif($messageSeen == 0 AND $sentByStaff == 1){
+					$messageAddSeen = "NOT READ BY USER ";
+				} else {
+					$messageAddSeen = "";
+				}
+
+				$messageDateTimeAdded = $message['OrderMessageDateTimeAdded'];
+				$displayMessageDateTimeAdded = convertDatetimeToFormat($messageDateTimeAdded , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
+
+				$finalMessage = $displayMessageDateTimeAdded . " " . $messageAddSeen . $messageAddFrom . ": " . $messageOnly . "\n";
+
+				$orderMessages .= $finalMessage;
+
+				if($sentByUser == 1 AND $messageSeen == 0){
+					// Update that the new messages (from user) has been seen.
+					$sql = "UPDATE	`ordermessages`
+							SET		`messageSeen` = 1
+							WHERE	`orderID` = :OrderID
+							AND		`messageID` = :MessageID";
+					$s = $pdo->prepare($sql);
+					$s->bindValue(':OrderID', $orderID);
+					$s->bindValue(':MessageID', $messageID);
+					$s->execute();
+				}
+			}
+
+			$_SESSION['EditStaffOrderOrderMessages'] = $orderMessages;
+
+			// Update that there are no new messages from user
+			$sql = "UPDATE	`orders`
+					SET		`orderNewMessageFromUser` = 0
+					WHERE	`orderID` = :OrderID";
+			$s = $pdo->prepare($sql);
+			$s->bindValue(':OrderID', $orderID);
+			$s->execute();
+
+			$pdo->commit();
+
 			//Close the connection
 			$pdo = null;
 		}
@@ -308,20 +378,10 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Details') OR
 	}
 
 	// Set original values
-	$originalOrderCommunicationToUser = $_SESSION['EditStaffOrderOriginalInfo']['OrderCommunicationToUser'];
-	$originalOrderCommunicationFromUser = $_SESSION['EditStaffOrderOriginalInfo']['OrderCommunicationFromUser'];
 	$originalOrderIsApproved = $_SESSION['EditStaffOrderOriginalInfo']['OrderIsApproved'];
 	$originalOrderUserNotes = $_SESSION['EditStaffOrderOriginalInfo']['OrderUserNotes'];
 	$originalOrderCreated = $_SESSION['EditStaffOrderOriginalInfo']['DateTimeCreated'];
 	$originalOrderUpdated = $_SESSION['EditStaffOrderOriginalInfo']['DateTimeUpdated'];
-
-	if($originalOrderCommunicationToUser == ""){
-		$originalOrderCommunicationToUser = "No messages sent to user.";
-	}
-
-	if($originalOrderCommunicationFromUser == ""){
-		$originalOrderCommunicationFromUser = "No messages received from user.";
-	}
 
 	if(!isSet($orderCommunicationToUser)){
 		$orderCommunicationToUser = "";
@@ -361,10 +421,6 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Submit Changes'){
 		if($validatedOrderCommunicationToUser != ""){
 			$numberOfChanges++;
 			$messageAdded = TRUE;
-
-			$dateTimeNow = getDatetimeNow();
-			$displayDateTimeNow = convertDatetimeToFormat($dateTimeNow, 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
-			$fullOrderCommunicationToUser = $original['OrderCommunicationToUser'] . "$displayDateTimeNow:\n" . $validatedOrderCommunicationToUser . "\n\n";
 		}
 
 		$setAsApproved = FALSE;
@@ -405,30 +461,13 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Submit Changes'){
 			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 			$pdo = connect_to_db();
 
-			if($extraChanged){
+			if($extraChanged OR $messageAdded){
 				$pdo->beginTransaction();
 			}
 
-			if($setAsApproved AND $messageAdded){
+			if($setAsApproved){
 				$sql = 'UPDATE 	`orders`
-						SET		`orderCommunicationToUser` = :OrderCommunicationToUser,
-								`orderApprovedByAdmin` = :approvedByAdmin,
-								`orderApprovedByStaff` = :approvedByStaff,
-								`dateTimeUpdated` = CURRENT_TIMESTAMP,
-								`dateTimeApproved` = CURRENT_TIMESTAMP,
-								`orderApprovedByUserID` = :orderApprovedByUserID
-						WHERE 	`orderID` = :OrderID';
-				$s = $pdo->prepare($sql);
-				$s->bindValue(':OrderID', $orderID);
-				$s->bindValue(':OrderCommunicationToUser', $fullOrderCommunicationToUser);
-				$s->bindValue(':approvedByAdmin', $approvedByAdmin);
-				$s->bindValue(':approvedByStaff', $approvedByStaff);
-				$s->bindValue(':orderApprovedByUserID', $_SESSION['LoggedInUserID']);
-				$s->execute();
-			} elseif($setAsApproved AND !$messageAdded){
-				$sql = 'UPDATE 	`orders`
-						SET		`orderCommunicationToUser` = :OrderCommunicationToUser,
-								`orderApprovedByAdmin` = :approvedByAdmin,
+						SET		`orderApprovedByAdmin` = :approvedByAdmin,
 								`orderApprovedByStaff` = :approvedByStaff,
 								`dateTimeUpdated` = CURRENT_TIMESTAMP,
 								`dateTimeApproved` = CURRENT_TIMESTAMP,
@@ -439,21 +478,6 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Submit Changes'){
 				$s->bindValue(':approvedByAdmin', $approvedByAdmin);
 				$s->bindValue(':approvedByStaff', $approvedByStaff);
 				$s->bindValue(':orderApprovedByUserID', $_SESSION['LoggedInUserID']);
-				$s->execute();
-			} elseif(!$setAsApproved AND $messageAdded){
-				$sql = 'UPDATE 	`orders`
-						SET		`orderCommunicationToUser` = :OrderCommunicationToUser,
-								`orderApprovedByAdmin` = :approvedByAdmin,
-								`orderApprovedByStaff` = :approvedByStaff,
-								`dateTimeUpdated` = CURRENT_TIMESTAMP,
-								`dateTimeApproved` = NULL,
-								`orderApprovedByUserID` = NULL
-						WHERE 	`orderID` = :OrderID';
-				$s = $pdo->prepare($sql);
-				$s->bindValue(':OrderID', $orderID);
-				$s->bindValue(':OrderCommunicationToUser', $fullOrderCommunicationToUser);
-				$s->bindValue(':approvedByAdmin', $approvedByAdmin);
-				$s->bindValue(':approvedByStaff', $approvedByStaff);
 				$s->execute();
 			} else {
 				$sql = 'UPDATE 	`orders`
@@ -470,6 +494,20 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Submit Changes'){
 				$s->execute();
 			}
 
+			if($messageAdded){
+				$sql = 'INSERT INTO `ordermessages`
+						SET			`message` = :message,
+									`sentByStaff` = 1,
+									`dateTimeAdded` = CURRENT_TIMESTAMP,
+									`messageFromUserID` = :messageFromUserID,
+									`orderID` = :OrderID';
+				$s = $pdo->prepare($sql);
+				$s->bindValue(':OrderID', $orderID);
+				$s->bindValue(':message', $validatedOrderCommunicationToUser);
+				$s->bindValue(':messageFromUserID', $_SESSION['LoggedInUserID']);
+				$s->execute();
+			}
+			
 			if($extraChanged){
 				// Update extraorders table
 				foreach($_SESSION['EditStaffOrderExtraOrdered'] AS $key => $extra){
@@ -578,6 +616,9 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Submit Changes'){
 						$s->execute();
 					}
 				}
+			}
+
+			if($extraChanged OR $messageAdded){
 				$pdo->commit();
 			}
 
@@ -586,6 +627,7 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Submit Changes'){
 		}
 		catch (PDOException $e)
 		{
+			$pdo->rollBack();
 			$error = 'Error updating submitted Order: ' . $e->getMessage();
 			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
 			$pdo = null;
@@ -605,7 +647,7 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Submit Changes'){
 }
 
 // If admin wants to get original values while editing
-if(isSet($_POST['edit']) AND $_POST['edit'] == 'Reset'){
+if(isSet($_POST['action']) AND $_POST['action'] == 'Reset'){
 
 	clearEditStaffOrderSessions();
 
@@ -614,9 +656,9 @@ if(isSet($_POST['edit']) AND $_POST['edit'] == 'Reset'){
 	exit();	
 }
 
-// If the admin wants to leave the page and go back to the Order overview again
-if(isSet($_POST['edit']) AND $_POST['edit'] == 'Cancel'){
-	$_SESSION['OrderStaffFeedback'] = "You cancelled your Order editing.";
+// If the user wants to leave the page and go back to the Order overview again
+if(isSet($_POST['action']) AND $_POST['action'] == 'Go Back'){
+	$_SESSION['OrderStaffFeedback'] = "You left the order without making any changes.";
 	$refreshOrder = TRUE;
 }
 
@@ -757,27 +799,34 @@ foreach($result AS $row){
 	$extrasPurchased = $row['OrderExtrasPurchased'];
 
 	if($orderNewMessageFromStaff == 1 AND $orderNewMessageFromUser == 1){
-		$messageStatus = "New Message From User\nMessage Sent To User Not Seen Yet";
+		$messageStatus = "New Message From User!\n\nMessage Sent To User Not Seen Yet.";
 	} elseif($orderNewMessageFromStaff == 1 AND $orderNewMessageFromUser == 0){
-		$messageStatus = "Message Sent To User Not Seen Yet";
+		$messageStatus = "Message Sent To User Not Seen Yet.";
 	} elseif($orderNewMessageFromStaff == 0 AND $orderNewMessageFromUser == 1) {
-		$messageStatus = "New Message From User";
+		$messageStatus = "New Message From User!";
 	} elseif($orderMessagesSent > 0) {
-		$messageStatus = "All Messages Seen";
+		$messageStatus = "All Messages Seen.";
 	} else {
-		$messageStatus = "No Messages Sent";
+		$messageStatus = "No Messages Sent.";
 	}
 
 	if($newOrder){
-		$orderStatus = "New Order\nPending Staff Approval";
+		$orderStatus = "New Order!\nPending Staff Approval";
 	} elseif($orderIsApprovedByStaff AND $orderIsApprovedByUser){
-		$orderStatus = "Approved";
+		$orderStatus = "Order Approved!";
+		if($extrasApproved == $extrasOrdered AND $extrasPurchased == $extrasOrdered){
+			$orderStatus .= "\n\nAll Items Approved!\n\nAll Items Purchased!";
+		} elseif($extrasApproved == $extrasOrdered AND $extrasPurchased < $extrasOrdered){
+			$orderStatus .= "\n\nAll Items Approved!\n\nPending Item Purchases.";
+		} elseif($extrasApproved < $extrasOrdered){
+			$orderStatus .= "\n\nPending Item Approval.\n\nPending Item Purchases.";
+		}
 	} elseif($orderIsApprovedByStaff AND !$orderIsApprovedByUser) {
-		$orderStatus = "Order Changed\nPending User Approval";
+		$orderStatus = "Order Not Approved After Change.\n\nPending User Approval.";
 	} elseif(!$orderIsApprovedByStaff AND $orderIsApprovedByUser) {
-		$orderStatus = "Order Changed\nPending Staff Approval";
+		$orderStatus = "Order Not Approved.\n\nPending Staff Approval.";
 	} else {
-		$orderStatus = "Order Changed\nPending Staff\nPending User Approval";
+		$orderStatus = "Order Not Approved After Change.\n\nPending Staff Approval.\n\nPending User Approval.";
 	}
 
 	if(!empty($row['OrderLastMessageFromUser'])){

@@ -3,6 +3,9 @@ SET NAMES utf8;
 USE meetingflow;
 SHOW WARNINGS;
 SELECT CURRENT_TIMESTAMP;
+SELECT DATE(CURRENT_TIMESTAMP);
+SELECT UNIX_TIMESTAMP();
+SELECT CURRENT_DATE();
 SELECT @@version;
 SHOW indexes from `booking`;
 /*PDO::FETCH_ASSOC*/
@@ -56,8 +59,40 @@ AND		`companyID` <> 0;
 
 INSERT INTO `ordermessages`
 SET 		`orderID` = 1,
-			`message` = "Newest Test Message From Staff",
-            `sentByStaff` = 1;
+			`message` = "Test Message From User!",
+            `sentByUser` = 1;
+
+Update 	`orders`
+SET		`orderNewMessageFromUser` = 1
+WHERE	`orderID` = 1;
+
+UPDATE	`orders`
+SET		`orderFinalPrice` = (
+								SELECT		SUM(IFNULL(eo.`alternativePrice`, ex.`price`) * eo.`amount`) AS FullPrice
+								FROM		`extra` ex
+								INNER JOIN 	`extraorders` eo
+								ON 			ex.`extraID` = eo.`extraID`
+								WHERE		eo.`orderID` = 1
+							)
+WHERE	`orderID` = 1
+AND		`orderFinalPrice` IS NULL;
+
+SELECT 		MIN(c.`companyID`)
+FROM 		`company` c
+INNER JOIN 	`companycredits` cc
+ON 			cc.`CompanyID` = c.`CompanyID`
+INNER JOIN 	`credits` cr
+ON			cr.`CreditsID` = cc.`CreditsID`
+AND			CURDATE() >= c.`endDate`;
+
+SELECT		o.`orderFinalPrice` 											AS FinalPrice,
+			SUM(IFNULL(eo.`alternativePrice`, ex.`price`) * eo.`amount`) 	AS FullPrice
+FROM		`orders` o
+INNER JOIN 	`extraorders` eo
+ON			o.`orderID` = eo.`orderID`
+INNER JOIN	`extra` ex
+ON 			ex.`extraID` = eo.`extraID`
+WHERE		o.`orderID` = 1;
 
 SELECT 		o.`orderID`										AS TheOrderID,
 			o.`orderUserNotes`								AS OrderUserNotes,

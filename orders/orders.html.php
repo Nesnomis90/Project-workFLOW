@@ -38,12 +38,12 @@
 				<th>Last Update</th>
 				<th>Details</th>
 				<th>Status</th>
-				<th>Last Message To User</th>
+				<th>Last Message From Staff</th>
 				<th>Last Message From User</th>
 				<th>Room Name</th>
 				<th>Start</th>
 				<th>End</th>
-				<th>Booked For</th>
+				<th>Booked For Company</th>
 			</tr>
 			<?php if($rowNum > 0) : ?>
 				<?php foreach($order as $row): ?>
