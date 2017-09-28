@@ -8,7 +8,7 @@
 			label {
 				width: 210px;
 			}
-			#extraTable table th,tr,td {
+			table.extraTable th,tr,td {
 				
 			}
 		</style>
@@ -67,7 +67,7 @@
 				</div>
 			</fieldset>
 
-			<table>
+			<table class="extraTable">
 				<caption>Extra Ordered</caption>
 				<tr>
 					<th colspan="4">Extra</th>

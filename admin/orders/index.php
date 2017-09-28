@@ -405,8 +405,6 @@ try
 	$pdo = connect_to_db();
 	$sql = 'SELECT 		o.`orderID`										AS TheOrderID,
 						o.`orderUserNotes`								AS OrderUserNotes,
-						o.`orderCommunicationToUser`					AS OrderCommunicationToUser,
-						o.`orderCommunicationFromUser`					AS OrderCommunicationFromUser,
 						o.`dateTimeCreated`								AS DateTimeCreated,
 						o.`dateTimeUpdated`								AS DateTimeUpdated,
 						o.`dateTimeApproved`							AS DateTimeApproved,
@@ -414,6 +412,10 @@ try
 						o.`orderApprovedByUser`							AS OrderApprovedByUser,
 						o.`orderApprovedByAdmin`						AS OrderApprovedByAdmin,
 						o.`orderApprovedByStaff`						AS OrderApprovedByStaff,
+						o.`orderChangedByUser`							AS OrderChangedByUser,
+						o.`orderChangedByStaff`							AS OrderChangedByStaff,
+						o.`orderNewMessageFromUser`						AS OrderNewMessageFromUser,
+						o.`orderNewMessageFromStaff`					AS OrderNewMessageFromStaff,
 						o.`orderFinalPrice`								AS OrderFinalPrice,
 						o.`adminNote`									AS OrderAdminNote,
 						(
@@ -424,6 +426,31 @@ try
 						)												AS OrderApprovedByUserName,
 						GROUP_CONCAT(ex.`name`, " (", eo.`amount`, ")"
 							SEPARATOR "\n")								AS OrderContent,
+						COUNT(eo.`extraID`)								AS OrderExtrasOrdered,
+						COUNT(eo.`approvedForPurchase`)					AS OrderExtrasApproved,
+						COUNT(eo.`purchased`)							AS OrderExtrasPurchased,
+						(
+							SELECT	COUNT(om.`messageID`)
+							FROM	`ordermessages` om
+							WHERE	om.`orderID` = o.`orderID`
+							LIMIT 	1
+						)												AS OrderMessagesSent,
+						(
+							SELECT		om.`message`
+							FROM		`ordermessages` om
+							WHERE		om.`orderID` = o.`orderID`
+							AND			om.`sentByStaff` = 1
+							ORDER BY	om.`dateTimeAdded` DESC
+							LIMIT 	1
+						)												AS OrderLastMessageFromStaff,
+						(
+							SELECT		om.`message`
+							FROM		`ordermessages` om
+							WHERE		om.`orderID` = o.`orderID`
+							AND			om.`sentByUser` = 1
+							ORDER BY	om.`dateTimeAdded` DESC
+							LIMIT 	1
+						)												AS OrderLastMessageFromUser,
 						b.`startDateTime`								AS OrderStartDateTime,
 						b.`endDateTime`									AS OrderEndDateTime,
 						b.`actualEndDateTime`							AS OrderBookingCompleted,
@@ -433,7 +460,13 @@ try
 							FROM	`meetingroom`
 							WHERE	`meetingRoomID` = b.`meetingRoomID`
 							LIMIT 	1
-						)												AS OrderRoomName
+						)												AS OrderRoomName,
+						(
+							SELECT 	`name`
+							FROM	`company`
+							WHERE	`companyID` = b.`companyID`
+							LIMIT 	1
+						)												AS OrderBookedFor						
 			FROM 		`orders` o
 			INNER JOIN	`extraorders` eo
 			ON 			eo.`orderID` = o.`orderID`
@@ -511,12 +544,18 @@ foreach($result AS $row){
 	} else {
 		$orderIsApprovedByUser = FALSE;
 		$displayOrderApprovedByUser = "No";
-	}	
-	
+	}
+
 	if(!empty($row['OrderRoomName'])){
 		$orderRoomName = $row['OrderRoomName'];
 	} else {
 		$orderRoomName = "N/A - Deleted Room";
+	}
+
+	if(!empty($row['OrderBookedFor'])){
+		$orderBookedFor = $row['OrderBookedFor'];
+	} else {
+		$orderBookedFor = "N/A - Deleted Company";
 	}
 
 	if($row['OrderFinalPrice'] != NULL){
@@ -526,15 +565,50 @@ foreach($result AS $row){
 		$displayOrderFinalPrice = "N/A";
 	}
 
-	if($orderIsApprovedByStaff AND $orderIsApprovedByUser){
+	$orderMessagesSent = $row['OrderMessagesSent'];
+	$orderNewMessageFromUser = $row['OrderNewMessageFromUser'];
+	$orderNewMessageFromStaff = $row['OrderNewMessageFromStaff'];
+	$orderChangedByUser = $row['OrderChangedByUser'];
+	$orderChangedByStaff = $row['OrderChangedByStaff'];
+	$extrasOrdered = $row['OrderExtrasOrdered'];
+	$extrasApproved = $row['OrderExtrasApproved'];
+	$extrasPurchased = $row['OrderExtrasPurchased'];
+
+	if($orderNewMessageFromStaff == 1 AND $orderNewMessageFromUser == 1){
+		$messageStatus = "New Message From User\nMessage Sent To User Not Seen Yet";
+	} elseif($orderNewMessageFromStaff == 1 AND $orderNewMessageFromUser == 0){
+		$messageStatus = "Message Sent To User Not Seen Yet";
+	} elseif($orderNewMessageFromStaff == 0 AND $orderNewMessageFromUser == 1) {
+		$messageStatus = "New Message From User";
+	} elseif($orderMessagesSent > 0) {
+		$messageStatus = "All Messages Seen";
+	} else {
+		$messageStatus = "No Messages Sent";
+	}
+
+	if($newOrder){
+		$orderStatus = "New Order\nPending Staff Approval";
+	} elseif($orderIsApprovedByStaff AND $orderIsApprovedByUser){
 		$orderStatus = "Approved";
 	} elseif($orderIsApprovedByStaff AND !$orderIsApprovedByUser) {
-		$orderStatus = "Pending User Approval";
+		$orderStatus = "Order Changed\nPending User Approval";
 	} elseif(!$orderIsApprovedByStaff AND $orderIsApprovedByUser) {
-		$orderStatus = "Pending Staff Approval";
+		$orderStatus = "Order Changed\nPending Staff Approval";
 	} else {
-		$orderStatus = "Not Approved";
-	}	
+		$orderStatus = "Order Changed\nPending Staff\nPending User Approval";
+	}
+
+	if(!empty($row['OrderLastMessageFromUser'])){
+		$displayLastMessageFromUser = $row['OrderLastMessageFromUser'];
+	} else {
+		$displayLastMessageFromUser = "";
+	}
+
+	if(!empty($row['OrderLastMessageFromStaff'])){
+		$displayLastMessageFromStaff = $row['OrderLastMessageFromStaff'];
+	} else {
+		$displayLastMessageFromStaff = "";
+	}
 
 	if($orderIsApproved){
 		if($row['OrderBookingCompleted'] != NULL){
@@ -555,8 +629,9 @@ foreach($result AS $row){
 						'TheOrderID' => $row['TheOrderID'],
 						'OrderStatus' => $orderStatus,
 						'OrderUserNotes' => $row['OrderUserNotes'],
-						'OrderCommunicationToUser' => $row['OrderCommunicationToUser'],
-						'OrderCommunicationFromUser' => $row['OrderCommunicationFromUser'],
+						'OrderMessageStatus' => $messageStatus,
+						'OrderLastMessageFromUser' => $displayLastMessageFromUser,
+						'OrderLastMessageFromStaff' => $displayLastMessageFromStaff,
 						'OrderStartTime' => $displayDateTimeStart,
 						'OrderEndTime' => $displayDateTimeEnd,
 						'DateTimeApproved' => $displayDateTimeApproved,
@@ -568,7 +643,9 @@ foreach($result AS $row){
 						'OrderFinalPrice' => $displayOrderFinalPrice,
 						'OrderApprovedByUser' => $displayOrderApprovedByUser,
 						'OrderApprovedByStaff' => $displayOrderApprovedByStaff,
-						'OrderApprovedByName' => $orderApprovedBy
+						'OrderApprovedByName' => $orderApprovedBy,
+						'OrderRoomName' => $orderRoomName,
+						'OrderBookedFor' => $orderBookedFor
 					);
 }
 

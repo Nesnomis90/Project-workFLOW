@@ -10,8 +10,6 @@
 	<body onload="startTime()">
 		<?php include_once $_SERVER['DOCUMENT_ROOT'] .'/includes/admintopnav.html.php'; ?>
 
-		<h1>Manage Orders</h1>
-
 		<div class="left">
 			<?php if(isSet($_SESSION['OrderUserFeedback'])) : ?>
 				<span><b class="feedback"><?php htmlout($_SESSION['OrderUserFeedback']); ?></b></span>
@@ -22,53 +20,58 @@
 		<table>
 			<caption>Order History</caption>
 			<tr>
-				<th colspan="5">Order</th>
-				<th colspan="2">Communication</th>
-				<th colspan="6">Date</th>
-				<th colspan="3">Approved By</th>
-				<th colspan="2">Alter Order</th>
+				<th colspan="13">Order</th>
+				<th colspan="3">Messages</th>
+				<th colspan="4">Meeting</th>
+				<th colspan="1">Cancel Order</th>
 			</tr>
 			<tr>
 				<th>Status</th>
+				<th>Approved By User</th>
+				<th>Approved By Staff</th>
+				<th>Approved By Name</th>
 				<th>Content</th>
 				<th>User Notes</th>
 				<th>Admin Note</th>
 				<th>Final Price</th>
-				<th>To User</th>
-				<th>From User</th>
-				<th>Meeting Start</th>
-				<th>Meeting End</th>
 				<th>Created At</th>
-				<th>Approved At</th>
 				<th>Last Update</th>
+				<th>Approved At</th>
 				<th>Cancelled At</th>
-				<th>User</th>
-				<th>Staff</th>
-				<th>Staff Name</th>
-				<th>Edit</th>
-				<th>Cancel</th>
+				<th>Details</th>
+				<th>Status</th>
+				<th>Last Message From Staff</th>
+				<th>Last Message From User</th>
+				<th>Room Name</th>
+				<th>Start</th>
+				<th>End</th>
+				<th>Booked For</th>
+				<th></th>
 			</tr>
 			<?php if($rowNum > 0) : ?>
 				<?php foreach($order as $row): ?>
 					<form action="" method="post">
 						<tr>
-							<td style="white-space: pre-wrap;"><?php htmlout($row['OrderStatus']); ?></td><?php htmlout($row['OrderStatus']); ?></td>
+							<td style="white-space: pre-wrap;"><?php htmlout($row['OrderStatus']); ?></td>
+							<td><?php htmlout($row['OrderApprovedByUser']); ?></td>
+							<td><?php htmlout($row['OrderApprovedByStaff']); ?></td>
+							<td><?php htmlout($row['OrderApprovedByName']); ?></td>
 							<td style="white-space: pre-wrap;"><?php htmlout($row['OrderContent']); ?></td>
 							<td style="white-space: pre-wrap;"><?php htmlout($row['OrderUserNotes']); ?></td>
 							<td style="white-space: pre-wrap;"><?php htmlout($row['OrderAdminNote']); ?></td>
 							<td><?php htmlout($row['OrderFinalPrice']); ?></td>
-							<td style="white-space: pre-wrap;"><?php htmlout($row['OrderCommunicationToUser']); ?></td>
-							<td style="white-space: pre-wrap;"><?php htmlout($row['OrderCommunicationFromUser']); ?></td>
+							<td><?php htmlout($row['DateTimeCreated']); ?></td>
+							<td><?php htmlout($row['DateTimeUpdated']); ?></td>
+							<td><?php htmlout($row['DateTimeApproved']); ?></td>
+							<td><?php htmlout($row['DateTimeCancelled']); ?></td>
+							<td><input type="submit" name="action" value="Details"></td>
+							<td style="white-space: pre-wrap;"><?php htmlout($row['OrderMessageStatus']); ?></td>
+							<td style="white-space: pre-wrap;"><?php htmlout($row['OrderLastMessageFromStaff']); ?></td>
+							<td style="white-space: pre-wrap;"><?php htmlout($row['OrderLastMessageFromUser']); ?></td>
+							<td><?php htmlout($row['OrderRoomName']); ?></td>
 							<td><?php htmlout($row['OrderStartTime']); ?></td>
 							<td><?php htmlout($row['OrderEndTime']); ?></td>
-							<td><?php htmlout($row['DateTimeCreated']); ?></td>
-							<td><?php htmlout($row['DateTimeApproved']); ?></td>
-							<td><?php htmlout($row['DateTimeUpdated']); ?></td>
-							<td><?php htmlout($row['DateTimeCancelled']); ?></td>
-							<td><?php htmlout($row['OrderApprovedByUser']); ?></td>
-							<td><?php htmlout($row['OrderApprovedByStaff']); ?></td>
-							<td><?php htmlout($row['OrderApprovedByName']); ?></td>
-							<td><input type="submit" name="action" value="Edit"></td>
+							<td><?php htmlout($row['OrderBookedFor']); ?></td>
 							<td><input type="submit" name="action" value="Cancel"></td>
 							<input type="hidden" name="OrderID" value="<?php htmlout($row['TheOrderID']); ?>">
 						</tr>
