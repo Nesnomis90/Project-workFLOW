@@ -74,7 +74,8 @@ SET		`orderFinalPrice` = (
 								ON 			ex.`extraID` = eo.`extraID`
 								WHERE		eo.`orderID` = 1
 							)
-WHERE	`orderID` = 1;
+WHERE	`orderID` = 1
+AND		`orderFinalPrice` IS NULL;
 
 SELECT 		MIN(c.`companyID`)
 FROM 		`company` c
@@ -84,120 +85,14 @@ INNER JOIN 	`credits` cr
 ON			cr.`CreditsID` = cc.`CreditsID`
 AND			CURDATE() >= c.`endDate`;
 
-SELECT 		c.`CompanyID`				AS TheCompanyID,
-			c.`dateTimeCreated`			AS dateTimeCreated,
-			c.`startDate`				AS StartDate,
-			c.`endDate`					AS EndDate,
-			cr.`minuteAmount`			AS CreditsGivenInMinutes,
-			cr.`monthlyPrice`			AS MonthlyPrice,
-			cr.`overCreditHourPrice`	AS HourPrice,
-			cc.`altMinuteAmount`		AS AlternativeAmount,
-			(
-				SELECT (BIG_SEC_TO_TIME(SUM(
-										IF(
-											(
-												(
-													DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
-													)*86400 
-												+ 
-												(
-													TIME_TO_SEC(b.`actualEndDateTime`) 
-													- 
-													TIME_TO_SEC(b.`startDateTime`)
-													) 
-											) > 300,
-											IF(
-												(
-												(
-													DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
-													)*86400 
-												+ 
-												(
-													TIME_TO_SEC(b.`actualEndDateTime`) 
-													- 
-													TIME_TO_SEC(b.`startDateTime`)
-													) 
-											) > 900, 
-												(
-												(
-													DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
-													)*86400 
-												+ 
-												(
-													TIME_TO_SEC(b.`actualEndDateTime`) 
-													- 
-													TIME_TO_SEC(b.`startDateTime`)
-													) 
-											), 
-												900
-											),
-											0
-										)
-				)))	AS BookingTimeUsed
-				FROM 		`booking` b  
-				INNER JOIN 	`company` c 
-				ON 			b.`CompanyID` = c.`CompanyID` 
-				WHERE 		b.`CompanyID` = TheCompanyID
-				AND 		DATE(b.`actualEndDateTime`) >= c.`startDate`
-				AND 		DATE(b.`actualEndDateTime`) < c.`endDate`
-				AND			b.`mergeNumber` = 0
-			)							AS BookingTimeThisPeriodFromCompany,
-			(
-				SELECT (BIG_SEC_TO_TIME(SUM(
-										IF(
-											(
-												(
-													DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
-													)*86400 
-												+ 
-												(
-													TIME_TO_SEC(b.`actualEndDateTime`) 
-													- 
-													TIME_TO_SEC(b.`startDateTime`)
-													) 
-											) > 300,
-											IF(
-												(
-												(
-													DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
-													)*86400 
-												+ 
-												(
-													TIME_TO_SEC(b.`actualEndDateTime`) 
-													- 
-													TIME_TO_SEC(b.`startDateTime`)
-													) 
-											) > 900, 
-												(
-												(
-													DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
-													)*86400 
-												+ 
-												(
-													TIME_TO_SEC(b.`actualEndDateTime`) 
-													- 
-													TIME_TO_SEC(b.`startDateTime`)
-													) 
-											), 
-												900
-											),
-											0
-										)
-				)))	AS BookingTimeUsed
-				FROM 		`booking` b  
-				INNER JOIN 	`company` c 
-				ON 			b.`CompanyID` = c.`CompanyID` 
-				WHERE 		b.`CompanyID` = TheCompanyID
-				AND 		DATE(b.`actualEndDateTime`) >= c.`startDate`
-				AND 		DATE(b.`actualEndDateTime`) < c.`endDate`
-				AND			b.`mergeNumber` <> 0
-			)							AS BookingTimeThisPeriodFromTransfers
-FROM 		`company` c
-INNER JOIN 	`companycredits` cc
-ON 			cc.`CompanyID` = c.`CompanyID`
-INNER JOIN 	`credits` cr
-ON			cr.`CreditsID` = cc.`CreditsID`
-WHERE		CURDATE() >= c.`endDate`;
+SELECT		o.`orderFinalPrice` 											AS FinalPrice,
+			SUM(IFNULL(eo.`alternativePrice`, ex.`price`) * eo.`amount`) 	AS FullPrice
+FROM		`orders` o
+INNER JOIN 	`extraorders` eo
+ON			o.`orderID` = eo.`orderID`
+INNER JOIN	`extra` ex
+ON 			ex.`extraID` = eo.`extraID`
+WHERE		o.`orderID` = 1;
 
 SELECT 		o.`orderID`										AS TheOrderID,
 			o.`orderUserNotes`								AS OrderUserNotes,
