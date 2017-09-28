@@ -431,10 +431,6 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Submit Changes'){
 		if($validatedOrderCommunicationToUser != ""){
 			$numberOfChanges++;
 			$messageAdded = TRUE;
-
-			$dateTimeNow = getDatetimeNow();
-			$displayDateTimeNow = convertDatetimeToFormat($dateTimeNow, 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
-			$fullOrderCommunicationToUser = $original['OrderCommunicationToUser'] . "$displayDateTimeNow:\n" . $validatedOrderCommunicationToUser . "\n\n";
 		}
 
 		$setAsApproved = FALSE;
@@ -475,30 +471,13 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Submit Changes'){
 			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 			$pdo = connect_to_db();
 
-			if($extraChanged){
+			if($extraChanged OR $messageAdded){
 				$pdo->beginTransaction();
 			}
 
-			if($setAsApproved AND $messageAdded){
+			if($setAsApproved){
 				$sql = 'UPDATE 	`orders`
-						SET		`orderCommunicationToUser` = :OrderCommunicationToUser,
-								`orderApprovedByAdmin` = :approvedByAdmin,
-								`orderApprovedByStaff` = :approvedByStaff,
-								`dateTimeUpdated` = CURRENT_TIMESTAMP,
-								`dateTimeApproved` = CURRENT_TIMESTAMP,
-								`orderApprovedByUserID` = :orderApprovedByUserID
-						WHERE 	`orderID` = :OrderID';
-				$s = $pdo->prepare($sql);
-				$s->bindValue(':OrderID', $orderID);
-				$s->bindValue(':OrderCommunicationToUser', $fullOrderCommunicationToUser);
-				$s->bindValue(':approvedByAdmin', $approvedByAdmin);
-				$s->bindValue(':approvedByStaff', $approvedByStaff);
-				$s->bindValue(':orderApprovedByUserID', $_SESSION['LoggedInUserID']);
-				$s->execute();
-			} elseif($setAsApproved AND !$messageAdded){
-				$sql = 'UPDATE 	`orders`
-						SET		`orderCommunicationToUser` = :OrderCommunicationToUser,
-								`orderApprovedByAdmin` = :approvedByAdmin,
+						SET		`orderApprovedByAdmin` = :approvedByAdmin,
 								`orderApprovedByStaff` = :approvedByStaff,
 								`dateTimeUpdated` = CURRENT_TIMESTAMP,
 								`dateTimeApproved` = CURRENT_TIMESTAMP,
@@ -509,21 +488,6 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Submit Changes'){
 				$s->bindValue(':approvedByAdmin', $approvedByAdmin);
 				$s->bindValue(':approvedByStaff', $approvedByStaff);
 				$s->bindValue(':orderApprovedByUserID', $_SESSION['LoggedInUserID']);
-				$s->execute();
-			} elseif(!$setAsApproved AND $messageAdded){
-				$sql = 'UPDATE 	`orders`
-						SET		`orderCommunicationToUser` = :OrderCommunicationToUser,
-								`orderApprovedByAdmin` = :approvedByAdmin,
-								`orderApprovedByStaff` = :approvedByStaff,
-								`dateTimeUpdated` = CURRENT_TIMESTAMP,
-								`dateTimeApproved` = NULL,
-								`orderApprovedByUserID` = NULL
-						WHERE 	`orderID` = :OrderID';
-				$s = $pdo->prepare($sql);
-				$s->bindValue(':OrderID', $orderID);
-				$s->bindValue(':OrderCommunicationToUser', $fullOrderCommunicationToUser);
-				$s->bindValue(':approvedByAdmin', $approvedByAdmin);
-				$s->bindValue(':approvedByStaff', $approvedByStaff);
 				$s->execute();
 			} else {
 				$sql = 'UPDATE 	`orders`
@@ -540,6 +504,20 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Submit Changes'){
 				$s->execute();
 			}
 
+			if($messageAdded){
+				$sql = 'INSERT INTO `ordermessages`
+						SET			`message` = :message,
+									`sentByStaff` = 1,
+									`dateTimeAdded` = CURRENT_TIMESTAMP,
+									`messageFromUserID` = :messageFromUserID,
+									`orderID` = :OrderID';
+				$s = $pdo->prepare($sql);
+				$s->bindValue(':OrderID', $orderID);
+				$s->bindValue(':message', $validatedOrderCommunicationToUser);
+				$s->bindValue(':messageFromUserID', $_SESSION['LoggedInUserID']);
+				$s->execute();
+			}
+			
 			if($extraChanged){
 				// Update extraorders table
 				foreach($_SESSION['EditStaffOrderExtraOrdered'] AS $key => $extra){
@@ -648,6 +626,9 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Submit Changes'){
 						$s->execute();
 					}
 				}
+			}
+
+			if($extraChanged OR $messageAdded){
 				$pdo->commit();
 			}
 
@@ -656,6 +637,7 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Submit Changes'){
 		}
 		catch (PDOException $e)
 		{
+			$pdo->rollBack();
 			$error = 'Error updating submitted Order: ' . $e->getMessage();
 			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
 			$pdo = null;
