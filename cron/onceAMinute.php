@@ -60,7 +60,7 @@ function updateCompletedBookings(){
 				$s->execute();
 
 				if(!empty($orderID)){
-
+					// only update if it hasn't already been updated i.e. finalPrice is still null.
 					$sql = "UPDATE	`orders`
 							SET		`orderFinalPrice` = (
 															SELECT		SUM(IFNULL(eo.`alternativePrice`, ex.`price`) * eo.`amount`) AS FullPrice
@@ -69,7 +69,8 @@ function updateCompletedBookings(){
 															ON 			ex.`extraID` = eo.`extraID`
 															WHERE		eo.`orderID` = :OrderID
 														)
-							WHERE	`orderID` = :OrderID";
+							WHERE	`orderID` = :OrderID
+							AND		`orderFinalPrice` IS NULL";
 					$s = $pdo->prepare($sql);
 					$s->bindValue(':OrderID', $orderID);
 					$s->execute();
