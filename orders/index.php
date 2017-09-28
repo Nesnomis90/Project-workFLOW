@@ -302,7 +302,8 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Details') OR
 			$_SESSION['EditStaffOrderExtraOrdered'] = $extraOrdered;
 
 			// Get information about messages sent to/from user
-			$sql = 'SELECT	`message`		AS OrderMessage,
+			$sql = 'SELECT	`messageID`		AS OrderMessageID,
+							`message`		AS OrderMessage,
 							`sentByStaff`	AS OrderMessageSentByStaff,
 							`sentByUser`	AS OrderMessageSentByUser,
 							`messageSeen`	AS OrderMessageSeen,
@@ -315,6 +316,9 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Details') OR
 			$s->execute();
 
 			$result = $s->fetchAll(PDO::FETCH_ASSOC);
+
+			$pdo->beginTransaction();
+
 			foreach($result AS $message){
 
 				$messageOnly = $message['OrderMessage'];
@@ -337,11 +341,33 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Details') OR
 				$displayMessageDateTimeAdded = convertDatetimeToFormat($messageDateTimeAdded , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
 
 				$finalMessage = $messageAddSeen . $messageAddFrom . " " . $displayMessageDateTimeAdded . ": " . $messageOnly . "\n";
-				
+
 				extraMessages[] = $finalMessage;
+
+				if($sentByUser == 1 AND $messageSeen == 0){
+					// Update that the new messages (from user) has been seen.
+					$sql = "UPDATE	`ordermessages`
+							SET		`messageSeen` = 1
+							WHERE	`orderID` = :OrderID
+							AND		`messageID` = :MessageID";
+					$s = $pdo->prepare($sql);
+					$s->bindValue(':OrderID', $orderID);
+					$s->bindValue(':MessageID', $messageID);
+					$s->execute();
+				}
 			}
 
 			$_SESSION['EditStaffOrderOrderMessages'] = extraMessages;
+
+			// Update that there are no new messages from user
+			$sql = "UPDATE	`orders`
+					SET		`orderNewMessageFromUser` = 0
+					WHERE	`orderID` = :OrderID";
+			$s = $pdo->prepare($sql);
+			$s->bindValue(':OrderID', $orderID);
+			$s->execute();
+
+			$pdo->commit();
 
 			//Close the connection
 			$pdo = null;
