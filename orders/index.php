@@ -338,7 +338,7 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Details') OR
 				if($messageSeen == 0 AND $sentByUser == 1){
 					$messageAddSeen = "NEW MESSAGE ";
 				} elseif($messageSeen == 0 AND $sentByStaff == 1){
-					$messageAddSeen = "NOT READ ";
+					$messageAddSeen = "NOT READ BY USER ";
 				} else {
 					$messageAddSeen = "";
 				}
@@ -346,7 +346,7 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Details') OR
 				$messageDateTimeAdded = $message['OrderMessageDateTimeAdded'];
 				$displayMessageDateTimeAdded = convertDatetimeToFormat($messageDateTimeAdded , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
 
-				$finalMessage = $messageAddSeen . $messageAddFrom . " " . $displayMessageDateTimeAdded . ": " . $messageOnly . "\n";
+				$finalMessage = $displayMessageDateTimeAdded . " " . $messageAddSeen . $messageAddFrom . ": " . $messageOnly . "\n";
 
 				$orderMessages .= $finalMessage;
 
