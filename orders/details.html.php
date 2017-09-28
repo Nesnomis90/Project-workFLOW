@@ -9,9 +9,10 @@
 				width: 210px;
 			}
 			.checkboxlabel{
-				float: none;
+				display: inline-block;
+				float: left;
 				clear: none;
-				width: 200px;
+				width: auto;
 			}
 		</style>
 		<script src="/scripts/myFunctions.js"></script>
@@ -50,7 +51,7 @@
 				</div>
 
 				<div>
-					<label>Messages:</label>
+					<label>Messages: </label>
 					<span style="white-space: pre-wrap;"><b><?php htmlout($orderMessages); ?></b></span>
 				</div>
 
@@ -65,6 +66,15 @@
 						<span><b><?php htmlout("Order Approved"); ?></b></span>
 					<?php else : ?>
 						<span><b><?php htmlout("Order Not Approved"); ?></b></span>
+					<?php endif; ?>
+				</div>
+
+				<div>
+					<label>Change Order Approval: </label>
+					<?php if($orderIsApproved == 1) : ?>
+						<label class="checkboxlabel"><input type="checkbox" name="isApproved" value="1" checked>Set As Approved</label>
+					<?php else : ?>
+						<label class="checkboxlabel"><input type="checkbox" name="isApproved" value="1">Set As Approved</label>
 					<?php endif; ?>
 				</div>
 			</fieldset>

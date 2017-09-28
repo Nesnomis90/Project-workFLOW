@@ -18,6 +18,8 @@ function clearEditOrderSessions(){
 	unset($_SESSION['EditOrderAdminNote']);
 	unset($_SESSION['EditOrderIsApproved']);
 	unset($_SESSION['EditOrderOrderID']);
+	unset($_SESSION['EditOrderExtraOrdered']);
+	unset($_SESSION['EditOrderOrderMessages']);
 }
 
 // Function to check if user inputs for Order are correct
@@ -37,6 +39,54 @@ function validateUserInputs(){
 		// Doesn't need to be set.
 		$adminNote = NULL;
 	}
+
+	if(isSet($_SESSION['EditOrderExtraOrdered'])){
+		if(isSet($_POST['isApprovedForPurchase'])){
+			$isApprovedForPurchaseArray = $_POST['isApprovedForPurchase'];
+			foreach($_SESSION['EditOrderExtraOrdered'] AS &$extra){
+				$isApprovedForPurchaseUpdated = FALSE;
+				for($i=0; $i<sizeOf($isApprovedForPurchaseArray); $i++){
+					if($extra['ExtraID'] == $isApprovedForPurchaseArray[$i]){
+						$extra['ExtraBooleanApprovedForPurchase'] = 1;
+						$isApprovedForPurchaseUpdated = TRUE;
+						break;
+					}
+				}
+				if(!$isApprovedForPurchaseUpdated){
+					$extra['ExtraBooleanApprovedForPurchase'] = 0;
+				}
+				unset($extra); // destroy reference.
+			}
+		} else {
+			foreach($_SESSION['EditOrderExtraOrdered'] AS &$extra){
+				$extra['ExtraBooleanApprovedForPurchase'] = 0;
+				unset($extra); // destroy reference.
+			}
+		}
+		if(isSet($_POST['isPurchased'])){
+			$isPurchasedArray = $_POST['isPurchased'];
+			foreach($_SESSION['EditOrderExtraOrdered'] AS &$extra){
+				$isPurchasedUpdated = FALSE;
+				for($i=0; $i<sizeOf($isPurchasedArray); $i++){
+					if($extra['ExtraID'] == $isPurchasedArray[$i]){
+						$extra['ExtraBooleanPurchased'] = 1;
+						$isPurchasedUpdated = TRUE;
+						break;
+					}
+				}
+				if(!$isPurchasedUpdated){
+					$extra['ExtraBooleanPurchased'] = 0;
+				}
+				unset($extra); // destroy reference.
+			}
+		} else {
+			foreach($_SESSION['EditOrderExtraOrdered'] AS &$extra){
+				$extra['ExtraBooleanPurchased'] = 0;
+				unset($extra); // destroy reference.
+			}
+		}
+	}
+
 	if(isSet($_POST['isApproved']) AND $_POST['isApproved'] == 1){
 		$orderIsApproved = 1;
 	} else {
@@ -60,7 +110,7 @@ function validateUserInputs(){
 
 	// Check if input length is allowed
 		// OrderCommunicationToUser
-	$invalidOrderCommunicationToUser = isLengthInvalidEquipmentDescription($validatedOrderCommunicationToUser);
+	$invalidOrderCommunicationToUser = isLengthInvalidOrderMessage($validatedOrderCommunicationToUser);
 	if($invalidOrderCommunicationToUser AND !$invalidInput){
 		$_SESSION['AddOrderError'] = "Your submitted message to the user is too long.";
 		$invalidInput = TRUE;
@@ -830,13 +880,20 @@ foreach($result AS $row){
 	if($newOrder){
 		$orderStatus = "New Order\nPending Staff Approval";
 	} elseif($orderIsApprovedByStaff AND $orderIsApprovedByUser){
-		$orderStatus = "Approved";
+		$orderStatus = "Order Approved";
+		if($extrasApproved == $extrasOrdered AND $extrasPurchased == $extrasOrdered){
+			$orderStatus .= "\nAll Extras Approved\nAll Extras Purchased.";
+		} elseif($extrasApproved == $extrasOrdered AND $extrasPurchased < $extrasOrdered){
+			$orderStatus .= "\nAll Extras Approved\nPending Extra Purchases.";
+		} elseif($extrasApproved < $extrasOrdered){
+			$orderStatus .= "\nPending Extra Approval And Purchase.";
+		}
 	} elseif($orderIsApprovedByStaff AND !$orderIsApprovedByUser) {
-		$orderStatus = "Order Changed\nPending User Approval";
+		$orderStatus = "Order Not Approved\nPending User Approval";
 	} elseif(!$orderIsApprovedByStaff AND $orderIsApprovedByUser) {
-		$orderStatus = "Order Changed\nPending Staff Approval";
+		$orderStatus = "Order Not Approved\nPending Staff Approval";
 	} else {
-		$orderStatus = "Order Changed\nPending Staff\nPending User Approval";
+		$orderStatus = "Order Not Approved\nPending Staff\nPending User Approval";
 	}
 
 	if(!empty($row['OrderLastMessageFromUser'])){

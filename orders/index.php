@@ -111,7 +111,7 @@ function validateUserInputs(){
 
 	// Check if input length is allowed
 		// OrderCommunicationToUser
-	$invalidOrderCommunicationToUser = isLengthInvalidEquipmentDescription($validatedOrderCommunicationToUser);
+	$invalidOrderCommunicationToUser = isLengthInvalidOrderMessage($validatedOrderCommunicationToUser);
 	if($invalidOrderCommunicationToUser AND !$invalidInput){
 		$_SESSION['OrderStaffDetailsFeedback'] = "Your submitted message to the user is too long.";
 		$invalidInput = TRUE;
@@ -158,24 +158,24 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Details') OR
 		clearEditStaffOrderSessions();
 
 		$orderID = $_POST['OrderID'];
-		
+
 		// Get information from database again on the selected order
 		try
 		{
 			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 			$pdo = connect_to_db();
 
-			$sql = 'SELECT 		o.`orderID`						AS TheOrderID,
-								o.`orderUserNotes`				AS OrderUserNotes,
-								o.`dateTimeCreated`				AS DateTimeCreated,
-								o.`dateTimeUpdated`				AS DateTimeUpdated,
-								o.`orderApprovedByUser`			AS OrderApprovedByUser,
-								o.`orderApprovedByAdmin`		AS OrderApprovedByAdmin,
-								o.`orderApprovedByStaff`		AS OrderApprovedByStaff,
-								o.`orderChangedByUser`			AS OrderChangedByUser,
-								o.`orderChangedByStaff`			AS OrderChangedByStaff,
-								o.`orderNewMessageFromUser`		AS OrderNewMessageFromUser,
-								o.`orderNewMessageFromStaff`	AS OrderNewMessageFromStaff
+			$sql = 'SELECT 		`orderID`					AS TheOrderID,
+								`orderUserNotes`			AS OrderUserNotes,
+								`dateTimeCreated`			AS DateTimeCreated,
+								`dateTimeUpdated`			AS DateTimeUpdated,
+								`orderApprovedByUser`		AS OrderApprovedByUser,
+								`orderApprovedByAdmin`		AS OrderApprovedByAdmin,
+								`orderApprovedByStaff`		AS OrderApprovedByStaff,
+								`orderChangedByUser`		AS OrderChangedByUser,
+								`orderChangedByStaff`		AS OrderChangedByStaff,
+								`orderNewMessageFromUser`	AS OrderNewMessageFromUser,
+								`orderNewMessageFromStaff`	AS OrderNewMessageFromStaff
 					FROM 		`orders`
 					WHERE		`orderID` = :OrderID
 					LIMIT 		1';
@@ -813,13 +813,20 @@ foreach($result AS $row){
 	if($newOrder){
 		$orderStatus = "New Order\nPending Staff Approval";
 	} elseif($orderIsApprovedByStaff AND $orderIsApprovedByUser){
-		$orderStatus = "Approved";
+		$orderStatus = "Order Approved";
+		if($extrasApproved == $extrasOrdered AND $extrasPurchased == $extrasOrdered){
+			$orderStatus .= "\nAll Extras Approved\nAll Extras Purchased.";
+		} elseif($extrasApproved == $extrasOrdered AND $extrasPurchased < $extrasOrdered){
+			$orderStatus .= "\nAll Extras Approved\nPending Extra Purchases.";
+		} elseif($extrasApproved < $extrasOrdered){
+			$orderStatus .= "\nPending Extra Approval And Purchase.";
+		}
 	} elseif($orderIsApprovedByStaff AND !$orderIsApprovedByUser) {
-		$orderStatus = "Order Changed\nPending User Approval";
+		$orderStatus = "Order Not Approved\nPending User Approval";
 	} elseif(!$orderIsApprovedByStaff AND $orderIsApprovedByUser) {
-		$orderStatus = "Order Changed\nPending Staff Approval";
+		$orderStatus = "Order Not Approved\nPending Staff Approval";
 	} else {
-		$orderStatus = "Order Changed\nPending Staff\nPending User Approval";
+		$orderStatus = "Order Not Approved\nPending Staff\nPending User Approval";
 	}
 
 	if(!empty($row['OrderLastMessageFromUser'])){
