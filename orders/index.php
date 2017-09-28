@@ -799,7 +799,7 @@ foreach($result AS $row){
 	$extrasPurchased = $row['OrderExtrasPurchased'];
 
 	if($orderNewMessageFromStaff == 1 AND $orderNewMessageFromUser == 1){
-		$messageStatus = "New Message From User!\nMessage Sent To User Not Seen Yet.";
+		$messageStatus = "New Message From User!\n\nMessage Sent To User Not Seen Yet.";
 	} elseif($orderNewMessageFromStaff == 1 AND $orderNewMessageFromUser == 0){
 		$messageStatus = "Message Sent To User Not Seen Yet.";
 	} elseif($orderNewMessageFromStaff == 0 AND $orderNewMessageFromUser == 1) {
@@ -815,18 +815,18 @@ foreach($result AS $row){
 	} elseif($orderIsApprovedByStaff AND $orderIsApprovedByUser){
 		$orderStatus = "Order Approved!";
 		if($extrasApproved == $extrasOrdered AND $extrasPurchased == $extrasOrdered){
-			$orderStatus .= "\nAll Items Approved!\nAll Items Purchased!";
+			$orderStatus .= "\n\nAll Items Approved!\n\nAll Items Purchased!";
 		} elseif($extrasApproved == $extrasOrdered AND $extrasPurchased < $extrasOrdered){
-			$orderStatus .= "\nAll Items Approved!\nPending Item Purchases.";
+			$orderStatus .= "\n\nAll Items Approved!\n\nPending Item Purchases.";
 		} elseif($extrasApproved < $extrasOrdered){
-			$orderStatus .= "\nPending Item Approval.\nPending Item Purchases.";
+			$orderStatus .= "\n\nPending Item Approval.\n\nPending Item Purchases.";
 		}
 	} elseif($orderIsApprovedByStaff AND !$orderIsApprovedByUser) {
-		$orderStatus = "Order Not Approved After Change.\nPending User Approval.";
+		$orderStatus = "Order Not Approved After Change.\n\nPending User Approval.";
 	} elseif(!$orderIsApprovedByStaff AND $orderIsApprovedByUser) {
-		$orderStatus = "Order Not Approved.\nPending Staff Approval.";
+		$orderStatus = "Order Not Approved.\n\nPending Staff Approval.";
 	} else {
-		$orderStatus = "Order Not Approved After Change.\nPending Staff Approval.\nPending User Approval.";
+		$orderStatus = "Order Not Approved After Change.\n\nPending Staff Approval.\n\nPending User Approval.";
 	}
 
 	if(!empty($row['OrderLastMessageFromUser'])){
