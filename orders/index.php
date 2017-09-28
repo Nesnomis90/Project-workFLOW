@@ -815,11 +815,11 @@ foreach($result AS $row){
 	} elseif($orderIsApprovedByStaff AND $orderIsApprovedByUser){
 		$orderStatus = "Order Approved";
 		if($extrasApproved == $extrasOrdered AND $extrasPurchased == $extrasOrdered){
-			$orderStatus .= "\nAll Extras Approved\nAll Extras Purchased.";
+			$orderStatus .= "\nAll Items Approved!\nAll Items Purchased!";
 		} elseif($extrasApproved == $extrasOrdered AND $extrasPurchased < $extrasOrdered){
-			$orderStatus .= "\nAll Extras Approved\nPending Extra Purchases.";
+			$orderStatus .= "\nAll Items Approved!\nPending Item Purchases.";
 		} elseif($extrasApproved < $extrasOrdered){
-			$orderStatus .= "\nPending Extra Approval And Purchase.";
+			$orderStatus .= "\nPending Item Approval.\nPending Item Purchases.";
 		}
 	} elseif($orderIsApprovedByStaff AND !$orderIsApprovedByUser) {
 		$orderStatus = "Order Not Approved\nPending User Approval";
