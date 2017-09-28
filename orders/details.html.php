@@ -48,13 +48,8 @@
 				</div>
 
 				<div>
-					<label>Messages Received From User: </label>
-					<span style="white-space: pre-wrap;"><b><?php htmlout($originalOrderCommunicationFromUser); ?></b></span>
-				</div>
-
-				<div>
-					<label>Messages Sent To User: </label>
-					<span style="white-space: pre-wrap;"><b><?php htmlout($originalOrderCommunicationToUser); ?></b></span>
+					<label>Messages:</label>
+					<span style="white-space: pre-wrap;"><b><?php htmlout($orderMessages); ?></b></span>
 				</div>
 
 				<div>

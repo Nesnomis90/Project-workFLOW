@@ -151,7 +151,7 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Details') OR
 			$extraOrdered = $_SESSION['EditStaffOrderExtraOrdered'];
 		}
 		if(isSet($_SESSION['EditStaffOrderOrderMessages'])){
-			extraMessages = $_SESSION['EditStaffOrderOrderMessages'];
+			$orderMessages = $_SESSION['EditStaffOrderOrderMessages'];
 		}
 	} else {
 		// Make sure we don't have any remembered values in memory
@@ -235,7 +235,7 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Details') OR
 								(
 									SELECT 	CONCAT_WS(", ", u.`lastname`, u.`firstname`)
 									FROM	`user` u
-									WHERE	u.`userID` = eo.`orderApprovedByUserID`
+									WHERE	u.`userID` = eo.`approvedByUserID`
 								)														AS ExtraApprovedForPurchaseByUser
 					FROM 		`extraorders` eo
 					INNER JOIN	`extra` ex
@@ -319,8 +319,10 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Details') OR
 
 			$pdo->beginTransaction();
 
+			$orderMessages = "";
 			foreach($result AS $message){
 
+				$messageID = $message['OrderMessageID'];
 				$messageOnly = $message['OrderMessage'];
 				$sentByStaff = $message['OrderMessageSentByStaff'];
 				$sentByUser = $message['OrderMessageSentByUser'];
@@ -328,13 +330,17 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Details') OR
 					$messageAddFrom = "(Staff)";
 				} elseif($sentByUser == 1){
 					$messageAddFrom = "(User)";
+				} else {
+					$messageAddFrom = "(Unknown)";
 				}
 
 				$messageSeen = $message['OrderMessageSeen'];
-				if($messageSeen == 1){
-					$messageAddSeen = "";
-				} else {
+				if($messageSeen == 0 AND $sentByUser == 1){
 					$messageAddSeen = "NEW MESSAGE ";
+				} elseif($messageSeen == 0 AND $sentByStaff == 1){
+					$messageAddSeen = "NOT READ ";
+				} else {
+					$messageAddSeen = "";
 				}
 
 				$messageDateTimeAdded = $message['OrderMessageDateTimeAdded'];
@@ -342,7 +348,7 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Details') OR
 
 				$finalMessage = $messageAddSeen . $messageAddFrom . " " . $displayMessageDateTimeAdded . ": " . $messageOnly . "\n";
 
-				extraMessages[] = $finalMessage;
+				$orderMessages .= $finalMessage;
 
 				if($sentByUser == 1 AND $messageSeen == 0){
 					// Update that the new messages (from user) has been seen.
@@ -357,7 +363,7 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Details') OR
 				}
 			}
 
-			$_SESSION['EditStaffOrderOrderMessages'] = extraMessages;
+			$_SESSION['EditStaffOrderOrderMessages'] = $orderMessages;
 
 			// Update that there are no new messages from user
 			$sql = "UPDATE	`orders`
@@ -382,20 +388,10 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Details') OR
 	}
 
 	// Set original values
-	$originalOrderCommunicationToUser = $_SESSION['EditStaffOrderOriginalInfo']['OrderCommunicationToUser'];
-	$originalOrderCommunicationFromUser = $_SESSION['EditStaffOrderOriginalInfo']['OrderCommunicationFromUser'];
 	$originalOrderIsApproved = $_SESSION['EditStaffOrderOriginalInfo']['OrderIsApproved'];
 	$originalOrderUserNotes = $_SESSION['EditStaffOrderOriginalInfo']['OrderUserNotes'];
 	$originalOrderCreated = $_SESSION['EditStaffOrderOriginalInfo']['DateTimeCreated'];
 	$originalOrderUpdated = $_SESSION['EditStaffOrderOriginalInfo']['DateTimeUpdated'];
-
-	if($originalOrderCommunicationToUser == ""){
-		$originalOrderCommunicationToUser = "No messages sent to user.";
-	}
-
-	if($originalOrderCommunicationFromUser == ""){
-		$originalOrderCommunicationFromUser = "No messages received from user.";
-	}
 
 	if(!isSet($orderCommunicationToUser)){
 		$orderCommunicationToUser = "";
