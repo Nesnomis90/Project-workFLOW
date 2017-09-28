@@ -80,9 +80,9 @@
 			</fieldset>
 
 			<table>
-				<caption>Extra Ordered</caption>
+				<caption>Items Ordered</caption>
 				<tr>
-					<th colspan="4">Extra</th>
+					<th colspan="4">Item</th>
 					<th colspan="3">Approved For Purchase</th>
 					<th colspan="3">Set As Purchased</th>
 				</tr>
