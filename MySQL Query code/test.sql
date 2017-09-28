@@ -59,6 +59,10 @@ SET 		`orderID` = 1,
 			`message` = "Test Message From User!",
             `sentByUser` = 1;
 
+Update 	`orders`
+SET		`orderNewMessageFromUser` = 1
+WHERE	`orderID` = 1;
+
 SELECT 		o.`orderID`										AS TheOrderID,
 			o.`orderUserNotes`								AS OrderUserNotes,
 			o.`dateTimeCreated`								AS DateTimeCreated,

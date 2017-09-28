@@ -647,7 +647,7 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Submit Changes'){
 }
 
 // If admin wants to get original values while editing
-if(isSet($_POST['edit']) AND $_POST['edit'] == 'Reset'){
+if(isSet($_POST['action']) AND $_POST['action'] == 'Reset'){
 
 	clearEditStaffOrderSessions();
 
@@ -656,9 +656,9 @@ if(isSet($_POST['edit']) AND $_POST['edit'] == 'Reset'){
 	exit();	
 }
 
-// If the admin wants to leave the page and go back to the Order overview again
-if(isSet($_POST['edit']) AND $_POST['edit'] == 'Cancel'){
-	$_SESSION['OrderStaffFeedback'] = "You cancelled your Order editing.";
+// If the user wants to leave the page and go back to the Order overview again
+if(isSet($_POST['action']) AND $_POST['action'] == 'Go Back'){
+	$_SESSION['OrderStaffFeedback'] = "You left the order without making any changes.";
 	$refreshOrder = TRUE;
 }
 

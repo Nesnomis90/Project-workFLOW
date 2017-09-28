@@ -137,7 +137,7 @@
 
 			<div class="left">
 				<input type="hidden" name="OrderID" value="<?php htmlout($orderID); ?>">
-				<input type="submit" name="action" value="Cancel">
+				<input type="submit" name="action" value="Go Back">
 				<input type="submit" name="action" value="Reset">
 				<input type="submit" name="action" value="Submit Changes">
 			</div>
