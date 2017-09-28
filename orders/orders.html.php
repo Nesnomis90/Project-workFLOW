@@ -43,7 +43,7 @@
 				<th>Room Name</th>
 				<th>Start</th>
 				<th>End</th>
-				<th>Booked For</th>
+				<th>Booked For Company</th>
 			</tr>
 			<?php if($rowNum > 0) : ?>
 				<?php foreach($order as $row): ?>

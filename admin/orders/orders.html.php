@@ -45,7 +45,7 @@
 				<th>Room Name</th>
 				<th>Start</th>
 				<th>End</th>
-				<th>Booked For</th>
+				<th>Booked For Company</th>
 				<th></th>
 			</tr>
 			<?php if($rowNum > 0) : ?>
