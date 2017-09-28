@@ -866,21 +866,21 @@ foreach($result AS $row){
 	$extrasPurchased = $row['OrderExtrasPurchased'];
 
 	if($orderNewMessageFromStaff == 1 AND $orderNewMessageFromUser == 1){
-		$messageStatus = "New Message From User\nMessage Sent To User Not Seen Yet";
+		$messageStatus = "New Message From User!\nMessage Sent To User Not Seen Yet.";
 	} elseif($orderNewMessageFromStaff == 1 AND $orderNewMessageFromUser == 0){
-		$messageStatus = "Message Sent To User Not Seen Yet";
+		$messageStatus = "Message Sent To User Not Seen Yet.";
 	} elseif($orderNewMessageFromStaff == 0 AND $orderNewMessageFromUser == 1) {
-		$messageStatus = "New Message From User";
+		$messageStatus = "New Message From User!";
 	} elseif($orderMessagesSent > 0) {
-		$messageStatus = "All Messages Seen";
+		$messageStatus = "All Messages Seen.";
 	} else {
-		$messageStatus = "No Messages Sent";
+		$messageStatus = "No Messages Sent.";
 	}
 
 	if($newOrder){
-		$orderStatus = "New Order\nPending Staff Approval";
+		$orderStatus = "New Order!\nPending Staff Approval";
 	} elseif($orderIsApprovedByStaff AND $orderIsApprovedByUser){
-		$orderStatus = "Order Approved";
+		$orderStatus = "Order Approved!";
 		if($extrasApproved == $extrasOrdered AND $extrasPurchased == $extrasOrdered){
 			$orderStatus .= "\nAll Items Approved!\nAll Items Purchased!";
 		} elseif($extrasApproved == $extrasOrdered AND $extrasPurchased < $extrasOrdered){
@@ -889,11 +889,11 @@ foreach($result AS $row){
 			$orderStatus .= "\nPending Item Approval.\nPending Item Purchases.";
 		}
 	} elseif($orderIsApprovedByStaff AND !$orderIsApprovedByUser) {
-		$orderStatus = "Order Not Approved\nPending User Approval";
+		$orderStatus = "Order Not Approved After Change.\nPending User Approval.";
 	} elseif(!$orderIsApprovedByStaff AND $orderIsApprovedByUser) {
-		$orderStatus = "Order Not Approved\nPending Staff Approval";
+		$orderStatus = "Order Not Approved.\nPending Staff Approval.";
 	} else {
-		$orderStatus = "Order Not Approved\nPending Staff\nPending User Approval";
+		$orderStatus = "Order Not Approved After Change.\nPending Staff Approval.\nPending User Approval.";
 	}
 
 	if(!empty($row['OrderLastMessageFromUser'])){
