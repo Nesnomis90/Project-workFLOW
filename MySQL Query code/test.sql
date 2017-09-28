@@ -3,6 +3,9 @@ SET NAMES utf8;
 USE meetingflow;
 SHOW WARNINGS;
 SELECT CURRENT_TIMESTAMP;
+SELECT DATE(CURRENT_TIMESTAMP);
+SELECT UNIX_TIMESTAMP();
+SELECT CURRENT_DATE();
 SELECT @@version;
 SHOW indexes from `booking`;
 /*PDO::FETCH_ASSOC*/
@@ -62,6 +65,49 @@ SET 		`orderID` = 1,
 Update 	`orders`
 SET		`orderNewMessageFromUser` = 1
 WHERE	`orderID` = 1;
+
+UPDATE	`orders`
+SET		`orderFinalPrice` = (
+								SELECT		SUM(IFNULL(eo.`alternativePrice`, ex.`price`) * eo.`amount`) AS FullPrice
+								FROM		`extra` ex
+								INNER JOIN 	`extraorders` eo
+								ON 			ex.`extraID` = eo.`extraID`
+								WHERE		eo.`orderID` = 1
+							)
+WHERE	`orderID` = 1;
+
+SELECT		SUM(IFNULL(eo.`alternativePrice`, ex.`price`) * eo.`amount`) AS FullPrice
+FROM		`extra` ex
+INNER JOIN 	`extraorders` eo
+ON 			ex.`extraID` = eo.`extraID`
+WHERE		eo.`orderID` = 1;
+
+SELECT		IFNULL(eo.`alternativePrice`, ex.`price`)	AS ExtraPrice,
+			eo.`amount`									AS ExtraAmount
+FROM		`extra` ex
+INNER JOIN 	`extraorders` eo
+ON 			ex.`extraID` = eo.`extraID`
+WHERE		eo.`orderID` = 1;
+
+SELECT 	MIN(`bookingID`)
+FROM 	`booking`
+WHERE 	CURRENT_TIMESTAMP >= `endDateTime`
+AND 	`actualEndDateTime` IS NULL
+AND 	`dateTimeCancelled` IS NULL
+LIMIT 	1;
+
+SELECT 	`bookingID`
+FROM 	`booking`
+WHERE 	CURRENT_TIMESTAMP >= `endDateTime`
+AND 	`actualEndDateTime` IS NULL
+AND 	`dateTimeCancelled` IS NULL
+AND		`bookingID` >= 379;
+
+SELECT 	COUNT(*)
+FROM 	`booking`
+WHERE 	CURRENT_TIMESTAMP >= `endDateTime`
+AND 	`actualEndDateTime` IS NULL
+AND 	`dateTimeCancelled` IS NULL;
 
 SELECT 		o.`orderID`										AS TheOrderID,
 			o.`orderUserNotes`								AS OrderUserNotes,

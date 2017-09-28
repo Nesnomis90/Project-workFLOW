@@ -389,8 +389,8 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Details') OR
 	$originalOrderAdminNote = $_SESSION['EditOrderOriginalInfo']['OrderAdminNote'];
 	$originalOrderIsApproved = $_SESSION['EditOrderOriginalInfo']['OrderIsApproved'];
 	$originalOrderUserNotes = $_SESSION['EditOrderOriginalInfo']['OrderUserNotes'];
-	$originalOrderCreated = $_SESSION['EditStaffOrderOriginalInfo']['DateTimeCreated'];
-	$originalOrderUpdated = $_SESSION['EditStaffOrderOriginalInfo']['DateTimeUpdated'];
+	$originalOrderCreated = $_SESSION['EditOrderOriginalInfo']['DateTimeCreated'];
+	$originalOrderUpdated = $_SESSION['EditOrderOriginalInfo']['DateTimeUpdated'];
 
 	if(!isSet($orderCommunicationToUser)){
 		$orderCommunicationToUser = "";
