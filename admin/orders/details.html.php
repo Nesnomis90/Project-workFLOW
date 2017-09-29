@@ -34,11 +34,6 @@
 				columnPrice.setAttribute("id", "addAlternativePriceSelected");
 				var columnAmount = row.insertCell(3);
 
-				// Create the select box we want to be able to choose from
-				var selectExtraName = document.createElement("select");
-				selectExtraName.setAttribute("id", "addAlternativeSelected");
-				selectExtraName.onchange = function onChange(){changeAlternativeText();}
-
 				// Create the input number for amount
 				var inputExtraAmount = document.createElement("input");
 				inputExtraAmount.setAttribute("type", "number");
@@ -47,6 +42,11 @@
 
 				// Get available extras
 				var availableExtrasArray = <?php echo json_encode($availableExtra); ?>;
+
+				// Create the select box we want to be able to choose from
+				var selectExtraName = document.createElement("select");
+				selectExtraName.setAttribute("id", "addAlternativeSelected");
+				selectExtraName.onchange = function onChange(){changeAlternativeText(availableExtrasArray);}
 
 				// Add the available extra names as options
 				for(var i = 0; i < availableExtrasArray.length; i++){
@@ -63,19 +63,37 @@
 				columnAmount.appendChild(inputExtraAmount);
 			}
 
-			function changeAlternativeText(){
+			function changeAlternativeText(availableExtrasArray){
 				var selectBox = document.getElementById("addAlternativeSelected");
 				var	descriptionText = document.getElementById("addAlternativeDescriptionSelected");
 				var priceText = document.getElementById("addAlternativePriceSelected");
-				
-				// Get available extras
-				var availableExtrasArray = <?php echo json_encode($availableExtra); ?>;
 
 				// Add the available extra names as options
 				for(var i = 0; i < availableExtrasArray.length; i++){
 					if(selectBox.options[selectBox.selectedIndex].value == availableExtrasArray[i]['ExtraID']){
-						descriptionText.innerHTML = availableExtrasArray[i]['ExtraDescription'];
-						priceText.innerHTML = availableExtrasArray[i]['ExtraPrice'];
+						if(selectBox.options[selectBox.selectedIndex].text == "Alternativ"){
+							// add an input for description and price for the alternative choice
+							var inputExtraAmount = document.createElement("input");
+							inputExtraAmount.setAttribute("type", "number");
+							inputExtraAmount.setAttribute("value", "0");
+							inputExtraAmount.setAttribute("min", "0");
+							inputExtraAmount.setAttribute("name", "AlternativePrice");
+
+							var inputExtraDescription = document.createElement("input");
+							inputExtraDescription.setAttribute("type", "text");
+							inputExtraDescription.setAttribute("value", "");
+							inputExtraDescription.setAttribute("name", "AlternativeDescription");
+							inputExtraDescription.setAttribute("placeholder", "Enter A Description");
+
+							descriptionText.innerHTML = "";
+							priceText.innerHTML = "";
+							
+							descriptionText.appendChild(inputExtraDescription);
+							priceText.appendChild(inputExtraAmount);
+						} else {
+							descriptionText.innerHTML = availableExtrasArray[i]['ExtraDescription'];
+							priceText.innerHTML = availableExtrasArray[i]['ExtraPrice'];
+						}
 						break;
 					}
 				}
