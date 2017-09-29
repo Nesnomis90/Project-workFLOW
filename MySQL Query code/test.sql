@@ -77,6 +77,27 @@ SET		`orderFinalPrice` = (
 WHERE	`orderID` = 1
 AND		`orderFinalPrice` IS NULL;
 
+SELECT 	COUNT(*)	AS HitCount,
+		`orderID`	AS OrderID
+FROM	`booking`
+WHERE	`bookingID` = 384
+AND		`actualEndDateTime` IS NULL
+AND		`dateTimeCancelled` IS NULL
+AND		CURRENT_TIMESTAMP
+BETWEEN	`startDateTime`
+AND		`endDateTime`
+LIMIT 	1;
+
+UPDATE 	`booking` 
+SET 	`dateTimeCancelled` = CURRENT_TIMESTAMP,
+		`actualEndDateTime` = CURRENT_TIMESTAMP,
+		`cancellationCode` = NULL,
+		`cancelMessage` = 'test',
+		`cancelledByUserID` = 28
+WHERE 	`bookingID` = 384
+AND		`dateTimeCancelled` IS NULL
+AND		`actualEndDateTime` IS NULL;
+
 SELECT 		MIN(c.`companyID`)
 FROM 		`company` c
 INNER JOIN 	`companycredits` cc

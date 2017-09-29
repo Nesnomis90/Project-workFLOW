@@ -639,7 +639,7 @@ if (	(isSet($_POST['action']) and $_POST['action'] == 'Cancel') OR
 			$s->execute();
 
 			$pdo->commit();
-			
+
 			//Close the connection
 			$pdo = null;
 		}
