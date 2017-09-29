@@ -17,6 +17,70 @@
 				width: auto;
 			}
 		</style>
+		<script>
+			function addAlternativeExtra(){
+				// Get table we want to manipulate
+				var table = document.getElementById("addAlternative");
+				var tableRows = table.rows.length;
+
+				// Add new row at the "end" i.e. between the old extra and the button
+				var row = table.insertRow(tableRows-1);
+
+				// Insert td element for "Name" column
+				var columnName = row.insertCell(0);
+				var columnDescription = row.insertCell(1);
+				columnDescription.setAttribute("id", "addAlternativeDescriptionSelected");
+				var columnPrice = row.insertCell(2);
+				columnPrice.setAttribute("id", "addAlternativePriceSelected");
+				var columnAmount = row.insertCell(3);
+
+				// Create the select box we want to be able to choose from
+				var selectExtraName = document.createElement("select");
+				selectExtraName.setAttribute("id", "addAlternativeSelected");
+				selectExtraName.onchange = function onChange(){changeAlternativeText();}
+
+				// Create the input number for amount
+				var inputExtraAmount = document.createElement("input");
+				inputExtraAmount.setAttribute("type", "number");
+				inputExtraAmount.setAttribute("value", "1");
+				inputExtraAmount.setAttribute("min", "1");
+
+				// Get available extras
+				var availableExtrasArray = <?php echo json_encode($availableExtra); ?>;
+
+				// Add the available extra names as options
+				for(var i = 0; i < availableExtrasArray.length; i++){
+					var option = document.createElement("option");
+					option.value = availableExtrasArray[i]['ExtraID'];
+					option.text = availableExtrasArray[i]['ExtraName'];
+					selectExtraName.appendChild(option);
+				}
+
+				// Add items/values to columns
+				columnName.appendChild(selectExtraName);
+				columnDescription.innerHTML = availableExtrasArray[0]['ExtraDescription'];
+				columnPrice.innerHTML = availableExtrasArray[0]['ExtraPrice'];
+				columnAmount.appendChild(inputExtraAmount);
+			}
+
+			function changeAlternativeText(){
+				var selectBox = document.getElementById("addAlternativeSelected");
+				var	descriptionText = document.getElementById("addAlternativeDescriptionSelected");
+				var priceText = document.getElementById("addAlternativePriceSelected");
+				
+				// Get available extras
+				var availableExtrasArray = <?php echo json_encode($availableExtra); ?>;
+
+				// Add the available extra names as options
+				for(var i = 0; i < availableExtrasArray.length; i++){
+					if(selectBox.options[selectBox.selectedIndex].value == availableExtrasArray[i]['ExtraID']){
+						descriptionText.innerHTML = availableExtrasArray[i]['ExtraDescription'];
+						priceText.innerHTML = availableExtrasArray[i]['ExtraPrice'];
+						break;
+					}
+				}
+			}
+		</script>
 	</head>
 	<body onload="startTime()">
 		<?php include_once $_SERVER['DOCUMENT_ROOT'] .'/includes/admintopnav.html.php'; ?>
@@ -84,7 +148,7 @@
 				</div>
 			</fieldset>
 
-			<table>
+			<table id="addAlternative">
 				<caption>Items Ordered</caption>
 				<tr>
 					<th colspan="4">Item</th>
@@ -94,8 +158,8 @@
 				<tr>
 					<th>Name</th>
 					<th>Description</th>
+					<th>Price (1 Amount)</th>
 					<th>Amount</th>
-					<th>Price</th>
 					<th>Approved?</th>
 					<th>By Staff</th>
 					<th>At Date</th>
@@ -108,8 +172,8 @@
 						<tr>
 							<td><?php htmlout($row['ExtraName']); ?></td>
 							<td style="white-space: pre-wrap;"><?php htmlout($row['ExtraDescription']); ?></td>
-							<td><?php htmlout($row['ExtraAmount']); ?></td>
 							<td><?php htmlout($row['ExtraPrice']); ?></td>
+							<td><?php htmlout($row['ExtraAmount']); ?></td>
 							<td>
 								<?php if($row['ExtraBooleanApprovedForPurchase'] == 1) : ?>
 									<label style="width: auto;"><input type="checkbox" name="isApprovedForPurchase[]" value="<?php htmlout($row['ExtraID']); ?>" checked>Approved</label>
@@ -130,6 +194,7 @@
 							<td><?php htmlout($row['ExtraDateTimePurchased']); ?></td>
 						</tr>
 					<?php endforeach; ?>
+					<tr><td colspan="10"><button type="button" onclick="addAlternativeExtra()">Add Alternative</button></td></tr>
 				<?php else : ?>
 					<tr><td colspan="10"><b>This order has nothing in it.</b></td></tr>
 				<?php endif; ?>
