@@ -1034,8 +1034,8 @@ if (	(isSet($_POST['action']) and $_POST['action'] == 'Cancel') OR
 
 // If user wants to change the room for the booked meeting
 if (	(isSet($_POST['action']) and $_POST['action'] == 'Change Room') OR 
-		(isSet($_SESSION['refreshChangeBookingRoom']) AND $_SESSION['refreshChangeBookingRoom']))
-{
+		(isSet($_SESSION['refreshChangeBookingRoom']) AND $_SESSION['refreshChangeBookingRoom'])
+		){
 	if(isSet($_SESSION['refreshChangeBookingRoom']) AND $_SESSION['refreshChangeBookingRoom']){
 		unset($_SESSION['refreshChangeBookingRoom']);
 	} else {
@@ -4733,7 +4733,8 @@ if(isSet($_GET['cancellationcode']) OR isSet($_SESSION['refreshWithCancellationC
 						)													AS TheMeetingRoomName,
 						b.`startDateTime`									AS StartDateTime,
 						b.`endDateTime`										AS EndDateTime,
-						b.`actualEndDateTime`								AS ActualEndDateTime
+						b.`actualEndDateTime`								AS ActualEndDateTime,
+						b.`orderID`											AS OrderID
 				FROM	`booking` b
 				WHERE 	`cancellationCode` = :cancellationCode
 				AND		`dateTimeCancelled` IS NULL
@@ -4766,25 +4767,29 @@ if(isSet($_GET['cancellationcode']) OR isSet($_SESSION['refreshWithCancellationC
 		header("Location: .");
 		exit();
 	}
-	
+
 	$bookingID = $result['BookingID'];
 	$TheMeetingRoomName = $result['TheMeetingRoomName'];
 	$startDateTimeString = $result['StartDateTime'];
 	$endDateTimeString = $result['EndDateTime'];
 	$actualEndDateTimeString = $result['ActualEndDateTime'];
-	
 	$startDateTime = correctDatetimeFormat($startDateTimeString);
 	$endDateTime = correctDatetimeFormat($endDateTimeString);
-	
+
 	$displayValidatedStartDate = convertDatetimeToFormat($startDateTime , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
-	$displayValidatedEndDate = convertDatetimeToFormat($endDateTime, 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);	
-	
+	$displayValidatedEndDate = convertDatetimeToFormat($endDateTime, 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
+
 	$email = $result['Email'];
 	$sendEmail = $result['SendEmail'];
 	$meetinginfo = $TheMeetingRoomName . ' for the timeslot: ' . $displayValidatedStartDate . 
-					' to ' . $displayValidatedEndDate;	
-	
+					' to ' . $displayValidatedEndDate;
+
 	$meetingCancelled = FALSE;
+
+	if($result['OrderID'] != NULL){
+		$orderID = $result['OrderID'];
+	}
+
 	// Check if the meeting has already ended
 	if($actualEndDateTimeString == "" OR $actualEndDateTimeString == NULL){
 		// Meeting has not ended already.
@@ -4801,6 +4806,7 @@ if(isSet($_GET['cancellationcode']) OR isSet($_SESSION['refreshWithCancellationC
 								" and ending at: " . $displayValidatedEndDate . " has been ended early by using the cancellation link.";
 			$logEventDescription = $bookingFeedback;
 			$meetingCancelled = TRUE;
+			$endedEarly = TRUE;
 		} elseif($timeNow < $startDateTime) {
 			// The booking hasn't started yet, so we're actually cancelling the meeting
 			$sql = "UPDATE 	`booking`
@@ -4823,7 +4829,7 @@ if(isSet($_GET['cancellationcode']) OR isSet($_SESSION['refreshWithCancellationC
 									" and ending at: " . $displayValidatedEndDate . " was attempted to be cancelled with the " . 
 									"cancellation link, but the meeting should have already been completed." .
 									" The end date of the booking has been updated to have occured on the scheduled time.";			
-		}	
+		}
 	} elseif(isSet($actualEndDateTimeString) AND $actualEndDateTimeString != "" AND $actualEndDateTimeString != NULL) {
 		// Meeting has already ended. So there's no reason to cancel it.
 		$bookingFeedback = 	"The booked meeting has already ended.";
@@ -4838,19 +4844,18 @@ if(isSet($_GET['cancellationcode']) OR isSet($_SESSION['refreshWithCancellationC
 		$bookingFeedback = 		"Could not cancel the meeting.";
 	}
 	
-	if(isSet($logEventDescription) AND isSet($bookingID) AND $bookingID != NULL){
+	if(isSet($logEventDescription) AND isSet($bookingID)){
 		// Update the booked meeting
 		try
 		{
 			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
-			
+
 			$pdo = connect_to_db();
+			$pdo->beginTransaction();
+
 			$s = $pdo->prepare($sql);
 			$s->bindValue(':bookingID', $bookingID);
 			$s->execute();
-			
-			//Close the connection
-			$pdo = null;
 		}
 		catch(PDOException $e)
 		{
@@ -4858,14 +4863,39 @@ if(isSet($_GET['cancellationcode']) OR isSet($_SESSION['refreshWithCancellationC
 			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
 			$pdo = null;
 			exit();
-		}	
-										
+		}
+
+		if(isSet($orderID) AND isSet($endedEarly) AND $endedEarly){
+		// Add a log event about the updated booking
+			try
+			{
+				$sql = "UPDATE	`orders`
+						SET		`orderFinalPrice` = (
+														SELECT		SUM(IFNULL(eo.`alternativePrice`, ex.`price`) * eo.`amount`) AS FullPrice
+														FROM		`extra` ex
+														INNER JOIN 	`extraorders` eo
+														ON 			ex.`extraID` = eo.`extraID`
+														WHERE		eo.`orderID` = :OrderID
+													)
+						WHERE	`orderID` = :OrderID
+						AND		`orderFinalPrice` IS NULL";
+				$s = $pdo->prepare($sql);
+				$s->bindValue(':OrderID', $orderID);
+				$s->execute();
+			}
+			catch(PDOException $e)
+			{
+				$pdo->rollBack();
+				$error = 'Error updating meeting order: ' . $e->getMessage();
+				include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+				$pdo = null;
+				exit();
+			}
+		}
+
 		// Add a log event about the updated booking
 		try
 		{
-			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
-			
-			$pdo = connect_to_db();
 			$sql = "INSERT INTO `logevent`
 					SET			`actionID` = 	(
 													SELECT 	`actionID` 
@@ -4876,21 +4906,24 @@ if(isSet($_GET['cancellationcode']) OR isSet($_SESSION['refreshWithCancellationC
 			$s = $pdo->prepare($sql);
 			$s->bindValue(':description', $logEventDescription);
 			$s->execute();
-			
+
+			$pdo->commit();
+
 			//Close the connection
-			$pdo = null;		
+			$pdo = null;
 		}
 		catch(PDOException $e)
 		{
+			$pdo->rollBack();
 			$error = 'Error adding log event to database: ' . $e->getMessage();
 			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
 			$pdo = null;
 			exit();
 		}
 	}
-	
+
 	$_SESSION['normalBookingFeedback'] = $bookingFeedback;
-	
+
 	// Send mail to the user the booking was registered too about the meeting being cancelled/ended early.
 	if(isSet($meetingCancelled) AND $meetingCancelled){		
 		$_SESSION['cancelBookingOriginalValues']['SendEmail'] = $sendEmail;
