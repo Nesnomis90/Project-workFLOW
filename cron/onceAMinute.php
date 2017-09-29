@@ -60,7 +60,8 @@ function updateCompletedBookings(){
 				$s->execute();
 
 				if(!empty($orderID)){
-					// only update if it hasn't already been updated i.e. finalPrice is still null.
+					// should only update once, when the booking hasn't been marked as completed yet
+					// but just in case, make sure the value of finalprice hasn't been set yet
 					$sql = "UPDATE	`orders`
 							SET		`orderFinalPrice` = (
 															SELECT		SUM(IFNULL(eo.`alternativePrice`, ex.`price`) * eo.`amount`) AS FullPrice
@@ -192,8 +193,6 @@ function alertUserThatMeetingIsAboutToStart(){
 					"/booking/?cancellationcode=" . $row['CancelCode'];
 
 					$email = $row['UserEmail'];
-
-					$mailResult = sendEmail($email, $emailSubject, $emailMessage);
 
 					// Instead of sending the email here, we store them in the database to send them later instead.
 					// That way, we can limit the amount of email being sent out easier.

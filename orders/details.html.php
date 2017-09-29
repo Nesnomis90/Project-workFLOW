@@ -90,7 +90,7 @@
 					<th>Name</th>
 					<th>Description</th>
 					<th>Amount</th>
-					<th>Price</th>
+					<th>Price (1 Amount)</th>
 					<th>Approved?</th>
 					<th>By Staff</th>
 					<th>At Date</th>
@@ -103,8 +103,8 @@
 						<tr>
 							<td><?php htmlout($row['ExtraName']); ?></td>
 							<td style="white-space: pre-wrap;"><?php htmlout($row['ExtraDescription']); ?></td>
-							<td><?php htmlout($row['ExtraAmount']); ?></td>
 							<td><?php htmlout($row['ExtraPrice']); ?></td>
+							<td><?php htmlout($row['ExtraAmount']); ?></td>
 							<td>
 								<?php if($row['ExtraBooleanApprovedForPurchase'] == 1) : ?>
 									<label style="width: auto;"><input type="checkbox" name="isApprovedForPurchase[]" value="<?php htmlout($row['ExtraID']); ?>" checked>Approved</label>

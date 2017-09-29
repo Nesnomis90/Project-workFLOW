@@ -158,6 +158,9 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Details') OR
 		if(isSet($_SESSION['EditOrderOrderID'])){
 			$orderID = $_SESSION['EditOrderOrderID'];
 		}
+		if(isSet($_SESSION['EditOrderAvailableExtra'])){
+			$availableExtra = $_SESSION['EditOrderAvailableExtra'];
+		}
 	} else {
 		// Make sure we don't have any remembered values in memory
 		clearEditOrderSessions();
@@ -372,6 +375,16 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Details') OR
 			$s->execute();
 
 			$pdo->commit();
+
+			// Get all available extras if admin wants to add an alternative
+			$sql = 'SELECT 	`extraID`		AS ExtraID,
+							`name`			AS ExtraName,
+							`description`	AS ExtraDescription,
+							`price`			AS ExtraPrice
+					FROM 	`extra`';
+			$return = $pdo->query($sql);
+			$availableExtra = $return->fetchAll(PDO::FETCH_ASSOC);
+			$_SESSION['EditOrderAvailableExtra'] = $availableExtra;
 
 			//Close the connection
 			$pdo = null;
