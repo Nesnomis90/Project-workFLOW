@@ -65,6 +65,7 @@
 				var selectExtraName = document.createElement("select");
 				var selectExtraNameID = "addAlternativeSelected" + alternativeID;
 				selectExtraName.setAttribute("id", selectExtraNameID);
+				selectExtraName.setAttribute("name", selectExtraNameID);
 				selectExtraName.onchange = function onChange(){changeAlternativeText(this, availableExtrasArray);}
 
 				// Add the available extra names as options
