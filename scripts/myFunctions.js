@@ -1,4 +1,4 @@
-// The functions we will use to enhance our web pageX
+// The functions we will use to enhance our web page
 
 // Get a clock in text form
 /*function startTime(){
@@ -49,4 +49,12 @@ function startTime(){
 
 	// Update every 0.5s
 	var t = setTimeout(startTime, 500);	
+}
+
+function disableEventPropagation(event){
+   if(event.stopPropagation){
+	   event.stopPropagation();
+   } else if(window.event){
+      window.event.cancelBubble = true;
+   }
 }

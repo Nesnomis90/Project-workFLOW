@@ -20,6 +20,7 @@ function clearEditOrderSessions(){
 	unset($_SESSION['EditOrderOrderID']);
 	unset($_SESSION['EditOrderExtraOrdered']);
 	unset($_SESSION['EditOrderOrderMessages']);
+	unset($_SESSION['EditOrderAvailableExtra']);
 }
 
 // Function to check if user inputs for Order are correct
@@ -160,6 +161,12 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Details') OR
 		}
 		if(isSet($_SESSION['EditOrderAvailableExtra'])){
 			$availableExtra = $_SESSION['EditOrderAvailableExtra'];
+		}
+		if(isSet($_SESSION['EditOrderOrderMessages'])){
+			$orderMessages = $_SESSION['EditOrderOrderMessages'];
+		}
+		if(isSet($_SESSION['EditOrderExtraOrdered'])){
+			$extraOrdered = $_SESSION['EditOrderExtraOrdered'];
 		}
 	} else {
 		// Make sure we don't have any remembered values in memory
@@ -421,9 +428,49 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Submit Changes'){
 	// Validate user inputs
 	list($invalidInput, $validatedOrderCommunicationToUser, $validatedAdminNote, $validatedIsApproved) = validateUserInputs();
 
+	if(!$invalidInput){
+		if(isSet($_POST['AlternativesAdded']) AND $_POST['AlternativesAdded'] > 0){
+			// There has been an alternative extra added
+			$lastID = $_POST['LastAlternativeID']+1;
+			for($i=0; $i < $lastID; $i++){
+				$postExtraIDName = "addAlternativeSelected" . $i;
+				$postAmountName = "AmountSelected" . $i;
+				$postAlternativeDescriptionName = "AlternativeDescription" . $i;
+				$postAlternativePriceName = "AlternativePrice" . $i;
+				if(isSet($_POST[$postExtraIDName]) AND $_POST[$postExtraIDName] > 0){
+					// add the extras selected to an array
+					if(!isSet($selectedExtra)){
+						$selectedExtra = array();
+					}
+
+					if(isSet($_POST[$postAlternativeDescriptionName])){
+						$alternativeDescription = $_POST[$postAlternativeDescriptionName];
+					} else {
+						$alternativeDescription = "";
+					}
+
+					if(isSet($_POST[$postAlternativePriceName])){
+						$alternativePrice = $_POST[$postAlternativePriceName];
+					} else {
+						$alternativePrice = "";
+					}
+
+					$selectedExtra[] = array(
+												"ExtraID" => $_POST[$postExtraIDName],
+												"ExtraAmount" => $_POST[$postAmountName],
+												"ExtraDescription" => $alternativeDescription,
+												"ExtraPrice" => $alternativePrice
+												); ;
+				}
+			}
+		}
+	}
+
 	// Refresh form on invalid
 	if($invalidInput){
 
+		// TO-DO: FIX-ME: On refresh we lose our javascript of alternatives added. 
+	
 		// Refresh.
 		$_SESSION['EditOrderCommunicationToUser'] = $validatedOrderCommunicationToUser;
 		$_SESSION['EditOrderAdminNote'] = $validatedAdminNote;
@@ -682,7 +729,7 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Reset'){
 
 	$_SESSION['refreshEditOrder'] = TRUE;
 	header('Location: .');
-	exit();	
+	exit();
 }
 
 // If the admin wants to leave the page and go back to the Order overview again
