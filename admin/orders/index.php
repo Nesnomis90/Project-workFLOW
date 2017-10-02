@@ -422,6 +422,16 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Submit Changes'){
 	// Validate user inputs
 	list($invalidInput, $validatedOrderCommunicationToUser, $validatedAdminNote, $validatedIsApproved) = validateUserInputs();
 
+	if(!$invalidInput){
+		if(isSet($_POST['AlternativesAdded']) AND $_POST['AlternativesAdded'] > 0){
+			// There has been an alternative extra added
+			$lastID = $_POST['LastAlternativeID'];
+			for($i=0; $i < $lastID; $i++){
+				
+			}
+		}
+	}
+	
 	// Refresh form on invalid
 	if($invalidInput){
 

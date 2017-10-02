@@ -19,6 +19,7 @@
 		</style>
 		<script>
 			var alternativeID = 0;
+			var alternativesAdded = 0;
 		
 			function addAlternativeExtra(){
 				// Get table we want to manipulate
@@ -81,6 +82,16 @@
 				columnAmount.appendChild(inputExtraAmount);
 				columnRemoveButton.appendChild(removeAlternativeExtraButton);
 
+				alternativesAdded += 1;
+
+				// update the input to check how many alternatives we have submitted
+				var inputAlternativesAdded = document.getElementById("AlternativesAdded");
+				inputAlternativesAdded.value = alternativesAdded;
+
+				// update the input to keep track of the last ID value on the submitted alternative
+				var inputLastAlternativeIDValue = document.getElementById("LastAlternativeID");
+				inputLastAlternativeIDValue.value = alternativeID;
+
 				alternativeID += 1;
 
 				// Make sure we don't trigger multiple buttons (e.g. remove alternative)
@@ -133,6 +144,12 @@
 			function removeAlternativeExtra(removeButton){
 				var tableRow = removeButton.parentNode.parentNode;
 				tableRow.parentNode.removeChild(tableRow);
+				
+				alternativesAdded -= 1;
+
+				// update the input to check how many alternatives we have submitted
+				var inputAlternativesAdded = document.getElementById("AlternativesAdded");
+				inputAlternativesAdded.value = alternativesAdded;
 			}
 		</script>
 	</head>
@@ -256,6 +273,8 @@
 
 			<div class="left">
 				<input type="hidden" name="OrderID" value="<?php htmlout($orderID); ?>">
+				<input type="hidden" id="LastAlternativeID" name="LastAlternativeID" value="">
+				<input type="hidden" id="AlternativesAdded" name="AlternativesAdded" value="0">
 				<input type="submit" name="action" value="Go Back">
 				<input type="submit" name="action" value="Reset">
 				<input type="submit" name="action" value="Submit Changes">
