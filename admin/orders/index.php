@@ -427,7 +427,19 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Submit Changes'){
 			// There has been an alternative extra added
 			$lastID = $_POST['LastAlternativeID'];
 			for($i=0; $i < $lastID; $i++){
-				
+				$postExtraIDName = "addAlternativeSelected" . $i;
+				$postAmountName = "AmountSelected" . $i;
+				if(isSet($_POST[$postExtraIDName]) AND $_POST[$postExtraIDName] > 0){
+					// add the extras selected to an array
+					if(!isSet($selectedExtra)){
+						$selectedExtra = array();
+					}
+
+					$selectedExtra[] = array(
+												"ExtraID" => $_POST[$postExtraIDName],
+												"Amount" => $_POST[$postAmountName]
+												); ;
+				}
 			}
 		}
 	}

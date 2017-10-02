@@ -20,7 +20,7 @@
 		<script>
 			var alternativeID = 0;
 			var alternativesAdded = 0;
-		
+
 			function addAlternativeExtra(){
 				// Get table we want to manipulate
 				var table = document.getElementById("addAlternative");
