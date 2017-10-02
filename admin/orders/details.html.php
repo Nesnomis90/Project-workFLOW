@@ -18,25 +18,40 @@
 			}
 		</style>
 		<script>
+			var alternativeID = 0;
+		
 			function addAlternativeExtra(){
 				// Get table we want to manipulate
 				var table = document.getElementById("addAlternative");
 				var tableRows = table.rows.length;
+				var rowNumber = tableRows-1;
 
 				// Add new row at the "end" i.e. between the old extra and the button
-				var row = table.insertRow(tableRows-1);
+				var row = table.insertRow(rowNumber);
 
 				// Insert td element for "Name" column
 				var columnName = row.insertCell(0);
 				var columnDescription = row.insertCell(1);
-				columnDescription.setAttribute("id", "addAlternativeDescriptionSelected");
+				var columnDescriptionID = "addAlternativeDescriptionSelected" + alternativeID;
+				columnDescription.setAttribute("id", columnDescriptionID);
 				var columnPrice = row.insertCell(2);
-				columnPrice.setAttribute("id", "addAlternativePriceSelected");
+				var columnPriceID = "addAlternativePriceSelected" + alternativeID;
+				columnPrice.setAttribute("id", columnPriceID);
 				var columnAmount = row.insertCell(3);
+				var columnRemoveButton = row.insertCell(4);
+
+				// Create the remove alternative extra (remove table row) button
+				var removeAlternativeExtraButton = document.createElement("input");
+				removeAlternativeExtraButton.setAttribute("type", "button");
+				removeAlternativeExtraButton.innerHTML = "x";
+				removeAlternativeExtraButton.style.color = "red";
+				removeAlternativeExtraButton.onclick = function onClick(){removeAlternativeExtra(this);}
 
 				// Create the input number for amount
 				var inputExtraAmount = document.createElement("input");
+				var inputExtraAmountAttributeName = "AmountSelected" + alternativeID;
 				inputExtraAmount.setAttribute("type", "number");
+				inputExtraAmount.setAttribute("name", inputExtraAmountAttributeName);
 				inputExtraAmount.setAttribute("value", "1");
 				inputExtraAmount.setAttribute("min", "1");
 
@@ -45,8 +60,9 @@
 
 				// Create the select box we want to be able to choose from
 				var selectExtraName = document.createElement("select");
-				selectExtraName.setAttribute("id", "addAlternativeSelected");
-				selectExtraName.onchange = function onChange(){changeAlternativeText(availableExtrasArray);}
+				var selectExtraNameID = "addAlternativeSelected" + alternativeID;
+				selectExtraName.setAttribute("id", selectExtraNameID);
+				selectExtraName.onchange = function onChange(){changeAlternativeText(this, availableExtrasArray);}
 
 				// Add the available extra names as options
 				for(var i = 0; i < availableExtrasArray.length; i++){
@@ -61,35 +77,48 @@
 				columnDescription.innerHTML = availableExtrasArray[0]['ExtraDescription'];
 				columnPrice.innerHTML = availableExtrasArray[0]['ExtraPrice'];
 				columnAmount.appendChild(inputExtraAmount);
+				columnRemoveButton.appendChild(removeAlternativeExtraButton);
+
+				alternativeID += 1;
+
+				// Make sure we don't trigger multiple buttons (e.g. remove alternative)
+				disableEventPropagation(event);
 			}
 
-			function changeAlternativeText(availableExtrasArray){
-				var selectBox = document.getElementById("addAlternativeSelected");
-				var	descriptionText = document.getElementById("addAlternativeDescriptionSelected");
-				var priceText = document.getElementById("addAlternativePriceSelected");
+			function changeAlternativeText(selectBox, availableExtrasArray){
+				var selectBoxID = selectBox.id;
+				var attributeID = selectBoxID.slice(-1);
+				var descriptionTextID = "addAlternativeDescriptionSelected" + attributeID;
+				var	descriptionText = document.getElementById(descriptionTextID);
+				var priceTextID = "addAlternativePriceSelected" + attributeID;
+				var priceText = document.getElementById(priceTextID);
+
+				// get the extra ID for reference
+				var extraIDSelected = selectBox.options[selectBox.selectedIndex].value;
 
 				// Add the available extra names as options
 				for(var i = 0; i < availableExtrasArray.length; i++){
-					if(selectBox.options[selectBox.selectedIndex].value == availableExtrasArray[i]['ExtraID']){
+					if(extraIDSelected == availableExtrasArray[i]['ExtraID']){
 						if(selectBox.options[selectBox.selectedIndex].text == "Alternativ"){
 							// add an input for description and price for the alternative choice
-							var inputExtraAmount = document.createElement("input");
-							inputExtraAmount.setAttribute("type", "number");
-							inputExtraAmount.setAttribute("value", "0");
-							inputExtraAmount.setAttribute("min", "0");
-							inputExtraAmount.setAttribute("name", "AlternativePrice");
+							var inputExtraPrice = document.createElement("input");
+							var inputExtraPriceAttributeName = "AlternativePrice" + attributeID;
+							inputExtraPrice.setAttribute("type", "number");
+							inputExtraPrice.setAttribute("value", "0");
+							inputExtraPrice.setAttribute("min", "0");
+							inputExtraPrice.setAttribute("name", inputExtraPriceAttributeName);
 
 							var inputExtraDescription = document.createElement("input");
+							var inputExtraDescriptionAttributeName = "AlternativeDescription" + attributeID;
 							inputExtraDescription.setAttribute("type", "text");
-							inputExtraDescription.setAttribute("value", "");
-							inputExtraDescription.setAttribute("name", "AlternativeDescription");
+							inputExtraDescription.setAttribute("name", inputExtraDescriptionAttributeName);
 							inputExtraDescription.setAttribute("placeholder", "Enter A Description");
 
 							descriptionText.innerHTML = "";
 							priceText.innerHTML = "";
-							
+
 							descriptionText.appendChild(inputExtraDescription);
-							priceText.appendChild(inputExtraAmount);
+							priceText.appendChild(inputExtraPrice);
 						} else {
 							descriptionText.innerHTML = availableExtrasArray[i]['ExtraDescription'];
 							priceText.innerHTML = availableExtrasArray[i]['ExtraPrice'];
@@ -97,6 +126,11 @@
 						break;
 					}
 				}
+			}
+			
+			function removeAlternativeExtra(removeButton){
+				var tableRow = removeButton.parentNode.parentNode;
+				tableRow.parentNode.removeChild(tableRow);
 			}
 		</script>
 	</head>
