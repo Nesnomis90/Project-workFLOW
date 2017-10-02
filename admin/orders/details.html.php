@@ -44,7 +44,9 @@
 				var removeAlternativeExtraButton = document.createElement("input");
 				removeAlternativeExtraButton.setAttribute("type", "button");
 				removeAlternativeExtraButton.innerHTML = "x";
+				removeAlternativeExtraButton.value = "x";
 				removeAlternativeExtraButton.style.color = "red";
+				removeAlternativeExtraButton.style.fontSize = "120%";
 				removeAlternativeExtraButton.onclick = function onClick(){removeAlternativeExtra(this);}
 
 				// Create the input number for amount
