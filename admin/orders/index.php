@@ -20,6 +20,7 @@ function clearEditOrderSessions(){
 	unset($_SESSION['EditOrderOrderID']);
 	unset($_SESSION['EditOrderExtraOrdered']);
 	unset($_SESSION['EditOrderOrderMessages']);
+	unset($_SESSION['EditOrderAvailableExtra']);
 }
 
 // Function to check if user inputs for Order are correct
@@ -682,7 +683,7 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Reset'){
 
 	$_SESSION['refreshEditOrder'] = TRUE;
 	header('Location: .');
-	exit();	
+	exit();
 }
 
 // If the admin wants to leave the page and go back to the Order overview again
