@@ -392,13 +392,19 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Details') OR
 			$pdo->commit();
 
 			// Get all available extras if admin wants to add an alternative
-			$sql = 'SELECT 	`extraID`		AS ExtraID,
-							`name`			AS ExtraName,
-							`description`	AS ExtraDescription,
-							`price`			AS ExtraPrice
-					FROM 	`extra`';
-			$return = $pdo->query($sql);
-			$availableExtra = $return->fetchAll(PDO::FETCH_ASSOC);
+			// That are not already in the order
+			$sql = 'SELECT 		ex.`extraID`		AS ExtraID,
+								ex.`name`			AS ExtraName,
+								ex.`description`	AS ExtraDescription,
+								ex.`price`			AS ExtraPrice
+					FROM 		`extra` ex
+					LEFT JOIN 	`extraorders` eo
+					ON			ex.`extraID` = eo.`extraID`
+					WHERE		eo.`extraID` IS NULL';
+			$s = $pdo->prepare($sql);
+			$s->bindValue(':OrderID', $orderID);
+			$s->execute();
+			$availableExtra = $s->fetchAll(PDO::FETCH_ASSOC);
 			$_SESSION['EditOrderAvailableExtra'] = $availableExtra;
 
 			//Close the connection
@@ -512,7 +518,7 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Submit Changes'){
 										"ExtraAmount" => $_POST[$postAmountName],
 										"ExtraDescription" => $trimmedNewAlternativeExtraDescription,
 										"ExtraPrice" => $_POST[$postAlternativePriceName],
-										"Invalid" => $invalid;
+										"Invalid" => $invalid
 										);
 			}
 		}
@@ -614,7 +620,7 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Submit Changes'){
 								`orderApprovedByStaff` = :approvedByStaff,
 								`dateTimeUpdated` = CURRENT_TIMESTAMP,
 								`dateTimeApproved` = CURRENT_TIMESTAMP,
-								`adminNote` = :adminNote
+								`adminNote` = :adminNote,
 								`orderApprovedByUserID` = :orderApprovedByUserID
 						WHERE 	`orderID` = :OrderID';
 				$s = $pdo->prepare($sql);
@@ -630,7 +636,7 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Submit Changes'){
 								`orderApprovedByStaff` = :approvedByStaff,
 								`dateTimeUpdated` = CURRENT_TIMESTAMP,
 								`dateTimeApproved` = NULL,
-								`adminNote` = :adminNote
+								`adminNote` = :adminNote,
 								`orderApprovedByUserID` = NULL
 						WHERE 	`orderID` = :OrderID';
 				$s = $pdo->prepare($sql);
@@ -774,6 +780,39 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Submit Changes'){
 							SET				`extraID` = :ExtraID,
 											`orderID` = :OrderID,
 											`amount` = :ExtraAmount";
+					$s = $pdo->prepare($sql);
+					$s->bindValue(':OrderID', $orderID);
+					$s->bindValue(':ExtraID', $extraID);
+					$s->bindValue(':ExtraAmount', $extraAmount);
+					$s->execute();
+				}
+			}
+
+			if($extraCreated){
+				foreach($createdExtra AS $extra){
+					$extraName = $extra['ExtraName'];
+					$extraDescription = $extra['ExtraDescription'];
+					$extraAmount = $extra['ExtraAmount'];
+					$extraPrice = $extra['ExtraPrice'];
+
+					$sql = "INSERT INTO 	`extra`
+							SET				`name` = :ExtraName,
+											`description` = :ExtraDescription,
+											`price` = :ExtraPrice,
+											`isAlternative` = 1";
+					$s = $pdo->prepare($sql);
+					$s->bindValue(':ExtraName', $extraName);
+					$s->bindValue(':ExtraDescription', $extraDescription);
+					$s->bindValue(':ExtraPrice', $extraPrice);
+					$s->execute();
+
+					$extraID = $pdo->lastInsertId();
+
+					$sql = "INSERT INTO 	`extraorders`
+							SET				`extraID` = :ExtraID,
+											`orderID` = :OrderID,
+											`amount` = :ExtraAmount";
+					$s = $pdo->prepare($sql);
 					$s->bindValue(':OrderID', $orderID);
 					$s->bindValue(':ExtraID', $extraID);
 					$s->bindValue(':ExtraAmount', $extraAmount);

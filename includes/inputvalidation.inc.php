@@ -33,7 +33,7 @@ function isLengthInvalidDisplayName($name){
 
 	// Extra Names
 // Returns TRUE on invalid, FALSE on valid
-function isLengthInvalidDisplayName($name){
+function isLengthInvalidExtraName($name){
 	// Has to be less than 255 chars (MySQL - VARCHAR 255)
 
 	$nameLength = strlen(utf8_decode($name));
