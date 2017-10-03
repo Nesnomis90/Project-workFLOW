@@ -429,45 +429,87 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Submit Changes'){
 	list($invalidInput, $validatedOrderCommunicationToUser, $validatedAdminNote, $validatedIsApproved) = validateUserInputs();
 
 	// JavaScript alternatives submitted data
-	if(!$invalidInput){
-		if(isSet($_POST['LastAlternativeID']) AND $_POST['LastAlternativeID'] != ""){
-			// There has been an alternative added
-			$lastID = $_POST['LastAlternativeID']+1;
-			for($i=0; $i < $lastID; $i++){
-				$postExtraIDName = "addAlternativeSelected" . $i;
-				$postExtraNameName = "AlternativeName" . $i;
-				$postAmountName = "AmountSelected" . $i;
-				$postAlternativeDescriptionName = "AlternativeDescription" . $i;
-				$postAlternativePriceName = "AlternativePrice" . $i;
-				if(isSet($_POST[$postExtraIDName]) AND $_POST[$postExtraIDName] > 0){
-					// These are existing alternatives added
-					if(!isSet($addedExtra)){
-						$addedExtra = array();
-					}
-					$addedExtra[] = array(
-											"ExtraID" => $_POST[$postExtraIDName],
-											"ExtraAmount" => $_POST[$postAmountName]
-										);
-				} elseif(isSet($_POST[$postExtraNameName]) AND $_POST[$postExtraNameName] != "") {
-					// These are newly created alternatives
-					if(!isSet($createdExtra)){
-						$createdExtra = array();
-					}
-					$createdExtra[] = array(
-											"ExtraName" => $_POST[$postExtraNameName],
-											"ExtraAmount" => $_POST[$postAmountName],
-											"ExtraDescription" => $_POST[$postAlternativeDescriptionName],
-											"ExtraPrice" => $_POST[$postAlternativePriceName]
-											);
+	if(isSet($_POST['LastAlternativeID']) AND $_POST['LastAlternativeID'] != ""){
+		// There has been an alternative added
+		$lastID = $_POST['LastAlternativeID']+1;
+		for($i=0; $i < $lastID; $i++){
+			$postExtraIDName = "addAlternativeSelected" . $i;
+			$postExtraNameName = "AlternativeName" . $i;
+			$postAmountName = "AmountSelected" . $i;
+			$postAlternativeDescriptionName = "AlternativeDescription" . $i;
+			$postAlternativePriceName = "AlternativePrice" . $i;
+			if(isSet($_POST[$postExtraIDName]) AND $_POST[$postExtraIDName] > 0){
+				// These are existing alternatives added
+				if(!isSet($addedExtra)){
+					$addedExtra = array();
 				}
+				$addedExtra[] = array(
+										"ExtraID" => $_POST[$postExtraIDName],
+										"ExtraAmount" => $_POST[$postAmountName]
+									);
+			} elseif(isSet($_POST[$postExtraNameName])) {
+				// These are newly created alternatives
+				if(!isSet($createdExtra)){
+					$createdExtra = array();
+				}
+
+				$invalid = FALSE;
+				// input validation
+				$newAlternativeExtraName = $_POST[$postExtraNameName];
+				$newAlternativeExtraDescription = $_POST[$postAlternativeDescriptionName];
+
+				$trimmedNewAlternativeExtraName = trimExcessWhitespace($newAlternativeExtraName);
+				$trimmedNewAlternativeExtraDescription = trimExcessWhitespaceButLeaveLinefeed($newAlternativeExtraDescription);
+
+				// Do actual input validation
+				if(validateString($trimmedNewAlternativeExtraName) === FALSE AND !$invalidInput){
+					$invalidInput = TRUE;
+					$invalid = TRUE;
+					$_SESSION['AddOrderError'] = "Your submitted Extra name has illegal characters in it.";
+				}
+				if(validateString($trimmedNewAlternativeExtraDescription) === FALSE AND !$invalidInput){
+					$invalidInput = TRUE;
+					$invalid = TRUE;
+					$_SESSION['AddOrderError'] = "Your submitted Extra description has illegal characters in it.";
+				}
+
+				// Are values actually filled in?
+				if($trimmedNewAlternativeExtraName == "" AND !$invalidInput){
+					$_SESSION['AddExtraError'] = "You need to fill in a name for your Extra.";	
+					$invalidInput = TRUE;
+					$invalid = TRUE;
+				}
+				if($trimmedNewAlternativeExtraDescription == "" AND !$invalidInput){
+					$_SESSION['AddExtraError'] = "You need to fill in a description for your Extra.";
+					$invalidInput = TRUE;
+					$invalid = TRUE;
+				}
+
+				// Are character lengths fine?
+				$invalidExtraName = isLengthInvalidExtraName($trimmedNewAlternativeExtraName);
+				if($invalidExtraName AND !$invalidInput){
+					$_SESSION['AddExtraError'] = "The extra name submitted is too long.";	
+					$invalidInput = TRUE;
+					$invalid = TRUE;
+				}
+				$invalidExtraDescription = isLengthInvalidExtraDescription($trimmedNewAlternativeExtraDescription);
+				if($invalidExtraDescription AND !$invalidInput){
+					$_SESSION['AddExtraError'] = "The extra description submitted is too long.";
+					$invalidInput = TRUE;
+					$invalid = TRUE;
+				}
+
+				$createdExtra[] = array(
+										"ExtraName" => $trimmedNewAlternativeExtraName,
+										"ExtraAmount" => $_POST[$postAmountName],
+										"ExtraDescription" => $trimmedNewAlternativeExtraDescription,
+										"ExtraPrice" => $_POST[$postAlternativePriceName],
+										"Invalid" => $invalid;
+										);
 			}
 		}
 	}
 
-	var_dump($addedExtra);
-	var_dump($createdExtra);
-	exit();
-	
 	// Ask with JavaScript if the alternatives added are correct, then add them to database.
 	// TO-DO: Force a refresh of extraorders
 	// Then continue the code and give feedback if anything else the user submitted was invalid

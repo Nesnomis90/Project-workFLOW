@@ -96,13 +96,13 @@ function validateUserInputs(){
 	// Check if input length is allowed
 		// ExtraName
 		// Uses same limit as display name (max 255 chars)
-	$invalidExtraName = isLengthInvalidDisplayName($validatedExtraName);
+	$invalidExtraName = isLengthInvalidExtraName($validatedExtraName);
 	if($invalidExtraName AND !$invalidInput){
 		$_SESSION['AddExtraError'] = "The extra name submitted is too long.";	
 		$invalidInput = TRUE;
 	}
 		// ExtraDescription
-	$invalidExtraDescription = isLengthInvalidEquipmentDescription($validatedExtraDescription);
+	$invalidExtraDescription = isLengthInvalidExtraDescription($validatedExtraDescription);
 	if($invalidExtraDescription AND !$invalidInput){
 		$_SESSION['AddExtraError'] = "The extra description submitted is too long.";
 		$invalidInput = TRUE;
