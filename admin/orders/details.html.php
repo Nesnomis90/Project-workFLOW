@@ -47,10 +47,9 @@
 				// Create the remove alternative extra (remove table row) button
 				var removeAlternativeExtraButton = document.createElement("input");
 				removeAlternativeExtraButton.setAttribute("type", "button");
-				removeAlternativeExtraButton.innerHTML = "x";
-				removeAlternativeExtraButton.value = "x";
+				removeAlternativeExtraButton.innerHTML = "✖";
+				removeAlternativeExtraButton.value = "✖";
 				removeAlternativeExtraButton.style.color = "red";
-				removeAlternativeExtraButton.style.fontSize = "110%";
 
 				// Create the input number for amount
 				var inputExtraAmount = document.createElement("input");
@@ -239,6 +238,32 @@
 				// Enable button again if it was disabled
 				var addAlternativeExtraButton = document.getElementById("addAlternativeExtraButton");
 				addAlternativeExtraButton.removeAttribute("disabled");
+			}
+
+			function validateNewAlternatives(){ // TO-DO: Not yet implemented/tested properly.
+			// This refreshes the page and removes the javascript. (not intended)
+				if(newAlternativesCreated > 0){
+					// Check if name fields are filled in
+					for(var i = 0; i < alternativeID; i++){
+						var inputNameID = "AlternativeName" + i;
+						var inputName = document.getElementById(inputNameID);
+
+						if(inputName !== null){
+							var inputNameText = inputName.value;
+							if(inputNameText == ""){
+								alert("You need to give your alternative a name");
+
+								// Make sure we don't trigger multiple buttons (e.g. remove alternative)
+								disableEventPropagation(event);
+
+								return false;
+							}
+						}
+					}
+				} else {
+					// It's ok to submit it
+					return true;
+				}
 			}
 		</script>
 	</head>
