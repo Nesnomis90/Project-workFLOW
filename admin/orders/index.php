@@ -21,6 +21,8 @@ function clearEditOrderSessions(){
 	unset($_SESSION['EditOrderExtraOrdered']);
 	unset($_SESSION['EditOrderOrderMessages']);
 	unset($_SESSION['EditOrderAvailableExtra']);
+	unset($_SESSION['EditOrderAlternativeExtraAdded']);
+	unset($_SESSION['EditOrderAlternativeExtraCreated']);
 }
 
 // Function to check if user inputs for Order are correct
@@ -168,6 +170,12 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Details') OR
 		if(isSet($_SESSION['EditOrderExtraOrdered'])){
 			$extraOrdered = $_SESSION['EditOrderExtraOrdered'];
 		}
+		if(isSet($_SESSION['EditOrderAlternativeExtraAdded'])){
+			$addedExtra = $_SESSION['EditOrderAlternativeExtraAdded'];
+		}
+		if(isSet($_SESSION['EditOrderAlternativeExtraCreated'])){
+			$createdExtra = $_SESSION['EditOrderAlternativeExtraCreated'];
+		}
 	} else {
 		// Make sure we don't have any remembered values in memory
 		clearEditOrderSessions();
@@ -232,7 +240,7 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Details') OR
 								ex.`name`												AS ExtraName,
 								eo.`amount`												AS ExtraAmount,
 								IFNULL(eo.`alternativePrice`, ex.`price`)				AS ExtraPrice,
-								IFNULL(eo.`alternativeDescription`, ex.`description`)	AS ExtraDescription,
+								ex.`description`										AS ExtraDescription,
 								eo.`purchased`											AS ExtraDateTimePurchased,
 								(
 									SELECT 	CONCAT_WS(", ", u.`lastname`, u.`firstname`)
@@ -517,6 +525,12 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Submit Changes'){
 	// Refresh form on invalid
 	if($invalidInput){
 		// Refresh.
+		if(isSet($addedExtra)){
+			$_SESSION['EditOrderAlternativeExtraAdded'] = $addedExtra;
+		}
+		if(isSet($createdExtra)){
+			$_SESSION['EditOrderAlternativeExtraCreated'] = $createdExtra;
+		}
 		$_SESSION['EditOrderCommunicationToUser'] = $validatedOrderCommunicationToUser;
 		$_SESSION['EditOrderAdminNote'] = $validatedAdminNote;
 		$_SESSION['EditOrderIsApproved'] = $validatedIsApproved;
@@ -568,6 +582,18 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Submit Changes'){
 		$extraChanged = TRUE;
 	}
 
+	$extraAdded = FALSE;
+	if(isSet($addedExtra)){
+		$numberOfChanges++;
+		$extraAdded = TRUE;
+	}
+
+	$extraCreated = FALSE;
+	if(isSet($createdExtra)){
+		$numberOfChanges++;
+		$extraCreated = TRUE;
+	}
+
 	$orderID = $_POST['OrderID'];
 
 	if($numberOfChanges > 0){
@@ -577,7 +603,7 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Submit Changes'){
 			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 			$pdo = connect_to_db();
 
-			if($extraChanged OR $messageAdded){
+			if($extraChanged OR $messageAdded OR $extraAdded OR $extraCreated){
 				$pdo->beginTransaction();
 			}
 
@@ -739,7 +765,23 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Submit Changes'){
 				}
 			}
 
-			if($extraChanged OR $messageAdded){
+			if($extraAdded){
+				foreach($addedExtra AS $extra){
+					$extraID = $extra['ExtraID'];
+					$extraAmount = $extra['ExtraAmount'];
+
+					$sql = "INSERT INTO 	`extraorders`
+							SET				`extraID` = :ExtraID,
+											`orderID` = :OrderID,
+											`amount` = :ExtraAmount";
+					$s->bindValue(':OrderID', $orderID);
+					$s->bindValue(':ExtraID', $extraID);
+					$s->bindValue(':ExtraAmount', $extraAmount);
+					$s->execute();
+				}
+			}
+
+			if($extraChanged OR $messageAdded OR $extraAdded OR $extraCreated){
 				$pdo->commit();
 			}
 

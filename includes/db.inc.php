@@ -863,7 +863,6 @@ function create_tables(){
 						  `purchased` timestamp NULL DEFAULT NULL,
 						  `purchasedByUserID` int(10) unsigned DEFAULT NULL,
 						  `alternativePrice` smallint(5) unsigned DEFAULT NULL,
-						  `alternativeDescription` text,
 						  PRIMARY KEY (`extraID`,`orderID`),
 						  KEY `FK_OrderID2_idx` (`orderID`),
 						  KEY `FK_UserID5_idx` (`approvedByUserID`),

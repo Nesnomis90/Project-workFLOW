@@ -214,7 +214,7 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Details') OR
 								ex.`name`												AS ExtraName,
 								eo.`amount`												AS ExtraAmount,
 								IFNULL(eo.`alternativePrice`, ex.`price`)				AS ExtraPrice,
-								IFNULL(eo.`alternativeDescription`, ex.`description`)	AS ExtraDescription,
+								ex.`description`										AS ExtraDescription,
 								eo.`purchased`											AS ExtraDateTimePurchased,
 								(
 									SELECT 	CONCAT_WS(", ", u.`lastname`, u.`firstname`)
