@@ -77,6 +77,27 @@ SET		`orderFinalPrice` = (
 WHERE	`orderID` = 1
 AND		`orderFinalPrice` IS NULL;
 
+SELECT 	`extraID`		AS ExtraID,
+		`name`			AS ExtraName,
+		`description`	AS ExtraDescription,
+		`price`			AS ExtraPrice
+FROM 	`extra`
+WHERE	`extraID` 
+NOT IN 	(
+			SELECT 	`extraID`
+			FROM 	`extraorders`
+			WHERE	`orderID` = 1
+		);
+
+SELECT 		ex.`extraID`		AS ExtraID,
+			ex.`name`			AS ExtraName,
+			ex.`description`	AS ExtraDescription,
+			ex.`price`			AS ExtraPrice
+FROM 		`extra` ex
+LEFT JOIN 	`extraorders` eo
+ON			ex.`extraID` = eo.`extraID`
+WHERE		eo.`extraID` IS NULL;
+
 SELECT 	COUNT(*)	AS HitCount,
 		`orderID`	AS OrderID
 FROM	`booking`

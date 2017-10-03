@@ -4,7 +4,7 @@ require_once 'variables.inc.php';
 
 // Function to check if variables are too big for MySQL or our liking
 
-	//Order Messages
+	// Order Messages
 // Returns TRUE on invalid, FALSE on valid
 function isLengthInvalidOrderMessage($orderMessage){
 	// utf8 maximum of 21,844 characters (MySQL VARCHAR(21844))
@@ -18,45 +18,72 @@ function isLengthInvalidOrderMessage($orderMessage){
 	return FALSE;
 }
 
-	//Display Names
+	// Display Names
 // Returns TRUE on invalid, FALSE on valid
-function isLengthInvalidDisplayName($displayName){
+function isLengthInvalidDisplayName($name){
 	// Has to be less than 255 chars (MySQL - VARCHAR 255)
 
-	$dspnameLength = strlen(utf8_decode($displayName));
-	$dspnameMaxLength = 255; // TO-DO: Adjust max length if needed.
-	if($dspnameLength > $dspnameMaxLength){	
+	$nameLength = strlen(utf8_decode($name));
+	$maxLength = 255; // TO-DO: Adjust max length if needed.
+	if($nameLength > $maxLength){
 		return TRUE;
 	}
 	return FALSE;
 }
-	//Booking Descriptions
+
+	// Extra Names
 // Returns TRUE on invalid, FALSE on valid
-function isLengthInvalidBookingDescription($bookingDescription){
+function isLengthInvalidExtraName($name){
+	// Has to be less than 255 chars (MySQL - VARCHAR 255)
+
+	$nameLength = strlen(utf8_decode($name));
+	$maxLength = 255; // TO-DO: Adjust max length if needed.
+	if($nameLength > $maxLength){
+		return TRUE;
+	}
+	return FALSE;
+}
+
+	// Booking Descriptions
+// Returns TRUE on invalid, FALSE on valid
+function isLengthInvalidBookingDescription($description){
 	// Has to be less than 65,535 bytes (MySQL - TEXT) (too much anyway)
 
-	$bknDscrptnLength = strlen(utf8_decode($bookingDescription));
-	$bknDscrptnMaxLength = 500; // TO-DO: Adjust max length if needed.
-	if($bknDscrptnLength > $bknDscrptnMaxLength){
+	$descriptionLength = strlen(utf8_decode($description));
+	$maxLength = 500; // TO-DO: Adjust max length if needed.
+	if($descriptionLength > $maxLength){
 		return TRUE;
 	}
 	return FALSE;
 }
 
-	//Equipment Descriptions
+	// Equipment Descriptions
 // Returns TRUE on invalid, FALSE on valid
-function isLengthInvalidEquipmentDescription($equipmentDescription){
+function isLengthInvalidEquipmentDescription($description){
 	// Has to be less than 65,535 bytes (MySQL - TEXT) (too much anyway)
 
-	$eqpmntDscrptnLength = strlen(utf8_decode($equipmentDescription));
-	$eqpmntDscrptnMaxLength = 500; // TO-DO: Adjust max length if needed.
-	if($eqpmntDscrptnLength > $eqpmntDscrptnMaxLength){
+	$descriptionLength = strlen(utf8_decode($description));
+	$maxLength = 500; // TO-DO: Adjust max length if needed.
+	if($descriptionLength > $maxLength){
 		return TRUE;
 	}
 	return FALSE;
 }
 
-	//Meeting Room Descriptions
+	// Extra Descriptions
+// Returns TRUE on invalid, FALSE on valid
+function isLengthInvalidExtraDescription($description){
+	// Has to be less than 65,535 bytes (MySQL - TEXT) (too much anyway)
+
+	$descriptionLength = strlen(utf8_decode($description));
+	$maxLength = 500; // TO-DO: Adjust max length if needed.
+	if($descriptionLength > $maxLength){
+		return TRUE;
+	}
+	return FALSE;
+}
+
+	// Meeting Room Descriptions
 // Returns TRUE on invalid, FALSE on valid
 function isLengthInvalidMeetingRoomDescription($meetingRoomDescription){
 	// Has to be less than 65,535 bytes (MySQL - TEXT) (too much anyway)
@@ -69,7 +96,7 @@ function isLengthInvalidMeetingRoomDescription($meetingRoomDescription){
 	return FALSE;
 }
 
-	//Meeting Room Location
+	// Meeting Room Location
 // Returns TRUE on invalid, FALSE on valid
 function isLengthInvalidMeetingRoomLocation($meetingRoomCapacity){
 	// Has to be less than 65,535 bytes (MySQL - TEXT) (too much anyway)
