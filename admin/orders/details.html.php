@@ -83,6 +83,8 @@
 
 					// Add the available extra names as options
 					// exclude already selected alternatives
+					var firstIndexInSelectBox = 0;
+					var firstIndexAdded = false;
 					for(var i = 0; i < availableExtrasArray.length; i++){
 						var extraAlreadyAdded = false;
 
@@ -91,7 +93,6 @@
 							var selectBox = document.getElementById(selectBoxID);
 
 							if(selectBox !== null){
-								// get the extra ID for reference
 								var extraIDSelected = selectBox.options[selectBox.selectedIndex].value;
 								if(extraIDSelected == availableExtrasArray[i]['ExtraID']){
 									extraAlreadyAdded = true;
@@ -104,15 +105,27 @@
 							option.value = availableExtrasArray[i]['ExtraID'];
 							option.text = availableExtrasArray[i]['ExtraName'];
 							selectExtraName.appendChild(option);
+
+							// Make sure we have the appropriate description and price for the extra name
+							if(firstIndexAdded === false){
+								firstIndexInSelectBox = i
+								firstIndexAdded = true;
+							}
 						}
 					}
 
 					alternativesAdded += 1;
 
+					if(alternativesAdded == availableExtrasNumber){
+						// disable the add alternative button
+						var addAlternativeExtraButton = document.getElementById("addAlternativeExtraButton");
+						addAlternativeExtraButton.setAttribute("disabled", "disabled");
+					}
+
 					// Add items/values to columns
 					columnName.appendChild(selectExtraName);
-					columnDescription.innerHTML = availableExtrasArray[0]['ExtraDescription'];
-					columnPrice.innerHTML = availableExtrasArray[0]['ExtraPrice'];
+					columnDescription.innerHTML = availableExtrasArray[firstIndexInSelectBox]['ExtraDescription'];
+					columnPrice.innerHTML = availableExtrasArray[firstIndexInSelectBox]['ExtraPrice'];
 
 					// update the input to check how many alternatives we have submitted
 					var inputAlternativesAdded = document.getElementById("AlternativesAdded");
@@ -223,6 +236,10 @@
 				// update the input to check how many alternatives we have submitted
 				var inputAlternativesAdded = document.getElementById("AlternativesAdded");
 				inputAlternativesAdded.value = alternativesAdded;
+
+				// Enable button again if it was disabled
+				var addAlternativeExtraButton = document.getElementById("addAlternativeExtraButton");
+				addAlternativeExtraButton.removeAttribute("disabled");
 			}
 		</script>
 	</head>
@@ -343,7 +360,7 @@
 							<td><?php htmlout($row['ExtraDateTimePurchased']); ?></td>
 						</tr>
 					<?php endforeach; ?>
-					<tr><td colspan="10"><button type="button" onclick="createNewAlternativeExtraRow()">Create New Alternative</button><button type="button" onclick="addAlternativeExtraRow()">Add Alternative</button></td></tr>
+					<tr><td colspan="10"><button type="button" onclick="createNewAlternativeExtraRow()">Create New Alternative</button><button type="button" id="addAlternativeExtraButton" onclick="addAlternativeExtraRow()">Add Alternative</button></td></tr>
 				<?php else : ?>
 					<tr><td colspan="10"><b>This order has nothing in it.</b></td></tr>
 				<?php endif; ?>
