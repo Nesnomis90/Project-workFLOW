@@ -191,7 +191,8 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Details') OR
 			$sql = 'SELECT 		`orderID`						AS TheOrderID,
 								`orderUserNotes`				AS OrderUserNotes,
 								`dateTimeCreated`				AS DateTimeCreated,
-								`dateTimeUpdated`				AS DateTimeUpdated,
+								`dateTimeUpdatedByStaff`		AS DateTimeUpdatedByStaff,
+								`dateTimeUpdatedByUser`			AS DateTimeUpdatedByUser,
 								`orderApprovedByUser`			AS OrderApprovedByUser,
 								`orderApprovedByAdmin`			AS OrderApprovedByAdmin,
 								`orderApprovedByStaff` 			AS OrderApprovedByStaff,
@@ -224,16 +225,24 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Details') OR
 			$dateTimeCreated = $row['DateTimeCreated'];
 			$displayDateTimeCreated = convertDatetimeToFormat($dateTimeCreated , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
 
-			if(!empty($row['DateTimeUpdated'])){
-				$dateTimeUpdated = $row['DateTimeUpdated'];
-				$displayDateTimeUpdated = convertDatetimeToFormat($dateTimeUpdated , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);				
+			if(!empty($row['DateTimeUpdatedByStaff'])){
+				$dateTimeUpdatedByStaff = $row['DateTimeUpdatedByStaff'];
+				$displayDateTimeUpdatedByStaff = convertDatetimeToFormat($dateTimeUpdatedByStaff , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);				
 			} else {
-				$displayDateTimeUpdated = "N/A";
+				$displayDateTimeUpdatedByStaff = "N/A";
+			}
+
+			if(!empty($row['DateTimeUpdatedByStaff'])){
+				$dateTimeUpdatedByUser = $row['DateTimeUpdatedByUser'];
+				$displayDateTimeUpdatedByUser = convertDatetimeToFormat($dateTimeUpdatedByStaff , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);				
+			} else {
+				$displayDateTimeUpdatedByUser = "N/A";
 			}
 
 			$_SESSION['EditOrderOriginalInfo']['OrderIsApproved'] = $orderIsApproved;
 			$_SESSION['EditOrderOriginalInfo']['DateTimeCreated'] = $displayDateTimeCreated;
-			$_SESSION['EditOrderOriginalInfo']['DateTimeUpdated'] = $displayDateTimeUpdated;
+			$_SESSION['EditOrderOriginalInfo']['DateTimeUpdatedByStaff'] = $displayDateTimeUpdatedByStaff;
+			$_SESSION['EditOrderOriginalInfo']['DateTimeUpdatedByUser'] = $displayDateTimeUpdatedByUser;
 			$_SESSION['EditOrderOrderID'] = $orderID;
 
 			$sql = 'SELECT 		ex.`extraID`											AS ExtraID,
@@ -426,7 +435,8 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Details') OR
 	$originalOrderIsApproved = $_SESSION['EditOrderOriginalInfo']['OrderIsApproved'];
 	$originalOrderUserNotes = $_SESSION['EditOrderOriginalInfo']['OrderUserNotes'];
 	$originalOrderCreated = $_SESSION['EditOrderOriginalInfo']['DateTimeCreated'];
-	$originalOrderUpdated = $_SESSION['EditOrderOriginalInfo']['DateTimeUpdated'];
+	$originalOrderUpdatedByStaff = $_SESSION['EditOrderOriginalInfo']['DateTimeUpdatedByStaff'];
+	$originalOrderUpdatedByUser = $_SESSION['EditOrderOriginalInfo']['DateTimeUpdatedByUser'];
 
 	if(!isSet($orderCommunicationToUser)){
 		$orderCommunicationToUser = "";
@@ -620,7 +630,7 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Submit Changes'){
 					$sql = 'UPDATE 	`orders`
 							SET		`orderApprovedByAdmin` = :approvedByAdmin,
 									`orderApprovedByStaff` = :approvedByStaff,
-									`dateTimeUpdated` = CURRENT_TIMESTAMP,
+									`dateTimeUpdatedByStaff` = CURRENT_TIMESTAMP,
 									`dateTimeApproved` = CURRENT_TIMESTAMP,
 									`adminNote` = :adminNote,
 									`orderApprovedByUserID` = :orderApprovedByUserID,
@@ -632,7 +642,7 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Submit Changes'){
 					$sql = 'UPDATE 	`orders`
 							SET		`orderApprovedByAdmin` = :approvedByAdmin,
 									`orderApprovedByStaff` = :approvedByStaff,
-									`dateTimeUpdated` = CURRENT_TIMESTAMP,
+									`dateTimeUpdatedByStaff` = CURRENT_TIMESTAMP,
 									`dateTimeApproved` = CURRENT_TIMESTAMP,
 									`adminNote` = :adminNote,
 									`orderApprovedByUserID` = :orderApprovedByUserID,
@@ -643,7 +653,7 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Submit Changes'){
 					$sql = 'UPDATE 	`orders`
 							SET		`orderApprovedByAdmin` = :approvedByAdmin,
 									`orderApprovedByStaff` = :approvedByStaff,
-									`dateTimeUpdated` = CURRENT_TIMESTAMP,
+									`dateTimeUpdatedByStaff` = CURRENT_TIMESTAMP,
 									`dateTimeApproved` = CURRENT_TIMESTAMP,
 									`adminNote` = :adminNote,
 									`orderApprovedByUserID` = :orderApprovedByUserID,
@@ -653,7 +663,7 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Submit Changes'){
 					$sql = 'UPDATE 	`orders`
 							SET		`orderApprovedByAdmin` = :approvedByAdmin,
 									`orderApprovedByStaff` = :approvedByStaff,
-									`dateTimeUpdated` = CURRENT_TIMESTAMP,
+									`dateTimeUpdatedByStaff` = CURRENT_TIMESTAMP,
 									`dateTimeApproved` = CURRENT_TIMESTAMP,
 									`adminNote` = :adminNote,
 									`orderApprovedByUserID` = :orderApprovedByUserID
@@ -671,7 +681,7 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Submit Changes'){
 					$sql = 'UPDATE 	`orders`
 							SET		`orderApprovedByAdmin` = :approvedByAdmin,
 									`orderApprovedByStaff` = :approvedByStaff,
-									`dateTimeUpdated` = CURRENT_TIMESTAMP,
+									`dateTimeUpdatedByStaff` = CURRENT_TIMESTAMP,
 									`dateTimeApproved` = NULL,
 									`adminNote` = :adminNote,
 									`orderApprovedByUserID` = NULL,
@@ -683,7 +693,7 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Submit Changes'){
 					$sql = 'UPDATE 	`orders`
 							SET		`orderApprovedByAdmin` = :approvedByAdmin,
 									`orderApprovedByStaff` = :approvedByStaff,
-									`dateTimeUpdated` = CURRENT_TIMESTAMP,
+									`dateTimeUpdatedByStaff` = CURRENT_TIMESTAMP,
 									`dateTimeApproved` = NULL,
 									`adminNote` = :adminNote,
 									`orderApprovedByUserID` = NULL,
@@ -694,7 +704,7 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Submit Changes'){
 					$sql = 'UPDATE 	`orders`
 							SET		`orderApprovedByAdmin` = :approvedByAdmin,
 									`orderApprovedByStaff` = :approvedByStaff,
-									`dateTimeUpdated` = CURRENT_TIMESTAMP,
+									`dateTimeUpdatedByStaff` = CURRENT_TIMESTAMP,
 									`dateTimeApproved` = NULL,
 									`adminNote` = :adminNote,
 									`orderApprovedByUserID` = NULL,
@@ -704,7 +714,7 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Submit Changes'){
 					$sql = 'UPDATE 	`orders`
 							SET		`orderApprovedByAdmin` = :approvedByAdmin,
 									`orderApprovedByStaff` = :approvedByStaff,
-									`dateTimeUpdated` = CURRENT_TIMESTAMP,
+									`dateTimeUpdatedByStaff` = CURRENT_TIMESTAMP,
 									`dateTimeApproved` = NULL,
 									`adminNote` = :adminNote,
 									`orderApprovedByUserID` = NULL

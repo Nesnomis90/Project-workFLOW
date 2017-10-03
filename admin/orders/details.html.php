@@ -219,8 +219,13 @@
 				</div>
 
 				<div>
-					<label>Last Update: </label>
-					<span><b><?php htmlout($originalOrderUpdated); ?></b></span>
+					<label>Last Update (Staff): </label>
+					<span><b><?php htmlout($originalOrderUpdatedByStaff); ?></b></span>
+				</div>
+
+				<div>
+					<label>Last Update (User): </label>
+					<span><b><?php htmlout($originalOrderUpdatedByUser); ?></b></span>
 				</div>
 
 				<div>
