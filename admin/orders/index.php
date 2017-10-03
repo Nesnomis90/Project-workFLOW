@@ -232,9 +232,9 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Details') OR
 				$displayDateTimeUpdatedByStaff = "N/A";
 			}
 
-			if(!empty($row['DateTimeUpdatedByStaff'])){
+			if(!empty($row['DateTimeUpdatedByUser'])){
 				$dateTimeUpdatedByUser = $row['DateTimeUpdatedByUser'];
-				$displayDateTimeUpdatedByUser = convertDatetimeToFormat($dateTimeUpdatedByStaff , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);				
+				$displayDateTimeUpdatedByUser = convertDatetimeToFormat($dateTimeUpdatedByUser , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);				
 			} else {
 				$displayDateTimeUpdatedByUser = "N/A";
 			}
@@ -759,9 +759,9 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Submit Changes'){
 					}
 
 					if($extraBooleanApprovedForPurchase == 1){
-						$orderApprovedByUserID = $_SESSION['LoggedInUserID'];
+						$extraApprovedByUserID = $_SESSION['LoggedInUserID'];
 					} else {
-						$orderApprovedByUserID = NULL;
+						$extraApprovedByUserID = NULL;
 					}
 
 					if($extraBooleanPurchased == 1){
@@ -774,7 +774,7 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Submit Changes'){
 						if($extraBooleanApprovedForPurchase == 1 AND $extraBooleanPurchased == 1){
 							$sql = "UPDATE	`extraorders`
 									SET		`approvedForPurchase` = CURRENT_TIMESTAMP,
-											`orderApprovedByUserID` = :orderApprovedByUserID,
+											`approvedByUserID` = :extraApprovedByUserID,
 											`purchased` = CURRENT_TIMESTAMP,
 											`purchasedByUserID` = :purchasedByUserID
 									WHERE	`orderID` = :OrderID
@@ -782,7 +782,7 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Submit Changes'){
 						} elseif($extraBooleanApprovedForPurchase == 1 AND $extraBooleanPurchased == 0){
 							$sql = "UPDATE	`extraorders`
 									SET		`approvedForPurchase` = CURRENT_TIMESTAMP,
-											`orderApprovedByUserID` = :orderApprovedByUserID,
+											`approvedByUserID` = :extraApprovedByUserID,
 											`purchased` = NULL,
 											`purchasedByUserID` = :purchasedByUserID
 									WHERE	`orderID` = :OrderID
@@ -790,7 +790,7 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Submit Changes'){
 						} elseif($extraBooleanApprovedForPurchase == 0 AND $extraBooleanPurchased == 1){
 							$sql = "UPDATE	`extraorders`
 									SET		`approvedForPurchase` = NULL,
-											`orderApprovedByUserID` = :orderApprovedByUserID,
+											`approvedByUserID` = :extraApprovedByUserID,
 											`purchased` = CURRENT_TIMESTAMP,
 											`purchasedByUserID` = :purchasedByUserID
 									WHERE	`orderID` = :OrderID
@@ -798,7 +798,7 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Submit Changes'){
 						} else {
 							$sql = "UPDATE	`extraorders`
 									SET		`approvedForPurchase` = NULL,
-											`orderApprovedByUserID` = :orderApprovedByUserID,
+											`approvedByUserID` = :extraApprovedByUserID,
 											`purchased` = NULL,
 											`purchasedByUserID` = :purchasedByUserID
 									WHERE	`orderID` = :OrderID
@@ -807,27 +807,27 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Submit Changes'){
 						$s = $pdo->prepare($sql);
 						$s->bindValue(':OrderID', $orderID);
 						$s->bindValue(':ExtraID', $extraID);
-						$s->bindValue(':orderApprovedByUserID', $orderApprovedByUserID);
+						$s->bindValue(':extraApprovedByUserID', $extraApprovedByUserID);
 						$s->bindValue(':purchasedByUserID', $purchasedByUserID);
 						$s->execute();
 					} elseif($updateApprovedForPurchase AND !$updatePurchased){
 						if($extraBooleanApprovedForPurchase == 1){
 							$sql = "UPDATE	`extraorders`
 									SET		`approvedForPurchase` = CURRENT_TIMESTAMP,
-											`orderApprovedByUserID` = :orderApprovedByUserID
+											`approvedByUserID` = :extraApprovedByUserID
 									WHERE	`orderID` = :OrderID
 									AND		`extraID` = :ExtraID";
 						} else {
 							$sql = "UPDATE	`extraorders`
 									SET		`approvedForPurchase` = NULL,
-											`orderApprovedByUserID` = :orderApprovedByUserID
+											`approvedByUserID` = :extraApprovedByUserID
 									WHERE	`orderID` = :OrderID
 									AND		`extraID` = :ExtraID";
 						}
 						$s = $pdo->prepare($sql);
 						$s->bindValue(':OrderID', $orderID);
 						$s->bindValue(':ExtraID', $extraID);
-						$s->bindValue(':orderApprovedByUserID', $orderApprovedByUserID);
+						$s->bindValue(':extraApprovedByUserID', $extraApprovedByUserID);
 						$s->execute();
 					} elseif(!$updateApprovedForPurchase AND $updatePurchased){
 						if($extraBooleanPurchased == 1){
@@ -962,7 +962,8 @@ try
 	$sql = 'SELECT 		o.`orderID`										AS TheOrderID,
 						o.`orderUserNotes`								AS OrderUserNotes,
 						o.`dateTimeCreated`								AS DateTimeCreated,
-						o.`dateTimeUpdated`								AS DateTimeUpdated,
+						o.`dateTimeUpdatedByStaff`						AS DateTimeUpdatedByStaff,
+						o.`dateTimeUpdatedByUser`						AS DateTimeUpdatedByUser,
 						o.`dateTimeApproved`							AS DateTimeApproved,
 						o.`dateTimeCancelled`							AS DateTimeCancelled,
 						o.`orderApprovedByUser`							AS OrderApprovedByUser,
@@ -1055,8 +1056,22 @@ foreach($result AS $row){
 
 	$dateTimeCreated = $row['DateTimeCreated'];
 	$displayDateTimeCreated = convertDatetimeToFormat($dateTimeCreated , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
-	if(!empty($row['DateTimeUpdated'])){
-		$dateTimeUpdated = $row['DateTimeUpdated'];
+	if(!empty($row['DateTimeUpdatedByStaff']) AND !empty($row['DateTimeUpdatedByUser'])){
+		$dateTimeUpdatedByStaff = $row['DateTimeUpdatedByStaff'];
+		$dateTimeUpdatedByUser = $row['DateTimeUpdatedByUser'];
+		if($dateTimeUpdatedByStaff > $dateTimeUpdatedByUser){
+			$dateTimeUpdated = $dateTimeUpdatedByStaff;
+		} else {
+			$dateTimeUpdated = $dateTimeUpdatedByUser;
+		}
+		$displayDateTimeUpdated = convertDatetimeToFormat($dateTimeUpdated , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
+		$newOrder = FALSE;
+	} elseif(!empty($row['DateTimeUpdatedByStaff']) AND empty($row['DateTimeUpdatedByUser'])){
+		$dateTimeUpdated = $row['DateTimeUpdatedByStaff'];
+		$displayDateTimeUpdated = convertDatetimeToFormat($dateTimeUpdated , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
+		$newOrder = FALSE;
+	} elseif(empty($row['DateTimeUpdatedByStaff']) AND !empty($row['DateTimeUpdatedByUser'])){
+		$dateTimeUpdated = $row['DateTimeUpdatedByUser'];
 		$displayDateTimeUpdated = convertDatetimeToFormat($dateTimeUpdated , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
 		$newOrder = FALSE;
 	} else {
