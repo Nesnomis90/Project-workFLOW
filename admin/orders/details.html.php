@@ -201,7 +201,6 @@
 				var amountValueID = "AmountSelected" + attributeID;
 				var amountValue = document.getElementById(amountValueID);
 
-
 				// get the extra ID for reference
 				var extraIDSelected = selectBox.options[selectBox.selectedIndex].value;
 
