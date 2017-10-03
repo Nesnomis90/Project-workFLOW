@@ -382,8 +382,10 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Details') OR
 			$_SESSION['EditOrderOrderMessages'] = $orderMessages;
 
 			// Update that there are no new messages from user
+			// Also, we've seen any of the changes if there were any
 			$sql = "UPDATE	`orders`
-					SET		`orderNewMessageFromUser` = 0
+					SET		`orderNewMessageFromUser` = 0,
+							`orderChangedByUser` = 0
 					WHERE	`orderID` = :OrderID";
 			$s = $pdo->prepare($sql);
 			$s->bindValue(':OrderID', $orderID);
@@ -614,15 +616,49 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Submit Changes'){
 			}
 
 			if($setAsApproved){
-				$sql = 'UPDATE 	`orders`
-						SET		`orderCommunicationToUser` = :OrderCommunicationToUser,
-								`orderApprovedByAdmin` = :approvedByAdmin,
-								`orderApprovedByStaff` = :approvedByStaff,
-								`dateTimeUpdated` = CURRENT_TIMESTAMP,
-								`dateTimeApproved` = CURRENT_TIMESTAMP,
-								`adminNote` = :adminNote,
-								`orderApprovedByUserID` = :orderApprovedByUserID
-						WHERE 	`orderID` = :OrderID';
+				if($messageAdded AND ($extraAdded OR $extraCreated)){
+					$sql = 'UPDATE 	`orders`
+							SET		`orderApprovedByAdmin` = :approvedByAdmin,
+									`orderApprovedByStaff` = :approvedByStaff,
+									`dateTimeUpdated` = CURRENT_TIMESTAMP,
+									`dateTimeApproved` = CURRENT_TIMESTAMP,
+									`adminNote` = :adminNote,
+									`orderApprovedByUserID` = :orderApprovedByUserID,
+									`orderChangedByStaff` = 1,
+									`orderApprovedByUser` = 0,
+									`orderNewMessageFromStaff` = 1
+							WHERE 	`orderID` = :OrderID';
+				} elseif(!$messageAdded AND ($extraAdded OR $extraCreated)){
+					$sql = 'UPDATE 	`orders`
+							SET		`orderApprovedByAdmin` = :approvedByAdmin,
+									`orderApprovedByStaff` = :approvedByStaff,
+									`dateTimeUpdated` = CURRENT_TIMESTAMP,
+									`dateTimeApproved` = CURRENT_TIMESTAMP,
+									`adminNote` = :adminNote,
+									`orderApprovedByUserID` = :orderApprovedByUserID,
+									`orderChangedByStaff` = 1,
+									`orderApprovedByUser` = 0
+							WHERE 	`orderID` = :OrderID';
+				} elseif($messageAdded AND !$extraAdded AND !$extraCreated){
+					$sql = 'UPDATE 	`orders`
+							SET		`orderApprovedByAdmin` = :approvedByAdmin,
+									`orderApprovedByStaff` = :approvedByStaff,
+									`dateTimeUpdated` = CURRENT_TIMESTAMP,
+									`dateTimeApproved` = CURRENT_TIMESTAMP,
+									`adminNote` = :adminNote,
+									`orderApprovedByUserID` = :orderApprovedByUserID,
+									`orderNewMessageFromStaff` = 1
+							WHERE 	`orderID` = :OrderID';
+				} else {
+					$sql = 'UPDATE 	`orders`
+							SET		`orderApprovedByAdmin` = :approvedByAdmin,
+									`orderApprovedByStaff` = :approvedByStaff,
+									`dateTimeUpdated` = CURRENT_TIMESTAMP,
+									`dateTimeApproved` = CURRENT_TIMESTAMP,
+									`adminNote` = :adminNote,
+									`orderApprovedByUserID` = :orderApprovedByUserID
+							WHERE 	`orderID` = :OrderID';
+				}
 				$s = $pdo->prepare($sql);
 				$s->bindValue(':OrderID', $orderID);
 				$s->bindValue(':approvedByAdmin', $approvedByAdmin);
@@ -631,14 +667,49 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Submit Changes'){
 				$s->bindValue(':orderApprovedByUserID', $_SESSION['LoggedInUserID']);
 				$s->execute();
 			} else {
-				$sql = 'UPDATE 	`orders`
-						SET		`orderApprovedByAdmin` = :approvedByAdmin,
-								`orderApprovedByStaff` = :approvedByStaff,
-								`dateTimeUpdated` = CURRENT_TIMESTAMP,
-								`dateTimeApproved` = NULL,
-								`adminNote` = :adminNote,
-								`orderApprovedByUserID` = NULL
-						WHERE 	`orderID` = :OrderID';
+				if($messageAdded AND ($extraAdded OR $extraCreated)){
+					$sql = 'UPDATE 	`orders`
+							SET		`orderApprovedByAdmin` = :approvedByAdmin,
+									`orderApprovedByStaff` = :approvedByStaff,
+									`dateTimeUpdated` = CURRENT_TIMESTAMP,
+									`dateTimeApproved` = NULL,
+									`adminNote` = :adminNote,
+									`orderApprovedByUserID` = NULL,
+									`orderChangedByStaff` = 1,
+									`orderApprovedByUser` = 0,
+									`orderNewMessageFromStaff` = 1
+							WHERE 	`orderID` = :OrderID';
+				} elseif(!$messageAdded AND ($extraAdded OR $extraCreated)){
+					$sql = 'UPDATE 	`orders`
+							SET		`orderApprovedByAdmin` = :approvedByAdmin,
+									`orderApprovedByStaff` = :approvedByStaff,
+									`dateTimeUpdated` = CURRENT_TIMESTAMP,
+									`dateTimeApproved` = NULL,
+									`adminNote` = :adminNote,
+									`orderApprovedByUserID` = NULL,
+									`orderChangedByStaff` = 1,
+									`orderApprovedByUser` = 0
+							WHERE 	`orderID` = :OrderID';
+				} elseif($messageAdded AND !$extraAdded AND !$extraCreated){
+					$sql = 'UPDATE 	`orders`
+							SET		`orderApprovedByAdmin` = :approvedByAdmin,
+									`orderApprovedByStaff` = :approvedByStaff,
+									`dateTimeUpdated` = CURRENT_TIMESTAMP,
+									`dateTimeApproved` = NULL,
+									`adminNote` = :adminNote,
+									`orderApprovedByUserID` = NULL,
+									`orderNewMessageFromStaff` = 1
+							WHERE 	`orderID` = :OrderID';
+				} else {
+					$sql = 'UPDATE 	`orders`
+							SET		`orderApprovedByAdmin` = :approvedByAdmin,
+									`orderApprovedByStaff` = :approvedByStaff,
+									`dateTimeUpdated` = CURRENT_TIMESTAMP,
+									`dateTimeApproved` = NULL,
+									`adminNote` = :adminNote,
+									`orderApprovedByUserID` = NULL
+							WHERE 	`orderID` = :OrderID';
+				}
 				$s = $pdo->prepare($sql);
 				$s->bindValue(':OrderID', $orderID);
 				$s->bindValue(':approvedByAdmin', $approvedByAdmin);
