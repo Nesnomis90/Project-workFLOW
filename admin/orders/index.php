@@ -438,6 +438,8 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Details') OR
 	$originalOrderUpdatedByStaff = $_SESSION['EditOrderOriginalInfo']['DateTimeUpdatedByStaff'];
 	$originalOrderUpdatedByUser = $_SESSION['EditOrderOriginalInfo']['DateTimeUpdatedByUser'];
 
+	$availableExtrasNumber = sizeOf($availableExtra);
+
 	if(!isSet($orderCommunicationToUser)){
 		$orderCommunicationToUser = "";
 	}

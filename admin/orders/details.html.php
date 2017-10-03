@@ -64,6 +64,13 @@
 				if(addAlternativeExtra){
 					// Get available extras
 					var availableExtrasArray = <?php echo json_encode($availableExtra); ?>;
+					var availableExtrasNumber = <?php echo $availableExtrasNumber; ?>;
+
+					if(alternativesAdded == availableExtrasNumber){
+						// cancel the function, since we have nothing else to add
+						table.deleteRow(rowNumber);
+						return;
+					}
 
 					// Create the select box we want to be able to choose from
 					var selectExtraName = document.createElement("select");
@@ -75,15 +82,33 @@
 					removeAlternativeExtraButton.onclick = function onClick(){removeAlternativeExtra(this);}
 
 					// Add the available extra names as options
+					// exclude already selected alternatives
 					for(var i = 0; i < availableExtrasArray.length; i++){
-						var option = document.createElement("option");
-						option.value = availableExtrasArray[i]['ExtraID'];
-						option.text = availableExtrasArray[i]['ExtraName'];
-						selectExtraName.appendChild(option);
+						var extraAlreadyAdded = false;
+
+						for(var j = 0; j < alternativeID; j++){
+							var selectBoxID = "addAlternativeSelected" + j;
+							var selectBox = document.getElementById(selectBoxID);
+
+							if(selectBox !== null){
+								// get the extra ID for reference
+								var extraIDSelected = selectBox.options[selectBox.selectedIndex].value;
+								if(extraIDSelected == availableExtrasArray[i]['ExtraID']){
+									extraAlreadyAdded = true;
+								}
+							}
+						}
+
+						if(extraAlreadyAdded === false){
+							var option = document.createElement("option");
+							option.value = availableExtrasArray[i]['ExtraID'];
+							option.text = availableExtrasArray[i]['ExtraName'];
+							selectExtraName.appendChild(option);
+						}
 					}
 
 					alternativesAdded += 1;
-					
+
 					// Add items/values to columns
 					columnName.appendChild(selectExtraName);
 					columnDescription.innerHTML = availableExtrasArray[0]['ExtraDescription'];
