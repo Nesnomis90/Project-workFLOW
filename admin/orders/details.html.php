@@ -20,8 +20,11 @@
 		<script>
 			var alternativeID = 0;
 			var alternativesAdded = 0;
+			var newAlternativesCreated = 0;
+			var addAlternativeExtra = false;
+			var createNewAlternativeExtra = false;
 
-			function addAlternativeExtra(){
+			function addTableRow(){
 				// Get table we want to manipulate
 				var table = document.getElementById("addAlternative");
 				var tableRows = table.rows.length;
@@ -47,47 +50,86 @@
 				removeAlternativeExtraButton.innerHTML = "x";
 				removeAlternativeExtraButton.value = "x";
 				removeAlternativeExtraButton.style.color = "red";
-				removeAlternativeExtraButton.style.fontSize = "120%";
-				removeAlternativeExtraButton.onclick = function onClick(){removeAlternativeExtra(this);}
+				removeAlternativeExtraButton.style.fontSize = "110%";
 
 				// Create the input number for amount
 				var inputExtraAmount = document.createElement("input");
 				var inputExtraAmountAttributeName = "AmountSelected" + alternativeID;
 				inputExtraAmount.setAttribute("type", "number");
+				inputExtraAmount.setAttribute("id", inputExtraAmountAttributeName);
 				inputExtraAmount.setAttribute("name", inputExtraAmountAttributeName);
 				inputExtraAmount.setAttribute("value", "1");
 				inputExtraAmount.setAttribute("min", "1");
 
-				// Get available extras
-				var availableExtrasArray = <?php echo json_encode($availableExtra); ?>;
+				if(addAlternativeExtra){
+					// Get available extras
+					var availableExtrasArray = <?php echo json_encode($availableExtra); ?>;
 
-				// Create the select box we want to be able to choose from
-				var selectExtraName = document.createElement("select");
-				var selectExtraNameID = "addAlternativeSelected" + alternativeID;
-				selectExtraName.setAttribute("id", selectExtraNameID);
-				selectExtraName.setAttribute("name", selectExtraNameID);
-				selectExtraName.onchange = function onChange(){changeAlternativeText(this, availableExtrasArray);}
+					// Create the select box we want to be able to choose from
+					var selectExtraName = document.createElement("select");
+					var selectExtraNameID = "addAlternativeSelected" + alternativeID;
+					selectExtraName.setAttribute("id", selectExtraNameID);
+					selectExtraName.setAttribute("name", selectExtraNameID);
+					selectExtraName.onchange = function onChange(){changeAlternativeText(this, availableExtrasArray);}
 
-				// Add the available extra names as options
-				for(var i = 0; i < availableExtrasArray.length; i++){
-					var option = document.createElement("option");
-					option.value = availableExtrasArray[i]['ExtraID'];
-					option.text = availableExtrasArray[i]['ExtraName'];
-					selectExtraName.appendChild(option);
+					removeAlternativeExtraButton.onclick = function onClick(){removeAlternativeExtra(this);}
+
+					// Add the available extra names as options
+					for(var i = 0; i < availableExtrasArray.length; i++){
+						var option = document.createElement("option");
+						option.value = availableExtrasArray[i]['ExtraID'];
+						option.text = availableExtrasArray[i]['ExtraName'];
+						selectExtraName.appendChild(option);
+					}
+
+					alternativesAdded += 1;
+					
+					// Add items/values to columns
+					columnName.appendChild(selectExtraName);
+					columnDescription.innerHTML = availableExtrasArray[0]['ExtraDescription'];
+					columnPrice.innerHTML = availableExtrasArray[0]['ExtraPrice'];
+
+					// update the input to check how many alternatives we have submitted
+					var inputAlternativesAdded = document.getElementById("AlternativesAdded");
+					inputAlternativesAdded.value = alternativesAdded;
+				} else if(createNewAlternativeExtra){
+
+					// add an input for name, description and price for the alternative choice
+					var inputExtraName = document.createElement("input");
+					var inputExtraNameAttributeName = "AlternativeName" + alternativeID;
+					inputExtraName.setAttribute("type", "text");
+					inputExtraName.setAttribute("name", inputExtraNameAttributeName);
+					inputExtraName.setAttribute("placeholder", "Enter A Name");
+
+					var inputExtraPrice = document.createElement("input");
+					var inputExtraPriceAttributeName = "AlternativePrice" + alternativeID;
+					inputExtraPrice.setAttribute("type", "number");
+					inputExtraPrice.setAttribute("value", "0");
+					inputExtraPrice.setAttribute("min", "0");
+					inputExtraPrice.setAttribute("name", inputExtraPriceAttributeName);
+
+					var inputExtraDescription = document.createElement("input");
+					var inputExtraDescriptionAttributeName = "AlternativeDescription" + alternativeID;
+					inputExtraDescription.setAttribute("type", "text");
+					inputExtraDescription.setAttribute("name", inputExtraDescriptionAttributeName);
+					inputExtraDescription.setAttribute("placeholder", "Enter A Description");
+
+					removeAlternativeExtraButton.onclick = function onClick(){removeNewAlternativeExtra(this);}
+
+					newAlternativesCreated += 1;
+
+					// Add items/values to columns
+					columnName.appendChild(inputExtraName);
+					columnDescription.appendChild(inputExtraDescription);
+					columnPrice.appendChild(inputExtraPrice);
+
+					// update the input to check how many alternatives we have submitted
+					var inputNewAlternativesCreated = document.getElementById("NewAlternativesCreated");
+					inputNewAlternativesCreated.value = newAlternativesCreated;
 				}
 
-				// Add items/values to columns
-				columnName.appendChild(selectExtraName);
-				columnDescription.innerHTML = availableExtrasArray[0]['ExtraDescription'];
-				columnPrice.innerHTML = availableExtrasArray[0]['ExtraPrice'];
 				columnAmount.appendChild(inputExtraAmount);
 				columnRemoveButton.appendChild(removeAlternativeExtraButton);
-
-				alternativesAdded += 1;
-
-				// update the input to check how many alternatives we have submitted
-				var inputAlternativesAdded = document.getElementById("AlternativesAdded");
-				inputAlternativesAdded.value = alternativesAdded;
 
 				// update the input to keep track of the last ID value on the submitted alternative
 				var inputLastAlternativeIDValue = document.getElementById("LastAlternativeID");
@@ -99,6 +141,18 @@
 				disableEventPropagation(event);
 			}
 
+			function addAlternativeExtraRow(){
+				addAlternativeExtra = true;
+				addTableRow();
+				addAlternativeExtra = false;
+			}
+
+			function createNewAlternativeExtraRow(){
+				createNewAlternativeExtra = true;
+				addTableRow();
+				createNewAlternativeExtra = false;
+			}
+
 			function changeAlternativeText(selectBox, availableExtrasArray){
 				var selectBoxID = selectBox.id;
 				var attributeID = selectBoxID.slice(-1);
@@ -106,6 +160,9 @@
 				var	descriptionText = document.getElementById(descriptionTextID);
 				var priceTextID = "addAlternativePriceSelected" + attributeID;
 				var priceText = document.getElementById(priceTextID);
+				var amountValueID = "AmountSelected" + attributeID;
+				var amountValue = document.getElementById(amountValueID);
+
 
 				// get the extra ID for reference
 				var extraIDSelected = selectBox.options[selectBox.selectedIndex].value;
@@ -113,39 +170,29 @@
 				// Add the available extra names as options
 				for(var i = 0; i < availableExtrasArray.length; i++){
 					if(extraIDSelected == availableExtrasArray[i]['ExtraID']){
-						if(selectBox.options[selectBox.selectedIndex].text == "Alternativ"){
-							// add an input for description and price for the alternative choice
-							var inputExtraPrice = document.createElement("input");
-							var inputExtraPriceAttributeName = "AlternativePrice" + attributeID;
-							inputExtraPrice.setAttribute("type", "number");
-							inputExtraPrice.setAttribute("value", "0");
-							inputExtraPrice.setAttribute("min", "0");
-							inputExtraPrice.setAttribute("name", inputExtraPriceAttributeName);
-
-							var inputExtraDescription = document.createElement("input");
-							var inputExtraDescriptionAttributeName = "AlternativeDescription" + attributeID;
-							inputExtraDescription.setAttribute("type", "text");
-							inputExtraDescription.setAttribute("name", inputExtraDescriptionAttributeName);
-							inputExtraDescription.setAttribute("placeholder", "Enter A Description");
-
-							descriptionText.innerHTML = "";
-							priceText.innerHTML = "";
-
-							descriptionText.appendChild(inputExtraDescription);
-							priceText.appendChild(inputExtraPrice);
-						} else {
-							descriptionText.innerHTML = availableExtrasArray[i]['ExtraDescription'];
-							priceText.innerHTML = availableExtrasArray[i]['ExtraPrice'];
-						}
+						descriptionText.innerHTML = availableExtrasArray[i]['ExtraDescription'];
+						priceText.innerHTML = availableExtrasArray[i]['ExtraPrice'];
+						amountValue.value = 1;
 						break;
 					}
 				}
 			}
-			
+
+			function removeNewAlternativeExtra(removeButton){
+				var tableRow = removeButton.parentNode.parentNode;
+				tableRow.parentNode.removeChild(tableRow);
+
+				newAlternativesCreated -= 1;
+
+				// update the input to check how many alternatives we have submitted
+				var inputNewAlternativesCreated = document.getElementById("NewAlternativesCreated");
+				inputNewAlternativesCreated.value = newAlternativesCreated;
+			}
+
 			function removeAlternativeExtra(removeButton){
 				var tableRow = removeButton.parentNode.parentNode;
 				tableRow.parentNode.removeChild(tableRow);
-				
+
 				alternativesAdded -= 1;
 
 				// update the input to check how many alternatives we have submitted
@@ -266,7 +313,7 @@
 							<td><?php htmlout($row['ExtraDateTimePurchased']); ?></td>
 						</tr>
 					<?php endforeach; ?>
-					<tr><td colspan="10"><button type="button" onclick="addAlternativeExtra()">Add Alternative</button></td></tr>
+					<tr><td colspan="10"><button type="button" onclick="createNewAlternativeExtraRow()">Create New Alternative</button><button type="button" onclick="addAlternativeExtraRow()">Add Alternative</button></td></tr>
 				<?php else : ?>
 					<tr><td colspan="10"><b>This order has nothing in it.</b></td></tr>
 				<?php endif; ?>
@@ -276,6 +323,7 @@
 				<input type="hidden" name="OrderID" value="<?php htmlout($orderID); ?>">
 				<input type="hidden" id="LastAlternativeID" name="LastAlternativeID" value="">
 				<input type="hidden" id="AlternativesAdded" name="AlternativesAdded" value="0">
+				<input type="hidden" id="NewAlternativesCreated" name="NewAlternativesCreated" value="0">
 				<input type="submit" name="action" value="Go Back">
 				<input type="submit" name="action" value="Reset">
 				<input type="submit" name="action" value="Submit Changes">

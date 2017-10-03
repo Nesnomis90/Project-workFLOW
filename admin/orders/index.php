@@ -428,49 +428,52 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Submit Changes'){
 	// Validate user inputs
 	list($invalidInput, $validatedOrderCommunicationToUser, $validatedAdminNote, $validatedIsApproved) = validateUserInputs();
 
+	// JavaScript alternatives submitted data
 	if(!$invalidInput){
-		if(isSet($_POST['AlternativesAdded']) AND $_POST['AlternativesAdded'] > 0){
-			// There has been an alternative extra added
+		if(isSet($_POST['LastAlternativeID']) AND $_POST['LastAlternativeID'] != ""){
+			// There has been an alternative added
 			$lastID = $_POST['LastAlternativeID']+1;
 			for($i=0; $i < $lastID; $i++){
 				$postExtraIDName = "addAlternativeSelected" . $i;
+				$postExtraNameName = "AlternativeName" . $i;
 				$postAmountName = "AmountSelected" . $i;
 				$postAlternativeDescriptionName = "AlternativeDescription" . $i;
 				$postAlternativePriceName = "AlternativePrice" . $i;
 				if(isSet($_POST[$postExtraIDName]) AND $_POST[$postExtraIDName] > 0){
-					// add the extras selected to an array
-					if(!isSet($selectedExtra)){
-						$selectedExtra = array();
+					// These are existing alternatives added
+					if(!isSet($addedExtra)){
+						$addedExtra = array();
 					}
-
-					if(isSet($_POST[$postAlternativeDescriptionName])){
-						$alternativeDescription = $_POST[$postAlternativeDescriptionName];
-					} else {
-						$alternativeDescription = "";
+					$addedExtra[] = array(
+											"ExtraID" => $_POST[$postExtraIDName],
+											"ExtraAmount" => $_POST[$postAmountName]
+										);
+				} elseif(isSet($_POST[$postExtraNameName]) AND $_POST[$postExtraNameName] != "") {
+					// These are newly created alternatives
+					if(!isSet($createdExtra)){
+						$createdExtra = array();
 					}
-
-					if(isSet($_POST[$postAlternativePriceName])){
-						$alternativePrice = $_POST[$postAlternativePriceName];
-					} else {
-						$alternativePrice = "";
-					}
-
-					$selectedExtra[] = array(
-												"ExtraID" => $_POST[$postExtraIDName],
-												"ExtraAmount" => $_POST[$postAmountName],
-												"ExtraDescription" => $alternativeDescription,
-												"ExtraPrice" => $alternativePrice
-												); ;
+					$createdExtra[] = array(
+											"ExtraName" => $_POST[$postExtraNameName],
+											"ExtraAmount" => $_POST[$postAmountName],
+											"ExtraDescription" => $_POST[$postAlternativeDescriptionName],
+											"ExtraPrice" => $_POST[$postAlternativePriceName]
+											);
 				}
 			}
 		}
 	}
 
+	var_dump($addedExtra);
+	var_dump($createdExtra);
+	exit();
+	
+	// Ask with JavaScript if the alternatives added are correct, then add them to database.
+	// TO-DO: Force a refresh of extraorders
+	// Then continue the code and give feedback if anything else the user submitted was invalid
+
 	// Refresh form on invalid
 	if($invalidInput){
-
-		// TO-DO: FIX-ME: On refresh we lose our javascript of alternatives added. 
-	
 		// Refresh.
 		$_SESSION['EditOrderCommunicationToUser'] = $validatedOrderCommunicationToUser;
 		$_SESSION['EditOrderAdminNote'] = $validatedAdminNote;
