@@ -439,15 +439,6 @@ if(isSet($_POST['confirm']) AND $_POST['confirm'] == "Yes, Send The Request"){
 			$s->execute();
 			$result = $s->fetchAll(PDO::FETCH_ASSOC);
 
-/*			if(isSet($result) AND !empty($result)){
-				foreach($result AS $row){
-					// Check if user wants to receive owner emails
-					if($row['SendEmail'] == 1){
-						$companyOwnerEmails[] = $row['Email'];
-					}
-				}
-			}*/
-
 			// We send email to all registered company owners, regardless of what email choices they've made
 			if(isSet($result) AND sizeOf($result) > 0){
 				foreach($result AS $row){
@@ -578,8 +569,7 @@ if(isSet($_SESSION['loggedIn']) AND $_SESSION['loggedIn']){
 
 // if admin wants to change the company role for a user
 // we load a new html form
-if (isSet($_POST['action']) AND $_POST['action'] == 'Change Role')
-{
+if(isSet($_POST['action']) AND $_POST['action'] == 'Change Role'){
 	// Get information from database again on the selected employee
 	try
 	{
@@ -634,7 +624,7 @@ if (isSet($_POST['action']) AND $_POST['action'] == 'Change Role')
 		$error = 'Error fetching employee details: ' . $e->getMessage();
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
 		$pdo = null;
-		exit();		
+		exit();
 	}
 
 	// Create an array with the row information we retrieved
@@ -717,7 +707,7 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Confirm Role'){
 // If company owner does not want to remove the employee after all
 if(isSet($_POST['remove']) AND $_POST['remove'] == "Cancel"){
 	$_SESSION['EmployeeUserFeedback'] = "Cancelled the remove employee process.";
-	
+
 	$TheCompanyID = $_GET['ID'];
 	$location = "http://$_SERVER[HTTP_HOST]/company/?ID=" . $TheCompanyID . "&employees";
 	header("Location: $location");
@@ -880,8 +870,8 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Search'){
 // 	If company owner wants to add an employee to a company in the database
 // 	we load a new html form
 if ((isSet($_POST['action']) AND $_POST['action'] == 'Add Employee') OR 
-	(isSet($_SESSION['refreshAddEmployeeAsOwner']) AND $_SESSION['refreshAddEmployeeAsOwner']))
-{
+	(isSet($_SESSION['refreshAddEmployeeAsOwner']) AND $_SESSION['refreshAddEmployeeAsOwner'])
+	){
 	$usersearchstring = '';
 
 	if(isSet($_SESSION['normalUserCompanyIDSelected'], $_SESSION['normalUserCompanyNameSelected'])){
@@ -1127,7 +1117,7 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Confirm Employee'){
 	{
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 		$pdo = connect_to_db();
-		
+
 		if(!$createUser){
 			$sql = 'SELECT 	COUNT(*) 
 					FROM 	`employee`
@@ -1866,7 +1856,7 @@ if(isSet($_GET['employees']) AND isSet($_SESSION['normalUserCompanyIDSelected'])
 							WHERE 		b.`userID` = UsrID
 							AND 		b.`companyID` = :id
 							AND 		c.`CompanyID` = b.`companyID`
-						) 							AS TotalBookingTimeUsed							
+						) 							AS TotalBookingTimeUsed
 				FROM 	`company` c 
 				JOIN 	`employee` e
 				ON 		e.CompanyID = c.CompanyID 
@@ -2266,7 +2256,7 @@ if(isSet($_GET['employees']) AND isSet($_SESSION['normalUserCompanyIDSelected'])
 				$MonthlyTimeUsed = $row['MonthlyBookingTimeUsed'];
 				$monthlyTimeHour = substr($MonthlyTimeUsed,0,strpos($MonthlyTimeUsed,":"));
 				$monthylTimeMinute = substr($MonthlyTimeUsed,strpos($MonthlyTimeUsed,":")+1, 2);
-				$MonthlyTimeUsed = $monthlyTimeHour . 'h' . $monthylTimeMinute . 'm';	
+				$MonthlyTimeUsed = $monthlyTimeHour . 'h' . $monthylTimeMinute . 'm';
 			
 			}
 
@@ -2276,7 +2266,7 @@ if(isSet($_GET['employees']) AND isSet($_SESSION['normalUserCompanyIDSelected'])
 				$TotalTimeUsed = $row['TotalBookingTimeUsed'];
 				$totalTimeHour = substr($TotalTimeUsed,0,strpos($TotalTimeUsed,":"));
 				$totalTimeMinute = substr($TotalTimeUsed,strpos($TotalTimeUsed,":")+1, 2);
-				$TotalTimeUsed = $totalTimeHour . 'h' . $totalTimeMinute . 'm';			
+				$TotalTimeUsed = $totalTimeHour . 'h' . $totalTimeMinute . 'm';
 			}
 
 			$removedEmployees[] = array(
@@ -2285,7 +2275,7 @@ if(isSet($_GET['employees']) AND isSet($_SESSION['normalUserCompanyIDSelected'])
 										'firstName' => $row['firstName'],
 										'lastName' => $row['lastName'],
 										'email' => $row['email'],
-										'PreviousMonthBookingTimeUsed' => $PrevMonthTimeUsed,											
+										'PreviousMonthBookingTimeUsed' => $PrevMonthTimeUsed,
 										'MonthlyBookingTimeUsed' => $MonthlyTimeUsed,
 										'TotalBookingTimeUsed' => $TotalTimeUsed
 										);
@@ -2326,7 +2316,7 @@ if(isSet($_GET['employees']) AND isSet($_SESSION['normalUserCompanyIDSelected'])
 				$TotalTimeUsed = $row['TotalBookingTimeUsed'];
 				$totalTimeHour = substr($TotalTimeUsed,0,strpos($TotalTimeUsed,":"));
 				$totalTimeMinute = substr($TotalTimeUsed,strpos($TotalTimeUsed,":")+1, 2);
-				$TotalTimeUsed = $totalTimeHour . 'h' . $totalTimeMinute . 'm';			
+				$TotalTimeUsed = $totalTimeHour . 'h' . $totalTimeMinute . 'm';
 			}
 
 			$deletedEmployees[] = array(
@@ -2810,7 +2800,7 @@ if(isSet($_GET['totalBooking']) OR isSet($_GET['activeBooking']) OR isSet($_GET[
 											'UserInfo' => $userinfo,
 											'MeetingInfo' => $meetinginfo
 										);		
-		}	elseif(isSet($_GET['totalBooking'])){				
+		}	elseif(isSet($_GET['totalBooking'])){
 			$bookingsOther[] = array(	'id' => $row['bookingID'],
 										'BookingStatus' => $status,
 										'BookedRoomName' => $roomName,
