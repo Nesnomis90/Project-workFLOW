@@ -32,6 +32,12 @@ function clearEditStaffOrderSessions(){
 	unset($_SESSION['EditStaffOrderOrderID']);
 	unset($_SESSION['EditStaffOrderExtraOrdered']);
 	unset($_SESSION['EditStaffOrderOrderMessages']);
+	unset($_SESSION['EditStaffOrderAvailableExtra']);
+	unset($_SESSION['EditStaffOrderAlternativeExtraAdded']);
+	unset($_SESSION['EditStaffOrderAlternativeExtraCreated']);
+	unset($_SESSION['EditStaffOrderExtraOrderedOnlyNames']);
+	unset($_SESSION['resetEditStaffOrder']);
+	unset($_SESSION['refreshEditStaffOrder']);
 }
 
 // Function to check if user inputs for Order are correct
@@ -123,7 +129,8 @@ function validateUserInputs(){
 // if staff wants to edit Order information
 // we load a new html form
 if ((isSet($_POST['action']) AND $_POST['action'] == 'Details') OR
-	(isSet($_SESSION['refreshEditStaffOrder']) AND $_SESSION['refreshEditStaffOrder'])
+	(isSet($_SESSION['refreshEditStaffOrder']) AND $_SESSION['refreshEditStaffOrder']) OR
+	(isSet($_SESSION['resetEditStaffOrder']))
 	){
 
 	// Check if we're activated by a user or by a forced refresh
@@ -153,11 +160,25 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Details') OR
 		if(isSet($_SESSION['EditStaffOrderOrderMessages'])){
 			$orderMessages = $_SESSION['EditStaffOrderOrderMessages'];
 		}
+		if(isSet($_SESSION['EditStaffOrderAlternativeExtraAdded'])){
+			$addedExtra = $_SESSION['EditStaffOrderAlternativeExtraAdded'];
+		}
+		if(isSet($_SESSION['EditStaffOrderAlternativeExtraCreated'])){
+			$createdExtra = $_SESSION['EditStaffOrderAlternativeExtraCreated'];
+		}
+		if(isSet($_SESSION['EditStaffOrderExtraOrderedOnlyNames'])){
+			$extraOrderedOnlyNames = $_SESSION['EditStaffOrderExtraOrderedOnlyNames'];
+		}
 	} else {
+
+		if(isSet($_SESSION['resetEditStaffOrder'])){
+			$orderID = $_SESSION['resetEditStaffOrder'];
+		} else {
+			$orderID = $_POST['OrderID'];
+		}
+
 		// Make sure we don't have any remembered values in memory
 		clearEditStaffOrderSessions();
-
-		$orderID = $_POST['OrderID'];
 
 		// Get information from database again on the selected order
 		try
@@ -168,7 +189,8 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Details') OR
 			$sql = 'SELECT 		`orderID`					AS TheOrderID,
 								`orderUserNotes`			AS OrderUserNotes,
 								`dateTimeCreated`			AS DateTimeCreated,
-								`dateTimeUpdated`			AS DateTimeUpdated,
+								`dateTimeUpdatedByStaff`	AS DateTimeUpdatedByStaff,
+								`dateTimeUpdatedByUser`		AS DateTimeUpdatedByUser,
 								`orderApprovedByUser`		AS OrderApprovedByUser,
 								`orderApprovedByAdmin`		AS OrderApprovedByAdmin,
 								`orderApprovedByStaff`		AS OrderApprovedByStaff,
@@ -197,16 +219,24 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Details') OR
 			$dateTimeCreated = $row['DateTimeCreated'];
 			$displayDateTimeCreated = convertDatetimeToFormat($dateTimeCreated , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
 
-			if(!empty($row['DateTimeUpdated'])){
-				$dateTimeUpdated = $row['DateTimeUpdated'];
-				$displayDateTimeUpdated = convertDatetimeToFormat($dateTimeUpdated , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);				
+			if(!empty($row['DateTimeUpdatedByStaff'])){
+				$dateTimeUpdatedByStaff = $row['DateTimeUpdatedByStaff'];
+				$displayDateTimeUpdatedByStaff = convertDatetimeToFormat($dateTimeUpdatedByStaff , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);				
 			} else {
-				$displayDateTimeUpdated = "N/A";
+				$displayDateTimeUpdatedByStaff = "N/A";
+			}
+
+			if(!empty($row['DateTimeUpdatedByUser'])){
+				$dateTimeUpdatedByUser = $row['DateTimeUpdatedByUser'];
+				$displayDateTimeUpdatedByUser = convertDatetimeToFormat($dateTimeUpdatedByUser , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);				
+			} else {
+				$displayDateTimeUpdatedByUser = "N/A";
 			}
 
 			$_SESSION['EditStaffOrderOriginalInfo']['OrderIsApproved'] = $orderIsApproved;
 			$_SESSION['EditStaffOrderOriginalInfo']['DateTimeCreated'] = $displayDateTimeCreated;
-			$_SESSION['EditStaffOrderOriginalInfo']['DateTimeUpdated'] = $displayDateTimeUpdated;
+			$_SESSION['EditStaffOrderOriginalInfo']['DateTimeUpdatedByStaff'] = $displayDateTimeUpdatedByStaff;
+			$_SESSION['EditStaffOrderOriginalInfo']['DateTimeUpdatedByUser'] = $displayDateTimeUpdatedByUser;
 			$_SESSION['EditStaffOrderOrderID'] = $orderID;
 
 			// Get information about the extras ordered
@@ -273,6 +303,8 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Details') OR
 					$displayApprovedForPurchaseByUser = "";
 				}
 
+				$extraOrderedOnlyNames[] = $extraName;
+
 				$extraOrdered[] = array(
 											'ExtraID' => $extraID,
 											'ExtraName' => $extraName,
@@ -290,6 +322,7 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Details') OR
 
 			$_SESSION['EditStaffOrderOriginalInfo']['ExtraOrdered'] = $extraOrdered;
 			$_SESSION['EditStaffOrderExtraOrdered'] = $extraOrdered;
+			$_SESSION['EditStaffOrderExtraOrderedOnlyNames'] = $extraOrderedOnlyNames;
 
 			// Get information about messages sent to/from user
 			$sql = 'SELECT	`messageID`		AS OrderMessageID,
@@ -365,6 +398,22 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Details') OR
 
 			$pdo->commit();
 
+			// Get all available extras if admin wants to add an alternative
+			// That are not already in the order
+			$sql = 'SELECT 		ex.`extraID`		AS ExtraID,
+								ex.`name`			AS ExtraName,
+								ex.`description`	AS ExtraDescription,
+								ex.`price`			AS ExtraPrice
+					FROM 		`extra` ex
+					LEFT JOIN 	`extraorders` eo
+					ON			ex.`extraID` = eo.`extraID`
+					WHERE		eo.`extraID` IS NULL';
+			$s = $pdo->prepare($sql);
+			$s->bindValue(':OrderID', $orderID);
+			$s->execute();
+			$availableExtra = $s->fetchAll(PDO::FETCH_ASSOC);
+			$_SESSION['EditStaffOrderAvailableExtra'] = $availableExtra;
+
 			//Close the connection
 			$pdo = null;
 		}
@@ -381,7 +430,8 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Details') OR
 	$originalOrderIsApproved = $_SESSION['EditStaffOrderOriginalInfo']['OrderIsApproved'];
 	$originalOrderUserNotes = $_SESSION['EditStaffOrderOriginalInfo']['OrderUserNotes'];
 	$originalOrderCreated = $_SESSION['EditStaffOrderOriginalInfo']['DateTimeCreated'];
-	$originalOrderUpdated = $_SESSION['EditStaffOrderOriginalInfo']['DateTimeUpdated'];
+	$originalOrderUpdatedByStaff = $_SESSION['EditStaffOrderOriginalInfo']['DateTimeUpdatedByStaff'];
+	$originalOrderUpdatedByUser = $_SESSION['EditStaffOrderOriginalInfo']['DateTimeUpdatedByUser'];
 
 	if(!isSet($orderCommunicationToUser)){
 		$orderCommunicationToUser = "";
@@ -399,10 +449,128 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Submit Changes'){
 	// Validate user inputs
 	list($invalidInput, $validatedOrderCommunicationToUser, $validatedIsApproved) = validateUserInputs();
 
+	// JavaScript alternatives submitted data
+	if(isSet($_POST['LastAlternativeID']) AND $_POST['LastAlternativeID'] != ""){
+		// There has been an alternative added
+		$lastID = $_POST['LastAlternativeID']+1;
+		for($i=0; $i < $lastID; $i++){
+			$postExtraIDName = "addAlternativeSelected" . $i;
+			$postExtraNameName = "AlternativeName" . $i;
+			$postAmountName = "AmountSelected" . $i;
+			$postAlternativeDescriptionName = "AlternativeDescription" . $i;
+			$postAlternativePriceName = "AlternativePrice" . $i;
+			if(isSet($_POST[$postExtraIDName]) AND $_POST[$postExtraIDName] > 0){
+				// These are existing alternatives added
+				if(!isSet($addedExtra)){
+					$addedExtra = array();
+				}
+				$addedExtra[] = array(
+										"ExtraID" => $_POST[$postExtraIDName],
+										"ExtraAmount" => $_POST[$postAmountName]
+									);
+			} elseif(isSet($_POST[$postExtraNameName])) {
+				// These are newly created alternatives
+				if(!isSet($createdExtra)){
+					$createdExtra = array();
+				}
+
+				$invalid = FALSE;
+				// input validation
+				$newAlternativeExtraName = $_POST[$postExtraNameName];
+				$newAlternativeExtraDescription = $_POST[$postAlternativeDescriptionName];
+
+				$trimmedNewAlternativeExtraName = trimExcessWhitespace($newAlternativeExtraName);
+				$trimmedNewAlternativeExtraDescription = trimExcessWhitespaceButLeaveLinefeed($newAlternativeExtraDescription);
+
+				// Do actual input validation
+				if(validateString($trimmedNewAlternativeExtraName) === FALSE AND !$invalidInput){
+					$invalidInput = TRUE;
+					$invalid = TRUE;
+					$_SESSION['OrderStaffDetailsFeedback'] = "Your submitted Extra name has illegal characters in it.";
+				}
+				if(validateString($trimmedNewAlternativeExtraDescription) === FALSE AND !$invalidInput){
+					$invalidInput = TRUE;
+					$invalid = TRUE;
+					$_SESSION['OrderStaffDetailsFeedback'] = "Your submitted Extra description has illegal characters in it.";
+				}
+
+				// Are values actually filled in?
+				if($trimmedNewAlternativeExtraName == "" AND !$invalidInput){
+					$_SESSION['OrderStaffDetailsFeedback'] = "You need to fill in a name for your Extra.";	
+					$invalidInput = TRUE;
+					$invalid = TRUE;
+				}
+				if($trimmedNewAlternativeExtraDescription == "" AND !$invalidInput){
+					$_SESSION['OrderStaffDetailsFeedback'] = "You need to fill in a description for your Extra.";
+					$invalidInput = TRUE;
+					$invalid = TRUE;
+				}
+
+				// Are character lengths fine?
+				$invalidExtraName = isLengthInvalidExtraName($trimmedNewAlternativeExtraName);
+				if($invalidExtraName AND !$invalidInput){
+					$_SESSION['OrderStaffDetailsFeedback'] = "The extra name submitted is too long.";	
+					$invalidInput = TRUE;
+					$invalid = TRUE;
+				}
+				$invalidExtraDescription = isLengthInvalidExtraDescription($trimmedNewAlternativeExtraDescription);
+				if($invalidExtraDescription AND !$invalidInput){
+					$_SESSION['OrderStaffDetailsFeedback'] = "The extra description submitted is too long.";
+					$invalidInput = TRUE;
+					$invalid = TRUE;
+				}
+
+				// Check if new name is taken
+				try
+				{
+					include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+					$pdo = connect_to_db();
+					$sql = 'SELECT 	COUNT(*) 
+							FROM 	`extra`
+							WHERE 	`name`= :ExtraName';
+					$s = $pdo->prepare($sql);
+					$s->bindValue(':ExtraName', $trimmedNewAlternativeExtraName);
+					$s->execute();
+
+					$pdo = null;
+
+					$row = $s->fetch();
+
+					if($row[0] > 0){
+						// This name is already being used for an Extra
+						$_SESSION['AddOrderError'] = "There is already an Extra with the name: " . $trimmedNewAlternativeExtraName . "!";
+						$invalidInput = TRUE;
+						$invalid = TRUE;
+					}
+				}
+				catch (PDOException $e)
+				{
+					$error = 'Error searching through Extra.' . $e->getMessage();
+					include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+					$pdo = null;
+					exit();
+				}
+
+				$createdExtra[] = array(
+										"ExtraName" => $trimmedNewAlternativeExtraName,
+										"ExtraAmount" => $_POST[$postAmountName],
+										"ExtraDescription" => $trimmedNewAlternativeExtraDescription,
+										"ExtraPrice" => $_POST[$postAlternativePriceName],
+										"Invalid" => $invalid
+										);
+			}
+		}
+	}
+
 	// Refresh form on invalid
 	if($invalidInput){
-
 		// Refresh.
+		if(isSet($addedExtra)){
+			$_SESSION['EditStaffOrderAlternativeExtraAdded'] = $addedExtra;
+		}
+		if(isSet($createdExtra)){
+			$_SESSION['EditStaffOrderAlternativeExtraCreated'] = $createdExtra;
+		}
 		$_SESSION['EditStaffOrderCommunicationToUser'] = $validatedOrderCommunicationToUser;
 		$_SESSION['EditStaffOrderIsApproved'] = $validatedIsApproved;
 
@@ -452,8 +620,20 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Submit Changes'){
 		$extraChanged = TRUE;
 	}
 
+	$extraAdded = FALSE;
+	if(isSet($addedExtra)){
+		$numberOfChanges++;
+		$extraAdded = TRUE;
+	}
+
+	$extraCreated = FALSE;
+	if(isSet($createdExtra)){
+		$numberOfChanges++;
+		$extraCreated = TRUE;
+	}
+
 	$orderID = $_POST['OrderID'];
-	
+
 	if($numberOfChanges > 0){
 		// Some changes were made, let's update!
 		try
@@ -461,36 +641,110 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Submit Changes'){
 			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 			$pdo = connect_to_db();
 
-			if($extraChanged OR $messageAdded){
+			if($extraChanged OR $messageAdded OR $extraAdded OR $extraCreated){
 				$pdo->beginTransaction();
 			}
 
 			if($setAsApproved){
-				$sql = 'UPDATE 	`orders`
-						SET		`orderApprovedByAdmin` = :approvedByAdmin,
-								`orderApprovedByStaff` = :approvedByStaff,
-								`dateTimeUpdated` = CURRENT_TIMESTAMP,
-								`dateTimeApproved` = CURRENT_TIMESTAMP,
-								`orderApprovedByUserID` = :orderApprovedByUserID
-						WHERE 	`orderID` = :OrderID';
+				if($messageAdded AND ($extraAdded OR $extraCreated)){
+					$sql = 'UPDATE 	`orders`
+							SET		`orderApprovedByAdmin` = :approvedByAdmin,
+									`orderApprovedByStaff` = :approvedByStaff,
+									`dateTimeUpdatedByStaff` = CURRENT_TIMESTAMP,
+									`dateTimeApproved` = CURRENT_TIMESTAMP,
+									`adminNote` = :adminNote,
+									`orderApprovedByUserID` = :orderApprovedByUserID,
+									`orderChangedByStaff` = 1,
+									`orderApprovedByUser` = 0,
+									`orderNewMessageFromStaff` = 1
+							WHERE 	`orderID` = :OrderID';
+				} elseif(!$messageAdded AND ($extraAdded OR $extraCreated)){
+					$sql = 'UPDATE 	`orders`
+							SET		`orderApprovedByAdmin` = :approvedByAdmin,
+									`orderApprovedByStaff` = :approvedByStaff,
+									`dateTimeUpdatedByStaff` = CURRENT_TIMESTAMP,
+									`dateTimeApproved` = CURRENT_TIMESTAMP,
+									`adminNote` = :adminNote,
+									`orderApprovedByUserID` = :orderApprovedByUserID,
+									`orderChangedByStaff` = 1,
+									`orderApprovedByUser` = 0
+							WHERE 	`orderID` = :OrderID';
+				} elseif($messageAdded AND !$extraAdded AND !$extraCreated){
+					$sql = 'UPDATE 	`orders`
+							SET		`orderApprovedByAdmin` = :approvedByAdmin,
+									`orderApprovedByStaff` = :approvedByStaff,
+									`dateTimeUpdatedByStaff` = CURRENT_TIMESTAMP,
+									`dateTimeApproved` = CURRENT_TIMESTAMP,
+									`adminNote` = :adminNote,
+									`orderApprovedByUserID` = :orderApprovedByUserID,
+									`orderNewMessageFromStaff` = 1
+							WHERE 	`orderID` = :OrderID';
+				} else {
+					$sql = 'UPDATE 	`orders`
+							SET		`orderApprovedByAdmin` = :approvedByAdmin,
+									`orderApprovedByStaff` = :approvedByStaff,
+									`dateTimeUpdatedByStaff` = CURRENT_TIMESTAMP,
+									`dateTimeApproved` = CURRENT_TIMESTAMP,
+									`adminNote` = :adminNote,
+									`orderApprovedByUserID` = :orderApprovedByUserID
+							WHERE 	`orderID` = :OrderID';
+				}
 				$s = $pdo->prepare($sql);
 				$s->bindValue(':OrderID', $orderID);
 				$s->bindValue(':approvedByAdmin', $approvedByAdmin);
 				$s->bindValue(':approvedByStaff', $approvedByStaff);
+				$s->bindValue(':adminNote', $validatedAdminNote);
 				$s->bindValue(':orderApprovedByUserID', $_SESSION['LoggedInUserID']);
 				$s->execute();
 			} else {
-				$sql = 'UPDATE 	`orders`
-						SET		`orderApprovedByAdmin` = :approvedByAdmin,
-								`orderApprovedByStaff` = :approvedByStaff,
-								`dateTimeUpdated` = CURRENT_TIMESTAMP,
-								`dateTimeApproved` = NULL,
-								`orderApprovedByUserID` = NULL
-						WHERE 	`orderID` = :OrderID';
+				if($messageAdded AND ($extraAdded OR $extraCreated)){
+					$sql = 'UPDATE 	`orders`
+							SET		`orderApprovedByAdmin` = :approvedByAdmin,
+									`orderApprovedByStaff` = :approvedByStaff,
+									`dateTimeUpdatedByStaff` = CURRENT_TIMESTAMP,
+									`dateTimeApproved` = NULL,
+									`adminNote` = :adminNote,
+									`orderApprovedByUserID` = NULL,
+									`orderChangedByStaff` = 1,
+									`orderApprovedByUser` = 0,
+									`orderNewMessageFromStaff` = 1
+							WHERE 	`orderID` = :OrderID';
+				} elseif(!$messageAdded AND ($extraAdded OR $extraCreated)){
+					$sql = 'UPDATE 	`orders`
+							SET		`orderApprovedByAdmin` = :approvedByAdmin,
+									`orderApprovedByStaff` = :approvedByStaff,
+									`dateTimeUpdatedByStaff` = CURRENT_TIMESTAMP,
+									`dateTimeApproved` = NULL,
+									`adminNote` = :adminNote,
+									`orderApprovedByUserID` = NULL,
+									`orderChangedByStaff` = 1,
+									`orderApprovedByUser` = 0
+							WHERE 	`orderID` = :OrderID';
+				} elseif($messageAdded AND !$extraAdded AND !$extraCreated){
+					$sql = 'UPDATE 	`orders`
+							SET		`orderApprovedByAdmin` = :approvedByAdmin,
+									`orderApprovedByStaff` = :approvedByStaff,
+									`dateTimeUpdatedByStaff` = CURRENT_TIMESTAMP,
+									`dateTimeApproved` = NULL,
+									`adminNote` = :adminNote,
+									`orderApprovedByUserID` = NULL,
+									`orderNewMessageFromStaff` = 1
+							WHERE 	`orderID` = :OrderID';
+				} else {
+					$sql = 'UPDATE 	`orders`
+							SET		`orderApprovedByAdmin` = :approvedByAdmin,
+									`orderApprovedByStaff` = :approvedByStaff,
+									`dateTimeUpdatedByStaff` = CURRENT_TIMESTAMP,
+									`dateTimeApproved` = NULL,
+									`adminNote` = :adminNote,
+									`orderApprovedByUserID` = NULL
+							WHERE 	`orderID` = :OrderID';
+				}
 				$s = $pdo->prepare($sql);
 				$s->bindValue(':OrderID', $orderID);
 				$s->bindValue(':approvedByAdmin', $approvedByAdmin);
 				$s->bindValue(':approvedByStaff', $approvedByStaff);
+				$s->bindValue(':adminNote', $validatedAdminNote);
 				$s->execute();
 			}
 
@@ -507,7 +761,7 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Submit Changes'){
 				$s->bindValue(':messageFromUserID', $_SESSION['LoggedInUserID']);
 				$s->execute();
 			}
-			
+
 			if($extraChanged){
 				// Update extraorders table
 				foreach($_SESSION['EditStaffOrderExtraOrdered'] AS $key => $extra){
@@ -618,7 +872,74 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Submit Changes'){
 				}
 			}
 
-			if($extraChanged OR $messageAdded){
+			if($extraAdded){
+				foreach($addedExtra AS $extra){
+					$extraID = $extra['ExtraID'];
+					$extraAmount = $extra['ExtraAmount'];
+
+					$sql = "INSERT INTO 	`extraorders`
+							SET				`extraID` = :ExtraID,
+											`orderID` = :OrderID,
+											`amount` = :ExtraAmount";
+					$s = $pdo->prepare($sql);
+					$s->bindValue(':OrderID', $orderID);
+					$s->bindValue(':ExtraID', $extraID);
+					$s->bindValue(':ExtraAmount', $extraAmount);
+					$s->execute();
+				}
+			}
+
+			if($extraCreated){
+				foreach($createdExtra AS $extra){
+					$extraName = $extra['ExtraName'];
+					$extraDescription = $extra['ExtraDescription'];
+					$extraAmount = $extra['ExtraAmount'];
+					$extraPrice = $extra['ExtraPrice'];
+
+					$sql = "INSERT INTO 	`extra`
+							SET				`name` = :ExtraName,
+											`description` = :ExtraDescription,
+											`price` = :ExtraPrice,
+											`isAlternative` = 1";
+					$s = $pdo->prepare($sql);
+					$s->bindValue(':ExtraName', $extraName);
+					$s->bindValue(':ExtraDescription', $extraDescription);
+					$s->bindValue(':ExtraPrice', $extraPrice);
+					$s->execute();
+
+					$extraID = $pdo->lastInsertId();
+
+					// Save a description with information about the Extra that was added
+					$description = 	"The Extra: $extraName" . 
+									"\nwith the description: $extraDescription" . 
+									"\nand the price: $extraPrice" .
+									"\nwas added by: " . $_SESSION['LoggedInUserName'] .
+									"\nas an alternative only extra";
+
+					$sql = "INSERT INTO `logevent` 
+							SET			`actionID` = 	(
+															SELECT 	`actionID` 
+															FROM 	`logaction`
+															WHERE 	`name` = 'Extra Added'
+														),
+										`description` = :description";
+					$s = $pdo->prepare($sql);
+					$s->bindValue(':description', $description);
+					$s->execute();
+
+					$sql = "INSERT INTO 	`extraorders`
+							SET				`extraID` = :ExtraID,
+											`orderID` = :OrderID,
+											`amount` = :ExtraAmount";
+					$s = $pdo->prepare($sql);
+					$s->bindValue(':OrderID', $orderID);
+					$s->bindValue(':ExtraID', $extraID);
+					$s->bindValue(':ExtraAmount', $extraAmount);
+					$s->execute();
+				}
+			}
+
+			if($extraChanged OR $messageAdded OR $extraAdded OR $extraCreated){
 				$pdo->commit();
 			}
 
@@ -651,7 +972,7 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Reset'){
 
 	clearEditStaffOrderSessions();
 
-	$_SESSION['refreshEditStaffOrder'] = TRUE;
+	$_SESSION['resetEditStaffOrder'] = $_POST['OrderID'];
 	header('Location: .');
 	exit();	
 }
@@ -680,7 +1001,8 @@ try
 	$sql = 'SELECT 		o.`orderID`										AS TheOrderID,
 						o.`orderUserNotes`								AS OrderUserNotes,
 						o.`dateTimeCreated`								AS DateTimeCreated,
-						o.`dateTimeUpdated`								AS DateTimeUpdated,
+						o.`dateTimeUpdatedByStaff`						AS DateTimeUpdatedByStaff,
+						o.`dateTimeUpdatedByUser`						AS DateTimeUpdatedByUser,
 						o.`orderApprovedByUser`							AS OrderApprovedByUser,
 						o.`orderApprovedByAdmin`						AS OrderApprovedByAdmin,
 						o.`orderApprovedByStaff`						AS OrderApprovedByStaff,
@@ -759,8 +1081,22 @@ foreach($result AS $row){
 
 	$dateTimeCreated = $row['DateTimeCreated'];
 	$displayDateTimeCreated = convertDatetimeToFormat($dateTimeCreated , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
-	if(!empty($row['DateTimeUpdated'])){
-		$dateTimeUpdated = $row['DateTimeUpdated'];
+	if(!empty($row['DateTimeUpdatedByStaff']) AND !empty($row['DateTimeUpdatedByUser'])){
+		$dateTimeUpdatedByStaff = $row['DateTimeUpdatedByStaff'];
+		$dateTimeUpdatedByUser = $row['DateTimeUpdatedByUser'];
+		if($dateTimeUpdatedByStaff > $dateTimeUpdatedByUser){
+			$dateTimeUpdated = $dateTimeUpdatedByStaff;
+		} else {
+			$dateTimeUpdated = $dateTimeUpdatedByUser;
+		}
+		$displayDateTimeUpdated = convertDatetimeToFormat($dateTimeUpdated , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
+		$newOrder = FALSE;
+	} elseif(!empty($row['DateTimeUpdatedByStaff']) AND empty($row['DateTimeUpdatedByUser'])){
+		$dateTimeUpdated = $row['DateTimeUpdatedByStaff'];
+		$displayDateTimeUpdated = convertDatetimeToFormat($dateTimeUpdated , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
+		$newOrder = FALSE;
+	} elseif(empty($row['DateTimeUpdatedByStaff']) AND !empty($row['DateTimeUpdatedByUser'])){
+		$dateTimeUpdated = $row['DateTimeUpdatedByUser'];
 		$displayDateTimeUpdated = convertDatetimeToFormat($dateTimeUpdated , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
 		$newOrder = FALSE;
 	} else {

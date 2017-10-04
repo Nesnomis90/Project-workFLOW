@@ -190,7 +190,6 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Details') OR
 		} else {
 			$orderID = $_POST['OrderID'];
 		}
-		
 
 		// Make sure we don't have any remembered values in memory
 		clearEditOrderSessions();
@@ -519,12 +518,12 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Submit Changes'){
 
 				// Are values actually filled in?
 				if($trimmedNewAlternativeExtraName == "" AND !$invalidInput){
-					$_SESSION['AddExtraError'] = "You need to fill in a name for your Extra.";	
+					$_SESSION['AddOrderError'] = "You need to fill in a name for your Extra.";	
 					$invalidInput = TRUE;
 					$invalid = TRUE;
 				}
 				if($trimmedNewAlternativeExtraDescription == "" AND !$invalidInput){
-					$_SESSION['AddExtraError'] = "You need to fill in a description for your Extra.";
+					$_SESSION['AddOrderError'] = "You need to fill in a description for your Extra.";
 					$invalidInput = TRUE;
 					$invalid = TRUE;
 				}
@@ -532,13 +531,13 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Submit Changes'){
 				// Are character lengths fine?
 				$invalidExtraName = isLengthInvalidExtraName($trimmedNewAlternativeExtraName);
 				if($invalidExtraName AND !$invalidInput){
-					$_SESSION['AddExtraError'] = "The extra name submitted is too long.";	
+					$_SESSION['AddOrderError'] = "The extra name submitted is too long.";	
 					$invalidInput = TRUE;
 					$invalid = TRUE;
 				}
 				$invalidExtraDescription = isLengthInvalidExtraDescription($trimmedNewAlternativeExtraDescription);
 				if($invalidExtraDescription AND !$invalidInput){
-					$_SESSION['AddExtraError'] = "The extra description submitted is too long.";
+					$_SESSION['AddOrderError'] = "The extra description submitted is too long.";
 					$invalidInput = TRUE;
 					$invalid = TRUE;
 				}
@@ -1141,6 +1140,7 @@ foreach($result AS $row){
 		$displayDateTimeUpdated = "N/A";
 		$newOrder = TRUE;
 	}
+
 	$dateTimeStart = $row['OrderStartDateTime'];
 	$displayDateTimeStart = convertDatetimeToFormat($dateTimeStart , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
 	$dateTimeEnd = $row['OrderEndDateTime'];

@@ -305,7 +305,7 @@
 							} else if(extraNameExists(inputNameText, i)){
 								// Name already exists
 								inputName.setAttribute("class", "fillOut");
-								takenName += 1;								
+								takenName += 1;
 							} else {
 								// All good
 								inputName.removeAttribute("class", "fillOut");
