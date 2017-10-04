@@ -136,6 +136,7 @@
 					var inputExtraNameAttributeName = "AlternativeName" + alternativeID;
 					inputExtraName.setAttribute("type", "text");
 					inputExtraName.setAttribute("name", inputExtraNameAttributeName);
+					inputExtraName.setAttribute("id", inputExtraNameAttributeName);
 					inputExtraName.setAttribute("placeholder", "Enter A Name");
 
 					var inputExtraPrice = document.createElement("input");
@@ -240,26 +241,34 @@
 				addAlternativeExtraButton.removeAttribute("disabled");
 			}
 
-			function validateNewAlternatives(){ // TO-DO: Not yet implemented/tested properly.
-			// This refreshes the page and removes the javascript. (not intended)
+			function validateNewAlternatives(){
 				if(newAlternativesCreated > 0){
 					// Check if name fields are filled in
 					for(var i = 0; i < alternativeID; i++){
 						var inputNameID = "AlternativeName" + i;
 						var inputName = document.getElementById(inputNameID);
-
 						if(inputName !== null){
 							var inputNameText = inputName.value;
 							if(inputNameText == ""){
-								alert("You need to give your alternative a name");
-
-								// Make sure we don't trigger multiple buttons (e.g. remove alternative)
-								disableEventPropagation(event);
-
+								alert("Alternative Needs A Name");
+								inputName.setAttribute("class", "fillOut");
 								return false;
+							} else {
+								// Check for valid character inputs and length
+								if(){
+									alert("Alternative Needs A Name");
+									inputName.setAttribute("class", "fillOut");
+									return false;
+								} else {
+									inputName.removeAttribute("class", "fillOut");
+									return true;
+								}
+								
 							}
 						}
 					}
+					// All names were filled out.
+					return true;
 				} else {
 					// It's ok to submit it
 					return true;
@@ -397,7 +406,7 @@
 				<input type="hidden" id="NewAlternativesCreated" name="NewAlternativesCreated" value="0">
 				<input type="submit" name="action" value="Go Back">
 				<input type="submit" name="action" value="Reset">
-				<input type="submit" name="action" value="Submit Changes">
+				<input type="submit" name="action" value="Submit Changes" onclick="return validateNewAlternatives()">
 			</div>
 		</form>
 	</body>
