@@ -332,7 +332,7 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Confirm Extra'){
 		// Save a description with information about the Extra that was added
 		$description = 	"The Extra: $validatedExtraName" . 
 						"\nwith the description: $validatedExtraDescription" . 
-						"\nand the price: validatedExtraPrice" .
+						"\nand the price: $validatedExtraPrice" .
 						"\nwas added by: " . $_SESSION['LoggedInUserName'];
 
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';

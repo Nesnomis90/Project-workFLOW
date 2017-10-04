@@ -934,6 +934,24 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Submit Changes'){
 
 					$extraID = $pdo->lastInsertId();
 
+					// Save a description with information about the Extra that was added
+					$description = 	"The Extra: $extraName" . 
+									"\nwith the description: $extraDescription" . 
+									"\nand the price: $extraPrice" .
+									"\nwas added by: " . $_SESSION['LoggedInUserName'] .
+									"\nas an alternative only extra";
+
+					$sql = "INSERT INTO `logevent` 
+							SET			`actionID` = 	(
+															SELECT 	`actionID` 
+															FROM 	`logaction`
+															WHERE 	`name` = 'Extra Added'
+														),
+										`description` = :description";
+					$s = $pdo->prepare($sql);
+					$s->bindValue(':description', $description);
+					$s->execute();
+
 					$sql = "INSERT INTO 	`extraorders`
 							SET				`extraID` = :ExtraID,
 											`orderID` = :OrderID,
