@@ -160,7 +160,7 @@ function validateUserInputs(){
 }
 
 // If admin wants to be able to delete Extra it needs to enabled first
-if (isSet($_POST['action']) AND $_POST['action'] == "Enable Delete"){
+if(isSet($_POST['action']) AND $_POST['action'] == "Enable Delete"){
 	$_SESSION['ExtraEnableDelete'] = TRUE;
 	$refreshExtra = TRUE;
 }

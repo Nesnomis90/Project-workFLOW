@@ -23,6 +23,7 @@ function clearEditOrderSessions(){
 	unset($_SESSION['EditOrderAvailableExtra']);
 	unset($_SESSION['EditOrderAlternativeExtraAdded']);
 	unset($_SESSION['EditOrderAlternativeExtraCreated']);
+	unset($_SESSION['EditOrderExtraOrderedOnlyNames']);
 }
 
 // Function to check if user inputs for Order are correct
@@ -176,6 +177,9 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Details') OR
 		if(isSet($_SESSION['EditOrderAlternativeExtraCreated'])){
 			$createdExtra = $_SESSION['EditOrderAlternativeExtraCreated'];
 		}
+		if(isSet($_SESSION['EditOrderExtraOrderedOnlyNames'])){
+			$extraOrderedOnlyNames = $_SESSION['EditOrderExtraOrderedOnlyNames'];
+		}
 	} else {
 		// Make sure we don't have any remembered values in memory
 		clearEditOrderSessions();
@@ -308,6 +312,8 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Details') OR
 					$displayApprovedForPurchaseByUser = "";
 				}
 
+				$extraOrderedOnlyNames[] = array('ExtraName' => $extraName);
+
 				$extraOrdered[] = array(
 											'ExtraID' => $extraID,
 											'ExtraName' => $extraName,
@@ -325,6 +331,7 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Details') OR
 
 			$_SESSION['EditOrderOriginalInfo']['ExtraOrdered'] = $extraOrdered;
 			$_SESSION['EditOrderExtraOrdered'] = $extraOrdered;
+			$_SESSION['EditOrderExtraOrderedOnlyNames'] = $extraOrderedOnlyNames;
 
 			// Get information about messages sent to/from user
 			$sql = 'SELECT	`messageID`		AS OrderMessageID,
@@ -527,6 +534,37 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Submit Changes'){
 					$invalid = TRUE;
 				}
 
+				// Check if new name is taken
+				try
+				{
+					include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+					$pdo = connect_to_db();
+					$sql = 'SELECT 	COUNT(*) 
+							FROM 	`extra`
+							WHERE 	`name`= :ExtraName';
+					$s = $pdo->prepare($sql);
+					$s->bindValue(':ExtraName', $trimmedNewAlternativeExtraName);
+					$s->execute();
+
+					$pdo = null;
+
+					$row = $s->fetch();
+
+					if($row[0] > 0){
+						// This name is already being used for an Extra
+						$_SESSION['AddOrderError'] = "There is already an Extra with the name: " . $trimmedNewAlternativeExtraName . "!";
+						$invalidInput = TRUE;
+						$invalid = TRUE;
+					}
+				}
+				catch (PDOException $e)
+				{
+					$error = 'Error searching through Extra.' . $e->getMessage();
+					include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+					$pdo = null;
+					exit();
+				}
+
 				$createdExtra[] = array(
 										"ExtraName" => $trimmedNewAlternativeExtraName,
 										"ExtraAmount" => $_POST[$postAmountName],
@@ -537,10 +575,6 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Submit Changes'){
 			}
 		}
 	}
-
-	// Ask with JavaScript if the alternatives added are correct, then add them to database.
-	// TO-DO: Force a refresh of extraorders
-	// Then continue the code and give feedback if anything else the user submitted was invalid
 
 	// Refresh form on invalid
 	if($invalidInput){
