@@ -245,14 +245,16 @@
 				// Check if we're creating the same name as an existing extra (already in the order)
 				var usedExtraArray = <?php echo json_encode($extraOrderedOnlyNames); ?>;
 				for(var j = 0; j < usedExtraArray.length; j++){
-					if(name == usedExtraArray[j]['ExtraName']){
+					if(name.toLowerCase() == usedExtraArray[j].toLowerCase()){
+						alert("The name " + name + " is already taken");
 						return true;
 					}
 				}
 
 				// Check if we're creating the same name as an existing extra (not yet selected)
 				for(var j = 0; j < availableExtrasArray.length; j++){
-					if(name == availableExtrasArray[j]['ExtraName']){
+					if(name.toLowerCase() == availableExtrasArray[j]['ExtraName'].toLowerCase()){
+						alert("The name " + name + " is already taken");
 						return true;
 					}
 				}
@@ -265,7 +267,8 @@
 							var inputName = document.getElementById(inputNameID);
 							if(inputName !== null){
 								var inputNameText = inputName.value;
-								if(inputNameText == name){
+								if(inputNameText.toLowerCase() == name.toLowerCase()){
+									alert("You have already added another alternative with the name " + name);
 									return true;
 								}
 							}
@@ -279,6 +282,7 @@
 			function validateNewAlternatives(){
 				if(newAlternativesCreated > 0){
 					var invalidInputs = 0;
+					var takenName = 0;
 					// Check if text fields are filled out
 					for(var i = 0; i < alternativeID; i++){
 						// validate name
@@ -301,7 +305,7 @@
 							} else if(extraNameExists(inputNameText, i)){
 								// Name already exists
 								inputName.setAttribute("class", "fillOut");
-								invalidInputs += 1;								
+								takenName += 1;								
 							} else {
 								// All good
 								inputName.removeAttribute("class", "fillOut");
@@ -332,11 +336,13 @@
 						}
 					}
 
-					if(invalidInputs > 0){
+					if(takenName > 0){
+						return false;
+					} else if(invalidInputs > 0){
 						alert("One of your inputs are missing, too long or contain illegal characters.");
 						return false;
 					} else {
-						var submitConfirmed = confirm("Are you sure you want to update this order?");
+						var submitConfirmed = confirm("Are you sure you want to update this order and add the alternatives?");
 
 						return submitConfirmed;
 					}

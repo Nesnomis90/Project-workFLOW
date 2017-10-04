@@ -321,7 +321,7 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Details') OR
 					$displayApprovedForPurchaseByUser = "";
 				}
 
-				$extraOrderedOnlyNames[] = array('ExtraName' => $extraName);
+				$extraOrderedOnlyNames[] = $extraName;
 
 				$extraOrdered[] = array(
 											'ExtraID' => $extraID,
