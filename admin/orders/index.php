@@ -24,6 +24,8 @@ function clearEditOrderSessions(){
 	unset($_SESSION['EditOrderAlternativeExtraAdded']);
 	unset($_SESSION['EditOrderAlternativeExtraCreated']);
 	unset($_SESSION['EditOrderExtraOrderedOnlyNames']);
+	unset($_SESSION['resetEditOrder']);
+	unset($_SESSION['refreshEditOrder']);
 }
 
 // Function to check if user inputs for Order are correct
@@ -132,7 +134,8 @@ function validateUserInputs(){
 // if admin wants to edit Order information
 // we load a new html form
 if ((isSet($_POST['action']) AND $_POST['action'] == 'Details') OR
-	(isSet($_SESSION['refreshEditOrder']) AND $_SESSION['refreshEditOrder'])
+	(isSet($_SESSION['refreshEditOrder']) AND $_SESSION['refreshEditOrder']) OR
+	(isSet($_SESSION['resetEditOrder']))
 	){
 
 	// Check if we're activated by a user or by a forced refresh
@@ -181,10 +184,16 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Details') OR
 			$extraOrderedOnlyNames = $_SESSION['EditOrderExtraOrderedOnlyNames'];
 		}
 	} else {
+
+		if(isSet($_SESSION['resetEditOrder'])){
+			$orderID = $_SESSION['resetEditOrder'];
+		} else {
+			$orderID = $_POST['OrderID'];
+		}
+		
+
 		// Make sure we don't have any remembered values in memory
 		clearEditOrderSessions();
-
-		$orderID = $_POST['OrderID'];
 
 		// Get information from database again on the selected order
 		try
@@ -970,7 +979,7 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Reset'){
 
 	clearEditOrderSessions();
 
-	$_SESSION['refreshEditOrder'] = TRUE;
+	$_SESSION['resetEditOrder'] = $_POST['OrderID'];
 	header('Location: .');
 	exit();
 }
