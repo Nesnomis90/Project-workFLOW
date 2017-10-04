@@ -336,11 +336,14 @@
 						alert("One of your inputs are missing, too long or contain illegal characters.");
 						return false;
 					} else {
-						return true;
+						var submitConfirmed = confirm("Are you sure you want to update this order?");
+
+						return submitConfirmed;
 					}
 				} else {
-					// It's ok to submit it
-					return true;
+					var submitConfirmed = confirm("Are you sure you want to update this order?");
+
+					return submitConfirmed;
 				}
 			}
 		</script>
