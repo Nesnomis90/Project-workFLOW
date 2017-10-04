@@ -23,6 +23,9 @@ function clearEditOrderSessions(){
 	unset($_SESSION['EditOrderAvailableExtra']);
 	unset($_SESSION['EditOrderAlternativeExtraAdded']);
 	unset($_SESSION['EditOrderAlternativeExtraCreated']);
+	unset($_SESSION['EditOrderExtraOrderedOnlyNames']);
+	unset($_SESSION['resetEditOrder']);
+	unset($_SESSION['refreshEditOrder']);
 }
 
 // Function to check if user inputs for Order are correct
@@ -131,7 +134,8 @@ function validateUserInputs(){
 // if admin wants to edit Order information
 // we load a new html form
 if ((isSet($_POST['action']) AND $_POST['action'] == 'Details') OR
-	(isSet($_SESSION['refreshEditOrder']) AND $_SESSION['refreshEditOrder'])
+	(isSet($_SESSION['refreshEditOrder']) AND $_SESSION['refreshEditOrder']) OR
+	(isSet($_SESSION['resetEditOrder']))
 	){
 
 	// Check if we're activated by a user or by a forced refresh
@@ -176,11 +180,19 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Details') OR
 		if(isSet($_SESSION['EditOrderAlternativeExtraCreated'])){
 			$createdExtra = $_SESSION['EditOrderAlternativeExtraCreated'];
 		}
+		if(isSet($_SESSION['EditOrderExtraOrderedOnlyNames'])){
+			$extraOrderedOnlyNames = $_SESSION['EditOrderExtraOrderedOnlyNames'];
+		}
 	} else {
+
+		if(isSet($_SESSION['resetEditOrder'])){
+			$orderID = $_SESSION['resetEditOrder'];
+		} else {
+			$orderID = $_POST['OrderID'];
+		}
+
 		// Make sure we don't have any remembered values in memory
 		clearEditOrderSessions();
-
-		$orderID = $_POST['OrderID'];
 
 		// Get information from database again on the selected order
 		try
@@ -308,6 +320,8 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Details') OR
 					$displayApprovedForPurchaseByUser = "";
 				}
 
+				$extraOrderedOnlyNames[] = $extraName;
+
 				$extraOrdered[] = array(
 											'ExtraID' => $extraID,
 											'ExtraName' => $extraName,
@@ -325,6 +339,7 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Details') OR
 
 			$_SESSION['EditOrderOriginalInfo']['ExtraOrdered'] = $extraOrdered;
 			$_SESSION['EditOrderExtraOrdered'] = $extraOrdered;
+			$_SESSION['EditOrderExtraOrderedOnlyNames'] = $extraOrderedOnlyNames;
 
 			// Get information about messages sent to/from user
 			$sql = 'SELECT	`messageID`		AS OrderMessageID,
@@ -503,12 +518,12 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Submit Changes'){
 
 				// Are values actually filled in?
 				if($trimmedNewAlternativeExtraName == "" AND !$invalidInput){
-					$_SESSION['AddExtraError'] = "You need to fill in a name for your Extra.";	
+					$_SESSION['AddOrderError'] = "You need to fill in a name for your Extra.";	
 					$invalidInput = TRUE;
 					$invalid = TRUE;
 				}
 				if($trimmedNewAlternativeExtraDescription == "" AND !$invalidInput){
-					$_SESSION['AddExtraError'] = "You need to fill in a description for your Extra.";
+					$_SESSION['AddOrderError'] = "You need to fill in a description for your Extra.";
 					$invalidInput = TRUE;
 					$invalid = TRUE;
 				}
@@ -516,15 +531,46 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Submit Changes'){
 				// Are character lengths fine?
 				$invalidExtraName = isLengthInvalidExtraName($trimmedNewAlternativeExtraName);
 				if($invalidExtraName AND !$invalidInput){
-					$_SESSION['AddExtraError'] = "The extra name submitted is too long.";	
+					$_SESSION['AddOrderError'] = "The extra name submitted is too long.";	
 					$invalidInput = TRUE;
 					$invalid = TRUE;
 				}
 				$invalidExtraDescription = isLengthInvalidExtraDescription($trimmedNewAlternativeExtraDescription);
 				if($invalidExtraDescription AND !$invalidInput){
-					$_SESSION['AddExtraError'] = "The extra description submitted is too long.";
+					$_SESSION['AddOrderError'] = "The extra description submitted is too long.";
 					$invalidInput = TRUE;
 					$invalid = TRUE;
+				}
+
+				// Check if new name is taken
+				try
+				{
+					include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+					$pdo = connect_to_db();
+					$sql = 'SELECT 	COUNT(*) 
+							FROM 	`extra`
+							WHERE 	`name`= :ExtraName';
+					$s = $pdo->prepare($sql);
+					$s->bindValue(':ExtraName', $trimmedNewAlternativeExtraName);
+					$s->execute();
+
+					$pdo = null;
+
+					$row = $s->fetch();
+
+					if($row[0] > 0){
+						// This name is already being used for an Extra
+						$_SESSION['AddOrderError'] = "There is already an Extra with the name: " . $trimmedNewAlternativeExtraName . "!";
+						$invalidInput = TRUE;
+						$invalid = TRUE;
+					}
+				}
+				catch (PDOException $e)
+				{
+					$error = 'Error searching through Extra.' . $e->getMessage();
+					include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+					$pdo = null;
+					exit();
 				}
 
 				$createdExtra[] = array(
@@ -537,10 +583,6 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Submit Changes'){
 			}
 		}
 	}
-
-	// Ask with JavaScript if the alternatives added are correct, then add them to database.
-	// TO-DO: Force a refresh of extraorders
-	// Then continue the code and give feedback if anything else the user submitted was invalid
 
 	// Refresh form on invalid
 	if($invalidInput){
@@ -891,6 +933,24 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Submit Changes'){
 
 					$extraID = $pdo->lastInsertId();
 
+					// Save a description with information about the Extra that was added
+					$description = 	"The Extra: $extraName" . 
+									"\nwith the description: $extraDescription" . 
+									"\nand the price: $extraPrice" .
+									"\nwas added by: " . $_SESSION['LoggedInUserName'] .
+									"\nas an alternative only extra";
+
+					$sql = "INSERT INTO `logevent` 
+							SET			`actionID` = 	(
+															SELECT 	`actionID` 
+															FROM 	`logaction`
+															WHERE 	`name` = 'Extra Added'
+														),
+										`description` = :description";
+					$s = $pdo->prepare($sql);
+					$s->bindValue(':description', $description);
+					$s->execute();
+
 					$sql = "INSERT INTO 	`extraorders`
 							SET				`extraID` = :ExtraID,
 											`orderID` = :OrderID,
@@ -936,7 +996,7 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Reset'){
 
 	clearEditOrderSessions();
 
-	$_SESSION['refreshEditOrder'] = TRUE;
+	$_SESSION['resetEditOrder'] = $_POST['OrderID'];
 	header('Location: .');
 	exit();
 }
@@ -1080,6 +1140,7 @@ foreach($result AS $row){
 		$displayDateTimeUpdated = "N/A";
 		$newOrder = TRUE;
 	}
+
 	$dateTimeStart = $row['OrderStartDateTime'];
 	$displayDateTimeStart = convertDatetimeToFormat($dateTimeStart , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
 	$dateTimeEnd = $row['OrderEndDateTime'];
