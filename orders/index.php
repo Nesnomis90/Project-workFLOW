@@ -57,7 +57,7 @@ function validateUserInputs(){
 			$isApprovedForPurchaseArray = $_POST['isApprovedForPurchase'];
 			foreach($_SESSION['EditStaffOrderExtraOrdered'] AS &$extra){
 				$isApprovedForPurchaseUpdated = FALSE;
-				for($i=0; $i<sizeOf($isApprovedForPurchaseArray); $i++){
+				for($i=0; $i < sizeOf($isApprovedForPurchaseArray); $i++){
 					if($extra['ExtraID'] == $isApprovedForPurchaseArray[$i]){
 						$extra['ExtraBooleanApprovedForPurchase'] = 1;
 						$isApprovedForPurchaseUpdated = TRUE;
@@ -79,7 +79,7 @@ function validateUserInputs(){
 			$isPurchasedArray = $_POST['isPurchased'];
 			foreach($_SESSION['EditStaffOrderExtraOrdered'] AS &$extra){
 				$isPurchasedUpdated = FALSE;
-				for($i=0; $i<sizeOf($isPurchasedArray); $i++){
+				for($i=0; $i < sizeOf($isPurchasedArray); $i++){
 					if($extra['ExtraID'] == $isPurchasedArray[$i]){
 						$extra['ExtraBooleanPurchased'] = 1;
 						$isPurchasedUpdated = TRUE;
@@ -1076,6 +1076,10 @@ catch (PDOException $e)
 	exit();
 }
 
+if(!isSet($sortBy)){
+	$sortBy = "None";
+}
+
 // Create an array with the actual key/value pairs we want to use in our HTML
 foreach($result AS $row){
 
@@ -1177,24 +1181,36 @@ foreach($result AS $row){
 		$displayLastMessageFromStaff = "";
 	}
 
-	// Create an array with the actual key/value pairs we want to use in our HTML
-	$order[] = array(
-						'TheOrderID' => $row['TheOrderID'],
-						'OrderStatus' => $orderStatus,
-						'OrderUserNotes' => $row['OrderUserNotes'],
-						'OrderMessageStatus' => $messageStatus,
-						'OrderLastMessageFromUser' => $displayLastMessageFromUser,
-						'OrderLastMessageFromStaff' => $displayLastMessageFromStaff,
-						'OrderStartTime' => $displayDateTimeStart,
-						'OrderEndTime' => $displayDateTimeEnd,
-						'DateTimeCreated' => $displayDateTimeCreated,
-						'DateTimeUpdated' => $displayDateTimeUpdated,
-						'OrderContent' => $row['OrderContent'],
-						'OrderApprovedByUser' => $displayOrderApprovedByUser,
-						'OrderApprovedByStaff' => $displayOrderApprovedByStaff,
-						'OrderRoomName' => $row['OrderRoomName'],
-						'OrderBookedFor' => $row['OrderBookedFor']
-					);
+	// sort orders by their date and put them into different arrays representing orders today, this week and 
+	if($sortBy == "Day"){
+		date_default_timezone_set(DATE_DEFAULT_TIMEZONE);
+		$newDateTime = DateTime::createFromFormat('Y-m-d H:i:s', $dateTimeStart);
+		$dayName = $newDateTime->format("l");
+		$weekNumber = $newDateTime->format("W");
+	} elseif($sortBy == "Week"){
+		date_default_timezone_set(DATE_DEFAULT_TIMEZONE);
+		$newDateTime = DateTime::createFromFormat('Y-m-d H:i:s', $dateTimeStart);
+		$dayName = $newDateTime->format("l");
+		$weekNumber = $newDateTime->format("W");
+	} else {
+		$order[] = array(
+							'TheOrderID' => $row['TheOrderID'],
+							'OrderStatus' => $orderStatus,
+							'OrderUserNotes' => $row['OrderUserNotes'],
+							'OrderMessageStatus' => $messageStatus,
+							'OrderLastMessageFromUser' => $displayLastMessageFromUser,
+							'OrderLastMessageFromStaff' => $displayLastMessageFromStaff,
+							'OrderStartTime' => $displayDateTimeStart,
+							'OrderEndTime' => $displayDateTimeEnd,
+							'DateTimeCreated' => $displayDateTimeCreated,
+							'DateTimeUpdated' => $displayDateTimeUpdated,
+							'OrderContent' => $row['OrderContent'],
+							'OrderApprovedByUser' => $displayOrderApprovedByUser,
+							'OrderApprovedByStaff' => $displayOrderApprovedByStaff,
+							'OrderRoomName' => $row['OrderRoomName'],
+							'OrderBookedFor' => $row['OrderBookedFor']
+						);
+	}
 }
 
 var_dump($_SESSION); // TO-DO: remove after testing is done

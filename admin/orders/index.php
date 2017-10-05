@@ -1085,14 +1085,15 @@ try
 							FROM	`company`
 							WHERE	`companyID` = b.`companyID`
 							LIMIT 	1
-						)												AS OrderBookedFor						
+						)												AS OrderBookedFor
 			FROM 		`orders` o
-			INNER JOIN	`extraorders` eo
-			ON 			eo.`orderID` = o.`orderID`
-			INNER JOIN 	`extra` ex
-			ON 			eo.`extraID` = ex.`extraID`
 			INNER JOIN	`booking` b
 			ON 			b.`orderID` = o.`orderID`
+			LEFT JOIN	`extraorders` eo
+			ON 			eo.`orderID` = o.`orderID`
+			LEFT JOIN 	`extra` ex
+			ON 			eo.`extraID` = ex.`extraID`
+			WHERE		b.`orderID` IS NOT NULL
 			GROUP BY	o.`orderID`';
 
 	$return = $pdo->query($sql);
