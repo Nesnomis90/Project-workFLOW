@@ -89,7 +89,7 @@ WHERE	`extraID`
 NOT IN 	(
 			SELECT 	`extraID`
 			FROM 	`extraorders`
-			WHERE	`orderID` = 1
+			WHERE	`orderID` = 2
 		);
 
 SELECT 		ex.`extraID`		AS ExtraID,

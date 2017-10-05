@@ -20,7 +20,7 @@
 				<?php unset($_SESSION['OrderStaffFeedback']); ?>
 			<?php endif; ?>
 		</div>
-
+		<?php // to-do: sort by day/week/all and change tables shown based on it ?>
 		<table>
 			<caption>Active Orders</caption>
 			<tr>

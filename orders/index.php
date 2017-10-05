@@ -1199,27 +1199,47 @@ foreach($result AS $row){
 		$dayNumber = $newDateTime->format("d");
 
 		$orderByDay[$dayNumber][] = array(
-								'TheOrderID' => $row['TheOrderID'],
-								'OrderStatus' => $orderStatus,
-								'OrderUserNotes' => $row['OrderUserNotes'],
-								'OrderMessageStatus' => $messageStatus,
-								'OrderLastMessageFromUser' => $displayLastMessageFromUser,
-								'OrderLastMessageFromStaff' => $displayLastMessageFromStaff,
-								'OrderStartTime' => $displayDateTimeStart,
-								'OrderEndTime' => $displayDateTimeEnd,
-								'DateTimeCreated' => $displayDateTimeCreated,
-								'DateTimeUpdated' => $displayDateTimeUpdated,
-								'OrderContent' => $row['OrderContent'],
-								'OrderApprovedByUser' => $displayOrderApprovedByUser,
-								'OrderApprovedByStaff' => $displayOrderApprovedByStaff,
-								'OrderRoomName' => $row['OrderRoomName'],
-								'OrderBookedFor' => $row['OrderBookedFor']
-							);
+											'DayName' => $dayName,
+											'TheOrderID' => $row['TheOrderID'],
+											'OrderStatus' => $orderStatus,
+											'OrderUserNotes' => $row['OrderUserNotes'],
+											'OrderMessageStatus' => $messageStatus,
+											'OrderLastMessageFromUser' => $displayLastMessageFromUser,
+											'OrderLastMessageFromStaff' => $displayLastMessageFromStaff,
+											'OrderStartTime' => $displayDateTimeStart,
+											'OrderEndTime' => $displayDateTimeEnd,
+											'DateTimeCreated' => $displayDateTimeCreated,
+											'DateTimeUpdated' => $displayDateTimeUpdated,
+											'OrderContent' => $row['OrderContent'],
+											'OrderApprovedByUser' => $displayOrderApprovedByUser,
+											'OrderApprovedByStaff' => $displayOrderApprovedByStaff,
+											'OrderRoomName' => $row['OrderRoomName'],
+											'OrderBookedFor' => $row['OrderBookedFor']
+										);
 	} elseif($sortBy == "Week"){
 		date_default_timezone_set(DATE_DEFAULT_TIMEZONE);
 		$newDateTime = DateTime::createFromFormat('Y-m-d H:i:s', $dateTimeStart);
 		$dayName = $newDateTime->format("l");
 		$weekNumber = $newDateTime->format("W");
+
+		$orderByDay[$weekNumber][$dayNumber][] = array(
+														'DayName' => $dayName,
+														'TheOrderID' => $row['TheOrderID'],
+														'OrderStatus' => $orderStatus,
+														'OrderUserNotes' => $row['OrderUserNotes'],
+														'OrderMessageStatus' => $messageStatus,
+														'OrderLastMessageFromUser' => $displayLastMessageFromUser,
+														'OrderLastMessageFromStaff' => $displayLastMessageFromStaff,
+														'OrderStartTime' => $displayDateTimeStart,
+														'OrderEndTime' => $displayDateTimeEnd,
+														'DateTimeCreated' => $displayDateTimeCreated,
+														'DateTimeUpdated' => $displayDateTimeUpdated,
+														'OrderContent' => $row['OrderContent'],
+														'OrderApprovedByUser' => $displayOrderApprovedByUser,
+														'OrderApprovedByStaff' => $displayOrderApprovedByStaff,
+														'OrderRoomName' => $row['OrderRoomName'],
+														'OrderBookedFor' => $row['OrderBookedFor']
+													);
 	} else {
 		$order[] = array(
 							'TheOrderID' => $row['TheOrderID'],
