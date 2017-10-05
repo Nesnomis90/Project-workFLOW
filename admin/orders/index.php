@@ -337,6 +337,13 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Details') OR
 										);
 			}
 
+			if(!isSet($extraOrdered)){
+				$extraOrdered = array();
+			}
+			if(!isSet($extraOrderedOnlyNames)){
+				$extraOrderedOnlyNames = array();
+			}
+
 			$_SESSION['EditOrderOriginalInfo']['ExtraOrdered'] = $extraOrdered;
 			$_SESSION['EditOrderExtraOrdered'] = $extraOrdered;
 			$_SESSION['EditOrderExtraOrderedOnlyNames'] = $extraOrderedOnlyNames;
@@ -419,14 +426,17 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Details') OR
 
 			// Get all available extras if admin wants to add an alternative
 			// That are not already in the order
-			$sql = 'SELECT 		ex.`extraID`		AS ExtraID,
-								ex.`name`			AS ExtraName,
-								ex.`description`	AS ExtraDescription,
-								ex.`price`			AS ExtraPrice
-					FROM 		`extra` ex
-					LEFT JOIN 	`extraorders` eo
-					ON			ex.`extraID` = eo.`extraID`
-					WHERE		eo.`extraID` IS NULL';
+			$sql = 'SELECT 	`extraID`		AS ExtraID,
+							`name`			AS ExtraName,
+							`description`	AS ExtraDescription,
+							`price`			AS ExtraPrice
+					FROM 	`extra`
+					WHERE	`extraID` 
+					NOT IN 	(
+								SELECT 	`extraID`
+								FROM 	`extraorders`
+								WHERE	`orderID` = :OrderID
+							)';
 			$s = $pdo->prepare($sql);
 			$s->bindValue(':OrderID', $orderID);
 			$s->execute();
@@ -1085,14 +1095,15 @@ try
 							FROM	`company`
 							WHERE	`companyID` = b.`companyID`
 							LIMIT 	1
-						)												AS OrderBookedFor						
+						)												AS OrderBookedFor
 			FROM 		`orders` o
-			INNER JOIN	`extraorders` eo
-			ON 			eo.`orderID` = o.`orderID`
-			INNER JOIN 	`extra` ex
-			ON 			eo.`extraID` = ex.`extraID`
 			INNER JOIN	`booking` b
 			ON 			b.`orderID` = o.`orderID`
+			LEFT JOIN	`extraorders` eo
+			ON 			eo.`orderID` = o.`orderID`
+			LEFT JOIN 	`extra` ex
+			ON 			eo.`extraID` = ex.`extraID`
+			WHERE		b.`orderID` IS NOT NULL
 			GROUP BY	o.`orderID`';
 
 	$return = $pdo->query($sql);
