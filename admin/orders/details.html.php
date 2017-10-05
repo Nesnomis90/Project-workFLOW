@@ -444,7 +444,7 @@
 					<th>By Staff</th>
 					<th>At Date</th>
 				</tr>
-				<?php if(isSet($extraOrdered)) : ?>
+				<?php if(isSet($extraOrdered) AND sizeOf($extraOrdered) > 0) : ?>
 					<?php foreach($extraOrdered as $row): ?>
 						<tr>
 							<td><?php htmlout($row['ExtraName']); ?></td>
@@ -478,6 +478,11 @@
 					<?php endif; ?>
 				<?php else : ?>
 					<tr><td colspan="10"><b>This order has nothing in it.</b></td></tr>
+					<?php if($availableExtrasNumber > 0) : ?>
+						<tr><td colspan="10"><button type="button" onclick="createNewAlternativeExtraRow()">Create New Alternative</button><button type="button" id="addAlternativeExtraButton" onclick="addAlternativeExtraRow()">Add Alternative</button></td></tr>
+					<?php else : ?>
+						<tr><td colspan="10"><button type="button" onclick="createNewAlternativeExtraRow()">Create New Alternative</button><button type="button" id="addAlternativeExtraButton" onclick="addAlternativeExtraRow()" disabled="disabled">Add Alternative</button></td></tr>
+					<?php endif; ?>
 				<?php endif; ?>
 			</table>
 
