@@ -1052,21 +1052,24 @@ try
 							LIMIT 	1
 						)												AS OrderLastMessageFromUser
 			FROM 		`orders` o
-			INNER JOIN	`extraorders` eo
-			ON 			eo.`orderID` = o.`orderID`
-			INNER JOIN 	`extra` ex
-			ON 			eo.`extraID` = ex.`extraID`
 			INNER JOIN	`booking` b
 			ON 			b.`orderID` = o.`orderID`
 			INNER JOIN	`meetingroom` m
 			ON 			m.`meetingRoomID` = b.`meetingRoomID`
 			INNER JOIN 	`company` c
 			ON 			c.`companyID` = b.`companyID`
+			LEFT JOIN	(
+									`extraorders` eo
+						INNER JOIN 	`extra` ex
+						ON 			eo.`extraID` = ex.`extraID`
+			)
+			ON 			eo.`orderID` = o.`orderID`
 			WHERE		o.`dateTimeCancelled` IS NULL
 			AND			b.`dateTimeCancelled` IS NULL
 			AND			b.`actualEndDateTime` IS NULL
 			AND			b.`orderID` IS NOT NULL
-			GROUP BY	o.`orderID`';
+			GROUP BY	o.`orderID`
+			ORDER BY	b.`startDateTime`';
 
 	$return = $pdo->query($sql);
 	$result = $return->fetchAll(PDO::FETCH_ASSOC);
@@ -1085,6 +1088,9 @@ catch (PDOException $e)
 	include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
 	exit();
 }
+
+// TO-DO: Testing
+$sortBy = "Day";
 
 if(!isSet($sortBy)){
 	$sortBy = "None";
@@ -1114,7 +1120,7 @@ foreach($result AS $row){
 		$displayDateTimeUpdated = convertDatetimeToFormat($dateTimeUpdated , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
 		$newOrder = FALSE;
 	} else {
-		$displayDateTimeUpdated = "N/A";
+		$displayDateTimeUpdated = "";
 		$newOrder = TRUE;
 	}
 
@@ -1195,11 +1201,9 @@ foreach($result AS $row){
 	if($sortBy == "Day"){
 		date_default_timezone_set(DATE_DEFAULT_TIMEZONE);
 		$newDateTime = DateTime::createFromFormat('Y-m-d H:i:s', $dateTimeStart);
-		$dayName = $newDateTime->format("l");
-		$dayNumber = $newDateTime->format("d");
+		$dayNumber = $newDateTime->format("z");
 
 		$orderByDay[$dayNumber][] = array(
-											'DayName' => $dayName,
 											'TheOrderID' => $row['TheOrderID'],
 											'OrderStatus' => $orderStatus,
 											'OrderUserNotes' => $row['OrderUserNotes'],
@@ -1222,8 +1226,7 @@ foreach($result AS $row){
 		$dayName = $newDateTime->format("l");
 		$weekNumber = $newDateTime->format("W");
 
-		$orderByDay[$weekNumber][$dayNumber][] = array(
-														'DayName' => $dayName,
+		$orderByWeek[$weekNumber][$dayName][] = array(
 														'TheOrderID' => $row['TheOrderID'],
 														'OrderStatus' => $orderStatus,
 														'OrderUserNotes' => $row['OrderUserNotes'],

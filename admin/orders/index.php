@@ -1099,12 +1099,15 @@ try
 			FROM 		`orders` o
 			INNER JOIN	`booking` b
 			ON 			b.`orderID` = o.`orderID`
-			LEFT JOIN	`extraorders` eo
+			LEFT JOIN	(
+									`extraorders` eo
+						INNER JOIN 	`extra` ex
+						ON 			eo.`extraID` = ex.`extraID`
+			)
 			ON 			eo.`orderID` = o.`orderID`
-			LEFT JOIN 	`extra` ex
-			ON 			eo.`extraID` = ex.`extraID`
 			WHERE		b.`orderID` IS NOT NULL
-			GROUP BY	o.`orderID`';
+			GROUP BY	o.`orderID`
+			ORDER BY	b.`startDateTime`';
 
 	$return = $pdo->query($sql);
 	$result = $return->fetchAll(PDO::FETCH_ASSOC);
@@ -1122,6 +1125,13 @@ catch (PDOException $e)
 	$error = 'Error getting Order information: ' . $e->getMessage();
 	include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
 	exit();
+}
+
+// TO-DO: Testing
+$sortBy = "Week";
+
+if(!isSet($sortBy)){
+	$sortBy = "None";
 }
 
 // Create an array with the actual key/value pairs we want to use in our HTML
@@ -1148,7 +1158,7 @@ foreach($result AS $row){
 		$displayDateTimeUpdated = convertDatetimeToFormat($dateTimeUpdated , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
 		$newOrder = FALSE;
 	} else {
-		$displayDateTimeUpdated = "N/A";
+		$displayDateTimeUpdated = "";
 		$newOrder = TRUE;
 	}
 
@@ -1278,29 +1288,97 @@ foreach($result AS $row){
 		}
 	}
 
-	// Create an array with the actual key/value pairs we want to use in our HTML
-	$order[] = array(
-						'TheOrderID' => $row['TheOrderID'],
-						'OrderStatus' => $orderStatus,
-						'OrderUserNotes' => $row['OrderUserNotes'],
-						'OrderMessageStatus' => $messageStatus,
-						'OrderLastMessageFromUser' => $displayLastMessageFromUser,
-						'OrderLastMessageFromStaff' => $displayLastMessageFromStaff,
-						'OrderStartTime' => $displayDateTimeStart,
-						'OrderEndTime' => $displayDateTimeEnd,
-						'DateTimeApproved' => $displayDateTimeApproved,
-						'DateTimeCreated' => $displayDateTimeCreated,
-						'DateTimeUpdated' => $displayDateTimeUpdated,
-						'DateTimeCancelled' => $displayDateTimeCancelled,
-						'OrderContent' => $row['OrderContent'],
-						'OrderAdminNote' => $row['OrderAdminNote'],
-						'OrderFinalPrice' => $displayOrderFinalPrice,
-						'OrderApprovedByUser' => $displayOrderApprovedByUser,
-						'OrderApprovedByStaff' => $displayOrderApprovedByStaff,
-						'OrderApprovedByName' => $orderApprovedBy,
-						'OrderRoomName' => $orderRoomName,
-						'OrderBookedFor' => $orderBookedFor
-					);
+	// TO-DO: differentiate new orders/active orders and cancelled/completed etc.
+	// Active/Completed/Cancelled/others...
+
+	// sort orders by their date and put them into different arrays representing orders today, this week and
+	if($status == "Active"){
+		if($sortBy == "Day"){
+			date_default_timezone_set(DATE_DEFAULT_TIMEZONE);
+			$newDateTime = DateTime::createFromFormat('Y-m-d H:i:s', $dateTimeStart);
+			$dayNumber = $newDateTime->format("z");
+
+			$orderByDay[$dayNumber][] = array(
+												'TheOrderID' => $row['TheOrderID'],
+												'OrderStatus' => $orderStatus,
+												'OrderUserNotes' => $row['OrderUserNotes'],
+												'OrderMessageStatus' => $messageStatus,
+												'OrderLastMessageFromUser' => $displayLastMessageFromUser,
+												'OrderLastMessageFromStaff' => $displayLastMessageFromStaff,
+												'OrderStartTime' => $displayDateTimeStart,
+												'OrderEndTime' => $displayDateTimeEnd,
+												'DateTimeApproved' => $displayDateTimeApproved,
+												'DateTimeCreated' => $displayDateTimeCreated,
+												'DateTimeUpdated' => $displayDateTimeUpdated,
+												'DateTimeCancelled' => $displayDateTimeCancelled,
+												'OrderContent' => $row['OrderContent'],
+												'OrderAdminNote' => $row['OrderAdminNote'],
+												'OrderFinalPrice' => $displayOrderFinalPrice,
+												'OrderApprovedByUser' => $displayOrderApprovedByUser,
+												'OrderApprovedByStaff' => $displayOrderApprovedByStaff,
+												'OrderApprovedByName' => $orderApprovedBy,
+												'OrderRoomName' => $orderRoomName,
+												'OrderBookedFor' => $orderBookedFor
+											);
+		} elseif($sortBy == "Week"){
+			date_default_timezone_set(DATE_DEFAULT_TIMEZONE);
+			$newDateTime = DateTime::createFromFormat('Y-m-d H:i:s', $dateTimeStart);
+			$dayName = $newDateTime->format("l");
+			$weekNumber = $newDateTime->format("W");
+
+			$orderByWeek[$weekNumber][$dayName][] = array(
+															'TheOrderID' => $row['TheOrderID'],
+															'OrderStatus' => $orderStatus,
+															'OrderUserNotes' => $row['OrderUserNotes'],
+															'OrderMessageStatus' => $messageStatus,
+															'OrderLastMessageFromUser' => $displayLastMessageFromUser,
+															'OrderLastMessageFromStaff' => $displayLastMessageFromStaff,
+															'OrderStartTime' => $displayDateTimeStart,
+															'OrderEndTime' => $displayDateTimeEnd,
+															'DateTimeApproved' => $displayDateTimeApproved,
+															'DateTimeCreated' => $displayDateTimeCreated,
+															'DateTimeUpdated' => $displayDateTimeUpdated,
+															'DateTimeCancelled' => $displayDateTimeCancelled,
+															'OrderContent' => $row['OrderContent'],
+															'OrderAdminNote' => $row['OrderAdminNote'],
+															'OrderFinalPrice' => $displayOrderFinalPrice,
+															'OrderApprovedByUser' => $displayOrderApprovedByUser,
+															'OrderApprovedByStaff' => $displayOrderApprovedByStaff,
+															'OrderApprovedByName' => $orderApprovedBy,
+															'OrderRoomName' => $orderRoomName,
+															'OrderBookedFor' => $orderBookedFor
+														);
+		} else {
+			$order[] = array(
+								'TheOrderID' => $row['TheOrderID'],
+								'OrderStatus' => $orderStatus,
+								'OrderUserNotes' => $row['OrderUserNotes'],
+								'OrderMessageStatus' => $messageStatus,
+								'OrderLastMessageFromUser' => $displayLastMessageFromUser,
+								'OrderLastMessageFromStaff' => $displayLastMessageFromStaff,
+								'OrderStartTime' => $displayDateTimeStart,
+								'OrderEndTime' => $displayDateTimeEnd,
+								'DateTimeApproved' => $displayDateTimeApproved,
+								'DateTimeCreated' => $displayDateTimeCreated,
+								'DateTimeUpdated' => $displayDateTimeUpdated,
+								'DateTimeCancelled' => $displayDateTimeCancelled,
+								'OrderContent' => $row['OrderContent'],
+								'OrderAdminNote' => $row['OrderAdminNote'],
+								'OrderFinalPrice' => $displayOrderFinalPrice,
+								'OrderApprovedByUser' => $displayOrderApprovedByUser,
+								'OrderApprovedByStaff' => $displayOrderApprovedByStaff,
+								'OrderApprovedByName' => $orderApprovedBy,
+								'OrderRoomName' => $orderRoomName,
+								'OrderBookedFor' => $orderBookedFor
+							);
+		}
+	} elseif($status == "Completed"){
+		$ordersCompleted[] = array();
+	} elseif($status == "Cancelled"){
+		$ordersCancelled[] = array();
+	} else{
+		$ordersOther[] = array();
+	}
 }
 
 var_dump($_SESSION); // TO-DO: remove after testing is done
