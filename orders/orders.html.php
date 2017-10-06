@@ -30,7 +30,7 @@
 			<table>
 				<caption>Active Orders</caption>
 				<?php if($rowNum > 0) : ?>
-					<?php foreach($orderByDay as $dayNumber => $days): ?>
+					<?php foreach($orderByDay AS $dayNumber => $days) : ?>
 						<tr><td colspan="15"><?php htmlout("Day Number: " . $dayNumber); ?></td></tr>
 						<tr><td>
 							<table>

@@ -1201,7 +1201,7 @@ foreach($result AS $row){
 	if($sortBy == "Day"){
 		date_default_timezone_set(DATE_DEFAULT_TIMEZONE);
 		$newDateTime = DateTime::createFromFormat('Y-m-d H:i:s', $dateTimeStart);
-		$dayNumber = $newDateTime->format("d");
+		$dayNumber = $newDateTime->format("z");
 
 		$orderByDay[$dayNumber][] = array(
 											'TheOrderID' => $row['TheOrderID'],
