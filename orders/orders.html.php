@@ -64,7 +64,7 @@
 											<?php foreach($days AS $order) : ?>
 												<form action="" method="post">
 													<tr>
-														<?php if($order['DateTimeUpdated'] == "") : ?>
+														<?php if(substr($order['OrderStatus'],0,10) == "New Order!") : ?>
 															<td style="white-space: pre-wrap; color: green;"><span class="blink_me"><?php htmlout($order['OrderStatus']); ?></span></td>
 														<?php else : ?>
 															<td style="white-space: pre-wrap;"><?php htmlout($order['OrderStatus']); ?></td>

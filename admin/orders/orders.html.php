@@ -65,35 +65,35 @@
 											<th>Booked For Company</th>
 											<th></th>
 										</tr>
-											<?php foreach($order as $row): ?>
+											<?php foreach($days as $order): ?>
 												<form action="" method="post">
 													<tr>
-														<?php if($order['DateTimeUpdated'] == "") : ?>
+														<?php if(substr($order['OrderStatus'],0,10) == "New Order!") : ?>
 															<td style="white-space: pre-wrap; color: green;"><span class="blink_me"><?php htmlout($order['OrderStatus']); ?></span></td>
 														<?php else : ?>
 															<td style="white-space: pre-wrap;"><?php htmlout($order['OrderStatus']); ?></td>
 														<?php endif; ?>
-														<td><?php htmlout($row['OrderApprovedByUser']); ?></td>
-														<td><?php htmlout($row['OrderApprovedByStaff']); ?></td>
-														<td><?php htmlout($row['OrderApprovedByName']); ?></td>
-														<td style="white-space: pre-wrap;"><?php htmlout($row['OrderContent']); ?></td>
-														<td style="white-space: pre-wrap;"><?php htmlout($row['OrderUserNotes']); ?></td>
-														<td style="white-space: pre-wrap;"><?php htmlout($row['OrderAdminNote']); ?></td>
-														<td><?php htmlout($row['OrderFinalPrice']); ?></td>
-														<td><?php htmlout($row['DateTimeCreated']); ?></td>
-														<td><?php htmlout($row['DateTimeUpdated']); ?></td>
-														<td><?php htmlout($row['DateTimeApproved']); ?></td>
-														<td><?php htmlout($row['DateTimeCancelled']); ?></td>
+														<td><?php htmlout($order['OrderApprovedByUser']); ?></td>
+														<td><?php htmlout($order['OrderApprovedByStaff']); ?></td>
+														<td><?php htmlout($order['OrderApprovedByName']); ?></td>
+														<td style="white-space: pre-wrap;"><?php htmlout($order['OrderContent']); ?></td>
+														<td style="white-space: pre-wrap;"><?php htmlout($order['OrderUserNotes']); ?></td>
+														<td style="white-space: pre-wrap;"><?php htmlout($order['OrderAdminNote']); ?></td>
+														<td><?php htmlout($order['OrderFinalPrice']); ?></td>
+														<td><?php htmlout($order['DateTimeCreated']); ?></td>
+														<td><?php htmlout($order['DateTimeUpdated']); ?></td>
+														<td><?php htmlout($order['DateTimeApproved']); ?></td>
+														<td><?php htmlout($order['DateTimeCancelled']); ?></td>
 														<td><input type="submit" name="action" value="Details"></td>
-														<td style="white-space: pre-wrap;"><?php htmlout($row['OrderMessageStatus']); ?></td>
-														<td style="white-space: pre-wrap;"><?php htmlout($row['OrderLastMessageFromStaff']); ?></td>
-														<td style="white-space: pre-wrap;"><?php htmlout($row['OrderLastMessageFromUser']); ?></td>
-														<td><?php htmlout($row['OrderRoomName']); ?></td>
-														<td><?php htmlout($row['OrderStartTime']); ?></td>
-														<td><?php htmlout($row['OrderEndTime']); ?></td>
-														<td><?php htmlout($row['OrderBookedFor']); ?></td>
+														<td style="white-space: pre-wrap;"><?php htmlout($order['OrderMessageStatus']); ?></td>
+														<td style="white-space: pre-wrap;"><?php htmlout($order['OrderLastMessageFromStaff']); ?></td>
+														<td style="white-space: pre-wrap;"><?php htmlout($order['OrderLastMessageFromUser']); ?></td>
+														<td><?php htmlout($order['OrderRoomName']); ?></td>
+														<td><?php htmlout($order['OrderStartTime']); ?></td>
+														<td><?php htmlout($order['OrderEndTime']); ?></td>
+														<td><?php htmlout($order['OrderBookedFor']); ?></td>
 														<td><input type="submit" name="action" value="Cancel"></td>
-														<input type="hidden" name="OrderID" value="<?php htmlout($row['TheOrderID']); ?>">
+														<input type="hidden" name="OrderID" value="<?php htmlout($order['TheOrderID']); ?>">
 													</tr>
 												</form>
 											<?php endforeach; ?>
