@@ -1151,7 +1151,7 @@ foreach($result AS $row){
 		$displayDateTimeUpdated = convertDatetimeToFormat($dateTimeUpdated , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
 		$newOrder = FALSE;
 	} else {
-		$displayDateTimeUpdated = "N/A";
+		$displayDateTimeUpdated = "";
 		$newOrder = TRUE;
 	}
 

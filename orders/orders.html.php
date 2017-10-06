@@ -4,6 +4,12 @@
 	<head>
 		<meta charset="utf-8">
 		<link rel="stylesheet" type="text/css" href="/CSS/myCSS.css">
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+		<script>
+			$(document).ready(function blinkText(){ 
+				$(".blink_me").fadeOut("normal").fadeIn("normal", blinkText);
+			});
+		</script>
 		<script src="/scripts/myFunctions.js"></script>
 		<title>Manage Orders</title>
 	</head>
@@ -20,21 +26,15 @@
 				<?php unset($_SESSION['OrderStaffFeedback']); ?>
 			<?php endif; ?>
 		</div>
-		<?php // to-do: sort by day/week/all and change tables shown based on it ?>
 		<?php if($sortBy == "Day") : ?>
 
 		<?php elseif($sortBy == "Week") : ?>
 			<table>
 				<caption>Active Orders</caption>
-				<tr>
-					<th>Week Number</th>
-					<th>Day</th>
-					<th>Orders</th>
-				</tr>
 				<?php if($rowNum > 0) : ?>
 					<?php foreach($orderByWeek as $weekNumber => $weeks): ?>
 						<tr>
-							<td><?php htmlout($weekNumber); ?></td>
+							<td><?php htmlout("Week #" . $weekNumber); ?></td>
 							<?php foreach($weeks AS $dayName => $days) : ?>
 								<td><?php htmlout($dayName); ?></td>
 								<td>
@@ -64,7 +64,11 @@
 										<?php foreach($days AS $order) : ?>
 											<form action="" method="post">
 												<tr>
-													<td style="white-space: pre-wrap;"><?php htmlout($order['OrderStatus']); ?></td>
+													<?php if($order['DateTimeUpdated'] == "") : ?>
+														<td style="white-space: pre-wrap; color: green;"><span class="blink_me"><?php htmlout($order['OrderStatus']); ?></span></td>
+													<?php else : ?>
+														<td style="white-space: pre-wrap;"><?php htmlout($order['OrderStatus']); ?></td>
+													<?php endif; ?>
 													<td><?php htmlout($order['OrderApprovedByUser']); ?></td>
 													<td><?php htmlout($order['OrderApprovedByStaff']); ?></td>
 													<td style="white-space: pre-wrap;"><?php htmlout($order['OrderContent']); ?></td>

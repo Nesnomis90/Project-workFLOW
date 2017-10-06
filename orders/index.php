@@ -1120,7 +1120,7 @@ foreach($result AS $row){
 		$displayDateTimeUpdated = convertDatetimeToFormat($dateTimeUpdated , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
 		$newOrder = FALSE;
 	} else {
-		$displayDateTimeUpdated = "N/A";
+		$displayDateTimeUpdated = "";
 		$newOrder = TRUE;
 	}
 
@@ -1204,8 +1204,7 @@ foreach($result AS $row){
 		$dayName = $newDateTime->format("l");
 		$dayNumber = $newDateTime->format("d");
 
-		$orderByDay[$dayNumber][] = array(
-											'DayName' => $dayName,
+		$orderByDay[$weekNumber][$dayName][] = array(
 											'TheOrderID' => $row['TheOrderID'],
 											'OrderStatus' => $orderStatus,
 											'OrderUserNotes' => $row['OrderUserNotes'],

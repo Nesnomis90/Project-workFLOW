@@ -4,6 +4,12 @@
 	<head>
 		<meta charset="utf-8">
 		<link rel="stylesheet" type="text/css" href="/CSS/myCSS.css">
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+		<script>
+			$(document).ready(function blinkText(){ 
+				$(".blink_me").fadeOut("normal").fadeIn("normal", blinkText);
+			});
+		</script>
 		<script src="/scripts/myFunctions.js"></script>
 		<title>Manage Orders</title>
 	</head>
