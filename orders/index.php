@@ -1090,7 +1090,7 @@ catch (PDOException $e)
 }
 
 // TO-DO: Testing
-$sortBy = "Week";
+$sortBy = "Day";
 
 if(!isSet($sortBy)){
 	$sortBy = "None";
@@ -1201,9 +1201,9 @@ foreach($result AS $row){
 	if($sortBy == "Day"){
 		date_default_timezone_set(DATE_DEFAULT_TIMEZONE);
 		$newDateTime = DateTime::createFromFormat('Y-m-d H:i:s', $dateTimeStart);
-		$dayName = $newDateTime->format("l");
+		$dayNumber = $newDateTime->format("d");
 
-		$orderByDay[$weekNumber][$dayName][] = array(
+		$orderByDay[$dayNumber][] = array(
 											'TheOrderID' => $row['TheOrderID'],
 											'OrderStatus' => $orderStatus,
 											'OrderUserNotes' => $row['OrderUserNotes'],

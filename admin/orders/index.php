@@ -1296,30 +1296,30 @@ foreach($result AS $row){
 		if($sortBy == "Day"){
 			date_default_timezone_set(DATE_DEFAULT_TIMEZONE);
 			$newDateTime = DateTime::createFromFormat('Y-m-d H:i:s', $dateTimeStart);
-			$dayName = $newDateTime->format("l");
+			$dayNumber = $newDateTime->format("d");
 
-			$orderByDay[$weekNumber][$dayName][] = array(
-															'TheOrderID' => $row['TheOrderID'],
-															'OrderStatus' => $orderStatus,
-															'OrderUserNotes' => $row['OrderUserNotes'],
-															'OrderMessageStatus' => $messageStatus,
-															'OrderLastMessageFromUser' => $displayLastMessageFromUser,
-															'OrderLastMessageFromStaff' => $displayLastMessageFromStaff,
-															'OrderStartTime' => $displayDateTimeStart,
-															'OrderEndTime' => $displayDateTimeEnd,
-															'DateTimeApproved' => $displayDateTimeApproved,
-															'DateTimeCreated' => $displayDateTimeCreated,
-															'DateTimeUpdated' => $displayDateTimeUpdated,
-															'DateTimeCancelled' => $displayDateTimeCancelled,
-															'OrderContent' => $row['OrderContent'],
-															'OrderAdminNote' => $row['OrderAdminNote'],
-															'OrderFinalPrice' => $displayOrderFinalPrice,
-															'OrderApprovedByUser' => $displayOrderApprovedByUser,
-															'OrderApprovedByStaff' => $displayOrderApprovedByStaff,
-															'OrderApprovedByName' => $orderApprovedBy,
-															'OrderRoomName' => $orderRoomName,
-															'OrderBookedFor' => $orderBookedFor
-														);
+			$orderByDay[$dayNumber][] = array(
+												'TheOrderID' => $row['TheOrderID'],
+												'OrderStatus' => $orderStatus,
+												'OrderUserNotes' => $row['OrderUserNotes'],
+												'OrderMessageStatus' => $messageStatus,
+												'OrderLastMessageFromUser' => $displayLastMessageFromUser,
+												'OrderLastMessageFromStaff' => $displayLastMessageFromStaff,
+												'OrderStartTime' => $displayDateTimeStart,
+												'OrderEndTime' => $displayDateTimeEnd,
+												'DateTimeApproved' => $displayDateTimeApproved,
+												'DateTimeCreated' => $displayDateTimeCreated,
+												'DateTimeUpdated' => $displayDateTimeUpdated,
+												'DateTimeCancelled' => $displayDateTimeCancelled,
+												'OrderContent' => $row['OrderContent'],
+												'OrderAdminNote' => $row['OrderAdminNote'],
+												'OrderFinalPrice' => $displayOrderFinalPrice,
+												'OrderApprovedByUser' => $displayOrderApprovedByUser,
+												'OrderApprovedByStaff' => $displayOrderApprovedByStaff,
+												'OrderApprovedByName' => $orderApprovedBy,
+												'OrderRoomName' => $orderRoomName,
+												'OrderBookedFor' => $orderBookedFor
+											);
 		} elseif($sortBy == "Week"){
 			date_default_timezone_set(DATE_DEFAULT_TIMEZONE);
 			$newDateTime = DateTime::createFromFormat('Y-m-d H:i:s', $dateTimeStart);
