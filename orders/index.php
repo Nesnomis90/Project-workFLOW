@@ -1052,21 +1052,24 @@ try
 							LIMIT 	1
 						)												AS OrderLastMessageFromUser
 			FROM 		`orders` o
-			INNER JOIN	`extraorders` eo
-			ON 			eo.`orderID` = o.`orderID`
-			INNER JOIN 	`extra` ex
-			ON 			eo.`extraID` = ex.`extraID`
 			INNER JOIN	`booking` b
 			ON 			b.`orderID` = o.`orderID`
 			INNER JOIN	`meetingroom` m
 			ON 			m.`meetingRoomID` = b.`meetingRoomID`
 			INNER JOIN 	`company` c
 			ON 			c.`companyID` = b.`companyID`
+			LEFT JOIN	(
+									`extraorders` eo
+						INNER JOIN 	`extra` ex
+						ON 			eo.`extraID` = ex.`extraID`
+			)
+			ON 			eo.`orderID` = o.`orderID`
 			WHERE		o.`dateTimeCancelled` IS NULL
 			AND			b.`dateTimeCancelled` IS NULL
 			AND			b.`actualEndDateTime` IS NULL
 			AND			b.`orderID` IS NOT NULL
-			GROUP BY	o.`orderID`';
+			GROUP BY	o.`orderID`
+			ORDER BY	b.`startDateTime`';
 
 	$return = $pdo->query($sql);
 	$result = $return->fetchAll(PDO::FETCH_ASSOC);
@@ -1085,6 +1088,9 @@ catch (PDOException $e)
 	include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
 	exit();
 }
+
+// TO-DO: Testing
+$sortBy = "Week";
 
 if(!isSet($sortBy)){
 	$sortBy = "None";
@@ -1222,8 +1228,7 @@ foreach($result AS $row){
 		$dayName = $newDateTime->format("l");
 		$weekNumber = $newDateTime->format("W");
 
-		$orderByDay[$weekNumber][$dayNumber][] = array(
-														'DayName' => $dayName,
+		$orderByWeek[$weekNumber][$dayName][] = array(
 														'TheOrderID' => $row['TheOrderID'],
 														'OrderStatus' => $orderStatus,
 														'OrderUserNotes' => $row['OrderUserNotes'],

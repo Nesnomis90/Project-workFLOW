@@ -1099,12 +1099,15 @@ try
 			FROM 		`orders` o
 			INNER JOIN	`booking` b
 			ON 			b.`orderID` = o.`orderID`
-			LEFT JOIN	`extraorders` eo
+			LEFT JOIN	(
+									`extraorders` eo
+						INNER JOIN 	`extra` ex
+						ON 			eo.`extraID` = ex.`extraID`
+			)
 			ON 			eo.`orderID` = o.`orderID`
-			LEFT JOIN 	`extra` ex
-			ON 			eo.`extraID` = ex.`extraID`
 			WHERE		b.`orderID` IS NOT NULL
-			GROUP BY	o.`orderID`';
+			GROUP BY	o.`orderID`
+			ORDER BY	b.`startDateTime`';
 
 	$return = $pdo->query($sql);
 	$result = $return->fetchAll(PDO::FETCH_ASSOC);
