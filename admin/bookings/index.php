@@ -4182,8 +4182,8 @@ if(!isSet($_GET['Meetingroom'])){
 	}
 }
 
-foreach ($result as $row)
-{
+foreach($result AS $row){
+
 	$datetimeNow = getDatetimeNow();
 	$startDateTime = $row['StartTime'];	
 	$endDateTime = $row['EndTime'];

@@ -26,9 +26,10 @@
 				<?php unset($_SESSION['OrderStaffFeedback']); ?>
 			<?php endif; ?>
 		</div>
+
 		<?php if($sortBy == "Day") : ?>
 			<table>
-				<caption>Active Orders</caption>
+				<caption>Active Orders - Listed by Day</caption>
 				<?php if($rowNum > 0) : ?>
 					<?php foreach($orderByDay AS $dayNumber => $days) : ?>
 						<tr><td colspan="15"><?php htmlout("Day Number: " . $dayNumber); ?></td></tr>
@@ -59,7 +60,7 @@
 									<?php foreach($days AS $order) : ?>
 										<form action="" method="post">
 											<tr>
-												<?php if(substr($order['OrderStatus'],0,10) == "New Order!") : ?>
+												<?php if($order['OrderStatus'] == "New Order!") : ?>
 													<td style="white-space: pre-wrap; color: green;"><span class="blink_me"><?php htmlout($order['OrderStatus']); ?></span></td>
 												<?php else : ?>
 													<td style="white-space: pre-wrap;"><?php htmlout($order['OrderStatus']); ?></td>
@@ -91,9 +92,9 @@
 			</table>
 		<?php elseif($sortBy == "Week") : ?>
 			<table>
-				<caption>Active Orders</caption>
+				<caption>Active Orders - Listed by Week</caption>
 				<?php if($rowNum > 0) : ?>
-					<?php foreach($orderByWeek as $weekNumber => $weeks): ?>
+					<?php foreach($orderByWeek AS $weekNumber => $weeks): ?>
 						<tr>
 							<td><?php htmlout("Week #" . $weekNumber); ?></td>
 							<?php foreach($weeks AS $dayName => $days) : ?>
@@ -125,7 +126,7 @@
 											<?php foreach($days AS $order) : ?>
 												<form action="" method="post">
 													<tr>
-														<?php if(substr($order['OrderStatus'],0,10) == "New Order!") : ?>
+														<?php if($order['OrderStatus'] == "New Order!") : ?>
 															<td style="white-space: pre-wrap; color: green;"><span class="blink_me"><?php htmlout($order['OrderStatus']); ?></span></td>
 														<?php else : ?>
 															<td style="white-space: pre-wrap;"><?php htmlout($order['OrderStatus']); ?></td>
@@ -159,7 +160,7 @@
 			</table>
 		<?php else : ?>
 			<table>
-				<caption>Active Orders</caption>
+				<caption>Active Orders - Listed by starting time</caption>
 				<tr>
 					<th colspan="8">Order</th>
 					<th colspan="3">Messages</th>
@@ -183,10 +184,14 @@
 					<th>Booked For Company</th>
 				</tr>
 				<?php if($rowNum > 0) : ?>
-					<?php foreach($order as $row): ?>
+					<?php foreach($order AS $row): ?>
 						<form action="" method="post">
 							<tr>
-								<td style="white-space: pre-wrap;"><?php htmlout($row['OrderStatus']); ?></td>
+								<?php if($row['OrderStatus'] == "New Order!") : ?>
+									<td style="white-space: pre-wrap; color: green;"><span class="blink_me"><?php htmlout($row['OrderStatus']); ?></span></td>
+								<?php else : ?>
+									<td style="white-space: pre-wrap;"><?php htmlout($row['OrderStatus']); ?></td>
+								<?php endif; ?>
 								<td><?php htmlout($row['OrderApprovedByUser']); ?></td>
 								<td><?php htmlout($row['OrderApprovedByStaff']); ?></td>
 								<td style="white-space: pre-wrap;"><?php htmlout($row['OrderContent']); ?></td>
