@@ -91,6 +91,7 @@ function updateCompletedBookings(){
 	}
 }
 
+// TO-DO: FIX-ME: Unfinished
 function alertStaffThatMeetingWithOrderIsAboutToStart(){
 	try
 	{
@@ -104,27 +105,38 @@ function alertStaffThatMeetingWithOrderIsAboutToStart(){
 		// That have an active order attached that we haven't already alerted/sent email to staff about
 		// Only try to alert a user up to 1 minute until meeting starts (in theory they should instantly get alerted)
 		// Only try to alert a user if the booking was made longer than MINIMUM_TIME_PASSED_IN_MINUTES_AFTER_CREATING_BOOKING_BEFORE_SENDING_EMAIL minutes ago
-		$sql = "SELECT 		(
+		$sql = 'SELECT 		(
 								SELECT 	`name`
 								FROM 	`meetingroom`
 								WHERE 	`meetingRoomID` = b.`meetingRoomID`
-							)							AS MeetingRoomName,
+							)												AS MeetingRoomName,
 							(
 								SELECT 	`name`
 								FROM 	`company`
 								WHERE 	`companyID` = b.`companyID`
-							)							AS CompanyName,
-							b.`startDateTime`			AS StartDate,
-							b.`endDateTime`				AS EndDate,
-							b.`displayName`				AS DisplayName,
-							b.`description`				AS BookingDescription,
-							o.`orderID`					AS TheOrderID,
-							o.`orderApprovedByUser`		AS OrderApprovedByUser,
-							o.`orderApprovedByAdmin`	AS OrderApprovedByAdmin,
-							o.`orderApprovedByStaff`	AS OrderApprovedByStaff
+							)												AS CompanyName,
+							b.`startDateTime`								AS StartDate,
+							b.`endDateTime`									AS EndDate,
+							b.`displayName`									AS DisplayName,
+							b.`description`									AS BookingDescription,
+							o.`orderID`										AS TheOrderID,
+							o.`orderApprovedByUser`							AS OrderApprovedByUser,
+							o.`orderApprovedByAdmin`						AS OrderApprovedByAdmin,
+							o.`orderApprovedByStaff`						AS OrderApprovedByStaff,
+							GROUP_CONCAT(ex.`name`, " (", eo.`amount`, ")"
+								SEPARATOR "\n")								AS OrderContent,
+							COUNT(eo.`extraID`)								AS OrderExtrasOrdered,
+							COUNT(eo.`approvedForPurchase`)					AS OrderExtrasApproved,
+							COUNT(eo.`purchased`)							AS OrderExtrasPurchased,
 				FROM		`booking` b
 				INNER JOIN 	`orders` o
 				ON 			o.`orderID` = b.`orderID`
+				INNER JOIN	(
+										`extraorders` eo
+							INNER JOIN 	`extra` ex
+							ON 			eo.`extraID` = ex.`extraID`
+				)
+				ON 			eo.`orderID` = o.`orderID`
 				WHERE 		DATE_SUB(b.`startDateTime`, INTERVAL :bufferMinutes MINUTE) < CURRENT_TIMESTAMP
 				AND			DATE_SUB(b.`startDateTime`, INTERVAL 1 MINUTE) > CURRENT_TIMESTAMP
 				AND 		b.`dateTimeCancelled` IS NULL
@@ -132,7 +144,7 @@ function alertStaffThatMeetingWithOrderIsAboutToStart(){
 				AND 		b.`actualEndDateTime` IS NULL
 				AND			b.`orderID` IS NOT NULL
 				AND 		DATE_ADD(b.`dateTimeCreated`, INTERVAL :waitMinutes MINUTE) < CURRENT_TIMESTAMP
-				AND			o.`emailSoonSent` = 0";
+				AND			o.`emailSoonSent` = 0';
 		$s = $pdo->prepare($sql);
 		$s->bindValue(':bufferMinutes', TIME_LEFT_IN_MINUTES_UNTIL_MEETING_STARTS_BEFORE_SENDING_EMAIL);
 		$s->bindValue(':waitMinutes', MINIMUM_TIME_PASSED_IN_MINUTES_AFTER_CREATING_BOOKING_BEFORE_SENDING_EMAIL);
