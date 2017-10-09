@@ -454,6 +454,18 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Details') OR
 	exit();
 }
 
+if(isSet($_POST['sortBy'])){
+	if($_POST['sortBy'] == "Day"){
+		$sortBy = "Day";
+	} elseif($_POST['sortBy'] == "Week"){
+		$sortBy = "Week";
+	} elseif($_POST['sortBy'] == "Starting Time"){
+		$sortBy = "Starting Time";
+	}
+} else {
+	$sortBy = "Starting Time";
+}
+
 // Perform the actual database update of the edited information
 if(isSet($_POST['action']) AND $_POST['action'] == 'Submit Changes'){
 	// Validate user inputs
@@ -1089,13 +1101,6 @@ catch (PDOException $e)
 	exit();
 }
 
-// TO-DO: Testing
-$sortBy = "Day";
-
-if(!isSet($sortBy)){
-	$sortBy = "None";
-}
-
 // Create an array with the actual key/value pairs we want to use in our HTML
 foreach($result AS $row){
 
@@ -1167,7 +1172,7 @@ foreach($result AS $row){
 	}
 
 	if($newOrder){
-		$orderStatus = "New Order!\nPending Staff Approval";
+		$orderStatus = "New Order!";
 	} elseif($orderIsApprovedByStaff AND $orderIsApprovedByUser){
 		$orderStatus = "Order Approved!";
 		if($extrasApproved == $extrasOrdered AND $extrasPurchased == $extrasOrdered){

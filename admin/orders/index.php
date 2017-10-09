@@ -476,6 +476,18 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Details') OR
 	exit();
 }
 
+if(isSet($_POST['sortBy'])){
+	if($_POST['sortBy'] == "Day"){
+		$sortBy = "Day";
+	} elseif($_POST['sortBy'] == "Week"){
+		$sortBy = "Week";
+	} elseif($_POST['sortBy'] == "Starting Time"){
+		$sortBy = "Starting Time";
+	}
+} else {
+	$sortBy = "Starting Time";
+}
+
 // Perform the actual database update of the edited information
 if(isSet($_POST['action']) AND $_POST['action'] == 'Submit Changes'){
 	// Validate user inputs
@@ -1127,13 +1139,6 @@ catch (PDOException $e)
 	exit();
 }
 
-// TO-DO: Testing
-$sortBy = "Week";
-
-if(!isSet($sortBy)){
-	$sortBy = "None";
-}
-
 // Create an array with the actual key/value pairs we want to use in our HTML
 foreach($result AS $row){
 
@@ -1244,7 +1249,7 @@ foreach($result AS $row){
 	}
 
 	if($newOrder){
-		$orderStatus = "New Order!\nPending Staff Approval";
+		$orderStatus = "New Order!";
 	} elseif($orderIsApprovedByStaff AND $orderIsApprovedByUser){
 		$orderStatus = "Order Approved!";
 		if($extrasApproved == $extrasOrdered AND $extrasPurchased == $extrasOrdered){
@@ -1277,19 +1282,30 @@ foreach($result AS $row){
 	if($orderIsApproved){
 		if($row['OrderBookingCompleted'] != NULL){
 			$orderStatus = "Completed";
+			$status = "Completed";
+
+			$dateTimeCompleted = $row['OrderBookingCompleted'];
+			$displayDateTimeCompleted = convertDatetimeToFormat($dateTimeCompleted , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
 		} elseif($row['DateTimeCancelled'] != NULL OR $row['OrderBookingCancelled'] != NULL){
 			$orderStatus = "Cancelled";
+			$status = "Cancelled";
+		} else {
+			$status = "Active";
 		}
 	} else {
 		if($row['OrderBookingCompleted'] != NULL){
-			$orderStatus = "Ended without being approved.";
+			$orderStatus = "Ended without being approved";
+			$status = "Ended without being approved";
+
+			$dateTimeCompleted = $row['OrderBookingCompleted'];
+			$displayDateTimeCompleted = convertDatetimeToFormat($dateTimeCompleted , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
 		} elseif($row['DateTimeCancelled'] != NULL OR $row['OrderBookingCancelled'] != NULL){
 			$orderStatus = "Cancelled";
+			$status = "Cancelled";
+		} else {
+			$status = "Active";
 		}
 	}
-
-	// TO-DO: differentiate new orders/active orders and cancelled/completed etc.
-	// Active/Completed/Cancelled/others...
 
 	// sort orders by their date and put them into different arrays representing orders today, this week and
 	if($status == "Active"){
@@ -1310,7 +1326,6 @@ foreach($result AS $row){
 												'DateTimeApproved' => $displayDateTimeApproved,
 												'DateTimeCreated' => $displayDateTimeCreated,
 												'DateTimeUpdated' => $displayDateTimeUpdated,
-												'DateTimeCancelled' => $displayDateTimeCancelled,
 												'OrderContent' => $row['OrderContent'],
 												'OrderAdminNote' => $row['OrderAdminNote'],
 												'OrderFinalPrice' => $displayOrderFinalPrice,
@@ -1338,7 +1353,6 @@ foreach($result AS $row){
 															'DateTimeApproved' => $displayDateTimeApproved,
 															'DateTimeCreated' => $displayDateTimeCreated,
 															'DateTimeUpdated' => $displayDateTimeUpdated,
-															'DateTimeCancelled' => $displayDateTimeCancelled,
 															'OrderContent' => $row['OrderContent'],
 															'OrderAdminNote' => $row['OrderAdminNote'],
 															'OrderFinalPrice' => $displayOrderFinalPrice,
@@ -1361,7 +1375,6 @@ foreach($result AS $row){
 								'DateTimeApproved' => $displayDateTimeApproved,
 								'DateTimeCreated' => $displayDateTimeCreated,
 								'DateTimeUpdated' => $displayDateTimeUpdated,
-								'DateTimeCancelled' => $displayDateTimeCancelled,
 								'OrderContent' => $row['OrderContent'],
 								'OrderAdminNote' => $row['OrderAdminNote'],
 								'OrderFinalPrice' => $displayOrderFinalPrice,
@@ -1373,11 +1386,70 @@ foreach($result AS $row){
 							);
 		}
 	} elseif($status == "Completed"){
-		$ordersCompleted[] = array();
+		$ordersCompleted[] = array(
+								'TheOrderID' => $row['TheOrderID'],
+								'OrderStatus' => $orderStatus,
+								'OrderUserNotes' => $row['OrderUserNotes'],
+								'OrderMessageStatus' => $messageStatus,
+								'OrderLastMessageFromUser' => $displayLastMessageFromUser,
+								'OrderLastMessageFromStaff' => $displayLastMessageFromStaff,
+								'DateTimeApproved' => $displayDateTimeApproved,
+								'DateTimeUpdated' => $displayDateTimeUpdated,
+								'DateTimeCompleted' => $displayDateTimeCompleted,
+								'OrderContent' => $row['OrderContent'],
+								'OrderAdminNote' => $row['OrderAdminNote'],
+								'OrderFinalPrice' => $displayOrderFinalPrice,
+								'OrderApprovedByName' => $orderApprovedBy,
+								'OrderBookedFor' => $orderBookedFor
+							);
 	} elseif($status == "Cancelled"){
-		$ordersCancelled[] = array();
-	} else{
-		$ordersOther[] = array();
+		$ordersCancelled[] = array(
+								'TheOrderID' => $row['TheOrderID'],
+								'OrderStatus' => $orderStatus,
+								'OrderUserNotes' => $row['OrderUserNotes'],
+								'OrderMessageStatus' => $messageStatus,
+								'OrderLastMessageFromUser' => $displayLastMessageFromUser,
+								'OrderLastMessageFromStaff' => $displayLastMessageFromStaff,
+								'OrderStartTime' => $displayDateTimeStart,
+								'OrderEndTime' => $displayDateTimeEnd,
+								'DateTimeCreated' => $displayDateTimeCreated,
+								'DateTimeUpdated' => $displayDateTimeUpdated,
+								'DateTimeCancelled' => $displayDateTimeCancelled,
+								'OrderContent' => $row['OrderContent'],
+								'OrderAdminNote' => $row['OrderAdminNote'],
+								'OrderRoomName' => $orderRoomName,
+								'OrderBookedFor' => $orderBookedFor
+							);
+	} else {
+		if(!isSet($displayDateTimeCancelled)){
+			$displayDateTimeCancelled = "";
+		}
+		if(!isSet($displayDateTimeCompleted)){
+			$displayDateTimeCompleted = "";
+		}
+		$ordersOther[] = array(
+								'TheOrderID' => $row['TheOrderID'],
+								'OrderStatus' => $orderStatus,
+								'OrderUserNotes' => $row['OrderUserNotes'],
+								'OrderMessageStatus' => $messageStatus,
+								'OrderLastMessageFromUser' => $displayLastMessageFromUser,
+								'OrderLastMessageFromStaff' => $displayLastMessageFromStaff,
+								'OrderStartTime' => $displayDateTimeStart,
+								'OrderEndTime' => $displayDateTimeEnd,
+								'DateTimeApproved' => $displayDateTimeApproved,
+								'DateTimeCreated' => $displayDateTimeCreated,
+								'DateTimeUpdated' => $displayDateTimeUpdated,
+								'DateTimeCancelled' => $displayDateTimeCancelled,
+								'DateTimeCompleted' => $displayDateTimeCompleted,
+								'OrderContent' => $row['OrderContent'],
+								'OrderAdminNote' => $row['OrderAdminNote'],
+								'OrderFinalPrice' => $displayOrderFinalPrice,
+								'OrderApprovedByUser' => $displayOrderApprovedByUser,
+								'OrderApprovedByStaff' => $displayOrderApprovedByStaff,
+								'OrderApprovedByName' => $orderApprovedBy,
+								'OrderRoomName' => $orderRoomName,
+								'OrderBookedFor' => $orderBookedFor
+							);
 	}
 }
 

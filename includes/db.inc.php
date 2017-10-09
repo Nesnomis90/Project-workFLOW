@@ -17,6 +17,57 @@ require_once 'htmlout.inc.php';
 global $logEventArray;
 $logEventArray = array();
 
+// Function to add the custom MySQL functions we use to calculate booking time in seconds
+function addMySQLFunctions(){
+	$pdo = connect_to_db();
+	$sql = 'DROP FUNCTION IF EXISTS `BIG_SEC_TO_TIME`';
+	$pdo->query($sql);
+	$sql = 'DROP FUNCTION IF EXISTS `BIG_TIME_TO_SEC`';
+	$pdo->query($sql);
+	$sql = 'CREATE FUNCTION `BIG_SEC_TO_TIME`(SECS BIGINT) RETURNS text CHARSET utf8
+				READS SQL DATA
+				DETERMINISTIC
+			BEGIN
+				DECLARE HOURS TEXT;
+				DECLARE MINUTES CHAR(5);
+				DECLARE SECONDS CHAR(5);
+
+				IF (SECS IS NULL) THEN RETURN NULL; END IF;
+
+				SET HOURS = FLOOR(SECS / 3600);
+
+				SET MINUTES = FLOOR((SECS - (HOURS*3600)) / 60);
+
+				SET SECONDS = MOD(SECS, 60);
+
+				IF MINUTES < 10 THEN SET MINUTES = CONCAT( "0", MINUTES); END IF;
+				IF SECONDS < 10 THEN SET SECONDS = CONCAT( "0", SECONDS); END IF;
+
+				RETURN CONCAT(HOURS, ":", MINUTES, ":", SECONDS);
+			END';
+	$pdo->query($sql);
+	$sql = 'CREATE FUNCTION `BIG_TIME_TO_SEC`(TIME TEXT) RETURNS bigint(20)
+				READS SQL DATA
+				DETERMINISTIC
+			BEGIN
+				DECLARE HOURS TEXT;
+				DECLARE MINUTES CHAR(5);
+				DECLARE SECONDS CHAR(5);
+
+				IF (TIME IS NULL) THEN RETURN NULL; END IF;
+
+				SET HOURS = SUBSTRING_INDEX(TIME, ":", 1);
+
+				SET MINUTES = SUBSTRING(TIME FROM -5 FOR 2);
+
+				SET SECONDS = SUBSTRING(TIME FROM -2 FOR 2);
+
+				RETURN CAST(HOURS AS UNSIGNED INTEGER)*3600 + CAST(MINUTES AS UNSIGNED INTEGER)*60 + CAST(SECONDS AS  UNSIGNED INTEGER);
+			END';
+	$pdo->query($sql);
+	$pdo = null;
+}
+
 // Function to connect to server and create our wanted database
 function create_db(){
 	$pdo = null;
@@ -70,7 +121,8 @@ function create_db(){
 function connect_to_db(){
 	$pdo = null;
 
-	try {
+	try
+	{
 		//	Create connection with an existing database
 		$pdo = new PDO("mysql:host=".DB_HOST.";dbname=" . DB_NAME, DB_USER, DB_PASSWORD);
 		//	set the PDO error mode to exception
@@ -83,7 +135,7 @@ function connect_to_db(){
 	{
 		$error = 'Unable to connect to the database' . $e->getMessage() . '<br />';
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
-		$pdo = null;	// Close connection
+		$pdo = null;
 		exit();
 	}
 }
@@ -312,14 +364,14 @@ function create_tables(){
 		//Check if table already exists
 		if(!tableExists($conn, $table)){
 			$conn->exec("CREATE TABLE IF NOT EXISTS `$table` (
-					  `emailID` int(10) unsigned NOT NULL AUTO_INCREMENT,
-					  `subject` varchar(255) NOT NULL,
-					  `message` text NOT NULL,
-					  `receivers` text NOT NULL,
-					  `dateTimeAdded` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-					  `dateTimeRemove` timestamp DEFAULT NULL,
-					  PRIMARY KEY (`emailID`)
-					) ENGINE=InnoDB DEFAULT CHARSET=utf8");
+						  `emailID` int(10) unsigned NOT NULL AUTO_INCREMENT,
+						  `subject` varchar(255) NOT NULL,
+						  `message` text NOT NULL,
+						  `receivers` text NOT NULL,
+						  `dateTimeAdded` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+						  `dateTimeRemove` timestamp DEFAULT NULL,
+						  PRIMARY KEY (`emailID`)
+						) ENGINE=InnoDB DEFAULT CHARSET=utf8");
 
 			// Fill default values
 			fillAccessLevel($conn);
@@ -788,6 +840,8 @@ function create_tables(){
 						  `dateTimeApproved` timestamp NULL DEFAULT NULL,
 						  `dateTimeCancelled` timestamp NULL DEFAULT NULL,
 						  `adminNote` text,
+						  `emailSoonSent` tinyint(1) unsigned NOT NULL DEFAULT '0',
+						  `emailCheckSent` tinyint(1) unsigned NOT NULL DEFAULT '0',
 						  PRIMARY KEY (`orderID`),
 						  KEY `FK_UserID3_idx` (`orderApprovedByUserID`),
 						  CONSTRAINT `FK_UserID3` FOREIGN KEY (`orderApprovedByUserID`) REFERENCES `user` (`userID`) ON DELETE SET NULL ON UPDATE CASCADE
