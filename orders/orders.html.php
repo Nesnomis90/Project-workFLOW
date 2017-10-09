@@ -27,6 +27,25 @@
 			<?php endif; ?>
 		</div>
 
+		<div class="left">
+			<form action="" method="post">
+				<span>Sort the active orders by: </span>
+				<?php if($sortBy == "Day") : ?>
+					<input type="submit" name="disabled" value="Day" disabled="disabled">
+					<input type="submit" name="sortBy" value="Week">
+					<input type="submit" name="sortBy" value="Starting Time">
+				<?php elseif($sortBy == "Week") : ?>
+					<input type="submit" name="sortBy" value="Day">
+					<input type="submit" name="disabled" value="Week" disabled="disabled">
+					<input type="submit" name="sortBy" value="Starting Time">
+				<?php elseif($sortBy == "Starting Time") : ?>
+					<input type="submit" name="sortBy" value="Day">
+					<input type="submit" name="sortBy" value="Week">
+					<input type="submit" name="disabled" value="Starting Time" disabled="disabled">
+				<?php endif; ?>
+			</form>
+		</div>
+
 		<?php if($sortBy == "Day") : ?>
 			<table>
 				<caption>Active Orders - Listed by Day</caption>

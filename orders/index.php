@@ -454,6 +454,18 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Details') OR
 	exit();
 }
 
+if(isSet($_POST['sortBy'])){
+	if($_POST['sortBy'] == "Day"){
+		$sortBy = "Day";
+	} elseif($_POST['sortBy'] == "Week"){
+		$sortBy = "Week";
+	} elseif($_POST['sortBy'] == "Starting Time"){
+		$sortBy = "Starting Time";
+	}
+} else {
+	$sortBy = "Starting Time";
+}
+
 // Perform the actual database update of the edited information
 if(isSet($_POST['action']) AND $_POST['action'] == 'Submit Changes'){
 	// Validate user inputs
@@ -1087,13 +1099,6 @@ catch (PDOException $e)
 	$error = 'Error getting Order information: ' . $e->getMessage();
 	include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
 	exit();
-}
-
-// TO-DO: Testing
-$sortBy = "Day";
-
-if(!isSet($sortBy)){
-	$sortBy = "None";
 }
 
 // Create an array with the actual key/value pairs we want to use in our HTML

@@ -476,6 +476,18 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Details') OR
 	exit();
 }
 
+if(isSet($_POST['sortBy'])){
+	if($_POST['sortBy'] == "Day"){
+		$sortBy = "Day";
+	} elseif($_POST['sortBy'] == "Week"){
+		$sortBy = "Week";
+	} elseif($_POST['sortBy'] == "Starting Time"){
+		$sortBy = "Starting Time";
+	}
+} else {
+	$sortBy = "Starting Time";
+}
+
 // Perform the actual database update of the edited information
 if(isSet($_POST['action']) AND $_POST['action'] == 'Submit Changes'){
 	// Validate user inputs
@@ -1127,13 +1139,6 @@ catch (PDOException $e)
 	exit();
 }
 
-// TO-DO: Testing
-$sortBy = "Week";
-
-if(!isSet($sortBy)){
-	$sortBy = "None";
-}
-
 // Create an array with the actual key/value pairs we want to use in our HTML
 foreach($result AS $row){
 
@@ -1301,9 +1306,6 @@ foreach($result AS $row){
 			$status = "Active";
 		}
 	}
-
-	// TO-DO: differentiate new orders/active orders and cancelled/completed etc.
-	// Active/Completed/Cancelled/others...
 
 	// sort orders by their date and put them into different arrays representing orders today, this week and
 	if($status == "Active"){
