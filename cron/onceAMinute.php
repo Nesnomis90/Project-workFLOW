@@ -132,7 +132,7 @@ function alertStaffThatMeetingWithOrderIsAboutToStart(){
 				AND 		b.`actualEndDateTime` IS NULL
 				AND			b.`orderID` IS NOT NULL
 				AND 		DATE_ADD(b.`dateTimeCreated`, INTERVAL :waitMinutes MINUTE) < CURRENT_TIMESTAMP
-				AND			o.`emailSent` = 0";
+				AND			o.`emailSoonSent` = 0";
 		$s = $pdo->prepare($sql);
 		$s->bindValue(':bufferMinutes', TIME_LEFT_IN_MINUTES_UNTIL_MEETING_STARTS_BEFORE_SENDING_EMAIL);
 		$s->bindValue(':waitMinutes', MINIMUM_TIME_PASSED_IN_MINUTES_AFTER_CREATING_BOOKING_BEFORE_SENDING_EMAIL);
@@ -218,7 +218,7 @@ function alertStaffThatMeetingWithOrderIsAboutToStart(){
 
 					// Update booking that we've "sent" an email to the user 
 					$sql = "UPDATE 	`orders`
-							SET		`emailSent` = 1
+							SET		`emailSoonSent` = 1
 							WHERE	`orderID` = :orderID";
 					$s = $pdo->prepare($sql);
 					$s->bindValue(':orderID', $row['TheOrderID']);
