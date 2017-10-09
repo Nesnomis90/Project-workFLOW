@@ -246,7 +246,7 @@ function alertStaffThatMeetingWithOrderIsAboutToStart(){
 				return FALSE;
 			}
 		}
-		return TRUE;		
+		return TRUE;
 	}
 	catch(PDOException $e)
 	{
