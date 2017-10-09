@@ -14,4 +14,5 @@ include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 // ATTEMPT TO CREATE DATABASE AND TABLES
 create_db();
 create_tables();
+addMySQLFunctions();
 ?>
