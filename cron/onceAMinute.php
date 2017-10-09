@@ -91,6 +91,145 @@ function updateCompletedBookings(){
 	}
 }
 
+function alertStaffThatMeetingWithOrderIsAboutToStart(){
+	try
+	{
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+		
+		if(!isSet($pdo)){
+			$pdo = connect_to_db();
+		}
+
+		// Get all upcoming meetings that are TIME_LEFT_IN_MINUTES_UNTIL_MEETING_STARTS_BEFORE_SENDING_EMAIL minutes away from starting.
+		// That have an active order attached that we haven't already alerted/sent email to staff about
+		// Only try to alert a user up to 1 minute until meeting starts (in theory they should instantly get alerted)
+		// Only try to alert a user if the booking was made longer than MINIMUM_TIME_PASSED_IN_MINUTES_AFTER_CREATING_BOOKING_BEFORE_SENDING_EMAIL minutes ago
+		$sql = "SELECT 		(
+								SELECT 	`name`
+								FROM 	`meetingroom`
+								WHERE 	`meetingRoomID` = b.`meetingRoomID`
+							)							AS MeetingRoomName,
+							(
+								SELECT 	`name`
+								FROM 	`company`
+								WHERE 	`companyID` = b.`companyID`
+							)							AS CompanyName,
+							b.`dateTimeCreated`			AS DateCreated,
+							b.`startDateTime`			AS StartDate,
+							b.`endDateTime`				AS EndDate,
+							b.`displayName`				AS DisplayName,
+							b.`description`				AS BookingDescription,
+							o.`orderID`					AS TheOrderID,
+							o.`orderApprovedByUser`		AS OrderApprovedByUser,
+							o.`orderApprovedByAdmin`	AS OrderApprovedByAdmin,
+							o.`orderApprovedByStaff`	AS OrderApprovedByStaff
+				FROM		`booking` b
+				INNER JOIN 	`orders` o
+				ON 			o.`orderID` = b.`orderID`
+				WHERE 		DATE_SUB(b.`startDateTime`, INTERVAL :bufferMinutes MINUTE) < CURRENT_TIMESTAMP
+				AND			DATE_SUB(b.`startDateTime`, INTERVAL 1 MINUTE) > CURRENT_TIMESTAMP
+				AND 		b.`dateTimeCancelled` IS NULL
+				AND			o.`dateTimeCancelled` IS NULL
+				AND 		b.`actualEndDateTime` IS NULL
+				AND			b.`orderID` IS NOT NULL
+				AND 		DATE_ADD(b.`dateTimeCreated`, INTERVAL :waitMinutes MINUTE) < CURRENT_TIMESTAMP
+				AND			o.`emailSent` = 0";
+		$s = $pdo->prepare($sql);
+		$s->bindValue(':bufferMinutes', TIME_LEFT_IN_MINUTES_UNTIL_MEETING_STARTS_BEFORE_SENDING_EMAIL);
+		$s->bindValue(':waitMinutes', MINIMUM_TIME_PASSED_IN_MINUTES_AFTER_CREATING_BOOKING_BEFORE_SENDING_EMAIL);
+		$s->execute();
+
+		$result = $s->fetchAll(PDO::FETCH_ASSOC);
+		if(isSet($result)){
+			$rowNum = sizeOf($result);
+		} else {
+			$rowNum  = 0;
+		}
+
+		if($rowNum > 0){
+			foreach($result AS $row){
+				$upcomingMeetingsNotAlerted[] = array(
+														'MeetingRoomName' => $row['MeetingRoomName'],
+														'CompanyName' => $row['CompanyName'],
+														'TheOrderID' => $row['TheOrderID'],
+														'DateCreated' => $row['DateCreated'],
+														'StartDate' => $row['StartDate'],
+														'EndDate' => $row['EndDate'],
+														'DisplayName' => $row['DisplayName'],
+														'BookingDescription' => $row['BookingDescription']
+													);
+			}
+
+			$numberOfUsersToAlert = sizeOf($upcomingMeetingsNotAlerted);
+			echo "Number of orders to Alert about: $numberOfUsersToAlert";	// TO-DO: Remove before uploading.
+			echo "<br />";
+
+			try
+			{
+				include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+
+				if(!isSet($pdo)){
+					$pdo = connect_to_db();
+				}
+
+				$pdo->beginTransaction();
+
+				foreach($upcomingMeetingsNotAlerted AS $row){
+					$emailSubject = "Upcoming Meeting Info!";
+
+					$displayStartDate = convertDatetimeToFormat($row['StartDate'] , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
+					$displayEndDate = convertDatetimeToFormat($row['EndDate'], 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
+
+					$emailMessage = 
+					"A booked meeting with an active order is starting soon!\n" . 
+					"The booked Meeting Room: " . $row['MeetingRoomName'] . ".\n" . 
+					"The booked Start Time: " . $displayStartDate . ".\n" .
+					"The booked End Time: " . $displayEndDate . ".\n\n" .
+					"The order details: ";
+
+					//$email = $row['UserEmail']; // TO-DO: Get admin/staff emails
+
+					// Instead of sending the email here, we store them in the database to send them later instead.
+					// That way, we can limit the amount of email being sent out easier.
+					// Store email to be sent out later
+					$sql = 'INSERT INTO	`email`
+							SET			`subject` = :subject,
+										`message` = :message,
+										`receivers` = :receivers,
+										`dateTimeRemove` = DATE_ADD(CURRENT_TIMESTAMP, INTERVAL 1 HOUR);';
+					$s = $pdo->prepare($sql);
+					$s->bindValue(':subject', $emailSubject);
+					$s->bindValue(':message', $emailMessage);
+					$s->bindValue(':receivers', $email);
+					$s->execute();
+
+					// Update booking that we've "sent" an email to the user 
+					$sql = "UPDATE 	`orders`
+							SET		`emailSent` = 1
+							WHERE	`orderID` = :orderID";
+					$s = $pdo->prepare($sql);
+					$s->bindValue(':orderID', $row['TheOrderID']);
+					$s->execute();
+				}
+
+				$pdo->commit();
+			}
+			catch(PDOException $e)
+			{
+				$pdo->rollBack();
+				$pdo = null;
+				return FALSE;
+			}
+		}
+		return TRUE;		
+	}
+	catch(PDOException $e)
+	{
+		$pdo = null;
+		return FALSE;
+	}
+}
+
 // Check if a meeting is about to start and alert the user by "sending an email" e.g. adding it to the email queue.
 function alertUserThatMeetingIsAboutToStart(){
 	try

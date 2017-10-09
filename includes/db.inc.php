@@ -840,6 +840,7 @@ function create_tables(){
 						  `dateTimeApproved` timestamp NULL DEFAULT NULL,
 						  `dateTimeCancelled` timestamp NULL DEFAULT NULL,
 						  `adminNote` text,
+						  `emailSent` tinyint(1) unsigned NOT NULL DEFAULT '0',
 						  PRIMARY KEY (`orderID`),
 						  KEY `FK_UserID3_idx` (`orderApprovedByUserID`),
 						  CONSTRAINT `FK_UserID3` FOREIGN KEY (`orderApprovedByUserID`) REFERENCES `user` (`userID`) ON DELETE SET NULL ON UPDATE CASCADE
