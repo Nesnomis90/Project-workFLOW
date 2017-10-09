@@ -114,7 +114,6 @@ function alertStaffThatMeetingWithOrderIsAboutToStart(){
 								FROM 	`company`
 								WHERE 	`companyID` = b.`companyID`
 							)							AS CompanyName,
-							b.`dateTimeCreated`			AS DateCreated,
 							b.`startDateTime`			AS StartDate,
 							b.`endDateTime`				AS EndDate,
 							b.`displayName`				AS DisplayName,
@@ -148,15 +147,28 @@ function alertStaffThatMeetingWithOrderIsAboutToStart(){
 
 		if($rowNum > 0){
 			foreach($result AS $row){
+				
+				// TO-DO: Set this to once per day email instead of starting soon email
+				// i.e. make another function that checks if stuff is approved yet, while this only reminds about already confirmed ones
+				if($row['OrderApprovedByUser'] == 1 AND ($row['OrderApprovedByAdmin'] == 1 OR $row['OrderApprovedByStaff'] == 1)){
+					$approvedMessage = "Order approved by both staff and user.";
+				} elseif($row['OrderApprovedByUser'] == 0 AND ($row['OrderApprovedByAdmin'] == 1 OR $row['OrderApprovedByStaff'] == 1)){
+					$approvedMessage = "Order not yet approved by user.";
+				} elseif($row['OrderApprovedByUser'] == 1 AND $row['OrderApprovedByAdmin'] == 0 AND $row['OrderApprovedByStaff'] == 0){
+					$approvedMessage = "Order not yet approved by staff.";
+				} elseif($row['OrderApprovedByUser'] == 0 AND $row['OrderApprovedByAdmin'] == 0 AND $row['OrderApprovedByStaff'] == 0){
+					$approvedMessage = "Order not yet approved by staff and user.";
+				}
+
 				$upcomingMeetingsNotAlerted[] = array(
 														'MeetingRoomName' => $row['MeetingRoomName'],
 														'CompanyName' => $row['CompanyName'],
 														'TheOrderID' => $row['TheOrderID'],
-														'DateCreated' => $row['DateCreated'],
 														'StartDate' => $row['StartDate'],
 														'EndDate' => $row['EndDate'],
 														'DisplayName' => $row['DisplayName'],
-														'BookingDescription' => $row['BookingDescription']
+														'BookingDescription' => $row['BookingDescription'],
+														'ApprovedMessage' => $approvedMessage
 													);
 			}
 
@@ -185,8 +197,9 @@ function alertStaffThatMeetingWithOrderIsAboutToStart(){
 					"The booked Meeting Room: " . $row['MeetingRoomName'] . ".\n" . 
 					"The booked Start Time: " . $displayStartDate . ".\n" .
 					"The booked End Time: " . $displayEndDate . ".\n\n" .
-					"The order details: ";
+					"The order status: " . $row['ApprovedMessage'];
 
+					// TO-DO: Add order contents to email message.
 					//$email = $row['UserEmail']; // TO-DO: Get admin/staff emails
 
 					// Instead of sending the email here, we store them in the database to send them later instead.
@@ -257,7 +270,6 @@ function alertUserThatMeetingIsAboutToStart(){
 							)							AS CompanyName,
 							u.`email`					AS UserEmail,
 							b.`bookingID`				AS TheBookingID,
-							b.`dateTimeCreated`			AS DateCreated,
 							b.`startDateTime`			AS StartDate,
 							b.`endDateTime`				AS EndDate,
 							b.`displayName`				AS DisplayName,
@@ -293,7 +305,6 @@ function alertUserThatMeetingIsAboutToStart(){
 														'CompanyName' => $row['CompanyName'],
 														'UserEmail' => $row['UserEmail'],
 														'TheBookingID' => $row['TheBookingID'],
-														'DateCreated' => $row['DateCreated'],
 														'StartDate' => $row['StartDate'],
 														'EndDate' => $row['EndDate'],
 														'DisplayName' => $row['DisplayName'],
