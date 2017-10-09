@@ -25,7 +25,7 @@
 
 		<div class="left">
 			<form action="" method="post">
-				<span>Sort the active orders by: </span>
+				<span>Sort the active orders by</span>
 				<?php if($sortBy == "Day") : ?>
 					<input type="submit" name="disabled" value="Day" disabled="disabled">
 					<input type="submit" name="sortBy" value="Week">
@@ -51,9 +51,9 @@
 						<tr><td>
 							<table>
 								<tr>
-									<th colspan="12">Order</th>
+									<th colspan="11">Order</th>
 									<th colspan="3">Messages</th>
-									<th colspan="4">Meeting</th>
+									<th colspan="4">Booking Details</th>
 									<th colspan="1">Cancel Order</th>
 								</tr>
 								<tr>
@@ -64,7 +64,6 @@
 									<th>Content</th>
 									<th>User Notes</th>
 									<th>Admin Note</th>
-									<th>Final Price</th>
 									<th>Created At</th>
 									<th>Last Update</th>
 									<th>Approved At</th>
@@ -92,7 +91,6 @@
 											<td style="white-space: pre-wrap;"><?php htmlout($order['OrderContent']); ?></td>
 											<td style="white-space: pre-wrap;"><?php htmlout($order['OrderUserNotes']); ?></td>
 											<td style="white-space: pre-wrap;"><?php htmlout($order['OrderAdminNote']); ?></td>
-											<td><?php htmlout($order['OrderFinalPrice']); ?></td>
 											<td><?php htmlout($order['DateTimeCreated']); ?></td>
 											<td><?php htmlout($order['DateTimeUpdated']); ?></td>
 											<td><?php htmlout($order['DateTimeApproved']); ?></td>
@@ -128,9 +126,9 @@
 								<td>
 									<table>
 										<tr>
-											<th colspan="12">Order</th>
+											<th colspan="11">Order</th>
 											<th colspan="3">Messages</th>
-											<th colspan="4">Meeting</th>
+											<th colspan="4">Booking Details</th>
 											<th colspan="1">Cancel Order</th>
 										</tr>
 										<tr>
@@ -141,7 +139,6 @@
 											<th>Content</th>
 											<th>User Notes</th>
 											<th>Admin Note</th>
-											<th>Final Price</th>
 											<th>Created At</th>
 											<th>Last Update</th>
 											<th>Approved At</th>
@@ -169,7 +166,6 @@
 														<td style="white-space: pre-wrap;"><?php htmlout($order['OrderContent']); ?></td>
 														<td style="white-space: pre-wrap;"><?php htmlout($order['OrderUserNotes']); ?></td>
 														<td style="white-space: pre-wrap;"><?php htmlout($order['OrderAdminNote']); ?></td>
-														<td><?php htmlout($order['OrderFinalPrice']); ?></td>
 														<td><?php htmlout($order['DateTimeCreated']); ?></td>
 														<td><?php htmlout($order['DateTimeUpdated']); ?></td>
 														<td><?php htmlout($order['DateTimeApproved']); ?></td>
@@ -197,14 +193,16 @@
 			</table>
 		<?php else : ?>
 			<table>
-				<caption>Active Orders - Listed by starting time</caption>
+				<caption>Active Orders - Listed by Starting Time</caption>
 				<tr>
-					<th colspan="12">Order</th>
+					<th colspan="13">Order</th>
 					<th colspan="3">Messages</th>
-					<th colspan="4">Meeting</th>
+					<th colspan="2">Booking Details</th>
 					<th colspan="1">Cancel Order</th>
 				</tr>
 				<tr>
+					<th>Start</th>
+					<th>End</th>
 					<th>Status</th>
 					<th>Approved By User</th>
 					<th>Approved By Staff</th>
@@ -212,7 +210,6 @@
 					<th>Content</th>
 					<th>User Notes</th>
 					<th>Admin Note</th>
-					<th>Final Price</th>
 					<th>Created At</th>
 					<th>Last Update</th>
 					<th>Approved At</th>
@@ -221,8 +218,6 @@
 					<th>Last Message From Staff</th>
 					<th>Last Message From User</th>
 					<th>Room Name</th>
-					<th>Start</th>
-					<th>End</th>
 					<th>Booked For Company</th>
 					<th></th>
 				</tr>
@@ -230,6 +225,8 @@
 					<?php foreach($order AS $row): ?>
 						<form action="" method="post">
 							<tr>
+								<td><?php htmlout($row['OrderStartTime']); ?></td>
+								<td><?php htmlout($row['OrderEndTime']); ?></td>
 								<?php if($row['OrderStatus'] == "New Order!") : ?>
 									<td style="white-space: pre-wrap; color: green;"><span class="blink_me"><?php htmlout($row['OrderStatus']); ?></span></td>
 								<?php else : ?>
@@ -241,7 +238,6 @@
 								<td style="white-space: pre-wrap;"><?php htmlout($row['OrderContent']); ?></td>
 								<td style="white-space: pre-wrap;"><?php htmlout($row['OrderUserNotes']); ?></td>
 								<td style="white-space: pre-wrap;"><?php htmlout($row['OrderAdminNote']); ?></td>
-								<td><?php htmlout($row['OrderFinalPrice']); ?></td>
 								<td><?php htmlout($row['DateTimeCreated']); ?></td>
 								<td><?php htmlout($row['DateTimeUpdated']); ?></td>
 								<td><?php htmlout($row['DateTimeApproved']); ?></td>
@@ -250,8 +246,6 @@
 								<td style="white-space: pre-wrap;"><?php htmlout($row['OrderLastMessageFromStaff']); ?></td>
 								<td style="white-space: pre-wrap;"><?php htmlout($row['OrderLastMessageFromUser']); ?></td>
 								<td><?php htmlout($row['OrderRoomName']); ?></td>
-								<td><?php htmlout($row['OrderStartTime']); ?></td>
-								<td><?php htmlout($row['OrderEndTime']); ?></td>
 								<td><?php htmlout($row['OrderBookedFor']); ?></td>
 								<td><input type="submit" name="action" value="Cancel"></td>
 								<input type="hidden" name="OrderID" value="<?php htmlout($row['TheOrderID']); ?>">
@@ -269,7 +263,7 @@
 				<tr>
 					<th colspan="10">Order</th>
 					<th colspan="3">Messages</th>
-					<th colspan="4">Meeting</th>
+					<th colspan="4">Booking Details</th>
 				</tr>
 				<tr>
 					<th>Status</th>
@@ -316,7 +310,7 @@
 				<tr>
 					<th colspan="8">Order</th>
 					<th colspan="3">Messages</th>
-					<th colspan="4">Meeting</th>
+					<th colspan="4">Booking Details</th>
 				</tr>
 				<tr>
 					<th>Status</th>
@@ -365,7 +359,7 @@
 				<tr>
 					<th colspan="12">Order</th>
 					<th colspan="3">Messages</th>
-					<th colspan="4">Meeting</th>
+					<th colspan="4">Booking Details</th>
 					<th colspan="1">Cancel Order</th>
 				</tr>
 				<tr>
@@ -380,6 +374,8 @@
 					<th>Created At</th>
 					<th>Last Update</th>
 					<th>Approved At</th>
+					<th>Cancelled At</th>
+					<th>Completed At</th>
 					<th>Details</th>
 					<th>Status</th>
 					<th>Last Message From Staff</th>
@@ -408,6 +404,8 @@
 							<td><?php htmlout($row['DateTimeCreated']); ?></td>
 							<td><?php htmlout($row['DateTimeUpdated']); ?></td>
 							<td><?php htmlout($row['DateTimeApproved']); ?></td>
+							<td><?php htmlout($row['DateTimeCancelled']); ?></td>
+							<td><?php htmlout($row['DateTimeCompleted']); ?></td>
 							<td><input type="submit" name="action" value="Details"></td>
 							<td style="white-space: pre-wrap;"><?php htmlout($row['OrderMessageStatus']); ?></td>
 							<td style="white-space: pre-wrap;"><?php htmlout($row['OrderLastMessageFromStaff']); ?></td>
@@ -416,7 +414,13 @@
 							<td><?php htmlout($row['OrderStartTime']); ?></td>
 							<td><?php htmlout($row['OrderEndTime']); ?></td>
 							<td><?php htmlout($row['OrderBookedFor']); ?></td>
-							<td><input type="submit" name="action" value="Cancel"></td>
+							<td>
+								<?php if(empty($row['DateTimeCancelled']) AND empty($row['DateTimeCompleted'])) : ?>
+									<input type="submit" name="action" value="Cancel">
+								<?php else : ?>
+									<input type="submit" name="disabled" value="Cancel" disabled="disabled">
+								<?php endif; ?>
+							</td>
 							<input type="hidden" name="OrderID" value="<?php htmlout($row['TheOrderID']); ?>">
 						</tr>
 					</form>

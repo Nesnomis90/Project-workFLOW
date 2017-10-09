@@ -1420,7 +1420,13 @@ foreach($result AS $row){
 								'OrderRoomName' => $orderRoomName,
 								'OrderBookedFor' => $orderBookedFor
 							);
-	} else{
+	} else {
+		if(!isSet($displayDateTimeCancelled)){
+			$displayDateTimeCancelled = "";
+		}
+		if(!isSet($displayDateTimeCompleted)){
+			$displayDateTimeCompleted = "";
+		}
 		$ordersOther[] = array(
 								'TheOrderID' => $row['TheOrderID'],
 								'OrderStatus' => $orderStatus,
@@ -1434,6 +1440,7 @@ foreach($result AS $row){
 								'DateTimeCreated' => $displayDateTimeCreated,
 								'DateTimeUpdated' => $displayDateTimeUpdated,
 								'DateTimeCancelled' => $displayDateTimeCancelled,
+								'DateTimeCompleted' => $displayDateTimeCompleted,
 								'OrderContent' => $row['OrderContent'],
 								'OrderAdminNote' => $row['OrderAdminNote'],
 								'OrderFinalPrice' => $displayOrderFinalPrice,

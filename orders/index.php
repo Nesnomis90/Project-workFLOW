@@ -1172,7 +1172,7 @@ foreach($result AS $row){
 	}
 
 	if($newOrder){
-		$orderStatus = "New Order!\nPending Staff Approval";
+		$orderStatus = "New Order!";
 	} elseif($orderIsApprovedByStaff AND $orderIsApprovedByUser){
 		$orderStatus = "Order Approved!";
 		if($extrasApproved == $extrasOrdered AND $extrasPurchased == $extrasOrdered){

@@ -29,7 +29,7 @@
 
 		<div class="left">
 			<form action="" method="post">
-				<span>Sort the active orders by: </span>
+				<span>Sort the active orders by</span>
 				<?php if($sortBy == "Day") : ?>
 					<input type="submit" name="disabled" value="Day" disabled="disabled">
 					<input type="submit" name="sortBy" value="Week">
@@ -57,7 +57,7 @@
 								<tr>
 									<th colspan="8">Order</th>
 									<th colspan="3">Messages</th>
-									<th colspan="4">Meeting</th>
+									<th colspan="4">Booking Details</th>
 								</tr>
 								<tr>
 									<th>Status</th>
@@ -123,7 +123,7 @@
 										<tr>
 											<th colspan="8">Order</th>
 											<th colspan="3">Messages</th>
-											<th colspan="4">Meeting</th>
+											<th colspan="4">Booking Details</th>
 										</tr>
 										<tr>
 											<th>Status</th>
@@ -179,13 +179,15 @@
 			</table>
 		<?php else : ?>
 			<table>
-				<caption>Active Orders - Listed by starting time</caption>
+				<caption>Active Orders - Listed by Starting Time</caption>
 				<tr>
-					<th colspan="8">Order</th>
-					<th colspan="3">Messages</th>
-					<th colspan="4">Meeting</th>
+					<th colspan="10">Order</th>
+					<th colspan="3">Booking Details</th>
+					<th colspan="2">Meeting</th>
 				</tr>
 				<tr>
+					<th>Start</th>
+					<th>End</th>
 					<th>Status</th>
 					<th>Approved By User</th>
 					<th>Approved By Staff</th>
@@ -198,14 +200,14 @@
 					<th>Last Message From Staff</th>
 					<th>Last Message From User</th>
 					<th>Room Name</th>
-					<th>Start</th>
-					<th>End</th>
 					<th>Booked For Company</th>
 				</tr>
 				<?php if($rowNum > 0) : ?>
 					<?php foreach($order AS $row): ?>
 						<form action="" method="post">
 							<tr>
+								<td><?php htmlout($row['OrderStartTime']); ?></td>
+								<td><?php htmlout($row['OrderEndTime']); ?></td>
 								<?php if($row['OrderStatus'] == "New Order!") : ?>
 									<td style="white-space: pre-wrap; color: green;"><span class="blink_me"><?php htmlout($row['OrderStatus']); ?></span></td>
 								<?php else : ?>
@@ -222,8 +224,6 @@
 								<td style="white-space: pre-wrap;"><?php htmlout($row['OrderLastMessageFromStaff']); ?></td>
 								<td style="white-space: pre-wrap;"><?php htmlout($row['OrderLastMessageFromUser']); ?></td>
 								<td><?php htmlout($row['OrderRoomName']); ?></td>
-								<td><?php htmlout($row['OrderStartTime']); ?></td>
-								<td><?php htmlout($row['OrderEndTime']); ?></td>
 								<td><?php htmlout($row['OrderBookedFor']); ?></td>
 								<input type="hidden" name="OrderID" value="<?php htmlout($row['TheOrderID']); ?>">
 							</tr>
