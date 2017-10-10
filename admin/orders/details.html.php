@@ -464,9 +464,10 @@
 									<?php endif; ?>
 								<?php else : ?>
 									<?php if($row['ExtraBooleanApprovedForPurchase'] == 1) : ?>
-										<label style="width: auto;"><input type="checkbox" name="isApprovedForPurchase[]" disabled="disabled" value="<?php htmlout($row['ExtraID']); ?>" checked="checked">Approved</label>
+										<label style="width: auto;"><input type="checkbox" name="disabled" disabled="disabled" value="<?php htmlout($row['ExtraID']); ?>" checked="checked">Approved</label>
+										<input type="hidden" name="isApprovedForPurchase[]" value="<?php htmlout($row['ExtraID']); ?>">
 									<?php else : ?>
-										<label style="width: auto;"><input type="checkbox" name="isApprovedForPurchase[]" disabled="disabled" value="<?php htmlout($row['ExtraID']); ?>">Approved</label>
+										<label style="width: auto;"><input type="checkbox" name="disabled" disabled="disabled" value="<?php htmlout($row['ExtraID']); ?>">Approved</label>
 									<?php endif; ?>
 								<?php endif; ?>
 							</td>
@@ -481,9 +482,10 @@
 									<?php endif; ?>
 								<?php else : ?>
 									<?php if($row['ExtraBooleanPurchased'] == 1) : ?>
-										<label style="width: auto;"><input type="checkbox" name="isPurchased[]" disabled="disabled" value="<?php htmlout($row['ExtraID']); ?>" checked="checked">Purchased</label>
+										<label style="width: auto;"><input type="checkbox" name="disabled" disabled="disabled" value="<?php htmlout($row['ExtraID']); ?>" checked="checked">Purchased</label>
+										<input type="hidden" name="isPurchased[]" value="<?php htmlout($row['ExtraID']); ?>">
 									<?php else : ?>
-										<label style="width: auto;"><input type="checkbox" name="isPurchased[]" disabled="disabled" value="<?php htmlout($row['ExtraID']); ?>">Purchased</label>
+										<label style="width: auto;"><input type="checkbox" name="disabled" disabled="disabled" value="<?php htmlout($row['ExtraID']); ?>">Purchased</label>
 									<?php endif; ?>
 								<?php endif; ?>
 							</td>
