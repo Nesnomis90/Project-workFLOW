@@ -104,6 +104,7 @@
 											<td><?php htmlout($order['OrderBookedFor']); ?></td>
 											<td><input type="submit" name="action" value="Cancel"></td>
 											<input type="hidden" name="OrderID" value="<?php htmlout($order['TheOrderID']); ?>">
+											<input type="hidden" name="disableEdit" value="0">
 										</tr>
 									</form>
 								<?php endforeach; ?>
@@ -179,6 +180,7 @@
 														<td><?php htmlout($order['OrderBookedFor']); ?></td>
 														<td><input type="submit" name="action" value="Cancel"></td>
 														<input type="hidden" name="OrderID" value="<?php htmlout($order['TheOrderID']); ?>">
+														<input type="hidden" name="disableEdit" value="0">
 													</tr>
 												</form>
 											<?php endforeach; ?>
@@ -249,6 +251,7 @@
 								<td><?php htmlout($row['OrderBookedFor']); ?></td>
 								<td><input type="submit" name="action" value="Cancel"></td>
 								<input type="hidden" name="OrderID" value="<?php htmlout($row['TheOrderID']); ?>">
+								<input type="hidden" name="disableEdit" value="0">
 							</tr>
 						</form>
 					<?php endforeach; ?>
@@ -299,6 +302,7 @@
 								<td style="white-space: pre-wrap;"><?php htmlout($row['OrderLastMessageFromUser']); ?></td>
 								<td><?php htmlout($row['OrderBookedFor']); ?></td>
 								<input type="hidden" name="OrderID" value="<?php htmlout($row['TheOrderID']); ?>">
+								<input type="hidden" name="disableEdit" value="1">
 							</tr>
 						</form>
 					<?php endforeach; ?>
@@ -348,6 +352,7 @@
 							<td><?php htmlout($row['OrderEndTime']); ?></td>
 							<td><?php htmlout($row['OrderBookedFor']); ?></td>
 							<input type="hidden" name="OrderID" value="<?php htmlout($row['TheOrderID']); ?>">
+							<input type="hidden" name="disableEdit" value="1">
 						</tr>
 					</form>
 				<?php endforeach; ?>
@@ -357,7 +362,7 @@
 		<?php if(isSet($ordersOther)) : ?>
 			<table><caption>Other Orders</caption>
 				<tr>
-					<th colspan="12">Order</th>
+					<th colspan="14">Order</th>
 					<th colspan="3">Messages</th>
 					<th colspan="4">Booking Details</th>
 					<th colspan="1">Cancel Order</th>
@@ -422,6 +427,7 @@
 								<?php endif; ?>
 							</td>
 							<input type="hidden" name="OrderID" value="<?php htmlout($row['TheOrderID']); ?>">
+							<input type="hidden" name="disableEdit" value="0">
 						</tr>
 					</form>
 				<?php endforeach; ?>
