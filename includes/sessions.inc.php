@@ -34,6 +34,8 @@ function unsetSessionsFromAdmin(){
 	unset($_SESSION['BookingHistoryIntervalNumber']);
 	unset($_SESSION['BookingHistoryCompanyInfo']);
 	unset($_SESSION['BookingHistoryFirstPeriodIntervalNumber']);
+	unset($_SESSION['BookingHistoryStartDate']);
+	unset($_SESSION['BookingHistoryEndDate']);
 
 	unset($_SESSION['AddCompanyCompanyName']);
 

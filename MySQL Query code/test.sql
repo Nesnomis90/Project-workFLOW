@@ -130,6 +130,51 @@ INNER JOIN 	`credits` cr
 ON			cr.`CreditsID` = cc.`CreditsID`
 AND			CURDATE() >= c.`endDate`;
 
+SELECT 		u.`email`		AS Email
+FROM 		`user` u
+INNER JOIN 	`accesslevel` a
+ON			a.`AccessID` = u.`AccessID`
+WHERE		(
+							a.`AccessName` = 'Admin'
+				AND			u.`sendAdminEmail` = 1
+			)
+OR 			a.`AccessName` = 'Staff';
+
+SELECT 		m.`name`										AS MeetingRoomName,
+			c.`name`										AS CompanyName,
+			b.`startDateTime`								AS StartDate,
+			b.`endDateTime`									AS EndDate,
+			b.`displayName`									AS DisplayName,
+			b.`description`									AS BookingDescription,
+			o.`orderID`										AS TheOrderID,
+			o.`orderApprovedByUser`							AS OrderApprovedByUser,
+			o.`orderApprovedByAdmin`						AS OrderApprovedByAdmin,
+			o.`orderApprovedByStaff`						AS OrderApprovedByStaff,
+			GROUP_CONCAT(ex.`name`, " (", eo.`amount`, ")"
+				SEPARATOR "\n")								AS OrderContent,
+			COUNT(eo.`extraID`)								AS OrderExtrasOrdered,
+			COUNT(eo.`approvedForPurchase`)					AS OrderExtrasApproved,
+			COUNT(eo.`purchased`)							AS OrderExtrasPurchased
+FROM		`booking` b
+INNER JOIN 	`orders` o
+ON 			o.`orderID` = b.`orderID`
+INNER JOIN	(
+						`extraorders` eo
+			INNER JOIN 	`extra` ex
+			ON 			eo.`extraID` = ex.`extraID`
+)
+ON 			eo.`orderID` = o.`orderID`
+INNER JOIN 	`meetingroom` m
+ON			m.`meetingRoomID` = b.`meetingRoomID`
+INNER JOIN 	`company` c
+ON 			c.`companyID` = b.`companyID`
+WHERE 		b.`dateTimeCancelled` IS NULL
+AND			o.`dateTimeCancelled` IS NULL
+AND 		b.`actualEndDateTime` IS NULL
+AND			b.`orderID` IS NOT NULL
+AND			o.`emailSoonSent` = 0
+GROUP BY 	o.`orderID`;
+
 SELECT		o.`orderFinalPrice` 											AS FinalPrice,
 			SUM(IFNULL(eo.`alternativePrice`, ex.`price`) * eo.`amount`) 	AS FullPrice
 FROM		`orders` o

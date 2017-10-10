@@ -2368,11 +2368,11 @@ if(isSet($_POST['action']) AND $_POST['action'] == "Confirm Code"){
 
 // Handles booking based on selected meeting room
 if(	((isSet($_POST['action']) AND $_POST['action'] == 'Create Meeting')) OR
-	(isSet($_SESSION['refreshAddCreateBooking']) AND $_SESSION['refreshAddCreateBooking']))
-{
+	(isSet($_SESSION['refreshAddCreateBooking']) AND $_SESSION['refreshAddCreateBooking'])
+	){
 	// Confirm that we've reset.
 	unset($_SESSION['refreshAddCreateBooking']);
-	
+
 	$_SESSION['confirmOrigins'] = "Create Meeting";
 	$SelectedUserID = checkIfLocalDeviceOrLoggedIn();
 	unset($_SESSION['confirmOrigins']);
@@ -2381,7 +2381,7 @@ if(	((isSet($_POST['action']) AND $_POST['action'] == 'Create Meeting')) OR
 		try
 		{
 			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
-			
+
 			// Get the logged in user's default booking information
 			$pdo = connect_to_db();
 
@@ -2676,10 +2676,10 @@ if(	((isSet($_POST['action']) AND $_POST['action'] == 'Create Meeting')) OR
 		$s->bindValue(':minimumSecondsPerBooking', $minimumSecondsPerBooking);
 		$s->bindValue(':aboveThisManySecondsToCount', $aboveThisManySecondsToCount);
 		$s->execute();
-		
+
 		// Create an array with the row information we retrieved
 		$result = $s->fetchAll(PDO::FETCH_ASSOC);
-			
+
 			foreach($result as $row){
 				// Get the companies the user works for
 				// This will be used to create a dropdown list in HTML
@@ -2771,11 +2771,11 @@ if(	((isSet($_POST['action']) AND $_POST['action'] == 'Create Meeting')) OR
 									'PotentialCreditsRemaining' => $displayPotentialCompanyCreditsRemaining,
 									'HourPriceOverCredit' => $displayOverHourPrice
 									);
-				$_SESSION['AddCreateBookingCompanyArray'] = $company;					
+				$_SESSION['AddCreateBookingCompanyArray'] = $company;
 			}
 
 		$pdo = null;
-				
+
 		// We only need to allow the user a company dropdown selector if they
 		// are connected to more than 1 company.
 		// If not we just store the companyID in a hidden form field
@@ -2810,23 +2810,23 @@ if(	((isSet($_POST['action']) AND $_POST['action'] == 'Create Meeting')) OR
 			$_SESSION['AddCreateBookingInfoArray']['PotentialCreditsRemaining'] = "N/A";
 			$_SESSION['AddCreateBookingInfoArray']['HourPriceOverCredit'] = "N/A";
 			$_SESSION['AddCreateBookingInfoArray']['BookingDescription'] = "";
-		}		
+		}
 	}
 	catch(PDOException $e)
 	{
 		$error = 'Error fetching user details: ' . $e->getMessage();
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
 		$pdo = null;
-		exit();					
+		exit();
 	}
-	
+
 	// Set the correct information
 	$row = $_SESSION['AddCreateBookingInfoArray'];
 	$original = $_SESSION['AddCreateBookingOriginalInfoArray'];
 
 		// Altered inputs
 	if(isSet($row['TheCompanyID'])){
-		
+
 			// Changed company?
 		if(isSet($company)){
 			foreach($company AS $cmp){
@@ -2840,14 +2840,14 @@ if(	((isSet($_POST['action']) AND $_POST['action'] == 'Create Meeting')) OR
 					$row['BookingDescription'] = "Booked for " . $cmp['companyName'];
 					break;
 				}
-			}				
+			}
 		}
-		
+
 		$selectedCompanyID = $row['TheCompanyID'];
 		$companyID = $row['TheCompanyID'];
 	} else {
 		$selectedCompanyID = '';
-		$companyID = '';	
+		$companyID = '';
 	}
 
 	if(isSet($row['BookedForCompany'])){
@@ -2902,7 +2902,7 @@ if(	((isSet($_POST['action']) AND $_POST['action'] == 'Create Meeting')) OR
 	} else {
 		$validBookingEndTime = getNextValidBookingEndTime(substr($validBookingStartTime,0,-3));
 		$endDateTime = convertDatetimeToFormat($validBookingEndTime , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
-	}	
+	}
 
 	if(isSet($row['BookedBy'])){
 		$displayName = $row['BookedBy'];
@@ -2929,7 +2929,7 @@ if(	((isSet($_POST['action']) AND $_POST['action'] == 'Create Meeting')) OR
 	var_dump($_SESSION); // TO-DO: remove after testing is done
 	// Change form
 	include 'addbooking.html.php';
-	exit();		
+	exit();
 }
 
 // When the user has added the needed information and wants to add the booking
@@ -2951,7 +2951,7 @@ if ((isSet($_POST['add']) AND $_POST['add'] == "Add Booking") OR
 		if($invalidInput){
 			rememberAddCreateBookingInputs();
 			$_SESSION['refreshAddCreateBooking'] = TRUE;
-			
+
 			header('Location: ' . $location);
 			exit();
 		}

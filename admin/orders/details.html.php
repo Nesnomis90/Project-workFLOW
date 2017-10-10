@@ -416,11 +416,15 @@
 				</div>
 
 				<div>
-					<label>Change Order Approval: </label>
-					<?php if($orderIsApproved == 1) : ?>
-						<label class="checkboxlabel"><input type="checkbox" name="isApproved" value="1" checked>Set As Approved</label>
+					<?php if($_POST['disableEdit'] == 0) : ?>
+						<label>Change Order Approval: </label>
+						<?php if($orderIsApproved == 1) : ?>
+							<label class="checkboxlabel"><input type="checkbox" name="isApproved" value="1" checked="checked">Set As Approved</label>
+						<?php else : ?>
+							<label class="checkboxlabel"><input type="checkbox" name="isApproved" value="1">Set As Approved</label>
+						<?php endif; ?>
 					<?php else : ?>
-						<label class="checkboxlabel"><input type="checkbox" name="isApproved" value="1">Set As Approved</label>
+						<input type="hidden" name="isApproved" value="<?php htmlout($orderIsApproved); ?>">
 					<?php endif; ?>
 				</div>
 			</fieldset>
@@ -452,36 +456,58 @@
 							<td><?php htmlout($row['ExtraPrice']); ?></td>
 							<td><?php htmlout($row['ExtraAmount']); ?></td>
 							<td>
-								<?php if($row['ExtraBooleanApprovedForPurchase'] == 1) : ?>
-									<label style="width: auto;"><input type="checkbox" name="isApprovedForPurchase[]" value="<?php htmlout($row['ExtraID']); ?>" checked>Approved</label>
+								<?php if($_POST['disableEdit'] == 0) : ?>
+									<?php if($row['ExtraBooleanApprovedForPurchase'] == 1) : ?>
+										<label style="width: auto;"><input type="checkbox" name="isApprovedForPurchase[]" value="<?php htmlout($row['ExtraID']); ?>" checked="checked">Approved</label>
+									<?php else : ?>
+										<label style="width: auto;"><input type="checkbox" name="isApprovedForPurchase[]" value="<?php htmlout($row['ExtraID']); ?>">Approved</label>
+									<?php endif; ?>
 								<?php else : ?>
-									<label style="width: auto;"><input type="checkbox" name="isApprovedForPurchase[]" value="<?php htmlout($row['ExtraID']); ?>">Approved</label>
+									<?php if($row['ExtraBooleanApprovedForPurchase'] == 1) : ?>
+										<label style="width: auto;"><input type="checkbox" name="disabled" disabled="disabled" value="<?php htmlout($row['ExtraID']); ?>" checked="checked">Approved</label>
+										<input type="hidden" name="isApprovedForPurchase[]" value="<?php htmlout($row['ExtraID']); ?>">
+									<?php else : ?>
+										<label style="width: auto;"><input type="checkbox" name="disabled" disabled="disabled" value="<?php htmlout($row['ExtraID']); ?>">Approved</label>
+									<?php endif; ?>
 								<?php endif; ?>
 							</td>
 							<td><?php htmlout($row['ExtraApprovedForPurchaseByUser']); ?></td>
 							<td><?php htmlout($row['ExtraDateTimeApprovedForPurchase']); ?></td>
 							<td>
-								<?php if($row['ExtraBooleanPurchased'] == 1) : ?>
-									<label style="width: auto;"><input type="checkbox" name="isPurchased[]" value="<?php htmlout($row['ExtraID']); ?>" checked>Purchased</label>
+								<?php if($_POST['disableEdit'] == 0) : ?>
+									<?php if($row['ExtraBooleanPurchased'] == 1) : ?>
+										<label style="width: auto;"><input type="checkbox" name="isPurchased[]" value="<?php htmlout($row['ExtraID']); ?>" checked="checked">Purchased</label>
+									<?php else : ?>
+										<label style="width: auto;"><input type="checkbox" name="isPurchased[]" value="<?php htmlout($row['ExtraID']); ?>">Purchased</label>
+									<?php endif; ?>
 								<?php else : ?>
-									<label style="width: auto;"><input type="checkbox" name="isPurchased[]" value="<?php htmlout($row['ExtraID']); ?>">Purchased</label>
+									<?php if($row['ExtraBooleanPurchased'] == 1) : ?>
+										<label style="width: auto;"><input type="checkbox" name="disabled" disabled="disabled" value="<?php htmlout($row['ExtraID']); ?>" checked="checked">Purchased</label>
+										<input type="hidden" name="isPurchased[]" value="<?php htmlout($row['ExtraID']); ?>">
+									<?php else : ?>
+										<label style="width: auto;"><input type="checkbox" name="disabled" disabled="disabled" value="<?php htmlout($row['ExtraID']); ?>">Purchased</label>
+									<?php endif; ?>
 								<?php endif; ?>
 							</td>
 							<td><?php htmlout($row['ExtraPurchasedByUser']); ?></td>
 							<td><?php htmlout($row['ExtraDateTimePurchased']); ?></td>
 						</tr>
 					<?php endforeach; ?>
-					<?php if($availableExtrasNumber > 0) : ?>
-						<tr><td colspan="10"><button type="button" onclick="createNewAlternativeExtraRow()">Create New Alternative</button><button type="button" id="addAlternativeExtraButton" onclick="addAlternativeExtraRow()">Add Alternative</button></td></tr>
-					<?php else : ?>
-						<tr><td colspan="10"><button type="button" onclick="createNewAlternativeExtraRow()">Create New Alternative</button><button type="button" id="addAlternativeExtraButton" onclick="addAlternativeExtraRow()" disabled="disabled">Add Alternative</button></td></tr>
+					<?php if($_POST['disableEdit'] == 0) : ?>
+						<?php if($availableExtrasNumber > 0) : ?>
+							<tr><td colspan="10"><button type="button" onclick="createNewAlternativeExtraRow()">Create New Alternative</button><button type="button" id="addAlternativeExtraButton" onclick="addAlternativeExtraRow()">Add Alternative</button></td></tr>
+						<?php else : ?>
+							<tr><td colspan="10"><button type="button" onclick="createNewAlternativeExtraRow()">Create New Alternative</button><button type="button" id="addAlternativeExtraButton" onclick="addAlternativeExtraRow()" disabled="disabled">Add Alternative</button></td></tr>
+						<?php endif; ?>
 					<?php endif; ?>
 				<?php else : ?>
 					<tr><td colspan="10"><b>This order has nothing in it.</b></td></tr>
-					<?php if($availableExtrasNumber > 0) : ?>
-						<tr><td colspan="10"><button type="button" onclick="createNewAlternativeExtraRow()">Create New Alternative</button><button type="button" id="addAlternativeExtraButton" onclick="addAlternativeExtraRow()">Add Alternative</button></td></tr>
-					<?php else : ?>
-						<tr><td colspan="10"><button type="button" onclick="createNewAlternativeExtraRow()">Create New Alternative</button><button type="button" id="addAlternativeExtraButton" onclick="addAlternativeExtraRow()" disabled="disabled">Add Alternative</button></td></tr>
+					<?php if($_POST['disableEdit'] == 0) : ?>
+						<?php if($availableExtrasNumber > 0) : ?>
+							<tr><td colspan="10"><button type="button" onclick="createNewAlternativeExtraRow()">Create New Alternative</button><button type="button" id="addAlternativeExtraButton" onclick="addAlternativeExtraRow()">Add Alternative</button></td></tr>
+						<?php else : ?>
+							<tr><td colspan="10"><button type="button" onclick="createNewAlternativeExtraRow()">Create New Alternative</button><button type="button" id="addAlternativeExtraButton" onclick="addAlternativeExtraRow()" disabled="disabled">Add Alternative</button></td></tr>
+						<?php endif; ?>
 					<?php endif; ?>
 				<?php endif; ?>
 			</table>
@@ -491,6 +517,7 @@
 				<input type="hidden" id="LastAlternativeID" name="LastAlternativeID" value="">
 				<input type="hidden" id="AlternativesAdded" name="AlternativesAdded" value="0">
 				<input type="hidden" id="NewAlternativesCreated" name="NewAlternativesCreated" value="0">
+				<input type="hidden" name="disableEdit" value="<?php echo $_POST['disableEdit']; ?>">
 				<input type="submit" name="action" value="Submit Changes" onclick="return validateNewAlternatives()">
 				<input type="submit" name="action" value="Go Back">
 				<input type="submit" name="action" value="Reset">

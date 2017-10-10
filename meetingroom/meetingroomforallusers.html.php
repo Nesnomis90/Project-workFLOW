@@ -2,7 +2,7 @@
 <!DOCTYPE html>
 <html lang="en">
 	<head>
-		<meta charset="utf-8" HTTP-EQUIV="refresh" CONTENT="<?php htmlout(SECONDS_BEFORE_REFRESHING_MEETINGROOM_PAGE); ?>"> <!-- Refreshes every <?php htmlout(SECONDS_BEFORE_REFRESHING_MEETINGROOM_PAGE); ?> sec -->
+		<meta charset="utf-8">
 		<title>Meeting Room</title>
 		<link rel="stylesheet" type="text/css" href="/CSS/myCSS.css">
 		<script src="/scripts/myFunctions.js"></script>
@@ -12,7 +12,7 @@
 			}
 		</style>
 	</head>
-	<body onload="startTime()">
+	<body onload="startTime(); refreshPageTimer(<?php htmlout(SECONDS_BEFORE_REFRESHING_MEETINGROOM_PAGE); ?>);">
 
 		<?php include_once $_SERVER['DOCUMENT_ROOT'] .'/includes/topnav.html.php'; ?>
 

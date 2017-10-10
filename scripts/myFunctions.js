@@ -53,10 +53,21 @@ function startTime(){
 	var t = setTimeout(startTime, 500);	
 }
 
+// Used to stop button clicks for activating sub-buttons at the same time.
 function disableEventPropagation(event){
    if(event.stopPropagation){
 	   event.stopPropagation();
    } else if(window.event){
       window.event.cancelBubble = true;
    }
+}
+
+// Used to refresh a web page
+function refreshPageTimer(seconds){
+	var milliSeconds = seconds * 1000;
+	var refreshTimer = setInterval(refreshPage, milliSeconds);
+}
+
+function refreshPage(){
+	location.reload();
 }
