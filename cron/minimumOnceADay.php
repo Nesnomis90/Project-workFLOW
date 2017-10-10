@@ -5,7 +5,6 @@ include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/magicquotes.inc.php';
 // PHP code that we will set to be run at a certain interval, with CRON, to interact with our database
 // This file is set to run minimum once a day (more often in case SQL connection fails?)
 
-// TO-DO: FIX-ME: Unfinished
 function alertStaffThatMeetingWithOrderIsAboutToStart(){
 	try
 	{
@@ -15,22 +14,15 @@ function alertStaffThatMeetingWithOrderIsAboutToStart(){
 			$pdo = connect_to_db();
 		}
 
-		// Get all upcoming meetings that are scheduled for today
+		// Get all upcoming meetings that are TIME_LEFT_IN_MINUTES_UNTIL_MEETING_STARTS_BEFORE_SENDING_EMAIL minutes away from starting.
 		// That have an active order attached that we haven't already alerted/sent email to staff about
-		$sql = 'SELECT 		(
-								SELECT 	`name`
-								FROM 	`meetingroom`
-								WHERE 	`meetingRoomID` = b.`meetingRoomID`
-							)												AS MeetingRoomName,
-							(
-								SELECT 	`name`
-								FROM 	`company`
-								WHERE 	`companyID` = b.`companyID`
-							)												AS CompanyName,
+		// Only try to alert up to 1 minute before it starts (should occur way before)
+		// Only gets orders that are connected to a meeting that still has a meeting room and a company assigned whilst still being active itself.
+		// Only get orders that actually have ordered items attached to it.
+		$sql = 'SELECT 		m.`name`										AS MeetingRoomName,
+							c.`name`										AS CompanyName,
 							b.`startDateTime`								AS StartDate,
 							b.`endDateTime`									AS EndDate,
-							b.`displayName`									AS DisplayName,
-							b.`description`									AS BookingDescription,
 							o.`orderID`										AS TheOrderID,
 							o.`orderApprovedByUser`							AS OrderApprovedByUser,
 							o.`orderApprovedByAdmin`						AS OrderApprovedByAdmin,
@@ -39,7 +31,7 @@ function alertStaffThatMeetingWithOrderIsAboutToStart(){
 								SEPARATOR "\n")								AS OrderContent,
 							COUNT(eo.`extraID`)								AS OrderExtrasOrdered,
 							COUNT(eo.`approvedForPurchase`)					AS OrderExtrasApproved,
-							COUNT(eo.`purchased`)							AS OrderExtrasPurchased,
+							COUNT(eo.`purchased`)							AS OrderExtrasPurchased
 				FROM		`booking` b
 				INNER JOIN 	`orders` o
 				ON 			o.`orderID` = b.`orderID`
@@ -49,92 +41,105 @@ function alertStaffThatMeetingWithOrderIsAboutToStart(){
 							ON 			eo.`extraID` = ex.`extraID`
 				)
 				ON 			eo.`orderID` = o.`orderID`
-				WHERE		b.`dateTimeCancelled` IS NULL
+				INNER JOIN 	`meetingroom` m
+				ON			m.`meetingRoomID` = b.`meetingRoomID`
+				INNER JOIN 	`company` c
+				ON 			c.`companyID` = b.`companyID`
+				WHERE		DATE(b.`startDateTime`) = CURRENT_DATE
+				AND			o.`emailCheckSent` = 0
+				AND 		b.`dateTimeCancelled` IS NULL
 				AND			o.`dateTimeCancelled` IS NULL
 				AND 		b.`actualEndDateTime` IS NULL
 				AND			b.`orderID` IS NOT NULL
-				AND			DATE(b.`startDateTime`) = CURRENT_DATE
-				AND			o.`emailCheckSent` = 0';
+				AND			o.`emailSoonSent` = 0';
 		$s = $pdo->prepare($sql);
+		$s->bindValue(':bufferMinutes', TIME_LEFT_IN_MINUTES_UNTIL_MEETING_STARTS_BEFORE_SENDING_EMAIL);
 		$s->execute();
 
-		$result = $s->fetchAll(PDO::FETCH_ASSOC);
-		if(isSet($result)){
-			$rowNum = sizeOf($result);
+		$upcomingMeetingsNotAlerted = $s->fetchAll(PDO::FETCH_ASSOC);
+		if(isSet($upcomingMeetingsNotAlerted)){
+			$rowNum = sizeOf($upcomingMeetingsNotAlerted);
 		} else {
 			$rowNum  = 0;
 		}
 
 		if($rowNum > 0){
-			foreach($result AS $row){
-				
-				// TO-DO: Set this to once per day email instead of starting soon email
-				// i.e. make another function that checks if stuff is approved yet, while this only reminds about already confirmed ones
-				if($row['OrderApprovedByUser'] == 1 AND ($row['OrderApprovedByAdmin'] == 1 OR $row['OrderApprovedByStaff'] == 1)){
-					$approvedMessage = "Order approved by both staff and user.";
-				} elseif($row['OrderApprovedByUser'] == 0 AND ($row['OrderApprovedByAdmin'] == 1 OR $row['OrderApprovedByStaff'] == 1)){
-					$approvedMessage = "Order not yet approved by user.";
-				} elseif($row['OrderApprovedByUser'] == 1 AND $row['OrderApprovedByAdmin'] == 0 AND $row['OrderApprovedByStaff'] == 0){
-					$approvedMessage = "Order not yet approved by staff.";
-				} elseif($row['OrderApprovedByUser'] == 0 AND $row['OrderApprovedByAdmin'] == 0 AND $row['OrderApprovedByStaff'] == 0){
-					$approvedMessage = "Order not yet approved by staff and user.";
-				}
+			// Get staff/admin emails
+			$sql = "SELECT 		u.`email`		AS Email
+					FROM 		`user` u
+					INNER JOIN 	`accesslevel` a
+					ON			a.`AccessID` = u.`AccessID`
+					WHERE		(
+												a.`AccessName` = 'Admin'
+									AND			u.`sendAdminEmail` = 1
+								)
+					OR 			a.`AccessName` = 'Staff'";
+			$return = $pdo->query($sql);
+			$result = $return->fetchAll(PDO::FETCH_ASSOC);
 
-				$upcomingMeetingsNotAlerted[] = array(
-														'MeetingRoomName' => $row['MeetingRoomName'],
-														'CompanyName' => $row['CompanyName'],
-														'TheOrderID' => $row['TheOrderID'],
-														'StartDate' => $row['StartDate'],
-														'EndDate' => $row['EndDate'],
-														'DisplayName' => $row['DisplayName'],
-														'BookingDescription' => $row['BookingDescription'],
-														'ApprovedMessage' => $approvedMessage
-													);
+			if(isSet($result)){
+				foreach($result AS $Email){
+					$email[] = $Email['Email'];
+				}
+				$staffAndAdminEmails = implode(", ", $email);
+				echo "Will be sent to these email(s): " . $staffAndAdminEmails; // TO-DO: Remove before uploading
+				echo "<br />";
+			} else {
+				echo "Found no Admin/Staff that want to receive an Email"; // TO-DO: Remove before uploading
+				echo "<br />";
 			}
 
-			$numberOfUsersToAlert = sizeOf($upcomingMeetingsNotAlerted);
-			echo "Number of orders to Alert about: $numberOfUsersToAlert";	// TO-DO: Remove before uploading.
+			echo "Number of orders to Alert about: $rowNum";	// TO-DO: Remove before uploading.
 			echo "<br />";
 
 			try
 			{
-				include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
-
-				if(!isSet($pdo)){
-					$pdo = connect_to_db();
-				}
-
 				$pdo->beginTransaction();
+				$orderCounter = 1;
+				$emailMessage = "This is a summary of the orders set for today.";
 
 				foreach($upcomingMeetingsNotAlerted AS $row){
-					$emailSubject = "Orders scheduled today!";
+					$orderApprovedByUser = ($row['OrderApprovedByUser'] == 1) ? TRUE : FALSE;
+					$orderApprovedByAdmin = ($row['OrderApprovedByAdmin'] == 1) ? TRUE : FALSE;
+					$orderApprovedByStaff = ($row['OrderApprovedByStaff'] == 1) ? TRUE : FALSE;
+
+					// Check if the order itself is approved or not (by both parties)
+					if($orderApprovedByUser AND ($orderApprovedByAdmin OR $orderApprovedByStaff)){
+						$approvedStatus = "Order approved by both staff and user.";
+					} elseif(!$orderApprovedByUser AND ($orderApprovedByAdmin OR $orderApprovedByStaff)){
+						$approvedStatus = "Order not yet approved by user.";
+					} elseif($orderApprovedByUser AND !$orderApprovedByAdmin AND !$orderApprovedByStaff){
+						$approvedStatus = "Order not yet approved by staff.";
+					} elseif(!$orderApprovedByUser AND !$orderApprovedByAdmin AND !$orderApprovedByStaff){
+						$approvedStatus = "Order not yet approved by staff and user.";
+					}
+
+					// Check if the extras ordered are approved, and purchased, or not.
+					$numberOfExtrasOrdered = $row['OrderExtrasOrdered'];
+					$numberOfExtrasApproved = $row['OrderExtrasApproved'];
+					$numberOfExtrasPurchased = $row['OrderExtrasPurchased'];
+					if($numberOfExtrasApproved == $numberOfExtrasOrdered AND $numberOfExtrasPurchased == $numberOfExtrasOrdered){
+						$extrasOrderedStatus = "All $numberOfExtrasOrdered extras have been set as approved and purchased";
+					} elseif($numberOfExtrasApproved == $numberOfExtrasOrdered AND $numberOfExtrasPurchased < $numberOfExtrasOrdered){
+						$extrasOrderedStatus = "All $numberOfExtrasOrdered extras have been set as approved. $numberOfExtrasPurchased have been set purchased";
+					} elseif($numberOfExtrasApproved < $numberOfExtrasOrdered AND $numberOfExtrasPurchased == $numberOfExtrasOrdered){
+						$extrasOrderedStatus = "$numberOfExtrasApproved out of $numberOfExtrasOrdered extras has been set as approved. All of them have been set as purchased though";
+					} elseif($numberOfExtrasApproved < $numberOfExtrasOrdered AND $numberOfExtrasPurchased < $numberOfExtrasOrdered){
+						$extrasOrderedStatus = "$numberOfExtrasApproved out of $numberOfExtrasOrdered extras has been set as approved. $numberOfExtrasPurchased has been set as purchased";
+					}
 
 					$displayStartDate = convertDatetimeToFormat($row['StartDate'] , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
 					$displayEndDate = convertDatetimeToFormat($row['EndDate'], 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
 
-					$emailMessage = 
-					"A booked meeting with an active order is sheduled for today!\n" . 
+					$emailMessage .= 
+					"\n\nOrder #$orderCounter scheduled for today:\n" . 
 					"The booked Meeting Room: " . $row['MeetingRoomName'] . ".\n" . 
 					"The booked Start Time: " . $displayStartDate . ".\n" .
-					"The booked End Time: " . $displayEndDate . ".\n\n" .
-					"The order status: " . $row['ApprovedMessage'];
-
-					// TO-DO: Add order contents to email message.
-					//$email = $row['UserEmail']; // TO-DO: Get admin/staff emails
-
-					// Instead of sending the email here, we store them in the database to send them later instead.
-					// That way, we can limit the amount of email being sent out easier.
-					// Store email to be sent out later
-					$sql = 'INSERT INTO	`email`
-							SET			`subject` = :subject,
-										`message` = :message,
-										`receivers` = :receivers,
-										`dateTimeRemove` = DATE_ADD(CURRENT_TIMESTAMP, INTERVAL 1 HOUR);';
-					$s = $pdo->prepare($sql);
-					$s->bindValue(':subject', $emailSubject);
-					$s->bindValue(':message', $emailMessage);
-					$s->bindValue(':receivers', $email);
-					$s->execute();
+					"The booked End Time: " . $displayEndDate . ".\n" .
+					"The booked Company: " . $row['CompanyName'] . ".\n\n" .
+					"The order approval status: " . $approvedStatus . ".\n" .
+					"The order Content: " . $row['OrderContent'] . ".\n" .
+					"The extras ordered status: " . $extrasOrderedStatus . ".";
 
 					// Update booking that we've "sent" an email to the user 
 					$sql = "UPDATE 	`orders`
@@ -143,8 +148,29 @@ function alertStaffThatMeetingWithOrderIsAboutToStart(){
 					$s = $pdo->prepare($sql);
 					$s->bindValue(':orderID', $row['TheOrderID']);
 					$s->execute();
+
+					$orderCounter++;
 				}
 
+				$emailSubject = "Today's scheduled orders!";
+
+				$email = $staffAndAdminEmails;
+
+				// Instead of sending the email here, we store them in the database to send them later instead.
+				// That way, we can limit the amount of email being sent out easier.
+				// Store email to be sent out later
+				$sql = 'INSERT INTO	`email`
+						SET			`subject` = :subject,
+									`message` = :message,
+									`receivers` = :receivers,
+									`dateTimeRemove` = :orderStartDateTime';
+				$s = $pdo->prepare($sql);
+				$s->bindValue(':subject', $emailSubject);
+				$s->bindValue(':message', $emailMessage);
+				$s->bindValue(':receivers', $email);
+				$s->bindValue(':orderStartDateTime', $row['StartDate']);
+				$s->execute();
+				
 				$pdo->commit();
 			}
 			catch(PDOException $e)

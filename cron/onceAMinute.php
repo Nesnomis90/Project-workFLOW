@@ -151,8 +151,30 @@ function alertStaffThatMeetingWithOrderIsAboutToStart(){
 
 		if($rowNum > 0){
 			// Get staff/admin emails
-			$sql = "";
-			$staffAndAdminEmails = ;
+			$sql = "SELECT 		u.`email`		AS Email
+					FROM 		`user` u
+					INNER JOIN 	`accesslevel` a
+					ON			a.`AccessID` = u.`AccessID`
+					WHERE		(
+												a.`AccessName` = 'Admin'
+									AND			u.`sendAdminEmail` = 1
+								)
+					OR 			a.`AccessName` = 'Staff'";
+			$return = $pdo->query($sql);
+			$result = $return->fetchAll(PDO::FETCH_ASSOC);
+
+			if(isSet($result)){
+				foreach($result AS $Email){
+					$email[] = $Email['Email'];
+				}
+				$staffAndAdminEmails = implode(", ", $email);
+				echo "Will be sent to these email(s): " . $staffAndAdminEmails; // TO-DO: Remove before uploading
+				echo "<br />";
+			} else {
+				echo "Found no Admin/Staff that want to receive an Email"; // TO-DO: Remove before uploading
+				echo "<br />";
+			}
+
 			echo "Number of orders to Alert about: $rowNum";	// TO-DO: Remove before uploading.
 			echo "<br />";
 
@@ -180,10 +202,17 @@ function alertStaffThatMeetingWithOrderIsAboutToStart(){
 					$numberOfExtrasOrdered = $row['OrderExtrasOrdered'];
 					$numberOfExtrasApproved = $row['OrderExtrasApproved'];
 					$numberOfExtrasPurchased = $row['OrderExtrasPurchased'];
-					if(){
-						
+					if($numberOfExtrasApproved == $numberOfExtrasOrdered AND $numberOfExtrasPurchased == $numberOfExtrasOrdered){
+						$extrasOrderedStatus = "All $numberOfExtrasOrdered extras have been set as approved and purchased";
+					} elseif($numberOfExtrasApproved == $numberOfExtrasOrdered AND $numberOfExtrasPurchased < $numberOfExtrasOrdered){
+						$extrasOrderedStatus = "All $numberOfExtrasOrdered extras have been set as approved. $numberOfExtrasPurchased have been set purchased";
+					} elseif($numberOfExtrasApproved < $numberOfExtrasOrdered AND $numberOfExtrasPurchased == $numberOfExtrasOrdered){
+						$extrasOrderedStatus = "$numberOfExtrasApproved out of $numberOfExtrasOrdered extras has been set as approved. All of them have been set as purchased though";
+					} elseif($numberOfExtrasApproved < $numberOfExtrasOrdered AND $numberOfExtrasPurchased < $numberOfExtrasOrdered){
+						$extrasOrderedStatus = "$numberOfExtrasApproved out of $numberOfExtrasOrdered extras has been set as approved. $numberOfExtrasPurchased has been set as purchased";
 					}
-					$emailSubject = "Upcoming Meeting Info!";
+
+					$emailSubject = "Upcoming Order Info!";
 
 					$displayStartDate = convertDatetimeToFormat($row['StartDate'] , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
 					$displayEndDate = convertDatetimeToFormat($row['EndDate'], 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
@@ -198,8 +227,7 @@ function alertStaffThatMeetingWithOrderIsAboutToStart(){
 					"The order Content: " . $row['OrderContent'] . ".\n" .
 					"The extras ordered status: " . $extrasOrderedStatus . ".";
 
-					// TO-DO: Add order contents to email message.
-					$email = $staffAndAdminEmails; // TO-DO: Get admin/staff emails
+					$email = $staffAndAdminEmails;
 
 					// Instead of sending the email here, we store them in the database to send them later instead.
 					// That way, we can limit the amount of email being sent out easier.
@@ -208,11 +236,12 @@ function alertStaffThatMeetingWithOrderIsAboutToStart(){
 							SET			`subject` = :subject,
 										`message` = :message,
 										`receivers` = :receivers,
-										`dateTimeRemove` = DATE_ADD(CURRENT_TIMESTAMP, INTERVAL 1 HOUR);';
+										`dateTimeRemove` = :orderStartDateTime';
 					$s = $pdo->prepare($sql);
 					$s->bindValue(':subject', $emailSubject);
 					$s->bindValue(':message', $emailMessage);
 					$s->bindValue(':receivers', $email);
+					$s->bindValue(':orderStartDateTime', $row['StartDate']);
 					$s->execute();
 
 					// Update booking that we've "sent" an email to the user 

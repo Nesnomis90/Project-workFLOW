@@ -130,6 +130,16 @@ INNER JOIN 	`credits` cr
 ON			cr.`CreditsID` = cc.`CreditsID`
 AND			CURDATE() >= c.`endDate`;
 
+SELECT 		u.`email`		AS Email
+FROM 		`user` u
+INNER JOIN 	`accesslevel` a
+ON			a.`AccessID` = u.`AccessID`
+WHERE		(
+							a.`AccessName` = 'Admin'
+				AND			u.`sendAdminEmail` = 1
+			)
+OR 			a.`AccessName` = 'Staff';
+
 SELECT 		m.`name`										AS MeetingRoomName,
 			c.`name`										AS CompanyName,
 			b.`startDateTime`								AS StartDate,
