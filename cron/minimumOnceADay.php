@@ -5,7 +5,7 @@ include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/magicquotes.inc.php';
 // PHP code that we will set to be run at a certain interval, with CRON, to interact with our database
 // This file is set to run minimum once a day (more often in case SQL connection fails?)
 
-function alertStaffThatMeetingWithOrderIsAboutToStart(){
+function alertStaffAboutOrderStatusOfTheDay(){
 	try
 	{
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
@@ -35,23 +35,24 @@ function alertStaffThatMeetingWithOrderIsAboutToStart(){
 				FROM		`booking` b
 				INNER JOIN 	`orders` o
 				ON 			o.`orderID` = b.`orderID`
-				INNER JOIN	(
+				INNER JOIN 	`meetingroom` m
+				ON			m.`meetingRoomID` = b.`meetingRoomID`
+				INNER JOIN 	`company` c
+				ON 			c.`companyID` = b.`companyID`
+				LEFT JOIN	(
 										`extraorders` eo
 							INNER JOIN 	`extra` ex
 							ON 			eo.`extraID` = ex.`extraID`
 				)
 				ON 			eo.`orderID` = o.`orderID`
-				INNER JOIN 	`meetingroom` m
-				ON			m.`meetingRoomID` = b.`meetingRoomID`
-				INNER JOIN 	`company` c
-				ON 			c.`companyID` = b.`companyID`
 				WHERE		DATE(b.`startDateTime`) = CURRENT_DATE
 				AND			o.`emailCheckSent` = 0
 				AND 		b.`dateTimeCancelled` IS NULL
 				AND			o.`dateTimeCancelled` IS NULL
 				AND 		b.`actualEndDateTime` IS NULL
 				AND			b.`orderID` IS NOT NULL
-				AND			o.`emailSoonSent` = 0';
+				AND			o.`emailSoonSent` = 0
+				GROUP BY 	o.`orderID`';
 		$s = $pdo->prepare($sql);
 		$s->bindValue(':bufferMinutes', TIME_LEFT_IN_MINUTES_UNTIL_MEETING_STARTS_BEFORE_SENDING_EMAIL);
 		$s->execute();
@@ -118,7 +119,9 @@ function alertStaffThatMeetingWithOrderIsAboutToStart(){
 					$numberOfExtrasOrdered = $row['OrderExtrasOrdered'];
 					$numberOfExtrasApproved = $row['OrderExtrasApproved'];
 					$numberOfExtrasPurchased = $row['OrderExtrasPurchased'];
-					if($numberOfExtrasApproved == $numberOfExtrasOrdered AND $numberOfExtrasPurchased == $numberOfExtrasOrdered){
+					if($numberOfExtrasOrdered == 0){
+						$extrasOrderedStatus = "This order currently has nothing ordered.";
+					} elseif($numberOfExtrasApproved == $numberOfExtrasOrdered AND $numberOfExtrasPurchased == $numberOfExtrasOrdered){
 						$extrasOrderedStatus = "All $numberOfExtrasOrdered extras have been set as approved and purchased";
 					} elseif($numberOfExtrasApproved == $numberOfExtrasOrdered AND $numberOfExtrasPurchased < $numberOfExtrasOrdered){
 						$extrasOrderedStatus = "All $numberOfExtrasOrdered extras have been set as approved. $numberOfExtrasPurchased have been set purchased";
@@ -163,14 +166,13 @@ function alertStaffThatMeetingWithOrderIsAboutToStart(){
 						SET			`subject` = :subject,
 									`message` = :message,
 									`receivers` = :receivers,
-									`dateTimeRemove` = :orderStartDateTime';
+									`dateTimeRemove` = DATE_ADD(CURRENT_TIMESTAMP INTERVAL 23 HOUR)';
 				$s = $pdo->prepare($sql);
 				$s->bindValue(':subject', $emailSubject);
 				$s->bindValue(':message', $emailMessage);
 				$s->bindValue(':receivers', $email);
-				$s->bindValue(':orderStartDateTime', $row['StartDate']);
 				$s->execute();
-				
+
 				$pdo->commit();
 			}
 			catch(PDOException $e)
@@ -659,8 +661,9 @@ $updatedDefaultSubscription = setDefaultSubscriptionIfCompanyHasNone();
 $updatedBillingDates = updateBillingDatesForCompanies();
 $updatedCompanyActivity = setCompanyAsInactiveOnSetDate();
 $updatedUserAccess = setUserAccessToNormalOnSetDate();
+$alertedStaffAboutOrderStatusOfTheDay = alertStaffAboutOrderStatusOfTheDay();
 
-$repetition = 3;
+$repetition = 1; // repeats it once, i.e. tries twice.
 $sleepTime = 1; // Second(s)
 
 // If we get a FALSE back, the function failed to do its purpose
@@ -735,6 +738,24 @@ if(!$updatedUserAccess){
 	echo "<br />";
 } else {
 	echo "Successfully Set User Access Level To Normal";	// TO-DO: Remove before uploading.
+	echo "<br />";
+}
+
+if(!$alertedStaffAboutOrderStatusOfTheDay){
+	for($i = 0; $i < $repetition; $i++){
+		sleep($sleepTime);
+		$success = alertStaffAboutOrderStatusOfTheDay();
+		if($success){
+			echo "Successfully Alerted Staff About Today's Orders";	// TO-DO: Remove before uploading.
+			echo "<br />";
+			break;
+		}
+	}
+	unset($success);
+	echo "Failed To Alert Staff About Today's Orders";	// TO-DO: Remove before uploading.
+	echo "<br />";
+} else {
+	echo "Successfully Alerted Staff About Today's Orders";	// TO-DO: Remove before uploading.
 	echo "<br />";
 }
 

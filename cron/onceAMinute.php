@@ -137,7 +137,8 @@ function alertStaffThatMeetingWithOrderIsAboutToStart(){
 				AND			o.`dateTimeCancelled` IS NULL
 				AND 		b.`actualEndDateTime` IS NULL
 				AND			b.`orderID` IS NOT NULL
-				AND			o.`emailSoonSent` = 0';
+				AND			o.`emailSoonSent` = 0
+				GROUP BY 	o.`orderID`';
 		$s = $pdo->prepare($sql);
 		$s->bindValue(':bufferMinutes', TIME_LEFT_IN_MINUTES_UNTIL_MEETING_STARTS_BEFORE_SENDING_EMAIL);
 		$s->execute();
