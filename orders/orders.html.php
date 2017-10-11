@@ -11,6 +11,9 @@
 			tr.doNotHighlightRow:hover{
 				background-color: transparent;
 			}
+			tr.doNotHighlightRow:nth-of-type(odd){
+				background-color: white;
+			}
 			tr.doNotHighlightRow:nth-of-type(even){
 				background-color: white;
 			}

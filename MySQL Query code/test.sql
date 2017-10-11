@@ -10,6 +10,13 @@ SELECT @@version;
 SHOW indexes from `booking`;
 /*PDO::FETCH_ASSOC*/
 
+INSERT INTO `orders`
+SET			`orderUserNotes` = 'test';
+
+UPDATE 		`booking`
+SET			`orderID` = 10
+WHERE		`bookingID` = 386;
+
 INSERT INTO `companycreditshistory`
 SET			`CompanyID` = 2,
 			`startDate` = '2017-07-15',
