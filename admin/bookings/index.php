@@ -539,7 +539,7 @@ if (	(isSet($_POST['action']) and $_POST['action'] == 'Cancel') OR
 			$s->bindValue(':bookingID', $bookingID);
 			$s->execute();
 
-			$row = $s->fetchAll(PDO::FETCH_ASSOC);
+			$row = $s->fetch(PDO::FETCH_ASSOC);
 			if($row['HitCount'] > 0){
 				$endedEarly = TRUE;
 				if($row['OrderID'] != NULL){
@@ -626,7 +626,6 @@ if (	(isSet($_POST['action']) and $_POST['action'] == 'Cancel') OR
 
 			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 
-			$pdo = connect_to_db();
 			$sql = "INSERT INTO `logevent` 
 					SET			`actionID` = 	(
 													SELECT 	`actionID` 
