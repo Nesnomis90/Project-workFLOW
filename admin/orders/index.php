@@ -131,6 +131,236 @@ function validateUserInputs(){
 	return array($invalidInput, $validatedOrderCommunicationToUser, $validatedAdminNote, $validatedIsApproved);
 }
 
+// If admin wants to cancel an order
+// TO-DO: FIX-ME: Just copy pasted from admin/booking
+/*
+if (	(isSet($_POST['action']) and $_POST['action'] == 'Cancel') OR 
+		(isSet($_SESSION['refreshCancelAdminOrder']) AND $_SESSION['refreshCancelAdminOrder'])
+	){
+
+	if(isSet($_SESSION['refreshCancelAdminOrder']) AND $_SESSION['refreshCancelAdminOrder']){
+		unset($_SESSION['refreshCancelAdminOrder']);
+	} else {
+		$_SESSION['cancelAdminOrderOriginalValues']['OrderID'] = $_POST['id'];
+
+		if(isSet($_POST['UserID']) AND !empty($_POST['UserID'])){
+			$_SESSION['cancelAdminOrderOriginalValues']['UserID'] = $_POST['UserID'];
+		}
+		if(isSet($_POST['sendEmail']) AND !empty($_POST['sendEmail'])){
+			$_SESSION['cancelAdminOrderOriginalValues']['SendEmail'] = $_POST['sendEmail'];
+		}
+		if(isSet($_POST['Email']) AND !empty($_POST['Email'])){
+			$_SESSION['cancelAdminOrderOriginalValues']['UserEmail'] = $_POST['Email'];
+		}
+	}
+
+	$bookingID = $_SESSION['cancelAdminOrderOriginalValues']['BookingID'];
+	$bookingStatus = $_SESSION['cancelAdminOrderOriginalValues']['BookingStatus'];
+	$bookingMeetingInfo = $_SESSION['cancelAdminOrderOriginalValues']['MeetingInfo'];
+	$userInfo = $_SESSION['cancelAdminOrderOriginalValues']['UserInfo'];
+
+	// Only cancel if booking is currently active
+	if(isSet($bookingStatus) AND ($bookingStatus == 'Active' OR $bookingStatus == 'Active Today')){
+
+		// Load new template to let admin add a reason for cancelling the meeting
+		if(!isSet($_SESSION['cancelAdminOrderOriginalValues']['ReasonForCancelling'])){
+			var_dump($_SESSION); // TO-DO: Remove before uploading
+			include_once 'cancelmessage.html.php';
+			exit();
+		}
+
+		if(isSet($_SESSION['cancelAdminOrderOriginalValues']['ReasonForCancelling']) AND !empty($_SESSION['cancelAdminOrderOriginalValues']['ReasonForCancelling'])){
+			$cancelMessage = $_SESSION['cancelAdminOrderOriginalValues']['ReasonForCancelling'];
+		} else {
+			$cancelMessage = NULL;
+		}
+
+		// Update cancellation date for selected booked meeting in database
+		try
+		{
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+
+			$pdo = connect_to_db();
+			// Get info if the booking is ending early and if it had an order connected
+			$sql = "SELECT 	COUNT(*)	AS HitCount,
+							`orderID`	AS OrderID
+					FROM	`booking`
+					WHERE	`bookingID` = :bookingID
+					AND		`actualEndDateTime` IS NULL
+					AND		`dateTimeCancelled` IS NULL
+					AND		CURRENT_TIMESTAMP
+					BETWEEN	`startDateTime`
+					AND		`endDateTime`
+					LIMIT 	1";
+			$s = $pdo->prepare($sql);
+			$s->bindValue(':bookingID', $bookingID);
+			$s->execute();
+
+			$row = $s->fetch(PDO::FETCH_ASSOC);
+			if($row['HitCount'] > 0){
+				$endedEarly = TRUE;
+				if($row['OrderID'] != NULL){
+					$orderID = $row['OrderID'];
+				}
+			} else {
+				$endedEarly = FALSE;
+			}
+
+			$pdo->beginTransaction();
+
+			if($endedEarly){
+				// Meeting got cancelled after the meeting started.
+				$sql = 'UPDATE 	`booking` 
+						SET 	`dateTimeCancelled` = CURRENT_TIMESTAMP,
+								`actualEndDateTime` = CURRENT_TIMESTAMP,
+								`cancellationCode` = NULL,
+								`cancelMessage` = :cancelMessage,
+								`cancelledByUserID` = :cancelledByUserID
+						WHERE 	`bookingID` = :bookingID
+						AND		`dateTimeCancelled` IS NULL
+						AND		`actualEndDateTime` IS NULL';
+				$s = $pdo->prepare($sql);
+				$s->bindValue(':bookingID', $bookingID);
+				$s->bindValue(':cancelMessage', $cancelMessage);
+				$s->bindValue(':cancelledByUserID', $_SESSION['LoggedInUserID']);
+				$s->execute();
+
+				if(isSet($orderID)){
+					$sql = "UPDATE	`orders`
+							SET		`orderFinalPrice` = (
+															SELECT		SUM(IFNULL(eo.`alternativePrice`, ex.`price`) * eo.`amount`) AS FullPrice
+															FROM		`extra` ex
+															INNER JOIN 	`extraorders` eo
+															ON 			ex.`extraID` = eo.`extraID`
+															WHERE		eo.`orderID` = :OrderID
+														)
+							WHERE	`orderID` = :OrderID
+							AND		`orderFinalPrice` IS NULL";
+					$s = $pdo->prepare($sql);
+					$s->bindValue(':OrderID', $orderID);
+					$s->execute();
+				}
+
+			} else {
+				// Meeting got cancelled before the meeting started.
+				$sql = 'UPDATE 	`booking` 
+						SET 	`dateTimeCancelled` = CURRENT_TIMESTAMP,
+								`cancellationCode` = NULL,
+								`cancelMessage` = :cancelMessage,
+								`cancelledByUserID` = :cancelledByUserID
+						WHERE 	`bookingID` = :bookingID
+						AND		`dateTimeCancelled` IS NULL
+						AND		`actualEndDateTime` IS NULL';
+				$s = $pdo->prepare($sql);
+				$s->bindValue(':bookingID', $bookingID);
+				$s->bindValue(':cancelMessage', $cancelMessage);
+				$s->bindValue(':cancelledByUserID', $_SESSION['LoggedInUserID']);
+				$s->execute();
+			}
+		}
+		catch (PDOException $e)
+		{
+			$pdo->rollBack();
+			$pdo = null;
+			$error = 'Error updating selected booked meeting to be cancelled: ' . $e->getMessage();
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+			exit();
+		}
+
+			// Add a log event that a booking was cancelled
+		try
+		{
+			// Save a description with information about the booking that was cancelled
+			$logEventDescription = "N/A";
+			if(isSet($bookingMeetingInfo) AND isSet($userInfo)){
+				$logEventDescription = 	"A booking with these details was cancelled:" .
+										"\nMeeting Information: " . $bookingMeetingInfo .
+										"\nBooked For User: " . $userInfo .
+										"\nIt was cancelled by: " . $_SESSION['LoggedInUserName'];
+			} else {
+				$logEventDescription = 'A booking was cancelled by: ' . $_SESSION['LoggedInUserName'];
+			}
+
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+
+			$sql = "INSERT INTO `logevent` 
+					SET			`actionID` = 	(
+													SELECT 	`actionID` 
+													FROM 	`logaction`
+													WHERE 	`name` = 'Booking Cancelled'
+												),
+								`description` = :description";
+			$s = $pdo->prepare($sql);
+			$s->bindValue(':description', $logEventDescription);
+			$s->execute();
+
+			$pdo->commit();
+
+			//Close the connection
+			$pdo = null;
+		}
+		catch(PDOException $e)
+		{
+			$pdo->rollBack();
+			$error = 'Error adding log event to database: ' . $e->getMessage();
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+			$pdo = null;
+			exit();
+		}
+
+		$_SESSION['BookingUserFeedback'] .= "Successfully cancelled the booking";
+
+		emailUserOnCancelledBooking();
+	} else {
+		// Booking was not active, so no need to cancel it.
+		$_SESSION['BookingUserFeedback'] = "Meeting has already been completed. Did not cancel it.";
+	}
+
+	clearCancelSessions();
+
+	// Load booked meetings list webpage with updated database
+	header('Location: .');
+	exit();	
+}
+
+// If admin has finished adding a reason for cancelling a meeting.
+// TO-DO: FIX-ME: Just copy pasted from admin/booking
+if(isSet($_POST['action']) AND $_POST['action'] == "Confirm Reason"){
+	$invalidInput = FALSE;
+	// Do input validation
+	if(isSet($_POST['cancelMessage']) AND !empty($_POST['cancelMessage'])){
+		$cancelMessage = trimExcessWhitespaceButLeaveLinefeed($_POST['cancelMessage']);
+	} else {
+		$cancelMessage = "";
+	}
+	if(validateString($cancelMessage) === FALSE AND !$invalidInput){
+		$invalidInput = TRUE;
+		$_SESSION['confirmAdminReasonError'] = "Your submitted message has illegal characters in it.";
+	}
+
+	$invalidCancelMessage = isLengthInvalidBookingDescription($cancelMessage);
+	if($invalidCancelMessage AND !$invalidInput){
+		$_SESSION['confirmAdminReasonError'] = "Your submitted message is too long.";	
+		$invalidInput = TRUE;
+	}
+
+	if($invalidInput){
+
+		var_dump($_SESSION); // TO-DO: Remove when done testing
+
+		include_once 'cancelmessage.html.php';
+		exit();
+	}
+
+	$_SESSION['cancelAdminOrderOriginalValues']['ReasonForCancelling'] = $cancelMessage;
+	$_SESSION['refreshCancelAdminOrder'] = TRUE;
+
+	// Load booked meetings list webpage with updated database
+	header('Location: .');
+	exit();	
+}
+*/
+
 // if admin wants to edit Order information
 // we load a new html form
 if ((isSet($_POST['action']) AND $_POST['action'] == 'Details') OR
@@ -141,7 +371,7 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Details') OR
 	// Check if we're activated by a user or by a forced refresh
 	if(isSet($_SESSION['refreshEditOrder']) AND $_SESSION['refreshEditOrder']){
 		//Confirm we've refreshed
-		unset($_SESSION['refreshEditOrder']);	
+		unset($_SESSION['refreshEditOrder']);
 
 		// Get values we had before refresh
 		if(isSet($_SESSION['EditOrderCommunicationToUser'])){
