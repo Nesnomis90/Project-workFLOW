@@ -78,32 +78,32 @@
 									<th>End</th>
 									<th>Booked For Company</th>
 								</tr>
-									<?php foreach($days AS $order) : ?>
-										<form action="" method="post">
-											<tr>
-												<?php if($order['OrderStatus'] == "New Order!") : ?>
-													<td style="white-space: pre-wrap; color: green;"><span class="blink_me"><?php htmlout($order['OrderStatus']); ?></span></td>
-												<?php else : ?>
-													<td style="white-space: pre-wrap;"><?php htmlout($order['OrderStatus']); ?></td>
-												<?php endif; ?>
-												<td><?php htmlout($order['OrderApprovedByUser']); ?></td>
-												<td><?php htmlout($order['OrderApprovedByStaff']); ?></td>
-												<td style="white-space: pre-wrap;"><?php htmlout($order['OrderContent']); ?></td>
-												<td style="white-space: pre-wrap;"><?php htmlout($order['OrderUserNotes']); ?></td>
-												<td><?php htmlout($order['DateTimeCreated']); ?></td>
-												<td><?php htmlout($order['DateTimeUpdated']); ?></td>
-												<td><input type="submit" name="action" value="Details"></td>
-												<td style="white-space: pre-wrap;"><?php htmlout($order['OrderMessageStatus']); ?></td>
-												<td style="white-space: pre-wrap;"><?php htmlout($order['OrderLastMessageFromStaff']); ?></td>
-												<td style="white-space: pre-wrap;"><?php htmlout($order['OrderLastMessageFromUser']); ?></td>
-												<td><?php htmlout($order['OrderRoomName']); ?></td>
-												<td><?php htmlout($order['OrderStartTime']); ?></td>
-												<td><?php htmlout($order['OrderEndTime']); ?></td>
-												<td><?php htmlout($order['OrderBookedFor']); ?></td>
-												<input type="hidden" name="OrderID" value="<?php htmlout($order['TheOrderID']); ?>">
-											</tr>
-										</form>
-									<?php endforeach; ?>
+								<?php foreach($days AS $order) : ?>
+									<form action="" method="post">
+										<tr>
+											<?php if($order['OrderStatus'] == "New Order!") : ?>
+												<td style="white-space: pre-wrap; color: green;"><span class="blink_me"><?php htmlout($order['OrderStatus']); ?></span></td>
+											<?php else : ?>
+												<td style="white-space: pre-wrap;"><?php htmlout($order['OrderStatus']); ?></td>
+											<?php endif; ?>
+											<td><?php htmlout($order['OrderApprovedByUser']); ?></td>
+											<td><?php htmlout($order['OrderApprovedByStaff']); ?></td>
+											<td style="white-space: pre-wrap;"><?php htmlout($order['OrderContent']); ?></td>
+											<td style="white-space: pre-wrap;"><?php htmlout($order['OrderUserNotes']); ?></td>
+											<td><?php htmlout($order['DateTimeCreated']); ?></td>
+											<td><?php htmlout($order['DateTimeUpdated']); ?></td>
+											<td><input type="submit" name="action" value="Details"></td>
+											<td style="white-space: pre-wrap;"><?php htmlout($order['OrderMessageStatus']); ?></td>
+											<td style="white-space: pre-wrap;"><?php htmlout($order['OrderLastMessageFromStaff']); ?></td>
+											<td style="white-space: pre-wrap;"><?php htmlout($order['OrderLastMessageFromUser']); ?></td>
+											<td><?php htmlout($order['OrderRoomName']); ?></td>
+											<td><?php htmlout($order['OrderStartTime']); ?></td>
+											<td><?php htmlout($order['OrderEndTime']); ?></td>
+											<td><?php htmlout($order['OrderBookedFor']); ?></td>
+											<input type="hidden" name="OrderID" value="<?php htmlout($order['TheOrderID']); ?>">
+										</tr>
+									</form>
+								<?php endforeach; ?>
 							</table>
 						</td></tr>
 					<?php endforeach; ?>
@@ -151,32 +151,32 @@
 											<th>End</th>
 											<th>Booked For Company</th>
 										</tr>
-											<?php foreach($days AS $order) : ?>
-												<form action="" method="post">
-													<tr>
-														<?php if($order['OrderStatus'] == "New Order!") : ?>
-															<td style="white-space: pre-wrap; color: green;"><span class="blink_me"><?php htmlout($order['OrderStatus']); ?></span></td>
-														<?php else : ?>
-															<td style="white-space: pre-wrap;"><?php htmlout($order['OrderStatus']); ?></td>
-														<?php endif; ?>
-														<td><?php htmlout($order['OrderApprovedByUser']); ?></td>
-														<td><?php htmlout($order['OrderApprovedByStaff']); ?></td>
-														<td style="white-space: pre-wrap;"><?php htmlout($order['OrderContent']); ?></td>
-														<td style="white-space: pre-wrap;"><?php htmlout($order['OrderUserNotes']); ?></td>
-														<td><?php htmlout($order['DateTimeCreated']); ?></td>
-														<td><?php htmlout($order['DateTimeUpdated']); ?></td>
-														<td><input type="submit" name="action" value="Details"></td>
-														<td style="white-space: pre-wrap;"><?php htmlout($order['OrderMessageStatus']); ?></td>
-														<td style="white-space: pre-wrap;"><?php htmlout($order['OrderLastMessageFromStaff']); ?></td>
-														<td style="white-space: pre-wrap;"><?php htmlout($order['OrderLastMessageFromUser']); ?></td>
-														<td><?php htmlout($order['OrderRoomName']); ?></td>
-														<td><?php htmlout($order['OrderStartTime']); ?></td>
-														<td><?php htmlout($order['OrderEndTime']); ?></td>
-														<td><?php htmlout($order['OrderBookedFor']); ?></td>
-														<input type="hidden" name="OrderID" value="<?php htmlout($order['TheOrderID']); ?>">
-													</tr>
-												</form>
-											<?php endforeach; ?>
+										<?php foreach($days AS $order) : ?>
+											<form action="" method="post">
+												<tr>
+													<?php if($order['OrderStatus'] == "New Order!") : ?>
+														<td style="white-space: pre-wrap; color: green;"><span class="blink_me"><?php htmlout($order['OrderStatus']); ?></span></td>
+													<?php else : ?>
+														<td style="white-space: pre-wrap;"><?php htmlout($order['OrderStatus']); ?></td>
+													<?php endif; ?>
+													<td><?php htmlout($order['OrderApprovedByUser']); ?></td>
+													<td><?php htmlout($order['OrderApprovedByStaff']); ?></td>
+													<td style="white-space: pre-wrap;"><?php htmlout($order['OrderContent']); ?></td>
+													<td style="white-space: pre-wrap;"><?php htmlout($order['OrderUserNotes']); ?></td>
+													<td><?php htmlout($order['DateTimeCreated']); ?></td>
+													<td><?php htmlout($order['DateTimeUpdated']); ?></td>
+													<td><input type="submit" name="action" value="Details"></td>
+													<td style="white-space: pre-wrap;"><?php htmlout($order['OrderMessageStatus']); ?></td>
+													<td style="white-space: pre-wrap;"><?php htmlout($order['OrderLastMessageFromStaff']); ?></td>
+													<td style="white-space: pre-wrap;"><?php htmlout($order['OrderLastMessageFromUser']); ?></td>
+													<td><?php htmlout($order['OrderRoomName']); ?></td>
+													<td><?php htmlout($order['OrderStartTime']); ?></td>
+													<td><?php htmlout($order['OrderEndTime']); ?></td>
+													<td><?php htmlout($order['OrderBookedFor']); ?></td>
+													<input type="hidden" name="OrderID" value="<?php htmlout($order['TheOrderID']); ?>">
+												</tr>
+											</form>
+										<?php endforeach; ?>
 									</table>
 								</td>
 							<?php endforeach; ?>
