@@ -388,12 +388,20 @@
 
 				<div>
 					<label>User Notes: </label>
-					<span style="white-space: pre-wrap;"><b><?php htmlout($originalOrderUserNotes); ?></b></span>
+					<?php if(empty($originalOrderUserNotes)) : ?>
+						<span><b><i><?php htmlout("User did not submit anything."); ?></i></b></span>
+					<?php else : ?>
+						<span style="white-space: pre-wrap;"><b><?php htmlout($originalOrderUserNotes); ?></b></span>
+					<?php endif; ?>
 				</div>
 
 				<div>
 					<label>Messages: </label>
-					<span style="white-space: pre-wrap;"><b><?php htmlout($orderMessages); ?></b></span>
+					<?php if(empty($orderMessages)) : ?>
+						<span><b><i><?php htmlout("No messages have been sent so far."); ?></i></b></span>
+					<?php else : ?>
+						<span style="white-space: pre-wrap;"><b><?php htmlout($orderMessages); ?></b></span>
+					<?php endif; ?>
 				</div>
 
 				<div>
