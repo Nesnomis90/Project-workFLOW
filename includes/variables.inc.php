@@ -62,7 +62,7 @@ define('MAXIMUM_BOOKING_CODE_GUESSES', 5);
 define('MAXIMUM_ADMIN_BOOKING_CODE_GUESSES', 3);
 define('MAXIMUM_WRONG_LOGIN_GUESSES', 5);
 define('MAXIMUM_WRONG_LOGIN_TIMEOUTS', 3);
-define('MAX_NUMBER_OF_EMAILS_TO_SEND_AT_ONCE', 5); // TO-DO: FIX-ME: Change to an appropriate amount
+define('MAX_NUMBER_OF_EMAILS_TO_SEND_AT_ONCE', 5); // Runs once per minute // TO-DO: FIX-ME: Change to an appropriate amount
 
 // Numbers we use
 define('MAXIMUM_FLOAT_NUMBER', 65535);

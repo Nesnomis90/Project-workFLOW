@@ -382,7 +382,7 @@
 
 				<div>
 					<label>Last Update (User): </label>
-					<?php if(empty($originalOrderUpdatedByStaff)) : ?>
+					<?php if(empty($originalOrderUpdatedByUser)) : ?>
 						<span><b><i><?php htmlout("User has made no changes to this order yet."); ?></i></b></span>
 					<?php else : ?>
 						<span><b><?php htmlout($originalOrderUpdatedByUser); ?></b></span>

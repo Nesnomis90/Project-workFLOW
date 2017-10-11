@@ -4,6 +4,17 @@
 	<head>
 		<meta charset="utf-8">
 		<link rel="stylesheet" type="text/css" href="/CSS/myCSS.css">
+		<style>
+			tr.doNotHighlightRow{
+				background-color: white;
+			}
+			tr.doNotHighlightRow:hover{
+				background-color: transparent;
+			}
+			tr.doNotHighlightRow:nth-of-type(even){
+				background-color: white;
+			}
+		</style>
 		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
 		<script>
 			$(document).ready(function blinkText(){ 
@@ -49,8 +60,8 @@
 					<?php foreach($orderByDay AS $dayNumberAndYear => $days) : ?>
 						<?php $actualDateTime = DateTime::createFromFormat('z-Y', $dayNumberAndYear); ?>
 						<?php $displayDateTime = $actualDateTime->format(DATE_DEFAULT_FORMAT_TO_DISPLAY_WITH_DAY_NAME); ?>
-						<tr><td colspan="15"><?php htmlout($displayDateTime); ?></td></tr>
-						<tr><td>
+						<tr class="doNotHighlightRow"><td colspan="15"><?php htmlout($displayDateTime); ?></td></tr>
+						<tr class="doNotHighlightRow"><td>
 							<table>
 								<tr>
 									<th colspan="11">Order</th>
@@ -130,9 +141,9 @@
 						<?php $dateTimeWeekStart = $actualDateTime->format(DATE_DEFAULT_FORMAT_TO_DISPLAY_WITHOUT_YEAR); ?>
 						<?php $actualDateTime->modify('+6 days'); ?>
 						<?php $dateTimeWeekEnd = $actualDateTime->format(DATE_DEFAULT_FORMAT_TO_DISPLAY_WITHOUT_YEAR); ?>
-						<tr><td colspan="2"><?php htmlout("(Week #$weekNumber $year) $dateTimeWeekStart - $dateTimeWeekEnd"); ?></td></tr>
+						<tr class="doNotHighlightRow"><td colspan="2"><?php htmlout("(Week #$weekNumber $year) $dateTimeWeekStart - $dateTimeWeekEnd"); ?></td></tr>
 							<?php foreach($weeks AS $dayName => $days) : ?>
-								<tr><td><?php htmlout($dayName); ?></td>
+								<tr class="doNotHighlightRow"><td><?php htmlout($dayName); ?></td>
 								<td>
 									<table>
 										<tr>
