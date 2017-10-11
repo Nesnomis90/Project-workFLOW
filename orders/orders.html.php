@@ -50,8 +50,10 @@
 			<table>
 				<caption>Active Orders - Listed by Day</caption>
 				<?php if($rowNum > 0) : ?>
-					<?php foreach($orderByDay AS $dayNumber => $days) : ?>
-						<tr><td colspan="15"><?php htmlout("Day Number: " . $dayNumber); ?></td></tr>
+					<?php foreach($orderByDay AS $dayNumberAndYear => $days) : ?>
+						<?php $actualDateTime = DateTime::createFromFormat('z-Y', $dayNumberAndYear); ?>
+						<?php $displayDateTime = $actualDateTime->format(DATE_DEFAULT_FORMAT_TO_DISPLAY_WITH_DAY_NAME); ?>
+						<tr><td colspan="15"><?php htmlout($displayDateTime); ?></td></tr>
 						<tr><td>
 							<table>
 								<tr>
@@ -113,11 +115,18 @@
 			<table>
 				<caption>Active Orders - Listed by Week</caption>
 				<?php if($rowNum > 0) : ?>
-					<?php foreach($orderByWeek AS $weekNumber => $weeks): ?>
-						<tr>
-							<td><?php htmlout("Week #" . $weekNumber); ?></td>
+					<?php foreach($orderByWeek AS $weekNumberAndYear => $weeks): ?>
+						<?php $weekNumberAndYearArray = explode("-", $weekNumberAndYear); ?>
+						<?php $weekNumber = $weekNumberAndYearArray[0]; ?>
+						<?php $year = $weekNumberAndYearArray[1];?>
+						<?php $actualDateTime = new DateTime(); ?>
+						<?php $actualDateTime->setISODATE($year,$weekNumber); ?>
+						<?php $dateTimeWeekStart = $actualDateTime->format(DATE_DEFAULT_FORMAT_TO_DISPLAY_WITHOUT_YEAR); ?>
+						<?php $actualDateTime->modify('+6 days'); ?>
+						<?php $dateTimeWeekEnd = $actualDateTime->format(DATE_DEFAULT_FORMAT_TO_DISPLAY_WITHOUT_YEAR); ?>
+						<tr><td colspan="2"><?php htmlout("(Week #$weekNumber $year) $dateTimeWeekStart - $dateTimeWeekEnd"); ?></td></tr>
 							<?php foreach($weeks AS $dayName => $days) : ?>
-								<td><?php htmlout($dayName); ?></td>
+								<tr><td><?php htmlout($dayName); ?></td>
 								<td>
 									<table>
 										<tr>
