@@ -4,6 +4,20 @@
 	<head>
 		<meta charset="utf-8">
 		<link rel="stylesheet" type="text/css" href="/CSS/myCSS.css">
+		<style>
+			tr.doNotHighlightRow{
+				background-color: white;
+			}
+			tr.doNotHighlightRow:hover{
+				background-color: transparent;
+			}
+			tr.doNotHighlightRow:nth-of-type(odd){
+				background-color: white;
+			}
+			tr.doNotHighlightRow:nth-of-type(even){
+				background-color: white;
+			}
+		</style>
 		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
 		<script>
 			$(document).ready(function blinkText(){ 
@@ -50,9 +64,11 @@
 			<table>
 				<caption>Active Orders - Listed by Day</caption>
 				<?php if($rowNum > 0) : ?>
-					<?php foreach($orderByDay AS $dayNumber => $days) : ?>
-						<tr><td colspan="15"><?php htmlout("Day Number: " . $dayNumber); ?></td></tr>
-						<tr><td>
+					<?php foreach($orderByDay AS $dayNumberAndYear => $days) : ?>
+						<?php $actualDateTime = DateTime::createFromFormat('z-Y', $dayNumberAndYear); ?>
+						<?php $displayDateTime = $actualDateTime->format(DATE_DEFAULT_FORMAT_TO_DISPLAY_WITH_DAY_NAME); ?>
+						<tr class="doNotHighlightRow"><td colspan="15"><?php htmlout($displayDateTime); ?></td></tr>
+						<tr class="doNotHighlightRow"><td>
 							<table>
 								<tr>
 									<th colspan="8">Order</th>
@@ -76,32 +92,32 @@
 									<th>End</th>
 									<th>Booked For Company</th>
 								</tr>
-									<?php foreach($days AS $order) : ?>
-										<form action="" method="post">
-											<tr>
-												<?php if($order['OrderStatus'] == "New Order!") : ?>
-													<td style="white-space: pre-wrap; color: green;"><span class="blink_me"><?php htmlout($order['OrderStatus']); ?></span></td>
-												<?php else : ?>
-													<td style="white-space: pre-wrap;"><?php htmlout($order['OrderStatus']); ?></td>
-												<?php endif; ?>
-												<td><?php htmlout($order['OrderApprovedByUser']); ?></td>
-												<td><?php htmlout($order['OrderApprovedByStaff']); ?></td>
-												<td style="white-space: pre-wrap;"><?php htmlout($order['OrderContent']); ?></td>
-												<td style="white-space: pre-wrap;"><?php htmlout($order['OrderUserNotes']); ?></td>
-												<td><?php htmlout($order['DateTimeCreated']); ?></td>
-												<td><?php htmlout($order['DateTimeUpdated']); ?></td>
-												<td><input type="submit" name="action" value="Details"></td>
-												<td style="white-space: pre-wrap;"><?php htmlout($order['OrderMessageStatus']); ?></td>
-												<td style="white-space: pre-wrap;"><?php htmlout($order['OrderLastMessageFromStaff']); ?></td>
-												<td style="white-space: pre-wrap;"><?php htmlout($order['OrderLastMessageFromUser']); ?></td>
-												<td><?php htmlout($order['OrderRoomName']); ?></td>
-												<td><?php htmlout($order['OrderStartTime']); ?></td>
-												<td><?php htmlout($order['OrderEndTime']); ?></td>
-												<td><?php htmlout($order['OrderBookedFor']); ?></td>
-												<input type="hidden" name="OrderID" value="<?php htmlout($order['TheOrderID']); ?>">
-											</tr>
-										</form>
-									<?php endforeach; ?>
+								<?php foreach($days AS $order) : ?>
+									<form action="" method="post">
+										<tr>
+											<?php if($order['OrderStatus'] == "New Order!") : ?>
+												<td style="white-space: pre-wrap; color: green;"><span class="blink_me"><?php htmlout($order['OrderStatus']); ?></span></td>
+											<?php else : ?>
+												<td style="white-space: pre-wrap;"><?php htmlout($order['OrderStatus']); ?></td>
+											<?php endif; ?>
+											<td><?php htmlout($order['OrderApprovedByUser']); ?></td>
+											<td><?php htmlout($order['OrderApprovedByStaff']); ?></td>
+											<td style="white-space: pre-wrap;"><?php htmlout($order['OrderContent']); ?></td>
+											<td style="white-space: pre-wrap;"><?php htmlout($order['OrderUserNotes']); ?></td>
+											<td><?php htmlout($order['DateTimeCreated']); ?></td>
+											<td><?php htmlout($order['DateTimeUpdated']); ?></td>
+											<td><input type="submit" name="action" value="Details"></td>
+											<td style="white-space: pre-wrap;"><?php htmlout($order['OrderMessageStatus']); ?></td>
+											<td style="white-space: pre-wrap;"><?php htmlout($order['OrderLastMessageFromStaff']); ?></td>
+											<td style="white-space: pre-wrap;"><?php htmlout($order['OrderLastMessageFromUser']); ?></td>
+											<td><?php htmlout($order['OrderRoomName']); ?></td>
+											<td><?php htmlout($order['OrderStartTime']); ?></td>
+											<td><?php htmlout($order['OrderEndTime']); ?></td>
+											<td><?php htmlout($order['OrderBookedFor']); ?></td>
+											<input type="hidden" name="OrderID" value="<?php htmlout($order['TheOrderID']); ?>">
+										</tr>
+									</form>
+								<?php endforeach; ?>
 							</table>
 						</td></tr>
 					<?php endforeach; ?>
@@ -113,11 +129,18 @@
 			<table>
 				<caption>Active Orders - Listed by Week</caption>
 				<?php if($rowNum > 0) : ?>
-					<?php foreach($orderByWeek AS $weekNumber => $weeks): ?>
-						<tr>
-							<td><?php htmlout("Week #" . $weekNumber); ?></td>
+					<?php foreach($orderByWeek AS $weekNumberAndYear => $weeks): ?>
+						<?php $weekNumberAndYearArray = explode("-", $weekNumberAndYear); ?>
+						<?php $weekNumber = $weekNumberAndYearArray[0]; ?>
+						<?php $year = $weekNumberAndYearArray[1];?>
+						<?php $actualDateTime = new DateTime(); ?>
+						<?php $actualDateTime->setISODATE($year,$weekNumber); ?>
+						<?php $dateTimeWeekStart = $actualDateTime->format(DATE_DEFAULT_FORMAT_TO_DISPLAY_WITHOUT_YEAR); ?>
+						<?php $actualDateTime->modify('+6 days'); ?>
+						<?php $dateTimeWeekEnd = $actualDateTime->format(DATE_DEFAULT_FORMAT_TO_DISPLAY_WITHOUT_YEAR); ?>
+						<tr class="doNotHighlightRow"><td colspan="2"><?php htmlout("(Week #$weekNumber $year) $dateTimeWeekStart - $dateTimeWeekEnd"); ?></td></tr>
 							<?php foreach($weeks AS $dayName => $days) : ?>
-								<td><?php htmlout($dayName); ?></td>
+								<tr class="doNotHighlightRow"><td><?php htmlout($dayName); ?></td>
 								<td>
 									<table>
 										<tr>
@@ -142,32 +165,32 @@
 											<th>End</th>
 											<th>Booked For Company</th>
 										</tr>
-											<?php foreach($days AS $order) : ?>
-												<form action="" method="post">
-													<tr>
-														<?php if($order['OrderStatus'] == "New Order!") : ?>
-															<td style="white-space: pre-wrap; color: green;"><span class="blink_me"><?php htmlout($order['OrderStatus']); ?></span></td>
-														<?php else : ?>
-															<td style="white-space: pre-wrap;"><?php htmlout($order['OrderStatus']); ?></td>
-														<?php endif; ?>
-														<td><?php htmlout($order['OrderApprovedByUser']); ?></td>
-														<td><?php htmlout($order['OrderApprovedByStaff']); ?></td>
-														<td style="white-space: pre-wrap;"><?php htmlout($order['OrderContent']); ?></td>
-														<td style="white-space: pre-wrap;"><?php htmlout($order['OrderUserNotes']); ?></td>
-														<td><?php htmlout($order['DateTimeCreated']); ?></td>
-														<td><?php htmlout($order['DateTimeUpdated']); ?></td>
-														<td><input type="submit" name="action" value="Details"></td>
-														<td style="white-space: pre-wrap;"><?php htmlout($order['OrderMessageStatus']); ?></td>
-														<td style="white-space: pre-wrap;"><?php htmlout($order['OrderLastMessageFromStaff']); ?></td>
-														<td style="white-space: pre-wrap;"><?php htmlout($order['OrderLastMessageFromUser']); ?></td>
-														<td><?php htmlout($order['OrderRoomName']); ?></td>
-														<td><?php htmlout($order['OrderStartTime']); ?></td>
-														<td><?php htmlout($order['OrderEndTime']); ?></td>
-														<td><?php htmlout($order['OrderBookedFor']); ?></td>
-														<input type="hidden" name="OrderID" value="<?php htmlout($order['TheOrderID']); ?>">
-													</tr>
-												</form>
-											<?php endforeach; ?>
+										<?php foreach($days AS $order) : ?>
+											<form action="" method="post">
+												<tr>
+													<?php if($order['OrderStatus'] == "New Order!") : ?>
+														<td style="white-space: pre-wrap; color: green;"><span class="blink_me"><?php htmlout($order['OrderStatus']); ?></span></td>
+													<?php else : ?>
+														<td style="white-space: pre-wrap;"><?php htmlout($order['OrderStatus']); ?></td>
+													<?php endif; ?>
+													<td><?php htmlout($order['OrderApprovedByUser']); ?></td>
+													<td><?php htmlout($order['OrderApprovedByStaff']); ?></td>
+													<td style="white-space: pre-wrap;"><?php htmlout($order['OrderContent']); ?></td>
+													<td style="white-space: pre-wrap;"><?php htmlout($order['OrderUserNotes']); ?></td>
+													<td><?php htmlout($order['DateTimeCreated']); ?></td>
+													<td><?php htmlout($order['DateTimeUpdated']); ?></td>
+													<td><input type="submit" name="action" value="Details"></td>
+													<td style="white-space: pre-wrap;"><?php htmlout($order['OrderMessageStatus']); ?></td>
+													<td style="white-space: pre-wrap;"><?php htmlout($order['OrderLastMessageFromStaff']); ?></td>
+													<td style="white-space: pre-wrap;"><?php htmlout($order['OrderLastMessageFromUser']); ?></td>
+													<td><?php htmlout($order['OrderRoomName']); ?></td>
+													<td><?php htmlout($order['OrderStartTime']); ?></td>
+													<td><?php htmlout($order['OrderEndTime']); ?></td>
+													<td><?php htmlout($order['OrderBookedFor']); ?></td>
+													<input type="hidden" name="OrderID" value="<?php htmlout($order['TheOrderID']); ?>">
+												</tr>
+											</form>
+										<?php endforeach; ?>
 									</table>
 								</td>
 							<?php endforeach; ?>

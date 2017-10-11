@@ -223,14 +223,14 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Details') OR
 				$dateTimeUpdatedByStaff = $row['DateTimeUpdatedByStaff'];
 				$displayDateTimeUpdatedByStaff = convertDatetimeToFormat($dateTimeUpdatedByStaff , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);				
 			} else {
-				$displayDateTimeUpdatedByStaff = "N/A";
+				$displayDateTimeUpdatedByStaff = "";
 			}
 
 			if(!empty($row['DateTimeUpdatedByUser'])){
 				$dateTimeUpdatedByUser = $row['DateTimeUpdatedByUser'];
 				$displayDateTimeUpdatedByUser = convertDatetimeToFormat($dateTimeUpdatedByUser , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);				
 			} else {
-				$displayDateTimeUpdatedByUser = "N/A";
+				$displayDateTimeUpdatedByUser = "";
 			}
 
 			$_SESSION['EditStaffOrderOriginalInfo']['OrderIsApproved'] = $orderIsApproved;
@@ -442,6 +442,8 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Details') OR
 	$originalOrderCreated = $_SESSION['EditStaffOrderOriginalInfo']['DateTimeCreated'];
 	$originalOrderUpdatedByStaff = $_SESSION['EditStaffOrderOriginalInfo']['DateTimeUpdatedByStaff'];
 	$originalOrderUpdatedByUser = $_SESSION['EditStaffOrderOriginalInfo']['DateTimeUpdatedByUser'];
+
+	$availableExtrasNumber = sizeOf($availableExtra);
 
 	if(!isSet($orderCommunicationToUser)){
 		$orderCommunicationToUser = "";
@@ -1206,9 +1208,9 @@ foreach($result AS $row){
 	if($sortBy == "Day"){
 		date_default_timezone_set(DATE_DEFAULT_TIMEZONE);
 		$newDateTime = DateTime::createFromFormat('Y-m-d H:i:s', $dateTimeStart);
-		$dayNumber = $newDateTime->format("z");
+		$dayNumberAndYear = $newDateTime->format("z-Y");
 
-		$orderByDay[$dayNumber][] = array(
+		$orderByDay[$dayNumberAndYear][] = array(
 											'TheOrderID' => $row['TheOrderID'],
 											'OrderStatus' => $orderStatus,
 											'OrderUserNotes' => $row['OrderUserNotes'],
@@ -1229,9 +1231,9 @@ foreach($result AS $row){
 		date_default_timezone_set(DATE_DEFAULT_TIMEZONE);
 		$newDateTime = DateTime::createFromFormat('Y-m-d H:i:s', $dateTimeStart);
 		$dayName = $newDateTime->format("l");
-		$weekNumber = $newDateTime->format("W");
+		$weekNumberAndYear = $newDateTime->format("W-Y");
 
-		$orderByWeek[$weekNumber][$dayName][] = array(
+		$orderByWeek[$weekNumberAndYear][$dayName][] = array(
 														'TheOrderID' => $row['TheOrderID'],
 														'OrderStatus' => $orderStatus,
 														'OrderUserNotes' => $row['OrderUserNotes'],
