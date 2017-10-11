@@ -373,18 +373,26 @@
 
 				<div>
 					<label>Last Update (Staff): </label>
-					<span><b><?php htmlout($originalOrderUpdatedByStaff); ?></b></span>
+					<?php if(empty($originalOrderUpdatedByStaff)) : ?>
+						<span><b><i><?php htmlout("Staff has made no changes to this order yet."); ?></i></b></span>
+					<?php else : ?>
+						<span><b><?php htmlout($originalOrderUpdatedByStaff); ?></b></span>
+					<?php endif; ?>
 				</div>
 
 				<div>
 					<label>Last Update (User): </label>
-					<span><b><?php htmlout($originalOrderUpdatedByUser); ?></b></span>
+					<?php if(empty($originalOrderUpdatedByStaff)) : ?>
+						<span><b><i><?php htmlout("User has made no changes to this order yet."); ?></i></b></span>
+					<?php else : ?>
+						<span><b><?php htmlout($originalOrderUpdatedByUser); ?></b></span>
+					<?php endif; ?>
 				</div>
 
 				<div>
 					<label>User Notes: </label>
 					<?php if(empty($originalOrderUserNotes)) : ?>
-						<span><b><i><?php htmlout("User did not submit anything."); ?></i></b></span>
+						<span><b><i><?php htmlout("User did not submit any additional information."); ?></i></b></span>
 					<?php else : ?>
 						<span style="white-space: pre-wrap;"><b><?php htmlout($originalOrderUserNotes); ?></b></span>
 					<?php endif; ?>

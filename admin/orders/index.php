@@ -241,14 +241,14 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Details') OR
 				$dateTimeUpdatedByStaff = $row['DateTimeUpdatedByStaff'];
 				$displayDateTimeUpdatedByStaff = convertDatetimeToFormat($dateTimeUpdatedByStaff , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);				
 			} else {
-				$displayDateTimeUpdatedByStaff = "N/A";
+				$displayDateTimeUpdatedByStaff = "";
 			}
 
 			if(!empty($row['DateTimeUpdatedByUser'])){
 				$dateTimeUpdatedByUser = $row['DateTimeUpdatedByUser'];
 				$displayDateTimeUpdatedByUser = convertDatetimeToFormat($dateTimeUpdatedByUser , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);				
 			} else {
-				$displayDateTimeUpdatedByUser = "N/A";
+				$displayDateTimeUpdatedByUser = "";
 			}
 
 			$_SESSION['EditOrderOriginalInfo']['OrderIsApproved'] = $orderIsApproved;
