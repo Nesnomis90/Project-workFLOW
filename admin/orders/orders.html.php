@@ -38,7 +38,7 @@
 		</div>
 
 		<div class="left">
-			<form action="" method="post">
+			<form action="" method="get">
 				<span>Sort the active orders by</span>
 				<?php if($sortBy == "Day") : ?>
 					<input type="submit" name="disabled" value="Day" disabled="disabled">
@@ -120,6 +120,7 @@
 											<td><?php htmlout($order['OrderBookedFor']); ?></td>
 											<td><input type="submit" name="action" value="Cancel"></td>
 											<input type="hidden" name="OrderID" value="<?php htmlout($order['TheOrderID']); ?>">
+											<input type="hidden" name="OrderStatus" value="<?php htmlout($order['OrderStatus']); ?>">
 											<input type="hidden" name="disableEdit" value="0">
 										</tr>
 									</form>
@@ -203,6 +204,7 @@
 													<td><?php htmlout($order['OrderBookedFor']); ?></td>
 													<td><input type="submit" name="action" value="Cancel"></td>
 													<input type="hidden" name="OrderID" value="<?php htmlout($order['TheOrderID']); ?>">
+													<input type="hidden" name="OrderStatus" value="<?php htmlout($order['OrderStatus']); ?>">
 													<input type="hidden" name="disableEdit" value="0">
 												</tr>
 											</form>
@@ -274,6 +276,7 @@
 								<td><?php htmlout($row['OrderBookedFor']); ?></td>
 								<td><input type="submit" name="action" value="Cancel"></td>
 								<input type="hidden" name="OrderID" value="<?php htmlout($row['TheOrderID']); ?>">
+								<input type="hidden" name="OrderStatus" value="<?php htmlout($row['OrderStatus']); ?>">
 								<input type="hidden" name="disableEdit" value="0">
 							</tr>
 						</form>
@@ -325,6 +328,7 @@
 							<td style="white-space: pre-wrap;"><?php htmlout($row['OrderLastMessageFromUser']); ?></td>
 							<td><?php htmlout($row['OrderBookedFor']); ?></td>
 							<input type="hidden" name="OrderID" value="<?php htmlout($row['TheOrderID']); ?>">
+							<input type="hidden" name="OrderStatus" value="<?php htmlout($row['OrderStatus']); ?>">
 							<input type="hidden" name="disableEdit" value="1">
 						</tr>
 					</form>
@@ -375,6 +379,7 @@
 							<td><?php htmlout($row['OrderEndTime']); ?></td>
 							<td><?php htmlout($row['OrderBookedFor']); ?></td>
 							<input type="hidden" name="OrderID" value="<?php htmlout($row['TheOrderID']); ?>">
+							<input type="hidden" name="OrderStatus" value="<?php htmlout($row['OrderStatus']); ?>">
 							<input type="hidden" name="disableEdit" value="1">
 						</tr>
 					</form>
@@ -450,6 +455,7 @@
 								<?php endif; ?>
 							</td>
 							<input type="hidden" name="OrderID" value="<?php htmlout($row['TheOrderID']); ?>">
+							<input type="hidden" name="OrderStatus" value="<?php htmlout($row['OrderStatus']); ?>">
 							<input type="hidden" name="disableEdit" value="0">
 						</tr>
 					</form>

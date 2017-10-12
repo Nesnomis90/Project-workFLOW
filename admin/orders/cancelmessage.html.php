@@ -1,4 +1,4 @@
-<!-- This is the HTML form used for ADMINS in ADMIN/BOOKINGS to add a feedback message to users when cancelling their bookings -->
+<!-- This is the HTML form used for ADMINS in ADMIN/ORDERS to add a feedback message to users when cancelling their order -->
 <!DOCTYPE html>
 <html lang="en">
 	<head>
@@ -25,7 +25,7 @@
 
 			<div class="left">
 				<form action="" method="post">
-					<span>This will be added to the email sent out to the user the meeting was registered to.</span>
+					<span>This will be added to the email sent out to the user the order was registered to.</span>
 					<label for="bookingCode">Added message: </label>
 					<?php if(isSet($cancelMessage)) : ?>
 						<textarea rows="4" cols="50" name="cancelMessage" placeholder="Default: No reason given."><?php htmlout($cancelMessage); ?></textarea>

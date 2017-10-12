@@ -6,7 +6,7 @@ include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/helpers.inc.php'; // Starts 
 include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/navcheck.inc.php';
 include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/magicquotes.inc.php';
 
-// CHECK IF USER TRYING TO ACCESS THIS IS IN FACT THE ADMIN!
+// CHECK IF USER TRYING TO ACCESS THIS IS IN FACT STAFF OR ADMIN!
 
 if(!userIsLoggedIn()){
 	// Not logged in. Send user a login prompt.
@@ -24,6 +24,20 @@ if(userHasAccess('Staff')){
 	exit();
 }
 
+// Set default sorting option
+if(isSet($_GET['sortBy'])){
+	if($_GET['sortBy'] == "Day"){
+		$sortBy = "Day";
+	} elseif($_GET['sortBy'] == "Week"){
+		$sortBy = "Week";
+	} elseif($_GET['sortBy'] == "Starting Time"){
+		$sortBy = "Starting Time";
+	}
+} else {
+	header("Location: ?sortBy=Starting+Time");
+	exit();
+}
+
 // Function to clear sessions used to remember user inputs on refreshing the edit Order form
 function clearEditStaffOrderSessions(){
 	unset($_SESSION['EditStaffOrderOriginalInfo']);
@@ -36,6 +50,7 @@ function clearEditStaffOrderSessions(){
 	unset($_SESSION['EditStaffOrderAlternativeExtraAdded']);
 	unset($_SESSION['EditStaffOrderAlternativeExtraCreated']);
 	unset($_SESSION['EditStaffOrderExtraOrderedOnlyNames']);
+	unset($_SESSION['EditStaffOrderOrderStatus']);
 	unset($_SESSION['resetEditStaffOrder']);
 	unset($_SESSION['refreshEditStaffOrder']);
 }
@@ -179,6 +194,8 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Details') OR
 
 		// Make sure we don't have any remembered values in memory
 		clearEditStaffOrderSessions();
+
+		$_SESSION['EditStaffOrderOrderStatus'] = $_POST['OrderStatus'];
 
 		// Get information from database again on the selected order
 		try
@@ -443,6 +460,8 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Details') OR
 	$originalOrderUpdatedByStaff = $_SESSION['EditStaffOrderOriginalInfo']['DateTimeUpdatedByStaff'];
 	$originalOrderUpdatedByUser = $_SESSION['EditStaffOrderOriginalInfo']['DateTimeUpdatedByUser'];
 
+	$orderStatus = $_SESSION['EditStaffOrderOrderStatus'];
+
 	$availableExtrasNumber = sizeOf($availableExtra);
 
 	if(!isSet($orderCommunicationToUser)){
@@ -454,18 +473,6 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Details') OR
 	// Change to the template we want to use
 	include 'details.html.php';
 	exit();
-}
-
-if(isSet($_POST['sortBy'])){
-	if($_POST['sortBy'] == "Day"){
-		$sortBy = "Day";
-	} elseif($_POST['sortBy'] == "Week"){
-		$sortBy = "Week";
-	} elseif($_POST['sortBy'] == "Starting Time"){
-		$sortBy = "Starting Time";
-	}
-} else {
-	$sortBy = "Starting Time";
 }
 
 // Perform the actual database update of the edited information

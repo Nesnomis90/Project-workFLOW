@@ -358,7 +358,7 @@
 		<?php include_once $_SERVER['DOCUMENT_ROOT'] .'/includes/admintopnav.html.php'; ?>
 
 		<form action="" method="post">
-			<fieldset><legend>Order Details</legend>
+			<fieldset><legend>Order Details - Status: <?php htmlout($orderStatus); ?></legend>
 				<div>
 					<?php if(isSet($_SESSION['AddOrderError'])) :?>
 						<span><b class="feedback"><?php htmlout($_SESSION['AddOrderError']); ?></b></span>
@@ -414,7 +414,11 @@
 
 				<div>
 					<label>Original Admin Note: </label>
-					<span style="white-space: pre-wrap;"><b><?php htmlout($originalOrderAdminNote); ?></b></span>
+					<?php if(empty($originalOrderAdminNote)) : ?>
+						<span><b><i><?php htmlout("No admin note has been set."); ?></i></b></span>
+					<?php else : ?>
+						<span style="white-space: pre-wrap;"><b><?php htmlout($originalOrderAdminNote); ?></b></span>
+					<?php endif; ?>
 				</div>
 
 				<div>
@@ -432,7 +436,7 @@
 				</div>
 
 				<div>
-					<?php if($_POST['disableEdit'] == 0) : ?>
+					<?php if($disableEdit == 0) : ?>
 						<label>Change Order Approval: </label>
 						<?php if($orderIsApproved == 1) : ?>
 							<label class="checkboxlabel"><input type="checkbox" name="isApproved" value="1" checked="checked">Set As Approved</label>
@@ -443,6 +447,17 @@
 						<input type="hidden" name="isApproved" value="<?php htmlout($orderIsApproved); ?>">
 					<?php endif; ?>
 				</div>
+				
+				<?php if(isSet($originalDateTimeCancelled)) : ?>
+					<div>
+						<label>Date Cancelled: </label>
+						<span><b><?php htmlout($originalDateTimeCancelled); ?></b></span>
+					</div>
+					<div>
+						<label>Reason For Cancelling: </label>
+						<span style="white-space: pre-wrap;"><b><?php htmlout($originalCancelMessage); ?></b></span>
+					</div>
+				<?php endif; ?>
 			</fieldset>
 
 			<table id="addAlternative">
@@ -472,7 +487,7 @@
 							<td><?php htmlout($row['ExtraPrice']); ?></td>
 							<td><?php htmlout($row['ExtraAmount']); ?></td>
 							<td>
-								<?php if($_POST['disableEdit'] == 0) : ?>
+								<?php if($disableEdit == 0) : ?>
 									<?php if($row['ExtraBooleanApprovedForPurchase'] == 1) : ?>
 										<label style="width: auto;"><input type="checkbox" name="isApprovedForPurchase[]" value="<?php htmlout($row['ExtraID']); ?>" checked="checked">Approved</label>
 									<?php else : ?>
@@ -490,7 +505,7 @@
 							<td><?php htmlout($row['ExtraApprovedForPurchaseByUser']); ?></td>
 							<td><?php htmlout($row['ExtraDateTimeApprovedForPurchase']); ?></td>
 							<td>
-								<?php if($_POST['disableEdit'] == 0) : ?>
+								<?php if($disableEdit == 0) : ?>
 									<?php if($row['ExtraBooleanPurchased'] == 1) : ?>
 										<label style="width: auto;"><input type="checkbox" name="isPurchased[]" value="<?php htmlout($row['ExtraID']); ?>" checked="checked">Purchased</label>
 									<?php else : ?>
@@ -509,7 +524,7 @@
 							<td><?php htmlout($row['ExtraDateTimePurchased']); ?></td>
 						</tr>
 					<?php endforeach; ?>
-					<?php if($_POST['disableEdit'] == 0) : ?>
+					<?php if($disableEdit == 0) : ?>
 						<?php if($availableExtrasNumber > 0) : ?>
 							<tr><td colspan="10"><button type="button" onclick="createNewAlternativeExtraRow()">Create New Alternative</button><button type="button" id="addAlternativeExtraButton" onclick="addAlternativeExtraRow()">Add Alternative</button></td></tr>
 						<?php else : ?>
@@ -518,7 +533,7 @@
 					<?php endif; ?>
 				<?php else : ?>
 					<tr><td colspan="10"><b>This order has nothing in it.</b></td></tr>
-					<?php if($_POST['disableEdit'] == 0) : ?>
+					<?php if($disableEdit == 0) : ?>
 						<?php if($availableExtrasNumber > 0) : ?>
 							<tr><td colspan="10"><button type="button" onclick="createNewAlternativeExtraRow()">Create New Alternative</button><button type="button" id="addAlternativeExtraButton" onclick="addAlternativeExtraRow()">Add Alternative</button></td></tr>
 						<?php else : ?>
@@ -533,7 +548,6 @@
 				<input type="hidden" id="LastAlternativeID" name="LastAlternativeID" value="">
 				<input type="hidden" id="AlternativesAdded" name="AlternativesAdded" value="0">
 				<input type="hidden" id="NewAlternativesCreated" name="NewAlternativesCreated" value="0">
-				<input type="hidden" name="disableEdit" value="<?php echo $_POST['disableEdit']; ?>">
 				<input type="submit" name="action" value="Submit Changes" onclick="return validateNewAlternatives()">
 				<input type="submit" name="action" value="Go Back">
 				<input type="submit" name="action" value="Reset">

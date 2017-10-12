@@ -42,7 +42,7 @@
 		</div>
 
 		<div class="left">
-			<form action="" method="post">
+			<form action="" method="get">
 				<span>Sort the active orders by</span>
 				<?php if($sortBy == "Day") : ?>
 					<input type="submit" name="disabled" value="Day" disabled="disabled">
@@ -115,6 +115,7 @@
 											<td><?php htmlout($order['OrderEndTime']); ?></td>
 											<td><?php htmlout($order['OrderBookedFor']); ?></td>
 											<input type="hidden" name="OrderID" value="<?php htmlout($order['TheOrderID']); ?>">
+											<input type="hidden" name="OrderStatus" value="<?php htmlout($order['OrderStatus']); ?>">
 										</tr>
 									</form>
 								<?php endforeach; ?>
@@ -188,6 +189,7 @@
 													<td><?php htmlout($order['OrderEndTime']); ?></td>
 													<td><?php htmlout($order['OrderBookedFor']); ?></td>
 													<input type="hidden" name="OrderID" value="<?php htmlout($order['TheOrderID']); ?>">
+													<input type="hidden" name="OrderStatus" value="<?php htmlout($order['OrderStatus']); ?>">
 												</tr>
 											</form>
 										<?php endforeach; ?>
@@ -249,6 +251,7 @@
 								<td><?php htmlout($row['OrderRoomName']); ?></td>
 								<td><?php htmlout($row['OrderBookedFor']); ?></td>
 								<input type="hidden" name="OrderID" value="<?php htmlout($row['TheOrderID']); ?>">
+								<input type="hidden" name="OrderStatus" value="<?php htmlout($row['OrderStatus']); ?>">
 							</tr>
 						</form>
 					<?php endforeach; ?>

@@ -362,8 +362,7 @@
 		<?php endif; ?>
 
 		<form action="" method="post">
-			<fieldset><legend>Order Details:</legend>
-
+			<fieldset><legend>Order Details - Status: <?php htmlout($orderStatus); ?></legend>
 				<div class="left">
 					<?php if(isSet($_SESSION['OrderStaffDetailsFeedback'])) : ?>
 						<span><b class="feedback"><?php htmlout($_SESSION['OrderStaffDetailsFeedback']); ?></b></span>

@@ -829,8 +829,8 @@ function create_tables(){
 						  `orderApprovedByAdmin` tinyint(1) unsigned NOT NULL DEFAULT '0',
 						  `orderApprovedByStaff` tinyint(1) unsigned NOT NULL DEFAULT '0',
 						  `orderApprovedByUserID` int(10) unsigned DEFAULT NULL,
-						  `orderChangedByUser` tinyint(1) unsigned NOT NULL DEFAULT '0',
 						  `orderChangedByStaff` tinyint(1) unsigned NOT NULL DEFAULT '0',
+						  `orderChangedByUser` tinyint(1) unsigned NOT NULL DEFAULT '0',
 						  `orderFinalPrice` smallint(5) unsigned DEFAULT NULL,
 						  `orderNewMessageFromStaff` tinyint(1) unsigned NOT NULL DEFAULT '0',
 						  `orderNewMessageFromUser` tinyint(1) unsigned NOT NULL DEFAULT '0',
@@ -840,11 +840,15 @@ function create_tables(){
 						  `dateTimeApproved` timestamp NULL DEFAULT NULL,
 						  `dateTimeCancelled` timestamp NULL DEFAULT NULL,
 						  `adminNote` text,
+						  `cancelMessage` text,
+						  `cancelledByUserID` int(10) unsigned DEFAULT NULL,
 						  `emailSoonSent` tinyint(1) unsigned NOT NULL DEFAULT '0',
 						  `emailCheckSent` tinyint(1) unsigned NOT NULL DEFAULT '0',
 						  PRIMARY KEY (`orderID`),
 						  KEY `FK_UserID3_idx` (`orderApprovedByUserID`),
-						  CONSTRAINT `FK_UserID3` FOREIGN KEY (`orderApprovedByUserID`) REFERENCES `user` (`userID`) ON DELETE SET NULL ON UPDATE CASCADE
+						  KEY `FK_UserID8_idx` (`cancelledByUserID`),
+						  CONSTRAINT `FK_UserID3` FOREIGN KEY (`orderApprovedByUserID`) REFERENCES `user` (`userID`) ON DELETE SET NULL ON UPDATE CASCADE,
+						  CONSTRAINT `FK_UserID8` FOREIGN KEY (`cancelledByUserID`) REFERENCES `user` (`userID`) ON DELETE SET NULL ON UPDATE CASCADE
 						) ENGINE=InnoDB DEFAULT CHARSET=utf8");
 
 			//	Add the creation to log event

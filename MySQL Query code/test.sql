@@ -87,6 +87,45 @@ SET		`orderFinalPrice` = (
 WHERE	`orderID` = 1
 AND		`orderFinalPrice` IS NULL;
 
+SELECT 		b.`startDateTime`			AS BookingStartDateTime,
+			b.`endDateTime`				AS BookingEndDateTime,
+			u.`firstname`				AS UserFirstName,
+			u.`lastname`				AS UserLastName,
+			u.`email`					AS UserEmail,
+			u.`sendEmail`				AS UserSendEmail,
+			u.`userID`					AS UserID,
+			c.`name`					AS CompanyName,
+			m.`name`					AS RoomName,
+			GROUP_CONCAT(
+							ex.`name`, 
+							" (", 
+							eo.`amount`, 
+							")"
+							SEPARATOR ", "
+						)				AS OrderContent
+FROM		`booking` b
+INNER JOIN 	`orders` o
+ON			o.`orderID` = b.`orderID`
+INNER JOIN 	`meetingroom` m
+ON 			m.`meetingRoomID` = b.`meetingRoomID`
+INNER JOIN	`user` u
+ON 			u.`userID` = b.`userID`
+INNER JOIN 	`company` c
+ON 			c.`companyID` = b.`companyID`
+LEFT JOIN	(
+						`extraorders` eo
+			INNER JOIN 	`extra` ex
+			ON 			eo.`extraID` = ex.`extraID`
+)
+ON 			eo.`orderID` = o.`orderID`
+WHERE		o.`orderID` = 10
+AND			b.`bookingID` IS NOT NULL
+AND			b.`actualEndDateTime` IS NULL
+AND			b.`dateTimeCancelled` IS NULL
+AND			o.`dateTimeCancelled` IS NULL
+AND			CURRENT_TIMESTAMP < b.`startDateTime`
+LIMIT 		1;
+
 SELECT 	`extraID`		AS ExtraID,
 		`name`			AS ExtraName,
 		`description`	AS ExtraDescription,
