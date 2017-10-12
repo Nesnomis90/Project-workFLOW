@@ -542,7 +542,7 @@ if (	(isSet($_POST['action']) and $_POST['action'] == 'Cancel') OR
 			$row = $s->fetch(PDO::FETCH_ASSOC);
 			if($row['HitCount'] > 0){
 				$endedEarly = TRUE;
-				if($row['OrderID'] != NULL){
+				if(!empty($row['OrderID'])){
 					$orderID = $row['OrderID'];
 				}
 			} else {
@@ -624,8 +624,6 @@ if (	(isSet($_POST['action']) and $_POST['action'] == 'Cancel') OR
 				$logEventDescription = 'A booking was cancelled by: ' . $_SESSION['LoggedInUserName'];
 			}
 
-			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
-
 			$sql = "INSERT INTO `logevent` 
 					SET			`actionID` = 	(
 													SELECT 	`actionID` 
@@ -687,7 +685,6 @@ if(isSet($_POST['action']) AND $_POST['action'] == "Confirm Reason"){
 	}
 
 	if($invalidInput){
-		
 		var_dump($_SESSION); // TO-DO: Remove when done testing
 
 		include_once 'cancelmessage.html.php';

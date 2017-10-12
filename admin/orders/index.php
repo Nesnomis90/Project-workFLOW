@@ -141,180 +141,149 @@ if (	(isSet($_POST['action']) and $_POST['action'] == 'Cancel') OR
 	if(isSet($_SESSION['refreshCancelAdminOrder']) AND $_SESSION['refreshCancelAdminOrder']){
 		unset($_SESSION['refreshCancelAdminOrder']);
 	} else {
-		$_SESSION['cancelAdminOrderOriginalValues']['OrderID'] = $_POST['id'];
-
-		if(isSet($_POST['UserID']) AND !empty($_POST['UserID'])){
-			$_SESSION['cancelAdminOrderOriginalValues']['UserID'] = $_POST['UserID'];
-		}
-		if(isSet($_POST['sendEmail']) AND !empty($_POST['sendEmail'])){
-			$_SESSION['cancelAdminOrderOriginalValues']['SendEmail'] = $_POST['sendEmail'];
-		}
-		if(isSet($_POST['Email']) AND !empty($_POST['Email'])){
-			$_SESSION['cancelAdminOrderOriginalValues']['UserEmail'] = $_POST['Email'];
-		}
+		$_SESSION['cancelAdminOrder']['OrderID'] = $_POST['OrderID'];
 	}
 
-	$bookingID = $_SESSION['cancelAdminOrderOriginalValues']['BookingID'];
-	$bookingStatus = $_SESSION['cancelAdminOrderOriginalValues']['BookingStatus'];
-	$bookingMeetingInfo = $_SESSION['cancelAdminOrderOriginalValues']['MeetingInfo'];
-	$userInfo = $_SESSION['cancelAdminOrderOriginalValues']['UserInfo'];
+	$orderID = $_SESSION['cancelAdminOrder']['OrderID'];
 
-	// Only cancel if booking is currently active
-	if(isSet($bookingStatus) AND ($bookingStatus == 'Active' OR $bookingStatus == 'Active Today')){
+	// Load new template to let admin add a reason for cancelling the meeting
+	if(!isSet($_SESSION['cancelAdminOrder']['ReasonForCancelling'])){
+		var_dump($_SESSION); // TO-DO: Remove before uploading
+		include_once 'cancelmessage.html.php';
+		exit();
+	}
 
-		// Load new template to let admin add a reason for cancelling the meeting
-		if(!isSet($_SESSION['cancelAdminOrderOriginalValues']['ReasonForCancelling'])){
-			var_dump($_SESSION); // TO-DO: Remove before uploading
-			include_once 'cancelmessage.html.php';
-			exit();
-		}
-
-		if(isSet($_SESSION['cancelAdminOrderOriginalValues']['ReasonForCancelling']) AND !empty($_SESSION['cancelAdminOrderOriginalValues']['ReasonForCancelling'])){
-			$cancelMessage = $_SESSION['cancelAdminOrderOriginalValues']['ReasonForCancelling'];
-		} else {
-			$cancelMessage = NULL;
-		}
-
-		// Update cancellation date for selected booked meeting in database
-		try
-		{
-			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
-
-			$pdo = connect_to_db();
-			// Get info if the booking is ending early and if it had an order connected
-			$sql = "SELECT 	COUNT(*)	AS HitCount,
-							`orderID`	AS OrderID
-					FROM	`booking`
-					WHERE	`bookingID` = :bookingID
-					AND		`actualEndDateTime` IS NULL
-					AND		`dateTimeCancelled` IS NULL
-					AND		CURRENT_TIMESTAMP
-					BETWEEN	`startDateTime`
-					AND		`endDateTime`
-					LIMIT 	1";
-			$s = $pdo->prepare($sql);
-			$s->bindValue(':bookingID', $bookingID);
-			$s->execute();
-
-			$row = $s->fetch(PDO::FETCH_ASSOC);
-			if($row['HitCount'] > 0){
-				$endedEarly = TRUE;
-				if($row['OrderID'] != NULL){
-					$orderID = $row['OrderID'];
-				}
-			} else {
-				$endedEarly = FALSE;
-			}
-
-			$pdo->beginTransaction();
-
-			if($endedEarly){
-				// Meeting got cancelled after the meeting started.
-				$sql = 'UPDATE 	`booking` 
-						SET 	`dateTimeCancelled` = CURRENT_TIMESTAMP,
-								`actualEndDateTime` = CURRENT_TIMESTAMP,
-								`cancellationCode` = NULL,
-								`cancelMessage` = :cancelMessage,
-								`cancelledByUserID` = :cancelledByUserID
-						WHERE 	`bookingID` = :bookingID
-						AND		`dateTimeCancelled` IS NULL
-						AND		`actualEndDateTime` IS NULL';
-				$s = $pdo->prepare($sql);
-				$s->bindValue(':bookingID', $bookingID);
-				$s->bindValue(':cancelMessage', $cancelMessage);
-				$s->bindValue(':cancelledByUserID', $_SESSION['LoggedInUserID']);
-				$s->execute();
-
-				if(isSet($orderID)){
-					$sql = "UPDATE	`orders`
-							SET		`orderFinalPrice` = (
-															SELECT		SUM(IFNULL(eo.`alternativePrice`, ex.`price`) * eo.`amount`) AS FullPrice
-															FROM		`extra` ex
-															INNER JOIN 	`extraorders` eo
-															ON 			ex.`extraID` = eo.`extraID`
-															WHERE		eo.`orderID` = :OrderID
-														)
-							WHERE	`orderID` = :OrderID
-							AND		`orderFinalPrice` IS NULL";
-					$s = $pdo->prepare($sql);
-					$s->bindValue(':OrderID', $orderID);
-					$s->execute();
-				}
-
-			} else {
-				// Meeting got cancelled before the meeting started.
-				$sql = 'UPDATE 	`booking` 
-						SET 	`dateTimeCancelled` = CURRENT_TIMESTAMP,
-								`cancellationCode` = NULL,
-								`cancelMessage` = :cancelMessage,
-								`cancelledByUserID` = :cancelledByUserID
-						WHERE 	`bookingID` = :bookingID
-						AND		`dateTimeCancelled` IS NULL
-						AND		`actualEndDateTime` IS NULL';
-				$s = $pdo->prepare($sql);
-				$s->bindValue(':bookingID', $bookingID);
-				$s->bindValue(':cancelMessage', $cancelMessage);
-				$s->bindValue(':cancelledByUserID', $_SESSION['LoggedInUserID']);
-				$s->execute();
-			}
-		}
-		catch (PDOException $e)
-		{
-			$pdo->rollBack();
-			$pdo = null;
-			$error = 'Error updating selected booked meeting to be cancelled: ' . $e->getMessage();
-			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
-			exit();
-		}
-
-			// Add a log event that a booking was cancelled
-		try
-		{
-			// Save a description with information about the booking that was cancelled
-			$logEventDescription = "N/A";
-			if(isSet($bookingMeetingInfo) AND isSet($userInfo)){
-				$logEventDescription = 	"A booking with these details was cancelled:" .
-										"\nMeeting Information: " . $bookingMeetingInfo .
-										"\nBooked For User: " . $userInfo .
-										"\nIt was cancelled by: " . $_SESSION['LoggedInUserName'];
-			} else {
-				$logEventDescription = 'A booking was cancelled by: ' . $_SESSION['LoggedInUserName'];
-			}
-
-			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
-
-			$sql = "INSERT INTO `logevent` 
-					SET			`actionID` = 	(
-													SELECT 	`actionID` 
-													FROM 	`logaction`
-													WHERE 	`name` = 'Booking Cancelled'
-												),
-								`description` = :description";
-			$s = $pdo->prepare($sql);
-			$s->bindValue(':description', $logEventDescription);
-			$s->execute();
-
-			$pdo->commit();
-
-			//Close the connection
-			$pdo = null;
-		}
-		catch(PDOException $e)
-		{
-			$pdo->rollBack();
-			$error = 'Error adding log event to database: ' . $e->getMessage();
-			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
-			$pdo = null;
-			exit();
-		}
-
-		$_SESSION['BookingUserFeedback'] .= "Successfully cancelled the booking";
-
-		emailUserOnCancelledBooking();
+	if(isSet($_SESSION['cancelAdminOrder']['ReasonForCancelling']) AND !empty($_SESSION['cancelAdminOrder']['ReasonForCancelling'])){
+		$cancelMessage = $_SESSION['cancelAdminOrder']['ReasonForCancelling'];
 	} else {
-		// Booking was not active, so no need to cancel it.
-		$_SESSION['BookingUserFeedback'] = "Meeting has already been completed. Did not cancel it.";
+		$cancelMessage = NULL;
 	}
+
+	// Get relevant information from the booking and order.
+	try
+	{
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+
+		$pdo = connect_to_db();
+
+		$sql = "SELECT 		b.`startDateTime`			AS BookingStartDateTime,
+							b.`endDateTime`				AS BookingEndDateTime,
+							u.`firstname`				AS UserFirstName,
+							u.`lastname`				AS UserLastName,
+							u.`email`					AS UserEmail,
+							u.`sendEmail`				AS UserSendEmail,
+							c.`name`					AS CompanyName,
+							m.`name`					AS RoomName,
+							GROUP_CONCAT(
+											ex.`name`, 
+											" (", 
+											eo.`amount`, 
+											")"
+											SEPARATOR ", "
+										)				AS OrderContent
+				FROM		`booking` b
+				INNER JOIN 	`orders` o
+				ON			o.`orderID` = b.`orderID`
+				INNER JOIN 	`meetingroom` m
+				ON 			m.`meetingRoomID` = b.`meetingRoomID`
+				INNER JOIN	`user` u
+				ON 			u.`userID` = b.`userID`
+				INNER JOIN 	`company` c
+				ON 			c.`companyID` = b.`companyID`
+				LEFT JOIN	(
+										`extraorders` eo
+							INNER JOIN 	`extra` ex
+							ON 			eo.`extraID` = ex.`extraID`
+				)
+				ON 			eo.`orderID` = o.`orderID`
+				WHERE		o.`orderID` = :OrderID
+				AND			b.`bookingID` IS NOT NULL
+				AND			b.`actualEndDateTime` IS NULL
+				AND			b.`dateTimeCancelled` IS NULL
+				AND			o.`dateTimeCancelled` IS NULL
+				AND			CURRENT_TIMESTAMP < b.`startDateTime`
+				LIMIT 		1";
+		$s = $pdo->prepare($sql);
+		$s->bindValue(':orderID', $orderID);
+		$s->execute();
+
+		$row = $s->fetch(PDO::FETCH_ASSOC);
+
+		$dateTimeStart = $row['BookingStartDateTime'];
+		$dateTimEnd = $row['BookingEndDateTime'];
+		$displayBookingStartDateTime = convertDatetimeToFormat($dateTimeStart , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);;
+		$displayBookingEndDateTime = convertDatetimeToFormat($dateTimEnd , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);;
+		
+		$companyName = $row['CompanyName'];
+		$bookingMeetingInfo = "Room Name: " . $row['RoomName'] . " Time Slot: $displayBookingStartDateTime to $displayBookingEndDateTime.";
+		$userInfo = $row['UserLastName'] . ", " . $row['UserFirstName'] . " - " . $row['UserEmail'];
+		$orderContent = $row['OrderContent'];
+		
+		$pdo->beginTransaction();
+
+		// Meeting got cancelled before the meeting started.
+		$sql = 'UPDATE 	`order` 
+				SET 	`dateTimeCancelled` = CURRENT_TIMESTAMP,
+						`cancelMessage` = :cancelMessage,
+						`cancelledByUserID` = :cancelledByUserID
+				WHERE 	`bookingID` = :bookingID
+				AND		`dateTimeCancelled` IS NULL
+				AND		`actualEndDateTime` IS NULL';
+		$s = $pdo->prepare($sql);
+		$s->bindValue(':bookingID', $bookingID);
+		$s->bindValue(':cancelMessage', $cancelMessage);
+		$s->bindValue(':cancelledByUserID', $_SESSION['LoggedInUserID']);
+		$s->execute();
+		}
+	}
+	catch (PDOException $e)
+	{
+		$pdo->rollBack();
+		$pdo = null;
+		$error = 'Error updating selected booked meeting to be cancelled: ' . $e->getMessage();
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+		exit();
+	}
+
+		// Add a log event that a booking was cancelled
+	try
+	{
+		// Save a description with information about the order that was cancelled
+		$logEventDescription = 	"An order with these details was cancelled:" .
+								"\nMeeting Information: " . $bookingMeetingInfo .
+								"\nExtras Ordered: " . $orderContent .
+								"\nBooked For Company: " . $companyName .
+								"\nBooked By User: " . $userInfo .
+								"\nIt was cancelled by: " . $_SESSION['LoggedInUserName'];
+
+		$sql = "INSERT INTO `logevent` 
+				SET			`actionID` = 	(
+												SELECT 	`actionID` 
+												FROM 	`logaction`
+												WHERE 	`name` = 'Order Cancelled'
+											),
+							`description` = :description";
+		$s = $pdo->prepare($sql);
+		$s->bindValue(':description', $logEventDescription);
+		$s->execute();
+
+		$pdo->commit();
+
+		//Close the connection
+		$pdo = null;
+	}
+	catch(PDOException $e)
+	{
+		$pdo->rollBack();
+		$error = 'Error adding log event to database: ' . $e->getMessage();
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+		$pdo = null;
+		exit();
+	}
+
+	$_SESSION['OrderUserFeedback'] = "Successfully cancelled the order";
+
+	emailUserOnCancelledBooking(); // FIX-ME: MISSING FROM ORDERS
 
 	clearCancelSessions();
 
@@ -352,7 +321,7 @@ if(isSet($_POST['action']) AND $_POST['action'] == "Confirm Reason"){
 		exit();
 	}
 
-	$_SESSION['cancelAdminOrderOriginalValues']['ReasonForCancelling'] = $cancelMessage;
+	$_SESSION['cancelAdminOrder']['ReasonForCancelling'] = $cancelMessage;
 	$_SESSION['refreshCancelAdminOrder'] = TRUE;
 
 	// Load booked meetings list webpage with updated database
