@@ -6,7 +6,7 @@ include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/helpers.inc.php'; // Starts 
 include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/navcheck.inc.php';
 include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/magicquotes.inc.php';
 
-// CHECK IF USER TRYING TO ACCESS THIS IS IN FACT THE ADMIN!
+// CHECK IF USER TRYING TO ACCESS THIS IS IN FACT STAFF OR ADMIN!
 
 if(!userIsLoggedIn()){
 	// Not logged in. Send user a login prompt.
@@ -195,7 +195,7 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Details') OR
 		// Make sure we don't have any remembered values in memory
 		clearEditStaffOrderSessions();
 
-		$_SESSION['EditStaffOrderOrderStatus'] = $_POST['OrderStatus'];		
+		$_SESSION['EditStaffOrderOrderStatus'] = $_POST['OrderStatus'];
 
 		// Get information from database again on the selected order
 		try
