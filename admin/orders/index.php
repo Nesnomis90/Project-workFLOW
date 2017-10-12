@@ -426,7 +426,6 @@ if(isSet($_POST['action']) AND $_POST['action'] == "Confirm Reason"){
 	}
 
 	if($invalidInput){
-
 		var_dump($_SESSION); // TO-DO: Remove when done testing
 
 		include_once 'cancelmessage.html.php';
@@ -513,8 +512,10 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Details') OR
 			$sql = 'SELECT 		`orderID`						AS TheOrderID,
 								`orderUserNotes`				AS OrderUserNotes,
 								`dateTimeCreated`				AS DateTimeCreated,
+								`dateTimeCancelled`				AS DateTimeCancelled,
 								`dateTimeUpdatedByStaff`		AS DateTimeUpdatedByStaff,
 								`dateTimeUpdatedByUser`			AS DateTimeUpdatedByUser,
+								`cancelMessage`					AS OrderCancelMessage,
 								`orderApprovedByUser`			AS OrderApprovedByUser,
 								`orderApprovedByAdmin`			AS OrderApprovedByAdmin,
 								`orderApprovedByStaff` 			AS OrderApprovedByStaff,
@@ -549,22 +550,31 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Details') OR
 
 			if(!empty($row['DateTimeUpdatedByStaff'])){
 				$dateTimeUpdatedByStaff = $row['DateTimeUpdatedByStaff'];
-				$displayDateTimeUpdatedByStaff = convertDatetimeToFormat($dateTimeUpdatedByStaff , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);				
+				$displayDateTimeUpdatedByStaff = convertDatetimeToFormat($dateTimeUpdatedByStaff , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
 			} else {
 				$displayDateTimeUpdatedByStaff = "";
 			}
 
 			if(!empty($row['DateTimeUpdatedByUser'])){
 				$dateTimeUpdatedByUser = $row['DateTimeUpdatedByUser'];
-				$displayDateTimeUpdatedByUser = convertDatetimeToFormat($dateTimeUpdatedByUser , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);				
+				$displayDateTimeUpdatedByUser = convertDatetimeToFormat($dateTimeUpdatedByUser , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
 			} else {
 				$displayDateTimeUpdatedByUser = "";
 			}
 
+			if(!empty($row['DateTimeCancelled'])){
+				$dateTimeCancelled = $row['DateTimeCancelled'];
+				$displayDateTimeCancelled = convertDatetimeToFormat($dateTimeCancelled, 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
+			} else {
+				$displayDateTimeCancelled = NULL;
+			}
+
 			$_SESSION['EditOrderOriginalInfo']['OrderIsApproved'] = $orderIsApproved;
 			$_SESSION['EditOrderOriginalInfo']['DateTimeCreated'] = $displayDateTimeCreated;
+			$_SESSION['EditOrderOriginalInfo']['DateTimeCancelled'] = $displayDateTimeCancelled;
 			$_SESSION['EditOrderOriginalInfo']['DateTimeUpdatedByStaff'] = $displayDateTimeUpdatedByStaff;
 			$_SESSION['EditOrderOriginalInfo']['DateTimeUpdatedByUser'] = $displayDateTimeUpdatedByUser;
+
 			$_SESSION['EditOrderOrderID'] = $orderID;
 
 			$sql = 'SELECT 		ex.`extraID`											AS ExtraID,
@@ -772,6 +782,11 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Details') OR
 	$originalOrderCreated = $_SESSION['EditOrderOriginalInfo']['DateTimeCreated'];
 	$originalOrderUpdatedByStaff = $_SESSION['EditOrderOriginalInfo']['DateTimeUpdatedByStaff'];
 	$originalOrderUpdatedByUser = $_SESSION['EditOrderOriginalInfo']['DateTimeUpdatedByUser'];
+
+	if(!empty($_SESSION['EditOrderOriginalInfo']['DateTimeCancelled'])){
+		$originalCancelMessage = $_SESSION['EditOrderOriginalInfo']['OrderCancelMessage'];
+		$originalDateTimeCancelled = $_SESSION['EditOrderOriginalInfo']['DateTimeCancelled'];
+	}
 
 	$availableExtrasNumber = sizeOf($availableExtra);
 

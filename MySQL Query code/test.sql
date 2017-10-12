@@ -93,13 +93,15 @@ SELECT 		b.`startDateTime`			AS BookingStartDateTime,
 			u.`lastname`				AS UserLastName,
 			u.`email`					AS UserEmail,
 			u.`sendEmail`				AS UserSendEmail,
+			u.`userID`					AS UserID,
 			c.`name`					AS CompanyName,
+			m.`name`					AS RoomName,
 			GROUP_CONCAT(
 							ex.`name`, 
 							" (", 
 							eo.`amount`, 
 							")"
-							SEPARATOR "\n"
+							SEPARATOR ", "
 						)				AS OrderContent
 FROM		`booking` b
 INNER JOIN 	`orders` o

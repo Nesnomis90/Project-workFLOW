@@ -447,6 +447,17 @@
 						<input type="hidden" name="isApproved" value="<?php htmlout($orderIsApproved); ?>">
 					<?php endif; ?>
 				</div>
+				
+				<?php if(isSet($originalDateTimeCancelled)) : ?>
+					<div>
+						<label>Date Cancelled: </label>
+						<span><b><?php htmlout($originalDateTimeCancelled); ?></b></span>
+					</div>
+					<div>
+						<label>Reason For Cancelling: </label>
+						<span style="white-space: pre-wrap;"><b><?php htmlout($originalCancelMessage); ?></b></span>
+					</div>
+				<?php endif; ?>
 			</fieldset>
 
 			<table id="addAlternative">
