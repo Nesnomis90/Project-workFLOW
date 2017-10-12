@@ -28,6 +28,11 @@ function clearEditOrderSessions(){
 	unset($_SESSION['refreshEditOrder']);
 }
 
+// Function to clear sessions used to remember information during the cancel process.
+function clearCancelSessions(){
+	unset($_SESSION['cancelAdminOrder']);
+}
+
 // Function to check if user inputs for Order are correct
 function validateUserInputs(){
 	$invalidInput = FALSE;
@@ -131,9 +136,17 @@ function validateUserInputs(){
 	return array($invalidInput, $validatedOrderCommunicationToUser, $validatedAdminNote, $validatedIsApproved);
 }
 
+// If admin does not want to cancel the morder anyway.
+if(isSet($_POST['action']) AND $_POST['action'] == "Abort Cancel"){
+	clearCancelSessions();
+
+	$_SESSION['OrderUserFeedback'] = "You did not cancel the order.";
+
+	header('Location: .');
+	exit();
+}
+
 // If admin wants to cancel an order
-// TO-DO: FIX-ME: Just copy pasted from admin/booking
-/*
 if (	(isSet($_POST['action']) and $_POST['action'] == 'Cancel') OR 
 		(isSet($_SESSION['refreshCancelAdminOrder']) AND $_SESSION['refreshCancelAdminOrder'])
 	){
@@ -166,12 +179,13 @@ if (	(isSet($_POST['action']) and $_POST['action'] == 'Cancel') OR
 
 		$pdo = connect_to_db();
 
-		$sql = "SELECT 		b.`startDateTime`			AS BookingStartDateTime,
+		$sql = 'SELECT 		b.`startDateTime`			AS BookingStartDateTime,
 							b.`endDateTime`				AS BookingEndDateTime,
 							u.`firstname`				AS UserFirstName,
 							u.`lastname`				AS UserLastName,
 							u.`email`					AS UserEmail,
 							u.`sendEmail`				AS UserSendEmail,
+							u.`userID`					AS UserID,
 							c.`name`					AS CompanyName,
 							m.`name`					AS RoomName,
 							GROUP_CONCAT(
@@ -196,13 +210,13 @@ if (	(isSet($_POST['action']) and $_POST['action'] == 'Cancel') OR
 							ON 			eo.`extraID` = ex.`extraID`
 				)
 				ON 			eo.`orderID` = o.`orderID`
-				WHERE		o.`orderID` = :OrderID
+				WHERE		o.`orderID` = :orderID
 				AND			b.`bookingID` IS NOT NULL
 				AND			b.`actualEndDateTime` IS NULL
 				AND			b.`dateTimeCancelled` IS NULL
 				AND			o.`dateTimeCancelled` IS NULL
 				AND			CURRENT_TIMESTAMP < b.`startDateTime`
-				LIMIT 		1";
+				LIMIT 		1';
 		$s = $pdo->prepare($sql);
 		$s->bindValue(':orderID', $orderID);
 		$s->execute();
@@ -211,36 +225,63 @@ if (	(isSet($_POST['action']) and $_POST['action'] == 'Cancel') OR
 
 		$dateTimeStart = $row['BookingStartDateTime'];
 		$dateTimEnd = $row['BookingEndDateTime'];
-		$displayBookingStartDateTime = convertDatetimeToFormat($dateTimeStart , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);;
-		$displayBookingEndDateTime = convertDatetimeToFormat($dateTimEnd , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);;
-		
+		$displayBookingStartDateTime = convertDatetimeToFormat($dateTimeStart , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
+		$displayBookingEndDateTime = convertDatetimeToFormat($dateTimEnd , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
+
+		$userEmail = $row['UserEmail'];
+		$sendEmail = $row['UserSendEmail'];
+		$userID = $row['UserID'];
+
 		$companyName = $row['CompanyName'];
 		$bookingMeetingInfo = "Room Name: " . $row['RoomName'] . " Time Slot: $displayBookingStartDateTime to $displayBookingEndDateTime.";
-		$userInfo = $row['UserLastName'] . ", " . $row['UserFirstName'] . " - " . $row['UserEmail'];
+		$userInfo = $row['UserLastName'] . ", " . $row['UserFirstName'] . " - " . $userEmail;
 		$orderContent = $row['OrderContent'];
-		
+	}
+	catch (PDOException $e)
+	{
+		$pdo = null;
+		$error = 'Error getting selected order information: ' . $e->getMessage();
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+		exit();
+	}
+
+	if(empty($dateTimeStart)){
+		// Did not match an order, meaning it was already finished/cancelled
+		$pdo = null;
+
+		$_SESSION['OrderUserFeedback'] = "Order has already been completed or cancelled!";
+
+		clearCancelSessions();
+
+		// Load booked meetings list webpage with updated database
+		header('Location: .');
+		exit();	
+	}
+	
+	try
+	{
 		$pdo->beginTransaction();
 
 		// Meeting got cancelled before the meeting started.
-		$sql = 'UPDATE 	`order` 
+		$sql = 'UPDATE 	`orders` 
 				SET 	`dateTimeCancelled` = CURRENT_TIMESTAMP,
+						`dateTimeUpdatedByStaff` = CURRENT_TIMESTAMP,
+						`orderChangedByStaff` = 1,
 						`cancelMessage` = :cancelMessage,
 						`cancelledByUserID` = :cancelledByUserID
-				WHERE 	`bookingID` = :bookingID
-				AND		`dateTimeCancelled` IS NULL
-				AND		`actualEndDateTime` IS NULL';
+				WHERE 	`orderID` = :orderID
+				AND		`dateTimeCancelled` IS NULL';
 		$s = $pdo->prepare($sql);
-		$s->bindValue(':bookingID', $bookingID);
+		$s->bindValue(':orderID', $orderID);
 		$s->bindValue(':cancelMessage', $cancelMessage);
 		$s->bindValue(':cancelledByUserID', $_SESSION['LoggedInUserID']);
 		$s->execute();
-		}
 	}
 	catch (PDOException $e)
 	{
 		$pdo->rollBack();
 		$pdo = null;
-		$error = 'Error updating selected booked meeting to be cancelled: ' . $e->getMessage();
+		$error = 'Error updating selected order to be cancelled: ' . $e->getMessage();
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
 		exit();
 	}
@@ -266,11 +307,6 @@ if (	(isSet($_POST['action']) and $_POST['action'] == 'Cancel') OR
 		$s = $pdo->prepare($sql);
 		$s->bindValue(':description', $logEventDescription);
 		$s->execute();
-
-		$pdo->commit();
-
-		//Close the connection
-		$pdo = null;
 	}
 	catch(PDOException $e)
 	{
@@ -281,9 +317,86 @@ if (	(isSet($_POST['action']) and $_POST['action'] == 'Cancel') OR
 		exit();
 	}
 
-	$_SESSION['OrderUserFeedback'] = "Successfully cancelled the order";
+	if(isSet($userID) AND $userID != $_SESSION['LoggedInUserID']){
+		if(isSet($sendEmail) AND $sendEmail == 1){
 
-	emailUserOnCancelledBooking(); // FIX-ME: MISSING FROM ORDERS
+			if(!empty($_SESSION['cancelAdminOrder']['ReasonForCancelling'])){
+				$reasonForCancelling = $_SESSION['cancelAdminOrder']['ReasonForCancelling'];
+			} else {
+				$reasonForCancelling = "No reason given.";
+			}
+
+			$emailSubject = "Your meeting order has been cancelled!";
+
+			$emailMessage = 
+			"An order for your meeting has been cancelled by an Admin!" .
+			"\nMeeting Information: " . $bookingMeetingInfo .
+			"\nExtras Ordered: " . $orderContent .
+			"\nBooked For Company: " . $companyName .
+			"\nReason given for cancelling: " . $reasonForCancelling .
+			"\n\nThe meeting itself is still scheduled as normal and active.";
+
+			$email = $userEmail;
+
+			$mailResult = sendEmail($email, $emailSubject, $emailMessage);
+
+			$_SESSION['OrderUserFeedback'] = "";
+			if(!$mailResult){
+				$_SESSION['OrderUserFeedback'] = "[WARNING] System failed to send Email to user.";
+
+				// Email failed to be prepared. Store it in database to try again later
+				try
+				{
+					$sql = 'INSERT INTO	`email`
+							SET			`subject` = :subject,
+										`message` = :message,
+										`receivers` = :receivers,
+										`dateTimeRemove` = DATE_ADD(CURRENT_TIMESTAMP, INTERVAL 7 DAY);';
+					$s = $pdo->prepare($sql);
+					$s->bindValue(':subject', $emailSubject);
+					$s->bindValue(':message', $emailMessage);
+					$s->bindValue(':receivers', $email);
+					$s->execute();
+				}
+				catch (PDOException $e)
+				{
+					$pdo->rollBack();
+					$error = 'Error storing email: ' . $e->getMessage();
+					include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+					$pdo = null;
+					exit();
+				}
+
+				$_SESSION['OrderUserFeedback'] .= "\nEmail to be sent has been stored and will be attempted to be sent again later.";
+			}
+
+			$_SESSION['OrderUserFeedback'] .= "\nThis is the email msg we're sending out:\n$emailMessage\nSent to email: $email."; // TO-DO: Remove before uploading
+		} elseif(isSet($sendEmail) AND $sendEmail == 0) {
+			$_SESSION['OrderUserFeedback'] = "User does not want to be sent Email.";
+		}
+	} elseif(isSet($userID) AND $userID == $_SESSION['LoggedInUserID']){
+		$_SESSION['OrderUserFeedback'] = "Did not send an email because you cancelled your own meeting.";
+	} else {
+		$_SESSION['OrderUserFeedback'] = "Failed to send an email to the user that the booking got cancelled.";
+	}
+
+	try
+	{
+		$pdo->commit();
+
+		//close connection
+		$pdo = null;
+	}
+	catch (PDOException $e)
+	{
+		$pdo->rollBack();
+		$error = 'Error commiting transaction: ' . $e->getMessage();
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+		$pdo = null;
+		exit();
+	}
+
+	$_SESSION['OrderUserFeedback'] .= "\nSuccessfully cancelled the order!";
 
 	clearCancelSessions();
 
@@ -292,8 +405,7 @@ if (	(isSet($_POST['action']) and $_POST['action'] == 'Cancel') OR
 	exit();	
 }
 
-// If admin has finished adding a reason for cancelling a meeting.
-// TO-DO: FIX-ME: Just copy pasted from admin/booking
+// If admin has finished adding a reason for cancelling an order.
 if(isSet($_POST['action']) AND $_POST['action'] == "Confirm Reason"){
 	$invalidInput = FALSE;
 	// Do input validation
@@ -309,7 +421,7 @@ if(isSet($_POST['action']) AND $_POST['action'] == "Confirm Reason"){
 
 	$invalidCancelMessage = isLengthInvalidBookingDescription($cancelMessage);
 	if($invalidCancelMessage AND !$invalidInput){
-		$_SESSION['confirmAdminReasonError'] = "Your submitted message is too long.";	
+		$_SESSION['confirmAdminReasonError'] = "Your submitted message is too long.";
 		$invalidInput = TRUE;
 	}
 
@@ -328,7 +440,6 @@ if(isSet($_POST['action']) AND $_POST['action'] == "Confirm Reason"){
 	header('Location: .');
 	exit();	
 }
-*/
 
 // if admin wants to edit Order information
 // we load a new html form
@@ -1235,6 +1346,7 @@ if(isSet($refreshOrder) AND $refreshOrder) {
 
 // Remove any unused variables from memory // TO-DO: Change if this ruins having multiple tabs open etc.
 clearEditOrderSessions();
+clearCancelSessions();
 
 // Display Order list
 try

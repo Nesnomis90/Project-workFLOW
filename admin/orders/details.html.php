@@ -414,7 +414,11 @@
 
 				<div>
 					<label>Original Admin Note: </label>
-					<span style="white-space: pre-wrap;"><b><?php htmlout($originalOrderAdminNote); ?></b></span>
+					<?php if(empty($originalOrderAdminNote)) : ?>
+						<span><b><i><?php htmlout("No admin note has been set."); ?></i></b></span>
+					<?php else : ?>
+						<span style="white-space: pre-wrap;"><b><?php htmlout($originalOrderAdminNote); ?></b></span>
+					<?php endif; ?>
 				</div>
 
 				<div>

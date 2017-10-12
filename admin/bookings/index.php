@@ -113,7 +113,6 @@ function rememberAddBookingInputs(){
 	}
 }
 
-// This is used on cancel and delete.
 function emailUserOnCancelledBooking(){
 	if(isSet($_SESSION['cancelAdminBookingOriginalValues']['UserID']) AND $_SESSION['cancelAdminBookingOriginalValues']['UserID'] != $_SESSION['LoggedInUserID']){
 		if(isSet($_SESSION['cancelAdminBookingOriginalValues']['SendEmail']) AND $_SESSION['cancelAdminBookingOriginalValues']['SendEmail'] == 1){
