@@ -11,6 +11,20 @@ if (!isUserAdmin()){
 	exit();
 }
 
+// Set default sorting option
+if(isSet($_GET['sortBy'])){
+	if($_GET['sortBy'] == "Day"){
+		$sortBy = "Day";
+	} elseif($_GET['sortBy'] == "Week"){
+		$sortBy = "Week";
+	} elseif($_GET['sortBy'] == "Starting Time"){
+		$sortBy = "Starting Time";
+	}
+} else {
+	header("Location: ?sortBy=Starting+Time");
+	exit();
+}
+
 // Function to clear sessions used to remember user inputs on refreshing the edit Order form
 function clearEditOrderSessions(){
 	unset($_SESSION['EditOrderOriginalInfo']);
@@ -24,6 +38,8 @@ function clearEditOrderSessions(){
 	unset($_SESSION['EditOrderAlternativeExtraAdded']);
 	unset($_SESSION['EditOrderAlternativeExtraCreated']);
 	unset($_SESSION['EditOrderExtraOrderedOnlyNames']);
+	unset($_SESSION['EditOrderDisableEdit']);
+	unset($_SESSION['EditOrderOrderStatus']);
 	unset($_SESSION['resetEditOrder']);
 	unset($_SESSION['refreshEditOrder']);
 }
@@ -503,6 +519,9 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Details') OR
 		// Make sure we don't have any remembered values in memory
 		clearEditOrderSessions();
 
+		$_SESSION['EditOrderDisableEdit'] = $_POST['disableEdit'];
+		$_SESSION['EditOrderOrderStatus'] = $_POST['OrderStatus'];
+
 		// Get information from database again on the selected order
 		try
 		{
@@ -783,6 +802,9 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Details') OR
 	$originalOrderUpdatedByStaff = $_SESSION['EditOrderOriginalInfo']['DateTimeUpdatedByStaff'];
 	$originalOrderUpdatedByUser = $_SESSION['EditOrderOriginalInfo']['DateTimeUpdatedByUser'];
 
+	$disableEdit = $_SESSION['EditOrderDisableEdit'];
+	$orderStatus = $_SESSION['EditOrderOrderStatus'];
+
 	if(!empty($_SESSION['EditOrderOriginalInfo']['DateTimeCancelled'])){
 		$originalCancelMessage = $_SESSION['EditOrderOriginalInfo']['OrderCancelMessage'];
 		$originalDateTimeCancelled = $_SESSION['EditOrderOriginalInfo']['DateTimeCancelled'];
@@ -799,18 +821,6 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Details') OR
 	// Change to the template we want to use
 	include 'details.html.php';
 	exit();
-}
-
-if(isSet($_POST['sortBy'])){
-	if($_POST['sortBy'] == "Day"){
-		$sortBy = "Day";
-	} elseif($_POST['sortBy'] == "Week"){
-		$sortBy = "Week";
-	} elseif($_POST['sortBy'] == "Starting Time"){
-		$sortBy = "Starting Time";
-	}
-} else {
-	$sortBy = "Starting Time";
 }
 
 // Perform the actual database update of the edited information
