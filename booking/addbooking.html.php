@@ -29,8 +29,10 @@
 					headerPrice.outerHTML = "<th>Price</th>";
 					var headerAmount = headerRow.insertCell(3);
 					headerAmount.outerHTML = "<th>Amount</th>";
-					var headerRemove = headerRow.insertCell(4);
-					headerRemove.outerHTML = "<th></th>";
+					var headerConfirm = headerRow.insertCell(4);
+					headerConfirm.outerHTML = "<th>Select</th>";
+					var headerRemove = headerRow.insertCell(5);
+					headerRemove.outerHTML = "<th>Remove</th>";
 					rowNumber++;
 				}
 
@@ -46,7 +48,8 @@
 				var columnPriceID = "addAlternativePriceSelected" + alternativeID;
 				columnPrice.setAttribute("id", columnPriceID);
 				var columnAmount = row.insertCell(3);
-				var columnRemoveButton = row.insertCell(4);
+				var columnConfirmButton = row.insertCell(4);
+				var columnRemoveButton = row.insertCell(5);
 
 				// Create the remove alternative extra (remove table row) button
 				var removeAlternativeExtraButton = document.createElement("input");
@@ -54,6 +57,16 @@
 				removeAlternativeExtraButton.innerHTML = "✖";
 				removeAlternativeExtraButton.value = "✖";
 				removeAlternativeExtraButton.style.color = "red";
+				removeAlternativeExtraButton.onclick = function onClick(){removeAddedExtra(this);}
+
+				// Create the confirm chosen extra button
+				var confirmAddedExtraButton = document.createElement("input");
+				confirmAddedExtraButton.setAttribute("type", "button");
+				confirmAddedExtraButton.innerHTML = "✔";
+				confirmAddedExtraButton.value = "✔";
+				confirmAddedExtraButton.style.color = "green";
+				var confirmAddedExtraButtonIDNumber = alternativeID;
+				confirmAddedExtraButton.onclick = function onClick(){confirmAddedExtra(this, confirmAddedExtraButtonIDNumber);}
 
 				// Create the input number for amount
 				var inputExtraAmount = document.createElement("input");
@@ -80,10 +93,8 @@
 				selectExtraName.setAttribute("name", selectExtraNameID);
 				selectExtraName.onchange = function onChange(){changeAlternativeText(this);}
 
-				removeAlternativeExtraButton.onclick = function onClick(){removeAddedExtra(this);}
-
 				// Add the available extra names as options
-				// exclude already selected alternatives
+				// exclude already confirmed items
 				var firstIndexInSelectBox = 0;
 				var firstIndexAdded = false;
 				for(var i = 0; i < availableExtrasArray.length; i++){
@@ -96,7 +107,7 @@
 						if(selectBox !== null){
 							var extraIDSelected = selectBox.options[selectBox.selectedIndex].value;
 							if(extraIDSelected == availableExtrasArray[i]['ExtraID']){
-								extraAlreadyAdded = true;
+								//extraAlreadyAdded = true;
 							}
 						}
 					}
@@ -133,6 +144,7 @@
 				inputAlternativesAdded.value = alternativesAdded;
 
 				columnAmount.appendChild(inputExtraAmount);
+				columnConfirmButton.appendChild(confirmAddedExtraButton);
 				columnRemoveButton.appendChild(removeAlternativeExtraButton);
 
 				// update the input to keep track of the last ID value on the submitted alternative
@@ -167,6 +179,33 @@
 						break;
 					}
 				}
+			}
+
+			function confirmAddedExtra(confirmButton, selectBoxIDNumber){
+				var selectBoxID = "addAlternativeSelected" + selectBoxIDNumber;
+				var selectBox = document.getElementById(selectBoxID);
+				var extraIDSelected = selectBox.options[selectBox.selectedIndex].value;
+				var extraIDName = selectBox.options[selectBox.selectedIndex].text;
+
+				// Remove selected extra ID from other open options
+				for(var j = 0; j < alternativeID; j++){
+					if(j != selectBoxIDNumber){
+						var newSelectBoxID = "addAlternativeSelected" + j;
+						var newSelectBox = document.getElementById(newSelectBoxID);
+						var options = newSelectBox.options;
+
+						for (var i = 0; i < options.length; i++){
+							if(options[i].value === extraIDSelected){
+								newSelectBox.removeChild(options[i]);
+								break;
+							}
+							// update description, price and amount if we remove the already selected item
+						}
+					}
+				}
+
+				selectBox.setAttribute("disabled", "disabled");
+				confirmButton.parentNode.removeChild(confirmButton);
 			}
 
 			function removeAddedExtra(removeButton){
