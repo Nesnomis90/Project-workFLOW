@@ -206,6 +206,8 @@
 							var priceText = document.getElementById(priceTextID);
 							var amountValueID = "AmountSelected" + j;
 							var amountValue = document.getElementById(amountValueID);
+							descriptionText.innerHTML = availableExtrasArray[0]['ExtraDescription']; // TO-DO: check if this is correct
+							priceText.innerHTML = availableExtrasArray[0]['ExtraPrice']; // TO-DO: check if this is correct
 							amountValue.value = 1;
 						}
 					}
