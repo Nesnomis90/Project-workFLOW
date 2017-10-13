@@ -29,6 +29,7 @@ function clearAddCreateBookingSessions(){
 	unset($_SESSION['AddCreateBookingDisplayCompanySelect']);
 	unset($_SESSION['AddCreateBookingCompanyArray']);
 	unset($_SESSION['AddCreateBookingStartImmediately']);
+	unset($_SESSION['AddCreateBookingAvailableExtra']);
 
 	unset($_SESSION['refreshAddCreateBookingConfirmed']);
 
@@ -2535,6 +2536,41 @@ if(	((isSet($_POST['action']) AND $_POST['action'] == 'Create Meeting')) OR
 		}
 		$_SESSION['AddCreateBookingOriginalInfoArray'] = $_SESSION['AddCreateBookingInfoArray'];
 	}
+
+	if(!isSet($_SESSION['AddCreateBookingAvailableExtra'])){
+		try
+		{
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+
+			// Get booking information
+			$pdo = connect_to_db();
+
+			// Get all available extras that the user can use to add
+			// That are not already in the order
+			$sql = 'SELECT 	`extraID`		AS ExtraID,
+							`name`			AS ExtraName,
+							`description`	AS ExtraDescription,
+							`price`			AS ExtraPrice
+					FROM 	`extra`
+					WHERE	`isAlternative` = 0';
+			$result = $pdo->query($sql);
+			$availableExtra = $result->fetchAll(PDO::FETCH_ASSOC);
+			$_SESSION['AddCreateBookingAvailableExtra'] = $availableExtra;
+
+			$pdo = null;
+		}
+		catch (PDOException $e)
+		{
+			$error = 'Error fetching available extras: ' . $e->getMessage();
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+			$pdo = null;
+			exit();
+		}
+	} else {
+		$availableExtra = $_SESSION['AddCreateBookingAvailableExtra'];
+	}
+
+	$availableExtrasNumber = sizeOf($availableExtra);
 
 		// Get company information for the companies the user works for
 	try
