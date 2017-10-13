@@ -94,7 +94,7 @@
 				selectExtraName.onchange = function onChange(){changeAlternativeText(this);}
 
 				// Add the available extra names as options
-				// exclude already confirmed items
+				// exclude already confirmed items // To-DO
 				var firstIndexInSelectBox = 0;
 				var firstIndexAdded = false;
 				for(var i = 0; i < availableExtrasArray.length; i++){
@@ -200,6 +200,13 @@
 								break;
 							}
 							// update description, price and amount if we remove the already selected item
+							var descriptionTextID = "addAlternativeDescriptionSelected" + j;
+							var	descriptionText = document.getElementById(descriptionTextID);
+							var priceTextID = "addAlternativePriceSelected" + j;
+							var priceText = document.getElementById(priceTextID);
+							var amountValueID = "AmountSelected" + j;
+							var amountValue = document.getElementById(amountValueID);
+							amountValue.value = 1;
 						}
 					}
 				}
@@ -389,7 +396,7 @@
 								<span><b><?php htmlout($companyName); ?></b></span>
 								<input type="hidden" name="companyID" id="companyID" 
 								value="<?php htmlout($companyID); ?>">
-								<input type="submit" name="add" value="Change Company">							
+								<input type="submit" name="add" value="Change Company">
 								<label>Credits Remaining: </label>
 								<?php if(substr($creditsRemaining,0,1) === "-") : ?>
 									<span style="color:red"><?php htmlout($creditsRemaining); ?></span><span>¹</span>
