@@ -9,7 +9,6 @@
 		<script>
 			var alternativeID = 0;
 			var alternativesAdded = 0;
-			var addAlternativeExtra = false;
 			var availableExtrasArray = <?php echo json_encode($availableExtra); ?>;
 
 			function addTableRow(){
@@ -17,6 +16,23 @@
 				var table = document.getElementById("orderTable");
 				var tableRows = table.rows.length;
 				var rowNumber = tableRows;
+
+				// Add table header if we're adding the first item
+				if(tableRows == 0){
+					var headerRow = table.insertRow(0);
+					headerRow.setAttribute("id", "headerRow");
+					var headerName = headerRow.insertCell(0);
+					headerName.outerHTML = "<th>Name</th>";
+					var headerDescription = headerRow.insertCell(1);
+					headerDescription.outerHTML = "<th>Description</th>";
+					var headerPrice = headerRow.insertCell(2);
+					headerPrice.outerHTML = "<th>Price</th>";
+					var headerAmount = headerRow.insertCell(3);
+					headerAmount.outerHTML = "<th>Amount</th>";
+					var headerRemove = headerRow.insertCell(4);
+					headerRemove.outerHTML = "<th></th>";
+					rowNumber++;
+				}
 
 				// Add new row at the end
 				var row = table.insertRow(rowNumber);
@@ -48,75 +64,73 @@
 				inputExtraAmount.setAttribute("value", "1");
 				inputExtraAmount.setAttribute("min", "1");
 
-				if(addAlternativeExtra){
-					// Get available extras
-					var availableExtrasNumber = <?php echo $availableExtrasNumber; ?>;
+				// Get available extras
+				var availableExtrasNumber = <?php echo $availableExtrasNumber; ?>;
 
-					if(alternativesAdded == availableExtrasNumber){
-						// cancel the function, since we have nothing else to add
-						table.deleteRow(rowNumber);
-						return;
-					}
-
-					// Create the select box we want to be able to choose from
-					var selectExtraName = document.createElement("select");
-					var selectExtraNameID = "addAlternativeSelected" + alternativeID;
-					selectExtraName.setAttribute("id", selectExtraNameID);
-					selectExtraName.setAttribute("name", selectExtraNameID);
-					selectExtraName.onchange = function onChange(){changeAlternativeText(this);}
-
-					removeAlternativeExtraButton.onclick = function onClick(){removeAddedExtra(this);}
-
-					// Add the available extra names as options
-					// exclude already selected alternatives
-					var firstIndexInSelectBox = 0;
-					var firstIndexAdded = false;
-					for(var i = 0; i < availableExtrasArray.length; i++){
-						var extraAlreadyAdded = false;
-
-						for(var j = 0; j < alternativeID; j++){
-							var selectBoxID = "addAlternativeSelected" + j;
-							var selectBox = document.getElementById(selectBoxID);
-
-							if(selectBox !== null){
-								var extraIDSelected = selectBox.options[selectBox.selectedIndex].value;
-								if(extraIDSelected == availableExtrasArray[i]['ExtraID']){
-									extraAlreadyAdded = true;
-								}
-							}
-						}
-
-						if(extraAlreadyAdded === false){
-							var option = document.createElement("option");
-							option.value = availableExtrasArray[i]['ExtraID'];
-							option.text = availableExtrasArray[i]['ExtraName'];
-							selectExtraName.appendChild(option);
-
-							// Make sure we have the appropriate description and price for the extra name
-							if(firstIndexAdded === false){
-								firstIndexInSelectBox = i
-								firstIndexAdded = true;
-							}
-						}
-					}
-
-					alternativesAdded += 1;
-
-					if(alternativesAdded == availableExtrasNumber){
-						// disable the add alternative button
-						var addAlternativeExtraButton = document.getElementById("addAlternativeExtraButton");
-						addAlternativeExtraButton.setAttribute("disabled", "disabled");
-					}
-
-					// Add items/values to columns
-					columnName.appendChild(selectExtraName);
-					columnDescription.innerHTML = availableExtrasArray[firstIndexInSelectBox]['ExtraDescription'];
-					columnPrice.innerHTML = availableExtrasArray[firstIndexInSelectBox]['ExtraPrice'];
-
-					// update the input to check how many alternatives we have submitted
-					var inputAlternativesAdded = document.getElementById("AlternativesAdded");
-					inputAlternativesAdded.value = alternativesAdded;
+				if(alternativesAdded == availableExtrasNumber){
+					// cancel the function, since we have nothing else to add
+					table.deleteRow(rowNumber);
+					return;
 				}
+
+				// Create the select box we want to be able to choose from
+				var selectExtraName = document.createElement("select");
+				var selectExtraNameID = "addAlternativeSelected" + alternativeID;
+				selectExtraName.setAttribute("id", selectExtraNameID);
+				selectExtraName.setAttribute("name", selectExtraNameID);
+				selectExtraName.onchange = function onChange(){changeAlternativeText(this);}
+
+				removeAlternativeExtraButton.onclick = function onClick(){removeAddedExtra(this);}
+
+				// Add the available extra names as options
+				// exclude already selected alternatives
+				var firstIndexInSelectBox = 0;
+				var firstIndexAdded = false;
+				for(var i = 0; i < availableExtrasArray.length; i++){
+					var extraAlreadyAdded = false;
+
+					for(var j = 0; j < alternativeID; j++){
+						var selectBoxID = "addAlternativeSelected" + j;
+						var selectBox = document.getElementById(selectBoxID);
+
+						if(selectBox !== null){
+							var extraIDSelected = selectBox.options[selectBox.selectedIndex].value;
+							if(extraIDSelected == availableExtrasArray[i]['ExtraID']){
+								extraAlreadyAdded = true;
+							}
+						}
+					}
+
+					if(extraAlreadyAdded === false){
+						var option = document.createElement("option");
+						option.value = availableExtrasArray[i]['ExtraID'];
+						option.text = availableExtrasArray[i]['ExtraName'];
+						selectExtraName.appendChild(option);
+
+						// Make sure we have the appropriate description and price for the extra name
+						if(firstIndexAdded === false){
+							firstIndexInSelectBox = i
+							firstIndexAdded = true;
+						}
+					}
+				}
+
+				alternativesAdded += 1;
+
+				if(alternativesAdded == availableExtrasNumber){
+					// disable the add alternative button
+					var addAlternativeExtraButton = document.getElementById("addAlternativeExtraButton");
+					addAlternativeExtraButton.setAttribute("disabled", "disabled");
+				}
+
+				// Add items/values to columns
+				columnName.appendChild(selectExtraName);
+				columnDescription.innerHTML = availableExtrasArray[firstIndexInSelectBox]['ExtraDescription'];
+				columnPrice.innerHTML = availableExtrasArray[firstIndexInSelectBox]['ExtraPrice'];
+
+				// update the input to check how many alternatives we have submitted
+				var inputAlternativesAdded = document.getElementById("AlternativesAdded");
+				inputAlternativesAdded.value = alternativesAdded;
 
 				columnAmount.appendChild(inputExtraAmount);
 				columnRemoveButton.appendChild(removeAlternativeExtraButton);
@@ -129,12 +143,6 @@
 
 				// Make sure we don't trigger multiple buttons (e.g. remove alternative)
 				disableEventPropagation(event);
-			}
-
-			function addAlternativeExtraRow(){
-				addAlternativeExtra = true;
-				addTableRow();
-				addAlternativeExtra = false;
 			}
 
 			function changeAlternativeText(selectBox){
@@ -167,6 +175,12 @@
 
 				alternativesAdded -= 1;
 
+				// remove table header if we have no items added
+				if(alternativesAdded == 0){
+					var headerRow = document.getElementById("headerRow");
+					headerRow.parentNode.removeChild(headerRow);
+				}
+
 				// update the input to check how many alternatives we have submitted
 				var inputAlternativesAdded = document.getElementById("AlternativesAdded");
 				inputAlternativesAdded.value = alternativesAdded;
@@ -180,9 +194,9 @@
 				if(alternativesAdded > 0){
 					var invalidInputs = 0;
 					// Check if text fields are filled out
-					for(var i = 0; i < alternativeID; i++){
+					/*for(var i = 0; i < alternativeID; i++){
 						// TO-DO: FIX-ME: Add correct validation for users i.e. amount and user notes
-					/*	// validate name
+						// validate name
 						var inputNameID = "AlternativeName" + i;
 						var inputName = document.getElementById(inputNameID);
 						if(inputName !== null){
@@ -408,7 +422,7 @@
 						<span style="clear: both;"><b>The order has to be submitted at least 24 hours before the meeting starts.</b></span>
 						<table id="orderTable">
 						</table>
-						<button type="button" style="font-size: 150%; color: green;" id="addAlternativeExtraButton" onclick="return addAlternativeExtraRow()">+</button>
+						<button type="button" style="font-size: 150%; color: green;" id="addAlternativeExtraButton" onclick="addTableRow()">+</button>
 					<?php else : ?>
 						<span style="clear: both;"><b>This feature requires being logged in to use (online only)</b></span>
 					<?php endif; ?>
