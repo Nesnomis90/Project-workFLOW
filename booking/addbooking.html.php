@@ -218,6 +218,7 @@
 				// Add extra name selected to table cell etc.
 				selectBox.parentNode.appendChild(extraIDName);
 				inputExtraAccepted.setAttribute("value", selectBox.options[selectBox.selectedIndex].value);
+				// TO-DO: Disable amount or do the same thing as above...
 				selectBox.parentNode.removeChild(selectBox);
 				confirmButton.parentNode.removeChild(confirmButton);
 			}
