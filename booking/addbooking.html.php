@@ -77,6 +77,14 @@
 				inputExtraAmount.setAttribute("value", "1");
 				inputExtraAmount.setAttribute("min", "1");
 
+				// Create the hidden input for accepted extra
+				var inputExtraAccepted = document.createElement("input");
+				var inputExtraAcceptedAttributeName = "extraIDAccepted" + alternativeID;
+				inputExtraAccepted.setAttribute("type", "hidden");
+				inputExtraAccepted.setAttribute("id", inputExtraAcceptedAttributeName);
+				inputExtraAccepted.setAttribute("name", inputExtraAcceptedAttributeName);
+				inputExtraAccepted.setAttribute("value", "");
+
 				// Get available extras
 				var availableExtrasNumber = <?php echo $availableExtrasNumber; ?>;
 
@@ -101,14 +109,11 @@
 					var extraAlreadyAdded = false;
 
 					for(var j = 0; j < alternativeID; j++){
-						var selectBoxID = "addAlternativeSelected" + j;
-						var selectBox = document.getElementById(selectBoxID);
+						var extraIDAcceptedID = "extraIDAccepted" + j;
+						var extraIDAccepted = document.getElementById(extraIDAcceptedID);
 
-						if(selectBox !== null){
-							var extraIDSelected = selectBox.options[selectBox.selectedIndex].value;
-							if(extraIDSelected == availableExtrasArray[i]['ExtraID']){
-								//extraAlreadyAdded = true;
-							}
+						if(extraIDAccepted == availableExtrasArray[i]['ExtraID']){
+							extraAlreadyAdded = true;
 						}
 					}
 
@@ -136,6 +141,7 @@
 
 				// Add items/values to columns
 				columnName.appendChild(selectExtraName);
+				columnName.appendChild(inputExtraAccepted);
 				columnDescription.innerHTML = availableExtrasArray[firstIndexInSelectBox]['ExtraDescription'];
 				columnPrice.innerHTML = availableExtrasArray[firstIndexInSelectBox]['ExtraPrice'];
 
@@ -185,38 +191,39 @@
 				var selectBoxID = "addAlternativeSelected" + selectBoxIDNumber;
 				var selectBox = document.getElementById(selectBoxID);
 				var extraIDSelected = selectBox.options[selectBox.selectedIndex].value;
-				var extraIDName = selectBox.options[selectBox.selectedIndex].text;
+				var extraIDName = document.createTextNode(selectBox.options[selectBox.selectedIndex].text);
+				var inputExtraAcceptedID = "extraIDAccepted" + selectBoxIDNumber;
+				var inputExtraAccepted = document.getElementById(inputExtraAcceptedID);
 
 				// Remove selected extra ID from other open options
 				for(var j = 0; j < alternativeID; j++){
 					if(j != selectBoxIDNumber){
 						var newSelectBoxID = "addAlternativeSelected" + j;
 						var newSelectBox = document.getElementById(newSelectBoxID);
-						var options = newSelectBox.options;
-
-						for (var i = 0; i < options.length; i++){
-							if(options[i].value === extraIDSelected){
-								newSelectBox.removeChild(options[i]);
-								break;
+						if(newSelectBox !== null){
+							// Remove the option
+							for (var i = 0; i < newSelectBox.options.length; i++){
+								if(newSelectBox.options[i].value === extraIDSelected){
+									newSelectBox.removeChild(newSelectBox.options[i]);
+									break;
+								}
 							}
-							// update description, price and amount if we remove the already selected item
-							var descriptionTextID = "addAlternativeDescriptionSelected" + j;
-							var	descriptionText = document.getElementById(descriptionTextID);
-							var priceTextID = "addAlternativePriceSelected" + j;
-							var priceText = document.getElementById(priceTextID);
-							var amountValueID = "AmountSelected" + j;
-							var amountValue = document.getElementById(amountValueID);
-							descriptionText.innerHTML = availableExtrasArray[0]['ExtraDescription']; // TO-DO: check if this is correct
-							priceText.innerHTML = availableExtrasArray[0]['ExtraPrice']; // TO-DO: check if this is correct
-							amountValue.value = 1;
+
+							// Update text values connected to the now selected index in the select box
+							changeAlternativeText(newSelectBox);
 						}
 					}
 				}
 
-				selectBox.setAttribute("disabled", "disabled");
+				// Add extra name selected to table cell etc.
+				selectBox.parentNode.appendChild(extraIDName);
+				inputExtraAccepted.setAttribute("value", selectBox.options[selectBox.selectedIndex].value);
+				selectBox.parentNode.removeChild(selectBox);
 				confirmButton.parentNode.removeChild(confirmButton);
 			}
 
+			
+			// TO-DO: Add extra options back to already open select boxes, if an extra was accepted and removed
 			function removeAddedExtra(removeButton){
 				var tableRow = removeButton.parentNode.parentNode;
 				tableRow.parentNode.removeChild(tableRow);
