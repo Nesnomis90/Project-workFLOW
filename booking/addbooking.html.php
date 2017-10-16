@@ -207,11 +207,8 @@
 			function changeTotalPrice(){
 				var totalPrice = 0;
 
-				var displayTotalPriceID = "DisplayTotalPrice";
-				var displayTotalPrice = document.getElementById(displayTotalPriceID);
-				var saveTotalPriceID = "SaveTotalPrice";
-				var saveTotalPrice = document.getElementById(saveTotalPriceID);
-
+				var displayTotalPrice = document.getElementById("DisplayTotalPrice");
+				var saveTotalPrice = document.getElementById("SaveTotalPrice");
 
 				if(alternativesAdded > 0){
 					for(var i = 0; i < alternativeID; i++){
@@ -234,7 +231,8 @@
 				} else {
 					displayTotalPrice.innerHTML = "";
 				}
-				saveTotalPriceID.value = totalPrice;
+
+				saveTotalPrice.value = totalPrice;
 			}
 
 			function confirmAddedExtra(confirmButton, selectBoxIDNumber){
@@ -278,7 +276,6 @@
 				changeTotalPrice();
 			}
 
-			// TO-DO: Add extra options back to already open select boxes, if an extra was accepted and removed
 			function removeAddedExtra(removeButton){
 				var tableRow = removeButton.parentNode.parentNode;
 				tableRow.parentNode.removeChild(tableRow);
