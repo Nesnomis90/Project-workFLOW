@@ -146,7 +146,7 @@
 				if(alternativesAdded == availableExtrasNumber){
 					// disable the add alternative button
 					var addAlternativeExtraButton = document.getElementById("addAlternativeExtraButton");
-					addAlternativeExtraButton.setAttribute("disabled", "disabled");
+					addAlternativeExtraButton.style.display = 'none';
 				}
 
 				// Add items/values to columns
@@ -287,6 +287,10 @@
 				var addAlternativeExtraButton = document.getElementById("addAlternativeExtraButton");
 				addAlternativeExtraButton.removeAttribute("disabled");
 
+				// Display add button again if it wasn't before
+				var addAlternativeExtraButton = document.getElementById("addAlternativeExtraButton");
+				addAlternativeExtraButton.style.display = 'inline-block';				
+
 				// Update total price displayed
 				changeTotalPrice();
 
@@ -371,8 +375,8 @@
 	<body onload="startTime()">
 		<?php include_once $_SERVER['DOCUMENT_ROOT'] .'/includes/topnav.html.php'; ?>
 
-		<fieldset><legend>Book A New Meeting</legend>
-			<fieldset><legend>Meeting Details:</legend>
+		<fieldset class="left"><legend>Book A New Meeting</legend>
+			<fieldset class="left"><legend>Meeting Details:</legend>
 				<div class="left">
 				<?php if(isSet($_SESSION['AddCreateBookingError'])) : ?>
 					<span><b><?php htmlout($_SESSION['AddCreateBookingError']); ?></b></span>
@@ -520,10 +524,10 @@
 					</div>
 				</fieldset>
 
-				<fieldset><legend>Order Details:</legend>
+				<fieldset class="left"><legend>Order Details:</legend>
 					<span><b>Here you can add an order of food and drinks for the meeting.</b></span>
 					<?php if(isSet($_SESSION["loggedIn"]) AND !isSet($_SESSION["DefaultMeetingRoomInfo"])) : ?>
-						<span style="clear: both;"><b>The order has to be submitted at least 24 hours before the meeting starts.</b></span>
+						<span style="clear: both;"><b>The order has to be submitted, and will become a binding contract, 7 days before the meeting starts.</b></span>
 						<table id="orderTable">
 						</table>
 						<button type="button" style="font-size: 150%; color: green;" id="addAlternativeExtraButton" onclick="addTableRow()">+</button>
