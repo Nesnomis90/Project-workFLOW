@@ -99,20 +99,30 @@
 				var selectExtraNameID = "addAlternativeSelected" + alternativeID;
 				selectExtraName.setAttribute("id", selectExtraNameID);
 				selectExtraName.setAttribute("name", selectExtraNameID);
-				selectExtraName.onchange = function onChange(){changeAlternativeText(this);}
+				selectExtraName.onchange = function onChangeSelectIndex(){changeAlternativeText(this);}
 
 				// Add the available extra names as options
-				// exclude already confirmed items // To-DO
+				// exclude already confirmed items
 				var firstIndexInSelectBox = 0;
 				var firstIndexAdded = false;
+				var acceptedExtraIDArray = [];
+
+				// Get the extraIDs that have already been accepted
+				for(var j = 0; j < alternativeID; j++){
+					var extraIDAcceptedID = "extraIDAccepted" + j;
+					var extraIDAccepted = document.getElementById(extraIDAcceptedID);
+
+					if(extraIDAccepted !== null){
+						acceptedExtraIDArray.push(extraIDAccepted.value);
+					}
+				}
+
+				// Exclude already accepted extras from being displayed in select box
 				for(var i = 0; i < availableExtrasArray.length; i++){
 					var extraAlreadyAdded = false;
 
-					for(var j = 0; j < alternativeID; j++){
-						var extraIDAcceptedID = "extraIDAccepted" + j;
-						var extraIDAccepted = document.getElementById(extraIDAcceptedID);
-
-						if(extraIDAccepted == availableExtrasArray[i]['ExtraID']){
+					for(var j = 0; j < acceptedExtraIDArray.length; j++){
+						if(availableExtrasArray[i]['ExtraID'] == acceptedExtraIDArray[j]){
 							extraAlreadyAdded = true;
 						}
 					}
@@ -187,6 +197,34 @@
 				}
 			}
 
+			function changeTotalPrice(){
+				var totalPrice = 0;
+
+				for(var i = 0; i < alternativeID; i++){
+					var acceptedExtraID = "extraIDAccepted" + i;
+					var acceptedExtra = document.getElementById(acceptedExtraID);
+					if(acceptedExtra !== null && acceptedExtra.value != ""){
+						var amountValueID = "AmountSelected" + i;
+						var amountValue = document.getElementById(amountValueID);
+						var priceTextID = "addAlternativePriceSelected" + i;
+						var priceText = document.getElementById(priceTextID);
+
+						var amountSelected = amountValue.value;
+						var pricePerAmount = priceText.innerHTML;
+						var finalPrice = pricePerAmount * amountSelected;
+
+						totalPrice += finalPrice;
+					}
+				}
+
+				var displayTotalPriceID = "DisplayTotalPrice";
+				var displayTotalPrice = document.getElementById(displayTotalPriceID);
+				var saveTotalPriceID = "SaveTotalPrice";
+				var saveTotalPrice = document.getElementById(saveTotalPriceID);
+				displayTotalPrice.innerHTML = "Total Price: " + totalPrice;
+				saveTotalPriceID.value = totalPrice;
+			}
+
 			function confirmAddedExtra(confirmButton, selectBoxIDNumber){
 				var selectBoxID = "addAlternativeSelected" + selectBoxIDNumber;
 				var selectBox = document.getElementById(selectBoxID);
@@ -194,6 +232,8 @@
 				var extraIDName = document.createTextNode(selectBox.options[selectBox.selectedIndex].text);
 				var inputExtraAcceptedID = "extraIDAccepted" + selectBoxIDNumber;
 				var inputExtraAccepted = document.getElementById(inputExtraAcceptedID);
+				var amountValueID = "AmountSelected" + selectBoxIDNumber;
+				var amountValue = document.getElementById(amountValueID);
 
 				// Remove selected extra ID from other open options
 				for(var j = 0; j < alternativeID; j++){
@@ -218,12 +258,14 @@
 				// Add extra name selected to table cell etc.
 				selectBox.parentNode.appendChild(extraIDName);
 				inputExtraAccepted.setAttribute("value", selectBox.options[selectBox.selectedIndex].value);
-				// TO-DO: Disable amount or do the same thing as above...
+				amountValue.setAttribute("disabled","disabled");
 				selectBox.parentNode.removeChild(selectBox);
 				confirmButton.parentNode.removeChild(confirmButton);
+
+				// Update total price displayed
+				changeTotalPrice();
 			}
 
-			
 			// TO-DO: Add extra options back to already open select boxes, if an extra was accepted and removed
 			function removeAddedExtra(removeButton){
 				var tableRow = removeButton.parentNode.parentNode;
@@ -244,6 +286,12 @@
 				// Enable button again if it was disabled
 				var addAlternativeExtraButton = document.getElementById("addAlternativeExtraButton");
 				addAlternativeExtraButton.removeAttribute("disabled");
+
+				// Update total price displayed
+				changeTotalPrice();
+
+				// Fill in open select boxes again with the extra ID that was removed
+				// TO-DO:
 			}
 
 			function validateAlternativesAdded(){
@@ -479,12 +527,13 @@
 						<table id="orderTable">
 						</table>
 						<button type="button" style="font-size: 150%; color: green;" id="addAlternativeExtraButton" onclick="addTableRow()">+</button>
+						<span id="DisplayTotalPrice">Total Price: 0</span>
 					<?php else : ?>
 						<span style="clear: both;"><b>This feature requires being logged in to use (online only)</b></span>
 					<?php endif; ?>
 				</fieldset>
-
 				<div class="left">
+					<input type="hidden" id="SaveTotalPrice" name="SaveTotalPrice" value="">
 					<input type="hidden" id="LastAlternativeID" name="LastAlternativeID" value="">
 					<input type="hidden" id="AlternativesAdded" name="AlternativesAdded" value="0">
 					<input type="submit" name="add" value="Reset">
