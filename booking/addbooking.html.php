@@ -57,7 +57,8 @@
 				removeAlternativeExtraButton.innerHTML = "✖";
 				removeAlternativeExtraButton.value = "✖";
 				removeAlternativeExtraButton.style.color = "red";
-				removeAlternativeExtraButton.onclick = function onClick(){removeAddedExtra(this);}
+				var removeAlternativeExtraButtonIDNumber = alternativeID;
+				removeAlternativeExtraButton.onclick = function onClick(){removeAddedExtra(this, removeAlternativeExtraButtonIDNumber);}
 
 				// Create the confirm chosen extra button
 				var confirmAddedExtraButton = document.createElement("input");
@@ -276,7 +277,30 @@
 				changeTotalPrice();
 			}
 
-			function removeAddedExtra(removeButton){
+			function removeAddedExtra(removeButton, attributeID){
+				// get the extra ID that had already been accepted that was removed
+				var extraIDRemovedID = "extraIDAccepted" + attributeID;
+				var extraIDRemoved = document.getElementById(extraIDRemovedID);
+				if(extraIDRemoved !== null && extraIDRemoved.value != ""){
+					// Go through the open select boxes
+					for(var j = 0; j < alternativeID; j++){
+						var selectBoxToAddOptionID = "addAlternativeSelected" + j;
+						var selectBoxToAddOption = document.getElementById(selectBoxToAddOptionID);
+						if(selectBoxToAddOption !== null){
+							// Add the option that is no longer accepted
+							for(var i = 0; i < availableExtrasArray.length; i++){
+								if(availableExtrasArray[i]['ExtraID'] === extraIDRemoved.value){
+									var option = document.createElement("option");
+									option.value = availableExtrasArray[i]['ExtraID'];
+									option.text = availableExtrasArray[i]['ExtraName'];
+									selectBoxToAddOption.appendChild(option);
+									break;
+								}
+							}
+						}
+					}
+				}
+
 				var tableRow = removeButton.parentNode.parentNode;
 				tableRow.parentNode.removeChild(tableRow);
 
@@ -287,10 +311,9 @@
 					// remove table header 
 					var headerRow = document.getElementById("headerRow");
 					headerRow.parentNode.removeChild(headerRow);
-					
+
 					// remove total price text
-					var displayTotalPriceID = "DisplayTotalPrice";
-					var displayTotalPrice = document.getElementById(displayTotalPriceID);
+					var displayTotalPrice = document.getElementById("DisplayTotalPrice");
 					displayTotalPrice.innerHTML = "";
 				}
 
@@ -304,13 +327,10 @@
 
 				// Display add button again if it wasn't before
 				var addAlternativeExtraButton = document.getElementById("addAlternativeExtraButton");
-				addAlternativeExtraButton.style.display = 'inline-block';				
+				addAlternativeExtraButton.style.display = 'inline-block';
 
 				// Update total price displayed
 				changeTotalPrice();
-
-				// Fill in open select boxes again with the extra ID that was removed
-				// TO-DO:
 			}
 
 			function validateAlternativesAdded(){
