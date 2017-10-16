@@ -94,6 +94,13 @@
 					return;
 				}
 
+				// Add total price text if it hasn't been added before
+				var displayTotalPriceID = "DisplayTotalPrice";
+				var displayTotalPrice = document.getElementById(displayTotalPriceID);
+				if(displayTotalPrice.innerHTML == ""){
+					displayTotalPrice.innerHTML = "Total Price: 0";
+				}
+
 				// Create the select box we want to be able to choose from
 				var selectExtraName = document.createElement("select");
 				var selectExtraNameID = "addAlternativeSelected" + alternativeID;
@@ -200,28 +207,33 @@
 			function changeTotalPrice(){
 				var totalPrice = 0;
 
-				for(var i = 0; i < alternativeID; i++){
-					var acceptedExtraID = "extraIDAccepted" + i;
-					var acceptedExtra = document.getElementById(acceptedExtraID);
-					if(acceptedExtra !== null && acceptedExtra.value != ""){
-						var amountValueID = "AmountSelected" + i;
-						var amountValue = document.getElementById(amountValueID);
-						var priceTextID = "addAlternativePriceSelected" + i;
-						var priceText = document.getElementById(priceTextID);
-
-						var amountSelected = amountValue.value;
-						var pricePerAmount = priceText.innerHTML;
-						var finalPrice = pricePerAmount * amountSelected;
-
-						totalPrice += finalPrice;
-					}
-				}
-
 				var displayTotalPriceID = "DisplayTotalPrice";
 				var displayTotalPrice = document.getElementById(displayTotalPriceID);
 				var saveTotalPriceID = "SaveTotalPrice";
 				var saveTotalPrice = document.getElementById(saveTotalPriceID);
-				displayTotalPrice.innerHTML = "Total Price: " + totalPrice;
+
+
+				if(alternativesAdded > 0){
+					for(var i = 0; i < alternativeID; i++){
+						var acceptedExtraID = "extraIDAccepted" + i;
+						var acceptedExtra = document.getElementById(acceptedExtraID);
+						if(acceptedExtra !== null && acceptedExtra.value != ""){
+							var amountValueID = "AmountSelected" + i;
+							var amountValue = document.getElementById(amountValueID);
+							var priceTextID = "addAlternativePriceSelected" + i;
+							var priceText = document.getElementById(priceTextID);
+
+							var amountSelected = amountValue.value;
+							var pricePerAmount = priceText.innerHTML;
+							var finalPrice = pricePerAmount * amountSelected;
+
+							totalPrice += finalPrice;
+						}
+					}
+					displayTotalPrice.innerHTML = "Total Price: " + totalPrice;
+				} else {
+					displayTotalPrice.innerHTML = "";
+				}
 				saveTotalPriceID.value = totalPrice;
 			}
 
@@ -273,10 +285,16 @@
 
 				alternativesAdded -= 1;
 
-				// remove table header if we have no items added
+				//if we have no items added anymore
 				if(alternativesAdded == 0){
+					// remove table header 
 					var headerRow = document.getElementById("headerRow");
 					headerRow.parentNode.removeChild(headerRow);
+					
+					// remove total price text
+					var displayTotalPriceID = "DisplayTotalPrice";
+					var displayTotalPrice = document.getElementById(displayTotalPriceID);
+					displayTotalPrice.innerHTML = "";
 				}
 
 				// update the input to check how many alternatives we have submitted
@@ -531,7 +549,7 @@
 						<table id="orderTable">
 						</table>
 						<button type="button" style="font-size: 150%; color: green;" id="addAlternativeExtraButton" onclick="addTableRow()">+</button>
-						<span id="DisplayTotalPrice">Total Price: 0</span>
+						<span id="DisplayTotalPrice"></span>
 					<?php else : ?>
 						<span style="clear: both;"><b>This feature requires being logged in to use (online only)</b></span>
 					<?php endif; ?>
