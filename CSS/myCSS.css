@@ -65,9 +65,20 @@ input[type=number][disabled]{background-color: #EBEBE4;}
 input[type=submit]:hover{box-shadow: 2px 2px 2px #888888;}
 input[type=submit][disabled]:hover{box-shadow: none;}
 	/* CSS for all the submit buttons END */
+	
+	/* CSS for all the button buttons START */
+input[type=button]:hover{box-shadow: 2px 2px 2px #888888;}
+input[type=button][disabled]:hover{box-shadow: none;}
+button:hover{box-shadow: 2px 2px 2px #888888;}
+button[disabled]:hover{box-shadow: none;}	
+	/* CSS for all the button buttons END */
 input{
 	display: inline-block;
 	float: left;
+}
+button{
+	display: inline-block;
+	float: left;	
 }
 textarea{
 	display: inline-block;
