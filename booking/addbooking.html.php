@@ -16,9 +16,9 @@
 					// Get table we want to manipulate
 					var table = document.getElementById("orderTable");
 					var tableRows = table.rows.length;
-					var rowNumber = tableRows;
+					var rowNumber = tableRows - 2;
 
-					if(tableRows == 0){
+	/*				if(tableRows == 0){
 						// Add table header if we're adding the first item
 						var headerRow = table.insertRow(0);
 						headerRow.setAttribute("id", "headerRow");
@@ -54,7 +54,7 @@
 						var userNotesPlacement = document.getElementById("UserNotesPlacement");
 						userNotesPlacement.appendChild(userNotesLabel);
 						userNotesPlacement.appendChild(userNotesTextarea);
-					}
+					}*/
 
 					// Add new row at the end
 					var row = table.insertRow(rowNumber);
@@ -325,7 +325,7 @@
 
 					alternativesAdded -= 1;
 
-					//if we have no items added anymore
+	/*				//if we have no items added anymore
 					if(alternativesAdded == 0){
 						// remove table header 
 						var headerRow = document.getElementById("headerRow");
@@ -338,7 +338,7 @@
 						// remove user notes textarea
 						var userNotesPlacement = document.getElementById("UserNotesPlacement");
 						userNotesPlacement.innerHTML = "";
-					}
+					}*/
 
 					// update the input to check how many alternatives we have submitted
 					var inputAlternativesAdded = document.getElementById("AlternativesAdded");
@@ -570,12 +570,25 @@
 							<span><b>Here you can add an order of food and drinks for the meeting.</b></span>
 							<span style="clear: both;"><b>The order has to be submitted, and will become a binding contract, 7 days before the meeting starts.</b></span>
 							<table id="orderTable">
+								<tr>
+									<th>Name</th>
+									<th>Description</th>
+									<th>Price</th>
+									<th>Amount</th>
+									<th>Select</th>
+									<th>Remove</th>
+								</tr>
+								<tr>
+									<td colspan="6"><button type="button" style="font-size: 150%; color: green;" id="addAlternativeExtraButton" onclick="addTableRow()">+</button></td>
+								</tr>
+								<tr>
+									<th colspan="6"></th>
+								</tr>						
 							</table>
-							<button type="button" style="font-size: 150%; color: green;" id="addAlternativeExtraButton" onclick="addTableRow()">+</button>
+							<label for="UserNotes" style="display: block; float: none;">Your Order Notes: </label>
+							<textarea style="diplay: block; width: 100%;" rows="4" id="UserNotes" name="UserNotes" placeholder="Enter Any Additional Information"></textarea>
 						</div>
-						<div class="left">
-							<div id="UserNotesPlacement"></div>
-							<div id="DisplayTotalPricePlacement"></div>
+						<div id="DisplayTotalPricePlacement" class="left">
 						</div>
 					</fieldset>
 				<?php endif; ?>
