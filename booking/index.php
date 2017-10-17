@@ -22,14 +22,16 @@ function clearAddCreateBookingSessions(){
 	unset($_SESSION['AddCreateBookingChangeUser']);
 	unset($_SESSION['AddCreateBookingUsersArray']);
 	unset($_SESSION['AddCreateBookingOriginalInfoArray']);
-	unset($_SESSION['AddCreateBookingMeetingRoomsArray']);	
+	unset($_SESSION['AddCreateBookingMeetingRoomsArray']);
 	unset($_SESSION['AddCreateBookingUserSearch']);
 	unset($_SESSION['AddCreateBookingSelectedNewUser']);
-	unset($_SESSION['AddCreateBookingSelectedACompany']);	
+	unset($_SESSION['AddCreateBookingSelectedACompany']);
 	unset($_SESSION['AddCreateBookingDisplayCompanySelect']);
 	unset($_SESSION['AddCreateBookingCompanyArray']);
 	unset($_SESSION['AddCreateBookingStartImmediately']);
 	unset($_SESSION['AddCreateBookingAvailableExtra']);
+	unset($_SESSION['AddCreateBookingStepOneCompleted']);
+	unset($_SESSION['AddCreateBookingOrderTooSoon']);
 
 	unset($_SESSION['refreshAddCreateBookingConfirmed']);
 
@@ -44,7 +46,7 @@ function clearEditCreateBookingSessions(){
 	unset($_SESSION['EditCreateBookingChangeUser']);
 	unset($_SESSION['EditCreateBookingUsersArray']);
 	unset($_SESSION['EditCreateBookingOriginalInfoArray']);
-	unset($_SESSION['EditCreateBookingMeetingRoomsArray']);	
+	unset($_SESSION['EditCreateBookingMeetingRoomsArray']);
 	unset($_SESSION['EditCreateBookingUserSearch']);
 	unset($_SESSION['EditCreateBookingSelectedNewUser']);
 	unset($_SESSION['EditCreateBookingSelectACompany']);
@@ -245,8 +247,8 @@ function rememberAddCreateBookingInputs(){
 		$newValues['StartTime'] = trimExcessWhitespace($_POST['startDateTime']);
 			// The end time
 		$newValues['EndTime'] = trimExcessWhitespace($_POST['endDateTime']);
-		
-		$_SESSION['AddCreateBookingInfoArray'] = $newValues;			
+
+		$_SESSION['AddCreateBookingInfoArray'] = $newValues;
 	}
 }
 
@@ -2578,6 +2580,7 @@ if(	((isSet($_POST['action']) AND $_POST['action'] == 'Create Meeting')) OR
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 		$pdo = connect_to_db();
 		$sql = 'SELECT		c.`companyID`,
+							c.`dateTimeCreated`,
 							c.`name` 					AS companyName,
 							c.`startDate`,
 							c.`endDate`,
@@ -2800,6 +2803,7 @@ if(	((isSet($_POST['action']) AND $_POST['action'] == 'Create Meeting')) OR
 									'companyID' => $row['companyID'],
 									'companyName' => $row['companyName'],
 									'startDate' => $row['startDate'],
+									'dateTimeCreated' => $row['dateTimeCreated'],
 									'endDate' => $displayEndDate,
 									'creditsGiven' => $companyMinuteCredits,
 									'creditsRemaining' => $displayCompanyCreditsRemaining,
@@ -2970,7 +2974,8 @@ if(	((isSet($_POST['action']) AND $_POST['action'] == 'Create Meeting')) OR
 
 // When the user has added the needed information and wants to add the booking
 if ((isSet($_POST['add']) AND $_POST['add'] == "Add Booking") OR 
-	(isSet($_SESSION['refreshAddCreateBookingConfirmed']) AND $_SESSION['refreshAddCreateBookingConfirmed'])){
+	(isSet($_SESSION['refreshAddCreateBookingConfirmed']) AND $_SESSION['refreshAddCreateBookingConfirmed'])
+	){
 	// Validate user inputs
 	if(!isSet($_SESSION['refreshAddCreateBookingConfirmed'])){
 		list($invalidInput, $startDateTime, $endDateTime, $bknDscrptn, $dspname, $bookingCode) = validateUserInputs('AddCreateBookingError', FALSE);
@@ -3112,7 +3117,7 @@ if ((isSet($_POST['add']) AND $_POST['add'] == "Add Booking") OR
 
 	// Check if we got any hits, if so the timeslot is already taken
 	$row = $s->fetch(PDO::FETCH_ASSOC);	
-	if ($row['HitCount'] > 0){
+	if($row['HitCount'] > 0){
 
 		// Timeslot was taken
 		rememberAddCreateBookingInputs();
@@ -3131,12 +3136,42 @@ if ((isSet($_POST['add']) AND $_POST['add'] == "Add Booking") OR
 		exit();
 	}
 
+	// We're finished validating the inputs and seeing if it's available now.
+	// Make the user finish step 1 now and give them the option to go to step 2 (make an order)	if logged in
+	if(isSet($_SESSION["loggedIn"]) AND !isSet($_SESSION["DefaultMeetingRoomInfo"]) AND !isSet($_SESSION['AddCreateBookingStepOneCompleted'])){
+		$dateTimeNow = getDatetimeNow();
+		$timeDifferenceInDays = convertTwoDateTimesToTimeDifferenceInDays($dateTimeNow, $startDateTime);
+
+		if($timeDifferenceInDays < MINIMUM_DAYS_UNTIL_MEETING_STARTS_WHERE_YOU_CAN_STILL_PLACE_AN_ORDER){
+			$_SESSION['AddCreateBookingOrderTooSoon'] = TRUE;
+		} else {
+			unset($_SESSION['AddCreateBookingOrderTooSoon']);
+		}
+
+		$_SESSION['AddCreateBookingStepOneCompleted'] = TRUE;
+		$_SESSION['refreshAddCreateBooking'] = TRUE;
+		rememberAddCreateBookingInputs();
+
+		if(isSet($_GET['meetingroom'])){
+			$meetingRoomID = $_GET['meetingroom'];
+			$location = "http://$_SERVER[HTTP_HOST]/booking/?meetingroom=" . $meetingRoomID;
+		} else {
+			$meetingRoomID = $meetingRoomID;
+			$location = '.';
+		}
+		header('Location: ' . $location);
+		exit();
+	} else {
+		// Step 2 has been completed/ignored. Let's create the booking
+		// TO-DO: Get the order information
+	}
+
 	// We know it's available. Let's check if this booking makes the company go over credits.
 	// If over credits, ask for a confirmation before creating the booking
 	$displayValidatedStartDate = convertDatetimeToFormat($startDateTime , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
 	$displayValidatedEndDate = convertDatetimeToFormat($endDateTime, 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
 	$dateOnlyEndDate = convertDatetimeToFormat($endDateTime, 'Y-m-d H:i:s', 'Y-m-d');
-	$timeBookedInMinutes = convertTwoDateTimesToTimeDifferenceInMinutes($startDateTime, $endDateTime);	
+	$timeBookedInMinutes = convertTwoDateTimesToTimeDifferenceInMinutes($startDateTime, $endDateTime);
 
 	// Get meeting room name
 	$MeetingRoomName = 'N/A';
@@ -3194,7 +3229,7 @@ if ((isSet($_POST['add']) AND $_POST['add'] == "Add Booking") OR
 		date_default_timezone_set(DATE_DEFAULT_TIMEZONE);
 		$newDate = DateTime::createFromFormat("Y-m-d", $companyCreationDate);
 		$dayNumberToKeep = $newDate->format("d");
-		
+
 		list($newCompanyPeriodStart, $newCompanyPeriodEnd) = getPeriodDatesForCompanyFromDateSubmitted($dayNumberToKeep, $dateOnlyEndDate, $companyPeriodStartDate, $companyPeriodEndDate);
 
 		// For displaying the new period dates
@@ -3419,8 +3454,7 @@ if ((isSet($_POST['add']) AND $_POST['add'] == "Add Booking") OR
 		exit();
 	}
 
-	//Send email with booking information and cancellation code to the user who the booking is for.
-		// TO-DO: This is UNTESTED since we don't have php.ini set up to actually send email	
+	//Send email with booking information and cancellation code to the user who the booking is for.	
 	if($info['sendEmail'] == 1){
 		$emailSubject = "New Booking Information!";
 
@@ -3865,6 +3899,7 @@ if (isSet($_POST['add']) AND $_POST['add'] == "Reset"){
 	unset($_SESSION['AddCreateBookingSelectedACompany']);
 	unset($_SESSION['AddCreateBookingChangeUser']);
 	unset($_SESSION['AddCreateBookingSelectedNewUser']);
+	unset($_SESSION['AddCreateBookingStepOneCompleted']);
 
 	$_SESSION['refreshAddCreateBooking'] = TRUE;
 	if(isSet($_GET['meetingroom'])){
