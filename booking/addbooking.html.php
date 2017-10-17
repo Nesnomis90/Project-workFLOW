@@ -409,7 +409,7 @@
 		<fieldset class="left"><legend>Book A New Meeting</legend>
 			<?php if(isSet($_SESSION["loggedIn"]) AND !isSet($_SESSION["DefaultMeetingRoomInfo"])) : ?>
 				<?php if(isSet($_SESSION['AddCreateBookingStepOneCompleted'])) : ?>
-					<fieldset style="display: none;" id="stepOne" class="left"><legend>Step 1 - Set Meeting Details:</legend>
+					<fieldset style="display: none;" class="left"><legend>Step 1 - Set Meeting Details:</legend>
 				<?php else : ?>
 					<fieldset class="left"><legend>Step 1 - Set Meeting Details:</legend>
 				<?php endif; ?>
@@ -564,7 +564,7 @@
 					</div>
 				</fieldset>
 
-				<?php if(isSet($_SESSION["loggedIn"]) AND isSet($_SESSION['AddCreateBookingStepOneCompleted']) AND !isSet($_SESSION["DefaultMeetingRoomInfo"])) : ?>
+				<?php if(isSet($_SESSION["loggedIn"]) AND isSet($_SESSION['AddCreateBookingStepOneCompleted']) AND !isSet($_SESSION["DefaultMeetingRoomInfo"]) AND !isSet($_SESSION['AddCreateBookingOrderTooSoon'])) : ?>
 					<fieldset class="left"><legend>Step 2 (Optional) - Set Order Details:</legend>
 						<div class="left">
 							<span><b>Here you can add an order of food and drinks for the meeting.</b></span>
@@ -591,6 +591,14 @@
 						<div id="DisplayTotalPricePlacement" class="left">
 						</div>
 					</fieldset>
+				<?php elseif(isSet($_SESSION["loggedIn"]) AND isSet($_SESSION['AddCreateBookingStepOneCompleted']) AND !isSet($_SESSION["DefaultMeetingRoomInfo"]) AND isSet($_SESSION['AddCreateBookingOrderTooSoon'])) : ?>
+					<fieldset class="left"><legend>Step 2 (Unavailable) - Set Order Details:</legend>
+						<div class="left">
+							<span><b>Here you can add an order of food and drinks for the meeting.</b></span>
+							<span style="clear: both;"><b>The order has to be submitted, and will become a binding contract, <?php echo MINIMUM_DAYS_UNTIL_MEETING_STARTS_WHERE_YOU_CAN_STILL_PLACE_AN_ORDER; ?> days before the meeting starts.</b></span>
+							<span style="clear: both;"><b>Your current meeting is less than <?php echo MINIMUM_DAYS_UNTIL_MEETING_STARTS_WHERE_YOU_CAN_STILL_PLACE_AN_ORDER; ?> days away. If you still want to make arrangements, contact Admin.</b></span>
+						</div>
+					</fieldset>
 				<?php endif; ?>
 
 				<div class="left">
@@ -610,7 +618,7 @@
 							<input type="submit" name="add" value="Reset">
 							<input type="submit" name="add" value="Cancel">
 						</div>
-					<?php if(isSet($_SESSION['AddCreateBookingSelectedACompany'])) : ?>
+					<?php if(isSet($_SESSION['AddCreateBookingSelectedACompany']) AND !isSet($_SESSION['AddCreateBookingStepOneCompleted'])) : ?>
 						<span style="clear: both; white-space: pre-wrap;"><b><?php htmlout("¹ The given credit minus the sum of completed bookings this period (up to $companyPeriodEndDate).\n  This does not take into account non-completed bookings."); ?></b></span>
 						<span style="clear: both; white-space: pre-wrap;"><b><?php htmlout("² The sum of future bookings this period that have not been completed yet.\n  This is the maximum extra credits that have a potential of being used if the booking(s) complete."); ?></b></span>
 						<span style="clear: both; white-space: pre-wrap;"><b><?php htmlout("³ The potential minimum credits remaining if all booked meetings complete.\n  The actual remaining credits will be higher if the booking(s) cancel or complete early."); ?></b></span>

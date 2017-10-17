@@ -22,15 +22,16 @@ function clearAddCreateBookingSessions(){
 	unset($_SESSION['AddCreateBookingChangeUser']);
 	unset($_SESSION['AddCreateBookingUsersArray']);
 	unset($_SESSION['AddCreateBookingOriginalInfoArray']);
-	unset($_SESSION['AddCreateBookingMeetingRoomsArray']);	
+	unset($_SESSION['AddCreateBookingMeetingRoomsArray']);
 	unset($_SESSION['AddCreateBookingUserSearch']);
 	unset($_SESSION['AddCreateBookingSelectedNewUser']);
-	unset($_SESSION['AddCreateBookingSelectedACompany']);	
+	unset($_SESSION['AddCreateBookingSelectedACompany']);
 	unset($_SESSION['AddCreateBookingDisplayCompanySelect']);
 	unset($_SESSION['AddCreateBookingCompanyArray']);
 	unset($_SESSION['AddCreateBookingStartImmediately']);
 	unset($_SESSION['AddCreateBookingAvailableExtra']);
 	unset($_SESSION['AddCreateBookingStepOneCompleted']);
+	unset($_SESSION['AddCreateBookingOrderTooSoon']);
 
 	unset($_SESSION['refreshAddCreateBookingConfirmed']);
 
@@ -45,7 +46,7 @@ function clearEditCreateBookingSessions(){
 	unset($_SESSION['EditCreateBookingChangeUser']);
 	unset($_SESSION['EditCreateBookingUsersArray']);
 	unset($_SESSION['EditCreateBookingOriginalInfoArray']);
-	unset($_SESSION['EditCreateBookingMeetingRoomsArray']);	
+	unset($_SESSION['EditCreateBookingMeetingRoomsArray']);
 	unset($_SESSION['EditCreateBookingUserSearch']);
 	unset($_SESSION['EditCreateBookingSelectedNewUser']);
 	unset($_SESSION['EditCreateBookingSelectACompany']);
@@ -3138,6 +3139,15 @@ if ((isSet($_POST['add']) AND $_POST['add'] == "Add Booking") OR
 	// We're finished validating the inputs and seeing if it's available now.
 	// Make the user finish step 1 now and give them the option to go to step 2 (make an order)	if logged in
 	if(isSet($_SESSION["loggedIn"]) AND !isSet($_SESSION["DefaultMeetingRoomInfo"]) AND !isSet($_SESSION['AddCreateBookingStepOneCompleted'])){
+		$dateTimeNow = getDatetimeNow();
+		$timeDifferenceInDays = convertTwoDateTimesToTimeDifferenceInDays($dateTimeNow, $startDateTime);
+
+		if($timeDifferenceInDays < MINIMUM_DAYS_UNTIL_MEETING_STARTS_WHERE_YOU_CAN_STILL_PLACE_AN_ORDER){
+			$_SESSION['AddCreateBookingOrderTooSoon'] = TRUE;
+		} else {
+			unset($_SESSION['AddCreateBookingOrderTooSoon']);
+		}
+
 		$_SESSION['AddCreateBookingStepOneCompleted'] = TRUE;
 		$_SESSION['refreshAddCreateBooking'] = TRUE;
 		rememberAddCreateBookingInputs();

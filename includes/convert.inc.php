@@ -78,7 +78,7 @@ function convertToCurrency($input){
 	return $output;
 }
 // Two datetimes to time difference in minutes
-function convertTwoDateTimesToTimeDifferenceInMinutes($startDateTime,$endDateTime){
+function convertTwoDateTimesToTimeDifferenceInMinutes($startDateTime, $endDateTime){
 	$timeDifferenceStartDate = new DateTime($startDateTime);
 	$timeDifferenceCompletionDate = new DateTime($endDateTime);
 	$timeDifference = $timeDifferenceStartDate->diff($timeDifferenceCompletionDate);
@@ -96,9 +96,20 @@ function convertTwoDateTimesToTimeDifferenceInMinutes($startDateTime,$endDateTim
 	return $timeDifference;
 }
 
+// Two datetimes to difference in days.
+function convertTwoDateTimesToTimeDifferenceInDays($startDateTime, $endDateTime){
+	$timeDifferenceStartDate = new DateTime($startDateTime);
+	$timeDifferenceCompletionDate = new DateTime($endDateTime);
+	$timeDifference = $timeDifferenceStartDate->diff($timeDifferenceCompletionDate);
+
+	$timeDifferenceInDays = $timeDifference->days;
+
+	return $timeDifferenceInDays;
+}
+
 // Two datetimes to difference in months /Note: We no longer use this, since it didn't work for our period use/
 // e.g. 31 January 2011 to 28 February 2011 gives 0 months, not 1.
-function convertTwoDateTimesToTimeDifferenceInMonths($startDateTime,$endDateTime){
+function convertTwoDateTimesToTimeDifferenceInMonths($startDateTime, $endDateTime){
 	$timeDifferenceStartDate = new DateTime($startDateTime);
 	$timeDifferenceCompletionDate = new DateTime($endDateTime);
 	$timeDifference = $timeDifferenceStartDate->diff($timeDifferenceCompletionDate);
