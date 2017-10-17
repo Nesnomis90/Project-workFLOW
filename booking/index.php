@@ -2579,6 +2579,7 @@ if(	((isSet($_POST['action']) AND $_POST['action'] == 'Create Meeting')) OR
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 		$pdo = connect_to_db();
 		$sql = 'SELECT		c.`companyID`,
+							c.`dateTimeCreated`,
 							c.`name` 					AS companyName,
 							c.`startDate`,
 							c.`endDate`,
@@ -2801,6 +2802,7 @@ if(	((isSet($_POST['action']) AND $_POST['action'] == 'Create Meeting')) OR
 									'companyID' => $row['companyID'],
 									'companyName' => $row['companyName'],
 									'startDate' => $row['startDate'],
+									'dateTimeCreated' => $row['dateTimeCreated'],
 									'endDate' => $displayEndDate,
 									'creditsGiven' => $companyMinuteCredits,
 									'creditsRemaining' => $displayCompanyCreditsRemaining,
@@ -3114,7 +3116,7 @@ if ((isSet($_POST['add']) AND $_POST['add'] == "Add Booking") OR
 
 	// Check if we got any hits, if so the timeslot is already taken
 	$row = $s->fetch(PDO::FETCH_ASSOC);	
-	if ($row['HitCount'] > 0){
+	if($row['HitCount'] > 0){
 
 		// Timeslot was taken
 		rememberAddCreateBookingInputs();
@@ -3152,7 +3154,6 @@ if ((isSet($_POST['add']) AND $_POST['add'] == "Add Booking") OR
 	} else {
 		// Step 2 has been completed/ignored. Let's create the booking
 		// TO-DO: Get the order information
-		unset($_SESSION['AddCreateBookingStepOneCompleted']);
 	}
 
 	// We know it's available. Let's check if this booking makes the company go over credits.
