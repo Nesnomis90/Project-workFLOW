@@ -204,8 +204,5 @@
 			</div>
 		</fieldset>
 		</form>
-
-	<div class="left"><a href="..">Return to CMS home</a></div>
-
 	</body>
 </html>

@@ -30,6 +30,7 @@ function clearAddCreateBookingSessions(){
 	unset($_SESSION['AddCreateBookingCompanyArray']);
 	unset($_SESSION['AddCreateBookingStartImmediately']);
 	unset($_SESSION['AddCreateBookingAvailableExtra']);
+	unset($_SESSION['AddCreateBookingStepOneCompleted']);
 
 	unset($_SESSION['refreshAddCreateBookingConfirmed']);
 
@@ -2970,7 +2971,8 @@ if(	((isSet($_POST['action']) AND $_POST['action'] == 'Create Meeting')) OR
 
 // When the user has added the needed information and wants to add the booking
 if ((isSet($_POST['add']) AND $_POST['add'] == "Add Booking") OR 
-	(isSet($_SESSION['refreshAddCreateBookingConfirmed']) AND $_SESSION['refreshAddCreateBookingConfirmed'])){
+	(isSet($_SESSION['refreshAddCreateBookingConfirmed']) AND $_SESSION['refreshAddCreateBookingConfirmed'])
+	){
 	// Validate user inputs
 	if(!isSet($_SESSION['refreshAddCreateBookingConfirmed'])){
 		list($invalidInput, $startDateTime, $endDateTime, $bknDscrptn, $dspname, $bookingCode) = validateUserInputs('AddCreateBookingError', FALSE);
@@ -3131,6 +3133,28 @@ if ((isSet($_POST['add']) AND $_POST['add'] == "Add Booking") OR
 		exit();
 	}
 
+	// We're finished validating the inputs and seeing if it's available now.
+	// Make the user finish step 1 now and give them the option to go to step 2 (make an order)	if logged in
+	if(isSet($_SESSION["loggedIn"]) AND !isSet($_SESSION["DefaultMeetingRoomInfo"]) AND !isSet($_SESSION['AddCreateBookingStepOneCompleted'])){
+		$_SESSION['AddCreateBookingStepOneCompleted'] = TRUE;
+		$_SESSION['refreshAddCreateBooking'] = TRUE;
+		rememberAddCreateBookingInputs();
+
+		if(isSet($_GET['meetingroom'])){
+			$meetingRoomID = $_GET['meetingroom'];
+			$location = "http://$_SERVER[HTTP_HOST]/booking/?meetingroom=" . $meetingRoomID;
+		} else {
+			$meetingRoomID = $meetingRoomID;
+			$location = '.';
+		}
+		header('Location: ' . $location);
+		exit();
+	} else {
+		// Step 2 has been completed/ignored. Let's create the booking
+		// TO-DO: Get the order information
+		unset($_SESSION['AddCreateBookingStepOneCompleted']);
+	}
+
 	// We know it's available. Let's check if this booking makes the company go over credits.
 	// If over credits, ask for a confirmation before creating the booking
 	$displayValidatedStartDate = convertDatetimeToFormat($startDateTime , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
@@ -3194,7 +3218,7 @@ if ((isSet($_POST['add']) AND $_POST['add'] == "Add Booking") OR
 		date_default_timezone_set(DATE_DEFAULT_TIMEZONE);
 		$newDate = DateTime::createFromFormat("Y-m-d", $companyCreationDate);
 		$dayNumberToKeep = $newDate->format("d");
-		
+
 		list($newCompanyPeriodStart, $newCompanyPeriodEnd) = getPeriodDatesForCompanyFromDateSubmitted($dayNumberToKeep, $dateOnlyEndDate, $companyPeriodStartDate, $companyPeriodEndDate);
 
 		// For displaying the new period dates
@@ -3419,8 +3443,7 @@ if ((isSet($_POST['add']) AND $_POST['add'] == "Add Booking") OR
 		exit();
 	}
 
-	//Send email with booking information and cancellation code to the user who the booking is for.
-		// TO-DO: This is UNTESTED since we don't have php.ini set up to actually send email	
+	//Send email with booking information and cancellation code to the user who the booking is for.	
 	if($info['sendEmail'] == 1){
 		$emailSubject = "New Booking Information!";
 
@@ -3865,6 +3888,7 @@ if (isSet($_POST['add']) AND $_POST['add'] == "Reset"){
 	unset($_SESSION['AddCreateBookingSelectedACompany']);
 	unset($_SESSION['AddCreateBookingChangeUser']);
 	unset($_SESSION['AddCreateBookingSelectedNewUser']);
+	unset($_SESSION['AddCreateBookingStepOneCompleted']);
 
 	$_SESSION['refreshAddCreateBooking'] = TRUE;
 	if(isSet($_GET['meetingroom'])){

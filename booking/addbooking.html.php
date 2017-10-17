@@ -404,11 +404,15 @@
 		</style>
 	</head>
 	<body onload="startTime()">
-		<?php include_once $_SERVER['DOCUMENT_ROOT'] .'/includes/topnav.html.php'; ?>
+		<?php include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/topnav.html.php'; ?>
 
 		<fieldset class="left"><legend>Book A New Meeting</legend>
 			<?php if(isSet($_SESSION["loggedIn"]) AND !isSet($_SESSION["DefaultMeetingRoomInfo"])) : ?>
-				<fieldset class="left"><legend>Step 1 - Set Meeting Details:</legend>
+				<?php if(isSet($_SESSION['AddCreateBookingStepOneCompleted'])) : ?>
+					<fieldset style="display: none;" id="stepOne" class="left"><legend>Step 1 - Set Meeting Details:</legend>
+				<?php else : ?>
+					<fieldset class="left"><legend>Step 1 - Set Meeting Details:</legend>
+				<?php endif; ?>
 			<?php else : ?>
 				<fieldset class="left"><legend>Set Meeting Details:</legend>
 			<?php endif; ?>
@@ -430,7 +434,7 @@
 						<label for="meetingRoomID">Meeting Room: </label>
 						<?php if(isSet($_GET['meetingroom'])) : ?>
 							<?php foreach($meetingroom AS $row): ?> 
-								<?php if($row['meetingRoomID']==$_GET['meetingroom']):?>
+								<?php if($row['meetingRoomID'] == $_GET['meetingroom']):?>
 									<span><b><?php htmlout($row['meetingRoomName']);?></b></span>
 								<?php endif;?>
 							<?php endforeach; ?>
@@ -560,7 +564,7 @@
 					</div>
 				</fieldset>
 
-				<?php if(isSet($_SESSION["loggedIn"]) AND !isSet($_SESSION["DefaultMeetingRoomInfo"])) : ?>
+				<?php if(isSet($_SESSION["loggedIn"]) AND isSet($_SESSION['AddCreateBookingStepOneCompleted']) AND !isSet($_SESSION["DefaultMeetingRoomInfo"])) : ?>
 					<fieldset class="left"><legend>Step 2 (Optional) - Set Order Details:</legend>
 						<div class="left">
 							<span><b>Here you can add an order of food and drinks for the meeting.</b></span>
@@ -588,7 +592,7 @@
 							<input type="submit" name="disabled" value="Add Booking" disabled>
 					<?php else : ?>
 						<div class="left">
-							<input type="submit" name="add" value="Add Booking" onclick="return validateAlternativesAdded()">
+							<input type="submit" id="AddBookingButton" name="add" value="Add Booking" onclick="return validateAlternativesAdded()">
 					<?php endif; ?>	
 							<input type="submit" name="add" value="Reset">
 							<input type="submit" name="add" value="Cancel">
