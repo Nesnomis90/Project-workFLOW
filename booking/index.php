@@ -246,8 +246,8 @@ function rememberAddCreateBookingInputs(){
 		$newValues['StartTime'] = trimExcessWhitespace($_POST['startDateTime']);
 			// The end time
 		$newValues['EndTime'] = trimExcessWhitespace($_POST['endDateTime']);
-		
-		$_SESSION['AddCreateBookingInfoArray'] = $newValues;			
+
+		$_SESSION['AddCreateBookingInfoArray'] = $newValues;
 	}
 }
 
@@ -3160,7 +3160,7 @@ if ((isSet($_POST['add']) AND $_POST['add'] == "Add Booking") OR
 	$displayValidatedStartDate = convertDatetimeToFormat($startDateTime , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
 	$displayValidatedEndDate = convertDatetimeToFormat($endDateTime, 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
 	$dateOnlyEndDate = convertDatetimeToFormat($endDateTime, 'Y-m-d H:i:s', 'Y-m-d');
-	$timeBookedInMinutes = convertTwoDateTimesToTimeDifferenceInMinutes($startDateTime, $endDateTime);	
+	$timeBookedInMinutes = convertTwoDateTimesToTimeDifferenceInMinutes($startDateTime, $endDateTime);
 
 	// Get meeting room name
 	$MeetingRoomName = 'N/A';
