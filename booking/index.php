@@ -3198,6 +3198,8 @@ if ((isSet($_POST['add']) AND $_POST['add'] == "Add Booking") OR
 			}
 		}
 
+		$_SESSION['TEST'] = $addedExtra; // TEST TO-DO: REMOVE
+
 		if(isSet($addedExtra) AND sizeOf($addedExtra) > 0){
 			// Validate the order notes
 			$userNotes = $_POST["UserNotes"];
@@ -3209,7 +3211,7 @@ if ((isSet($_POST['add']) AND $_POST['add'] == "Add Booking") OR
 			}
 
 			$invalidOrderUserNotes = isLengthInvalidOrderUserNotes($trimmedUserNotes);
-			if($invalidExtraDescription AND !$invalidInput){
+			if($invalidOrderUserNotes AND !$invalidInput){
 				$_SESSION['AddCreateBookingError'] = "The Order Notes submitted is too long.";
 				$invalidInput = TRUE;
 			}
@@ -3223,9 +3225,6 @@ if ((isSet($_POST['add']) AND $_POST['add'] == "Add Booking") OR
 				header('Location: ' . $location);
 				exit();
 			}
-			$orderAdded = TRUE;
-		} else {
-			$orderAdded = FALSE;
 		}
 	}
 
@@ -3412,6 +3411,12 @@ if ((isSet($_POST['add']) AND $_POST['add'] == "Add Booking") OR
 		$bknDscrptn = $_SESSION["AddCreateBookingInfoArray"]["BookingDescription"];
 	}
 
+	if(isSet($_SESSION['AddCreateBookingOrderAddedExtra'])){
+		$orderAdded = TRUE;
+	} else {
+		$orderAdded = FALSE;
+	}
+
 	// Add the booking to the database
 	try
 	{
@@ -3424,7 +3429,7 @@ if ((isSet($_POST['add']) AND $_POST['add'] == "Add Booking") OR
 
 		$pdo->beginTransaction();
 
-		if(isSet($orderAdded) AND $orderAdded){
+		if($orderAdded){
 			// Create the order/extraorders first
 			if(!empty($_SESSION['AddCreateBookingOrderUserNotes'])){
 				$userNotes = $_SESSION['AddCreateBookingOrderUserNotes'];
@@ -3440,7 +3445,7 @@ if ((isSet($_POST['add']) AND $_POST['add'] == "Add Booking") OR
 			$s->bindValue(':orderUserNotes', $userNotes);
 			$s->execute();
 
-			$theOrderID = $pdo->lastInsertId;
+			$theOrderID = $pdo->lastInsertId();
 
 			foreach($addedExtra AS $extra){
 				$extraID = $extra["ExtraID"];
@@ -3457,6 +3462,9 @@ if ((isSet($_POST['add']) AND $_POST['add'] == "Add Booking") OR
 				$s->execute();
 			}
 
+			// Add log that order was created
+			// TO-DO:
+			
 			$sql = 'INSERT INTO `booking` 
 					SET			`meetingRoomID` = :meetingRoomID,
 								`userID` = :userID,
@@ -3503,7 +3511,7 @@ if ((isSet($_POST['add']) AND $_POST['add'] == "Add Booking") OR
 	}
 	catch (PDOException $e)
 	{
-		$error = 'Error adding submitted booking to database: ' . $e->getMessage();
+		$error = 'Error adding submitted order and booking to database: ' . $e->getMessage();
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
 		$pdo = null;
 		exit();

@@ -288,7 +288,7 @@
 					// Add extra name selected to table cell etc.
 					selectBox.parentNode.appendChild(extraIDName);
 					inputExtraAccepted.setAttribute("value", selectBox.options[selectBox.selectedIndex].value);
-					amountValue.setAttribute("disabled","disabled");
+					amountValue.readOnly = true;
 					selectBox.parentNode.removeChild(selectBox);
 					confirmButton.parentNode.removeChild(confirmButton);
 
@@ -413,6 +413,9 @@
 					<?php unset($_SESSION['AddCreateBookingError']); ?>
 				<?php endif; ?>
 			</div>
+			
+			<form action="" method="post">
+			
 			<?php if(isSet($_SESSION["loggedIn"]) AND !isSet($_SESSION["DefaultMeetingRoomInfo"])) : ?>
 				<?php if(isSet($_SESSION['AddCreateBookingStepOneCompleted'])) : ?>
 					<fieldset style="display: none;" class="left"><legend>Step 1 - Set Meeting Details:</legend>
@@ -423,7 +426,7 @@
 				<fieldset class="left"><legend>Set Meeting Details:</legend>
 			<?php endif; ?>
 
-				<form action="" method="post">
+				
 					<div class="left">
 						<label for="userInformation">Welcome </label>
 						<span><b><?php htmlout($userInformation); ?></b></span>
@@ -623,7 +626,7 @@
 						<span style="clear: both; white-space: pre-wrap;"><b><?php htmlout("³ The potential minimum credits remaining if all booked meetings complete.\n  The actual remaining credits will be higher if the booking(s) cancel or complete early."); ?></b></span>
 					<?php endif; ?>
 				</div>
-			</form>
-		</fieldset>
+			</fieldset>
+		</form>
 	</body>
 </html>
