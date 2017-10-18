@@ -3206,8 +3206,6 @@ if ((isSet($_POST['add']) AND $_POST['add'] == "Add Booking") OR
 			}
 		}
 
-		$_SESSION['TEST'] = $addedExtra; // TEST TO-DO: REMOVE
-
 		if(isSet($addedExtra) AND sizeOf($addedExtra) > 0){
 			// Validate the order notes
 			$userNotes = $_POST["UserNotes"];

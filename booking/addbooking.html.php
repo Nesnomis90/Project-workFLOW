@@ -588,7 +588,7 @@
 								</tr>						
 							</table>
 							<label for="UserNotes">Your Order Notes: </label>
-							<textarea style="width: 100%;" rows="4" id="UserNotes" name="UserNotes" placeholder="Enter Any Additional Information" value="<?php htmlout($userNotes); ?>"></textarea>
+							<textarea style="width: 100%;" rows="4" id="UserNotes" name="UserNotes" placeholder="Enter Any Additional Information"><?php htmlout($userNotes); ?></textarea>
 						</div>
 						<div id="DisplayTotalPricePlacement" class="left">
 						</div>
