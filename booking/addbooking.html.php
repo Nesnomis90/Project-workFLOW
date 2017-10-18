@@ -82,6 +82,8 @@
 
 					// Create the confirm chosen extra button
 					var confirmAddedExtraButton = document.createElement("input");
+					var confirmAddedExtraButtonName = "confirmButton" + alternativeID;
+					confirmAddedExtraButton.setAttribute("id", confirmAddedExtraButtonName)
 					confirmAddedExtraButton.setAttribute("type", "button");
 					confirmAddedExtraButton.innerHTML = "✔";
 					confirmAddedExtraButton.value = "✔";
@@ -262,8 +264,28 @@
 					var extraIDName = document.createTextNode(selectBox.options[selectBox.selectedIndex].text);
 					var inputExtraAcceptedID = "extraIDAccepted" + selectBoxIDNumber;
 					var inputExtraAccepted = document.getElementById(inputExtraAcceptedID);
-					var amountValueID = "AmountSelected" + selectBoxIDNumber;
-					var amountValue = document.getElementById(amountValueID);
+					var inputAmountID = "AmountSelected" + selectBoxIDNumber;
+					var inputAmount = document.getElementById(inputAmountID);
+
+					// Check if the amount selected is a valid amount first
+					if(inputAmount !== null){
+						var selectedAmount = inputAmount.value;
+						if(selectedAmount == "" || selectedAmount == 0){
+							inputAmount.setAttribute("class", "fillOut");
+							alert("The order amount needs to be filled out and a valid number.");
+							return;
+						} else if(selectedAmount.match(/^[0-9]*$/) === null){
+							inputAmount.setAttribute("class", "fillOut");
+							alert("The order amount needs to be filled out and a valid number.");
+							return;
+						} else if(selectedAmount < 0 || selectedAmount > 255){
+							inputAmount.setAttribute("class", "fillOut");
+							alert("The order amount needs to be filled out and a valid number between 1 and 255.");
+							return;
+						} else {
+							inputAmount.removeAttribute("class", "fillOut");
+						}
+					}
 
 					// Remove selected extra ID from other open options
 					for(var j = 0; j < alternativeID; j++){
@@ -288,7 +310,7 @@
 					// Add extra name selected to table cell etc.
 					selectBox.parentNode.appendChild(extraIDName);
 					inputExtraAccepted.setAttribute("value", selectBox.options[selectBox.selectedIndex].value);
-					amountValue.readOnly = true;
+					inputAmount.readOnly = true;
 					selectBox.parentNode.removeChild(selectBox);
 					confirmButton.parentNode.removeChild(confirmButton);
 
@@ -360,7 +382,15 @@
 					if(alternativesAdded > 0){
 
 						// First check if all added items have been accepted (checkmark)
-						// TO-DO: 
+						for(var i = 0; i < alternativeID; i++){
+							var confirmButtonID = "confirmButton" + i;
+							var confirmButton = document.getElementById(confirmButtonID);
+							if(confirmButton !== null){
+								alert("All items ordered need to be confirmed (✔) before you can submit the order.");
+								return false;
+							}
+						}
+
 						var invalidInputs = 0;
 
 						var inputUserNotes = document.getElementById("UserNotes");
@@ -384,36 +414,6 @@
 							}
 						}
 
-						// Check if the amount per item is valid and appropriate
-						for(var i = 0; i < alternativeID; i++){
-							var inputAmountID = "AmountSelected" + i;
-							var inputAmount = document.getElementById(inputAmountID);
-							if(selectedAmount !== null){
-								var selectedAmount = inputAmount.value;
-								if(selectedAmount == "" || selectedAmount == 0){
-									inputAmount.setAttribute("class", "fillOut");
-									if(invalidInputs == 0){
-										alert("The order amount needs to be filled out and a valid number.");
-									}
-									invalidInputs++;
-								} else if(selectedAmount.match(/^[0-9]*$/) === null){
-									inputAmount.setAttribute("class", "fillOut");
-									if(invalidInputs == 0){
-										alert("The order amount needs to be filled out and a valid number.");
-									}
-									invalidInputs++;
-								} else if(selectedAmount < 0 || selectedAmount > 255){
-									inputAmount.setAttribute("class", "fillOut");
-									if(invalidInputs == 0){
-										alert("The order amount needs to be filled out and a valid number between 1 and 255.");
-									}
-									invalidInputs++;
-								} else {
-									inputAmount.removeAttribute("class", "fillOut");
-								}
-							}
-						}
-
 						if(invalidInputs > 0){
 							return false;
 						} else {
@@ -422,9 +422,8 @@
 							return submitConfirmed;
 						}
 					} else {
-						//var submitConfirmed = confirm("Are you sure you want to book this meeting?");
-						//return submitConfirmed;
-						return true;
+						var submitConfirmed = confirm("Are you sure you want to book this meeting without an order?");
+						return submitConfirmed;
 					}
 				}
 			</script>
@@ -647,7 +646,11 @@
 							<input type="submit" name="disabled" value="Add Booking" disabled>
 					<?php else : ?>
 						<div class="left">
-							<input type="submit" id="AddBookingButton" name="add" value="Add Booking" onclick="return validateAlternativesAdded()">
+							<?php if(isSet($_SESSION['AddCreateBookingStepOneCompleted'])) : ?>
+								<input type="submit" id="AddBookingButton" name="add" value="Add Booking" onclick="return validateAlternativesAdded()">
+							<?php else : ?>
+								<input type="submit" id="AddBookingButton" name="add" value="Add Booking">
+							<?php endif; ?>
 					<?php endif; ?>	
 							<input type="submit" name="add" value="Reset">
 							<input type="submit" name="add" value="Cancel">
