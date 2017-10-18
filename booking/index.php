@@ -3182,17 +3182,25 @@ if ((isSet($_POST['add']) AND $_POST['add'] == "Add Booking") OR
 				}
 
 				$invalid = FALSE;
-				// input validation (check if amounts submitted are valid)
-				// TO-DO: FIX-ME:
+				// input validation (check if the amounts submitted are valid)
+				$amountSubmitted = $_POST[$postAmountName];
+
+				if(validateIntegerNumber($amountSubmitted) === FALSE){
+					$invalid = TRUE;
+				}
+
+				if(isNumberInvalidOrderAmount($amountSubmitted) === TRUE){
+					$invalid = TRUE;
+				}
 
 				if($invalid AND !$invalidInput){
 					$invalidInput = TRUE;
-					$_SESSION['AddCreateBookingError'] = "An amount you submitted was not valid.";
+					$_SESSION['AddCreateBookingError'] = "At least one amount you submitted was not valid.";
 				}
 
 				$addedExtra[] = array(
 										"ExtraID" => $_POST[$postExtraIDName],
-										"ExtraAmount" => $_POST[$postAmountName],
+										"ExtraAmount" => $amountSubmitted,
 										"Invalid" => $invalid
 									);
 			}
