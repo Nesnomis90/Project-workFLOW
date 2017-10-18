@@ -62,6 +62,7 @@
 				<tr>
 					<th colspan="8">Booking information</th>
 					<th colspan="2">Alter Booking</th>
+					<th colspan="2">Alter Order</th>
 				</tr>
 				<tr>
 					<th>Status</th>
@@ -73,6 +74,8 @@
 					<th>Description</th>
 					<th>Created At</th>
 					<th>Edit</th>			
+					<th>Cancel</th>
+					<th>Edit</th>
 					<th>Cancel</th>
 				</tr>
 			<?php if(isSet($bookingsActiveToday)) :?>					
@@ -120,6 +123,7 @@
 					<tr>
 						<th colspan="8">Booking information</th>
 						<th colspan="2">Alter Booking</th>
+						<th colspan="2">Alter Order</th>
 					</tr>
 					<tr>
 						<th>Status</th>
@@ -130,6 +134,8 @@
 						<th>For Company</th>
 						<th>Description</th>
 						<th>Created At</th>
+						<th>Edit</th>
+						<th>Cancel</th>
 						<th>Edit</th>
 						<th>Cancel</th>
 					</tr>
