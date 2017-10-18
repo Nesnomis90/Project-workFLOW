@@ -50,9 +50,12 @@ function clearEditStaffOrderSessions(){
 	unset($_SESSION['EditStaffOrderAlternativeExtraAdded']);
 	unset($_SESSION['EditStaffOrderAlternativeExtraCreated']);
 	unset($_SESSION['EditStaffOrderExtraOrderedOnlyNames']);
-	unset($_SESSION['EditStaffOrderOrderStatus']);
 	unset($_SESSION['resetEditStaffOrder']);
 	unset($_SESSION['refreshEditStaffOrder']);
+}
+
+function clearEditOrderSessionsOutsideReset(){
+	unset($_SESSION['EditStaffOrderOrderStatus']);
 }
 
 // Function to check if user inputs for Order are correct
@@ -195,7 +198,9 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Details') OR
 		// Make sure we don't have any remembered values in memory
 		clearEditStaffOrderSessions();
 
-		$_SESSION['EditStaffOrderOrderStatus'] = $_POST['OrderStatus'];
+		if(!isSet($_SESSION['EditStaffOrderOrderStatus'])){
+			$_SESSION['EditStaffOrderOrderStatus'] = $_POST['OrderStatus'];
+		}
 
 		// Get information from database again on the selected order
 		try
@@ -992,6 +997,7 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Submit Changes'){
 	}
 	
 	clearEditStaffOrderSessions();
+	clearEditOrderSessionsOutsideReset();
 
 	// Load Order list webpage
 	header('Location: .');
@@ -1021,6 +1027,7 @@ if(isSet($refreshOrder) AND $refreshOrder) {
 
 // Remove any unused variables from memory // TO-DO: Change if this ruins having multiple tabs open etc.
 clearEditStaffOrderSessions();
+clearEditOrderSessionsOutsideReset();
 
 // Display Order list
 try

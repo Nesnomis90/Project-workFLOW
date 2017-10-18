@@ -435,7 +435,7 @@
 				</div>
 			</fieldset>
 
-			<table>
+			<table id="addAlternative">
 				<caption>Items Ordered</caption>
 				<tr>
 					<th colspan="4">Item</th>

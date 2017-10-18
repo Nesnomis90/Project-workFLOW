@@ -82,6 +82,8 @@
 
 					// Create the confirm chosen extra button
 					var confirmAddedExtraButton = document.createElement("input");
+					var confirmAddedExtraButtonName = "confirmButton" + alternativeID;
+					confirmAddedExtraButton.setAttribute("id", confirmAddedExtraButtonName)
 					confirmAddedExtraButton.setAttribute("type", "button");
 					confirmAddedExtraButton.innerHTML = "✔";
 					confirmAddedExtraButton.value = "✔";
@@ -262,8 +264,28 @@
 					var extraIDName = document.createTextNode(selectBox.options[selectBox.selectedIndex].text);
 					var inputExtraAcceptedID = "extraIDAccepted" + selectBoxIDNumber;
 					var inputExtraAccepted = document.getElementById(inputExtraAcceptedID);
-					var amountValueID = "AmountSelected" + selectBoxIDNumber;
-					var amountValue = document.getElementById(amountValueID);
+					var inputAmountID = "AmountSelected" + selectBoxIDNumber;
+					var inputAmount = document.getElementById(inputAmountID);
+
+					// Check if the amount selected is a valid amount first
+					if(inputAmount !== null){
+						var selectedAmount = inputAmount.value;
+						if(selectedAmount == "" || selectedAmount == 0){
+							inputAmount.setAttribute("class", "fillOut");
+							alert("The order amount needs to be filled out and a valid number.");
+							return;
+						} else if(selectedAmount.match(/^[0-9]*$/) === null){
+							inputAmount.setAttribute("class", "fillOut");
+							alert("The order amount needs to be filled out and a valid number.");
+							return;
+						} else if(selectedAmount < 0 || selectedAmount > 255){
+							inputAmount.setAttribute("class", "fillOut");
+							alert("The order amount needs to be filled out and a valid number between 1 and 255.");
+							return;
+						} else {
+							inputAmount.removeAttribute("class", "fillOut");
+						}
+					}
 
 					// Remove selected extra ID from other open options
 					for(var j = 0; j < alternativeID; j++){
@@ -288,7 +310,7 @@
 					// Add extra name selected to table cell etc.
 					selectBox.parentNode.appendChild(extraIDName);
 					inputExtraAccepted.setAttribute("value", selectBox.options[selectBox.selectedIndex].value);
-					amountValue.setAttribute("disabled","disabled");
+					inputAmount.readOnly = true;
 					selectBox.parentNode.removeChild(selectBox);
 					confirmButton.parentNode.removeChild(confirmButton);
 
@@ -358,6 +380,17 @@
 
 				function validateAlternativesAdded(){
 					if(alternativesAdded > 0){
+
+						// First check if all added items have been accepted (checkmark)
+						for(var i = 0; i < alternativeID; i++){
+							var confirmButtonID = "confirmButton" + i;
+							var confirmButton = document.getElementById(confirmButtonID);
+							if(confirmButton !== null){
+								alert("All items ordered need to be confirmed (✔) before you can submit the order.");
+								return false;
+							}
+						}
+
 						var invalidInputs = 0;
 
 						var inputUserNotes = document.getElementById("UserNotes");
@@ -382,7 +415,6 @@
 						}
 
 						if(invalidInputs > 0){
-							//alert("One of your inputs are missing, too long or contain illegal characters.");
 							return false;
 						} else {
 							var submitConfirmed = confirm("Are you sure you want to book this meeting and submit your order?");
@@ -390,9 +422,8 @@
 							return submitConfirmed;
 						}
 					} else {
-						//var submitConfirmed = confirm("Are you sure you want to book this meeting?");
-						//return submitConfirmed;
-						return true;
+						var submitConfirmed = confirm("Are you sure you want to book this meeting without an order?");
+						return submitConfirmed;
 					}
 				}
 			</script>
@@ -407,6 +438,15 @@
 		<?php include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/topnav.html.php'; ?>
 
 		<fieldset class="left"><legend>Book A New Meeting</legend>
+			<div class="left">
+				<?php if(isSet($_SESSION['AddCreateBookingError'])) : ?>
+					<span><b><?php htmlout($_SESSION['AddCreateBookingError']); ?></b></span>
+					<?php unset($_SESSION['AddCreateBookingError']); ?>
+				<?php endif; ?>
+			</div>
+			
+			<form action="" method="post">
+			
 			<?php if(isSet($_SESSION["loggedIn"]) AND !isSet($_SESSION["DefaultMeetingRoomInfo"])) : ?>
 				<?php if(isSet($_SESSION['AddCreateBookingStepOneCompleted'])) : ?>
 					<fieldset style="display: none;" class="left"><legend>Step 1 - Set Meeting Details:</legend>
@@ -417,14 +457,7 @@
 				<fieldset class="left"><legend>Set Meeting Details:</legend>
 			<?php endif; ?>
 
-				<div class="left">
-				<?php if(isSet($_SESSION['AddCreateBookingError'])) : ?>
-					<span><b><?php htmlout($_SESSION['AddCreateBookingError']); ?></b></span>
-					<?php unset($_SESSION['AddCreateBookingError']); ?>
-				<?php endif; ?>
-				</div>
-
-				<form action="" method="post">
+				
 					<div class="left">
 						<label for="userInformation">Welcome </label>
 						<span><b><?php htmlout($userInformation); ?></b></span>
@@ -585,8 +618,8 @@
 									<th colspan="6"></th>
 								</tr>						
 							</table>
-							<label for="UserNotes" style="display: block; float: none;">Your Order Notes: </label>
-							<textarea style="diplay: block; width: 100%;" rows="4" id="UserNotes" name="UserNotes" placeholder="Enter Any Additional Information"></textarea>
+							<label for="UserNotes">Your Order Notes: </label>
+							<textarea style="width: 100%;" rows="4" id="UserNotes" name="UserNotes" placeholder="Enter Any Additional Information"><?php htmlout($userNotes); ?></textarea>
 						</div>
 						<div id="DisplayTotalPricePlacement" class="left">
 						</div>
@@ -613,7 +646,11 @@
 							<input type="submit" name="disabled" value="Add Booking" disabled>
 					<?php else : ?>
 						<div class="left">
-							<input type="submit" id="AddBookingButton" name="add" value="Add Booking" onclick="return validateAlternativesAdded()">
+							<?php if(isSet($_SESSION['AddCreateBookingStepOneCompleted'])) : ?>
+								<input type="submit" id="AddBookingButton" name="add" value="Add Booking" onclick="return validateAlternativesAdded()">
+							<?php else : ?>
+								<input type="submit" id="AddBookingButton" name="add" value="Add Booking">
+							<?php endif; ?>
 					<?php endif; ?>	
 							<input type="submit" name="add" value="Reset">
 							<input type="submit" name="add" value="Cancel">
@@ -624,7 +661,7 @@
 						<span style="clear: both; white-space: pre-wrap;"><b><?php htmlout("³ The potential minimum credits remaining if all booked meetings complete.\n  The actual remaining credits will be higher if the booking(s) cancel or complete early."); ?></b></span>
 					<?php endif; ?>
 				</div>
-			</form>
-		</fieldset>
+			</fieldset>
+		</form>
 	</body>
 </html>

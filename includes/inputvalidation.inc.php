@@ -83,6 +83,19 @@ function isLengthInvalidExtraDescription($description){
 	return FALSE;
 }
 
+	// Order User Notes
+// Returns TRUE on invalid, FALSE on valid
+function isLengthInvalidOrderUserNotes($description){
+	// Has to be less than 65,535 bytes (MySQL - TEXT) (too much anyway)
+
+	$descriptionLength = strlen(utf8_decode($description));
+	$maxLength = 500; // TO-DO: Adjust max length if needed.
+	if($descriptionLength > $maxLength){
+		return TRUE;
+	}
+	return FALSE;
+}
+
 	// Meeting Room Descriptions
 // Returns TRUE on invalid, FALSE on valid
 function isLengthInvalidMeetingRoomDescription($meetingRoomDescription){
@@ -114,10 +127,24 @@ function isLengthInvalidMeetingRoomLocation($meetingRoomCapacity){
 function isNumberInvalidMeetingRoomCapacity($capacityNumber){
 	// Has to be between 0 and 255
 	// In practice the meeting room needs at least room for 1 person.
-	
+
 	$maxNumber = MAXIMUM_UNSIGNED_TINYINT_NUMBER;
 	$minNumber = 1;
 	if($capacityNumber < $minNumber OR $capacityNumber > $maxNumber){
+		return TRUE;
+	}
+	return FALSE;
+}
+
+	// Extra Order Amount
+// Returns TRUE on invalid, FALSE on valid
+function isNumberInvalidOrderAmount($creditsAmount){
+	// Has to be between 0 and 255
+	// In practice an extra order always needs at least 1 amount.
+
+	$maxNumber = MAXIMUM_UNSIGNED_TINYINT_NUMBER;
+	$minNumber = 1;
+	if($creditsAmount < $minNumber OR $creditsAmount > $maxNumber){
 		return TRUE;
 	}
 	return FALSE;
@@ -127,7 +154,7 @@ function isNumberInvalidMeetingRoomCapacity($capacityNumber){
 // Returns TRUE on invalid, FALSE on valid
 function isNumberInvalidCreditsAmount($creditsAmount){
 	// Has to be between 0 and 65535 (minutes)
-	
+
 	$maxNumber = MAXIMUM_UNSIGNED_SMALLINT_NUMBER;	// To-do: change if needed
 	$minNumber = 0;
 	if($creditsAmount < $minNumber OR $creditsAmount > $maxNumber){
@@ -141,7 +168,7 @@ function isNumberInvalidCreditsAmount($creditsAmount){
 function isNumberInvalidCreditsHourPrice($creditsHourPrice){
 	// Is a float so it has a large range
 	// In practice we only need from 0 to some big number
-	
+
 	$maxNumber = MAXIMUM_FLOAT_NUMBER;
 	$minNumber = 0;
 	if($creditsHourPrice < $minNumber OR $creditsHourPrice > $maxNumber){
@@ -155,13 +182,13 @@ function isNumberInvalidCreditsHourPrice($creditsHourPrice){
 function isNumberInvalidCreditsMonthlyPrice($creditsMonthlyPrice){
 	// Is a float so it has a large range
 	// In practice we only need from 0 to some big number
-	
+
 	$maxNumber = MAXIMUM_FLOAT_NUMBER;
 	$minNumber = 0;
 	if($creditsMonthlyPrice < $minNumber OR $creditsMonthlyPrice > $maxNumber){
 		return TRUE;
 	}
-	return FALSE;	
+	return FALSE;
 }
 
 	// Booking Code Digits
@@ -189,8 +216,8 @@ function isNumberInvalidBookingCode($bookingCode){
 		$blockedDigits[] = str_repeat($i,$bookingCodeLength); // Block all equal digits
 		$blockedDigits[] = substr($ascNum,$i,$bookingCodeLength); // Block ascending digits
 		$blockedDigits[] = substr($descNum,$i,$bookingCodeLength); // Block descending digits
-	}	
-							
+	}
+
 	$minNumber = 0;
 	$maxNumber = (10 ** BOOKING_CODE_LENGTH)-1; // Sets the highest number with our set digits (10^digits - 1)
 	if($bookingCode < $minNumber OR $bookingCode > $maxNumber){
@@ -201,7 +228,7 @@ function isNumberInvalidBookingCode($bookingCode){
 			return TRUE;
 		}
 	}
-	return FALSE;	
+	return FALSE;
 }
 
 // Function that (hopefully) removes excess white space, line feeds etc.
