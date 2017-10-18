@@ -358,6 +358,9 @@
 
 				function validateAlternativesAdded(){
 					if(alternativesAdded > 0){
+
+						// First check if all added items have been accepted (checkmark)
+						// TO-DO: 
 						var invalidInputs = 0;
 
 						var inputUserNotes = document.getElementById("UserNotes");
@@ -381,8 +384,37 @@
 							}
 						}
 
+						// Check if the amount per item is valid and appropriate
+						for(var i = 0; i < alternativeID; i++){
+							var inputAmountID = "AmountSelected" + i;
+							var inputAmount = document.getElementById(inputAmountID);
+							if(selectedAmount !== null){
+								var selectedAmount = inputAmount.value;
+								if(selectedAmount == "" || selectedAmount == 0){
+									inputAmount.setAttribute("class", "fillOut");
+									if(invalidInputs == 0){
+										alert("The order amount needs to be filled out and a valid number.");
+									}
+									invalidInputs++;
+								} else if(selectedAmount.match(/^[0-9]*$/) === null){
+									inputAmount.setAttribute("class", "fillOut");
+									if(invalidInputs == 0){
+										alert("The order amount needs to be filled out and a valid number.");
+									}
+									invalidInputs++;
+								} else if(selectedAmount < 0 || selectedAmount > 255){
+									inputAmount.setAttribute("class", "fillOut");
+									if(invalidInputs == 0){
+										alert("The order amount needs to be filled out and a valid number between 1 and 255.");
+									}
+									invalidInputs++;
+								} else {
+									inputAmount.removeAttribute("class", "fillOut");
+								}
+							}
+						}
+
 						if(invalidInputs > 0){
-							//alert("One of your inputs are missing, too long or contain illegal characters.");
 							return false;
 						} else {
 							var submitConfirmed = confirm("Are you sure you want to book this meeting and submit your order?");
