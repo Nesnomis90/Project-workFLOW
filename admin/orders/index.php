@@ -38,10 +38,13 @@ function clearEditOrderSessions(){
 	unset($_SESSION['EditOrderAlternativeExtraAdded']);
 	unset($_SESSION['EditOrderAlternativeExtraCreated']);
 	unset($_SESSION['EditOrderExtraOrderedOnlyNames']);
-	unset($_SESSION['EditOrderDisableEdit']);
-	unset($_SESSION['EditOrderOrderStatus']);
 	unset($_SESSION['resetEditOrder']);
 	unset($_SESSION['refreshEditOrder']);
+}
+
+function clearEditOrderSessionsOutsideReset(){
+	unset($_SESSION['EditOrderDisableEdit']);
+	unset($_SESSION['EditOrderOrderStatus']);
 }
 
 // Function to clear sessions used to remember information during the cancel process.
@@ -519,9 +522,12 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Details') OR
 		// Make sure we don't have any remembered values in memory
 		clearEditOrderSessions();
 
-		$_SESSION['EditOrderDisableEdit'] = $_POST['disableEdit'];
-		$_SESSION['EditOrderOrderStatus'] = $_POST['OrderStatus'];
-
+		if(!isSet($_SESSION['EditOrderDisableEdit'])){
+			$_SESSION['EditOrderDisableEdit'] = $_POST['disableEdit'];
+		}
+		if(!isSet($_SESSION['EditOrderOrderStatus'])){
+			$_SESSION['EditOrderOrderStatus'] = $_POST['OrderStatus'];
+		}
 		// Get information from database again on the selected order
 		try
 		{
@@ -1342,6 +1348,7 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Submit Changes'){
 	}
 
 	clearEditOrderSessions();
+	clearEditOrderSessionsOutsideReset();
 
 	// Load Order list webpage
 	header('Location: .');
@@ -1371,6 +1378,7 @@ if(isSet($refreshOrder) AND $refreshOrder) {
 
 // Remove any unused variables from memory // TO-DO: Change if this ruins having multiple tabs open etc.
 clearEditOrderSessions();
+clearEditOrderSessionsOutsideReset();
 clearCancelSessions();
 
 // Display Order list
