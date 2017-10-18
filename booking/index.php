@@ -32,6 +32,8 @@ function clearAddCreateBookingSessions(){
 	unset($_SESSION['AddCreateBookingAvailableExtra']);
 	unset($_SESSION['AddCreateBookingStepOneCompleted']);
 	unset($_SESSION['AddCreateBookingOrderTooSoon']);
+	unset($_SESSION['AddCreateBookingOrderUserNotes']);
+	unset($_SESSION['AddCreateBookingOrderAddedExtra']);
 
 	unset($_SESSION['refreshAddCreateBookingConfirmed']);
 
@@ -2966,6 +2968,13 @@ if(	((isSet($_POST['action']) AND $_POST['action'] == 'Create Meeting')) OR
 
 	$_SESSION['AddCreateBookingInfoArray'] = $row; // Remember the company/user info we changed based on user choice
 
+	// order information (step 2)
+	if(isSet($_SESSION['AddCreateBookingOrderUserNotes'])){
+		$userNotes = $_SESSION['AddCreateBookingOrderUserNotes'];
+	} else {
+		$userNotes = "";
+	}
+	
 	var_dump($_SESSION); // TO-DO: remove after testing is done
 	// Change form
 	include 'addbooking.html.php';
@@ -3138,7 +3147,7 @@ if ((isSet($_POST['add']) AND $_POST['add'] == "Add Booking") OR
 
 	// We're finished validating the inputs and seeing if it's available now.
 	// Make the user finish step 1 now and give them the option to go to step 2 (make an order)	if logged in
-	if(isSet($_SESSION["loggedIn"]) AND !isSet($_SESSION["DefaultMeetingRoomInfo"]) AND !isSet($_SESSION['AddCreateBookingStepOneCompleted'])){
+	if(isSet($_SESSION["loggedIn"]) AND !isSet($_SESSION["DefaultMeetingRoomInfo"]) AND !isSet($_SESSION['AddCreateBookingStepOneCompleted']) AND !isSet($_SESSION['refreshAddCreateBookingConfirmed'])){
 		$dateTimeNow = getDatetimeNow();
 		$timeDifferenceInDays = convertTwoDateTimesToTimeDifferenceInDays($dateTimeNow, $startDateTime);
 
@@ -3161,9 +3170,66 @@ if ((isSet($_POST['add']) AND $_POST['add'] == "Add Booking") OR
 		}
 		header('Location: ' . $location);
 		exit();
-	} else {
-		// Step 2 has been completed/ignored. Let's create the booking
-		// TO-DO: Get the order information
+	} elseif(isSet($_SESSION["loggedIn"]) AND !isSet($_SESSION["DefaultMeetingRoomInfo"]) AND isSet($_SESSION['AddCreateBookingStepOneCompleted']) AND !isSet($_SESSION['refreshAddCreateBookingConfirmed']) AND isSet($_POST['LastAlternativeID']) AND $_POST['LastAlternativeID'] != ""){
+		// There has been items added to the order
+		$lastID = $_POST['LastAlternativeID']+1;
+		for($i=0; $i < $lastID; $i++){
+			$postExtraIDName = "extraIDAccepted" . $i;
+			$postAmountName = "AmountSelected" . $i;
+			if(isSet($_POST[$postExtraIDName]) AND $_POST[$postExtraIDName] > 0){
+				if(!isSet($addedExtra)){
+					$addedExtra = array();
+				}
+
+				$invalid = FALSE;
+				// input validation (check if amounts submitted are valid)
+				// TO-DO: FIX-ME:
+
+				if($invalid AND !$invalidInput){
+					$invalidInput = TRUE;
+					$_SESSION['AddCreateBookingError'] = "An amount you submitted was not valid.";
+				}
+
+				$addedExtra[] = array(
+										"ExtraID" => $_POST[$postExtraIDName],
+										"ExtraAmount" => $_POST[$postAmountName],
+										"Invalid" => $invalid
+									);
+			}
+		}
+
+		if(isSet($addedExtra) AND sizeOf($addedExtra) > 0){
+			// Validate the order notes
+			$userNotes = $_POST["UserNotes"];
+			$trimmedUserNotes = trimExcessWhitespaceButLeaveLinefeed($userNotes);
+
+			if(validateString($trimmedUserNotes) === FALSE AND !$invalidInput){
+				$invalidInput = TRUE;
+				$_SESSION['AddCreateBookingError'] = "The Order Notes you submitted has illegal characters in it.";
+			}
+
+			$invalidOrderUserNotes = isLengthInvalidOrderUserNotes($trimmedUserNotes);
+			if($invalidExtraDescription AND !$invalidInput){
+				$_SESSION['AddCreateBookingError'] = "The Order Notes submitted is too long.";
+				$invalidInput = TRUE;
+			}
+
+			$_SESSION['AddCreateBookingOrderUserNotes'] = $trimmedUserNotes;
+			$_SESSION['AddCreateBookingOrderAddedExtra'] = $addedExtra;
+
+			if($invalidInput){ // This resets the javascript that has been done, unless we use the addedextra
+				$_SESSION['refreshAddCreateBooking'] = TRUE;
+
+				header('Location: ' . $location);
+				exit();
+			}
+			$orderAdded = TRUE;
+		} else {
+			$orderAdded = FALSE;
+		}
+	} elseif(isSet($_SESSION['refreshAddCreateBookingConfirmed'],$_SESSION['AddCreateBookingOrderUserNotes'],$_SESSION['AddCreateBookingOrderAddedExtra'])){
+		$userNotes = $_SESSION['AddCreateBookingOrderUserNotes'];
+		$addedExtra = $_SESSION['AddCreateBookingOrderAddedExtra'];
 	}
 
 	// We know it's available. Let's check if this booking makes the company go over credits.

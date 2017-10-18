@@ -407,6 +407,12 @@
 		<?php include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/topnav.html.php'; ?>
 
 		<fieldset class="left"><legend>Book A New Meeting</legend>
+			<div class="left">
+				<?php if(isSet($_SESSION['AddCreateBookingError'])) : ?>
+					<span><b><?php htmlout($_SESSION['AddCreateBookingError']); ?></b></span>
+					<?php unset($_SESSION['AddCreateBookingError']); ?>
+				<?php endif; ?>
+			</div>
 			<?php if(isSet($_SESSION["loggedIn"]) AND !isSet($_SESSION["DefaultMeetingRoomInfo"])) : ?>
 				<?php if(isSet($_SESSION['AddCreateBookingStepOneCompleted'])) : ?>
 					<fieldset style="display: none;" class="left"><legend>Step 1 - Set Meeting Details:</legend>
@@ -416,13 +422,6 @@
 			<?php else : ?>
 				<fieldset class="left"><legend>Set Meeting Details:</legend>
 			<?php endif; ?>
-
-				<div class="left">
-				<?php if(isSet($_SESSION['AddCreateBookingError'])) : ?>
-					<span><b><?php htmlout($_SESSION['AddCreateBookingError']); ?></b></span>
-					<?php unset($_SESSION['AddCreateBookingError']); ?>
-				<?php endif; ?>
-				</div>
 
 				<form action="" method="post">
 					<div class="left">
@@ -585,8 +584,8 @@
 									<th colspan="6"></th>
 								</tr>						
 							</table>
-							<label for="UserNotes" style="display: block; float: none;">Your Order Notes: </label>
-							<textarea style="diplay: block; width: 100%;" rows="4" id="UserNotes" name="UserNotes" placeholder="Enter Any Additional Information"></textarea>
+							<label for="UserNotes">Your Order Notes: </label>
+							<textarea style="width: 100%;" rows="4" id="UserNotes" name="UserNotes" placeholder="Enter Any Additional Information" value="<?php htmlout($userNotes); ?>"></textarea>
 						</div>
 						<div id="DisplayTotalPricePlacement" class="left">
 						</div>

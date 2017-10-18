@@ -83,6 +83,19 @@ function isLengthInvalidExtraDescription($description){
 	return FALSE;
 }
 
+	// Order User Notes
+// Returns TRUE on invalid, FALSE on valid
+function isLengthInvalidOrderUserNotes($description){
+	// Has to be less than 65,535 bytes (MySQL - TEXT) (too much anyway)
+
+	$descriptionLength = strlen(utf8_decode($description));
+	$maxLength = 500; // TO-DO: Adjust max length if needed.
+	if($descriptionLength > $maxLength){
+		return TRUE;
+	}
+	return FALSE;
+}
+
 	// Meeting Room Descriptions
 // Returns TRUE on invalid, FALSE on valid
 function isLengthInvalidMeetingRoomDescription($meetingRoomDescription){
