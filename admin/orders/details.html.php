@@ -480,7 +480,7 @@
 					<th>At Date</th>
 				</tr>
 				<?php if(isSet($extraOrdered) AND sizeOf($extraOrdered) > 0) : ?>
-					<?php foreach($extraOrdered as $row): ?>
+					<?php foreach($extraOrdered AS $row): ?>
 						<tr>
 							<td><?php htmlout($row['ExtraName']); ?></td>
 							<td style="white-space: pre-wrap;"><?php htmlout($row['ExtraDescription']); ?></td>
