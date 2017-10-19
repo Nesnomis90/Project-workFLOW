@@ -5341,7 +5341,7 @@ if ((isSet($_POST['order']) AND $_POST['order'] == 'Cancel' AND isSet($_SESSION[
 		exit();
 	}
 
-	// Only cancel the order if booking is currently active AND within the allowed cancelled timeframe set (e.g. 7 days)
+	// Only cancel the order if booking is currently active
 	if(isSet($bookingStatus) AND $bookingStatus == 'Active'){
 
 		// Load new template to let admin add a reason for cancelling the meeting
@@ -5359,85 +5359,23 @@ if ((isSet($_POST['order']) AND $_POST['order'] == 'Cancel' AND isSet($_SESSION[
 			$cancelMessage = NULL;
 		}
 
-		// Update cancellation date for selected booked meeting in database
+		// Update cancellation date for selected order in database
 		try
 		{
-			// Get info if the booking is ending early and if it had an order connected
-			$sql = "SELECT 	COUNT(*)	AS HitCount,
-							`orderID`	AS OrderID
-					FROM	`booking`
-					WHERE	`bookingID` = :bookingID
-					AND		`actualEndDateTime` IS NULL
-					AND		`dateTimeCancelled` IS NULL
-					AND		CURRENT_TIMESTAMP
-					BETWEEN	`startDateTime`
-					AND		`endDateTime`
-					LIMIT 	1";
-			$s = $pdo->prepare($sql);
-			$s->bindValue(':bookingID', $bookingID);
-			$s->execute();
-
-			$row = $s->fetchAll(PDO::FETCH_ASSOC);
-			if($row['HitCount'] > 0){
-				$endedEarly = TRUE;
-				if($row['OrderID'] != NULL){
-					$orderID = $row['OrderID'];
-				}
-			} else {
-				$endedEarly = FALSE;
-			}
-
 			$pdo->beginTransaction();
 
-			if($endedEarly){
-				// Meeting got cancelled after the meeting started.
-				$sql = 'UPDATE 	`booking` 
-						SET 	`dateTimeCancelled` = CURRENT_TIMESTAMP,
-								`actualEndDateTime` = CURRENT_TIMESTAMP,
-								`cancellationCode` = NULL,
-								`cancelMessage` = :cancelMessage,
-								`cancelledByUserID` = :cancelledByUserID
-						WHERE 	`bookingID` = :bookingID
-						AND		`dateTimeCancelled` IS NULL
-						AND		`actualEndDateTime` IS NULL';
-				$s = $pdo->prepare($sql);
-				$s->bindValue(':bookingID', $bookingID);
-				$s->bindValue(':cancelMessage', $cancelMessage);
-				$s->bindValue(':cancelledByUserID', $SelectedUserID);
-				$s->execute();
-
-				if(isSet($orderID)){
-					$sql = "UPDATE	`orders`
-							SET		`orderFinalPrice` = (
-															SELECT		SUM(IFNULL(eo.`alternativePrice`, ex.`price`) * eo.`amount`) AS FullPrice
-															FROM		`extra` ex
-															INNER JOIN 	`extraorders` eo
-															ON 			ex.`extraID` = eo.`extraID`
-															WHERE		eo.`orderID` = :OrderID
-														)
-							WHERE	`orderID` = :OrderID
-							AND		`orderFinalPrice` IS NULL";
-					$s = $pdo->prepare($sql);
-					$s->bindValue(':OrderID', $orderID);
-					$s->execute();
-				}
-
-			} else {
-				// Meeting got cancelled before the meeting started.
-				$sql = 'UPDATE 	`booking` 
-						SET 	`dateTimeCancelled` = CURRENT_TIMESTAMP,
-								`cancellationCode` = NULL,
-								`cancelMessage` = :cancelMessage,
-								`cancelledByUserID` = :cancelledByUserID
-						WHERE 	`bookingID` = :bookingID
-						AND		`dateTimeCancelled` IS NULL
-						AND		`actualEndDateTime` IS NULL';
-				$s = $pdo->prepare($sql);
-				$s->bindValue(':bookingID', $bookingID);
-				$s->bindValue(':cancelMessage', $cancelMessage);
-				$s->bindValue(':cancelledByUserID', $SelectedUserID);
-				$s->execute();
-			}
+			$sql = 'UPDATE 	`orders` 
+					SET 	`dateTimeCancelled` = CURRENT_TIMESTAMP,
+							`cancelMessage` = :cancelMessage,
+							`cancelledByUserID` = :cancelledByUserID
+					WHERE 	`orderID` = :orderID
+					AND		`dateTimeCancelled` IS NULL
+					AND		`actualEndDateTime` IS NULL';
+			$s = $pdo->prepare($sql);
+			$s->bindValue(':bookingID', $bookingOrderID);
+			$s->bindValue(':cancelMessage', $cancelMessage);
+			$s->bindValue(':cancelledByUserID', $SelectedUserID);
+			$s->execute();
 		}
 		catch (PDOException $e)
 		{
@@ -5448,7 +5386,7 @@ if ((isSet($_POST['order']) AND $_POST['order'] == 'Cancel' AND isSet($_SESSION[
 			exit();
 		}
 
-			// Add a log event that a booking was cancelled
+			// Add a log event that a order was cancelled
 		try
 		{
 			if($cancelledByAdmin){
@@ -5465,7 +5403,7 @@ if ((isSet($_POST['order']) AND $_POST['order'] == 'Cancel' AND isSet($_SESSION[
 			// Save a description with information about the booking that was cancelled
 			$logEventDescription = "N/A";
 			if(isSet($bookingCreatorUserInfo) AND isSet($bookingMeetingInfo)){
-				$logEventDescription = 	"A booking with these details was cancelled:" . 
+				$logEventDescription = 	"An order for the booking with these details was cancelled:" . 
 										"\nBooked for User: " . $bookingCreatorUserInfo . 
 										"\nMeeting Information: " . $bookingMeetingInfo . 
 										"\nIt was cancelled by: " . $nameOfUserWhoCancelled;
@@ -5481,7 +5419,7 @@ if ((isSet($_POST['order']) AND $_POST['order'] == 'Cancel' AND isSet($_SESSION[
 					SET			`actionID` = 	(
 													SELECT 	`actionID` 
 													FROM 	`logaction`
-													WHERE 	`name` = 'Booking Cancelled'
+													WHERE 	`name` = 'Order Cancelled'
 												),
 								`description` = :description";
 			$s = $pdo->prepare($sql);
