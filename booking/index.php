@@ -3468,9 +3468,6 @@ if ((isSet($_POST['add']) AND $_POST['add'] == "Add Booking") OR
 				$s->execute();
 			}
 
-			// Add log that order was created
-			// TO-DO:
-			
 			$sql = 'INSERT INTO `booking` 
 					SET			`meetingRoomID` = :meetingRoomID,
 								`userID` = :userID,
@@ -3525,10 +3522,9 @@ if ((isSet($_POST['add']) AND $_POST['add'] == "Add Booking") OR
 
 	$_SESSION['normalBookingFeedback'] = "Successfully created the booking.";
 
-	// Add a log event that a booking has been created
+	// Add a log event that a booking (and order) has been created
 	try
 	{
-
 		unset($_SESSION['AddCreateBookingMeetingRoomsArray']);
 
 		$meetinginfo = $MeetingRoomName . ' for the timeslot: ' . 
@@ -3549,7 +3545,7 @@ if ((isSet($_POST['add']) AND $_POST['add'] == "Add Booking") OR
 			$nameOfUserWhoBooked = $info["UserLastname"] . ', ' . $info["UserFirstname"];
 		}
 
-		// Save a description with information about the booking that was created	
+		// Save a description with information about the booking that was created
 		$logEventDescription = 	"A booking was created with these details:" .
 								"\nMeeting Room: " . $MeetingRoomName . 
 								"\nStart Time: " . $displayValidatedStartDate .
@@ -3571,10 +3567,32 @@ if ((isSet($_POST['add']) AND $_POST['add'] == "Add Booking") OR
 		$s = $pdo->prepare($sql);
 		$s->bindValue(':description', $logEventDescription);
 		$s->execute();
+
+		if($orderAdded){
+			// Save a description with information about the booking that was created
+			$logEventDescription = 	"An order was created for the meeting:" .
+									"\nMeeting Room: " . $MeetingRoomName . 
+									"\nStart Time: " . $displayValidatedStartDate .
+									"\nEnd Time: " . $displayValidatedEndDate .
+									"\nBooked for User: " . $userinfo . 
+									"\nBooked for Company: " . $companyName . 
+									"\nIt was created by: " . $nameOfUserWhoBooked;
+
+			$sql = "INSERT INTO `logevent` 
+					SET			`actionID` = 	(
+													SELECT 	`actionID` 
+													FROM 	`logaction`
+													WHERE 	`name` = 'Order Created'
+												),
+								`description` = :description";
+			$s = $pdo->prepare($sql);
+			$s->bindValue(':description', $logEventDescription);
+			$s->execute();
+		}
 	}
 	catch(PDOException $e)
 	{
-		$error = 'Error adding log event to database: ' . $e->getMessage();
+		$error = 'Error adding log events to database: ' . $e->getMessage();
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
 		$pdo = null;
 		exit();
@@ -3757,7 +3775,7 @@ if ((isSet($_POST['add']) AND $_POST['add'] == "Add Booking") OR
 
 	// Booking a new meeting is done. Reset all connected sessions.
 	clearAddCreateBookingSessions();
-	
+
 	// Load booking history list webpage with new booking
 	header('Location: .');
 	exit();

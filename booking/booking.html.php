@@ -73,14 +73,14 @@
 					<th>For Company</th>
 					<th>Description</th>
 					<th>Created At</th>
-					<th>Edit</th>			
+					<th>Edit</th>
 					<th>Cancel</th>
 					<th>Edit</th>
 					<th>Cancel</th>
 				</tr>
-			<?php if(isSet($bookingsActiveToday)) :?>					
+			<?php if(isSet($bookingsActiveToday)) : ?>
 				<?php foreach ($bookingsActiveToday AS $booking): ?>
-					<form action="" method="post">				
+					<form action="" method="post">
 						<?php if(isSet($_SESSION['LoggedInUserID']) AND $_SESSION['LoggedInUserID'] == $booking['BookedUserID']) : ?>					
 							<tr class="LoggedInUserBooking">
 						<?php else : ?>
@@ -100,8 +100,10 @@
 							<td><?php htmlout($booking['BookedForCompany']); ?></td>
 							<td><?php htmlout($booking['BookingDescription']); ?></td>
 							<td><?php htmlout($booking['BookingWasCreatedOn']); ?></td>
-							<td><input type="submit" name="action" value="Edit"></td>							
+							<td><input type="submit" name="action" value="Edit"></td>
 							<td><input type="submit" name="action" value="Cancel"></td>
+							<td><input type="submit" name="order" value="Edit"></td>
+							<td><input type="submit" name="order" value="Cancel"></td>
 							<input type="hidden" name="id" value="<?php htmlout($booking['id']); ?>">
 							<input type="hidden" name="UserInfo" id="UserInfo"
 							value="<?php htmlout($booking['UserInfo']); ?>">
@@ -116,7 +118,7 @@
 						</tr>
 					</form>
 				<?php endforeach; ?>
-			<?php endif; ?>				
+			<?php endif; ?>
 				</table>
 				<table>
 					<caption>Future Bookings</caption>
@@ -157,6 +159,8 @@
 								<td><?php htmlout($booking['BookingWasCreatedOn']); ?></td>
 								<td><input type="submit" name="action" value="Edit"></td>
 								<td><input type="submit" name="action" value="Cancel"></td>
+								<td><input type="submit" name="order" value="Edit"></td>
+								<td><input type="submit" name="order" value="Cancel"></td>
 								<input type="hidden" name="id" value="<?php htmlout($booking['id']); ?>">
 								<input type="hidden" name="UserInfo" id="UserInfo"
 								value="<?php htmlout($booking['UserInfo']); ?>">
