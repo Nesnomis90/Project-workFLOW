@@ -351,6 +351,74 @@ function emailUserOnCancelledBooking(){
 	}
 }
 
+// This is used when an order is cancelled by someone else than the booking owner
+// e.g. company owner or an admin
+function emailUserOnCancelledOrder(){
+
+	if(isSet($_SESSION['cancelOrderOriginalValues'])){
+		if($_SESSION['cancelOrderOriginalValues']['SendEmail'] == 1){
+			$bookingCreatorUserEmail = $_SESSION['cancelOrderOriginalValues']['UserEmail'];
+			$bookingCreatorMeetingInfo = $_SESSION['cancelOrderOriginalValues']['MeetingInfo'];
+			$cancelledBy = $_SESSION['cancelOrderOriginalValues']['CancelledBy'];
+
+			if(isSet($_SESSION['cancelOrderOriginalValues']['ReasonForCancelling']) AND !empty($_SESSION['cancelOrderOriginalValues']['ReasonForCancelling'])){
+				$reasonForCancelling = $_SESSION['cancelOrderOriginalValues']['ReasonForCancelling'];
+			} else {
+				$reasonForCancelling = "No reason given.";
+			}
+
+			$emailSubject = "Your meeting order has been cancelled!";
+
+			$emailMessage = 
+			"An order for your booked meeting has been cancelled by " . $cancelledBy . "!\n" .
+			"The meeting was booked for the room " . $bookingCreatorMeetingInfo .
+			"\nReason given for cancelling the order: " . $reasonForCancelling;
+
+			$email = $bookingCreatorUserEmail;
+
+			$mailResult = sendEmail($email, $emailSubject, $emailMessage);
+
+			if(!$mailResult){
+				$_SESSION['normalBookingFeedback'] .= "\n\n[WARNING] System failed to send Email to user.";
+
+				// Email failed to be prepared. Store it in database to try again later
+				try
+				{
+					include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+
+					$pdo = connect_to_db();
+					$sql = 'INSERT INTO	`email`
+							SET			`subject` = :subject,
+										`message` = :message,
+										`receivers` = :receivers,
+										`dateTimeRemove` = DATE_ADD(CURRENT_TIMESTAMP, INTERVAL 7 DAY);';
+					$s = $pdo->prepare($sql);
+					$s->bindValue(':subject', $emailSubject);
+					$s->bindValue(':message', $emailMessage);
+					$s->bindValue(':receivers', $email);
+					$s->execute();
+
+					//close connection
+					$pdo = null;
+				}
+				catch (PDOException $e)
+				{
+					$error = 'Error storing email: ' . $e->getMessage();
+					include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+					$pdo = null;
+					exit();
+				}
+
+				$_SESSION['normalBookingFeedback'] .= "\nEmail to be sent has been stored and will be attempted to be sent again later.";
+			}
+
+			$_SESSION['normalBookingFeedback'] .= "\nThis is the email msg we're sending out:\n$emailMessage\nSent to email: $email."; // TO-DO: Remove after testing
+		}
+	} else {
+		$_SESSION['BookingUserFeedback'] .= "\nFailed to send an email to the user that the booking got cancelled.";
+	}
+}
+
 // Function to validate user inputs
 function validateUserInputs($FeedbackSessionToUse, $editing){
 	// Get user inputs
@@ -629,10 +697,16 @@ if (isSet($_POST['action']) and $_POST['action'] == 'Refresh'){
 
 // If admin does not want to cancel the meeting anyway.
 if(isSet($_POST['action']) AND $_POST['action'] == "Abort Cancel"){
-	
+
 	clearChangeBookingSessions();
 
-	$_SESSION['normalBookingFeedback'] = "You did not cancel the meeting.";
+	if(isSet($_SESSION['cancelOrderOriginalValues'])){
+		$_SESSION['normalBookingFeedback'] = "You did not cancel the order.";
+	}
+
+	if(isSet($_SESSION['cancelBookingOriginalValues'])){
+		$_SESSION['normalBookingFeedback'] = "You did not cancel the meeting.";
+	}
 
 	if(isSet($_GET['meetingroom'])){
 		$TheMeetingRoomID = $_GET['meetingroom'];
@@ -670,15 +744,22 @@ if(isSet($_POST['action']) AND $_POST['action'] == "Confirm Reason"){
 	}
 
 	if($invalidInput){
-		
+
 		var_dump($_SESSION); // TO-DO: Remove when done testing
 
 		include_once 'cancelmessage.html.php';
 		exit();
 	}
 
-	$_SESSION['cancelBookingOriginalValues']['ReasonForCancelling'] = $cancelMessage;
-	$_SESSION['refreshCancelBooking'] = TRUE;
+	if(isSet($_SESSION['cancelOrderOriginalValues'])){
+		$_SESSION['cancelOrderOriginalValues']['ReasonForCancelling'] = $cancelMessage;
+		$_SESSION['refreshCancelOrder'] = TRUE;
+	}
+
+	if(isSet($_SESSION['cancelBookingOriginalValues'])){
+		$_SESSION['cancelBookingOriginalValues']['ReasonForCancelling'] = $cancelMessage;
+		$_SESSION['refreshCancelBooking'] = TRUE;
+	}
 
 	if(isSet($_GET['meetingroom'])){
 		$meetingRoomID = $_GET['meetingroom'];
@@ -5447,15 +5528,18 @@ if ((isSet($_POST['order']) AND $_POST['order'] == 'Cancel' AND isSet($_SESSION[
 			exit();
 		}
 		if($cancelledByAdmin OR $cancelledByOwner){
-			// only send email to inform the user that the booking was cancelled, if the user didn't cancel their own booking.
-			emailUserOnCancelledBooking();
+			// only send email to inform the user that the order was cancelled, if the user didn't cancel their own order.
+			emailUserOnCancelledOrder();
+		} else {
+			// Inform admin(s) that the order was cancelled by the booking creator
+ 			// TO-DO:
 		}
+
+		$_SESSION['normalBookingFeedback'] = "Successfully cancelled the order.";
 	} else {
 		// Booking was not active, so no need to cancel it.
 		$_SESSION['normalBookingFeedback'] = "Meeting has already ended or is too close to starting. Did not cancel the order.";
 	}
-
-	$_SESSION['normalBookingFeedback'] = "Successfully cancelled the order.";
 
 	clearChangeBookingSessions();
 
