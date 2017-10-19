@@ -692,9 +692,10 @@ if(isSet($_POST['action']) AND $_POST['action'] == "Confirm Reason"){
 }
 
 // If user wants to cancel a scheduled booked meeting
-if (	(isSet($_POST['action']) and $_POST['action'] == 'Cancel') OR 
-		(isSet($_SESSION['refreshCancelBooking']) AND $_SESSION['refreshCancelBooking']))
-{
+if ((isSet($_POST['action']) and $_POST['action'] == 'Cancel') OR 
+	(isSet($_SESSION['refreshCancelBooking']) AND $_SESSION['refreshCancelBooking'])
+	){
+
 	if(isSet($_SESSION['refreshCancelBooking']) AND $_SESSION['refreshCancelBooking']){
 		unset($_SESSION['refreshCancelBooking']);
 	} else {
@@ -5147,19 +5148,394 @@ if(isSet($_GET['cancellationcode']) OR isSet($_SESSION['refreshWithCancellationC
 
 // CANCELLATION CODE SNIPPET // END //
 
+// ORDER CODE SNIPPET // START //
+
+/*
+// If user wants to cancel am scheduled order (only accesed by being online)
+if ((isSet($_POST['order']) AND $_POST['order'] == 'Cancel' AND isSet($_SESSION['loggedIn'])) OR 
+	(isSet($_SESSION['refreshCancelOrder']) AND $_SESSION['refreshCancelOrder'])
+	){
+
+	if(isSet($_SESSION['refreshCancelOrder']) AND $_SESSION['refreshCancelOrder']){
+		unset($_SESSION['refreshCancelOrder']);
+	} else {
+		$_SESSION['cancelOrderOriginalValues']['BookingID'] = $_POST['id'];
+		$_SESSION['cancelOrderOriginalValues']['BookingStatus'] = $_POST['BookingStatus'];
+		$_SESSION['cancelOrderOriginalValues']['MeetingInfo'] = $_POST['MeetingInfo'];
+
+		if(isSet($_POST['sendEmail']) AND !empty($_POST['sendEmail'])){
+			$_SESSION['cancelOrderOriginalValues']['SendEmail'] = $_POST['sendEmail'];
+		}
+		if(isSet($_POST['Email']) AND !empty($_POST['Email'])){
+			$_SESSION['cancelOrderOriginalValues']['UserEmail'] = $_POST['Email'];
+		}
+	}
+
+	$bookingID = $_SESSION['cancelOrderOriginalValues']['BookingID'];
+	$bookingStatus = $_SESSION['cancelOrderOriginalValues']['BookingStatus'];
+	$bookingMeetingInfo = $_SESSION['cancelOrderOriginalValues']['MeetingInfo'];
+
+	$SelectedUserID = checkIfLocalDeviceOrLoggedIn();
+
+	// Check if selected user ID is creator of booking, owner of the company it's booked for or an admin
+	$continueCancel = FALSE;
+	$cancelledByOwner = FALSE;
+	$cancelledByAdmin = FALSE;
+		// Check if the user is the creator of the booking	
+	try
+	{
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+
+		$pdo = connect_to_db();
+		$sql = 'SELECT 		COUNT(*)			AS HitCount,
+							o.`orderID`			AS OrderID,
+							b.`userID`			AS UserID,
+							b.`startDateTime`	AS StartDateTime,
+							u.`email`			AS UserEmail,
+							u.`firstName`		AS FirstName,
+							u.`lastName`		AS LastName,
+							u.`sendEmail`		AS SendEmail
+				FROM		`booking` b
+				INNER JOIN 	`user` u
+				ON 			b.`userID` = u.`userID`
+				INNER JOIN 	`orders` o
+				ON 			o.`orderID` = b.`orderID`
+				WHERE 		b.`bookingID` = :BookingID
+				AND			b.`orderID` IS NOT NULL
+				LIMIT 		1';
+		$s = $pdo->prepare($sql);
+		$s->bindValue(':BookingID', $bookingID);
+		$s->execute();
+		$row = $s->fetch(PDO::FETCH_ASSOC);
+
+		if(isSet($row) AND $row['HitCount'] > 0){
+
+			$orderStartDateTime = $row['StartDateTime'];
+			$dateTimeNow = getDatetimeNow();
+			$daysUntilMeetingStarts = convertTwoDateTimesToTimeDifferenceInDays($dateTimeNow, $orderStartDateTime)
+
+			if($daysUntilMeetingStarts < MINIMUM_DAYS_UNTIL_MEETING_STARTS_WHERE_YOU_CAN_STILL_PLACE_AN_ORDER){
+
+				$_SESSION['normalBookingFeedback'] = "The booked meeting is within the time period where you can no longer cancel the order.";
+
+				clearChangeBookingSessions();
+
+				// Load booked meetings list webpage with updated database
+				if(isSet($_GET['meetingroom'])){
+					$meetingRoomID = $_GET['meetingroom'];
+					$location = "http://$_SERVER[HTTP_HOST]/booking/?meetingroom=" . $meetingRoomID;
+				} else {
+					$location = "http://$_SERVER[HTTP_HOST]/booking/";
+				}
+				header('Location: ' . $location);
+				exit();	
+			}
+
+			$bookingCreatorUserID = $row['UserID'];
+			$bookingCreatorUserEmail = $row['UserEmail'];
+			$bookingCreatorUserInfo = $row['LastName'] . ", " . $row['FirstName'] . " - " . $row['UserEmail'];
+			$bookingOrderID = $row['OrderID'];
+			$_SESSION['cancelOrderOriginalValues']['SendEmail'] = $row['SendEmail'];
+			$_SESSION['cancelOrderOriginalValues']['UserEmail'] = $bookingCreatorUserEmail;
+			if(isSet($bookingCreatorUserID) AND !empty($bookingCreatorUserID) AND $bookingCreatorUserID == $SelectedUserID){
+				$continueCancel = TRUE;
+			}
+		}
+	}
+	catch (PDOException $e)
+	{
+		$pdo = null;
+		$error = 'Error retrieving original booking and order information: ' . $e->getMessage();
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+		exit();
+	}
+
+		// Check if the user is an owner of the company the booking is booked for
+	if(!$continueCancel) {
+		try
+		{
+			$sql = 'SELECT 		COUNT(*)		AS HitCount,
+								b.`userID`		AS UserID,
+								u.`email`		AS UserEmail,
+								u.`firstName`	AS FirstName,
+								u.`lastName`	AS LastName
+					FROM		`booking` b
+					INNER JOIN	`employee` e
+					ON			e.`CompanyID` = b.`CompanyID`
+					INNER JOIN 	`user` u
+					ON 			e.`userID` = u.`userID`
+					INNER JOIN	`companyposition` cp
+					ON			cp.`PositionID` = e.`PositionID`
+					WHERE 		b.`bookingID` = :BookingID
+					AND			e.`UserID` = :UserID
+					AND			cp.`name` = "Owner"
+					LIMIT 		1';
+			$s = $pdo->prepare($sql);
+			$s->bindValue(':BookingID', $bookingID);
+			$s->bindValue(':UserID', $SelectedUserID);
+			$s->execute();
+			$row = $s->fetch(PDO::FETCH_ASSOC);
+
+			if(isSet($row) AND $row['HitCount'] > 0){
+				$cancelledByUserName = $row['LastName'] . ", " . $row['FirstName'];
+				$cancelledByUserEmail = $row['UserEmail'];
+				$cancelledByUserInfo = $row['LastName'] . ", " . $row['FirstName'] . " - " . $row['UserEmail'];
+				$continueCancel = TRUE;
+				$cancelledByOwner = TRUE;
+			}
+		}
+		catch (PDOException $e)
+		{
+			$pdo = null;
+			$error = 'Error validating cancelling access: ' . $e->getMessage();
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+			exit();
+		}
+	}
+
+		// Check if the user is an admin
+		// Only needed if the the user isn't the creator of the booking or an owner
+	if(!$continueCancel) {
+		try
+		{
+			$sql = 'SELECT 		COUNT(*) 		AS HitCount,
+								u.`userID`		AS UserID,
+								u.`firstName`	AS FirstName,
+								u.`lastName`	AS LastName
+					FROM		`user` u
+					INNER JOIN	`accesslevel` a
+					ON 			u.`AccessID` = a.`AccessID`
+					WHERE 		u.`userID` = :userID
+					AND			a.`AccessName` = "Admin"
+					LIMIT		1';
+
+			$s = $pdo->prepare($sql);
+			$s->bindValue(':userID', $SelectedUserID);
+			$s->execute();
+			$row = $s->fetch(PDO::FETCH_ASSOC);
+			if(isSet($row) AND $row['HitCount'] > 0){
+				$cancelledByAdminName = $row['LastName'] . ", " . $row['FirstName'];
+				$continueCancel = TRUE;
+				$cancelledByAdmin = TRUE;
+			}
+		}
+		catch (PDOException $e)
+		{
+			$pdo = null;
+			$error = 'Error validating cancelling access: ' . $e->getMessage();
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+			exit();
+		}
+	}
+
+	if($continueCancel === FALSE){
+		$pdo = null;
+		$_SESSION['normalBookingFeedback'] = "You do not have the access to cancel the order for this booked meeting.";
+		if(isSet($_GET['meetingroom'])){
+			$meetingRoomID = $_GET['meetingroom'];
+			$location = "http://$_SERVER[HTTP_HOST]/booking/?meetingroom=" . $meetingRoomID;
+		} else {
+			$location = "http://$_SERVER[HTTP_HOST]/booking/";
+		}
+		header('Location: ' . $location);
+		exit();
+	}
+
+	// Only cancel the order if booking is currently active AND within the allowed cancelled timeframe set (e.g. 7 days)
+	if(isSet($bookingStatus) AND $bookingStatus == 'Active'){
+
+		// Load new template to let admin add a reason for cancelling the meeting
+		if(isSet($cancelledByAdmin) AND $cancelledByAdmin AND !isSet($_SESSION['cancelOrderOriginalValues']['ReasonForCancelling'])){
+			var_dump($_SESSION); // TO-DO: Remove before uploading
+			include_once 'cancelmessage.html.php';
+			exit();
+		} elseif(!isSet($cancelledByAdmin)){
+			unset($_SESSION['cancelOrderOriginalValues']['ReasonForCancelling']);
+		}
+
+		if(isSet($_SESSION['cancelOrderOriginalValues']['ReasonForCancelling']) AND !empty($_SESSION['cancelOrderOriginalValues']['ReasonForCancelling'])){
+			$cancelMessage = $_SESSION['cancelOrderOriginalValues']['ReasonForCancelling'];
+		} else {
+			$cancelMessage = NULL;
+		}
+
+		// Update cancellation date for selected booked meeting in database
+		try
+		{
+			// Get info if the booking is ending early and if it had an order connected
+			$sql = "SELECT 	COUNT(*)	AS HitCount,
+							`orderID`	AS OrderID
+					FROM	`booking`
+					WHERE	`bookingID` = :bookingID
+					AND		`actualEndDateTime` IS NULL
+					AND		`dateTimeCancelled` IS NULL
+					AND		CURRENT_TIMESTAMP
+					BETWEEN	`startDateTime`
+					AND		`endDateTime`
+					LIMIT 	1";
+			$s = $pdo->prepare($sql);
+			$s->bindValue(':bookingID', $bookingID);
+			$s->execute();
+
+			$row = $s->fetchAll(PDO::FETCH_ASSOC);
+			if($row['HitCount'] > 0){
+				$endedEarly = TRUE;
+				if($row['OrderID'] != NULL){
+					$orderID = $row['OrderID'];
+				}
+			} else {
+				$endedEarly = FALSE;
+			}
+
+			$pdo->beginTransaction();
+
+			if($endedEarly){
+				// Meeting got cancelled after the meeting started.
+				$sql = 'UPDATE 	`booking` 
+						SET 	`dateTimeCancelled` = CURRENT_TIMESTAMP,
+								`actualEndDateTime` = CURRENT_TIMESTAMP,
+								`cancellationCode` = NULL,
+								`cancelMessage` = :cancelMessage,
+								`cancelledByUserID` = :cancelledByUserID
+						WHERE 	`bookingID` = :bookingID
+						AND		`dateTimeCancelled` IS NULL
+						AND		`actualEndDateTime` IS NULL';
+				$s = $pdo->prepare($sql);
+				$s->bindValue(':bookingID', $bookingID);
+				$s->bindValue(':cancelMessage', $cancelMessage);
+				$s->bindValue(':cancelledByUserID', $SelectedUserID);
+				$s->execute();
+
+				if(isSet($orderID)){
+					$sql = "UPDATE	`orders`
+							SET		`orderFinalPrice` = (
+															SELECT		SUM(IFNULL(eo.`alternativePrice`, ex.`price`) * eo.`amount`) AS FullPrice
+															FROM		`extra` ex
+															INNER JOIN 	`extraorders` eo
+															ON 			ex.`extraID` = eo.`extraID`
+															WHERE		eo.`orderID` = :OrderID
+														)
+							WHERE	`orderID` = :OrderID
+							AND		`orderFinalPrice` IS NULL";
+					$s = $pdo->prepare($sql);
+					$s->bindValue(':OrderID', $orderID);
+					$s->execute();
+				}
+
+			} else {
+				// Meeting got cancelled before the meeting started.
+				$sql = 'UPDATE 	`booking` 
+						SET 	`dateTimeCancelled` = CURRENT_TIMESTAMP,
+								`cancellationCode` = NULL,
+								`cancelMessage` = :cancelMessage,
+								`cancelledByUserID` = :cancelledByUserID
+						WHERE 	`bookingID` = :bookingID
+						AND		`dateTimeCancelled` IS NULL
+						AND		`actualEndDateTime` IS NULL';
+				$s = $pdo->prepare($sql);
+				$s->bindValue(':bookingID', $bookingID);
+				$s->bindValue(':cancelMessage', $cancelMessage);
+				$s->bindValue(':cancelledByUserID', $SelectedUserID);
+				$s->execute();
+			}
+		}
+		catch (PDOException $e)
+		{
+			$pdo->rollBack();
+			$pdo = null;
+			$error = 'Error updating selected booked meeting to be cancelled: ' . $e->getMessage();
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+			exit();
+		}
+
+			// Add a log event that a booking was cancelled
+		try
+		{
+			if($cancelledByAdmin){
+				$nameOfUserWhoCancelled = $cancelledByAdminName;
+				$_SESSION['cancelOrderOriginalValues']['CancelledBy'] = "an Admin: " . $cancelledByAdminName;
+			} elseif($cancelledByOwner) {
+				$nameOfUserWhoCancelled = $cancelledByUserName;
+				$_SESSION['cancelOrderOriginalValues']['CancelledBy'] = "a Company Owner: " . $cancelledByUserName;
+			} else {
+				$nameOfUserWhoCancelled = $bookingCreatorUserInfo;
+				unset($_SESSION['cancelOrderOriginalValues']);
+			}
+
+			// Save a description with information about the booking that was cancelled
+			$logEventDescription = "N/A";
+			if(isSet($bookingCreatorUserInfo) AND isSet($bookingMeetingInfo)){
+				$logEventDescription = 	"A booking with these details was cancelled:" . 
+										"\nBooked for User: " . $bookingCreatorUserInfo . 
+										"\nMeeting Information: " . $bookingMeetingInfo . 
+										"\nIt was cancelled by: " . $nameOfUserWhoCancelled;
+			} else {
+				$logEventDescription = 	"A booking was cancelled by: " . $nameOfUserWhoCancelled;
+			}
+
+			if(isSet($cancelledByAdmin) AND $cancelledByAdmin AND isSet($_SESSION['cancelOrderOriginalValues']['ReasonForCancelling'])){
+				$logEventDescription .= "\nReason for cancelling: " . $_SESSION['cancelOrderOriginalValues']['ReasonForCancelling'];
+			}
+
+			$sql = "INSERT INTO `logevent` 
+					SET			`actionID` = 	(
+													SELECT 	`actionID` 
+													FROM 	`logaction`
+													WHERE 	`name` = 'Booking Cancelled'
+												),
+								`description` = :description";
+			$s = $pdo->prepare($sql);
+			$s->bindValue(':description', $logEventDescription);
+			$s->execute();
+
+			$pdo->commit();
+			//Close the connection
+			$pdo = null;
+		}
+		catch(PDOException $e)
+		{
+			$pdo->rollBack();
+			$error = 'Error adding log event to database: ' . $e->getMessage();
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+			$pdo = null;
+			exit();
+		}
+		if($cancelledByAdmin OR $cancelledByOwner){
+			// only send email to inform the user that the booking was cancelled, if the user didn't cancel their own booking.
+			emailUserOnCancelledBooking();
+		}
+	} else {
+		// Booking was not active, so no need to cancel it.
+		$_SESSION['normalBookingFeedback'] = "Meeting has already ended or is too close to starting. Did not cancel the order.";
+	}
+
+	$_SESSION['normalBookingFeedback'] = "Successfully cancelled the order.";
+
+	clearChangeBookingSessions();
+
+	// Load booked meetings list webpage with updated database
+	if(isSet($_GET['meetingroom'])){
+		$meetingRoomID = $_GET['meetingroom'];
+		$location = "http://$_SERVER[HTTP_HOST]/booking/?meetingroom=" . $meetingRoomID;
+	} else {
+		$location = "http://$_SERVER[HTTP_HOST]/booking/";
+	}
+	header('Location: ' . $location);
+	exit();	
+} */
+
+// ORDER CODE SNIPPET // END //
+
 // Remove any unused variables from memory 
 // TO-DO: Change if this ruins having multiple tabs open etc.
 updateAdminBookingCodeGuesses();
 updateBookingCodeGuesses();
 clearAddCreateBookingSessions();
 clearEditCreateBookingSessions();
-unset($_SESSION["cancelBookingOriginalValues"]);
-unset($_SESSION["changeRoomOriginalValues"]);
+clearChangeBookingSessions();
+unset($_SESSION["cancelOrderOriginalValues"]);
 unset($_SESSION["confirmOrigins"]);
 unset($_SESSION["EditCreateBookingError"]);
-unset($_SESSION['changeToMeetingRoomID']);
-unset($_SESSION['changeRoomOriginalBookingValues']);
-unset($_SESSION['continueChangeRoom']);
 
 if(isSet($refreshBookings) AND $refreshBookings) {
 	// TO-DO: Add code that should occur on a refresh
