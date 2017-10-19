@@ -5202,12 +5202,15 @@ if ((isSet($_POST['order']) AND $_POST['order'] == 'Cancel' AND isSet($_SESSION[
 				ON 			o.`orderID` = b.`orderID`
 				WHERE 		b.`bookingID` = :BookingID
 				AND			b.`orderID` IS NOT NULL
+				AND			o.`dateTimeCancelled` IS NULL
 				LIMIT 		1';
 		$s = $pdo->prepare($sql);
 		$s->bindValue(':BookingID', $bookingID);
 		$s->execute();
 		$row = $s->fetch(PDO::FETCH_ASSOC);
 
+		$cancelTheCancel = FALSE;
+		
 		if(isSet($row) AND $row['HitCount'] > 0){
 
 			$orderStartDateTime = $row['StartDateTime'];
@@ -5215,20 +5218,8 @@ if ((isSet($_POST['order']) AND $_POST['order'] == 'Cancel' AND isSet($_SESSION[
 			$daysUntilMeetingStarts = convertTwoDateTimesToTimeDifferenceInDays($dateTimeNow, $orderStartDateTime)
 
 			if($daysUntilMeetingStarts < MINIMUM_DAYS_UNTIL_MEETING_STARTS_WHERE_YOU_CAN_STILL_PLACE_AN_ORDER){
-
+				$cancelTheCancel = TRUE;
 				$_SESSION['normalBookingFeedback'] = "The booked meeting is within the time period where you can no longer cancel the order.";
-
-				clearChangeBookingSessions();
-
-				// Load booked meetings list webpage with updated database
-				if(isSet($_GET['meetingroom'])){
-					$meetingRoomID = $_GET['meetingroom'];
-					$location = "http://$_SERVER[HTTP_HOST]/booking/?meetingroom=" . $meetingRoomID;
-				} else {
-					$location = "http://$_SERVER[HTTP_HOST]/booking/";
-				}
-				header('Location: ' . $location);
-				exit();	
 			}
 
 			$bookingCreatorUserID = $row['UserID'];
@@ -5240,6 +5231,23 @@ if ((isSet($_POST['order']) AND $_POST['order'] == 'Cancel' AND isSet($_SESSION[
 			if(isSet($bookingCreatorUserID) AND !empty($bookingCreatorUserID) AND $bookingCreatorUserID == $SelectedUserID){
 				$continueCancel = TRUE;
 			}
+		} else {
+			$cancelTheCancel = TRUE;
+			$_SESSION['normalBookingFeedback'] = "This meeting has no order connected to it, or it has already been cancelled.";
+		}
+
+		if($cancelTheCancel){
+			clearChangeBookingSessions();
+
+			// Load booked meetings list webpage with updated database
+			if(isSet($_GET['meetingroom'])){
+				$meetingRoomID = $_GET['meetingroom'];
+				$location = "http://$_SERVER[HTTP_HOST]/booking/?meetingroom=" . $meetingRoomID;
+			} else {
+				$location = "http://$_SERVER[HTTP_HOST]/booking/";
+			}
+			header('Location: ' . $location);
+			exit();
 		}
 	}
 	catch (PDOException $e)
