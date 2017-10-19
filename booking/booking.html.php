@@ -62,7 +62,7 @@
 				<tr>
 					<th colspan="8">Booking information</th>
 					<th colspan="2">Alter Booking</th>
-					<th colspan="2">Alter Order</th>
+					<th>Order Details</th>
 				</tr>
 				<tr>
 					<th>Status</th>
@@ -76,7 +76,6 @@
 					<th>Edit</th>
 					<th>Cancel</th>
 					<th>Edit</th>
-					<th>Cancel</th>
 				</tr>
 			<?php if(isSet($bookingsActiveToday)) : ?>
 				<?php foreach ($bookingsActiveToday AS $booking): ?>
@@ -103,7 +102,6 @@
 							<td><input type="submit" name="action" value="Edit"></td>
 							<td><input type="submit" name="action" value="Cancel"></td>
 							<td><input type="submit" name="order" value="Edit"></td>
-							<td><input type="submit" name="order" value="Cancel"></td>
 							<input type="hidden" name="id" value="<?php htmlout($booking['id']); ?>">
 							<input type="hidden" name="UserInfo" id="UserInfo"
 							value="<?php htmlout($booking['UserInfo']); ?>">
@@ -138,7 +136,7 @@
 						<th>Created At</th>
 						<th>Edit</th>
 						<th>Cancel</th>
-						<th>Edit</th>
+						<th>Create/Edit</th>
 						<th>Cancel</th>
 					</tr>
 				<?php if(isSet($bookingsFuture)) :?>
@@ -159,8 +157,18 @@
 								<td><?php htmlout($booking['BookingWasCreatedOn']); ?></td>
 								<td><input type="submit" name="action" value="Edit"></td>
 								<td><input type="submit" name="action" value="Cancel"></td>
-								<td><input type="submit" name="order" value="Edit"></td>
-								<td><input type="submit" name="order" value="Cancel"></td>
+								<?php if($booking['OrderCanBeAltered']) : ?>
+									<?php if(!empty($booking['OrderID'])) : ?>
+										<td><input type="submit" name="order" value="Edit"></td>
+										<td><input type="submit" name="order" value="Cancel"></td>
+									<?php else : ?>
+										<td><input type="submit" name="order" value="Create"></td>
+										<td></td>
+									<?php endif; ?>
+								<?php else : ?>
+									<td></td>
+									<td></td>
+								<?php endif; ?>
 								<input type="hidden" name="id" value="<?php htmlout($booking['id']); ?>">
 								<input type="hidden" name="UserInfo" id="UserInfo"
 								value="<?php htmlout($booking['UserInfo']); ?>">

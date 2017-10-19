@@ -5231,7 +5231,7 @@ if(isSet($_GET['cancellationcode']) OR isSet($_SESSION['refreshWithCancellationC
 
 // ORDER CODE SNIPPET // START //
 
-/*
+
 // If user wants to cancel am scheduled order (only accesed by being online)
 if ((isSet($_POST['order']) AND $_POST['order'] == 'Cancel' AND isSet($_SESSION['loggedIn'])) OR 
 	(isSet($_SESSION['refreshCancelOrder']) AND $_SESSION['refreshCancelOrder'])
@@ -5296,7 +5296,7 @@ if ((isSet($_POST['order']) AND $_POST['order'] == 'Cancel' AND isSet($_SESSION[
 
 			$orderStartDateTime = $row['StartDateTime'];
 			$dateTimeNow = getDatetimeNow();
-			$daysUntilMeetingStarts = convertTwoDateTimesToTimeDifferenceInDays($dateTimeNow, $orderStartDateTime)
+			$daysUntilMeetingStarts = convertTwoDateTimesToTimeDifferenceInDays($dateTimeNow, $orderStartDateTime);
 
 			if($daysUntilMeetingStarts < MINIMUM_DAYS_UNTIL_MEETING_STARTS_WHERE_YOU_CAN_STILL_PLACE_AN_ORDER){
 				$cancelTheCancel = TRUE;
@@ -5458,10 +5458,9 @@ if ((isSet($_POST['order']) AND $_POST['order'] == 'Cancel' AND isSet($_SESSION[
 							`cancelMessage` = :cancelMessage,
 							`cancelledByUserID` = :cancelledByUserID
 					WHERE 	`orderID` = :orderID
-					AND		`dateTimeCancelled` IS NULL
-					AND		`actualEndDateTime` IS NULL';
+					AND		`dateTimeCancelled` IS NULL';
 			$s = $pdo->prepare($sql);
-			$s->bindValue(':bookingID', $bookingOrderID);
+			$s->bindValue(':orderID', $bookingOrderID);
 			$s->bindValue(':cancelMessage', $cancelMessage);
 			$s->bindValue(':cancelledByUserID', $SelectedUserID);
 			$s->execute();
@@ -5470,7 +5469,7 @@ if ((isSet($_POST['order']) AND $_POST['order'] == 'Cancel' AND isSet($_SESSION[
 		{
 			$pdo->rollBack();
 			$pdo = null;
-			$error = 'Error updating selected booked meeting to be cancelled: ' . $e->getMessage();
+			$error = 'Error updating selected booked order to be cancelled: ' . $e->getMessage();
 			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
 			exit();
 		}
@@ -5494,7 +5493,7 @@ if ((isSet($_POST['order']) AND $_POST['order'] == 'Cancel' AND isSet($_SESSION[
 			if(isSet($bookingCreatorUserInfo) AND isSet($bookingMeetingInfo)){
 				$logEventDescription = 	"An order for the booking with these details was cancelled:" . 
 										"\nBooked for User: " . $bookingCreatorUserInfo . 
-										"\nMeeting Information: " . $bookingMeetingInfo . 
+										"\nMeeting Information: The booked room " . $bookingMeetingInfo . 
 										"\nIt was cancelled by: " . $nameOfUserWhoCancelled;
 			} else {
 				$logEventDescription = 	"A booking was cancelled by: " . $nameOfUserWhoCancelled;
@@ -5551,8 +5550,8 @@ if ((isSet($_POST['order']) AND $_POST['order'] == 'Cancel' AND isSet($_SESSION[
 		$location = "http://$_SERVER[HTTP_HOST]/booking/";
 	}
 	header('Location: ' . $location);
-	exit();	
-} */
+	exit();
+}
 
 // ORDER CODE SNIPPET // END //
 
@@ -5580,6 +5579,7 @@ try
 	if(isSet($_GET['meetingroom']) AND $_GET['meetingroom'] != NULL AND $_GET['meetingroom'] != ""){
 		$sql = 'SELECT 		b.`userID`										AS BookedUserID,
 							b.`bookingID`,
+							b.`orderID`,
 							(
 								IF(b.`meetingRoomID` IS NULL, NULL, (SELECT `name` FROM `meetingroom` WHERE `meetingRoomID` = b.`meetingRoomID`))
 							)        										AS BookedRoomName,
@@ -5633,6 +5633,7 @@ try
 	} elseif(!isSet($_GET['meetingroom'])){
 		$sql = 'SELECT 		b.`userID`										AS BookedUserID,
 							b.`bookingID`,
+							b.`orderID`,
 							(
 								IF(b.`meetingRoomID` IS NULL, NULL, (SELECT `name` FROM `meetingroom` WHERE `meetingRoomID` = b.`meetingRoomID`))
 							)        										AS BookedRoomName,
@@ -5665,7 +5666,7 @@ try
 										GROUP BY 	e.`userID`
 									)
 								)
-							)												AS WorksForCompany,		 
+							)												AS WorksForCompany,
 							b.`description`									AS BookingDescription, 
 							b.`dateTimeCreated`								AS BookingWasCreatedOn
 				FROM 		`booking` b
@@ -5693,15 +5694,14 @@ catch (PDOException $e)
 	exit();
 }
 
-foreach ($result as $row)
-{
+foreach($result as $row){
 	$datetimeNow = getDatetimeNow();
 	$startDateTime = $row['StartTime'];	
 	$endDateTime = $row['EndTime'];
 	$dateOnlyNow = convertDatetimeToFormat($datetimeNow, 'Y-m-d H:i:s', 'Y-m-d');
 	$dateOnlyStart = convertDatetimeToFormat($startDateTime,'Y-m-d H:i:s','Y-m-d');
 	$createdDateTime = $row['BookingWasCreatedOn'];	
-	
+
 	// Check if booking is for today or for the future
 	if($datetimeNow < $endDateTime AND $dateOnlyNow != $dateOnlyStart) {
 		$status = 'Active';
@@ -5711,7 +5711,7 @@ foreach ($result as $row)
 		$status = 'Unknown';
 		// This should never occur
 	}
-	
+
 	$roomName = $row['BookedRoomName'];
 	$firstname = $row['firstName'];
 	$lastname = $row['lastName'];
@@ -5727,7 +5727,7 @@ foreach ($result as $row)
 	if(!isSet($email) OR $email == NULL OR $email == ""){
 		$firstname = "N/A - Deleted";
 		$lastname = "N/A - Deleted";
-		$email = "N/A - Deleted";		
+		$email = "N/A - Deleted";
 	}
 	if(!isSet($worksForCompany) OR $worksForCompany == NULL OR $worksForCompany == ""){
 		$worksForCompany = "N/A";
@@ -5735,11 +5735,19 @@ foreach ($result as $row)
 	$displayValidatedStartDate = convertDatetimeToFormat($startDateTime , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
 	$displayValidatedEndDate = convertDatetimeToFormat($endDateTime, 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);	
 	$displayCreatedDateTime = convertDatetimeToFormat($createdDateTime, 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
-	
+
 	$meetinginfo = $roomName . ' for the timeslot: ' . $displayValidatedStartDate . 
 					' to ' . $displayValidatedEndDate;
-	
-	if($status == "Active Today"){				
+
+	$timeDifferenceInDays = convertTwoDateTimesToTimeDifferenceInDays($datetimeNow, $startDateTime);
+
+	if($timeDifferenceInDays < MINIMUM_DAYS_UNTIL_MEETING_STARTS_WHERE_YOU_CAN_STILL_PLACE_AN_ORDER){
+		$orderCanBeAltered = FALSE;
+	} else {
+		$orderCanBeAltered = TRUE;
+	}
+
+	if($status == "Active Today"){
 		$bookingsActiveToday[] = array(	'id' => $row['bookingID'],
 										'BookingStatus' => $status,
 										'BookedRoomName' => $roomName,
@@ -5756,7 +5764,9 @@ foreach ($result as $row)
 										'BookedUserID' => $row['BookedUserID'],
 										'UserInfo' => $userinfo,
 										'MeetingInfo' => $meetinginfo,
-										'sendEmail' => $row['sendEmail']
+										'sendEmail' => $row['sendEmail'],
+										'OrderID' => $row['orderID'],
+										'OrderCanBeAltered' => $orderCanBeAltered
 									);
 	}	elseif($status == "Active") {
 		$bookingsFuture[] = array(	'id' => $row['bookingID'],
@@ -5775,7 +5785,9 @@ foreach ($result as $row)
 									'BookedUserID' => $row['BookedUserID'],									
 									'UserInfo' => $userinfo,
 									'MeetingInfo' => $meetinginfo,
-									'sendEmail' => $row['sendEmail']
+									'sendEmail' => $row['sendEmail'],
+									'OrderID' => $row['orderID'],
+									'OrderCanBeAltered' => $orderCanBeAltered
 								);
 	}
 }
