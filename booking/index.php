@@ -5815,7 +5815,7 @@ foreach($result as $row){
 				$orderCanBeEdited = FALSE;
 				$orderCanBeCancelled = FALSE;
 			} else {
-				$orderCanBeCreated = TRUE;
+				$orderCanBeCreated = FALSE; // Order is already created
 				$orderCanBeCancelled = TRUE;
 				$orderCanBeEdited = TRUE;
 			}
