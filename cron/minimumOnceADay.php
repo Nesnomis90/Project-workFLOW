@@ -558,10 +558,10 @@ function updateBillingDatesForCompanies(){
 					if(isSet($email)){
 						$mailResult = sendEmail($email, $emailSubject, $emailMessage);
 
-						$email = implode(", ", $email);
-
 						if(!$mailResult){
 							// Email failed to be prepared. Store it in database to try again later
+
+							$email = implode(", ", $email);
 
 							$sql = 'INSERT INTO	`email`
 									SET			`subject` = :subject,

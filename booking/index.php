@@ -5526,12 +5526,71 @@ if ((isSet($_POST['order']) AND $_POST['order'] == 'Cancel' AND isSet($_SESSION[
 			$pdo = null;
 			exit();
 		}
+
 		if($cancelledByAdmin OR $cancelledByOwner){
 			// only send email to inform the user that the order was cancelled, if the user didn't cancel their own order.
 			emailUserOnCancelledOrder();
 		} else {
-			// Inform admin(s) that the order was cancelled by the booking creator
- 			// TO-DO:
+			try
+			{
+				// Inform admin(s) that the order was cancelled by the booking creator
+				// TO-DO: Remove staff if not needed/wanted
+				$pdo = connect_to_db();
+
+				$sql = "SELECT 		u.`email`		AS Email
+						FROM 		`user` u
+						INNER JOIN 	`accesslevel` a
+						ON			a.`AccessID` = u.`AccessID`
+						WHERE		(
+													a.`AccessName` = 'Admin'
+										AND			u.`sendAdminEmail` = 1
+									)
+						OR 			a.`AccessName` = 'Staff'";
+				$return = $pdo->query($sql);
+				$result = $return->fetchAll(PDO::FETCH_ASSOC);
+
+				if(isSet($result)){
+					foreach($result AS $Email){
+						$email[] = $Email['Email'];
+					}
+				}
+
+				$emailSubject = "An order was cancelled!";
+
+				$emailMessage = $logEventDescription;
+
+				// Only try to send out email if there are any admins and staff that have set they want them
+				if(isSet($email)){
+					$mailResult = sendEmail($email, $emailSubject, $emailMessage);
+
+					if(!$mailResult){
+						// Email failed to be prepared. Store it in database to try again later
+
+						$email = implode(", ", $email);
+
+						$sql = 'INSERT INTO	`email`
+								SET			`subject` = :subject,
+											`message` = :message,
+											`receivers` = :receivers,
+											`dateTimeRemove` = DATE_ADD(CURRENT_TIMESTAMP, INTERVAL 7 DAY);';
+						$s = $pdo->prepare($sql);
+						$s->bindValue(':subject', $emailSubject);
+						$s->bindValue(':message', $emailMessage);
+						$s->bindValue(':receivers', $email);
+						$s->execute();
+					}
+				}
+
+				$pdo = null;
+			}
+			catch(PDOException $e)
+			{
+				//$pdo->rollBack();
+				$error = 'Error trying to send email to admin/staff about order being cancelled: ' . $e->getMessage();
+				include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+				$pdo = null;
+				exit();
+			}
 		}
 
 		$_SESSION['normalBookingFeedback'] = "Successfully cancelled the order.";

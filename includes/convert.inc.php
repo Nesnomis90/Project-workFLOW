@@ -13,7 +13,7 @@ function convertHoursAndMinutesToMinutes($hoursAndMinutes){
 	} else {
 		$timeHour = substr($hoursAndMinutes,0,strpos($hoursAndMinutes,"h"));
 		$timeMinute = substr($hoursAndMinutes,strpos($hoursAndMinutes,"h")+1, strpos($hoursAndMinutes,"m"));
-		return $timeHour * 60 + $timeMinute;		
+		return $timeHour * 60 + $timeMinute;
 	}
 }
 
@@ -86,7 +86,7 @@ function convertTwoDateTimesToTimeDifferenceInMinutes($startDateTime, $endDateTi
 	$timeDifferenceInMinutes = $timeDifference->i;
 	$timeDifferenceInHours = $timeDifference->h;
 	$timeDifferenceInDays = $timeDifference->d;
-	
+
 	if($timeDifferenceInSeconds > 0){
 		$timeDifferenceInMinutes += 1;
 	}
