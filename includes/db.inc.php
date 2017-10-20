@@ -844,9 +844,12 @@ function create_tables(){
 						  `cancelledByUserID` int(10) unsigned DEFAULT NULL,
 						  `emailSoonSent` tinyint(1) unsigned NOT NULL DEFAULT '0',
 						  `emailCheckSent` tinyint(1) unsigned NOT NULL DEFAULT '0',
+						  `removedFromBookingID` int(10) unsigned DEFAULT NULL,
 						  PRIMARY KEY (`orderID`),
 						  KEY `FK_UserID3_idx` (`orderApprovedByUserID`),
 						  KEY `FK_UserID8_idx` (`cancelledByUserID`),
+						  KEY `FK_BookingID_idx` (`removedFromBookingID`),
+						  CONSTRAINT `FK_BookingID` FOREIGN KEY (`removedFromBookingID`) REFERENCES `booking` (`bookingID`) ON DELETE CASCADE ON UPDATE CASCADE,
 						  CONSTRAINT `FK_UserID3` FOREIGN KEY (`orderApprovedByUserID`) REFERENCES `user` (`userID`) ON DELETE SET NULL ON UPDATE CASCADE,
 						  CONSTRAINT `FK_UserID8` FOREIGN KEY (`cancelledByUserID`) REFERENCES `user` (`userID`) ON DELETE SET NULL ON UPDATE CASCADE
 						) ENGINE=InnoDB DEFAULT CHARSET=utf8");
