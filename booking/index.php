@@ -384,9 +384,6 @@ function emailUserOnCancelledOrder(){
 				// Email failed to be prepared. Store it in database to try again later
 				try
 				{
-					include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
-
-					$pdo = connect_to_db();
 					$sql = 'INSERT INTO	`email`
 							SET			`subject` = :subject,
 										`message` = :message,
@@ -397,12 +394,10 @@ function emailUserOnCancelledOrder(){
 					$s->bindValue(':message', $emailMessage);
 					$s->bindValue(':receivers', $email);
 					$s->execute();
-
-					//close connection
-					$pdo = null;
 				}
 				catch (PDOException $e)
 				{
+					$pdo->rollBack();
 					$error = 'Error storing email: ' . $e->getMessage();
 					include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
 					$pdo = null;
@@ -5291,7 +5286,7 @@ if ((isSet($_POST['order']) AND $_POST['order'] == 'Cancel' AND isSet($_SESSION[
 		$row = $s->fetch(PDO::FETCH_ASSOC);
 
 		$cancelTheCancel = FALSE;
-		
+
 		if(isSet($row) AND $row['HitCount'] > 0){
 
 			$orderStartDateTime = $row['StartDateTime'];
@@ -5513,10 +5508,6 @@ if ((isSet($_POST['order']) AND $_POST['order'] == 'Cancel' AND isSet($_SESSION[
 			$s = $pdo->prepare($sql);
 			$s->bindValue(':description', $logEventDescription);
 			$s->execute();
-
-			$pdo->commit();
-			//Close the connection
-			$pdo = null;
 		}
 		catch(PDOException $e)
 		{
@@ -5535,8 +5526,6 @@ if ((isSet($_POST['order']) AND $_POST['order'] == 'Cancel' AND isSet($_SESSION[
 			{
 				// Inform admin(s) that the order was cancelled by the booking creator
 				// TO-DO: Remove staff if not needed/wanted
-				$pdo = connect_to_db();
-
 				$sql = "SELECT 		u.`email`		AS Email
 						FROM 		`user` u
 						INNER JOIN 	`accesslevel` a
@@ -5580,17 +5569,30 @@ if ((isSet($_POST['order']) AND $_POST['order'] == 'Cancel' AND isSet($_SESSION[
 						$s->execute();
 					}
 				}
-
-				$pdo = null;
 			}
 			catch(PDOException $e)
 			{
-				//$pdo->rollBack();
-				$error = 'Error trying to send email to admin/staff about order being cancelled: ' . $e->getMessage();
+				$pdo->rollBack();
+				$error = 'Error sending email: ' . $e->getMessage();
 				include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
 				$pdo = null;
 				exit();
 			}
+		}
+
+		try
+		{
+			$pdo->commit();
+			//Close the connection
+			$pdo = null;
+		}
+		catch(PDOException $e)
+		{
+			$pdo->rollBack();
+			$error = 'Error completing cancellation process: ' . $e->getMessage();
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+			$pdo = null;
+			exit();
 		}
 
 		$_SESSION['normalBookingFeedback'] = "Successfully cancelled the order.";
