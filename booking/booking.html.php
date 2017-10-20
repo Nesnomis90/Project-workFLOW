@@ -101,7 +101,11 @@
 							<td><?php htmlout($booking['BookingWasCreatedOn']); ?></td>
 							<td><input type="submit" name="action" value="Edit"></td>
 							<td><input type="submit" name="action" value="Cancel"></td>
-							<td><input type="submit" name="order" value="Details"></td>
+							<?php if($booking['OrderCanBeDetailsOnly']) : ?>
+								<td><input type="submit" name="order" value="Details"></td>
+							<?php else : ?>
+								<td></td>
+							<?php endif; ?>
 							<input type="hidden" name="id" value="<?php htmlout($booking['id']); ?>">
 							<input type="hidden" name="UserInfo" id="UserInfo"
 							value="<?php htmlout($booking['UserInfo']); ?>">
@@ -159,6 +163,8 @@
 								<td><input type="submit" name="action" value="Cancel"></td>
 								<?php if($booking['OrderCanBeCreated']) : ?>
 									<td><input type="submit" name="order" value="Create"></td>
+								<?php elseif($booking['OrderCanBeDetailsOnly']) : ?>
+									<td><input type="submit" name="order" value="Details"></td>
 								<?php elseif($booking['OrderCanBeEdited']) : ?>
 									<td><input type="submit" name="order" value="Edit"></td>
 								<?php else : ?>
@@ -215,7 +221,6 @@
 						<th>Edit</th>
 						<th>Cancel</th>
 					<?php endif; ?>
-
 				</tr>
 			<?php if(isSet($bookingsActiveToday)) :?>
 				<?php foreach ($bookingsActiveToday AS $booking): ?>

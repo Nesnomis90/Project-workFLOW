@@ -5814,22 +5814,26 @@ foreach($result as $row){
 				$orderCanBeCreated = FALSE;
 				$orderCanBeEdited = FALSE;
 				$orderCanBeCancelled = FALSE;
+				$orderDetailsOnly = TRUE;
 			} else {
 				$orderCanBeCreated = FALSE; // Order is already created
 				$orderCanBeCancelled = TRUE;
 				$orderCanBeEdited = TRUE;
+				$orderDetailsOnly = FALSE;
 			}
 		} else {
 			// Order has been cancelled
 			$orderCanBeCreated = TRUE;
 			$orderCanBeEdited = FALSE;
 			$orderCanBeCancelled = FALSE;
+			$orderDetailsOnly = FALSE;
 		}
 	} else {
 		// Meeting has no order yet
 		$orderCanBeCreated = TRUE;
 		$orderCanBeEdited = FALSE;
 		$orderCanBeCancelled = FALSE;
+		$orderDetailsOnly = FALSE;
 	}
 
 	if($status == "Active Today"){
@@ -5853,7 +5857,8 @@ foreach($result as $row){
 										'OrderID' => $row['orderID'],
 										'OrderCanBeCreated' => $orderCanBeCreated,
 										'OrderCanBeEdited' => $orderCanBeEdited,
-										'OrderCanBeCancelled' => $orderCanBeCancelled
+										'OrderCanBeCancelled' => $orderCanBeCancelled,
+										'OrderCanBeDetailsOnly' => $orderDetailsOnly
 									);
 	}	elseif($status == "Active") {
 		$bookingsFuture[] = array(	'id' => $row['bookingID'],
@@ -5876,7 +5881,8 @@ foreach($result as $row){
 									'OrderID' => $row['orderID'],
 									'OrderCanBeCreated' => $orderCanBeCreated,
 									'OrderCanBeEdited' => $orderCanBeEdited,
-									'OrderCanBeCancelled' => $orderCanBeCancelled
+									'OrderCanBeCancelled' => $orderCanBeCancelled,
+									'OrderCanBeDetailsOnly' => $orderDetailsOnly
 								);
 	}
 }
