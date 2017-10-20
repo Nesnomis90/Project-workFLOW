@@ -132,7 +132,7 @@ function updateAdminBookingCodeGuesses(){
 		$newArray = array();
 		for($i=0; $i < sizeOf($_SESSION['adminBookingCodeGuesses']); $i++){
 			$startDateTime = $_SESSION['adminBookingCodeGuesses'][$i];
-			
+
 			$timeDifference = convertTwoDateTimesToTimeDifferenceInMinutes($startDateTime, $dateTimeNow);		
 			if($timeDifference < BOOKING_CODE_WRONG_GUESS_TIMEOUT_IN_MINUTES){
 				$newArray[] = $_SESSION['adminBookingCodeGuesses'][$i];
@@ -189,7 +189,7 @@ function updateAdminBookingCodeGuesses(){
 			$_SESSION['confirmBookingCodeError'] = "You have inserted an incorrect code too many times.\nThe timeout can be removed by an Admin ($remainingAttempts attempts left).\nOr you can try again in less than a minute.";
 		}
 
-		return TRUE;		
+		return TRUE;
 	} else {
 		return TRUE;
 	}
@@ -202,7 +202,7 @@ function rememberEditCreateBookingInputs(){
 
 			// The company selected
 		if(isSet($_POST['companyID'])){
-			$newValues['TheCompanyID'] = $_POST['companyID'];	
+			$newValues['TheCompanyID'] = $_POST['companyID'];
 		}
 			// The user selected
 		if(isSet($_POST['displayName'])){
@@ -384,9 +384,6 @@ function emailUserOnCancelledOrder(){
 				// Email failed to be prepared. Store it in database to try again later
 				try
 				{
-					include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
-
-					$pdo = connect_to_db();
 					$sql = 'INSERT INTO	`email`
 							SET			`subject` = :subject,
 										`message` = :message,
@@ -397,12 +394,10 @@ function emailUserOnCancelledOrder(){
 					$s->bindValue(':message', $emailMessage);
 					$s->bindValue(':receivers', $email);
 					$s->execute();
-
-					//close connection
-					$pdo = null;
 				}
 				catch (PDOException $e)
 				{
+					$pdo->rollBack();
 					$error = 'Error storing email: ' . $e->getMessage();
 					include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
 					$pdo = null;
@@ -495,7 +490,7 @@ function validateUserInputs($FeedbackSessionToUse, $editing){
 	if($usingBookingCode){	
 		if(validateIntegerNumber($validatedBookingCode) === FALSE AND !$invalidInput){
 			$invalidInput = TRUE;
-			$_SESSION[$FeedbackSessionToUse] = "Your submitted booking code has illegal characters in it.";		
+			$_SESSION[$FeedbackSessionToUse] = "Your submitted booking code has illegal characters in it.";
 		}
 	}
 
@@ -503,34 +498,34 @@ function validateUserInputs($FeedbackSessionToUse, $editing){
 	if(!$editing){
 		if($validatedStartDateTime == "" AND $validatedEndDateTime == "" AND !$invalidInput){
 
-			$_SESSION[$FeedbackSessionToUse] = "You need to fill in a start and end time for your booking.";	
+			$_SESSION[$FeedbackSessionToUse] = "You need to fill in a start and end time for your booking.";
 			$invalidInput = TRUE;
 		} elseif($validatedStartDateTime != "" AND $validatedEndDateTime == "" AND !$invalidInput) {
 			$_SESSION[$FeedbackSessionToUse] = "You need to fill in an end time for your booking.";	
 			$invalidInput = TRUE;
 		} elseif($validatedStartDateTime == "" AND $validatedEndDateTime != "" AND !$invalidInput){
-			$_SESSION[$FeedbackSessionToUse] = "You need to fill in a start time for your booking.";	
+			$_SESSION[$FeedbackSessionToUse] = "You need to fill in a start time for your booking.";
 			$invalidInput = TRUE;
 		}
 	}
 	if($usingBookingCode){
 		if(isSet($validatedBookingCode) AND $validatedBookingCode == "" AND !$invalidInput){
-			$_SESSION[$FeedbackSessionToUse] = "You need to fill in a booking code to be able to create the booking.";	
+			$_SESSION[$FeedbackSessionToUse] = "You need to fill in a booking code to be able to create the booking.";
 			$invalidInput = TRUE;
 		}
 	}
-	
+
 	// Check if input length is allowed
 		// DisplayName
 	$invalidDisplayName = isLengthInvalidDisplayName($validatedDisplayName);
 	if($invalidDisplayName AND !$invalidInput){
-		$_SESSION[$FeedbackSessionToUse] = "The display name submitted is too long.";	
+		$_SESSION[$FeedbackSessionToUse] = "The display name submitted is too long.";
 		$invalidInput = TRUE;
 	}
 		// BookingDescription
 	$invalidBookingDescription = isLengthInvalidBookingDescription($validatedBookingDescription);
 	if($invalidBookingDescription AND !$invalidInput){
-		$_SESSION[$FeedbackSessionToUse] = "The booking description submitted is too long.";	
+		$_SESSION[$FeedbackSessionToUse] = "The booking description submitted is too long.";
 		$invalidInput = TRUE;
 	}
 
@@ -547,7 +542,7 @@ function validateUserInputs($FeedbackSessionToUse, $editing){
 			$_SESSION[$FeedbackSessionToUse] = "The end date you submitted did not have a correct format. Please try again.";
 			$invalidInput = TRUE;
 		}
-		
+
 		$timeNow = getDatetimeNow();
 
 		if($startDateTime > $endDateTime AND !$invalidInput){
@@ -579,7 +574,7 @@ function validateUserInputs($FeedbackSessionToUse, $editing){
 		// Check if booking code submitted is a valid booking code
 		if($usingBookingCode){
 			if(databaseContainsBookingCode($validatedBookingCode) === FALSE AND !$invalidInput){
-				$_SESSION[$FeedbackSessionToUse] = "The booking code you submitted is not valid.";	
+				$_SESSION[$FeedbackSessionToUse] = "The booking code you submitted is not valid.";
 				$invalidInput = TRUE;
 			}
 		}
@@ -634,7 +629,7 @@ if (isSet($_POST['action']) and $_POST['action'] == 'Go Back'){
 	unset($_SESSION['confirmOrigins']);
 	if(isSet($_GET['meetingroom'])){
 		$TheMeetingRoomID = $_GET['meetingroom'];
-		$location = "http://$_SERVER[HTTP_HOST]/booking/?meetingroom=" . $TheMeetingRoomID;		
+		$location = "http://$_SERVER[HTTP_HOST]/booking/?meetingroom=" . $TheMeetingRoomID;
 	} else {
 		$location = "http://$_SERVER[HTTP_HOST]/booking/";
 	}
@@ -647,10 +642,10 @@ if (isSet($_POST['action']) and $_POST['action'] == 'Go Back'){
 if (isSet($_POST['edit']) and $_POST['edit'] == 'Go Back'){
 	unset($_SESSION['confirmOrigins']);
 	$_SESSION['normalBookingFeedback'] = "You cancelled your booking editing.";
-	
+
 	if(isSet($_GET['meetingroom'])){
 		$TheMeetingRoomID = $_GET['meetingroom'];
-		$location = "http://$_SERVER[HTTP_HOST]/booking/?meetingroom=" . $TheMeetingRoomID;		
+		$location = "http://$_SERVER[HTTP_HOST]/booking/?meetingroom=" . $TheMeetingRoomID;
 	} else {
 		$location = "http://$_SERVER[HTTP_HOST]/booking/";
 	}
@@ -668,7 +663,7 @@ if (isSet($_POST['changeroom']) and $_POST['changeroom'] == 'Go Back'){
 
 	if(isSet($_GET['meetingroom'])){
 		$TheMeetingRoomID = $_GET['meetingroom'];
-		$location = "http://$_SERVER[HTTP_HOST]/booking/?meetingroom=" . $TheMeetingRoomID;		
+		$location = "http://$_SERVER[HTTP_HOST]/booking/?meetingroom=" . $TheMeetingRoomID;
 	} else {
 		$location = "http://$_SERVER[HTTP_HOST]/booking/";
 	}
@@ -720,7 +715,7 @@ if(isSet($_POST['action']) AND $_POST['action'] == "Abort Cancel"){
 	}
 
 	header("Location: $location");
-	exit();	
+	exit();
 }
 
 // If admin has finished adding a reason for cancelling a meeting.
@@ -739,7 +734,7 @@ if(isSet($_POST['action']) AND $_POST['action'] == "Confirm Reason"){
 
 	$invalidCancelMessage = isLengthInvalidBookingDescription($cancelMessage);
 	if($invalidCancelMessage AND !$invalidInput){
-		$_SESSION['confirmReasonError'] = "Your submitted message is too long.";	
+		$_SESSION['confirmReasonError'] = "Your submitted message is too long.";
 		$invalidInput = TRUE;
 	}
 
@@ -846,7 +841,7 @@ if ((isSet($_POST['action']) and $_POST['action'] == 'Cancel') OR
 	}
 
 		// Check if the user is an owner of the company the booking is booked for
-	if(!$continueCancel) {	
+	if(!$continueCancel) {
 		try
 		{
 			$sql = 'SELECT 		COUNT(*)		AS HitCount,
@@ -1120,9 +1115,9 @@ if ((isSet($_POST['action']) and $_POST['action'] == 'Cancel') OR
 }
 
 // If user wants to change the room for the booked meeting
-if (	(isSet($_POST['action']) and $_POST['action'] == 'Change Room') OR 
-		(isSet($_SESSION['refreshChangeBookingRoom']) AND $_SESSION['refreshChangeBookingRoom'])
-		){
+if ((isSet($_POST['action']) and $_POST['action'] == 'Change Room') OR 
+	(isSet($_SESSION['refreshChangeBookingRoom']) AND $_SESSION['refreshChangeBookingRoom'])
+	){
 	if(isSet($_SESSION['refreshChangeBookingRoom']) AND $_SESSION['refreshChangeBookingRoom']){
 		unset($_SESSION['refreshChangeBookingRoom']);
 	} else {
@@ -1308,7 +1303,7 @@ if (	(isSet($_POST['action']) and $_POST['action'] == 'Change Room') OR
 		}
 
 	} elseif($_SESSION['changeRoomOriginalBookingValues']['ContinueChangeRoom']){
-		$bookingStartDateTime = $_SESSION['changeRoomOriginalBookingValues']['StartDateTime'];															
+		$bookingStartDateTime = $_SESSION['changeRoomOriginalBookingValues']['StartDateTime'];
 		$bookingEndDateTime = $_SESSION['changeRoomOriginalBookingValues']['EndDateTime'];
 		$originalMeetingRoomName = $_SESSION['changeRoomOriginalBookingValues']['MeetingRoomName'];
 		$continueChangeRoom = $_SESSION['changeRoomOriginalBookingValues']['ContinueChangeRoom'];
@@ -1478,7 +1473,7 @@ if (	(isSet($_POST['action']) and $_POST['action'] == 'Change Room') OR
 	var_dump($_SESSION); // TO-DO: Remove after done testing
 
 	unset($_SESSION['bookingCodeUserID']);
-	
+
 	include_once 'changeroom.html.php';
 	exit();
 }
@@ -2034,11 +2029,11 @@ if ((isSet($_POST['changeroom']) and $_POST['changeroom'] == 'Confirm Change') O
 					$_SESSION['normalBookingFeedback'] .= "\nEmail to be sent has been stored and will be attempted to be sent again later.";
 				}
 
-				$_SESSION['normalBookingFeedback'] .= "\nThis is the email msg we're sending out:\n$emailMessage\nSent to email: $email."; // TO-DO: Remove after testing	
+				$_SESSION['normalBookingFeedback'] .= "\nThis is the email msg we're sending out:\n$emailMessage\nSent to email: $email."; // TO-DO: Remove after testing
 
 			} elseif($bookingCreatorSendEmail == 0){
 				$_SESSION['normalBookingFeedback'] .= "\nUser did not want to get sent Emails."; // TO-DO: remove when done testing
-			}			
+			}
 		}
 	} else {
 		// Just change booked room to the selected available room
@@ -5291,7 +5286,7 @@ if ((isSet($_POST['order']) AND $_POST['order'] == 'Cancel' AND isSet($_SESSION[
 		$row = $s->fetch(PDO::FETCH_ASSOC);
 
 		$cancelTheCancel = FALSE;
-		
+
 		if(isSet($row) AND $row['HitCount'] > 0){
 
 			$orderStartDateTime = $row['StartDateTime'];
@@ -5513,10 +5508,6 @@ if ((isSet($_POST['order']) AND $_POST['order'] == 'Cancel' AND isSet($_SESSION[
 			$s = $pdo->prepare($sql);
 			$s->bindValue(':description', $logEventDescription);
 			$s->execute();
-
-			$pdo->commit();
-			//Close the connection
-			$pdo = null;
 		}
 		catch(PDOException $e)
 		{
@@ -5526,12 +5517,82 @@ if ((isSet($_POST['order']) AND $_POST['order'] == 'Cancel' AND isSet($_SESSION[
 			$pdo = null;
 			exit();
 		}
+
 		if($cancelledByAdmin OR $cancelledByOwner){
 			// only send email to inform the user that the order was cancelled, if the user didn't cancel their own order.
 			emailUserOnCancelledOrder();
 		} else {
-			// Inform admin(s) that the order was cancelled by the booking creator
- 			// TO-DO:
+			try
+			{
+				// Inform admin(s) that the order was cancelled by the booking creator
+				// TO-DO: Remove staff if not needed/wanted
+				$sql = "SELECT 		u.`email`		AS Email
+						FROM 		`user` u
+						INNER JOIN 	`accesslevel` a
+						ON			a.`AccessID` = u.`AccessID`
+						WHERE		(
+													a.`AccessName` = 'Admin'
+										AND			u.`sendAdminEmail` = 1
+									)
+						OR 			a.`AccessName` = 'Staff'";
+				$return = $pdo->query($sql);
+				$result = $return->fetchAll(PDO::FETCH_ASSOC);
+
+				if(isSet($result)){
+					foreach($result AS $Email){
+						$email[] = $Email['Email'];
+					}
+				}
+
+				$emailSubject = "An order was cancelled!";
+
+				$emailMessage = $logEventDescription;
+
+				// Only try to send out email if there are any admins and staff that have set they want them
+				if(isSet($email)){
+					$mailResult = sendEmail($email, $emailSubject, $emailMessage);
+
+					if(!$mailResult){
+						// Email failed to be prepared. Store it in database to try again later
+
+						$email = implode(", ", $email);
+
+						$sql = 'INSERT INTO	`email`
+								SET			`subject` = :subject,
+											`message` = :message,
+											`receivers` = :receivers,
+											`dateTimeRemove` = DATE_ADD(CURRENT_TIMESTAMP, INTERVAL 7 DAY);';
+						$s = $pdo->prepare($sql);
+						$s->bindValue(':subject', $emailSubject);
+						$s->bindValue(':message', $emailMessage);
+						$s->bindValue(':receivers', $email);
+						$s->execute();
+					}
+				}
+			}
+			catch(PDOException $e)
+			{
+				$pdo->rollBack();
+				$error = 'Error sending email: ' . $e->getMessage();
+				include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+				$pdo = null;
+				exit();
+			}
+		}
+
+		try
+		{
+			$pdo->commit();
+			//Close the connection
+			$pdo = null;
+		}
+		catch(PDOException $e)
+		{
+			$pdo->rollBack();
+			$error = 'Error completing cancellation process: ' . $e->getMessage();
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+			$pdo = null;
+			exit();
 		}
 
 		$_SESSION['normalBookingFeedback'] = "Successfully cancelled the order.";
@@ -5612,8 +5673,8 @@ try
 										GROUP BY 	e.`userID`
 									)
 								)
-							)												AS WorksForCompany,		 
-							b.`description`									AS BookingDescription, 
+							)												AS WorksForCompany,
+							b.`description`									AS BookingDescription,
 							b.`dateTimeCreated`								AS BookingWasCreatedOn
 				FROM 		`booking` b
 				WHERE		b.`meetingRoomID` = :meetingRoomID
@@ -5634,6 +5695,7 @@ try
 		$sql = 'SELECT 		b.`userID`										AS BookedUserID,
 							b.`bookingID`,
 							b.`orderID`,
+							o.`dateTimeCancelled`							AS OrderDateTimeCancelled,
 							(
 								IF(b.`meetingRoomID` IS NULL, NULL, (SELECT `name` FROM `meetingroom` WHERE `meetingRoomID` = b.`meetingRoomID`))
 							)        										AS BookedRoomName,
@@ -5670,6 +5732,8 @@ try
 							b.`description`									AS BookingDescription, 
 							b.`dateTimeCreated`								AS BookingWasCreatedOn
 				FROM 		`booking` b
+				LEFT JOIN 	`orders` o
+				ON 			o.`orderID` = b.`orderID`
 				WHERE		b.`dateTimeCancelled` IS NULL
 				AND 		b.`actualEndDateTime` IS NULL
 				ORDER BY 	UNIX_TIMESTAMP(b.`startDateTime`)
@@ -5722,7 +5786,7 @@ foreach($result as $row){
 		$roomName = "N/A - Deleted";
 	}
 	if(!isSet($userinfo) OR $userinfo == NULL OR $userinfo == ",  - "){
-		$userinfo = "N/A - Deleted";	
+		$userinfo = "N/A - Deleted";
 	}
 	if(!isSet($email) OR $email == NULL OR $email == ""){
 		$firstname = "N/A - Deleted";
@@ -5733,7 +5797,7 @@ foreach($result as $row){
 		$worksForCompany = "N/A";
 	}
 	$displayValidatedStartDate = convertDatetimeToFormat($startDateTime , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
-	$displayValidatedEndDate = convertDatetimeToFormat($endDateTime, 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);	
+	$displayValidatedEndDate = convertDatetimeToFormat($endDateTime, 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
 	$displayCreatedDateTime = convertDatetimeToFormat($createdDateTime, 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
 
 	$meetinginfo = $roomName . ' for the timeslot: ' . $displayValidatedStartDate . 
@@ -5741,10 +5805,35 @@ foreach($result as $row){
 
 	$timeDifferenceInDays = convertTwoDateTimesToTimeDifferenceInDays($datetimeNow, $startDateTime);
 
-	if($timeDifferenceInDays < MINIMUM_DAYS_UNTIL_MEETING_STARTS_WHERE_YOU_CAN_STILL_PLACE_AN_ORDER){
-		$orderCanBeAltered = FALSE;
+	// Check if meeting has an order connected and what the user is allowed to do with it
+	if(isSet($row['orderID']) AND $row['orderID'] > 0){
+		if(empty($row['OrderDateTimeCancelled'])){
+			// Order has not been cancelled yet
+			if($timeDifferenceInDays < MINIMUM_DAYS_UNTIL_MEETING_STARTS_WHERE_YOU_CAN_STILL_PLACE_AN_ORDER){
+				// Order is outside the timeframe where user can add/alter/cancel the order
+				$orderCanBeCreated = FALSE;
+				$orderCanBeEdited = FALSE;
+				$orderCanBeCancelled = FALSE;
+				$orderDetailsOnly = TRUE;
+			} else {
+				$orderCanBeCreated = FALSE; // Order is already created
+				$orderCanBeCancelled = TRUE;
+				$orderCanBeEdited = TRUE;
+				$orderDetailsOnly = FALSE;
+			}
+		} else {
+			// Order has been cancelled
+			$orderCanBeCreated = TRUE;
+			$orderCanBeEdited = FALSE;
+			$orderCanBeCancelled = FALSE;
+			$orderDetailsOnly = FALSE;
+		}
 	} else {
-		$orderCanBeAltered = TRUE;
+		// Meeting has no order yet
+		$orderCanBeCreated = TRUE;
+		$orderCanBeEdited = FALSE;
+		$orderCanBeCancelled = FALSE;
+		$orderDetailsOnly = FALSE;
 	}
 
 	if($status == "Active Today"){
@@ -5766,7 +5855,10 @@ foreach($result as $row){
 										'MeetingInfo' => $meetinginfo,
 										'sendEmail' => $row['sendEmail'],
 										'OrderID' => $row['orderID'],
-										'OrderCanBeAltered' => $orderCanBeAltered
+										'OrderCanBeCreated' => $orderCanBeCreated,
+										'OrderCanBeEdited' => $orderCanBeEdited,
+										'OrderCanBeCancelled' => $orderCanBeCancelled,
+										'OrderCanBeDetailsOnly' => $orderDetailsOnly
 									);
 	}	elseif($status == "Active") {
 		$bookingsFuture[] = array(	'id' => $row['bookingID'],
@@ -5782,12 +5874,15 @@ foreach($result as $row){
 									'email' => $email,
 									'WorksForCompany' => $worksForCompany,
 									'BookingWasCreatedOn' => $displayCreatedDateTime,
-									'BookedUserID' => $row['BookedUserID'],									
+									'BookedUserID' => $row['BookedUserID'],
 									'UserInfo' => $userinfo,
 									'MeetingInfo' => $meetinginfo,
 									'sendEmail' => $row['sendEmail'],
 									'OrderID' => $row['orderID'],
-									'OrderCanBeAltered' => $orderCanBeAltered
+									'OrderCanBeCreated' => $orderCanBeCreated,
+									'OrderCanBeEdited' => $orderCanBeEdited,
+									'OrderCanBeCancelled' => $orderCanBeCancelled,
+									'OrderCanBeDetailsOnly' => $orderDetailsOnly
 								);
 	}
 }
