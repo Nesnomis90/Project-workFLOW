@@ -417,7 +417,9 @@
 						if(invalidInputs > 0){
 							return false;
 						} else {
-							var submitConfirmed = confirm("Are you sure you want to book this meeting and submit your order?");
+							var totalPrice = document.getElementById("SaveTotalPrice").value;
+
+							var submitConfirmed = confirm("The total cost of this order will be " + totalPrice + " NOK. Are you sure you want to submit this booking with this order?");
 
 							return submitConfirmed;
 						}
