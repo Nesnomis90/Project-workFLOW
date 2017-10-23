@@ -5582,7 +5582,9 @@ if(isSet($_POST['add']) AND $_POST['add'] == "Add Order"){
 		$s = $pdo->prepare($sql);
 		$s->bindValue(':bookingID', $bookingID);
 		$s->execute();
+
 		$row = $s->fetch(PDO::FETCH_ASSOC);
+
 		$companyName = $row['CompanyName'];
 		$companyID = $row['CompanyID'];
 		$cancellationCode = $row['CancellationCode'];
@@ -5593,7 +5595,7 @@ if(isSet($_POST['add']) AND $_POST['add'] == "Add Order"){
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
 		$pdo = null;
 		exit();
-	}	
+	}
 
 // Add the order to the database
 	try
@@ -5696,7 +5698,7 @@ if(isSet($_POST['add']) AND $_POST['add'] == "Add Order"){
 
 		$emailMessage = 
 		"Your order has been successfully booked!\n" . 
-		"The order is connected to your meeting with the following details: \n" .
+		"The order is connected to the meeting with the following details: \n" .
 		"Meeting Room Info: The room name " . $bookingMeetingInfo . ".\n" . 
 		"If you wish to cancel the order, or alter its contents, you have to do it before it's $cancelDayAmount days left until the meeting starts.\n" .
 		"If if it's within $cancelDayAmount days left you have to contact an Admin directly to see what can be done.\n\n" . 
