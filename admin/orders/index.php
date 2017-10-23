@@ -1541,7 +1541,7 @@ try
 			WHERE		b.`orderID` IS NOT NULL
 			GROUP BY 	o.`orderID`)
 			UNION		
-			(SELECT 		o.`orderID`										AS TheOrderID,
+			(SELECT 	o.`orderID`										AS TheOrderID,
 						o.`orderUserNotes`								AS OrderUserNotes,
 						o.`dateTimeCreated`								AS DateTimeCreated,
 						o.`dateTimeUpdatedByStaff`						AS DateTimeUpdatedByStaff,

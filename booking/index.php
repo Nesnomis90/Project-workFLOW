@@ -77,6 +77,15 @@ function clearChangeBookingSessions(){
 	unset($_SESSION['normalUserOriginalInfoArray']); // Make sure we get up-to-date user values after doing bookings
 }
 
+// Function to clear sessions used during creating an order after a booking has been made
+function clearAddOrderToBookingSessions(){
+	unset($_SESSION['refreshCreateOrder']);
+	unset($_SESSION['createOrderOriginalValues']);
+	unset($_SESSION['AddCreateOrderForBookingAvailableExtra']);
+	unset($_SESSION['AddCreateOrderForBookingOrderUserNotes']);
+	unset($_SESSION['AddCreateOrderForBookingOrderAddedExtra']);
+}
+
 function updateBookingCodeGuesses(){
 	// Check if any of the old guesses are old enough to remove
 	if(isSet($_SESSION['bookingCodeGuesses'])){
@@ -133,7 +142,7 @@ function updateAdminBookingCodeGuesses(){
 		for($i=0; $i < sizeOf($_SESSION['adminBookingCodeGuesses']); $i++){
 			$startDateTime = $_SESSION['adminBookingCodeGuesses'][$i];
 
-			$timeDifference = convertTwoDateTimesToTimeDifferenceInMinutes($startDateTime, $dateTimeNow);		
+			$timeDifference = convertTwoDateTimesToTimeDifferenceInMinutes($startDateTime, $dateTimeNow);
 			if($timeDifference < BOOKING_CODE_WRONG_GUESS_TIMEOUT_IN_MINUTES){
 				$newArray[] = $_SESSION['adminBookingCodeGuesses'][$i];
 			}
@@ -2389,8 +2398,7 @@ if(isSet($_POST['action']) AND $_POST['action'] == "Confirm Code"){
 		//Close connection
 		$pdo = null;
 
-		if ($row['HitCount'] > 0)
-		{
+		if($row['HitCount'] > 0){
 			// Booking code is a valid user
 			unset($_SESSION['bookingCodeGuesses']);
 			$_SESSION['bookingCodeUserID'] = $row['userID'];
@@ -2414,7 +2422,7 @@ if(isSet($_POST['action']) AND $_POST['action'] == "Confirm Code"){
 			if($_SESSION['confirmOrigins'] == "Confirm Change"){
 				$_SESSION['refreshConfirmBookingRoom'] = TRUE;
 				unset($_SESSION['confirmOrigins']);
-			}	
+			}
 
 			if(isSet($_GET['meetingroom'])){
 				$meetingRoomID = $_GET['meetingroom'];
@@ -2615,6 +2623,7 @@ if(	((isSet($_POST['action']) AND $_POST['action'] == 'Create Meeting')) OR
 		if(isSet($_GET['meetingroom']) AND !empty($_GET['meetingroom'])){
 			$_SESSION['AddCreateBookingInfoArray']['TheMeetingRoomID'] = $_GET['meetingroom'];
 		}
+
 		$_SESSION['AddCreateBookingOriginalInfoArray'] = $_SESSION['AddCreateBookingInfoArray'];
 	}
 
@@ -2877,7 +2886,7 @@ if(	((isSet($_POST['action']) AND $_POST['action'] == 'Create Meeting')) OR
 				$displayEndDate =  convertDatetimeToFormat($row['endDate'], 'Y-m-d', DATE_DEFAULT_FORMAT_TO_DISPLAY);
 				$overHourPrice = $row['CreditHourPriceOverCredits'];
 				$displayOverHourPrice = convertToCurrency($overHourPrice) . "/h";
-				
+
 				$company[] = array(
 									'companyID' => $row['companyID'],
 									'companyName' => $row['companyName'],
@@ -3051,7 +3060,7 @@ if(	((isSet($_POST['action']) AND $_POST['action'] == 'Create Meeting')) OR
 	} else {
 		$userNotes = "";
 	}
-	
+
 	var_dump($_SESSION); // TO-DO: remove after testing is done
 	// Change form
 	include 'addbooking.html.php';
@@ -3109,7 +3118,7 @@ if ((isSet($_POST['add']) AND $_POST['add'] == "Add Booking") OR
 		$_SESSION['AddCreateBookingInfoArray']['StartTime'] = $startDateTime;
 		$_SESSION['AddCreateBookingInfoArray']['EndTime'] = $endDateTime;
 		$_SESSION['AddCreateBookingInfoArray']['BookedBy'] = $dspname;
-		$_SESSION['AddCreateBookingInfoArray']['BookingDescription'] = $bknDscrptn;		
+		$_SESSION['AddCreateBookingInfoArray']['BookingDescription'] = $bknDscrptn;
 	} else {
 		$meetingRoomID = $_SESSION['AddCreateBookingInfoArray']['TheMeetingRoomID'];
 		$companyID = $_SESSION['AddCreateBookingInfoArray']['TheCompanyID'];
@@ -3591,6 +3600,7 @@ if ((isSet($_POST['add']) AND $_POST['add'] == "Add Booking") OR
 	}
 	catch (PDOException $e)
 	{
+		$pdo->rollBack();
 		$error = 'Error adding submitted order and booking to database: ' . $e->getMessage();
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
 		$pdo = null;
@@ -3669,6 +3679,7 @@ if ((isSet($_POST['add']) AND $_POST['add'] == "Add Booking") OR
 	}
 	catch(PDOException $e)
 	{
+		$pdo->rollBack();
 		$error = 'Error adding log events to database: ' . $e->getMessage();
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
 		$pdo = null;
@@ -3717,6 +3728,7 @@ if ((isSet($_POST['add']) AND $_POST['add'] == "Add Booking") OR
 			}
 			catch (PDOException $e)
 			{
+				$pdo->rollBack();
 				$error = 'Error storing email: ' . $e->getMessage();
 				include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
 				$pdo = null;
@@ -3820,6 +3832,7 @@ if ((isSet($_POST['add']) AND $_POST['add'] == "Add Booking") OR
 				}
 				catch (PDOException $e)
 				{
+					$pdo->rollBack();
 					$error = 'Error storing email: ' . $e->getMessage();
 					include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
 					$pdo = null;
@@ -3843,6 +3856,7 @@ if ((isSet($_POST['add']) AND $_POST['add'] == "Add Booking") OR
 	}
 	catch (PDOException $e)
 	{
+		$pdo->rollBack();
 		unset($_SESSION['normalBookingFeedback']);
 		$error = 'Error committing booking and order queries: ' . $e->getMessage();
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
@@ -5226,10 +5240,638 @@ if(isSet($_GET['cancellationcode']) OR isSet($_SESSION['refreshWithCancellationC
 
 // ORDER CODE SNIPPET // START //
 
+	// ADD ORDER CODE SNIPPET // START //
+
+// If user wants to create an order after the booking has already been made / order has been cancelled before
+if	(isSet($_SESSION['loggedIn']) AND 
+	((isSet($_POST['order']) AND $_POST['order'] == 'Create')) OR 
+	(isSet($_SESSION['refreshCreateOrder']) AND $_SESSION['refreshCreateOrder'])
+	){
+
+	if(isSet($_SESSION['refreshCreateOrder']) AND $_SESSION['refreshCreateOrder']){
+		unset($_SESSION['refreshCreateOrder']);
+	} else {
+		$_SESSION['createOrderOriginalValues']['BookingID'] = $_POST['id'];
+		$_SESSION['createOrderOriginalValues']['BookingStatus'] = $_POST['BookingStatus'];
+		$_SESSION['createOrderOriginalValues']['MeetingInfo'] = $_POST['MeetingInfo'];
+
+		if(isSet($_POST['sendEmail']) AND !empty($_POST['sendEmail'])){
+			$_SESSION['createOrderOriginalValues']['SendEmail'] = $_POST['sendEmail'];
+		}
+		if(isSet($_POST['Email']) AND !empty($_POST['Email'])){
+			$_SESSION['createOrderOriginalValues']['UserEmail'] = $_POST['Email'];
+		}
+	}
+
+	$bookingID = $_SESSION['createOrderOriginalValues']['BookingID'];
+	$bookingStatus = $_SESSION['createOrderOriginalValues']['BookingStatus'];
+	$bookingMeetingInfo = $_SESSION['createOrderOriginalValues']['MeetingInfo'];
+
+	// Only do this if the booking is still active (and not today)
+	if(!isSet($bookingStatus) OR (isSet($bookingStatus) AND $bookingStatus != 'Active')){
+		$_SESSION['normalBookingFeedback'] = "This meeting can not submit an order.";
+
+		clearAddOrderToBookingSessions();
+
+		// Load booked meetings list webpage with updated database
+		if(isSet($_GET['meetingroom'])){
+			$meetingRoomID = $_GET['meetingroom'];
+			$location = "http://$_SERVER[HTTP_HOST]/booking/?meetingroom=" . $meetingRoomID;
+		} else {
+			$location = "http://$_SERVER[HTTP_HOST]/booking/";
+		}
+		header('Location: ' . $location);
+		exit();
+	}	
+
+	$SelectedUserID = checkIfLocalDeviceOrLoggedIn();
+
+	// Check if selected user ID is creator of booking, owner of the company it's booked for or an admin
+	$continueOrderCreation = FALSE;
+	$createdByOwner = FALSE;
+	$createdByAdmin = FALSE;
+		// Check if the user is the creator of the booking	
+	try
+	{
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+
+		$pdo = connect_to_db();
+		$sql = 'SELECT 		COUNT(*)			AS HitCount,
+							b.`userID`			AS UserID,
+							b.`startDateTime`	AS StartDateTime,
+							u.`email`			AS UserEmail,
+							u.`firstName`		AS FirstName,
+							u.`lastName`		AS LastName,
+							u.`sendEmail`		AS SendEmail
+				FROM		`booking` b
+				INNER JOIN 	`user` u
+				ON 			b.`userID` = u.`userID`
+				WHERE 		b.`bookingID` = :BookingID
+				AND			b.`orderID` IS NOT NULL
+				LIMIT 		1';
+		$s = $pdo->prepare($sql);
+		$s->bindValue(':BookingID', $bookingID);
+		$s->execute();
+		$row = $s->fetch(PDO::FETCH_ASSOC);
+
+		if(isSet($row) AND $row['HitCount'] > 0){
+
+			$orderStartDateTime = $row['StartDateTime'];
+			$dateTimeNow = getDatetimeNow();
+			$daysUntilMeetingStarts = convertTwoDateTimesToTimeDifferenceInDays($dateTimeNow, $orderStartDateTime);
+
+			if($daysUntilMeetingStarts < MINIMUM_DAYS_UNTIL_MEETING_STARTS_WHERE_YOU_CAN_STILL_PLACE_AN_ORDER){
+				$_SESSION['normalBookingFeedback'] = "The booked meeting is within the time period where you can no longer create an order.";
+				clearAddOrderToBookingSessions();
+
+				// Load booked meetings list webpage with updated database
+				if(isSet($_GET['meetingroom'])){
+					$meetingRoomID = $_GET['meetingroom'];
+					$location = "http://$_SERVER[HTTP_HOST]/booking/?meetingroom=" . $meetingRoomID;
+				} else {
+					$location = "http://$_SERVER[HTTP_HOST]/booking/";
+				}
+				header('Location: ' . $location);
+				exit();
+			}
+
+			$bookingCreatorUserID = $row['UserID'];
+			$bookingCreatorUserEmail = $row['UserEmail'];
+			$bookingCreatorUserInfo = $row['LastName'] . ", " . $row['FirstName'] . " - " . $row['UserEmail'];
+			$bookingOrderID = $row['OrderID'];
+			$_SESSION['createOrderOriginalValues']['SendEmail'] = $row['SendEmail'];
+			$_SESSION['createOrderOriginalValues']['UserEmail'] = $bookingCreatorUserEmail;
+			if(isSet($bookingCreatorUserID) AND !empty($bookingCreatorUserID) AND $bookingCreatorUserID == $SelectedUserID){
+				$continueOrderCreation = TRUE;
+			}
+		}
+	}
+	catch (PDOException $e)
+	{
+		$pdo = null;
+		$error = 'Error retrieving original booking information: ' . $e->getMessage();
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+		exit();
+	}
+
+		// Check if the user is an owner of the company the booking is booked for
+	if(!$continueOrderCreation) {
+		try
+		{
+			$sql = 'SELECT 		COUNT(*)		AS HitCount,
+								b.`userID`		AS UserID,
+								u.`email`		AS UserEmail,
+								u.`firstName`	AS FirstName,
+								u.`lastName`	AS LastName
+					FROM		`booking` b
+					INNER JOIN	`employee` e
+					ON			e.`CompanyID` = b.`CompanyID`
+					INNER JOIN 	`user` u
+					ON 			e.`userID` = u.`userID`
+					INNER JOIN	`companyposition` cp
+					ON			cp.`PositionID` = e.`PositionID`
+					WHERE 		b.`bookingID` = :BookingID
+					AND			e.`UserID` = :UserID
+					AND			cp.`name` = "Owner"
+					LIMIT 		1';
+			$s = $pdo->prepare($sql);
+			$s->bindValue(':BookingID', $bookingID);
+			$s->bindValue(':UserID', $SelectedUserID);
+			$s->execute();
+			$row = $s->fetch(PDO::FETCH_ASSOC);
+
+			if(isSet($row) AND $row['HitCount'] > 0){
+				$cancelledByUserName = $row['LastName'] . ", " . $row['FirstName'];
+				$cancelledByUserEmail = $row['UserEmail'];
+				$cancelledByUserInfo = $row['LastName'] . ", " . $row['FirstName'] . " - " . $row['UserEmail'];
+				$continueOrderCreation = TRUE;
+				$createdByOwner = TRUE;
+			}
+		}
+		catch (PDOException $e)
+		{
+			$pdo = null;
+			$error = 'Error validating cancelling access: ' . $e->getMessage();
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+			exit();
+		}
+	}
+
+		// Check if the user is an admin
+		// Only needed if the the user isn't the creator of the booking or an owner
+	if(!$continueOrderCreation) {
+		try
+		{
+			$sql = 'SELECT 		COUNT(*) 		AS HitCount,
+								u.`userID`		AS UserID,
+								u.`firstName`	AS FirstName,
+								u.`lastName`	AS LastName
+					FROM		`user` u
+					INNER JOIN	`accesslevel` a
+					ON 			u.`AccessID` = a.`AccessID`
+					WHERE 		u.`userID` = :userID
+					AND			a.`AccessName` = "Admin"
+					LIMIT		1';
+
+			$s = $pdo->prepare($sql);
+			$s->bindValue(':userID', $SelectedUserID);
+			$s->execute();
+			$row = $s->fetch(PDO::FETCH_ASSOC);
+			if(isSet($row) AND $row['HitCount'] > 0){
+				$cancelledByAdminName = $row['LastName'] . ", " . $row['FirstName'];
+				$continueOrderCreation = TRUE;
+				$createdByAdmin = TRUE;
+			}
+		}
+		catch (PDOException $e)
+		{
+			$pdo = null;
+			$error = 'Error validating cancelling access: ' . $e->getMessage();
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+			exit();
+		}
+	}
+
+	if($continueOrderCreation === FALSE){
+		$pdo = null;
+		$_SESSION['normalBookingFeedback'] = "You do not have the access to create an order for this booked meeting.";
+		if(isSet($_GET['meetingroom'])){
+			$meetingRoomID = $_GET['meetingroom'];
+			$location = "http://$_SERVER[HTTP_HOST]/booking/?meetingroom=" . $meetingRoomID;
+		} else {
+			$location = "http://$_SERVER[HTTP_HOST]/booking/";
+		}
+		header('Location: ' . $location);
+		exit();
+	}
+
+	// Get needed information from database
+	if(!isSet($_SESSION['AddCreateOrderForBookingAvailableExtra'])){
+		try
+		{
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+
+			// Get booking information
+			$pdo = connect_to_db();
+
+			// Get all available extras that the user can use to add
+			// That are not already in the order
+			$sql = 'SELECT 	`extraID`		AS ExtraID,
+							`name`			AS ExtraName,
+							`description`	AS ExtraDescription,
+							`price`			AS ExtraPrice
+					FROM 	`extra`
+					WHERE	`isAlternative` = 0';
+			$result = $pdo->query($sql);
+			$availableExtra = $result->fetchAll(PDO::FETCH_ASSOC);
+			$_SESSION['AddCreateOrderForBookingAvailableExtra'] = $availableExtra;
+
+			$pdo = null;
+		}
+		catch (PDOException $e)
+		{
+			$error = 'Error fetching available extras: ' . $e->getMessage();
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+			$pdo = null;
+			exit();
+		}
+	} else {
+		$availableExtra = $_SESSION['AddCreateOrderForBookingAvailableExtra'];
+	}
+
+	$availableExtrasNumber = sizeOf($availableExtra);
+
+	if(isSet($_SESSION['AddCreateOrderForBookingOrderUserNotes'])){
+		$userNotes = $_SESSION['AddCreateOrderForBookingOrderUserNotes'];
+	} else {
+		$userNotes = "";
+	}
+
+	var_dump($_SESSION);	// TO-DO: remove before uploading
+	include_once 'addorder.html.php';
+	exit();
+}
+	// ADD ORDER CODE SNIPPET // END //
+
+	// SUBMIT ORDER CODE SNIPPET // START //
+
+if(isSet($_POST['add']) AND $_POST['add'] == "Add Order"){
+
+	$bookingID = $_SESSION['createOrderOriginalValues']['BookingID'];
+	$bookingMeetingInfo = $_SESSION['createOrderOriginalValues']['MeetingInfo'];
+
+	// Get the items added to the order
+	$lastID = $_POST['LastAlternativeID']+1;
+	for($i = 0; $i < $lastID; $i++){
+		$postExtraIDName = "extraIDAccepted" . $i;
+		$postAmountName = "AmountSelected" . $i;
+		if(isSet($_POST[$postExtraIDName]) AND $_POST[$postExtraIDName] > 0){
+			if(!isSet($addedExtra)){
+				$addedExtra = array();
+			}
+
+			$invalid = FALSE;
+			// input validation (check if the amounts submitted are valid)
+			$amountSubmitted = $_POST[$postAmountName];
+
+			if(validateIntegerNumber($amountSubmitted) === FALSE){
+				$invalid = TRUE;
+			}
+
+			if(isNumberInvalidOrderAmount($amountSubmitted) === TRUE){
+				$invalid = TRUE;
+			}
+
+			if($invalid AND !$invalidInput){
+				$invalidInput = TRUE;
+				$_SESSION['AddCreateBookingOrderError'] = "At least one amount you submitted was not valid.";
+			}
+
+			$addedExtra[] = array(
+									"ExtraID" => $_POST[$postExtraIDName],
+									"ExtraAmount" => $amountSubmitted,
+									"Invalid" => $invalid
+								);
+		}
+	}
+
+	if(isSet($addedExtra) AND sizeOf($addedExtra) > 0){
+		// Validate the order notes
+		$userNotes = $_POST["UserNotes"];
+		$trimmedUserNotes = trimExcessWhitespaceButLeaveLinefeed($userNotes);
+
+		if(validateString($trimmedUserNotes) === FALSE AND !$invalidInput){
+			$invalidInput = TRUE;
+			$_SESSION['AddCreateBookingOrderError'] = "The Order Notes you submitted has illegal characters in it.";
+		}
+
+		$invalidOrderUserNotes = isLengthInvalidOrderUserNotes($trimmedUserNotes);
+		if($invalidOrderUserNotes AND !$invalidInput){
+			$_SESSION['AddCreateBookingOrderError'] = "The Order Notes submitted is too long.";
+			$invalidInput = TRUE;
+		}
+
+		$_SESSION['AddCreateOrderForBookingOrderUserNotes'] = $trimmedUserNotes;
+		$_SESSION['AddCreateOrderForBookingOrderAddedExtra'] = $addedExtra;
+
+		if($invalidInput){ // This resets the javascript that has been done, unless we use the addedextra
+			$_SESSION['refreshCreateOrder'] = TRUE;
+
+			header('Location: ' . $location);
+			exit();
+		}
+	}
+
+
+/*	
+// Get relevant booking information
+	try
+	{
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+
+		$pdo = connect_to_db();
+		
+		$sql = "SELECT 		c.`name`				AS CompanyName,
+							c.`companyID` 			AS CompanyID,
+							b.`cancellationCode` 	AS CancellationCode
+				FROM 		`booking` b
+				INNER JOIN 	`company` c
+				ON			c.`companyID` = b.`companyID`
+				WHERE		b.`bookingID` = :bookingID
+				LIMIT 		1";
+		$s = $pdo->prepare($sql);
+		$s->bindValue(':bookingID', $bookingID);
+		$s->execute();
+
+		$row = $s->fetch(PDO::FETCH_ASSOC);
+
+		$companyName = $row['CompanyName'];
+		$companyID = $row['CompanyID'];
+		$cancellationCode = $row['CancellationCode'];
+	}	
+	catch (PDOException $e)
+	{
+		$error = 'Error getting orginal booking information: ' . $e->getMessage();
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+		$pdo = null;
+		exit();
+	}
+
+// Add the order to the database
+	try
+	{
+		$pdo->beginTransaction();
+
+		// Create the order/extraorders first
+		if(!empty($_SESSION['AddCreateOrderForBookingOrderUserNotes'])){
+			$userNotes = $_SESSION['AddCreateOrderForBookingOrderUserNotes'];
+		} else {
+			$userNotes = "";
+		}
+
+		$addedExtra = $_SESSION['AddCreateOrderForBookingOrderAddedExtra'];
+
+		$sql = "INSERT INTO	`orders`
+				SET			`orderUserNotes` = :orderUserNotes";
+		$s = $pdo->prepare($sql);
+		$s->bindValue(':orderUserNotes', $userNotes);
+		$s->execute();
+
+		$theOrderID = $pdo->lastInsertId();
+
+		foreach($addedExtra AS $extra){
+			$extraID = $extra["ExtraID"];
+			$extraAmount = $extra["ExtraAmount"];
+
+			$sql = "INSERT INTO	`extraorders`
+					SET			`extraID` = :extraID,
+								`orderID` = :orderID,
+								`amount` = :amount";
+			$s = $pdo->prepare($sql);
+			$s->bindValue(':extraID', $extraID);
+			$s->bindValue(':orderID', $theOrderID);
+			$s->bindValue(':amount', $extraAmount);
+			$s->execute();
+		}
+
+		$sql = 'UPDATE 	`booking` 
+				SET		`orderID` = :orderID
+				WHERE	`bookingID` = :bookingID;
+
+		$s = $pdo->prepare($sql);
+		$s->bindValue(':orderID', $theOrderID);
+		$s->bindValue(':bookingID', $bookingID);
+		$s->execute();
+	}
+	catch (PDOException $e)
+	{
+		$pdo->rollBack();
+		$error = 'Error adding submitted order and updating booking in database: ' . $e->getMessage();
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+		$pdo = null;
+		exit();
+	}
+
+	$_SESSION['normalBookingFeedback'] = "Successfully created the order.";
+
+	// Add a log event that an order has been created
+	try
+	{
+		if(isSet($_SESSION['LoggedInUserName'])){
+			$nameOfUserWhoBooked = $_SESSION['LoggedInUserName'];
+		} else {
+			$nameOfUserWhoBooked = "N/A";
+		}
+
+		// Save a description with information about the booking that was created
+		$logEventDescription = 	"An order was created for the meeting:" .
+								"\nMeeting Info: For the room " . $bookingMeetingInfo . 
+								"\nIt was created by: " . $nameOfUserWhoBooked;
+
+		$sql = "INSERT INTO `logevent` 
+				SET			`actionID` = 	(
+												SELECT 	`actionID` 
+												FROM 	`logaction`
+												WHERE 	`name` = 'Order Created'
+											),
+							`description` = :description";
+		$s = $pdo->prepare($sql);
+		$s->bindValue(':description', $logEventDescription);
+		$s->execute();
+	}
+	catch(PDOException $e)
+	{
+		$pdo->rollBack();
+		$error = 'Error adding log events to database: ' . $e->getMessage();
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+		$pdo = null;
+		exit();
+	}
+	$bookingCreatorUserEmail = $_SESSION['createOrderOriginalValues']['UserEmail']; 
+	$sendEmail = $_SESSION['createOrderOriginalValues']['SendEmail'];
+
+	//Send email with order information to the user who the booking is for.	
+	if($sendEmail == 1){
+		$emailSubject = "New Order Information!";
+
+		$cancelDayAmount = MINIMUM_DAYS_UNTIL_MEETING_STARTS_WHERE_YOU_CAN_STILL_PLACE_AN_ORDER;
+
+		$emailMessage = 
+		"Your order has been successfully booked!\n" . 
+		"The order is connected to the meeting with the following details: \n" .
+		"Meeting Room Info: The room name " . $bookingMeetingInfo . ".\n" . 
+		"If you wish to cancel the order, or alter its contents, you have to do it before it's $cancelDayAmount days left until the meeting starts.\n" .
+		"If if it's within $cancelDayAmount days left you have to contact an Admin directly to see what can be done.\n\n" . 
+		"If you wish to cancel the booked meeting, including this submitted order, you can easily do so by using the link given below.\n" .
+		"Click this link to cancel the booked meeting: " . $_SERVER['HTTP_HOST'] . 
+		"/booking/?cancellationcode=" . $cancellationCode . "\n\n";
+
+		$email = $bookingCreatorUserEmail;
+
+		$mailResult = sendEmail($email, $emailSubject, $emailMessage);
+
+		if(!$mailResult){
+			$_SESSION['normalBookingFeedback'] .= "\n\n[WARNING] System failed to send Email to user.";
+
+			// Email failed to be prepared. Store it in database to try again later
+			try
+			{
+				$sql = 'INSERT INTO	`email`
+						SET			`subject` = :subject,
+									`message` = :message,
+									`receivers` = :receivers,
+									`dateTimeRemove` = DATE_ADD(CURRENT_TIMESTAMP, INTERVAL 7 DAY)';
+				$s = $pdo->prepare($sql);
+				$s->bindValue(':subject', $emailSubject);
+				$s->bindValue(':message', $emailMessage);
+				$s->bindValue(':receivers', $email);
+				$s->execute();
+			}
+			catch (PDOException $e)
+			{
+				$pdo->rollBack();
+				$error = 'Error storing email: ' . $e->getMessage();
+				include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+				$pdo = null;
+				exit();
+			}
+
+			$_SESSION['normalBookingFeedback'] .= "\nEmail to be sent has been stored and will be attempted to be sent again later.";
+		}
+
+		$_SESSION['normalBookingFeedback'] .= "\nThis is the email msg we're sending out:\n$emailMessage.\nSent to email: $email."; // TO-DO: Remove before uploading
+	} elseif($sendEmail'] == 0){
+		$_SESSION['normalBookingFeedback'] .= "\nUser did not want to get sent Emails.";
+	}
+
+	// Send email to alert company owner(s) that an order was made.
+	// Check if any owners want to receive an email
+	try
+	{
+		$sql = 'SELECT		u.`email`					AS Email,
+							e.`sendEmail`				AS SendOwnerEmail,
+							e.`sendEmailOnceOrAlways`	AS SendEmailOnceOrAlways
+				FROM 		`user` u
+				INNER JOIN	`employee` e
+				ON 			e.`UserID` = u.`UserID`
+				INNER JOIN	`company` c
+				ON 			c.`CompanyID` = e.`CompanyID`
+				INNER JOIN	`companyposition` cp
+				ON			e.`PositionID` = cp.`PositionID`
+				WHERE 		c.`CompanyID` = :CompanyID
+				AND			cp.`name` = "Owner"
+				AND			u.`email` <> :UserEmail';
+
+		$s = $pdo->prepare($sql);
+		$s->bindValue(':CompanyID', $companyID);
+		$s->bindValue(':UserEmail', $email);
+		$s->execute();
+		$result = $s->fetchAll(PDO::FETCH_ASSOC);
+
+		if(isSet($result) AND !empty($result)){
+			foreach($result AS $row){
+				// Check if user wants to receive owner emails
+				if($row['SendOwnerEmail'] == 1){ 
+					$companyOwnerEmails[] = $row['Email'];
+				}
+			}
+		}
+	}
+	catch (PDOException $e)
+	{
+		$pdo->rollBack();
+		$error = 'Error sending email to company owner(s): ' . $e->getMessage();
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+		$pdo = null;
+		exit();
+	}
+
+		// We found company owners to send email too
+	if(isSet($companyOwnerEmails) AND !empty($companyOwnerEmails)){
+		$emailSubject = "Order Added To Booked Meeting!";
+
+		$emailMessage = 
+		"The employee: " . $nameOfUserWhoBooked . "\n" .
+		"In your company: " . $companyName . "\n" .
+		"Has submitted an order for a booked meeting with the following details:\n" .
+		// TO-DO: FILL IN.
+		"If you wish to cancel the booked meeting, including this submitted order, you can easily do so by using the link given below.\n" .
+		"Click this link to cancel the booked meeting: " . $_SERVER['HTTP_HOST'] . 
+		"/booking/?cancellationcode=" . $cancellationCode . "\n\n" . 
+		"If you do not wish to receive these emails, you can disable them in 'My Account' under 'Company Owner Alert Status'.";
+
+		$email = $companyOwnerEmails;
+
+		$mailResult = sendEmail($email, $emailSubject, $emailMessage);
+
+		$email = implode(", ", $email);
+
+		if(!$mailResult){
+			$_SESSION['normalBookingFeedback'] .= "\n\n[WARNING] System failed to send Email to user(s).";
+
+			// Email failed to be prepared. Store it in database to try again later
+			try
+			{
+				$sql = 'INSERT INTO	`email`
+						SET			`subject` = :subject,
+									`message` = :message,
+									`receivers` = :receivers,
+									`dateTimeRemove` = DATE_ADD(CURRENT_TIMESTAMP, INTERVAL 7 DAY)';
+				$s = $pdo->prepare($sql);
+				$s->bindValue(':subject', $emailSubject);
+				$s->bindValue(':message', $emailMessage);
+				$s->bindValue(':receivers', $email);
+				$s->execute();
+			}
+			catch (PDOException $e)
+			{
+				$pdo->rollBack();
+				$error = 'Error storing email: ' . $e->getMessage();
+				include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+				$pdo = null;
+				exit();
+			}
+
+			$_SESSION['normalBookingFeedback'] .= "\nEmail to be sent has been stored and will be attempted to be sent again later.";
+		}
+
+		$_SESSION['normalBookingFeedback'] .= "\nThis is the email msg we're sending out:\n$emailMessage\nSent to email: $email."; // TO-DO: Remove before uploading			
+	} else {
+		$_SESSION['normalBookingFeedback'] .= "\n\nNo Company Owners were sent an email about the booking going over booking."; // TO-DO: Remove before uploading.
+	}
+
+	try
+	{
+		$pdo->commit();
+		//close connection
+		$pdo = null;
+	}
+	catch (PDOException $e)
+	{
+		$pdo->rollBack();
+		unset($_SESSION['normalBookingFeedback']);
+		$error = 'Error committing order queries: ' . $e->getMessage();
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+		$pdo = null;
+		exit();
+	}*/
+
+	// Booking a new meeting is done. Reset all connected sessions.
+	clearAddOrderToBookingSessions();
+
+	// Load booking history list webpage with new booking
+	header('Location: .');
+	exit();
+}
+
+	// SUBMIT ORDER CODE SNIPPET // END //
+
+	// CANCEL ORDER CODE SNIPPET // START //
 
 // If user wants to cancel am scheduled order (only accesed by being online)
-if ((isSet($_POST['order']) AND $_POST['order'] == 'Cancel' AND isSet($_SESSION['loggedIn'])) OR 
-	(isSet($_SESSION['refreshCancelOrder']) AND $_SESSION['refreshCancelOrder'])
+if	(isSet($_SESSION['loggedIn']) AND 
+	((isSet($_POST['order']) AND $_POST['order'] == 'Cancel') OR 
+	(isSet($_SESSION['refreshCancelOrder']) AND $_SESSION['refreshCancelOrder']))
 	){
 
 	if(isSet($_SESSION['refreshCancelOrder']) AND $_SESSION['refreshCancelOrder']){
@@ -5614,6 +6256,8 @@ if ((isSet($_POST['order']) AND $_POST['order'] == 'Cancel' AND isSet($_SESSION[
 	exit();
 }
 
+	// CANCEL ORDER CODE SNIPPET // START //
+
 // ORDER CODE SNIPPET // END //
 
 // Remove any unused variables from memory 
@@ -5823,7 +6467,7 @@ foreach($result as $row){
 			}
 		} else {
 			// Order has been cancelled
-			$orderCanBeCreated = TRUE;
+			$orderCanBeCreated = TRUE;	// Can create a new order then
 			$orderCanBeEdited = FALSE;
 			$orderCanBeCancelled = FALSE;
 			$orderDetailsOnly = FALSE;
