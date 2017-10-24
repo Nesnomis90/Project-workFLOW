@@ -86,6 +86,27 @@ function clearAddOrderToBookingSessions(){
 	unset($_SESSION['AddCreateOrderForBookingOrderAddedExtra']);
 }
 
+// Function to clear sessions used to remember user inputs on refreshing the edit Order form
+function clearEditBookingOrderSessions(){
+	unset($_SESSION['EditBookingOrderOriginalInfo']);
+	unset($_SESSION['EditBookingOrderCommunicationToStaff']);
+	unset($_SESSION['EditBookingOrderIsApproved']);
+	unset($_SESSION['EditBookingOrderOrderID']);
+	unset($_SESSION['EditBookingOrderExtraOrdered']);
+	unset($_SESSION['EditBookingOrderOrderMessages']);
+	unset($_SESSION['EditBookingOrderAvailableExtra']);
+	unset($_SESSION['EditBookingOrderAlternativeExtraAdded']);
+	unset($_SESSION['EditBookingOrderAlternativeExtraCreated']);
+	unset($_SESSION['EditBookingOrderExtraOrderedOnlyNames']);
+	unset($_SESSION['resetEditBookingOrder']);
+	unset($_SESSION['refreshEditBookingOrder']);
+}
+
+function clearEditBookingOrderSessionsOutsideReset(){
+	unset($_SESSION['EditOrderDisableEdit']);
+	unset($_SESSION['EditOrderOrderStatus']);
+}
+
 function updateBookingCodeGuesses(){
 	// Check if any of the old guesses are old enough to remove
 	if(isSet($_SESSION['bookingCodeGuesses'])){
@@ -5917,17 +5938,18 @@ if(isSet($_POST['add']) AND $_POST['add'] == "Add Order"){
 if	(isSet($_SESSION['loggedIn']) AND 
 	((isSet($_POST['order']) AND $_POST['order'] == "Edit") OR 
 	(isSet($_SESSION['refreshEditBookingOrder']) AND $_SESSION['refreshEditBookingOrder']) OR
-	(isSet($_SESSION['resetEditBookingOrder'])){
+	(isSet($_SESSION['resetEditBookingOrder'])))
+	){
 	
 	if(isSet($_SESSION['refreshEditBookingOrder']) AND $_SESSION['refreshEditBookingOrder']){
 		unset($_SESSION['refreshEditBookingOrder']);
 		
 		// Get values we had before refresh
-		if(isSet($_SESSION['EditBookingOrderCommunicationToUser'])){
-			$orderCommunicationToUser = $_SESSION['EditBookingOrderCommunicationToUser'];
-			unset($_SESSION['EditBookingOrderCommunicationToUser']);
+		if(isSet($_SESSION['EditBookingOrderCommunicationToStaff'])){
+			$orderCommunicationToStaff = $_SESSION['EditBookingOrderCommunicationToStaff'];
+			unset($_SESSION['EditBookingOrderCommunicationToStaff']);
 		} else {
-			$orderCommunicationToUser = "";
+			$orderCommunicationToStaff = "";
 		}
 		if(isSet($_SESSION['EditBookingOrderIsApproved'])){
 			$orderIsApproved = $_SESSION['EditBookingOrderIsApproved'];
@@ -5998,9 +6020,6 @@ if	(isSet($_SESSION['loggedIn']) AND
 			// Create an array with the row information we retrieved
 			$row = $s->fetch(PDO::FETCH_ASSOC);
 			$_SESSION['EditBookingOrderOriginalInfo'] = $row;
-
-			// Set the correct information
-			$orderAdminNote = $row['OrderAdminNote'];
 
 			if($row['OrderApprovedByAdmin'] == 1 OR $row['OrderApprovedByStaff'] == 1){
 				$orderIsApproved = 1;
@@ -6215,8 +6234,8 @@ if	(isSet($_SESSION['loggedIn']) AND
 
 	$availableExtrasNumber = sizeOf($availableExtra);
 
-	if(!isSet($orderCommunicationToUser)){
-		$orderCommunicationToUser = "";
+	if(!isSet($orderCommunicationToStaff)){
+		$orderCommunicationToStaff = "";
 	}
 
 	var_dump($_SESSION); // TO-DO: Remove before uploading
