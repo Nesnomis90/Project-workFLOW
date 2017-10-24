@@ -417,20 +417,14 @@
 				<caption>Items Ordered</caption>
 				<tr>
 					<th colspan="4">Item</th>
-					<th colspan="3">Approved For Purchase</th>
-					<th colspan="3">Set As Purchased</th>
+					<th>Approved For Purchase?</th>
 				</tr>
 				<tr>
 					<th>Name</th>
 					<th>Description</th>
 					<th>Price (1 Amount)</th>
 					<th>Amount</th>
-					<th>Approved?</th>
-					<th>By Staff</th>
-					<th>At Date</th>
-					<th>Purchased?</th>
-					<th>By Staff</th>
-					<th>At Date</th>
+					<th></th>
 				</tr>
 				<?php if(isSet($extraOrdered) AND sizeOf($extraOrdered) > 0) : ?>
 					<?php foreach($extraOrdered AS $row): ?>
@@ -455,43 +449,19 @@
 									<?php endif; ?>
 								<?php endif; ?>
 							</td>
-							<td><?php htmlout($row['ExtraApprovedForPurchaseByUser']); ?></td>
-							<td><?php htmlout($row['ExtraDateTimeApprovedForPurchase']); ?></td>
-							<td>
-								<?php if($disableEdit == 0) : ?>
-									<?php if($row['ExtraBooleanPurchased'] == 1) : ?>
-										<label style="width: auto;"><input type="checkbox" name="isPurchased[]" value="<?php htmlout($row['ExtraID']); ?>" checked="checked">Purchased</label>
-									<?php else : ?>
-										<label style="width: auto;"><input type="checkbox" name="isPurchased[]" value="<?php htmlout($row['ExtraID']); ?>">Purchased</label>
-									<?php endif; ?>
-								<?php else : ?>
-									<?php if($row['ExtraBooleanPurchased'] == 1) : ?>
-										<label style="width: auto;"><input type="checkbox" name="disabled" disabled="disabled" value="<?php htmlout($row['ExtraID']); ?>" checked="checked">Purchased</label>
-										<input type="hidden" name="isPurchased[]" value="<?php htmlout($row['ExtraID']); ?>">
-									<?php else : ?>
-										<label style="width: auto;"><input type="checkbox" name="disabled" disabled="disabled" value="<?php htmlout($row['ExtraID']); ?>">Purchased</label>
-									<?php endif; ?>
-								<?php endif; ?>
-							</td>
-							<td><?php htmlout($row['ExtraPurchasedByUser']); ?></td>
-							<td><?php htmlout($row['ExtraDateTimePurchased']); ?></td>
 						</tr>
 					<?php endforeach; ?>
-					<?php if($disableEdit == 0) : ?>
-						<?php if($availableExtrasNumber > 0) : ?>
-							<tr><td colspan="10"><button type="button" id="addAlternativeExtraButton" onclick="addAlternativeExtraRow()">Add Alternative</button></td></tr>
-						<?php else : ?>
-							<tr><td colspan="10"><button type="button" id="addAlternativeExtraButton" onclick="addAlternativeExtraRow()" disabled="disabled">Add Alternative</button></td></tr>
-						<?php endif; ?>
+					<?php if($availableExtrasNumber > 0) : ?>
+						<tr><td colspan="5"><button type="button" id="addAlternativeExtraButton" onclick="addAlternativeExtraRow()">Add Alternative</button></td></tr>
+					<?php else : ?>
+						<tr><td colspan="5"><button type="button" id="addAlternativeExtraButton" onclick="addAlternativeExtraRow()" disabled="disabled">Add Alternative</button></td></tr>
 					<?php endif; ?>
 				<?php else : ?>
-					<tr><td colspan="10"><b>This order has nothing in it.</b></td></tr>
-					<?php if($disableEdit == 0) : ?>
-						<?php if($availableExtrasNumber > 0) : ?>
-							<tr><td colspan="10"><button type="button" id="addAlternativeExtraButton" onclick="addAlternativeExtraRow()">Add Alternative</button></td></tr>
-						<?php else : ?>
-							<tr><td colspan="10"><button type="button" id="addAlternativeExtraButton" onclick="addAlternativeExtraRow()" disabled="disabled">Add Alternative</button></td></tr>
-						<?php endif; ?>
+					<tr><td colspan="5"><b>This order has nothing in it.</b></td></tr>
+					<?php if($availableExtrasNumber > 0) : ?>
+						<tr><td colspan="5"><button type="button" id="addAlternativeExtraButton" onclick="addAlternativeExtraRow()">Add Alternative</button></td></tr>
+					<?php else : ?>
+						<tr><td colspan="5"><button type="button" id="addAlternativeExtraButton" onclick="addAlternativeExtraRow()" disabled="disabled">Add Alternative</button></td></tr>
 					<?php endif; ?>
 				<?php endif; ?>
 			</table>
@@ -500,7 +470,6 @@
 				<input type="hidden" name="OrderID" value="<?php htmlout($orderID); ?>">
 				<input type="hidden" id="LastAlternativeID" name="LastAlternativeID" value="">
 				<input type="hidden" id="AlternativesAdded" name="AlternativesAdded" value="0">
-				<input type="hidden" id="NewAlternativesCreated" name="NewAlternativesCreated" value="0">
 				<input type="submit" name="action" value="Submit Changes" onclick="return validateNewAlternatives()">
 				<input type="submit" name="action" value="Go Back">
 				<input type="submit" name="action" value="Reset">
