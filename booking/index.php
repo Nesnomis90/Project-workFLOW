@@ -5253,7 +5253,6 @@ if	(isSet($_SESSION['loggedIn']) AND
 	} else {
 		$_SESSION['createOrderOriginalValues']['BookingID'] = $_POST['id'];
 		$_SESSION['createOrderOriginalValues']['BookingStatus'] = $_POST['BookingStatus'];
-		$_SESSION['createOrderOriginalValues']['MeetingInfo'] = $_POST['MeetingInfo'];
 
 		if(isSet($_POST['sendEmail']) AND !empty($_POST['sendEmail'])){
 			$_SESSION['createOrderOriginalValues']['SendEmail'] = $_POST['sendEmail'];
@@ -5265,7 +5264,6 @@ if	(isSet($_SESSION['loggedIn']) AND
 
 	$bookingID = $_SESSION['createOrderOriginalValues']['BookingID'];
 	$bookingStatus = $_SESSION['createOrderOriginalValues']['BookingStatus'];
-	$bookingMeetingInfo = $_SESSION['createOrderOriginalValues']['MeetingInfo'];
 
 	// Only do this if the booking is still active (and not today)
 	if(!isSet($bookingStatus) OR (isSet($bookingStatus) AND $bookingStatus != 'Active')){
@@ -5498,7 +5496,6 @@ if	(isSet($_SESSION['loggedIn']) AND
 if(isSet($_POST['add']) AND $_POST['add'] == "Add Order"){
 
 	$bookingID = $_SESSION['createOrderOriginalValues']['BookingID'];
-	$bookingMeetingInfo = $_SESSION['createOrderOriginalValues']['MeetingInfo'];
 
 	// Get the items added to the order
 	$lastID = $_POST['LastAlternativeID']+1;
@@ -5561,22 +5558,30 @@ if(isSet($_POST['add']) AND $_POST['add'] == "Add Order"){
 			exit();
 		}
 	}
-
-
-/*	
+	
 // Get relevant booking information
 	try
 	{
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 
 		$pdo = connect_to_db();
-		
+
 		$sql = "SELECT 		c.`name`				AS CompanyName,
 							c.`companyID` 			AS CompanyID,
-							b.`cancellationCode` 	AS CancellationCode
+							b.`cancellationCode` 	AS CancellationCode,
+							b.`dateTimeStart`		AS BookingStartTime,
+							b.`dateTimeEnd`			AS BookingEndTime,
+							u.`lastname`			AS UserLastName,
+							u.`firstName`			AS UserFirstName,
+							u.`email`				AS UserEmail,
+							m.`name`				AS MeetingRoomName
 				FROM 		`booking` b
 				INNER JOIN 	`company` c
 				ON			c.`companyID` = b.`companyID`
+				INNER JOIN 	`meetingroom` m
+				ON 			m.`meetingRoomID` = b.`meetingRoomID`
+				INNER JOIN  `user` u
+				ON 			u.`userID` = b.`userID`
 				WHERE		b.`bookingID` = :bookingID
 				LIMIT 		1";
 		$s = $pdo->prepare($sql);
@@ -5588,7 +5593,13 @@ if(isSet($_POST['add']) AND $_POST['add'] == "Add Order"){
 		$companyName = $row['CompanyName'];
 		$companyID = $row['CompanyID'];
 		$cancellationCode = $row['CancellationCode'];
-	}	
+		$meetingRoomName = $row['MeetingRoomName'];
+		$userinfo = $row['UserLastName'] . ", " . $row['UserFirstName'] . " - " . $row['UserEmail'];
+		$bookingStartTime = $row['BookingStartTime'];
+		$bookingEndTime = $row['BookingStartBookingEndTimeTime'];
+		$displayBookingStartTime = convertDatetimeToFormat($bookingStartTime , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
+		$displayBookingEndTime = convertDatetimeToFormat($bookingEndTime , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
+	}
 	catch (PDOException $e)
 	{
 		$error = 'Error getting orginal booking information: ' . $e->getMessage();
@@ -5636,7 +5647,7 @@ if(isSet($_POST['add']) AND $_POST['add'] == "Add Order"){
 
 		$sql = 'UPDATE 	`booking` 
 				SET		`orderID` = :orderID
-				WHERE	`bookingID` = :bookingID;
+				WHERE	`bookingID` = :bookingID';
 
 		$s = $pdo->prepare($sql);
 		$s->bindValue(':orderID', $theOrderID);
@@ -5652,8 +5663,6 @@ if(isSet($_POST['add']) AND $_POST['add'] == "Add Order"){
 		exit();
 	}
 
-	$_SESSION['normalBookingFeedback'] = "Successfully created the order.";
-
 	// Add a log event that an order has been created
 	try
 	{
@@ -5665,7 +5674,11 @@ if(isSet($_POST['add']) AND $_POST['add'] == "Add Order"){
 
 		// Save a description with information about the booking that was created
 		$logEventDescription = 	"An order was created for the meeting:" .
-								"\nMeeting Info: For the room " . $bookingMeetingInfo . 
+								"\nMeeting Room: " . $MeetingRoomName . 
+								"\nStart Time: " . $displayBookingStartTime .
+								"\nEnd Time: " . $displayBookingEndTime .
+								"\nBooked for User: " . $userinfo . 
+								"\nBooked for Company: " . $companyName . 
 								"\nIt was created by: " . $nameOfUserWhoBooked;
 
 		$sql = "INSERT INTO `logevent` 
@@ -5687,6 +5700,7 @@ if(isSet($_POST['add']) AND $_POST['add'] == "Add Order"){
 		$pdo = null;
 		exit();
 	}
+
 	$bookingCreatorUserEmail = $_SESSION['createOrderOriginalValues']['UserEmail']; 
 	$sendEmail = $_SESSION['createOrderOriginalValues']['SendEmail'];
 
@@ -5699,8 +5713,13 @@ if(isSet($_POST['add']) AND $_POST['add'] == "Add Order"){
 		$emailMessage = 
 		"Your order has been successfully booked!\n" . 
 		"The order is connected to the meeting with the following details: \n" .
-		"Meeting Room Info: The room name " . $bookingMeetingInfo . ".\n" . 
-		"If you wish to cancel the order, or alter its contents, you have to do it before it's $cancelDayAmount days left until the meeting starts.\n" .
+		"\nMeeting Room: " . $MeetingRoomName . 
+		"\nStart Time: " . $displayBookingStartTime .
+		"\nEnd Time: " . $displayBookingEndTime .
+		"\nBooked for User: " . $userinfo . 
+		"\nBooked for Company: " . $companyName . 
+		"\nOrder added by: " . $nameOfUserWhoBooked .
+		"\n\nIf you wish to cancel the order, or alter its contents, you have to do it before it's $cancelDayAmount days left until the meeting starts.\n" .
 		"If if it's within $cancelDayAmount days left you have to contact an Admin directly to see what can be done.\n\n" . 
 		"If you wish to cancel the booked meeting, including this submitted order, you can easily do so by using the link given below.\n" .
 		"Click this link to cancel the booked meeting: " . $_SERVER['HTTP_HOST'] . 
@@ -5740,7 +5759,7 @@ if(isSet($_POST['add']) AND $_POST['add'] == "Add Order"){
 		}
 
 		$_SESSION['normalBookingFeedback'] .= "\nThis is the email msg we're sending out:\n$emailMessage.\nSent to email: $email."; // TO-DO: Remove before uploading
-	} elseif($sendEmail'] == 0){
+	} elseif($sendEmail == 0){
 		$_SESSION['normalBookingFeedback'] .= "\nUser did not want to get sent Emails.";
 	}
 
@@ -5794,8 +5813,11 @@ if(isSet($_POST['add']) AND $_POST['add'] == "Add Order"){
 		"The employee: " . $nameOfUserWhoBooked . "\n" .
 		"In your company: " . $companyName . "\n" .
 		"Has submitted an order for a booked meeting with the following details:\n" .
-		// TO-DO: FILL IN.
-		"If you wish to cancel the booked meeting, including this submitted order, you can easily do so by using the link given below.\n" .
+		"\nMeeting Room: " . $MeetingRoomName . 
+		"\nStart Time: " . $displayBookingStartTime .
+		"\nEnd Time: " . $displayBookingEndTime .
+		"\nBooked for User: " . $userinfo . 
+		"\n\nIf you wish to cancel the booked meeting, including this submitted order, you can easily do so by using the link given below.\n" .
 		"Click this link to cancel the booked meeting: " . $_SERVER['HTTP_HOST'] . 
 		"/booking/?cancellationcode=" . $cancellationCode . "\n\n" . 
 		"If you do not wish to receive these emails, you can disable them in 'My Account' under 'Company Owner Alert Status'.";
@@ -5842,7 +5864,14 @@ if(isSet($_POST['add']) AND $_POST['add'] == "Add Order"){
 
 	try
 	{
-		$pdo->commit();
+		$commitResult = $pdo->commit();
+
+		if($commitResult){
+			$_SESSION['normalBookingFeedback'] = "Successfully created the order." . $_SESSION['normalBookingFeedback'];
+		} else {
+			$_SESSION['normalBookingFeedback'] = "Order may not have been successfully created." . $_SESSION['normalBookingFeedback'];
+		}
+
 		//close connection
 		$pdo = null;
 	}
@@ -5854,7 +5883,7 @@ if(isSet($_POST['add']) AND $_POST['add'] == "Add Order"){
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
 		$pdo = null;
 		exit();
-	}*/
+	}
 
 	// Booking a new meeting is done. Reset all connected sessions.
 	clearAddOrderToBookingSessions();
