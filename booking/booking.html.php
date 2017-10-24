@@ -104,7 +104,7 @@
 							<?php if($booking['OrderCanBeDetailsOnly']) : ?>
 								<td><input type="submit" name="order" value="Details"></td>
 							<?php else : ?>
-								<td></td>
+								<td>Not Eligible</td>
 							<?php endif; ?>
 							<input type="hidden" name="id" value="<?php htmlout($booking['id']); ?>">
 							<input type="hidden" name="UserInfo" id="UserInfo"
@@ -117,6 +117,7 @@
 							value="<?php htmlout($booking['email']); ?>">
 							<input type="hidden" name="sendEmail" id="sendEmail"
 							value="<?php htmlout($booking['sendEmail']); ?>">
+							<input type="hidden" name="OrderID" value="<?php htmlout($booking['OrderID']); ?>">
 						</tr>
 					</form>
 				<?php endforeach; ?>
@@ -168,7 +169,7 @@
 								<?php elseif($booking['OrderCanBeEdited']) : ?>
 									<td><input type="submit" name="order" value="Edit"></td>
 								<?php else : ?>
-									<td></td>
+									<td>Not Eligible</td>
 								<?php endif; ?>
 								<?php if($booking['OrderCanBeCancelled']) : ?>
 									<td><input type="submit" name="order" value="Cancel"></td>
@@ -186,6 +187,7 @@
 								value="<?php htmlout($booking['email']); ?>">
 								<input type="hidden" name="sendEmail" id="sendEmail"
 								value="<?php htmlout($booking['sendEmail']); ?>">
+								<input type="hidden" name="OrderID" value="<?php htmlout($booking['OrderID']); ?>">
 							</tr>
 						</form>
 					<?php endforeach; ?>
