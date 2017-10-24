@@ -104,7 +104,7 @@
 							<?php if($booking['OrderCanBeDetailsOnly']) : ?>
 								<td><input type="submit" name="order" value="Details"></td>
 							<?php else : ?>
-								<td>No Order Connected</td>
+								<td>Not Eligible</td>
 							<?php endif; ?>
 							<input type="hidden" name="id" value="<?php htmlout($booking['id']); ?>">
 							<input type="hidden" name="UserInfo" id="UserInfo"
