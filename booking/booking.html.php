@@ -117,6 +117,7 @@
 							value="<?php htmlout($booking['email']); ?>">
 							<input type="hidden" name="sendEmail" id="sendEmail"
 							value="<?php htmlout($booking['sendEmail']); ?>">
+							<input type="hidden" name="orderID" value="<?php htmlout($booking['OrderID']); ?>">
 						</tr>
 					</form>
 				<?php endforeach; ?>
@@ -186,6 +187,7 @@
 								value="<?php htmlout($booking['email']); ?>">
 								<input type="hidden" name="sendEmail" id="sendEmail"
 								value="<?php htmlout($booking['sendEmail']); ?>">
+								<input type="hidden" name="orderID" value="<?php htmlout($booking['OrderID']); ?>">
 							</tr>
 						</form>
 					<?php endforeach; ?>

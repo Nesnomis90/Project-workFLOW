@@ -5280,7 +5280,7 @@ if	(isSet($_SESSION['loggedIn']) AND
 		}
 		header('Location: ' . $location);
 		exit();
-	}	
+	}
 
 	$SelectedUserID = checkIfLocalDeviceOrLoggedIn();
 
@@ -5288,6 +5288,7 @@ if	(isSet($_SESSION['loggedIn']) AND
 	$continueOrderCreation = FALSE;
 	$createdByOwner = FALSE;
 	$createdByAdmin = FALSE;
+
 		// Check if the user is the creator of the booking	
 	try
 	{
@@ -5559,7 +5560,7 @@ if(isSet($_POST['add']) AND $_POST['add'] == "Add Order"){
 			exit();
 		}
 	}
-	
+
 	// Get relevant booking information
 	try
 	{
@@ -5875,6 +5876,8 @@ if(isSet($_POST['add']) AND $_POST['add'] == "Add Order"){
 		$_SESSION['normalBookingFeedback'] .= "\n\nNo Company Owners were sent an email about the booking going over booking."; // TO-DO: Remove before uploading.
 	}
 
+	// TO-DO: Add emails to admin if order is close?
+
 	try
 	{
 		$commitResult = $pdo->commit();
@@ -5966,7 +5969,6 @@ if	(isSet($_SESSION['loggedIn']) AND
 		if(!isSet($_SESSION['EditBookingOrderOrderStatus'])){
 			$_SESSION['EditBookingOrderOrderStatus'] = $_POST['OrderStatus'];
 		}
-	}
 
 		// Get information from database again on the selected order
 		try
@@ -5977,10 +5979,7 @@ if	(isSet($_SESSION['loggedIn']) AND
 			$sql = 'SELECT 		`orderID`						AS TheOrderID,
 								`orderUserNotes`				AS OrderUserNotes,
 								`dateTimeCreated`				AS DateTimeCreated,
-								`dateTimeCancelled`				AS DateTimeCancelled,
-								`dateTimeUpdatedByStaff`		AS DateTimeUpdatedByStaff,
 								`dateTimeUpdatedByUser`			AS DateTimeUpdatedByUser,
-								`cancelMessage`					AS OrderCancelMessage,
 								`orderApprovedByUser`			AS OrderApprovedByUser,
 								`orderApprovedByAdmin`			AS OrderApprovedByAdmin,
 								`orderApprovedByStaff` 			AS OrderApprovedByStaff,
@@ -6012,13 +6011,6 @@ if	(isSet($_SESSION['loggedIn']) AND
 			$dateTimeCreated = $row['DateTimeCreated'];
 			$displayDateTimeCreated = convertDatetimeToFormat($dateTimeCreated , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
 
-			if(!empty($row['DateTimeUpdatedByStaff'])){
-				$dateTimeUpdatedByStaff = $row['DateTimeUpdatedByStaff'];
-				$displayDateTimeUpdatedByStaff = convertDatetimeToFormat($dateTimeUpdatedByStaff , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
-			} else {
-				$displayDateTimeUpdatedByStaff = "";
-			}
-
 			if(!empty($row['DateTimeUpdatedByUser'])){
 				$dateTimeUpdatedByUser = $row['DateTimeUpdatedByUser'];
 				$displayDateTimeUpdatedByUser = convertDatetimeToFormat($dateTimeUpdatedByUser , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
@@ -6026,17 +6018,8 @@ if	(isSet($_SESSION['loggedIn']) AND
 				$displayDateTimeUpdatedByUser = "";
 			}
 
-			if(!empty($row['DateTimeCancelled'])){
-				$dateTimeCancelled = $row['DateTimeCancelled'];
-				$displayDateTimeCancelled = convertDatetimeToFormat($dateTimeCancelled, 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
-			} else {
-				$displayDateTimeCancelled = NULL;
-			}
-
 			$_SESSION['EditBookingOrderOriginalInfo']['OrderIsApproved'] = $orderIsApproved;
 			$_SESSION['EditBookingOrderOriginalInfo']['DateTimeCreated'] = $displayDateTimeCreated;
-			$_SESSION['EditBookingOrderOriginalInfo']['DateTimeCancelled'] = $displayDateTimeCancelled;
-			$_SESSION['EditBookingOrderOriginalInfo']['DateTimeUpdatedByStaff'] = $displayDateTimeUpdatedByStaff;
 			$_SESSION['EditBookingOrderOriginalInfo']['DateTimeUpdatedByUser'] = $displayDateTimeUpdatedByUser;
 
 			$_SESSION['EditBookingOrderOrderID'] = $orderID;
@@ -6166,10 +6149,10 @@ if	(isSet($_SESSION['loggedIn']) AND
 				}
 
 				$messageSeen = $message['OrderMessageSeen'];
-				if($messageSeen == 0 AND $sentByUser == 1){
+				if($messageSeen == 0 AND $sentByStaff == 1){
 					$messageAddSeen = "NEW MESSAGE ";
-				} elseif($messageSeen == 0 AND $sentByStaff == 1){
-					$messageAddSeen = "NOT READ BY USER ";
+				} elseif($messageSeen == 0 AND $sentByUser == 1){
+					$messageAddSeen = "NOT READ BY STAFF ";
 				} else {
 					$messageAddSeen = "";
 				}
@@ -6196,11 +6179,11 @@ if	(isSet($_SESSION['loggedIn']) AND
 
 			$_SESSION['EditBookingOrderOrderMessages'] = $orderMessages;
 
-			// Update that there are no new messages from user
+			// Update that there are no new messages from staff
 			// Also, we've seen any of the changes if there were any
 			$sql = "UPDATE	`orders`
-					SET		`orderNewMessageFromUser` = 0,
-							`orderChangedByUser` = 0
+					SET		`orderNewMessageFromStaff` = 0,
+							`orderChangedByStaff` = 0
 					WHERE	`orderID` = :OrderID";
 			$s = $pdo->prepare($sql);
 			$s->bindValue(':OrderID', $orderID);
@@ -6208,7 +6191,7 @@ if	(isSet($_SESSION['loggedIn']) AND
 
 			$pdo->commit();
 
-			// Get all available extras if admin wants to add an alternative
+			// Get all available extras if user wants to add an alternative
 			// That are not already in the order
 			$sql = 'SELECT 	`extraID`		AS ExtraID,
 							`name`			AS ExtraName,
@@ -6240,20 +6223,13 @@ if	(isSet($_SESSION['loggedIn']) AND
 	}
 
 	// Set original values
-	$originalOrderAdminNote = $_SESSION['EditBookingOrderOriginalInfo']['OrderAdminNote'];
 	$originalOrderIsApproved = $_SESSION['EditBookingOrderOriginalInfo']['OrderIsApproved'];
 	$originalOrderUserNotes = $_SESSION['EditBookingOrderOriginalInfo']['OrderUserNotes'];
 	$originalOrderCreated = $_SESSION['EditBookingOrderOriginalInfo']['DateTimeCreated'];
-	$originalOrderUpdatedByStaff = $_SESSION['EditBookingOrderOriginalInfo']['DateTimeUpdatedByStaff'];
 	$originalOrderUpdatedByUser = $_SESSION['EditBookingOrderOriginalInfo']['DateTimeUpdatedByUser'];
 
 	$disableEdit = $_SESSION['EditBookingOrderDisableEdit'];
 	$orderStatus = $_SESSION['EditBookingOrderOrderStatus'];
-
-	if(!empty($_SESSION['EditBookingOrderOriginalInfo']['DateTimeCancelled'])){
-		$originalCancelMessage = $_SESSION['EditBookingOrderOriginalInfo']['OrderCancelMessage'];
-		$originalDateTimeCancelled = $_SESSION['EditBookingOrderOriginalInfo']['DateTimeCancelled'];
-	}
 
 	$availableExtrasNumber = sizeOf($availableExtra);
 
@@ -6267,6 +6243,12 @@ if	(isSet($_SESSION['loggedIn']) AND
 }
 
 	// EDIT ORDER CODE SNIPPET // END //
+
+	// FINISH EDIT ORDER CODE SNIPPET // START //
+
+	
+
+	// FINISH EDIT ORDER CODE SNIPPET // END //
 
 	// CANCEL ORDER CODE SNIPPET // START //
 
