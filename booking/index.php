@@ -5573,6 +5573,7 @@ if(isSet($_POST['add']) AND $_POST['add'] == "Add Order"){
 							b.`cancellationCode` 	AS CancellationCode,
 							b.`startDateTime`		AS BookingStartTime,
 							b.`endDateTime`			AS BookingEndTime,
+							b.`orderID`				AS OriginalOrderID,
 							u.`lastname`			AS UserLastName,
 							u.`firstName`			AS UserFirstName,
 							u.`email`				AS UserEmail,
@@ -5601,6 +5602,7 @@ if(isSet($_POST['add']) AND $_POST['add'] == "Add Order"){
 		$bookingEndTime = $row['BookingEndTime'];
 		$displayBookingStartTime = convertDatetimeToFormat($bookingStartTime , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
 		$displayBookingEndTime = convertDatetimeToFormat($bookingEndTime , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
+		$originalOrderID = $row['OriginalOrderID'];
 	}
 	catch (PDOException $e)
 	{
@@ -5644,6 +5646,16 @@ if(isSet($_POST['add']) AND $_POST['add'] == "Add Order"){
 			$s->bindValue(':extraID', $extraID);
 			$s->bindValue(':orderID', $theOrderID);
 			$s->bindValue(':amount', $extraAmount);
+			$s->execute();
+		}
+
+		if(isSet($originalOrderID) AND $originalOrderID > 0){
+			$sql = "UPDATE	`orders`
+					SET		`removedFromBookingID` = :removedFromBookingID
+					WHERE	`orderID` = :orginalOrderID";
+			$s = $pdo->prepare($sql);
+			$s->bindValue(':orginalOrderID', $originalOrderID);
+			$s->bindValue(':removedFromBookingID', $bookingID);
 			$s->execute();
 		}
 
@@ -5725,7 +5737,7 @@ if(isSet($_POST['add']) AND $_POST['add'] == "Add Order"){
 		"If if it's within $cancelDayAmount days left you have to contact an Admin directly to see what can be done.\n\n" . 
 		"If you wish to cancel the booked meeting, including this submitted order, you can easily do so by using the link given below.\n" .
 		"Click this link to cancel the booked meeting: " . $_SERVER['HTTP_HOST'] . 
-		"/booking/?cancellationcode=" . $cancellationCode . "\n\n";
+		"/booking/?cancellationcode=" . $cancellationCode;
 
 		$email = $bookingCreatorUserEmail;
 
