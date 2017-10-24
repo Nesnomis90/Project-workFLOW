@@ -5336,7 +5336,6 @@ if	(isSet($_SESSION['loggedIn']) AND
 			$bookingCreatorUserID = $row['UserID'];
 			$bookingCreatorUserEmail = $row['UserEmail'];
 			$bookingCreatorUserInfo = $row['LastName'] . ", " . $row['FirstName'] . " - " . $row['UserEmail'];
-			$bookingOrderID = $row['OrderID'];
 			$_SESSION['createOrderOriginalValues']['SendEmail'] = $row['SendEmail'];
 			$_SESSION['createOrderOriginalValues']['UserEmail'] = $bookingCreatorUserEmail;
 			if(isSet($bookingCreatorUserID) AND !empty($bookingCreatorUserID) AND $bookingCreatorUserID == $SelectedUserID){
