@@ -102,11 +102,6 @@ function clearEditBookingOrderSessions(){
 	unset($_SESSION['refreshEditBookingOrder']);
 }
 
-function clearEditBookingOrderSessionsOutsideReset(){
-	unset($_SESSION['EditOrderDisableEdit']);
-	unset($_SESSION['EditOrderOrderStatus']);
-}
-
 function updateBookingCodeGuesses(){
 	// Check if any of the old guesses are old enough to remove
 	if(isSet($_SESSION['bookingCodeGuesses'])){
@@ -5985,13 +5980,6 @@ if	(isSet($_SESSION['loggedIn']) AND
 		// Make sure we don't have any remembered values in memory
 		clearEditBookingOrderSessions();
 
-		if(!isSet($_SESSION['EditBookingOrderDisableEdit'])){
-			$_SESSION['EditBookingOrderDisableEdit'] = $_POST['disableEdit'];
-		}
-		if(!isSet($_SESSION['EditBookingOrderOrderStatus'])){
-			$_SESSION['EditBookingOrderOrderStatus'] = $_POST['OrderStatus'];
-		}
-
 		// Get information from database again on the selected order
 		try
 		{
@@ -6228,9 +6216,6 @@ if	(isSet($_SESSION['loggedIn']) AND
 	$originalOrderUserNotes = $_SESSION['EditBookingOrderOriginalInfo']['OrderUserNotes'];
 	$originalOrderCreated = $_SESSION['EditBookingOrderOriginalInfo']['DateTimeCreated'];
 	$originalOrderUpdatedByUser = $_SESSION['EditBookingOrderOriginalInfo']['DateTimeUpdatedByUser'];
-
-	$disableEdit = $_SESSION['EditBookingOrderDisableEdit'];
-	$orderStatus = $_SESSION['EditBookingOrderOrderStatus'];
 
 	$availableExtrasNumber = sizeOf($availableExtra);
 
