@@ -6030,17 +6030,7 @@ if	(isSet($_SESSION['loggedIn']) AND
 								IFNULL(eo.`alternativePrice`, ex.`price`)				AS ExtraPrice,
 								ex.`description`										AS ExtraDescription,
 								eo.`purchased`											AS ExtraDateTimePurchased,
-								(
-									SELECT 	CONCAT_WS(", ", u.`lastname`, u.`firstname`)
-									FROM	`user` u
-									WHERE	u.`userID` = eo.`purchasedByUserID`
-								)														AS ExtraPurchasedByUser,
-								eo.`approvedForPurchase`								AS ExtraDateTimeApprovedForPurchase,
-								(
-									SELECT 	CONCAT_WS(", ", u.`lastname`, u.`firstname`)
-									FROM	`user` u
-									WHERE	u.`userID` = eo.`approvedByUserID`
-								)														AS ExtraApprovedForPurchaseByUser
+								eo.`approvedForPurchase`								AS ExtraDateTimeApprovedForPurchase
 					FROM 		`extraorders` eo
 					INNER JOIN	`extra` ex
 					ON 			ex.`extraID` = eo.`extraID`
@@ -6075,16 +6065,9 @@ if	(isSet($_SESSION['loggedIn']) AND
 				if($extra['ExtraDateTimeApprovedForPurchase'] != NULL){
 					$booleanApprovedForPurchase = 1;
 					$dateTimeApprovedForPurchase = $extra['ExtraDateTimeApprovedForPurchase'];
-					$displayDateTimeApprovedForPurchase = convertDatetimeToFormat($dateTimeApprovedForPurchase , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
-					if($extra['ExtraApprovedForPurchaseByUser'] != NULL){
-						$displayApprovedForPurchaseByUser = $extra['ExtraApprovedForPurchaseByUser'];
-					} else {
-						$displayApprovedForPurchaseByUser = "N/A - Deleted User";
-					}
 				} else {
 					$booleanApprovedForPurchase = 0;
 					$displayDateTimeApprovedForPurchase = "";
-					$displayApprovedForPurchaseByUser = "";
 				}
 
 				$extraOrderedOnlyNames[] = $extraName;
@@ -6098,7 +6081,6 @@ if	(isSet($_SESSION['loggedIn']) AND
 											'ExtraDateTimePurchased' => $displayDateTimePurchased,
 											'ExtraPurchasedByUser' => $displayPurchasedByUser,
 											'ExtraDateTimeApprovedForPurchase' => $displayDateTimeApprovedForPurchase,
-											'ExtraApprovedForPurchaseByUser' => $displayApprovedForPurchaseByUser,
 											'ExtraBooleanApprovedForPurchase' => $booleanApprovedForPurchase,
 											'ExtraBooleanPurchased' => $booleanPurchased
 										);
@@ -6115,7 +6097,7 @@ if	(isSet($_SESSION['loggedIn']) AND
 			$_SESSION['EditBookingOrderExtraOrdered'] = $extraOrdered;
 			$_SESSION['EditBookingOrderExtraOrderedOnlyNames'] = $extraOrderedOnlyNames;
 
-			// Get information about messages sent to/from user
+			// Get information about messages sent to/from staff
 			$sql = 'SELECT	`messageID`		AS OrderMessageID,
 							`message`		AS OrderMessage,
 							`sentByStaff`	AS OrderMessageSentByStaff,
