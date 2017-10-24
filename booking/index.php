@@ -5497,6 +5497,8 @@ if(isSet($_POST['add']) AND $_POST['add'] == "Add Order"){
 
 	$bookingID = $_SESSION['createOrderOriginalValues']['BookingID'];
 
+	$invalidInput = FALSE;
+
 	// Get the items added to the order
 	$lastID = $_POST['LastAlternativeID']+1;
 	for($i = 0; $i < $lastID; $i++){
@@ -5559,7 +5561,7 @@ if(isSet($_POST['add']) AND $_POST['add'] == "Add Order"){
 		}
 	}
 	
-// Get relevant booking information
+	// Get relevant booking information
 	try
 	{
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
@@ -5569,8 +5571,8 @@ if(isSet($_POST['add']) AND $_POST['add'] == "Add Order"){
 		$sql = "SELECT 		c.`name`				AS CompanyName,
 							c.`companyID` 			AS CompanyID,
 							b.`cancellationCode` 	AS CancellationCode,
-							b.`dateTimeStart`		AS BookingStartTime,
-							b.`dateTimeEnd`			AS BookingEndTime,
+							b.`startDateTime`		AS BookingStartTime,
+							b.`endDateTime`			AS BookingEndTime,
 							u.`lastname`			AS UserLastName,
 							u.`firstName`			AS UserFirstName,
 							u.`email`				AS UserEmail,
@@ -5596,7 +5598,7 @@ if(isSet($_POST['add']) AND $_POST['add'] == "Add Order"){
 		$meetingRoomName = $row['MeetingRoomName'];
 		$userinfo = $row['UserLastName'] . ", " . $row['UserFirstName'] . " - " . $row['UserEmail'];
 		$bookingStartTime = $row['BookingStartTime'];
-		$bookingEndTime = $row['BookingStartBookingEndTimeTime'];
+		$bookingEndTime = $row['BookingEndTime'];
 		$displayBookingStartTime = convertDatetimeToFormat($bookingStartTime , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
 		$displayBookingEndTime = convertDatetimeToFormat($bookingEndTime , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
 	}
@@ -6496,14 +6498,22 @@ foreach($result as $row){
 			}
 		} else {
 			// Order has been cancelled
-			$orderCanBeCreated = TRUE;	// Can create a new order then
+			if($timeDifferenceInDays < MINIMUM_DAYS_UNTIL_MEETING_STARTS_WHERE_YOU_CAN_STILL_PLACE_AN_ORDER){
+				$orderCanBeCreated = FALSE;
+			} else {
+				$orderCanBeCreated = TRUE; // Can create a new order then
+			}
 			$orderCanBeEdited = FALSE;
 			$orderCanBeCancelled = FALSE;
 			$orderDetailsOnly = FALSE;
 		}
 	} else {
 		// Meeting has no order yet
-		$orderCanBeCreated = TRUE;
+		if($timeDifferenceInDays < MINIMUM_DAYS_UNTIL_MEETING_STARTS_WHERE_YOU_CAN_STILL_PLACE_AN_ORDER){
+			$orderCanBeCreated = FALSE;
+		} else {
+			$orderCanBeCreated = TRUE;
+		}
 		$orderCanBeEdited = FALSE;
 		$orderCanBeCancelled = FALSE;
 		$orderDetailsOnly = FALSE;
