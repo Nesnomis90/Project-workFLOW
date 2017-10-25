@@ -358,7 +358,7 @@
 		<?php include_once $_SERVER['DOCUMENT_ROOT'] .'/includes/topnav.html.php'; ?>
 
 		<form action="" method="post">
-			<fieldset><legend>Order Details - Status: <?php htmlout($orderStatus); ?></legend>
+			<fieldset><legend>Order Details</legend>
 				<div>
 					<?php if(isSet($_SESSION['EditBookingOrderError'])) :?>
 						<span><b class="feedback"><?php htmlout($_SESSION['EditBookingOrderError']); ?></b></span>
@@ -414,11 +414,7 @@
 
 				<div>
 					<label>Order Approval Status: </label>
-					<?php if($originalOrderIsApproved == 1) : ?>
-						<span><b><?php htmlout("Order Approved"); ?></b></span>
-					<?php else : ?>
-						<span><b><?php htmlout("Order Not Yet Approved"); ?></b></span>
-					<?php endif; ?>
+					<span><b><?php htmlout($orderStatus); ?></b></span>
 				</div>
 			</fieldset>
 

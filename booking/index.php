@@ -6054,9 +6054,13 @@ if	(isSet($_SESSION['loggedIn']) AND
 			$s = $pdo->prepare($sql);
 			$s->bindValue(':OrderID', $orderID);
 			$s->execute();
+			
+			$extrasOrdered = 0;
+			$extrasApproved = 0;
 
 			$result = $s->fetchAll(PDO::FETCH_ASSOC);
 			foreach($result AS $extra){
+				$extrasOrdered++;
 				$extraName = $extra['ExtraName'];
 				$extraAmount = $extra['ExtraAmount'];
 				$extraPrice = convertToCurrency($extra['ExtraPrice']);
@@ -6064,6 +6068,7 @@ if	(isSet($_SESSION['loggedIn']) AND
 				$extraID = $extra['ExtraID'];
 
 				if($extra['ExtraDateTimePurchased'] != NULL){
+					$extrasApproved++;
 					$booleanPurchased = 1;
 					$dateTimePurchased = $extra['ExtraDateTimePurchased'];
 					$displayDateTimePurchased = convertDatetimeToFormat($dateTimePurchased , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
@@ -6109,6 +6114,8 @@ if	(isSet($_SESSION['loggedIn']) AND
 				$extraOrderedOnlyNames = array();
 			}
 
+			$_SESSION['EditBookingOrderOriginalInfo']['OrderExtrasOrdered'] = $extrasOrdered;
+			$_SESSION['EditBookingOrderOriginalInfo']['OrderExtrasApproved'] = $extrasApproved;
 			$_SESSION['EditBookingOrderOriginalInfo']['ExtraOrdered'] = $extraOrdered;
 			$_SESSION['EditBookingOrderExtraOrdered'] = $extraOrdered;
 			$_SESSION['EditBookingOrderExtraOrderedOnlyNames'] = $extraOrderedOnlyNames;
@@ -6231,7 +6238,6 @@ if	(isSet($_SESSION['loggedIn']) AND
 	// Calculate order status
 	$extrasOrdered = $_SESSION['EditBookingOrderOriginalInfo']['OrderExtrasOrdered'];
 	$extrasApproved = $_SESSION['EditBookingOrderOriginalInfo']['OrderExtrasApproved'];
-	$extrasPurchased = $_SESSION['EditBookingOrderOriginalInfo']['OrderExtrasPurchased'];
 	$orderIsApprovedByUser =$_SESSION['EditBookingOrderOriginalInfo']['OrderApprovedByUser'];
 
 	if($originalOrderIsApproved == 1 AND $orderIsApprovedByUser == 1){
@@ -6241,12 +6247,12 @@ if	(isSet($_SESSION['loggedIn']) AND
 		} elseif($extrasApproved < $extrasOrdered){
 			$orderStatus .= "\n\nPending Item Approval.";
 		}
-	} elseif($originalOrderIsApproved == 1 AND $orderIsApprovedByUser == 0) {
-		$orderStatus = "Order Not Approved After Change.\n\nPending Your Approval.";
-	} elseif($originalOrderIsApproved == 0 AND $orderIsApprovedByUser == 1) {
-		$orderStatus = "Order Not Approved.\n\nPending Staff Approval.";
-	} elseif(($originalOrderIsApproved == 0 AND $orderIsApprovedByUser == 0) {
-		$orderStatus = "Order Not Approved After Change.\n\nPending Staff Approval.\n\nPending Your Approval.";
+	} elseif($originalOrderIsApproved == 1 AND $orderIsApprovedByUser == 0){
+		$orderStatus = "Order Not Yet Approved After Change.\n\nPending Your Approval.";
+	} elseif($originalOrderIsApproved == 0 AND $orderIsApprovedByUser == 1){
+		$orderStatus = "Order Not Yet Approved.\n\nPending Staff Approval.";
+	} elseif($originalOrderIsApproved == 0 AND $orderIsApprovedByUser == 0){
+		$orderStatus = "Order Not Yet Approved After Change.\n\nPending Staff Approval.\n\nPending Your Approval.";
 	}
 
 	$availableExtrasNumber = sizeOf($availableExtra);
@@ -6264,7 +6270,7 @@ if	(isSet($_SESSION['loggedIn']) AND
 
 	// FINISH EDIT ORDER CODE SNIPPET // START //
 
-	
+	// TO-DO: FIX-ME: Add finish edit code from admin\orders\index.php
 
 	// FINISH EDIT ORDER CODE SNIPPET // END //
 
