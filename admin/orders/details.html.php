@@ -60,6 +60,7 @@
 				inputExtraAmount.setAttribute("name", inputExtraAmountAttributeName);
 				inputExtraAmount.setAttribute("value", "1");
 				inputExtraAmount.setAttribute("min", "1");
+				inputExtraAmount.style.width = "45px";
 
 				if(addAlternativeExtra){
 					// Get available extras
@@ -73,7 +74,7 @@
 
 					// Create the select box we want to be able to choose from
 					var selectExtraName = document.createElement("select");
-					var selectExtraNameID = "addAlternativeSelected" + alternativeID;
+					var selectExtraNameID = "addAlternativeSelected-" + alternativeID;
 					selectExtraName.setAttribute("id", selectExtraNameID);
 					selectExtraName.setAttribute("name", selectExtraNameID);
 					selectExtraName.onchange = function onChange(){changeAlternativeText(this);}
@@ -118,7 +119,7 @@
 					if(alternativesAdded == availableExtrasNumber){
 						// disable the add alternative button
 						var addAlternativeExtraButton = document.getElementById("addAlternativeExtraButton");
-						addAlternativeExtraButton.setAttribute("disabled", "disabled");
+						addAlternativeExtraButton.style.display = 'none';
 					}
 
 					// Add items/values to columns
@@ -193,7 +194,8 @@
 
 			function changeAlternativeText(selectBox){
 				var selectBoxID = selectBox.id;
-				var attributeID = selectBoxID.slice(-1);
+				var splitID = selectBoxID.split("-");
+				var attributeID = splitID[1];
 				var descriptionTextID = "addAlternativeDescriptionSelected" + attributeID;
 				var	descriptionText = document.getElementById(descriptionTextID);
 				var priceTextID = "addAlternativePriceSelected" + attributeID;

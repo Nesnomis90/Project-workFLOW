@@ -68,8 +68,7 @@
 					var columnPriceID = "addAlternativePriceSelected" + alternativeID;
 					columnPrice.setAttribute("id", columnPriceID);
 					var columnAmount = row.insertCell(3);
-					var columnConfirmButton = row.insertCell(4);
-					var columnRemoveButton = row.insertCell(5);
+					var columnConfirmAndRemoveButton = row.insertCell(4);
 
 					// Create the remove alternative extra (remove table row) button
 					var removeAlternativeExtraButton = document.createElement("input");
@@ -99,6 +98,7 @@
 					inputExtraAmount.setAttribute("name", inputExtraAmountAttributeName);
 					inputExtraAmount.setAttribute("value", "1");
 					inputExtraAmount.setAttribute("min", "1");
+					inputExtraAmount.style.width = "45px";
 
 					// Create the hidden input for accepted extra
 					var inputExtraAccepted = document.createElement("input");
@@ -125,7 +125,7 @@
 
 					// Create the select box we want to be able to choose from
 					var selectExtraName = document.createElement("select");
-					var selectExtraNameID = "addAlternativeSelected" + alternativeID;
+					var selectExtraNameID = "addAlternativeSelected-" + alternativeID;
 					selectExtraName.setAttribute("id", selectExtraNameID);
 					selectExtraName.setAttribute("name", selectExtraNameID);
 					selectExtraName.onchange = function onChangeSelectIndex(){changeAlternativeText(this);}
@@ -189,8 +189,8 @@
 					inputAlternativesAdded.value = alternativesAdded;
 
 					columnAmount.appendChild(inputExtraAmount);
-					columnConfirmButton.appendChild(confirmAddedExtraButton);
-					columnRemoveButton.appendChild(removeAlternativeExtraButton);
+					columnConfirmAndRemoveButton.appendChild(confirmAddedExtraButton);
+					columnConfirmAndRemoveButton.appendChild(removeAlternativeExtraButton);
 
 					// update the input to keep track of the last ID value on the submitted alternative
 					var inputLastAlternativeIDValue = document.getElementById("LastAlternativeID");
@@ -204,7 +204,8 @@
 
 				function changeAlternativeText(selectBox){
 					var selectBoxID = selectBox.id;
-					var attributeID = selectBoxID.slice(-1);
+					var splitID = selectBoxID.split("-");
+					var attributeID = splitID[1];
 					var descriptionTextID = "addAlternativeDescriptionSelected" + attributeID;
 					var	descriptionText = document.getElementById(descriptionTextID);
 					var priceTextID = "addAlternativePriceSelected" + attributeID;
@@ -613,18 +614,13 @@
 									<th>Select</th>
 									<th>Remove</th>
 								</tr>
-								<tr>
-									<td colspan="6"><button type="button" style="font-size: 150%; color: green;" id="addAlternativeExtraButton" onclick="addTableRow()">+</button></td>
-								</tr>
-								<tr>
-									<th colspan="6"></th>
-								</tr>
+								<tr><td colspan="6"><button type="button" style="font-size: 150%; color: green;" id="addAlternativeExtraButton" onclick="addTableRow()">+</button></td></tr>
+								<tr><th colspan="6"></th></tr>
 							</table>
 							<label for="UserNotes">Your Order Notes: </label>
 							<textarea style="width: 100%;" rows="4" id="UserNotes" name="UserNotes" placeholder="Enter Any Additional Information"><?php htmlout($userNotes); ?></textarea>
 						</div>
-						<div id="DisplayTotalPricePlacement" class="left">
-						</div>
+						<div id="DisplayTotalPricePlacement" class="left"></div>
 					</fieldset>
 				<?php elseif(isSet($_SESSION["loggedIn"]) AND isSet($_SESSION['AddCreateBookingStepOneCompleted']) AND !isSet($_SESSION["DefaultMeetingRoomInfo"]) AND isSet($_SESSION['AddCreateBookingOrderTooSoon'])) : ?>
 					<fieldset class="left"><legend>Step 2 (Unavailable) - Set Order Details:</legend>
