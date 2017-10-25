@@ -89,7 +89,7 @@
 						var extraAlreadyAdded = false;
 
 						for(var j = 0; j < alternativeID; j++){
-							var selectBoxID = "addAlternativeSelected" + j;
+							var selectBoxID = "addAlternativeSelected-" + j;
 							var selectBox = document.getElementById(selectBoxID);
 
 							if(selectBox !== null){
@@ -108,7 +108,7 @@
 
 							// Make sure we have the appropriate description and price for the extra name
 							if(firstIndexAdded === false){
-								firstIndexInSelectBox = i
+								firstIndexInSelectBox = i;
 								firstIndexAdded = true;
 							}
 						}

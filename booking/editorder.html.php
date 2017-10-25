@@ -43,7 +43,7 @@
 				var columnPriceID = "addAlternativePriceSelected" + alternativeID;
 				columnPrice.setAttribute("id", columnPriceID);
 				var columnAmount = row.insertCell(3);
-				var columnRemoveButton = row.insertCell(4);
+				var columnConfirmAndRemoveButton = row.insertCell(4);
 
 				// Create the remove alternative extra (remove table row) button
 				var removeAlternativeExtraButton = document.createElement("input");
@@ -125,14 +125,9 @@
 				for(var i = 0; i < availableExtrasArray.length; i++){
 					var extraAlreadyAdded = false;
 
-					for(var j = 0; j < alternativeID; j++){
-						var selectBoxID = "addAlternativeSelected" + j;
-						var selectBox = document.getElementById(selectBoxID);
-
-						for(var j = 0; j < acceptedExtraIDArray.length; j++){
-							if(availableExtrasArray[i]['ExtraID'] == acceptedExtraIDArray[j]){
-								extraAlreadyAdded = true;
-							}
+					for(var j = 0; j < acceptedExtraIDArray.length; j++){
+						if(availableExtrasArray[i]['ExtraID'] == acceptedExtraIDArray[j]){
+							extraAlreadyAdded = true;
 						}
 					}
 
@@ -144,7 +139,7 @@
 
 						// Make sure we have the appropriate description and price for the extra name
 						if(firstIndexAdded === false){
-							firstIndexInSelectBox = i
+							firstIndexInSelectBox = i;
 							firstIndexAdded = true;
 						}
 					}
@@ -169,8 +164,8 @@
 				inputAlternativesAdded.value = alternativesAdded;
 
 				columnAmount.appendChild(inputExtraAmount);
-				columnConfirmButton.appendChild(confirmAddedExtraButton);
-				columnRemoveButton.appendChild(removeAlternativeExtraButton);
+				columnConfirmAndRemoveButton.appendChild(confirmAddedExtraButton);
+				columnConfirmAndRemoveButton.appendChild(removeAlternativeExtraButton);
 
 				// update the input to keep track of the last ID value on the submitted alternative
 				var inputLastAlternativeIDValue = document.getElementById("LastAlternativeID");
@@ -239,7 +234,7 @@
 			}
 
 			function confirmAddedExtra(confirmButton, selectBoxIDNumber){
-				var selectBoxID = "addAlternativeSelected" + selectBoxIDNumber;
+				var selectBoxID = "addAlternativeSelected-" + selectBoxIDNumber;
 				var selectBox = document.getElementById(selectBoxID);
 				var extraIDSelected = selectBox.options[selectBox.selectedIndex].value;
 				var extraIDName = document.createTextNode(selectBox.options[selectBox.selectedIndex].text);
@@ -271,7 +266,7 @@
 				// Remove selected extra ID from other open options
 				for(var j = 0; j < alternativeID; j++){
 					if(j != selectBoxIDNumber){
-						var newSelectBoxID = "addAlternativeSelected" + j;
+						var newSelectBoxID = "addAlternativeSelected-" + j;
 						var newSelectBox = document.getElementById(newSelectBoxID);
 						if(newSelectBox !== null){
 							// Remove the option
@@ -331,7 +326,7 @@
 				if(extraIDRemoved !== null && extraIDRemoved.value != ""){
 					// Go through the open select boxes
 					for(var j = 0; j < alternativeID; j++){
-						var selectBoxToAddOptionID = "addAlternativeSelected" + j;
+						var selectBoxToAddOptionID = "addAlternativeSelected-" + j;
 						var selectBoxToAddOption = document.getElementById(selectBoxToAddOptionID);
 						if(selectBoxToAddOption !== null){
 							// Add the option that is no longer accepted
@@ -357,25 +352,23 @@
 				var inputAlternativesAdded = document.getElementById("AlternativesAdded");
 				inputAlternativesAdded.value = alternativesAdded;
 
-				// Enable button again if it was disabled
 				var addAlternativeExtraButton = document.getElementById("addAlternativeExtraButton");
+					// Enable button again if it was disabled
 				addAlternativeExtraButton.removeAttribute("disabled");
-
-				// Display add button again if it wasn't before
-				var addAlternativeExtraButton = document.getElementById("addAlternativeExtraButton");
+					// Display add button again if it wasn't before
 				addAlternativeExtraButton.style.display = 'inline-block';
 
 				// Update total price displayed
 				changeTotalPrice();
 			}
 
-			function changeAmount(buttonWithExtraID){
+		/*	function changeAmount(buttonWithExtraID){
 				var splitID = buttonWithExtraID.id.split("-");
 				var extraID = splitID[1];
-			}
+			}*/
 
 			function validateNewAlternatives(){
-				if(newAlternativesCreated > 0){
+				if(alternativesAdded > 0){
 
 					// First check if all added items have been accepted (checkmark)
 					for(var i = 0; i < alternativeID; i++){
@@ -414,6 +407,7 @@
 						return false;
 					} else {
 						var totalPrice = document.getElementById("SaveTotalPrice").value;
+
 						var submitConfirmed = confirm("The total cost of this order will be " + totalPrice + " NOK. Are you sure you want to submit these updates to the order?");
 
 						return submitConfirmed;
@@ -506,58 +500,58 @@
 					<label>Order Approval Status: </label>
 					<span><b><?php htmlout($orderStatus); ?></b></span>
 				</div>
+
+				<div class="left">
+					<table id="addAlternative">
+						<caption>Items Ordered</caption>
+						<tr>
+							<th colspan="5">Item</th>
+						</tr>
+						<tr>
+							<th>Name</th>
+							<th>Description</th>
+							<th>Price (1 Amount)</th>
+							<th>Amount</th>
+							<th>Item Status</th>
+						</tr>
+						<?php if(isSet($extraOrdered) AND sizeOf($extraOrdered) > 0) : ?>
+							<?php foreach($extraOrdered AS $row): ?>
+								<tr>
+									<td><?php htmlout($row['ExtraName']); ?></td>
+									<td style="white-space: pre-wrap;"><?php htmlout($row['ExtraDescription']); ?></td>
+									<td><?php htmlout($row['ExtraPrice']); ?></td>
+									<td>
+										<input style="width: 45px;" type="number" name="extraAmount-<?php htmlout($row['ExtraID']); ?>" min="1" value="<?php htmlout($row['ExtraAmount']); ?>">
+										<button type="button" id="changeAmountButton-<?php htmlout($row['ExtraID']); ?>"onclick="changeAmount(this);">Change</button>
+									</td>
+									<td>
+										<?php if($row['ExtraBooleanApprovedForPurchase'] == 1) : ?>
+											<b>Item Approved</b>
+										<?php else : ?>
+											<b>Item Not Yet Approved</b>
+										<?php endif; ?>
+									</td>
+								</tr>
+							<?php endforeach; ?>
+						<?php else : ?>
+							<tr><td colspan="5"><b>This order has nothing in it.</b></td></tr>
+						<?php endif; ?>
+							<tr><td colspan="5"><button type="button" style="font-size: 150%; color: green;" id="addAlternativeExtraButton" onclick="addTableRow()">+</button></td></tr>
+							<tr><th colspan="5"></th></tr>
+					</table>
+				</div>
+				<div id="DisplayTotalPricePlacement" class="left"></div>
+
+				<div class="left">
+					<input type="hidden" name="OrderID" value="<?php htmlout($orderID); ?>">
+					<input type="hidden" id="SaveTotalPrice" name="SaveTotalPrice" value="">
+					<input type="hidden" id="LastAlternativeID" name="LastAlternativeID" value="">
+					<input type="hidden" id="AlternativesAdded" name="AlternativesAdded" value="0">
+					<input type="submit" id="AddBookingButton" name="order" value="Submit Changes" onclick="return validateAlternativesAdded()">
+					<input type="submit" name="order" value="Go Back">
+					<input type="submit" name="order" value="Reset">
+				</div>
 			</fieldset>
-
-			<div class="left">
-				<table id="addAlternative">
-					<caption>Items Ordered</caption>
-					<tr>
-						<th colspan="5">Item</th>
-					</tr>
-					<tr>
-						<th>Name</th>
-						<th>Description</th>
-						<th>Price (1 Amount)</th>
-						<th>Amount</th>
-						<th>Item Status</th>
-					</tr>
-					<?php if(isSet($extraOrdered) AND sizeOf($extraOrdered) > 0) : ?>
-						<?php foreach($extraOrdered AS $row): ?>
-							<tr>
-								<td><?php htmlout($row['ExtraName']); ?></td>
-								<td style="white-space: pre-wrap;"><?php htmlout($row['ExtraDescription']); ?></td>
-								<td><?php htmlout($row['ExtraPrice']); ?></td>
-								<td>
-									<input style="width: 45px;" type="number" name="extraAmount-<?php htmlout($row['ExtraID']); ?>" min="1" value="<?php htmlout($row['ExtraAmount']); ?>">
-									<button type="button" id="changeAmountButton-<?php htmlout($row['ExtraID']); ?>"onclick="changeAmount(this);">Change</button>
-								</td>
-								<td>
-									<?php if($row['ExtraBooleanApprovedForPurchase'] == 1) : ?>
-										<b>Item Approved</b>
-									<?php else : ?>
-										<b>Item Not Yet Approved</b>
-									<?php endif; ?>
-								</td>
-							</tr>
-						<?php endforeach; ?>
-					<?php else : ?>
-						<tr><td colspan="5"><b>This order has nothing in it.</b></td></tr>
-					<?php endif; ?>
-						<tr><td colspan="5"><button type="button" style="font-size: 150%; color: green;" id="addAlternativeExtraButton" onclick="addTableRow()">+</button></td></tr>
-						<tr><th colspan="5"></th></tr>
-				</table>
-			</div>
-			<div id="DisplayTotalPricePlacement" class="left"></div>
-
-			<div class="left">
-				<input type="hidden" name="OrderID" value="<?php htmlout($orderID); ?>">
-				<input type="hidden" id="SaveTotalPrice" name="SaveTotalPrice" value="">
-				<input type="hidden" id="LastAlternativeID" name="LastAlternativeID" value="">
-				<input type="hidden" id="AlternativesAdded" name="AlternativesAdded" value="0">
-				<input type="submit" name="action" value="Submit Changes" onclick="return validateNewAlternatives()">
-				<input type="submit" name="action" value="Go Back">
-				<input type="submit" name="action" value="Reset">
-			</div>
 		</form>
 	</body>
 </html>

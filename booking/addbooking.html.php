@@ -68,7 +68,8 @@
 					var columnPriceID = "addAlternativePriceSelected" + alternativeID;
 					columnPrice.setAttribute("id", columnPriceID);
 					var columnAmount = row.insertCell(3);
-					var columnConfirmAndRemoveButton = row.insertCell(4);
+					var columnConfirmButton = row.insertCell(4);
+					var columnRemoveButton = row.insertCell(5);
 
 					// Create the remove alternative extra (remove table row) button
 					var removeAlternativeExtraButton = document.createElement("input");
@@ -164,7 +165,7 @@
 
 							// Make sure we have the appropriate description and price for the extra name
 							if(firstIndexAdded === false){
-								firstIndexInSelectBox = i
+								firstIndexInSelectBox = i;
 								firstIndexAdded = true;
 							}
 						}
@@ -189,8 +190,8 @@
 					inputAlternativesAdded.value = alternativesAdded;
 
 					columnAmount.appendChild(inputExtraAmount);
-					columnConfirmAndRemoveButton.appendChild(confirmAddedExtraButton);
-					columnConfirmAndRemoveButton.appendChild(removeAlternativeExtraButton);
+					columnConfirmButton.appendChild(confirmAddedExtraButton);
+					columnRemoveButton.appendChild(removeAlternativeExtraButton);
 
 					// update the input to keep track of the last ID value on the submitted alternative
 					var inputLastAlternativeIDValue = document.getElementById("LastAlternativeID");
@@ -259,7 +260,7 @@
 				}
 
 				function confirmAddedExtra(confirmButton, selectBoxIDNumber){
-					var selectBoxID = "addAlternativeSelected" + selectBoxIDNumber;
+					var selectBoxID = "addAlternativeSelected-" + selectBoxIDNumber;
 					var selectBox = document.getElementById(selectBoxID);
 					var extraIDSelected = selectBox.options[selectBox.selectedIndex].value;
 					var extraIDName = document.createTextNode(selectBox.options[selectBox.selectedIndex].text);
@@ -291,7 +292,7 @@
 					// Remove selected extra ID from other open options
 					for(var j = 0; j < alternativeID; j++){
 						if(j != selectBoxIDNumber){
-							var newSelectBoxID = "addAlternativeSelected" + j;
+							var newSelectBoxID = "addAlternativeSelected-" + j;
 							var newSelectBox = document.getElementById(newSelectBoxID);
 							if(newSelectBox !== null){
 								// Remove the option
@@ -326,7 +327,7 @@
 					if(extraIDRemoved !== null && extraIDRemoved.value != ""){
 						// Go through the open select boxes
 						for(var j = 0; j < alternativeID; j++){
-							var selectBoxToAddOptionID = "addAlternativeSelected" + j;
+							var selectBoxToAddOptionID = "addAlternativeSelected-" + j;
 							var selectBoxToAddOption = document.getElementById(selectBoxToAddOptionID);
 							if(selectBoxToAddOption !== null){
 								// Add the option that is no longer accepted
@@ -367,12 +368,10 @@
 					var inputAlternativesAdded = document.getElementById("AlternativesAdded");
 					inputAlternativesAdded.value = alternativesAdded;
 
-					// Enable button again if it was disabled
 					var addAlternativeExtraButton = document.getElementById("addAlternativeExtraButton");
+						// Enable button again if it was disabled
 					addAlternativeExtraButton.removeAttribute("disabled");
-
-					// Display add button again if it wasn't before
-					var addAlternativeExtraButton = document.getElementById("addAlternativeExtraButton");
+						// Display add button again if it wasn't before
 					addAlternativeExtraButton.style.display = 'inline-block';
 
 					// Update total price displayed
@@ -426,6 +425,7 @@
 						}
 					} else {
 						var submitConfirmed = confirm("Are you sure you want to book this meeting without an order?");
+
 						return submitConfirmed;
 					}
 				}

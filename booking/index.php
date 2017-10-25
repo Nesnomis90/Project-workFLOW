@@ -6219,7 +6219,8 @@ if	(isSet($_SESSION['loggedIn']) AND
 								SELECT 	`extraID`
 								FROM 	`extraorders`
 								WHERE	`orderID` = :OrderID
-							)';
+							)
+					AND		`isAlternative` = 0';
 			$s = $pdo->prepare($sql);
 			$s->bindValue(':OrderID', $orderID);
 			$s->execute();
