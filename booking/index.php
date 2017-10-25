@@ -5989,6 +5989,7 @@ if	(isSet($_SESSION['loggedIn']) AND
 			$sql = 'SELECT 		`orderID`						AS TheOrderID,
 								`orderUserNotes`				AS OrderUserNotes,
 								`dateTimeCreated`				AS DateTimeCreated,
+								`dateTimeUpdatedByStaff`		AS DateTimeUpdatedByStaff,
 								`dateTimeUpdatedByUser`			AS DateTimeUpdatedByUser,
 								`orderApprovedByUser`			AS OrderApprovedByUser,
 								`orderApprovedByAdmin`			AS OrderApprovedByAdmin,
@@ -6018,6 +6019,13 @@ if	(isSet($_SESSION['loggedIn']) AND
 			$dateTimeCreated = $row['DateTimeCreated'];
 			$displayDateTimeCreated = convertDatetimeToFormat($dateTimeCreated , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
 
+			if(!empty($row['DateTimeUpdatedByStaff'])){
+				$dateTimeUpdatedByStaff = $row['DateTimeUpdatedByStaff'];
+				$displayDateTimeUpdatedByStaff = convertDatetimeToFormat($dateTimeUpdatedByStaff , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
+			} else {
+				$displayDateTimeUpdatedByStaff = "";
+			}
+
 			if(!empty($row['DateTimeUpdatedByUser'])){
 				$dateTimeUpdatedByUser = $row['DateTimeUpdatedByUser'];
 				$displayDateTimeUpdatedByUser = convertDatetimeToFormat($dateTimeUpdatedByUser , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
@@ -6027,6 +6035,7 @@ if	(isSet($_SESSION['loggedIn']) AND
 
 			$_SESSION['EditBookingOrderOriginalInfo']['OrderIsApproved'] = $orderIsApproved;
 			$_SESSION['EditBookingOrderOriginalInfo']['DateTimeCreated'] = $displayDateTimeCreated;
+			$_SESSION['EditBookingOrderOriginalInfo']['DateTimeUpdatedByStaff'] = $displayDateTimeUpdatedByStaff;
 			$_SESSION['EditBookingOrderOriginalInfo']['DateTimeUpdatedByUser'] = $displayDateTimeUpdatedByUser;
 
 			$_SESSION['EditBookingOrderOrderID'] = $orderID;
@@ -6204,6 +6213,7 @@ if	(isSet($_SESSION['loggedIn']) AND
 		}
 		catch (PDOException $e)
 		{
+			$pdo->rollBack();
 			$error = 'Error fetching order details: ' . $e->getMessage();
 			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
 			$pdo = null;
@@ -6216,6 +6226,28 @@ if	(isSet($_SESSION['loggedIn']) AND
 	$originalOrderUserNotes = $_SESSION['EditBookingOrderOriginalInfo']['OrderUserNotes'];
 	$originalOrderCreated = $_SESSION['EditBookingOrderOriginalInfo']['DateTimeCreated'];
 	$originalOrderUpdatedByUser = $_SESSION['EditBookingOrderOriginalInfo']['DateTimeUpdatedByUser'];
+	$originalOrderUpdatedByStaff = $_SESSION['EditBookingOrderOriginalInfo']['DateTimeUpdatedByStaff'];
+
+	// Calculate order status
+	$extrasOrdered = $_SESSION['EditBookingOrderOriginalInfo']['OrderExtrasOrdered'];
+	$extrasApproved = $_SESSION['EditBookingOrderOriginalInfo']['OrderExtrasApproved'];
+	$extrasPurchased = $_SESSION['EditBookingOrderOriginalInfo']['OrderExtrasPurchased'];
+	$orderIsApprovedByUser =$_SESSION['EditBookingOrderOriginalInfo']['OrderApprovedByUser'];
+
+	if($originalOrderIsApproved == 1 AND $orderIsApprovedByUser == 1){
+		$orderStatus = "Order Approved!";
+		if($extrasApproved == $extrasOrdered){
+			$orderStatus .= "\n\nAll Items Approved!";
+		} elseif($extrasApproved < $extrasOrdered){
+			$orderStatus .= "\n\nPending Item Approval.";
+		}
+	} elseif($originalOrderIsApproved == 1 AND $orderIsApprovedByUser == 0) {
+		$orderStatus = "Order Not Approved After Change.\n\nPending Your Approval.";
+	} elseif($originalOrderIsApproved == 0 AND $orderIsApprovedByUser == 1) {
+		$orderStatus = "Order Not Approved.\n\nPending Staff Approval.";
+	} elseif(($originalOrderIsApproved == 0 AND $orderIsApprovedByUser == 0) {
+		$orderStatus = "Order Not Approved After Change.\n\nPending Staff Approval.\n\nPending Your Approval.";
+	}
 
 	$availableExtrasNumber = sizeOf($availableExtra);
 

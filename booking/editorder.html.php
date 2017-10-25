@@ -372,7 +372,16 @@
 				</div>
 
 				<div>
-					<label>Your Last Update: </label>
+					<label>Last Update (Staff): </label>
+					<?php if(empty($originalOrderUpdatedByStaff)) : ?>
+						<span><b><i><?php htmlout("Staff has made no changes to this order yet."); ?></i></b></span>
+					<?php else : ?>
+						<span><b><?php htmlout($originalOrderUpdatedByStaff); ?></b></span>
+					<?php endif; ?>
+				</div>
+
+				<div>
+					<label>Last Update (User): </label>
 					<?php if(empty($originalOrderUpdatedByUser)) : ?>
 						<span><b><i><?php htmlout("You have made no changes to this order yet."); ?></i></b></span>
 					<?php else : ?>
@@ -417,7 +426,7 @@
 				<caption>Items Ordered</caption>
 				<tr>
 					<th colspan="4">Item</th>
-					<th>Approved For Purchase?</th>
+					<th>Approved By Staff?</th>
 				</tr>
 				<tr>
 					<th>Name</th>
@@ -434,19 +443,10 @@
 							<td><?php htmlout($row['ExtraPrice']); ?></td>
 							<td><?php htmlout($row['ExtraAmount']); ?></td>
 							<td>
-								<?php if($disableEdit == 0) : ?>
-									<?php if($row['ExtraBooleanApprovedForPurchase'] == 1) : ?>
-										<label style="width: auto;"><input type="checkbox" name="isApprovedForPurchase[]" value="<?php htmlout($row['ExtraID']); ?>" checked="checked">Approved</label>
-									<?php else : ?>
-										<label style="width: auto;"><input type="checkbox" name="isApprovedForPurchase[]" value="<?php htmlout($row['ExtraID']); ?>">Approved</label>
-									<?php endif; ?>
+								<?php if($row['ExtraBooleanApprovedForPurchase'] == 1) : ?>
+									<b>Item Approved</b>
 								<?php else : ?>
-									<?php if($row['ExtraBooleanApprovedForPurchase'] == 1) : ?>
-										<label style="width: auto;"><input type="checkbox" name="disabled" disabled="disabled" value="<?php htmlout($row['ExtraID']); ?>" checked="checked">Approved</label>
-										<input type="hidden" name="isApprovedForPurchase[]" value="<?php htmlout($row['ExtraID']); ?>">
-									<?php else : ?>
-										<label style="width: auto;"><input type="checkbox" name="disabled" disabled="disabled" value="<?php htmlout($row['ExtraID']); ?>">Approved</label>
-									<?php endif; ?>
+									<b>Item Not Yet Approved</b>
 								<?php endif; ?>
 							</td>
 						</tr>

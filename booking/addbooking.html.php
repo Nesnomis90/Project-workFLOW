@@ -618,7 +618,7 @@
 								</tr>
 								<tr>
 									<th colspan="6"></th>
-								</tr>						
+								</tr>
 							</table>
 							<label for="UserNotes">Your Order Notes: </label>
 							<textarea style="width: 100%;" rows="4" id="UserNotes" name="UserNotes" placeholder="Enter Any Additional Information"><?php htmlout($userNotes); ?></textarea>
