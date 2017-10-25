@@ -5986,20 +5986,23 @@ if	(isSet($_SESSION['loggedIn']) AND
 			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 			$pdo = connect_to_db();
 
-			$sql = 'SELECT 		`orderID`						AS TheOrderID,
-								`orderUserNotes`				AS OrderUserNotes,
-								`dateTimeCreated`				AS DateTimeCreated,
-								`dateTimeUpdatedByStaff`		AS DateTimeUpdatedByStaff,
-								`dateTimeUpdatedByUser`			AS DateTimeUpdatedByUser,
-								`orderApprovedByUser`			AS OrderApprovedByUser,
-								`orderApprovedByAdmin`			AS OrderApprovedByAdmin,
-								`orderApprovedByStaff` 			AS OrderApprovedByStaff,
-								`orderChangedByUser`			AS OrderChangedByUser,
-								`orderChangedByStaff`			AS OrderChangedByStaff,
-								`orderNewMessageFromUser`		AS OrderNewMessageFromUser,
-								`orderNewMessageFromStaff`		AS OrderNewMessageFromStaff
-					FROM 		`orders`
-					WHERE		`orderID` = :OrderID
+			$sql = 'SELECT 		o.`orderID`						AS TheOrderID,
+								o.`orderUserNotes`				AS OrderUserNotes,
+								o.`dateTimeCreated`				AS DateTimeCreated,
+								o.`dateTimeUpdatedByStaff`		AS DateTimeUpdatedByStaff,
+								o.`dateTimeUpdatedByUser`		AS DateTimeUpdatedByUser,
+								o.`orderApprovedByUser`			AS OrderApprovedByUser,
+								o.`orderApprovedByAdmin`		AS OrderApprovedByAdmin,
+								o.`orderApprovedByStaff` 		AS OrderApprovedByStaff,
+								o.`orderChangedByUser`			AS OrderChangedByUser,
+								o.`orderChangedByStaff`			AS OrderChangedByStaff,
+								o.`orderNewMessageFromUser`		AS OrderNewMessageFromUser,
+								o.`orderNewMessageFromStaff`	AS OrderNewMessageFromStaff,
+								b.`startDateTime`				AS DateTimeStart
+					FROM 		`orders` o
+					INNER JOIN 	`booking` b
+					ON 			b.`orderID` = o.`orderID`
+					WHERE		o.`orderID` = :OrderID
 					LIMIT 		1';
 
 			$s = $pdo->prepare($sql);
@@ -6018,6 +6021,8 @@ if	(isSet($_SESSION['loggedIn']) AND
 
 			$dateTimeCreated = $row['DateTimeCreated'];
 			$displayDateTimeCreated = convertDatetimeToFormat($dateTimeCreated , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
+			$dateTimeStart = $row['DateTimeStart'];
+			$displayDateTimeStart = convertDatetimeToFormat($dateTimeStart , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
 
 			if(!empty($row['DateTimeUpdatedByStaff'])){
 				$dateTimeUpdatedByStaff = $row['DateTimeUpdatedByStaff'];
@@ -6033,10 +6038,16 @@ if	(isSet($_SESSION['loggedIn']) AND
 				$displayDateTimeUpdatedByUser = "";
 			}
 
+			$datetimeNow = getDatetimeNow();
+			$timeDifferenceInDaysUntilStart = convertTwoDateTimesToTimeDifferenceInDays($datetimeNow, $dateTimeStart);
+			$timeDifferenceInDaysUntilEditOrCancelGetsBlocked = $timeDifferenceInDaysUntilStart - MINIMUM_DAYS_UNTIL_MEETING_STARTS_WHERE_YOU_CAN_STILL_PLACE_AN_ORDER;
+
 			$_SESSION['EditBookingOrderOriginalInfo']['OrderIsApproved'] = $orderIsApproved;
 			$_SESSION['EditBookingOrderOriginalInfo']['DateTimeCreated'] = $displayDateTimeCreated;
 			$_SESSION['EditBookingOrderOriginalInfo']['DateTimeUpdatedByStaff'] = $displayDateTimeUpdatedByStaff;
 			$_SESSION['EditBookingOrderOriginalInfo']['DateTimeUpdatedByUser'] = $displayDateTimeUpdatedByUser;
+			$_SESSION['EditBookingOrderOriginalInfo']['DateTimeStart'] = $displayDateTimeStart;
+			$_SESSION['EditBookingOrderOriginalInfo']['DaysLeftToEditOrCancel'] = $timeDifferenceInDaysUntilEditOrCancelGetsBlocked;
 
 			$_SESSION['EditBookingOrderOrderID'] = $orderID;
 
@@ -6054,7 +6065,7 @@ if	(isSet($_SESSION['loggedIn']) AND
 			$s = $pdo->prepare($sql);
 			$s->bindValue(':OrderID', $orderID);
 			$s->execute();
-			
+
 			$extrasOrdered = 0;
 			$extrasApproved = 0;
 
@@ -6234,11 +6245,13 @@ if	(isSet($_SESSION['loggedIn']) AND
 	$originalOrderCreated = $_SESSION['EditBookingOrderOriginalInfo']['DateTimeCreated'];
 	$originalOrderUpdatedByUser = $_SESSION['EditBookingOrderOriginalInfo']['DateTimeUpdatedByUser'];
 	$originalOrderUpdatedByStaff = $_SESSION['EditBookingOrderOriginalInfo']['DateTimeUpdatedByStaff'];
+	$originalMeetingStartDate = $_SESSION['EditBookingOrderOriginalInfo']['DateTimeStart'];
+	$daysLeftToEditOrCancel = $_SESSION['EditBookingOrderOriginalInfo']['DaysLeftToEditOrCancel'];
 
 	// Calculate order status
 	$extrasOrdered = $_SESSION['EditBookingOrderOriginalInfo']['OrderExtrasOrdered'];
 	$extrasApproved = $_SESSION['EditBookingOrderOriginalInfo']['OrderExtrasApproved'];
-	$orderIsApprovedByUser =$_SESSION['EditBookingOrderOriginalInfo']['OrderApprovedByUser'];
+	$orderIsApprovedByUser = $_SESSION['EditBookingOrderOriginalInfo']['OrderApprovedByUser'];
 
 	if($originalOrderIsApproved == 1 AND $orderIsApprovedByUser == 1){
 		$orderStatus = "Order Approved!";

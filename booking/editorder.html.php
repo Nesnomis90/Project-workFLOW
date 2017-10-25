@@ -372,6 +372,24 @@
 				</div>
 
 				<div>
+					<label>Date Of Meeting: </label>
+					<span><b><?php htmlout($originalMeetingStartDate); ?></b></span>
+				</div>
+
+				<div>
+					<label>Days Left To Alter Order: </label>
+					<?php if($daysLeftToEditOrCancel > 1) : ?>
+						<span><b><?php htmlout($daysLeftToEditOrCancel); ?> Days Left</b></span>
+					<?php elseif($daysLeftToEditOrCancel == 1) : ?>
+						<span><b><?php htmlout($daysLeftToEditOrCancel); ?> Day Left</b></span>
+					<?php elseif($daysLeftToEditOrCancel == 0) : ?>
+						<span><b>Last Day</b></span>
+					<?php elseif($daysLeftToEditOrCancel < 0) : ?>
+						<span><b>No Longer Eligible</b></span>
+					<?php endif; ?>
+				</div>
+
+				<div>
 					<label>Last Update (Staff): </label>
 					<?php if(empty($originalOrderUpdatedByStaff)) : ?>
 						<span><b><i><?php htmlout("Staff has made no changes to this order yet."); ?></i></b></span>
@@ -421,15 +439,14 @@
 			<table id="addAlternative">
 				<caption>Items Ordered</caption>
 				<tr>
-					<th colspan="4">Item</th>
-					<th>Approved By Staff?</th>
+					<th colspan="5">Item</th>
 				</tr>
 				<tr>
 					<th>Name</th>
 					<th>Description</th>
 					<th>Price (1 Amount)</th>
 					<th>Amount</th>
-					<th></th>
+					<th>Item Status</th>
 				</tr>
 				<?php if(isSet($extraOrdered) AND sizeOf($extraOrdered) > 0) : ?>
 					<?php foreach($extraOrdered AS $row): ?>
