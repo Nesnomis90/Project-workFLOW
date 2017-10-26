@@ -100,6 +100,7 @@ function clearEditBookingOrderSessions(){
 	unset($_SESSION['EditBookingOrderExtraOrderedOnlyNames']);
 	unset($_SESSION['resetEditBookingOrder']);
 	unset($_SESSION['refreshEditBookingOrder']);
+	unset($_SESSION['EditBookingOrderTotalPrice']);
 }
 
 function updateBookingCodeGuesses(){
@@ -6066,15 +6067,19 @@ if	(isSet($_SESSION['loggedIn']) AND
 			$s->bindValue(':OrderID', $orderID);
 			$s->execute();
 
-			$extrasOrdered = 0;
+			$extraOrderedNumber = 0;
 			$extrasApproved = 0;
+			$totalPrice = 0;
 
 			$result = $s->fetchAll(PDO::FETCH_ASSOC);
 			foreach($result AS $extra){
-				$extrasOrdered++;
+				$extraOrderedNumber++;
 				$extraName = $extra['ExtraName'];
 				$extraAmount = $extra['ExtraAmount'];
-				$extraPrice = convertToCurrency($extra['ExtraPrice']);
+				$extraPrice = $extra['ExtraPrice'];
+				$finalPrice = $extraAmount * $extraPrice;
+				$totalPrice += $finalPrice;
+				//$extraPrice = convertToCurrency($extra['ExtraPrice']);
 				$extraDescription = $extra['ExtraDescription'];
 				$extraID = $extra['ExtraID'];
 
@@ -6125,7 +6130,8 @@ if	(isSet($_SESSION['loggedIn']) AND
 				$extraOrderedOnlyNames = array();
 			}
 
-			$_SESSION['EditBookingOrderOriginalInfo']['OrderExtrasOrdered'] = $extrasOrdered;
+			$_SESSION['EditBookingOrderTotalPrice'] = $totalPrice;
+			$_SESSION['EditBookingOrderOriginalInfo']['OrderExtrasOrdered'] = $extraOrderedNumber;
 			$_SESSION['EditBookingOrderOriginalInfo']['OrderExtrasApproved'] = $extrasApproved;
 			$_SESSION['EditBookingOrderOriginalInfo']['ExtraOrdered'] = $extraOrdered;
 			$_SESSION['EditBookingOrderExtraOrdered'] = $extraOrdered;
@@ -6248,17 +6254,31 @@ if	(isSet($_SESSION['loggedIn']) AND
 	$originalOrderUpdatedByStaff = $_SESSION['EditBookingOrderOriginalInfo']['DateTimeUpdatedByStaff'];
 	$originalMeetingStartDate = $_SESSION['EditBookingOrderOriginalInfo']['DateTimeStart'];
 	$daysLeftToEditOrCancel = $_SESSION['EditBookingOrderOriginalInfo']['DaysLeftToEditOrCancel'];
+	$originalTotalPrice = $_SESSION['EditBookingOrderTotalPrice'];
+	$extraOrdered = $_SESSION['EditBookingOrderOriginalInfo']['ExtraOrdered'];
+
+	// Adjust days left message to user
+	if($daysLeftToEditOrCancel > 1){
+		$displayDaysLeftMessage = "$daysLeftToEditOrCancel Days Left";
+	} elseif($daysLeftToEditOrCancel == 1){
+		$displayDaysLeftMessage = "1 Day Left";
+	} elseif($daysLeftToEditOrCancel == 0){
+		$startTime = convertDatetimeToFormat($originalMeetingStartDate , DATETIME_DEFAULT_FORMAT_TO_DISPLAY, TIME_DEFAULT_FORMAT_TO_DISPLAY);
+		$displayDaysLeftMessage = "Last Day (Ends at $startTime)";
+	} elseif($daysLeftToEditOrCancel < 0){
+		$displayDaysLeftMessage = "No Longer Eligible";
+	}
 
 	// Calculate order status
-	$extrasOrdered = $_SESSION['EditBookingOrderOriginalInfo']['OrderExtrasOrdered'];
+	$extraOrderedNumber = $_SESSION['EditBookingOrderOriginalInfo']['OrderExtrasOrdered'];
 	$extrasApproved = $_SESSION['EditBookingOrderOriginalInfo']['OrderExtrasApproved'];
 	$orderIsApprovedByUser = $_SESSION['EditBookingOrderOriginalInfo']['OrderApprovedByUser'];
 
 	if($originalOrderIsApproved == 1 AND $orderIsApprovedByUser == 1){
 		$orderStatus = "Order Approved!";
-		if($extrasApproved == $extrasOrdered){
+		if($extrasApproved == $extraOrderedNumber){
 			$orderStatus .= "\n\nAll Items Approved!";
-		} elseif($extrasApproved < $extrasOrdered){
+		} elseif($extrasApproved < $extraOrderedNumber){
 			$orderStatus .= "\n\nPending Item Approval.";
 		}
 	} elseif($originalOrderIsApproved == 1 AND $orderIsApprovedByUser == 0){

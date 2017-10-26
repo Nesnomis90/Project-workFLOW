@@ -24,6 +24,7 @@
 			var addAlternativeExtra = false;
 			var createNewAlternativeExtra = false;
 			var availableExtrasArray = <?php echo json_encode($availableExtra); ?>;
+			var extrasOrdered = <?php echo json_encode($extraOrdered); ?>;
 
 			function addTableRow(){
 				// Get table we want to manipulate
@@ -208,6 +209,17 @@
 				var displayTotalPrice = document.getElementById("DisplayTotalPricePlacement");
 				var saveTotalPrice = document.getElementById("SaveTotalPrice");
 
+				for(var i = 0; i < extrasOrdered.length; i++){
+					var extraID = extrasOrdered[i]['ExtraID'];
+					var extraAmountSelected = document.getElementById("extraAmountSelected-" + extraID);
+					if(extraAmountSelected !== null){
+						var amountSelected = extraAmountSelected.value;
+						var pricePerAmount = extrasOrdered[i]['ExtraPrice']
+						var finalPrice = amountSelected * pricePerAmount;
+						totalPrice += finalPrice;
+					}
+				}
+
 				if(alternativesAdded > 0){
 					for(var i = 0; i < alternativeID; i++){
 						var acceptedExtraID = "extraIDAccepted" + i;
@@ -225,11 +237,9 @@
 							totalPrice += finalPrice;
 						}
 					}
-					displayTotalPrice.innerHTML = "<span>Total Price: " + totalPrice + "</span>";
-				} else {
-					displayTotalPrice.innerHTML = "";
 				}
 
+				displayTotalPrice.innerHTML = "<span>Total Price: " + totalPrice + "</span>";
 				saveTotalPrice.value = totalPrice;
 			}
 
@@ -362,14 +372,74 @@
 				changeTotalPrice();
 			}
 
-		/*	function changeAmount(buttonWithExtraID){
-				var splitID = buttonWithExtraID.id.split("-");
+			function confirmNewAmount(confirmButton, extraID){
+				// Get new amount 
+				var newExtraAmount = document.getElementById("extraAmount-" + extraID);
+				var newExtraAmountValue = newExtraAmount.value;
+				// Set new amount 
+				var extraAmountSelected = document.getElementById("extraAmountSelected-" + extraID);
+				extraAmountSelected.value = newExtraAmountValue;
+
+				// Remove confirm/reset buttons
+				var tableCell = confirmButton.parentNode;
+				var resetAmountButtonName = "resetAmountButton-" + extraID;
+				var resetAmountButton = document.getElementById(resetAmountButtonName);
+				tableCell.removeChild(confirmButton);
+				tableCell.removeChild(resetAmountButton);
+			}
+			/*
+			function resetAmount(resetButton, extraID){
+				
+			}
+			*/
+
+			function changeAmount(inputAmount, originalInputValue){
+				var splitID = inputAmount.id.split("-");
 				var extraID = splitID[1];
-			}*/
+				var inputCurrentValue = inputAmount.value;
+				var tableCell = inputAmount.parentNode;
+
+				// Add a checkmark/cross to the same tablecell, if they're not already added
+				var confirmNewAmountButtonName = "confirmAmountButton-" + extraID;
+				var resetAmountButtonName = "resetAmountButton-" + extraID;
+				var confirmNewAmountButton = document.getElementById(confirmNewAmountButtonName);
+				var resetAmountButton = document.getElementById(resetAmountButtonName);
+
+				if(confirmNewAmountButton === null && inputCurrentValue != originalInputValue){
+					var confirmNewAmountButton = document.createElement("input");
+					confirmNewAmountButton.setAttribute("id", confirmNewAmountButtonName)
+					confirmNewAmountButton.setAttribute("type", "button");
+					confirmNewAmountButton.innerHTML = "✔";
+					confirmNewAmountButton.value = "✔";
+					confirmNewAmountButton.style.color = "green";
+					var confirmNewAmountButtonIDNumber = extraID;
+					confirmNewAmountButton.onclick = function onClick(){confirmNewAmount(this, confirmNewAmountButtonIDNumber);}						
+					tableCell.appendChild(confirmNewAmountButton);
+				} else if(confirmNewAmountButton !== null && inputCurrentValue == originalInputValue){
+					tableCell.removeChild(confirmNewAmountButton);
+				}
+
+				if(resetAmountButton === null && inputCurrentValue != originalInputValue){
+					var resetAmountButton = document.createElement("input");
+					resetAmountButton.setAttribute("id", resetAmountButtonName)
+					resetAmountButton.setAttribute("type", "button");
+					resetAmountButton.innerHTML = "✖";
+					resetAmountButton.value = "✖";
+					resetAmountButton.style.color = "red";
+					var resetAmountButtonIDNumber = extraID;
+					//resetAmountButton.onclick = function onClick(){resetAmount(this, resetAmountButtonIDNumber);}						
+					tableCell.appendChild(resetAmountButton);
+				} else if(resetAmountButton !== null && inputCurrentValue == originalInputValue){
+					tableCell.removeChild(resetAmountButton);
+				}
+			}
 
 			function validateNewAlternatives(){
-				if(alternativesAdded > 0){
 
+				// Check if any amount has been changed, and if so if they've been confirmed
+				// TO-DO: Just check if any of the confirm/reset buttons are still active
+
+				if(alternativesAdded > 0){
 					// First check if all added items have been accepted (checkmark)
 					for(var i = 0; i < alternativeID; i++){
 						var confirmButtonID = "confirmButton" + i;
@@ -444,15 +514,7 @@
 
 				<div>
 					<label>Days Left To Alter Order: </label>
-					<?php if($daysLeftToEditOrCancel > 1) : ?>
-						<span><b><?php htmlout($daysLeftToEditOrCancel); ?> Days Left</b></span>
-					<?php elseif($daysLeftToEditOrCancel == 1) : ?>
-						<span><b><?php htmlout($daysLeftToEditOrCancel); ?> Day Left</b></span>
-					<?php elseif($daysLeftToEditOrCancel == 0) : ?>
-						<span><b>Last Day</b></span>
-					<?php elseif($daysLeftToEditOrCancel < 0) : ?>
-						<span><b>No Longer Eligible</b></span>
-					<?php endif; ?>
+					<span><b><?php htmlout($displayDaysLeftMessage); ?></b></span>
 				</div>
 
 				<div>
@@ -521,8 +583,8 @@
 									<td style="white-space: pre-wrap;"><?php htmlout($row['ExtraDescription']); ?></td>
 									<td><?php htmlout($row['ExtraPrice']); ?></td>
 									<td>
-										<input style="width: 45px;" type="number" name="extraAmount-<?php htmlout($row['ExtraID']); ?>" min="1" value="<?php htmlout($row['ExtraAmount']); ?>">
-										<button type="button" id="changeAmountButton-<?php htmlout($row['ExtraID']); ?>"onclick="changeAmount(this);">Change</button>
+										<input style="width: 45px;" type="number" id="extraAmount-<?php htmlout($row['ExtraID']); ?>" name="extraAmount-<?php htmlout($row['ExtraID']); ?>" min="1" onchange="changeAmount(this, <?php htmlout($row['ExtraAmount']); ?>)" value="<?php htmlout($row['ExtraAmount']); ?>">
+										<input type="hidden" id="extraAmountSelected-<?php htmlout($row['ExtraID']); ?>" name="extraAmountSelected-<?php htmlout($row['ExtraID']); ?>" value="<?php htmlout($row['ExtraAmount']); ?>">
 									</td>
 									<td>
 										<?php if($row['ExtraBooleanApprovedForPurchase'] == 1) : ?>
@@ -540,7 +602,9 @@
 							<tr><th colspan="5"></th></tr>
 					</table>
 				</div>
-				<div id="DisplayTotalPricePlacement" class="left"></div>
+				<div id="DisplayTotalPricePlacement" class="left">
+					<span>Total Price: <?php htmlout($originalTotalPrice); ?></span>
+				</div>
 
 				<div class="left">
 					<input type="hidden" name="OrderID" value="<?php htmlout($orderID); ?>">
