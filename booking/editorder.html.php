@@ -372,11 +372,22 @@
 				changeTotalPrice();
 			}
 
-			/*
 			function confirmNewAmount(confirmButton, extraID){
-				
+				// Get new amount 
+				var newExtraAmount = document.getElementById("extraAmount-" + extraID);
+				var newExtraAmountValue = newExtraAmount.value;
+				// Set new amount 
+				var extraAmountSelected = document.getElementById("extraAmountSelected-" + extraID);
+				extraAmountSelected.value = newExtraAmountValue;
+
+				// Remove confirm/reset buttons
+				var tableCell = confirmButton.parentNode;
+				var resetAmountButtonName = "resetAmountButton-" + extraID;
+				var resetAmountButton = document.getElementById(resetAmountButtonName);
+				tableCell.removeChild(confirmButton);
+				tableCell.removeChild(resetAmountButton);
 			}
-			
+			/*
 			function resetAmount(resetButton, extraID){
 				
 			}
@@ -389,20 +400,20 @@
 				var tableCell = inputAmount.parentNode;
 
 				// Add a checkmark/cross to the same tablecell, if they're not already added
-				var confirmAddedExtraButtonName = "confirmAmountButton-" + extraID;
-				var removeAlternativeExtraButtonName = "resetAmountButton-" + extraID;
-				var confirmNewAmountButton = document.getElementById(confirmAddedExtraButtonName);
-				var resetAmountButton = document.getElementById(removeAlternativeExtraButtonName);
+				var confirmNewAmountButtonName = "confirmAmountButton-" + extraID;
+				var resetAmountButtonName = "resetAmountButton-" + extraID;
+				var confirmNewAmountButton = document.getElementById(confirmNewAmountButtonName);
+				var resetAmountButton = document.getElementById(resetAmountButtonName);
 
 				if(confirmNewAmountButton === null && inputCurrentValue != originalInputValue){
 					var confirmNewAmountButton = document.createElement("input");
-					confirmNewAmountButton.setAttribute("id", confirmAddedExtraButtonName)
+					confirmNewAmountButton.setAttribute("id", confirmNewAmountButtonName)
 					confirmNewAmountButton.setAttribute("type", "button");
 					confirmNewAmountButton.innerHTML = "✔";
 					confirmNewAmountButton.value = "✔";
 					confirmNewAmountButton.style.color = "green";
 					var confirmNewAmountButtonIDNumber = extraID;
-					//confirmNewAmountButton.onclick = function onClick(){confirmNewAmount(this, confirmNewAmountButtonIDNumber);}						
+					confirmNewAmountButton.onclick = function onClick(){confirmNewAmount(this, confirmNewAmountButtonIDNumber);}						
 					tableCell.appendChild(confirmNewAmountButton);
 				} else if(confirmNewAmountButton !== null && inputCurrentValue == originalInputValue){
 					tableCell.removeChild(confirmNewAmountButton);
@@ -410,7 +421,7 @@
 
 				if(resetAmountButton === null && inputCurrentValue != originalInputValue){
 					var resetAmountButton = document.createElement("input");
-					resetAmountButton.setAttribute("id", removeAlternativeExtraButtonName)
+					resetAmountButton.setAttribute("id", resetAmountButtonName)
 					resetAmountButton.setAttribute("type", "button");
 					resetAmountButton.innerHTML = "✖";
 					resetAmountButton.value = "✖";
@@ -426,6 +437,7 @@
 			function validateNewAlternatives(){
 
 				// Check if any amount has been changed, and if so if they've been confirmed
+				// TO-DO: Just check if any of the confirm/reset buttons are still active
 
 				if(alternativesAdded > 0){
 					// First check if all added items have been accepted (checkmark)
