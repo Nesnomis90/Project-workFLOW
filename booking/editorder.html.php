@@ -208,6 +208,8 @@
 				var displayTotalPrice = document.getElementById("DisplayTotalPricePlacement");
 				var saveTotalPrice = document.getElementById("SaveTotalPrice");
 
+				// TO-DO: Add total price from already added items
+
 				if(alternativesAdded > 0){
 					for(var i = 0; i < alternativeID; i++){
 						var acceptedExtraID = "extraIDAccepted" + i;
@@ -225,11 +227,9 @@
 							totalPrice += finalPrice;
 						}
 					}
-					displayTotalPrice.innerHTML = "<span>Total Price: " + totalPrice + "</span>";
-				} else {
-					displayTotalPrice.innerHTML = "";
 				}
 
+				displayTotalPrice.innerHTML = "<span>Total Price: " + totalPrice + "</span>";
 				saveTotalPrice.value = totalPrice;
 			}
 
@@ -362,14 +362,52 @@
 				changeTotalPrice();
 			}
 
-		/*	function changeAmount(buttonWithExtraID){
-				var splitID = buttonWithExtraID.id.split("-");
+			function changeAmount(inputAmount, originalInputValue){
+				var splitID = inputAmount.id.split("-");
 				var extraID = splitID[1];
-			}*/
+				var inputCurrentValue = inputAmount.value;
+				var tableCell = inputAmount.parentNode;
+
+				// Add a checkmark/cross to the same tablecell, if they're not already added
+				var confirmAddedExtraButtonName = "confirmAmountButton-" + extraID;
+				var removeAlternativeExtraButtonName = "resetAmountButton-" + extraID;
+				var confirmNewAmountButton = document.getElementById(confirmAddedExtraButtonName);
+				var resetAmountButton = document.getElementById(removeAlternativeExtraButtonName);
+
+				if(confirmNewAmountButton === null && inputCurrentValue != originalInputValue){
+					var confirmAddedExtraButton = document.createElement("input");
+					confirmAddedExtraButton.setAttribute("id", confirmAddedExtraButtonName)
+					confirmAddedExtraButton.setAttribute("type", "button");
+					confirmAddedExtraButton.innerHTML = "✔";
+					confirmAddedExtraButton.value = "✔";
+					confirmAddedExtraButton.style.color = "green";
+					var confirmAddedExtraButtonIDNumber = extraID;
+					//confirmAddedExtraButton.onclick = function onClick(){confirmAddedExtra(this, confirmAddedExtraButtonIDNumber);}						
+					tableCell.appendChild(confirmAddedExtraButton);
+				} else if(confirmNewAmountButton !== null && inputCurrentValue == originalInputValue){
+					tableCell.removeChild(confirmNewAmountButton);
+				}
+
+				if(resetAmountButton === null && inputCurrentValue != originalInputValue){
+					var removeAlternativeExtraButton = document.createElement("input");
+					removeAlternativeExtraButton.setAttribute("id", removeAlternativeExtraButtonName)
+					removeAlternativeExtraButton.setAttribute("type", "button");
+					removeAlternativeExtraButton.innerHTML = "✖";
+					removeAlternativeExtraButton.value = "✖";
+					removeAlternativeExtraButton.style.color = "red";
+					var removeAlternativeExtraButtonIDNumber = extraID;
+					//removeAlternativeExtraButton.onclick = function onClick(){removeAddedExtra(this, removeAlternativeExtraButtonIDNumber);}						
+					tableCell.appendChild(removeAlternativeExtraButton);
+				} else if(resetAmountButton !== null && inputCurrentValue == originalInputValue){
+					tableCell.removeChild(resetAmountButton);
+				}
+			}
 
 			function validateNewAlternatives(){
-				if(alternativesAdded > 0){
 
+				// Check if any amount has been changed, and if so if they've been confirmed
+
+				if(alternativesAdded > 0){
 					// First check if all added items have been accepted (checkmark)
 					for(var i = 0; i < alternativeID; i++){
 						var confirmButtonID = "confirmButton" + i;
@@ -444,15 +482,7 @@
 
 				<div>
 					<label>Days Left To Alter Order: </label>
-					<?php if($daysLeftToEditOrCancel > 1) : ?>
-						<span><b><?php htmlout($daysLeftToEditOrCancel); ?> Days Left</b></span>
-					<?php elseif($daysLeftToEditOrCancel == 1) : ?>
-						<span><b><?php htmlout($daysLeftToEditOrCancel); ?> Day Left</b></span>
-					<?php elseif($daysLeftToEditOrCancel == 0) : ?>
-						<span><b>Last Day</b></span>
-					<?php elseif($daysLeftToEditOrCancel < 0) : ?>
-						<span><b>No Longer Eligible</b></span>
-					<?php endif; ?>
+					<span><b><?php htmlout($displayDaysLeftMessage); ?></b></span>
 				</div>
 
 				<div>
@@ -521,8 +551,7 @@
 									<td style="white-space: pre-wrap;"><?php htmlout($row['ExtraDescription']); ?></td>
 									<td><?php htmlout($row['ExtraPrice']); ?></td>
 									<td>
-										<input style="width: 45px;" type="number" name="extraAmount-<?php htmlout($row['ExtraID']); ?>" min="1" value="<?php htmlout($row['ExtraAmount']); ?>">
-										<button type="button" id="changeAmountButton-<?php htmlout($row['ExtraID']); ?>"onclick="changeAmount(this);">Change</button>
+										<input style="width: 45px;" type="number" id="extraAmount-<?php htmlout($row['ExtraID']); ?>"" name="extraAmount-<?php htmlout($row['ExtraID']); ?>" min="1" onchange="changeAmount(this, <?php htmlout($row['ExtraAmount']); ?>)" value="<?php htmlout($row['ExtraAmount']); ?>">
 									</td>
 									<td>
 										<?php if($row['ExtraBooleanApprovedForPurchase'] == 1) : ?>

@@ -77,6 +77,7 @@ function convertToCurrency($input){
 	}
 	return $output;
 }
+
 // Two datetimes to time difference in minutes
 function convertTwoDateTimesToTimeDifferenceInMinutes($startDateTime, $endDateTime){
 	$timeDifferenceStartDate = new DateTime($startDateTime);

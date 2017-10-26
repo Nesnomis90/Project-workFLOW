@@ -6249,6 +6249,18 @@ if	(isSet($_SESSION['loggedIn']) AND
 	$originalMeetingStartDate = $_SESSION['EditBookingOrderOriginalInfo']['DateTimeStart'];
 	$daysLeftToEditOrCancel = $_SESSION['EditBookingOrderOriginalInfo']['DaysLeftToEditOrCancel'];
 
+	// Adjust days left message to user
+	if($daysLeftToEditOrCancel > 1){
+		$displayDaysLeftMessage = "$daysLeftToEditOrCancel Days Left";
+	} elseif($daysLeftToEditOrCancel == 1){
+		$displayDaysLeftMessage = "1 Day Left";
+	} elseif($daysLeftToEditOrCancel == 0){
+		$startTime = convertDatetimeToFormat($originalMeetingStartDate , DATETIME_DEFAULT_FORMAT_TO_DISPLAY, TIME_DEFAULT_FORMAT_TO_DISPLAY);
+		$displayDaysLeftMessage = "Last Day (Ends at $startTime)";
+	} elseif($daysLeftToEditOrCancel < 0){
+		$displayDaysLeftMessage = "No Longer Eligible";
+	}
+
 	// Calculate order status
 	$extrasOrdered = $_SESSION['EditBookingOrderOriginalInfo']['OrderExtrasOrdered'];
 	$extrasApproved = $_SESSION['EditBookingOrderOriginalInfo']['OrderExtrasApproved'];
