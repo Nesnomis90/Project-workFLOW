@@ -1884,6 +1884,12 @@ foreach($result AS $row){
 			$status = "Active";
 		}
 	}
+	
+	if(!empty($row['OrderContent'])){
+		$orderContent = $row['OrderContent'];
+	} else {
+		$orderContent = "No Items Ordered";
+	}
 
 	// sort orders by their date and put them into different arrays representing orders today, this week and
 	if($status == "Active"){
@@ -1904,7 +1910,7 @@ foreach($result AS $row){
 												'DateTimeApproved' => $displayDateTimeApproved,
 												'DateTimeCreated' => $displayDateTimeCreated,
 												'DateTimeUpdated' => $displayDateTimeUpdated,
-												'OrderContent' => $row['OrderContent'],
+												'OrderContent' => $orderContent,
 												'OrderAdminNote' => $row['OrderAdminNote'],
 												'OrderFinalPrice' => $displayOrderFinalPrice,
 												'OrderApprovedByUser' => $displayOrderApprovedByUser,
@@ -1931,7 +1937,7 @@ foreach($result AS $row){
 																	'DateTimeApproved' => $displayDateTimeApproved,
 																	'DateTimeCreated' => $displayDateTimeCreated,
 																	'DateTimeUpdated' => $displayDateTimeUpdated,
-																	'OrderContent' => $row['OrderContent'],
+																	'OrderContent' => $orderContent,
 																	'OrderAdminNote' => $row['OrderAdminNote'],
 																	'OrderFinalPrice' => $displayOrderFinalPrice,
 																	'OrderApprovedByUser' => $displayOrderApprovedByUser,
@@ -1953,7 +1959,7 @@ foreach($result AS $row){
 								'DateTimeApproved' => $displayDateTimeApproved,
 								'DateTimeCreated' => $displayDateTimeCreated,
 								'DateTimeUpdated' => $displayDateTimeUpdated,
-								'OrderContent' => $row['OrderContent'],
+								'OrderContent' => $orderContent,
 								'OrderAdminNote' => $row['OrderAdminNote'],
 								'OrderFinalPrice' => $displayOrderFinalPrice,
 								'OrderApprovedByUser' => $displayOrderApprovedByUser,
@@ -1974,7 +1980,7 @@ foreach($result AS $row){
 								'DateTimeApproved' => $displayDateTimeApproved,
 								'DateTimeUpdated' => $displayDateTimeUpdated,
 								'DateTimeCompleted' => $displayDateTimeCompleted,
-								'OrderContent' => $row['OrderContent'],
+								'OrderContent' => $orderContent,
 								'OrderAdminNote' => $row['OrderAdminNote'],
 								'OrderFinalPrice' => $displayOrderFinalPrice,
 								'OrderApprovedByName' => $orderApprovedBy,
@@ -1993,7 +1999,7 @@ foreach($result AS $row){
 								'DateTimeCreated' => $displayDateTimeCreated,
 								'DateTimeUpdated' => $displayDateTimeUpdated,
 								'DateTimeCancelled' => $displayDateTimeCancelled,
-								'OrderContent' => $row['OrderContent'],
+								'OrderContent' => $orderContent,
 								'OrderAdminNote' => $row['OrderAdminNote'],
 								'OrderRoomName' => $orderRoomName,
 								'OrderBookedFor' => $orderBookedFor
@@ -2019,7 +2025,7 @@ foreach($result AS $row){
 								'DateTimeUpdated' => $displayDateTimeUpdated,
 								'DateTimeCancelled' => $displayDateTimeCancelled,
 								'DateTimeCompleted' => $displayDateTimeCompleted,
-								'OrderContent' => $row['OrderContent'],
+								'OrderContent' => $orderContent,
 								'OrderAdminNote' => $row['OrderAdminNote'],
 								'OrderFinalPrice' => $displayOrderFinalPrice,
 								'OrderApprovedByUser' => $displayOrderApprovedByUser,
