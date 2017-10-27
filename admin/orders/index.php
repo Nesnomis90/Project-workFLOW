@@ -71,12 +71,13 @@ function validateUserInputs(){
 		$adminNote = NULL;
 	}
 
+	// Update submitted checkmark values
 	if(isSet($_SESSION['EditOrderExtraOrdered'])){
 		if(isSet($_POST['isApprovedForPurchase'])){
 			$isApprovedForPurchaseArray = $_POST['isApprovedForPurchase'];
 			foreach($_SESSION['EditOrderExtraOrdered'] AS &$extra){
 				$isApprovedForPurchaseUpdated = FALSE;
-				for($i=0; $i<sizeOf($isApprovedForPurchaseArray); $i++){
+				for($i = 0; $i < sizeOf($isApprovedForPurchaseArray); $i++){
 					if($extra['ExtraID'] == $isApprovedForPurchaseArray[$i]){
 						$extra['ExtraBooleanApprovedForPurchase'] = 1;
 						$isApprovedForPurchaseUpdated = TRUE;
@@ -94,11 +95,12 @@ function validateUserInputs(){
 				unset($extra); // destroy reference.
 			}
 		}
+
 		if(isSet($_POST['isPurchased'])){
 			$isPurchasedArray = $_POST['isPurchased'];
 			foreach($_SESSION['EditOrderExtraOrdered'] AS &$extra){
 				$isPurchasedUpdated = FALSE;
-				for($i=0; $i<sizeOf($isPurchasedArray); $i++){
+				for($i = 0; $i < sizeOf($isPurchasedArray); $i++){
 					if($extra['ExtraID'] == $isPurchasedArray[$i]){
 						$extra['ExtraBooleanPurchased'] = 1;
 						$isPurchasedUpdated = TRUE;
@@ -115,6 +117,16 @@ function validateUserInputs(){
 				$extra['ExtraBooleanPurchased'] = 0;
 				unset($extra); // destroy reference.
 			}
+		}
+
+		// Update submitted item amounts of originally submitted items
+		foreach($_SESSION['EditOrderExtraOrdered'] AS &$extra){
+			$extraID = $extra['ExtraID'];
+			$postSubmittedAmountName = "extraAmountSelected-" . $extraID;
+			if(isSet($_POST[$postSubmittedAmountName]) AND $_POST[$postSubmittedAmountName] > 1){
+				$extra['ExtraAmount'] = $_POST[$postSubmittedAmountName];
+			}
+			unset($extra); // destroy reference.
 		}
 	}
 
@@ -878,8 +890,8 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Submit Changes'){
 	// JavaScript alternatives submitted data
 	if(isSet($_POST['LastAlternativeID']) AND $_POST['LastAlternativeID'] != ""){
 		// There has been an alternative added
-		$lastID = $_POST['LastAlternativeID']+1;
-		for($i=0; $i < $lastID; $i++){
+		$lastID = $_POST['LastAlternativeID'] + 1;
+		for($i = 0; $i < $lastID; $i++){
 			$postExtraIDName = "addAlternativeSelected" . $i;
 			$postExtraNameName = "AlternativeName" . $i;
 			$postAmountName = "AmountSelected" . $i;
@@ -890,6 +902,7 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Submit Changes'){
 				if(!isSet($addedExtra)){
 					$addedExtra = array();
 				}
+
 				$addedExtra[] = array(
 										"ExtraID" => $_POST[$postExtraIDName],
 										"ExtraAmount" => $_POST[$postAmountName]
@@ -1196,14 +1209,20 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Submit Changes'){
 					$extraID = $extra['ExtraID'];
 					$extraBooleanApprovedForPurchase = $extra['ExtraBooleanApprovedForPurchase'];
 					$extraBooleanPurchased = $extra['ExtraBooleanPurchased'];
+					$extraAmount = $extra['ExtraAmount'];
 					$updateApprovedForPurchase = FALSE;
 					$updatePurchased = FALSE;
+					$updateAmount = FALSE;
+
 					// update if the values actually changed
 					if($original['ExtraOrdered'][$key]['ExtraBooleanApprovedForPurchase'] != $extraBooleanApprovedForPurchase){
 						$updateApprovedForPurchase = TRUE;
 					}
 					if($original['ExtraOrdered'][$key]['ExtraBooleanPurchased'] != $extraBooleanPurchased){
 						$updatePurchased = TRUE;
+					}
+					if($original['ExtraOrdered'][$key]['ExtraAmount'] != $extraAmount){
+						$updateAmount = TRUE;
 					}
 
 					if($extraBooleanApprovedForPurchase == 1){
@@ -1224,7 +1243,8 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Submit Changes'){
 									SET		`approvedForPurchase` = CURRENT_TIMESTAMP,
 											`approvedByUserID` = :extraApprovedByUserID,
 											`purchased` = CURRENT_TIMESTAMP,
-											`purchasedByUserID` = :purchasedByUserID
+											`purchasedByUserID` = :purchasedByUserID,
+											`amount` = :amount
 									WHERE	`orderID` = :OrderID
 									AND		`extraID` = :ExtraID";
 						} elseif($extraBooleanApprovedForPurchase == 1 AND $extraBooleanPurchased == 0){
@@ -1232,7 +1252,8 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Submit Changes'){
 									SET		`approvedForPurchase` = CURRENT_TIMESTAMP,
 											`approvedByUserID` = :extraApprovedByUserID,
 											`purchased` = NULL,
-											`purchasedByUserID` = :purchasedByUserID
+											`purchasedByUserID` = :purchasedByUserID,
+											`amount` = :amount
 									WHERE	`orderID` = :OrderID
 									AND		`extraID` = :ExtraID";
 						} elseif($extraBooleanApprovedForPurchase == 0 AND $extraBooleanPurchased == 1){
@@ -1240,7 +1261,8 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Submit Changes'){
 									SET		`approvedForPurchase` = NULL,
 											`approvedByUserID` = :extraApprovedByUserID,
 											`purchased` = CURRENT_TIMESTAMP,
-											`purchasedByUserID` = :purchasedByUserID
+											`purchasedByUserID` = :purchasedByUserID,
+											`amount` = :amount
 									WHERE	`orderID` = :OrderID
 									AND		`extraID` = :ExtraID";
 						} else {
@@ -1248,7 +1270,8 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Submit Changes'){
 									SET		`approvedForPurchase` = NULL,
 											`approvedByUserID` = :extraApprovedByUserID,
 											`purchased` = NULL,
-											`purchasedByUserID` = :purchasedByUserID
+											`purchasedByUserID` = :purchasedByUserID,
+											`amount` = :amount
 									WHERE	`orderID` = :OrderID
 									AND		`extraID` = :ExtraID";
 						}
@@ -1257,18 +1280,21 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Submit Changes'){
 						$s->bindValue(':ExtraID', $extraID);
 						$s->bindValue(':extraApprovedByUserID', $extraApprovedByUserID);
 						$s->bindValue(':purchasedByUserID', $purchasedByUserID);
+						$s->bindValue(':amount', $extraAmount);
 						$s->execute();
 					} elseif($updateApprovedForPurchase AND !$updatePurchased){
 						if($extraBooleanApprovedForPurchase == 1){
 							$sql = "UPDATE	`extraorders`
 									SET		`approvedForPurchase` = CURRENT_TIMESTAMP,
-											`approvedByUserID` = :extraApprovedByUserID
+											`approvedByUserID` = :extraApprovedByUserID,
+											`amount` = :amount
 									WHERE	`orderID` = :OrderID
 									AND		`extraID` = :ExtraID";
 						} else {
 							$sql = "UPDATE	`extraorders`
 									SET		`approvedForPurchase` = NULL,
-											`approvedByUserID` = :extraApprovedByUserID
+											`approvedByUserID` = :extraApprovedByUserID,
+											`amount` = :amount
 									WHERE	`orderID` = :OrderID
 									AND		`extraID` = :ExtraID";
 						}
@@ -1276,18 +1302,21 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Submit Changes'){
 						$s->bindValue(':OrderID', $orderID);
 						$s->bindValue(':ExtraID', $extraID);
 						$s->bindValue(':extraApprovedByUserID', $extraApprovedByUserID);
+						$s->bindValue(':amount', $extraAmount);
 						$s->execute();
 					} elseif(!$updateApprovedForPurchase AND $updatePurchased){
 						if($extraBooleanPurchased == 1){
 							$sql = "UPDATE	`extraorders`
 									SET		`purchased` = CURRENT_TIMESTAMP,
-											`purchasedByUserID` = :purchasedByUserID
+											`purchasedByUserID` = :purchasedByUserID,
+											`amount` = :amount
 									WHERE	`orderID` = :OrderID
 									AND		`extraID` = :ExtraID";
 						} else {
 							$sql = "UPDATE	`extraorders`
 									SET		`purchased` = NULL,
-											`purchasedByUserID` = :purchasedByUserID
+											`purchasedByUserID` = :purchasedByUserID,
+											`amount` = :amount
 									WHERE	`orderID` = :OrderID
 									AND		`extraID` = :ExtraID";
 						}
@@ -1295,6 +1324,17 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Submit Changes'){
 						$s->bindValue(':OrderID', $orderID);
 						$s->bindValue(':ExtraID', $extraID);
 						$s->bindValue(':purchasedByUserID', $purchasedByUserID);
+						$s->bindValue(':amount', $extraAmount);
+						$s->execute();
+					} elseif($updateAmount){
+						$sql = "UPDATE	`extraorders`
+								SET		`amount` = :amount
+								WHERE	`orderID` = :OrderID
+								AND		`extraID` = :ExtraID";
+						$s = $pdo->prepare($sql);
+						$s->bindValue(':OrderID', $orderID);
+						$s->bindValue(':ExtraID', $extraID);
+						$s->bindValue(':amount', $extraAmount);
 						$s->execute();
 					}
 				}
