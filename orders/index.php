@@ -1218,6 +1218,12 @@ foreach($result AS $row){
 		$displayLastMessageFromStaff = "";
 	}
 
+	if(!empty($row['OrderContent'])){
+		$orderContent = $row['OrderContent'];
+	} else {
+		$orderContent = "No Items Ordered";
+	}
+
 	// sort orders by their date and put them into different arrays representing orders today, this week and 
 	if($sortBy == "Day"){
 		date_default_timezone_set(DATE_DEFAULT_TIMEZONE);
@@ -1235,7 +1241,7 @@ foreach($result AS $row){
 											'OrderEndTime' => $displayDateTimeEnd,
 											'DateTimeCreated' => $displayDateTimeCreated,
 											'DateTimeUpdated' => $displayDateTimeUpdated,
-											'OrderContent' => $row['OrderContent'],
+											'OrderContent' => $orderContent,
 											'OrderApprovedByUser' => $displayOrderApprovedByUser,
 											'OrderApprovedByStaff' => $displayOrderApprovedByStaff,
 											'OrderRoomName' => $row['OrderRoomName'],
@@ -1258,7 +1264,7 @@ foreach($result AS $row){
 														'OrderEndTime' => $displayDateTimeEnd,
 														'DateTimeCreated' => $displayDateTimeCreated,
 														'DateTimeUpdated' => $displayDateTimeUpdated,
-														'OrderContent' => $row['OrderContent'],
+														'OrderContent' => $orderContent,
 														'OrderApprovedByUser' => $displayOrderApprovedByUser,
 														'OrderApprovedByStaff' => $displayOrderApprovedByStaff,
 														'OrderRoomName' => $row['OrderRoomName'],
@@ -1276,7 +1282,7 @@ foreach($result AS $row){
 							'OrderEndTime' => $displayDateTimeEnd,
 							'DateTimeCreated' => $displayDateTimeCreated,
 							'DateTimeUpdated' => $displayDateTimeUpdated,
-							'OrderContent' => $row['OrderContent'],
+							'OrderContent' => $orderContent,
 							'OrderApprovedByUser' => $displayOrderApprovedByUser,
 							'OrderApprovedByStaff' => $displayOrderApprovedByStaff,
 							'OrderRoomName' => $row['OrderRoomName'],

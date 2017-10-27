@@ -38,6 +38,7 @@ function clearEditOrderSessions(){
 	unset($_SESSION['EditOrderAlternativeExtraAdded']);
 	unset($_SESSION['EditOrderAlternativeExtraCreated']);
 	unset($_SESSION['EditOrderExtraOrderedOnlyNames']);
+	unset($_SESSION['EditOrderTotalPrice']);
 	unset($_SESSION['resetEditOrder']);
 	unset($_SESSION['refreshEditOrder']);
 }
@@ -70,12 +71,13 @@ function validateUserInputs(){
 		$adminNote = NULL;
 	}
 
+	// Update submitted checkmark values
 	if(isSet($_SESSION['EditOrderExtraOrdered'])){
 		if(isSet($_POST['isApprovedForPurchase'])){
 			$isApprovedForPurchaseArray = $_POST['isApprovedForPurchase'];
 			foreach($_SESSION['EditOrderExtraOrdered'] AS &$extra){
 				$isApprovedForPurchaseUpdated = FALSE;
-				for($i=0; $i<sizeOf($isApprovedForPurchaseArray); $i++){
+				for($i = 0; $i < sizeOf($isApprovedForPurchaseArray); $i++){
 					if($extra['ExtraID'] == $isApprovedForPurchaseArray[$i]){
 						$extra['ExtraBooleanApprovedForPurchase'] = 1;
 						$isApprovedForPurchaseUpdated = TRUE;
@@ -93,11 +95,12 @@ function validateUserInputs(){
 				unset($extra); // destroy reference.
 			}
 		}
+
 		if(isSet($_POST['isPurchased'])){
 			$isPurchasedArray = $_POST['isPurchased'];
 			foreach($_SESSION['EditOrderExtraOrdered'] AS &$extra){
 				$isPurchasedUpdated = FALSE;
-				for($i=0; $i<sizeOf($isPurchasedArray); $i++){
+				for($i = 0; $i < sizeOf($isPurchasedArray); $i++){
 					if($extra['ExtraID'] == $isPurchasedArray[$i]){
 						$extra['ExtraBooleanPurchased'] = 1;
 						$isPurchasedUpdated = TRUE;
@@ -114,6 +117,16 @@ function validateUserInputs(){
 				$extra['ExtraBooleanPurchased'] = 0;
 				unset($extra); // destroy reference.
 			}
+		}
+
+		// Update submitted item amounts of originally submitted items
+		foreach($_SESSION['EditOrderExtraOrdered'] AS &$extra){
+			$extraID = $extra['ExtraID'];
+			$postSubmittedAmountName = "extraAmountSelected-" . $extraID;
+			if(isSet($_POST[$postSubmittedAmountName]) AND $_POST[$postSubmittedAmountName] > 1){
+				$extra['ExtraAmount'] = $_POST[$postSubmittedAmountName];
+			}
+			unset($extra); // destroy reference.
 		}
 	}
 
@@ -534,23 +547,26 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Details') OR
 			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 			$pdo = connect_to_db();
 
-			$sql = 'SELECT 		`orderID`						AS TheOrderID,
-								`orderUserNotes`				AS OrderUserNotes,
-								`dateTimeCreated`				AS DateTimeCreated,
-								`dateTimeCancelled`				AS DateTimeCancelled,
-								`dateTimeUpdatedByStaff`		AS DateTimeUpdatedByStaff,
-								`dateTimeUpdatedByUser`			AS DateTimeUpdatedByUser,
-								`cancelMessage`					AS OrderCancelMessage,
-								`orderApprovedByUser`			AS OrderApprovedByUser,
-								`orderApprovedByAdmin`			AS OrderApprovedByAdmin,
-								`orderApprovedByStaff` 			AS OrderApprovedByStaff,
-								`orderChangedByUser`			AS OrderChangedByUser,
-								`orderChangedByStaff`			AS OrderChangedByStaff,
-								`orderNewMessageFromUser`		AS OrderNewMessageFromUser,
-								`orderNewMessageFromStaff`		AS OrderNewMessageFromStaff,
-								`adminNote`						AS OrderAdminNote
-					FROM 		`orders`
-					WHERE		`orderID` = :OrderID
+			$sql = 'SELECT 		o.`orderID`						AS TheOrderID,
+								o.`orderUserNotes`				AS OrderUserNotes,
+								o.`dateTimeCreated`				AS DateTimeCreated,
+								o.`dateTimeCancelled`			AS DateTimeCancelled,
+								o.`dateTimeUpdatedByStaff`		AS DateTimeUpdatedByStaff,
+								o.`dateTimeUpdatedByUser`		AS DateTimeUpdatedByUser,
+								o.`cancelMessage`				AS OrderCancelMessage,
+								o.`orderApprovedByUser`			AS OrderApprovedByUser,
+								o.`orderApprovedByAdmin`		AS OrderApprovedByAdmin,
+								o.`orderApprovedByStaff` 		AS OrderApprovedByStaff,
+								o.`orderChangedByUser`			AS OrderChangedByUser,
+								o.`orderChangedByStaff`			AS OrderChangedByStaff,
+								o.`orderNewMessageFromUser`		AS OrderNewMessageFromUser,
+								o.`orderNewMessageFromStaff`	AS OrderNewMessageFromStaff,
+								o.`adminNote`					AS OrderAdminNote,
+								b.`startDateTime`				AS DateTimeStart
+					FROM 		`orders` o
+					LEFT JOIN 	`booking` b
+					ON 			b.`orderID` = o.`orderID`
+					WHERE		o.`orderID` = :OrderID
 					LIMIT 		1';
 
 			$s = $pdo->prepare($sql);
@@ -572,6 +588,10 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Details') OR
 
 			$dateTimeCreated = $row['DateTimeCreated'];
 			$displayDateTimeCreated = convertDatetimeToFormat($dateTimeCreated , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
+			if(!empty($row['DateTimeStart'])){
+				$dateTimeStart = $row['DateTimeStart'];
+				$displayDateTimeStart = convertDatetimeToFormat($dateTimeStart , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
+			}
 
 			if(!empty($row['DateTimeUpdatedByStaff'])){
 				$dateTimeUpdatedByStaff = $row['DateTimeUpdatedByStaff'];
@@ -594,11 +614,22 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Details') OR
 				$displayDateTimeCancelled = NULL;
 			}
 
+			if(!empty($row['DateTimeStart'])){
+				$datetimeNow = getDatetimeNow();
+				$timeDifferenceInDaysUntilStart = convertTwoDateTimesToTimeDifferenceInDays($datetimeNow, $dateTimeStart);
+				$timeDifferenceInDaysUntilEditOrCancelGetsBlocked = $timeDifferenceInDaysUntilStart - MINIMUM_DAYS_UNTIL_MEETING_STARTS_WHERE_YOU_CAN_STILL_PLACE_AN_ORDER;
+			} else {
+				$timeDifferenceInDaysUntilEditOrCancelGetsBlocked = -1; // No date attached i.e. not eligible to cancel or edit
+				$displayDateTimeStart = "No Meeting Attached";
+			}
+
 			$_SESSION['EditOrderOriginalInfo']['OrderIsApproved'] = $orderIsApproved;
 			$_SESSION['EditOrderOriginalInfo']['DateTimeCreated'] = $displayDateTimeCreated;
 			$_SESSION['EditOrderOriginalInfo']['DateTimeCancelled'] = $displayDateTimeCancelled;
 			$_SESSION['EditOrderOriginalInfo']['DateTimeUpdatedByStaff'] = $displayDateTimeUpdatedByStaff;
 			$_SESSION['EditOrderOriginalInfo']['DateTimeUpdatedByUser'] = $displayDateTimeUpdatedByUser;
+			$_SESSION['EditOrderOriginalInfo']['DateTimeStart'] = $displayDateTimeStart;
+			$_SESSION['EditOrderOriginalInfo']['DaysLeftToEditOrCancel'] = $timeDifferenceInDaysUntilEditOrCancelGetsBlocked;
 
 			$_SESSION['EditOrderOrderID'] = $orderID;
 
@@ -627,11 +658,16 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Details') OR
 			$s->bindValue(':OrderID', $orderID);
 			$s->execute();
 
+			$totalPrice = 0;
+
 			$result = $s->fetchAll(PDO::FETCH_ASSOC);
 			foreach($result AS $extra){
 				$extraName = $extra['ExtraName'];
 				$extraAmount = $extra['ExtraAmount'];
-				$extraPrice = convertToCurrency($extra['ExtraPrice']);
+				$extraPrice = $extra['ExtraPrice'];
+				$finalPrice = $extraAmount * $extraPrice;
+				$totalPrice += $finalPrice;
+				//$extraPrice = convertToCurrency($extra['ExtraPrice']);
 				$extraDescription = $extra['ExtraDescription'];
 				$extraID = $extra['ExtraID'];
 
@@ -689,6 +725,7 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Details') OR
 				$extraOrderedOnlyNames = array();
 			}
 
+			$_SESSION['EditOrderTotalPrice'] = $totalPrice;
 			$_SESSION['EditOrderOriginalInfo']['ExtraOrdered'] = $extraOrdered;
 			$_SESSION['EditOrderExtraOrdered'] = $extraOrdered;
 			$_SESSION['EditOrderExtraOrderedOnlyNames'] = $extraOrderedOnlyNames;
@@ -807,6 +844,22 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Details') OR
 	$originalOrderCreated = $_SESSION['EditOrderOriginalInfo']['DateTimeCreated'];
 	$originalOrderUpdatedByStaff = $_SESSION['EditOrderOriginalInfo']['DateTimeUpdatedByStaff'];
 	$originalOrderUpdatedByUser = $_SESSION['EditOrderOriginalInfo']['DateTimeUpdatedByUser'];
+	$originalMeetingStartDate = $_SESSION['EditOrderOriginalInfo']['DateTimeStart'];
+	$daysLeftToEditOrCancel = $_SESSION['EditOrderOriginalInfo']['DaysLeftToEditOrCancel'];
+	$originalTotalPrice = $_SESSION['EditOrderTotalPrice'];
+	$extraOrdered = $_SESSION['EditOrderOriginalInfo']['ExtraOrdered'];
+
+	// Adjust days left message to user
+	if($daysLeftToEditOrCancel > 1){
+		$displayDaysLeftMessage = "$daysLeftToEditOrCancel Days Left";
+	} elseif($daysLeftToEditOrCancel == 1){
+		$displayDaysLeftMessage = "1 Day Left";
+	} elseif($daysLeftToEditOrCancel == 0){
+		$startTime = convertDatetimeToFormat($originalMeetingStartDate , DATETIME_DEFAULT_FORMAT_TO_DISPLAY, TIME_DEFAULT_FORMAT_TO_DISPLAY);
+		$displayDaysLeftMessage = "Last Day (Ends at $startTime)";
+	} elseif($daysLeftToEditOrCancel < 0){
+		$displayDaysLeftMessage = "No Longer Eligible";
+	}
 
 	$disableEdit = $_SESSION['EditOrderDisableEdit'];
 	$orderStatus = $_SESSION['EditOrderOrderStatus'];
@@ -837,8 +890,8 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Submit Changes'){
 	// JavaScript alternatives submitted data
 	if(isSet($_POST['LastAlternativeID']) AND $_POST['LastAlternativeID'] != ""){
 		// There has been an alternative added
-		$lastID = $_POST['LastAlternativeID']+1;
-		for($i=0; $i < $lastID; $i++){
+		$lastID = $_POST['LastAlternativeID'] + 1;
+		for($i = 0; $i < $lastID; $i++){
 			$postExtraIDName = "addAlternativeSelected" . $i;
 			$postExtraNameName = "AlternativeName" . $i;
 			$postAmountName = "AmountSelected" . $i;
@@ -849,6 +902,7 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Submit Changes'){
 				if(!isSet($addedExtra)){
 					$addedExtra = array();
 				}
+
 				$addedExtra[] = array(
 										"ExtraID" => $_POST[$postExtraIDName],
 										"ExtraAmount" => $_POST[$postAmountName]
@@ -1155,14 +1209,20 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Submit Changes'){
 					$extraID = $extra['ExtraID'];
 					$extraBooleanApprovedForPurchase = $extra['ExtraBooleanApprovedForPurchase'];
 					$extraBooleanPurchased = $extra['ExtraBooleanPurchased'];
+					$extraAmount = $extra['ExtraAmount'];
 					$updateApprovedForPurchase = FALSE;
 					$updatePurchased = FALSE;
+					$updateAmount = FALSE;
+
 					// update if the values actually changed
 					if($original['ExtraOrdered'][$key]['ExtraBooleanApprovedForPurchase'] != $extraBooleanApprovedForPurchase){
 						$updateApprovedForPurchase = TRUE;
 					}
 					if($original['ExtraOrdered'][$key]['ExtraBooleanPurchased'] != $extraBooleanPurchased){
 						$updatePurchased = TRUE;
+					}
+					if($original['ExtraOrdered'][$key]['ExtraAmount'] != $extraAmount){
+						$updateAmount = TRUE;
 					}
 
 					if($extraBooleanApprovedForPurchase == 1){
@@ -1183,7 +1243,8 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Submit Changes'){
 									SET		`approvedForPurchase` = CURRENT_TIMESTAMP,
 											`approvedByUserID` = :extraApprovedByUserID,
 											`purchased` = CURRENT_TIMESTAMP,
-											`purchasedByUserID` = :purchasedByUserID
+											`purchasedByUserID` = :purchasedByUserID,
+											`amount` = :amount
 									WHERE	`orderID` = :OrderID
 									AND		`extraID` = :ExtraID";
 						} elseif($extraBooleanApprovedForPurchase == 1 AND $extraBooleanPurchased == 0){
@@ -1191,7 +1252,8 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Submit Changes'){
 									SET		`approvedForPurchase` = CURRENT_TIMESTAMP,
 											`approvedByUserID` = :extraApprovedByUserID,
 											`purchased` = NULL,
-											`purchasedByUserID` = :purchasedByUserID
+											`purchasedByUserID` = :purchasedByUserID,
+											`amount` = :amount
 									WHERE	`orderID` = :OrderID
 									AND		`extraID` = :ExtraID";
 						} elseif($extraBooleanApprovedForPurchase == 0 AND $extraBooleanPurchased == 1){
@@ -1199,7 +1261,8 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Submit Changes'){
 									SET		`approvedForPurchase` = NULL,
 											`approvedByUserID` = :extraApprovedByUserID,
 											`purchased` = CURRENT_TIMESTAMP,
-											`purchasedByUserID` = :purchasedByUserID
+											`purchasedByUserID` = :purchasedByUserID,
+											`amount` = :amount
 									WHERE	`orderID` = :OrderID
 									AND		`extraID` = :ExtraID";
 						} else {
@@ -1207,7 +1270,8 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Submit Changes'){
 									SET		`approvedForPurchase` = NULL,
 											`approvedByUserID` = :extraApprovedByUserID,
 											`purchased` = NULL,
-											`purchasedByUserID` = :purchasedByUserID
+											`purchasedByUserID` = :purchasedByUserID,
+											`amount` = :amount
 									WHERE	`orderID` = :OrderID
 									AND		`extraID` = :ExtraID";
 						}
@@ -1216,18 +1280,21 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Submit Changes'){
 						$s->bindValue(':ExtraID', $extraID);
 						$s->bindValue(':extraApprovedByUserID', $extraApprovedByUserID);
 						$s->bindValue(':purchasedByUserID', $purchasedByUserID);
+						$s->bindValue(':amount', $extraAmount);
 						$s->execute();
 					} elseif($updateApprovedForPurchase AND !$updatePurchased){
 						if($extraBooleanApprovedForPurchase == 1){
 							$sql = "UPDATE	`extraorders`
 									SET		`approvedForPurchase` = CURRENT_TIMESTAMP,
-											`approvedByUserID` = :extraApprovedByUserID
+											`approvedByUserID` = :extraApprovedByUserID,
+											`amount` = :amount
 									WHERE	`orderID` = :OrderID
 									AND		`extraID` = :ExtraID";
 						} else {
 							$sql = "UPDATE	`extraorders`
 									SET		`approvedForPurchase` = NULL,
-											`approvedByUserID` = :extraApprovedByUserID
+											`approvedByUserID` = :extraApprovedByUserID,
+											`amount` = :amount
 									WHERE	`orderID` = :OrderID
 									AND		`extraID` = :ExtraID";
 						}
@@ -1235,18 +1302,21 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Submit Changes'){
 						$s->bindValue(':OrderID', $orderID);
 						$s->bindValue(':ExtraID', $extraID);
 						$s->bindValue(':extraApprovedByUserID', $extraApprovedByUserID);
+						$s->bindValue(':amount', $extraAmount);
 						$s->execute();
 					} elseif(!$updateApprovedForPurchase AND $updatePurchased){
 						if($extraBooleanPurchased == 1){
 							$sql = "UPDATE	`extraorders`
 									SET		`purchased` = CURRENT_TIMESTAMP,
-											`purchasedByUserID` = :purchasedByUserID
+											`purchasedByUserID` = :purchasedByUserID,
+											`amount` = :amount
 									WHERE	`orderID` = :OrderID
 									AND		`extraID` = :ExtraID";
 						} else {
 							$sql = "UPDATE	`extraorders`
 									SET		`purchased` = NULL,
-											`purchasedByUserID` = :purchasedByUserID
+											`purchasedByUserID` = :purchasedByUserID,
+											`amount` = :amount
 									WHERE	`orderID` = :OrderID
 									AND		`extraID` = :ExtraID";
 						}
@@ -1254,6 +1324,17 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Submit Changes'){
 						$s->bindValue(':OrderID', $orderID);
 						$s->bindValue(':ExtraID', $extraID);
 						$s->bindValue(':purchasedByUserID', $purchasedByUserID);
+						$s->bindValue(':amount', $extraAmount);
+						$s->execute();
+					} elseif($updateAmount){
+						$sql = "UPDATE	`extraorders`
+								SET		`amount` = :amount
+								WHERE	`orderID` = :OrderID
+								AND		`extraID` = :ExtraID";
+						$s = $pdo->prepare($sql);
+						$s->bindValue(':OrderID', $orderID);
+						$s->bindValue(':ExtraID', $extraID);
+						$s->bindValue(':amount', $extraAmount);
 						$s->execute();
 					}
 				}
@@ -1803,6 +1884,12 @@ foreach($result AS $row){
 			$status = "Active";
 		}
 	}
+	
+	if(!empty($row['OrderContent'])){
+		$orderContent = $row['OrderContent'];
+	} else {
+		$orderContent = "No Items Ordered";
+	}
 
 	// sort orders by their date and put them into different arrays representing orders today, this week and
 	if($status == "Active"){
@@ -1823,7 +1910,7 @@ foreach($result AS $row){
 												'DateTimeApproved' => $displayDateTimeApproved,
 												'DateTimeCreated' => $displayDateTimeCreated,
 												'DateTimeUpdated' => $displayDateTimeUpdated,
-												'OrderContent' => $row['OrderContent'],
+												'OrderContent' => $orderContent,
 												'OrderAdminNote' => $row['OrderAdminNote'],
 												'OrderFinalPrice' => $displayOrderFinalPrice,
 												'OrderApprovedByUser' => $displayOrderApprovedByUser,
@@ -1850,7 +1937,7 @@ foreach($result AS $row){
 																	'DateTimeApproved' => $displayDateTimeApproved,
 																	'DateTimeCreated' => $displayDateTimeCreated,
 																	'DateTimeUpdated' => $displayDateTimeUpdated,
-																	'OrderContent' => $row['OrderContent'],
+																	'OrderContent' => $orderContent,
 																	'OrderAdminNote' => $row['OrderAdminNote'],
 																	'OrderFinalPrice' => $displayOrderFinalPrice,
 																	'OrderApprovedByUser' => $displayOrderApprovedByUser,
@@ -1872,7 +1959,7 @@ foreach($result AS $row){
 								'DateTimeApproved' => $displayDateTimeApproved,
 								'DateTimeCreated' => $displayDateTimeCreated,
 								'DateTimeUpdated' => $displayDateTimeUpdated,
-								'OrderContent' => $row['OrderContent'],
+								'OrderContent' => $orderContent,
 								'OrderAdminNote' => $row['OrderAdminNote'],
 								'OrderFinalPrice' => $displayOrderFinalPrice,
 								'OrderApprovedByUser' => $displayOrderApprovedByUser,
@@ -1893,7 +1980,7 @@ foreach($result AS $row){
 								'DateTimeApproved' => $displayDateTimeApproved,
 								'DateTimeUpdated' => $displayDateTimeUpdated,
 								'DateTimeCompleted' => $displayDateTimeCompleted,
-								'OrderContent' => $row['OrderContent'],
+								'OrderContent' => $orderContent,
 								'OrderAdminNote' => $row['OrderAdminNote'],
 								'OrderFinalPrice' => $displayOrderFinalPrice,
 								'OrderApprovedByName' => $orderApprovedBy,
@@ -1912,7 +1999,7 @@ foreach($result AS $row){
 								'DateTimeCreated' => $displayDateTimeCreated,
 								'DateTimeUpdated' => $displayDateTimeUpdated,
 								'DateTimeCancelled' => $displayDateTimeCancelled,
-								'OrderContent' => $row['OrderContent'],
+								'OrderContent' => $orderContent,
 								'OrderAdminNote' => $row['OrderAdminNote'],
 								'OrderRoomName' => $orderRoomName,
 								'OrderBookedFor' => $orderBookedFor
@@ -1938,7 +2025,7 @@ foreach($result AS $row){
 								'DateTimeUpdated' => $displayDateTimeUpdated,
 								'DateTimeCancelled' => $displayDateTimeCancelled,
 								'DateTimeCompleted' => $displayDateTimeCompleted,
-								'OrderContent' => $row['OrderContent'],
+								'OrderContent' => $orderContent,
 								'OrderAdminNote' => $row['OrderAdminNote'],
 								'OrderFinalPrice' => $displayOrderFinalPrice,
 								'OrderApprovedByUser' => $displayOrderApprovedByUser,

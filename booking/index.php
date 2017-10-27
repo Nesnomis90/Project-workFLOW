@@ -98,9 +98,9 @@ function clearEditBookingOrderSessions(){
 	unset($_SESSION['EditBookingOrderAlternativeExtraAdded']);
 	unset($_SESSION['EditBookingOrderAlternativeExtraCreated']);
 	unset($_SESSION['EditBookingOrderExtraOrderedOnlyNames']);
+	unset($_SESSION['EditBookingOrderTotalPrice']);
 	unset($_SESSION['resetEditBookingOrder']);
 	unset($_SESSION['refreshEditBookingOrder']);
-	unset($_SESSION['EditBookingOrderTotalPrice']);
 }
 
 function updateBookingCodeGuesses(){
@@ -111,7 +111,7 @@ function updateBookingCodeGuesses(){
 		for($i=0; $i < sizeOf($_SESSION['bookingCodeGuesses']); $i++){
 			$startDateTime = $_SESSION['bookingCodeGuesses'][$i];
 
-			$timeDifference = convertTwoDateTimesToTimeDifferenceInMinutes($startDateTime, $dateTimeNow);		
+			$timeDifference = convertTwoDateTimesToTimeDifferenceInMinutes($startDateTime, $dateTimeNow);
 			if($timeDifference < BOOKING_CODE_WRONG_GUESS_TIMEOUT_IN_MINUTES){
 				$newArray[] = $_SESSION['bookingCodeGuesses'][$i];
 			}
