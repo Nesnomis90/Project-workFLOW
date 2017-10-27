@@ -387,25 +387,41 @@
 				tableCell.removeChild(confirmButton);
 				tableCell.removeChild(resetAmountButton);
 			}
-			/*
-			function resetAmount(resetButton, extraID){
-				
-			}
-			*/
 
-			function changeAmount(inputAmount, originalInputValue){
+			function resetAmount(resetAmountButton, extraID){
+				// Get original amount
+				var originalExtraAmountSelected = document.getElementById("extraAmountSelected-" + extraID);
+				var originalExtraAmount = originalExtraAmountSelected.value;
+
+				// Set back to original amount
+				var resetExtraAmount = document.getElementById("extraAmount-" + extraID);
+				resetExtraAmount.value = originalExtraAmount;
+
+				// Remove confirm/reset buttons
+				var tableCell = resetAmountButton.parentNode;
+				var confirmNewAmountButtonName = "confirmAmountButton-" + extraID;
+				var confirmButton = document.getElementById(confirmNewAmountButtonName);
+				tableCell.removeChild(confirmButton);
+				tableCell.removeChild(resetAmountButton);
+			}
+
+			function changeAmount(inputAmount){
 				var splitID = inputAmount.id.split("-");
 				var extraID = splitID[1];
 				var inputCurrentValue = inputAmount.value;
 				var tableCell = inputAmount.parentNode;
 
+				// Get original amount value
+				var originalExtraAmountSelected = document.getElementById("extraAmountSelected-" + extraID);
+				var alreadySelectedValue = originalExtraAmountSelected.value;
+				
 				// Add a checkmark/cross to the same tablecell, if they're not already added
 				var confirmNewAmountButtonName = "confirmAmountButton-" + extraID;
 				var resetAmountButtonName = "resetAmountButton-" + extraID;
 				var confirmNewAmountButton = document.getElementById(confirmNewAmountButtonName);
 				var resetAmountButton = document.getElementById(resetAmountButtonName);
 
-				if(confirmNewAmountButton === null && inputCurrentValue != originalInputValue){
+				if(confirmNewAmountButton === null && inputCurrentValue != alreadySelectedValue){
 					var confirmNewAmountButton = document.createElement("input");
 					confirmNewAmountButton.setAttribute("id", confirmNewAmountButtonName)
 					confirmNewAmountButton.setAttribute("type", "button");
@@ -415,11 +431,11 @@
 					var confirmNewAmountButtonIDNumber = extraID;
 					confirmNewAmountButton.onclick = function onClick(){confirmNewAmount(this, confirmNewAmountButtonIDNumber);}						
 					tableCell.appendChild(confirmNewAmountButton);
-				} else if(confirmNewAmountButton !== null && inputCurrentValue == originalInputValue){
+				} else if(confirmNewAmountButton !== null && inputCurrentValue == alreadySelectedValue){
 					tableCell.removeChild(confirmNewAmountButton);
 				}
 
-				if(resetAmountButton === null && inputCurrentValue != originalInputValue){
+				if(resetAmountButton === null && inputCurrentValue != alreadySelectedValue){
 					var resetAmountButton = document.createElement("input");
 					resetAmountButton.setAttribute("id", resetAmountButtonName)
 					resetAmountButton.setAttribute("type", "button");
@@ -427,9 +443,9 @@
 					resetAmountButton.value = "✖";
 					resetAmountButton.style.color = "red";
 					var resetAmountButtonIDNumber = extraID;
-					//resetAmountButton.onclick = function onClick(){resetAmount(this, resetAmountButtonIDNumber);}						
+					resetAmountButton.onclick = function onClick(){resetAmount(this, resetAmountButtonIDNumber);}						
 					tableCell.appendChild(resetAmountButton);
-				} else if(resetAmountButton !== null && inputCurrentValue == originalInputValue){
+				} else if(resetAmountButton !== null && inputCurrentValue == alreadySelectedValue){
 					tableCell.removeChild(resetAmountButton);
 				}
 			}
@@ -583,7 +599,7 @@
 									<td style="white-space: pre-wrap;"><?php htmlout($row['ExtraDescription']); ?></td>
 									<td><?php htmlout($row['ExtraPrice']); ?></td>
 									<td>
-										<input style="width: 45px;" type="number" id="extraAmount-<?php htmlout($row['ExtraID']); ?>" name="extraAmount-<?php htmlout($row['ExtraID']); ?>" min="1" onchange="changeAmount(this, <?php htmlout($row['ExtraAmount']); ?>)" value="<?php htmlout($row['ExtraAmount']); ?>">
+										<input style="width: 45px;" type="number" id="extraAmount-<?php htmlout($row['ExtraID']); ?>" name="extraAmount-<?php htmlout($row['ExtraID']); ?>" min="1" onchange="changeAmount(this)" value="<?php htmlout($row['ExtraAmount']); ?>">
 										<input type="hidden" id="extraAmountSelected-<?php htmlout($row['ExtraID']); ?>" name="extraAmountSelected-<?php htmlout($row['ExtraID']); ?>" value="<?php htmlout($row['ExtraAmount']); ?>">
 									</td>
 									<td>
