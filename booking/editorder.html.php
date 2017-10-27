@@ -374,8 +374,9 @@
 
 			function confirmNewAmount(confirmButton, extraID){
 				// Get new amount 
-				var newExtraAmount = document.getElementById("extraAmount-" + extraID);
-				var newExtraAmountValue = newExtraAmount.value;
+				var inputExtraAmount = document.getElementById("extraAmount-" + extraID);
+				var newExtraAmountValue = inputExtraAmount.value;
+				inputExtraAmount.removeAttribute("class", "fillOut");
 				// Set new amount 
 				var extraAmountSelected = document.getElementById("extraAmountSelected-" + extraID);
 				extraAmountSelected.value = newExtraAmountValue;
@@ -394,8 +395,9 @@
 				var originalExtraAmount = originalExtraAmountSelected.value;
 
 				// Set back to original amount
-				var resetExtraAmount = document.getElementById("extraAmount-" + extraID);
-				resetExtraAmount.value = originalExtraAmount;
+				var inputExtraAmount = document.getElementById("extraAmount-" + extraID);
+				inputExtraAmount.value = originalExtraAmount;
+				inputExtraAmount.removeAttribute("class", "fillOut");
 
 				// Remove confirm/reset buttons
 				var tableCell = resetAmountButton.parentNode;
@@ -412,14 +414,19 @@
 				var tableCell = inputAmount.parentNode;
 
 				// Get original amount value
-				var originalExtraAmountSelected = document.getElementById("extraAmountSelected-" + extraID);
-				var alreadySelectedValue = originalExtraAmountSelected.value;
-				
+				var alreadySelectedValueSelected = document.getElementById("extraAmountSelected-" + extraID);
+				var alreadySelectedValue = alreadySelectedValueSelected.value;
+
 				// Add a checkmark/cross to the same tablecell, if they're not already added
 				var confirmNewAmountButtonName = "confirmAmountButton-" + extraID;
 				var resetAmountButtonName = "resetAmountButton-" + extraID;
 				var confirmNewAmountButton = document.getElementById(confirmNewAmountButtonName);
 				var resetAmountButton = document.getElementById(resetAmountButtonName);
+				var inputExtraAmount = document.getElementById("extraAmount-" + extraID);
+
+				if(inputCurrentValue == alreadySelectedValue){
+					inputExtraAmount.removeAttribute("class", "fillOut");
+				}
 
 				if(confirmNewAmountButton === null && inputCurrentValue != alreadySelectedValue){
 					var confirmNewAmountButton = document.createElement("input");
@@ -429,7 +436,7 @@
 					confirmNewAmountButton.value = "✔";
 					confirmNewAmountButton.style.color = "green";
 					var confirmNewAmountButtonIDNumber = extraID;
-					confirmNewAmountButton.onclick = function onClick(){confirmNewAmount(this, confirmNewAmountButtonIDNumber);}						
+					confirmNewAmountButton.onclick = function onClick(){confirmNewAmount(this, confirmNewAmountButtonIDNumber);}
 					tableCell.appendChild(confirmNewAmountButton);
 				} else if(confirmNewAmountButton !== null && inputCurrentValue == alreadySelectedValue){
 					tableCell.removeChild(confirmNewAmountButton);
@@ -443,18 +450,35 @@
 					resetAmountButton.value = "✖";
 					resetAmountButton.style.color = "red";
 					var resetAmountButtonIDNumber = extraID;
-					resetAmountButton.onclick = function onClick(){resetAmount(this, resetAmountButtonIDNumber);}						
+					resetAmountButton.onclick = function onClick(){resetAmount(this, resetAmountButtonIDNumber);}
 					tableCell.appendChild(resetAmountButton);
 				} else if(resetAmountButton !== null && inputCurrentValue == alreadySelectedValue){
 					tableCell.removeChild(resetAmountButton);
 				}
 			}
 
-			function validateNewAlternatives(){
+			function validateUserInputs(){
 
 				// Check if any amount has been changed, and if so if they've been confirmed
-				// TO-DO: Just check if any of the confirm/reset buttons are still active
+				var amountsNotConfirmed = 0;
+				for(var i = 0; i < extrasOrdered.length; i++){
+					var extraID = extrasOrdered[i]['ExtraID'];
+					var confirmNewAmountButtonName = "confirmAmountButton-" + extraID;
+					var confirmNewAmountButton = document.getElementById(confirmNewAmountButtonName);
+					var inputExtraAmount = document.getElementById("extraAmount-" + extraID);
+					if(confirmNewAmountButton !== null){
+						inputExtraAmount.setAttribute("class", "fillOut");
+						amountsNotConfirmed++;
+					} else {
+						inputExtraAmount.removeAttribute("class", "fillOut");
+					}
+				}
 
+				if(amountsNotConfirmed > 0){
+					alert("You have made some changes to an item's amount. You have to confirm the change (✔) or reset it (✖) before submitting the changes.");
+					return false;
+				}
+				
 				if(alternativesAdded > 0){
 					// First check if all added items have been accepted (checkmark)
 					for(var i = 0; i < alternativeID; i++){
@@ -627,7 +651,7 @@
 					<input type="hidden" id="SaveTotalPrice" name="SaveTotalPrice" value="">
 					<input type="hidden" id="LastAlternativeID" name="LastAlternativeID" value="">
 					<input type="hidden" id="AlternativesAdded" name="AlternativesAdded" value="0">
-					<input type="submit" id="AddBookingButton" name="order" value="Submit Changes" onclick="return validateAlternativesAdded()">
+					<input type="submit" id="AddBookingButton" name="order" value="Submit Changes" onclick="return validateUserInputs()">
 					<input type="submit" name="order" value="Go Back">
 					<input type="submit" name="order" value="Reset">
 				</div>
