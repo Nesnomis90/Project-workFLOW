@@ -38,6 +38,7 @@ function clearEditOrderSessions(){
 	unset($_SESSION['EditOrderAlternativeExtraAdded']);
 	unset($_SESSION['EditOrderAlternativeExtraCreated']);
 	unset($_SESSION['EditOrderExtraOrderedOnlyNames']);
+	unset($_SESSION['EditOrderTotalPrice']);
 	unset($_SESSION['resetEditOrder']);
 	unset($_SESSION['refreshEditOrder']);
 }
@@ -534,23 +535,26 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Details') OR
 			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 			$pdo = connect_to_db();
 
-			$sql = 'SELECT 		`orderID`						AS TheOrderID,
-								`orderUserNotes`				AS OrderUserNotes,
-								`dateTimeCreated`				AS DateTimeCreated,
-								`dateTimeCancelled`				AS DateTimeCancelled,
-								`dateTimeUpdatedByStaff`		AS DateTimeUpdatedByStaff,
-								`dateTimeUpdatedByUser`			AS DateTimeUpdatedByUser,
-								`cancelMessage`					AS OrderCancelMessage,
-								`orderApprovedByUser`			AS OrderApprovedByUser,
-								`orderApprovedByAdmin`			AS OrderApprovedByAdmin,
-								`orderApprovedByStaff` 			AS OrderApprovedByStaff,
-								`orderChangedByUser`			AS OrderChangedByUser,
-								`orderChangedByStaff`			AS OrderChangedByStaff,
-								`orderNewMessageFromUser`		AS OrderNewMessageFromUser,
-								`orderNewMessageFromStaff`		AS OrderNewMessageFromStaff,
-								`adminNote`						AS OrderAdminNote
-					FROM 		`orders`
-					WHERE		`orderID` = :OrderID
+			$sql = 'SELECT 		o.`orderID`						AS TheOrderID,
+								o.`orderUserNotes`				AS OrderUserNotes,
+								o.`dateTimeCreated`				AS DateTimeCreated,
+								o.`dateTimeCancelled`			AS DateTimeCancelled,
+								o.`dateTimeUpdatedByStaff`		AS DateTimeUpdatedByStaff,
+								o.`dateTimeUpdatedByUser`		AS DateTimeUpdatedByUser,
+								o.`cancelMessage`				AS OrderCancelMessage,
+								o.`orderApprovedByUser`			AS OrderApprovedByUser,
+								o.`orderApprovedByAdmin`		AS OrderApprovedByAdmin,
+								o.`orderApprovedByStaff` 		AS OrderApprovedByStaff,
+								o.`orderChangedByUser`			AS OrderChangedByUser,
+								o.`orderChangedByStaff`			AS OrderChangedByStaff,
+								o.`orderNewMessageFromUser`		AS OrderNewMessageFromUser,
+								o.`orderNewMessageFromStaff`	AS OrderNewMessageFromStaff,
+								o.`adminNote`					AS OrderAdminNote,
+								b.`startDateTime`				AS DateTimeStart
+					FROM 		`orders` o
+					LEFT JOIN 	`booking` b
+					ON 			b.`orderID` = o.`orderID`
+					WHERE		o.`orderID` = :OrderID
 					LIMIT 		1';
 
 			$s = $pdo->prepare($sql);
@@ -572,6 +576,10 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Details') OR
 
 			$dateTimeCreated = $row['DateTimeCreated'];
 			$displayDateTimeCreated = convertDatetimeToFormat($dateTimeCreated , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
+			if(!empty($row['DateTimeStart'])){
+				$dateTimeStart = $row['DateTimeStart'];
+				$displayDateTimeStart = convertDatetimeToFormat($dateTimeStart , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
+			}
 
 			if(!empty($row['DateTimeUpdatedByStaff'])){
 				$dateTimeUpdatedByStaff = $row['DateTimeUpdatedByStaff'];
@@ -594,11 +602,22 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Details') OR
 				$displayDateTimeCancelled = NULL;
 			}
 
+			if(!empty($row['DateTimeStart'])){
+				$datetimeNow = getDatetimeNow();
+				$timeDifferenceInDaysUntilStart = convertTwoDateTimesToTimeDifferenceInDays($datetimeNow, $dateTimeStart);
+				$timeDifferenceInDaysUntilEditOrCancelGetsBlocked = $timeDifferenceInDaysUntilStart - MINIMUM_DAYS_UNTIL_MEETING_STARTS_WHERE_YOU_CAN_STILL_PLACE_AN_ORDER;
+			} else {
+				$timeDifferenceInDaysUntilEditOrCancelGetsBlocked = -1; // No date attached i.e. not eligible to cancel or edit
+				$displayDateTimeStart = "No Meeting Attached";
+			}
+
 			$_SESSION['EditOrderOriginalInfo']['OrderIsApproved'] = $orderIsApproved;
 			$_SESSION['EditOrderOriginalInfo']['DateTimeCreated'] = $displayDateTimeCreated;
 			$_SESSION['EditOrderOriginalInfo']['DateTimeCancelled'] = $displayDateTimeCancelled;
 			$_SESSION['EditOrderOriginalInfo']['DateTimeUpdatedByStaff'] = $displayDateTimeUpdatedByStaff;
 			$_SESSION['EditOrderOriginalInfo']['DateTimeUpdatedByUser'] = $displayDateTimeUpdatedByUser;
+			$_SESSION['EditOrderOriginalInfo']['DateTimeStart'] = $displayDateTimeStart;
+			$_SESSION['EditOrderOriginalInfo']['DaysLeftToEditOrCancel'] = $timeDifferenceInDaysUntilEditOrCancelGetsBlocked;
 
 			$_SESSION['EditOrderOrderID'] = $orderID;
 
@@ -627,11 +646,16 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Details') OR
 			$s->bindValue(':OrderID', $orderID);
 			$s->execute();
 
+			$totalPrice = 0;
+
 			$result = $s->fetchAll(PDO::FETCH_ASSOC);
 			foreach($result AS $extra){
 				$extraName = $extra['ExtraName'];
 				$extraAmount = $extra['ExtraAmount'];
-				$extraPrice = convertToCurrency($extra['ExtraPrice']);
+				$extraPrice = $extra['ExtraPrice'];
+				$finalPrice = $extraAmount * $extraPrice;
+				$totalPrice += $finalPrice;
+				//$extraPrice = convertToCurrency($extra['ExtraPrice']);
 				$extraDescription = $extra['ExtraDescription'];
 				$extraID = $extra['ExtraID'];
 
@@ -689,6 +713,7 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Details') OR
 				$extraOrderedOnlyNames = array();
 			}
 
+			$_SESSION['EditOrderTotalPrice'] = $totalPrice;
 			$_SESSION['EditOrderOriginalInfo']['ExtraOrdered'] = $extraOrdered;
 			$_SESSION['EditOrderExtraOrdered'] = $extraOrdered;
 			$_SESSION['EditOrderExtraOrderedOnlyNames'] = $extraOrderedOnlyNames;
@@ -807,6 +832,22 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Details') OR
 	$originalOrderCreated = $_SESSION['EditOrderOriginalInfo']['DateTimeCreated'];
 	$originalOrderUpdatedByStaff = $_SESSION['EditOrderOriginalInfo']['DateTimeUpdatedByStaff'];
 	$originalOrderUpdatedByUser = $_SESSION['EditOrderOriginalInfo']['DateTimeUpdatedByUser'];
+	$originalMeetingStartDate = $_SESSION['EditOrderOriginalInfo']['DateTimeStart'];
+	$daysLeftToEditOrCancel = $_SESSION['EditOrderOriginalInfo']['DaysLeftToEditOrCancel'];
+	$originalTotalPrice = $_SESSION['EditOrderTotalPrice'];
+	$extraOrdered = $_SESSION['EditOrderOriginalInfo']['ExtraOrdered'];
+
+	// Adjust days left message to user
+	if($daysLeftToEditOrCancel > 1){
+		$displayDaysLeftMessage = "$daysLeftToEditOrCancel Days Left";
+	} elseif($daysLeftToEditOrCancel == 1){
+		$displayDaysLeftMessage = "1 Day Left";
+	} elseif($daysLeftToEditOrCancel == 0){
+		$startTime = convertDatetimeToFormat($originalMeetingStartDate , DATETIME_DEFAULT_FORMAT_TO_DISPLAY, TIME_DEFAULT_FORMAT_TO_DISPLAY);
+		$displayDaysLeftMessage = "Last Day (Ends at $startTime)";
+	} elseif($daysLeftToEditOrCancel < 0){
+		$displayDaysLeftMessage = "No Longer Eligible";
+	}
 
 	$disableEdit = $_SESSION['EditOrderDisableEdit'];
 	$orderStatus = $_SESSION['EditOrderOrderStatus'];

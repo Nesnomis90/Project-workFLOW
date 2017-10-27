@@ -22,7 +22,6 @@
 			var alternativesAdded = 0;
 			var newAlternativesCreated = 0;
 			var addAlternativeExtra = false;
-			var createNewAlternativeExtra = false;
 			var availableExtrasArray = <?php echo json_encode($availableExtra); ?>;
 			var extrasOrdered = <?php echo json_encode($extraOrdered); ?>;
 
@@ -91,12 +90,6 @@
 					// cancel the function, since we have nothing else to add
 					table.deleteRow(rowNumber);
 					return;
-				}
-
-				// Add total price text if it hasn't been added before
-				var displayTotalPrice = document.getElementById("DisplayTotalPricePlacement");
-				if(displayTotalPrice.innerHTML == ""){
-					displayTotalPrice.innerHTML = "<span>Total Price: 0</span>";
 				}
 
 				// Create the select box we want to be able to choose from
@@ -304,31 +297,6 @@
 				changeTotalPrice();
 			}
 
-			function changeAlternativeText(selectBox){
-				var selectBoxID = selectBox.id;
-				var splitID = selectBoxID.split("-");
-				var attributeID = splitID[1];
-				var descriptionTextID = "addAlternativeDescriptionSelected" + attributeID;
-				var	descriptionText = document.getElementById(descriptionTextID);
-				var priceTextID = "addAlternativePriceSelected" + attributeID;
-				var priceText = document.getElementById(priceTextID);
-				var amountValueID = "AmountSelected" + attributeID;
-				var amountValue = document.getElementById(amountValueID);
-
-				// get the extra ID for reference
-				var extraIDSelected = selectBox.options[selectBox.selectedIndex].value;
-
-				// Add the available extra names as options
-				for(var i = 0; i < availableExtrasArray.length; i++){
-					if(extraIDSelected == availableExtrasArray[i]['ExtraID']){
-						descriptionText.innerHTML = availableExtrasArray[i]['ExtraDescription'];
-						priceText.innerHTML = availableExtrasArray[i]['ExtraPrice'];
-						amountValue.value = 1;
-						break;
-					}
-				}
-			}
-
 			function removeAddedExtra(removeButton, attributeID){
 				// get the extra ID that had already been accepted that was removed
 				var extraIDRemovedID = "extraIDAccepted" + attributeID;
@@ -387,6 +355,8 @@
 				var resetAmountButton = document.getElementById(resetAmountButtonName);
 				tableCell.removeChild(confirmButton);
 				tableCell.removeChild(resetAmountButton);
+
+				changeTotalPrice();
 			}
 
 			function resetAmount(resetAmountButton, extraID){
@@ -405,6 +375,8 @@
 				var confirmButton = document.getElementById(confirmNewAmountButtonName);
 				tableCell.removeChild(confirmButton);
 				tableCell.removeChild(resetAmountButton);
+
+				changeTotalPrice();
 			}
 
 			function changeAmount(inputAmount){
@@ -473,7 +445,7 @@
 					} else {
 						inputExtraAmount.removeAttribute("class", "fillOut");
 					}
-					
+
 					// Check if any amounts have changed
 					var originalAmount = extrasOrdered[i]['ExtraAmount'];
 					var submittedAmount = inputExtraAmount.value;
@@ -524,7 +496,7 @@
 							return false;
 						}
 					}
-					
+
 					// Submit message on adding new items
 					var totalPrice = document.getElementById("SaveTotalPrice").value;
 					var submitConfirmed = confirm("The total cost of this order, with the new items, will be " + totalPrice + " NOK. Are you sure you want to submit these updates to the order?");
@@ -532,7 +504,7 @@
 				} else if(amountsChangedFromOriginal > 0){
 					// Submit message on changing item amounts
 					var totalPrice = document.getElementById("SaveTotalPrice").value;
-					var submitConfirmed = confirm("The total cost of this order, with the updated a, will be " + totalPrice + " NOK. Are you sure you want to submit these updates to the order?");
+					var submitConfirmed = confirm("The total cost of this order, with the updated amount, will be " + totalPrice + " NOK. Are you sure you want to submit these updates to the order?");
 					return submitConfirmed;
 				} else if(userMessageSubmitted){
 					// Submit message on sending staff a message
