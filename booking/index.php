@@ -90,7 +90,7 @@ function clearAddOrderToBookingSessions(){
 function clearEditBookingOrderSessions(){
 	unset($_SESSION['EditBookingOrderOriginalInfo']);
 	unset($_SESSION['EditBookingOrderCommunicationToStaff']);
-	unset($_SESSION['EditBookingOrderIsApproved']);
+	unset($_SESSION['EditBookingOrderIsApprovedByUser']);
 	unset($_SESSION['EditBookingOrderOrderID']);
 	unset($_SESSION['EditBookingOrderExtraOrdered']);
 	unset($_SESSION['EditBookingOrderOrderMessages']);
@@ -638,6 +638,59 @@ function validateUserInputs($FeedbackSessionToUse, $editing){
 		return array($invalidInput, $validatedBookingDescription, $validatedDisplayName, $validatedBookingCode);
 	}
 }
+
+// Function to check if user inputs for Order are correct
+function validateOrderUserInputs(){
+	$invalidInput = FALSE;
+
+	// Get user inputs
+	if(isSet($_POST['OrderCommunicationToStaff']) AND !$invalidInput){
+		$orderCommunicationToStaff = trim($_POST['OrderCommunicationToStaff']);
+	} else {
+		// Doesn't need to be set.
+		$orderCommunicationToStaff = "";
+	}
+
+	// Update submitted checkmark values
+	if(isSet($_SESSION['EditBookingOrderExtraOrdered'])){
+		// Update submitted item amounts of originally submitted items
+		foreach($_SESSION['EditBookingOrderExtraOrdered'] AS &$extra){
+			$extraID = $extra['ExtraID'];
+			$postSubmittedAmountName = "extraAmountSelected-" . $extraID;
+			if(isSet($_POST[$postSubmittedAmountName]) AND $_POST[$postSubmittedAmountName] > 1){
+				$extra['ExtraAmount'] = $_POST[$postSubmittedAmountName];
+			}
+			unset($extra); // destroy reference.
+		}
+	}
+
+	if(isSet($_POST['isApprovedByUser']) AND $_POST['isApprovedByUser'] == 1){
+		$orderIsApprovedByUser = 1;
+	} else {
+		$orderIsApprovedByUser = 0;
+	}
+
+	// Remove excess whitespace and prepare strings for validation
+	$validatedOrderCommunicationToStaff = trimExcessWhitespaceButLeaveLinefeed($orderCommunicationToStaff);
+	$validatedIsApprovedByUser = $orderIsApprovedByUser;
+
+	// Do actual input validation
+	if(validateString($validatedOrderCommunicationToStaff) === FALSE AND !$invalidInput){
+		$invalidInput = TRUE;
+		$_SESSION['EditBookingOrderError'] = "Your submitted message to staff has illegal characters in it.";
+	}
+
+	// Check if input length is allowed
+		// OrderCommunicationToStaff
+	$invalidorderCommunicationToStaff = isLengthInvalidOrderMessage($validatedOrderCommunicationToStaff);
+	if($invalidorderCommunicationToStaff AND !$invalidInput){
+		$_SESSION['EditBookingOrderError'] = "Your submitted message to staff is too long.";
+		$invalidInput = TRUE;
+	}
+
+	return array($invalidInput, $validatedOrderCommunicationToStaff, $validatedIsApprovedByUser);
+}
+
 
 // Check if we're accessing from a local device
 // If so, set that meeting room's info as the default meeting room info
@@ -5956,11 +6009,11 @@ if	(isSet($_SESSION['loggedIn']) AND
 		} else {
 			$orderCommunicationToStaff = "";
 		}
-		if(isSet($_SESSION['EditBookingOrderIsApproved'])){
-			$orderIsApproved = $_SESSION['EditBookingOrderIsApproved'];
-			unset($_SESSION['EditBookingOrderIsApproved']);
+		if(isSet($_SESSION['EditBookingOrderIsApprovedByUser'])){
+			$orderIsApprovedByUser = $_SESSION['EditBookingOrderIsApprovedByUser'];
+			unset($_SESSION['EditBookingOrderIsApprovedByUser']);
 		} else {
-			$orderIsApproved = 0;
+			$orderIsApprovedByUser = 0;
 		}
 		if(isSet($_SESSION['EditBookingOrderOrderID'])){
 			$orderID = $_SESSION['EditBookingOrderOrderID'];
@@ -6229,7 +6282,7 @@ if	(isSet($_SESSION['loggedIn']) AND
 							`description`	AS ExtraDescription,
 							`price`			AS ExtraPrice
 					FROM 	`extra`
-					WHERE	`extraID` 
+					WHERE	`extraID`
 					NOT IN 	(
 								SELECT 	`extraID`
 								FROM 	`extraorders`
@@ -6312,8 +6365,231 @@ if	(isSet($_SESSION['loggedIn']) AND
 	// EDIT ORDER CODE SNIPPET // END //
 
 	// FINISH EDIT ORDER CODE SNIPPET // START //
+// Perform the actual database update of the edited information
+if(isSet($_POST['order']) AND $_POST['order'] == 'Submit Changes'){
+	// Validate user inputs
+	list($invalidInput, $validatedOrderCommunicationToStaff, $validatedIsApprovedByUser) = validateOrderUserInputs();
 
-	// TO-DO: FIX-ME: Add finish edit code from admin\orders\index.php
+	// JavaScript alternatives submitted data
+	if(isSet($_POST['LastAlternativeID']) AND $_POST['LastAlternativeID'] != ""){
+		// There has been an alternative added
+		$lastID = $_POST['LastAlternativeID'] + 1;
+		for($i = 0; $i < $lastID; $i++){
+			$postExtraIDName = "addAlternativeSelected-" . $i;
+			$postExtraIDNameWithJavascript = "extraIDAccepted" . $i;
+			$postAmountName = "AmountSelected" . $i;
+
+			// POST name changes depending if the user has used javascript or not to confirm the amount.
+			// If not confirmed we take the raw value
+			if(isSet($_POST[$postExtraIDName]) AND $_POST[$postExtraIDName] > 0){
+				$extraID = $_POST[$postExtraIDName];
+			} elseif(isSet($_POST[$postExtraIDNameWithJavascript]) AND $_POST[$postExtraIDNameWithJavascript] > 0){
+				$extraID = $_POST[$postExtraIDNameWithJavascript];
+			}
+
+			if(isSet($extraID)){
+				// These are existing alternatives added
+				if(!isSet($addedExtra)){
+					$addedExtra = array();
+				}
+
+				$addedExtra[] = array(
+										"ExtraID" => $extraID,
+										"ExtraAmount" => $_POST[$postAmountName]
+									);
+			}
+		}
+	}
+
+	// Refresh form on invalid
+	if($invalidInput){
+		// Refresh.
+		if(isSet($addedExtra)){
+			$_SESSION['EditBookingOrderAlternativeExtraAdded'] = $addedExtra;
+		}
+
+		$_SESSION['EditBookingOrderCommunicationToStaff'] = $validatedOrderCommunicationToStaff;
+		$_SESSION['EditBookingOrderIsApprovedByUser'] = $validatedIsApprovedByUser;
+
+		$_SESSION['refreshEditOrder'] = TRUE;
+		header('Location: .');
+		exit();
+	}
+
+	// Check if values have actually changed
+	$numberOfChanges = 0;
+	if(isSet($_SESSION['EditBookingOrderOriginalInfo'])){
+		$original = $_SESSION['EditBookingOrderOriginalInfo'];
+		unset($_SESSION['EditBookingOrderOriginalInfo']);
+
+		$messageAdded = FALSE;
+		if($validatedOrderCommunicationToStaff != ""){
+			$numberOfChanges++;
+			$messageAdded = TRUE;
+		}
+
+		if($original['OrderApprovedByUser'] != $validatedIsApprovedByUser){
+			$numberOfChanges++;
+			// Approved changed.
+			$approvedByUser = $validatedIsApprovedByUser;
+		} else {
+			// Approve didn't change
+			$approvedByUser = $original['OrderApprovedByUser'];
+		}
+
+		$extraChanged = FALSE;
+		if($original['ExtraOrdered'] != $_SESSION['EditBookingOrderExtraOrdered']){
+			$numberOfChanges++;
+			$extraChanged = TRUE;
+		}
+
+		$extraAdded = FALSE;
+		if(isSet($addedExtra)){
+			$numberOfChanges++;
+			$extraAdded = TRUE;
+		}
+	}
+
+	$orderID = $_POST['OrderID'];
+
+	if($numberOfChanges > 0){
+		// Some changes were made, let's update!
+		try
+		{
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+			$pdo = connect_to_db();
+
+			$pdo->beginTransaction();
+
+			if($messageAdded AND $extraAdded){
+				$sql = 'UPDATE 	`orders`
+						SET		`orderApprovedByUser` = :approvedByUser,
+								`dateTimeUpdatedByUser` = CURRENT_TIMESTAMP,
+								`orderChangedByUser` = 1,
+								`orderApprovedByUser` = :approvedByUser,
+								`orderNewMessageFromUser` = 1
+						WHERE 	`orderID` = :OrderID';
+			} elseif(!$messageAdded AND $extraAdded){
+				$sql = 'UPDATE 	`orders`
+						SET		`orderApprovedByUser` = :approvedByUser,
+								`dateTimeUpdatedByUser` = CURRENT_TIMESTAMP,
+								`orderChangedByUser` = 1
+						WHERE 	`orderID` = :OrderID';
+			} elseif($messageAdded AND !$extraAdded){
+				$sql = 'UPDATE 	`orders`
+						SET		`orderApprovedByUser` = :approvedByUser,
+								`dateTimeUpdatedByUser` = CURRENT_TIMESTAMP,
+								`orderNewMessageFromUser` = 1
+						WHERE 	`orderID` = :OrderID';
+			} else {
+				$sql = 'UPDATE 	`orders`
+						SET		`orderApprovedByUser` = :approvedByUser,
+								`dateTimeUpdatedByUser` = CURRENT_TIMESTAMP,
+						WHERE 	`orderID` = :OrderID';
+			}
+			$s = $pdo->prepare($sql);
+			$s->bindValue(':OrderID', $orderID);
+			$s->bindValue(':approvedByUser', $approvedByUser);
+			$s->execute();
+
+			if($messageAdded){
+				$sql = 'INSERT INTO `ordermessages`
+						SET			`message` = :message,
+									`sentByUser` = 1,
+									`dateTimeAdded` = CURRENT_TIMESTAMP,
+									`messageFromUserID` = :messageFromUserID,
+									`orderID` = :OrderID';
+				$s = $pdo->prepare($sql);
+				$s->bindValue(':OrderID', $orderID);
+				$s->bindValue(':message', $validatedOrderCommunicationToStaff);
+				$s->bindValue(':messageFromUserID', $_SESSION['LoggedInUserID']);
+				$s->execute();
+			}
+
+			if($extraChanged){
+				// Update extraorders table
+				foreach($_SESSION['EditBookingOrderExtraOrdered'] AS $key => $extra){
+					$extraID = $extra['ExtraID'];
+					$extraAmount = $extra['ExtraAmount'];
+					$updateAmount = FALSE;
+
+					// update if the values actually changed
+					if($original['ExtraOrdered'][$key]['ExtraAmount'] != $extraAmount){
+						$updateAmount = TRUE;
+					}
+
+					if($updateAmount){
+						$sql = "UPDATE	`extraorders`
+								SET		`amount` = :amount
+								WHERE	`orderID` = :OrderID
+								AND		`extraID` = :ExtraID";
+						$s = $pdo->prepare($sql);
+						$s->bindValue(':OrderID', $orderID);
+						$s->bindValue(':ExtraID', $extraID);
+						$s->bindValue(':amount', $extraAmount);
+						$s->execute();
+					}
+				}
+			}
+
+			if($extraAdded){
+				foreach($addedExtra AS $extra){
+					$extraID = $extra['ExtraID'];
+					$extraAmount = $extra['ExtraAmount'];
+
+					$sql = "INSERT INTO 	`extraorders`
+							SET				`extraID` = :ExtraID,
+											`orderID` = :OrderID,
+											`amount` = :ExtraAmount";
+					$s = $pdo->prepare($sql);
+					$s->bindValue(':OrderID', $orderID);
+					$s->bindValue(':ExtraID', $extraID);
+					$s->bindValue(':ExtraAmount', $extraAmount);
+					$s->execute();
+				}
+			}
+
+			$pdo->commit();
+
+			// Close the connection
+			$pdo = null;
+		}
+		catch (PDOException $e)
+		{
+			$pdo->rollBack();
+			$error = 'Error updating submitted Order: ' . $e->getMessage();
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+			$pdo = null;
+			exit();
+		}
+
+		$_SESSION['normalBookingFeedback'] = "Successfully updated the Order.";
+	} else {
+		$_SESSION['normalBookingFeedback'] = "No changes were made to the Order.";
+	}
+
+	clearEditBookingOrderSessions();
+
+	// Load Order list webpage
+	header('Location: .');
+	exit();
+}
+
+// If user wants to get original values while editing
+if(isSet($_POST['action']) AND $_POST['action'] == 'Reset'){
+
+	clearEditBookingOrderSessions();
+
+	$_SESSION['resetEditBookingOrder'] = $_POST['OrderID'];
+	header('Location: .');
+	exit();
+}
+
+// If the user wants to leave the page and go back to the booking overview again
+if(isSet($_POST['action']) AND $_POST['action'] == 'Go Back'){
+	$_SESSION['normalBookingFeedback'] = "You left the order without making any changes.";
+	$refreshBookings = TRUE;
+}
 
 	// FINISH EDIT ORDER CODE SNIPPET // END //
 
