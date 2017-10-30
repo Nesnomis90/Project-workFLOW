@@ -719,8 +719,6 @@ if (isSet($_POST['action']) and $_POST['action'] == 'Refresh'){
 // If user does not want to cancel the meeting/order anyway
 if(isSet($_POST['confirmCancel']) AND $_POST['confirmCancel'] == "Abort Cancel"){
 
-	clearChangeBookingSessions();
-
 	if(isSet($_SESSION['cancelOrderOriginalValues'])){
 		$_SESSION['normalBookingFeedback'] = "You did not cancel the order.";
 	}
@@ -728,6 +726,8 @@ if(isSet($_POST['confirmCancel']) AND $_POST['confirmCancel'] == "Abort Cancel")
 	if(isSet($_SESSION['cancelBookingOriginalValues'])){
 		$_SESSION['normalBookingFeedback'] = "You did not cancel the meeting.";
 	}
+
+	clearChangeBookingSessions();
 
 	if(isSet($_GET['meetingroom'])){
 		$TheMeetingRoomID = $_GET['meetingroom'];
@@ -745,7 +745,7 @@ if(isSet($_POST['confirmCancel']) AND $_POST['confirmCancel'] == "Abort Cancel")
 }
 
 // If user has confirmed the order/meeting cancel
-if(isSet($_POST['confirmCancel']) AND $_POST['confirmCancel'] == "Confirm Reason"){
+if(isSet($_POST['confirmCancel']) AND $_POST['confirmCancel'] == "Confirm Cancel"){
 	$invalidInput = FALSE;
 	// Do input validation
 	if(isSet($_POST['cancelMessage']) AND !empty($_POST['cancelMessage'])){
@@ -962,7 +962,7 @@ if ((isSet($_POST['action']) and $_POST['action'] == 'Cancel') OR
 	// Only cancel if booking is currently active
 	if(isSet($bookingStatus) AND ($bookingStatus == 'Active' OR $bookingStatus == 'Active Today')){
 
-		// Load new template to let admin user add a reason for cancelling the meeting
+		// Load new template to make user confirm the cancel and an optional way to add a reason for cancelling the meeting
 		if(!isSet($_SESSION['cancelBookingOriginalValues']['ReasonForCancelling'])){
 
 			if(isSet($cancelledByAdmin)){
@@ -6524,7 +6524,7 @@ if	(isSet($_SESSION['loggedIn']) AND
 	// Only cancel the order if booking is currently active
 	if(isSet($bookingStatus) AND $bookingStatus == 'Active'){
 
-		// Load new template to let admin user add a reason for cancelling the meeting
+		// Load new template to make user confirm the cancel and an optional way to add a reason for cancelling the order
 		if(!isSet($_SESSION['cancelOrderOriginalValues']['ReasonForCancelling'])){
 
 			if(isSet($cancelledByAdmin)){
