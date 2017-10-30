@@ -716,8 +716,8 @@ if (isSet($_POST['action']) and $_POST['action'] == 'Refresh'){
 	exit();
 }
 
-// If admin does not want to cancel the meeting anyway.
-if(isSet($_POST['action']) AND $_POST['action'] == "Abort Cancel"){
+// If user does not want to cancel the meeting/order anyway
+if(isSet($_POST['confirmCancel']) AND $_POST['confirmCancel'] == "Abort Cancel"){
 
 	clearChangeBookingSessions();
 
@@ -744,8 +744,8 @@ if(isSet($_POST['action']) AND $_POST['action'] == "Abort Cancel"){
 	exit();
 }
 
-// If admin has finished adding a reason for cancelling a meeting.
-if(isSet($_POST['action']) AND $_POST['action'] == "Confirm Reason"){
+// If user has confirmed the order/meeting cancel
+if(isSet($_POST['confirmCancel']) AND $_POST['confirmCancel'] == "Confirm Reason"){
 	$invalidInput = FALSE;
 	// Do input validation
 	if(isSet($_POST['cancelMessage']) AND !empty($_POST['cancelMessage'])){
@@ -765,6 +765,8 @@ if(isSet($_POST['action']) AND $_POST['action'] == "Confirm Reason"){
 	}
 
 	if($invalidInput){
+
+		$cancelledBy = $_POST['cancelledBy'];
 
 		var_dump($_SESSION); // TO-DO: Remove when done testing
 
@@ -960,13 +962,20 @@ if ((isSet($_POST['action']) and $_POST['action'] == 'Cancel') OR
 	// Only cancel if booking is currently active
 	if(isSet($bookingStatus) AND ($bookingStatus == 'Active' OR $bookingStatus == 'Active Today')){
 
-		// Load new template to let admin add a reason for cancelling the meeting
-		if(isSet($cancelledByAdmin) AND $cancelledByAdmin AND !isSet($_SESSION['cancelBookingOriginalValues']['ReasonForCancelling'])){
+		// Load new template to let admin user add a reason for cancelling the meeting
+		if(!isSet($_SESSION['cancelBookingOriginalValues']['ReasonForCancelling'])){
+
+			if(isSet($cancelledByAdmin)){
+				$cancelledBy = "Admin";
+			} elseif($cancelledByOwner){
+				$cancelledBy = "Owner";
+			} else {
+				$cancelledBy = "Creator";
+			}
+
 			var_dump($_SESSION); // TO-DO: Remove before uploading
 			include_once 'cancelmessage.html.php';
 			exit();
-		} elseif(!isSet($cancelledByAdmin)){
-			unset($_SESSION['cancelBookingOriginalValues']['ReasonForCancelling']);
 		}
 
 		if(isSet($_SESSION['cancelBookingOriginalValues']['ReasonForCancelling']) AND !empty($_SESSION['cancelBookingOriginalValues']['ReasonForCancelling'])){
@@ -6341,6 +6350,7 @@ if	(isSet($_SESSION['loggedIn']) AND
 	$continueCancel = FALSE;
 	$cancelledByOwner = FALSE;
 	$cancelledByAdmin = FALSE;
+
 		// Check if the user is the creator of the booking	
 	try
 	{
@@ -6386,8 +6396,10 @@ if	(isSet($_SESSION['loggedIn']) AND
 			$bookingCreatorUserEmail = $row['UserEmail'];
 			$bookingCreatorUserInfo = $row['LastName'] . ", " . $row['FirstName'] . " - " . $row['UserEmail'];
 			$bookingOrderID = $row['OrderID'];
+
 			$_SESSION['cancelOrderOriginalValues']['SendEmail'] = $row['SendEmail'];
 			$_SESSION['cancelOrderOriginalValues']['UserEmail'] = $bookingCreatorUserEmail;
+
 			if(isSet($bookingCreatorUserID) AND !empty($bookingCreatorUserID) AND $bookingCreatorUserID == $SelectedUserID){
 				$continueCancel = TRUE;
 			}
@@ -6512,13 +6524,20 @@ if	(isSet($_SESSION['loggedIn']) AND
 	// Only cancel the order if booking is currently active
 	if(isSet($bookingStatus) AND $bookingStatus == 'Active'){
 
-		// Load new template to let admin add a reason for cancelling the meeting
-		if(isSet($cancelledByAdmin) AND $cancelledByAdmin AND !isSet($_SESSION['cancelOrderOriginalValues']['ReasonForCancelling'])){
+		// Load new template to let admin user add a reason for cancelling the meeting
+		if(!isSet($_SESSION['cancelOrderOriginalValues']['ReasonForCancelling'])){
+
+			if(isSet($cancelledByAdmin)){
+				$cancelledBy = "Admin";
+			} elseif($cancelledByOwner){
+				$cancelledBy = "Owner";
+			} else {
+				$cancelledBy = "Creator";
+			}
+
 			var_dump($_SESSION); // TO-DO: Remove before uploading
 			include_once 'cancelmessage.html.php';
 			exit();
-		} elseif(!isSet($cancelledByAdmin)){
-			unset($_SESSION['cancelOrderOriginalValues']['ReasonForCancelling']);
 		}
 
 		if(isSet($_SESSION['cancelOrderOriginalValues']['ReasonForCancelling']) AND !empty($_SESSION['cancelOrderOriginalValues']['ReasonForCancelling'])){
