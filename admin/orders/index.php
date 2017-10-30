@@ -892,19 +892,27 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Submit Changes'){
 		// There has been an alternative added
 		$lastID = $_POST['LastAlternativeID'] + 1;
 		for($i = 0; $i < $lastID; $i++){
-			$postExtraIDName = "addAlternativeSelected" . $i;
+			$postExtraIDName = "addAlternativeSelected-" . $i;
+			$postExtraIDNameWithJavascript = "extraIDAccepted" . $i;
 			$postExtraNameName = "AlternativeName" . $i;
 			$postAmountName = "AmountSelected" . $i;
 			$postAlternativeDescriptionName = "AlternativeDescription" . $i;
 			$postAlternativePriceName = "AlternativePrice" . $i;
+			
 			if(isSet($_POST[$postExtraIDName]) AND $_POST[$postExtraIDName] > 0){
+				$extraID = $_POST[$postExtraIDName];
+			} elseif(isSet($_POST[$postExtraIDNameWithJavascript]) AND $_POST[$postExtraIDNameWithJavascript] > 0){
+				$extraID = $_POST[$postExtraIDNameWithJavascript];
+			}
+
+			if(isSet($extraID)){
 				// These are existing alternatives added
 				if(!isSet($addedExtra)){
 					$addedExtra = array();
 				}
 
 				$addedExtra[] = array(
-										"ExtraID" => $_POST[$postExtraIDName],
+										"ExtraID" => $extraID,
 										"ExtraAmount" => $_POST[$postAmountName]
 									);
 			} elseif(isSet($_POST[$postExtraNameName])) {
@@ -1053,24 +1061,24 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Submit Changes'){
 			$approvedByAdmin = $original['OrderApprovedByAdmin'];
 			$approvedByStaff = $original['OrderApprovedByStaff'];
 		}
-	}
 
-	$extraChanged = FALSE;
-	if($original['ExtraOrdered'] != $_SESSION['EditOrderExtraOrdered']){
-		$numberOfChanges++;
-		$extraChanged = TRUE;
-	}
+		$extraChanged = FALSE;
+		if($original['ExtraOrdered'] != $_SESSION['EditOrderExtraOrdered']){
+			$numberOfChanges++;
+			$extraChanged = TRUE;
+		}
 
-	$extraAdded = FALSE;
-	if(isSet($addedExtra)){
-		$numberOfChanges++;
-		$extraAdded = TRUE;
-	}
+		$extraAdded = FALSE;
+		if(isSet($addedExtra)){
+			$numberOfChanges++;
+			$extraAdded = TRUE;
+		}
 
-	$extraCreated = FALSE;
-	if(isSet($createdExtra)){
-		$numberOfChanges++;
-		$extraCreated = TRUE;
+		$extraCreated = FALSE;
+		if(isSet($createdExtra)){
+			$numberOfChanges++;
+			$extraCreated = TRUE;
+		}
 	}
 
 	$orderID = $_POST['OrderID'];
