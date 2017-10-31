@@ -782,118 +782,120 @@
 		<?php include_once $_SERVER['DOCUMENT_ROOT'] .'/includes/admintopnav.html.php'; ?>
 
 		<form action="" method="post">
-			<fieldset><legend>Order Details - Status: <?php htmlout($orderStatus); ?></legend>
-				<div>
-					<?php if(isSet($_SESSION['AddOrderError'])) :?>
-						<span><b class="feedback"><?php htmlout($_SESSION['AddOrderError']); ?></b></span>
-						<?php unset($_SESSION['AddOrderError']); ?>
-					<?php endif; ?>
-				</div>
-
-				<div>
-					<label>Date Created: </label>
-					<span><b><?php htmlout($originalOrderCreated); ?></b></span>
-				</div>
-
-				<div>
-					<label>Date Of Meeting: </label>
-					<span><b><?php htmlout($originalMeetingStartDate); ?></b></span>
-				</div>
-
-				<div>
-					<label>Days Left User Can Alter Order: </label>
-					<span><b><?php htmlout($displayDaysLeftMessage); ?></b></span>
-				</div>
-
-				<div>
-					<label>Last Update (Staff): </label>
-					<?php if(empty($originalOrderUpdatedByStaff)) : ?>
-						<span><b><i><?php htmlout("Staff has made no changes to this order yet."); ?></i></b></span>
-					<?php else : ?>
-						<span><b><?php htmlout($originalOrderUpdatedByStaff); ?></b></span>
-					<?php endif; ?>
-				</div>
-
-				<div>
-					<label>Last Update (User): </label>
-					<?php if(empty($originalOrderUpdatedByUser)) : ?>
-						<span><b><i><?php htmlout("User has made no changes to this order yet."); ?></i></b></span>
-					<?php else : ?>
-						<span><b><?php htmlout($originalOrderUpdatedByUser); ?></b></span>
-					<?php endif; ?>
-				</div>
-
-				<div>
-					<label>User Notes: </label>
-					<?php if(empty($originalOrderUserNotes)) : ?>
-						<span><b><i><?php htmlout("User did not submit any additional information."); ?></i></b></span>
-					<?php else : ?>
-						<span style="white-space: pre-wrap;"><b><?php htmlout($originalOrderUserNotes); ?></b></span>
-					<?php endif; ?>
-				</div>
-
-				<div>
-					<label>Messages: </label>
-					<?php if(empty($orderMessages)) : ?>
-						<span><b><i><?php htmlout("No messages have been sent so far."); ?></i></b></span>
-					<?php else : ?>
-						<span style="white-space: pre-wrap;"><b><?php htmlout($orderMessages); ?></b></span>
-					<?php endif; ?>
-				</div>
-
-				<div>
-					<label class="description">Send New Message To User: </label>
-					<textarea rows="4" cols="50" id="OrderCommunicationToUser" name="OrderCommunicationToUser" placeholder="Enter New Message To User"><?php htmlout($orderCommunicationToUser); ?></textarea>
-				</div>
-
-				<div>
-					<label>Original Admin Note: </label>
-					<?php if(empty($originalOrderAdminNote)) : ?>
-						<span><b><i><?php htmlout("No admin note has been set."); ?></i></b></span>
-					<?php else : ?>
-						<span style="white-space: pre-wrap;"><b><?php htmlout($originalOrderAdminNote); ?></b></span>
-					<?php endif; ?>
-				</div>
-
-				<div>
-					<label class="description">Set New Admin Note: </label>
-						<textarea rows="4" cols="50" id="AdminNote" name="AdminNote" placeholder="Enter Admin Note"><?php htmlout($orderAdminNote); ?></textarea>
-				</div>
-
-				<div>
-					<label>Original Order Approval: </label>
-					<?php if($originalOrderIsApproved == 1) : ?>
-						<span><b><?php htmlout("Order Approved"); ?></b></span>
-					<?php else : ?>
-						<span><b><?php htmlout("Order Not Approved"); ?></b></span>
-					<?php endif; ?>
-				</div>
-
-				<div>
-					<?php if($disableEdit == 0) : ?>
-						<label>Change Order Approval: </label>
-						<?php if($orderIsApproved == 1) : ?>
-							<label class="checkboxlabel"><input type="checkbox" name="isApproved" value="1" checked="checked">Set As Approved</label>
-						<?php else : ?>
-							<label class="checkboxlabel"><input type="checkbox" name="isApproved" value="1">Set As Approved</label>
+			<div class="left">
+				<fieldset><legend>Order Details - Status: <?php htmlout($orderStatus); ?></legend>
+					<div>
+						<?php if(isSet($_SESSION['AddOrderError'])) :?>
+							<span><b class="feedback"><?php htmlout($_SESSION['AddOrderError']); ?></b></span>
+							<?php unset($_SESSION['AddOrderError']); ?>
 						<?php endif; ?>
-					<?php else : ?>
-						<input type="hidden" name="isApproved" value="<?php htmlout($orderIsApproved); ?>">
-					<?php endif; ?>
-				</div>
-				
-				<?php if(isSet($originalDateTimeCancelled)) : ?>
-					<div>
-						<label>Date Cancelled: </label>
-						<span><b><?php htmlout($originalDateTimeCancelled); ?></b></span>
 					</div>
-					<div>
-						<label>Reason For Cancelling: </label>
-						<span style="white-space: pre-wrap;"><b><?php htmlout($originalCancelMessage); ?></b></span>
-					</div>
-				<?php endif; ?>
-			</fieldset>
 
+					<div>
+						<label>Date Created: </label>
+						<span><b><?php htmlout($originalOrderCreated); ?></b></span>
+					</div>
+
+					<div>
+						<label>Date Of Meeting: </label>
+						<span><b><?php htmlout($originalMeetingStartDate); ?></b></span>
+					</div>
+
+					<div>
+						<label>Days Left User Can Alter Order: </label>
+						<span><b><?php htmlout($displayDaysLeftMessage); ?></b></span>
+					</div>
+
+					<div>
+						<label>Last Update (Staff): </label>
+						<?php if(empty($originalOrderUpdatedByStaff)) : ?>
+							<span><b><i><?php htmlout("Staff has made no changes to this order yet."); ?></i></b></span>
+						<?php else : ?>
+							<span><b><?php htmlout($originalOrderUpdatedByStaff); ?></b></span>
+						<?php endif; ?>
+					</div>
+
+					<div>
+						<label>Last Update (User): </label>
+						<?php if(empty($originalOrderUpdatedByUser)) : ?>
+							<span><b><i><?php htmlout("User has made no changes to this order yet."); ?></i></b></span>
+						<?php else : ?>
+							<span><b><?php htmlout($originalOrderUpdatedByUser); ?></b></span>
+						<?php endif; ?>
+					</div>
+
+					<div>
+						<label>User Notes: </label>
+						<?php if(empty($originalOrderUserNotes)) : ?>
+							<span><b><i><?php htmlout("User did not submit any additional information."); ?></i></b></span>
+						<?php else : ?>
+							<span style="white-space: pre-wrap;"><b><?php htmlout($originalOrderUserNotes); ?></b></span>
+						<?php endif; ?>
+					</div>
+
+					<div>
+						<label>Messages: </label>
+						<?php if(empty($orderMessages)) : ?>
+							<span><b><i><?php htmlout("No messages have been sent so far."); ?></i></b></span>
+						<?php else : ?>
+							<span style="white-space: pre-wrap;"><b><?php htmlout($orderMessages); ?></b></span>
+						<?php endif; ?>
+					</div>
+
+					<div>
+						<label class="description">Send New Message To User: </label>
+						<textarea rows="4" cols="50" id="OrderCommunicationToUser" name="OrderCommunicationToUser" placeholder="Enter New Message To User"><?php htmlout($orderCommunicationToUser); ?></textarea>
+					</div>
+
+					<div>
+						<label>Original Admin Note: </label>
+						<?php if(empty($originalOrderAdminNote)) : ?>
+							<span><b><i><?php htmlout("No admin note has been set."); ?></i></b></span>
+						<?php else : ?>
+							<span style="white-space: pre-wrap;"><b><?php htmlout($originalOrderAdminNote); ?></b></span>
+						<?php endif; ?>
+					</div>
+
+					<div>
+						<label class="description">Set New Admin Note: </label>
+							<textarea rows="4" cols="50" id="AdminNote" name="AdminNote" placeholder="Enter Admin Note"><?php htmlout($orderAdminNote); ?></textarea>
+					</div>
+
+					<div>
+						<label>Original Order Approval: </label>
+						<?php if($originalOrderIsApproved == 1) : ?>
+							<span><b><?php htmlout("Order Approved"); ?></b></span>
+						<?php else : ?>
+							<span><b><?php htmlout("Order Not Approved"); ?></b></span>
+						<?php endif; ?>
+					</div>
+
+					<div>
+						<?php if($disableEdit == 0) : ?>
+							<label>Change Order Approval: </label>
+							<?php if($orderIsApproved == 1) : ?>
+								<label class="checkboxlabel"><input type="checkbox" name="isApproved" value="1" checked="checked">Set As Approved</label>
+							<?php else : ?>
+								<label class="checkboxlabel"><input type="checkbox" name="isApproved" value="1">Set As Approved</label>
+							<?php endif; ?>
+						<?php else : ?>
+							<input type="hidden" name="isApproved" value="<?php htmlout($orderIsApproved); ?>">
+						<?php endif; ?>
+					</div>
+					
+					<?php if(isSet($originalDateTimeCancelled)) : ?>
+						<div>
+							<label>Date Cancelled: </label>
+							<span><b><?php htmlout($originalDateTimeCancelled); ?></b></span>
+						</div>
+						<div>
+							<label>Reason For Cancelling: </label>
+							<span style="white-space: pre-wrap;"><b><?php htmlout($originalCancelMessage); ?></b></span>
+						</div>
+					<?php endif; ?>
+				</fieldset>
+			</div>
+			
 			<div class="left">
 				<table id="addAlternative">
 					<caption>Items Ordered</caption>
