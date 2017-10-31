@@ -6,7 +6,7 @@
 		<link rel="stylesheet" type="text/css" href="/CSS/myCSS.css">
 		<style>
 			label {
-				width: 210px;
+				width: 220px;
 			}
 			.checkboxlabel{
 				display: inline-block;

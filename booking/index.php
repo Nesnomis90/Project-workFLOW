@@ -3338,7 +3338,7 @@ if ((isSet($_POST['add']) AND $_POST['add'] == "Add Booking") OR
 	} elseif(isSet($_SESSION["loggedIn"]) AND !isSet($_SESSION["DefaultMeetingRoomInfo"]) AND isSet($_SESSION['AddCreateBookingStepOneCompleted']) AND !isSet($_SESSION['refreshAddCreateBookingConfirmed']) AND isSet($_POST['LastAlternativeID']) AND $_POST['LastAlternativeID'] != ""){
 		// There has been items added to the order
 		$lastID = $_POST['LastAlternativeID']+1;
-		for($i=0; $i < $lastID; $i++){
+		for($i = 0; $i < $lastID; $i++){
 			$postExtraIDName = "extraIDAccepted" . $i;
 			$postAmountName = "AmountSelected" . $i;
 			if(isSet($_POST[$postExtraIDName]) AND $_POST[$postExtraIDName] > 0){
@@ -3460,7 +3460,7 @@ if ((isSet($_POST['add']) AND $_POST['add'] == "Add Booking") OR
 		$newPeriod = TRUE;
 		// Get exact period the user is booking for
 		date_default_timezone_set(DATE_DEFAULT_TIMEZONE);
-		$newDate = DateTime::createFromFormat("Y-m-d", $companyCreationDate);
+		$newDate = DateTime::createFromFormat("Y-m-d H:i:s", $companyCreationDate);
 		$dayNumberToKeep = $newDate->format("d");
 
 		list($newCompanyPeriodStart, $newCompanyPeriodEnd) = getPeriodDatesForCompanyFromDateSubmitted($dayNumberToKeep, $dateOnlyEndDate, $companyPeriodStartDate, $companyPeriodEndDate);

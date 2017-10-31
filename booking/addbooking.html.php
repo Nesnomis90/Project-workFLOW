@@ -18,44 +18,6 @@
 					var tableRows = table.rows.length;
 					var rowNumber = tableRows - 2;
 
-	/*				if(tableRows == 0){
-						// Add table header if we're adding the first item
-						var headerRow = table.insertRow(0);
-						headerRow.setAttribute("id", "headerRow");
-						var headerName = headerRow.insertCell(0);
-						headerName.outerHTML = "<th>Name</th>";
-						var headerDescription = headerRow.insertCell(1);
-						headerDescription.outerHTML = "<th>Description</th>";
-						var headerPrice = headerRow.insertCell(2);
-						headerPrice.outerHTML = "<th>Price</th>";
-						var headerAmount = headerRow.insertCell(3);
-						headerAmount.outerHTML = "<th>Amount</th>";
-						var headerConfirm = headerRow.insertCell(4);
-						headerConfirm.outerHTML = "<th>Select</th>";
-						var headerRemove = headerRow.insertCell(5);
-						headerRemove.outerHTML = "<th>Remove</th>";
-						rowNumber++;
-
-						// Also add the user notes submission textarea
-						var userNotesTextarea = document.createElement("textarea");
-						var userNotesTextareaName = "UserNotes";
-						userNotesTextarea.setAttribute("name", userNotesTextareaName);
-						userNotesTextarea.setAttribute("id", userNotesTextareaName);
-						userNotesTextarea.setAttribute("placeholder", "Enter Any Additional Information");
-						userNotesTextarea.style.display = 'block';
-						userNotesTextarea.rows = 4;
-						userNotesTextarea.cols = 50;
-						var userNotesLabel = document.createElement("label");
-						userNotesLabel.style.display = 'block';
-						userNotesLabel.style.float = 'none';
-						userNotesLabel.innerHTML = "Your Order Notes: ";
-						userNotesLabel.htmlFor = userNotesTextareaName;
-
-						var userNotesPlacement = document.getElementById("UserNotesPlacement");
-						userNotesPlacement.appendChild(userNotesLabel);
-						userNotesPlacement.appendChild(userNotesTextarea);
-					}*/
-
 					// Add new row at the end
 					var row = table.insertRow(rowNumber);
 
@@ -348,21 +310,6 @@
 					tableRow.parentNode.removeChild(tableRow);
 
 					alternativesAdded -= 1;
-
-	/*				//if we have no items added anymore
-					if(alternativesAdded == 0){
-						// remove table header 
-						var headerRow = document.getElementById("headerRow");
-						headerRow.parentNode.removeChild(headerRow);
-
-						// remove total price text
-						var displayTotalPrice = document.getElementById("DisplayTotalPricePlacement");
-						displayTotalPrice.innerHTML = "";
-
-						// remove user notes textarea
-						var userNotesPlacement = document.getElementById("UserNotesPlacement");
-						userNotesPlacement.innerHTML = "";
-					}*/
 
 					// update the input to check how many alternatives we have submitted
 					var inputAlternativesAdded = document.getElementById("AlternativesAdded");
