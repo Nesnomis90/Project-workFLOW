@@ -53,7 +53,6 @@
 				removeAlternativeExtraButton.value = "✖";
 				removeAlternativeExtraButton.style.color = "red";
 				var removeAlternativeExtraButtonIDNumber = alternativeID;
-				removeAlternativeExtraButton.onclick = function onClick(){removeAddedExtra(this, removeAlternativeExtraButtonIDNumber);}
 
 				// Create the confirm chosen extra button
 				var confirmAddedExtraButton = document.createElement("input");
@@ -85,6 +84,8 @@
 				inputExtraAccepted.setAttribute("value", "");
 
 				if(addAlternativeExtra){
+					removeAlternativeExtraButton.onclick = function onClick(){removeAddedExtra(this, removeAlternativeExtraButtonIDNumber);}
+					
 					// Get available extras
 					var availableExtrasNumber = <?php echo $availableExtrasNumber; ?>;
 
@@ -141,35 +142,6 @@
 						}
 					}
 
-					/*for(var i = 0; i < availableExtrasArray.length; i++){
-						var extraAlreadyAdded = false;
-
-						for(var j = 0; j < alternativeID; j++){
-							var selectBoxID = "addAlternativeSelected-" + j;
-							var selectBox = document.getElementById(selectBoxID);
-
-							if(selectBox !== null){
-								var extraIDSelected = selectBox.options[selectBox.selectedIndex].value;
-								if(extraIDSelected == availableExtrasArray[i]['ExtraID']){
-									extraAlreadyAdded = true;
-								}
-							}
-						}
-
-						if(extraAlreadyAdded === false){
-							var option = document.createElement("option");
-							option.value = availableExtrasArray[i]['ExtraID'];
-							option.text = availableExtrasArray[i]['ExtraName'];
-							selectExtraName.appendChild(option);
-
-							// Make sure we have the appropriate description and price for the extra name
-							if(firstIndexAdded === false){
-								firstIndexInSelectBox = i;
-								firstIndexAdded = true;
-							}
-						}
-					}*/
-
 					alternativesAdded += 1;
 
 					if(alternativesAdded == availableExtrasNumber){
@@ -188,6 +160,7 @@
 					var inputAlternativesAdded = document.getElementById("AlternativesAdded");
 					inputAlternativesAdded.value = alternativesAdded;
 				} else if(createNewAlternativeExtra){
+					removeAlternativeExtraButton.onclick = function onClick(){removeNewAlternativeExtra(this);}
 
 					// add an input for name, description and price for the alternative choice
 					var inputExtraName = document.createElement("input");
@@ -209,8 +182,6 @@
 					inputExtraDescription.setAttribute("name", inputExtraDescriptionAttributeName);
 					inputExtraDescription.setAttribute("id", inputExtraDescriptionAttributeName);
 					inputExtraDescription.setAttribute("placeholder", "Enter A Description");
-
-					removeAlternativeExtraButton.onclick = function onClick(){removeNewAlternativeExtra(this);}
 
 					newAlternativesCreated += 1;
 
@@ -587,8 +558,8 @@
 					return false;
 				}
 
-				// Validate user message to staff
-				var inputUserMessage = document.getElementById("OrderCommunicationToStaff");
+				// Validate staff message to user
+				var inputUserMessage = document.getElementById("OrderCommunicationToUser");
 				var userMessageSubmitted = false;
 				if(inputUserMessage !== null){
 					var userMessageSubmitted = inputUserMessage.value;
@@ -704,7 +675,7 @@
 					return submitConfirmed;
 				} else if(userMessageSubmitted){
 					// Submit message on sending staff a message
-					var submitConfirmed = confirm("Are you sure you want to send the new message to staff?");
+					var submitConfirmed = confirm("Are you sure you want to send the new message to user?");
 					return submitConfirmed;
 				} else {
 					// No change detected
@@ -853,7 +824,7 @@
 
 				<div>
 					<label class="description">Send New Message To User: </label>
-					<textarea rows="4" cols="50" name="OrderCommunicationToUser" placeholder="Enter New Message To User"><?php htmlout($orderCommunicationToUser); ?></textarea>
+					<textarea rows="4" cols="50" id="OrderCommunicationToUser" name="OrderCommunicationToUser" placeholder="Enter New Message To User"><?php htmlout($orderCommunicationToUser); ?></textarea>
 				</div>
 
 				<div>

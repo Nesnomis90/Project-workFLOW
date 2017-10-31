@@ -633,6 +633,7 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Details') OR
 
 			$_SESSION['EditOrderOrderID'] = $orderID;
 
+			// Get information about the extras ordered
 			$sql = 'SELECT 		ex.`extraID`											AS ExtraID,
 								ex.`name`												AS ExtraName,
 								eo.`amount`												AS ExtraAmount,
