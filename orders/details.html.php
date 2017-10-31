@@ -410,7 +410,26 @@
 				// Get new amount 
 				var inputExtraAmount = document.getElementById("extraAmount-" + extraID);
 				var newExtraAmountValue = inputExtraAmount.value;
-				inputExtraAmount.removeAttribute("class", "fillOut");
+
+				// Check if the amount selected is a valid amount first
+				if(inputExtraAmount !== null){
+					if(newExtraAmountValue == "" || newExtraAmountValue == 0){
+						inputExtraAmount.setAttribute("class", "fillOut");
+						alert("The order amount needs to be filled out and a valid number.");
+						return;
+					} else if(newExtraAmountValue.match(/^[0-9]*$/) === null){
+						inputExtraAmount.setAttribute("class", "fillOut");
+						alert("The order amount needs to be filled out and a valid number.");
+						return;
+					} else if(newExtraAmountValue < 0 || newExtraAmountValue > 255){
+						inputExtraAmount.setAttribute("class", "fillOut");
+						alert("The order amount needs to be filled out and a valid number between 1 and 255.");
+						return;
+					} else {
+						inputExtraAmount.removeAttribute("class", "fillOut");
+					}
+				}
+
 				// Set new amount 
 				var extraAmountSelected = document.getElementById("extraAmountSelected-" + extraID);
 				extraAmountSelected.value = newExtraAmountValue;
