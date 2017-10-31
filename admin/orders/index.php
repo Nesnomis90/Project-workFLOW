@@ -633,6 +633,7 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Details') OR
 
 			$_SESSION['EditOrderOrderID'] = $orderID;
 
+			// Get information about the extras ordered
 			$sql = 'SELECT 		ex.`extraID`											AS ExtraID,
 								ex.`name`												AS ExtraName,
 								eo.`amount`												AS ExtraAmount,
@@ -898,7 +899,7 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Submit Changes'){
 			$postAmountName = "AmountSelected" . $i;
 			$postAlternativeDescriptionName = "AlternativeDescription" . $i;
 			$postAlternativePriceName = "AlternativePrice" . $i;
-			
+
 			if(isSet($_POST[$postExtraIDName]) AND $_POST[$postExtraIDName] > 0){
 				$extraID = $_POST[$postExtraIDName];
 			} elseif(isSet($_POST[$postExtraIDNameWithJavascript]) AND $_POST[$postExtraIDNameWithJavascript] > 0){
