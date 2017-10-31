@@ -573,12 +573,12 @@
 					if(illegalCharacterFound === null){
 						// Did not match the entire string i.e. Found illegal characters
 						inputUserMessage.setAttribute("class", "fillOut");
-						alert("The message to staff you submitted contain illegal characters.");
+						alert("The message to the user you submitted contain illegal characters.");
 						return false;
 					} else if(userMessageSubmitted.length > 500){
 						// Text submitted is too long
 						inputUserMessage.setAttribute("class", "fillOut");
-						alert("The message to staff you submitted are too long.");
+						alert("The message to the user you submitted are too long.");
 						return false;
 					} else {
 						// All good
