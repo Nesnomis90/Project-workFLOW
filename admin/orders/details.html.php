@@ -350,9 +350,9 @@
 					inputPrice.setAttribute("class", "fillOut");
 					alert("The item price needs to be filled out and a valid number.");
 					return;
-				} else if(selectedAmount < 0 || selectedAmount > 5000){
+				} else if(selectedAmount < 0 || selectedAmount > 65635){
 					inputPrice.setAttribute("class", "fillOut");
-					alert("The item price needs to be filled out and a valid number between 0 and 5000.");
+					alert("The item price needs to be filled out and a valid number between 0 and 65635.");
 					return;
 				} else {
 					inputPrice.removeAttribute("class", "fillOut");
