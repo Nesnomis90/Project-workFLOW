@@ -65,13 +65,14 @@
 
 				// Create the input number for amount
 				var inputExtraAmount = document.createElement("input");
-				var inputExtraAmountAttributeName = "AmountSelected" + alternativeID;
+				var inputExtraAmountAttributeName = "AmountSelected-" + alternativeID;
 				inputExtraAmount.setAttribute("type", "number");
 				inputExtraAmount.setAttribute("id", inputExtraAmountAttributeName);
 				inputExtraAmount.setAttribute("name", inputExtraAmountAttributeName);
 				inputExtraAmount.setAttribute("value", "1");
 				inputExtraAmount.setAttribute("min", "1");
 				inputExtraAmount.style.width = "45px";
+				inputExtraAmount.onchange = function onChangeAmount(){changeAmountNewAlternative(this);}
 
 				// Create the hidden input for accepted extra
 				var inputExtraAccepted = document.createElement("input");
@@ -237,7 +238,7 @@
 				var	descriptionText = document.getElementById(descriptionTextID);
 				var priceTextID = "addAlternativePriceSelected" + attributeID;
 				var priceText = document.getElementById(priceTextID);
-				var amountValueID = "AmountSelected" + attributeID;
+				var amountValueID = "AmountSelected-" + attributeID;
 				var amountValue = document.getElementById(amountValueID);
 
 				// get the extra ID for reference
@@ -276,7 +277,7 @@
 						var acceptedExtraID = "extraIDAccepted" + i;
 						var acceptedExtra = document.getElementById(acceptedExtraID);
 						if(acceptedExtra !== null && acceptedExtra.value != ""){
-							var amountValueID = "AmountSelected" + i;
+							var amountValueID = "AmountSelected-" + i;
 							var amountValue = document.getElementById(amountValueID);
 							var priceTextID = "addAlternativePriceSelected" + i;
 							var priceText = document.getElementById(priceTextID);
@@ -315,7 +316,7 @@
 				var inputDescription = document.getElementById(inputDescriptionID);
 				var inputPriceID = "AlternativePrice" + attributeID;
 				var inputPrice = document.getElementById(inputPriceID);
-				var inputAmountID = "AmountSelected" + attributeID;
+				var inputAmountID = "AmountSelected-" + attributeID;
 				var inputAmount = document.getElementById(inputAmountID);
 
 				// Validate name
@@ -400,7 +401,7 @@
 				var extraIDName = document.createTextNode(selectBox.options[selectBox.selectedIndex].text);
 				var inputExtraAcceptedID = "extraIDAccepted" + selectBoxIDNumber;
 				var inputExtraAccepted = document.getElementById(inputExtraAcceptedID);
-				var inputAmountID = "AmountSelected" + selectBoxIDNumber;
+				var inputAmountID = "AmountSelected-" + selectBoxIDNumber;
 				var inputAmount = document.getElementById(inputAmountID);
 
 				// Check if the amount selected is a valid amount first
