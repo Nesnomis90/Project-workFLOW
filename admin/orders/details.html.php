@@ -178,6 +178,7 @@
 					inputExtraPrice.setAttribute("min", "0");
 					inputExtraPrice.setAttribute("name", inputExtraPriceAttributeName);
 					inputExtraPrice.setAttribute("id", inputExtraPriceAttributeName);
+					inputExtraPrice.style.width = "70px";
 
 					var inputExtraDescription = document.createElement("textarea");
 					var inputExtraDescriptionAttributeName = "AlternativeDescription" + alternativeID;
@@ -302,7 +303,7 @@
 				var inputDescription = document.getElementById(inputDescriptionID);
 				var inputPriceID = "AlternativePrice" + attributeID;
 				var inputPrice = document.getElementById(inputPriceID);
-				var inputAmountID = "AmountSelected" + selectBoxIDNumber;
+				var inputAmountID = "AmountSelected" + attributeID;
 				var inputAmount = document.getElementById(inputAmountID);
 
 				// Validate name
@@ -316,7 +317,7 @@
 				} else if(inputNameText.length > 255){
 					// Name too long
 					inputName.setAttribute("class", "fillOut");;
-				} else if(extraNameExists(inputNameText, i)){
+				} else if(extraNameExists(inputNameText, attributeID)){
 					// Name already exists
 					inputName.setAttribute("class", "fillOut");
 				} else {
@@ -346,11 +347,11 @@
 					inputPrice.setAttribute("class", "fillOut");
 					alert("The item price needs to be filled out and a valid number.");
 					return;
-				} else if(selectedAmount.match(/^[0-9]*$/) === null){
+				} else if(selectedPrice.match(/^[0-9]*$/) === null){
 					inputPrice.setAttribute("class", "fillOut");
 					alert("The item price needs to be filled out and a valid number.");
 					return;
-				} else if(selectedAmount < 0 || selectedAmount > 65635){
+				} else if(selectedPrice < 0 || selectedPrice > 65635){
 					inputPrice.setAttribute("class", "fillOut");
 					alert("The item price needs to be filled out and a valid number between 0 and 65635.");
 					return;
@@ -375,6 +376,17 @@
 				} else {
 					inputAmount.removeAttribute("class", "fillOut");
 				}
+
+				// Save the selected created extra, change total price and remove confirm/remove buttons
+				// TO-DO:
+				inputName.readOnly = true;
+				inputDescription.readOnly = true;
+				inputAmount.readOnly = true;
+				inputPrice.readOnly = true;
+				confirmButton.parentNode.removeChild(confirmButton);
+
+				// Update total price displayed
+				changeTotalPrice();
 			}
 
 			function removeNewAlternativeExtra(removeButton){
