@@ -544,7 +544,7 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Submit Changes'){
 			$postExtraIDName = "addAlternativeSelected-" . $i;
 			$postExtraIDNameWithJavascript = "extraIDAccepted" . $i;
 			$postExtraNameName = "AlternativeName" . $i;
-			$postAmountName = "AmountSelected" . $i;
+			$postAmountName = "AmountSelected-" . $i;
 			$postAlternativeDescriptionName = "AlternativeDescription" . $i;
 			$postAlternativePriceName = "AlternativePrice" . $i;
 

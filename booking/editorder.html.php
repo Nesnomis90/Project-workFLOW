@@ -74,6 +74,7 @@
 				inputExtraAmount.setAttribute("value", "1");
 				inputExtraAmount.setAttribute("min", "1");
 				inputExtraAmount.style.width = "45px";
+				inputExtraAmount.onchange = function onChangeAmount(){changeAmountNewAlternative(this);}
 
 				// Create the hidden input for accepted extra
 				var inputExtraAccepted = document.createElement("input");
@@ -405,7 +406,7 @@
 				var tableCell = inputAmount.parentNode;
 
 				// First make sure we only allow numbers to be entered
-				inputCurrentValue = inputCurrentValue.replace(/[^0-9]/g, '');
+				inputAmount.value = inputCurrentValue.replace(/[^0-9]/g, '');
 
 				// Get original amount value
 				var alreadySelectedValueSelected = document.getElementById("extraAmountSelected-" + extraID);
@@ -416,14 +417,13 @@
 				var resetAmountButtonName = "resetAmountButton-" + extraID;
 				var confirmNewAmountButton = document.getElementById(confirmNewAmountButtonName);
 				var resetAmountButton = document.getElementById(resetAmountButtonName);
-				var inputExtraAmount = document.getElementById("extraAmount-" + extraID);
 
 				if(inputCurrentValue == alreadySelectedValue){
-					inputExtraAmount.removeAttribute("class", "fillOut");
+					inputAmount.removeAttribute("class", "fillOut");
 				} else if(inputCurrentValue < 1){
-					inputExtraAmount.value = 1;
+					inputAmount.value = 1;
 				} else if(inputCurrentValue > 255){
-					inputExtraAmount.value = 255;
+					inputAmount.value = 255;
 				}
 
 				if(confirmNewAmountButton === null && inputCurrentValue != alreadySelectedValue){
@@ -452,6 +452,19 @@
 					tableCell.appendChild(resetAmountButton);
 				} else if(resetAmountButton !== null && inputCurrentValue == alreadySelectedValue){
 					tableCell.removeChild(resetAmountButton);
+				}
+			}
+
+			function changeAmountNewAlternative(inputAmount){
+				var inputCurrentValue = inputAmount.value;
+
+				// First make sure we only allow numbers to be entered
+				inputAmount.value = inputCurrentValue.replace(/[^0-9]/g, '');
+
+				if(inputCurrentValue < 1){
+					inputAmount.value = 1;
+				} else if(inputCurrentValue > 255){
+					inputAmount.value = 255;
 				}
 			}
 

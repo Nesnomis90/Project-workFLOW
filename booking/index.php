@@ -3340,7 +3340,7 @@ if ((isSet($_POST['add']) AND $_POST['add'] == "Add Booking") OR
 		$lastID = $_POST['LastAlternativeID']+1;
 		for($i = 0; $i < $lastID; $i++){
 			$postExtraIDName = "extraIDAccepted" . $i;
-			$postAmountName = "AmountSelected" . $i;
+			$postAmountName = "AmountSelected-" . $i;
 			if(isSet($_POST[$postExtraIDName]) AND $_POST[$postExtraIDName] > 0){
 				if(!isSet($addedExtra)){
 					$addedExtra = array();
@@ -5582,7 +5582,7 @@ if(isSet($_POST['add']) AND $_POST['add'] == "Add Order"){
 	$lastID = $_POST['LastAlternativeID']+1;
 	for($i = 0; $i < $lastID; $i++){
 		$postExtraIDName = "extraIDAccepted" . $i;
-		$postAmountName = "AmountSelected" . $i;
+		$postAmountName = "AmountSelected-" . $i;
 		if(isSet($_POST[$postExtraIDName]) AND $_POST[$postExtraIDName] > 0){
 			if(!isSet($addedExtra)){
 				$addedExtra = array();
@@ -6377,7 +6377,7 @@ if(isSet($_POST['order']) AND $_POST['order'] == 'Submit Changes'){
 		for($i = 0; $i < $lastID; $i++){
 			$postExtraIDName = "addAlternativeSelected-" . $i;
 			$postExtraIDNameWithJavascript = "extraIDAccepted" . $i;
-			$postAmountName = "AmountSelected" . $i;
+			$postAmountName = "AmountSelected-" . $i;
 
 			// POST name changes depending if the user has used javascript or not to confirm the amount.
 			// If not confirmed we take the raw value
