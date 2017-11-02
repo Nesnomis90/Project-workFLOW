@@ -753,6 +753,7 @@
 						} else {
 							inputExtraAmount.removeAttribute("class", "fillOut");
 						}
+
 						// Check if any amounts have changed
 						var originalAmount = extrasOrdered[i]['ExtraAmount'];
 						var submittedAmount = inputExtraAmount.value;

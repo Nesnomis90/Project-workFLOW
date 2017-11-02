@@ -6422,6 +6422,18 @@ if(isSet($_POST['order']) AND $_POST['order'] == 'Submit Changes'){
 		exit();
 	}
 
+	// Check if any extras were removed
+	if(isSet($_POST['ItemsRemovedFromOrder']) AND $_POST['ItemsRemovedFromOrder'] > 0){
+		foreach($_SESSION['EditBookingOrderExtraOrdered'] AS $extra){
+			$extraID = $extra['ExtraID'];
+			$postSubmittedAmountName = "extraAmountSelected-" . $extraID;
+			if(!isSet($_POST[$postSubmittedAmountName])){
+				// If there's no selected amount, then this item is no longer in the order
+				$removedExtraID[] = $extraID;
+			}
+		}
+	}
+
 	// Check if values have actually changed
 	$numberOfChanges = 0;
 	if(isSet($_SESSION['EditBookingOrderOriginalInfo'])){
