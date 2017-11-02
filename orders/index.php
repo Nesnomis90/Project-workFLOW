@@ -499,10 +499,10 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Details') OR
 	$originalOrderCreated = $_SESSION['EditStaffOrderOriginalInfo']['DateTimeCreated'];
 	$originalOrderUpdatedByStaff = $_SESSION['EditStaffOrderOriginalInfo']['DateTimeUpdatedByStaff'];
 	$originalOrderUpdatedByUser = $_SESSION['EditStaffOrderOriginalInfo']['DateTimeUpdatedByUser'];
-	$originalMeetingStartDate = $_SESSION['EditOrderOriginalInfo']['DateTimeStart'];
-	$daysLeftToEditOrCancel = $_SESSION['EditOrderOriginalInfo']['DaysLeftToEditOrCancel'];
-	$originalTotalPrice = $_SESSION['EditOrderTotalPrice'];
-	$extraOrdered = $_SESSION['EditOrderOriginalInfo']['ExtraOrdered'];
+	$originalMeetingStartDate = $_SESSION['EditStaffOrderOriginalInfo']['DateTimeStart'];
+	$daysLeftToEditOrCancel = $_SESSION['EditStaffOrderOriginalInfo']['DaysLeftToEditOrCancel'];
+	$originalTotalPrice = $_SESSION['EditStaffOrderTotalPrice'];
+	$extraOrdered = $_SESSION['EditStaffOrderOriginalInfo']['ExtraOrdered'];
 
 	// Adjust days left message to user
 	if($daysLeftToEditOrCancel > 1){

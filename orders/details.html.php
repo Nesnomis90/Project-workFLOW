@@ -184,7 +184,8 @@
 					inputExtraPrice.setAttribute("min", "0");
 					inputExtraPrice.setAttribute("name", inputExtraPriceAttributeName);
 					inputExtraPrice.setAttribute("id", inputExtraPriceAttributeName);
-					inputExtraPrice.style.width = "70px";
+					inputExtraPrice.style.width = "60px";
+					inputExtraPrice.onchange = function onChangePrice(){changePriceNewAlternative(this);}
 
 					var inputExtraDescription = document.createElement("textarea");
 					var inputExtraDescriptionAttributeName = "AlternativeDescription" + alternativeID;
@@ -647,6 +648,32 @@
 					tableCell.appendChild(resetAmountButton);
 				} else if(resetAmountButton !== null && inputCurrentValue == alreadySelectedValue){
 					tableCell.removeChild(resetAmountButton);
+				}
+			}
+
+			function changeAmountNewAlternative(inputAmount){
+				var inputCurrentValue = inputAmount.value;
+
+				// First make sure we only allow numbers to be entered
+				inputAmount.value = inputCurrentValue.replace(/[^0-9]/g, '');
+
+				if(inputCurrentValue < 1){
+					inputAmount.value = 1;
+				} else if(inputCurrentValue > 255){
+					inputAmount.value = 255;
+				}
+			}
+
+			function changePriceNewAlternative(inputPrice){
+				var inputCurrentValue = inputPrice.value;
+
+				// First make sure we only allow numbers to be entered
+				inputPrice.value = inputCurrentValue.replace(/[^0-9]/g, '');
+				
+				if(inputCurrentValue < 0){
+					inputPrice.value = 0;
+				} else if(inputCurrentValue > 65535){
+					inputPrice.value = 65535;
 				}
 			}
 
