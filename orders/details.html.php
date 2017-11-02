@@ -334,6 +334,8 @@
 				var inputDescription = document.getElementById(inputDescriptionID);
 				var inputPriceID = "AlternativePrice" + attributeID;
 				var inputPrice = document.getElementById(inputPriceID);
+				var inputPriceConfirmedID = "AlternativePriceConfirmed" + attributeID;
+				var inputPriceConfirmed = document.getElementById(inputPriceConfirmedID);
 				var inputAmountID = "AmountSelected-" + attributeID;
 				var inputAmount = document.getElementById(inputAmountID);
 
