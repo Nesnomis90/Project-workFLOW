@@ -651,7 +651,7 @@ function validateOrderUserInputs(){
 		$orderCommunicationToStaff = "";
 	}
 
-	// Update submitted checkmark values
+	// Update submitted item amounts of originally submitted items
 	if(isSet($_SESSION['EditBookingOrderExtraOrdered'])){
 		// Update submitted item amounts of originally submitted items
 		foreach($_SESSION['EditBookingOrderExtraOrdered'] AS &$extra){
@@ -5634,7 +5634,13 @@ if(isSet($_POST['add']) AND $_POST['add'] == "Add Order"){
 
 		if($invalidInput){ // This resets the javascript that has been done, unless we use the addedextra
 			$_SESSION['refreshCreateOrder'] = TRUE;
-
+			
+			if(isSet($_GET['meetingroom'])){
+				$meetingRoomID = $_GET['meetingroom'];
+				$location = "http://$_SERVER[HTTP_HOST]/booking/?meetingroom=" . $meetingRoomID;
+			} else {
+				$location = "http://$_SERVER[HTTP_HOST]/booking/";
+			}
 			header('Location: ' . $location);
 			exit();
 		}
@@ -5691,7 +5697,7 @@ if(isSet($_POST['add']) AND $_POST['add'] == "Add Order"){
 		exit();
 	}
 
-// Add the order to the database
+	// Add the order to the database
 	try
 	{
 		$pdo->beginTransaction();
@@ -6448,6 +6454,12 @@ if(isSet($_POST['order']) AND $_POST['order'] == 'Submit Changes'){
 			$numberOfChanges++;
 			$extraAdded = TRUE;
 		}
+
+		$extraRemoved = FALSE;
+		if(isSet($removedExtraID)){
+			$numberOfChanges++;
+			$extraRemoved = TRUE;
+		}
 	}
 
 	$orderID = $_POST['OrderID'];
@@ -6461,7 +6473,7 @@ if(isSet($_POST['order']) AND $_POST['order'] == 'Submit Changes'){
 
 			$pdo->beginTransaction();
 
-			if($messageAdded AND $extraAdded){
+			if($messageAdded AND ($extraAdded OR $extraRemoved)){
 				$sql = 'UPDATE 	`orders`
 						SET		`orderApprovedByUser` = :approvedByUser,
 								`dateTimeUpdatedByUser` = CURRENT_TIMESTAMP,
@@ -6469,13 +6481,13 @@ if(isSet($_POST['order']) AND $_POST['order'] == 'Submit Changes'){
 								`orderApprovedByUser` = :approvedByUser,
 								`orderNewMessageFromUser` = 1
 						WHERE 	`orderID` = :OrderID';
-			} elseif(!$messageAdded AND $extraAdded){
+			} elseif(!$messageAdded AND ($extraAdded OR $extraRemoved)){
 				$sql = 'UPDATE 	`orders`
 						SET		`orderApprovedByUser` = :approvedByUser,
 								`dateTimeUpdatedByUser` = CURRENT_TIMESTAMP,
 								`orderChangedByUser` = 1
 						WHERE 	`orderID` = :OrderID';
-			} elseif($messageAdded AND !$extraAdded){
+			} elseif($messageAdded AND !$extraAdded AND !$extraRemoved){
 				$sql = 'UPDATE 	`orders`
 						SET		`orderApprovedByUser` = :approvedByUser,
 								`dateTimeUpdatedByUser` = CURRENT_TIMESTAMP,
@@ -6545,6 +6557,18 @@ if(isSet($_POST['order']) AND $_POST['order'] == 'Submit Changes'){
 					$s->bindValue(':OrderID', $orderID);
 					$s->bindValue(':ExtraID', $extraID);
 					$s->bindValue(':ExtraAmount', $extraAmount);
+					$s->execute();
+				}
+			}
+
+			if($extraRemoved){
+				foreach($removedExtraID AS $extraID){
+					$sql = "DELETE FROM `extraorders`
+							WHERE		`extraID` = :ExtraID
+							AND			`orderID` = :OrderID";
+					$s = $pdo->prepare($sql);
+					$s->bindValue(':OrderID', $orderID);
+					$s->bindValue(':ExtraID', $extraID);
 					$s->execute();
 				}
 			}

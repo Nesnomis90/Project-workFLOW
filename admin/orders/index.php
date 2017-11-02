@@ -1109,9 +1109,7 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Submit Changes'){
 			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 			$pdo = connect_to_db();
 
-			if($extraChanged OR $messageAdded OR $extraAdded OR $extraCreated OR $extraRemoved){
-				$pdo->beginTransaction();
-			}
+			$pdo->beginTransaction();
 
 			if($setAsApproved){
 				if($messageAdded AND ($extraAdded OR $extraCreated OR $extraRemoved)){
@@ -1446,9 +1444,7 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Submit Changes'){
 				}
 			}
 
-			if($extraChanged OR $messageAdded OR $extraAdded OR $extraCreated OR $extraRemoved){
-				$pdo->commit();
-			}
+			$pdo->commit();
 
 			// Close the connection
 			$pdo = null;
