@@ -1010,6 +1010,18 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Submit Changes'){
 		}
 	}
 
+	// Check if any extras were removed
+	if(isSet($_POST['ItemsRemovedFromOrder']) AND $_POST['ItemsRemovedFromOrder'] > 0){
+		foreach($_SESSION['EditOrderExtraOrdered'] AS $extra){
+			$extraID = $extra['ExtraID'];
+			$postSubmittedAmountName = "extraAmountSelected-" . $extraID;
+			if(!isSet($_POST[$postSubmittedAmountName])){
+				// If there's no selected amount, then this item is no longer in the order
+				$removedExtraID[] = $extraID;
+			}
+		}
+	}
+
 	// Refresh form on invalid
 	if($invalidInput){
 		// Refresh.
@@ -1080,6 +1092,12 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Submit Changes'){
 			$numberOfChanges++;
 			$extraCreated = TRUE;
 		}
+
+		$extraRemoved = FALSE;
+		if(isSet($removedExtraID)){
+			$numberOfChanges++;
+			$extraRemoved = TRUE;
+		}
 	}
 
 	$orderID = $_POST['OrderID'];
@@ -1091,12 +1109,12 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Submit Changes'){
 			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 			$pdo = connect_to_db();
 
-			if($extraChanged OR $messageAdded OR $extraAdded OR $extraCreated){
+			if($extraChanged OR $messageAdded OR $extraAdded OR $extraCreated OR $extraRemoved){
 				$pdo->beginTransaction();
 			}
 
 			if($setAsApproved){
-				if($messageAdded AND ($extraAdded OR $extraCreated)){
+				if($messageAdded AND ($extraAdded OR $extraCreated OR $extraRemoved)){
 					$sql = 'UPDATE 	`orders`
 							SET		`orderApprovedByAdmin` = :approvedByAdmin,
 									`orderApprovedByStaff` = :approvedByStaff,
@@ -1108,7 +1126,7 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Submit Changes'){
 									`orderApprovedByUser` = 0,
 									`orderNewMessageFromStaff` = 1
 							WHERE 	`orderID` = :OrderID';
-				} elseif(!$messageAdded AND ($extraAdded OR $extraCreated)){
+				} elseif(!$messageAdded AND ($extraAdded OR $extraCreated OR $extraRemoved)){
 					$sql = 'UPDATE 	`orders`
 							SET		`orderApprovedByAdmin` = :approvedByAdmin,
 									`orderApprovedByStaff` = :approvedByStaff,
@@ -1119,7 +1137,7 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Submit Changes'){
 									`orderChangedByStaff` = 1,
 									`orderApprovedByUser` = 0
 							WHERE 	`orderID` = :OrderID';
-				} elseif($messageAdded AND !$extraAdded AND !$extraCreated){
+				} elseif($messageAdded AND !$extraAdded AND !$extraCreated AND !$extraRemoved){
 					$sql = 'UPDATE 	`orders`
 							SET		`orderApprovedByAdmin` = :approvedByAdmin,
 									`orderApprovedByStaff` = :approvedByStaff,
@@ -1147,7 +1165,7 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Submit Changes'){
 				$s->bindValue(':orderApprovedByUserID', $_SESSION['LoggedInUserID']);
 				$s->execute();
 			} else {
-				if($messageAdded AND ($extraAdded OR $extraCreated)){
+				if($messageAdded AND ($extraAdded OR $extraCreated OR $extraRemoved)){
 					$sql = 'UPDATE 	`orders`
 							SET		`orderApprovedByAdmin` = :approvedByAdmin,
 									`orderApprovedByStaff` = :approvedByStaff,
@@ -1159,7 +1177,7 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Submit Changes'){
 									`orderApprovedByUser` = 0,
 									`orderNewMessageFromStaff` = 1
 							WHERE 	`orderID` = :OrderID';
-				} elseif(!$messageAdded AND ($extraAdded OR $extraCreated)){
+				} elseif(!$messageAdded AND ($extraAdded OR $extraCreated OR $extraRemoved)){
 					$sql = 'UPDATE 	`orders`
 							SET		`orderApprovedByAdmin` = :approvedByAdmin,
 									`orderApprovedByStaff` = :approvedByStaff,
@@ -1170,7 +1188,7 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Submit Changes'){
 									`orderChangedByStaff` = 1,
 									`orderApprovedByUser` = 0
 							WHERE 	`orderID` = :OrderID';
-				} elseif($messageAdded AND !$extraAdded AND !$extraCreated){
+				} elseif($messageAdded AND !$extraAdded AND !$extraCreated AND !$extraRemoved){
 					$sql = 'UPDATE 	`orders`
 							SET		`orderApprovedByAdmin` = :approvedByAdmin,
 									`orderApprovedByStaff` = :approvedByStaff,
@@ -1416,7 +1434,19 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Submit Changes'){
 				}
 			}
 
-			if($extraChanged OR $messageAdded OR $extraAdded OR $extraCreated){
+			if($extraRemoved){
+				foreach($removedExtraID AS $extraID){
+					$sql = "DELETE FROM `extraorders`
+							WHERE		`extraID` = :ExtraID
+							AND			`orderID` = :OrderID";
+					$s = $pdo->prepare($sql);
+					$s->bindValue(':OrderID', $orderID);
+					$s->bindValue(':ExtraID', $extraID);
+					$s->execute();
+				}
+			}
+
+			if($extraChanged OR $messageAdded OR $extraAdded OR $extraCreated OR $extraRemoved){
 				$pdo->commit();
 			}
 

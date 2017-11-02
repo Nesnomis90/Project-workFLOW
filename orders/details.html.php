@@ -20,6 +20,7 @@
 			var alternativeID = 0;
 			var alternativesAdded = 0;
 			var newAlternativesCreated = 0;
+			var itemsRemovedFromOrder = 0;
 			var addAlternativeExtra = false;
 			var createNewAlternativeExtra = false;
 			var availableExtrasArray = <?php echo json_encode($availableExtra); ?>;
@@ -187,6 +188,13 @@
 					inputExtraPrice.style.width = "60px";
 					inputExtraPrice.onchange = function onChangePrice(){changePriceNewAlternative(this);}
 
+					var inputExtraPriceConfirmed = document.createElement("input");
+					var inputExtraPriceConfirmedAttributeName = "AlternativePriceConfirmed" + alternativeID;
+					inputExtraPriceConfirmed.setAttribute("type", "hidden");
+					inputExtraPriceConfirmed.setAttribute("value", "0");
+					inputExtraPriceConfirmed.setAttribute("min", "0");
+					inputExtraPriceConfirmed.setAttribute("id", inputExtraPriceConfirmedAttributeName);
+
 					var inputExtraDescription = document.createElement("textarea");
 					var inputExtraDescriptionAttributeName = "AlternativeDescription" + alternativeID;
 					inputExtraDescription.setAttribute("name", inputExtraDescriptionAttributeName);
@@ -199,6 +207,7 @@
 					columnName.appendChild(inputExtraName);
 					columnDescription.appendChild(inputExtraDescription);
 					columnPrice.appendChild(inputExtraPrice);
+					columnPrice.appendChild(inputExtraPriceConfirmed);
 
 					// update the input to check how many alternatives we have submitted
 					var inputNewAlternativesCreated = document.getElementById("NewAlternativesCreated");
@@ -273,6 +282,7 @@
 					}
 				}
 
+				// Add price from added items
 				if(alternativesAdded > 0){
 					for(var i = 0; i < alternativeID; i++){
 						var acceptedExtraID = "extraIDAccepted" + i;
@@ -292,19 +302,26 @@
 					}
 				}
 
+				// Add price from created items
+				if(newAlternativesCreated > 0){
+					for(var i = 0; i < alternativeID; i++){
+						var alternativePriceConfirmedID = "AlternativePriceConfirmed" + i;
+						var alternativePriceConfirmed = document.getElementById(alternativePriceConfirmedID);
+						if(alternativePriceConfirmed !== null && alternativePriceConfirmed.value != ""){
+							var amountValueID = "AmountSelected-" + i;
+							var amountValue = document.getElementById(amountValueID);
+
+							var amountSelected = amountValue.value;
+							var pricePerAmount = alternativePriceConfirmed.value;
+							var finalPrice = pricePerAmount * amountSelected;
+
+							totalPrice += finalPrice;
+						}
+					}
+				}
+
 				displayTotalPrice.innerHTML = "<span>Total Price: " + totalPrice + "</span>";
 				saveTotalPrice.value = totalPrice;
-			}
-
-			function removeNewAlternativeExtra(removeButton){
-				var tableRow = removeButton.parentNode.parentNode;
-				tableRow.parentNode.removeChild(tableRow);
-
-				newAlternativesCreated -= 1;
-
-				// update the input to check how many alternatives we have submitted
-				var inputNewAlternativesCreated = document.getElementById("NewAlternativesCreated");
-				inputNewAlternativesCreated.value = newAlternativesCreated;
 			}
 
 			function confirmNewAlternativeExtra(confirmButton){
@@ -390,6 +407,33 @@
 				} else {
 					inputAmount.removeAttribute("class", "fillOut");
 				}
+
+				// Disable editing the newly created extra on confirm
+				inputName.readOnly = true;
+				inputDescription.readOnly = true;
+				inputAmount.readOnly = true;
+				inputPrice.readOnly = true;
+				confirmButton.parentNode.removeChild(confirmButton);
+
+				// Update the hidden price used for total price calculation
+				inputPriceConfirmed.value = selectedPrice;
+
+				// Update total price displayed
+				changeTotalPrice();
+			}
+
+			function removeNewAlternativeExtra(removeButton){
+				var tableRow = removeButton.parentNode.parentNode;
+				tableRow.parentNode.removeChild(tableRow);
+
+				newAlternativesCreated -= 1;
+
+				// update the input to check how many alternatives we have submitted
+				var inputNewAlternativesCreated = document.getElementById("NewAlternativesCreated");
+				inputNewAlternativesCreated.value = newAlternativesCreated;
+
+				// Update total price displayed
+				changeTotalPrice();
 			}
 
 			function confirmAddedExtra(confirmButton){
@@ -506,7 +550,7 @@
 
 				// Check if the amount selected is a valid amount first
 				if(inputExtraAmount !== null){
-					if(newExtraAmountValue == "" || newExtraAmountValue == 0){
+					if(newExtraAmountValue == ""){
 						inputExtraAmount.setAttribute("class", "fillOut");
 						alert("The order amount needs to be filled out and a valid number.");
 						return;
@@ -516,24 +560,41 @@
 						return;
 					} else if(newExtraAmountValue < 0 || newExtraAmountValue > 255){
 						inputExtraAmount.setAttribute("class", "fillOut");
-						alert("The order amount needs to be filled out and a valid number between 1 and 255.");
+						alert("The order amount needs to be filled out and a valid number between 0 and 255.");
 						return;
 					} else {
 						inputExtraAmount.removeAttribute("class", "fillOut");
 					}
 				}
 
-				// Set new amount 
-				var extraAmountSelected = document.getElementById("extraAmountSelected-" + extraID);
-				extraAmountSelected.value = newExtraAmountValue;
+				// Check if the user wants to remove the item (amount is 0)
+				if(newExtraAmountValue == 0){
+					var removeItem = confirm("You've set the amount of this item to 0. This will remove the item from the order. Is this what you want?");
+					if(removeItem){
+						// Remove table row
+						var tableCell = confirmButton.parentNode;
+						var tableRow = tableCell.parentNode;
+						tableRow.parentNode.removeChild(tableRow);
 
-				// Remove confirm/reset buttons
-				var tableCell = confirmButton.parentNode;
-				var resetAmountButtonName = "resetAmountButton-" + extraID;
-				var resetAmountButton = document.getElementById(resetAmountButtonName);
-				tableCell.removeChild(confirmButton);
-				tableCell.removeChild(resetAmountButton);
+						// Add that we've removed an item from the order
+						itemsRemovedFromOrder++;
+						var inputItemsRemoved = document.getElementById("ItemsRemovedFromOrder");
+						inputItemsRemoved.value = itemsRemovedFromOrder;
+					}
+				} else {
+					// Set new amount 
+					var extraAmountSelected = document.getElementById("extraAmountSelected-" + extraID);
+					extraAmountSelected.value = newExtraAmountValue;
 
+					// Remove confirm/reset buttons
+					var tableCell = confirmButton.parentNode;
+					var resetAmountButtonName = "resetAmountButton-" + extraID;
+					var resetAmountButton = document.getElementById(resetAmountButtonName);
+					tableCell.removeChild(confirmButton);
+					tableCell.removeChild(resetAmountButton);
+				}
+
+				// Update total price
 				changeTotalPrice();
 			}
 
@@ -616,8 +677,8 @@
 
 				if(inputCurrentValue == alreadySelectedValue){
 					inputAmount.removeAttribute("class", "fillOut");
-				} else if(inputCurrentValue < 1){
-					inputAmount.value = 1;
+				} else if(inputCurrentValue < 0){
+					inputAmount.value = 0;
 				} else if(inputCurrentValue > 255){
 					inputAmount.value = 255;
 				}
@@ -687,18 +748,20 @@
 					var confirmNewAmountButtonName = "confirmAmountButton-" + extraID;
 					var confirmNewAmountButton = document.getElementById(confirmNewAmountButtonName);
 					var inputExtraAmount = document.getElementById("extraAmount-" + extraID);
-					if(confirmNewAmountButton !== null){
-						inputExtraAmount.setAttribute("class", "fillOut");
-						amountsNotConfirmed++;
-					} else {
-						inputExtraAmount.removeAttribute("class", "fillOut");
-					}
-
-					// Check if any amounts have changed
-					var originalAmount = extrasOrdered[i]['ExtraAmount'];
-					var submittedAmount = inputExtraAmount.value;
-					if(submittedAmount != originalAmount){
-						amountsChangedFromOriginal++;
+					// Check if item still is in the order and hasn't been removed
+					if(inputExtraAmount !== null){
+						if(confirmNewAmountButton !== null){
+							inputExtraAmount.setAttribute("class", "fillOut");
+							amountsNotConfirmed++;
+						} else {
+							inputExtraAmount.removeAttribute("class", "fillOut");
+						}
+						// Check if any amounts have changed
+						var originalAmount = extrasOrdered[i]['ExtraAmount'];
+						var submittedAmount = inputExtraAmount.value;
+						if(submittedAmount != originalAmount){
+							amountsChangedFromOriginal++;
+						}
 					}
 				}
 
@@ -728,7 +791,7 @@
 						// All good
 						inputUserMessage.removeAttribute("class", "fillOut");
 					}
-					
+
 					if(userMessageSubmitted.length > 0){
 						userMessageSubmitted = true;
 					}
@@ -791,7 +854,6 @@
 					}
 
 					if(takenName > 0){
-						alert("Your newly created item has a name that's already in use. This needs to be changed.");
 						return false;
 					} else if(invalidInputs > 0){
 						alert("One of your inputs are missing, too long or contain illegal characters.");
@@ -813,6 +875,10 @@
 					// Submit message on adding new items
 					var totalPrice = document.getElementById("SaveTotalPrice").value;
 					var submitConfirmed = confirm("The total cost of this order, with the new items, will be " + totalPrice + " NOK. Are you sure you want to submit these updates to the order?");
+					return submitConfirmed;
+				} else if(itemsRemovedFromOrder > 0){
+					var totalPrice = document.getElementById("SaveTotalPrice").value;
+					var submitConfirmed = confirm("The total cost of this order, after removing " + itemsRemovedFromOrder + " item(s), will be " + totalPrice + " NOK. Are you sure you want to submit these updates to the order?");
 					return submitConfirmed;
 				} else if(amountsChangedFromOriginal > 0){
 					// Submit message on changing item amounts
@@ -997,6 +1063,7 @@
 				<input type="hidden" id="LastAlternativeID" name="LastAlternativeID" value="">
 				<input type="hidden" id="AlternativesAdded" name="AlternativesAdded" value="0">
 				<input type="hidden" id="NewAlternativesCreated" name="NewAlternativesCreated" value="0">
+				<input type="hidden" id="ItemsRemovedFromOrder" name="ItemsRemovedFromOrder" value="0">
 				<input type="submit" name="action" value="Submit Changes" onclick="return validateUserInputs()">
 				<input type="submit" name="action" value="Go Back">
 				<input type="submit" name="action" value="Reset">
