@@ -1010,18 +1010,6 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Submit Changes'){
 		}
 	}
 
-	// Check if any extras were removed
-	if(isSet($_POST['ItemsRemovedFromOrder']) AND $_POST['ItemsRemovedFromOrder'] > 0){
-		foreach($_SESSION['EditOrderExtraOrdered'] AS $extra){
-			$extraID = $extra['ExtraID'];
-			$postSubmittedAmountName = "extraAmountSelected-" . $extraID;
-			if(!isSet($_POST[$postSubmittedAmountName])){
-				// If there's no selected amount, then this item is no longer in the order
-				$removedExtraID[] = $extraID;
-			}
-		}
-	}
-
 	// Refresh form on invalid
 	if($invalidInput){
 		// Refresh.
@@ -1038,6 +1026,18 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Submit Changes'){
 		$_SESSION['refreshEditOrder'] = TRUE;
 		header('Location: .');
 		exit();
+	}
+
+	// Check if any extras were removed
+	if(isSet($_POST['ItemsRemovedFromOrder']) AND $_POST['ItemsRemovedFromOrder'] > 0){
+		foreach($_SESSION['EditOrderExtraOrdered'] AS $extra){
+			$extraID = $extra['ExtraID'];
+			$postSubmittedAmountName = "extraAmountSelected-" . $extraID;
+			if(!isSet($_POST[$postSubmittedAmountName])){
+				// If there's no selected amount, then this item is no longer in the order
+				$removedExtraID[] = $extraID;
+			}
+		}
 	}
 
 	// Check if values have actually changed
