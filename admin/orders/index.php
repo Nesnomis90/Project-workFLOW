@@ -123,7 +123,7 @@ function validateUserInputs(){
 		foreach($_SESSION['EditOrderExtraOrdered'] AS &$extra){
 			$extraID = $extra['ExtraID'];
 			$postSubmittedAmountName = "extraAmountSelected-" . $extraID;
-			if(isSet($_POST[$postSubmittedAmountName]) AND $_POST[$postSubmittedAmountName] > 1){
+			if(isSet($_POST[$postSubmittedAmountName]) AND $_POST[$postSubmittedAmountName] > 0){
 				$extra['ExtraAmount'] = $_POST[$postSubmittedAmountName];
 			}
 			unset($extra); // destroy reference.

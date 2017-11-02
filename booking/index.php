@@ -657,7 +657,7 @@ function validateOrderUserInputs(){
 		foreach($_SESSION['EditBookingOrderExtraOrdered'] AS &$extra){
 			$extraID = $extra['ExtraID'];
 			$postSubmittedAmountName = "extraAmountSelected-" . $extraID;
-			if(isSet($_POST[$postSubmittedAmountName]) AND $_POST[$postSubmittedAmountName] > 1){
+			if(isSet($_POST[$postSubmittedAmountName]) AND $_POST[$postSubmittedAmountName] > 0){
 				$extra['ExtraAmount'] = $_POST[$postSubmittedAmountName];
 			}
 			unset($extra); // destroy reference.
@@ -6508,7 +6508,7 @@ if(isSet($_POST['order']) AND $_POST['order'] == 'Submit Changes'){
 			} else {
 				$sql = 'UPDATE 	`orders`
 						SET		`orderApprovedByUser` = :approvedByUser,
-								`dateTimeUpdatedByUser` = CURRENT_TIMESTAMP,
+								`dateTimeUpdatedByUser` = CURRENT_TIMESTAMP
 						WHERE 	`orderID` = :OrderID';
 			}
 			$s = $pdo->prepare($sql);
