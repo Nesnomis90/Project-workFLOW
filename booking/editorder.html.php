@@ -21,6 +21,7 @@
 			var alternativeID = 0;
 			var alternativesAdded = 0;
 			var newAlternativesCreated = 0;
+			var itemsRemovedFromOrder = 0;
 			var addAlternativeExtra = false;
 			var availableExtrasArray = <?php echo json_encode($availableExtra); ?>;
 			var extrasOrdered = <?php echo json_encode($extraOrdered); ?>;
@@ -67,7 +68,7 @@
 
 				// Create the input number for amount
 				var inputExtraAmount = document.createElement("input");
-				var inputExtraAmountAttributeName = "AmountSelected" + alternativeID;
+				var inputExtraAmountAttributeName = "AmountSelected-" + alternativeID;
 				inputExtraAmount.setAttribute("type", "number");
 				inputExtraAmount.setAttribute("id", inputExtraAmountAttributeName);
 				inputExtraAmount.setAttribute("name", inputExtraAmountAttributeName);
@@ -180,7 +181,7 @@
 				var	descriptionText = document.getElementById(descriptionTextID);
 				var priceTextID = "addAlternativePriceSelected" + attributeID;
 				var priceText = document.getElementById(priceTextID);
-				var amountValueID = "AmountSelected" + attributeID;
+				var amountValueID = "AmountSelected-" + attributeID;
 				var amountValue = document.getElementById(amountValueID);
 
 				// get the extra ID for reference
@@ -219,7 +220,7 @@
 						var acceptedExtraID = "extraIDAccepted" + i;
 						var acceptedExtra = document.getElementById(acceptedExtraID);
 						if(acceptedExtra !== null && acceptedExtra.value != ""){
-							var amountValueID = "AmountSelected" + i;
+							var amountValueID = "AmountSelected-" + i;
 							var amountValue = document.getElementById(amountValueID);
 							var priceTextID = "addAlternativePriceSelected" + i;
 							var priceText = document.getElementById(priceTextID);
@@ -244,7 +245,7 @@
 				var extraIDName = document.createTextNode(selectBox.options[selectBox.selectedIndex].text);
 				var inputExtraAcceptedID = "extraIDAccepted" + selectBoxIDNumber;
 				var inputExtraAccepted = document.getElementById(inputExtraAcceptedID);
-				var inputAmountID = "AmountSelected" + selectBoxIDNumber;
+				var inputAmountID = "AmountSelected-" + selectBoxIDNumber;
 				var inputAmount = document.getElementById(inputAmountID);
 
 				// Check if the amount selected is a valid amount first
@@ -348,7 +349,7 @@
 
 				// Check if the amount selected is a valid amount first
 				if(inputExtraAmount !== null){
-					if(newExtraAmountValue == "" || newExtraAmountValue == 0){
+					if(newExtraAmountValue == ""){
 						inputExtraAmount.setAttribute("class", "fillOut");
 						alert("The order amount needs to be filled out and a valid number.");
 						return;
@@ -358,23 +359,39 @@
 						return;
 					} else if(newExtraAmountValue < 0 || newExtraAmountValue > 255){
 						inputExtraAmount.setAttribute("class", "fillOut");
-						alert("The order amount needs to be filled out and a valid number between 1 and 255.");
+						alert("The order amount needs to be filled out and a valid number between 0 and 255.");
 						return;
 					} else {
 						inputExtraAmount.removeAttribute("class", "fillOut");
 					}
 				}
 
-				// Set new amount 
-				var extraAmountSelected = document.getElementById("extraAmountSelected-" + extraID);
-				extraAmountSelected.value = newExtraAmountValue;
+				// Check if the user wants to remove the item (amount is 0)
+				if(newExtraAmountValue == 0){
+					var removeItem = confirm("You've set the amount of this item to 0. This will remove the item from the order. Is this what you want?");
+					if(removeItem){
+						// Remove table row
+						var tableCell = confirmButton.parentNode;
+						var tableRow = tableCell.parentNode;
+						tableRow.parentNode.removeChild(tableRow);
 
-				// Remove confirm/reset buttons
-				var tableCell = confirmButton.parentNode;
-				var resetAmountButtonName = "resetAmountButton-" + extraID;
-				var resetAmountButton = document.getElementById(resetAmountButtonName);
-				tableCell.removeChild(confirmButton);
-				tableCell.removeChild(resetAmountButton);
+						// Add that we've removed an item from the order
+						itemsRemovedFromOrder++;
+						var inputItemsRemoved = document.getElementById("ItemsRemovedFromOrder");
+						inputItemsRemoved.value = itemsRemovedFromOrder;
+					}
+				} else {
+					// Set new amount 
+					var extraAmountSelected = document.getElementById("extraAmountSelected-" + extraID);
+					extraAmountSelected.value = newExtraAmountValue;
+
+					// Remove confirm/reset buttons
+					var tableCell = confirmButton.parentNode;
+					var resetAmountButtonName = "resetAmountButton-" + extraID;
+					var resetAmountButton = document.getElementById(resetAmountButtonName);
+					tableCell.removeChild(confirmButton);
+					tableCell.removeChild(resetAmountButton);
+				}
 
 				changeTotalPrice();
 			}
@@ -420,8 +437,8 @@
 
 				if(inputCurrentValue == alreadySelectedValue){
 					inputAmount.removeAttribute("class", "fillOut");
-				} else if(inputCurrentValue < 1){
-					inputAmount.value = 1;
+				} else if(inputCurrentValue < 0){
+					inputAmount.value = 0;
 				} else if(inputCurrentValue > 255){
 					inputAmount.value = 255;
 				}
@@ -478,11 +495,14 @@
 					var confirmNewAmountButtonName = "confirmAmountButton-" + extraID;
 					var confirmNewAmountButton = document.getElementById(confirmNewAmountButtonName);
 					var inputExtraAmount = document.getElementById("extraAmount-" + extraID);
-					if(confirmNewAmountButton !== null){
-						inputExtraAmount.setAttribute("class", "fillOut");
-						amountsNotConfirmed++;
-					} else {
-						inputExtraAmount.removeAttribute("class", "fillOut");
+					// Check if item still is in the order and hasn't been removed
+					if(inputExtraAmount !== null){
+						if(confirmNewAmountButton !== null){
+							inputExtraAmount.setAttribute("class", "fillOut");
+							amountsNotConfirmed++;
+						} else {
+							inputExtraAmount.removeAttribute("class", "fillOut");
+						}
 					}
 
 					// Check if any amounts have changed
@@ -539,6 +559,10 @@
 					// Submit message on adding new items
 					var totalPrice = document.getElementById("SaveTotalPrice").value;
 					var submitConfirmed = confirm("The total cost of this order, with the new items, will be " + totalPrice + " NOK. Are you sure you want to submit these updates to the order?");
+					return submitConfirmed;
+				} else if(itemsRemovedFromOrder > 0){
+					var totalPrice = document.getElementById("SaveTotalPrice").value;
+					var submitConfirmed = confirm("The total cost of this order, after removing " + itemsRemovedFromOrder + " item(s), will be " + totalPrice + " NOK. Are you sure you want to submit these updates to the order?");
 					return submitConfirmed;
 				} else if(amountsChangedFromOriginal > 0){
 					// Submit message on changing item amounts
@@ -678,6 +702,7 @@
 					<input type="hidden" id="SaveTotalPrice" name="SaveTotalPrice" value="">
 					<input type="hidden" id="LastAlternativeID" name="LastAlternativeID" value="">
 					<input type="hidden" id="AlternativesAdded" name="AlternativesAdded" value="0">
+					<input type="hidden" id="ItemsRemovedFromOrder" name="ItemsRemovedFromOrder" value="0">
 					<input type="submit" id="AddBookingButton" name="order" value="Submit Changes" onclick="return validateUserInputs()">
 					<input type="submit" name="order" value="Go Back">
 					<input type="submit" name="order" value="Reset">

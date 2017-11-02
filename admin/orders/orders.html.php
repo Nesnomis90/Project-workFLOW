@@ -456,7 +456,7 @@
 							</td>
 							<input type="hidden" name="OrderID" value="<?php htmlout($row['TheOrderID']); ?>">
 							<input type="hidden" name="OrderStatus" value="<?php htmlout($row['OrderStatus']); ?>">
-							<input type="hidden" name="disableEdit" value="0">
+							<input type="hidden" name="disableEdit" value="1">
 						</tr>
 					</form>
 				<?php endforeach; ?>

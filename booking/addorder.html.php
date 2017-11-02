@@ -55,7 +55,7 @@
 
 					// Create the input number for amount
 					var inputExtraAmount = document.createElement("input");
-					var inputExtraAmountAttributeName = "AmountSelected" + alternativeID;
+					var inputExtraAmountAttributeName = "AmountSelected-" + alternativeID;
 					inputExtraAmount.setAttribute("type", "number");
 					inputExtraAmount.setAttribute("id", inputExtraAmountAttributeName);
 					inputExtraAmount.setAttribute("name", inputExtraAmountAttributeName);
@@ -89,7 +89,7 @@
 
 					// Create the select box we want to be able to choose from
 					var selectExtraName = document.createElement("select");
-					var selectExtraNameID = "addAlternativeSelected" + alternativeID;
+					var selectExtraNameID = "addAlternativeSelected-" + alternativeID;
 					selectExtraName.setAttribute("id", selectExtraNameID);
 					selectExtraName.setAttribute("name", selectExtraNameID);
 					selectExtraName.onchange = function onChangeSelectIndex(){changeAlternativeText(this);}
@@ -186,7 +186,7 @@
 					var	descriptionText = document.getElementById(descriptionTextID);
 					var priceTextID = "addAlternativePriceSelected" + attributeID;
 					var priceText = document.getElementById(priceTextID);
-					var amountValueID = "AmountSelected" + attributeID;
+					var amountValueID = "AmountSelected-" + attributeID;
 					var amountValue = document.getElementById(amountValueID);
 
 					// get the extra ID for reference
@@ -214,7 +214,7 @@
 							var acceptedExtraID = "extraIDAccepted" + i;
 							var acceptedExtra = document.getElementById(acceptedExtraID);
 							if(acceptedExtra !== null && acceptedExtra.value != ""){
-								var amountValueID = "AmountSelected" + i;
+								var amountValueID = "AmountSelected-" + i;
 								var amountValue = document.getElementById(amountValueID);
 								var priceTextID = "addAlternativePriceSelected" + i;
 								var priceText = document.getElementById(priceTextID);
@@ -235,13 +235,13 @@
 				}
 
 				function confirmAddedExtra(confirmButton, selectBoxIDNumber){
-					var selectBoxID = "addAlternativeSelected" + selectBoxIDNumber;
+					var selectBoxID = "addAlternativeSelected-" + selectBoxIDNumber;
 					var selectBox = document.getElementById(selectBoxID);
 					var extraIDSelected = selectBox.options[selectBox.selectedIndex].value;
 					var extraIDName = document.createTextNode(selectBox.options[selectBox.selectedIndex].text);
 					var inputExtraAcceptedID = "extraIDAccepted" + selectBoxIDNumber;
 					var inputExtraAccepted = document.getElementById(inputExtraAcceptedID);
-					var inputAmountID = "AmountSelected" + selectBoxIDNumber;
+					var inputAmountID = "AmountSelected-" + selectBoxIDNumber;
 					var inputAmount = document.getElementById(inputAmountID);
 
 					// Check if the amount selected is a valid amount first
@@ -267,7 +267,7 @@
 					// Remove selected extra ID from other open options
 					for(var j = 0; j < alternativeID; j++){
 						if(j != selectBoxIDNumber){
-							var newSelectBoxID = "addAlternativeSelected" + j;
+							var newSelectBoxID = "addAlternativeSelected-" + j;
 							var newSelectBox = document.getElementById(newSelectBoxID);
 							if(newSelectBox !== null){
 								// Remove the option
@@ -302,7 +302,7 @@
 					if(extraIDRemoved !== null && extraIDRemoved.value != ""){
 						// Go through the open select boxes
 						for(var j = 0; j < alternativeID; j++){
-							var selectBoxToAddOptionID = "addAlternativeSelected" + j;
+							var selectBoxToAddOptionID = "addAlternativeSelected-" + j;
 							var selectBoxToAddOption = document.getElementById(selectBoxToAddOptionID);
 							if(selectBoxToAddOption !== null){
 								// Add the option that is no longer accepted
