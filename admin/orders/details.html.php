@@ -182,6 +182,13 @@
 					inputExtraPrice.style.width = "60px";
 					inputExtraPrice.onchange = function onChangePrice(){changePriceNewAlternative(this);}
 
+					var inputExtraPriceConfirmed = document.createElement("input");
+					var inputExtraPriceConfirmedAttributeName = "AlternativePriceConfirmed" + alternativeID;
+					inputExtraPriceConfirmed.setAttribute("type", "hidden");
+					inputExtraPriceConfirmed.setAttribute("value", "0");
+					inputExtraPriceConfirmed.setAttribute("min", "0");
+					inputExtraPriceConfirmed.setAttribute("id", inputExtraPriceConfirmedAttributeName);
+
 					var inputExtraDescription = document.createElement("textarea");
 					var inputExtraDescriptionAttributeName = "AlternativeDescription" + alternativeID;
 					inputExtraDescription.setAttribute("name", inputExtraDescriptionAttributeName);
@@ -194,6 +201,7 @@
 					columnName.appendChild(inputExtraName);
 					columnDescription.appendChild(inputExtraDescription);
 					columnPrice.appendChild(inputExtraPrice);
+					columnPrice.appendChild(inputExtraPriceConfirmed);
 
 					// update the input to check how many alternatives we have submitted
 					var inputNewAlternativesCreated = document.getElementById("NewAlternativesCreated");
@@ -289,7 +297,22 @@
 				}
 
 				// Add price from created items
-				// TO-DO:
+				if(newAlternativesCreated > 0){
+					for(var i = 0; i < alternativeID; i++){
+						var alternativePriceConfirmedID = "AlternativePriceConfirmed" + i;
+						var alternativePriceConfirmed = document.getElementById(alternativePriceConfirmedID);
+						if(alternativePriceConfirmed !== null && alternativePriceConfirmed.value != ""){
+							var amountValueID = "AmountSelected-" + i;
+							var amountValue = document.getElementById(amountValueID);
+
+							var amountSelected = amountValue.value;
+							var pricePerAmount = alternativePriceConfirmed.value;
+							var finalPrice = pricePerAmount * amountSelected;
+
+							totalPrice += finalPrice;
+						}
+					}
+				}
 
 				displayTotalPrice.innerHTML = "<span>Total Price: " + totalPrice + "</span>";
 				saveTotalPrice.value = totalPrice;
@@ -305,6 +328,8 @@
 				var inputDescription = document.getElementById(inputDescriptionID);
 				var inputPriceID = "AlternativePrice" + attributeID;
 				var inputPrice = document.getElementById(inputPriceID);
+				var inputPriceConfirmedID = "AlternativePriceConfirmed" + attributeID;
+				var inputPriceConfirmed = document.getElementById(inputPriceConfirmedID);
 				var inputAmountID = "AmountSelected-" + attributeID;
 				var inputAmount = document.getElementById(inputAmountID);
 
@@ -379,14 +404,16 @@
 					inputAmount.removeAttribute("class", "fillOut");
 				}
 
-				// Save the selected created extra, change total price and remove confirm/remove buttons
-				// TO-DO:
+				// Disable editing the newly created extra on confirm
 				inputName.readOnly = true;
 				inputDescription.readOnly = true;
 				inputAmount.readOnly = true;
 				inputPrice.readOnly = true;
 				confirmButton.parentNode.removeChild(confirmButton);
 
+				// Update the hidden price used for total price calculation
+				inputPriceConfirmed.value = selectedPrice;
+				
 				// Update total price displayed
 				changeTotalPrice();
 			}
@@ -400,6 +427,9 @@
 				// update the input to check how many alternatives we have submitted
 				var inputNewAlternativesCreated = document.getElementById("NewAlternativesCreated");
 				inputNewAlternativesCreated.value = newAlternativesCreated;
+
+				// Update total price displayed
+				changeTotalPrice();
 			}
 
 			function confirmAddedExtra(confirmButton){
