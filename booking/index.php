@@ -691,7 +691,6 @@ function validateOrderUserInputs(){
 	return array($invalidInput, $validatedOrderCommunicationToStaff, $validatedIsApprovedByUser);
 }
 
-
 // Check if we're accessing from a local device
 // If so, set that meeting room's info as the default meeting room info
 checkIfLocalDevice();
@@ -6088,6 +6087,8 @@ if	(isSet($_SESSION['loggedIn']) AND
 				$orderIsApproved = 0;
 			}
 
+			$orderIsApprovedByUser = $row['OrderApprovedByUser'];
+
 			$dateTimeCreated = $row['DateTimeCreated'];
 			$displayDateTimeCreated = convertDatetimeToFormat($dateTimeCreated , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
 			$dateTimeStart = $row['DateTimeStart'];
@@ -6340,21 +6341,25 @@ if	(isSet($_SESSION['loggedIn']) AND
 	// Calculate order status
 	$extraOrderedNumber = $_SESSION['EditBookingOrderOriginalInfo']['OrderExtrasOrdered'];
 	$extrasApproved = $_SESSION['EditBookingOrderOriginalInfo']['OrderExtrasApproved'];
-	$orderIsApprovedByUser = $_SESSION['EditBookingOrderOriginalInfo']['OrderApprovedByUser'];
+	$originalOrderIsApprovedByUser = $_SESSION['EditBookingOrderOriginalInfo']['OrderApprovedByUser'];
+	
+	$needUserApproval = FALSE;
 
-	if($originalOrderIsApproved == 1 AND $orderIsApprovedByUser == 1){
+	if($originalOrderIsApproved == 1 AND $originalOrderIsApprovedByUser == 1){
 		$orderStatus = "Order Approved!";
 		if($extrasApproved == $extraOrderedNumber){
 			$orderStatus .= "\n\nAll Items Approved!";
 		} elseif($extrasApproved < $extraOrderedNumber){
 			$orderStatus .= "\n\nPending Item Approval.";
 		}
-	} elseif($originalOrderIsApproved == 1 AND $orderIsApprovedByUser == 0){
+	} elseif($originalOrderIsApproved == 1 AND $originalOrderIsApprovedByUser == 0){
 		$orderStatus = "Order Not Yet Approved After Change.\n\nPending Your Approval.";
-	} elseif($originalOrderIsApproved == 0 AND $orderIsApprovedByUser == 1){
+		$needUserApproval = TRUE;
+	} elseif($originalOrderIsApproved == 0 AND $originalOrderIsApprovedByUser == 1){
 		$orderStatus = "Order Not Yet Approved.\n\nPending Staff Approval.";
-	} elseif($originalOrderIsApproved == 0 AND $orderIsApprovedByUser == 0){
+	} elseif($originalOrderIsApproved == 0 AND $originalOrderIsApprovedByUser == 0){
 		$orderStatus = "Order Not Yet Approved After Change.\n\nPending Staff Approval.\n\nPending Your Approval.";
+		$needUserApproval = TRUE;
 	}
 
 	$availableExtrasNumber = sizeOf($availableExtra);
