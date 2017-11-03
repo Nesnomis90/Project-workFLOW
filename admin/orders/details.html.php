@@ -881,6 +881,22 @@
 					}
 				}
 
+				// Check if admin has changed the order approval
+				var originalAdminApproval = document.getElementById("originalIsApproved");
+				var originalAdminApprovalValue = originalAdminApproval.value;
+				var adminApprovalCheckbox = document.getElementById("isApproved");
+				var orderApprovalChanged = false;
+
+				if(adminApprovalCheckbox.checked){
+					var adminApprovalCheckboxValue = adminApprovalCheckbox.value;
+				} else {
+					var adminApprovalCheckboxValue = 0;
+				}
+
+				if(adminApprovalCheckboxValue != originalAdminApprovalValue){
+					orderApprovalChanged = true;
+				}
+
 				// Check if new added items/created have been confirmed
 				if(alternativesAdded > 0 || newAlternativesCreated > 0){
 					for(var i = 0; i < alternativeID; i++){
@@ -909,8 +925,12 @@
 					// Submit message on sending staff a message
 					var submitConfirmed = confirm("Are you sure you want to send the new message to user?");
 					return submitConfirmed;
+				} else if(orderApprovalChanged){
+					// User approved staff changes
+					var submitConfirmed = confirm("Are you sure you want to change the order approval?");
+					return submitConfirmed;
 				//} else if(){
-					// TO-DO: Check if order/any items were set as approved/purchased.
+					// TO-DO: Check if any items were set as approved/purchased.
 				} else {
 					// No change detected
 					var submitConfirmed = confirm("No changes have been detected. Are you sure you want to exit the update process?");
@@ -920,7 +940,7 @@
 		</script>
 	</head>
 	<body onload="startTime()">
-		<?php include_once $_SERVER['DOCUMENT_ROOT'] .'/includes/admintopnav.html.php'; ?>
+		<?php include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/admintopnav.html.php'; ?>
 
 		<form action="" method="post">
 			<div class="left">
@@ -1015,15 +1035,16 @@
 						<?php if($disableEdit == 0) : ?>
 							<label>Change Order Approval: </label>
 							<?php if($orderIsApproved == 1) : ?>
-								<label class="checkboxlabel"><input type="checkbox" name="isApproved" value="1" checked="checked">Set As Approved</label>
+								<label class="checkboxlabel"><input type="checkbox" id="isApproved" name="isApproved" value="1" checked="checked">Set As Approved</label>
 							<?php else : ?>
-								<label class="checkboxlabel"><input type="checkbox" name="isApproved" value="1">Set As Approved</label>
+								<label class="checkboxlabel"><input type="checkbox" id="isApproved" name="isApproved" value="1">Set As Approved</label>
 							<?php endif; ?>
 						<?php else : ?>
 							<input type="hidden" name="isApproved" value="<?php htmlout($orderIsApproved); ?>">
 						<?php endif; ?>
+						<input type="hidden" id="originalIsApproved" name="originalIsApproved" value="<?php htmlout($originalOrderIsApproved); ?>">
 					</div>
-					
+
 					<?php if(isSet($originalDateTimeCancelled)) : ?>
 						<div>
 							<label>Date Cancelled: </label>
@@ -1036,7 +1057,7 @@
 					<?php endif; ?>
 				</fieldset>
 			</div>
-			
+
 			<div class="left">
 				<table id="addAlternative">
 					<caption>Items Ordered</caption>

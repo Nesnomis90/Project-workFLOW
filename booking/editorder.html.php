@@ -549,8 +549,7 @@
 				var userApprovalCheckbox = document.getElementById("isApprovedByUser");
 				var orderApproved = false;
 				if(userApprovalCheckbox !== null){
-					var userApprovalCheckboxValue = userApprovalCheckbox.value;
-					if(userApprovalCheckboxValue > 0){
+					if(userApprovalCheckbox.checked){
 						orderApproved = true;
 					}
 				}

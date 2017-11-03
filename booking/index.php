@@ -6342,7 +6342,7 @@ if	(isSet($_SESSION['loggedIn']) AND
 	$extraOrderedNumber = $_SESSION['EditBookingOrderOriginalInfo']['OrderExtrasOrdered'];
 	$extrasApproved = $_SESSION['EditBookingOrderOriginalInfo']['OrderExtrasApproved'];
 	$originalOrderIsApprovedByUser = $_SESSION['EditBookingOrderOriginalInfo']['OrderApprovedByUser'];
-	
+
 	$needUserApproval = FALSE;
 
 	if($originalOrderIsApproved == 1 AND $originalOrderIsApprovedByUser == 1){
@@ -6495,7 +6495,6 @@ if(isSet($_POST['order']) AND $_POST['order'] == 'Submit Changes'){
 						SET		`orderApprovedByUser` = :approvedByUser,
 								`dateTimeUpdatedByUser` = CURRENT_TIMESTAMP,
 								`orderChangedByUser` = 1,
-								`orderApprovedByUser` = :approvedByUser,
 								`orderNewMessageFromUser` = 1
 						WHERE 	`orderID` = :OrderID';
 			} elseif(!$messageAdded AND ($extraAdded OR $extraRemoved)){
