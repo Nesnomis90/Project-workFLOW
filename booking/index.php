@@ -6633,6 +6633,450 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Go Back'){
 
 	// FINISH EDIT ORDER CODE SNIPPET // END //
 
+	// DETAILS ONLY ORDER CODE SNIPPET // START //
+
+/*
+// If user wants to edit their order (while they still can)
+if	(isSet($_SESSION['loggedIn']) AND 
+	((isSet($_POST['order']) AND $_POST['order'] == "Details") OR 
+	(isSet($_SESSION['refreshEditBookingOrder']) AND $_SESSION['refreshEditBookingOrder']) OR
+	(isSet($_SESSION['resetEditBookingOrder'])))
+	){
+	
+	if(isSet($_SESSION['refreshEditBookingOrder']) AND $_SESSION['refreshEditBookingOrder']){
+		unset($_SESSION['refreshEditBookingOrder']);
+		
+		// Get values we had before refresh
+		if(isSet($_SESSION['EditBookingOrderCommunicationToStaff'])){
+			$orderCommunicationToStaff = $_SESSION['EditBookingOrderCommunicationToStaff'];
+			unset($_SESSION['EditBookingOrderCommunicationToStaff']);
+		} else {
+			$orderCommunicationToStaff = "";
+		}
+		if(isSet($_SESSION['EditBookingOrderIsApprovedByUser'])){
+			$orderIsApprovedByUser = $_SESSION['EditBookingOrderIsApprovedByUser'];
+			unset($_SESSION['EditBookingOrderIsApprovedByUser']);
+		} else {
+			$orderIsApprovedByUser = 0;
+		}
+		if(isSet($_SESSION['EditBookingOrderOrderID'])){
+			$orderID = $_SESSION['EditBookingOrderOrderID'];
+		}
+		if(isSet($_SESSION['EditBookingOrderOrderMessages'])){
+			$orderMessages = $_SESSION['EditBookingOrderOrderMessages'];
+		}
+		if(isSet($_SESSION['EditBookingOrderExtraOrderedOnlyNames'])){
+			$extraOrderedOnlyNames = $_SESSION['EditBookingOrderExtraOrderedOnlyNames'];
+		}
+	} else {
+		if(isSet($_SESSION['resetEditBookingOrder'])){
+			$orderID = $_SESSION['resetEditBookingOrder'];
+		} else {
+			$orderID = $_POST['OrderID'];
+		}
+
+		// Make sure we don't have any remembered values in memory
+		clearEditBookingOrderSessions();
+
+		// Get information from database again on the selected order
+		try
+		{
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+			$pdo = connect_to_db();
+
+			$sql = 'SELECT 		o.`orderID`						AS TheOrderID,
+								o.`orderUserNotes`				AS OrderUserNotes,
+								o.`dateTimeCreated`				AS DateTimeCreated,
+								o.`dateTimeUpdatedByStaff`		AS DateTimeUpdatedByStaff,
+								o.`dateTimeUpdatedByUser`		AS DateTimeUpdatedByUser,
+								o.`orderApprovedByUser`			AS OrderApprovedByUser,
+								o.`orderApprovedByAdmin`		AS OrderApprovedByAdmin,
+								o.`orderApprovedByStaff` 		AS OrderApprovedByStaff,
+								o.`orderChangedByUser`			AS OrderChangedByUser,
+								o.`orderChangedByStaff`			AS OrderChangedByStaff,
+								o.`orderNewMessageFromUser`		AS OrderNewMessageFromUser,
+								o.`orderNewMessageFromStaff`	AS OrderNewMessageFromStaff,
+								b.`startDateTime`				AS DateTimeStart
+					FROM 		`orders` o
+					INNER JOIN 	`booking` b
+					ON 			b.`orderID` = o.`orderID`
+					WHERE		o.`orderID` = :OrderID
+					LIMIT 		1';
+
+			$s = $pdo->prepare($sql);
+			$s->bindValue(':OrderID', $orderID);
+			$s->execute();
+
+			// Create an array with the row information we retrieved
+			$row = $s->fetch(PDO::FETCH_ASSOC);
+			$_SESSION['EditBookingOrderOriginalInfo'] = $row;
+
+			if($row['OrderApprovedByAdmin'] == 1 OR $row['OrderApprovedByStaff'] == 1){
+				$orderIsApproved = 1;
+			} else {
+				$orderIsApproved = 0;
+			}
+
+			$orderIsApprovedByUser = $row['OrderApprovedByUser'];
+
+			$dateTimeCreated = $row['DateTimeCreated'];
+			$displayDateTimeCreated = convertDatetimeToFormat($dateTimeCreated , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
+			$dateTimeStart = $row['DateTimeStart'];
+			$displayDateTimeStart = convertDatetimeToFormat($dateTimeStart , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
+
+			if(!empty($row['DateTimeUpdatedByStaff'])){
+				$dateTimeUpdatedByStaff = $row['DateTimeUpdatedByStaff'];
+				$displayDateTimeUpdatedByStaff = convertDatetimeToFormat($dateTimeUpdatedByStaff , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
+			} else {
+				$displayDateTimeUpdatedByStaff = "";
+			}
+
+			if(!empty($row['DateTimeUpdatedByUser'])){
+				$dateTimeUpdatedByUser = $row['DateTimeUpdatedByUser'];
+				$displayDateTimeUpdatedByUser = convertDatetimeToFormat($dateTimeUpdatedByUser , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
+			} else {
+				$displayDateTimeUpdatedByUser = "";
+			}
+
+			$datetimeNow = getDatetimeNow();
+			$timeDifferenceInDaysUntilStart = convertTwoDateTimesToTimeDifferenceInDays($datetimeNow, $dateTimeStart);
+			$timeDifferenceInDaysUntilEditOrCancelGetsBlocked = $timeDifferenceInDaysUntilStart - MINIMUM_DAYS_UNTIL_MEETING_STARTS_WHERE_YOU_CAN_STILL_PLACE_AN_ORDER;
+
+			$_SESSION['EditBookingOrderOriginalInfo']['OrderIsApproved'] = $orderIsApproved;
+			$_SESSION['EditBookingOrderOriginalInfo']['DateTimeCreated'] = $displayDateTimeCreated;
+			$_SESSION['EditBookingOrderOriginalInfo']['DateTimeUpdatedByStaff'] = $displayDateTimeUpdatedByStaff;
+			$_SESSION['EditBookingOrderOriginalInfo']['DateTimeUpdatedByUser'] = $displayDateTimeUpdatedByUser;
+			$_SESSION['EditBookingOrderOriginalInfo']['DateTimeStart'] = $displayDateTimeStart;
+			$_SESSION['EditBookingOrderOriginalInfo']['DaysLeftToEditOrCancel'] = $timeDifferenceInDaysUntilEditOrCancelGetsBlocked;
+
+			$_SESSION['EditBookingOrderOrderID'] = $orderID;
+
+			$sql = 'SELECT 		ex.`extraID`											AS ExtraID,
+								ex.`name`												AS ExtraName,
+								eo.`amount`												AS ExtraAmount,
+								IFNULL(eo.`alternativePrice`, ex.`price`)				AS ExtraPrice,
+								ex.`description`										AS ExtraDescription,
+								eo.`purchased`											AS ExtraDateTimePurchased,
+								eo.`approvedForPurchase`								AS ExtraDateTimeApprovedForPurchase
+					FROM 		`extraorders` eo
+					INNER JOIN	`extra` ex
+					ON 			ex.`extraID` = eo.`extraID`
+					WHERE		eo.`orderID` = :OrderID';
+			$s = $pdo->prepare($sql);
+			$s->bindValue(':OrderID', $orderID);
+			$s->execute();
+
+			$extraOrderedNumber = 0;
+			$extrasApproved = 0;
+			$totalPrice = 0;
+
+			$result = $s->fetchAll(PDO::FETCH_ASSOC);
+			foreach($result AS $extra){
+				$extraOrderedNumber++;
+				$extraName = $extra['ExtraName'];
+				$extraAmount = $extra['ExtraAmount'];
+				$extraPrice = $extra['ExtraPrice'];
+				$finalPrice = $extraAmount * $extraPrice;
+				$totalPrice += $finalPrice;
+				//$extraPrice = convertToCurrency($extra['ExtraPrice']);
+				$extraDescription = $extra['ExtraDescription'];
+				$extraID = $extra['ExtraID'];
+
+				if($extra['ExtraDateTimePurchased'] != NULL){
+					$extrasApproved++;
+					$booleanPurchased = 1;
+					$dateTimePurchased = $extra['ExtraDateTimePurchased'];
+					$displayDateTimePurchased = convertDatetimeToFormat($dateTimePurchased , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
+					if($extra['ExtraPurchasedByUser'] != NULL){
+						$displayPurchasedByUser = $extra['ExtraPurchasedByUser'];
+					} else {
+						$displayPurchasedByUser = "N/A - Deleted User";
+					}
+				} else {
+					$displayDateTimePurchased = "";
+					$displayPurchasedByUser = "";
+					$booleanPurchased = 0;
+				}
+
+				if($extra['ExtraDateTimeApprovedForPurchase'] != NULL){
+					$booleanApprovedForPurchase = 1;
+					$dateTimeApprovedForPurchase = $extra['ExtraDateTimeApprovedForPurchase'];
+				} else {
+					$booleanApprovedForPurchase = 0;
+					$displayDateTimeApprovedForPurchase = "";
+				}
+
+				$extraOrderedOnlyNames[] = $extraName;
+
+				$extraOrdered[] = array(
+											'ExtraID' => $extraID,
+											'ExtraName' => $extraName,
+											'ExtraAmount' => $extraAmount,
+											'ExtraPrice' => $extraPrice,
+											'ExtraDescription' => $extraDescription,
+											'ExtraDateTimePurchased' => $displayDateTimePurchased,
+											'ExtraPurchasedByUser' => $displayPurchasedByUser,
+											'ExtraDateTimeApprovedForPurchase' => $displayDateTimeApprovedForPurchase,
+											'ExtraBooleanApprovedForPurchase' => $booleanApprovedForPurchase,
+											'ExtraBooleanPurchased' => $booleanPurchased
+										);
+			}
+
+			if(!isSet($extraOrdered)){
+				$extraOrdered = array();
+			}
+			if(!isSet($extraOrderedOnlyNames)){
+				$extraOrderedOnlyNames = array();
+			}
+
+			$_SESSION['EditBookingOrderTotalPrice'] = $totalPrice;
+			$_SESSION['EditBookingOrderOriginalInfo']['OrderExtrasOrdered'] = $extraOrderedNumber;
+			$_SESSION['EditBookingOrderOriginalInfo']['OrderExtrasApproved'] = $extrasApproved;
+			$_SESSION['EditBookingOrderOriginalInfo']['ExtraOrdered'] = $extraOrdered;
+			$_SESSION['EditBookingOrderExtraOrdered'] = $extraOrdered;
+			$_SESSION['EditBookingOrderExtraOrderedOnlyNames'] = $extraOrderedOnlyNames;
+
+			// Get information about messages sent to/from staff
+			$sql = 'SELECT	`messageID`		AS OrderMessageID,
+							`message`		AS OrderMessage,
+							`sentByStaff`	AS OrderMessageSentByStaff,
+							`sentByUser`	AS OrderMessageSentByUser,
+							`messageSeen`	AS OrderMessageSeen,
+							`dateTimeAdded`	AS OrderMessageDateTimeAdded
+					FROM	`ordermessages`
+					WHERE	`orderID` = :OrderID';
+
+			$s = $pdo->prepare($sql);
+			$s->bindValue(':OrderID', $orderID);
+			$s->execute();
+
+			$result = $s->fetchAll(PDO::FETCH_ASSOC);
+
+			$pdo->beginTransaction();
+
+			$orderMessages = "";
+			foreach($result AS $message){
+
+				$messageID = $message['OrderMessageID'];
+				$messageOnly = $message['OrderMessage'];
+				$sentByStaff = $message['OrderMessageSentByStaff'];
+				$sentByUser = $message['OrderMessageSentByUser'];
+				if($sentByStaff == 1){
+					$messageAddFrom = "(Staff)";
+				} elseif($sentByUser == 1){
+					$messageAddFrom = "(User)";
+				} else {
+					$messageAddFrom = "(Unknown)";
+				}
+
+				$messageSeen = $message['OrderMessageSeen'];
+				if($messageSeen == 0 AND $sentByStaff == 1){
+					$messageAddSeen = "NEW MESSAGE ";
+				} elseif($messageSeen == 0 AND $sentByUser == 1){
+					$messageAddSeen = "NOT READ BY STAFF ";
+				} else {
+					$messageAddSeen = "";
+				}
+
+				$messageDateTimeAdded = $message['OrderMessageDateTimeAdded'];
+				$displayMessageDateTimeAdded = convertDatetimeToFormat($messageDateTimeAdded , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
+
+				$finalMessage = $displayMessageDateTimeAdded . " " . $messageAddSeen . $messageAddFrom . ": " . $messageOnly . "\n";
+
+				$orderMessages .= $finalMessage;
+
+				if($sentByUser == 1 AND $messageSeen == 0){
+					// Update that the new messages (from user) has been seen.
+					$sql = "UPDATE	`ordermessages`
+							SET		`messageSeen` = 1
+							WHERE	`orderID` = :OrderID
+							AND		`messageID` = :MessageID";
+					$s = $pdo->prepare($sql);
+					$s->bindValue(':OrderID', $orderID);
+					$s->bindValue(':MessageID', $messageID);
+					$s->execute();
+				}
+			}
+
+			$_SESSION['EditBookingOrderOrderMessages'] = $orderMessages;
+
+			// Update that there are no new messages from staff
+			// Also, we've seen any of the changes if there were any
+			$sql = "UPDATE	`orders`
+					SET		`orderNewMessageFromStaff` = 0,
+							`orderChangedByStaff` = 0
+					WHERE	`orderID` = :OrderID";
+			$s = $pdo->prepare($sql);
+			$s->bindValue(':OrderID', $orderID);
+			$s->execute();
+
+			$pdo->commit();
+
+			// Get all available extras if user wants to add an alternative
+			// That are not already in the order
+			$sql = 'SELECT 	`extraID`		AS ExtraID,
+							`name`			AS ExtraName,
+							`description`	AS ExtraDescription,
+							`price`			AS ExtraPrice
+					FROM 	`extra`
+					WHERE	`extraID`
+					NOT IN 	(
+								SELECT 	`extraID`
+								FROM 	`extraorders`
+								WHERE	`orderID` = :OrderID
+							)
+					AND		`isAlternative` = 0';
+			$s = $pdo->prepare($sql);
+			$s->bindValue(':OrderID', $orderID);
+			$s->execute();
+			$availableExtra = $s->fetchAll(PDO::FETCH_ASSOC);
+			$_SESSION['EditBookingOrderAvailableExtra'] = $availableExtra;
+
+			//Close the connection
+			$pdo = null;
+		}
+		catch (PDOException $e)
+		{
+			$pdo->rollBack();
+			$error = 'Error fetching order details: ' . $e->getMessage();
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+			$pdo = null;
+			exit();
+		}
+	}
+
+	// Set original values
+	$originalOrderIsApproved = $_SESSION['EditBookingOrderOriginalInfo']['OrderIsApproved'];
+	$originalOrderUserNotes = $_SESSION['EditBookingOrderOriginalInfo']['OrderUserNotes'];
+	$originalOrderCreated = $_SESSION['EditBookingOrderOriginalInfo']['DateTimeCreated'];
+	$originalOrderUpdatedByUser = $_SESSION['EditBookingOrderOriginalInfo']['DateTimeUpdatedByUser'];
+	$originalOrderUpdatedByStaff = $_SESSION['EditBookingOrderOriginalInfo']['DateTimeUpdatedByStaff'];
+	$originalMeetingStartDate = $_SESSION['EditBookingOrderOriginalInfo']['DateTimeStart'];
+	$daysLeftToEditOrCancel = $_SESSION['EditBookingOrderOriginalInfo']['DaysLeftToEditOrCancel'];
+	$originalTotalPrice = $_SESSION['EditBookingOrderTotalPrice'];
+	$extraOrdered = $_SESSION['EditBookingOrderOriginalInfo']['ExtraOrdered'];
+
+	// Adjust days left message to user
+	if($daysLeftToEditOrCancel > 1){
+		$displayDaysLeftMessage = "$daysLeftToEditOrCancel Days Left";
+	} elseif($daysLeftToEditOrCancel == 1){
+		$displayDaysLeftMessage = "1 Day Left";
+	} elseif($daysLeftToEditOrCancel == 0){
+		$startTime = convertDatetimeToFormat($originalMeetingStartDate , DATETIME_DEFAULT_FORMAT_TO_DISPLAY, TIME_DEFAULT_FORMAT_TO_DISPLAY);
+		$displayDaysLeftMessage = "Last Day (Ends at $startTime)";
+	} elseif($daysLeftToEditOrCancel < 0){
+		$displayDaysLeftMessage = "No Longer Eligible";
+	}
+
+	// Calculate order status
+	$extraOrderedNumber = $_SESSION['EditBookingOrderOriginalInfo']['OrderExtrasOrdered'];
+	$extrasApproved = $_SESSION['EditBookingOrderOriginalInfo']['OrderExtrasApproved'];
+	$originalOrderIsApprovedByUser = $_SESSION['EditBookingOrderOriginalInfo']['OrderApprovedByUser'];
+
+	$needUserApproval = FALSE;
+
+	if($originalOrderIsApproved == 1 AND $originalOrderIsApprovedByUser == 1){
+		$orderStatus = "Order Approved!";
+		if($extrasApproved == $extraOrderedNumber){
+			$orderStatus .= "\n\nAll Items Approved!";
+		} elseif($extrasApproved < $extraOrderedNumber){
+			$orderStatus .= "\n\nPending Item Approval.";
+		}
+	} elseif($originalOrderIsApproved == 1 AND $originalOrderIsApprovedByUser == 0){
+		$orderStatus = "Order Not Yet Approved After Change.\n\nPending Your Approval.";
+		$needUserApproval = TRUE;
+	} elseif($originalOrderIsApproved == 0 AND $originalOrderIsApprovedByUser == 1){
+		$orderStatus = "Order Not Yet Approved.\n\nPending Staff Approval.";
+	} elseif($originalOrderIsApproved == 0 AND $originalOrderIsApprovedByUser == 0){
+		$orderStatus = "Order Not Yet Approved After Change.\n\nPending Staff Approval.\n\nPending Your Approval.";
+		$needUserApproval = TRUE;
+	}
+
+	$availableExtrasNumber = sizeOf($availableExtra);
+
+	if(!isSet($orderCommunicationToStaff)){
+		$orderCommunicationToStaff = "";
+	}
+
+	var_dump($_SESSION); // TO-DO: Remove before uploading
+	include_once 'editorder.html.php';
+	exit();
+}
+
+	// DETAILS ONLY ORDER CODE SNIPPET // END //
+
+	// FINISH DETAILS ONLY ORDER CODE SNIPPET // START //
+// Perform the actual database update of the edited information
+if(isSet($_POST['details']) AND $_POST['details'] == 'Submit Message'){
+	// Validate user inputs
+	list($invalidInput, $validatedOrderCommunicationToStaff, $validatedIsApprovedByUser) = validateOrderUserInputs();
+
+	// Refresh form on invalid
+	if($invalidInput){
+		// Refresh.
+
+		$_SESSION['EditBookingOrderCommunicationToStaff'] = $validatedOrderCommunicationToStaff;
+		$_SESSION['EditBookingOrderIsApprovedByUser'] = $validatedIsApprovedByUser;
+
+		$_SESSION['refreshEditOrder'] = TRUE;
+		header('Location: .');
+		exit();
+	}
+
+	// Check if user tried to send a message
+	$messageAdded = FALSE;
+	if($validatedOrderCommunicationToStaff != ""){
+		$messageAdded = TRUE;
+	}
+
+	$orderID = $_POST['OrderID'];
+
+	if($messageAdded){
+		// Some changes were made, let's update!
+		try
+		{
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+			$pdo = connect_to_db();
+
+			$sql = 'INSERT INTO `ordermessages`
+					SET			`message` = :message,
+								`sentByUser` = 1,
+								`dateTimeAdded` = CURRENT_TIMESTAMP,
+								`messageFromUserID` = :messageFromUserID,
+								`orderID` = :OrderID';
+			$s = $pdo->prepare($sql);
+			$s->bindValue(':OrderID', $orderID);
+			$s->bindValue(':message', $validatedOrderCommunicationToStaff);
+			$s->bindValue(':messageFromUserID', $_SESSION['LoggedInUserID']);
+			$s->execute();
+
+			// Close the connection
+			$pdo = null;
+		}
+		catch (PDOException $e)
+		{
+			$error = 'Error updating submitted Order: ' . $e->getMessage();
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+			$pdo = null;
+			exit();
+		}
+
+		$_SESSION['normalBookingFeedback'] = "Successfully sent the message.";
+	} else {
+		$_SESSION['normalBookingFeedback'] = "No message was sent.";
+	}
+
+	clearEditBookingOrderSessions();
+
+	// Load Order list webpage
+	header('Location: .');
+	exit();
+}
+
+*/
+
+	// FINISH DETAILS ONLY ORDER CODE SNIPPET // END //
+
 	// CANCEL ORDER CODE SNIPPET // START //
 
 // If user wants to cancel am scheduled order (only accesed by being online)
