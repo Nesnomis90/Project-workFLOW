@@ -863,6 +863,61 @@
 					}
 				}
 
+				// Check if staff has changed the order approval
+				var originalStaffApproval = document.getElementById("originalIsApproved");
+				var originalStaffApprovalValue = originalStaffApproval.value;
+				var staffApprovalCheckbox = document.getElementById("isApproved");
+				var orderApprovalChanged = false;
+
+				if(staffApprovalCheckbox.checked){
+					var staffApprovalCheckboxValue = staffApprovalCheckbox.value;
+				} else {
+					var staffApprovalCheckboxValue = 0;
+				}
+
+				if(staffApprovalCheckboxValue != originalStaffApprovalValue){
+					orderApprovalChanged = true;
+				}
+
+				// Check if staff has changed any item's being marked as approved or purchased
+				var itemsApprovedChanged = 0;
+				var itemsPurchasedChanged = 0;
+				for(var i = 0; i < extrasOrdered.length; i++){
+					var extraID = extrasOrdered[i]['ExtraID'];
+
+					var originalIsApprovedForPurchaseID = "originalIsApprovedForPurchase" + extraID;
+					var originalIsApprovedForPurchase = document.getElementById(originalIsApprovedForPurchaseID);
+					var originalIsApprovedForPurchaseValue = originalIsApprovedForPurchase.value;
+					var checkboxIsApprovedForPurchaseID = "isApprovedForPurchase" + extraID;
+					var checkboxIsApprovedForPurchase = document.getElementById(checkboxIsApprovedForPurchaseID);
+
+					if(checkboxIsApprovedForPurchase.checked){
+						var checkboxIsApprovedForPurchaseValue = 1;
+					} else {
+						var checkboxIsApprovedForPurchaseValue = 0;
+					}
+
+					if(checkboxIsApprovedForPurchaseValue != originalIsApprovedForPurchaseValue){
+						itemsApprovedChanged++;
+					}
+
+					var originalIsPurchasedID = "originalIsPurchased" + extraID;
+					var originalIsPurchased = document.getElementById(originalIsPurchasedID);
+					var originalIsPurchasedValue = originalIsPurchased.value;
+					var checkboxIsPurchasedID = "isPurchased" + extraID;
+					var checkboxIsPurchased = document.getElementById(checkboxIsPurchasedID);
+
+					if(checkboxIsPurchased.checked){
+						var checkboxIsPurchasedValue = 1;
+					} else {
+						var checkboxIsPurchasedValue = 0;
+					}
+
+					if(checkboxIsPurchasedValue != originalIsPurchasedValue){
+						itemsPurchasedChanged++;
+					}
+				}
+
 				// Check if new added items have been confirmed
 				if(alternativesAdded > 0 || newAlternativesCreated > 0){
 					for(var i = 0; i < alternativeID; i++){
@@ -890,6 +945,18 @@
 				} else if(userMessageSubmitted){
 					// Submit message on sending staff a message
 					var submitConfirmed = confirm("Are you sure you want to send the new message to user?");
+					return submitConfirmed;
+				} else if(orderApprovalChanged){
+					// User approved staff changes
+					var submitConfirmed = confirm("Are you sure you want to change the order approval?");
+					return submitConfirmed;
+				} else if(itemsApprovedChanged > 0){
+					// User approved staff changes
+					var submitConfirmed = confirm("Are you sure you want to change if the " + itemsApprovedChanged + " item(s) is marked as approved?");
+					return submitConfirmed;
+				} else if(itemsPurchasedChanged > 0){
+					// User approved staff changes
+					var submitConfirmed = confirm("Are you sure you want to change if the " + itemsPurchasedChanged +  " item(s) is marked as purchased?");
 					return submitConfirmed;
 				} else {
 					// No change detected
@@ -985,10 +1052,11 @@
 					<div>
 						<label>Change Order Approval: </label>
 						<?php if($orderIsApproved == 1) : ?>
-							<label class="checkboxlabel"><input type="checkbox" name="isApproved" value="1" checked>Set As Approved</label>
+							<label class="checkboxlabel"><input type="checkbox" id="isApproved" name="isApproved" value="1" checked>Set As Approved</label>
 						<?php else : ?>
-							<label class="checkboxlabel"><input type="checkbox" name="isApproved" value="1">Set As Approved</label>
+							<label class="checkboxlabel"><input type="checkbox" id="isApproved" name="isApproved" value="1">Set As Approved</label>
 						<?php endif; ?>
+						<input type="hidden" id="originalIsApproved" name="originalIsApproved" value="<?php htmlout($originalOrderIsApproved); ?>">
 					</div>
 				</fieldset>
 			</div>
@@ -1025,19 +1093,21 @@
 								</td>
 								<td>
 									<?php if($row['ExtraBooleanApprovedForPurchase'] == 1) : ?>
-										<label style="width: auto;"><input type="checkbox" name="isApprovedForPurchase[]" value="<?php htmlout($row['ExtraID']); ?>" checked>Approved</label>
+										<label style="width: auto;"><input type="checkbox" id="isApprovedForPurchase<?php htmlout($row['ExtraID']); ?>" name="isApprovedForPurchase[]" value="<?php htmlout($row['ExtraID']); ?>" checked>Approved</label>
 									<?php else : ?>
-										<label style="width: auto;"><input type="checkbox" name="isApprovedForPurchase[]" value="<?php htmlout($row['ExtraID']); ?>">Approved</label>
+										<label style="width: auto;"><input type="checkbox" id="isApprovedForPurchase<?php htmlout($row['ExtraID']); ?>" name="isApprovedForPurchase[]" value="<?php htmlout($row['ExtraID']); ?>">Approved</label>
 									<?php endif; ?>
+									<input type="hidden" id="originalIsApprovedForPurchase<?php htmlout($row['ExtraID']); ?>" value="<?php htmlout($row['ExtraBooleanApprovedForPurchase']); ?>">
 								</td>
 								<td><?php htmlout($row['ExtraApprovedForPurchaseByUser']); ?></td>
 								<td><?php htmlout($row['ExtraDateTimeApprovedForPurchase']); ?></td>
 								<td>
 									<?php if($row['ExtraBooleanPurchased'] == 1) : ?>
-										<label style="width: auto;"><input type="checkbox" name="isPurchased[]" value="<?php htmlout($row['ExtraID']); ?>" checked>Purchased</label>
+										<label style="width: auto;"><input type="checkbox" id="isPurchased<?php htmlout($row['ExtraID']); ?>" name="isPurchased[]" value="<?php htmlout($row['ExtraID']); ?>" checked>Purchased</label>
 									<?php else : ?>
-										<label style="width: auto;"><input type="checkbox" name="isPurchased[]" value="<?php htmlout($row['ExtraID']); ?>">Purchased</label>
+										<label style="width: auto;"><input type="checkbox" id="isPurchased<?php htmlout($row['ExtraID']); ?>" name="isPurchased[]" value="<?php htmlout($row['ExtraID']); ?>">Purchased</label>
 									<?php endif; ?>
+									<input type="hidden" id="originalIsPurchased<?php htmlout($row['ExtraID']); ?>" value="<?php htmlout($row['ExtraBooleanApprovedForPurchase']); ?>">
 								</td>
 								<td><?php htmlout($row['ExtraPurchasedByUser']); ?></td>
 								<td><?php htmlout($row['ExtraDateTimePurchased']); ?></td>

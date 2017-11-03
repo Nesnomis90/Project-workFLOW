@@ -545,6 +545,15 @@
 					}
 				}
 
+				// Check if user has approved staff changes
+				var userApprovalCheckbox = document.getElementById("isApprovedByUser");
+				var orderApproved = false;
+				if(userApprovalCheckbox !== null){
+					if(userApprovalCheckbox.checked){
+						orderApproved = true;
+					}
+				}
+
 				// Check if new added items have been confirmed
 				if(alternativesAdded > 0){
 					for(var i = 0; i < alternativeID; i++){
@@ -572,6 +581,10 @@
 				} else if(userMessageSubmitted){
 					// Submit message on sending staff a message
 					var submitConfirmed = confirm("Are you sure you want to send the new message to staff?");
+					return submitConfirmed;
+				} else if(orderApproved){
+					// User approved staff changes
+					var submitConfirmed = confirm("Are you sure you want to approve the staff changes?");
 					return submitConfirmed;
 				} else {
 					// No change detected
@@ -652,6 +665,19 @@
 				<div>
 					<label>Order Approval Status: </label>
 					<span><b><?php htmlout($orderStatus); ?></b></span>
+				</div>
+
+				<div>
+					<?php if($needUserApproval) : ?>
+						<label>Approve Staff Changes: </label>
+						<?php if($orderIsApprovedByUser == 1) : ?>
+							<label class="checkboxlabel"><input type="checkbox" id="isApprovedByUser" name="isApprovedByUser" value="1" checked="checked">Set As Approved</label>
+						<?php else : ?>
+							<label class="checkboxlabel"><input type="checkbox" id="isApprovedByUser" name="isApprovedByUser" value="1">Set As Approved</label>
+						<?php endif; ?>
+					<?php else : ?>
+						<input type="hidden" id="isApprovedByUser" name="isApprovedByUser" value="<?php htmlout($orderIsApprovedByUser); ?>">
+					<?php endif; ?>
 				</div>
 
 				<div class="left">
