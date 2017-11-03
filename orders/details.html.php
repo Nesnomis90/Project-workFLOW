@@ -863,6 +863,22 @@
 					}
 				}
 
+				// Check if staff has changed the order approval
+				var originalStaffApproval = document.getElementById("originalIsApproved");
+				var originalStaffApprovalValue = originalStaffApproval.value;
+				var staffApprovalCheckbox = document.getElementById("isApproved");
+				var orderApprovalChanged = false;
+
+				if(staffApprovalCheckbox.checked){
+					var staffApprovalCheckboxValue = staffApprovalCheckbox.value;
+				} else {
+					var staffApprovalCheckboxValue = 0;
+				}
+
+				if(staffApprovalCheckboxValue != originalStaffApprovalValue){
+					orderApprovalChanged = true;
+				}
+
 				// Check if new added items have been confirmed
 				if(alternativesAdded > 0 || newAlternativesCreated > 0){
 					for(var i = 0; i < alternativeID; i++){
@@ -985,10 +1001,11 @@
 					<div>
 						<label>Change Order Approval: </label>
 						<?php if($orderIsApproved == 1) : ?>
-							<label class="checkboxlabel"><input type="checkbox" name="isApproved" value="1" checked>Set As Approved</label>
+							<label class="checkboxlabel"><input type="checkbox" id="isApproved" name="isApproved" value="1" checked>Set As Approved</label>
 						<?php else : ?>
-							<label class="checkboxlabel"><input type="checkbox" name="isApproved" value="1">Set As Approved</label>
+							<label class="checkboxlabel"><input type="checkbox" id="isApproved" name="isApproved" value="1">Set As Approved</label>
 						<?php endif; ?>
+						<input type="hidden" id="originalIsApproved" name="originalIsApproved" value="<?php htmlout($originalOrderIsApproved); ?>">
 					</div>
 				</fieldset>
 			</div>
