@@ -10,6 +10,160 @@ SELECT @@version;
 SHOW indexes from `booking`;
 /*PDO::FETCH_ASSOC*/
 
+SELECT 		(
+				BIG_SEC_TO_TIME(
+					(
+						DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
+						)*86400 
+					+ 
+					(
+						TIME_TO_SEC(b.`actualEndDateTime`) 
+						- 
+						TIME_TO_SEC(b.`startDateTime`)
+					)
+				)
+			)						AS BookingTimeUsed,
+			(
+				BIG_SEC_TO_TIME(
+					IF(
+						(
+							(
+								DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
+								)*86400 
+							+ 
+							(
+								TIME_TO_SEC(b.`actualEndDateTime`) 
+								- 
+								TIME_TO_SEC(b.`startDateTime`)
+							) 
+						) > 300,
+						IF(
+							(
+								(
+									DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
+									)*86400 
+								+ 
+								(
+									TIME_TO_SEC(b.`actualEndDateTime`) 
+									- 
+									TIME_TO_SEC(b.`startDateTime`)
+								) 
+							) > 900, 
+							(
+								(
+									DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
+									)*86400 
+								+ 
+								(
+									TIME_TO_SEC(b.`actualEndDateTime`) 
+									- 
+									TIME_TO_SEC(b.`startDateTime`)
+								) 
+							),
+							900
+						),
+						0
+					)
+				)
+			)						AS BookingTimeCharged,
+			b.`startDateTime`		AS BookingStartedDatetime,
+			b.`actualEndDateTime`	AS BookingCompletedDatetime,
+			b.`adminNote`			AS AdminNote,
+			b.`cancelMessage`		AS CancelMessage,
+			b.`mergeNumber`			AS MergeNumber,
+			u.`firstName`			AS UserFirstname,
+			u.`lastName`			AS UserLastname,
+			u.`email`				AS UserEmail,
+			(
+				IF(b.`meetingRoomID` IS NULL, NULL, (SELECT `name` FROM `meetingroom` WHERE `meetingRoomID` = b.`meetingRoomID`))
+			) 						AS MeetingRoomName
+FROM 		`booking` b
+LEFT JOIN 	`user` u
+ON 			u.`userID` = b.`userID`
+WHERE   	b.`CompanyID` = 68
+AND 		b.`actualEndDateTime` IS NOT NULL
+AND         DATE(b.`actualEndDateTime`) >= '2017-03-15'
+AND         DATE(b.`actualEndDateTime`) < '2017-11-15';
+
+SELECT 		(
+				BIG_SEC_TO_TIME(
+					(
+						DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
+						)*86400 
+					+ 
+					(
+						TIME_TO_SEC(b.`actualEndDateTime`) 
+						- 
+						TIME_TO_SEC(b.`startDateTime`)
+					)
+				)
+			)						AS BookingTimeUsed,
+			(
+				BIG_SEC_TO_TIME(
+					IF(
+						(
+							(
+								DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
+								)*86400 
+							+ 
+							(
+								TIME_TO_SEC(b.`actualEndDateTime`) 
+								- 
+								TIME_TO_SEC(b.`startDateTime`)
+							) 
+						) > 300,
+						IF(
+							(
+								(
+									DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
+									)*86400 
+								+ 
+								(
+									TIME_TO_SEC(b.`actualEndDateTime`) 
+									- 
+									TIME_TO_SEC(b.`startDateTime`)
+								) 
+							) > 900, 
+							(
+								(
+									DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
+									)*86400 
+								+ 
+								(
+									TIME_TO_SEC(b.`actualEndDateTime`) 
+									- 
+									TIME_TO_SEC(b.`startDateTime`)
+								) 
+							),
+							900
+						),
+						0
+					)
+				)
+			)						AS BookingTimeCharged,
+			b.`startDateTime`		AS BookingStartedDatetime,
+			b.`actualEndDateTime`	AS BookingCompletedDatetime,
+			b.`adminNote`			AS AdminNote,
+			b.`cancelMessage`		AS CancelMessage,
+			b.`mergeNumber`			AS MergeNumber,
+			(
+				IF(b.`userID` IS NULL, NULL, (SELECT `firstName` FROM `user` WHERE `userID` = b.`userID`))
+			)						AS UserFirstname,
+			(
+				IF(b.`userID` IS NULL, NULL, (SELECT `lastName` FROM `user` WHERE `userID` = b.`userID`))
+			)						AS UserLastname,
+			(
+				IF(b.`userID` IS NULL, NULL, (SELECT `email` FROM `user` WHERE `userID` = b.`userID`))
+			)						AS UserEmail,
+			(
+				IF(b.`meetingRoomID` IS NULL, NULL, (SELECT `name` FROM `meetingroom` WHERE `meetingRoomID` = b.`meetingRoomID`))
+			) 						AS MeetingRoomName
+FROM 		`booking` b
+WHERE   	b.`CompanyID` = 68
+AND 		b.`actualEndDateTime` IS NOT NULL
+AND         DATE(b.`actualEndDateTime`) >= '2017-03-15'
+AND         DATE(b.`actualEndDateTime`) < '2017-11-15';
+
 (SELECT 	o.`orderID`										AS TheOrderID,
 			o.`orderUserNotes`								AS OrderUserNotes,
 			o.`dateTimeCreated`								AS DateTimeCreated,

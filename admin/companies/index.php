@@ -732,7 +732,7 @@ function calculatePeriodInformation($pdo, $companyID, $BillingStart, $BillingEnd
 	} else {
 		$includeMerged = TRUE;
 	}
-
+	// TO-DO: FIX-ME: Add order cost and order admin note to array!
 	$minimumSecondsPerBooking = MINIMUM_BOOKING_DURATION_IN_MINUTES_USED_IN_PRICE_CALCULATIONS * 60; // e.g. 15min = 900s
 	$aboveThisManySecondsToCount = BOOKING_DURATION_IN_MINUTES_USED_BEFORE_INCLUDING_IN_PRICE_CALCULATIONS * 60; // e.g. 1min = 60s
 	$s = $pdo->prepare($sql);
@@ -769,15 +769,15 @@ function calculatePeriodInformation($pdo, $companyID, $BillingStart, $BillingEnd
 
 		//$totalBookingTimeThisPeriodIncludingMerged += $bookingTimeUsed;
 		//$totalBookingTimeUsedInPriceCalculationsIncludingMerged += $bookingTimeUsedInPriceCalculations;
-		
+
 		if($includeMerged AND $mergeNumber == 0){
 			// If we're including merged bookings, still only track time used by the non-merged
 			$totalBookingTimeThisPeriod += $bookingTimeUsed;
-			$totalBookingTimeUsedInPriceCalculations += $bookingTimeUsedInPriceCalculations;			
+			$totalBookingTimeUsedInPriceCalculations += $bookingTimeUsedInPriceCalculations;
 		} elseif(!$includeMerged){
 			// if we're just calculating a specific period
 			$totalBookingTimeThisPeriod += $bookingTimeUsed;
-			$totalBookingTimeUsedInPriceCalculations += $bookingTimeUsedInPriceCalculations;			
+			$totalBookingTimeUsedInPriceCalculations += $bookingTimeUsedInPriceCalculations;
 		}
 
 		if($row['UserLastname'] == NULL){
@@ -927,7 +927,7 @@ function validateUserInputs(){
 
 	// Are values actually filled in?
 	if($validatedCompanyName == "" AND !$invalidInput){
-		$_SESSION['AddCompanyError'] = "You need to fill in a name for the company.";	
+		$_SESSION['AddCompanyError'] = "You need to fill in a name for the company.";
 		$invalidInput = TRUE;
 	}
 
@@ -936,7 +936,7 @@ function validateUserInputs(){
 		// Uses same limit as display name (max 255 chars)
 	$invalidCompanyName = isLengthInvalidDisplayName($validatedCompanyName);
 	if($invalidCompanyName AND !$invalidInput){
-		$_SESSION['AddCompanyError'] = "The company name submitted is too long.";	
+		$_SESSION['AddCompanyError'] = "The company name submitted is too long.";
 		$invalidInput = TRUE;
 	}
 
@@ -946,7 +946,7 @@ function validateUserInputs(){
 
 		$correctFormatIfValid = correctDatetimeFormat($validatedCompanyDateToRemove);
 
-		if (isSet($correctFormatIfValid) AND $correctFormatIfValid === FALSE AND !$invalidInput){
+		if(isSet($correctFormatIfValid) AND $correctFormatIfValid === FALSE AND !$invalidInput){
 			$_SESSION['AddCompanyError'] = "The date you submitted did not have a correct format. Please try again.";
 			$invalidInput = TRUE;
 		}
@@ -993,9 +993,8 @@ function validateUserInputs(){
 
 				$row = $s->fetch();
 
-				if ($row[0] > 0)
-				{
-					// This name is already being used for a company	
+				if($row[0] > 0){
+					// This name is already being used for a company
 					$_SESSION['AddCompanyError'] = "There is already a company with the name: " . $validatedCompanyName . "!";
 					$invalidInput = TRUE;
 				}
