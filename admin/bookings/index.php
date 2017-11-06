@@ -1599,17 +1599,25 @@ if( (isSet($_POST['edit']) AND $_POST['edit'] == "Finish Edit") OR
 				$invalidBookingLength = isBookingTimeDurationInvalid($startDateTime, $endDateTime);
 				if($invalidBookingLength AND !$invalidInput){
 					$_SESSION['EditBookingError'] = "Your start time and end time needs to have at least a " . MINIMUM_BOOKING_TIME_IN_MINUTES . " minutes difference.";
-					$invalidInput = TRUE;		
+					$invalidInput = TRUE;
 				}
 			}
 		}
-		
+
+		// We can only book a meeting if a company is attached
+		if(isSet($_POST['companyID']) AND !empty($_POST['companyID']) AND !$invalidInput){
+			$companyID = $_POST['companyID'];
+		} else {
+			$invalidInput = TRUE;
+			$_SESSION['EditBookingError'] = "Could not create the meeting due to a missing company identifier.";
+		}
+
 		if($invalidInput){
-			
+
 			rememberEditBookingInputs();
 			// Refresh.
 			if(isSet($_SESSION['EditBookingChangeUser']) AND $_SESSION['EditBookingChangeUser']){
-				$_SESSION['refreshEditBookingChangeUser'] = TRUE;				
+				$_SESSION['refreshEditBookingChangeUser'] = TRUE;
 			} else {
 				$_SESSION['refreshEditBooking'] = TRUE;	
 			}
@@ -1623,14 +1631,6 @@ if( (isSet($_POST['edit']) AND $_POST['edit'] == "Finish Edit") OR
 			$meetingRoomID = $_POST['meetingRoomID'];
 		}
 
-		// Set correct companyID
-		if(isSet($_POST['companyID']) AND !empty($_POST['companyID'])){
-			$companyID = $_POST['companyID'];
-		} else {
-			// TO-DO: Give error since there's no companyID?
-			$companyID = NULL;
-		}
-		
 		if(isSet($_POST['userID']) AND !empty($_POST['userID'])){
 			$userID = $_POST['userID'];
 		}
@@ -2095,7 +2095,6 @@ if( (isSet($_POST['edit']) AND $_POST['edit'] == "Finish Edit") OR
 	}
 
 	// Send email to users affected (if changed) or company owners if over credit.
-		// TO-DO: This is UNTESTED since we don't have php.ini set up to actually send email
 	if(!$bookingCompleted){
 		// Check if we're sending email to the user(s) the meetings are/were booked for.
 		if($_SESSION['EditBookingInfoArray']['sendEmail'] == 1 OR $originalValue['sendEmail'] == 1){
@@ -2351,7 +2350,6 @@ if( (isSet($_POST['edit']) AND $_POST['edit'] == "Finish Edit") OR
 
 				// We found company owners to send email too
 			if(isSet($companyOwnerEmails) AND !empty($companyOwnerEmails)){
-				// TO-DO: This might need some change since it's an edit and not a fresh booking.
 				$emailSubject = "Booked Meeting Above Credits!";
 
 				$emailMessage = 
@@ -3116,6 +3114,14 @@ if ((isSet($_POST['add']) AND $_POST['add'] == "Add Booking") OR
 	if(!isSet($_SESSION['refreshAddBookingConfirmed'])){
 		list($invalidInput, $startDateTime, $endDateTime, $bknDscrptn, $dspname, $validatedAdminNote) = validateUserInputs('AddBookingError', FALSE, FALSE);
 
+		// We can only book a meeting if a company is attached
+		if(isSet($_POST['companyID']) AND !empty($_POST['companyID']) AND !$invalidInput){
+			$companyID = $_POST['companyID'];
+		} else {
+			$invalidInput = TRUE;
+			$_SESSION['AddBookingError'] = "Could not create the meeting due to a missing company identifier.";
+		}
+
 		// handle feedback process on invalid input values
 		if($invalidInput){
 
@@ -3134,13 +3140,6 @@ if ((isSet($_POST['add']) AND $_POST['add'] == "Add Booking") OR
 			$meetingRoomID = $_GET['meetingroom'];
 		} else {
 			$meetingRoomID = $_POST['meetingRoomID'];
-		}
-
-		if(isSet($_POST['companyID']) AND !empty($_POST['companyID'])){
-			$companyID = $_POST['companyID'];
-		} else {
-			// TO-DO: Give error since there's no companyID?
-			$companyID = NULL;
 		}
 
 		$_SESSION['AddBookingInfoArray']['TheCompanyID'] = $companyID;
@@ -3240,7 +3239,7 @@ if ((isSet($_POST['add']) AND $_POST['add'] == "Add Booking") OR
 
 	// Check if we got any hits, if so the timeslot is already taken
 	$row = $s->fetch(PDO::FETCH_ASSOC);
-	if ($row['HitCount'] > 0){
+	if($row['HitCount'] > 0){
 
 		// Timeslot was taken
 		rememberAddBookingInputs();
@@ -3539,7 +3538,6 @@ if ((isSet($_POST['add']) AND $_POST['add'] == "Add Booking") OR
 	}		
 	
 	//Send email with booking information and cancellation code to the user who the booking is for.
-		// TO-DO: This is UNTESTED since we don't have php.ini set up to actually send email
 	if($info['sendEmail'] == 1){
 		if($info["TheUserID"] == $_SESSION['LoggedInUserID']){
 			// Admin booked a meeting for him/herself
@@ -4023,7 +4021,6 @@ if (isSet($_POST['add']) AND $_POST['add'] == 'Cancel'){
 // END OF USER INPUT CODE //
 
 // Remove any unused variables from memory 
-// TO-DO: Change if this ruins having multiple tabs open etc.
 clearAddBookingSessions();
 clearEditBookingSessions();
 clearCancelSessions();
@@ -4032,7 +4029,6 @@ clearCancelSessions();
 // BOOKING OVERVIEW CODE SNIPPET START //
 
 if(isSet($refreshBookings) AND $refreshBookings) {
-	// TO-DO: Add code that should occur on a refresh
 	unset($refreshBookings);
 }
 

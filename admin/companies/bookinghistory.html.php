@@ -174,11 +174,17 @@
 								<label class="period">For the period of:</label><span><b><?php htmlout($row['BookingPeriod']); ?></b></span>
 								<label class="period">Using a total time of:</label><span><b><?php htmlout($row['BookingTimeUsed']); ?></b></span>
 								<label class="period">Time used in price calculation:</label><span><b><?php htmlout($row['BookingTimeCharged']); ?></b></span>
-								<?php if(isSet($row['CancelMessage']) AND !empty($row['CancelMessage'])) : ?>
+								<?php if(!empty($row['CancelMessage'])) : ?>
 									<label class="period">Ended Early Message:</label><span><b><?php htmlout($row['CancelMessage']); ?></b></span>
 								<?php endif; ?>
-								<?php if(isSet($row['AdminNote']) AND $row['AdminNote'] != "") : ?>
-									<label class="period" style="color: red;">Admin Note:</label><span style="white-space: pre-wrap; color:red;"><b><?php htmlout($row['AdminNote']); ?></b></span>
+								<?php if(!empty($row['AdminNote'])) : ?>
+									<label class="period" style="color: red;">Admin Note (Booking):</label><span style="white-space: pre-wrap; color:red;"><b><?php htmlout($row['AdminNote']); ?></b></span>
+								<?php endif; ?>
+								<?php if(!empty($row['OrderCost'])) : ?>
+									<label class="period" style="color: red;">Order Cost:</label><span style="color: red;"><b><?php htmlout($row['OrderCost']); ?></b></span>
+								<?php endif; ?>
+								<?php if(!empty($row['OrderAdminNote'])) : ?>
+									<label class="period" style="color: red;">Admin Note (Order):</label><span style="white-space: pre-wrap; color:red;"><b><?php htmlout($row['OrderAdminNote']); ?></b></span>
 								<?php endif; ?>
 						</fieldset>
 						<?php $bookingNumberThisPeriod += 1; ?>
@@ -246,8 +252,5 @@
 			</div>
 			</fieldset>
 		</div>
-
-	<div class="left"><a href="..">Return to CMS home</a></div>
-
 	</body>
 </html>		

@@ -82,11 +82,6 @@
 				</div>
 
 				<div>
-					<label>Days Left To Alter Order: </label>
-					<span><b><?php htmlout($displayDaysLeftMessage); ?></b></span>
-				</div>
-
-				<div>
 					<label>Last Update (Staff): </label>
 					<?php if(empty($originalOrderUpdatedByStaff)) : ?>
 						<span><b><i><?php htmlout("Staff has made no changes to this order yet."); ?></i></b></span>

@@ -1488,11 +1488,10 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Go Back'){
 }
 
 if(isSet($refreshOrder) AND $refreshOrder) {
-	// TO-DO: Add code that should occur on a refresh
 	unset($refreshOrder);
 }
 
-// Remove any unused variables from memory // TO-DO: Change if this ruins having multiple tabs open etc.
+// Remove any unused variables from memory
 clearEditOrderSessions();
 clearEditOrderSessionsOutsideReset();
 clearCancelSessions();
