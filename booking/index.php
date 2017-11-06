@@ -3164,6 +3164,14 @@ if ((isSet($_POST['add']) AND $_POST['add'] == "Add Booking") OR
 	if(!isSet($_SESSION['refreshAddCreateBookingConfirmed'])){
 		list($invalidInput, $startDateTime, $endDateTime, $bknDscrptn, $dspname, $bookingCode) = validateUserInputs('AddCreateBookingError', FALSE);
 
+		// We can only book a meeting if a company is attached
+		if(isSet($_POST['companyID']) AND !empty($_POST['companyID']) AND !$invalidInput){
+			$companyID = $_POST['companyID'];
+		} else {
+			$invalidInput = TRUE;
+			$_SESSION['AddCreateBookingError'] = "Could not create the meeting due to a missing company identifier.";
+		}
+
 		// handle feedback process on invalid input values
 		if(isSet($_GET['meetingroom'])){
 			$meetingRoomID = $_GET['meetingroom'];
@@ -3185,13 +3193,6 @@ if ((isSet($_POST['add']) AND $_POST['add'] == "Add Booking") OR
 			$meetingRoomID = $_GET['meetingroom'];
 		} else {
 			$meetingRoomID = $_POST['meetingRoomID'];
-		}
-
-		if(isSet($_POST['companyID']) AND !empty($_POST['companyID'])){
-			$companyID = $_POST['companyID'];
-		} else {
-			// TO-DO: Give error since there's no companyID?
-			$companyID = NULL;
 		}
 
 		if(!isSet($dspname) OR ($dspname == "" AND !empty($_SESSION['AddCreateBookingInfoArray']['BookedBy']))){
@@ -5971,8 +5972,6 @@ if(isSet($_POST['add']) AND $_POST['add'] == "Add Order"){
 		$_SESSION['normalBookingFeedback'] .= "\n\nNo Company Owners were sent an email about the booking going over booking."; // TO-DO: Remove before uploading.
 	}
 
-	// TO-DO: Add emails to admin if order is close?
-
 	try
 	{
 		$commitResult = $pdo->commit();
@@ -7425,7 +7424,6 @@ if	(isSet($_SESSION['loggedIn']) AND
 // ORDER CODE SNIPPET // END //
 
 // Remove any unused variables from memory 
-// TO-DO: Change if this ruins having multiple tabs open etc.
 updateAdminBookingCodeGuesses();
 updateBookingCodeGuesses();
 clearAddCreateBookingSessions();
@@ -7439,7 +7437,6 @@ unset($_SESSION["confirmOrigins"]);
 unset($_SESSION["EditCreateBookingError"]);
 
 if(isSet($refreshBookings) AND $refreshBookings) {
-	// TO-DO: Add code that should occur on a refresh
 	unset($refreshBookings);
 }
 
