@@ -6006,6 +6006,24 @@ if(isSet($_POST['add']) AND $_POST['add'] == "Add Order"){
 
 	// SUBMIT ORDER CODE SNIPPET // END //
 
+	// ADDITIONAL ADD ORDER CODE SNIPPETS // START //
+
+// If user wants to get original values while editing
+if(isSet($_POST['addorder']) AND $_POST['addorder'] == 'Reset'){
+
+	$_SESSION['refreshCreateOrder'] = TRUE;
+	header('Location: .');
+	exit();
+}
+
+// If the user wants to leave the page and go back to the booking overview again
+if(isSet($_POST['addorder']) AND $_POST['addorder'] == 'Cancel'){
+	$_SESSION['normalBookingFeedback'] = "You cancelled your order creation.";
+	$refreshBookings = TRUE;
+}
+
+	// ADDITIONAL ADD ORDER CODE SNIPPETS // END //
+
 	// EDIT ORDER CODE SNIPPET // START //
 
 // If user wants to edit their order (while they still can)
@@ -6137,7 +6155,6 @@ if	(isSet($_SESSION['loggedIn']) AND
 								eo.`amount`												AS ExtraAmount,
 								IFNULL(eo.`alternativePrice`, ex.`price`)				AS ExtraPrice,
 								ex.`description`										AS ExtraDescription,
-								eo.`purchased`											AS ExtraDateTimePurchased,
 								eo.`approvedForPurchase`								AS ExtraDateTimeApprovedForPurchase
 					FROM 		`extraorders` eo
 					INNER JOIN	`extra` ex
@@ -6159,32 +6176,14 @@ if	(isSet($_SESSION['loggedIn']) AND
 				$extraPrice = $extra['ExtraPrice'];
 				$finalPrice = $extraAmount * $extraPrice;
 				$totalPrice += $finalPrice;
-				//$extraPrice = convertToCurrency($extra['ExtraPrice']);
 				$extraDescription = $extra['ExtraDescription'];
 				$extraID = $extra['ExtraID'];
 
-				if($extra['ExtraDateTimePurchased'] != NULL){
-					$extrasApproved++;
-					$booleanPurchased = 1;
-					$dateTimePurchased = $extra['ExtraDateTimePurchased'];
-					$displayDateTimePurchased = convertDatetimeToFormat($dateTimePurchased , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
-					if($extra['ExtraPurchasedByUser'] != NULL){
-						$displayPurchasedByUser = $extra['ExtraPurchasedByUser'];
-					} else {
-						$displayPurchasedByUser = "N/A - Deleted User";
-					}
-				} else {
-					$displayDateTimePurchased = "";
-					$displayPurchasedByUser = "";
-					$booleanPurchased = 0;
-				}
-
 				if($extra['ExtraDateTimeApprovedForPurchase'] != NULL){
 					$booleanApprovedForPurchase = 1;
-					$dateTimeApprovedForPurchase = $extra['ExtraDateTimeApprovedForPurchase'];
+					$extrasApproved++;
 				} else {
 					$booleanApprovedForPurchase = 0;
-					$displayDateTimeApprovedForPurchase = "";
 				}
 
 				$extraOrderedOnlyNames[] = $extraName;
@@ -6195,11 +6194,7 @@ if	(isSet($_SESSION['loggedIn']) AND
 											'ExtraAmount' => $extraAmount,
 											'ExtraPrice' => $extraPrice,
 											'ExtraDescription' => $extraDescription,
-											'ExtraDateTimePurchased' => $displayDateTimePurchased,
-											'ExtraPurchasedByUser' => $displayPurchasedByUser,
-											'ExtraDateTimeApprovedForPurchase' => $displayDateTimeApprovedForPurchase,
-											'ExtraBooleanApprovedForPurchase' => $booleanApprovedForPurchase,
-											'ExtraBooleanPurchased' => $booleanPurchased
+											'ExtraBooleanApprovedForPurchase' => $booleanApprovedForPurchase
 										);
 			}
 
@@ -6627,7 +6622,7 @@ if(isSet($_POST['order']) AND $_POST['order'] == 'Submit Changes'){
 }
 
 // If user wants to get original values while editing
-if(isSet($_POST['action']) AND $_POST['action'] == 'Reset'){
+if(isSet($_POST['order']) AND $_POST['order'] == 'Reset'){
 
 	clearEditBookingOrderSessions();
 
@@ -6637,7 +6632,7 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Reset'){
 }
 
 // If the user wants to leave the page and go back to the booking overview again
-if(isSet($_POST['action']) AND $_POST['action'] == 'Go Back'){
+if(isSet($_POST['order']) AND $_POST['order'] == 'Go Back'){
 	$_SESSION['normalBookingFeedback'] = "You left the order without making any changes.";
 	$refreshBookings = TRUE;
 }
@@ -6753,7 +6748,6 @@ if	(isSet($_SESSION['loggedIn']) AND
 								eo.`amount`												AS ExtraAmount,
 								IFNULL(eo.`alternativePrice`, ex.`price`)				AS ExtraPrice,
 								ex.`description`										AS ExtraDescription,
-								eo.`purchased`											AS ExtraDateTimePurchased,
 								eo.`approvedForPurchase`								AS ExtraDateTimeApprovedForPurchase
 					FROM 		`extraorders` eo
 					INNER JOIN	`extra` ex
@@ -6775,32 +6769,14 @@ if	(isSet($_SESSION['loggedIn']) AND
 				$extraPrice = $extra['ExtraPrice'];
 				$finalPrice = $extraAmount * $extraPrice;
 				$totalPrice += $finalPrice;
-				//$extraPrice = convertToCurrency($extra['ExtraPrice']);
 				$extraDescription = $extra['ExtraDescription'];
 				$extraID = $extra['ExtraID'];
 
-				if($extra['ExtraDateTimePurchased'] != NULL){
-					$extrasApproved++;
-					$booleanPurchased = 1;
-					$dateTimePurchased = $extra['ExtraDateTimePurchased'];
-					$displayDateTimePurchased = convertDatetimeToFormat($dateTimePurchased , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
-					if($extra['ExtraPurchasedByUser'] != NULL){
-						$displayPurchasedByUser = $extra['ExtraPurchasedByUser'];
-					} else {
-						$displayPurchasedByUser = "N/A - Deleted User";
-					}
-				} else {
-					$displayDateTimePurchased = "";
-					$displayPurchasedByUser = "";
-					$booleanPurchased = 0;
-				}
-
 				if($extra['ExtraDateTimeApprovedForPurchase'] != NULL){
+					$extrasApproved++;
 					$booleanApprovedForPurchase = 1;
-					$dateTimeApprovedForPurchase = $extra['ExtraDateTimeApprovedForPurchase'];
 				} else {
 					$booleanApprovedForPurchase = 0;
-					$displayDateTimeApprovedForPurchase = "";
 				}
 
 				$extraOrdered[] = array(
@@ -6809,7 +6785,6 @@ if	(isSet($_SESSION['loggedIn']) AND
 											'ExtraAmount' => $extraAmount,
 											'ExtraPrice' => $extraPrice,
 											'ExtraDescription' => $extraDescription,
-											'ExtraDateTimeApprovedForPurchase' => $displayDateTimeApprovedForPurchase,
 											'ExtraBooleanApprovedForPurchase' => $booleanApprovedForPurchase
 										);
 			}
