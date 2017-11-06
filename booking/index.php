@@ -119,7 +119,7 @@ function updateBookingCodeGuesses(){
 	if(isSet($_SESSION['bookingCodeGuesses'])){
 		$dateTimeNow = getDatetimeNow();
 		$newArray = array();
-		for($i=0; $i < sizeOf($_SESSION['bookingCodeGuesses']); $i++){
+		for($i = 0; $i < sizeOf($_SESSION['bookingCodeGuesses']); $i++){
 			$startDateTime = $_SESSION['bookingCodeGuesses'][$i];
 
 			$timeDifference = convertTwoDateTimesToTimeDifferenceInMinutes($startDateTime, $dateTimeNow);
@@ -167,7 +167,7 @@ function updateAdminBookingCodeGuesses(){
 	if(isSet($_SESSION['adminBookingCodeGuesses'])){
 		$dateTimeNow = getDatetimeNow();
 		$newArray = array();
-		for($i=0; $i < sizeOf($_SESSION['adminBookingCodeGuesses']); $i++){
+		for($i = 0; $i < sizeOf($_SESSION['adminBookingCodeGuesses']); $i++){
 			$startDateTime = $_SESSION['adminBookingCodeGuesses'][$i];
 
 			$timeDifference = convertTwoDateTimesToTimeDifferenceInMinutes($startDateTime, $dateTimeNow);
@@ -6646,7 +6646,6 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Go Back'){
 
 	// DETAILS ONLY ORDER CODE SNIPPET // START //
 
-/*
 // If user wants to edit their order (while they still can)
 if	(isSet($_SESSION['loggedIn']) AND 
 	((isSet($_POST['order']) AND $_POST['order'] == "Details") OR 
@@ -6804,27 +6803,19 @@ if	(isSet($_SESSION['loggedIn']) AND
 					$displayDateTimeApprovedForPurchase = "";
 				}
 
-				$extraOrderedOnlyNames[] = $extraName;
-
 				$extraOrdered[] = array(
 											'ExtraID' => $extraID,
 											'ExtraName' => $extraName,
 											'ExtraAmount' => $extraAmount,
 											'ExtraPrice' => $extraPrice,
 											'ExtraDescription' => $extraDescription,
-											'ExtraDateTimePurchased' => $displayDateTimePurchased,
-											'ExtraPurchasedByUser' => $displayPurchasedByUser,
 											'ExtraDateTimeApprovedForPurchase' => $displayDateTimeApprovedForPurchase,
-											'ExtraBooleanApprovedForPurchase' => $booleanApprovedForPurchase,
-											'ExtraBooleanPurchased' => $booleanPurchased
+											'ExtraBooleanApprovedForPurchase' => $booleanApprovedForPurchase
 										);
 			}
 
 			if(!isSet($extraOrdered)){
 				$extraOrdered = array();
-			}
-			if(!isSet($extraOrderedOnlyNames)){
-				$extraOrderedOnlyNames = array();
 			}
 
 			$_SESSION['DetailsBookingOrderTotalPrice'] = $totalPrice;
@@ -6929,21 +6920,8 @@ if	(isSet($_SESSION['loggedIn']) AND
 	$originalOrderUpdatedByUser = $_SESSION['DetailsBookingOrderOriginalInfo']['DateTimeUpdatedByUser'];
 	$originalOrderUpdatedByStaff = $_SESSION['DetailsBookingOrderOriginalInfo']['DateTimeUpdatedByStaff'];
 	$originalMeetingStartDate = $_SESSION['DetailsBookingOrderOriginalInfo']['DateTimeStart'];
-	$daysLeftToEditOrCancel = $_SESSION['DetailsBookingOrderOriginalInfo']['DaysLeftToEditOrCancel'];
 	$originalTotalPrice = $_SESSION['DetailsBookingOrderTotalPrice'];
 	$extraOrdered = $_SESSION['DetailsBookingOrderOriginalInfo']['ExtraOrdered'];
-
-	// Adjust days left message to user
-	if($daysLeftToEditOrCancel > 1){
-		$displayDaysLeftMessage = "$daysLeftToEditOrCancel Days Left";
-	} elseif($daysLeftToEditOrCancel == 1){
-		$displayDaysLeftMessage = "1 Day Left";
-	} elseif($daysLeftToEditOrCancel == 0){
-		$startTime = convertDatetimeToFormat($originalMeetingStartDate , DATETIME_DEFAULT_FORMAT_TO_DISPLAY, TIME_DEFAULT_FORMAT_TO_DISPLAY);
-		$displayDaysLeftMessage = "Last Day (Ends at $startTime)";
-	} elseif($daysLeftToEditOrCancel < 0){
-		$displayDaysLeftMessage = "No Longer Eligible";
-	}
 
 	// Calculate order status
 	$extraOrderedNumber = $_SESSION['DetailsBookingOrderOriginalInfo']['OrderExtrasOrdered'];
@@ -6969,14 +6947,12 @@ if	(isSet($_SESSION['loggedIn']) AND
 		$needUserApproval = TRUE;
 	}
 
-	$availableExtrasNumber = sizeOf($availableExtra);
-
 	if(!isSet($orderCommunicationToStaff)){
 		$orderCommunicationToStaff = "";
 	}
 
 	var_dump($_SESSION); // TO-DO: Remove before uploading
-	include_once 'editorder.html.php';
+	include_once 'details.html.php';
 	exit();
 }
 
@@ -7048,8 +7024,6 @@ if(isSet($_POST['details']) AND $_POST['details'] == 'Submit Message'){
 	header('Location: .');
 	exit();
 }
-
-*/
 
 	// FINISH DETAILS ONLY ORDER CODE SNIPPET // END //
 
@@ -7464,6 +7438,9 @@ updateBookingCodeGuesses();
 clearAddCreateBookingSessions();
 clearEditCreateBookingSessions();
 clearChangeBookingSessions();
+clearAddOrderToBookingSessions();
+clearEditBookingOrderSessions();
+clearDetailsBookingOrderSessions();
 unset($_SESSION["cancelOrderOriginalValues"]);
 unset($_SESSION["confirmOrigins"]);
 unset($_SESSION["EditCreateBookingError"]);
