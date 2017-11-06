@@ -2765,12 +2765,10 @@ if(isSet($_POST['merge']) AND $_POST['merge'] == 'Cancel'){
 }
 
 if(isSet($refreshcompanies) AND $refreshcompanies) {
-	// TO-DO: Add code that should occur on a refresh
 	unset($refreshcompanies);
 }
 
-// Remove any unused variables from memory 
-// TO-DO: Change if this ruins having multiple tabs open etc.
+// Remove any unused variables from memory
 clearAddCompanySessions();
 clearEditCompanySessions();
 clearBookingHistorySessions();
