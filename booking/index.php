@@ -7027,6 +7027,24 @@ if(isSet($_POST['details']) AND $_POST['details'] == 'Submit Message'){
 
 	// FINISH DETAILS ONLY ORDER CODE SNIPPET // END //
 
+	// ADDITIONAL DETAILS ONLY CODE SNIPPETS // START //
+
+// If user wants to get original values while editing
+if(isSet($_POST['details']) AND $_POST['details'] == 'Reset'){
+
+	$_SESSION['refreshDetailsBookingOrder'] = TRUE;
+	header('Location: .');
+	exit();
+}
+
+// If the user wants to leave the page and go back to the booking overview again
+if(isSet($_POST['details']) AND $_POST['details'] == 'Go Back'){
+	$_SESSION['normalBookingFeedback'] = "You left the order without leaving any message.";
+	$refreshBookings = TRUE;
+}
+
+	// ADDITIONAL DETAILS ONLY CODE SNIPPETS // END //
+
 	// CANCEL ORDER CODE SNIPPET // START //
 
 // If user wants to cancel am scheduled order (only accesed by being online)
