@@ -1130,8 +1130,13 @@
 								<td style="white-space: pre-wrap;"><?php htmlout($row['ExtraDescription']); ?></td>
 								<td><?php htmlout($row['ExtraPrice']); ?></td>
 								<td>
-									<input style="width: 45px;" type="number" id="extraAmount-<?php htmlout($row['ExtraID']); ?>" name="extraAmount-<?php htmlout($row['ExtraID']); ?>" min="0" onchange="changeAmount(this)" value="<?php htmlout($row['ExtraAmount']); ?>">
-									<input type="hidden" id="extraAmountSelected-<?php htmlout($row['ExtraID']); ?>" name="extraAmountSelected-<?php htmlout($row['ExtraID']); ?>" value="<?php htmlout($row['ExtraAmount']); ?>">
+									<?php if($disableEdit == 0) : ?>
+										<input style="width: 45px;" type="number" id="extraAmount-<?php htmlout($row['ExtraID']); ?>" name="extraAmount-<?php htmlout($row['ExtraID']); ?>" min="0" onchange="changeAmount(this)" value="<?php htmlout($row['ExtraAmount']); ?>">
+										<input type="hidden" id="extraAmountSelected-<?php htmlout($row['ExtraID']); ?>" name="extraAmountSelected-<?php htmlout($row['ExtraID']); ?>" value="<?php htmlout($row['ExtraAmount']); ?>">
+									<?php else : ?>
+										<span><b><?php htmlout($row['ExtraAmount']); ?></b></span>
+										<input type="hidden" id="extraAmountSelected-<?php htmlout($row['ExtraID']); ?>" name="extraAmountSelected-<?php htmlout($row['ExtraID']); ?>" value="<?php htmlout($row['ExtraAmount']); ?>">										
+									<?php endif; ?>
 								</td>
 								<td>
 									<?php if($disableEdit == 0) : ?>

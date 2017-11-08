@@ -10,7 +10,123 @@ SELECT @@version;
 SHOW indexes from `booking`;
 /*PDO::FETCH_ASSOC*/
 
-SELECT 		(
+SELECT 		c.`CompanyID`				AS TheCompanyID,
+			c.`dateTimeCreated`			AS dateTimeCreated,
+			c.`startDate`				AS StartDate,
+			c.`endDate`					AS EndDate,
+			cr.`minuteAmount`			AS CreditsGivenInMinutes,
+			cr.`monthlyPrice`			AS MonthlyPrice,
+			cr.`overCreditHourPrice`	AS HourPrice,
+			cc.`altMinuteAmount`		AS AlternativeAmount,
+			(
+				SELECT (BIG_SEC_TO_TIME(SUM(
+										IF(
+											(
+												(
+													DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
+													)*86400 
+												+ 
+												(
+													TIME_TO_SEC(b.`actualEndDateTime`) 
+													- 
+													TIME_TO_SEC(b.`startDateTime`)
+													) 
+											) > 300,
+											IF(
+												(
+												(
+													DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
+													)*86400 
+												+ 
+												(
+													TIME_TO_SEC(b.`actualEndDateTime`) 
+													- 
+													TIME_TO_SEC(b.`startDateTime`)
+													) 
+											) > 900, 
+												(
+												(
+													DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
+													)*86400 
+												+ 
+												(
+													TIME_TO_SEC(b.`actualEndDateTime`) 
+													- 
+													TIME_TO_SEC(b.`startDateTime`)
+													) 
+											), 
+												900
+											),
+											0
+										)
+				)))	AS BookingTimeUsed
+				FROM 		`booking` b  
+				INNER JOIN 	`company` c 
+				ON 			b.`CompanyID` = c.`CompanyID` 
+				WHERE 		b.`CompanyID` = TheCompanyID
+				AND 		DATE(b.`actualEndDateTime`) >= c.`startDate`
+				AND 		DATE(b.`actualEndDateTime`) < c.`endDate`
+				AND			b.`mergeNumber` = 0
+			)							AS BookingTimeThisPeriodFromCompany,
+			(
+				SELECT (BIG_SEC_TO_TIME(SUM(
+										IF(
+											(
+												(
+													DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
+													)*86400 
+												+ 
+												(
+													TIME_TO_SEC(b.`actualEndDateTime`) 
+													- 
+													TIME_TO_SEC(b.`startDateTime`)
+													) 
+											) > 300,
+											IF(
+												(
+												(
+													DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
+													)*86400 
+												+ 
+												(
+													TIME_TO_SEC(b.`actualEndDateTime`) 
+													- 
+													TIME_TO_SEC(b.`startDateTime`)
+													) 
+											) > 900, 
+												(
+												(
+													DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
+													)*86400 
+												+ 
+												(
+													TIME_TO_SEC(b.`actualEndDateTime`) 
+													- 
+													TIME_TO_SEC(b.`startDateTime`)
+													) 
+											), 
+												900
+											),
+											0
+										)
+				)))	AS BookingTimeUsed
+				FROM 		`booking` b  
+				INNER JOIN 	`company` c 
+				ON 			b.`CompanyID` = c.`CompanyID` 
+				WHERE 		b.`CompanyID` = TheCompanyID
+				AND 		DATE(b.`actualEndDateTime`) >= c.`startDate`
+				AND 		DATE(b.`actualEndDateTime`) < c.`endDate`
+				AND			b.`mergeNumber` <> 0
+			)							AS BookingTimeThisPeriodFromTransfers
+FROM 		`company` c
+INNER JOIN 	`companycredits` cc
+ON 			cc.`CompanyID` = c.`CompanyID`
+INNER JOIN 	`credits` cr
+ON			cr.`CreditsID` = cc.`CreditsID`
+WHERE		CURDATE() >= c.`endDate`;
+
+SELECT 		b.`bookingID`,
+			(
 				BIG_SEC_TO_TIME(
 					(
 						DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
@@ -74,16 +190,26 @@ SELECT 		(
 			u.`firstName`			AS UserFirstname,
 			u.`lastName`			AS UserLastname,
 			u.`email`				AS UserEmail,
-			(
-				IF(b.`meetingRoomID` IS NULL, NULL, (SELECT `name` FROM `meetingroom` WHERE `meetingRoomID` = b.`meetingRoomID`))
-			) 						AS MeetingRoomName
+            m.`name`				AS MeetingRoomName,
+            o.`dateTimeCancelled`	AS OrderDateTimeCancelled,
+            SUM(eo.`amount`*ex.`price`)	AS TotalOrderPrice
 FROM 		`booking` b
 LEFT JOIN 	`user` u
 ON 			u.`userID` = b.`userID`
+LEFT JOIN 	`meetingroom` m
+ON 			m.`meetingRoomID` = b.`meetingRoomID`
+LEFT JOIN 	(
+							`orders` o
+				INNER JOIN 	`extraorders` eo
+                ON 			eo.`orderID` = o.`orderID`
+                INNER JOIN 	`extra` ex
+                ON			ex.`extraID` = eo.`extraID`)
+ON 			o.`orderID` = b.`orderID`
 WHERE   	b.`CompanyID` = 68
 AND 		b.`actualEndDateTime` IS NOT NULL
 AND         DATE(b.`actualEndDateTime`) >= '2017-03-15'
-AND         DATE(b.`actualEndDateTime`) < '2017-11-15';
+AND         DATE(b.`actualEndDateTime`) < '2017-11-15'
+GROUP BY	b.`bookingID`;
 
 SELECT 		(
 				BIG_SEC_TO_TIME(
@@ -828,7 +954,47 @@ SELECT 		c.`CompanyID`				AS TheCompanyID,
 				AND 		DATE(b.`actualEndDateTime`) >= c.`prevStartDate`
 				AND 		DATE(b.`actualEndDateTime`) < c.`startDate`
 				AND			b.`mergeNumber` <> 0
-			)							AS BookingTimeThisPeriodFromTransfers
+			)							AS BookingTimeThisPeriodFromTransfers,
+            (
+				SELECT		SUM(eo.`amount` * ex.`price`) AS TotalOrderCost
+                FROM		`booking` b
+				INNER JOIN 	`orders` o
+                ON 			o.`orderID` = b.`orderID`
+                INNER JOIN	`extraorders` eo
+				ON 			eo.`orderID` = o.`orderID`
+				INNER JOIN 	`extra` ex
+				ON 			ex.`extraID` = eo.`extraID`
+				WHERE 		b.`CompanyID` = TheCompanyID
+                AND			(
+								b.`dateTimeCancelled` IS NULL OR 
+								b.`dateTimeCancelled` = b.`actualEndDateTime`
+							)
+                AND			b.`actualEndDateTime` IS NOT NULL
+				AND			o.`dateTimeCancelled` IS NULL
+				AND 		DATE(b.`actualEndDateTime`) >= c.`prevStartDate`
+				AND 		DATE(b.`actualEndDateTime`) < c.`startDate`
+				AND			b.`mergeNumber` = 0
+            )							AS TotalOrderCostThisPeriodFromCompany,
+			(
+				SELECT		SUM(eo.`amount` * ex.`price`) AS TotalOrderCost
+                FROM		`booking` b
+				INNER JOIN 	`orders` o
+                ON 			o.`orderID` = b.`orderID`
+                INNER JOIN	`extraorders` eo
+				ON 			eo.`orderID` = o.`orderID`
+				INNER JOIN 	`extra` ex
+				ON 			ex.`extraID` = eo.`extraID`
+				WHERE 		b.`CompanyID` = TheCompanyID
+                AND			(
+								b.`dateTimeCancelled` IS NULL OR 
+								b.`dateTimeCancelled` = b.`actualEndDateTime`
+							)
+                AND			b.`actualEndDateTime` IS NOT NULL
+				AND			o.`dateTimeCancelled` IS NULL
+				AND 		DATE(b.`actualEndDateTime`) >= c.`prevStartDate`
+				AND 		DATE(b.`actualEndDateTime`) < c.`startDate`
+				AND			b.`mergeNumber` <> 0
+            )							AS TotalOrderCostThisPeriodFromTransfers           
 FROM 		`company` c
 INNER JOIN 	`companycredits` cc
 ON 			cc.`CompanyID` = c.`CompanyID`

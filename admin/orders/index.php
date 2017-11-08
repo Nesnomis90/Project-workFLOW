@@ -1891,34 +1891,46 @@ foreach($result AS $row){
 		$displayLastMessageFromStaff = "";
 	}
 
+	// Calculate order status
+	$dateTimeBookingCompleted = $row['OrderBookingCompleted'];
+	$dateTimeBookingCancelled = $row['OrderBookingCancelled'];
+	$dateTimeOrderCancelled = $row['DateTimeCancelled'];
+
 	if($orderIsApproved){
-		if($row['OrderBookingCompleted'] != NULL){
+		if(($dateTimeBookingCompleted != NULL AND $dateTimeBookingCancelled == NULL AND $dateTimeOrderCancelled == NULL) OR 
+			($dateTimeBookingCompleted != NULL AND $dateTimeBookingCancelled != NULL AND $dateTimeBookingCompleted == $dateTimeBookingCancelled AND $dateTimeOrderCancelled == NULL)
+		){
 			$orderStatus = "Completed";
 			$status = "Completed";
 
 			$dateTimeCompleted = $row['OrderBookingCompleted'];
 			$displayDateTimeCompleted = convertDatetimeToFormat($dateTimeCompleted , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
-		} elseif($row['DateTimeCancelled'] != NULL OR $row['OrderBookingCancelled'] != NULL){
+		} elseif($dateTimeOrderCancelled != NULL OR ($dateTimeBookingCompleted == NULL AND $dateTimeBookingCancelled != NULL) OR 
+				(($dateTimeBookingCompleted != NULL AND $dateTimeBookingCancelled != NULL AND $dateTimeBookingCancelled < $dateTimeBookingCompleted))
+		){
 			$orderStatus = "Cancelled";
 			$status = "Cancelled";
 		} else {
 			$status = "Active";
 		}
 	} else {
-		if($row['OrderBookingCompleted'] != NULL){
+		if(($dateTimeBookingCompleted != NULL AND $dateTimeBookingCancelled == NULL AND $dateTimeOrderCancelled == NULL) OR 
+			($dateTimeBookingCompleted != NULL AND $dateTimeBookingCancelled != NULL AND $dateTimeBookingCompleted == $dateTimeBookingCancelled AND $dateTimeOrderCancelled == NULL)
+		){
 			$orderStatus = "Ended without being approved";
 			$status = "Ended without being approved";
 
-			$dateTimeCompleted = $row['OrderBookingCompleted'];
-			$displayDateTimeCompleted = convertDatetimeToFormat($dateTimeCompleted , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
-		} elseif($row['DateTimeCancelled'] != NULL OR $row['OrderBookingCancelled'] != NULL){
+			$displayDateTimeCompleted = convertDatetimeToFormat($dateTimeBookingCompleted , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
+		} elseif($dateTimeOrderCancelled != NULL OR ($dateTimeBookingCompleted == NULL AND $dateTimeBookingCancelled != NULL) OR 
+				(($dateTimeBookingCompleted != NULL AND $dateTimeBookingCancelled != NULL AND $dateTimeBookingCancelled < $dateTimeBookingCompleted))
+		){
 			$orderStatus = "Cancelled";
 			$status = "Cancelled";
 		} else {
 			$status = "Active";
 		}
 	}
-	
+
 	if(!empty($row['OrderContent'])){
 		$orderContent = $row['OrderContent'];
 	} else {

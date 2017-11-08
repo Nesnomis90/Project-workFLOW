@@ -659,7 +659,7 @@ function calculatePeriodInformation($pdo, $companyID, $BillingStart, $BillingEnd
 									TIME_TO_SEC(b.`startDateTime`)
 								)
 							)
-						)						AS BookingTimeUsed,
+						)							AS BookingTimeUsed,
 						(
 							BIG_SEC_TO_TIME(
 								IF(
@@ -702,26 +702,34 @@ function calculatePeriodInformation($pdo, $companyID, $BillingStart, $BillingEnd
 									0
 								)
 							)
-						)						AS BookingTimeCharged,
-						b.`startDateTime`		AS BookingStartedDatetime,
-						b.`actualEndDateTime`	AS BookingCompletedDatetime,
-						b.`adminNote`			AS AdminNote,
-						b.`cancelMessage`		AS CancelMessage,
-						b.`mergeNumber`			AS MergeNumber,
-						(
-							IF(b.`userID` IS NULL, NULL, (SELECT `firstName` FROM `user` WHERE `userID` = b.`userID`))
-						)						AS UserFirstname,
-						(
-							IF(b.`userID` IS NULL, NULL, (SELECT `lastName` FROM `user` WHERE `userID` = b.`userID`))
-						)						AS UserLastname,
-						(
-							IF(b.`userID` IS NULL, NULL, (SELECT `email` FROM `user` WHERE `userID` = b.`userID`))
-						)						AS UserEmail,
-						(
-							IF(b.`meetingRoomID` IS NULL, NULL, (SELECT `name` FROM `meetingroom` WHERE `meetingRoomID` = b.`meetingRoomID`))
-						) 						AS MeetingRoomName
+						)							AS BookingTimeCharged,
+						b.`startDateTime`			AS BookingStartedDatetime,
+						b.`actualEndDateTime`		AS BookingCompletedDatetime,
+						b.`adminNote`				AS AdminNote,
+						b.`cancelMessage`			AS CancelMessage,
+						b.`mergeNumber`				AS MergeNumber,
+						u.`firstName`				AS UserFirstname,
+						u.`lastName`				AS UserLastname,
+						u.`email`					AS UserEmail,
+						m.`name`					AS MeetingRoomName,
+						b.`orderID`					AS OrderID,
+						o.`dateTimeCancelled`		AS OrderDateTimeCancelled,
+						o.`adminNote`				AS OrderAdminNote,
+						SUM(eo.`amount`*ex.`price`)	AS TotalOrderCost
 			FROM 		`booking` b
-			WHERE   	b.`CompanyID` = :CompanyID
+			LEFT JOIN 	`user` u
+			ON 			u.`userID` = b.`userID`
+			LEFT JOIN 	`meetingroom` m
+			ON 			m.`meetingRoomID` = b.`meetingRoomID`
+			LEFT JOIN 	(
+										`orders` o
+							INNER JOIN 	`extraorders` eo
+							ON 			eo.`orderID` = o.`orderID`
+							INNER JOIN 	`extra` ex
+							ON			ex.`extraID` = eo.`extraID`
+						)
+			ON 			o.`orderID` = b.`orderID`
+			WHERE		b.`CompanyID` = :CompanyID
 			AND 		b.`actualEndDateTime` IS NOT NULL
 			AND         DATE(b.`actualEndDateTime`) >= :startDate
 			AND         DATE(b.`actualEndDateTime`) < :endDate";
@@ -732,7 +740,9 @@ function calculatePeriodInformation($pdo, $companyID, $BillingStart, $BillingEnd
 	} else {
 		$includeMerged = TRUE;
 	}
-	// TO-DO: FIX-ME: Add order cost and order admin note to array!
+
+	$sql .= " GROUP BY	b.`bookingID`";
+
 	$minimumSecondsPerBooking = MINIMUM_BOOKING_DURATION_IN_MINUTES_USED_IN_PRICE_CALCULATIONS * 60; // e.g. 15min = 900s
 	$aboveThisManySecondsToCount = BOOKING_DURATION_IN_MINUTES_USED_BEFORE_INCLUDING_IN_PRICE_CALCULATIONS * 60; // e.g. 1min = 60s
 	$s = $pdo->prepare($sql);
@@ -780,25 +790,34 @@ function calculatePeriodInformation($pdo, $companyID, $BillingStart, $BillingEnd
 			$totalBookingTimeUsedInPriceCalculations += $bookingTimeUsedInPriceCalculations;
 		}
 
-		if($row['UserLastname'] == NULL){
+		if(empty($row['UserLastname'])){
 			$userInformation = "<deleted user>";
 		} else {
 			$userInformation = $row['UserLastname'] . ", " . $row['UserFirstname'] . " - " . $row['UserEmail'];
 		}
-		if($row['MeetingRoomName'] == NULL){
+		if(empty($row['MeetingRoomName'])){
 			$meetingRoomName = "<deleted room>";
 		} else {
 			$meetingRoomName = $row['MeetingRoomName'];
 		}
-		if($row['AdminNote'] == NULL){
+		if(empty($row['AdminNote'])){
 			$adminNote = "";
 		} else {
 			$adminNote = $row['AdminNote'];
 		}
-		if($row['CancelMessage'] == NULL){
+		if(empty($row['CancelMessage'])){
 			$cancelMessage = "";
 		} else {
 			$cancelMessage = $row['CancelMessage'];
+		}
+
+		// Check if booking has an order and if it was cancelled or not
+		if(!empty($row['OrderID']) AND empty($row['OrderDateTimeCancelled'])){
+			$totalOrderCost = convertToCurrency($row['TotalOrderCost']);
+			$orderAdminNote = $row['OrderAdminNote'];
+		} else {
+			$totalOrderCost = "";
+			$orderAdminNote = "";
 		}
 
 		$bookingHistory[] = array(
@@ -808,9 +827,12 @@ function calculatePeriodInformation($pdo, $companyID, $BillingStart, $BillingEnd
 									'BookingTimeUsed' => $displayBookingTimeUsed,
 									'BookingTimeCharged' => $displayBookingTimeUsedInPriceCalculations,
 									'AdminNote' => $adminNote,
-									'CancelMessage' => $cancelMessage
+									'CancelMessage' => $cancelMessage,
+									'TotalOrderCost' => $totalOrderCost,
+									'OrderAdminNote' => $orderAdminNote
 									);
 	}
+	// TO-DO: make company period need to be billed if any orders are completed with a cost over 0 (in cron?)
 		// Calculate monthly cost (subscription + over credit charges)
 	if($totalBookingTimeUsedInPriceCalculations > 0){
 		if($totalBookingTimeUsedInPriceCalculations > $companyMinuteCredits){
