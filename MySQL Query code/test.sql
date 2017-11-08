@@ -10,7 +10,8 @@ SELECT @@version;
 SHOW indexes from `booking`;
 /*PDO::FETCH_ASSOC*/
 
-SELECT 		(
+SELECT 		b.`bookingID`,
+			(
 				BIG_SEC_TO_TIME(
 					(
 						DATEDIFF(b.`actualEndDateTime`, b.`startDateTime`)
@@ -74,16 +75,26 @@ SELECT 		(
 			u.`firstName`			AS UserFirstname,
 			u.`lastName`			AS UserLastname,
 			u.`email`				AS UserEmail,
-			(
-				IF(b.`meetingRoomID` IS NULL, NULL, (SELECT `name` FROM `meetingroom` WHERE `meetingRoomID` = b.`meetingRoomID`))
-			) 						AS MeetingRoomName
+            m.`name`				AS MeetingRoomName,
+            o.`dateTimeCancelled`	AS OrderDateTimeCancelled,
+            SUM(eo.`amount`*ex.`price`)	AS TotalOrderPrice
 FROM 		`booking` b
 LEFT JOIN 	`user` u
 ON 			u.`userID` = b.`userID`
+LEFT JOIN 	`meetingroom` m
+ON 			m.`meetingRoomID` = b.`meetingRoomID`
+LEFT JOIN 	(
+							`orders` o
+				INNER JOIN 	`extraorders` eo
+                ON 			eo.`orderID` = o.`orderID`
+                INNER JOIN 	`extra` ex
+                ON			ex.`extraID` = eo.`extraID`)
+ON 			o.`orderID` = b.`orderID`
 WHERE   	b.`CompanyID` = 68
 AND 		b.`actualEndDateTime` IS NOT NULL
 AND         DATE(b.`actualEndDateTime`) >= '2017-03-15'
-AND         DATE(b.`actualEndDateTime`) < '2017-11-15';
+AND         DATE(b.`actualEndDateTime`) < '2017-11-15'
+GROUP BY	b.`bookingID`;
 
 SELECT 		(
 				BIG_SEC_TO_TIME(

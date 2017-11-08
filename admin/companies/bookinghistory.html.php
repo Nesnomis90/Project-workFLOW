@@ -180,8 +180,8 @@
 								<?php if(!empty($row['AdminNote'])) : ?>
 									<label class="period" style="color: red;">Admin Note (Booking):</label><span style="white-space: pre-wrap; color:red;"><b><?php htmlout($row['AdminNote']); ?></b></span>
 								<?php endif; ?>
-								<?php if(!empty($row['OrderCost'])) : ?>
-									<label class="period" style="color: red;">Order Cost:</label><span style="color: red;"><b><?php htmlout($row['OrderCost']); ?></b></span>
+								<?php if(!empty($row['TotalOrderCost'])) : ?>
+									<label class="period" style="color: red;">Order Cost:</label><span style="color: red;"><b><?php htmlout($row['TotalOrderCost']); ?></b></span>
 								<?php endif; ?>
 								<?php if(!empty($row['OrderAdminNote'])) : ?>
 									<label class="period" style="color: red;">Admin Note (Order):</label><span style="white-space: pre-wrap; color:red;"><b><?php htmlout($row['OrderAdminNote']); ?></b></span>
