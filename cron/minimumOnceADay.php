@@ -386,7 +386,47 @@ function updateBillingDatesForCompanies(){
 									AND 		DATE(b.`actualEndDateTime`) >= c.`startDate`
 									AND 		DATE(b.`actualEndDateTime`) < c.`endDate`
 									AND			b.`mergeNumber` <> 0
-								)							AS BookingTimeThisPeriodFromTransfers
+								)							AS BookingTimeThisPeriodFromTransfers,
+								(
+									SELECT		SUM(eo.`amount` * ex.`price`) AS TotalOrderCost
+									FROM		`booking` b
+									INNER JOIN 	`orders` o
+									ON 			o.`orderID` = b.`orderID`
+									INNER JOIN	`extraorders` eo
+									ON 			eo.`orderID` = o.`orderID`
+									INNER JOIN 	`extra` ex
+									ON 			ex.`extraID` = eo.`extraID`
+									WHERE 		b.`CompanyID` = TheCompanyID
+									AND			(
+													b.`dateTimeCancelled` IS NULL OR 
+													b.`dateTimeCancelled` = b.`actualEndDateTime`
+												)
+									AND			b.`actualEndDateTime` IS NOT NULL
+									AND			o.`dateTimeCancelled` IS NULL
+									AND 		DATE(b.`actualEndDateTime`) >= c.`prevStartDate`
+									AND 		DATE(b.`actualEndDateTime`) < c.`startDate`
+									AND			b.`mergeNumber` = 0
+								)							AS TotalOrderCostThisPeriodFromCompany,
+								(
+									SELECT		SUM(eo.`amount` * ex.`price`) AS TotalOrderCost
+									FROM		`booking` b
+									INNER JOIN 	`orders` o
+									ON 			o.`orderID` = b.`orderID`
+									INNER JOIN	`extraorders` eo
+									ON 			eo.`orderID` = o.`orderID`
+									INNER JOIN 	`extra` ex
+									ON 			ex.`extraID` = eo.`extraID`
+									WHERE 		b.`CompanyID` = TheCompanyID
+									AND			(
+													b.`dateTimeCancelled` IS NULL OR 
+													b.`dateTimeCancelled` = b.`actualEndDateTime`
+												)
+									AND			b.`actualEndDateTime` IS NOT NULL
+									AND			o.`dateTimeCancelled` IS NULL
+									AND 		DATE(b.`actualEndDateTime`) >= c.`prevStartDate`
+									AND 		DATE(b.`actualEndDateTime`) < c.`startDate`
+									AND			b.`mergeNumber` <> 0
+								)							AS TotalOrderCostThisPeriodFromTransfers
 					FROM 		`company` c
 					INNER JOIN 	`companycredits` cc
 					ON 			cc.`CompanyID` = c.`CompanyID`
@@ -401,6 +441,8 @@ function updateBillingDatesForCompanies(){
 			$dateTimeNow = getDatetimeNow();
 			$displayDateTimeNow = convertDatetimeToFormat($dateTimeNow , 'Y-m-d H:i:s', DATE_DEFAULT_FORMAT_TO_DISPLAY);
 
+			// TO-DO: TotalOrderCostThisPeriodFromCompany and TotalOrderCostThisPeriodFromTransfers are heavily untested!!
+			
 			$pdo->beginTransaction();
 			foreach($result AS $insert){
 				if($insert['AlternativeAmount'] == NULL){
@@ -507,7 +549,7 @@ function updateBillingDatesForCompanies(){
 			}
 
 			$success = $pdo->commit();
-			if($success){
+			if($success){ // TO-DO: Unsure if this works as intended.
 				// Check if any of the companies went over credits and send an email to Admin that they did
 				if(isSet($companiesOverCredit) AND sizeOf($companiesOverCredit) > 0){
 					// There were companies that went over credit
