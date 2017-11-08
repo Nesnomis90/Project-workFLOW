@@ -279,7 +279,6 @@ function updateBillingDatesForCompanies(){
 			$minimumSecondsPerBooking = MINIMUM_BOOKING_DURATION_IN_MINUTES_USED_IN_PRICE_CALCULATIONS * 60; // e.g. 15min = 900s
 			$aboveThisManySecondsToCount = BOOKING_DURATION_IN_MINUTES_USED_BEFORE_INCLUDING_IN_PRICE_CALCULATIONS * 60; // E.g. 5min = 300s
 			// There is information to update. Get needed values
-			// 			Change this?
 			$sql = "SELECT 		c.`CompanyID`				AS TheCompanyID,
 								c.`dateTimeCreated`			AS dateTimeCreated,
 								c.`startDate`				AS StartDate,
@@ -414,6 +413,8 @@ function updateBillingDatesForCompanies(){
 				$startDate = $insert['StartDate'];
 				$endDate = $insert['EndDate'];
 				$monthlyPrice = $insert['MonthlyPrice'];
+				$orderTotalCost = $insert['OrderTotalCost'];
+				$displayTotalOrderCost = convertToCurrency($orderTotalCost);
 				$hourPrice = $insert['HourPrice'];
 				$bookingTimeUsedThisPeriodFromCompany = $insert['BookingTimeThisPeriodFromCompany'];
 				$bookingTimeUsedThisPeriodFromCompanyInMinutes = convertTimeToMinutes($bookingTimeUsedThisPeriodFromCompany);
@@ -427,6 +428,7 @@ function updateBillingDatesForCompanies(){
 
 				$setAsBilled = FALSE;
 				$setAsOverCreditDueToTransfer = FALSE;
+				$orderNeedsToBeBilled = FALSE;
 
 				if($totalBookingTimeUsedThisPeriodInMinutes > $creditsGivenInMinutes){
 					// Company went over credit this period
@@ -439,9 +441,11 @@ function updateBillingDatesForCompanies(){
 						$setAsOverCreditDueToTransfer = TRUE;
 					}
 				} else {
-					if($monthlyPrice == 0 OR $monthlyPrice == NULL){
-						// Company had no fees to pay this month
+					if(empty($monthlyPrice) AND empty($orderTotalCost)){
+						// Company had no fees to pay this month nor any orders to be charged for
 						$setAsBilled = TRUE;
+					} elseif(!empty($orderTotalCost)){
+						$orderNeedsToBeBilled = TRUE;
 					}
 				}
 
@@ -453,21 +457,31 @@ function updateBillingDatesForCompanies(){
 									`monthlyPrice` = " . $monthlyPrice . ",
 									`overCreditHourPrice` = " . $hourPrice;
 				if($setAsBilled){
-					$billingDescriptionInformation = 	"This period was Set As Billed automatically at the end of the period due to there being no fees.\n" .
+					$billingDescriptionInformation = 	"This period was Set As Billed automatically at the end of the period due to there being no booking or order fees.\n" .
 														"At that time the company had produced a total booking time of: " . $displayTotalBookingTimeThisPeriod .
-														", with a credit given of: " . $displayCompanyCredits . " and a monthly fee of " . convertToCurrency(0) . ".";							
+														", with a credit given of: " . $displayCompanyCredits . " and a monthly fee of " . convertToCurrency(0) . ".";
 					$sql .= ", 	`hasBeenBilled` = 1,
 								`billingDescription` = '" . $billingDescriptionInformation . "'";
 				}
 
-				if($setAsOverCreditDueToTransfer){
+				if($setAsOverCreditDueToTransfer AND !$orderNeedsToBeBilled){
 					$billingDescriptionInformation = 	"This period is only marked as 'over credits' if you include bookings transferred from another company in this period.\n" .
 														"In this period the company had produced a total booking time of: " . $displayTotalBookingTimeThisPeriod .
 														", with a credit given of: " . $displayCompanyCredits . ".\n" .
 														"The booking time made by the company: " . $displayBookingTimeUsedThisPeriodFromCompany . 
 														"\nThe booking time from transfers: " . $displayBookingTimeUsedThisPeriodFromTransfers . 
 														"\nThe transferred bookings will have their own period listed with the exact details, and may have already been billed." .
-														"\nIt is therefore important to double check that the company isn't being unfairly billed twice, due to a merge.";							
+														"\nIt is therefore important to double check that the company isn't being unfairly billed twice, due to a merge.";
+					$sql .= ", 	`billingDescription` = '" . $billingDescriptionInformation . "'";
+				} elseif($setAsOverCreditDueToTransfer AND $orderNeedsToBeBilled){
+					$billingDescriptionInformation = 	"This period is marked as 'over credits' if you include bookings transferred from another company in this period.\n" .
+														"In this period the company had produced a total booking time of: " . $displayTotalBookingTimeThisPeriod .
+														", with a credit given of: " . $displayCompanyCredits . ".\n" .
+														"The booking time made by the company: " . $displayBookingTimeUsedThisPeriodFromCompany . 
+														"\nThe booking time from transfers: " . $displayBookingTimeUsedThisPeriodFromTransfers . 
+														"\nThe transferred bookings will have their own period listed with the exact details, and may have already been billed." .
+														"\nIt is therefore important to double check that the company isn't being unfairly billed twice, due to a merge." .
+														"\n\nIncluding this the company has had orders for a total cost of $displayTotalOrderCost (unless noted otherwise in Admin Notes) that needs to be paid.";
 					$sql .= ", 	`billingDescription` = '" . $billingDescriptionInformation . "'";
 				}
 
