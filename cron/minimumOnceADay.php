@@ -441,8 +441,6 @@ function updateBillingDatesForCompanies(){
 			$dateTimeNow = getDatetimeNow();
 			$displayDateTimeNow = convertDatetimeToFormat($dateTimeNow , 'Y-m-d H:i:s', DATE_DEFAULT_FORMAT_TO_DISPLAY);
 
-			// TO-DO: TotalOrderCostThisPeriodFromCompany and TotalOrderCostThisPeriodFromTransfers are heavily untested!!
-			
 			$pdo->beginTransaction();
 			foreach($result AS $insert){
 				if($insert['AlternativeAmount'] == NULL){
@@ -455,8 +453,12 @@ function updateBillingDatesForCompanies(){
 				$startDate = $insert['StartDate'];
 				$endDate = $insert['EndDate'];
 				$monthlyPrice = $insert['MonthlyPrice'];
-				$orderTotalCost = $insert['OrderTotalCost'];
-				$displayTotalOrderCost = convertToCurrency($orderTotalCost);
+				$orderTotalCostThisPeriodFromCompany = $insert['TotalOrderCostThisPeriodFromCompany'];
+				$orderTotalCostThisPeriodFromTransfers = $insert['TotalOrderCostThisPeriodFromTransfers'];
+				$orderTotalCost = $orderTotalCostThisPeriodFromCompany + $orderTotalCostThisPeriodFromTransfers;
+				$displayTotalCost = convertToCurrency($orderTotalCost);
+				$displayTotalCostThisPeriodFromCompany = convertToCurrency($orderTotalCostThisPeriodFromCompany);
+				$displayTotalCostThisPeriodFromTransfers = convertToCurrency($orderTotalCostThisPeriodFromTransfers);
 				$hourPrice = $insert['HourPrice'];
 				$bookingTimeUsedThisPeriodFromCompany = $insert['BookingTimeThisPeriodFromCompany'];
 				$bookingTimeUsedThisPeriodFromCompanyInMinutes = convertTimeToMinutes($bookingTimeUsedThisPeriodFromCompany);
@@ -523,7 +525,8 @@ function updateBillingDatesForCompanies(){
 														"\nThe booking time from transfers: " . $displayBookingTimeUsedThisPeriodFromTransfers . 
 														"\nThe transferred bookings will have their own period listed with the exact details, and may have already been billed." .
 														"\nIt is therefore important to double check that the company isn't being unfairly billed twice, due to a merge." .
-														"\n\nIncluding this the company has had orders for a total cost of $displayTotalOrderCost (unless noted otherwise in Admin Notes) that needs to be paid.";
+														"\n\nIncluding this the company has had orders for a total cost of $displayTotalCost (unless noted otherwise in Admin Notes) that needs to be paid." .
+														"\nWhere $displayTotalCostThisPeriodFromCompany is from the company itself and $displayTotalCostThisPeriodFromTransfers is from companies being merged.";
 					$sql .= ", 	`billingDescription` = '" . $billingDescriptionInformation . "'";
 				}
 

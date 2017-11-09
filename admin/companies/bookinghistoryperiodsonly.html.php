@@ -68,8 +68,5 @@
 			</fieldset>
 		</div>
 		<?php endif; ?>
-
-	<div class="left"><a href="..">Return to CMS home</a></div>
-
 	</body>
 </html>		
