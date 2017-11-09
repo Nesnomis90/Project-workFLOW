@@ -27,7 +27,7 @@
 			<h2>For the company: <?php htmlout($CompanyName); ?> (Active Since: <?php htmlout($displayDateTimeCreated); ?>)</h2>
 		</div>
 
-		<?php if($mergedCompanies) : ?>
+		<?php if(isSet($mergedCompanies) AND $mergedCompanies) : ?>
 		<div class="left">
 			<fieldset><legend><b>Merged Companies</b></legend>
 				<div class="left">
@@ -228,10 +228,11 @@
 			<?php endif; ?>
 
 			<span>This company has a monthly set subscription cost of: <b style="color:<?php htmlout($color); ?>"><?php htmlout($displayMonthPrice); ?></b></span><br />
+			<span>The total cost of all orders this period: <b style="color:<?php htmlout($color); ?>"><?php htmlout($displayTotalOrderCostThisPeriod); ?></b></span><br />
 			<?php if($rightNow) : ?>
-				<span>Resulting in the total cost so far this period of: <b><?php htmlout($bookingCostThisMonth); ?></b> = <b style="color:<?php htmlout($color); ?>"><?php htmlout($totalBookingCostThisMonth); ?></b></span>
+				<span>Resulting in the total cost, including orders, so far this period of: <b><?php htmlout($periodCost); ?></b> = <b style="color:<?php htmlout($color); ?>"><?php htmlout($displayTotalPeriodCost); ?></b></span>
 			<?php else : ?>
-				<span>Resulting in the total cost this period of: <b><?php htmlout($bookingCostThisMonth); ?></b> = <b style="color:<?php htmlout($color); ?>"><?php htmlout($totalBookingCostThisMonth); ?></b></span>
+				<span>Resulting in the total cost, including orders, this period of: <b><?php htmlout($periodCost); ?></b> = <b style="color:<?php htmlout($color); ?>"><?php htmlout($displayTotalPeriodCost); ?></b></span>
 			<?php endif; ?>
 
 			<div class="left">
