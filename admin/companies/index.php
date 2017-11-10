@@ -52,6 +52,7 @@ function sumUpUnbilledPeriods($pdo, $companyID){
 		$sql = "SELECT		StartDate, 
 							EndDate,
 							CompanyMergeNumber,
+							TotalOrderCost,
 							CreditSubscriptionMonthlyPrice,
 							CreditSubscriptionHourPrice,
 							CreditsGivenInSeconds/60							AS CreditSubscriptionMinuteAmount,
@@ -130,7 +131,7 @@ function sumUpUnbilledPeriods($pdo, $companyID){
 									AND			DATE(b.`actualEndDateTime`) < cch.`endDate`
 								)										AS BookingTimeChargedInSeconds,
 								(
-									SELECT		SUM(eo.`amount` * ex.`price`) AS TotalOrderCost
+									SELECT		SUM(eo.`amount` * ex.`price`)
 									FROM		`booking` b
 									INNER JOIN 	`orders` o
 									ON 			o.`orderID` = b.`orderID`
@@ -139,6 +140,7 @@ function sumUpUnbilledPeriods($pdo, $companyID){
 									INNER JOIN 	`extra` ex
 									ON 			ex.`extraID` = eo.`extraID`
 									WHERE 		b.`CompanyID` = :CompanyID
+									AND			b.`mergeNumber` = cch.`mergeNumber`
 									AND			b.`orderID` IS NOT NULL
 									AND			(
 													b.`dateTimeCancelled` IS NULL OR 
@@ -146,8 +148,8 @@ function sumUpUnbilledPeriods($pdo, $companyID){
 												)
 									AND			b.`actualEndDateTime` IS NOT NULL
 									AND			o.`dateTimeCancelled` IS NULL
-									AND 		DATE(b.`actualEndDateTime`) >= c.`prevStartDate`
-									AND 		DATE(b.`actualEndDateTime`) < c.`startDate`
+									AND 		DATE(b.`actualEndDateTime`) >= cch.`startDate`
+									AND			DATE(b.`actualEndDateTime`) < cch.`endDate`
 								)											AS TotalOrderCost
 							FROM 		`companycreditshistory` cch
 							INNER JOIN	`companycredits` cc
@@ -166,6 +168,7 @@ function sumUpUnbilledPeriods($pdo, $companyID){
 		$sql = "SELECT		StartDate, 
 							EndDate,
 							CompanyMergeNumber,
+							TotalOrderCost,
 							CreditSubscriptionMonthlyPrice,
 							CreditSubscriptionHourPrice,
 							CreditsGivenInSeconds/60							AS CreditSubscriptionMinuteAmount,
@@ -240,7 +243,7 @@ function sumUpUnbilledPeriods($pdo, $companyID){
 									AND 		DATE(b.`actualEndDateTime`) < cch.`endDate`
 								)										AS BookingTimeChargedInSeconds,
 								(
-									SELECT		SUM(eo.`amount` * ex.`price`) AS TotalOrderCost
+									SELECT		SUM(eo.`amount` * ex.`price`)
 									FROM		`booking` b
 									INNER JOIN 	`orders` o
 									ON 			o.`orderID` = b.`orderID`
@@ -249,6 +252,7 @@ function sumUpUnbilledPeriods($pdo, $companyID){
 									INNER JOIN 	`extra` ex
 									ON 			ex.`extraID` = eo.`extraID`
 									WHERE 		b.`CompanyID` = :CompanyID
+									AND			b.`mergeNumber` = cch.`mergeNumber`
 									AND			b.`orderID` IS NOT NULL
 									AND			(
 													b.`dateTimeCancelled` IS NULL OR 
@@ -256,8 +260,8 @@ function sumUpUnbilledPeriods($pdo, $companyID){
 												)
 									AND			b.`actualEndDateTime` IS NOT NULL
 									AND			o.`dateTimeCancelled` IS NULL
-									AND 		DATE(b.`actualEndDateTime`) >= c.`prevStartDate`
-									AND 		DATE(b.`actualEndDateTime`) < c.`startDate`
+									AND 		DATE(b.`actualEndDateTime`) >= cch.`startDate`
+									AND 		DATE(b.`actualEndDateTime`) < cch.`endDate`
 								)											AS TotalOrderCost
 							FROM 		`companycreditshistory` cch
 							INNER JOIN	`companycredits` cc
@@ -281,13 +285,19 @@ function sumUpUnbilledPeriods($pdo, $companyID){
 	foreach($result AS $row){
 				// Get credits values
 
+		if(empty($row['TotalOrderCost'])){
+			$orderCost = $row['TotalOrderCost'];
+		} else {
+			$orderCost = 0;
+		}	
+
 		if(empty($row['CreditSubscriptionMinuteAmount'])){
 			$companyMinuteCredits = 0;
 		} else {
 			$companyMinuteCredits = $row['CreditSubscriptionMinuteAmount'];
 		}
 
-		if(empty($row["CreditSubscriptionMonthlyPrice"];)){
+		if(empty($row["CreditSubscriptionMonthlyPrice"])){
 			$monthPrice = 0;
 		} else {
 			$monthPrice = $row["CreditSubscriptionMonthlyPrice"];
@@ -372,6 +382,7 @@ function displayAllPeriodsFromMergedNumber($pdo, $companyID, $mergeNumber){
 		$sql = "SELECT		StartDate, 
 							EndDate,
 							CompanyMergeNumber,
+							TotalOrderCost,
 							BillingStatus,
 							CreditSubscriptionMonthlyPrice,
 							CreditSubscriptionHourPrice,
@@ -452,7 +463,7 @@ function displayAllPeriodsFromMergedNumber($pdo, $companyID, $mergeNumber){
 									AND			DATE(b.`actualEndDateTime`) < cch.`endDate`
 								)										AS BookingTimeChargedInSeconds,
 								(
-									SELECT		SUM(eo.`amount` * ex.`price`) AS TotalOrderCost
+									SELECT		SUM(eo.`amount` * ex.`price`)
 									FROM		`booking` b
 									INNER JOIN 	`orders` o
 									ON 			o.`orderID` = b.`orderID`
@@ -468,8 +479,8 @@ function displayAllPeriodsFromMergedNumber($pdo, $companyID, $mergeNumber){
 												)
 									AND			b.`actualEndDateTime` IS NOT NULL
 									AND			o.`dateTimeCancelled` IS NULL
-									AND 		DATE(b.`actualEndDateTime`) >= c.`prevStartDate`
-									AND 		DATE(b.`actualEndDateTime`) < c.`startDate`
+									AND 		DATE(b.`actualEndDateTime`) >= cch.`startDate`
+									AND			DATE(b.`actualEndDateTime`) < cch.`endDate`
 									AND			b.`mergeNumber` = cch.`mergeNumber`
 								)											AS TotalOrderCost
 							FROM 		`companycreditshistory` cch
@@ -490,6 +501,7 @@ function displayAllPeriodsFromMergedNumber($pdo, $companyID, $mergeNumber){
 		$sql = "SELECT		StartDate, 
 							EndDate,
 							CompanyMergeNumber,
+							TotalOrderCost,
 							BillingStatus,
 							CreditSubscriptionMonthlyPrice,
 							CreditSubscriptionHourPrice,
@@ -566,7 +578,7 @@ function displayAllPeriodsFromMergedNumber($pdo, $companyID, $mergeNumber){
 									AND 		DATE(b.`actualEndDateTime`) < cch.`endDate`
 								)										AS BookingTimeChargedInSeconds,
 								(
-									SELECT		SUM(eo.`amount` * ex.`price`) AS TotalOrderCost
+									SELECT		SUM(eo.`amount` * ex.`price`)
 									FROM		`booking` b
 									INNER JOIN 	`orders` o
 									ON 			o.`orderID` = b.`orderID`
@@ -582,8 +594,8 @@ function displayAllPeriodsFromMergedNumber($pdo, $companyID, $mergeNumber){
 												)
 									AND			b.`actualEndDateTime` IS NOT NULL
 									AND			o.`dateTimeCancelled` IS NULL
-									AND 		DATE(b.`actualEndDateTime`) >= c.`prevStartDate`
-									AND 		DATE(b.`actualEndDateTime`) < c.`startDate`
+									AND 		DATE(b.`actualEndDateTime`) >= cch.`startDate`
+									AND			DATE(b.`actualEndDateTime`) < cch.`endDate`
 									AND			b.`mergeNumber` = cch.`mergeNumber`
 								)											AS TotalOrderCost
 							FROM 		`companycreditshistory` cch
@@ -612,7 +624,7 @@ function displayAllPeriodsFromMergedNumber($pdo, $companyID, $mergeNumber){
 			$companyMinuteCredits = $row['CreditSubscriptionMinuteAmount'];
 		}
 
-		if(empty($row["CreditSubscriptionMonthlyPrice"]){
+		if(empty($row["CreditSubscriptionMonthlyPrice"])){
 			$monthPrice = 0;
 		} else {
 			$monthPrice = $row["CreditSubscriptionMonthlyPrice"];
