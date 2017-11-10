@@ -44,8 +44,6 @@ function clearEditCompanySessions(){
 // Function to check if the company has unbilled periods and then sums them up and displays the total 
 function sumUpUnbilledPeriods($pdo, $companyID){
 
-	// TO-DO: Include orders
-
 	$minimumSecondsPerBooking = MINIMUM_BOOKING_DURATION_IN_MINUTES_USED_IN_PRICE_CALCULATIONS * 60; // e.g. 15min = 900s
 	$aboveThisManySecondsToCount = BOOKING_DURATION_IN_MINUTES_USED_BEFORE_INCLUDING_IN_PRICE_CALCULATIONS * 60; // e.g. 5min = 300s
 	$roundDownToTheClosestMinuteNumberInSeconds = ROUND_SUMMED_BOOKING_TIME_CHARGED_FOR_PERIOD_DOWN_TO_THIS_CLOSEST_MINUTE_AMOUNT * 60; // e.g. 15min = 900s
@@ -130,7 +128,27 @@ function sumUpUnbilledPeriods($pdo, $companyID){
 									AND			b.`mergeNumber` = cch.`mergeNumber`
 									AND 		DATE(b.`actualEndDateTime`) >= cch.`startDate`
 									AND			DATE(b.`actualEndDateTime`) < cch.`endDate`
-								)										AS BookingTimeChargedInSeconds
+								)										AS BookingTimeChargedInSeconds,
+								(
+									SELECT		SUM(eo.`amount` * ex.`price`) AS TotalOrderCost
+									FROM		`booking` b
+									INNER JOIN 	`orders` o
+									ON 			o.`orderID` = b.`orderID`
+									INNER JOIN	`extraorders` eo
+									ON 			eo.`orderID` = o.`orderID`
+									INNER JOIN 	`extra` ex
+									ON 			ex.`extraID` = eo.`extraID`
+									WHERE 		b.`CompanyID` = :CompanyID
+									AND			b.`orderID` IS NOT NULL
+									AND			(
+													b.`dateTimeCancelled` IS NULL OR 
+													b.`dateTimeCancelled` = b.`actualEndDateTime`
+												)
+									AND			b.`actualEndDateTime` IS NOT NULL
+									AND			o.`dateTimeCancelled` IS NULL
+									AND 		DATE(b.`actualEndDateTime`) >= c.`prevStartDate`
+									AND 		DATE(b.`actualEndDateTime`) < c.`startDate`
+								)											AS TotalOrderCost
 							FROM 		`companycreditshistory` cch
 							INNER JOIN	`companycredits` cc
 							ON 			cc.`CompanyID` = cch.`CompanyID`
@@ -220,7 +238,27 @@ function sumUpUnbilledPeriods($pdo, $companyID){
 									AND			b.`mergeNumber` = cch.`mergeNumber`
 									AND 		DATE(b.`actualEndDateTime`) >= cch.`startDate`
 									AND 		DATE(b.`actualEndDateTime`) < cch.`endDate`
-								)										AS BookingTimeChargedInSeconds
+								)										AS BookingTimeChargedInSeconds,
+								(
+									SELECT		SUM(eo.`amount` * ex.`price`) AS TotalOrderCost
+									FROM		`booking` b
+									INNER JOIN 	`orders` o
+									ON 			o.`orderID` = b.`orderID`
+									INNER JOIN	`extraorders` eo
+									ON 			eo.`orderID` = o.`orderID`
+									INNER JOIN 	`extra` ex
+									ON 			ex.`extraID` = eo.`extraID`
+									WHERE 		b.`CompanyID` = :CompanyID
+									AND			b.`orderID` IS NOT NULL
+									AND			(
+													b.`dateTimeCancelled` IS NULL OR 
+													b.`dateTimeCancelled` = b.`actualEndDateTime`
+												)
+									AND			b.`actualEndDateTime` IS NOT NULL
+									AND			o.`dateTimeCancelled` IS NULL
+									AND 		DATE(b.`actualEndDateTime`) >= c.`prevStartDate`
+									AND 		DATE(b.`actualEndDateTime`) < c.`startDate`
+								)											AS TotalOrderCost
 							FROM 		`companycreditshistory` cch
 							INNER JOIN	`companycredits` cc
 							ON 			cc.`CompanyID` = cch.`CompanyID`
@@ -242,17 +280,23 @@ function sumUpUnbilledPeriods($pdo, $companyID){
 
 	foreach($result AS $row){
 				// Get credits values
-		$companyMinuteCredits = $row['CreditSubscriptionMinuteAmount'];
-		if($companyMinuteCredits == NULL OR $companyMinuteCredits == ""){
+
+		if(empty($row['CreditSubscriptionMinuteAmount'])){
 			$companyMinuteCredits = 0;
+		} else {
+			$companyMinuteCredits = $row['CreditSubscriptionMinuteAmount'];
 		}
-		$monthPrice = $row["CreditSubscriptionMonthlyPrice"];
-		if($monthPrice == NULL OR $monthPrice == ""){
+
+		if(empty($row["CreditSubscriptionMonthlyPrice"];)){
 			$monthPrice = 0;
+		} else {
+			$monthPrice = $row["CreditSubscriptionMonthlyPrice"];
 		}
-		$hourPrice = $row["CreditSubscriptionHourPrice"];
-		if($hourPrice == NULL OR $hourPrice == ""){
+
+		if(empty($row["CreditSubscriptionHourPrice"])){
 			$hourPrice = 0;
+		} else {
+			$hourPrice = $row["CreditSubscriptionHourPrice"];
 		}
 
 		$mergeNumber = $row['CompanyMergeNumber'];
@@ -271,16 +315,16 @@ function sumUpUnbilledPeriods($pdo, $companyID){
 				// Rounds down
 			$numberOfMinuteSlices = floor($bookingTimeChargedInMinutes / ROUND_SUMMED_BOOKING_TIME_CHARGED_FOR_PERIOD_DOWN_TO_THIS_CLOSEST_MINUTE_AMOUNT);
 			$slicedHourPrice = $hourPrice/$splitPricePerHourIntoThisManyPieces;
-			$overFeeCostThisMonth = $numberOfMinuteSlices * $slicedHourPrice;			
+			$overFeeCostThisMonth = $numberOfMinuteSlices * $slicedHourPrice;
 		} else {
 			// Get price for the exact minute amount used
 			$minutePrice = $hourPrice/60;
 			$overFeeCostThisMonth = $bookingTimeChargedInMinutes * $minutePrice;
 		}
 
-		$totalCost = $monthPrice+$overFeeCostThisMonth;
-		$bookingCostThisMonth = convertToCurrency($monthPrice) . " + " . convertToCurrency($overFeeCostThisMonth);
-		$totalBookingCostThisMonth = convertToCurrency($totalCost);		
+		$totalCost = $monthPrice + $overFeeCostThisMonth + $orderCost;
+		$totalCostThisPeriodInParts = convertToCurrency($monthPrice) . " + " . convertToCurrency($overFeeCostThisMonth) . " + " . convertToCurrency($orderCost);
+		$totalBookingCostThisPeriod = convertToCurrency($totalCost);
 
 		$startDate = $row['StartDate'];
 		$endDate = $row['EndDate'];
@@ -298,8 +342,8 @@ function sumUpUnbilledPeriods($pdo, $companyID){
 										'BookingTimeCharged' => convertTimeToHoursAndMinutes($row['BookingTimeCharged']),
 										'OverCreditsTimeExact' => convertTimeToHoursAndMinutes($row['OverCreditsTimeExact']),
 										'OverCreditsTimeCharged' => convertTimeToHoursAndMinutes($row['OverCreditsTimeCharged']),
-										'TotalBookingCostThisMonthAsParts' => $bookingCostThisMonth,
-										'TotalBookingCostThisMonth' => $totalBookingCostThisMonth,
+										'TotalBookingCostThisMonthAsParts' => $totalCostThisPeriodInParts,
+										'TotalBookingCostThisMonth' => $totalBookingCostThisPeriod,
 										'TotalBookingCostThisMonthJustNumber' => $totalCost
 									);
 	}
@@ -319,8 +363,6 @@ function sumUpUnbilledPeriods($pdo, $companyID){
 
 // Function to check if the company has unbilled periods and then sums them up and displays the total 
 function displayAllPeriodsFromMergedNumber($pdo, $companyID, $mergeNumber){
-
-	// TO-DO: Include orders
 
 	$minimumSecondsPerBooking = MINIMUM_BOOKING_DURATION_IN_MINUTES_USED_IN_PRICE_CALCULATIONS * 60; // e.g. 15min = 900s
 	$aboveThisManySecondsToCount = BOOKING_DURATION_IN_MINUTES_USED_BEFORE_INCLUDING_IN_PRICE_CALCULATIONS * 60; // e.g. 5min = 300s
@@ -408,7 +450,28 @@ function displayAllPeriodsFromMergedNumber($pdo, $companyID, $mergeNumber){
 									AND			b.`mergeNumber` = cch.`mergeNumber`
 									AND 		DATE(b.`actualEndDateTime`) >= cch.`startDate`
 									AND			DATE(b.`actualEndDateTime`) < cch.`endDate`
-								)										AS BookingTimeChargedInSeconds
+								)										AS BookingTimeChargedInSeconds,
+								(
+									SELECT		SUM(eo.`amount` * ex.`price`) AS TotalOrderCost
+									FROM		`booking` b
+									INNER JOIN 	`orders` o
+									ON 			o.`orderID` = b.`orderID`
+									INNER JOIN	`extraorders` eo
+									ON 			eo.`orderID` = o.`orderID`
+									INNER JOIN 	`extra` ex
+									ON 			ex.`extraID` = eo.`extraID`
+									WHERE 		b.`CompanyID` = :CompanyID
+									AND			b.`orderID` IS NOT NULL
+									AND			(
+													b.`dateTimeCancelled` IS NULL OR 
+													b.`dateTimeCancelled` = b.`actualEndDateTime`
+												)
+									AND			b.`actualEndDateTime` IS NOT NULL
+									AND			o.`dateTimeCancelled` IS NULL
+									AND 		DATE(b.`actualEndDateTime`) >= c.`prevStartDate`
+									AND 		DATE(b.`actualEndDateTime`) < c.`startDate`
+									AND			b.`mergeNumber` = cch.`mergeNumber`
+								)											AS TotalOrderCost
 							FROM 		`companycreditshistory` cch
 							INNER JOIN	`companycredits` cc
 							ON 			cc.`CompanyID` = cch.`CompanyID`
@@ -416,7 +479,7 @@ function displayAllPeriodsFromMergedNumber($pdo, $companyID, $mergeNumber){
 							ON 			cr.`CreditsID` = cc.`CreditsID`
 							WHERE 		cch.`CompanyID` = :CompanyID
 							AND 		cch.`mergeNumber` = :mergeNumber
-				)													AS PeriodInformation";
+				)														AS PeriodInformation";
 		$s = $pdo->prepare($sql);
 		$s->bindValue(':CompanyID', $companyID);
 		$s->bindValue(':mergeNumber', $mergeNumber);
@@ -501,7 +564,28 @@ function displayAllPeriodsFromMergedNumber($pdo, $companyID, $mergeNumber){
 									AND			b.`mergeNumber` = cch.`mergeNumber`
 									AND 		DATE(b.`actualEndDateTime`) >= cch.`startDate`
 									AND 		DATE(b.`actualEndDateTime`) < cch.`endDate`
-								)										AS BookingTimeChargedInSeconds
+								)										AS BookingTimeChargedInSeconds,
+								(
+									SELECT		SUM(eo.`amount` * ex.`price`) AS TotalOrderCost
+									FROM		`booking` b
+									INNER JOIN 	`orders` o
+									ON 			o.`orderID` = b.`orderID`
+									INNER JOIN	`extraorders` eo
+									ON 			eo.`orderID` = o.`orderID`
+									INNER JOIN 	`extra` ex
+									ON 			ex.`extraID` = eo.`extraID`
+									WHERE 		b.`CompanyID` = :CompanyID
+									AND			b.`orderID` IS NOT NULL
+									AND			(
+													b.`dateTimeCancelled` IS NULL OR 
+													b.`dateTimeCancelled` = b.`actualEndDateTime`
+												)
+									AND			b.`actualEndDateTime` IS NOT NULL
+									AND			o.`dateTimeCancelled` IS NULL
+									AND 		DATE(b.`actualEndDateTime`) >= c.`prevStartDate`
+									AND 		DATE(b.`actualEndDateTime`) < c.`startDate`
+									AND			b.`mergeNumber` = cch.`mergeNumber`
+								)											AS TotalOrderCost
 							FROM 		`companycreditshistory` cch
 							INNER JOIN	`companycredits` cc
 							ON 			cc.`CompanyID` = cch.`CompanyID`
@@ -514,7 +598,7 @@ function displayAllPeriodsFromMergedNumber($pdo, $companyID, $mergeNumber){
 		$s->bindValue(':CompanyID', $companyID);
 		$s->bindValue(':mergeNumber', $mergeNumber);
 		$s->bindValue(':minimumSecondsPerBooking', $minimumSecondsPerBooking);
-		$s->bindValue(':aboveThisManySecondsToCount', $aboveThisManySecondsToCount);		
+		$s->bindValue(':aboveThisManySecondsToCount', $aboveThisManySecondsToCount);
 	}
 
 	$s->execute();
@@ -522,17 +606,28 @@ function displayAllPeriodsFromMergedNumber($pdo, $companyID, $mergeNumber){
 
 	foreach($result AS $row){
 		// Get credits values
-		$companyMinuteCredits = $row['CreditSubscriptionMinuteAmount'];
-		if($companyMinuteCredits == NULL OR $companyMinuteCredits == ""){
+		if(empty($row['CreditSubscriptionMinuteAmount'])){
 			$companyMinuteCredits = 0;
+		} else {
+			$companyMinuteCredits = $row['CreditSubscriptionMinuteAmount'];
 		}
-		$monthPrice = $row["CreditSubscriptionMonthlyPrice"];
-		if($monthPrice == NULL OR $monthPrice == ""){
+
+		if(empty($row["CreditSubscriptionMonthlyPrice"]){
 			$monthPrice = 0;
+		} else {
+			$monthPrice = $row["CreditSubscriptionMonthlyPrice"];
 		}
-		$hourPrice = $row["CreditSubscriptionHourPrice"];
-		if($hourPrice == NULL OR $hourPrice == ""){
+
+		if(empty($row["CreditSubscriptionHourPrice"])){
 			$hourPrice = 0;
+		} else {
+			$hourPrice = $row["CreditSubscriptionHourPrice"];
+		}
+
+		if(empty($row["TotalOrderCost"])){
+			$orderCost = $row["TotalOrderCost"];
+		} else {
+			$orderCost = 0;
 		}
 
 		$mergeStatus = "Transferred From Another Company (ID=$mergeNumber)";
@@ -545,16 +640,16 @@ function displayAllPeriodsFromMergedNumber($pdo, $companyID, $mergeNumber){
 				// Rounds down
 			$numberOfMinuteSlices = floor($bookingTimeChargedInMinutes / ROUND_SUMMED_BOOKING_TIME_CHARGED_FOR_PERIOD_DOWN_TO_THIS_CLOSEST_MINUTE_AMOUNT);
 			$slicedHourPrice = $hourPrice/$splitPricePerHourIntoThisManyPieces;
-			$overFeeCostThisMonth = $numberOfMinuteSlices * $slicedHourPrice;			
+			$overFeeCostThisMonth = $numberOfMinuteSlices * $slicedHourPrice;
 		} else {
 			// Get price for the exact minute amount used
 			$minutePrice = $hourPrice/60;
 			$overFeeCostThisMonth = $bookingTimeChargedInMinutes * $minutePrice;
 		}
 
-		$totalCost = $monthPrice+$overFeeCostThisMonth;
-		$bookingCostThisMonth = convertToCurrency($monthPrice) . " + " . convertToCurrency($overFeeCostThisMonth);
-		$totalBookingCostThisMonth = convertToCurrency($totalCost);		
+		$totalCost = $monthPrice + $overFeeCostThisMonth + $orderCost;
+		$totalCostThisPeriodInParts = convertToCurrency($monthPrice) . " + " . convertToCurrency($overFeeCostThisMonth) . " + " . convertToCurrency($orderCost);
+		$totalBookingCostThisPeriod = convertToCurrency($totalCost);
 
 		$startDate = $row['StartDate'];
 		$endDate = $row['EndDate'];
@@ -562,22 +657,23 @@ function displayAllPeriodsFromMergedNumber($pdo, $companyID, $mergeNumber){
 		$displayEndDate = convertDatetimeToFormat($endDate, 'Y-m-d', DATE_DEFAULT_FORMAT_TO_DISPLAY);
 
 		$allPeriodsFromMergedNumber[] = array(
-										'MergeStatus' => $mergeStatus,
-										'MergeNumber' => $mergeNumber,
-										'BillingStatus' => $row['BillingStatus'],
-										'DisplayStartDate' => $displayStartDate,
-										'DisplayEndDate' => $displayEndDate,
-										'StartDate' => $startDate,
-										'EndDate' => $endDate,
-										'CreditsGiven' => convertTimeToHoursAndMinutes($row['CreditsGiven']),
-										'BookingTimeCharged' => convertTimeToHoursAndMinutes($row['BookingTimeCharged']),
-										'OverCreditsTimeExact' => convertTimeToHoursAndMinutes($row['OverCreditsTimeExact']),
-										'OverCreditsTimeCharged' => convertTimeToHoursAndMinutes($row['OverCreditsTimeCharged']),
-										'TotalBookingCostThisMonthAsParts' => $bookingCostThisMonth,
-										'TotalBookingCostThisMonth' => $totalBookingCostThisMonth,
-										'TotalBookingCostThisMonthJustNumber' => $totalCost
-									);
+												'MergeStatus' => $mergeStatus,
+												'MergeNumber' => $mergeNumber,
+												'BillingStatus' => $row['BillingStatus'],
+												'DisplayStartDate' => $displayStartDate,
+												'DisplayEndDate' => $displayEndDate,
+												'StartDate' => $startDate,
+												'EndDate' => $endDate,
+												'CreditsGiven' => convertTimeToHoursAndMinutes($row['CreditsGiven']),
+												'BookingTimeCharged' => convertTimeToHoursAndMinutes($row['BookingTimeCharged']),
+												'OverCreditsTimeExact' => convertTimeToHoursAndMinutes($row['OverCreditsTimeExact']),
+												'OverCreditsTimeCharged' => convertTimeToHoursAndMinutes($row['OverCreditsTimeCharged']),
+												'TotalBookingCostThisMonthAsParts' => $totalCostThisPeriodInParts,
+												'TotalBookingCostThisMonth' => $totalBookingCostThisPeriod,
+												'TotalBookingCostThisMonthJustNumber' => $totalCost
+											);
 	}
+
 	$displayMergeStatus = TRUE;
 
 	if(isSet($allPeriodsFromMergedNumber)){
