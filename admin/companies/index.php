@@ -1177,7 +1177,7 @@ function refreshBookingHistory(){
 		// Format billing dates
 		$displayBillingStart = convertDatetimeToFormat($BillingStart , 'Y-m-d', DATE_DEFAULT_FORMAT_TO_DISPLAY);
 		$displayBillingEnd = convertDatetimeToFormat($BillingEnd , 'Y-m-d', DATE_DEFAULT_FORMAT_TO_DISPLAY);
-		$BillingPeriod = $displayBillingStart . " up to " . $displayBillingEnd . ".";	
+		$BillingPeriod = $displayBillingStart . " up to " . $displayBillingEnd . ".";
 
 		// rightNow decides if we use the companycreditshistory or the credits/companycredits information
 		if($NextPeriod){
@@ -1308,7 +1308,7 @@ if(isSet($_POST['history']) AND $_POST['history'] == "Go To This Period"){
 		// Format billing dates
 		$displayBillingStart = convertDatetimeToFormat($BillingStart , 'Y-m-d', DATE_DEFAULT_FORMAT_TO_DISPLAY);
 		$displayBillingEnd = convertDatetimeToFormat($BillingEnd , 'Y-m-d', DATE_DEFAULT_FORMAT_TO_DISPLAY);
-		$BillingPeriod = $displayBillingStart . " up to " . $displayBillingEnd . ".";			
+		$BillingPeriod = $displayBillingStart . " up to " . $displayBillingEnd . ".";
 
 		// An unbilled period cannot be right now.
 		$rightNow = FALSE;
@@ -1543,7 +1543,7 @@ if(	(isSet($_POST['history']) AND $_POST['history'] == "Previous Period") OR
 	date_default_timezone_set(DATE_DEFAULT_TIMEZONE);	
 	// Get company information
 	$companyID = $_SESSION['BookingHistoryCompanyInfo']['CompanyID'];
-	$CompanyName = $_SESSION['BookingHistoryCompanyInfo']['CompanyName'];		
+	$CompanyName = $_SESSION['BookingHistoryCompanyInfo']['CompanyName'];
 	$companyCreationDate = $_SESSION['BookingHistoryCompanyInfo']['CompanyDateCreated'];
 	date_default_timezone_set(DATE_DEFAULT_TIMEZONE);
 	$newDate = DateTime::createFromFormat("Y-m-d", $companyCreationDate);
