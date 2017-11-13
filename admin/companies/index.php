@@ -1400,7 +1400,7 @@ if(isSet($_POST['history']) AND $_POST['history'] == "Set As Billed"){
 											".\nAt that time the company had produced a total booking time of: " . $displayTotalBookingTimeUsedInPriceCalculationsThisPeriod .
 											", with a credit given of: " . $displayCompanyCredits . " resulting in excess use of: " . $displayOverCreditsTimeUsed . 
 											" (billed as " . $displayTotalBookingTimeChargedWithAfterCredits . ").\nThe montly fee was set as " . $displayMonthPrice . 
-											".\nResulting in a total billing cost that period of " . $bookingCostThisMonth . " = " . $totalBookingCostThisMonth . 
+											".\nResulting in a total billing cost that period of " . $periodCost . " = " . $displayTotalPeriodCost . 
 											".\nAdditional information submitted by Admin:\n" . $billingDescriptionAdminAddition;
 		if(substr($billingDescriptionInformation,-1) != "."){
 			$billingDescriptionInformation . ".";
