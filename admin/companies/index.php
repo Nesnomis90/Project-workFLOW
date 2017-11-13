@@ -1640,7 +1640,7 @@ if (	(isSet($_GET['companyID']) AND isSet($_GET['BillingStart']) AND isSet($_GET
 		// Link example IN: http://localhost/admin/companies/?companyID=2&BillingStart=2017-05-15&BillingEnd=2017-06-15
 		// Link out: http://localhost/admin/companies/
 	if(isSet($_SESSION['refreshBookingHistoryFromLink'])){
-		list($companyID, $BillingStart, $BillingEnd) = $_SESSION['refreshBookingHistoryFromLink'];		
+		list($companyID, $BillingStart, $BillingEnd) = $_SESSION['refreshBookingHistoryFromLink'];
 		unset($_SESSION['refreshBookingHistoryFromLink']);
 	} else {
 		$companyID = $_GET['companyID'];
@@ -2225,7 +2225,7 @@ if (isSet($_POST['action']) and $_POST['action'] == 'Confirm Merge'){
 			if($setAsBilled){
 				$billingDescriptionInformation = 	"This period was Set As Billed automatically during a company merge due to there being no fees.\n" .
 													"At that time the company had produced a total booking time of: " . $displayTotalBookingTimeThisPeriod .
-													", with a credit given of: " . $displayCompanyCredits . " and a monthly fee of " . convertToCurrency(0) . ".";							
+													", with a credit given of: " . $displayCompanyCredits . " and a monthly fee of " . convertToCurrency(0) . ".";
 				$sql .= ", 	`hasBeenBilled` = 1,
 							`billingDescription` = '" . $billingDescriptionInformation . "'";
 			}
@@ -2592,7 +2592,7 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Edit') OR
 	} else {
 		// Make sure we don't have old values in memory
 		clearEditCompanySessions();
-		// Get information from database again on the selected company	
+		// Get information from database again on the selected company
 		try
 		{
 			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
@@ -2826,7 +2826,7 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Edit Company'))
 			exit();
 		}
 
-		$_SESSION['CompanyUserFeedback'] = "Successfully updated the company: " . $validatedCompanyName . ".";		
+		$_SESSION['CompanyUserFeedback'] = "Successfully updated the company: " . $validatedCompanyName . ".";
 	} else {
 		$_SESSION['CompanyUserFeedback'] = "No changes were made to the company: " . $validatedCompanyName . ".";
 	}
@@ -2975,7 +2975,7 @@ try
 							WHERE 		b.`CompanyID` = CompID
 							AND 		DATE(b.`actualEndDateTime`) >= c.`prevStartDate`
 							AND 		DATE(b.`actualEndDateTime`) < c.`startDate`
-						)   												AS PreviousMonthCompanyWideBookingTimeUsed,           
+						)   												AS PreviousMonthCompanyWideBookingTimeUsed,
 						(
 							SELECT (BIG_SEC_TO_TIME(SUM(
 													IF(
@@ -3136,7 +3136,7 @@ foreach($result as $row){
 	if($row['TotalCompanyWideBookingTimeUsed'] == null){
 		$TotalTimeUsed = 'N/A';
 	} else {
-		$TotalTimeUsed = convertTimeToHoursAndMinutes($row['TotalCompanyWideBookingTimeUsed']);	
+		$TotalTimeUsed = convertTimeToHoursAndMinutes($row['TotalCompanyWideBookingTimeUsed']);
 	}
 
 	// Calculate and display company booking subscription details
@@ -3182,7 +3182,7 @@ foreach($result as $row){
 	$dateToRemove = $row['DeletionDate'];
 	$isActive = ($row['CompanyActivated'] == 1);
 	$dateTimeCreatedToDisplay = convertDatetimeToFormat($dateCreated, 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
-	$dateToRemoveToDisplay = convertDatetimeToFormat($dateToRemove, 'Y-m-d', DATE_DEFAULT_FORMAT_TO_DISPLAY);	
+	$dateToRemoveToDisplay = convertDatetimeToFormat($dateToRemove, 'Y-m-d', DATE_DEFAULT_FORMAT_TO_DISPLAY);
 
 		// Get Period Status information
 	if(isSet($row['CompanyCreditsHistoryPeriods']) AND $row['CompanyCreditsHistoryPeriods'] != ""){
@@ -3195,6 +3195,7 @@ foreach($result as $row){
 	} else {
 		$billedPeriods = 0;
 	}
+
 	$notBilledPeriods = $totalPeriods - $billedPeriods;
 
 	if($isActive){
