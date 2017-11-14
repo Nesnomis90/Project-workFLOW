@@ -479,7 +479,7 @@ if(isSet($_POST['confirm']) AND $_POST['confirm'] == "Yes, Send The Request"){
 			$email = implode(", ", $email);
 
 			if(!$mailResult){
-				$_SESSION['normalCompanyFeedback'] .= "\n\n[WARNING] System failed to send Email to user(s).";
+				$_SESSION['normalCompanyFeedback'] = "[WARNING] System failed to send Email to user(s).";
 
 				// Email failed to be prepared. Store it in database to try again later
 				try
@@ -512,7 +512,11 @@ if(isSet($_POST['confirm']) AND $_POST['confirm'] == "Yes, Send The Request"){
 				$_SESSION['normalCompanyFeedback'] .= "\nEmail to be sent has been stored and will be attempted to be sent again later.";
 			}
 
-			$_SESSION['normalCompanyFeedback'] .= "\nThis is the email msg we're sending out:\n$emailMessage\nSent to email: $email."; // TO-DO: Remove before uploading			
+			if(isSet($_SESSION['normalCompanyFeedback'])){
+				$_SESSION['normalCompanyFeedback'] .= "\nThis is the email msg we're sending out:\n$emailMessage\nSent to email: $email."; // TO-DO: Remove before uploading
+			} else {
+				$_SESSION['normalCompanyFeedback'] = "This is the email msg we're sending out:\n$emailMessage\nSent to email: $email."; // TO-DO: Remove before uploading			
+			}
 		} else {
 			if(isSet($_SESSION['normalCompanyFeedback'])){
 				$_SESSION['normalCompanyFeedback'] .= "\n\nThe request couldn't be made, since there were no company owner(s) that wanted to be contacted."; // TO-DO: Remove before uploading.
