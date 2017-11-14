@@ -506,7 +506,6 @@ if (	(isSet($_POST['action']) and $_POST['action'] == 'Cancel') OR
 
 		// Load new template to let admin add a reason for cancelling the meeting
 		if(!isSet($_SESSION['cancelAdminBookingOriginalValues']['ReasonForCancelling'])){
-			var_dump($_SESSION); // TO-DO: Remove before uploading
 			include_once 'cancelmessage.html.php';
 			exit();
 		}
@@ -684,8 +683,6 @@ if(isSet($_POST['action']) AND $_POST['action'] == "Confirm Reason"){
 	}
 
 	if($invalidInput){
-		var_dump($_SESSION); // TO-DO: Remove when done testing
-
 		include_once 'cancelmessage.html.php';
 		exit();
 	}
@@ -1266,8 +1263,6 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Edit') OR
 
 	// Save changes
 	$_SESSION['EditBookingInfoArray'] = $row;
-
-	var_dump($_SESSION); // TO-DO: remove after testing is done
 
 	// Change to the actual form we want to use
 	include 'editbooking.html.php';
@@ -2035,7 +2030,6 @@ if( (isSet($_POST['edit']) AND $_POST['edit'] == "Finish Edit") OR
 
 	// Send user to the confirmation template if needed
 	if($bookingWentOverCredits AND !isSet($_SESSION['refreshEditBookingConfirmed'])){
-		var_dump($_SESSION); // TO-DO: Remove before uploading
 		include_once 'confirmbooking.html.php';
 		exit();
 	}
@@ -3057,8 +3051,6 @@ if (	(isSet($_POST['action']) AND $_POST['action'] == "Create Booking") OR
 
 	$_SESSION['AddBookingInfoArray'] = $row; // Remember the company/user info we changed based on user choice
 
-	var_dump($_SESSION); // TO-DO: remove after testing is done
-
 	// Change form
 	if(isSet($notInACompany) AND $notInACompany){
 		$_SESSION['refreshAddBookingChangeUser'] = TRUE;
@@ -3422,7 +3414,6 @@ if ((isSet($_POST['add']) AND $_POST['add'] == "Add Booking") OR
 
 	// Send user to the confirmation template if needed
 	if($bookingWentOverCredits AND !isSet($_SESSION['refreshAddBookingConfirmed'])){
-		var_dump($_SESSION); // TO-DO: Remove before uploading
 		include_once 'confirmbooking.html.php';
 		exit();
 	}
@@ -4455,8 +4446,8 @@ foreach($result AS $row){
 if(isSet($displayRoomNameForTitle) AND ($displayRoomNameForTitle == NULL OR $displayRoomNameForTitle == "N/A - Deleted")){
 	unset($displayRoomNameForTitle);
 }
-// BOOKING OVERVIEW CODE SNIPPET END //
-var_dump($_SESSION); // TO-DO: remove after testing is done
+// BOOKING OVERVIEW CODE SNIPPET // END //
+
 // Create the booking information table in HTML
 include_once 'bookings.html.php';
 ?>

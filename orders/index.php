@@ -524,8 +524,6 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Details') OR
 		$orderCommunicationToUser = "";
 	}
 
-	var_dump($_SESSION); // TO-DO: remove after testing is done
-
 	// Change to the template we want to use
 	include 'details.html.php';
 	exit();
@@ -1392,8 +1390,6 @@ foreach($result AS $row){
 						);
 	}
 }
-
-var_dump($_SESSION); // TO-DO: remove after testing is done
 
 // Create the Order list in HTML
 include_once 'orders.html.php';

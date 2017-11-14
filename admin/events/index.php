@@ -321,7 +321,6 @@ if(	(isSet($_POST['action']) AND $_POST['action'] == "Create Event") OR
 	$daysOfTheWeek = array('Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday');
 
 	// Array for the remaining weeks this year
-		// TO-DO: test this and fix template for week part
 	$dateNow = getDateNow();
 	$lastDate = '2017-12-28';
 	$weeksOfTheYear = getWeekInfoBetweenTwoDateTimes($dateNow, $lastDate); //Returns week number, start date and end date
@@ -433,9 +432,6 @@ if(	(isSet($_POST['action']) AND $_POST['action'] == "Create Event") OR
 			}
 		}
 	}
-
-	var_dump($_SESSION); // TO-DO: remove after testing is done
-
 	include_once 'addevent.html.php';
 	exit();
 }
@@ -463,10 +459,10 @@ if(isSet($_POST['add']) AND $_POST['add'] == "Create Event"){
 		$daysSelected = array($daysSelected);
 	}
 	// FIX-ME: Allow choosing the year.
-	$yearNow = date("Y"); // TO-DO: Change if we allow different years
+	$yearNow = date("Y"); // FIX-ME: Change if we allow different years
 	$dateTimeNow = getDatetimeNow();
-	for($i=0; $i < sizeOf($weeksSelected); $i++){
-		for($j=0; $j < sizeOf($daysSelected); $j++){
+	for($i = 0; $i < sizeOf($weeksSelected); $i++){
+		for($j = 0; $j < sizeOf($daysSelected); $j++){
 			$startDateTime = getDateTimeFromTimeDayNameWeekNumberAndYear($startTime,$daysSelected[$j],$weeksSelected[$i],$yearNow);
 			$endDateTime =  getDateTimeFromTimeDayNameWeekNumberAndYear($endTime,$daysSelected[$j],$weeksSelected[$i],$yearNow);
 			// Don't check if the datetime is in the past e.g. we selected a monday and it's already tuesday
@@ -923,14 +919,12 @@ if(isSet($_POST['add']) AND $_POST['add'] == 'Cancel'){
 }
 
 // Remove any unused variables from memory 
-// TO-DO: Change if this ruins having multiple tabs open etc.
 clearAddEventSessions();
 //clearEditEventSessions();
 
 // EVENTS OVERVIEW CODE SNIPPET START //
 
 if(isSet($refreshEvents) AND $refreshEvents) {
-	// TO-DO: Add code that should occur on a refresh
 	unset($refreshEvents);
 }
 
@@ -1098,8 +1092,6 @@ foreach($result as $row){
 						);
 	}
 }
-
-var_dump($_SESSION); // TO-DO: remove after testing is done
 
 // Create the Events table in HTML
 include_once 'events.html.php';

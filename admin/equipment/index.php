@@ -228,8 +228,6 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Add Equipment') OR
 		unset($_SESSION['AddEquipmentName']);
 	}
 
-	var_dump($_SESSION); // TO-DO: remove after testing is done
-
 	// Change form
 	include 'form.html.php';
 	exit();
@@ -409,8 +407,6 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Edit') OR
 	$originalEquipmentName = $_SESSION['EditEquipmentOriginalInfo']['EquipmentName'];
 	$originalEquipmentDescription = $_SESSION['EditEquipmentOriginalInfo']['EquipmentDescription'];
 
-	var_dump($_SESSION); // TO-DO: remove after testing is done
-
 	// Change to the template we want to use
 	include 'form.html.php';
 	exit();
@@ -504,12 +500,11 @@ if(isSet($_POST['edit']) AND $_POST['edit'] == 'Cancel'){
 	$refreshEquipment = TRUE;
 }
 
-if(isSet($refreshEquipment) AND $refreshEquipment) {
-	// TO-DO: Add code that should occur on a refresh
+if(isSet($refreshEquipment) AND $refreshEquipment){
 	unset($refreshEquipment);
 }
 
-// Remove any unused variables from memory // TO-DO: Change if this ruins having multiple tabs open etc.
+// Remove any unused variables from memory
 clearAddEquipmentSessions();
 clearEditEquipmentSessions();
 
@@ -567,7 +562,6 @@ foreach($result AS $row){
 							'EquipmentIsInTheseRooms' => $row['EquipmentIsInTheseRooms']
 						);
 }
-var_dump($_SESSION); // TO-DO: remove after testing is done
 
 // Create the equipment list in HTML
 include_once 'equipment.html.php';

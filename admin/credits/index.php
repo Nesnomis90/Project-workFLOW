@@ -134,7 +134,6 @@ function validateUserInputs(){
 		$invalidInput = TRUE;
 	}
 		// Credits Amount
-		// TO-DO: We check the amount in minutes. Does admin also submit in minutes or just hours?
 	$invalidCreditsAmount = isNumberInvalidCreditsAmount($validatedCreditsAmount);
 	if($invalidCreditsAmount AND !$invalidInput){
 		$_SESSION['EditCreditsError'] = "The credits amount submitted is too big.";	
@@ -362,8 +361,6 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Add Credits') OR
 		$CreditsMonthlyPrice = $_SESSION['AddCreditsMonthlyPrice'];
 		unset($_SESSION['AddCreditsMonthlyPrice']);
 	}
-
-	var_dump($_SESSION); // TO-DO: remove after testing is done
 
 	// Change form
 	include 'form.html.php';
@@ -601,8 +598,6 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Edit') OR
 	$originalCreditsMonthlyPrice = $original['CreditsMonthlyPrice'];
 	$originalCreditsHourPrice = $original['CreditsHourPrice'];
 
-	var_dump($_SESSION); // TO-DO: remove after testing is done
-
 	// Change to the template we want to use
 	include 'form.html.php';
 	exit();
@@ -739,11 +734,10 @@ if (isSet($_POST['edit']) AND $_POST['edit'] == 'Cancel'){
 }
 
 if(isSet($refreshCredits) AND $refreshCredits) {
-	// TO-DO: Add code that should occur on a refresh
 	unset($refreshCredits);
 }
 
-// Remove any unused variables from memory // TO-DO: Change if this ruins having multiple tabs open etc.
+// Remove any unused variables from memory
 clearAddCreditsSessions();
 clearEditCreditsSessions();
 
@@ -831,7 +825,6 @@ foreach($result AS $row){
 							'CreditsIsUsedByThisManyCompanies' => $row['CreditsIsUsedByThisManyCompanies']							
 						);
 }
-var_dump($_SESSION); // TO-DO: remove after testing is done
 
 // Create the Credits list in HTML
 include_once 'credits.html.php';

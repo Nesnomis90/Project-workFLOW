@@ -193,7 +193,6 @@ if (	(isSet($_POST['action']) and $_POST['action'] == 'Cancel') OR
 
 	// Load new template to let admin add a reason for cancelling the meeting
 	if(!isSet($_SESSION['cancelAdminOrder']['ReasonForCancelling'])){
-		var_dump($_SESSION); // TO-DO: Remove before uploading
 		include_once 'cancelmessage.html.php';
 		exit();
 	}
@@ -458,8 +457,6 @@ if(isSet($_POST['action']) AND $_POST['action'] == "Confirm Reason"){
 	}
 
 	if($invalidInput){
-		var_dump($_SESSION); // TO-DO: Remove when done testing
-
 		include_once 'cancelmessage.html.php';
 		exit();
 	}
@@ -875,8 +872,6 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Details') OR
 	if(!isSet($orderCommunicationToUser)){
 		$orderCommunicationToUser = "";
 	}
-
-	var_dump($_SESSION); // TO-DO: remove after testing is done
 
 	// Change to the template we want to use
 	include 'details.html.php';
@@ -2082,8 +2077,6 @@ foreach($result AS $row){
 							);
 	}
 }
-
-var_dump($_SESSION); // TO-DO: remove after testing is done
 
 // Create the Order list in HTML
 include_once 'orders.html.php';
