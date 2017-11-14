@@ -234,9 +234,7 @@ if (	(isSet($_GET['getEmails'])) OR
 	$separatorChar = ",";
 	$_SESSION['UserEmailListSeparatorSelected'] = TRUE;
 	$emailList = implode($separatorChar,$_SESSION['UserEmailsToBeDisplayed']);
-	
-	var_dump($_SESSION);	// TO-DO: Remove when done testing
-	
+
 	include_once 'listemail.html.php';
 	exit();
 }
@@ -247,9 +245,7 @@ if (isSet($_POST['action']) AND $_POST['action'] == "Change Separator Char"){
 	unset($_SESSION['UserEmailListSeparatorSelected']);
 	$separatorChar = "";
 	$emailList = "";
-	
-	var_dump($_SESSION);	// TO-DO: Remove when done testing
-	
+
 	include_once 'listemail.html.php';
 	exit();	
 }
@@ -265,7 +261,6 @@ if (isSet($_POST['action']) AND $_POST['action'] == "Select Separator Char"){
 	}	
 	if(strlen(utf8_decode($separatorChar)) > 1){
 		// We only want one char
-		// TO-DO: Change/remove if wrong
 		$_SESSION['UserEmailListError'] = "You submitted too many characters. Set as default character: ','.";
 		$invalidInput = TRUE;
 	}
@@ -278,7 +273,6 @@ if (isSet($_POST['action']) AND $_POST['action'] == "Select Separator Char"){
 	
 	$_SESSION['UserEmailListSeparatorSelected'] = TRUE;
 	$emailList = implode($separatorChar,$_SESSION['UserEmailsToBeDisplayed']);
-	var_dump($_SESSION);	// TO-DO: Remove when done testing
 	
 	include_once 'listemail.html.php';
 	exit();
@@ -289,8 +283,6 @@ if(isSet($_POST['action']) and $_POST['action'] == 'Delete'){
 
 	$userID = $_POST['UserID'];
 	$userInfo = $_POST['UserInfo'];
-
-	var_dump($_SESSION); // TO-DO: Remove before uploading
 
 	include_once 'confirmdelete.html.php';
 	exit();
@@ -313,11 +305,7 @@ if(isSet($_POST['confirmdelete']) AND $_POST['confirmdelete'] == "Yes, Delete Th
 
 	// Check if password is submitted
 	if(!isSet($_POST['password']) OR (isSet($_POST['password']) AND $_POST['password'] == "")){
-
 		$wrongPassword = "You need to fill in your password.";
-
-		var_dump($_SESSION); // TO-DO: Remove before uploading
-
 		include_once 'confirmdelete.html.php';
 		exit();
 	}
@@ -354,9 +342,6 @@ if(isSet($_POST['confirmdelete']) AND $_POST['confirmdelete'] == "Yes, Delete Th
 
 	if($hashedPassword != $correctPassword){
 		$wrongPassword = "The password you submitted is incorrect.";
-
-		var_dump($_SESSION); // TO-DO: Remove before uploading
-
 		include_once 'confirmdelete.html.php';
 		exit();
 	}
@@ -765,8 +750,6 @@ if(isSet($_GET['add']) OR (isSet($_SESSION['refreshAddUser']) AND $_SESSION['ref
 		$accessID = $_SESSION['AddNewUserDefaultAccessID'];
 	}
 
-	var_dump($_SESSION); // TO-DO: remove after testing is done
-
 	// Change to the actual html form template
 	include 'form.html.php';
 	exit();
@@ -872,7 +855,6 @@ if(isSet($_GET['addform']) AND isSet($_POST['action']) AND $_POST['action'] == '
 	}
 
 	// Send user an email with the activation code
-		// TO-DO: This is UNTESTED since we don't have php.ini set up to actually send email
 	$generatedPassword = $_SESSION['AddNewUserGeneratedPassword'];
 
 	$emailSubject = "Account Activation Link";
@@ -1090,8 +1072,6 @@ if 	((isSet($_POST['action']) AND $_POST['action'] == 'Edit') OR
 	$originalDisplayName = $_SESSION['EditUserOriginaDisplayName'];
 	$originalBookingDescription = $_SESSION['EditUserOriginaBookingDescription'];
 	$originalAccessName = $_SESSION['EditUserOriginaAccessName'];
-
-	var_dump($_SESSION); // TO-DO: remove after testing is done	
 
 	// Change to the actual form we want to use
 	include 'form.html.php';
@@ -1377,11 +1357,10 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Cancel Date'){
 // End of user input code snippets
 
 if(isSet($refreshUsers) AND $refreshUsers){
-	// TO-DO: Add code that should occur on a refresh
 	unset($refreshUsers);
 }
 
-// Remove any unused variables from memory // TO-DO: Change if this ruins having multiple tabs open etc.
+// Remove any unused variables from memory
 clearAddUserSessions();
 clearEditUserSessions();
 
@@ -1506,7 +1485,6 @@ if(isSet($email)){
 	$_SESSION['UserEmailsToBeDisplayed'] = $email;
 }
 
-var_dump($_SESSION); // TO-DO: Remove after done testing
 // Create the registered users list in HTML
 include_once 'users.html.php';
 ?>

@@ -351,8 +351,6 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Add Room Equipment') OR
 	}
 	unset($_SESSION['AddRoomEquipmentShowSearchResults']);
 
-	var_dump($_SESSION); // TO-DO: remove after testing is done
-
 	// Change to the actual html form template
 	include 'addroomequipment.html.php';
 	exit();
@@ -410,7 +408,7 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Confirm Room Equipment'){
 		// We didn't have enough values filled in. "go back" to add roomequipment
 		$_SESSION['refreshAddRoomEquipment'] = TRUE;
 		$_SESSION['AddRoomEquipmentError'] = $d;
-		//TO-DO: Remove/Change the search variables if we don't want it to show up after a search
+
 		$_SESSION['AddRoomEquipmentMeetingRoomSearch'] = trimExcessWhitespace($_POST['meetingroomsearchstring']);
 		$_SESSION['AddRoomEquipmentEquipmentSearch'] = trimExcessWhitespace($_POST['equipmentsearchstring']);
 
@@ -661,8 +659,6 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Change Amount'){
 
 	$_SESSION['EditRoomEquipmentOriginalEquipmentAmount'] = $EquipmentAmount;
 
-	var_dump($_SESSION); // TO-DO: remove after testing is done
-
 	// Change to the actual form we want to use
 	include 'changeamount.html.php';
 	exit();
@@ -672,7 +668,7 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Change Amount'){
 if(isSet($_POST['action']) AND $_POST['action'] == 'Confirm Amount'){
 	// Check if there were any changes made
 	$NumberOfChanges = 0;
-	// TO-DO: validate equipment amount
+
 	$selectedRoomEquipmentAmount = $_POST['EquipmentAmount'];
 
 	if(	isSet($_SESSION['EditRoomEquipmentOriginalEquipmentAmount']) AND 
@@ -750,11 +746,10 @@ if (isSet($_POST['edit']) AND $_POST['edit'] == 'Cancel'){
 }
 
 if(isSet($refreshRoomEquipment) AND $refreshRoomEquipment){
-	// TO-DO: Add code that should occur on a refresh
 	unset($refreshRoomEquipment);
 }
 
-// Remove any unused variables from memory // TO-DO: Change if this ruins having multiple tabs open etc.
+// Remove any unused variables from memory
 clearAddRoomEquipmentSessions();
 clearEditRoomEquipmentSessions();
 
@@ -863,8 +858,6 @@ foreach($result AS $row){
 							'MeetingRoomName' => $row['MeetingRoomName']
 						);
 }
-
-var_dump($_SESSION); // TO-DO: remove after testing is done
 
 // Create the room equipment list in HTML
 include_once 'roomequipment.html.php';

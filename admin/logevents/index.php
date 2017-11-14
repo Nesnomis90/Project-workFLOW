@@ -50,7 +50,6 @@ $checkboxes = array(
 if ((isSet($_POST['action']) AND $_POST['action'] == "Refresh Logs") OR 
 	(isSet($_POST['action']) AND $_POST['action'] == "Set New Maximum")){
 
-	// TO-DO: Change if too high
 	$minimumLogLimit = 10;
 	$maximumLogLimit = 1000;
 
@@ -226,8 +225,6 @@ if(!isSet($search) AND !isSet($searchAll) AND !$invalidInput){
 
 if($invalidInput){
 	// We've found some invalid user inputs
-	var_dump($_SESSION); // TO-DO: remove before uploading
-
 	include_once 'log.html.php';
 	exit();
 }
@@ -392,8 +389,6 @@ if($numberOfCheckboxesActivated > 0){
 } else {
 	$rowNum = 0;
 }
-
-var_dump($_SESSION); // TO-DO: remove after testing is done
 
 // Create the Log Event table in HTML
 include_once 'log.html.php';

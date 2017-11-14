@@ -277,7 +277,6 @@ if(isSet($_POST['register']) AND $_POST['register'] == "Register Account"){
 	}
 
 	// Send user an email with the activation code
-		// TO-DO: This is UNTESTED since we don't have php.ini set up to actually send email
 	$emailSubject = "Account Activation Link";
 
 	$emailMessage = 
@@ -338,8 +337,6 @@ if(isSet($_POST['register']) AND $_POST['register'] == "Register Account"){
 	$password1 = "";
 	$password2 = "";
 
-	var_dump($_SESSION); // TO-DO: Remove after testing
-
 	include_once 'register.html.php';
 	exit();
 }
@@ -376,8 +373,6 @@ if(isSet($_GET['register']) OR (isSet($_SESSION['refreshRegisterUser']) AND $_SE
 	}
 	$password1 = "";
 	$password2 = "";
-
-	var_dump($_SESSION); // TO-DO: Remove after testing
 
 	include_once 'register.html.php';
 	exit();
@@ -515,7 +510,6 @@ if(isSet($_GET['resetpassword']) AND !empty($_GET['resetpassword'])){
 	$lastName = $result['LastName'];
 	$hashedPassword = $result['HashedPassword'];
 
-	var_dump($_SESSION); // TO-DO: Remove before uploading
 	include_once 'resetpassword.html.php';
 	exit();
 }
@@ -1086,8 +1080,6 @@ if(	(isSet($_SESSION['loggedIn']) AND isSet($_SESSION['LoggedInUserID']) AND
 		}
 	}
 
-	var_dump($_SESSION); // TO-DO: remove after testing is done
-
 	// Create the booking information table in HTML
 	include_once 'bookings.html.php';
 	exit();
@@ -1650,8 +1642,6 @@ if(isSet($_SESSION['normalUserEditMode'])){
 	$sendEmail = $edit['SendEmail'];
 	$sendAdminEmail = $edit['SendAdminEmail'];
 }
-
-var_dump($_SESSION); // TO-DO: Remove after done testing
 
 // Load the html template
 include_once 'user.html.php';
