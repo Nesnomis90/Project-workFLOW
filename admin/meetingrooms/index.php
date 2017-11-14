@@ -11,8 +11,6 @@ if (!isUserAdmin()){
 	exit();
 }
 
-var_dump($_SESSION); // TO-DO: remove after testing is done
-
 // Function to clear sessions used to remember user inputs on refreshing the add meeting room form
 function clearAddMeetingRoomSessions(){
 	unset($_SESSION['AddMeetingRoomDescription']);
@@ -304,8 +302,6 @@ if ((isSet($_POST['action']) AND $_POST['action'] == "Create Meeting Room") OR
 	$button = 'Add Room';
 	$meetingRoomID = '';
 
-	var_dump($_SESSION); // TO-DO: Remove before uploading.
-	
 	// Change form
 	include 'form.html.php';
 	exit();
@@ -511,8 +507,6 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Edit') OR
 	$originalMeetingRoomDescription = $_SESSION['EditMeetingRoomOriginalInfo']['MeetingRoomDescription'];
 	$originalMeetingRoomLocation = $_SESSION['EditMeetingRoomOriginalInfo']['MeetingRoomLocation'];
 
-	var_dump($_SESSION); // TO-DO: Remove before uploading.
-
 	include 'form.html.php';
 	exit();
 }
@@ -621,11 +615,10 @@ if(isSet($_POST['edit']) AND $_POST['edit'] == 'Cancel'){
 }
 
 if (isSet($refreshMeetingRooms) AND $refreshMeetingRooms) {
-	//TO-DO: Add code that should occur on a refresh
 	unset($refreshMeetingRooms);
 }
 
-// Remove any unused variables from memory // TO-DO: Change if this ruins having multiple tabs open etc.
+// Remove any unused variables from memory
 clearAddMeetingRoomSessions();
 clearEditMeetingRoomSessions();
 

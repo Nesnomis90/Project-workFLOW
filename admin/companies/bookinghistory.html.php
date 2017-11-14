@@ -104,7 +104,7 @@
 								<label class="notBilled">Booking Time Charged:</label><span><b><?php htmlout($period['BookingTimeCharged']); ?></b></span>
 								<label class="notBilled">Excess Booking Time:</label><span><b><?php htmlout($period['OverCreditsTimeExact']); ?></b></span>
 								<label class="notBilled">Excess Time Charged:</label><span><b><?php htmlout($period['OverCreditsTimeCharged']); ?></b></span>
-								<label class="notBilled">Cost (Subscription + Excess Booking Time + Orders):</label><span><b><?php htmlout($period['TotalBookingCostThisMonthAsParts']); ?></b></span>
+								<label class="notBilled">Cost (Subscription + Excess Time + Orders):</label><span><b><?php htmlout($period['TotalBookingCostThisMonthAsParts']); ?></b></span>
 								<label class="notBilled">Cost (Total):</label><span><b style="color:red"><?php htmlout($period['TotalBookingCostThisMonth']); ?></b></span>
 								<?php $totalCostForAllPeriodsSummedUp += $period['TotalBookingCostThisMonthJustNumber']; ?>
 							</div>

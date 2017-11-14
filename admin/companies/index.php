@@ -1212,8 +1212,6 @@ function refreshBookingHistory(){
 
 	$displayDateTimeCreated = $_SESSION['BookingHistoryCompanyInfo']['CompanyDateTimeCreated'];
 
-	var_dump($_SESSION); // TO-DO: Remove before uploading
-
 	include_once 'bookinghistory.html.php';
 	exit();
 }
@@ -1257,8 +1255,6 @@ if(isSet($_POST['changeToMergeNumber']) AND $_POST['changeToMergeNumber'] != "")
 		$pdo = null;
 		exit();
 	}
-
-	var_dump($_SESSION); // TO-DO: Remove before uploading
 
 	include_once 'bookinghistoryperiodsonly.html.php';
 	exit();
@@ -1335,8 +1331,6 @@ if(isSet($_POST['history']) AND $_POST['history'] == "Go To This Period"){
 		$pdo = null;
 		exit();
 	}
-
-	var_dump($_SESSION); // TO-DO: Remove before uploading
 
 	include_once 'bookinghistory.html.php';
 	exit();
@@ -1437,8 +1431,6 @@ if(isSet($_POST['history']) AND $_POST['history'] == "Set As Billed"){
 	$billingDescription = $billingDescriptionInformation;
 	$displayDateTimeCreated = $_SESSION['BookingHistoryCompanyInfo']['CompanyDateTimeCreated'];
 
-	var_dump($_SESSION); // TO-DO: Remove before uploading
-
 	include_once 'bookinghistory.html.php';
 	exit();	
 }
@@ -1529,8 +1521,6 @@ if(isSet($_POST['history']) AND $_POST['history'] == "Next Period"){
 	}
 
 	$displayDateTimeCreated = $_SESSION['BookingHistoryCompanyInfo']['CompanyDateTimeCreated'];
-
-	var_dump($_SESSION); // TO-DO: Remove before uploading
 
 	include_once 'bookinghistory.html.php';
 	exit();
@@ -1624,8 +1614,6 @@ if(	(isSet($_POST['history']) AND $_POST['history'] == "Previous Period") OR
 	}
 
 	$displayDateTimeCreated = $_SESSION['BookingHistoryCompanyInfo']['CompanyDateTimeCreated'];
-
-	var_dump($_SESSION); // TO-DO: Remove before uploading.
 
 	include_once 'bookinghistory.html.php';
 	exit();
@@ -1776,8 +1764,6 @@ if (	(isSet($_GET['companyID']) AND isSet($_GET['BillingStart']) AND isSet($_GET
 		exit();
 	}
 
-	var_dump($_SESSION); // TO-DO: Remove before uploading
-
 	include_once 'bookinghistory.html.php';
 	exit();
 }
@@ -1904,8 +1890,6 @@ if ((isSet($_POST['action']) AND $_POST['action'] == "Booking History") OR
 		exit();
 	}
 
-	var_dump($_SESSION); // TO-DO: Remove before uploading
-
 	include_once 'bookinghistory.html.php';
 	exit();
 }
@@ -1985,8 +1969,6 @@ if ((isSet($_POST['action']) and $_POST['action'] == 'Merge') OR
 			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
 			exit();
 		}
-
-		var_dump($_SESSION); // TO-DO: Remove before uploading
 
 		include_once 'merge.html.php';
 		exit();
@@ -2370,8 +2352,6 @@ if(isSet($_POST['action']) and $_POST['action'] == 'Delete'){
 	$companyID = $_POST['CompanyID'];
 	$companyName = $_POST['CompanyName'];
 
-	var_dump($_SESSION); // TO-DO: Remove before uploading
-
 	include_once 'confirmdelete.html.php';
 	exit();
 }
@@ -2394,8 +2374,6 @@ if(isSet($_POST['confirmdelete']) AND $_POST['confirmdelete'] == "Yes, Delete Th
 	if(!isSet($_POST['password']) OR (isSet($_POST['password']) AND $_POST['password'] == "")){
 
 		$wrongPassword = "You need to fill in your password.";
-
-		var_dump($_SESSION); // TO-DO: Remove before uploading
 
 		include_once 'confirmdelete.html.php';
 		exit();
@@ -2433,8 +2411,6 @@ if(isSet($_POST['confirmdelete']) AND $_POST['confirmdelete'] == "Yes, Delete Th
 
 	if($hashedPassword != $correctPassword){
 		$wrongPassword = "The password you submitted is incorrect.";
-
-		var_dump($_SESSION); // TO-DO: Remove before uploading
 
 		include_once 'confirmdelete.html.php';
 		exit();
@@ -2560,8 +2536,6 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Create Company') OR
 	// We don't need to see date to remove when adding a new company
 	$ShowDateToRemove = FALSE;
 
-	var_dump($_SESSION); // TO-DO: Remove before uploading
-
 	// Change to the actual html form template
 	include 'form.html.php';
 	exit();
@@ -2650,8 +2624,6 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Edit') OR
 
 	// Want to see date to remove while editing
 	$ShowDateToRemove = TRUE;
-
-	var_dump($_SESSION); // TO-DO: Remove before uploading
 
 	// Change to the actual form we want to use
 	include 'form.html.php';
@@ -3237,8 +3209,6 @@ foreach($result as $row){
 
 unset($_SESSION['MergeCompanySelectedCompanyID']);
 unset($_SESSION['MergeCompanySelectedCompanyID2']);
-
-var_dump($_SESSION); // TO-DO: Remove before uploading
 
 // Create the companies list in HTML
 include_once 'companies.html.php';

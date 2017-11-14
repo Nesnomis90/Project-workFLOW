@@ -306,14 +306,12 @@ function checkIfLocalDeviceOrLoggedIn(){
 		if(isSet($_SESSION['DefaultMeetingRoomInfo'])){
 			// We're accessing a local device.
 			// Confirm with booking code
-			var_dump($_SESSION); // TO-DO: remove after testing is done
 			include_once 'bookingcode.html.php';
 			exit();
 		}
 			// If not local, use regular log in
 		if(checkIfUserIsLoggedIn() === FALSE){
 			makeUserLogIn();
-			var_dump($_SESSION); // TO-DO: remove after testing is done
 			exit();
 		}	
 	}
@@ -708,7 +706,6 @@ checkIfLocalDevice();
 
 // If user wants to refresh the booking code template when timed out.
 if(isSet($_POST['bookingCode']) AND $_POST['bookingCode'] == "Refresh"){
-	var_dump($_SESSION);	// TO-DO: Remove before uploading
 	include_once 'bookingcode.html.php';
 	exit();
 }
@@ -828,11 +825,7 @@ if(isSet($_POST['confirmCancel']) AND $_POST['confirmCancel'] == "Confirm Cancel
 	}
 
 	if($invalidInput){
-
 		$cancelledBy = $_POST['cancelledBy'];
-
-		var_dump($_SESSION); // TO-DO: Remove when done testing
-
 		include_once 'cancelmessage.html.php';
 		exit();
 	}
@@ -1036,7 +1029,6 @@ if ((isSet($_POST['action']) and $_POST['action'] == 'Cancel') OR
 				$cancelledBy = "Creator";
 			}
 
-			var_dump($_SESSION); // TO-DO: Remove before uploading
 			include_once 'cancelmessage.html.php';
 			exit();
 		}
@@ -1567,8 +1559,6 @@ if ((isSet($_POST['action']) and $_POST['action'] == 'Change Room') OR
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
 		exit();
 	}
-
-	var_dump($_SESSION); // TO-DO: Remove after done testing
 
 	unset($_SESSION['bookingCodeUserID']);
 
@@ -2360,7 +2350,6 @@ if ((isSet($_POST['changeroom']) and $_POST['changeroom'] == 'Confirm Change') O
 if(isSet($_POST['action']) AND $_POST['action'] == "Remove Timeout"){
 
 	if(updateAdminBookingCodeGuesses() === FALSE){
-		var_dump($_SESSION); // TO-DO: remove after testing is done
 		include_once 'bookingcode.html.php';
 		exit();
 	}
@@ -2369,7 +2358,6 @@ if(isSet($_POST['action']) AND $_POST['action'] == "Remove Timeout"){
 	$validatedBookingCode = trimAllWhitespace($bookingCode);
 	if(validateIntegerNumber($validatedBookingCode) !== TRUE){
 		$_SESSION['confirmBookingCodeError'] = "The booking code you submitted had non-numbers in it.";
-		var_dump($_SESSION); // TO-DO: remove after testing is done
 		include_once 'bookingcode.html.php';
 		exit();
 	}
@@ -2377,7 +2365,6 @@ if(isSet($_POST['action']) AND $_POST['action'] == "Remove Timeout"){
 	$invalidBookingCode = isNumberInvalidBookingCode($validatedBookingCode);
 	if($invalidBookingCode === TRUE){
 		$_SESSION['confirmBookingCodeError'] = "The booking code you submitted is an invalid code.";
-		var_dump($_SESSION); // TO-DO: remove after testing is done
 		include_once 'bookingcode.html.php';
 		exit();	
 	}
@@ -2413,16 +2400,12 @@ if(isSet($_POST['action']) AND $_POST['action'] == "Remove Timeout"){
 			unset($_SESSION['adminBookingCodeGuesses']);
 			$_SESSION['confirmBookingCodeError'] = "Successfully removed timeout.";
 
-			var_dump($_SESSION); // TO-DO: Remove after testing
-
 			include_once 'bookingcode.html.php';
 			exit();
 		} else {
 			// Remember last datetime we guessed wrong
 			$_SESSION['adminBookingCodeGuesses'][] = getDatetimeNow();
 			$_SESSION['confirmBookingCodeError'] = "The booking code you submitted is an incorrect admin code.";
-
-			var_dump($_SESSION); // TO-DO: Remove after testing
 
 			include_once 'bookingcode.html.php';
 			exit();
@@ -2441,7 +2424,6 @@ if(isSet($_POST['action']) AND $_POST['action'] == "Remove Timeout"){
 if(isSet($_POST['action']) AND $_POST['action'] == "Confirm Code"){
 
 	if(updateBookingCodeGuesses() === FALSE){
-		var_dump($_SESSION); // TO-DO: remove after testing is done
 		include_once 'bookingcode.html.php';
 		exit();
 	}
@@ -2450,7 +2432,6 @@ if(isSet($_POST['action']) AND $_POST['action'] == "Confirm Code"){
 	$validatedBookingCode = trimAllWhitespace($bookingCode);
 	if(validateIntegerNumber($validatedBookingCode) !== TRUE){
 		$_SESSION['confirmBookingCodeError'] = "The booking code you submitted had non-numbers in it.";
-		var_dump($_SESSION); // TO-DO: remove after testing is done
 		include_once 'bookingcode.html.php';
 		exit();
 	}
@@ -2458,7 +2439,6 @@ if(isSet($_POST['action']) AND $_POST['action'] == "Confirm Code"){
 	$invalidBookingCode = isNumberInvalidBookingCode($validatedBookingCode);
 	if($invalidBookingCode === TRUE){
 		$_SESSION['confirmBookingCodeError'] = "The booking code you submitted is an invalid code.";
-		var_dump($_SESSION); // TO-DO: remove after testing is done
 		include_once 'bookingcode.html.php';
 		exit();	
 	}
@@ -2529,8 +2509,6 @@ if(isSet($_POST['action']) AND $_POST['action'] == "Confirm Code"){
 			if(!isSet($_SESSION['confirmBookingCodeError'])){
 				$_SESSION['confirmBookingCodeError'] = "The booking code you submitted is an incorrect code.";
 			}
-
-			var_dump($_SESSION); // TO-DO: Remove after testing
 
 			include_once 'bookingcode.html.php';
 			exit();
@@ -3150,7 +3128,6 @@ if(	((isSet($_POST['action']) AND $_POST['action'] == 'Create Meeting')) OR
 		$userNotes = "";
 	}
 
-	var_dump($_SESSION); // TO-DO: remove after testing is done
 	// Change form
 	include 'addbooking.html.php';
 	exit();
@@ -3578,7 +3555,6 @@ if ((isSet($_POST['add']) AND $_POST['add'] == "Add Booking") OR
 
 	// Send user to the confirmation template if needed
 	if($bookingWentOverCredits AND !isSet($_SESSION['refreshAddCreateBookingConfirmed'])){
-		var_dump($_SESSION); // TO-DO: Remove before uploading
 		include_once 'confirmbooking.html.php';
 		exit();
 	}
@@ -4820,7 +4796,7 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Edit') OR
 	$displayName = $row['BookedBy'];
 	$description = $row['BookingDescription'];
 	$userInformation = $row['UserLastname'] . ', ' . $row['UserFirstname'] . ' - ' . $row['UserEmail'];
-		// Original values	
+		// Original values
 	$originalStartDateTime = $original['StartTime'];
 	$originalEndDateTime = $original['EndTime'];
 	if(!validateDatetimeWithFormat($originalStartDateTime, DATETIME_DEFAULT_FORMAT_TO_DISPLAY)){
@@ -4828,7 +4804,7 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Edit') OR
 	}
 	if(!validateDatetimeWithFormat($originalEndDateTime, DATETIME_DEFAULT_FORMAT_TO_DISPLAY)){
 		$originalEndDateTime = convertDatetimeToFormat($originalEndDateTime , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
-	}	
+	}
 	if($original['BookedForCompany']!=NULL){
 		$originalCompanyName = $original['BookedForCompany'];
 	}
@@ -4842,13 +4818,11 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Edit') OR
 								' - ' . $original['UserEmail'];
 	if(!isSet($originalUserInformation) OR $originalUserInformation == NULL OR $originalUserInformation == ",  - "){
 		$originalUserInformation = "N/A - Deleted";	
-	}	
-	
+	}
+
 	// Save changes
 	$_SESSION['EditCreateBookingInfoArray'] = $row;
-	
-	var_dump($_SESSION); // TO-DO: remove after testing is done
-	
+
 	// Change to the actual form we want to use
 	include 'editbooking.html.php';
 	exit();
@@ -5575,7 +5549,6 @@ if	(isSet($_SESSION['loggedIn']) AND
 		$userNotes = "";
 	}
 
-	var_dump($_SESSION);	// TO-DO: remove before uploading
 	include_once 'addorder.html.php';
 	exit();
 }
@@ -6373,7 +6346,6 @@ if	(isSet($_SESSION['loggedIn']) AND
 		$orderCommunicationToStaff = "";
 	}
 
-	var_dump($_SESSION); // TO-DO: Remove before uploading
 	include_once 'editorder.html.php';
 	exit();
 }
@@ -6925,7 +6897,6 @@ if	(isSet($_SESSION['loggedIn']) AND
 		$orderCommunicationToStaff = "";
 	}
 
-	var_dump($_SESSION); // TO-DO: Remove before uploading
 	include_once 'details.html.php';
 	exit();
 }
@@ -7237,7 +7208,6 @@ if	(isSet($_SESSION['loggedIn']) AND
 				$cancelledBy = "Creator";
 			}
 
-			var_dump($_SESSION); // TO-DO: Remove before uploading
 			include_once 'cancelmessage.html.php';
 			exit();
 		}
@@ -7702,7 +7672,6 @@ foreach($result as $row){
 								);
 	}
 }
-var_dump($_SESSION); // TO-DO: remove after testing is done
 // Load the html template
 include_once 'booking.html.php';
 ?>

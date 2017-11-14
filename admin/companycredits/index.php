@@ -157,9 +157,7 @@ if (	isSet($_POST['action']) AND $_POST['action'] == 'Edit' OR
 	$CreditsAlternativeCreditsAmount = $creditsAlternativeAmount;
 		
 	$selectedCreditsID = $_SESSION['EditCompanyCreditsSelectedCreditsID'];
-		
-	var_dump($_SESSION); // TO-DO: remove after testing is done
-	
+
 	// Change to the actual form we want to use
 	include 'editcompanycredits.html.php';
 	exit();
@@ -429,7 +427,6 @@ if (isSet($_POST['edit']) AND $_POST['edit'] == 'Finish Edit')
 }
 
 if(isSet($refreshCompanyCredits) AND $refreshCompanyCredits){
-	// TO-DO: Add code that should occur on a refresh
 	unset($refreshCompanyCredits);
 }
 
@@ -576,8 +573,6 @@ foreach($result AS $row){
 							'DateTimeLastModified' => $displaylastModifiedDateTime						
 						);
 }
-
-var_dump($_SESSION); // TO-DO: remove after testing is done
 
 // Create the company credits list in HTML
 include_once 'companycredits.html.php';

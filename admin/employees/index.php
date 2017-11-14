@@ -395,8 +395,6 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Add Employee') OR
 	}
 	unset($_SESSION['AddEmployeeShowSearchResults']);
 
-	var_dump($_SESSION); // TO-DO: remove after testing is done
-
 	// Change to the actual html form template
 	include 'addemployee.html.php';
 	exit();
@@ -434,7 +432,7 @@ if (isSet($_POST['action']) AND $_POST['action'] == 'Confirm Employee')
 		// We didn't have enough values filled in. "go back" to add employee
 		$_SESSION['refreshAddEmployee'] = TRUE;
 		$_SESSION['AddEmployeeError'] = $c;
-		//TO-DO: Remove/Change the search variables if we don't want it to show up after a search
+
 		$companySearchString = $_POST['companysearchstring'];
 		$userSearchString = $_POST['usersearchstring'];
 		$_SESSION['AddEmployeeCompanySearch'] = trimExcessWhitespace($companySearchString);
@@ -711,8 +709,6 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Change Role'){
 	$UserID = $row['UsrID'];
 	$_SESSION['EditEmployeeOriginalPositionID'] = $row['PositionID'];
 
-	var_dump($_SESSION); // TO-DO: remove after testing is done
-
 	// Change to the actual form we want to use
 	include 'changerole.html.php';
 	exit();
@@ -839,8 +835,6 @@ if ((isSet($_POST['action']) and $_POST['action'] == 'Transfer') OR
 			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
 			exit();
 		}
-
-		var_dump($_SESSION);	// TO-DO: Remove after done testing
 
 		include_once 'transfer.html.php';
 		exit();
@@ -1031,7 +1025,6 @@ if (isSet($_POST['action']) AND $_POST['action'] == 'Cancel'){
 }
 
 if(isSet($refreshEmployees) AND $refreshEmployees){
-	// TO-DO: Add code that should occur on a refresh
 	unset($refreshEmployees);
 }
 
@@ -1959,8 +1952,6 @@ foreach($result AS $row){
 						'StartDateTime' => $displayStartDateTime
 						);
 }
-
-var_dump($_SESSION); // TO-DO: remove after testing is done
 
 // Create the employees list in HTML
 include_once 'employees.html.php';

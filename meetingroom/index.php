@@ -16,11 +16,6 @@ if(isSet($_SESSION['loggedIn'])){
 	userIsLoggedIn();
 }
 
-/*
-	TO-DO:
-		Search meeting room status by datetime?
-*/
-
 // ADMIN INTERACTIONS // START //
 
 if(isSet($_GET['cancelSetDefaultRoom'])){
@@ -79,8 +74,7 @@ if(	(isSet($_POST['action']) AND $_POST['action'] == "Set Default Room") OR
 								'MeetingRoomIDCode' => $row['MeetingRoomIDCode']
 								);
 	}
-	var_dump($_SESSION); // TO-DO: remove after testing is done
-	
+
 	include_once 'adminroomselect.html.php';
 	exit();
 }
@@ -289,8 +283,6 @@ foreach($result as $row){
 							'MeetingRoomStatus' => $status
 					);
 }
-
-var_dump($_SESSION); // TO-DO: remove after testing is done
 
 // Load the html template
 include_once 'meetingroomforallusers.html.php';

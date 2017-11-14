@@ -33,8 +33,6 @@ function clearEditEmployeeAsOwnerSessions(){
 if(isSet($_SESSION['loggedIn'])){
 	userIsLoggedIn();
 } else {
-	var_dump($_SESSION); // TO-DO: remove after testing is done	
-
 	include_once 'company.html.php';
 	exit();
 }
@@ -386,7 +384,6 @@ if(isSet($_POST['action']) AND $_POST['action'] == "Request To Join"){
 			exit();
 		}
 
-		var_dump($_SESSION);	// TO-DO: Remove before uploading
 		include_once 'confirmrequest.html.php';
 		exit();
 	}
@@ -479,7 +476,7 @@ if(isSet($_POST['confirm']) AND $_POST['confirm'] == "Yes, Send The Request"){
 			$email = implode(", ", $email);
 
 			if(!$mailResult){
-				$_SESSION['normalCompanyFeedback'] .= "\n\n[WARNING] System failed to send Email to user(s).";
+				$_SESSION['normalCompanyFeedback'] = "[WARNING] System failed to send Email to user(s).";
 
 				// Email failed to be prepared. Store it in database to try again later
 				try
@@ -512,7 +509,11 @@ if(isSet($_POST['confirm']) AND $_POST['confirm'] == "Yes, Send The Request"){
 				$_SESSION['normalCompanyFeedback'] .= "\nEmail to be sent has been stored and will be attempted to be sent again later.";
 			}
 
-			$_SESSION['normalCompanyFeedback'] .= "\nThis is the email msg we're sending out:\n$emailMessage\nSent to email: $email."; // TO-DO: Remove before uploading			
+			if(isSet($_SESSION['normalCompanyFeedback'])){
+				$_SESSION['normalCompanyFeedback'] .= "\nThis is the email msg we're sending out:\n$emailMessage\nSent to email: $email."; // TO-DO: Remove before uploading
+			} else {
+				$_SESSION['normalCompanyFeedback'] = "This is the email msg we're sending out:\n$emailMessage\nSent to email: $email."; // TO-DO: Remove before uploading			
+			}
 		} else {
 			if(isSet($_SESSION['normalCompanyFeedback'])){
 				$_SESSION['normalCompanyFeedback'] .= "\n\nThe request couldn't be made, since there were no company owner(s) that wanted to be contacted."; // TO-DO: Remove before uploading.
@@ -638,8 +639,6 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Change Role'){
 	$UserID = $row['UsrID'];
 	$_SESSION['EditEmployeeAsOwnerOriginalPositionID'] = $row['PositionID'];
 
-	var_dump($_SESSION); // TO-DO: remove after testing is done
-
 	// Change to the actual form we want to use
 	include 'changerole.html.php';
 	exit();
@@ -721,8 +720,6 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Remove'){
 	$userID = $_POST['UserID'];
 	$companyID = $_POST['CompanyID'];
 
-	var_dump($_SESSION); // TO-DO: Remove before uploading
-
 	include_once 'confirmremoveemployee.html.php';
 	exit();
 }
@@ -740,9 +737,6 @@ if(isSet($_POST['remove']) AND $_POST['remove'] == 'Remove Employee'){
 
 	if($submittedPassword == ""){
 		$feedback = "You need to fill in your password.";
-
-		var_dump($_SESSION); // TO-DO: Remove before uploading
-
 		include_once 'confirmremoveemployee.html.php';
 		exit();
 	}
@@ -834,9 +828,6 @@ if(isSet($_POST['remove']) AND $_POST['remove'] == 'Remove Employee'){
 		}
 	} else {
 		$feedback = "Incorrect Password. Try Again.";
-
-		var_dump($_SESSION); // TO-DO: Remove before uploading
-
 		include_once 'confirmremoveemployee.html.php';
 		exit();
 	}
@@ -1034,8 +1025,6 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Add Employee') OR
 	}
 	unset($_SESSION['AddEmployeeAsOwnerShowSearchResults']);
 
-	var_dump($_SESSION); // TO-DO: remove after testing is done
-
 	// Change to the actual html form template
 	include 'addemployee.html.php';
 	exit();
@@ -1176,8 +1165,6 @@ if(isSet($_POST['action']) AND $_POST['action'] == 'Confirm Employee'){
 		}
 	}
 
-	var_dump($_SESSION);	// TO-DO: Remove before uploading
-
 	include_once 'confirmaddemployee.html.php';
 	exit();
 }
@@ -1198,11 +1185,7 @@ if(isSet($_POST['confirmadd']) AND $_POST['confirmadd'] == "Add Employee"){
 
 	// Check if password is submitted
 	if(!isSet($_POST['password']) OR (isSet($_POST['password']) AND $_POST['password'] == "")){
-
 		$wrongPassword = "You need to fill in your password.";
-
-		var_dump($_SESSION); // TO-DO: Remove before uploading
-
 		include_once 'confirmaddemployee.html.php';
 		exit();
 	}
@@ -1236,9 +1219,6 @@ if(isSet($_POST['confirmadd']) AND $_POST['confirmadd'] == "Add Employee"){
 
 	if($hashedPassword != $correctPassword){
 		$wrongPassword = "The password you submitted is incorrect.";
-
-		var_dump($_SESSION); // TO-DO: Remove before uploading
-
 		include_once 'confirmaddemployee.html.php';
 		exit();
 	}
@@ -1291,7 +1271,6 @@ if(isSet($_POST['confirmadd']) AND $_POST['confirmadd'] == "Add Employee"){
 			$userID = $pdo->lastInsertId();
 
 			// Send user an email with the activation code and password
-				// TO-DO: This is UNTESTED since we don't have php.ini set up to actually send email
 			$emailSubject = "Account Activation Link - FLOW";
 
 			$emailMessage = 
@@ -1539,9 +1518,6 @@ if(isSet($_SESSION['AddEmployeeAsOwnerAutoFillInEmail'], $_SESSION['normalUserCo
 		} else {
 			$noAccess = TRUE;
 			unset($_SESSION['AddEmployeeAsOwnerAutoFillInEmail']);
-
-			var_dump($_SESSION); // TO-DO: remove after testing is done	
-
 			include_once 'company.html.php';
 			exit();
 		}
@@ -1637,8 +1613,6 @@ if(isSet($_SESSION['AddEmployeeAsOwnerAutoFillInEmail'], $_SESSION['normalUserCo
 		$_SESSION['normalUserCompanyNameSelected'] = $companyName;
 	}
 
-	var_dump($_SESSION); // TO-DO: Remove before uploading
-
 	include_once 'autofillinemployee.html.php';
 	exit();
 }
@@ -1679,9 +1653,6 @@ if(isSet($_GET['employees']) AND isSet($_SESSION['normalUserCompanyIDSelected'])
 			$_SESSION['normalUserCompanyNameSelected'] = $userResult['CompanyName'];
 		} else {
 			$noAccess = TRUE;
-
-			var_dump($_SESSION); // TO-DO: remove after testing is done	
-
 			include_once 'company.html.php';
 			exit();
 		}
@@ -2384,8 +2355,6 @@ if(isSet($_GET['employees']) AND isSet($_SESSION['normalUserCompanyIDSelected'])
 							);
 	}
 
-	var_dump($_SESSION); // TO-DO: remove after testing is done
-
 	include_once 'employees.html.php';
 	exit();
 }
@@ -2445,8 +2414,6 @@ if(isSet($selectedCompanyToDisplayID) OR (isSet($selectedCompanyToDisplayID) AND
 	if($companyHit === FALSE){
 		$noAccess = TRUE;
 		$pdo = null;
-		var_dump($_SESSION); // TO-DO: remove after testing is done	
-
 		include_once 'company.html.php';
 		exit();
 	}
@@ -2824,8 +2791,6 @@ if(isSet($_GET['totalBooking']) OR isSet($_GET['activeBooking']) OR isSet($_GET[
 		}
 	}
 
-	var_dump($_SESSION); // TO-DO: remove after testing is done
-
 	// Create the booking information table in HTML
 	include_once 'bookings.html.php';
 	exit();
@@ -3169,8 +3134,6 @@ if(isSet($selectedCompanyToDisplayID) AND !empty($selectedCompanyToDisplayID)){
 							'PeriodInfo' => $periodInfo
 						);
 }
-
-var_dump($_SESSION); // TO-DO: remove after testing is done	
 
 include_once 'company.html.php';
 ?>
