@@ -94,6 +94,9 @@
 				</tr>
 			</form>
 
+			<tr>
+				<th colspan="12"></th>
+			</tr>
 		</table>
 
 		<table>
@@ -151,6 +154,5 @@
 		<?php endif; ?>
 		</table>
 
-		<p><a href="..">Return to CMS home</a></p>
 	</body>
 </html>	

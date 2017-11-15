@@ -141,7 +141,5 @@
 					<?php endforeach; ?>				
 				<?php endif; ?>
 			</table>
-
-	<div class="left"><a href="..">Return to CMS home</a></div>
 	</body>
 </html>

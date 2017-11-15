@@ -103,10 +103,9 @@
 						<input type="submit" style="font-size: 150%; color: green;" value="+">
 					</td>
 				</tr>
-			</form>	
+			</form>
 
+			<tr><th colspan="10"></th></tr>
 		</table>
-
-	<div class="left"><a href="..">Return to CMS home</a></div>
 	</body>
 </html>

@@ -88,7 +88,7 @@
 				</tr>
 			</form>
 
+			<tr><th colspan="9"></th></tr>
 		</table>
-		<p><a href="/admin/">Return to CMS home</a></p>
 	</body>
 </html>

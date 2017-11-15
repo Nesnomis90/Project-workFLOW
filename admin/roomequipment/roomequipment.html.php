@@ -46,7 +46,7 @@
 				<th colspan="3">Equipment</th>
 				<th>Meeting Room</th>
 				<th>Date</th>
-				<th colspan=2">Alter Room Equipment</th>
+				<th colspan="2">Alter Room Equipment</th>
 			</tr>
 			<tr>
 				<th>Name</th>
@@ -98,6 +98,7 @@
 				</tr>
 			</form>
 
+			<tr><th colspan="7"></th></tr>
 		</table>
 
 		<p><a href="..">Return to CMS home</a></p>
