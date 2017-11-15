@@ -83,8 +83,5 @@
 			<tr><td colspan="12"><b>There are no credits for any companies registered in the database. This should only occur if there are no companies registered.</b></td></tr>
 		<?php endif; ?>
 		</table>
-
-	<div class="left"><a href="..">Return to CMS home</a></div>
-
 	</body>
 </html>

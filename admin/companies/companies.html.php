@@ -8,7 +8,7 @@
 		<title>Manage Companies</title>
 	</head>
 	<body onload="startTime()">
-		<?php include_once $_SERVER['DOCUMENT_ROOT'] .'/includes/admintopnav.html.php'; ?>
+		<?php include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/admintopnav.html.php'; ?>
 
 		<h1>Manage Companies</h1>
 		
@@ -19,7 +19,7 @@
 			<?php endif; ?>
 		</div>
 
-		<?php if($rowNum>0) :?>
+		<?php if($rowNum > 0) :?>
 			<form action="" method="post">
 				<div class="left">
 					<input type="submit" name="action" value="Create Company">
@@ -199,17 +199,6 @@
 					<?php endforeach; ?>
 				</table>
 			<?php endif; ?>
-
-		<?php else : ?>
-			<tr><b>There are no companies registered in the database.</b></tr>
-			<tr>
-				<form action="" method="post">
-					<input type="submit" name="action" value="Create Company">
-				</form>
-			</tr>
 		<?php endif; ?>
-
-	<div class="left"><a href="..">Return to CMS home</a></div>
-
 	</body>
 </html>
