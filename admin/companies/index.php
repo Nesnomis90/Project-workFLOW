@@ -1374,7 +1374,7 @@ if(isSet($_POST['history']) AND $_POST['history'] == "Set As Billed"){
 		// Format billing dates
 		$displayBillingStart = convertDatetimeToFormat($BillingStart , 'Y-m-d', DATE_DEFAULT_FORMAT_TO_DISPLAY);
 		$displayBillingEnd = convertDatetimeToFormat($BillingEnd , 'Y-m-d', DATE_DEFAULT_FORMAT_TO_DISPLAY);
-		$BillingPeriod = $displayBillingStart . " up to " . $displayBillingEnd . ".";	
+		$BillingPeriod = $displayBillingStart . " up to " . $displayBillingEnd . ".";
 
 		$rightNow = FALSE;
 
@@ -1393,10 +1393,12 @@ if(isSet($_POST['history']) AND $_POST['history'] == "Set As Billed"){
 											" by the user " . $_SESSION['LoggedInUserName'] .
 											".\nAt that time the company had produced a total booking time of: " . $displayTotalBookingTimeUsedInPriceCalculationsThisPeriod .
 											", with a credit given of: " . $displayCompanyCredits . " resulting in excess use of: " . $displayOverCreditsTimeUsed . 
-											" (billed as " . $displayTotalBookingTimeChargedWithAfterCredits . ").\nThe montly fee was set as " . $displayMonthPrice . 
+											" (billed as " . $displayTotalBookingTimeChargedWithAfterCredits . ")." .
+											"\nThe montly fee was set as " . $displayMonthPrice . 
+											"\nThe monthly order cost was set as " . $displayTotalOrderCostThisPeriod .
 											".\nResulting in a total billing cost that period of " . $periodCost . " = " . $displayTotalPeriodCost . 
-											".\nAdditional information submitted by Admin:\n" . $billingDescriptionAdminAddition;
-		if(substr($billingDescriptionInformation,-1) != "."){
+											".\n\nAdditional information submitted by Admin:\n" . $billingDescriptionAdminAddition;
+		if(substr($billingDescriptionInformation, -1) != "."){
 			$billingDescriptionInformation . ".";
 		}
 
@@ -1415,6 +1417,19 @@ if(isSet($_POST['history']) AND $_POST['history'] == "Set As Billed"){
 		$s->bindValue(':billingDescription', $billingDescriptionInformation);
 		$s->execute();
 
+		$rowUpdated = $s->rowCount();
+
+		if($rowUpdated > 0){
+			// We've clearly billed it now, but the retrieved info hasn't seen that yet, so we update it.
+			$periodHasBeenBilled = 1;
+			$billingDescription = $billingDescriptionInformation;
+			$displayDateTimeCreated = $_SESSION['BookingHistoryCompanyInfo']['CompanyDateTimeCreated'];
+		} else {
+			// For some reason there was no entry in the databse for this period, so couldn't update it
+			$periodHasBeenBilled = 0;
+			$displayDateTimeCreated = $_SESSION['BookingHistoryCompanyInfo']['CompanyDateTimeCreated'];
+		}
+
 		//Close the connection
 		$pdo = null;
 	}
@@ -1425,11 +1440,6 @@ if(isSet($_POST['history']) AND $_POST['history'] == "Set As Billed"){
 		$pdo = null;
 		exit();
 	}
-
-	// We've clearly billed it now, but the retrieved info hasn't seen that yet, so we update it.
-	$periodHasBeenBilled = 1;
-	$billingDescription = $billingDescriptionInformation;
-	$displayDateTimeCreated = $_SESSION['BookingHistoryCompanyInfo']['CompanyDateTimeCreated'];
 
 	include_once 'bookinghistory.html.php';
 	exit();	

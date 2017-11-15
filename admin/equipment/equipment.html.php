@@ -83,7 +83,7 @@
 				</tr>
 			</form>
 
+			<tr><th colspan="7"></th></tr>
 		</table>
-		<p><a href="..">Return to CMS home</a></p>
 	</body>
 </html>

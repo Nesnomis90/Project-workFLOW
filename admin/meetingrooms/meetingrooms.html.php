@@ -112,6 +112,7 @@
 				</tr>
 			</form>
 
+			<tr><th colspan="12"></th></tr>
 		</table>
 
 		<p><a href="/admin/">Return to CMS home</a></p>
