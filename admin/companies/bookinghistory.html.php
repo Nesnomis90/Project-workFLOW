@@ -267,22 +267,25 @@
 			<?php endif; ?>
 
 			<div class="left">
-				<?php if(!$rightNow AND empty($periodHasBeenBilled)) : ?>
-					<form action="" method="post">
+				<form action="" method="post">
+					<?php if(!$rightNow AND empty($periodHasBeenBilled)) : ?>
 						<label class="description" for="billingDescription">Billing Description: </label>
 						<textarea name="billingDescription" rows="4" cols="50" placeholder="Type in any additional information you'd like to see when viewing this period later."></textarea>
+						<input type="submit" name="history" value="Set As Billed">
+					<?php elseif(!$rightNow AND $periodHasBeenBilled == 1) : ?>
+						<label class="description" for="billingDescriptionDisabled">Billing Description: </label>
+						<textarea name="billingDescriptionDisabled" rows="8" cols="100" disabled><?php htmlout($billingDescription); ?></textarea>
+						<input type="submit" name="history" value="Remove Billed Status">
+					<?php endif; ?>
+					<?php if(!$rightNow) : ?>
 						<input type="hidden" name="nextPeriod" value="<?php htmlout($NextPeriod); ?>">
 						<input type="hidden" name="previousPeriod" value="<?php htmlout($PreviousPeriod); ?>">
 						<input type="hidden" name="billingStart" value="<?php htmlout($BillingStart); ?>">
-						<input type="hidden" name="billingEnd" value="<?php htmlout($BillingEnd); ?>"><br />
-						<input type="submit" name="history" value="Set As Billed">
-					</form>
-				<?php elseif(!$rightNow AND $periodHasBeenBilled == 1) : ?>
-					<label class="description" for="billingDescriptionDisabled">Billing Description: </label>
-					<textarea name="billingDescriptionDisabled" rows="8" cols="100" disabled><?php htmlout($billingDescription); ?></textarea>
-				<?php endif; ?>
+						<input type="hidden" name="billingEnd" value="<?php htmlout($BillingEnd); ?>">
+					<?php endif; ?>
+				</form>
 			</div>
 			</fieldset>
 		</div>
 	</body>
-</html>		
+</html>

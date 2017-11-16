@@ -1484,6 +1484,108 @@ if(isSet($_POST['history']) AND $_POST['history'] == "Set As Billed"){
 	exit();	
 }
 
+/*
+// If admin wants to remove a period as being set as billed
+if(isSet($_POST['history']) AND $_POST['history'] == "Remove Billed Status"){
+
+	$companyID = $_SESSION['BookingHistoryCompanyInfo']['CompanyID'];
+	$CompanyName = $_SESSION['BookingHistoryCompanyInfo']['CompanyName'];
+
+	// Remember information
+	$NextPeriod = $_POST['nextPeriod'];
+	$PreviousPeriod = $_POST['previousPeriod'];
+	$BillingStart = $_POST['billingStart'];
+	$BillingEnd = $_POST['billingEnd'];
+
+	if(isSet($_SESSION['BookingHistoryCompanyMergeNumber']) AND $_SESSION['BookingHistoryCompanyMergeNumber'] != ""){
+		$mergeNumber = $_SESSION['BookingHistoryCompanyMergeNumber'];
+		$mergedCompanies = FALSE;
+		$lookingAtASpecificMergedPeriod = TRUE;
+	} else {
+		unset($_SESSION['BookingHistoryCompanyMergeNumber']);
+		$mergeNumber = 0;
+	}
+
+	if(isSet($_POST['billingDescription'])){
+		$billingDescriptionAdminAddition = trimExcessWhitespaceButLeaveLinefeed($_POST['billingDescription']);
+	}
+
+	if(empty($billingDescriptionAdminAddition)){
+		$billingDescriptionAdminAddition = "No additional information submitted";
+	}
+
+	// Get booking history for the selected company
+	try
+	{
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
+		$pdo = connect_to_db();	
+
+		// Format billing dates
+		$displayBillingStart = convertDatetimeToFormat($BillingStart , 'Y-m-d', DATE_DEFAULT_FORMAT_TO_DISPLAY);
+		$displayBillingEnd = convertDatetimeToFormat($BillingEnd , 'Y-m-d', DATE_DEFAULT_FORMAT_TO_DISPLAY);
+		$BillingPeriod = $displayBillingStart . " up to " . $displayBillingEnd . ".";
+
+		$rightNow = FALSE;
+
+		list(	$bookingHistory, $displayCompanyCredits, $displayCompanyCreditsRemaining, $displayOverCreditsTimeUsed, 
+				$displayMonthPrice, $displayTotalBookingTimeThisPeriod, $displayOverFeeCostThisMonth, $overCreditsFee,
+				$companyMinuteCreditsRemaining, $actualTimeOverCreditsInMinutes, $periodHasBeenBilled, $billingDescription, 
+				$displayTotalBookingTimeUsedInPriceCalculationsThisPeriod, $displayTotalBookingTimeChargedWithAfterCredits, 
+				$displayTotalOrderCostThisPeriod, $displayTotalPeriodCost, $periodCost, $companyCreditsHistoryPeriodExists,
+				$totalOrderCostThisPeriod)
+		= calculatePeriodInformation($pdo, $companyID, $BillingStart, $BillingEnd, $rightNow, $mergeNumber);
+
+		$dateTimeNow = getDatetimeNow();
+		$displayDateTimeNow = convertDatetimeToFormat($dateTimeNow , 'Y-m-d H:i:s', DATE_DEFAULT_FORMAT_TO_DISPLAY);
+
+		// Update period without being billed
+		$billingDescriptionInformation = 	"This period was Set As Billed on " . $displayDateTimeNow .
+											" by the user " . $_SESSION['LoggedInUserName'] .
+											".\nAt that time the company had produced a total booking time of: " . $displayTotalBookingTimeUsedInPriceCalculationsThisPeriod .
+											", with a credit given of: " . $displayCompanyCredits . " resulting in excess use of: " . $displayOverCreditsTimeUsed . 
+											" (billed as " . $displayTotalBookingTimeChargedWithAfterCredits . ")." .
+											"\nThe montly fee was set as " . $displayMonthPrice . 
+											"\nThe monthly order cost was set as " . $displayTotalOrderCostThisPeriod .
+											".\nResulting in a total billing cost that period of " . $periodCost . " = " . $displayTotalPeriodCost . 
+											".\n\nAdditional information submitted by Admin:\n" . $billingDescriptionAdminAddition;
+		if(substr($billingDescriptionInformation, -1) != "."){
+			$billingDescriptionInformation . ".";
+		}
+
+		$sql = "UPDATE 	`companycreditshistory`
+				SET		`hasBeenBilled` = 0,
+						`billingDescription` = :billingDescription
+				WHERE   `CompanyID` = :CompanyID
+				AND	    `startDate` = :startDate
+				AND		`endDate` = :endDate
+				AND		`mergeNumber` = :mergeNumber";
+		$s = $pdo->prepare($sql);
+		$s->bindValue(':CompanyID', $companyID);
+		$s->bindValue(':startDate', $BillingStart);
+		$s->bindValue(':endDate', $BillingEnd);
+		$s->bindValue(':mergeNumber', $mergeNumber);
+		$s->bindValue(':billingDescription', $billingDescriptionInformation);
+		$s->execute();
+
+		$periodHasBeenBilled = 0;
+		$billingDescription = $billingDescriptionInformation;
+		$displayDateTimeCreated = $_SESSION['BookingHistoryCompanyInfo']['CompanyDateTimeCreated'];	
+
+		//Close the connection
+		$pdo = null;
+	}
+	catch (PDOException $e)
+	{
+		$error = 'Error removing Billed status: ' . $e->getMessage();
+		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+		$pdo = null;
+		exit();
+	}
+
+	include_once 'bookinghistory.html.php';
+	exit();
+}*/
+
 // If admin wants to see the booking history of the period after the currently shown one
 if(isSet($_POST['history']) AND $_POST['history'] == "Next Period"){
 
