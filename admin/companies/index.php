@@ -1484,7 +1484,6 @@ if(isSet($_POST['history']) AND $_POST['history'] == "Set As Billed"){
 	exit();	
 }
 
-/*
 // If admin wants to remove a period as being set as billed
 if(isSet($_POST['history']) AND $_POST['history'] == "Remove Billed Status"){
 
@@ -1504,14 +1503,6 @@ if(isSet($_POST['history']) AND $_POST['history'] == "Remove Billed Status"){
 	} else {
 		unset($_SESSION['BookingHistoryCompanyMergeNumber']);
 		$mergeNumber = 0;
-	}
-
-	if(isSet($_POST['billingDescription'])){
-		$billingDescriptionAdminAddition = trimExcessWhitespaceButLeaveLinefeed($_POST['billingDescription']);
-	}
-
-	if(empty($billingDescriptionAdminAddition)){
-		$billingDescriptionAdminAddition = "No additional information submitted";
 	}
 
 	// Get booking history for the selected company
@@ -1538,23 +1529,9 @@ if(isSet($_POST['history']) AND $_POST['history'] == "Remove Billed Status"){
 		$dateTimeNow = getDatetimeNow();
 		$displayDateTimeNow = convertDatetimeToFormat($dateTimeNow , 'Y-m-d H:i:s', DATE_DEFAULT_FORMAT_TO_DISPLAY);
 
-		// Update period without being billed
-		$billingDescriptionInformation = 	"This period was Set As Billed on " . $displayDateTimeNow .
-											" by the user " . $_SESSION['LoggedInUserName'] .
-											".\nAt that time the company had produced a total booking time of: " . $displayTotalBookingTimeUsedInPriceCalculationsThisPeriod .
-											", with a credit given of: " . $displayCompanyCredits . " resulting in excess use of: " . $displayOverCreditsTimeUsed . 
-											" (billed as " . $displayTotalBookingTimeChargedWithAfterCredits . ")." .
-											"\nThe montly fee was set as " . $displayMonthPrice . 
-											"\nThe monthly order cost was set as " . $displayTotalOrderCostThisPeriod .
-											".\nResulting in a total billing cost that period of " . $periodCost . " = " . $displayTotalPeriodCost . 
-											".\n\nAdditional information submitted by Admin:\n" . $billingDescriptionAdminAddition;
-		if(substr($billingDescriptionInformation, -1) != "."){
-			$billingDescriptionInformation . ".";
-		}
-
 		$sql = "UPDATE 	`companycreditshistory`
 				SET		`hasBeenBilled` = 0,
-						`billingDescription` = :billingDescription
+						`billingDescription` = NULL
 				WHERE   `CompanyID` = :CompanyID
 				AND	    `startDate` = :startDate
 				AND		`endDate` = :endDate
@@ -1564,11 +1541,9 @@ if(isSet($_POST['history']) AND $_POST['history'] == "Remove Billed Status"){
 		$s->bindValue(':startDate', $BillingStart);
 		$s->bindValue(':endDate', $BillingEnd);
 		$s->bindValue(':mergeNumber', $mergeNumber);
-		$s->bindValue(':billingDescription', $billingDescriptionInformation);
 		$s->execute();
 
 		$periodHasBeenBilled = 0;
-		$billingDescription = $billingDescriptionInformation;
 		$displayDateTimeCreated = $_SESSION['BookingHistoryCompanyInfo']['CompanyDateTimeCreated'];	
 
 		//Close the connection
@@ -1584,7 +1559,7 @@ if(isSet($_POST['history']) AND $_POST['history'] == "Remove Billed Status"){
 
 	include_once 'bookinghistory.html.php';
 	exit();
-}*/
+}
 
 // If admin wants to see the booking history of the period after the currently shown one
 if(isSet($_POST['history']) AND $_POST['history'] == "Next Period"){
