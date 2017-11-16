@@ -1402,50 +1402,72 @@ if(isSet($_POST['history']) AND $_POST['history'] == "Set As Billed"){
 				$totalOrderCostThisPeriod)
 		= calculatePeriodInformation($pdo, $companyID, $BillingStart, $BillingEnd, $rightNow, $mergeNumber);
 
-		// Update period as billed relevant information and admin inputs
-
 		$dateTimeNow = getDatetimeNow();
 		$displayDateTimeNow = convertDatetimeToFormat($dateTimeNow , 'Y-m-d H:i:s', DATE_DEFAULT_FORMAT_TO_DISPLAY);
-		$billingDescriptionInformation = 	"This period was Set As Billed on " . $displayDateTimeNow .
-											" by the user " . $_SESSION['LoggedInUserName'] .
-											".\nAt that time the company had produced a total booking time of: " . $displayTotalBookingTimeUsedInPriceCalculationsThisPeriod .
-											", with a credit given of: " . $displayCompanyCredits . " resulting in excess use of: " . $displayOverCreditsTimeUsed . 
-											" (billed as " . $displayTotalBookingTimeChargedWithAfterCredits . ")." .
-											"\nThe montly fee was set as " . $displayMonthPrice . 
-											"\nThe monthly order cost was set as " . $displayTotalOrderCostThisPeriod .
-											".\nResulting in a total billing cost that period of " . $periodCost . " = " . $displayTotalPeriodCost . 
-											".\n\nAdditional information submitted by Admin:\n" . $billingDescriptionAdminAddition;
-		if(substr($billingDescriptionInformation, -1) != "."){
-			$billingDescriptionInformation . ".";
-		}
 
-		$sql = "UPDATE 	`companycreditshistory`
-				SET		`hasBeenBilled` = 1,
-						`billingDescription` = :billingDescription
-				WHERE   `CompanyID` = :CompanyID
-				AND	    `startDate` = :startDate
-				AND		`endDate` = :endDate
-				AND		`mergeNumber` = :mergeNumber";
-		$s = $pdo->prepare($sql);
-		$s->bindValue(':CompanyID', $companyID);
-		$s->bindValue(':startDate', $BillingStart);
-		$s->bindValue(':endDate', $BillingEnd);
-		$s->bindValue(':mergeNumber', $mergeNumber);
-		$s->bindValue(':billingDescription', $billingDescriptionInformation);
-		$s->execute();
+		// Update period as billed with relevant information and admin inputs
+		if($companyCreditsHistoryPeriodExists){
+			$billingDescriptionInformation = 	"This period was Set As Billed on " . $displayDateTimeNow .
+												" by the user " . $_SESSION['LoggedInUserName'] .
+												".\nAt that time the company had produced a total booking time of: " . $displayTotalBookingTimeUsedInPriceCalculationsThisPeriod .
+												", with a credit given of: " . $displayCompanyCredits . " resulting in excess use of: " . $displayOverCreditsTimeUsed . 
+												" (billed as " . $displayTotalBookingTimeChargedWithAfterCredits . ")." .
+												"\nThe montly fee was set as " . $displayMonthPrice . 
+												"\nThe monthly order cost was set as " . $displayTotalOrderCostThisPeriod .
+												".\nResulting in a total billing cost that period of " . $periodCost . " = " . $displayTotalPeriodCost . 
+												".\n\nAdditional information submitted by Admin:\n" . $billingDescriptionAdminAddition;
+			if(substr($billingDescriptionInformation, -1) != "."){
+				$billingDescriptionInformation . ".";
+			}
 
-		$rowUpdated = $s->rowCount();
-
-		if($rowUpdated > 0){
-			// We've clearly billed it now, but the retrieved info hasn't seen that yet, so we update it.
-			$periodHasBeenBilled = 1;
-			$billingDescription = $billingDescriptionInformation;
-			$displayDateTimeCreated = $_SESSION['BookingHistoryCompanyInfo']['CompanyDateTimeCreated'];
+			$sql = "UPDATE 	`companycreditshistory`
+					SET		`hasBeenBilled` = 1,
+							`billingDescription` = :billingDescription
+					WHERE   `CompanyID` = :CompanyID
+					AND	    `startDate` = :startDate
+					AND		`endDate` = :endDate
+					AND		`mergeNumber` = :mergeNumber";
+			$s = $pdo->prepare($sql);
+			$s->bindValue(':CompanyID', $companyID);
+			$s->bindValue(':startDate', $BillingStart);
+			$s->bindValue(':endDate', $BillingEnd);
+			$s->bindValue(':mergeNumber', $mergeNumber);
+			$s->bindValue(':billingDescription', $billingDescriptionInformation);
+			$s->execute();
 		} else {
-			// For some reason there was no entry in the databse for this period, so couldn't update it
-			$periodHasBeenBilled = 0;
-			$displayDateTimeCreated = $_SESSION['BookingHistoryCompanyInfo']['CompanyDateTimeCreated'];
+			// Period was not already in the database so we have to add it
+			$billingDescriptionInformation = 	"This period was Set As Billed on " . $displayDateTimeNow .
+												" by the user " . $_SESSION['LoggedInUserName'] .
+												".\nAt that time the company had produced a total booking time of: " . $displayTotalBookingTimeUsedInPriceCalculationsThisPeriod .
+												", with an unknown amount of credit given, 'over fee'-cost and monthly subscription." .
+												"\nThe order cost the period was set as " . $displayTotalOrderCostThisPeriod .
+												".\nResulting in an unknown cost that period of ($displayTotalBookingTimeChargedWithAfterCredits*Over Credits Fee) + Monthly Subscription + $displayTotalOrderCostThisPeriod = N/A + $displayTotalOrderCostThisPeriod" . 
+												".\n\nAdditional information submitted by Admin:\n" . $billingDescriptionAdminAddition;
+			if(substr($billingDescriptionInformation, -1) != "."){
+				$billingDescriptionInformation . ".";
+			}
+
+			$sql = "INSERT IGNORE INTO	`companycreditshistory`
+					SET					`hasBeenBilled` = 1,
+										`minuteAmount` = 0,
+										`overCreditHourPrice` = 0,
+										`billingDescription` = :billingDescription,
+										`CompanyID` = :CompanyID,
+										`startDate` = :startDate,
+										`endDate` = :endDate,
+										`mergeNumber` = :mergeNumber";
+			$s = $pdo->prepare($sql);
+			$s->bindValue(':CompanyID', $companyID);
+			$s->bindValue(':startDate', $BillingStart);
+			$s->bindValue(':endDate', $BillingEnd);
+			$s->bindValue(':mergeNumber', $mergeNumber);
+			$s->bindValue(':billingDescription', $billingDescriptionInformation);
+			$s->execute();
 		}
+
+		$periodHasBeenBilled = 1;
+		$billingDescription = $billingDescriptionInformation;
+		$displayDateTimeCreated = $_SESSION['BookingHistoryCompanyInfo']['CompanyDateTimeCreated'];	
 
 		//Close the connection
 		$pdo = null;
