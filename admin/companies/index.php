@@ -714,6 +714,8 @@ function calculatePeriodInformation($pdo, $companyID, $BillingStart, $BillingEnd
 		$s->bindValue(':CompanyID', $companyID);
 		$s->execute();
 		$row = $s->fetch(PDO::FETCH_ASSOC);
+
+		$companyCreditsHistoryPeriodExists = TRUE;
 	} else {
 		// Get the credit information for the selected period (if we have it saved in companycreditshistory
 		$sql = "SELECT 		`minuteAmount`				AS CreditSubscriptionMinuteAmount,
@@ -735,27 +737,37 @@ function calculatePeriodInformation($pdo, $companyID, $BillingStart, $BillingEnd
 		$s->execute();
 		$row = $s->fetch(PDO::FETCH_ASSOC);
 
+		if(empty($row)){
+			$companyCreditsHistoryPeriodExists = FALSE;
+		} else {
+			$companyCreditsHistoryPeriodExists = TRUE;
+		}
+
 		$periodHasBeenBilled = $row['PeriodHasBeenBilled'];
 		$billingDescription = $row['BillingDescription'];
 	}
 
 	// Get credits values
-	$companyMinuteCredits = $row['CreditSubscriptionMinuteAmount'];
-	if($companyMinuteCredits == NULL OR $companyMinuteCredits == ""){
+	if(empty($row['CreditSubscriptionMinuteAmount'])){
 		$companyMinuteCredits = 0;
+	} else {
+		$companyMinuteCredits = $row['CreditSubscriptionMinuteAmount'];
 	}
 
-		// Format company credits to be displayed
-	$displayCompanyCredits = convertMinutesToHoursAndMinutes($companyMinuteCredits);
-
-	$monthPrice = $row["CreditSubscriptionMonthlyPrice"];
-	if($monthPrice == NULL OR $monthPrice == ""){
+	if(empty($row["CreditSubscriptionMonthlyPrice"])){
 		$monthPrice = 0;
+	} else {
+		$monthPrice = $row["CreditSubscriptionMonthlyPrice"];
 	}
-	$hourPrice = $row["CreditSubscriptionHourPrice"];
-	if($hourPrice == NULL OR $hourPrice == ""){
+
+	if(empty($hourPrice = $row["CreditSubscriptionHourPrice"])){
 		$hourPrice = 0;
+	} else {
+		$hourPrice = $row["CreditSubscriptionHourPrice"];
 	}
+
+	// Format data to be displayed
+	$displayCompanyCredits = convertMinutesToHoursAndMinutes($companyMinuteCredits);
 	$overCreditsFee = convertToCurrency($hourPrice) . "/h";
 
 	//Get completed booking history from the selected billing period
@@ -941,6 +953,7 @@ function calculatePeriodInformation($pdo, $companyID, $BillingStart, $BillingEnd
 									'OrderAdminNote' => $orderAdminNote
 									);
 	}
+
 		// Calculate monthly cost (subscription + over credit charges)
 	if($totalBookingTimeUsedInPriceCalculations > 0){
 		if($totalBookingTimeUsedInPriceCalculations > $companyMinuteCredits){
@@ -1016,7 +1029,7 @@ function calculatePeriodInformation($pdo, $companyID, $BillingStart, $BillingEnd
 	if(!isSet($periodHasBeenBilled)){
 		$periodHasBeenBilled = 0;
 	}
-	if(!isSet($billingDescription) OR $billingDescription == NULL){
+	if(empty($billingDescription)){
 		$billingDescription = "";
 	}
 
@@ -1024,7 +1037,8 @@ function calculatePeriodInformation($pdo, $companyID, $BillingStart, $BillingEnd
 					$displayMonthPrice, $displayTotalBookingTimeThisPeriod, $displayOverFeeCostThisMonth, $overCreditsFee,
 					$companyMinuteCreditsRemaining, $actualTimeOverCreditsInMinutes, $periodHasBeenBilled, $billingDescription, 
 					$displayTotalBookingTimeUsedInPriceCalculationsThisPeriod, $displayTotalBookingTimeChargedWithAfterCredits, 
-					$displayTotalOrderCostThisPeriod, $displayTotalPeriodCost, $periodCost);
+					$displayTotalOrderCostThisPeriod, $displayTotalPeriodCost, $periodCost, $companyCreditsHistoryPeriodExists,
+					$totalOrderCostThisPeriod);
 }
 
 // Function to check if user inputs for companies are correct
@@ -1190,7 +1204,8 @@ function refreshBookingHistory(){
 				$displayMonthPrice, $displayTotalBookingTimeThisPeriod, $displayOverFeeCostThisMonth, $overCreditsFee,
 				$companyMinuteCreditsRemaining, $actualTimeOverCreditsInMinutes, $periodHasBeenBilled, $billingDescription, 
 				$displayTotalBookingTimeUsedInPriceCalculationsThisPeriod, $displayTotalBookingTimeChargedWithAfterCredits, 
-				$displayTotalOrderCostThisPeriod, $displayTotalPeriodCost, $periodCost)
+				$displayTotalOrderCostThisPeriod, $displayTotalPeriodCost, $periodCost, $companyCreditsHistoryPeriodExists,
+				$totalOrderCostThisPeriod)
 		= calculatePeriodInformation($pdo, $companyID, $BillingStart, $BillingEnd, $rightNow, $mergeNumber);
 
 		// Sum up periods that are not set as billed
@@ -1319,7 +1334,8 @@ if(isSet($_POST['history']) AND $_POST['history'] == "Go To This Period"){
 				$displayMonthPrice, $displayTotalBookingTimeThisPeriod, $displayOverFeeCostThisMonth, $overCreditsFee,
 				$companyMinuteCreditsRemaining, $actualTimeOverCreditsInMinutes, $periodHasBeenBilled, $billingDescription, 
 				$displayTotalBookingTimeUsedInPriceCalculationsThisPeriod, $displayTotalBookingTimeChargedWithAfterCredits, 
-				$displayTotalOrderCostThisPeriod, $displayTotalPeriodCost, $periodCost)
+				$displayTotalOrderCostThisPeriod, $displayTotalPeriodCost, $periodCost, $companyCreditsHistoryPeriodExists,
+				$totalOrderCostThisPeriod)
 		= calculatePeriodInformation($pdo, $companyID, $BillingStart, $BillingEnd, $rightNow, $mergeNumber);
 
 		$pdo = NULL;
@@ -1382,7 +1398,8 @@ if(isSet($_POST['history']) AND $_POST['history'] == "Set As Billed"){
 				$displayMonthPrice, $displayTotalBookingTimeThisPeriod, $displayOverFeeCostThisMonth, $overCreditsFee,
 				$companyMinuteCreditsRemaining, $actualTimeOverCreditsInMinutes, $periodHasBeenBilled, $billingDescription, 
 				$displayTotalBookingTimeUsedInPriceCalculationsThisPeriod, $displayTotalBookingTimeChargedWithAfterCredits, 
-				$displayTotalOrderCostThisPeriod, $displayTotalPeriodCost, $periodCost)
+				$displayTotalOrderCostThisPeriod, $displayTotalPeriodCost, $periodCost, $companyCreditsHistoryPeriodExists,
+				$totalOrderCostThisPeriod)
 		= calculatePeriodInformation($pdo, $companyID, $BillingStart, $BillingEnd, $rightNow, $mergeNumber);
 
 		// Update period as billed relevant information and admin inputs
@@ -1510,7 +1527,8 @@ if(isSet($_POST['history']) AND $_POST['history'] == "Next Period"){
 				$displayMonthPrice, $displayTotalBookingTimeThisPeriod, $displayOverFeeCostThisMonth, $overCreditsFee,
 				$companyMinuteCreditsRemaining, $actualTimeOverCreditsInMinutes, $periodHasBeenBilled, $billingDescription, 
 				$displayTotalBookingTimeUsedInPriceCalculationsThisPeriod, $displayTotalBookingTimeChargedWithAfterCredits, 
-				$displayTotalOrderCostThisPeriod, $displayTotalPeriodCost, $periodCost)
+				$displayTotalOrderCostThisPeriod, $displayTotalPeriodCost, $periodCost, $companyCreditsHistoryPeriodExists,
+				$totalOrderCostThisPeriod)
 		= calculatePeriodInformation($pdo, $companyID, $BillingStart, $BillingEnd, $rightNow, $mergeNumber);
 
 		// Sum up periods that are not set as billed
@@ -1538,7 +1556,7 @@ if(isSet($_POST['history']) AND $_POST['history'] == "Next Period"){
 
 // If admin wants to see the booking history of the period before the currently shown one
 if(	(isSet($_POST['history']) AND $_POST['history'] == "Previous Period") OR 
-		(isSet($_POST['history']) AND $_POST['history'] == "First Period")){
+	(isSet($_POST['history']) AND $_POST['history'] == "First Period")){
 
 	date_default_timezone_set(DATE_DEFAULT_TIMEZONE);	
 	// Get company information
@@ -1559,7 +1577,7 @@ if(	(isSet($_POST['history']) AND $_POST['history'] == "Previous Period") OR
 		$startDate = $companyCreationDate;
 		$endDate = addOneMonthToPeriodDate($dayNumberToKeep, $companyCreationDate);
 	}
-	
+
 	// Save our newly set start/end dates
 	$_SESSION['BookingHistoryStartDate'] = $startDate;
 	$_SESSION['BookingHistoryEndDate'] = $endDate;
@@ -1603,7 +1621,8 @@ if(	(isSet($_POST['history']) AND $_POST['history'] == "Previous Period") OR
 				$displayMonthPrice, $displayTotalBookingTimeThisPeriod, $displayOverFeeCostThisMonth, $overCreditsFee,
 				$companyMinuteCreditsRemaining, $actualTimeOverCreditsInMinutes, $periodHasBeenBilled, $billingDescription, 
 				$displayTotalBookingTimeUsedInPriceCalculationsThisPeriod, $displayTotalBookingTimeChargedWithAfterCredits, 
-				$displayTotalOrderCostThisPeriod, $displayTotalPeriodCost, $periodCost)
+				$displayTotalOrderCostThisPeriod, $displayTotalPeriodCost, $periodCost, $companyCreditsHistoryPeriodExists,
+				$totalOrderCostThisPeriod)
 		= calculatePeriodInformation($pdo, $companyID, $BillingStart, $BillingEnd, $rightNow, $mergeNumber);
 
 		// Sum up periods that are not set as billed
@@ -1761,7 +1780,8 @@ if (	(isSet($_GET['companyID']) AND isSet($_GET['BillingStart']) AND isSet($_GET
 				$displayMonthPrice, $displayTotalBookingTimeThisPeriod, $displayOverFeeCostThisMonth, $overCreditsFee,
 				$companyMinuteCreditsRemaining, $actualTimeOverCreditsInMinutes, $periodHasBeenBilled, $billingDescription, 
 				$displayTotalBookingTimeUsedInPriceCalculationsThisPeriod, $displayTotalBookingTimeChargedWithAfterCredits, 
-				$displayTotalOrderCostThisPeriod, $displayTotalPeriodCost, $periodCost)
+				$displayTotalOrderCostThisPeriod, $displayTotalPeriodCost, $periodCost, $companyCreditsHistoryPeriodExists,
+				$totalOrderCostThisPeriod)
 		= calculatePeriodInformation($pdo, $companyID, $BillingStart, $BillingEnd, $rightNow, $mergeNumber);
 
 		$pdo = NULL;
@@ -1880,7 +1900,8 @@ if ((isSet($_POST['action']) AND $_POST['action'] == "Booking History") OR
 				$displayMonthPrice, $displayTotalBookingTimeThisPeriod, $displayOverFeeCostThisMonth, $overCreditsFee,
 				$companyMinuteCreditsRemaining, $actualTimeOverCreditsInMinutes, $periodHasBeenBilled, $billingDescription, 
 				$displayTotalBookingTimeUsedInPriceCalculationsThisPeriod, $displayTotalBookingTimeChargedWithAfterCredits, 
-				$displayTotalOrderCostThisPeriod, $displayTotalPeriodCost, $periodCost)
+				$displayTotalOrderCostThisPeriod, $displayTotalPeriodCost, $periodCost, $companyCreditsHistoryPeriodExists,
+				$totalOrderCostThisPeriod)
 		= calculatePeriodInformation($pdo, $companyID, $BillingStart, $BillingEnd, $rightNow, $mergeNumber);
 
 			// Sum up periods that are not set as billed
