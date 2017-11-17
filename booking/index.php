@@ -3585,6 +3585,15 @@ if ((isSet($_POST['add']) AND $_POST['add'] == "Add Booking") OR
 
 		$pdo = connect_to_db();
 
+		if($orderAdded){
+			$sql = "SELECT	`extraID`	AS ExtraID,
+							`name`		AS ExtraName,
+							`price`		AS ExtraPrice
+					FROM	`extra`";
+			$return = $pdo->query();
+			$allExtrasArray = $return->fetchAll(PDO::FETCH_ASSOC);
+		}
+
 		$pdo->beginTransaction();
 
 		if($orderAdded){
@@ -3595,8 +3604,6 @@ if ((isSet($_POST['add']) AND $_POST['add'] == "Add Booking") OR
 				$userNotes = "";
 			}
 
-			$addedExtra = $_SESSION['AddCreateBookingOrderAddedExtra'];
-
 			$sql = "INSERT INTO	`orders`
 					SET			`orderUserNotes` = :orderUserNotes";
 			$s = $pdo->prepare($sql);
@@ -3605,9 +3612,29 @@ if ((isSet($_POST['add']) AND $_POST['add'] == "Add Booking") OR
 
 			$theOrderID = $pdo->lastInsertId();
 
+			$itemsOrdered = "";
+			$totalPrice = 0;
+
 			foreach($addedExtra AS $extra){
 				$extraID = $extra["ExtraID"];
 				$extraAmount = $extra["ExtraAmount"];
+
+				foreach($allExtrasArray AS $extraDetails){
+					if($extraDetails['ExtraID'] == $extraID){
+						$extraName = $extraDetails['ExtraName'];
+						$extraPrice = $extraDetails['ExtraPrice'];
+					}
+				}
+
+				$itemPrice = $extraAmount * $extraPrice;
+				$itemPriceCurrency = convertToCurrency($itemPrice);
+				$totalPrice += $itemPrice;
+
+				if(isSet($itemsOrdered)){
+					$itemsOrdered .= "\n$extraAmount of $extraName (Price: $itemPriceCurrency)";
+				} else {
+					$itemsOrdered = "$extraAmount of $extraName (Price: $itemPriceCurrency)";
+				}
 
 				$sql = "INSERT INTO	`extraorders`
 						SET			`extraID` = :extraID,
@@ -3619,6 +3646,8 @@ if ((isSet($_POST['add']) AND $_POST['add'] == "Add Booking") OR
 				$s->bindValue(':amount', $extraAmount);
 				$s->execute();
 			}
+
+			$totalPriceCurrency = convertToCurrency($totalPrice);
 
 			$sql = 'INSERT INTO `booking` 
 					SET			`meetingRoomID` = :meetingRoomID,
@@ -3729,7 +3758,9 @@ if ((isSet($_POST['add']) AND $_POST['add'] == "Add Booking") OR
 									"\nEnd Time: " . $displayValidatedEndDate .
 									"\nBooked for User: " . $userinfo . 
 									"\nBooked for Company: " . $companyName . 
-									"\nIt was created by: " . $nameOfUserWhoBooked;
+									"\nIt was created by: " . $nameOfUserWhoBooked .
+									"\nItem(s) Ordered: " . $itemsOrdered .
+									"\nTotal Order Cost: " . $totalPriceCurrency;
 
 			$sql = "INSERT INTO `logevent` 
 					SET			`actionID` = 	(
@@ -3765,6 +3796,12 @@ if ((isSet($_POST['add']) AND $_POST['add'] == "Add Booking") OR
 		"If you wish to cancel your meeting, or just end it early, you can easily do so by using the link given below.\n" .
 		"Click this link to cancel your booked meeting: " . $_SERVER['HTTP_HOST'] . 
 		"/booking/?cancellationcode=" . $cancellationCode;
+
+		if($orderAdded){
+			$emailMessage .= 	"\n\nYour meeting also has the following order added to it: " .
+								"\nItem(s) ordered: " . $itemsOrdered . 
+								"\nTotal cost: " . $totalPriceCurrency;
+		}
 
 		if($bookingWentOverCredits){
 			// Add time over credits and the price per hour the company subscription has.
@@ -3811,6 +3848,7 @@ if ((isSet($_POST['add']) AND $_POST['add'] == "Add Booking") OR
 
 	// Send email to alert company owner(s) that a booking was made that is over credits.
 		// Check if any owners want to receive an email
+		// TO-DO: Add if order was added
 	if($bookingWentOverCredits){
 		try
 		{
@@ -3834,7 +3872,7 @@ if ((isSet($_POST['add']) AND $_POST['add'] == "Add Booking") OR
 			$s->execute();
 			$result = $s->fetchAll(PDO::FETCH_ASSOC);
 
-			if(isSet($result) AND !empty($result)){
+			if(!empty($result)){
 				foreach($result AS $row){
 					// Check if user wants to receive owner emails
 					if($row['SendOwnerEmail'] == 1){ 
