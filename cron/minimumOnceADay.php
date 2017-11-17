@@ -489,6 +489,11 @@ function updateBillingDatesForCompanies(){
 						// Company had no fees to pay this month nor any orders to be charged for
 						$setAsBilled = TRUE;
 					} elseif(!empty($orderTotalCost)){
+						$companiesWithOrders[] = array(
+														'CompanyID' => $companyID,
+														'StartDate' => $startDate,
+														'EndDate' 	=> $endDate
+														);
 						$orderNeedsToBeBilled = TRUE;
 					}
 				}
@@ -554,9 +559,9 @@ function updateBillingDatesForCompanies(){
 			$success = $pdo->commit();
 			if($success){ // TO-DO: Unsure if this works as intended.
 				// Check if any of the companies went over credits and send an email to Admin that they did
-				if(isSet($companiesOverCredit) AND sizeOf($companiesOverCredit) > 0){
+				if((isSet($companiesOverCredit) OR isSet($companiesWithOrders)){
 					// There were companies that went over credit
-					if(sizeOf($companiesOverCredit) == 1){
+					if(isSet($companiesOverCredit) AND sizeOf($companiesOverCredit) == 1){
 						// One company went over
 						$emailSubject = "A company went over credit!";
 						$companyID = $companiesOverCredit[0]['CompanyID'];
@@ -570,7 +575,7 @@ function updateBillingDatesForCompanies(){
 						$emailMessage = 
 						"A company has gone over credit the previous period.\nClick the link below to see the details!\n
 						Link: " . $link;
-					} else {
+					} elseif(isSet($companiesOverCredit) AND sizeOf($companiesOverCredit) > 1) {
 						// More than one company went over
 						$emailSubject = "Companies went over credit!";
 
@@ -578,6 +583,37 @@ function updateBillingDatesForCompanies(){
 						"More than one company has gone over credit the previous period.\nClick the links below to see the details!\n";
 
 						foreach($companiesOverCredit AS $url){
+							$companyID = $url['CompanyID'];
+							$startDate = $url['StartDate'];
+							$endDate = $url['EndDate'];
+
+							$link = "http://$_SERVER[HTTP_HOST]/admin/companies/?companyID=" . $companyID . 
+									"&BillingStart=" . $startDate . "&BillingEnd=" . $endDate;
+
+							$emailMessage .= "Link: " . $link . "\n";
+						}
+					} elseif(isSet($companiesWithOrders) AND sizeOf($companiesWithOrders) == 1){
+						// One company had orders that needs to be billed
+						$emailSubject = "A company has unbilled orders!";
+						$companyID = $companiesWithOrders[0]['CompanyID'];
+						$startDate = $companiesWithOrders[0]['StartDate'];
+						$endDate = $companiesWithOrders[0]['EndDate'];
+
+						//Link example: http://localhost/admin/companies/?companyID=2&BillingStart=2017-05-15&BillingEnd=2017-06-15
+						$link = "http://$_SERVER[HTTP_HOST]/admin/companies/?companyID=" . $companyID . 
+								"&BillingStart=" . $startDate . "&BillingEnd=" . $endDate;
+
+						$emailMessage = 
+						"A company's last period has bookings with orders that needs to be billed.\nClick the link below to see the details!\n
+						Link: " . $link;
+					} elseif(isSet($companiesWithOrders) AND sizeOf($companiesWithOrders) > 1){
+						// More than one company has orders that needs to be billed
+						$emailSubject = "Companies has unbilled orders!";
+
+						$emailMessage =
+						"More than one company's last period has bookings with orders that needs to be billed.\nClick the links below to see the details!\n";
+
+						foreach($companiesWithOrders AS $url){
 							$companyID = $url['CompanyID'];
 							$startDate = $url['StartDate'];
 							$endDate = $url['EndDate'];
