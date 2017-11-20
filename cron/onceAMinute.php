@@ -29,8 +29,21 @@ function updateCompletedBookings(){
 		if(!empty($minBookingID) AND $minBookingID > 0){
 			// There are completed bookings that needs to be updated
 			// Minimize query time by using index search provided by the lowest bookingID found earlier.
-			$sql = "SELECT 		b.`bookingID`	AS BookingID,
-								b.`orderID` 	AS OrderID
+			$sql = 'SELECT 		b.`bookingID`										AS BookingID,
+								b.`meetingRoomID`									AS TheMeetingRoomID, 
+								(
+									SELECT	`name`
+									FROM	`meetingroom`
+									WHERE	`meetingRoomID` = TheMeetingRoomID 
+								)													AS TheMeetingRoomName,
+								b.`startDateTime`									AS StartDateTime,
+								b.`endDateTime`										AS EndDateTime,
+								b.`orderID` 										AS OrderID,
+								SUM(eo.`amount`*ex.`price`)							AS TotalOrderCost,
+								GROUP_CONCAT(
+												CONCAT(eo.`amount`, " × ", ex.`name`) 
+												SEPARATOR "\n"
+											)										AS TotalOrder
 					FROM 		`booking` b
 					LEFT JOIN 	(
 												`orders` o
@@ -43,11 +56,12 @@ function updateCompletedBookings(){
 					WHERE 		CURRENT_TIMESTAMP >= b.`endDateTime`
 					AND 		b.`actualEndDateTime` IS NULL
 					AND 		b.`dateTimeCancelled` IS NULL
-					AND			b.`bookingID` >= :minBookingID";
+					AND			b.`bookingID` >= :minBookingID
+					GROUP BY 	b.`bookingID`';
 			$s = $pdo->prepare($sql);
 			$s->bindValue(':minBookingID', $minBookingID);
 			$s->execute();
-			$result = $s->fetchAll(PDO::FETCH_ASSOC);	
+			$result = $s->fetchAll(PDO::FETCH_ASSOC);
 
 			$pdo->beginTransaction();
 
@@ -85,8 +99,54 @@ function updateCompletedBookings(){
 					$s->execute();
 				}
 
-				// TO-DO: add log events that booking (and order) has been completed.
-				
+				// Add log events that booking/order was set as completed
+				$meetingRoomName = $booking['TheMeetingRoomName'];
+				$startDateTimeString = $booking['StartDateTime'];
+				$endDateTimeString = $booking['EndDateTime'];
+				$startDateTime = correctDatetimeFormat($startDateTimeString);
+				$endDateTime = correctDatetimeFormat($endDateTimeString);
+
+				$displayValidatedStartDate = convertDatetimeToFormat($startDateTime , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
+				$displayValidatedEndDate = convertDatetimeToFormat($endDateTime, 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
+
+				$logEventDescription = 	"The booking for the meeting room: " . $meetingRoomName . 
+										"\nStarting at: " . $displayValidatedStartDate . 
+										"\nEnding at: " . $displayValidatedEndDate . 
+										"\nWas set as completed due to the scheduled time being over.";
+
+				$sql = "INSERT INTO `logevent`
+						SET			`actionID` = 	(
+														SELECT 	`actionID` 
+														FROM 	`logaction`
+														WHERE 	`name` = 'Booking Completed'
+													),
+									`description` = :description";
+				$s = $pdo->prepare($sql);
+				$s->bindValue(':description', $logEventDescription);
+				$s->execute();
+
+				if(!empty($orderID)){
+					$orderTotalOrder = $booking['TotalOrder'];
+					$orderTotalCost = $booking['TotalOrderCost'];
+					$logEventDescription = 	"Order was completed automatically due to the following: " .
+											"\nThe booking for the meeting room: " . $meetingRoomName . 
+											"\nStarting at: " . $displayValidatedStartDate . 
+											"\nEnding at: " . $displayValidatedEndDate . 
+											"\nWas set as completed." .
+											"\nItem(s) Ordered: \n" . $orderTotalOrder .
+											"\nTotal Order Costt: " . convertToCurrency($orderTotalCost);;
+
+					$sql = "INSERT INTO `logevent`
+							SET			`actionID` = 	(
+															SELECT 	`actionID` 
+															FROM 	`logaction`
+															WHERE 	`name` = 'Order Completed'
+														),
+										`description` = :description";
+					$s = $pdo->prepare($sql);
+					$s->bindValue(':description', $logEventDescription);
+					$s->execute();
+				}
 			}
 
 			$pdo->commit();
