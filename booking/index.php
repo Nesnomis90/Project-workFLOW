@@ -5165,7 +5165,7 @@ if(isSet($_GET['cancellationcode']) OR isSet($_SESSION['refreshWithCancellationC
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 		
 		$pdo = connect_to_db();
-		$sql = "SELECT 		COUNT(*)											AS HitCount,
+		$sql = 'SELECT 		COUNT(*)											AS HitCount,
 							(
 								IF(b.`userID` IS NULL, NULL, (SELECT u.`email` FROM `user` u WHERE u.`userID` = b.`userID`))
 							) 													AS Email,
@@ -5182,11 +5182,25 @@ if(isSet($_GET['cancellationcode']) OR isSet($_SESSION['refreshWithCancellationC
 							b.`startDateTime`									AS StartDateTime,
 							b.`endDateTime`										AS EndDateTime,
 							b.`actualEndDateTime`								AS ActualEndDateTime,
-							b.`orderID`											AS OrderID
+							b.`orderID`											AS OrderID,
+							SUM(eo.`amount`*ex.`price`)							AS TotalOrderCost,
+							GROUP_CONCAT(
+											CONCAT(eo.`amount`, " × ", ex.`name`) 
+											SEPARATOR "\n"
+										)										AS TotalOrder
 				FROM		`booking` b
-				WHERE 		`cancellationCode` = :cancellationCode
-				AND			`dateTimeCancelled` IS NULL
-				LIMIT 		1";
+				LEFT JOIN 	(
+											`orders` o
+								INNER JOIN 	`extraorders` eo
+								ON 			eo.`orderID` = o.`orderID`
+								INNER JOIN 	`extra` ex
+								ON			ex.`extraID` = eo.`extraID`
+							)
+				ON 			o.`orderID` = b.`orderID`
+				WHERE 		b.`cancellationCode` = :cancellationCode
+				AND			b.`dateTimeCancelled` IS NULL
+				GROUP BY 	b.`bookingID`
+				LIMIT 		1';
 		$s = $pdo->prepare($sql);
 		$s->bindValue(':cancellationCode', $cancellationCode);
 		$s->execute();
@@ -5235,8 +5249,10 @@ if(isSet($_GET['cancellationcode']) OR isSet($_SESSION['refreshWithCancellationC
 	$meetingCancelled = FALSE;
 	$endedEarly = FALSE;
 
-	if($result['OrderID'] != NULL){
+	if(!empty($result['OrderID'])){
 		$orderID = $result['OrderID'];
+		$orderTotalOrder = $result['TotalOrder'];
+		$orderTotalCost = $result['TotalOrderCost'];
 	}
 
 	// Check if the meeting has already ended
@@ -5352,7 +5368,6 @@ if(isSet($_GET['cancellationcode']) OR isSet($_SESSION['refreshWithCancellationC
 			}
 
 			// Add a log event about the updated order
-			// TO-DO: Give more details?
 			if($endedEarly OR $meetingCancelled){
 				if($endedEarly){
 					$sql = "INSERT INTO `logevent`
@@ -5362,7 +5377,9 @@ if(isSet($_GET['cancellationcode']) OR isSet($_SESSION['refreshWithCancellationC
 															WHERE 	`name` = 'Order Completed'
 														),
 										`description` = :description";
-					$orderLogEventDescription = "Order was completed automatically due to the following:\n" . $logEventDescription;
+					$orderLogEventDescription = "Order was completed automatically due to the following:\n" . $logEventDescription .
+												"\nItem(s) Ordered: \n" . $orderTotalOrder .
+												"\nTotal Order Costt: " . convertToCurrency($orderTotalCost);
 				} elseif($meetingCancelled){
 					$sql = "INSERT INTO `logevent`
 							SET			`actionID` = 	(
@@ -5371,7 +5388,9 @@ if(isSet($_GET['cancellationcode']) OR isSet($_SESSION['refreshWithCancellationC
 															WHERE 	`name` = 'Order Cancelled'
 														),
 										`description` = :description";
-					$orderLogEventDescription = "Order was cancelled automatically due to the following:\n" . $logEventDescription;
+					$orderLogEventDescription = "Order was cancelled automatically due to the following:\n" . $logEventDescription . 
+												"\nItem(s) Ordered: \n" . $orderTotalOrder .
+												"\nTotal Order Costt: " . convertToCurrency($orderTotalCost);
 				}
 				try
 				{
