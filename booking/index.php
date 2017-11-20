@@ -3396,7 +3396,7 @@ if ((isSet($_POST['add']) AND $_POST['add'] == "Add Booking") OR
 
 	// Get meeting room name
 	$MeetingRoomName = 'N/A';
-	foreach ($_SESSION['AddCreateBookingMeetingRoomsArray'] AS $room){
+	foreach($_SESSION['AddCreateBookingMeetingRoomsArray'] AS $room){
 		if($room['meetingRoomID'] == $meetingRoomID){
 			$MeetingRoomName = $room['meetingRoomName'];
 			break;
@@ -3570,6 +3570,9 @@ if ((isSet($_POST['add']) AND $_POST['add'] == "Add Booking") OR
 	}
 
 	if(isSet($_SESSION['AddCreateBookingOrderAddedExtra'])){
+		if(!isSet($addedExtra) AND isSet($_SESSION['AddCreateBookingOrderAddedExtra'])){
+			$addedExtra = $_SESSION['AddCreateBookingOrderAddedExtra'];
+		}
 		$orderAdded = TRUE;
 	} else {
 		$orderAdded = FALSE;
@@ -3590,7 +3593,7 @@ if ((isSet($_POST['add']) AND $_POST['add'] == "Add Booking") OR
 							`name`		AS ExtraName,
 							`price`		AS ExtraPrice
 					FROM	`extra`";
-			$return = $pdo->query();
+			$return = $pdo->query($sql);
 			$allExtrasArray = $return->fetchAll(PDO::FETCH_ASSOC);
 		}
 
@@ -3615,6 +3618,8 @@ if ((isSet($_POST['add']) AND $_POST['add'] == "Add Booking") OR
 			$itemsOrdered = "";
 			$totalPrice = 0;
 
+
+
 			foreach($addedExtra AS $extra){
 				$extraID = $extra["ExtraID"];
 				$extraAmount = $extra["ExtraAmount"];
@@ -3631,9 +3636,9 @@ if ((isSet($_POST['add']) AND $_POST['add'] == "Add Booking") OR
 				$totalPrice += $itemPrice;
 
 				if(isSet($itemsOrdered)){
-					$itemsOrdered .= "\n$extraAmount of $extraName (Price: $itemPriceCurrency)";
+					$itemsOrdered .= "\n$extraAmount × $extraName ($itemPriceCurrency)";
 				} else {
-					$itemsOrdered = "$extraAmount of $extraName (Price: $itemPriceCurrency)";
+					$itemsOrdered = "$extraAmount × $extraName ($itemPriceCurrency)";
 				}
 
 				$sql = "INSERT INTO	`extraorders`
@@ -3848,8 +3853,7 @@ if ((isSet($_POST['add']) AND $_POST['add'] == "Add Booking") OR
 
 	// Send email to alert company owner(s) that a booking was made that is over credits.
 		// Check if any owners want to receive an email
-		// TO-DO: Add if order was added
-	if($bookingWentOverCredits){
+	if($bookingWentOverCredits OR $orderAdded){
 		try
 		{
 			$sql = 'SELECT		u.`email`					AS Email,
@@ -3894,26 +3898,69 @@ if ((isSet($_POST['add']) AND $_POST['add'] == "Add Booking") OR
 		}
 
 			// We found company owners to send email too
-		if(isSet($companyOwnerEmails) AND !empty($companyOwnerEmails)){
-			$emailSubject = "Booked Meeting Above Credits!";
+		if(TRUE){
+		//if(isSet($companyOwnerEmails) AND !empty($companyOwnerEmails)){
 
-			$emailMessage = 
-			"The employee: " . $nameOfUserWhoBooked . "\n" .
-			"In your company: " . $companyName . "\n" .
-			"Has booked a meeting that will put your company above the treshold of free booking time this period.\n" .
-			"If this booking is completed your company will be $timeOverCredits over the treshold.\nThis will result in a cost of $companyHourPriceOverCredits\n\n" .
-			"The meeting has been set to: \n" .
-			"Meeting Room: " . $MeetingRoomName . ".\n" . 
-			"Start Time: " . $displayValidatedStartDate . ".\n" .
-			"End Time: " . $displayValidatedEndDate . ".\n\n" .
-			"If you wish to cancel this meeting, or just end it early, you can easily do so by using the link given below.\n" .
-			"Click this link to cancel the booked meeting: " . $_SERVER['HTTP_HOST'] . 
-			"/booking/?cancellationcode=" . $cancellationCode . "\n\n" . 
-			"If you do not wish to receive these emails, you can disable them in 'My Account' under 'Company Owner Alert Status'.";
+			if($bookingWentOverCredits AND $orderAdded){
+				$emailSubject = "Booked Meeting Above Credits With Order!";
 
-			$email = $companyOwnerEmails;
+				$emailMessage = 
+				"The employee: " . $nameOfUserWhoBooked . "\n" .
+				"In your company: " . $companyName . "\n" .
+				"Has booked a meeting that will put your company above the treshold of free booking time this period.\n" .
+				"If this booking is completed your company will be $timeOverCredits over the treshold.\nThis will result in a cost of $companyHourPriceOverCredits\n\n" .
+				"The meeting has been set to: \n" .
+				"Meeting Room: " . $MeetingRoomName . ".\n" . 
+				"Start Time: " . $displayValidatedStartDate . ".\n" .
+				"End Time: " . $displayValidatedEndDate . ".\n\n" .
+				"The booked meeting also has an order included with the following details:\n" .
+				"Item(s) ordered: " . $itemsOrdered . "\n" .
+				"Total cost: " . $totalPriceCurrency . "\n\n" .
+				"If you wish to cancel this meeting, or just end it early, you can easily do so by using the link given below.\n" .
+				"Click this link to cancel the booked meeting: " . $_SERVER['HTTP_HOST'] . 
+				"/booking/?cancellationcode=" . $cancellationCode . "\n\n" . 
+				"If you do not wish to receive these emails, you can disable them in 'My Account' under 'Company Owner Alert Status'.";
+			} elseif($bookingWentOverCredits AND !$orderAdded){
+				$emailSubject = "Booked Meeting Above Credits!";
 
-			$mailResult = sendEmail($email, $emailSubject, $emailMessage);
+				$emailMessage = 
+				"The employee: " . $nameOfUserWhoBooked . "\n" .
+				"In your company: " . $companyName . "\n" .
+				"Has booked a meeting that will put your company above the treshold of free booking time this period.\n" .
+				"If this booking is completed your company will be $timeOverCredits over the treshold.\nThis will result in a cost of $companyHourPriceOverCredits\n\n" .
+				"The meeting has been set to: \n" .
+				"Meeting Room: " . $MeetingRoomName . ".\n" . 
+				"Start Time: " . $displayValidatedStartDate . ".\n" .
+				"End Time: " . $displayValidatedEndDate . ".\n\n" .
+				"If you wish to cancel this meeting, or just end it early, you can easily do so by using the link given below.\n" .
+				"Click this link to cancel the booked meeting: " . $_SERVER['HTTP_HOST'] . 
+				"/booking/?cancellationcode=" . $cancellationCode . "\n\n" . 
+				"If you do not wish to receive these emails, you can disable them in 'My Account' under 'Company Owner Alert Status'.";
+			} elseif(!$bookingWentOverCredits AND $orderAdded){
+				$emailSubject = "Booked Meeting With An Order!";
+
+				$emailMessage = 
+				"The employee: " . $nameOfUserWhoBooked . "\n" .
+				"In your company: " . $companyName . "\n" .
+				"Has booked a meeting with an order included.\n" .
+				"The meeting has been set to: \n" .
+				"Meeting Room: " . $MeetingRoomName . ".\n" . 
+				"Start Time: " . $displayValidatedStartDate . ".\n" .
+				"End Time: " . $displayValidatedEndDate . ".\n\n" .
+				"The Order Details:\n" .
+				"Item(s) ordered: " . $itemsOrdered . "\n" .
+				"Total cost: " . $totalPriceCurrency . "\n\n" .
+				"If you wish to cancel this meeting, or just end it early, you can easily do so by using the link given below.\n" .
+				"Click this link to cancel the booked meeting: " . $_SERVER['HTTP_HOST'] . 
+				"/booking/?cancellationcode=" . $cancellationCode . "\n\n" . 
+				"If you do not wish to receive these emails, you can disable them in 'My Account' under 'Company Owner Alert Status'.";
+			}
+
+			//$email = $companyOwnerEmails;
+			$email = array("test@email.com");
+
+			//$mailResult = sendEmail($email, $emailSubject, $emailMessage);
+			$mailResult = FALSE;
 
 			$email = implode(", ", $email);
 
@@ -3948,7 +3995,7 @@ if ((isSet($_POST['add']) AND $_POST['add'] == "Add Booking") OR
 
 			$_SESSION['normalBookingFeedback'] .= "\nThis is the email msg we're sending out:\n$emailMessage\nSent to email: $email."; // TO-DO: Remove before uploading			
 		} else {
-			$_SESSION['normalBookingFeedback'] .= "\n\nNo Company Owners were sent an email about the booking going over booking."; // TO-DO: Remove before uploading.
+			$_SESSION['normalBookingFeedback'] .= "\n\nNo Company Owners were sent an email about the booking details."; // TO-DO: Remove before uploading.
 		}
 	}
 
