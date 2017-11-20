@@ -3396,7 +3396,7 @@ if ((isSet($_POST['add']) AND $_POST['add'] == "Add Booking") OR
 
 	// Get meeting room name
 	$MeetingRoomName = 'N/A';
-	foreach ($_SESSION['AddCreateBookingMeetingRoomsArray'] AS $room){
+	foreach($_SESSION['AddCreateBookingMeetingRoomsArray'] AS $room){
 		if($room['meetingRoomID'] == $meetingRoomID){
 			$MeetingRoomName = $room['meetingRoomName'];
 			break;
@@ -3570,6 +3570,9 @@ if ((isSet($_POST['add']) AND $_POST['add'] == "Add Booking") OR
 	}
 
 	if(isSet($_SESSION['AddCreateBookingOrderAddedExtra'])){
+		if(!isSet($addedExtra) AND isSet($_SESSION['AddCreateBookingOrderAddedExtra'])){
+			$addedExtra = $_SESSION['AddCreateBookingOrderAddedExtra'];
+		}
 		$orderAdded = TRUE;
 	} else {
 		$orderAdded = FALSE;
@@ -3590,7 +3593,7 @@ if ((isSet($_POST['add']) AND $_POST['add'] == "Add Booking") OR
 							`name`		AS ExtraName,
 							`price`		AS ExtraPrice
 					FROM	`extra`";
-			$return = $pdo->query();
+			$return = $pdo->query($sql);
 			$allExtrasArray = $return->fetchAll(PDO::FETCH_ASSOC);
 		}
 
@@ -3615,6 +3618,8 @@ if ((isSet($_POST['add']) AND $_POST['add'] == "Add Booking") OR
 			$itemsOrdered = "";
 			$totalPrice = 0;
 
+
+
 			foreach($addedExtra AS $extra){
 				$extraID = $extra["ExtraID"];
 				$extraAmount = $extra["ExtraAmount"];
@@ -3631,9 +3636,9 @@ if ((isSet($_POST['add']) AND $_POST['add'] == "Add Booking") OR
 				$totalPrice += $itemPrice;
 
 				if(isSet($itemsOrdered)){
-					$itemsOrdered .= "\n$extraAmount of $extraName (Price: $itemPriceCurrency)";
+					$itemsOrdered .= "\n$extraAmount × $extraName ($itemPriceCurrency)";
 				} else {
-					$itemsOrdered = "$extraAmount of $extraName (Price: $itemPriceCurrency)";
+					$itemsOrdered = "$extraAmount × $extraName ($itemPriceCurrency)";
 				}
 
 				$sql = "INSERT INTO	`extraorders`
@@ -3848,8 +3853,7 @@ if ((isSet($_POST['add']) AND $_POST['add'] == "Add Booking") OR
 
 	// Send email to alert company owner(s) that a booking was made that is over credits.
 		// Check if any owners want to receive an email
-		// TO-DO: Add if order was added
-	if($bookingWentOverCredits){
+	if($bookingWentOverCredits OR $orderAdded){
 		try
 		{
 			$sql = 'SELECT		u.`email`					AS Email,
@@ -3895,21 +3899,61 @@ if ((isSet($_POST['add']) AND $_POST['add'] == "Add Booking") OR
 
 			// We found company owners to send email too
 		if(isSet($companyOwnerEmails) AND !empty($companyOwnerEmails)){
-			$emailSubject = "Booked Meeting Above Credits!";
 
-			$emailMessage = 
-			"The employee: " . $nameOfUserWhoBooked . "\n" .
-			"In your company: " . $companyName . "\n" .
-			"Has booked a meeting that will put your company above the treshold of free booking time this period.\n" .
-			"If this booking is completed your company will be $timeOverCredits over the treshold.\nThis will result in a cost of $companyHourPriceOverCredits\n\n" .
-			"The meeting has been set to: \n" .
-			"Meeting Room: " . $MeetingRoomName . ".\n" . 
-			"Start Time: " . $displayValidatedStartDate . ".\n" .
-			"End Time: " . $displayValidatedEndDate . ".\n\n" .
-			"If you wish to cancel this meeting, or just end it early, you can easily do so by using the link given below.\n" .
-			"Click this link to cancel the booked meeting: " . $_SERVER['HTTP_HOST'] . 
-			"/booking/?cancellationcode=" . $cancellationCode . "\n\n" . 
-			"If you do not wish to receive these emails, you can disable them in 'My Account' under 'Company Owner Alert Status'.";
+			if($bookingWentOverCredits AND $orderAdded){
+				$emailSubject = "Booked Meeting Above Credits With Order!";
+
+				$emailMessage = 
+				"The employee: " . $nameOfUserWhoBooked . "\n" .
+				"In your company: " . $companyName . "\n" .
+				"Has booked a meeting that will put your company above the treshold of free booking time this period.\n" .
+				"If this booking is completed your company will be $timeOverCredits over the treshold.\nThis will result in a cost of $companyHourPriceOverCredits\n\n" .
+				"The meeting has been set to: \n" .
+				"Meeting Room: " . $MeetingRoomName . ".\n" . 
+				"Start Time: " . $displayValidatedStartDate . ".\n" .
+				"End Time: " . $displayValidatedEndDate . ".\n\n" .
+				"The booked meeting also has an order included with the following details:\n" .
+				"Item(s) ordered: " . $itemsOrdered . "\n" .
+				"Total cost: " . $totalPriceCurrency . "\n\n" .
+				"If you wish to cancel this meeting, or just end it early, you can easily do so by using the link given below.\n" .
+				"Click this link to cancel the booked meeting: " . $_SERVER['HTTP_HOST'] . 
+				"/booking/?cancellationcode=" . $cancellationCode . "\n\n" . 
+				"If you do not wish to receive these emails, you can disable them in 'My Account' under 'Company Owner Alert Status'.";
+			} elseif($bookingWentOverCredits AND !$orderAdded){
+				$emailSubject = "Booked Meeting Above Credits!";
+
+				$emailMessage = 
+				"The employee: " . $nameOfUserWhoBooked . "\n" .
+				"In your company: " . $companyName . "\n" .
+				"Has booked a meeting that will put your company above the treshold of free booking time this period.\n" .
+				"If this booking is completed your company will be $timeOverCredits over the treshold.\nThis will result in a cost of $companyHourPriceOverCredits\n\n" .
+				"The meeting has been set to: \n" .
+				"Meeting Room: " . $MeetingRoomName . ".\n" . 
+				"Start Time: " . $displayValidatedStartDate . ".\n" .
+				"End Time: " . $displayValidatedEndDate . ".\n\n" .
+				"If you wish to cancel this meeting, or just end it early, you can easily do so by using the link given below.\n" .
+				"Click this link to cancel the booked meeting: " . $_SERVER['HTTP_HOST'] . 
+				"/booking/?cancellationcode=" . $cancellationCode . "\n\n" . 
+				"If you do not wish to receive these emails, you can disable them in 'My Account' under 'Company Owner Alert Status'.";
+			} elseif(!$bookingWentOverCredits AND $orderAdded){
+				$emailSubject = "Booked Meeting With An Order!";
+
+				$emailMessage = 
+				"The employee: " . $nameOfUserWhoBooked . "\n" .
+				"In your company: " . $companyName . "\n" .
+				"Has booked a meeting with an order included.\n" .
+				"The meeting has been set to: \n" .
+				"Meeting Room: " . $MeetingRoomName . ".\n" . 
+				"Start Time: " . $displayValidatedStartDate . ".\n" .
+				"End Time: " . $displayValidatedEndDate . ".\n\n" .
+				"The Order Details:\n" .
+				"Item(s) ordered: " . $itemsOrdered . "\n" .
+				"Total cost: " . $totalPriceCurrency . "\n\n" .
+				"If you wish to cancel this meeting, or just end it early, you can easily do so by using the link given below.\n" .
+				"Click this link to cancel the booked meeting: " . $_SERVER['HTTP_HOST'] . 
+				"/booking/?cancellationcode=" . $cancellationCode . "\n\n" . 
+				"If you do not wish to receive these emails, you can disable them in 'My Account' under 'Company Owner Alert Status'.";
+			}
 
 			$email = $companyOwnerEmails;
 
@@ -3948,7 +3992,7 @@ if ((isSet($_POST['add']) AND $_POST['add'] == "Add Booking") OR
 
 			$_SESSION['normalBookingFeedback'] .= "\nThis is the email msg we're sending out:\n$emailMessage\nSent to email: $email."; // TO-DO: Remove before uploading			
 		} else {
-			$_SESSION['normalBookingFeedback'] .= "\n\nNo Company Owners were sent an email about the booking going over booking."; // TO-DO: Remove before uploading.
+			$_SESSION['normalBookingFeedback'] .= "\n\nNo Company Owners were sent an email about the booking details."; // TO-DO: Remove before uploading.
 		}
 	}
 
@@ -5121,28 +5165,42 @@ if(isSet($_GET['cancellationcode']) OR isSet($_SESSION['refreshWithCancellationC
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 		
 		$pdo = connect_to_db();
-		$sql = "SELECT 	COUNT(*)											AS HitCount,
-						(
-							IF(b.`userID` IS NULL, NULL, (SELECT u.`email` FROM `user` u WHERE u.`userID` = b.`userID`))
-						) 													AS Email,
-						(
-							IF(b.`userID` IS NULL, NULL, (SELECT u.`sendEmail` FROM `user` u WHERE u.`userID` = b.`userID`))
-						) 													AS SendEmail,
-						b.`bookingID`										AS BookingID,
-						b.`meetingRoomID`									AS TheMeetingRoomID, 
-						(
-							SELECT	`name`
-							FROM	`meetingroom`
-							WHERE	`meetingRoomID` = TheMeetingRoomID 
-						)													AS TheMeetingRoomName,
-						b.`startDateTime`									AS StartDateTime,
-						b.`endDateTime`										AS EndDateTime,
-						b.`actualEndDateTime`								AS ActualEndDateTime,
-						b.`orderID`											AS OrderID
-				FROM	`booking` b
-				WHERE 	`cancellationCode` = :cancellationCode
-				AND		`dateTimeCancelled` IS NULL
-				LIMIT 	1";
+		$sql = 'SELECT 		COUNT(*)											AS HitCount,
+							(
+								IF(b.`userID` IS NULL, NULL, (SELECT u.`email` FROM `user` u WHERE u.`userID` = b.`userID`))
+							) 													AS Email,
+							(
+								IF(b.`userID` IS NULL, NULL, (SELECT u.`sendEmail` FROM `user` u WHERE u.`userID` = b.`userID`))
+							) 													AS SendEmail,
+							b.`bookingID`										AS BookingID,
+							b.`meetingRoomID`									AS TheMeetingRoomID, 
+							(
+								SELECT	`name`
+								FROM	`meetingroom`
+								WHERE	`meetingRoomID` = TheMeetingRoomID 
+							)													AS TheMeetingRoomName,
+							b.`startDateTime`									AS StartDateTime,
+							b.`endDateTime`										AS EndDateTime,
+							b.`actualEndDateTime`								AS ActualEndDateTime,
+							b.`orderID`											AS OrderID,
+							SUM(eo.`amount`*ex.`price`)							AS TotalOrderCost,
+							GROUP_CONCAT(
+											CONCAT(eo.`amount`, " × ", ex.`name`) 
+											SEPARATOR "\n"
+										)										AS TotalOrder
+				FROM		`booking` b
+				LEFT JOIN 	(
+											`orders` o
+								INNER JOIN 	`extraorders` eo
+								ON 			eo.`orderID` = o.`orderID`
+								INNER JOIN 	`extra` ex
+								ON			ex.`extraID` = eo.`extraID`
+							)
+				ON 			o.`orderID` = b.`orderID`
+				WHERE 		b.`cancellationCode` = :cancellationCode
+				AND			b.`dateTimeCancelled` IS NULL
+				GROUP BY 	b.`bookingID`
+				LIMIT 		1';
 		$s = $pdo->prepare($sql);
 		$s->bindValue(':cancellationCode', $cancellationCode);
 		$s->execute();
@@ -5189,13 +5247,16 @@ if(isSet($_GET['cancellationcode']) OR isSet($_SESSION['refreshWithCancellationC
 					' to ' . $displayValidatedEndDate;
 
 	$meetingCancelled = FALSE;
+	$endedEarly = FALSE;
 
-	if($result['OrderID'] != NULL){
+	if(!empty($result['OrderID'])){
 		$orderID = $result['OrderID'];
+		$orderTotalOrder = $result['TotalOrder'];
+		$orderTotalCost = $result['TotalOrderCost'];
 	}
 
 	// Check if the meeting has already ended
-	if($actualEndDateTimeString == "" OR $actualEndDateTimeString == NULL){
+	if(empty($actualEndDateTimeString)){
 		// Meeting has not ended already.
 		// Check if we're cancelling the booking or simply ending the booking early!
 		$timeNow = getDatetimeNow();
@@ -5234,7 +5295,7 @@ if(isSet($_GET['cancellationcode']) OR isSet($_SESSION['refreshWithCancellationC
 									"cancellation link, but the meeting should have already been completed." .
 									" The end date of the booking has been updated to have occured on the scheduled time.";			
 		}
-	} elseif(isSet($actualEndDateTimeString) AND $actualEndDateTimeString != "" AND $actualEndDateTimeString != NULL) {
+	} elseif(!empty($actualEndDateTimeString)){
 		// Meeting has already ended. So there's no reason to cancel it.
 		$bookingFeedback = 	"The booked meeting has already ended.";
 		$sql = "UPDATE 	`booking`
@@ -5244,10 +5305,8 @@ if(isSet($_GET['cancellationcode']) OR isSet($_SESSION['refreshWithCancellationC
 		$logEventDescription = 	"The booking for " . $TheMeetingRoomName . ".\nStarting at: " . $displayValidatedStartDate . 
 								" and ending at: " . $displayValidatedEndDate . " was attempted to be cancelled with the " . 
 								"cancellation link, but the meeting had already ended so it had no effect.";
-	} else {
-		$bookingFeedback = 		"Could not cancel the meeting.";
 	}
-	
+
 	if(isSet($logEventDescription) AND isSet($bookingID)){
 		// Update the booked meeting
 		try
@@ -5263,54 +5322,131 @@ if(isSet($_GET['cancellationcode']) OR isSet($_SESSION['refreshWithCancellationC
 		}
 		catch(PDOException $e)
 		{
+			$pdo->rollBack();
 			$error = 'Error updating booking: ' . $e->getMessage();
 			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
 			$pdo = null;
 			exit();
 		}
 
-		if(isSet($orderID) AND isSet($endedEarly) AND $endedEarly){
+		if(!empty($orderID)){
+			if($endedEarly OR $meetingCancelled){
+				if($endedEarly){
+					// Update the booked meeting order as completed
+					$sql = "UPDATE	`orders`
+							SET		`orderFinalPrice` = (
+															SELECT		SUM(IFNULL(eo.`alternativePrice`, ex.`price`) * eo.`amount`) AS FullPrice
+															FROM		`extra` ex
+															INNER JOIN 	`extraorders` eo
+															ON 			ex.`extraID` = eo.`extraID`
+															WHERE		eo.`orderID` = :OrderID
+														)
+							WHERE	`orderID` = :OrderID
+							AND		`orderFinalPrice` IS NULL";
+
+				} elseif($meetingCancelled){
+					// Update the booked meeting order as cancelled
+					$sql = "UPDATE	`orders`
+							SET		`dateTimeCancelled` = CURRENT_TIMESTAMP,
+									`cancelMessage` = 'Automatically cancalled due to booking being cancelled.'
+							WHERE	`orderID` = :OrderID";
+				}
+				try
+				{
+					$s = $pdo->prepare($sql);
+					$s->bindValue(':OrderID', $orderID);
+					$s->execute();
+				}
+				catch(PDOException $e)
+				{
+					$pdo->rollBack();
+					$error = 'Error updating meeting order: ' . $e->getMessage();
+					include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+					$pdo = null;
+					exit();
+				}
+			}
+
+			// Add a log event about the updated order
+			if($endedEarly OR $meetingCancelled){
+				if($endedEarly){
+					$sql = "INSERT INTO `logevent`
+							SET			`actionID` = 	(
+															SELECT 	`actionID` 
+															FROM 	`logaction`
+															WHERE 	`name` = 'Order Completed'
+														),
+										`description` = :description";
+					$orderLogEventDescription = "Order was completed automatically due to the following:\n" . $logEventDescription .
+												"\nItem(s) Ordered: \n" . $orderTotalOrder .
+												"\nTotal Order Costt: " . convertToCurrency($orderTotalCost);
+				} elseif($meetingCancelled){
+					$sql = "INSERT INTO `logevent`
+							SET			`actionID` = 	(
+															SELECT 	`actionID` 
+															FROM 	`logaction`
+															WHERE 	`name` = 'Order Cancelled'
+														),
+										`description` = :description";
+					$orderLogEventDescription = "Order was cancelled automatically due to the following:\n" . $logEventDescription . 
+												"\nItem(s) Ordered: \n" . $orderTotalOrder .
+												"\nTotal Order Costt: " . convertToCurrency($orderTotalCost);
+				}
+				try
+				{
+					$s = $pdo->prepare($sql);
+					$s->bindValue(':description', $orderLogEventDescription);
+					$s->execute();
+				}
+				catch(PDOException $e)
+				{
+					$pdo->rollBack();
+					$error = 'Error adding log event to database: ' . $e->getMessage();
+					include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
+					$pdo = null;
+					exit();
+				}
+			}
+		}
+
 		// Add a log event about the updated booking
+		if($endedEarly OR $meetingCancelled){
+			if($endedEarly){
+				$sql = "INSERT INTO `logevent`
+						SET			`actionID` = 	(
+														SELECT 	`actionID` 
+														FROM 	`logaction`
+														WHERE 	`name` = 'Booking Completed'
+													),
+									`description` = :description";
+			} elseif($meetingCancelled){
+				$sql = "INSERT INTO `logevent`
+						SET			`actionID` = 	(
+														SELECT 	`actionID` 
+														FROM 	`logaction`
+														WHERE 	`name` = 'Booking Cancelled'
+													),
+									`description` = :description";
+			}
 			try
 			{
-				$sql = "UPDATE	`orders`
-						SET		`orderFinalPrice` = (
-														SELECT		SUM(IFNULL(eo.`alternativePrice`, ex.`price`) * eo.`amount`) AS FullPrice
-														FROM		`extra` ex
-														INNER JOIN 	`extraorders` eo
-														ON 			ex.`extraID` = eo.`extraID`
-														WHERE		eo.`orderID` = :OrderID
-													)
-						WHERE	`orderID` = :OrderID
-						AND		`orderFinalPrice` IS NULL";
 				$s = $pdo->prepare($sql);
-				$s->bindValue(':OrderID', $orderID);
+				$s->bindValue(':description', $logEventDescription);
 				$s->execute();
 			}
 			catch(PDOException $e)
 			{
 				$pdo->rollBack();
-				$error = 'Error updating meeting order: ' . $e->getMessage();
+				$error = 'Error adding log event to database: ' . $e->getMessage();
 				include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
 				$pdo = null;
 				exit();
 			}
 		}
 
-		// Add a log event about the updated booking
+		// Commit all updates and inserts
 		try
 		{
-			$sql = "INSERT INTO `logevent`
-					SET			`actionID` = 	(
-													SELECT 	`actionID` 
-													FROM 	`logaction`
-													WHERE 	`name` = 'Booking Cancelled'
-												),
-								`description` = :description";
-			$s = $pdo->prepare($sql);
-			$s->bindValue(':description', $logEventDescription);
-			$s->execute();
-
 			$pdo->commit();
 
 			//Close the connection
@@ -5319,7 +5455,7 @@ if(isSet($_GET['cancellationcode']) OR isSet($_SESSION['refreshWithCancellationC
 		catch(PDOException $e)
 		{
 			$pdo->rollBack();
-			$error = 'Error adding log event to database: ' . $e->getMessage();
+			$error = 'Error committing changes: ' . $e->getMessage();
 			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
 			$pdo = null;
 			exit();
@@ -5329,7 +5465,7 @@ if(isSet($_GET['cancellationcode']) OR isSet($_SESSION['refreshWithCancellationC
 	$_SESSION['normalBookingFeedback'] = $bookingFeedback;
 
 	// Send mail to the user the booking was registered too about the meeting being cancelled/ended early.
-	if(isSet($meetingCancelled) AND $meetingCancelled){		
+	if($meetingCancelled){
 		$_SESSION['cancelBookingOriginalValues']['SendEmail'] = $sendEmail;
 		$_SESSION['cancelBookingOriginalValues']['UserEmail'] = $email ;
 		$_SESSION['cancelBookingOriginalValues']['MeetingInfo'] = $meetinginfo;

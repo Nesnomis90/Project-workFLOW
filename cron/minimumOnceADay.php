@@ -559,7 +559,7 @@ function updateBillingDatesForCompanies(){
 			$success = $pdo->commit();
 			if($success){ // TO-DO: Unsure if this works as intended.
 				// Check if any of the companies went over credits and send an email to Admin that they did
-				if((isSet($companiesOverCredit) OR isSet($companiesWithOrders)){
+				if(isSet($companiesOverCredit) OR isSet($companiesWithOrders)){
 					// There were companies that went over credit
 					if(isSet($companiesOverCredit) AND sizeOf($companiesOverCredit) == 1){
 						// One company went over
