@@ -40,6 +40,7 @@ $checkboxes = array(
 						array('Meeting Room Added', 			'Meeting Room Added', 		FALSE, 			FALSE),
 						array('Meeting Room Removed', 			'Meeting Room Removed', 	TRUE, 			FALSE),
 						array('Order Cancelled', 				'Order Cancelled', 			FALSE, 			FALSE),
+						array('Order Completed', 				'Order Completed', 			FALSE, 			FALSE),
 						array('Order Created', 					'Order Created', 			TRUE, 			FALSE),
 						array('Room Equipment Added',			'Room Equipment Added',		FALSE, 			FALSE),
 						array('Room Equipment Removed', 		'Room Equipment Removed', 	TRUE, 			FALSE)

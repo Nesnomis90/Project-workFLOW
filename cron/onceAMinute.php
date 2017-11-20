@@ -29,13 +29,21 @@ function updateCompletedBookings(){
 		if(!empty($minBookingID) AND $minBookingID > 0){
 			// There are completed bookings that needs to be updated
 			// Minimize query time by using index search provided by the lowest bookingID found earlier.
-			$sql = "SELECT 	`bookingID`	AS BookingID,
-							`orderID` 	AS OrderID
-					FROM 	`booking`
-					WHERE 	CURRENT_TIMESTAMP >= `endDateTime`
-					AND 	`actualEndDateTime` IS NULL
-					AND 	`dateTimeCancelled` IS NULL
-					AND		`bookingID` >= :minBookingID";
+			$sql = "SELECT 		b.`bookingID`	AS BookingID,
+								b.`orderID` 	AS OrderID
+					FROM 		`booking` b
+					LEFT JOIN 	(
+												`orders` o
+									INNER JOIN 	`extraorders` eo
+									ON 			eo.`orderID` = o.`orderID`
+									INNER JOIN 	`extra` ex
+									ON			ex.`extraID` = eo.`extraID`
+								)
+					ON 			o.`orderID` = b.`orderID`
+					WHERE 		CURRENT_TIMESTAMP >= b.`endDateTime`
+					AND 		b.`actualEndDateTime` IS NULL
+					AND 		b.`dateTimeCancelled` IS NULL
+					AND			b.`bookingID` >= :minBookingID";
 			$s = $pdo->prepare($sql);
 			$s->bindValue(':minBookingID', $minBookingID);
 			$s->execute();
@@ -76,7 +84,7 @@ function updateCompletedBookings(){
 					$s->bindValue(':OrderID', $orderID);
 					$s->execute();
 				}
-				
+
 				// TO-DO: add log events that booking (and order) has been completed.
 				
 			}
