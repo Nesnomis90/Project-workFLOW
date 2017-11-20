@@ -76,6 +76,9 @@ function updateCompletedBookings(){
 					$s->bindValue(':OrderID', $orderID);
 					$s->execute();
 				}
+				
+				// TO-DO: add log events that booking (and order) has been completed.
+				
 			}
 
 			$pdo->commit();
