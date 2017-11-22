@@ -3172,11 +3172,11 @@ if ((isSet($_POST['add']) AND $_POST['add'] == "Add Booking") OR
 			$meetingRoomID = $_POST['meetingRoomID'];
 		}
 
-		if(!isSet($dspname) OR ($dspname == "" AND !empty($_SESSION['AddCreateBookingInfoArray']['BookedBy']))){
+		if(empty($dspname) AND !empty($_SESSION['AddCreateBookingInfoArray']['BookedBy'])){
 			$dspname = $_SESSION['AddCreateBookingInfoArray']['BookedBy'];
 		}
 
-		if(!isSet($bknDscrptn) OR ($bknDscrptn == "" AND !empty($_SESSION["AddCreateBookingInfoArray"]["BookingDescription"]))){
+		if(empty($bknDscrptn) AND !empty($_SESSION["AddCreateBookingInfoArray"]["BookingDescription"])){
 			$bknDscrptn = $_SESSION["AddCreateBookingInfoArray"]["BookingDescription"];
 		}
 
@@ -3561,13 +3561,13 @@ if ((isSet($_POST['add']) AND $_POST['add'] == "Add Booking") OR
 
 	unset($_SESSION['AddCreateBookingStartImmediately']);
 
-	if(!isSet($dspname) OR ($dspname == "" AND !empty($_SESSION['AddCreateBookingInfoArray']['BookedBy']))){
+	/*if(!isSet($dspname) OR ($dspname == "" AND !empty($_SESSION['AddCreateBookingInfoArray']['BookedBy']))){
 		$dspname = $_SESSION['AddCreateBookingInfoArray']['BookedBy'];
 	}
 
 	if(!isSet($bknDscrptn) OR ($bknDscrptn == "" AND !empty($_SESSION["AddCreateBookingInfoArray"]["BookingDescription"]))){
 		$bknDscrptn = $_SESSION["AddCreateBookingInfoArray"]["BookingDescription"];
-	}
+	}*/
 
 	if(isSet($_SESSION['AddCreateBookingOrderAddedExtra'])){
 		if(!isSet($addedExtra) AND isSet($_SESSION['AddCreateBookingOrderAddedExtra'])){

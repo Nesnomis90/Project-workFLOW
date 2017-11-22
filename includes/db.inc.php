@@ -294,7 +294,14 @@ function fillUser($pdo){
 	try
 	{
 		// Get/set a host email
-		$email = "admin@" . $_SERVER['HTTP_HOST'];
+		if(strtolower(substr($_SERVER['HTTP_HOST'], 0, 4)) == "www."){
+			$urlWithWWW = $_SERVER['HTTP_HOST'];
+			$urlWithoutWWW = substr($urlWithWWW, 4);			
+		} else {
+			$urlWithoutWWW = $_SERVER['HTTP_HOST'];
+		}
+
+		$email = "admin@" . $urlWithoutWWW;
 
 		// Create a default password
 		$defaultPassword = "admin";
@@ -370,12 +377,9 @@ function create_tables(){
 						  `message` text NOT NULL,
 						  `receivers` text NOT NULL,
 						  `dateTimeAdded` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-						  `dateTimeRemove` timestamp DEFAULT NULL,
+						  `dateTimeRemove` timestamp NULL DEFAULT NULL,
 						  PRIMARY KEY (`emailID`)
 						) ENGINE=InnoDB DEFAULT CHARSET=utf8");
-
-			// Fill default values
-			fillAccessLevel($conn);
 
 			//	Add the creation to log event
 			$sqlLog = '	INSERT INTO `logevent`(`actionID`, `description`) 
@@ -613,6 +617,7 @@ function create_tables(){
 						  `meetingRoomID` int(10) unsigned DEFAULT NULL,
 						  `userID` int(10) unsigned DEFAULT NULL,
 						  `companyID` int(10) unsigned DEFAULT NULL,
+						  `orderID` int(10) unsigned DEFAULT NULL,
 						  `displayName` varchar(255) DEFAULT NULL,
 						  `dateTimeCreated` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
 						  `dateTimeCancelled` timestamp NULL DEFAULT NULL,
@@ -632,6 +637,7 @@ function create_tables(){
 						  KEY `FK_UserID2_idx` (`userID`),
 						  KEY `FK_CompanyID3_idx` (`companyID`),
 						  KEY `FK_UserID4_idx` (`cancelledByUserID`),
+						  KEY `FK_OrderID_idx` (`orderID`),
 						  CONSTRAINT `FK_CompanyID3` FOREIGN KEY (`companyID`) REFERENCES `company` (`CompanyID`) ON DELETE SET NULL ON UPDATE CASCADE,
 						  CONSTRAINT `FK_MeetingRoomID` FOREIGN KEY (`meetingRoomID`) REFERENCES `meetingroom` (`meetingRoomID`) ON DELETE SET NULL ON UPDATE CASCADE,
 						  CONSTRAINT `FK_UserID2` FOREIGN KEY (`userID`) REFERENCES `user` (`userID`) ON DELETE SET NULL ON UPDATE CASCADE,
@@ -854,6 +860,9 @@ function create_tables(){
 						  CONSTRAINT `FK_UserID3` FOREIGN KEY (`orderApprovedByUserID`) REFERENCES `user` (`userID`) ON DELETE SET NULL ON UPDATE CASCADE,
 						  CONSTRAINT `FK_UserID8` FOREIGN KEY (`cancelledByUserID`) REFERENCES `user` (`userID`) ON DELETE SET NULL ON UPDATE CASCADE
 						) ENGINE=InnoDB DEFAULT CHARSET=utf8");
+			
+			// Add FK constraint to booking now that orders table exists
+			$conn->exec("ALTER TABLE `booking` ADD CONSTRAINT `FK_OrderID` FOREIGN KEY (`orderID`) REFERENCES `orders` (`orderID`) ON DELETE SET NULL ON UPDATE CASCADE");
 
 			//	Add the creation to log event
 			$sqlLog = '	INSERT INTO `logevent`(`actionID`, `description`) 
@@ -1295,7 +1304,7 @@ function create_tables(){
 				}
 
 				$logEventArray = array(); //reinitialize it i.e. make it empty	
-				
+
 				$totaltime = microtime(true) - $_SERVER["REQUEST_TIME_FLOAT"];
 				$time = $totaltime - $prevtime;
 				$prevtime = $totaltime;
