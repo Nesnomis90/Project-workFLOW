@@ -16,12 +16,11 @@
 // Function that prepares an email to be sent
 // Takes in one or multiple emails.
 // Returns TRUE if prepared, FALSE if not prepared.
-// TO-DO: Untested with proper php.ini settings
 function sendEmail($toEmail, $subject, $message){
 
 	// Check if the email(s) is(are) a valid email
 	if(is_Array($toEmail)){
-		for($i=0; $i<sizeOf($toEmail); $i++){
+		for($i = 0; $i < sizeOf($toEmail); $i++){
 			if(validateUserEmail($toEmail[$i])){
 				$validEmail[] = $toEmail[$i];
 			}
