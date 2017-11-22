@@ -5,9 +5,9 @@ include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/magicquotes.inc.php';
 
 // PHP code that we will set to be run at a certain interval, with CRON, to interact with our database
 // Cron does 1 run per minute (fastest)
+// TO-DO: Adapt code to run every 5 minutes at max?
 
 // Update completed bookings
-// Untested with new order update functions.
 function updateCompletedBookings(){
 	try
 	{
