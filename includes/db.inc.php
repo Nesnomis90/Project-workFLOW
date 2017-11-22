@@ -294,7 +294,14 @@ function fillUser($pdo){
 	try
 	{
 		// Get/set a host email
-		$email = "admin@" . $_SERVER['HTTP_HOST'];
+		if(strtolower(substr($_SERVER['HTTP_HOST'], 0, 4)) == "www."){
+			$urlWithWWW = $_SERVER['HTTP_HOST'];
+			$urlWithoutWWW = substr($urlWithWWW, 4);			
+		} else {
+			$urlWithoutWWW = $_SERVER['HTTP_HOST'];
+		}
+
+		$email = "admin@" . $urlWithoutWWW;
 
 		// Create a default password
 		$defaultPassword = "admin";
