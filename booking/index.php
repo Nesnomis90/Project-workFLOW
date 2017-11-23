@@ -863,6 +863,8 @@ if ((isSet($_POST['action']) and $_POST['action'] == 'Cancel') OR
 		$_SESSION['cancelBookingOriginalValues']['BookingStatus'] = $_POST['BookingStatus'];
 		$_SESSION['cancelBookingOriginalValues']['MeetingInfo'] = $_POST['MeetingInfo'];
 
+		unset($_SESSION['confirmBookingCodeError']); // Remove old booking code error messages
+
 		if(isSet($_POST['sendEmail']) AND !empty($_POST['sendEmail'])){
 			$_SESSION['cancelBookingOriginalValues']['SendEmail'] = $_POST['sendEmail'];
 		}
@@ -7656,7 +7658,7 @@ try
 							b.`displayName` 								AS BookedBy,
 							(
 								IF(b.`companyID` IS NULL, NULL, (SELECT `name` FROM `company` WHERE `companyID` = b.`companyID`))
-							)        										AS BookedForCompany,										
+							)        										AS BookedForCompany,
 							(
 								IF(b.`userID` IS NULL, NULL, (SELECT `firstName` FROM `user` WHERE `userID` = b.`userID`))
 							) 												AS firstName,
