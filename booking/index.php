@@ -863,8 +863,6 @@ if ((isSet($_POST['action']) and $_POST['action'] == 'Cancel') OR
 		$_SESSION['cancelBookingOriginalValues']['BookingStatus'] = $_POST['BookingStatus'];
 		$_SESSION['cancelBookingOriginalValues']['MeetingInfo'] = $_POST['MeetingInfo'];
 
-		unset($_SESSION['confirmBookingCodeError']); // Remove old booking code error messages
-
 		if(isSet($_POST['sendEmail']) AND !empty($_POST['sendEmail'])){
 			$_SESSION['cancelBookingOriginalValues']['SendEmail'] = $_POST['sendEmail'];
 		}
