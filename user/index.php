@@ -1595,7 +1595,7 @@ if(isSet($_POST['action']) AND $_POST['action'] == "Confirm Change"){
 
 					// Update session values
 					$_SESSION['email'] = $new['Email'];
-					$_SESSION['LoggedInUserName'] = $new['lastname'] . ", " . $new['firstname'];
+					$_SESSION['LoggedInUserName'] = $new['LastName'] . ", " . $new['FirstName'];
 					$_SESSION['password'] = $hashedNewPassword;
 
 					// Close the connection

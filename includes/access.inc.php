@@ -394,7 +394,7 @@ function checkIfUserIsLoggedIn(){
 		unset($_SESSION['DatabaseContainsUserID']);
 		unset($_SESSION['DatabaseContainsUserName']);
 
-		return $userExists:
+		return $userExists;
 	}
 
 	return FALSE;
