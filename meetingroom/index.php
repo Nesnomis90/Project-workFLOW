@@ -132,20 +132,6 @@ if(isSet($_POST['action']) AND $_POST['action'] == "Show All Rooms"){
 	exit();
 }
 
-/*// If user wants to refresh the page to get the most up-to-date information
-if(isSet($_POST['action']) and $_POST['action'] == 'Refresh'){
-
-	if(isSet($_GET['meetingroom'])){
-		$TheMeetingRoomID = $_GET['meetingroom'];
-		$location = "http://$_SERVER[HTTP_HOST]/meetingroom/?meetingroom=" . $TheMeetingRoomID;
-	} else {
-		$location = ".";
-	}
-
-	header("Location: $location");
-	exit();
-}*/
-
 // Redirect to booking when a room has been selected
 if(isSet($_POST['action']) AND $_POST['action'] == "Booking Information"){
 
