@@ -327,7 +327,11 @@ if(isSet($_POST['register']) AND $_POST['register'] == "Register Account"){
 	}
 
 	// End of register account 
-	$_SESSION['registerUserFeedback'] .= "\nYour account has been successfully created.\nA confirmation link has been sent to your email.";
+	if(isSet($_SESSION['registerUserFeedback'])){
+		$_SESSION['registerUserFeedback'] .= "\nYour account has been successfully created.\nA confirmation link has been sent to your email.";
+	} else {
+		$_SESSION['registerUserFeedback'] = "Your account has been successfully created.\nA confirmation link has been sent to your email.";
+	}
 
 	$firstName = "";
 	$lastName = "";

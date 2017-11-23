@@ -57,15 +57,17 @@ function sendEmail($toEmail, $subject, $message){
 			$ourContact = CONTACT_INFO_SENT_IN_MAIL;
 
 			// Add a "No reply"-warning to all emails sent out.
-			$message .= "\r\n\r\nThis Email address is not monitored for responses.";
-			$message .= "\r\nTo contact us check out " . $ourContact;
+			$message .= "\n\nThis Email address is not monitored for responses.";
+			$message .= "\nTo contact us check out " . $ourContact;
 			// Use wordwrap() if lines are longer than 70 characters
-			$message = wordwrap($message,70,"\r\n");
+				// Make sure we don't count already existing line breaks as a character (too many wordwraps)
+
+			$message = linewrap($message,70,"\n");//wordwrap($message,70,"\n");
 
 			$toEmail = implode(', ', $validEmail);
 
 			// Set header information
-			$header = 	"Content-type: text/html; charset=" . $encoding . "\r\n";
+			$header = 	"Content-type: text/plain; charset=" . $encoding . "\r\n"; // TO-DO: Change to text/html if needed
 			$header .= 	"From: " . $ourName." <" . $ourEmail . ">\r\n";
 			$header .=	"Bcc: " . $toEmail . "\r\n";
 			$header .= 	"MIME-Version: 1.0\r\n";
@@ -107,7 +109,7 @@ function validateUserEmail($email){
 	}
 
 	// Check for the presence of at least one @ symbol
-	if(strpos($email, '@') !== FALSE) {
+	if(strpos($email, '@') !== FALSE){
 		// Email contains an @
 
 		// Check that the local-part is no longer than 64 octets (64x8 bit = 64 byte)
@@ -137,5 +139,17 @@ function validateUserEmail($email){
 		// No @ found, invalid email.
 		return FALSE;
 	}
+}
+
+function linewrap($string, $width, $break) {
+	$array = explode("\n", $string);
+	$string = "";
+
+	foreach($array as $key => $val){
+		$string .= wordwrap($val, $width, $break);
+		$string .= "\n";
+	}
+
+	return $string;
 }
 ?>
