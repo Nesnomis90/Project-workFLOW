@@ -326,8 +326,6 @@ if(isSet($_POST['register']) AND $_POST['register'] == "Register Account"){
 		$_SESSION['registerUserFeedback'] .= "\nEmail to be sent has been stored and will be attempted to be sent again later.";	
 	}
 
-	$_SESSION['registerUserFeedback'] .= "\nThis is the email msg we're sending out:\n$emailMessage.\nSent to: $email."; // TO-DO: Remove before uploading	
-
 	// End of register account 
 	$_SESSION['registerUserFeedback'] .= "\nYour account has been successfully created.\nA confirmation link has been sent to your email.";
 

@@ -57,8 +57,8 @@ function sendEmail($toEmail, $subject, $message){
 			$ourContact = CONTACT_INFO_SENT_IN_MAIL;
 
 			// Add a "No reply"-warning to all emails sent out.
-			$message .= "\n\nThis Email address is not monitored for responses.";
-			$message .= "\nTo contact us check out " . $ourContact;
+			$message .= "\r\n\r\nThis Email address is not monitored for responses.";
+			$message .= "\r\nTo contact us check out " . $ourContact;
 			// Use wordwrap() if lines are longer than 70 characters
 			$message = wordwrap($message,70,"\r\n");
 
