@@ -12,8 +12,14 @@ unsetSessionsFromUserManagement();
 unsetSessionsFromBookingManagement();
 
 // Make sure logout works properly and that we check if their login details are up-to-date
+$adminLoggedIn = FALSE;
 if(isSet($_SESSION['loggedIn'])){
-	userIsLoggedIn();
+	$loggedIn = userIsLoggedIn();
+
+	// Check if logged in user is admin
+	if($loggedIn AND userHasAccess('Admin')){
+		$adminLoggedIn = TRUE;
+	}
 }
 
 // ADMIN INTERACTIONS // START //
@@ -28,10 +34,10 @@ if(isSet($_GET['cancelSetDefaultRoom'])){
 if(	(isSet($_POST['action']) AND $_POST['action'] == "Set Default Room") OR 
 	(isSet($_POST['action']) AND $_POST['action'] == "Change Default Room") OR
 	(isSet($_SESSION['SetDefaultRoom']) AND $_SESSION['SetDefaultRoom'])){
-		
+
 	$_SESSION['SetDefaultRoom'] = TRUE;
 		// CHECK IF USER TRYING TO ACCESS THIS IS IN FACT THE ADMIN!
-	if (!isUserAdmin()){
+	if(!isUserAdmin()){
 		exit();
 	}
 	unset($_SESSION['SetDefaultRoom']);
@@ -54,7 +60,7 @@ if(	(isSet($_POST['action']) AND $_POST['action'] == "Set Default Room") OR
 		} else {
 			$rowNum = 0;
 		}
-		
+
 		//Close the connection
 		$pdo = null;
 	}
@@ -67,11 +73,12 @@ if(	(isSet($_POST['action']) AND $_POST['action'] == "Set Default Room") OR
 	}
 
 	foreach ($result as $row){
-		$meetingrooms[] = array('MeetingRoomID' => $row['TheMeetingRoomID'], 
-								'MeetingRoomName' => $row['MeetingRoomName'],
-								'MeetingRoomCapacity' => $row['MeetingRoomCapacity'],
-								'MeetingRoomDescription' => $row['MeetingRoomDescription'],
-								'MeetingRoomIDCode' => $row['MeetingRoomIDCode']
+		$meetingrooms[] = array(
+									'MeetingRoomID' => $row['TheMeetingRoomID'], 
+									'MeetingRoomName' => $row['MeetingRoomName'],
+									'MeetingRoomCapacity' => $row['MeetingRoomCapacity'],
+									'MeetingRoomDescription' => $row['MeetingRoomDescription'],
+									'MeetingRoomIDCode' => $row['MeetingRoomIDCode']
 								);
 	}
 
@@ -82,14 +89,14 @@ if(	(isSet($_POST['action']) AND $_POST['action'] == "Set Default Room") OR
 // If Admin has chosen a default meeting room from the available meeting rooms
 if(isSet($_POST['action']) AND $_POST['action'] == "Set As Default"){
 		// CHECK IF USER TRYING TO ACCESS THIS IS IN FACT THE ADMIN!
-	if (!isUserAdmin()){
+	if(!isUserAdmin()){
 		exit();
 	}
-	
+
 		// Set the proper cookies for the meeting room and logout the Admin.
 	if(isSet($_POST['MeetingRoomName']) AND isSet($_POST['MeetingRoomIDCode'])){
 		$meetingRoomName = $_POST['MeetingRoomName'];
-		
+
 		setNewMeetingRoomCookies($meetingRoomName, $_POST['MeetingRoomIDCode']);
 		destroySession();
 		$defaultMeetingRoomFeedback = "Set $meetingRoomName as the default meeting room for this device. Also logged you off as Admin.";
@@ -121,20 +128,6 @@ if(isSet($_POST['action']) AND $_POST['action'] == "Show Default Room Only"){
 if(isSet($_POST['action']) AND $_POST['action'] == "Show All Rooms"){
 
 	$location = "http://$_SERVER[HTTP_HOST]/meetingroom/";
-	header("Location: $location");
-	exit();
-}
-
-// If user wants to refresh the page to get the most up-to-date information
-if (isSet($_POST['action']) and $_POST['action'] == 'Refresh'){
-	
-	if(isSet($_GET['meetingroom'])){
-		$TheMeetingRoomID = $_GET['meetingroom'];
-		$location = "http://$_SERVER[HTTP_HOST]/meetingroom/?meetingroom=" . $TheMeetingRoomID;		
-	} else {
-		$location = ".";
-	}
-
 	header("Location: $location");
 	exit();
 }
@@ -204,7 +197,7 @@ if(isSet($_GET['meetingroom']) AND !empty($_GET['meetingroom'])){
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
 		$pdo = null;
 		exit();
-	}	
+	}
 } else {
 	// Display meeting rooms
 	try

@@ -16,26 +16,8 @@
 
 		<?php include_once $_SERVER['DOCUMENT_ROOT'] .'/includes/topnav.html.php'; ?>
 
-		<?php if(isSet($_SESSION['DefaultMeetingRoomInfo']) AND !isSet($defaultMeetingRoomFeedback)) : ?>
-			<div class="left">
-				<form action="" method="post">
-					<label style="width: 295px;" for="defaultMeetingRoomName">The Default Meeting Room For This Device: </label>
-					<span><b><?php htmlout($_SESSION['DefaultMeetingRoomInfo']['TheMeetingRoomName']); ?></b></span>
-					<div class="left">
-						<input type="submit" name="action" value="Change Default Room"><span style="color:red">* Requires Admin Access</span>
-					</div>
-				</form>
-			</div>
-		<?php else : ?>
-			<div class="left">
-				<form action="" method="post">
-					<input type="submit" name="action" 
-					value="Set Default Room"><span style="color:red">* Requires Admin Access</span>
-				</form>
-			<div>
-		<?php endif; ?>
-
 		<div class="left">
+			<span><b>Last Refresh: <?php htmlout(getDatetimeNowInDisplayFormat()); ?></b></span>
 			<form action="" method="post">
 				<?php if(isSet($_SESSION['DefaultMeetingRoomInfo'])) : ?>
 				<?php $default = $_SESSION['DefaultMeetingRoomInfo']; ?>
@@ -46,10 +28,28 @@
 						<input type="submit" name="action" value="Show All Rooms">
 					<?php endif; ?>
 				<?php endif; ?>
-				<input type="submit" name="action" value="Refresh">
-				<span><b>Last Refresh: <?php htmlout(getDatetimeNowInDisplayFormat()); ?></b></span>
 			</form>
 		</div>
+
+		<?php if(isSet($_SESSION['DefaultMeetingRoomInfo']) AND !isSet($defaultMeetingRoomFeedback)) : ?>
+			<div class="left">
+				<form action="" method="post">
+					<label style="width: 295px;" for="defaultMeetingRoomName">The Default Meeting Room For This Device: </label>
+					<span><b><?php htmlout($_SESSION['DefaultMeetingRoomInfo']['TheMeetingRoomName']); ?></b></span>
+					<?php if($adminLoggedIn) : ?>
+						<div class="left">
+							<input type="submit" name="action" value="Change Default Room">
+						</div>
+					<?php endif; ?>
+				</form>
+			</div>
+		<?php elseif($adminLoggedIn) : ?>
+			<div class="left">
+				<form action="" method="post">
+					<input type="submit" name="action" value="Set Default Room">
+				</form>
+			<div>
+		<?php endif; ?>
 
 		<?php if(isSet($_SESSION['MeetingRoomAllUsersFeedback'])) : ?>
 			<div class="left"><b class="feedback"><?php htmlout($_SESSION['MeetingRoomAllUsersFeedback']); ?></b></div>
@@ -60,7 +60,7 @@
 			<div class="left"><b class="feedback"><?php htmlout($defaultMeetingRoomFeedback); ?></b></div>
 		<?php endif; ?>
 
-		<?php if(isSet($_GET['meetingroom']) AND $_GET['meetingroom'] != NULL AND $_GET['meetingroom'] != "") : ?>
+		<?php if(!empty($_GET['meetingroom'])) : ?>
 			<?php if(isSet($meetingrooms)) : ?>
 				<?php if(isSet($default) AND $_GET['meetingroom'] == $default['TheMeetingRoomID']) : ?>
 					<div class="left"><h2>Viewing Default Room For Device</h2></div>
@@ -68,7 +68,7 @@
 					<div class="left"><h2>Viewing Non-Default Room For Device</h2></div>
 				<?php elseif(!isSet($default)) : ?>
 					<div class="left"><h2>Viewing Selected Meeting Room</h2></div>
-				<?php endif; ?>			
+				<?php endif; ?>
 				<?php foreach ($meetingrooms as $room): ?>
 					<div class="left">
 						<form action="" method="post">

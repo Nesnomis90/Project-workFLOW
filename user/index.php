@@ -142,7 +142,7 @@ function validateUserInputs($FeedbackSessionToUse){
 	if(isSet($_SESSION['EditNormalUserOriginaEmail'])){
 		$originalEmail = $_SESSION['EditNormalUserOriginaEmail'];
 		// no need to check if our own email exists in the database
-		if($email!=$originalEmail){
+		if($email != $originalEmail){
 			if (databaseContainsEmail($email)){
 				// The email has been used before. So we can't create a new user with this info.
 				$_SESSION[$FeedbackSessionToUse] = "The new email you've set is already connected to an account.";
@@ -326,10 +326,12 @@ if(isSet($_POST['register']) AND $_POST['register'] == "Register Account"){
 		$_SESSION['registerUserFeedback'] .= "\nEmail to be sent has been stored and will be attempted to be sent again later.";	
 	}
 
-	$_SESSION['registerUserFeedback'] .= "\nThis is the email msg we're sending out:\n$emailMessage.\nSent to: $email."; // TO-DO: Remove before uploading	
-
 	// End of register account 
-	$_SESSION['registerUserFeedback'] .= "\nYour account has been successfully created.\nA confirmation link has been sent to your email.";
+	if(isSet($_SESSION['registerUserFeedback'])){
+		$_SESSION['registerUserFeedback'] .= "\nYour account has been successfully created.\nA confirmation link has been sent to your email.";
+	} else {
+		$_SESSION['registerUserFeedback'] = "Your account has been successfully created.\nA confirmation link has been sent to your email.";
+	}
 
 	$firstName = "";
 	$lastName = "";
@@ -558,11 +560,12 @@ if(isSet($_GET['activateaccount']) AND $_GET['activateaccount'] != ""){
 
 	// Check if the select even found something
 	$result = $s->fetch(PDO::FETCH_ASSOC);
-	if(isSet($result)){
+	if(!empty($result)){
 		$rowNum = sizeOf($result);
 	} else {
 		$rowNum = 0;
 	}
+
 	if($rowNum == 0){
 		// No match.
 		$_SESSION['normalUserFeedback'] = "The activation code that was submitted is not a valid code.";
@@ -1589,6 +1592,11 @@ if(isSet($_POST['action']) AND $_POST['action'] == "Confirm Change"){
 					}
 
 					$pdo->commit();
+
+					// Update session values
+					$_SESSION['email'] = $new['Email'];
+					$_SESSION['LoggedInUserName'] = $new['LastName'] . ", " . $new['FirstName'];
+					$_SESSION['password'] = $hashedNewPassword;
 
 					// Close the connection
 					$pdo = Null;

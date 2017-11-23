@@ -28,7 +28,15 @@
 
 	<?php include_once $_SERVER['DOCUMENT_ROOT'] .'/includes/topnav.html.php'; ?>
 
-	<?php if(isSet($_SESSION['loggedIn']) AND $_SESSION['loggedIn'] AND isSet($_SESSION['LoggedInUserID']) AND !empty($_SESSION['LoggedInUserID']) AND !isSet($noAccess)) : ?>
+	<?php if(isSet($_SESSION['loggedIn']) AND $_SESSION['loggedIn'] AND !empty($_SESSION['LoggedInUserID']) AND !isSet($noAccess)) : ?>
+		<h2>Company Management</h2>
+	<?php elseif(isSet($noAccess)) : ?>
+		<h2>You do not have the rights to view this information.</h2>
+	<?php else : ?>
+		<h2>This page requires you to be logged in to view.</h2>
+	<?php endif; ?>
+
+	<?php if(isSet($_SESSION['loggedIn']) AND $_SESSION['loggedIn'] AND !empty($_SESSION['LoggedInUserID']) AND !isSet($noAccess)) : ?>
 
 		<fieldset class="left">
 			<?php if(isSet($numberOfCompanies) AND $numberOfCompanies > 1) : ?>
@@ -169,25 +177,32 @@
 						<?php elseif(isSet($numberOfCompanies) AND $numberOfCompanies == 0) : ?>
 							<legend>Request To Join A Company</legend>
 						<?php endif; ?>
-							<div class="left">
-								<label>Choose: </label>
-								<select name="selectedCompanyToJoin">
-									<?php foreach($companies AS $company) : ?>
-										<?php if($company['CompanyID'] == $selectedCompanyToJoinID) : ?>
-											<option selected="selected" value="<?php htmlout($company['CompanyID']); ?>"><?php htmlout($company['CompanyName']); ?></option>
-										<?php else : ?>
-											<option value="<?php htmlout($company['CompanyID']); ?>"><?php htmlout($company['CompanyName']); ?></option>
-										<?php endif; ?>
-									<?php endforeach; ?>
-								</select>
-								<label>Request Message: </label>
-								<textarea rows="4" cols="50" name="requestToJoinMessage"
-								placeholder="Enter any information you would like to send to the company."></textarea>
-							</div>
-							<div class="left">
-								<input type="submit" name="action" value="Request To Join">
-								<input type="submit" name="action" value="Cancel">
-							</div>
+							<?php if(!empty($companies)) : ?>
+								<div class="left">
+									<label>Choose: </label>
+									<select name="selectedCompanyToJoin">
+										<?php foreach($companies AS $company) : ?>
+											<?php if($company['CompanyID'] == $selectedCompanyToJoinID) : ?>
+												<option selected="selected" value="<?php htmlout($company['CompanyID']); ?>"><?php htmlout($company['CompanyName']); ?></option>
+											<?php else : ?>
+												<option value="<?php htmlout($company['CompanyID']); ?>"><?php htmlout($company['CompanyName']); ?></option>
+											<?php endif; ?>
+										<?php endforeach; ?>
+									</select>
+									<label>Request Message: </label>
+									<textarea rows="4" cols="50" name="requestToJoinMessage"
+									placeholder="Enter any information you would like to send to the company."></textarea>
+								</div>
+								<div class="left">
+									<input type="submit" name="action" value="Request To Join">
+									<input type="submit" name="action" value="Cancel">
+								</div>
+							<?php else : ?>
+								<div class="left">
+									<span><b>There are no companies to join.</b></span>
+									<input type="submit" name="action" value="Cancel">
+								</div>
+							<?php endif; ?>
 						</fieldset>
 					<?php endif; ?>
 				</div>
@@ -233,10 +248,6 @@
 				<?php endif; ?>
 			</form>
 		</fieldset>
-	<?php elseif(isSet($noAccess)) : ?>
-		<h2>You do not have the rights to view this information.</h2>
-	<?php else : ?>
-		<h2>This page requires you to be logged in to view.</h2>
 	<?php endif; ?>
 	</body>
 </html>

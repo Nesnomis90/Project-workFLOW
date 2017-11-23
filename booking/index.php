@@ -7656,7 +7656,7 @@ try
 							b.`displayName` 								AS BookedBy,
 							(
 								IF(b.`companyID` IS NULL, NULL, (SELECT `name` FROM `company` WHERE `companyID` = b.`companyID`))
-							)        										AS BookedForCompany,										
+							)        										AS BookedForCompany,
 							(
 								IF(b.`userID` IS NULL, NULL, (SELECT `firstName` FROM `user` WHERE `userID` = b.`userID`))
 							) 												AS firstName,

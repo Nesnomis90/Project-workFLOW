@@ -52,8 +52,7 @@ function databaseContainsMeetingRoomWithIDCode($name, $cookieIdCode){
 	}
 
 	$row = $s->fetch();
-	if ($row[0] > 0)
-	{
+	if($row[0] > 0){
 		// The cookie had a valid meeting room name.
 		// Check if the idCode is correct
 		$hashedIDCode = hashMeetingRoomIDCode($row['idCode']);
@@ -181,21 +180,11 @@ function checkIfUserIsLoggedIn(){
 		$userInfo = databaseContainsUser($email, $password);
 		if($userInfo === TRUE){
 			// Correct log in info! Update the session data to know we're logged in
-			if(!isSet($_SESSION['loggedIn'])){
-				$_SESSION['loggedIn'] = TRUE;
-			}
-			if(!isSet($_SESSION['email'])){
-				$_SESSION['email'] = $email;
-			}
-			if(!isSet($_SESSION['password'])){
-				$_SESSION['password'] = $password;
-			}
-			if(!isSet($_SESSION['LoggedInUserID'])){
-				$_SESSION['LoggedInUserID'] = $_SESSION['DatabaseContainsUserID'];
-			}
-			if(!isSet($_SESSION['LoggedInUserName'])){
-				$_SESSION['LoggedInUserName'] = $_SESSION['DatabaseContainsUserName']; 
-			}
+			$_SESSION['loggedIn'] = TRUE;
+			$_SESSION['email'] = $email;
+			$_SESSION['password'] = $password;
+			$_SESSION['LoggedInUserID'] = $_SESSION['DatabaseContainsUserID'];
+			$_SESSION['LoggedInUserName'] = $_SESSION['DatabaseContainsUserName'];
 
 			// We're not a local device if we can log in
 			resetLocalDevice();
@@ -326,7 +315,7 @@ function checkIfUserIsLoggedIn(){
 					$mailResult = sendEmail($email, $emailSubject, $emailMessage);
 
 					$_SESSION['forgottenPasswordError'] = "User found and reset link sent to email!";
-					
+
 					if(!$mailResult){
 						$_SESSION['forgottenPasswordError'] .= "\n\n[WARNING] System failed to send Email.";
 
@@ -400,7 +389,12 @@ function checkIfUserIsLoggedIn(){
 	// loggedIn = true session variable in the case that user info
 	// has been altered while someone is already logged in with old data
 	if(isSet($_SESSION['loggedIn'])){
-		return databaseContainsUser($_SESSION['email'], $_SESSION['password']);
+		$userExists = databaseContainsUser($_SESSION['email'], $_SESSION['password']);
+
+		unset($_SESSION['DatabaseContainsUserID']);
+		unset($_SESSION['DatabaseContainsUserName']);
+
+		return $userExists;
 	}
 
 	return FALSE;
@@ -441,16 +435,10 @@ function databaseContainsUser($email, $password){
 	// If we got a hit, then the user info was correct
 	if($row[0] > 0){
 
-		if(!isSet($_SESSION['LoggedInUserID'])){
-			$_SESSION['DatabaseContainsUserID'] = $row['userID'];
-		}
-
-		if(!isSet($_SESSION['LoggedInUserName'])){
-			$_SESSION['DatabaseContainsUserName'] = $row['lastname'] . ", " . $row['firstname'];
-		}
+		$_SESSION['DatabaseContainsUserID'] = $row['userID'];
+		$_SESSION['DatabaseContainsUserName'] = $row['lastname'] . ", " . $row['firstname'];
 
 		return TRUE;
-
 	} else {
 		unset($_SESSION['DatabaseContainsUserID']);
 		unset($_SESSION['DatabaseContainsUserName']);
