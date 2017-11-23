@@ -68,7 +68,7 @@
 					<div class="left"><h2>Viewing Non-Default Room For Device</h2></div>
 				<?php elseif(!isSet($default)) : ?>
 					<div class="left"><h2>Viewing Selected Meeting Room</h2></div>
-				<?php endif; ?>			
+				<?php endif; ?>
 				<?php foreach ($meetingrooms as $room): ?>
 					<div class="left">
 						<form action="" method="post">
