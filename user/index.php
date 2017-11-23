@@ -142,7 +142,7 @@ function validateUserInputs($FeedbackSessionToUse){
 	if(isSet($_SESSION['EditNormalUserOriginaEmail'])){
 		$originalEmail = $_SESSION['EditNormalUserOriginaEmail'];
 		// no need to check if our own email exists in the database
-		if($email!=$originalEmail){
+		if($email != $originalEmail){
 			if (databaseContainsEmail($email)){
 				// The email has been used before. So we can't create a new user with this info.
 				$_SESSION[$FeedbackSessionToUse] = "The new email you've set is already connected to an account.";
@@ -1592,6 +1592,11 @@ if(isSet($_POST['action']) AND $_POST['action'] == "Confirm Change"){
 					}
 
 					$pdo->commit();
+
+					// Update session values
+					$_SESSION['email'] = $new['Email'];
+					$_SESSION['LoggedInUserName'] = $new['lastname'] . ", " . $new['firstname'];
+					$_SESSION['password'] = $hashedNewPassword;
 
 					// Close the connection
 					$pdo = Null;

@@ -9,7 +9,7 @@
 	</head>
 	<body onload="startTime(); refreshPageTimer(<?php htmlout(SECONDS_BEFORE_REFRESHING_BOOKING_PAGE); ?>);">
 		<?php include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/topnav.html.php'; ?>
-		
+
 		<div class="left">
 			<?php if(isSet($_SESSION['normalBookingFeedback'])) : ?>
 				<span><b class="feedback"><?php htmlout($_SESSION['normalBookingFeedback']); ?></b></span>
@@ -26,7 +26,7 @@
 				<h1>Booking Information Overview</h1>
 			<?php endif; ?>
 		</div>
-		
+
 		<?php if(isSet($_GET['cancellationcode'])) : ?>
 
 		<?php elseif(isSet($_SESSION['loggedIn']) AND $_SESSION['loggedIn']) : ?>

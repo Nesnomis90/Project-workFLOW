@@ -52,8 +52,7 @@ function databaseContainsMeetingRoomWithIDCode($name, $cookieIdCode){
 	}
 
 	$row = $s->fetch();
-	if ($row[0] > 0)
-	{
+	if($row[0] > 0){
 		// The cookie had a valid meeting room name.
 		// Check if the idCode is correct
 		$hashedIDCode = hashMeetingRoomIDCode($row['idCode']);
@@ -181,9 +180,8 @@ function checkIfUserIsLoggedIn(){
 		$userInfo = databaseContainsUser($email, $password);
 		if($userInfo === TRUE){
 			// Correct log in info! Update the session data to know we're logged in
-			if(!isSet($_SESSION['loggedIn'])){
-				$_SESSION['loggedIn'] = TRUE;
-			}
+			$_SESSION['loggedIn'] = TRUE;
+
 			if(!isSet($_SESSION['email'])){
 				$_SESSION['email'] = $email;
 			}
@@ -194,7 +192,7 @@ function checkIfUserIsLoggedIn(){
 				$_SESSION['LoggedInUserID'] = $_SESSION['DatabaseContainsUserID'];
 			}
 			if(!isSet($_SESSION['LoggedInUserName'])){
-				$_SESSION['LoggedInUserName'] = $_SESSION['DatabaseContainsUserName']; 
+				$_SESSION['LoggedInUserName'] = $_SESSION['DatabaseContainsUserName'];
 			}
 
 			// We're not a local device if we can log in
@@ -326,7 +324,7 @@ function checkIfUserIsLoggedIn(){
 					$mailResult = sendEmail($email, $emailSubject, $emailMessage);
 
 					$_SESSION['forgottenPasswordError'] = "User found and reset link sent to email!";
-					
+
 					if(!$mailResult){
 						$_SESSION['forgottenPasswordError'] .= "\n\n[WARNING] System failed to send Email.";
 
