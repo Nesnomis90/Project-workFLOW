@@ -560,11 +560,12 @@ if(isSet($_GET['activateaccount']) AND $_GET['activateaccount'] != ""){
 
 	// Check if the select even found something
 	$result = $s->fetch(PDO::FETCH_ASSOC);
-	if(isSet($result)){
+	if(!empty($result)){
 		$rowNum = sizeOf($result);
 	} else {
 		$rowNum = 0;
 	}
+
 	if($rowNum == 0){
 		// No match.
 		$_SESSION['normalUserFeedback'] = "The activation code that was submitted is not a valid code.";
