@@ -620,7 +620,7 @@ try
 							AND			b.`actualEndDateTime` IS NULL
 							AND			b.`endDateTime` > CURRENT_TIMESTAMP
 						)													AS ExtraIsInThisManyActiveOrders
-			FROM 		`Extra` ex
+			FROM 		`extra` ex
 			ORDER BY	ex.`name`';
 
 	$return = $pdo->query($sql);
@@ -650,7 +650,7 @@ foreach($result AS $row){
 	$displayDateTimeUpdated = convertDatetimeToFormat($dateTimeUpdated , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
 
 	$extraIsAlternative = $row['ExtraIsAlternative'];
-	
+
 	if($extraIsAlternative == 1){
 		$displayExtraType = "Alternative";
 	} else {
@@ -676,5 +676,5 @@ foreach($result AS $row){
 var_dump($_SESSION); // TO-DO: remove after testing is done
 
 // Create the Extra list in HTML
-include_once 'Extra.html.php';
+include_once 'extra.html.php';
 ?>
