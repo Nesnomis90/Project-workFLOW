@@ -378,8 +378,6 @@ function emailUserOnCancelledBooking(){
 
 				$_SESSION['normalBookingFeedback'] .= "\nEmail to be sent has been stored and will be attempted to be sent again later.";
 			}
-
-			$_SESSION['normalBookingFeedback'] .= "\nThis is the email msg we're sending out:\n$emailMessage\nSent to email: $email."; // TO-DO: Remove after testing
 		}
 	} else {
 		$_SESSION['BookingUserFeedback'] .= "\nFailed to send an email to the user that the booking got cancelled.";
@@ -441,8 +439,6 @@ function emailUserOnCancelledOrder(){
 
 				$_SESSION['normalBookingFeedback'] .= "\nEmail to be sent has been stored and will be attempted to be sent again later.";
 			}
-
-			$_SESSION['normalBookingFeedback'] .= "\nThis is the email msg we're sending out:\n$emailMessage\nSent to email: $email."; // TO-DO: Remove after testing
 		}
 	} else {
 		$_SESSION['BookingUserFeedback'] .= "\nFailed to send an email to the user that the booking got cancelled.";
@@ -2049,11 +2045,6 @@ if ((isSet($_POST['changeroom']) and $_POST['changeroom'] == 'Confirm Change') O
 
 					$_SESSION['normalBookingFeedback'] .= "\nEmail to be sent has been stored and will be attempted to be sent again later.";
 				}
-
-				$_SESSION['normalBookingFeedback'] .= "\nThis is the email msg we're sending out:\n$emailMessage\nSent to email: $email."; // TO-DO: Remove after testing	
-
-			} elseif($_SESSION['changeRoomOriginalValues']['SendEmail'] == 0){
-				$_SESSION['normalBookingFeedback'] .= "\nUser did not want to get sent Emails."; // TO-DO: remove when done testing
 			}
 		}
 
@@ -2116,11 +2107,6 @@ if ((isSet($_POST['changeroom']) and $_POST['changeroom'] == 'Confirm Change') O
 
 					$_SESSION['normalBookingFeedback'] .= "\nEmail to be sent has been stored and will be attempted to be sent again later.";
 				}
-
-				$_SESSION['normalBookingFeedback'] .= "\nThis is the email msg we're sending out:\n$emailMessage\nSent to email: $email."; // TO-DO: Remove after testing
-
-			} elseif($bookingCreatorSendEmail == 0){
-				$_SESSION['normalBookingFeedback'] .= "\nUser did not want to get sent Emails."; // TO-DO: remove when done testing
 			}
 		}
 	} else {
@@ -2320,11 +2306,6 @@ if ((isSet($_POST['changeroom']) and $_POST['changeroom'] == 'Confirm Change') O
 
 					$_SESSION['normalBookingFeedback'] .= "\nEmail to be sent has been stored and will be attempted to be sent again later.";
 				}
-
-				$_SESSION['normalBookingFeedback'] .= "\nThis is the email msg we're sending out:\n$emailMessage.\nSent to email: $email."; // TO-DO: Remove after testing	
-
-			} elseif($_SESSION['changeRoomOriginalValues']['SendEmail'] == 0){
-				$_SESSION['normalBookingFeedback'] .= "\nUser did not want to get sent Emails."; // TO-DO: remove when done testing
 			}
 		}
 	}
@@ -3810,7 +3791,7 @@ if ((isSet($_POST['add']) AND $_POST['add'] == "Add Booking") OR
 
 		if($bookingWentOverCredits){
 			// Add time over credits and the price per hour the company subscription has.
-			$emailMessage .= "\n\nWarning: If this booking is completed the company you booked for will be $timeOverCredits over the given free booking time.\nThis will result in a cost of $companyHourPriceOverCredits";
+			$emailMessage .= "\n\nWarning: If this booking is completed the company you booked for will be $timeOverCredits over the given free booking time that period. This will result in a cost of $companyHourPriceOverCredits";
 		}
 
 		$email = $_SESSION['AddCreateBookingInfoArray']['UserEmail'];
@@ -3845,10 +3826,6 @@ if ((isSet($_POST['add']) AND $_POST['add'] == "Add Booking") OR
 
 			$_SESSION['normalBookingFeedback'] .= "\nEmail to be sent has been stored and will be attempted to be sent again later.";
 		}
-
-		$_SESSION['normalBookingFeedback'] .= "\nThis is the email msg we're sending out:\n$emailMessage.\nSent to email: $email."; // TO-DO: Remove before uploading
-	} elseif($info['sendEmail'] == 0){
-		$_SESSION['normalBookingFeedback'] .= "\nUser did not want to get sent Emails.";
 	}
 
 	// Send email to alert company owner(s) that a booking was made that is over credits.
@@ -3989,10 +3966,6 @@ if ((isSet($_POST['add']) AND $_POST['add'] == "Add Booking") OR
 
 				$_SESSION['normalBookingFeedback'] .= "\nEmail to be sent has been stored and will be attempted to be sent again later.";
 			}
-
-			$_SESSION['normalBookingFeedback'] .= "\nThis is the email msg we're sending out:\n$emailMessage\nSent to email: $email."; // TO-DO: Remove before uploading			
-		} else {
-			$_SESSION['normalBookingFeedback'] .= "\n\nNo Company Owners were sent an email about the booking details."; // TO-DO: Remove before uploading.
 		}
 	}
 
@@ -6014,10 +5987,6 @@ if(isSet($_POST['add']) AND $_POST['add'] == "Add Order"){
 
 			$_SESSION['normalBookingFeedback'] .= "\nEmail to be sent has been stored and will be attempted to be sent again later.";
 		}
-
-		$_SESSION['normalBookingFeedback'] .= "\nThis is the email msg we're sending out:\n$emailMessage.\nSent to email: $email."; // TO-DO: Remove before uploading
-	} elseif($sendEmail == 0){
-		$_SESSION['normalBookingFeedback'] .= "\nUser did not want to get sent Emails.";
 	}
 
 	// Send email to alert company owner(s) that an order was made.
@@ -6113,10 +6082,6 @@ if(isSet($_POST['add']) AND $_POST['add'] == "Add Order"){
 
 			$_SESSION['normalBookingFeedback'] .= "\nEmail to be sent has been stored and will be attempted to be sent again later.";
 		}
-
-		$_SESSION['normalBookingFeedback'] .= "\nThis is the email msg we're sending out:\n$emailMessage\nSent to email: $email."; // TO-DO: Remove before uploading			
-	} else {
-		$_SESSION['normalBookingFeedback'] .= "\n\nNo Company Owners were sent an email about the booking going over booking."; // TO-DO: Remove before uploading.
 	}
 
 	try
