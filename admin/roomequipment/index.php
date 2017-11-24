@@ -754,7 +754,7 @@ clearAddRoomEquipmentSessions();
 clearEditRoomEquipmentSessions();
 
 // Get only information from the specific meetingroom
-if(isSet($_GET['Meetingroom'])){
+if(!empty($_GET['Meetingroom'])){
 
 	try
 	{
@@ -775,8 +775,7 @@ if(isSet($_GET['Meetingroom'])){
 				ON 			e.`EquipmentID` = re.`EquipmentID`
 				JOIN 		`meetingroom` m
 				ON 			m.`meetingRoomID` = re.`meetingRoomID`
-				WHERE 		m.`meetingRoomID` = :MeetingRoomID
-				LIMIT		1";
+				WHERE 		m.`meetingRoomID` = :MeetingRoomID";
 
 		$s = $pdo->prepare($sql);
 		$s->bindValue(':MeetingRoomID', $_GET['Meetingroom']);
@@ -798,10 +797,7 @@ if(isSet($_GET['Meetingroom'])){
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
 		exit();
 	}
-}
-
-// Get information from all meeting rooms
-if(!isSet($_GET['Meetingroom'])){
+} else {
 	try
 	{
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
