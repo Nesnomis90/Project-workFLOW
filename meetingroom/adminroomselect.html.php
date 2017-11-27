@@ -11,7 +11,7 @@
 		<?php include_once $_SERVER['DOCUMENT_ROOT'] .'/includes/topnav.html.php'; ?>
 
 		<?php if($rowNum>0) :?>
-			<table>
+			<table class="myTable">
 				<caption>Active Meeting Rooms</caption>
 				<tr>
 					<th colspan="3">Meeting Room</th>

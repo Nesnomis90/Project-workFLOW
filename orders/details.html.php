@@ -1062,7 +1062,7 @@
 			</div>
 
 			<div class="left">
-				<table id="addAlternative">
+				<table class="myTable" id="addAlternative">
 					<caption>Items Ordered</caption>
 					<tr>
 						<th colspan="4">Item</th>

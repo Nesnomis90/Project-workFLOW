@@ -40,7 +40,7 @@
 			</form>
 		<?php endif; ?>
 
-		<table>
+		<table class="myTable">
 			<caption>Meeting Room Equipment</caption>
 			<tr>
 				<th colspan="3">Equipment</th>

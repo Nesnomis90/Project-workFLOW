@@ -31,7 +31,7 @@
 		</div>
 
 		<?php if($rowNum>0) :?>
-			<table>
+			<table class="myTable">
 				<caption>Activated Users</caption>
 				<tr>
 					<th colspan="3">User Information</th>
@@ -85,7 +85,7 @@
 			</table>
 
 			<?php if(isSet($blockedUsers)) : ?>
-			<table>
+			<table class="myTable">
 				<caption>Blocked Users (Cannot log in)</caption>
 				<tr>
 					<th colspan="3">User Information</th>
@@ -142,7 +142,7 @@
 			<?php endif; ?>
 
 			<?php if(isSet($inactiveusers)) : ?>
-				<table>
+				<table class="myTable">
 					<caption>Unactivated Users</caption>
 					<tr>
 						<th colspan="3">User Information</th>

@@ -106,7 +106,7 @@
 			</fieldset>
 		</form>
 
-		<table>
+		<table  class="myTable">
 			<caption>Log Events</caption>
 			<tr>
 				<th>Date</th>
@@ -143,7 +143,5 @@
 				<tr><td colspan="5"><b>No logs could be found due to no categories being selected and an incorrect date being submitted.</b></td></tr>
 			<?php endif; ?>
 		</table>
-
-	<div class="left"><a href="..">Return to CMS home</a></div>
 	</body>
 </html>

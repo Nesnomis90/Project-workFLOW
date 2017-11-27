@@ -28,7 +28,7 @@
 			</form>
 		<?php endif; ?>
 
-		<table>
+		<table class="myTable">
 			<caption>Company Credits</caption>
 			<tr>
 				<th colspan="3">Company</th>

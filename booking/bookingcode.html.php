@@ -4,7 +4,16 @@
 	<head>
 		<meta charset="utf-8">
 		<link rel="stylesheet" type="text/css" href="/CSS/myCSS.css">
-		<script src="/scripts/myFunctions.js"></script>			
+		<link rel="stylesheet" type="text/css" href="/CSS/jquery.keypad.css">
+		<script src="/scripts/myFunctions.js"></script>	
+		<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+		<script src="/scripts/jquery.plugin.min.js"></script>
+		<script src="/scripts/jquery.keypad.js"></script>
+		<script>
+			$(function () {
+				$('#bookingCode').keypad();
+			});
+		</script>
 		<title>Confirm Booking Code</title>
 		<style>
 			label {
@@ -29,7 +38,7 @@
 				<form action="" method="post">
 					<?php if(!$activateRemoveTimeout OR ($activateRemoveTimeout AND !isSet($_SESSION['adminBookingCodeGuesses'])) OR ($activateRemoveTimeout AND isSet($_SESSION['adminBookingCodeGuesses']) AND sizeOf($_SESSION['adminBookingCodeGuesses']) != MAXIMUM_ADMIN_BOOKING_CODE_GUESSES)) : ?>
 						<label for="bookingCode">Submit your booking code: </label>
-						<input type="password" name="bookingCode" maxlength="<?php htmlout(BOOKING_CODE_LENGTH); ?>"
+						<input type="password" id="bookingCode" name="bookingCode" maxlength="<?php htmlout(BOOKING_CODE_LENGTH); ?>"
 						placeholder="<?php htmlout(BOOKING_CODE_LENGTH); ?> digits"
 						value="">
 					<?php endif; ?>

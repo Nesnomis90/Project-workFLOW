@@ -99,7 +99,7 @@ select{
 
 select:hover{background-color: #f2f2f2;}
 
-span{
+span {
 	display:inline-block;
 	float: left;
 }
@@ -111,30 +111,31 @@ fieldset {
 	/* CSS for all the fieldsets END */
 
 	/* CSS for all the tables START */
-table {
+table.myTable {
 	font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
 	border-collapse: collapse;
 	width: 100%;
 }
 
-table tr {
+table.myTable tr {
 	padding: 8px;
 	text-align: left;
 	border-bottom: 1px solid #ddd;
 }
-table tr:nth-of-type(even) {background-color: #f2f2f2;}
-table tr:nth-of-type(odd) {background-color: white;}
 
-table tr.LoggedInUserBooking { /* Special CSS for viewing rows with this class*/
+table.myTable tr:nth-of-type(even) {background-color: #f2f2f2;}
+table.myTable tr:nth-of-type(odd) {background-color: white;}
+
+table.myTable tr.LoggedInUserBooking { /* Special CSS for viewing rows with this class*/
 	padding: 8px;
 	text-align: left;
 	border-bottom: 1px solid #ddd;
 	background-color: #75E4D7;
 }
-			
-table tr:hover{background-color:#DBEAE8;}
-						
-table th {
+
+table.myTable tr:hover{background-color:#DBEAE8;}
+
+table.myTable th {
 	padding: 12px;
 	text-align: left;
 	background-color: #4CAF50;
@@ -142,29 +143,29 @@ table th {
 	border: 1px solid #ddd;
 }
 
-table td {
+table.myTable td {
 	padding: 8px;
 	text-align: left;
 	border: 1px solid #ddd;
 }
 
-table caption {
+table.myTable caption {
 	padding: 8px;
 	font-size: 300%;
 }
 	/* CSS for all the tables END */
-	
+
 	/* CSS for all divs START */
 	/* CSS for all divs END */
-	
+
 /*CSS CLASSES START*/
 
 	/* CSS used to warn the user error/feedback START*/
 .feedback{
 	white-space: pre-wrap;
 	font-size: 120%;
-}	
-	
+}
+
 .warning{
 	white-space: pre-wrap;
 	color: red;
@@ -176,7 +177,7 @@ table caption {
 	border-bottom-color: red;
 }
 	/* CSS used to warn the user error/feedback END*/
-	
+
 	/* CSS used to alter a selected item/text START*/
 .highlight{
 	color: green;
@@ -187,11 +188,11 @@ table caption {
 	/* CSS used to make sure labels used with textfields look correct START*/
 .description {vertical-align: top;}
 	/* CSS used to make sure labels used with textfields look correct END*/
-	
+
 	/* CSS used to position DIVs START
 		TO-DO: These are badly implemented
 		Should just replace this with bootstrap
-	example: 	
+	example: 
 	<div class="container">
 		<div class="left"></div>
 		<div class="innerWrap">
@@ -214,14 +215,14 @@ table caption {
 .bottomRight {
 	position: absolute; 
 	right: 10px; 
-	bottom: 10px;	
+	bottom: 10px;
 }
 .left{
 	clear: both;
 	float: left;
 }
 .middle{
-	
+
 }
 .right{
 	float: right;

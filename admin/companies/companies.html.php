@@ -25,7 +25,8 @@
 					<input type="submit" name="action" value="Create Company">
 				</div>
 			</form>
-			<table>
+
+			<table class="myTable">
 				<caption>Registered Companies</caption>
 				<tr>
 					<th colspan="2">Employees</th>
@@ -130,7 +131,7 @@
 			</table>
 
 			<?php if(isSet($unactivedcompanies)) : ?>
-				<table>
+				<table class="myTable">
 					<caption>Unactivated New Companies</caption>
 					<tr>
 						<th>Company</th>
@@ -159,7 +160,7 @@
 			<?php endif; ?>
 
 			<?php if(isSet($inactivecompanies)) : ?>
-				<table>
+				<table class="myTable">
 					<caption>Inactive Old Companies</caption>
 					<tr>
 						<th>Company</th>

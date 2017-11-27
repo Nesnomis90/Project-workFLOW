@@ -3123,9 +3123,9 @@ if ((isSet($_POST['add']) AND $_POST['add'] == "Add Booking") OR
 		list($invalidInput, $startDateTime, $endDateTime, $bknDscrptn, $dspname, $bookingCode) = validateUserInputs('AddCreateBookingError', FALSE);
 
 		// We can only book a meeting if a company is attached
-		if(isSet($_POST['companyID']) AND !empty($_POST['companyID']) AND !$invalidInput){
+		if(!empty($_POST['companyID']) AND !$invalidInput){
 			$companyID = $_POST['companyID'];
-		} else {
+		} elseif(empty($_POST['companyID']) AND !$invalidInput){
 			$invalidInput = TRUE;
 			$_SESSION['AddCreateBookingError'] = "Could not create the meeting due to a missing company identifier.";
 		}

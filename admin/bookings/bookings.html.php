@@ -46,7 +46,7 @@
 			</div>
 		</form>
 
-		<table>
+		<table class="myTable">
 			<caption>Active Bookings Today</caption>
 			<tr>
 				<th colspan="9">Booking Information</th>
@@ -108,7 +108,7 @@
 		<?php endif; ?>
 		</table>
 
-		<table>
+		<table class="myTable">
 			<caption>Completed Bookings Today</caption>
 			<tr>
 				<th colspan="9">Booking Information</th>
@@ -177,7 +177,7 @@
 		<?php endif; ?>
 		</table>
 
-		<table>
+		<table class="myTable">
 			<caption>Future Bookings</caption>
 			<tr>
 				<th colspan="9">Booking information</th>
@@ -239,7 +239,7 @@
 		<?php endif; ?>
 		</table>
 
-		<table>
+		<table class="myTable">
 			<caption>Completed Bookings</caption>
 			<tr>
 				<th colspan="9">Booking information</th>
@@ -308,7 +308,7 @@
 		<?php endif; ?>
 		</table>
 
-		<table>
+		<table class="myTable">
 			<caption>Bookings Cancelled</caption>
 			<tr>
 				<th colspan="9">Booking information</th>
@@ -374,7 +374,7 @@
 		</table>
 
 		<?php if(isSet($bookingsOther)) : ?>
-		<table>
+		<table class="myTable">
 			<caption>Other Bookings</caption>
 			<tr>
 				<th colspan="9">Booking information</th>
@@ -439,8 +439,5 @@
 			<?php endforeach; ?>
 		</table>
 		<?php endif; ?>
-
-	<div class="left"><a href="/admin/">Return to CMS home</a></div>
-
 	</body>
 </html>

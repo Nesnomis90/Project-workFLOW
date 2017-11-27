@@ -4,8 +4,11 @@
 	<head>
 		<meta charset="utf-8">
 		<link rel="stylesheet" type="text/css" href="/CSS/myCSS.css">
+		<link rel="stylesheet" type="text/css" href="/CSS/jquery.datetimepicker.min.css">
 		<title>Book A New Meeting</title>
 		<script src="/scripts/myFunctions.js"></script>
+		<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+		<script src="/scripts/jquery.datetimepicker.full.min.js"></script>
 		<?php if(isSet($_SESSION["loggedIn"]) AND !isSet($_SESSION["DefaultMeetingRoomInfo"])) : ?>
 			<script>
 				var alternativeID = 0;
@@ -392,6 +395,14 @@
 				}
 			</script>
 		<?php endif; ?>
+		<script>
+			$(function () {
+				$('#startDateTime').datetimepicker();
+			});
+			$(function () {
+				$('#endDateTime').datetimepicker();
+			});
+		</script>
 		<style>
 			label{
 				width: 150px;
@@ -566,7 +577,7 @@
 						<div class="left">
 							<span><b>Here you can add an order of food and drinks for the meeting.</b></span>
 							<span style="clear: both;"><b>The order has to be submitted, and will become a binding contract, 7 days before the meeting starts.</b></span>
-							<table id="orderTable">
+							<table class="myTable" id="orderTable">
 								<tr>
 									<th>Name</th>
 									<th>Description</th>
