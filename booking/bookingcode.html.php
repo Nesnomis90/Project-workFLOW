@@ -13,7 +13,6 @@
 			$(function () {
 				$('#bookingCode').keypad();
 			});
-			
 		</script>
 		<title>Confirm Booking Code</title>
 		<style>
