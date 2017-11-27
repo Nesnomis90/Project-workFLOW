@@ -45,7 +45,7 @@
 			</div>
 		</form>
 
-		<table>
+		<table class="myTable">
 			<caption>Company Employees</caption>
 			<tr>
 				<th colspan="2">Company</th>

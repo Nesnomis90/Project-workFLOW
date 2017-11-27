@@ -57,7 +57,7 @@
 				</div>
 			<?php endif; ?>
 
-			<table>
+			<table class="myTable">
 				<caption>Active Bookings Today</caption>
 				<tr>
 					<th colspan="8">Booking information</th>
@@ -123,7 +123,7 @@
 				<?php endforeach; ?>
 			<?php endif; ?>
 				</table>
-				<table>
+				<table class="myTable">
 					<caption>Future Bookings</caption>
 					<tr>
 						<th colspan="8">Booking information</th>
@@ -205,7 +205,7 @@
 				</form>
 			</div>
 
-			<table>
+			<table class="myTable">
 				<caption>Bookings Today</caption>
 				<tr>
 					<th colspan="4">Booking information</th>
@@ -254,7 +254,7 @@
 			<?php endif; ?>	
 			</table>
 
-			<table>
+			<table class="myTable">
 				<caption>Future Bookings</caption>
 				<tr>
 					<th colspan="4">Booking information</th>

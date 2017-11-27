@@ -416,7 +416,7 @@
 					<div class="left">
 						<span><b>Here you can add an order of food and drinks for the meeting.</b></span>
 						<span style="clear: both;"><b>The order has to be submitted, and will become a binding contract, 7 days before the meeting starts.</b></span>
-						<table id="orderTable">
+						<table class="myTable" id="orderTable">
 							<tr>
 								<th>Name</th>
 								<th>Description</th>

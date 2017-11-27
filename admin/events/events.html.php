@@ -29,7 +29,7 @@
 			</div>
 		<?php endif; ?>
 
-		<table>
+		<table class="myTable">
 			<caption>Active Events</caption>
 			<tr>
 				<th colspan="11">Event information</th>
@@ -99,7 +99,7 @@
 			</tr>
 		</table>
 
-		<table>
+		<table class="myTable">
 			<caption>Completed Events</caption>
 			<tr>
 				<th colspan="10">Event information</th>

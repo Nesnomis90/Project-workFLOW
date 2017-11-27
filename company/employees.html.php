@@ -18,7 +18,7 @@
 			<?php endif; ?>
 		</div>
 
-		<table>
+		<table class="myTable">
 			<caption>Company Employees</caption>
 			<tr>
 				<th>Company</th>

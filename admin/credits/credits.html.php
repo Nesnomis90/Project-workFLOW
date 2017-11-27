@@ -34,7 +34,7 @@
 			<?php endif; ?>
 		</div>
 
-		<table>
+		<table class="myTable">
 			<caption>Available Credits</caption>
 			<tr>
 				<th colspan="6">Credits</th>

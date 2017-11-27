@@ -21,7 +21,7 @@
 			</div>
 
 			<?php if(isSet($bookingsActiveToday) OR isSet($_GET['activeBooking'])) : ?>
-				<table>
+				<table class="myTable">
 					<caption>Active Bookings Today</caption>
 					<tr>
 						<th colspan="8">Booking information</th>
@@ -66,7 +66,7 @@
 			<?php endif; ?>
 
 			<?php if(isSet($bookingsCompletedToday)) : ?>
-				<table>
+				<table class="myTable">
 					<caption>Completed Bookings Today</caption>
 					<tr>
 						<th colspan="8">Booking information</th>
@@ -116,7 +116,7 @@
 			<?php endif; ?>
 			
 			<?php if(isSet($bookingsFuture) OR isSet($_GET['activeBooking'])) : ?>
-				<table>
+				<table class="myTable">
 					<caption>Future Bookings</caption>
 					<tr>
 						<th colspan="8">Booking information</th>
@@ -163,7 +163,7 @@
 			<?php endif; ?>
 
 			<?php if(isSet($bookingsCompleted)) : ?>
-				<table>
+				<table class="myTable">
 					<caption>Completed Bookings</caption>
 					<tr>
 						<th colspan="8">Booking information</th>
@@ -213,7 +213,7 @@
 			<?php endif; ?>
 			
 			<?php if(isSet($bookingsCancelled)) : ?>
-				<table>
+				<table class="myTable">
 					<caption>Bookings Cancelled</caption>
 					<tr>
 						<th colspan="8">Booking information</th>
@@ -260,7 +260,7 @@
 			<?php endif; ?>
 
 			<?php if(isSet($bookingsOther)) : ?>
-				<table>
+				<table class="myTable">
 					<caption>Other Bookings</caption>
 					<tr>
 						<th colspan="8">Booking information</th>

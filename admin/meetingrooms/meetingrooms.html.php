@@ -34,7 +34,7 @@
 			</div>
 		<?php endif; ?>
 
-		<table>
+		<table class="myTable">
 			<caption>Current Meeting Rooms</caption>
 			<tr>
 				<th colspan="2">Equipment In Room</th>
@@ -114,7 +114,5 @@
 
 			<tr><th colspan="12"></th></tr>
 		</table>
-
-		<p><a href="/admin/">Return to CMS home</a></p>
 	</body>
 </html>

@@ -57,7 +57,7 @@
 		</div>
 		
 		<?php if($sortBy == "Day") : ?>
-			<table>
+			<table class="myTable">
 				<caption>Active Orders - Listed by Day</caption>
 				<?php if($rowNum > 0) : ?>
 					<?php foreach($orderByDay AS $dayNumberAndYear => $days) : ?>
@@ -65,7 +65,7 @@
 						<?php $displayDateTime = $actualDateTime->format(DATE_DEFAULT_FORMAT_TO_DISPLAY_WITH_DAY_NAME); ?>
 						<tr class="doNotHighlightRow"><td colspan="15"><?php htmlout($displayDateTime); ?></td></tr>
 						<tr class="doNotHighlightRow"><td>
-							<table>
+							<table class="myTable">
 								<tr>
 									<th colspan="11">Order</th>
 									<th colspan="3">Messages</th>
@@ -133,7 +133,7 @@
 				<?php endif; ?>
 			</table>
 		<?php elseif($sortBy == "Week") : ?>
-			<table>
+			<table class="myTable">
 				<caption>Active Orders - Listed by Week</caption>
 				<?php if($rowNum > 0) : ?>
 					<?php foreach($orderByWeek AS $weekNumberAndYear => $weeks): ?>
@@ -149,7 +149,7 @@
 							<?php foreach($weeks AS $dayName => $days) : ?>
 								<tr class="doNotHighlightRow"><td><?php htmlout($dayName); ?></td>
 								<td>
-									<table>
+									<table class="myTable">
 										<tr>
 											<th colspan="11">Order</th>
 											<th colspan="3">Messages</th>
@@ -219,7 +219,7 @@
 				<?php endif; ?>
 			</table>
 		<?php else : ?>
-			<table>
+			<table class="myTable">
 				<caption>Active Orders - Listed by Starting Time</caption>
 				<tr>
 					<th colspan="13">Order</th>
@@ -288,7 +288,7 @@
 		<?php endif; ?>
 
 		<?php if(isSet($ordersCompleted)) : ?>
-			<table><caption>Completed Orders</caption>
+			<table class="myTable"><caption>Completed Orders</caption>
 				<tr>
 					<th colspan="10">Order</th>
 					<th colspan="3">Messages</th>
@@ -337,7 +337,7 @@
 		<?php endif; ?>
 
 		<?php if(isSet($ordersCancelled)) : ?>
-			<table><caption>Cancelled Orders</caption>
+			<table class="myTable"><caption>Cancelled Orders</caption>
 				<tr>
 					<th colspan="8">Order</th>
 					<th colspan="3">Messages</th>
@@ -388,7 +388,7 @@
 		<?php endif; ?>
 
 		<?php if(isSet($ordersOther)) : ?>
-			<table><caption>Other Orders</caption>
+			<table class="myTable"><caption>Other Orders</caption>
 				<tr>
 					<th colspan="14">Order</th>
 					<th colspan="3">Messages</th>

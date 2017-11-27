@@ -29,7 +29,7 @@
 			<?php endif; ?>
 		</div>
 
-		<table>
+		<table class="myTable">
 			<caption>Available Extra</caption>
 			<tr>
 				<th colspan="5">Extra</th>
