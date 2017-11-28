@@ -54,7 +54,7 @@ function idCodeExists($code){
 		$sql = 'SELECT 	COUNT(*) 
 				FROM 	`meetingroom` 
 				WHERE 	`idCode` = ' . $code .
-				' LIMIT 1'; //To-do: remove/fix limit 1 if broken
+				' LIMIT 1';
 		$return = $pdo->query($sql);
 		$result = $return->fetchColumn();
 
@@ -112,7 +112,7 @@ function activationCodeExists($code){
 		$sql = 'SELECT 	COUNT(*) 
 				FROM 	`user` 
 				WHERE 	`activationcode` = ' . $code .
-				' LIMIT 1'; //To-do: remove/fix limit 1 if broken
+				' LIMIT 1';
 		$return = $pdo->query($sql);
 		$result = $return->fetchColumn();
 

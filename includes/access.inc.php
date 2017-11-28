@@ -350,8 +350,6 @@ function checkIfUserIsLoggedIn(){
 						$_SESSION['forgottenPasswordError'] .= "\nEmail to be sent has been stored and will be attempted to be sent again later.";
 					}
 
-					$_SESSION['forgottenPasswordError'] .= "\nThis is the email msg we're sending out:\n$emailMessage\nSent to email: $email."; // TO-DO: Remove before uploading
-
 					include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/forgottenpassword.html.php';
 					exit();
 				} else {
@@ -774,7 +772,5 @@ function sendEmailAboutLoginBeingBlocked($email, $activationCode){
 
 		$_SESSION['loginError'] .= "\nEmail to be sent has been stored and will be attempted to be sent again later.";		
 	}
-
-	$_SESSION['loginError'] .= "\nThis is the email msg we're sending out:\n$emailMessage\nSent to email: $email."; // TO-DO: Remove before uploading
 }
 ?>
