@@ -4,11 +4,11 @@
 	<head>
 		<meta charset="utf-8">
 		<link rel="stylesheet" type="text/css" href="/CSS/myCSS.css">
-		<link rel="stylesheet" type="text/css" href="/CSS/jquery.keypad.css">
+		<link rel="stylesheet" type="text/css" href="/plugin/keypad/jquery.keypad.css">
 		<script src="/scripts/myFunctions.js"></script>	
 		<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
-		<script src="/scripts/jquery.plugin.min.js"></script>
-		<script src="/scripts/jquery.keypad.js"></script>
+		<script src="/plugin/keypad/jquery.plugin.min.js"></script>
+		<script src="/plugin/keypad/jquery.keypad.js"></script>
 		<script>
 			$(function () {
 				$('#bookingCode').keypad();
