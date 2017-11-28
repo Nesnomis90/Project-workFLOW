@@ -170,10 +170,6 @@ function emailUserOnCancelledBooking(){
 
 				$_SESSION['BookingUserFeedback'] .= "\nEmail to be sent has been stored and will be attempted to be sent again later.";
 			}
-
-			$_SESSION['BookingUserFeedback'] .= "\nThis is the email msg we're sending out:\n$emailMessage\nSent to email: $email."; // TO-DO: Remove before uploading
-		} elseif(isSet($_SESSION['cancelAdminBookingOriginalValues']['SendEmail']) AND $_SESSION['cancelAdminBookingOriginalValues']['SendEmail'] == 0) {
-			$_SESSION['BookingUserFeedback'] .= "\nUser does not want to be sent Email.";
 		}
 	} elseif(isSet($_SESSION['cancelAdminBookingOriginalValues']['UserID']) AND $_SESSION['cancelAdminBookingOriginalValues']['UserID'] == $_SESSION['LoggedInUserID']){
 		$_SESSION['BookingUserFeedback'] .= "\nDid not send an email because you cancelled your own meeting.";
@@ -2153,8 +2149,6 @@ if( (isSet($_POST['edit']) AND $_POST['edit'] == "Finish Edit") OR
 
 						$_SESSION['BookingUserFeedback'] .= "\nEmail to be sent has been stored and will be attempted to be sent again later.";
 					}
-
-					$_SESSION['BookingUserFeedback'] .= "\nThis is the email msg we're sending out:\n$emailMessage.\nSent to email: $email."; // TO-DO: Remove after testing				
 				}
 
 				if($originalValue['sendEmail'] == 1){
@@ -2205,14 +2199,10 @@ if( (isSet($_POST['edit']) AND $_POST['edit'] == "Finish Edit") OR
 						}
 
 						$_SESSION['BookingUserFeedback'] .= "\nEmail to be sent has been stored and will be attempted to be sent again later.";
-					}
-
-					$_SESSION['BookingUserFeedback'] .= "\nThis is the email msg we're sending out:\n$emailMessage\nSent to email: $email."; // TO-DO: Remove after testing				
-				} else {
-					$_SESSION['BookingUserFeedback'] .= "\nUser does not want to be sent an Email.";
+					}			
 				}
 			} elseif($originalValue['TheUserID'] == $_SESSION['LoggedInUserID']){
-				$_SESSION['BookingUserFeedback'] .= "\nDid not send an email with the updated information, since you changed your own booking."; // TO-DO: Remove?
+				$_SESSION['BookingUserFeedback'] .= "\nDid not send an email with the updated information, since you changed your own booking.";
 			} else {
 				if($originalValue['sendEmail'] == 1){
 					$emailSubject = "Booking Information Has Changed!";
@@ -2273,8 +2263,6 @@ if( (isSet($_POST['edit']) AND $_POST['edit'] == "Finish Edit") OR
 
 						$_SESSION['BookingUserFeedback'] .= "\nEmail to be sent has been stored and will be attempted to be sent again later.";
 					}
-
-					$_SESSION['BookingUserFeedback'] .= "\nThis is the email msg we're sending out:\n$emailMessage\nSent to email: $email."; // TO-DO: Remove after testing	
 				} else {
 					$_SESSION['BookingUserFeedback'] .= "\nUser does not want to be sent an Email.";
 				}
@@ -2398,11 +2386,7 @@ if( (isSet($_POST['edit']) AND $_POST['edit'] == "Finish Edit") OR
 					}
 
 					$_SESSION['BookingUserFeedback'] .= "\nEmail to be sent has been stored and will be attempted to be sent again later.";
-				}
-
-				$_SESSION['BookingUserFeedback'] .= "\nThis is the email msg we're sending out:\n$emailMessage\nSent to email: $email."; // TO-DO: Remove before uploading			
-			} else {
-				$_SESSION['BookingUserFeedback'] .= "\n\nNo Company Owners were sent an email about the booking going over booking."; // TO-DO: Remove before uploading.
+				}			
 			}
 		}
 	}
@@ -3600,10 +3584,6 @@ if ((isSet($_POST['add']) AND $_POST['add'] == "Add Booking") OR
 
 			$_SESSION['BookingUserFeedback'] .= "\nEmail to be sent has been stored and will be attempted to be sent again later.";
 		}
-
-		$_SESSION['BookingUserFeedback'] .= "\nThis is the email msg we're sending out:\n$emailMessage.\nSent to email: $email."; // TO-DO: Remove after testing
-	} elseif($info['sendEmail'] == 0){
-		$_SESSION['BookingUserFeedback'] .= " \nUser does not want to get sent Emails.";
 	}
 
 	// Send email to alert company owner(s) that a booking was made that is over credits.
@@ -3719,10 +3699,6 @@ if ((isSet($_POST['add']) AND $_POST['add'] == "Add Booking") OR
 
 				$_SESSION['BookingUserFeedback'] .= "\nEmail to be sent has been stored and will be attempted to be sent again later.";
 			}
-
-			$_SESSION['BookingUserFeedback'] .= "\nThis is the email msg we're sending out:\n$emailMessage\nSent to email: $email."; // TO-DO: Remove before uploading			
-		} else {
-			$_SESSION['BookingUserFeedback'] .= "\n\nNo Company Owners were sent an email about the booking going over credits."; // TO-DO: Remove before uploading.
 		}
 	}	
 	

@@ -518,8 +518,6 @@ if (isSet($_POST['action']) and $_POST['action'] == 'Re-Activate'){
 
 					$_SESSION['UserManagementFeedbackMessage'] .= "\nEmail to be sent has been stored and will be attempted to be sent again later.";
 				}
-
-				$_SESSION['UserManagementFeedbackMessage'] .= "\nThis is the email msg we're sending out: $emailMessage\nSent to: $email."; // TO-DO: Remove after testing
 			} elseif(isSet($row) AND $row['isActive'] == 1) {
 				// User is already active
 				$_SESSION['UserManagementFeedbackMessage'] = "User had already been re-activated";
@@ -627,8 +625,6 @@ if (isSet($_POST['action']) and $_POST['action'] == 'Activate'){
 
 					$_SESSION['UserManagementFeedbackMessage'] .= "\nEmail to be sent has been stored and will be attempted to be sent again later.";
 				}
-
-				$_SESSION['UserManagementFeedbackMessage'] .= "\nThis is the email msg we're sending out: $emailMessage\nSent to: $email."; // TO-DO: Remove after testing
 			} elseif(isSet($row) AND $row['isActive'] == 1) {
 				// User is already active
 				$_SESSION['UserManagementFeedbackMessage'] = "User had already been activated";
@@ -903,8 +899,6 @@ if(isSet($_GET['addform']) AND isSet($_POST['action']) AND $_POST['action'] == '
 
 		$_SESSION['UserManagementFeedbackMessage'] .= "\nEmail to be sent has been stored and will be attempted to be sent again later.";
 	}
-
-	$_SESSION['UserManagementFeedbackMessage'] .= "\nThis is the email msg we're sending out: $emailMessage\nSent to: $email."; // TO-DO: Remove after testing	
 
 	// Forget information we don't need anymore
 	clearAddUserSessions();

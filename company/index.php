@@ -311,10 +311,9 @@ if(isSet($_POST['action']) AND $_POST['action'] == "Confirm"){
 					}
 
 					$_SESSION['normalCompanyFeedback'] .= "\nEmail to be sent has been stored and will be attempted to be sent again later.";
-				}
-
-				$_SESSION['normalCompanyFeedback'] .= "\nThis is the email msg we're sending out:\n$emailMessage.\nSent to email(s): $email."; // TO-DO: Remove after testing				
+				}			
 			}
+
 			// close connection
 			$pdo = null;
 		}
@@ -507,12 +506,6 @@ if(isSet($_POST['confirm']) AND $_POST['confirm'] == "Yes, Send The Request"){
 				}
 
 				$_SESSION['normalCompanyFeedback'] .= "\nEmail to be sent has been stored and will be attempted to be sent again later.";
-			}
-
-			if(isSet($_SESSION['normalCompanyFeedback'])){
-				$_SESSION['normalCompanyFeedback'] .= "\nThis is the email msg we're sending out:\n$emailMessage\nSent to email: $email."; // TO-DO: Remove before uploading
-			} else {
-				$_SESSION['normalCompanyFeedback'] = "This is the email msg we're sending out:\n$emailMessage\nSent to email: $email."; // TO-DO: Remove before uploading			
 			}
 		} else {
 			if(isSet($_SESSION['normalCompanyFeedback'])){
@@ -1316,8 +1309,6 @@ if(isSet($_POST['confirmadd']) AND $_POST['confirmadd'] == "Add Employee"){
 
 				$_SESSION['EmployeeUserFeedback'] .= "\nEmail to be sent has been stored and will be attempted to be sent again later.";
 			}
-
-			$_SESSION['EmployeeUserFeedback'] .= "\nThis is the email msg we're sending out:\n$emailMessage.\nSent to: $email."; // TO-DO: Remove after testing	
 		}
 		catch (PDOException $e)
 		{

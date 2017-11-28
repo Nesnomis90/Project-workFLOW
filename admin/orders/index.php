@@ -400,10 +400,6 @@ if (	(isSet($_POST['action']) and $_POST['action'] == 'Cancel') OR
 
 				$_SESSION['OrderUserFeedback'] .= "\nEmail to be sent has been stored and will be attempted to be sent again later.";
 			}
-
-			$_SESSION['OrderUserFeedback'] .= "\nThis is the email msg we're sending out:\n$emailMessage\nSent to email: $email."; // TO-DO: Remove before uploading
-		} elseif(isSet($sendEmail) AND $sendEmail == 0) {
-			$_SESSION['OrderUserFeedback'] = "User does not want to be sent Email.";
 		}
 	} elseif(isSet($userID) AND $userID == $_SESSION['LoggedInUserID']){
 		$_SESSION['OrderUserFeedback'] = "Did not send an email because you cancelled your own meeting.";
