@@ -150,8 +150,8 @@ if(isSet($_GET['meetingroom']) AND !empty($_GET['meetingroom'])){
 		$pdo = connect_to_db();
 		$sql = 'SELECT  	m.`meetingRoomID`	AS TheMeetingRoomID, 
 							m.`name`			AS MeetingRoomName, 
-							m.`capacity`		AS MeetingRoomCapacity, 
-							m.`description`		AS MeetingRoomDescription, 
+							m.`capacity`		AS MeetingRoomCapacity,
+							m.`description`		AS MeetingRoomDescription,
 							m.`location`		AS MeetingRoomLocation,
 							(
 								SELECT 	COUNT(*)
@@ -267,14 +267,15 @@ foreach($result as $row){
 		$status = "Available all day";
 	}
 
-	$meetingrooms[] = array('MeetingRoomID' => $row['TheMeetingRoomID'], 
-							'MeetingRoomName' => $row['MeetingRoomName'],
-							'MeetingRoomCapacity' => $row['MeetingRoomCapacity'],
-							'MeetingRoomDescription' => $row['MeetingRoomDescription'],
-							'MeetingRoomLocation' => $row['MeetingRoomLocation'],
-							'MeetingRoomEquipmentAmount' => $row['MeetingRoomEquipmentAmount'],
-							'MeetingRoomStatus' => $status
-					);
+	$meetingrooms[] = array(
+								'MeetingRoomID' => $row['TheMeetingRoomID'], 
+								'MeetingRoomName' => $row['MeetingRoomName'],
+								'MeetingRoomCapacity' => $row['MeetingRoomCapacity'],
+								'MeetingRoomDescription' => $row['MeetingRoomDescription'],
+								'MeetingRoomLocation' => $row['MeetingRoomLocation'],
+								'MeetingRoomEquipmentAmount' => $row['MeetingRoomEquipmentAmount'],
+								'MeetingRoomStatus' => $status
+							);
 }
 
 // Load the html template

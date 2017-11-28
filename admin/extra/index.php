@@ -270,8 +270,6 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Add Extra') OR
 		unset($_SESSION['AddExtraIsAlternative']);
 	}
 
-	var_dump($_SESSION); // TO-DO: remove after testing is done
-
 	// Change form
 	include 'form.html.php';
 	exit();
@@ -476,8 +474,6 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Edit') OR
 	$originalExtraPrice = $_SESSION['EditExtraOriginalInfo']['ExtraPrice'];
 	$originalExtraIsAlternative = $_SESSION['EditExtraOriginalInfo']['ExtraIsAlternative'];
 
-	var_dump($_SESSION); // TO-DO: remove after testing is done
-
 	// Change to the template we want to use
 	include 'form.html.php';
 	exit();
@@ -586,12 +582,11 @@ if(isSet($_POST['edit']) AND $_POST['edit'] == 'Cancel'){
 	$refreshExtra = TRUE;
 }
 
-if(isSet($refreshExtra) AND $refreshExtra) {
-	// TO-DO: Add code that should occur on a refresh
+if(isSet($refreshExtra) AND $refreshExtra){
 	unset($refreshExtra);
 }
 
-// Remove any unused variables from memory // TO-DO: Change if this ruins having multiple tabs open etc.
+// Remove any unused variables from memory
 clearAddExtraSessions();
 clearEditExtraSessions();
 
@@ -672,8 +667,6 @@ foreach($result AS $row){
 							'ExtraIsInThisManyActiveOrders' => $row['ExtraIsInThisManyActiveOrders']
 						);
 }
-
-var_dump($_SESSION); // TO-DO: remove after testing is done
 
 // Create the Extra list in HTML
 include_once 'extra.html.php';

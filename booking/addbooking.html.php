@@ -4,11 +4,11 @@
 	<head>
 		<meta charset="utf-8">
 		<link rel="stylesheet" type="text/css" href="/CSS/myCSS.css">
-		<link rel="stylesheet" type="text/css" href="/CSS/jquery.datetimepicker.min.css">
+		<link rel="stylesheet" type="text/css" href="/plugin/datetimepicker/jquery.datetimepicker.min.css">
 		<title>Book A New Meeting</title>
 		<script src="/scripts/myFunctions.js"></script>
 		<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
-		<script src="/scripts/jquery.datetimepicker.full.min.js"></script>
+		<script src="/plugin/datetimepicker/jquery.datetimepicker.full.min.js"></script>
 		<?php if(isSet($_SESSION["loggedIn"]) AND !isSet($_SESSION["DefaultMeetingRoomInfo"])) : ?>
 			<script>
 				var alternativeID = 0;

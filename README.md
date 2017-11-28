@@ -9,7 +9,8 @@ Fully realised Content Management System (CMS) for ease of use for admin(s).
 Built from scratch with MySQL, PHP, HTML, CSS and JavaScript.
 
 Contains a jQuery Keypad plugin (http://keith-wood.name/keypad.html) that's under MIT license.
-Contains a jQuery Datetimepicker pluging (http://xdsoft.net/jqplugins/datetimepicker/) that's under MIT license.
+
+Contains a jQuery Datetimepicker plugin (http://xdsoft.net/jqplugins/datetimepicker/) that's under MIT license.
 
 All other code is not licensed and fall under standard copyright law.
 
