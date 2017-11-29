@@ -69,7 +69,7 @@
 				<?php elseif(!isSet($default)) : ?>
 					<div class="left"><h2>Viewing Selected Meeting Room</h2></div>
 				<?php endif; ?>
-				<?php foreach ($meetingrooms as $room): ?>
+				<?php foreach($meetingrooms as $room): ?>
 					<div class="left">
 						<form action="" method="post">
 							<?php if(substr($room['MeetingRoomStatus'],0,8) == "Occupied") : ?>
@@ -104,7 +104,7 @@
 			<?php else : ?>
 				<div class="left"><h2>This isn't a valid meeting room.</h2></div>
 			<?php endif; ?>
-		<?php elseif(!isSet($_GET['meetingroom'])) : ?>
+		<?php else : ?>
 			<?php if(isSet($meetingrooms)) :?>
 				<div class="left"><h2>Active Meeting Rooms:</h2></div>
 				<?php foreach ($meetingrooms as $room): ?>
