@@ -142,32 +142,36 @@ if(isSet($_POST['action']) AND $_POST['action'] == "Booking Information"){
 	exit();
 }
 
-if(isSet($_GET['meetingroom']) AND !empty($_GET['meetingroom'])){
+// TO-DO: Implement
+if(!empty($_POST['selectedDate'])){
+	$dateSelectedDisplayed = $_POST['selectedDate'];
+	$dateSelected = convertDatetimeToFormat($dateSelectedDisplayed, DATETIME_DEFAULT_FORMAT_TO_DISPLAY, 'Y-m-d H:i:s');
+} else {
+	$dateSelected = getDateNow();
+}
+
+if(!empty($_GET['meetingroom'])){
 	// Display selected meeting room
 	try
 	{
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 		$pdo = connect_to_db();
-		$sql = 'SELECT  	m.`meetingRoomID`	AS TheMeetingRoomID, 
+/*		$sql = 'SELECT  	m.`meetingRoomID`	AS TheMeetingRoomID, 
 							m.`name`			AS MeetingRoomName, 
 							m.`capacity`		AS MeetingRoomCapacity,
 							m.`description`		AS MeetingRoomDescription,
 							m.`location`		AS MeetingRoomLocation,
 							(
-								SELECT 	COUNT(*)
-								FROM 	`roomequipment` re
-								WHERE 	re.`MeetingRoomID` = TheMeetingRoomID
-							)					AS MeetingRoomEquipmentAmount,
-							(
-								SELECT	b.`endDateTime`
-								FROM	`booking` b
-								WHERE	b.`meetingRoomID` = TheMeetingRoomID
-								AND		b.`actualEndDateTime` IS NULL
-								AND		b.`dateTimeCancelled` IS NULL
-								AND		CURRENT_TIMESTAMP 
-								BETWEEN	b.`startDateTime` 
-								AND 	b.`endDateTime`
-							)					AS CurrentMeetingEnd,
+								SELECT		b.`endDateTime`
+								FROM		`booking` b
+								WHERE		b.`meetingRoomID` = TheMeetingRoomID
+								AND			b.`actualEndDateTime` IS NULL
+								AND			b.`dateTimeCancelled` IS NULL
+								AND			b.`endDateTime` > CURRENT_TIMESTAMP
+								AND			DATE(b.`startDateTime`) = :dateSelected
+								ORDER BY 	UNIX_TIMESTAMP(b.`startDateTime`)
+								LIMIT 		1
+							)					AS FirstMeetingEnd,
 							(
 								SELECT		b.`startDateTime`
 								FROM		`booking` b
@@ -175,18 +179,39 @@ if(isSet($_GET['meetingroom']) AND !empty($_GET['meetingroom'])){
 								AND			b.`actualEndDateTime` IS NULL
 								AND			b.`dateTimeCancelled` IS NULL
 								AND			b.`startDateTime` > CURRENT_TIMESTAMP
-								AND			CURRENT_DATE = DATE(b.`startDateTime`)
+								AND			DATE(b.`startDateTime`) = :dateSelected
 								ORDER BY 	UNIX_TIMESTAMP(b.`startDateTime`)
-								ASC
-								LIMIT 1
+								LIMIT 		1
 							)					AS NextMeetingStart
 				FROM 		`meetingroom` m
 				WHERE		m.`meetingRoomID` = :meetingRoomID
 				LIMIT 		1';
 		$s = $pdo->prepare($sql);
 		$s->bindValue(':meetingRoomID', $_GET['meetingroom']);
+		$s->bindValue(':dateSelected', $dateSelected);
 		$s->execute();
-		$result = $s->fetchAll();
+		$meetingRoomInfo = $s->fetchAll(PDO::FETCH_ASSOC);*/
+
+		$sql = 'SELECT 		b.`startDateTime`	AS BookingStartTime,
+							b.`endDateTime`		AS BookingEndTime,
+							b.`displayName`		AS BookingDisplayName,
+							b.`bookingID`		AS TheBookingID,
+							m.`name`			AS BookedMeetingRoom,
+							m.`meetingRoomID`	AS TheMeetingRoomID
+				FROM		`booking` b
+				INNER JOIN 	`meetingroom` m
+				ON			m.`meetingRoomID` = b.`meetingRoomID`
+				WHERE		b.`dateTimeCancelled` IS NULL
+				AND			b.`actualEndDateTime` IS NULL
+				AND			DATE(b.`endDateTime`) = :dateSelected
+				AND			b.`endDateTime` > CURRENT_TIMESTAMP
+				AND			m.`meetingRoomID` = :meetingRoomID
+				ORDER BY 	UNIX_TIMESTAMP(b.`startDateTime`)';
+		$s = $pdo->prepare($sql);
+		$s->bindValue(':dateSelected', $dateSelected);
+		$s->bindValue(':meetingRoomID', $_GET['meetingroom']);
+		$s->execute();
+		$meetingRoomInfo = $s->fetchAll(PDO::FETCH_ASSOC);
 
 		//Close the connection
 		$pdo = null;
@@ -204,26 +229,22 @@ if(isSet($_GET['meetingroom']) AND !empty($_GET['meetingroom'])){
 	{
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
 		$pdo = connect_to_db();
-		$sql = 'SELECT  	m.`meetingRoomID`	AS TheMeetingRoomID, 
+/*		$sql = 'SELECT  	m.`meetingRoomID`	AS TheMeetingRoomID, 
 							m.`name`			AS MeetingRoomName, 
 							m.`capacity`		AS MeetingRoomCapacity, 
 							m.`description`		AS MeetingRoomDescription, 
 							m.`location`		AS MeetingRoomLocation,
 							(
-								SELECT 	COUNT(*)
-								FROM 	`roomequipment` re
-								WHERE 	re.`MeetingRoomID` = TheMeetingRoomID
-							)					AS MeetingRoomEquipmentAmount,
-							(
-								SELECT	b.`endDateTime`
-								FROM	`booking` b
-								WHERE	b.`meetingRoomID` = TheMeetingRoomID
-								AND		b.`actualEndDateTime` IS NULL
-								AND		b.`dateTimeCancelled` IS NULL
-								AND		CURRENT_TIMESTAMP 
-								BETWEEN	b.`startDateTime` 
-								AND 	b.`endDateTime`
-							)					AS CurrentMeetingEnd,
+								SELECT		b.`endDateTime`
+								FROM		`booking` b
+								WHERE		b.`meetingRoomID` = TheMeetingRoomID
+								AND			b.`actualEndDateTime` IS NULL
+								AND			b.`dateTimeCancelled` IS NULL
+								AND			b.`endDateTime` > CURRENT_TIMESTAMP
+								AND			DATE(b.`startDateTime`) = :dateSelected
+								ORDER BY 	UNIX_TIMESTAMP(b.`startDateTime`)
+								LIMIT 		1
+							)					AS FirstMeetingEnd,
 							(
 								SELECT		b.`startDateTime`
 								FROM		`booking` b
@@ -231,13 +252,35 @@ if(isSet($_GET['meetingroom']) AND !empty($_GET['meetingroom'])){
 								AND			b.`actualEndDateTime` IS NULL
 								AND			b.`dateTimeCancelled` IS NULL
 								AND			b.`startDateTime` > CURRENT_TIMESTAMP
-								AND			CURRENT_DATE = DATE(b.`startDateTime`)
+								AND			DATE(b.`startDateTime`) = :dateSelected
 								ORDER BY 	UNIX_TIMESTAMP(b.`startDateTime`)
-								ASC
-								LIMIT 1
+								LIMIT 		1
 							)					AS NextMeetingStart 
 				FROM 		`meetingroom` m';
-		$result = $pdo->query($sql);
+		$s = $pdo->prepare($sql);
+		$s->bindValue(':dateSelected', $dateSelected);
+		$s->execute();
+		$meetingRoomInfo = $s->fetchAll(PDO::FETCH_ASSOC);*/
+
+		$sql = 'SELECT 		b.`startDateTime`	AS BookingStartTime,
+							b.`endDateTime`		AS BookingEndTime,
+							b.`displayName`		AS BookingDisplayName,
+							b.`bookingID`		AS TheBookingID,
+							m.`name`			AS BookedMeetingRoom,
+							m.`meetingRoomID`	AS TheMeetingRoomID
+				FROM		`booking` b
+				INNER JOIN 	`meetingroom` m
+				ON			m.`meetingRoomID` = b.`meetingRoomID`
+				WHERE		b.`dateTimeCancelled` IS NULL
+				AND			b.`actualEndDateTime` IS NULL
+				AND			DATE(b.`endDateTime`) = :dateSelected
+				AND			b.`endDateTime` > CURRENT_TIMESTAMP
+				ORDER BY 	m.`meetingRoomID`, 
+							UNIX_TIMESTAMP(b.`startDateTime`)';
+		$s = $pdo->prepare($sql);
+		$s->bindValue(':dateSelected', $dateSelected);
+		$s->execute();
+		$meetingRoomInfo = $s->fetchAll(PDO::FETCH_ASSOC);
 
 		//Close the connection
 		$pdo = null;
@@ -251,15 +294,15 @@ if(isSet($_GET['meetingroom']) AND !empty($_GET['meetingroom'])){
 	}
 }
 
-foreach($result as $row){
+foreach($meetingRoomInfo as $row){
 
-	if($row['CurrentMeetingEnd'] != NULL AND $row['NextMeetingStart'] == NULL){
-		$currentMeetingEnd = convertDatetimeToFormat($row['CurrentMeetingEnd'], 'Y-m-d H:i:s', TIME_DEFAULT_FORMAT_TO_DISPLAY);
-		$status = "Occupied until " . $currentMeetingEnd . " and then available all day";
-	} elseif($row['CurrentMeetingEnd'] != NULL AND $row['NextMeetingStart'] != NULL){
-		$currentMeetingEnd = convertDatetimeToFormat($row['CurrentMeetingEnd'], 'Y-m-d H:i:s', TIME_DEFAULT_FORMAT_TO_DISPLAY);
+/*	if($row['FirstMeetingEnd'] != NULL AND $row['NextMeetingStart'] == NULL){
+		$firstMeetingEnd = convertDatetimeToFormat($row['FirstMeetingEnd'], 'Y-m-d H:i:s', TIME_DEFAULT_FORMAT_TO_DISPLAY);
+		$status = "Occupied until " . $firstMeetingEnd . " and then available all day";
+	} elseif($row['FirstMeetingEnd'] != NULL AND $row['NextMeetingStart'] != NULL){
+		$firstMeetingEnd = convertDatetimeToFormat($row['FirstMeetingEnd'], 'Y-m-d H:i:s', TIME_DEFAULT_FORMAT_TO_DISPLAY);
 		$nextMeetingStart = convertDatetimeToFormat($row['NextMeetingStart'], 'Y-m-d H:i:s', TIME_DEFAULT_FORMAT_TO_DISPLAY);
-		$status = "Occupied until " . $currentMeetingEnd . " and again starting at " . $nextMeetingStart;
+		$status = "Occupied until " . $firstMeetingEnd . " and again starting at " . $nextMeetingStart;
 	} elseif($row['NextMeetingStart'] != NULL){
 		$nextMeetingStart = convertDatetimeToFormat($row['NextMeetingStart'], 'Y-m-d H:i:s', TIME_DEFAULT_FORMAT_TO_DISPLAY);
 		$status = "Available until " . $nextMeetingStart;
@@ -273,11 +316,36 @@ foreach($result as $row){
 								'MeetingRoomCapacity' => $row['MeetingRoomCapacity'],
 								'MeetingRoomDescription' => $row['MeetingRoomDescription'],
 								'MeetingRoomLocation' => $row['MeetingRoomLocation'],
-								'MeetingRoomEquipmentAmount' => $row['MeetingRoomEquipmentAmount'],
 								'MeetingRoomStatus' => $status
 							);
+	*/
+
+	$meetingRoomID = $row['TheMeetingRoomID'];
+	$startDateTime = $row['BookingStartTime'];
+	$endDateTime = $row['BookingEndTime'];
+	$startDate = convertDatetimeToFormat($startDateTime, 'Y-m-d H:i:s', 'Y-m-d');
+	$endDate = convertDatetimeToFormat($startDateTime, 'Y-m-d H:i:s', 'Y-m-d');
+	$startTime = convertDatetimeToFormat($startDateTime, 'Y-m-d H:i:s', TIME_DEFAULT_FORMAT_TO_DISPLAY);
+	$endTime = convertDatetimeToFormat($endDateTime, 'Y-m-d H:i:s', TIME_DEFAULT_FORMAT_TO_DISPLAY);
+	if($startDate < $dateSelected){
+		// We have no need to display times earlier than today
+		$startTime = convertDatetimeToFormat('00:00:00', 'H:i:s', TIME_DEFAULT_FORMAT_TO_DISPLAY);
+	}
+	if($endDate > $dateSelected){
+		// We have no need to display times further than today
+		$endTime = convertDatetimeToFormat('00:00:00', 'H:i:s', TIME_DEFAULT_FORMAT_TO_DISPLAY);
+	}
+
+	$meetingrooms[$meetingRoomID][] = array( 
+											'MeetingRoomName' => $row['BookedMeetingRoom'],
+											'MeetingStartTime' => $startTime,
+											'MeetingEndTime' => $endTime,
+											'BookingDisplayName' => $row['BookingDisplayName'],
+											'BookingID' => $row['TheBookingID']
+										);
 }
 
 // Load the html template
-include_once 'meetingroomforallusers.html.php';
+//include_once 'meetingroomforallusers.html.php';
+include_once 'meetingroomoverview.html.php';
 ?>
