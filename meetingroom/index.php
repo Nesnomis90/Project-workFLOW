@@ -144,7 +144,8 @@ if(isSet($_POST['action']) AND $_POST['action'] == "Booking Information"){
 
 // TO-DO: Implement
 if(!empty($_POST['selectedDate'])){
-	$dateSelected = $_POST['selectedDate'];
+	$dateSelectedDisplayed = $_POST['selectedDate'];
+	$dateSelected = convertDatetimeToFormat($dateSelectedDisplayed, DATETIME_DEFAULT_FORMAT_TO_DISPLAY, 'Y-m-d H:i:s');
 } else {
 	$dateSelected = getDateNow();
 }
@@ -324,19 +325,18 @@ foreach($meetingRoomInfo as $row){
 	$endDateTime = $row['BookingEndTime'];
 	$startDate = convertDatetimeToFormat($startDateTime, 'Y-m-d H:i:s', 'Y-m-d');
 	$endDate = convertDatetimeToFormat($startDateTime, 'Y-m-d H:i:s', 'Y-m-d');
-	$dateNow = getDateNow();
 	$startTime = convertDatetimeToFormat($startDateTime, 'Y-m-d H:i:s', TIME_DEFAULT_FORMAT_TO_DISPLAY);
 	$endTime = convertDatetimeToFormat($endDateTime, 'Y-m-d H:i:s', TIME_DEFAULT_FORMAT_TO_DISPLAY);
-	if($startDate < $dateNow){
+	if($startDate < $dateSelected){
 		// We have no need to display times earlier than today
 		$startTime = convertDatetimeToFormat('00:00:00', 'H:i:s', TIME_DEFAULT_FORMAT_TO_DISPLAY);
 	}
-	if($endDate > $dateNow){
+	if($endDate > $dateSelected){
 		// We have no need to display times further than today
 		$endTime = convertDatetimeToFormat('00:00:00', 'H:i:s', TIME_DEFAULT_FORMAT_TO_DISPLAY);
 	}
 
-	$meetingrooms[$meetingRoomID] = array( 
+	$meetingrooms[$meetingRoomID][] = array( 
 											'MeetingRoomName' => $row['BookedMeetingRoom'],
 											'MeetingStartTime' => $startTime,
 											'MeetingEndTime' => $endTime,
@@ -346,5 +346,6 @@ foreach($meetingRoomInfo as $row){
 }
 
 // Load the html template
-include_once 'meetingroomforallusers.html.php';
+//include_once 'meetingroomforallusers.html.php';
+include_once 'meetingroomoverview.html.php';
 ?>
