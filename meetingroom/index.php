@@ -320,29 +320,37 @@ foreach($meetingRoomInfo as $row){
 							);
 	*/
 
+	$bookingMinuteChunks = MINIMUM_BOOKING_TIME_IN_MINUTES;
+
 	$meetingRoomID = $row['TheMeetingRoomID'];
 	$startDateTime = $row['BookingStartTime'];
 	$endDateTime = $row['BookingEndTime'];
 	$startDate = convertDatetimeToFormat($startDateTime, 'Y-m-d H:i:s', 'Y-m-d');
-	$endDate = convertDatetimeToFormat($startDateTime, 'Y-m-d H:i:s', 'Y-m-d');
-	$startTime = convertDatetimeToFormat($startDateTime, 'Y-m-d H:i:s', TIME_DEFAULT_FORMAT_TO_DISPLAY);
-	$endTime = convertDatetimeToFormat($endDateTime, 'Y-m-d H:i:s', TIME_DEFAULT_FORMAT_TO_DISPLAY);
+	$endDate = convertDatetimeToFormat($endDateTime, 'Y-m-d H:i:s', 'Y-m-d');
+	$startTime = convertDatetimeToFormat($startDateTime, 'Y-m-d H:i:s', 'H:i');
+	$startTimeInMinutesSinceMidnight = convertTimeToMinutes($startTime);
+	$endTime = convertDatetimeToFormat($endDateTime, 'Y-m-d H:i:s', 'H:i');
+	$endTimeInMinutesSinceMidnight = convertTimeToMinutes($endTime);
+	$displayStartTime = convertDatetimeToFormat($startDateTime, 'Y-m-d H:i:s', TIME_DEFAULT_FORMAT_TO_DISPLAY);
+	$displayEndTime = convertDatetimeToFormat($endDateTime, 'Y-m-d H:i:s', TIME_DEFAULT_FORMAT_TO_DISPLAY);
 	if($startDate < $dateSelected){
 		// We have no need to display times earlier than today
-		$startTime = convertDatetimeToFormat('00:00:00', 'H:i:s', TIME_DEFAULT_FORMAT_TO_DISPLAY);
+		$displayStartTime = convertDatetimeToFormat('00:00:00', 'H:i:s', TIME_DEFAULT_FORMAT_TO_DISPLAY);
 	}
 	if($endDate > $dateSelected){
 		// We have no need to display times further than today
-		$endTime = convertDatetimeToFormat('00:00:00', 'H:i:s', TIME_DEFAULT_FORMAT_TO_DISPLAY);
+		$displayEndTime = convertDatetimeToFormat('00:00:00', 'H:i:s', TIME_DEFAULT_FORMAT_TO_DISPLAY);
 	}
 
 	$meetingrooms[$meetingRoomID][] = array( 
-											'MeetingRoomName' => $row['BookedMeetingRoom'],
-											'MeetingStartTime' => $startTime,
-											'MeetingEndTime' => $endTime,
-											'BookingDisplayName' => $row['BookingDisplayName'],
-											'BookingID' => $row['TheBookingID']
-										);
+												'MeetingRoomName' => $row['BookedMeetingRoom'],
+												'MeetingStartTime' => $displayStartTime,
+												'MeetingEndTime' => $displayEndTime,
+												'StartTimeInMinutesSinceMidnight' => $startTimeInMinutesSinceMidnight,
+												'EndTimeInMinutesSinceMidnight' => $endTimeInMinutesSinceMidnight,
+												'BookingDisplayName' => $row['BookingDisplayName'],
+												'BookingID' => $row['TheBookingID']
+											);
 }
 
 // Load the html template

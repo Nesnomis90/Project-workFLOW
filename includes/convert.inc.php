@@ -32,7 +32,7 @@ function convertTimeToHoursAndMinutes($time){
 
 // Takes time xx:yy (x hours and y minutes) and returns minutes
 function convertTimeToMinutes($time){
-	if(isSet($time) AND !empty($time)){
+	if(!empty($time)){
 		$timeHour = substr($time,0,strpos($time,":"));
 		$timeMinute = substr($time,strpos($time,":")+1, 2);
 		return $timeHour*60 + $timeMinute;
@@ -42,18 +42,39 @@ function convertTimeToMinutes($time){
 }
 
 // Integer minute input to string output
-function convertMinutesToHoursAndMinutes($GivenInMinutes){
-	if($GivenInMinutes > 59){
-		$GivenInHours = floor($GivenInMinutes/60);
-		$GivenInMinutes -= $GivenInHours*60;
-		$GivenInHoursAndMinutes = $GivenInHours . 'h' . $GivenInMinutes . 'm';
-	} elseif($GivenInMinutes > 0) {
-		//$GivenInHoursAndMinutes = '0h' . $GivenInMinutes . 'm';
-		$GivenInHoursAndMinutes = $GivenInMinutes . 'm';
+function convertMinutesToHoursAndMinutes($givenInMinutes){
+	if($givenInMinutes > 59){
+		$hours = floor($givenInMinutes/60);
+		$minutes = ($givenInMinutes % 60);
+		$givenInHoursAndMinutes = $hours . 'h' . $minutes . 'm';
+	} elseif($givenInMinutes > 0) {
+		//$givenInHoursAndMinutes = '0h' . $givenInMinutes . 'm';
+		$givenInHoursAndMinutes = $minutes . 'm';
 	} else {
-		$GivenInHoursAndMinutes = 'None';
+		$givenInHoursAndMinutes = 'None';
 	}
-	return $GivenInHoursAndMinutes;
+	return $givenInHoursAndMinutes;
+}
+
+function convertMinutesToTime($givenInMinutes){
+	if($givenInMinutes > 0){
+		$hours = floor($givenInMinutes/60);
+		$minutes = ($givenInMinutes % 60);
+		if($hours < 10){
+			$hours = "0" . $hours;
+		} elseif($hours == 24){
+			$hours = "00";
+		}
+		if($minutes < 10){
+			$minutes = "0" . $minutes;
+		}
+
+		$givenInTime = $hours . ":" . $minutes;
+	} else {
+		$givenInTime = "00:00";
+	}
+
+	return $givenInTime;
 }
 
 // Number value to currency (string) output
