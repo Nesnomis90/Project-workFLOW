@@ -49,7 +49,7 @@ function convertMinutesToHoursAndMinutes($givenInMinutes){
 		$givenInHoursAndMinutes = $hours . 'h' . $minutes . 'm';
 	} elseif($givenInMinutes > 0) {
 		//$givenInHoursAndMinutes = '0h' . $givenInMinutes . 'm';
-		$givenInHoursAndMinutes = $minutes . 'm';
+		$givenInHoursAndMinutes = $givenInMinutes . 'm';
 	} else {
 		$givenInHoursAndMinutes = 'None';
 	}
@@ -62,8 +62,6 @@ function convertMinutesToTime($givenInMinutes){
 		$minutes = ($givenInMinutes % 60);
 		if($hours < 10){
 			$hours = "0" . $hours;
-		} elseif($hours == 24){
-			$hours = "00";
 		}
 		if($minutes < 10){
 			$minutes = "0" . $minutes;

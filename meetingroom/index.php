@@ -143,11 +143,22 @@ if(isSet($_POST['action']) AND $_POST['action'] == "Booking Information"){
 }
 
 // TO-DO: Implement
+$dateToday = getDateNow();
+$timeNow = getTimeNow();
+$displayTimeNow = convertDatetimeToFormat($timeNow, 'H:i:s', TIME_DEFAULT_FORMAT_TO_DISPLAY);
+$timeNowInMinutes = convertTimeToMinutes($timeNow);
 if(!empty($_POST['selectedDate'])){
 	$dateSelectedDisplayed = $_POST['selectedDate'];
 	$dateSelected = convertDatetimeToFormat($dateSelectedDisplayed, DATETIME_DEFAULT_FORMAT_TO_DISPLAY, 'Y-m-d H:i:s');
 } else {
-	$dateSelected = getDateNow();
+	$dateSelected = $dateToday;
+	$dateSelectedDisplayed = convertDatetimeToFormat($dateSelected, 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
+}
+
+if($dateSelected == $dateToday){
+	$displayingToday = TRUE;
+} else {
+	$displayingToday = FALSE;
 }
 
 if(!empty($_GET['meetingroom'])){
