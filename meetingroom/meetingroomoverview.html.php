@@ -61,7 +61,7 @@
 		<?php endif; ?>
 
 		<?php if(!empty($_GET['meetingroom'])) : ?>
-			<?php if(isSet($meetingrooms)) : ?>
+			<?php if(!empty($meetingrooms)) : ?>
 				<?php if(isSet($default) AND $_GET['meetingroom'] == $default['TheMeetingRoomID']) : ?>
 					<div class="left"><h2>Viewing Default Room For Device</h2></div>
 				<?php elseif(isSet($default) AND $_GET['meetingroom'] != $default['TheMeetingRoomID']) : ?>
@@ -69,68 +69,178 @@
 				<?php elseif(!isSet($default)) : ?>
 					<div class="left"><h2>Viewing Selected Meeting Room</h2></div>
 				<?php endif; ?>
-				<?php foreach($meetingrooms AS $meetingRoomID => $bookings): ?>
-					<div class="left">
-						<form action="" method="post">
-							<?php if(substr($room['MeetingRoomStatus'],0,8) == "Occupied") : ?>
-								<?php $color = "#ff3333"; // Light Red?>
-							<?php elseif(substr($room['MeetingRoomStatus'],0,9) == "Available") : ?>
-								<?php $color = "#33ff33"; // Light Green?>
-							<?php endif; ?>
-							<fieldset style="border-style: solid; border-color: <?php htmlout($color); ?>"><legend><b><?php htmlout($bookings[$meetingRoomID]['MeetingRoomName']); ?></b></legend>
+				<table><tr>
+					<?php foreach($meetingrooms AS $meetingRoomID => $bookings): ?>
+						<td><form action="" method="post">
+							<table>
+								<?php if($displayingToday) : ?>
+									<?php $currentStartTimeInMinutes = $timeNowInMinutes; ?> 
+								<?php else : ?>
+									<?php $currentStartTimeInMinutes = 0; ?>
+								<?php endif; ?>
 								<?php if(!empty($bookings)) : ?>
 									<?php foreach($bookings AS $bookingInfo) : ?>
+										<tr>
+											<th></th>
+											<th><?php htmlout($bookingInfo['MeetingRoomName']); ?></th>
+										</tr>
+										<?php $nextStartTimeInMinutes = $bookingInfo['StartTimeInMinutesSinceMidnight']; ?>
+										<?php $nextEndTimeInMinutes = $bookingInfo['EndTimeInMinutesSinceMidnight']; ?>
+										<?php if($currentStartTimeInMinutes == $nextStartTimeInMinutes AND $timeNowInMinutes <= $nextStartTimeInMinutes) : ?>
+											<tr>
+												<td><?php htmlout($bookingInfo['MeetingStartTime']); ?> - <?php htmlout($bookingInfo['MeetingEndTime']); ?></td>
+												<td style="background-color: #ff3333;"><?php htmlout($bookingInfo['BookingDisplayName']); ?></td>
+											</tr>
+										<?php elseif($currentStartTimeInMinutes >= $nextStartTimeInMinutes AND $timeNowInMinutes > $nextStartTimeInMinutes) : ?>
+											<tr>
+												<td><?php htmlout($displayTimeNow); ?> - <?php htmlout($bookingInfo['MeetingEndTime']); ?></td>
+												<td style="background-color: #ff3333;"><?php htmlout($bookingInfo['BookingDisplayName']); ?></td>
+											</tr>
+										<?php else : ?>
+											<?php for($currentStartTimeInMinutes; $currentStartTimeInMinutes < $nextStartTimeInMinutes;) : ?>
+												<?php if($currentStartTimeInMinutes+$bookingMinuteChunks > $nextStartTimeInMinutes) : ?>
+													<?php $endTimeInMinutes = $nextStartTimeInMinutes; ?>
+												<?php else : ?>
+													<?php $endTimeInMinutes = $currentStartTimeInMinutes+$bookingMinuteChunks; ?>
+												<?php endif; ?>
+												<?php if(is_float((($endTimeInMinutes % 60)/$bookingMinuteChunks))) : ?>
+													<?php for($i=$currentStartTimeInMinutes+1;$i<$endTimeInMinutes;$i++) : ?>
+														<?php if(!is_float((($i % 60)/$bookingMinuteChunks))): ?>
+															<?php $endTimeInMinutes = $i; ?>
+															<?php break; ?>
+														<?php endif; ?>
+													<?php endfor; ?>
+												<?php endif; ?>
+												<tr>
+													<td><?php echo convertMinutesToTime($currentStartTimeInMinutes); ?> - <?php echo convertMinutesToTime($endTimeInMinutes); ?></td>
+													<td style="background-color: #33ff33;"></td>
+												</tr>
+												<?php $currentStartTimeInMinutes = $endTimeInMinutes; ?>
+											<?php endfor; ?>
+											<tr>
+												<td><?php htmlout($bookingInfo['MeetingStartTime']); ?> - <?php htmlout($bookingInfo['MeetingEndTime']); ?></td>
+												<td style="background-color: #ff3333;"><?php htmlout($bookingInfo['BookingDisplayName']); ?></td>
+											</tr>
+										<?php endif; ?>
+										<?php $currentStartTimeInMinutes = $nextEndTimeInMinutes; ?>
 										<input id="bookMeeting" type="submit" name="bookMeeting">
 										<input type="hidden" name="bookingStartTime" value="">
 										<input type="hidden" name="BookingID" value="<?php htmlout($bookingInfo['BookingID']); ?>">
 										<input type="hidden" name="MeetingRoomName" value="<?php htmlout($bookingInfo['MeetingRoomName']); ?>">
 										<input type="hidden" name="MeetingRoomID" value="<?php htmlout($meetingRoomID); ?>">
 									<?php endforeach; ?>
+
+									<?php if($currentStartTimeInMinutes < 1440) : ?>
+										<?php for($currentStartTimeInMinutes = $currentStartTimeInMinutes; $currentStartTimeInMinutes < 1440;) : ?>
+											<tr>
+												<td><?php echo convertMinutesToTime($currentStartTimeInMinutes); ?> - <?php echo convertMinutesToTime($currentStartTimeInMinutes+$bookingMinuteChunks); ?></td>
+												<td style="background-color: #33ff33;"></td>
+											</tr>
+											<?php $currentStartTimeInMinutes+=$bookingMinuteChunks; ?>
+										<?php endfor; ?>
+									<?php endif; ?>
 								<?php else : ?>
-									
+									<?php for($currentStartTimeInMinutes; $currentStartTimeInMinutes < 1440;) : ?>
+										<tr>
+											<td><?php echo convertMinutesToTime($currentStartTimeInMinutes); ?> - <?php echo convertMinutesToTime($currentStartTimeInMinutes+$bookingMinuteChunks); ?></td>
+											<td style="background-color: #33ff33;"></td>
+										</tr>
+										<?php $currentStartTimeInMinutes+=$bookingMinuteChunks; ?>
+									<?php endfor; ?>
 								<?php endif; ?>
-							</fieldset>
-						</form>
-					</div>
-				<?php endforeach; ?>
+							</table>
+						</form></td>
+					<?php endforeach; ?>
+				</tr></table>
 			<?php else : ?>
 				<div class="left"><h2>This isn't a valid meeting room.</h2></div>
 			<?php endif; ?>
 		<?php else : ?>
-			<?php if(isSet($meetingrooms)) :?>
+			<?php if(!empty($meetingrooms)) :?>
 				<div class="left"><h2>Active Meeting Rooms:</h2></div>
-				<?php foreach ($meetingrooms as $room): ?>
-					<div class="left">
-						<form action="" method="post">
-						<?php if(substr($room['MeetingRoomStatus'],0,8) == "Occupied") : ?>
-							<?php $color = "#ff3333"; // Light Red?>
-						<?php elseif(substr($room['MeetingRoomStatus'],0,9) == "Available") : ?>
-							<?php $color = "#33ff33"; // Light Green?>
-						<?php endif; ?>
-							<fieldset style="border-style: solid; border-color: <?php htmlout($color); ?>"><legend><b><?php htmlout($room['MeetingRoomName']); ?></b></legend>
-								<div class="left">
-									<label>Status: </label>
-									<span><?php htmlout($room['MeetingRoomStatus']); ?></span>
-								</div>
-								<div class="left">
-									<label for="MeetingRoomCapacity">Capacity: </label>
-									<?php htmlout($room['MeetingRoomCapacity']); ?>
-								</div>
-								<div class="left">
-									<label for="MeetingRoomDescription">Description: </label>
-									<?php htmlout($room['MeetingRoomDescription']); ?>
-								</div>
-								<div class="left">
-									<label for="MeetingRoomLocation">Location: </label>
-									<?php htmlout($room['MeetingRoomLocation']); ?>
-								</div>
-								<div class="left"><input type="submit" name="action" value="Booking Information"></div>
-								<input type="hidden" name="MeetingRoomName" value="<?php htmlout($room['MeetingRoomName']); ?>">
-								<input type="hidden" name="MeetingRoomID" value="<?php htmlout($room['MeetingRoomID']); ?>">
-							</fieldset>
-						</form>
-					</div>
-				<?php endforeach; ?>
+				<table><tr>
+					<?php foreach($meetingrooms AS $meetingRoomID => $bookings): ?>
+						<td><form action="" method="post">
+							<table>
+								<?php if($displayingToday) : ?>
+									<?php $currentStartTimeInMinutes = $timeNowInMinutes; ?> 
+								<?php else : ?>
+									<?php $currentStartTimeInMinutes = 0; ?>
+								<?php endif; ?>
+								<?php if(!empty($bookings)) : ?>
+									<?php foreach($bookings AS $bookingInfo) : ?>
+										<tr>
+											<th></th>
+											<th><?php htmlout($bookingInfo['MeetingRoomName']); ?></th>
+										</tr>
+										<?php $nextStartTimeInMinutes = $bookingInfo['StartTimeInMinutesSinceMidnight']; ?>
+										<?php $nextEndTimeInMinutes = $bookingInfo['EndTimeInMinutesSinceMidnight']; ?>
+										<?php if($currentStartTimeInMinutes == $nextStartTimeInMinutes AND $timeNowInMinutes <= $nextStartTimeInMinutes) : ?>
+											<tr>
+												<td><?php htmlout($bookingInfo['MeetingStartTime']); ?> - <?php htmlout($bookingInfo['MeetingEndTime']); ?></td>
+												<td style="background-color: #ff3333;"><?php htmlout($bookingInfo['BookingDisplayName']); ?></td>
+											</tr>
+										<?php elseif($currentStartTimeInMinutes >= $nextStartTimeInMinutes AND $timeNowInMinutes > $nextStartTimeInMinutes) : ?>
+											<tr>
+												<td><?php htmlout($displayTimeNow); ?> - <?php htmlout($bookingInfo['MeetingEndTime']); ?></td>
+												<td style="background-color: #ff3333;"><?php htmlout($bookingInfo['BookingDisplayName']); ?></td>
+											</tr>
+										<?php else : ?>
+											<?php for($currentStartTimeInMinutes; $currentStartTimeInMinutes < $nextStartTimeInMinutes;) : ?>
+												<?php if($currentStartTimeInMinutes+$bookingMinuteChunks > $nextStartTimeInMinutes) : ?>
+													<?php $endTimeInMinutes = $nextStartTimeInMinutes; ?>
+												<?php else : ?>
+													<?php $endTimeInMinutes = $currentStartTimeInMinutes+$bookingMinuteChunks; ?>
+												<?php endif; ?>
+												<?php if(is_float((($endTimeInMinutes % 60)/$bookingMinuteChunks))) : ?>
+													<?php for($i=$currentStartTimeInMinutes+1;$i<$endTimeInMinutes;$i++) : ?>
+														<?php if(!is_float((($i % 60)/$bookingMinuteChunks))): ?>
+															<?php $endTimeInMinutes = $i; ?>
+															<?php break; ?>
+														<?php endif; ?>
+													<?php endfor; ?>
+												<?php endif; ?>
+												<tr>
+													<td><?php echo convertMinutesToTime($currentStartTimeInMinutes); ?> - <?php echo convertMinutesToTime($endTimeInMinutes); ?></td>
+													<td style="background-color: #33ff33;"></td>
+												</tr>
+												<?php $currentStartTimeInMinutes = $endTimeInMinutes; ?>
+											<?php endfor; ?>
+											<tr>
+												<td><?php htmlout($bookingInfo['MeetingStartTime']); ?> - <?php htmlout($bookingInfo['MeetingEndTime']); ?></td>
+												<td style="background-color: #ff3333;"><?php htmlout($bookingInfo['BookingDisplayName']); ?></td>
+											</tr>
+										<?php endif; ?>
+										<?php $currentStartTimeInMinutes = $nextEndTimeInMinutes; ?>
+										<input id="bookMeeting" type="submit" name="bookMeeting">
+										<input type="hidden" name="bookingStartTime" value="">
+										<input type="hidden" name="BookingID" value="<?php htmlout($bookingInfo['BookingID']); ?>">
+										<input type="hidden" name="MeetingRoomName" value="<?php htmlout($bookingInfo['MeetingRoomName']); ?>">
+										<input type="hidden" name="MeetingRoomID" value="<?php htmlout($meetingRoomID); ?>">
+									<?php endforeach; ?>
+
+									<?php if($currentStartTimeInMinutes < 1440) : ?>
+										<?php for($currentStartTimeInMinutes = $currentStartTimeInMinutes; $currentStartTimeInMinutes < 1440;) : ?>
+											<tr>
+												<td><?php echo convertMinutesToTime($currentStartTimeInMinutes); ?> - <?php echo convertMinutesToTime($currentStartTimeInMinutes+$bookingMinuteChunks); ?></td>
+												<td style="background-color: #33ff33;"></td>
+											</tr>
+											<?php $currentStartTimeInMinutes+=$bookingMinuteChunks; ?>
+										<?php endfor; ?>
+									<?php endif; ?>
+								<?php else : ?>
+									<?php for($currentStartTimeInMinutes; $currentStartTimeInMinutes < 1440;) : ?>
+										<tr>
+											<td><?php echo convertMinutesToTime($currentStartTimeInMinutes); ?> - <?php echo convertMinutesToTime($currentStartTimeInMinutes+$bookingMinuteChunks); ?></td>
+											<td style="background-color: #33ff33;"></td>
+										</tr>
+										<?php $currentStartTimeInMinutes+=$bookingMinuteChunks; ?>
+									<?php endfor; ?>
+								<?php endif; ?>
+							</table>
+						</form></td>
+					<?php endforeach; ?>
+				</tr></table>
 			<?php else : ?>
 				<div class="left"><h2>There are no meeting rooms.</h2></div>
 			<?php endif; ?>
