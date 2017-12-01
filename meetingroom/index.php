@@ -209,10 +209,10 @@ if(!empty($_GET['meetingroom'])){
 							b.`bookingID`		AS TheBookingID,
 							m.`name`			AS BookedMeetingRoom,
 							m.`meetingRoomID`	AS TheMeetingRoomID
-				FROM		`booking` b
-				INNER JOIN 	`meetingroom` m
-				ON			m.`meetingRoomID` = b.`meetingRoomID`
-				WHERE		b.`dateTimeCancelled` IS NULL
+				FROM		`meetingroom` m
+				LEFT JOIN 	`booking`b
+				ON			b.`meetingRoomID` = m.`meetingRoomID`
+				AND			b.`dateTimeCancelled` IS NULL
 				AND			b.`actualEndDateTime` IS NULL
 				AND			DATE(b.`endDateTime`) = :dateSelected
 				AND			b.`endDateTime` > CURRENT_TIMESTAMP
@@ -279,14 +279,14 @@ if(!empty($_GET['meetingroom'])){
 							b.`bookingID`		AS TheBookingID,
 							m.`name`			AS BookedMeetingRoom,
 							m.`meetingRoomID`	AS TheMeetingRoomID
-				FROM		`booking` b
-				INNER JOIN 	`meetingroom` m
-				ON			m.`meetingRoomID` = b.`meetingRoomID`
-				WHERE		b.`dateTimeCancelled` IS NULL
+				FROM		`meetingroom` m
+				LEFT JOIN 	`booking`b
+				ON			b.`meetingRoomID` = m.`meetingRoomID`
+				AND			b.`dateTimeCancelled` IS NULL
 				AND			b.`actualEndDateTime` IS NULL
 				AND			DATE(b.`endDateTime`) = :dateSelected
 				AND			b.`endDateTime` > CURRENT_TIMESTAMP
-				ORDER BY 	m.`meetingRoomID`, 
+				ORDER BY 	m.`meetingRoomID`,
 							UNIX_TIMESTAMP(b.`startDateTime`)';
 		$s = $pdo->prepare($sql);
 		$s->bindValue(':dateSelected', $dateSelected);

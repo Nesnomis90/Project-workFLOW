@@ -57,7 +57,7 @@ function convertMinutesToHoursAndMinutes($givenInMinutes){
 }
 
 function convertMinutesToTime($givenInMinutes){
-	if($givenInMinutes > 0 AND $givenInMinutes < 1441){
+	if($givenInMinutes > 0 AND $givenInMinutes < 1440){
 		$hours = floor($givenInMinutes/60);
 		$minutes = ($givenInMinutes % 60);
 		if($hours < 10){

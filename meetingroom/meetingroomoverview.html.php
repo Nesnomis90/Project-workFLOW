@@ -10,6 +10,9 @@
 			label {
 				width: 85px;
 			}
+			table td {
+				min-width: 50px;
+			}
 		</style>
 	</head>
 	<body onload="startTime(); refreshPageTimer(<?php htmlout(SECONDS_BEFORE_REFRESHING_MEETINGROOM_PAGE); ?>);">
@@ -84,68 +87,89 @@
 											<th></th>
 											<th><?php htmlout($bookingInfo['MeetingRoomName']); ?></th>
 										</tr>
-										<?php $nextStartTimeInMinutes = $bookingInfo['StartTimeInMinutesSinceMidnight']; ?>
-										<?php $nextEndTimeInMinutes = $bookingInfo['EndTimeInMinutesSinceMidnight']; ?>
-										<?php if($currentStartTimeInMinutes == $nextStartTimeInMinutes AND $timeNowInMinutes <= $nextStartTimeInMinutes) : ?>
-											<tr>
-												<td><?php htmlout($bookingInfo['MeetingStartTime']); ?> - <?php htmlout($bookingInfo['MeetingEndTime']); ?></td>
-												<td style="background-color: #ff3333;"><?php htmlout($bookingInfo['BookingDisplayName']); ?></td>
-											</tr>
-										<?php elseif($currentStartTimeInMinutes >= $nextStartTimeInMinutes AND $timeNowInMinutes > $nextStartTimeInMinutes) : ?>
-											<tr>
-												<td><?php htmlout($displayTimeNow); ?> - <?php htmlout($bookingInfo['MeetingEndTime']); ?></td>
-												<td style="background-color: #ff3333;"><?php htmlout($bookingInfo['BookingDisplayName']); ?></td>
-											</tr>
-										<?php else : ?>
-											<?php for($currentStartTimeInMinutes; $currentStartTimeInMinutes < $nextStartTimeInMinutes;) : ?>
-												<?php if($currentStartTimeInMinutes+$bookingMinuteChunks > $nextStartTimeInMinutes) : ?>
-													<?php $endTimeInMinutes = $nextStartTimeInMinutes; ?>
-												<?php else : ?>
-													<?php $endTimeInMinutes = $currentStartTimeInMinutes+$bookingMinuteChunks; ?>
-												<?php endif; ?>
-												<?php if(is_float((($endTimeInMinutes % 60)/$bookingMinuteChunks))) : ?>
-													<?php for($i=$currentStartTimeInMinutes+1;$i<$endTimeInMinutes;$i++) : ?>
-														<?php if(!is_float((($i % 60)/$bookingMinuteChunks))): ?>
-															<?php $endTimeInMinutes = $i; ?>
-															<?php break; ?>
-														<?php endif; ?>
-													<?php endfor; ?>
-												<?php endif; ?>
+										<?php if(!empty($bookingInfo['StartTimeInMinutesSinceMidnight']) AND !empty($bookingInfo['EndTimeInMinutesSinceMidnight'])) : ?>
+											<?php $nextStartTimeInMinutes = $bookingInfo['StartTimeInMinutesSinceMidnight']; ?>
+											<?php $nextEndTimeInMinutes = $bookingInfo['EndTimeInMinutesSinceMidnight']; ?>
+											<?php if($currentStartTimeInMinutes == $nextStartTimeInMinutes AND $timeNowInMinutes <= $nextStartTimeInMinutes) : ?>
 												<tr>
-													<td><?php echo convertMinutesToTime($currentStartTimeInMinutes); ?> - <?php echo convertMinutesToTime($endTimeInMinutes); ?></td>
-													<td style="background-color: #33ff33;"></td>
+													<td><?php htmlout($bookingInfo['MeetingStartTime']); ?> - <?php htmlout($bookingInfo['MeetingEndTime']); ?></td>
+													<td style="background-color: #ff3333;"><?php htmlout($bookingInfo['BookingDisplayName']); ?></td>
 												</tr>
-												<?php $currentStartTimeInMinutes = $endTimeInMinutes; ?>
-											<?php endfor; ?>
-											<tr>
-												<td><?php htmlout($bookingInfo['MeetingStartTime']); ?> - <?php htmlout($bookingInfo['MeetingEndTime']); ?></td>
-												<td style="background-color: #ff3333;"><?php htmlout($bookingInfo['BookingDisplayName']); ?></td>
-											</tr>
+											<?php elseif($currentStartTimeInMinutes >= $nextStartTimeInMinutes AND $timeNowInMinutes > $nextStartTimeInMinutes) : ?>
+												<tr>
+													<td><?php htmlout($displayTimeNow); ?> - <?php htmlout($bookingInfo['MeetingEndTime']); ?></td>
+													<td style="background-color: #ff3333;"><?php htmlout($bookingInfo['BookingDisplayName']); ?></td>
+												</tr>
+											<?php else : ?>
+												<?php for($currentStartTimeInMinutes; $currentStartTimeInMinutes < $nextStartTimeInMinutes;) : ?>
+													<?php if($currentStartTimeInMinutes+$bookingMinuteChunks > $nextStartTimeInMinutes) : ?>
+														<?php $endTimeInMinutes = $nextStartTimeInMinutes; ?>
+													<?php else : ?>
+														<?php $endTimeInMinutes = $currentStartTimeInMinutes+$bookingMinuteChunks; ?>
+													<?php endif; ?>
+													<?php if(is_float((($endTimeInMinutes % 60)/$bookingMinuteChunks))) : ?>
+														<?php for($i=$currentStartTimeInMinutes+1;$i<$endTimeInMinutes;$i++) : ?>
+															<?php if(!is_float((($i % 60)/$bookingMinuteChunks))): ?>
+																<?php $endTimeInMinutes = $i; ?>
+																<?php break; ?>
+															<?php endif; ?>
+														<?php endfor; ?>
+													<?php endif; ?>
+													<tr>
+														<td><?php echo convertMinutesToTime($currentStartTimeInMinutes); ?> - <?php echo convertMinutesToTime($endTimeInMinutes); ?></td>
+														<td style="background-color: #33ff33;"></td>
+													</tr>
+													<?php $currentStartTimeInMinutes = $endTimeInMinutes; ?>
+												<?php endfor; ?>
+												<tr>
+													<td><?php htmlout($bookingInfo['MeetingStartTime']); ?> - <?php htmlout($bookingInfo['MeetingEndTime']); ?></td>
+													<td style="background-color: #ff3333;"><?php htmlout($bookingInfo['BookingDisplayName']); ?></td>
+												</tr>
+											<?php endif; ?>
+											<?php $currentStartTimeInMinutes = $nextEndTimeInMinutes; ?>
+											<input type="hidden" name="bookingStartTime" value="">
+											<input type="hidden" name="BookingID" value="<?php htmlout($bookingInfo['BookingID']); ?>">
+											<input type="hidden" name="MeetingRoomName" value="<?php htmlout($bookingInfo['MeetingRoomName']); ?>">
+											<input type="hidden" name="MeetingRoomID" value="<?php htmlout($meetingRoomID); ?>">
 										<?php endif; ?>
-										<?php $currentStartTimeInMinutes = $nextEndTimeInMinutes; ?>
-										<input id="bookMeeting" type="submit" name="bookMeeting">
-										<input type="hidden" name="bookingStartTime" value="">
-										<input type="hidden" name="BookingID" value="<?php htmlout($bookingInfo['BookingID']); ?>">
-										<input type="hidden" name="MeetingRoomName" value="<?php htmlout($bookingInfo['MeetingRoomName']); ?>">
-										<input type="hidden" name="MeetingRoomID" value="<?php htmlout($meetingRoomID); ?>">
 									<?php endforeach; ?>
 
 									<?php if($currentStartTimeInMinutes < 1440) : ?>
-										<?php for($currentStartTimeInMinutes = $currentStartTimeInMinutes; $currentStartTimeInMinutes < 1440;) : ?>
+										<?php $endTimeInMinutes = $currentStartTimeInMinutes+$bookingMinuteChunks; ?>
+										<?php if(is_float((($endTimeInMinutes % 60)/$bookingMinuteChunks))) : ?>
+											<?php for($i=$currentStartTimeInMinutes+1;$i<$endTimeInMinutes;$i++) : ?>
+												<?php if(!is_float((($i % 60)/$bookingMinuteChunks))): ?>
+													<?php $endTimeInMinutes = $i; ?>
+													<?php break; ?>
+												<?php endif; ?>
+											<?php endfor; ?>
+										<?php endif; ?>
+										<?php for($currentStartTimeInMinutes; $currentStartTimeInMinutes < 1440;) : ?>
 											<tr>
-												<td><?php echo convertMinutesToTime($currentStartTimeInMinutes); ?> - <?php echo convertMinutesToTime($currentStartTimeInMinutes+$bookingMinuteChunks); ?></td>
+												<td><?php echo convertMinutesToTime($currentStartTimeInMinutes); ?> - <?php echo convertMinutesToTime($endTimeInMinutes); ?></td>
 												<td style="background-color: #33ff33;"></td>
 											</tr>
-											<?php $currentStartTimeInMinutes+=$bookingMinuteChunks; ?>
+											<?php $currentStartTimeInMinutes=$endTimeInMinutes; ?>
+											<?php $endTimeInMinutes+=$bookingMinuteChunks; ?>
 										<?php endfor; ?>
 									<?php endif; ?>
 								<?php else : ?>
+									<?php $endTimeInMinutes = $currentStartTimeInMinutes+$bookingMinuteChunks; ?>
+									<?php if(is_float((($endTimeInMinutes % 60)/$bookingMinuteChunks))) : ?>
+										<?php for($i=$currentStartTimeInMinutes+1;$i<$endTimeInMinutes;$i++) : ?>
+											<?php if(!is_float((($i % 60)/$bookingMinuteChunks))): ?>
+												<?php $endTimeInMinutes = $i; ?>
+												<?php break; ?>
+											<?php endif; ?>
+										<?php endfor; ?>
+									<?php endif; ?>
 									<?php for($currentStartTimeInMinutes; $currentStartTimeInMinutes < 1440;) : ?>
 										<tr>
-											<td><?php echo convertMinutesToTime($currentStartTimeInMinutes); ?> - <?php echo convertMinutesToTime($currentStartTimeInMinutes+$bookingMinuteChunks); ?></td>
+											<td><?php echo convertMinutesToTime($currentStartTimeInMinutes); ?> - <?php echo convertMinutesToTime($endTimeInMinutes); ?></td>
 											<td style="background-color: #33ff33;"></td>
 										</tr>
-										<?php $currentStartTimeInMinutes+=$bookingMinuteChunks; ?>
+										<?php $currentStartTimeInMinutes=$endTimeInMinutes; ?>
+										<?php $endTimeInMinutes+=$bookingMinuteChunks; ?>
 									<?php endfor; ?>
 								<?php endif; ?>
 							</table>
@@ -168,73 +192,94 @@
 									<?php $currentStartTimeInMinutes = 0; ?>
 								<?php endif; ?>
 								<?php if(!empty($bookings)) : ?>
+									<tr>
+										<th></th>
+										<th><?php htmlout($bookings[0]['MeetingRoomName']); ?></th>
+									</tr>
 									<?php foreach($bookings AS $bookingInfo) : ?>
-										<tr>
-											<th></th>
-											<th><?php htmlout($bookingInfo['MeetingRoomName']); ?></th>
-										</tr>
-										<?php $nextStartTimeInMinutes = $bookingInfo['StartTimeInMinutesSinceMidnight']; ?>
-										<?php $nextEndTimeInMinutes = $bookingInfo['EndTimeInMinutesSinceMidnight']; ?>
-										<?php if($currentStartTimeInMinutes == $nextStartTimeInMinutes AND $timeNowInMinutes <= $nextStartTimeInMinutes) : ?>
-											<tr>
-												<td><?php htmlout($bookingInfo['MeetingStartTime']); ?> - <?php htmlout($bookingInfo['MeetingEndTime']); ?></td>
-												<td style="background-color: #ff3333;"><?php htmlout($bookingInfo['BookingDisplayName']); ?></td>
-											</tr>
-										<?php elseif($currentStartTimeInMinutes >= $nextStartTimeInMinutes AND $timeNowInMinutes > $nextStartTimeInMinutes) : ?>
-											<tr>
-												<td><?php htmlout($displayTimeNow); ?> - <?php htmlout($bookingInfo['MeetingEndTime']); ?></td>
-												<td style="background-color: #ff3333;"><?php htmlout($bookingInfo['BookingDisplayName']); ?></td>
-											</tr>
-										<?php else : ?>
-											<?php for($currentStartTimeInMinutes; $currentStartTimeInMinutes < $nextStartTimeInMinutes;) : ?>
-												<?php if($currentStartTimeInMinutes+$bookingMinuteChunks > $nextStartTimeInMinutes) : ?>
-													<?php $endTimeInMinutes = $nextStartTimeInMinutes; ?>
-												<?php else : ?>
-													<?php $endTimeInMinutes = $currentStartTimeInMinutes+$bookingMinuteChunks; ?>
-												<?php endif; ?>
-												<?php if(is_float((($endTimeInMinutes % 60)/$bookingMinuteChunks))) : ?>
-													<?php for($i=$currentStartTimeInMinutes+1;$i<$endTimeInMinutes;$i++) : ?>
-														<?php if(!is_float((($i % 60)/$bookingMinuteChunks))): ?>
-															<?php $endTimeInMinutes = $i; ?>
-															<?php break; ?>
-														<?php endif; ?>
-													<?php endfor; ?>
-												<?php endif; ?>
+										<?php if(!empty($bookingInfo['StartTimeInMinutesSinceMidnight']) AND !empty($bookingInfo['EndTimeInMinutesSinceMidnight'])) : ?>
+											<?php $nextStartTimeInMinutes = $bookingInfo['StartTimeInMinutesSinceMidnight']; ?>
+											<?php $nextEndTimeInMinutes = $bookingInfo['EndTimeInMinutesSinceMidnight']; ?>
+											<?php if($currentStartTimeInMinutes == $nextStartTimeInMinutes AND $timeNowInMinutes <= $nextStartTimeInMinutes) : ?>
 												<tr>
-													<td><?php echo convertMinutesToTime($currentStartTimeInMinutes); ?> - <?php echo convertMinutesToTime($endTimeInMinutes); ?></td>
-													<td style="background-color: #33ff33;"></td>
+													<td><?php htmlout($bookingInfo['MeetingStartTime']); ?> - <?php htmlout($bookingInfo['MeetingEndTime']); ?></td>
+													<td style="background-color: #ff3333;"><?php htmlout($bookingInfo['BookingDisplayName']); ?></td>
 												</tr>
-												<?php $currentStartTimeInMinutes = $endTimeInMinutes; ?>
-											<?php endfor; ?>
-											<tr>
-												<td><?php htmlout($bookingInfo['MeetingStartTime']); ?> - <?php htmlout($bookingInfo['MeetingEndTime']); ?></td>
-												<td style="background-color: #ff3333;"><?php htmlout($bookingInfo['BookingDisplayName']); ?></td>
-											</tr>
+											<?php elseif($currentStartTimeInMinutes >= $nextStartTimeInMinutes AND $timeNowInMinutes > $nextStartTimeInMinutes) : ?>
+												<tr>
+													<td><?php htmlout($displayTimeNow); ?> - <?php htmlout($bookingInfo['MeetingEndTime']); ?></td>
+													<td style="background-color: #ff3333;"><?php htmlout($bookingInfo['BookingDisplayName']); ?></td>
+												</tr>
+											<?php else : ?>
+												<?php for($currentStartTimeInMinutes; $currentStartTimeInMinutes < $nextStartTimeInMinutes;) : ?>
+													<?php if($currentStartTimeInMinutes+$bookingMinuteChunks > $nextStartTimeInMinutes) : ?>
+														<?php $endTimeInMinutes = $nextStartTimeInMinutes; ?>
+													<?php else : ?>
+														<?php $endTimeInMinutes = $currentStartTimeInMinutes+$bookingMinuteChunks; ?>
+													<?php endif; ?>
+													<?php if(is_float((($endTimeInMinutes % 60)/$bookingMinuteChunks))) : ?>
+														<?php for($i=$currentStartTimeInMinutes+1;$i<$endTimeInMinutes;$i++) : ?>
+															<?php if(!is_float((($i % 60)/$bookingMinuteChunks))): ?>
+																<?php $endTimeInMinutes = $i; ?>
+																<?php break; ?>
+															<?php endif; ?>
+														<?php endfor; ?>
+													<?php endif; ?>
+													<tr>
+														<td><?php echo convertMinutesToTime($currentStartTimeInMinutes); ?> - <?php echo convertMinutesToTime($endTimeInMinutes); ?></td>
+														<td style="background-color: #33ff33;"></td>
+													</tr>
+													<?php $currentStartTimeInMinutes = $endTimeInMinutes; ?>
+												<?php endfor; ?>
+												<tr>
+													<td><?php htmlout($bookingInfo['MeetingStartTime']); ?> - <?php htmlout($bookingInfo['MeetingEndTime']); ?></td>
+													<td style="background-color: #ff3333;"><?php htmlout($bookingInfo['BookingDisplayName']); ?></td>
+												</tr>
+											<?php endif; ?>
+											<?php $currentStartTimeInMinutes = $nextEndTimeInMinutes; ?>
+											<input type="hidden" name="bookingStartTime" value="">
+											<input type="hidden" name="BookingID" value="<?php htmlout($bookingInfo['BookingID']); ?>">
+											<input type="hidden" name="MeetingRoomName" value="<?php htmlout($bookingInfo['MeetingRoomName']); ?>">
+											<input type="hidden" name="MeetingRoomID" value="<?php htmlout($meetingRoomID); ?>">
 										<?php endif; ?>
-										<?php $currentStartTimeInMinutes = $nextEndTimeInMinutes; ?>
-										<input id="bookMeeting" type="submit" name="bookMeeting">
-										<input type="hidden" name="bookingStartTime" value="">
-										<input type="hidden" name="BookingID" value="<?php htmlout($bookingInfo['BookingID']); ?>">
-										<input type="hidden" name="MeetingRoomName" value="<?php htmlout($bookingInfo['MeetingRoomName']); ?>">
-										<input type="hidden" name="MeetingRoomID" value="<?php htmlout($meetingRoomID); ?>">
 									<?php endforeach; ?>
 
 									<?php if($currentStartTimeInMinutes < 1440) : ?>
-										<?php for($currentStartTimeInMinutes = $currentStartTimeInMinutes; $currentStartTimeInMinutes < 1440;) : ?>
+										<?php $endTimeInMinutes = $currentStartTimeInMinutes+$bookingMinuteChunks; ?>
+										<?php if(is_float((($endTimeInMinutes % 60)/$bookingMinuteChunks))) : ?>
+											<?php for($i=$currentStartTimeInMinutes+1;$i<$endTimeInMinutes;$i++) : ?>
+												<?php if(!is_float((($i % 60)/$bookingMinuteChunks))): ?>
+													<?php $endTimeInMinutes = $i; ?>
+													<?php break; ?>
+												<?php endif; ?>
+											<?php endfor; ?>
+										<?php endif; ?>
+										<?php for($currentStartTimeInMinutes; $currentStartTimeInMinutes < 1440;) : ?>
 											<tr>
-												<td><?php echo convertMinutesToTime($currentStartTimeInMinutes); ?> - <?php echo convertMinutesToTime($currentStartTimeInMinutes+$bookingMinuteChunks); ?></td>
+												<td><?php echo convertMinutesToTime($currentStartTimeInMinutes); ?> - <?php echo convertMinutesToTime($endTimeInMinutes); ?></td>
 												<td style="background-color: #33ff33;"></td>
 											</tr>
-											<?php $currentStartTimeInMinutes+=$bookingMinuteChunks; ?>
+											<?php $currentStartTimeInMinutes=$endTimeInMinutes; ?>
+											<?php $endTimeInMinutes+=$bookingMinuteChunks; ?>
 										<?php endfor; ?>
 									<?php endif; ?>
 								<?php else : ?>
+									<?php $endTimeInMinutes = $currentStartTimeInMinutes+$bookingMinuteChunks; ?>
+									<?php if(is_float((($endTimeInMinutes % 60)/$bookingMinuteChunks))) : ?>
+										<?php for($i=$currentStartTimeInMinutes+1;$i<$endTimeInMinutes;$i++) : ?>
+											<?php if(!is_float((($i % 60)/$bookingMinuteChunks))): ?>
+												<?php $endTimeInMinutes = $i; ?>
+												<?php break; ?>
+											<?php endif; ?>
+										<?php endfor; ?>
+									<?php endif; ?>
 									<?php for($currentStartTimeInMinutes; $currentStartTimeInMinutes < 1440;) : ?>
 										<tr>
-											<td><?php echo convertMinutesToTime($currentStartTimeInMinutes); ?> - <?php echo convertMinutesToTime($currentStartTimeInMinutes+$bookingMinuteChunks); ?></td>
+											<td><?php echo convertMinutesToTime($currentStartTimeInMinutes); ?> - <?php echo convertMinutesToTime($endTimeInMinutes); ?></td>
 											<td style="background-color: #33ff33;"></td>
 										</tr>
-										<?php $currentStartTimeInMinutes+=$bookingMinuteChunks; ?>
+										<?php $currentStartTimeInMinutes=$endTimeInMinutes; ?>
+										<?php $endTimeInMinutes+=$bookingMinuteChunks; ?>
 									<?php endfor; ?>
 								<?php endif; ?>
 							</table>
