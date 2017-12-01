@@ -216,7 +216,7 @@ if(!empty($_GET['meetingroom'])){
 				AND			b.`actualEndDateTime` IS NULL
 				AND			DATE(b.`endDateTime`) = :dateSelected
 				AND			b.`endDateTime` > CURRENT_TIMESTAMP
-				AND			m.`meetingRoomID` = :meetingRoomID
+				WHERE		m.`meetingRoomID` = :meetingRoomID
 				ORDER BY 	UNIX_TIMESTAMP(b.`startDateTime`)';
 		$s = $pdo->prepare($sql);
 		$s->bindValue(':dateSelected', $dateSelected);
@@ -331,7 +331,8 @@ foreach($meetingRoomInfo as $row){
 							);
 	*/
 
-	$bookingMinuteChunks = MINIMUM_BOOKING_TIME_IN_MINUTES;
+	// Decide how big of a time chunk each box displayed is
+	$bookingMinuteChunks = 15;//MINIMUM_BOOKING_TIME_IN_MINUTES; // TO-DO: Change if wanted
 
 	$meetingRoomID = $row['TheMeetingRoomID'];
 	$startDateTime = $row['BookingStartTime'];

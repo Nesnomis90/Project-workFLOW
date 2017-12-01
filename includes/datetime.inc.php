@@ -21,6 +21,18 @@ function convertDatetimeToFormat($oldDatetimeString, $oldformat, $format){
 	}
 }
 
+function getNextBookingEndTime($currentStartTimeInMinutesSinceMidnight, $currentEndTimeInMinutesSinceMidnight, $minuteChunk){
+	if(is_float((($currentEndTimeInMinutesSinceMidnight % 60)/$minuteChunk))){
+		for($i = $currentStartTimeInMinutesSinceMidnight+1; $i < $currentEndTimeInMinutesSinceMidnight; $i++){
+			if(!is_float((($i % 60)/$minuteChunk))){
+				return $i;
+			}
+		}
+	} else {
+		return $currentEndTimeInMinutesSinceMidnight;
+	}
+}
+
 function getPeriodIntervalNumberFromDateSubmitted($dayNumberToKeep, $startDate, $endDate){
 	$intervalNumber = 0;
 	$nextPeriodEnd = addOneMonthToPeriodDate($dayNumberToKeep, $startDate);
