@@ -21,6 +21,7 @@ function convertDatetimeToFormat($oldDatetimeString, $oldformat, $format){
 	}
 }
 
+// Function to get the next correct booking chunk for displaying times for users e.g. 24-39->24-30 with a 15 min chunk
 function getNextBookingEndTime($currentStartTimeInMinutesSinceMidnight, $currentEndTimeInMinutesSinceMidnight, $minuteChunk){
 	if(is_float((($currentEndTimeInMinutesSinceMidnight % 60)/$minuteChunk))){
 		for($i = $currentStartTimeInMinutesSinceMidnight+1; $i < $currentEndTimeInMinutesSinceMidnight; $i++){
@@ -28,9 +29,9 @@ function getNextBookingEndTime($currentStartTimeInMinutesSinceMidnight, $current
 				return $i;
 			}
 		}
-	} else {
-		return $currentEndTimeInMinutesSinceMidnight;
 	}
+
+	return $currentEndTimeInMinutesSinceMidnight;
 }
 
 function getPeriodIntervalNumberFromDateSubmitted($dayNumberToKeep, $startDate, $endDate){

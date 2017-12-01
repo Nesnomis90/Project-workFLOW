@@ -83,8 +83,7 @@
 								<?php endif; ?>
 								<?php if(!empty($bookings)) : ?>
 									<tr>
-										<th></th>
-										<th><?php htmlout($bookings[0]['MeetingRoomName']); ?></th>
+										<th colspan="2"><?php htmlout($bookings[0]['MeetingRoomName']); ?></th>
 									</tr>
 									<?php foreach($bookings AS $bookingInfo) : ?>
 										<?php if(!empty($bookingInfo['StartTimeInMinutesSinceMidnight']) AND !empty($bookingInfo['EndTimeInMinutesSinceMidnight'])) : ?>
@@ -202,8 +201,7 @@
 								<?php endif; ?>
 								<?php if(!empty($bookings)) : ?>
 									<tr>
-										<th></th>
-										<th><?php htmlout($bookings[0]['MeetingRoomName']); ?></th>
+										<th colspan="2"><?php htmlout($bookings[0]['MeetingRoomName']); ?></th>
 									</tr>
 									<?php foreach($bookings AS $bookingInfo) : ?>
 										<?php if(!empty($bookingInfo['StartTimeInMinutesSinceMidnight']) AND !empty($bookingInfo['EndTimeInMinutesSinceMidnight'])) : ?>
