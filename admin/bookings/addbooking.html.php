@@ -4,7 +4,18 @@
 	<head>
 		<meta charset="utf-8">
 		<link rel="stylesheet" type="text/css" href="/CSS/myCSS.css">
+		<link rel="stylesheet" type="text/css" href="/plugin/datetimepicker/jquery.datetimepicker.min.css">
 		<script src="/scripts/myFunctions.js"></script>
+		<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+		<script src="/plugin/datetimepicker/jquery.datetimepicker.full.min.js"></script>
+		<script>
+			$(function () {
+				$('#startDateTime').datetimepicker({format:'<?php htmlout(DATETIME_DEFAULT_FORMAT_TO_DISPLAY); ?>'});
+			});
+			$(function () {
+				$('#endDateTime').datetimepicker({format:'<?php htmlout(DATETIME_DEFAULT_FORMAT_TO_DISPLAY); ?>'});
+			});
+		</script>
 		<title>Book A New Meeting</title>
 		<style>
 			label {

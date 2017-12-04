@@ -36,13 +36,13 @@
 				<div>
 					<label for="originalStartDateTime">Booked Start Time: </label>
 					<span><b><?php htmlout($originalStartDateTime); ?></b></span>
-					<input type="hidden" name="startDateTime" value="<?php htmlout($originalStartDateTime); ?>">
+					<input type="hidden" id="startDateTime" name="startDateTime" value="<?php htmlout($originalStartDateTime); ?>">
 				</div>
 
 				<div>	
 					<label for="originalEndDateTime">Booked End Time: </label>
 					<span><b><?php htmlout($originalEndDateTime); ?></b></span>
-					<input type="hidden" name="endDateTime" value="<?php htmlout($originalEndDateTime); ?>">
+					<input type="hidden" id="endDateTime" name="endDateTime" value="<?php htmlout($originalEndDateTime); ?>">
 				</div>
 
 				<div>
