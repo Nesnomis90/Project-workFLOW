@@ -1694,6 +1694,7 @@ if( (isSet($_POST['edit']) AND $_POST['edit'] == "Finish Edit") OR
 
 	if($numberOfChanges == 0){
 		// There were no changes made. Go back to booking overview
+		clearEditBookingSessions();
 		$_SESSION['BookingUserFeedback'] = "No changes were made to the booking.";
 		header('Location: .');
 		exit();	
@@ -1812,6 +1813,7 @@ if( (isSet($_POST['edit']) AND $_POST['edit'] == "Finish Edit") OR
 				rememberEditBookingInputs();
 
 				$_SESSION['EditBookingError'] = "The booking couldn't be made. The timeslot is already taken for this meeting room.";
+				unset($_SESSION['refreshEditBookingConfirmed']);
 
 				if(isSet($_SESSION['EditBookingChangeUser']) AND $_SESSION['EditBookingChangeUser']){
 					$_SESSION['refreshEditBookingChangeUser'] = TRUE;

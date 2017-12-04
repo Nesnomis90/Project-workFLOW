@@ -397,10 +397,10 @@
 		<?php endif; ?>
 		<script>
 			$(function () {
-				$('#startDateTime').datetimepicker();
+				$('#startDateTime').datetimepicker({format:'<?php htmlout(DATETIME_DEFAULT_FORMAT_TO_DISPLAY); ?>'});
 			});
 			$(function () {
-				$('#endDateTime').datetimepicker();
+				$('#endDateTime').datetimepicker({format:'<?php htmlout(DATETIME_DEFAULT_FORMAT_TO_DISPLAY); ?>'});
 			});
 		</script>
 		<style>
