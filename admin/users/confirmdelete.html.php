@@ -27,7 +27,7 @@
 			</div>
 			<?php endif; ?>
 			<div class="left">
-				<form action="" method="post">
+				<form method="post">
 					<label>Confirm with Password: </label>
 					<?php if(isSet($wrongPassword)) : ?>
 						<input type="password" name="password" class="fillOut">

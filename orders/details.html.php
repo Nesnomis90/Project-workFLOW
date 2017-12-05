@@ -974,7 +974,7 @@
 			<?php include_once $_SERVER['DOCUMENT_ROOT'] .'/includes/stafftopnav.html.php'; ?>
 		<?php endif; ?>
 
-		<form action="" method="post">
+		<form method="post">
 			<div class="left">
 				<fieldset><legend>Order Details - Status: <?php htmlout($orderStatus); ?></legend>
 					<div class="left">

@@ -24,7 +24,7 @@
 			</div>
 
 			<div class="left">
-				<form action="" method="post">
+				<form method="post">
 					<?php if(	isSet($_SESSION['UserEmailListSeparatorSelected']) AND
 								$_SESSION['UserEmailListSeparatorSelected']) : ?>
 						<label for="separatorchar">The current character to separate emails with: </label>
@@ -58,7 +58,7 @@
 			</div>
 
 			<div class="left">
-				<form action="" method="post">
+				<form method="post">
 					<input type="submit" name="action" value="Return To Users">
 				</form>
 			</div>

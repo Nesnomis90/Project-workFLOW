@@ -56,7 +56,7 @@
 					<th>Delete</th>
 				</tr>
 				<?php foreach ($users as $user): ?>
-					<form action="" method="post">
+					<form method="post">
 						<tr>
 							<td><?php htmlout($user['firstname']); ?></td>
 							<td><?php htmlout($user['lastname']); ?></td>
@@ -111,7 +111,7 @@
 					<th>Delete</th>
 				</tr>
 				<?php foreach ($blockedUsers as $user): ?>
-					<form action="" method="post">
+					<form method="post">
 						<tr>
 							<td><?php htmlout($user['firstname']); ?></td>
 							<td><?php htmlout($user['lastname']); ?></td>
@@ -160,7 +160,7 @@
 						<th>Delete</th>
 					</tr>
 					<?php foreach ($inactiveusers as $user): ?>
-					<form action="" method="post">
+					<form method="post">
 						<tr>
 							<td><?php htmlout($user['firstname']); ?></td>
 							<td><?php htmlout($user['lastname']); ?></td>

@@ -34,7 +34,7 @@
 				</div>
 			<?php endif; ?>
 			
-			<form action="" method="post">
+			<form method="post">
 				<div>
 					<fieldset>
 						<?php if(!isSet($_SESSION['AddEventRoomChoiceSelected'])) : ?>

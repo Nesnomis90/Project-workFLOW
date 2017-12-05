@@ -15,7 +15,7 @@
 
 		<?php if(!isSet($_SESSION['loggedIn'])) : ?>
 			<div class="left">
-				<form action="" method="post">
+				<form method="post">
 					<fieldset><legend>Set Your New Password</legend>
 						<div class="left">
 							<?php if(isSet($_SESSION['resetPasswordFeedback'])) : ?>

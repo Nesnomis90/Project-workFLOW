@@ -32,7 +32,7 @@
 				<?php endif; ?>
 			</div>
 			<div class="left">
-				<form action="" method="post">
+				<form method="post">
 					<input type="submit" name="confirm" value="Yes, Create The Booking">
 					<input type="submit" name="confirm" value="No, Cancel The Booking">
 				</form>

@@ -12,7 +12,7 @@
 
 		<h1>Manage Meeting Rooms</h1>
 
-		<form action="" method="post">
+		<form method="post">
 			<div class="right">
 				<?php if(isSet($_SESSION['meetingroomsEnableDelete']) AND $_SESSION['meetingroomsEnableDelete']) : ?>
 					<input type="submit" name="action" value="Disable Delete">
@@ -75,7 +75,7 @@
 							<td><?php htmlout($room['MeetingRoomCapacity']); ?></td>
 							<td style="white-space: pre-wrap;"><?php htmlout($room['MeetingRoomDescription']); ?></td>
 							<td><?php htmlout($room['MeetingRoomLocation']); ?></td>
-						<form action="" method="post">
+						<form method="post">
 							<td><input type="submit" name="action" value="Edit"></td>
 							<td>
 								<?php if(isSet($_SESSION['meetingroomsEnableDelete']) AND $_SESSION['meetingroomsEnableDelete'] AND
@@ -103,7 +103,7 @@
 			<tr><b>There are no meeting rooms registered in the database.</b></tr>
 		<?php endif; ?>
 
-			<form action="" method="post">
+			<form method="post">
 				<tr>
 					<td colspan="12">
 						<input type="hidden" name="action" value="Create Meeting Room">

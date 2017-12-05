@@ -23,7 +23,7 @@
 				<?php endif; ?>
 			</div>
 			
-			<form action="" method="post">
+			<form method="post">
 				<?php if(isSet($originalCompanyName)) : ?>
 					<div>
 						<label for="originalCompanyName">Original Company Name:</label>

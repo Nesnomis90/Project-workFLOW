@@ -49,7 +49,7 @@
 			</tr>
 			<?php if($rowNum > 0) :?>
 				<?php foreach ($employees as $employee): ?>
-					<form action="" method="post">
+					<form method="post">
 						<tr>
 							<td><?php htmlout($employee['PositionName']); ?></td>
 							<td><?php htmlout($employee['firstName']); ?></td>
@@ -82,7 +82,7 @@
 			<?php endif; ?>
 
 			<?php if(isSet($companyRole) AND $companyRole == "Owner") : ?>
-				<form action="" method="post">
+				<form method="post">
 					<tr>
 						<td colspan="11">
 							<input type="hidden" name="action" value="Add Employee">

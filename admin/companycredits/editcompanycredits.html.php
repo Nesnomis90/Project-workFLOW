@@ -23,7 +23,7 @@
 				<?php endif; ?>
 			</div>
 
-			<form action="" method="post">
+			<form method="post">
 				<div>
 					<label for="selectedCompanyName">Company Selected: </label>
 					<span><b><?php htmlout($CompanyName); ?></b></span>

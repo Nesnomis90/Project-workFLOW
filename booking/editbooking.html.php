@@ -22,7 +22,7 @@
 				<?php endif; ?>
 			</div>
 
-			<form action="" method="post">
+			<form method="post">
 				<div>
 					<label for="userInformation">Welcome </label>
 					<span><b><?php htmlout($_SESSION['EditCreateBookingLoggedInUserInformation']); ?></b></span>

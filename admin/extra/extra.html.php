@@ -12,7 +12,7 @@
 
 		<h1>Manage Booking Extra</h1>
 
-		<form action="" method="post">
+		<form method="post">
 			<div class="right">
 				<?php if(isSet($_SESSION['ExtraEnableDelete']) AND $_SESSION['ExtraEnableDelete']) : ?>
 					<input type="submit" name="action" value="Disable Delete">
@@ -49,7 +49,7 @@
 			</tr>
 			<?php if($rowNum > 0) : ?>
 				<?php foreach($extra as $row): ?>
-					<form action="" method="post">
+					<form method="post">
 						<tr>
 							<td><?php htmlout($row['ExtraName']); ?></td>
 							<td style="white-space: pre-wrap;"><?php htmlout($row['ExtraDescription']); ?></td>
@@ -79,7 +79,7 @@
 				<tr><td colspan="9"><b>There are no Extra registered in the database.</b></td></tr>
 			<?php endif; ?>
 
-			<form action="" method="post">
+			<form method="post">
 				<tr>
 					<td colspan="9">
 						<input type="hidden" name="action" value="Add Extra">

@@ -20,7 +20,7 @@
 		</div>
 
 		<?php if($rowNum > 0) :?>
-			<form action="" method="post">
+			<form method="post">
 				<div class="left">
 					<input type="submit" name="action" value="Create Company">
 				</div>
@@ -95,7 +95,7 @@
 								<td><?php htmlout($company['PreviousMonthCompanyWideBookingTimeUsed']); ?></td>
 								<td><?php htmlout($company['MonthlyCompanyWideBookingTimeUsed']); ?></td>
 								<td><?php htmlout($company['TotalCompanyWideBookingTimeUsed']); ?></td>
-							<form action="" method="post">
+							<form method="post">
 								<td><input type="submit" name="action" value="Booking History"></td>
 								<td><?php htmlout($company['TotalPeriods']); ?></td>
 								<td><?php htmlout($company['BilledPeriods']); ?></td>
@@ -146,7 +146,7 @@
 					</tr>
 					<?php foreach ($unactivedcompanies as $company): ?>
 						<tr>
-							<form action="" method="post">
+							<form method="post">
 								<td><?php htmlout($company['CompanyName']); ?></td>
 								<td><?php htmlout($company['DatetimeCreated']); ?></td>
 								<td><input type="submit" name="action" value="Activate"></td>
@@ -179,7 +179,7 @@
 					</tr>
 					<?php foreach ($inactivecompanies as $company): ?>
 						<tr>
-							<form action="" method="post">
+							<form method="post">
 								<td><?php htmlout($company['CompanyName']); ?></td>
 								<td><?php htmlout($company['MonthlyCompanyWideBookingTimeUsed']); ?></td>
 								<td><?php htmlout($company['TotalCompanyWideBookingTimeUsed']); ?></td>

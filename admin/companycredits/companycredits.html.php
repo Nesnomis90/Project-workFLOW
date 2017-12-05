@@ -52,7 +52,7 @@
 			</tr>
 		<?php if($rowNum>0) :?>
 				<?php foreach ($companycredits as $row): ?>
-					<form action="" method="post">
+					<form method="post">
 						<tr>
 							<td>
 								<?php htmlout($row['CompanyName']); ?>

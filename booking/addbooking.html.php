@@ -420,7 +420,7 @@
 				<?php endif; ?>
 			</div>
 			
-			<form action="" method="post">
+			<form method="post">
 			
 			<?php if(isSet($_SESSION["loggedIn"]) AND !isSet($_SESSION["DefaultMeetingRoomInfo"])) : ?>
 				<?php if(isSet($_SESSION['AddCreateBookingStepOneCompleted'])) : ?>

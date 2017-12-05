@@ -12,7 +12,7 @@
 
 		<h1>Manage Equipment in Meeting Rooms</h1>
 
-		<form action="" method="post">
+		<form method="post">
 			<div class="right">
 				<?php if(isSet($_SESSION['roomequipmentEnableDelete']) AND $_SESSION['roomequipmentEnableDelete']) : ?>
 					<input type="submit" name="action" value="Disable Remove">
@@ -59,7 +59,7 @@
 			</tr>
 			<?php if($rowNum>0) :?>
 				<?php foreach ($roomequipment as $row): ?>
-					<form action="" method="post">
+					<form method="post">
 						<tr>
 							<td>
 								<?php htmlout($row['EquipmentName']); ?>
@@ -89,7 +89,7 @@
 				<tr><b>There are no equipment for any meeting rooms registered in the database.</b></tr>
 			<?php endif; ?>
 
-			<form action="" method="post">
+			<form method="post">
 				<tr>
 					<td colspan="7">
 						<input type="hidden" name="action" value="Add Room Equipment">

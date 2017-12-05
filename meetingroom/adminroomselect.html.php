@@ -25,7 +25,7 @@
 				</tr>
 				<?php foreach ($meetingrooms as $room): ?>
 					<tr>
-						<form action="" method="post">
+						<form method="post">
 							<td>
 								<?php htmlout($room['MeetingRoomName']); ?>
 								<input type="hidden" name="MeetingRoomName" id="MeetingRoomName"

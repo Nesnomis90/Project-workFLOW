@@ -18,7 +18,7 @@
 
 		<div class="left">
 			<span><b>Last Refresh: <?php htmlout(getDatetimeNowInDisplayFormat()); ?></b></span>
-			<form action="" method="post">
+			<form method="post">
 				<?php if(isSet($_SESSION['DefaultMeetingRoomInfo'])) : ?>
 				<?php $default = $_SESSION['DefaultMeetingRoomInfo']; ?>
 					<?php if((!isSet($_GET['meetingroom'])) OR
@@ -33,7 +33,7 @@
 
 		<?php if(isSet($_SESSION['DefaultMeetingRoomInfo']) AND !isSet($defaultMeetingRoomFeedback)) : ?>
 			<div class="left">
-				<form action="" method="post">
+				<form method="post">
 					<label style="width: 295px;" for="defaultMeetingRoomName">The Default Meeting Room For This Device: </label>
 					<span><b><?php htmlout($_SESSION['DefaultMeetingRoomInfo']['TheMeetingRoomName']); ?></b></span>
 					<?php if($adminLoggedIn) : ?>
@@ -45,7 +45,7 @@
 			</div>
 		<?php elseif($adminLoggedIn) : ?>
 			<div class="left">
-				<form action="" method="post">
+				<form method="post">
 					<input type="submit" name="action" value="Set Default Room">
 				</form>
 			<div>
@@ -71,7 +71,7 @@
 				<?php endif; ?>
 				<?php foreach($meetingrooms AS $room): ?>
 					<div class="left">
-						<form action="" method="post">
+						<form method="post">
 							<?php if(substr($room['MeetingRoomStatus'],0,8) == "Occupied") : ?>
 								<?php $color = "#ff3333"; // Light Red?>
 							<?php elseif(substr($room['MeetingRoomStatus'],0,9) == "Available") : ?>
@@ -109,7 +109,7 @@
 				<div class="left"><h2>Active Meeting Rooms:</h2></div>
 				<?php foreach ($meetingrooms AS $room): ?>
 					<div class="left">
-						<form action="" method="post">
+						<form method="post">
 						<?php if(substr($room['MeetingRoomStatus'],0,8) == "Occupied") : ?>
 							<?php $color = "#ff3333"; // Light Red?>
 						<?php elseif(substr($room['MeetingRoomStatus'],0,9) == "Available") : ?>

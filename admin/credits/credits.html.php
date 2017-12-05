@@ -12,7 +12,7 @@
 
 		<h1>Manage Company Booking Credits</h1>
 
-		<form action="" method="post">
+		<form method="post">
 			<div class="right">
 				<?php if(isSet($_SESSION['creditsEnableDelete']) AND $_SESSION['creditsEnableDelete']) : ?>
 					<input type="submit" name="action" value="Disable Delete">
@@ -55,7 +55,7 @@
 			</tr>
 			<?php if($rowNum>0) :?>
 				<?php foreach ($credits as $row): ?>
-					<form action="" method="post">
+					<form method="post">
 						<tr>
 							<td><?php htmlout($row['CreditsName']); ?></td>
 							<td><?php htmlout($row['CreditsDescription']); ?></td>
@@ -96,7 +96,7 @@
 				<tr><b>There are no Credits registered in the database. This should never occur as the system needs a Credits named Default to function properly.</b></tr>
 			<?php endif; ?>
 
-			<form action="" method="post">
+			<form method="post">
 				<tr>
 					<td colspan="10">
 						<input type="hidden" name="action" value="Add Credits">

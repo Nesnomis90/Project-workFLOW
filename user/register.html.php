@@ -13,7 +13,7 @@
 		<?php if(!isSet($_SESSION['loggedIn'])) : ?>
 			<h1>Register Account</h1>
 			<div>
-				<form action="" method="post">
+				<form method="post">
 					<fieldset><legend>Enter your login information</legend>
 						<div>
 							<?php if(!isSet($_SESSION['registerUserFeedback']) AND !isSet($_SESSION['registerUserWarning'])) : ?>

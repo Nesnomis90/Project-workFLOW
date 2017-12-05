@@ -16,7 +16,7 @@
 		<?php include_once $_SERVER['DOCUMENT_ROOT'] .'/includes/admintopnav.html.php'; ?>
 
 		<fieldset><legend>Change Meeting Room Equipment Amount</legend>
-			<form action="" method="post">
+			<form method="post">
 				<div>
 					<label for="EquipmentName">Equipment Name:</label>
 					<span><b id="EquipmentName"><?php htmlout($EquipmentName); ?></b></span>

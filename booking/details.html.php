@@ -62,7 +62,7 @@
 	<body onload="startTime()">
 		<?php include_once $_SERVER['DOCUMENT_ROOT'] .'/includes/topnav.html.php'; ?>
 
-		<form action="" method="post">
+		<form method="post">
 			<fieldset><legend>Order Details</legend>
 				<div>
 					<?php if(isSet($_SESSION['EditBookingOrderError'])) :?>

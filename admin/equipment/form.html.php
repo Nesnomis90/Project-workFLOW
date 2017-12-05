@@ -23,7 +23,7 @@
 				<?php endif; ?>
 			</div>
 			
-			<form action="" method="post">
+			<form method="post">
 				<?php if($button == 'Edit Equipment') : ?>
 					<div>
 						<label for="OriginalEquipmentName">Original Equipment Name: </label>

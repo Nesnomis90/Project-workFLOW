@@ -28,7 +28,7 @@
 				<?php endif; ?>
 			</div>
 			
-			<form action="" method="post">
+			<form method="post">
 				<?php if($button == 'Edit Extra') : ?>
 					<div>
 						<label>Original Extra Name: </label>

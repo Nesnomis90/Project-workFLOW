@@ -32,7 +32,7 @@
 			</div>
 		<?php endif; ?>
 	
-		<form action="" method="post">
+		<form method="post">
 			<div class="left">
 				<input type="submit" name="action" value="Add Employee">
 			</div>
@@ -76,7 +76,7 @@
 				</tr>
 				<?php endif; ?>
 				<?php foreach ($employees as $employee) : ?>
-					<form action="" method="post">
+					<form method="post">
 						<tr>
 							<td><?php htmlout($employee['CompanyName']); ?></td>
 							<td><?php htmlout($employee['PositionName']); ?></td>

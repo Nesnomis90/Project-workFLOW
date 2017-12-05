@@ -21,7 +21,7 @@
 			</div>
 
 			<div class="left">
-				<form action="" method="post">
+				<form method="post">
 					<div>
 						<?php if(!isSet($_SESSION['loginEmailSubmitted'])){
 							$email = "";
@@ -45,7 +45,7 @@
 			</div>
 
 			<div class="left">
-				<form action="" method="post">
+				<form method="post">
 					<input type="submit" name="action" value="Forgotten Password?">
 				</form>
 			</div>
