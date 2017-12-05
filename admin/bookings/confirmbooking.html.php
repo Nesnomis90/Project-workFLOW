@@ -32,7 +32,7 @@
 				<?php endif; ?>
 			</div>
 			<div class="left">
-				<form action="" method="post">
+				<form method="post">
 					<?php if(isSet($_SESSION['AddBookingInfoArray'])) : ?>
 						<input type="submit" name="Add" value="Yes, Create The Booking">
 						<input type="submit" name="Add" value="No, Cancel The Booking">

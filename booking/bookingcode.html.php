@@ -35,7 +35,7 @@
 			</div>
 
 			<div class="left">
-				<form action="" method="post">
+				<form method="post">
 					<?php if(!$activateRemoveTimeout OR ($activateRemoveTimeout AND !isSet($_SESSION['adminBookingCodeGuesses'])) OR ($activateRemoveTimeout AND isSet($_SESSION['adminBookingCodeGuesses']) AND sizeOf($_SESSION['adminBookingCodeGuesses']) != MAXIMUM_ADMIN_BOOKING_CODE_GUESSES)) : ?>
 						<label for="bookingCode">Submit your booking code: </label>
 						<input type="password" id="bookingCode" name="bookingCode" maxlength="<?php htmlout(BOOKING_CODE_LENGTH); ?>"
@@ -51,7 +51,7 @@
 				</form>
 			</div>
 			<div class="left">
-				<form action="" method="Post">
+				<form method="post">
 					<input type="submit" name="action" value="Go Back">
 					<?php if(isSet($_SESSION['bookingCodeGuesses'])) : ?>
 						<input type="submit" name="bookingCode" value="Refresh">

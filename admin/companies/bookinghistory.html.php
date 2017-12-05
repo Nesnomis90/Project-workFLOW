@@ -36,7 +36,7 @@
 						<span style="clear:both;">Currently only displaying bookings made for the selected company. "Not Billed Periods" always includes transferred bookings.</span>
 					<?php else : ?>
 						<span style="clear:both;">Currently only displaying bookings transferred from another company (ID=<?php htmlout($mergeNumber); ?>). "Not Billed Periods" always includes transferred bookings.</span>
-						<form action="" method="post">
+						<form method="post">
 							<input type="hidden" name="changeToMergeNumber" value="0">
 							<input type="submit" value="Change Back To Default">
 						</form>
@@ -45,7 +45,7 @@
 
 				<div class="left">
 					<?php foreach($_SESSION['BookingHistoryCompanyInfo']['CompanyMergeNumbers'] AS $availableMergeNumbers) : ?>
-						<form action="" method="post">
+						<form method="post">
 							<input type="hidden" name="changeToMergeNumber" value="<?php htmlout($availableMergeNumbers[0]); ?>">
 							<input type="submit" value="Look at periods from the merged company (ID=<?php htmlout($availableMergeNumbers[0]); ?>)">
 						</form>
@@ -53,7 +53,7 @@
 				</div>
 				<?php if(isSet($_SESSION['BookingHistoryDisplayWithMerged'])) : ?>
 					<div class="left">
-						<form action="" method="post">
+						<form method="post">
 							<input type="hidden" name="nextPeriod" value="<?php htmlout($NextPeriod); ?>">
 							<input type="hidden" name="previousPeriod" value="<?php htmlout($PreviousPeriod); ?>">
 							<input type="hidden" name="billingStart" value="<?php htmlout($BillingStart); ?>">
@@ -63,7 +63,7 @@
 					</div>
 				<?php else : ?>
 					<div class="left">
-						<form action="" method="post">
+						<form method="post">
 							<input type="hidden" name="nextPeriod" value="<?php htmlout($NextPeriod); ?>">
 							<input type="hidden" name="previousPeriod" value="<?php htmlout($PreviousPeriod); ?>">
 							<input type="hidden" name="billingStart" value="<?php htmlout($BillingStart); ?>">
@@ -78,7 +78,7 @@
 
 		<?php if(isSet($lookingAtASpecificMergedPeriod) AND $lookingAtASpecificMergedPeriod) : ?>
 			<div class="left">
-				<form action="" method="post">
+				<form method="post">
 					<input type="submit" name="history" value="Display Default">
 				</form>
 			</div>
@@ -95,7 +95,7 @@
 				<?php $totalCostForAllPeriodsSummedUp = 0; ?>
 				<?php foreach($periodsSummmedUp AS $period) : ?>
 					<fieldset><legend><b><?php htmlout($period['DisplayStartDate'] . " up to " . $period['DisplayEndDate']); ?></b></legend>
-						<form action="" method="post">
+						<form method="post">
 							<div class="left">
 								<?php if($displayMergeStatus) : ?>
 									<label class="notBilled">Period Info:</label><span><b><?php htmlout($period['MergeStatus']); ?></b></span>
@@ -136,7 +136,7 @@
 			<?php endif; ?>
 		</div>
 
-		<form action="" method="post">
+		<form method="post">
 			<div class="left">
 				<?php if(isSet($PreviousPeriod) AND $PreviousPeriod) : ?>
 					<input type="submit" name="history" value="First Period">
@@ -267,7 +267,7 @@
 			<?php endif; ?>
 
 			<div class="left">
-				<form action="" method="post">
+				<form method="post">
 					<?php if(!$rightNow AND empty($periodHasBeenBilled)) : ?>
 						<label class="description" for="billingDescription">Billing Description: </label>
 						<textarea name="billingDescription" rows="4" cols="50" placeholder="Type in any additional information you'd like to see when viewing this period later."></textarea>

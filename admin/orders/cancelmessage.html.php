@@ -24,7 +24,7 @@
 			</div>
 
 			<div class="left">
-				<form action="" method="post">
+				<form method="post">
 					<span>This will be added to the email sent out to the user the order was registered to.</span>
 					<label for="bookingCode">Added message: </label>
 					<?php if(isSet($cancelMessage)) : ?>

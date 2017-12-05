@@ -16,7 +16,7 @@
 		<?php include_once $_SERVER['DOCUMENT_ROOT'] .'/includes/admintopnav.html.php'; ?>
 
 		<fieldset class="left"><legend>Change Employee Role</legend>
-			<form action="" method="post">
+			<form method="post">
 				<div>
 					<label for="CompanyName">Company Name:</label>
 					<span><b id="CompanyName"><?php htmlout($CompanyName); ?></b></span>

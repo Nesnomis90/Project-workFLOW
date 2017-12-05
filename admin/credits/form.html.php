@@ -23,7 +23,7 @@
 				<?php endif; ?>
 			</div>
 
-			<form action="" method="post">
+			<form method="post">
 				<?php if($button == 'Edit Credits') : ?>
 					<div>
 						<label for="OriginalCreditsName">Original Credits Name: </label>

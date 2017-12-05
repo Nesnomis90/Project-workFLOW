@@ -987,7 +987,7 @@
 	<body onload="startTime()">
 		<?php include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/admintopnav.html.php'; ?>
 
-		<form action="" method="post">
+		<form method="post">
 			<div class="left">
 				<fieldset><legend>Order Details - Status: <?php htmlout($orderStatus); ?></legend>
 					<div>

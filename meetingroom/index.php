@@ -332,7 +332,7 @@ foreach($meetingRoomInfo as $row){
 	*/
 
 	// Decide how big of a time chunk each box displayed is
-	$bookingMinuteChunks = 15;//MINIMUM_BOOKING_TIME_IN_MINUTES; // TO-DO: Change if wanted
+	$bookingMinuteChunks = MINIMUM_BOOKING_TIME_IN_MINUTES;
 
 	$meetingRoomID = $row['TheMeetingRoomID'];
 	$startDateTime = $row['BookingStartTime'];

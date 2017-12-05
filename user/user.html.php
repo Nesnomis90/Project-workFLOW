@@ -38,7 +38,7 @@
 		<?php if(isSet($_SESSION['loggedIn']) AND $_SESSION['loggedIn'] AND !empty($_SESSION['LoggedInUserID'])) : ?>
 			<div class="left">
 				<fieldset>
-					<form action="" method="post">
+					<form method="post">
 						<fieldset class="left"><legend>User Information:</legend>
 
 							<?php if(isSet($editMode)) : ?>

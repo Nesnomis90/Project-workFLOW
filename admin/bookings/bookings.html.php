@@ -40,7 +40,7 @@
 			</div>
 		<?php endif; ?>
 
-		<form action="" method="post">
+		<form method="post">
 			<div class="left">
 				<input type="submit" name="action" value="Create Booking">
 			</div>
@@ -72,7 +72,7 @@
 			</tr>
 		<?php if(isSet($bookingsActiveToday)) : ?>
 			<?php foreach ($bookingsActiveToday AS $booking) : ?>
-				<form action="" method="post">
+				<form method="post">
 					<tr>
 						<td><?php htmlout($booking['BookingStatus']);?></td>
 						<td><?php htmlout($booking['BookedRoomName']); ?></td>
@@ -140,7 +140,7 @@
 			</tr>
 		<?php if(isSet($bookingsCompletedToday)) : ?>
 			<?php foreach ($bookingsCompletedToday AS $booking) : ?>
-				<form action="" method="post">
+				<form method="post">
 					<tr>
 						<td><?php htmlout($booking['BookingStatus']);?></td>
 						<td><?php htmlout($booking['BookedRoomName']); ?></td>
@@ -203,7 +203,7 @@
 			</tr>
 		<?php if(isSet($bookingsFuture)) : ?>
 			<?php foreach ($bookingsFuture AS $booking) : ?>
-				<form action="" method="post">
+				<form method="post">
 					<tr>
 						<td><?php htmlout($booking['BookingStatus']);?></td>
 						<td><?php htmlout($booking['BookedRoomName']); ?></td>
@@ -271,7 +271,7 @@
 			</tr>
 		<?php if(isSet($bookingsCompleted)) : ?>
 			<?php foreach ($bookingsCompleted AS $booking) : ?>
-				<form action="" method="post">
+				<form method="post">
 					<tr>
 						<td><?php htmlout($booking['BookingStatus']);?></td>
 						<td><?php htmlout($booking['BookedRoomName']); ?></td>
@@ -338,7 +338,7 @@
 			</tr>
 		<?php if(isSet($bookingsCancelled)) : ?>
 			<?php foreach ($bookingsCancelled AS $booking) : ?>
-				<form action="" method="post">
+				<form method="post">
 					<tr>
 						<td><?php htmlout($booking['BookingStatus']);?></td>
 						<td><?php htmlout($booking['BookedRoomName']); ?></td>
@@ -402,7 +402,7 @@
 				<th>Cancel</th>
 			</tr>
 			<?php foreach ($bookingsOther AS $booking) : ?>
-				<form action="" method="post">
+				<form method="post">
 					<tr>
 						<td><?php htmlout($booking['BookingStatus']);?></td>
 						<td><?php htmlout($booking['BookedRoomName']); ?></td>

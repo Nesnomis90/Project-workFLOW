@@ -23,7 +23,7 @@
 				<?php endif; ?>
 			</div>
 			
-			<form action="" method="post">
+			<form method="post">
 				<?php if($button == 'Edit Room') : ?>
 					<div>
 						<label for="OriginalMeetingRoomName">Original Room Name: </label>

@@ -23,7 +23,7 @@
 				<?php endif; ?>
 			</div>
 
-			<form action="" method="post">
+			<form method="post">
 			<fieldset class="left"><legend>Company Connection</legend>
 				<div>
 					<label>Company Name:</label>

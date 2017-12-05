@@ -24,7 +24,7 @@
 				<?php endif; ?>
 			</div>
 
-		<form action="" method="post">
+		<form method="post">
 			<div class="left">
 				<span style="white-space: pre-wrap;"><b><?php htmlout("The company you have selected will be removed. All its employees and booking history will be transferred into the new company.\nEmployees who work in both companies will not have their employee information transferred."); ?></b></span>
 			</div>

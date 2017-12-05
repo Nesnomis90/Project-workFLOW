@@ -29,7 +29,7 @@
 				<?php endif; ?>	
 			</div>
 
-			<form action="" method="post">
+			<form method="post">
 				<div>
 					<label for="MeetingRoomID">Meeting Room Name:</label>
 					<?php if(!isSet($_GET['Meetingroom'])) : ?>

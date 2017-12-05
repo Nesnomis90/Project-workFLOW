@@ -30,7 +30,7 @@
 			</div>
 
 			<div class="left">
-				<form action="" method="post">
+				<form method="post">
 					<div class="left">
 						<?php if($cancelledBy == "Admin") : ?>
 							<span style="white-space: pre-wrap;"><?php htmlout(	"Add a reason in the textfield below if you want to inform the user why you are cancelling their $cancelling." . 

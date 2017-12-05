@@ -12,7 +12,7 @@
 
 		<h1>Scheduled Events</h1>
 
-		<form action="" method="post">
+		<form method="post">
 				<div class="right"">
 				<?php if(isSet($_SESSION['eventsEnableDelete']) AND $_SESSION['eventsEnableDelete']) : ?>
 					<input type="submit" name="action" value="Disable Delete">
@@ -51,7 +51,7 @@
 			</tr>
 		<?php if(isSet($activeEvents)) : ?>
 			<?php foreach ($activeEvents AS $event) : ?>
-				<form action="" method="post">
+				<form method="post">
 					<tr>
 						<td style="white-space: pre-wrap;"><?php htmlout($event['EventStatus']); ?></td>
 						<td><?php htmlout($event['NextStart']); ?></td>
@@ -85,7 +85,7 @@
 			</tr>
 		<?php endif; ?>
 
-			<form action="" method="post">
+			<form method="post">
 				<tr>
 					<td colspan="12">
 						<input type="hidden" name="action" value="Create Event">
@@ -120,7 +120,7 @@
 			</tr>
 		<?php if(isSet($completedEvents)) : ?>
 			<?php foreach ($completedEvents AS $event) : ?>
-				<form action="" method="post">
+				<form method="post">
 					<tr>
 						<td style="white-space: pre-wrap;"><?php htmlout($event['EventStatus']); ?></td>
 						<td style="white-space: pre-wrap;"><?php htmlout($event['EventName']); ?></td>

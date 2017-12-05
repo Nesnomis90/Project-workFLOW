@@ -23,7 +23,7 @@
 		</div>
 
 		<div class="left">
-			<form action="" method="post">
+			<form method="post">
 				<input type="submit" name="history" value="Display Default">
 			</form>
 		</div>
@@ -34,7 +34,7 @@
 			<?php $totalCostForAllPeriodsSummedUp = 0; ?>
 			<?php foreach($displayAllPeriodsFromMergedNumber AS $period) : ?>
 				<fieldset><legend><b><?php htmlout($period['DisplayStartDate'] . " up to " . $period['DisplayEndDate']); ?></b></legend>
-					<form action="" method="post">
+					<form method="post">
 						<div class="left">
 							<?php if($period['BillingStatus'] == 0) : ?>
 								<?php $color = "red"; ?>

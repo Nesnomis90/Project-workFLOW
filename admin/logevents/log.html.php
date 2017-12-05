@@ -20,7 +20,7 @@
 	<body onload="startTime()">
 		<?php include_once $_SERVER['DOCUMENT_ROOT'] .'/includes/admintopnav.html.php'; ?>
 
-		<form action="" method="post">
+		<form method="post">
 			<fieldset><legend>Manage Log Events</legend>
 
 				<div class="left">
@@ -122,7 +122,7 @@
 			<?php if(isSet($search) OR isSet($searchAll)) : ?>
 				<?php if(isSet($rowNum) AND $rowNum>0) :?>
 					<?php foreach ($log as $row): ?>
-						<form action="" method="post">
+						<form method="post">
 							<tr>
 								<td><?php htmlout($row['date']); ?></td>
 								<td><?php htmlout($row['actionName']); ?></td>

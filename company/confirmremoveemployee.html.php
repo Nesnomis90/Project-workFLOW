@@ -22,7 +22,7 @@
 						<span class="warning"><?php htmlout($feedback); ?></span>
 					</div>
 				<?php endif; ?>
-				<form action="" method="post">
+				<form method="post">
 					<div>
 						<label>Name: </label>
 						<span><b><?php htmlout($userName); ?></b></span>

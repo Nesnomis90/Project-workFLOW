@@ -40,7 +40,7 @@
 			</div>
 
 			<div class="left">
-				<form action="" method="post">
+				<form method="post">
 					<input type="submit" name="action" value="Create Meeting">
 					<input type="submit" name="action" value="Refresh">
 					<span><b>Last Refresh: <?php htmlout(getDatetimeNowInDisplayFormat()); ?></b></span>
@@ -79,7 +79,7 @@
 				</tr>
 			<?php if(isSet($bookingsActiveToday)) : ?>
 				<?php foreach ($bookingsActiveToday AS $booking): ?>
-					<form action="" method="post">
+					<form method="post">
 						<?php if(isSet($_SESSION['LoggedInUserID']) AND $_SESSION['LoggedInUserID'] == $booking['BookedUserID']) : ?>					
 							<tr class="LoggedInUserBooking">
 						<?php else : ?>
@@ -146,7 +146,7 @@
 					</tr>
 				<?php if(isSet($bookingsFuture)) :?>
 					<?php foreach ($bookingsFuture AS $booking): ?>
-						<form action="" method="post">
+						<form method="post">
 						<?php if(isSet($_SESSION['LoggedInUserID']) AND $_SESSION['LoggedInUserID'] == $booking['BookedUserID']) : ?>					
 							<tr class="LoggedInUserBooking">
 						<?php else : ?>
@@ -196,7 +196,7 @@
 		<?php elseif(!isSet($_SESSION['loggedIn'])) : ?>
 
 			<div class="left">
-				<form action="" method="post">
+				<form method="post">
 					<?php if(isSet($_SESSION["DefaultMeetingRoomInfo"])) : ?>
 						<input type="submit" name="action" value="Create Meeting">
 					<?php endif; ?>
@@ -226,7 +226,7 @@
 				</tr>
 			<?php if(isSet($bookingsActiveToday)) :?>
 				<?php foreach ($bookingsActiveToday AS $booking): ?>
-					<form action="" method="post">
+					<form method="post">
 						<tr>
 							<td><?php htmlout($booking['BookingStatus']);?></td>
 							<td><?php htmlout($booking['BookedRoomName']); ?></td>
@@ -275,7 +275,7 @@
 				</tr>
 			<?php if(isSet($bookingsFuture)) :?>
 				<?php foreach ($bookingsFuture AS $booking): ?>
-					<form action="" method="post">
+					<form method="post">
 						<tr>
 							<td><?php htmlout($booking['BookingStatus']);?></td>
 							<td><?php htmlout($booking['BookedRoomName']); ?></td>

@@ -93,7 +93,7 @@
 									<th>Booked For Company</th>
 								</tr>
 								<?php foreach($days AS $order) : ?>
-									<form action="" method="post">
+									<form method="post">
 										<tr>
 											<?php if($order['OrderStatus'] == "New Order!") : ?>
 												<td style="white-space: pre-wrap; color: green;"><span class="blink_me"><?php htmlout($order['OrderStatus']); ?></span></td>
@@ -167,7 +167,7 @@
 											<th>Booked For Company</th>
 										</tr>
 										<?php foreach($days AS $order) : ?>
-											<form action="" method="post">
+											<form method="post">
 												<tr>
 													<?php if($order['OrderStatus'] == "New Order!") : ?>
 														<td style="white-space: pre-wrap; color: green;"><span class="blink_me"><?php htmlout($order['OrderStatus']); ?></span></td>
@@ -229,7 +229,7 @@
 				</tr>
 				<?php if($rowNum > 0) : ?>
 					<?php foreach($order AS $row): ?>
-						<form action="" method="post">
+						<form method="post">
 							<tr>
 								<td><?php htmlout($row['OrderStartTime']); ?></td>
 								<td><?php htmlout($row['OrderEndTime']); ?></td>

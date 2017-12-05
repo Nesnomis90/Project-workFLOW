@@ -26,7 +26,7 @@
 	<body onload="startTime()">
 		<?php include_once $_SERVER['DOCUMENT_ROOT'] .'/includes/admintopnav.html.php'; ?>
 
-		<form action="" method="post">
+		<form method="post">
 		<fieldset><legend><b>Book A New Meeting</b></legend>
 			<div class="left">
 				<?php if(isSet($_SESSION['AddBookingError'])) : ?>

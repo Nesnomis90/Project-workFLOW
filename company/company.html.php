@@ -54,7 +54,7 @@
 				<?php endif; ?>
 			</div>
 
-			<form action="" method="post">
+			<form method="post">
 				<?php if(isSet($numberOfCompanies) AND $numberOfCompanies > 1) : ?>
 					<fieldset class="left"><legend>Select A Company To Display</legend>
 						<div class="left">

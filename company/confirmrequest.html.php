@@ -24,7 +24,7 @@
 			</div>
 
 			<div class="left">
-				<form action="" method="post">
+				<form method="post">
 					<input type="hidden" name="companyID" value="<?php htmlout($selectedCompanyToJoinID); ?>">
 					<input type="hidden" name="requestMessage" value="<?php htmlout($requestMessage); ?>">
 					<input type="hidden" name="companyName" value="<?php htmlout($companyName); ?>">

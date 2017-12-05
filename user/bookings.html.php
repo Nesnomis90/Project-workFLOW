@@ -40,7 +40,7 @@
 					</tr>
 					<?php if(isSet($bookingsActiveToday)) : ?>
 						<?php foreach ($bookingsActiveToday AS $booking) : ?>
-							<form action="" method="post">
+							<form method="post">
 								<tr>
 									<td><?php htmlout($booking['BookingStatus']);?></td>
 									<td><?php htmlout($booking['BookedRoomName']); ?></td>
@@ -88,7 +88,7 @@
 						<th>Ended Early By</th>
 					</tr>
 					<?php foreach($bookingsCompletedToday AS $booking) : ?>
-						<form action="" method="post">
+						<form method="post">
 							<tr>
 								<td><?php htmlout($booking['BookingStatus']);?></td>
 								<td><?php htmlout($booking['BookedRoomName']); ?></td>
@@ -135,7 +135,7 @@
 					</tr>
 					<?php if(isSet($bookingsFuture)) : ?>
 						<?php foreach ($bookingsFuture AS $booking) : ?>
-							<form action="" method="post">
+							<form method="post">
 								<tr>
 									<td><?php htmlout($booking['BookingStatus']);?></td>
 									<td><?php htmlout($booking['BookedRoomName']); ?></td>
@@ -185,7 +185,7 @@
 						<th>Ended Early By</th>
 					</tr>
 					<?php foreach ($bookingsCompleted AS $booking) : ?>
-						<form action="" method="post">
+						<form method="post">
 							<tr>
 								<td><?php htmlout($booking['BookingStatus']);?></td>
 								<td><?php htmlout($booking['BookedRoomName']); ?></td>
@@ -233,7 +233,7 @@
 						<th>Cancelled By</th>
 					</tr>
 					<?php foreach ($bookingsCancelled AS $booking) : ?>
-						<form action="" method="post">
+						<form method="post">
 							<tr>
 								<td><?php htmlout($booking['BookingStatus']);?></td>
 								<td><?php htmlout($booking['BookedRoomName']); ?></td>
@@ -281,7 +281,7 @@
 						<th>Cancelled By</th>
 					</tr>
 					<?php foreach ($bookingsOther AS $booking) : ?>
-						<form action="" method="post">
+						<form method="post">
 							<tr>
 								<td><?php htmlout($booking['BookingStatus']);?></td>
 								<td><?php htmlout($booking['BookedRoomName']); ?></td>

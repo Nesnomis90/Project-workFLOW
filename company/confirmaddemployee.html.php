@@ -22,7 +22,7 @@
 						<span class="warning"><?php htmlout($wrongPassword); ?></span>
 					</div>
 				<?php endif; ?>
-				<form action="" method="post">
+				<form method="post">
 				<?php if($createUser) : ?>
 					<div>
 						<span style="white-space: pre-wrap;"><?php htmlout(

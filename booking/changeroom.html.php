@@ -22,7 +22,7 @@
 				<?php endif; ?>
 			</div>
 
-			<form action="" method="post">
+			<form method="post">
 				<div>
 					<label>Current Booked Meeting Room: </label>
 					<span><b><?php htmlout($originalMeetingRoomName); ?></b></span>

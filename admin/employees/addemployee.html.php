@@ -30,7 +30,7 @@
 				<?php endif; ?>
 			</div>
 			
-			<form action="" method="post">
+			<form method="post">
 				<div>
 					<label for="CompanyID">Company name:</label>
 					<?php if(!isSet($_GET['Company'])) : ?>
