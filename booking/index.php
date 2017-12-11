@@ -2506,7 +2506,8 @@ if(isSet($_POST['action']) AND $_POST['action'] == "Confirm Code"){
 
 // Handles booking based on selected meeting room
 if(	((isSet($_POST['action']) AND $_POST['action'] == 'Create Meeting')) OR
-	(isSet($_SESSION['refreshAddCreateBooking']) AND $_SESSION['refreshAddCreateBooking'])
+	(isSet($_SESSION['refreshAddCreateBooking']) AND $_SESSION['refreshAddCreateBooking']) OR 
+	(!empty($_POST['MeetingRoomID']) AND !empty($_POST['DateTimeStart']))
 	){
 	// Confirm that we've reset.
 	unset($_SESSION['refreshAddCreateBooking']);
@@ -2668,8 +2669,11 @@ if(	((isSet($_POST['action']) AND $_POST['action'] == 'Create Meeting')) OR
 		$_SESSION['AddCreateBookingInfoArray']['sendEmail'] = $sendEmail;
 		$_SESSION['AddCreateBookingInfoArray']['Access'] = $access;
 
-		if(isSet($_GET['meetingroom']) AND !empty($_GET['meetingroom'])){
+		if(!empty($_GET['meetingroom'])){
 			$_SESSION['AddCreateBookingInfoArray']['TheMeetingRoomID'] = $_GET['meetingroom'];
+		} elseif(!empty($_POST['MeetingRoomID']) AND !empty($_POST['DateTimeStart'])){
+			$_SESSION['AddCreateBookingInfoArray']['TheMeetingRoomID'] = $_POST['MeetingRoomID'];
+			$_SESSION['AddCreateBookingInfoArray']['StartTime'] = $_POST['DateTimeStart'];
 		}
 
 		$_SESSION['AddCreateBookingOriginalInfoArray'] = $_SESSION['AddCreateBookingInfoArray'];
@@ -3067,16 +3071,17 @@ if(	((isSet($_POST['action']) AND $_POST['action'] == 'Create Meeting')) OR
 		$selectedMeetingRoomID = $_GET['meetingroom'];
 	}
 
-	if(isSet($row['StartTime']) AND $row['StartTime'] != ""){
+	if(!empty($row['StartTime'])){
 		$startDateTime = $row['StartTime'];
 	} else {
 		$validBookingStartTime = getNextValidBookingStartTime();
 		$startDateTime = convertDatetimeToFormat($validBookingStartTime , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
 	}
-	if(isSet($row['EndTime']) AND $row['EndTime'] != ""){
+	if(!empty($row['EndTime'])){
 		$endDateTime = $row['EndTime'];
 	} else {
-		$validBookingEndTime = getNextValidBookingEndTime(substr($validBookingStartTime,0,-3));
+		$validBookingEndTime = getNextValidBookingEndTime(substr($startDateTime,0,-3));
+		//$validBookingEndTime = getNextValidBookingEndTime(substr($validBookingStartTime,0,-3));
 		$endDateTime = convertDatetimeToFormat($validBookingEndTime , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
 	}
 
