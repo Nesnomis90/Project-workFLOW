@@ -313,7 +313,7 @@ function checkIfLocalDeviceOrLoggedIn(){
 		if(checkIfUserIsLoggedIn() === FALSE){
 			makeUserLogIn();
 			exit();
-		}	
+		}
 	}
 	return $SelectedUserID;
 }
@@ -481,7 +481,7 @@ function validateUserInputs($FeedbackSessionToUse, $editing){
 			$bookingCode = $_POST['bookingCode'];
 		} else {
 			$invalidInput = TRUE;
-			$_SESSION[$FeedbackSessionToUse] = "A booking cannot be created without submitting a booking code.";		
+			$_SESSION[$FeedbackSessionToUse] = "A booking cannot be created without submitting a booking code.";
 		}
 	}
 
@@ -707,7 +707,7 @@ if(isSet($_POST['bookingCode']) AND $_POST['bookingCode'] == "Refresh"){
 }
 
 // If user wants to go back to the main page while in the confirm booking page
-if (isSet($_POST['action']) and $_POST['action'] == 'Go Back'){
+if(isSet($_POST['action']) and $_POST['action'] == 'Go Back'){
 	unset($_SESSION['confirmOrigins']);
 	if(isSet($_GET['meetingroom'])){
 		$TheMeetingRoomID = $_GET['meetingroom'];
@@ -721,7 +721,7 @@ if (isSet($_POST['action']) and $_POST['action'] == 'Go Back'){
 }
 
 // If user wants to go back to the main page while editing
-if (isSet($_POST['edit']) and $_POST['edit'] == 'Go Back'){
+if(isSet($_POST['edit']) and $_POST['edit'] == 'Go Back'){
 	unset($_SESSION['confirmOrigins']);
 	$_SESSION['normalBookingFeedback'] = "You cancelled your booking editing.";
 
@@ -737,7 +737,7 @@ if (isSet($_POST['edit']) and $_POST['edit'] == 'Go Back'){
 }
 
 // If user wants to go back to the main page while changing rooms
-if (isSet($_POST['changeroom']) and $_POST['changeroom'] == 'Go Back'){
+if(isSet($_POST['changeroom']) and $_POST['changeroom'] == 'Go Back'){
 	unset($_SESSION['confirmOrigins']);
 	$_SESSION['normalBookingFeedback'] = "You cancelled your meeting room change.";
 
@@ -755,8 +755,8 @@ if (isSet($_POST['changeroom']) and $_POST['changeroom'] == 'Go Back'){
 }
 
 // If user wants to refresh the page to get the most up-to-date information
-if (isSet($_POST['action']) and $_POST['action'] == 'Refresh'){
-	
+if(isSet($_POST['action']) and $_POST['action'] == 'Refresh'){
+
 	if(isSet($_GET['meetingroom'])){
 		$TheMeetingRoomID = $_GET['meetingroom'];
 		$location = "http://$_SERVER[HTTP_HOST]/booking/?meetingroom=" . $TheMeetingRoomID;
@@ -1431,7 +1431,7 @@ if ((isSet($_POST['action']) and $_POST['action'] == 'Change Room') OR
 				WHERE 		b.`actualEndDateTime` IS NULL
 				AND			b.`dateTimeCancelled` IS NULL
 				AND
-						(		
+						(
 								(
 									b.`startDateTime` >= :startDateTime AND 
 									b.`startDateTime` < :endDateTime
@@ -1489,7 +1489,7 @@ if ((isSet($_POST['action']) and $_POST['action'] == 'Change Room') OR
 					WHERE 		b.`dateTimeCancelled` IS NULL
 					AND			b.`actualEndDateTime` IS NULL
 					AND
-							(		
+							(
 									(
 										b.`startDateTime` >= :startDateTime AND 
 										b.`startDateTime` < :endDateTime
@@ -1514,7 +1514,7 @@ if ((isSet($_POST['action']) and $_POST['action'] == 'Change Room') OR
 					SELECT 		rev.`meetingRoomID`
 					FROM 		`roomevent` rev
 					WHERE 
-							(		
+							(
 									(
 										rev.`startDateTime` >= :startDateTime AND 
 										rev.`startDateTime` < :endDateTime
@@ -2310,7 +2310,7 @@ if ((isSet($_POST['changeroom']) and $_POST['changeroom'] == 'Confirm Change') O
 		}
 	}
 
-	clearChangeBookingSessions();		
+	clearChangeBookingSessions();
 
 	if(isSet($_GET['meetingroom']) AND !empty($_GET['meetingroom'])){
 		$meetingRoomID = $_GET['meetingroom'];
@@ -2596,7 +2596,7 @@ if(	((isSet($_POST['action']) AND $_POST['action'] == 'Create Meeting')) OR
 			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
 			$pdo = null;
 			exit();
-		}	
+		}
 
 		// Get information from database on booking information user can choose between
 		if(!isSet($_SESSION['AddCreateBookingMeetingRoomsArray'])){
