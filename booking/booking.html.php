@@ -5,6 +5,7 @@
 		<meta charset="utf-8">
 		<title>Booking Information</title>
 		<link rel="stylesheet" type="text/css" href="/CSS/myCSS.css">
+		<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
 		<script src="/scripts/myFunctions.js"></script>		
 	</head>
 	<body onload="startTime(); refreshPageTimer(<?php htmlout(SECONDS_BEFORE_REFRESHING_BOOKING_PAGE); ?>);">
