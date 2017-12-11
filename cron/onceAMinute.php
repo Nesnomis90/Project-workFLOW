@@ -166,7 +166,7 @@ function alertStaffThatMeetingWithOrderIsAboutToStart(){
 	try
 	{
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/db.inc.php';
-		
+
 		if(!isSet($pdo)){
 			$pdo = connect_to_db();
 		}
@@ -507,7 +507,7 @@ function removeOldEmailsFromQueue(){
 	{
 		$pdo = null;
 		return FALSE;
-	}	
+	}
 }
 
 // Check our saved emails and attempt to send as many as we have limited ourselves to
@@ -556,7 +556,7 @@ function checkEmailQueue(){
 				$mailResult = sendEmail($email, $emailSubject, $emailMessage);
 
 				if($mailResult){
-					
+
 					echo "Succesfully sent email to $emailAsText.\nEmail message sent out was: $emailMessage"; // TO-DO: Remove before uploading
 					echo "<br />";
 

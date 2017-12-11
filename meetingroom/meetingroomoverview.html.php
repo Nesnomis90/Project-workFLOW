@@ -5,6 +5,7 @@
 		<meta charset="utf-8">
 		<title>Meeting Room</title>
 		<link rel="stylesheet" type="text/css" href="/CSS/myCSS.css">
+		<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
 		<script src="/scripts/myFunctions.js"></script>
 		<style>
 			label {
@@ -40,11 +41,40 @@
 			var dateSelected = '<?php htmlout($dateSelected); ?>';
 
 			function createBooking(meetingRoomID, timeSelected){
-				alert("Trying to create booking for meeting room ID: " + meetingRoomID + " for the datetime: " + dateSelected + " " + timeSelected + ":00");
+				var inputPlacement = document.getElementById("bookingForm");
+				$("#bookingForm").empty();
+
+				var inputMeetingRoomID = document.createElement("input");
+				inputMeetingRoomID.setAttribute("type", "hidden");
+				inputMeetingRoomID.setAttribute("name", "MeetingRoomID");
+				inputMeetingRoomID.setAttribute("id", "MeetingRoomID");
+				inputMeetingRoomID.setAttribute("value", meetingRoomID);
+				inputPlacement.appendChild(inputMeetingRoomID);
+
+				var dateTime = dateSelected + " " + timeSelected + ":00";
+
+				var inputDateTimeStart = document.createElement("input");
+				inputDateTimeStart.setAttribute("type", "hidden");
+				inputDateTimeStart.setAttribute("name", "DateTimeStart");
+				inputDateTimeStart.setAttribute("id", "DateTimeStart");
+				inputDateTimeStart.setAttribute("value", dateTime);
+				inputPlacement.appendChild(inputDateTimeStart);
+
+				document.getElementById("bookingForm").submit();
 			}
-			
-			function editBooking(bookingID){
-				alert("Trying to edit the booking with ID: " + bookingID);
+
+			function alterBooking(bookingID){
+				var inputPlacement = document.getElementById("bookingForm");
+				$("#bookingForm").empty();
+
+				var inputBookingID = document.createElement("input");
+				inputBookingID.setAttribute("type", "hidden");
+				inputBookingID.setAttribute("name", "BookingID");
+				inputBookingID.setAttribute("id", "BookingID");
+				inputBookingID.setAttribute("value", bookingID);
+				inputPlacement.appendChild(inputBookingID);
+
+				document.getElementById("bookingForm").submit();
 			}
 		</script>
 	</head>
@@ -100,7 +130,7 @@
 			<?php if(!empty($meetingrooms)) : ?>
 				<table><tr>
 					<?php foreach($meetingrooms AS $meetingRoomID => $bookings): ?>
-						<td><form method="post">
+						<td>
 							<table class="innerTable">
 								<?php if($displayingToday) : ?>
 									<?php $currentStartTimeInMinutes = $timeNowInMinutes; ?> 
@@ -119,14 +149,14 @@
 												<?php if($nextEndTimeInMinutes > $nextStartTimeInMinutes+$bookingMinuteChunks) : ?>
 													<?php for($currentStartTimeInMinutes; $currentStartTimeInMinutes<$nextEndTimeInMinutes;) : ?>
 														<?php $endTimeInMinutes = getNextBookingEndTime($currentStartTimeInMinutes, $currentStartTimeInMinutes+$bookingMinuteChunks, $bookingMinuteChunks); ?>
-														<tr onclick="editBooking(<?php htmlout($bookingInfo['BookingID']); ?>)">
+														<tr onclick="alterBooking(<?php htmlout($bookingInfo['BookingID']); ?>)">
 															<td><?php echo convertMinutesToTime($currentStartTimeInMinutes); ?> - <?php echo convertMinutesToTime($endTimeInMinutes); ?></td>
 															<td class="occupied"><div class="overflow"><?php htmlout($bookingInfo['BookingDisplayName']); ?></div></td>
 														</tr>
 														<?php $currentStartTimeInMinutes = $endTimeInMinutes; ?>
 													<?php endfor; ?>
 												<?php else : ?>
-													<tr onclick="editBooking(<?php htmlout($bookingInfo['BookingID']); ?>)">
+													<tr onclick="alterBooking(<?php htmlout($bookingInfo['BookingID']); ?>)">
 														<td><?php htmlout($bookingInfo['MeetingStartTime']); ?> - <?php htmlout($bookingInfo['MeetingEndTime']); ?></td>
 														<td class="occupied"><div class="overflow"><?php htmlout($bookingInfo['BookingDisplayName']); ?></div></td>
 													</tr>
@@ -135,14 +165,14 @@
 												<?php if($nextEndTimeInMinutes > $nextStartTimeInMinutes+$bookingMinuteChunks) : ?>
 													<?php for($currentStartTimeInMinutes; $currentStartTimeInMinutes<$nextEndTimeInMinutes;) : ?>
 														<?php $endTimeInMinutes = getNextBookingEndTime($currentStartTimeInMinutes, $currentStartTimeInMinutes+$bookingMinuteChunks, $bookingMinuteChunks); ?>
-														<tr onclick="editBooking(<?php htmlout($bookingInfo['BookingID']); ?>)">
+														<tr onclick="alterBooking(<?php htmlout($bookingInfo['BookingID']); ?>)">
 															<td><?php echo convertMinutesToTime($currentStartTimeInMinutes); ?> - <?php echo convertMinutesToTime($endTimeInMinutes); ?></td>
 															<td class="occupied"><div class="overflow"><?php htmlout($bookingInfo['BookingDisplayName']); ?></div></td>
 														</tr>
 														<?php $currentStartTimeInMinutes = $endTimeInMinutes; ?>
 													<?php endfor; ?>
 												<?php else : ?>
-													<tr onclick="editBooking(<?php htmlout($bookingInfo['BookingID']); ?>)">
+													<tr onclick="alterBooking(<?php htmlout($bookingInfo['BookingID']); ?>)">
 														<td><?php htmlout($displayTimeNow); ?> - <?php htmlout($bookingInfo['MeetingEndTime']); ?></td>
 														<td class="occupied"><div class="overflow"><?php htmlout($bookingInfo['BookingDisplayName']); ?></div></td>
 													</tr>
@@ -163,24 +193,20 @@
 												<?php if($nextEndTimeInMinutes > $nextStartTimeInMinutes+$bookingMinuteChunks) : ?>
 													<?php for($currentStartTimeInMinutes; $currentStartTimeInMinutes<$nextEndTimeInMinutes;) : ?>
 														<?php $endTimeInMinutes = getNextBookingEndTime($currentStartTimeInMinutes, $currentStartTimeInMinutes+$bookingMinuteChunks, $bookingMinuteChunks); ?>
-														<tr onclick="editBooking(<?php htmlout($bookingInfo['BookingID']); ?>)">
+														<tr onclick="alterBooking(<?php htmlout($bookingInfo['BookingID']); ?>)">
 															<td><?php echo convertMinutesToTime($currentStartTimeInMinutes); ?> - <?php echo convertMinutesToTime($endTimeInMinutes); ?></td>
 															<td class="occupied"><div class="overflow"><?php htmlout($bookingInfo['BookingDisplayName']); ?></div></td>
 														</tr>
 														<?php $currentStartTimeInMinutes = $endTimeInMinutes; ?>
 													<?php endfor; ?>
 												<?php else : ?>
-													<tr onclick="editBooking(<?php htmlout($bookingInfo['BookingID']); ?>)">
+													<tr onclick="alterBooking(<?php htmlout($bookingInfo['BookingID']); ?>)">
 														<td><?php htmlout($bookingInfo['MeetingStartTime']); ?> - <?php htmlout($bookingInfo['MeetingEndTime']); ?></td>
 														<td class="occupied"><div class="overflow"><?php htmlout($bookingInfo['BookingDisplayName']); ?></div></td>
 													</tr>
 												<?php endif; ?>
 											<?php endif; ?>
 											<?php $currentStartTimeInMinutes = $nextEndTimeInMinutes; ?>
-											<input type="hidden" name="bookingStartTime" value="">
-											<input type="hidden" name="BookingID" value="<?php htmlout($bookingInfo['BookingID']); ?>">
-											<input type="hidden" name="MeetingRoomName" value="<?php htmlout($bookingInfo['MeetingRoomName']); ?>">
-											<input type="hidden" name="MeetingRoomID" value="<?php htmlout($meetingRoomID); ?>">
 										<?php endif; ?>
 									<?php endforeach; ?>
 
@@ -207,8 +233,9 @@
 									<?php endfor; ?>
 								<?php endif; ?>
 							</table>
-						</form></td>
+						</td>
 					<?php endforeach; ?>
+					<form id="bookingForm" action="/booking/" method="post"></form>
 				</tr></table>
 			<?php else : ?>
 				<div class="left"><h2>This isn't a valid meeting room.</h2></div>
@@ -217,7 +244,7 @@
 			<?php if(!empty($meetingrooms)) :?>
 				<table><tr>
 					<?php foreach($meetingrooms AS $meetingRoomID => $bookings): ?>
-						<td><form method="post">
+						<td>
 							<table class="innerTable">
 								<?php if($displayingToday) : ?>
 									<?php $currentStartTimeInMinutes = $timeNowInMinutes; ?> 
@@ -236,14 +263,14 @@
 												<?php if($nextEndTimeInMinutes > $nextStartTimeInMinutes+$bookingMinuteChunks) : ?>
 													<?php for($currentStartTimeInMinutes; $currentStartTimeInMinutes<$nextEndTimeInMinutes;) : ?>
 														<?php $endTimeInMinutes = getNextBookingEndTime($currentStartTimeInMinutes, $currentStartTimeInMinutes+$bookingMinuteChunks, $bookingMinuteChunks); ?>
-														<tr onclick="editBooking(<?php htmlout($bookingInfo['BookingID']); ?>)">
+														<tr onclick="alterBooking(<?php htmlout($bookingInfo['BookingID']); ?>)">
 															<td><?php echo convertMinutesToTime($currentStartTimeInMinutes); ?> - <?php echo convertMinutesToTime($endTimeInMinutes); ?></td>
 															<td class="occupied"><div class="overflow"><?php htmlout($bookingInfo['BookingDisplayName']); ?></div></td>
 														</tr>
 														<?php $currentStartTimeInMinutes = $endTimeInMinutes; ?>
 													<?php endfor; ?>
 												<?php else : ?>
-													<tr onclick="editBooking(<?php htmlout($bookingInfo['BookingID']); ?>)">
+													<tr onclick="alterBooking(<?php htmlout($bookingInfo['BookingID']); ?>)">
 														<td><?php htmlout($bookingInfo['MeetingStartTime']); ?> - <?php htmlout($bookingInfo['MeetingEndTime']); ?></td>
 														<td class="occupied"><div class="overflow"><?php htmlout($bookingInfo['BookingDisplayName']); ?></div></td>
 													</tr>
@@ -252,14 +279,14 @@
 												<?php if($nextEndTimeInMinutes > $nextStartTimeInMinutes+$bookingMinuteChunks) : ?>
 													<?php for($currentStartTimeInMinutes; $currentStartTimeInMinutes<$nextEndTimeInMinutes;) : ?>
 														<?php $endTimeInMinutes = getNextBookingEndTime($currentStartTimeInMinutes, $currentStartTimeInMinutes+$bookingMinuteChunks, $bookingMinuteChunks); ?>
-														<tr onclick="editBooking(<?php htmlout($bookingInfo['BookingID']); ?>)">
+														<tr onclick="alterBooking(<?php htmlout($bookingInfo['BookingID']); ?>)">
 															<td><?php echo convertMinutesToTime($currentStartTimeInMinutes); ?> - <?php echo convertMinutesToTime($endTimeInMinutes); ?></td>
 															<td class="occupied"><div class="overflow"><?php htmlout($bookingInfo['BookingDisplayName']); ?></div></td>
 														</tr>
 														<?php $currentStartTimeInMinutes = $endTimeInMinutes; ?>
 													<?php endfor; ?>
 												<?php else : ?>
-													<tr onclick="editBooking(<?php htmlout($bookingInfo['BookingID']); ?>)">
+													<tr onclick="alterBooking(<?php htmlout($bookingInfo['BookingID']); ?>)">
 														<td><?php htmlout($displayTimeNow); ?> - <?php htmlout($bookingInfo['MeetingEndTime']); ?></td>
 														<td class="occupied"><div class="overflow"><?php htmlout($bookingInfo['BookingDisplayName']); ?></div></td>
 													</tr>
@@ -280,24 +307,20 @@
 												<?php if($nextEndTimeInMinutes > $nextStartTimeInMinutes+$bookingMinuteChunks) : ?>
 													<?php for($currentStartTimeInMinutes; $currentStartTimeInMinutes<$nextEndTimeInMinutes;) : ?>
 														<?php $endTimeInMinutes = getNextBookingEndTime($currentStartTimeInMinutes, $currentStartTimeInMinutes+$bookingMinuteChunks, $bookingMinuteChunks); ?>
-														<tr onclick="editBooking(<?php htmlout($bookingInfo['BookingID']); ?>)">
+														<tr onclick="alterBooking(<?php htmlout($bookingInfo['BookingID']); ?>)">
 															<td><?php echo convertMinutesToTime($currentStartTimeInMinutes); ?> - <?php echo convertMinutesToTime($endTimeInMinutes); ?></td>
 															<td class="occupied"><div class="overflow"><?php htmlout($bookingInfo['BookingDisplayName']); ?></div></td>
 														</tr>
 														<?php $currentStartTimeInMinutes = $endTimeInMinutes; ?>
 													<?php endfor; ?>
 												<?php else : ?>
-													<tr onclick="editBooking(<?php htmlout($bookingInfo['BookingID']); ?>)">
+													<tr onclick="alterBooking(<?php htmlout($bookingInfo['BookingID']); ?>)">
 														<td><?php htmlout($bookingInfo['MeetingStartTime']); ?> - <?php htmlout($bookingInfo['MeetingEndTime']); ?></td>
 														<td class="occupied"><div class="overflow"><?php htmlout($bookingInfo['BookingDisplayName']); ?></div></td>
 													</tr>
 												<?php endif; ?>
 											<?php endif; ?>
 											<?php $currentStartTimeInMinutes = $nextEndTimeInMinutes; ?>
-											<input type="hidden" name="bookingStartTime" value="">
-											<input type="hidden" name="BookingID" value="<?php htmlout($bookingInfo['BookingID']); ?>">
-											<input type="hidden" name="MeetingRoomName" value="<?php htmlout($bookingInfo['MeetingRoomName']); ?>">
-											<input type="hidden" name="MeetingRoomID" value="<?php htmlout($meetingRoomID); ?>">
 										<?php endif; ?>
 									<?php endforeach; ?>
 
@@ -324,8 +347,9 @@
 									<?php endfor; ?>
 								<?php endif; ?>
 							</table>
-						</form></td>
+						</td>
 					<?php endforeach; ?>
+					<form id="bookingForm" action="/booking/" method="post"></form>
 				</tr></table>
 			<?php else : ?>
 				<div class="left"><h2>There are no meeting rooms.</h2></div>

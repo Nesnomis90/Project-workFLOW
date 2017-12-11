@@ -313,7 +313,7 @@ function checkIfLocalDeviceOrLoggedIn(){
 		if(checkIfUserIsLoggedIn() === FALSE){
 			makeUserLogIn();
 			exit();
-		}	
+		}
 	}
 	return $SelectedUserID;
 }
@@ -481,7 +481,7 @@ function validateUserInputs($FeedbackSessionToUse, $editing){
 			$bookingCode = $_POST['bookingCode'];
 		} else {
 			$invalidInput = TRUE;
-			$_SESSION[$FeedbackSessionToUse] = "A booking cannot be created without submitting a booking code.";		
+			$_SESSION[$FeedbackSessionToUse] = "A booking cannot be created without submitting a booking code.";
 		}
 	}
 
@@ -707,7 +707,7 @@ if(isSet($_POST['bookingCode']) AND $_POST['bookingCode'] == "Refresh"){
 }
 
 // If user wants to go back to the main page while in the confirm booking page
-if (isSet($_POST['action']) and $_POST['action'] == 'Go Back'){
+if(isSet($_POST['action']) and $_POST['action'] == 'Go Back'){
 	unset($_SESSION['confirmOrigins']);
 	if(isSet($_GET['meetingroom'])){
 		$TheMeetingRoomID = $_GET['meetingroom'];
@@ -721,7 +721,7 @@ if (isSet($_POST['action']) and $_POST['action'] == 'Go Back'){
 }
 
 // If user wants to go back to the main page while editing
-if (isSet($_POST['edit']) and $_POST['edit'] == 'Go Back'){
+if(isSet($_POST['edit']) and $_POST['edit'] == 'Go Back'){
 	unset($_SESSION['confirmOrigins']);
 	$_SESSION['normalBookingFeedback'] = "You cancelled your booking editing.";
 
@@ -737,7 +737,7 @@ if (isSet($_POST['edit']) and $_POST['edit'] == 'Go Back'){
 }
 
 // If user wants to go back to the main page while changing rooms
-if (isSet($_POST['changeroom']) and $_POST['changeroom'] == 'Go Back'){
+if(isSet($_POST['changeroom']) and $_POST['changeroom'] == 'Go Back'){
 	unset($_SESSION['confirmOrigins']);
 	$_SESSION['normalBookingFeedback'] = "You cancelled your meeting room change.";
 
@@ -755,8 +755,8 @@ if (isSet($_POST['changeroom']) and $_POST['changeroom'] == 'Go Back'){
 }
 
 // If user wants to refresh the page to get the most up-to-date information
-if (isSet($_POST['action']) and $_POST['action'] == 'Refresh'){
-	
+if(isSet($_POST['action']) and $_POST['action'] == 'Refresh'){
+
 	if(isSet($_GET['meetingroom'])){
 		$TheMeetingRoomID = $_GET['meetingroom'];
 		$location = "http://$_SERVER[HTTP_HOST]/booking/?meetingroom=" . $TheMeetingRoomID;
@@ -1431,7 +1431,7 @@ if ((isSet($_POST['action']) and $_POST['action'] == 'Change Room') OR
 				WHERE 		b.`actualEndDateTime` IS NULL
 				AND			b.`dateTimeCancelled` IS NULL
 				AND
-						(		
+						(
 								(
 									b.`startDateTime` >= :startDateTime AND 
 									b.`startDateTime` < :endDateTime
@@ -1489,7 +1489,7 @@ if ((isSet($_POST['action']) and $_POST['action'] == 'Change Room') OR
 					WHERE 		b.`dateTimeCancelled` IS NULL
 					AND			b.`actualEndDateTime` IS NULL
 					AND
-							(		
+							(
 									(
 										b.`startDateTime` >= :startDateTime AND 
 										b.`startDateTime` < :endDateTime
@@ -1514,7 +1514,7 @@ if ((isSet($_POST['action']) and $_POST['action'] == 'Change Room') OR
 					SELECT 		rev.`meetingRoomID`
 					FROM 		`roomevent` rev
 					WHERE 
-							(		
+							(
 									(
 										rev.`startDateTime` >= :startDateTime AND 
 										rev.`startDateTime` < :endDateTime
@@ -2310,7 +2310,7 @@ if ((isSet($_POST['changeroom']) and $_POST['changeroom'] == 'Confirm Change') O
 		}
 	}
 
-	clearChangeBookingSessions();		
+	clearChangeBookingSessions();
 
 	if(isSet($_GET['meetingroom']) AND !empty($_GET['meetingroom'])){
 		$meetingRoomID = $_GET['meetingroom'];
@@ -2506,7 +2506,8 @@ if(isSet($_POST['action']) AND $_POST['action'] == "Confirm Code"){
 
 // Handles booking based on selected meeting room
 if(	((isSet($_POST['action']) AND $_POST['action'] == 'Create Meeting')) OR
-	(isSet($_SESSION['refreshAddCreateBooking']) AND $_SESSION['refreshAddCreateBooking'])
+	(isSet($_SESSION['refreshAddCreateBooking']) AND $_SESSION['refreshAddCreateBooking']) OR 
+	(!empty($_POST['MeetingRoomID']) AND !empty($_POST['DateTimeStart']))
 	){
 	// Confirm that we've reset.
 	unset($_SESSION['refreshAddCreateBooking']);
@@ -2596,7 +2597,7 @@ if(	((isSet($_POST['action']) AND $_POST['action'] == 'Create Meeting')) OR
 			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
 			$pdo = null;
 			exit();
-		}	
+		}
 
 		// Get information from database on booking information user can choose between
 		if(!isSet($_SESSION['AddCreateBookingMeetingRoomsArray'])){
@@ -2668,8 +2669,11 @@ if(	((isSet($_POST['action']) AND $_POST['action'] == 'Create Meeting')) OR
 		$_SESSION['AddCreateBookingInfoArray']['sendEmail'] = $sendEmail;
 		$_SESSION['AddCreateBookingInfoArray']['Access'] = $access;
 
-		if(isSet($_GET['meetingroom']) AND !empty($_GET['meetingroom'])){
+		if(!empty($_GET['meetingroom'])){
 			$_SESSION['AddCreateBookingInfoArray']['TheMeetingRoomID'] = $_GET['meetingroom'];
+		} elseif(!empty($_POST['MeetingRoomID']) AND !empty($_POST['DateTimeStart'])){
+			$_SESSION['AddCreateBookingInfoArray']['TheMeetingRoomID'] = $_POST['MeetingRoomID'];
+			$_SESSION['AddCreateBookingInfoArray']['StartTime'] = $_POST['DateTimeStart'];
 		}
 
 		$_SESSION['AddCreateBookingOriginalInfoArray'] = $_SESSION['AddCreateBookingInfoArray'];
@@ -3067,16 +3071,17 @@ if(	((isSet($_POST['action']) AND $_POST['action'] == 'Create Meeting')) OR
 		$selectedMeetingRoomID = $_GET['meetingroom'];
 	}
 
-	if(isSet($row['StartTime']) AND $row['StartTime'] != ""){
+	if(!empty($row['StartTime'])){
 		$startDateTime = $row['StartTime'];
 	} else {
 		$validBookingStartTime = getNextValidBookingStartTime();
 		$startDateTime = convertDatetimeToFormat($validBookingStartTime , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
 	}
-	if(isSet($row['EndTime']) AND $row['EndTime'] != ""){
+	if(!empty($row['EndTime'])){
 		$endDateTime = $row['EndTime'];
 	} else {
-		$validBookingEndTime = getNextValidBookingEndTime(substr($validBookingStartTime,0,-3));
+		$validBookingEndTime = getNextValidBookingEndTime(substr($startDateTime,0,-3));
+		//$validBookingEndTime = getNextValidBookingEndTime(substr($validBookingStartTime,0,-3));
 		$endDateTime = convertDatetimeToFormat($validBookingEndTime , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
 	}
 

@@ -5,6 +5,7 @@
 		<meta charset="utf-8">
 		<title>Meeting Room</title>
 		<link rel="stylesheet" type="text/css" href="/CSS/myCSS.css">
+		<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
 		<script src="/scripts/myFunctions.js"></script>
 		<style>
 			label {
