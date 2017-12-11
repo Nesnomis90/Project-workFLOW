@@ -64,8 +64,14 @@ function disableEventPropagation(event){
 
 // Used to refresh a web page
 function refreshPageTimer(seconds){
-	var milliSeconds = seconds * 1000;
-	var refreshTimer = setInterval(refreshPage, milliSeconds);
+    var timer; 
+    var interval = seconds * 1000;
+    function refresh() {
+            clearInterval(timer);
+            timer = setTimeout(refreshPage, interval);
+    };
+    $(document).on('keypress click scroll mousemove', refresh);
+    refresh();
 }
 
 function refreshPage(){

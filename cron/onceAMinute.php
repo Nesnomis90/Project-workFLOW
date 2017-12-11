@@ -556,7 +556,7 @@ function checkEmailQueue(){
 				$mailResult = sendEmail($email, $emailSubject, $emailMessage);
 
 				if($mailResult){
-					
+
 					echo "Succesfully sent email to $emailAsText.\nEmail message sent out was: $emailMessage"; // TO-DO: Remove before uploading
 					echo "<br />";
 
