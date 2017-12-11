@@ -60,11 +60,6 @@
 				inputDateTimeStart.setAttribute("value", dateTime);
 				inputPlacement.appendChild(inputDateTimeStart);
 
-				var inputSubmit = document.createElement("input");
-				inputSubmit.setAttribute("type", "submit");
-				inputSubmit.setAttribute("name", "createBooking");
-				inputPlacement.appendChild(inputSubmit);
-
 				document.getElementById("bookingForm").submit();
 			}
 
@@ -78,11 +73,6 @@
 				inputBookingID.setAttribute("id", "BookingID");
 				inputBookingID.setAttribute("value", bookingID);
 				inputPlacement.appendChild(inputBookingID);
-
-				var inputSubmit = document.createElement("input");
-				inputSubmit.setAttribute("type", "submit");
-				inputSubmit.setAttribute("name", "alterBooking");
-				inputPlacement.appendChild(inputSubmit);
 
 				document.getElementById("bookingForm").submit();
 			}
