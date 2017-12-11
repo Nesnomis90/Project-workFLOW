@@ -41,11 +41,40 @@
 			var dateSelected = '<?php htmlout($dateSelected); ?>';
 
 			function createBooking(meetingRoomID, timeSelected){
-				alert("Trying to create booking for meeting room ID: " + meetingRoomID + " for the datetime: " + dateSelected + " " + timeSelected + ":00");
+				var inputPlacement = document.getElementById("inputPlacement");
+				$("#inputPlacement").empty();
+
+				var inputMeetingRoomID = document.createElement("input");
+				inputMeetingRoomID.setAttribute("type", "hidden");
+				inputMeetingRoomID.setAttribute("name", "MeetingRoomID");
+				inputMeetingRoomID.setAttribute("id", "MeetingRoomID");
+				inputMeetingRoomID.setAttribute("value", meetingRoomID);
+				inputPlacement.appendChild(inputMeetingRoomID);
+
+				var dateTime = dateSelected + " " + timeSelected + ":00";
+
+				var inputDateTimeStart = document.createElement("input");
+				inputDateTimeStart.setAttribute("type", "hidden");
+				inputDateTimeStart.setAttribute("name", "DateTimeStart");
+				inputDateTimeStart.setAttribute("id", "DateTimeStart");
+				inputDateTimeStart.setAttribute("value", dateTime);
+				inputPlacement.appendChild(inputDateTimeStart);
+
+				document.getElementById("bookingForm").submit();
 			}
-			
+
 			function editBooking(bookingID){
-				alert("Trying to edit the booking with ID: " + bookingID);
+				var inputPlacement = document.getElementById("inputPlacement");
+				$("#inputPlacement").empty();
+
+				var inputBookingID = document.createElement("input");
+				inputBookingID.setAttribute("type", "hidden");
+				inputBookingID.setAttribute("name", "BookingID");
+				inputBookingID.setAttribute("id", "BookingID");
+				inputBookingID.setAttribute("value", bookingID);
+				inputPlacement.appendChild(inputBookingID);
+
+				document.getElementById("bookingForm").submit();
 			}
 		</script>
 	</head>
@@ -218,7 +247,7 @@
 			<?php if(!empty($meetingrooms)) :?>
 				<table><tr>
 					<?php foreach($meetingrooms AS $meetingRoomID => $bookings): ?>
-						<td><form method="post">
+						<td>
 							<table class="innerTable">
 								<?php if($displayingToday) : ?>
 									<?php $currentStartTimeInMinutes = $timeNowInMinutes; ?> 
@@ -325,8 +354,12 @@
 									<?php endfor; ?>
 								<?php endif; ?>
 							</table>
-						</form></td>
+							
+						</td>
 					<?php endforeach; ?>
+					<form id="bookingForm" method="post">
+						<div id="inputPlacement"></div>
+					</form>
 				</tr></table>
 			<?php else : ?>
 				<div class="left"><h2>There are no meeting rooms.</h2></div>
