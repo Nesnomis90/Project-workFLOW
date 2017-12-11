@@ -41,8 +41,8 @@
 			var dateSelected = '<?php htmlout($dateSelected); ?>';
 
 			function createBooking(meetingRoomID, timeSelected){
-				var inputPlacement = document.getElementById("inputPlacement");
-				$("#inputPlacement").empty();
+				var inputPlacement = document.getElementById("bookingForm");
+				$("#bookingForm").empty();
 
 				var inputMeetingRoomID = document.createElement("input");
 				inputMeetingRoomID.setAttribute("type", "hidden");
@@ -64,8 +64,8 @@
 			}
 
 			function alterBooking(bookingID){
-				var inputPlacement = document.getElementById("inputPlacement");
-				$("#inputPlacement").empty();
+				var inputPlacement = document.getElementById("bookingForm");
+				$("#bookingForm").empty();
 
 				var inputBookingID = document.createElement("input");
 				inputBookingID.setAttribute("type", "hidden");
@@ -235,9 +235,7 @@
 							</table>
 						</td>
 					<?php endforeach; ?>
-					<form id="bookingForm" method="post">
-						<div id="inputPlacement"></div>
-					</form>
+					<form id="bookingForm" action="/booking/" method="post"></form>
 				</tr></table>
 			<?php else : ?>
 				<div class="left"><h2>This isn't a valid meeting room.</h2></div>
@@ -351,9 +349,7 @@
 							</table>
 						</td>
 					<?php endforeach; ?>
-					<form id="bookingForm" method="post">
-						<div id="inputPlacement"></div>
-					</form>
+					<form id="bookingForm" action="/booking/" method="post"></form>
 				</tr></table>
 			<?php else : ?>
 				<div class="left"><h2>There are no meeting rooms.</h2></div>
