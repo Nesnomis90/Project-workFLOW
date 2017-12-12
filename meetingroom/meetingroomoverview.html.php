@@ -66,8 +66,9 @@
 			function onClickBookedMeeting(cellClicked){
 				// Add expand animation if not clicked before
 					// Also add edit/cancel buttons
+					// Also add change room button if local
 				// Add shrink animation if already big
-					// Also remove edit/cancel buttons
+					// Also remove edit/cancel/change room buttons
 			}
 
 			function alterBooking(bookingID){

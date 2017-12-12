@@ -34,6 +34,8 @@ function clearAddCreateBookingSessions(){
 	unset($_SESSION['AddCreateBookingOrderTooSoon']);
 	unset($_SESSION['AddCreateBookingOrderUserNotes']);
 	unset($_SESSION['AddCreateBookingOrderAddedExtra']);
+	unset($_SESSION['AddCreateBookingSelectedStartDateTime']);
+	unset($_SESSION['AddCreateBookingSelectedMeetingRoomID']);
 
 	unset($_SESSION['refreshAddCreateBookingConfirmed']);
 
@@ -2504,10 +2506,16 @@ if(isSet($_POST['action']) AND $_POST['action'] == "Confirm Code"){
 	}
 }
 
+// Handles 
+if(!empty($_POST['MeetingRoomID']) AND !empty($_POST['DateTimeStart'])){
+	$_SESSION['refreshAddCreateBooking'] = TRUE;
+	$_SESSION['AddCreateBookingSelectedStartDateTime'] = $_POST['DateTimeStart'];
+	$_SESSION['AddCreateBookingSelectedMeetingRoomID'] = $_POST['MeetingRoomID'];
+}
+
 // Handles booking based on selected meeting room
 if(	((isSet($_POST['action']) AND $_POST['action'] == 'Create Meeting')) OR
-	(isSet($_SESSION['refreshAddCreateBooking']) AND $_SESSION['refreshAddCreateBooking']) OR 
-	(!empty($_POST['MeetingRoomID']) AND !empty($_POST['DateTimeStart']))
+	(isSet($_SESSION['refreshAddCreateBooking']) AND $_SESSION['refreshAddCreateBooking'])
 	){
 	// Confirm that we've reset.
 	unset($_SESSION['refreshAddCreateBooking']);
@@ -2669,15 +2677,17 @@ if(	((isSet($_POST['action']) AND $_POST['action'] == 'Create Meeting')) OR
 		$_SESSION['AddCreateBookingInfoArray']['sendEmail'] = $sendEmail;
 		$_SESSION['AddCreateBookingInfoArray']['Access'] = $access;
 
-		if(!empty($_GET['meetingroom'])){
-			$_SESSION['AddCreateBookingInfoArray']['TheMeetingRoomID'] = $_GET['meetingroom'];
-		} elseif(!empty($_POST['MeetingRoomID']) AND !empty($_POST['DateTimeStart'])){
-			$startDateTime = $_POST['DateTimeStart'];
+		if(isSet($_SESSION['AddCreateBookingSelectedStartDateTime'], $_SESSION['AddCreateBookingSelectedMeetingRoomID'])){
+			$startDateTime = $_SESSION['AddCreateBookingSelectedStartDateTime'];
 			if(validateDatetimeWithFormat($startDateTime,'Y-m-d H:i:s')){
 				$displayStartDateTime = convertDatetimeToFormat($startDateTime , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
 				$_SESSION['AddCreateBookingInfoArray']['StartTime'] = $displayStartDateTime;
 			}
-			$_SESSION['AddCreateBookingInfoArray']['TheMeetingRoomID'] = $_POST['MeetingRoomID'];
+			$_SESSION['AddCreateBookingInfoArray']['TheMeetingRoomID'] = $_SESSION['AddCreateBookingSelectedMeetingRoomID'];
+			unset($_SESSION['AddCreateBookingSelectedMeetingRoomID']);
+			unset($_SESSION['AddCreateBookingSelectedStartDateTime']);
+		} elseif(!empty($_GET['meetingroom'])){
+			$_SESSION['AddCreateBookingInfoArray']['TheMeetingRoomID'] = $_GET['meetingroom'];
 		}
 
 		$_SESSION['AddCreateBookingOriginalInfoArray'] = $_SESSION['AddCreateBookingInfoArray'];
