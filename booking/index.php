@@ -7262,7 +7262,7 @@ if	(isSet($_SESSION['loggedIn']) AND
 	}
 
 		// Check if the user is an owner of the company the booking is booked for
-	if(!$continueCancel) {
+	if(!$continueCancel){
 		try
 		{
 			$sql = 'SELECT 		COUNT(*)		AS HitCount,
@@ -7564,7 +7564,7 @@ unset($_SESSION["cancelOrderOriginalValues"]);
 unset($_SESSION["confirmOrigins"]);
 unset($_SESSION["EditCreateBookingError"]);
 
-if(isSet($refreshBookings) AND $refreshBookings) {
+if(isSet($refreshBookings) AND $refreshBookings){
 	unset($refreshBookings);
 }
 
