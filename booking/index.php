@@ -2672,8 +2672,12 @@ if(	((isSet($_POST['action']) AND $_POST['action'] == 'Create Meeting')) OR
 		if(!empty($_GET['meetingroom'])){
 			$_SESSION['AddCreateBookingInfoArray']['TheMeetingRoomID'] = $_GET['meetingroom'];
 		} elseif(!empty($_POST['MeetingRoomID']) AND !empty($_POST['DateTimeStart'])){
+			$startDateTime = $_POST['DateTimeStart'];
+			if(validateDatetimeWithFormat($startDateTime,'Y-m-d H:i:s')){
+				$displayStartDateTime = convertDatetimeToFormat($startDateTime , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
+				$_SESSION['AddCreateBookingInfoArray']['StartTime'] = $displayStartDateTime;
+			}
 			$_SESSION['AddCreateBookingInfoArray']['TheMeetingRoomID'] = $_POST['MeetingRoomID'];
-			$_SESSION['AddCreateBookingInfoArray']['StartTime'] = $_POST['DateTimeStart'];
 		}
 
 		$_SESSION['AddCreateBookingOriginalInfoArray'] = $_SESSION['AddCreateBookingInfoArray'];
@@ -3073,6 +3077,7 @@ if(	((isSet($_POST['action']) AND $_POST['action'] == 'Create Meeting')) OR
 
 	if(!empty($row['StartTime'])){
 		$startDateTime = $row['StartTime'];
+		$validBookingStartTime = convertDatetimeToFormat($startDateTime, DATETIME_DEFAULT_FORMAT_TO_DISPLAY, 'Y-m-d H:i:s');
 	} else {
 		$validBookingStartTime = getNextValidBookingStartTime();
 		$startDateTime = convertDatetimeToFormat($validBookingStartTime , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
@@ -3080,8 +3085,8 @@ if(	((isSet($_POST['action']) AND $_POST['action'] == 'Create Meeting')) OR
 	if(!empty($row['EndTime'])){
 		$endDateTime = $row['EndTime'];
 	} else {
-		$validBookingEndTime = getNextValidBookingEndTime(substr($startDateTime,0,-3));
 		//$validBookingEndTime = getNextValidBookingEndTime(substr($validBookingStartTime,0,-3));
+		$validBookingEndTime = getNextValidBookingEndTime($validBookingStartTime);
 		$endDateTime = convertDatetimeToFormat($validBookingEndTime , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
 	}
 
