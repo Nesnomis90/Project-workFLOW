@@ -63,6 +63,13 @@
 				document.getElementById("bookingForm").submit();
 			}
 
+			function onClickBookedMeeting(cellClicked){
+				// Add expand animation if not clicked before
+					// Also add edit/cancel buttons
+				// Add shrink animation if already big
+					// Also remove edit/cancel buttons
+			}
+
 			function alterBooking(bookingID){
 				var inputPlacement = document.getElementById("bookingForm");
 				$("#bookingForm").empty();
