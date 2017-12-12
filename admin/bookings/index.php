@@ -3002,17 +3002,18 @@ if (	(isSet($_POST['action']) AND $_POST['action'] == "Create Booking") OR
 		$selectedMeetingRoomID = '';
 	}
 
-	if(isSet($row['StartTime']) AND $row['StartTime'] != ""){
+	if(!empty($row['StartTime'])){
 		$startDateTime = $row['StartTime'];
+		$validBookingStartTime = convertDatetimeToFormat($startDateTime, DATETIME_DEFAULT_FORMAT_TO_DISPLAY, 'Y-m-d H:i:s');
 	} else {
 		$validBookingStartTime = getNextValidBookingStartTime();
 		$startDateTime = convertDatetimeToFormat($validBookingStartTime , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
 	}
 
-	if(isSet($row['EndTime']) AND $row['EndTime'] != ""){
+	if(!empty($row['EndTime'])){
 		$endDateTime = $row['EndTime'];
 	} else {
-		$validBookingEndTime = getNextValidBookingEndTime(substr($validBookingStartTime,0,-3));
+		$validBookingEndTime = getNextValidBookingEndTime($validBookingStartTime);
 		$endDateTime = convertDatetimeToFormat($validBookingEndTime , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
 	}
 

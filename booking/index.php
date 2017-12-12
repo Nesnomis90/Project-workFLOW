@@ -34,6 +34,8 @@ function clearAddCreateBookingSessions(){
 	unset($_SESSION['AddCreateBookingOrderTooSoon']);
 	unset($_SESSION['AddCreateBookingOrderUserNotes']);
 	unset($_SESSION['AddCreateBookingOrderAddedExtra']);
+	unset($_SESSION['AddCreateBookingSelectedStartDateTime']);
+	unset($_SESSION['AddCreateBookingSelectedMeetingRoomID']);
 
 	unset($_SESSION['refreshAddCreateBookingConfirmed']);
 
@@ -2504,10 +2506,16 @@ if(isSet($_POST['action']) AND $_POST['action'] == "Confirm Code"){
 	}
 }
 
+// Handles 
+if(!empty($_POST['MeetingRoomID']) AND !empty($_POST['DateTimeStart'])){
+	$_SESSION['refreshAddCreateBooking'] = TRUE;
+	$_SESSION['AddCreateBookingSelectedStartDateTime'] = $_POST['DateTimeStart'];
+	$_SESSION['AddCreateBookingSelectedMeetingRoomID'] = $_POST['MeetingRoomID'];
+}
+
 // Handles booking based on selected meeting room
 if(	((isSet($_POST['action']) AND $_POST['action'] == 'Create Meeting')) OR
-	(isSet($_SESSION['refreshAddCreateBooking']) AND $_SESSION['refreshAddCreateBooking']) OR 
-	(!empty($_POST['MeetingRoomID']) AND !empty($_POST['DateTimeStart']))
+	(isSet($_SESSION['refreshAddCreateBooking']) AND $_SESSION['refreshAddCreateBooking'])
 	){
 	// Confirm that we've reset.
 	unset($_SESSION['refreshAddCreateBooking']);
@@ -2669,11 +2677,17 @@ if(	((isSet($_POST['action']) AND $_POST['action'] == 'Create Meeting')) OR
 		$_SESSION['AddCreateBookingInfoArray']['sendEmail'] = $sendEmail;
 		$_SESSION['AddCreateBookingInfoArray']['Access'] = $access;
 
-		if(!empty($_GET['meetingroom'])){
+		if(isSet($_SESSION['AddCreateBookingSelectedStartDateTime'], $_SESSION['AddCreateBookingSelectedMeetingRoomID'])){
+			$startDateTime = $_SESSION['AddCreateBookingSelectedStartDateTime'];
+			if(validateDatetimeWithFormat($startDateTime,'Y-m-d H:i:s')){
+				$displayStartDateTime = convertDatetimeToFormat($startDateTime , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
+				$_SESSION['AddCreateBookingInfoArray']['StartTime'] = $displayStartDateTime;
+			}
+			$_SESSION['AddCreateBookingInfoArray']['TheMeetingRoomID'] = $_SESSION['AddCreateBookingSelectedMeetingRoomID'];
+			unset($_SESSION['AddCreateBookingSelectedMeetingRoomID']);
+			unset($_SESSION['AddCreateBookingSelectedStartDateTime']);
+		} elseif(!empty($_GET['meetingroom'])){
 			$_SESSION['AddCreateBookingInfoArray']['TheMeetingRoomID'] = $_GET['meetingroom'];
-		} elseif(!empty($_POST['MeetingRoomID']) AND !empty($_POST['DateTimeStart'])){
-			$_SESSION['AddCreateBookingInfoArray']['TheMeetingRoomID'] = $_POST['MeetingRoomID'];
-			$_SESSION['AddCreateBookingInfoArray']['StartTime'] = $_POST['DateTimeStart'];
 		}
 
 		$_SESSION['AddCreateBookingOriginalInfoArray'] = $_SESSION['AddCreateBookingInfoArray'];
@@ -3073,6 +3087,7 @@ if(	((isSet($_POST['action']) AND $_POST['action'] == 'Create Meeting')) OR
 
 	if(!empty($row['StartTime'])){
 		$startDateTime = $row['StartTime'];
+		$validBookingStartTime = convertDatetimeToFormat($startDateTime, DATETIME_DEFAULT_FORMAT_TO_DISPLAY, 'Y-m-d H:i:s');
 	} else {
 		$validBookingStartTime = getNextValidBookingStartTime();
 		$startDateTime = convertDatetimeToFormat($validBookingStartTime , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
@@ -3080,8 +3095,7 @@ if(	((isSet($_POST['action']) AND $_POST['action'] == 'Create Meeting')) OR
 	if(!empty($row['EndTime'])){
 		$endDateTime = $row['EndTime'];
 	} else {
-		$validBookingEndTime = getNextValidBookingEndTime(substr($startDateTime,0,-3));
-		//$validBookingEndTime = getNextValidBookingEndTime(substr($validBookingStartTime,0,-3));
+		$validBookingEndTime = getNextValidBookingEndTime($validBookingStartTime);
 		$endDateTime = convertDatetimeToFormat($validBookingEndTime , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
 	}
 
@@ -7248,7 +7262,7 @@ if	(isSet($_SESSION['loggedIn']) AND
 	}
 
 		// Check if the user is an owner of the company the booking is booked for
-	if(!$continueCancel) {
+	if(!$continueCancel){
 		try
 		{
 			$sql = 'SELECT 		COUNT(*)		AS HitCount,
@@ -7550,7 +7564,7 @@ unset($_SESSION["cancelOrderOriginalValues"]);
 unset($_SESSION["confirmOrigins"]);
 unset($_SESSION["EditCreateBookingError"]);
 
-if(isSet($refreshBookings) AND $refreshBookings) {
+if(isSet($refreshBookings) AND $refreshBookings){
 	unset($refreshBookings);
 }
 
@@ -7689,7 +7703,7 @@ foreach($result as $row){
 	$createdDateTime = $row['BookingWasCreatedOn'];	
 
 	// Check if booking is for today or for the future
-	if($datetimeNow < $endDateTime AND $dateOnlyNow != $dateOnlyStart) {
+	if($datetimeNow < $endDateTime AND $dateOnlyNow != $dateOnlyStart){
 		$status = 'Active';
 	} elseif($datetimeNow < $endDateTime AND $dateOnlyNow == $dateOnlyStart){
 		$status = 'Active Today';
@@ -7699,25 +7713,27 @@ foreach($result as $row){
 	}
 
 	$roomName = $row['BookedRoomName'];
+	$worksForCompany = $row['WorksForCompany'];
 	$firstname = $row['firstName'];
 	$lastname = $row['lastName'];
 	$email = $row['email'];
-	$userinfo = $lastname . ', ' . $firstname . ' - ' . $row['email'];
-	$worksForCompany = $row['WorksForCompany'];
-	if(!isSet($roomName) OR $roomName == NULL OR $roomName == ""){
-		$roomName = "N/A - Deleted";
-	}
-	if(!isSet($userinfo) OR $userinfo == NULL OR $userinfo == ",  - "){
-		$userinfo = "N/A - Deleted";
-	}
-	if(!isSet($email) OR $email == NULL OR $email == ""){
+
+	if(!empty($firstname) AND !empty($lastname) AND !empty($email)){
+		$userinfo = $lastname . ', ' . $firstname . ' - ' . $email;
+	} elseif(empty($email)){
 		$firstname = "N/A - Deleted";
 		$lastname = "N/A - Deleted";
 		$email = "N/A - Deleted";
+		$userinfo = "N/A - Deleted";
 	}
-	if(!isSet($worksForCompany) OR $worksForCompany == NULL OR $worksForCompany == ""){
+
+	if(empty($roomName)){
+		$roomName = "N/A - Deleted";
+	}
+	if(empty($worksForCompany)){
 		$worksForCompany = "N/A";
 	}
+
 	$displayValidatedStartDate = convertDatetimeToFormat($startDateTime , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
 	$displayValidatedEndDate = convertDatetimeToFormat($endDateTime, 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
 	$displayCreatedDateTime = convertDatetimeToFormat($createdDateTime, 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);

@@ -44,7 +44,7 @@
 				<form method="post">
 					<input type="submit" name="action" value="Create Meeting">
 					<input type="submit" name="action" value="Refresh">
-					<span><b>Last Refresh: <?php htmlout(getDatetimeNowInDisplayFormat()); ?></b></span>
+					<span><b>Last Refresh: <?php htmlout(getTimeNowInDisplayFormat()); ?></b></span>
 				</form>
 			</div>
 
@@ -202,7 +202,7 @@
 						<input type="submit" name="action" value="Create Meeting">
 					<?php endif; ?>
 					<input type="submit" name="action" value="Refresh">
-					<span><b>Last Refresh: <?php htmlout(getDatetimeNowInDisplayFormat()); ?></b></span>
+					<span><b>Last Refresh: <?php htmlout(getTimeNowInDisplayFormat()); ?></b></span>
 				</form>
 			</div>
 

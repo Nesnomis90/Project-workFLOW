@@ -191,6 +191,7 @@ function getNextValidBookingStartTime(){
 	date_default_timezone_set(DATE_DEFAULT_TIMEZONE);
 	$datetimeNow = new Datetime();
 	$timeNow = $datetimeNow->format('Y-m-d H:i');
+	$timeNow .= ":00";
 
 	return getNextValidBookingEndTime($timeNow);
 }
@@ -278,6 +279,13 @@ function getTimeNow(){
 	return $datetimeNow->format('H:i:s');
 }
 
+// Function to get the current datetime in display format (with seconds)
+function getTimeNowInDisplayFormat(){
+	$timeNow = getTimeNow();
+	$displayTimeNow = convertDatetimeToFormat($timeNow,'H:i:s',TIME_DEFAULT_FORMAT_TO_DISPLAY_WITH_SECONDS);
+	return $displayTimeNow;
+}
+
 // Function to convert string to datetime in MySQL format
 // TO-DO: Just broken. But still, not broken...?
 function stringToDateTime($datetimeString, $format){
@@ -341,7 +349,6 @@ function correctTimeFormat($wrongTimeString){
 	}
 
 	return FALSE;
-
 }
 
 //	Function to change datetime format to be correct for datetime input in database

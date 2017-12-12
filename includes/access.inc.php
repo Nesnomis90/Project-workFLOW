@@ -122,15 +122,14 @@ function checkIfUserIsLoggedIn(){
 	// If user is trying to log in
 	if(isSet($_POST['action']) and $_POST['action'] == 'login'){
 
-		if(isSet($_POST['email']) AND $_POST['email'] != ""){
+		if(!empty($_POST['email'])){
 			// Remember email if it's filled in. Retyping an email is the most annoying thing in the world.
 			$email = trim($_POST['email']);
 			$_SESSION['loginEmailSubmitted'] = $email;
 		}
 
 		// Check if user has filled in the necessary information
-		if (!isSet($_POST['email']) OR $_POST['email'] == '' OR
-			!isSet($_POST['password']) OR $_POST['password'] == ''){
+		if(empty($_POST['email']) OR empty($_POST['password'])){
 			// User didn't fill in enough info
 			// Save a custom error message for the user
 			$_SESSION['loginError'] = 'Please fill in both fields';
