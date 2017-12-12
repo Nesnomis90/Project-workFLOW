@@ -81,7 +81,7 @@
 				inputBookingID.setAttribute("value", bookingID);
 				inputPlacement.appendChild(inputBookingID);
 
-				document.getElementById("bookingForm").submit();
+				//document.getElementById("bookingForm").submit();
 			}
 		</script>
 	</head>
@@ -90,7 +90,7 @@
 		<?php include_once $_SERVER['DOCUMENT_ROOT'] .'/includes/topnav.html.php'; ?>
 
 		<div class="left">
-			<span><b>Last Refresh: <?php htmlout(getDatetimeNowInDisplayFormat()); ?></b></span>
+			<span><b>Last Refresh: <?php htmlout(getTimeNowInDisplayFormat()); ?></b></span>
 			<form method="post">
 				<?php if(isSet($_SESSION['DefaultMeetingRoomInfo'])) : ?>
 				<?php $default = $_SESSION['DefaultMeetingRoomInfo']; ?>
