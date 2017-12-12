@@ -7703,7 +7703,7 @@ foreach($result as $row){
 	$createdDateTime = $row['BookingWasCreatedOn'];	
 
 	// Check if booking is for today or for the future
-	if($datetimeNow < $endDateTime AND $dateOnlyNow != $dateOnlyStart) {
+	if($datetimeNow < $endDateTime AND $dateOnlyNow != $dateOnlyStart){
 		$status = 'Active';
 	} elseif($datetimeNow < $endDateTime AND $dateOnlyNow == $dateOnlyStart){
 		$status = 'Active Today';
@@ -7713,25 +7713,27 @@ foreach($result as $row){
 	}
 
 	$roomName = $row['BookedRoomName'];
+	$worksForCompany = $row['WorksForCompany'];
 	$firstname = $row['firstName'];
 	$lastname = $row['lastName'];
 	$email = $row['email'];
-	$userinfo = $lastname . ', ' . $firstname . ' - ' . $row['email'];
-	$worksForCompany = $row['WorksForCompany'];
-	if(!isSet($roomName) OR $roomName == NULL OR $roomName == ""){
-		$roomName = "N/A - Deleted";
-	}
-	if(!isSet($userinfo) OR $userinfo == NULL OR $userinfo == ",  - "){
-		$userinfo = "N/A - Deleted";
-	}
-	if(!isSet($email) OR $email == NULL OR $email == ""){
+
+	if(!empty($firstname) AND !empty($lastname) AND !empty($email)){
+		$userinfo = $lastname . ', ' . $firstname . ' - ' . $email;
+	} elseif(empty($email)){
 		$firstname = "N/A - Deleted";
 		$lastname = "N/A - Deleted";
 		$email = "N/A - Deleted";
+		$userinfo = "N/A - Deleted";
 	}
-	if(!isSet($worksForCompany) OR $worksForCompany == NULL OR $worksForCompany == ""){
+
+	if(empty($roomName)){
+		$roomName = "N/A - Deleted";
+	}
+	if(empty($worksForCompany)){
 		$worksForCompany = "N/A";
 	}
+
 	$displayValidatedStartDate = convertDatetimeToFormat($startDateTime , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
 	$displayValidatedEndDate = convertDatetimeToFormat($endDateTime, 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
 	$displayCreatedDateTime = convertDatetimeToFormat($createdDateTime, 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
