@@ -191,6 +191,7 @@ function getNextValidBookingStartTime(){
 	date_default_timezone_set(DATE_DEFAULT_TIMEZONE);
 	$datetimeNow = new Datetime();
 	$timeNow = $datetimeNow->format('Y-m-d H:i');
+	$timeNow .= ":00";
 
 	return getNextValidBookingEndTime($timeNow);
 }

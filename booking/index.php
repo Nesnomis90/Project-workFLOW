@@ -3085,7 +3085,6 @@ if(	((isSet($_POST['action']) AND $_POST['action'] == 'Create Meeting')) OR
 	if(!empty($row['EndTime'])){
 		$endDateTime = $row['EndTime'];
 	} else {
-		//$validBookingEndTime = getNextValidBookingEndTime(substr($validBookingStartTime,0,-3));
 		$validBookingEndTime = getNextValidBookingEndTime($validBookingStartTime);
 		$endDateTime = convertDatetimeToFormat($validBookingEndTime , 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
 	}
