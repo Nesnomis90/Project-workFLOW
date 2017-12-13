@@ -70,6 +70,8 @@
 					var tableCell = cellClicked.childNodes[3];
 					var div = tableCell.childNodes[0];
 					tableCell.removeAttribute("style");
+
+					// Remove buttons from div
 					div.removeChild(document.getElementById("EditButton" + bookingID));
 					div.removeChild(document.getElementById("CancelButton" + bookingID));
 					div.removeChild(document.getElementById("ChangeRoomButton" + bookingID));
@@ -81,7 +83,7 @@
 					tableCell.style.width = "10em";
 					tableCell.style.height = "10em";
 					tableCell.style.display = "block";
-					
+
 					// Create buttons
 						// Edit
 					var buttonEdit = document.createElement("input");
@@ -90,7 +92,7 @@
 					buttonEdit.innerHTML = "Edit";
 					buttonEdit.value = "Edit";
 					buttonEdit.onclick = function onClick(){editBooking(bookingID);}
-					
+
 						// Cancel
 					var buttonCancel = document.createElement("input");
 					buttonCancel.setAttribute("type","button");
@@ -106,17 +108,13 @@
 					buttonChangeRoom.innerHTML = "Change Room";
 					buttonChangeRoom.value = "Change Room";
 					buttonChangeRoom.onclick = function onClick(){changeRoom(bookingID);}
-					
+
+					// Add buttons to div
 					var div = tableCell.childNodes[0];
 					div.appendChild(buttonEdit);
 					div.appendChild(buttonCancel);
 					div.appendChild(buttonChangeRoom);
 				}
-
-					// Also add edit/cancel buttons
-					// Also add change room button if local
-				// Add shrink animation if already big
-					// Also remove edit/cancel/change room buttons
 			}
 
 			function editBooking(bookingID){
