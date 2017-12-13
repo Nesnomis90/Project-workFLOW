@@ -185,13 +185,20 @@ function unsetSessionsFromBookingManagement(){
 	unset($_SESSION['AddCreateBookingChangeUser']);
 	unset($_SESSION['AddCreateBookingUsersArray']);
 	unset($_SESSION['AddCreateBookingOriginalInfoArray']);
-	unset($_SESSION['AddCreateBookingMeetingRoomsArray']);	
+	unset($_SESSION['AddCreateBookingMeetingRoomsArray']);
 	unset($_SESSION['AddCreateBookingUserSearch']);
 	unset($_SESSION['AddCreateBookingSelectedNewUser']);
-	unset($_SESSION['AddCreateBookingSelectedACompany']);	
+	unset($_SESSION['AddCreateBookingSelectedACompany']);
 	unset($_SESSION['AddCreateBookingDisplayCompanySelect']);
 	unset($_SESSION['AddCreateBookingCompanyArray']);
 	unset($_SESSION['AddCreateBookingStartImmediately']);
+	unset($_SESSION['AddCreateBookingAvailableExtra']);
+	unset($_SESSION['AddCreateBookingStepOneCompleted']);
+	unset($_SESSION['AddCreateBookingOrderTooSoon']);
+	unset($_SESSION['AddCreateBookingOrderUserNotes']);
+	unset($_SESSION['AddCreateBookingOrderAddedExtra']);
+	unset($_SESSION['AddCreateBookingSelectedStartDateTime']);
+	unset($_SESSION['AddCreateBookingSelectedMeetingRoomID']);
 
 	unset($_SESSION['EditCreateBookingInfoArray']);
 	unset($_SESSION['EditCreateBookingChangeUser']);
@@ -214,9 +221,40 @@ function unsetSessionsFromBookingManagement(){
 	unset($_SESSION['changeToOccupiedRoomBookingID']);
 	unset($_SESSION['cancelBookingOriginalValues']);
 
+	unset($_SESSION['createOrderOriginalValues']);
+	unset($_SESSION['AddCreateOrderForBookingAvailableExtra']);
+	unset($_SESSION['AddCreateOrderForBookingOrderUserNotes']);
+	unset($_SESSION['AddCreateOrderForBookingOrderAddedExtra']);
+
+	unset($_SESSION['EditBookingOrderOriginalInfo']);
+	unset($_SESSION['EditBookingOrderCommunicationToStaff']);
+	unset($_SESSION['EditBookingOrderIsApprovedByUser']);
+	unset($_SESSION['EditBookingOrderOrderID']);
+	unset($_SESSION['EditBookingOrderExtraOrdered']);
+	unset($_SESSION['EditBookingOrderOrderMessages']);
+	unset($_SESSION['EditBookingOrderAvailableExtra']);
+	unset($_SESSION['EditBookingOrderAlternativeExtraAdded']);
+	unset($_SESSION['EditBookingOrderAlternativeExtraCreated']);
+	unset($_SESSION['EditBookingOrderExtraOrderedOnlyNames']);
+	unset($_SESSION['EditBookingOrderTotalPrice']);
+	unset($_SESSION['resetEditBookingOrder']);
+
+	unset($_SESSION['DetailsBookingOrderOriginalInfo']);
+	unset($_SESSION['DetailsBookingOrderCommunicationToStaff']);
+	unset($_SESSION['DetailsBookingOrderOrderID']);
+	unset($_SESSION['DetailsBookingOrderExtraOrdered']);
+	unset($_SESSION['DetailsBookingOrderOrderMessages']);
+	unset($_SESSION['DetailsBookingOrderTotalPrice']);
+
+	unset($_SESSION['refreshDetailsBookingOrder']);	
+	unset($_SESSION['refreshEditBookingOrder']);
+	unset($_SESSION['refreshCreateOrder']);
+	unset($_SESSION['refreshAddCreateBooking']);
 	unset($_SESSION['refreshAddCreateBookingConfirmed']);
 
 	unset($_SESSION['bookingCodeUserID']);
+
+	unset($_SESSION["confirmOrigins"]);
 }
 
 function unsetSessionsFromMeetingroomManagement(){
