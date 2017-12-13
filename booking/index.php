@@ -12,8 +12,8 @@ unsetSessionsFromCompanyManagement();
 unsetSessionsFromMeetingroomManagement();
 
 // Make sure logout works properly and that we check if their login details are up-to-date
-if(isSet($_SESSION['loggedIn'])){
-	userIsLoggedIn();
+if(isSet($_SESSION['loggedIn']) OR (isSet($_SESSION['confirmOrigins']) AND !isSet($_SESSION['DefaultMeetingRoomInfo']))){
+	checkIfLocalDeviceOrLoggedIn();
 }
 
 // Function to clear sessions used to remember user inputs on refreshing the add booking form
@@ -37,6 +37,7 @@ function clearAddCreateBookingSessions(){
 	unset($_SESSION['AddCreateBookingSelectedStartDateTime']);
 	unset($_SESSION['AddCreateBookingSelectedMeetingRoomID']);
 
+	unset($_SESSION['refreshAddCreateBooking']);
 	unset($_SESSION['refreshAddCreateBookingConfirmed']);
 
 	unset($_SESSION['bookingCodeUserID']);
@@ -308,16 +309,36 @@ function checkIfLocalDeviceOrLoggedIn(){
 		if(isSet($_SESSION['DefaultMeetingRoomInfo'])){
 			// We're accessing a local device.
 			// Confirm with booking code
+			VAR_DUMP($_SESSION); // TO-DO: REMOVE
 			include_once 'bookingcode.html.php';
 			exit();
 		}
 			// If not local, use regular log in
-		if(checkIfUserIsLoggedIn() === FALSE){
-			makeUserLogIn();
+		if(userIsLoggedIn() === FALSE){
+			VAR_DUMP($_SESSION); // TO-DO: REMOVE
+			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/login.html.php';
 			exit();
+		} elseif(isSet($_SESSION['confirmOrigins'])){
+			if($_SESSION['confirmOrigins'] == "Create Meeting"){
+				$_SESSION['refreshAddCreateBooking'] = TRUE;
+				unset($_SESSION['confirmOrigins']);
+			} elseif($_SESSION['confirmOrigins'] == "Cancel"){
+				$_SESSION['refreshCancelBooking'] = TRUE;
+				unset($_SESSION['confirmOrigins']);
+			} elseif($_SESSION['confirmOrigins'] == "Edit Meeting"){
+				$_SESSION['refreshEditCreateBooking'] = TRUE;
+				unset($_SESSION['confirmOrigins']);
+			} elseif($_SESSION['confirmOrigins'] == "Change Room"){
+				$_SESSION['refreshChangeBookingRoom'] = TRUE;
+				unset($_SESSION['confirmOrigins']);
+			} elseif($_SESSION['confirmOrigins'] == "Confirm Change"){
+				$_SESSION['refreshConfirmBookingRoom'] = TRUE;
+				unset($_SESSION['confirmOrigins']);
+			}
 		}
+	} else {
+		return $SelectedUserID;
 	}
-	return $SelectedUserID;
 }
 
 // This is used when a booking is cancelled by someone else than the booking owner
@@ -2455,25 +2476,23 @@ if(isSet($_POST['action']) AND $_POST['action'] == "Confirm Code"){
 			unset($_SESSION['bookingCodeGuesses']);
 			$_SESSION['bookingCodeUserID'] = $row['userID'];
 			// Check if we are confirming a create booking, a cancel or an edit.
-			if($_SESSION['confirmOrigins'] == "Create Meeting"){
-				$_SESSION['refreshAddCreateBooking'] = TRUE;
-				unset($_SESSION['confirmOrigins']);
-			}
-			if($_SESSION['confirmOrigins'] == "Cancel"){
-				$_SESSION['refreshCancelBooking'] = TRUE;
-				unset($_SESSION['confirmOrigins']);
-			}
-			if($_SESSION['confirmOrigins'] == "Edit Meeting"){
-				$_SESSION['refreshEditCreateBooking'] = TRUE;
-				unset($_SESSION['confirmOrigins']);
-			}
-			if($_SESSION['confirmOrigins'] == "Change Room"){
-				$_SESSION['refreshChangeBookingRoom'] = TRUE;
-				unset($_SESSION['confirmOrigins']);
-			}
-			if($_SESSION['confirmOrigins'] == "Confirm Change"){
-				$_SESSION['refreshConfirmBookingRoom'] = TRUE;
-				unset($_SESSION['confirmOrigins']);
+			if(isSet($_SESSION['confirmOrigins'])){
+				if($_SESSION['confirmOrigins'] == "Create Meeting"){
+					$_SESSION['refreshAddCreateBooking'] = TRUE;
+					unset($_SESSION['confirmOrigins']);
+				} elseif($_SESSION['confirmOrigins'] == "Cancel"){
+					$_SESSION['refreshCancelBooking'] = TRUE;
+					unset($_SESSION['confirmOrigins']);
+				} elseif($_SESSION['confirmOrigins'] == "Edit Meeting"){
+					$_SESSION['refreshEditCreateBooking'] = TRUE;
+					unset($_SESSION['confirmOrigins']);
+				} elseif($_SESSION['confirmOrigins'] == "Change Room"){
+					$_SESSION['refreshChangeBookingRoom'] = TRUE;
+					unset($_SESSION['confirmOrigins']);
+				} elseif($_SESSION['confirmOrigins'] == "Confirm Change"){
+					$_SESSION['refreshConfirmBookingRoom'] = TRUE;
+					unset($_SESSION['confirmOrigins']);
+				}
 			}
 
 			if(isSet($_GET['meetingroom'])){
@@ -2506,7 +2525,7 @@ if(isSet($_POST['action']) AND $_POST['action'] == "Confirm Code"){
 	}
 }
 
-// Handles 
+// Handles setting up a booking for the room and time selected in overview
 if(!empty($_POST['MeetingRoomID']) AND !empty($_POST['DateTimeStart'])){
 	$_SESSION['refreshAddCreateBooking'] = TRUE;
 	$_SESSION['AddCreateBookingSelectedStartDateTime'] = $_POST['DateTimeStart'];
