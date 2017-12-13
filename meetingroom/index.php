@@ -142,7 +142,7 @@ if(isSet($_POST['action']) AND $_POST['action'] == "Booking Information"){
 	exit();
 }
 
-// TO-DO: Implement
+// TO-DO: Implement date selection
 $dateToday = getDateNow();
 $timeNow = getTimeNow();
 $displayTimeNow = convertDatetimeToFormat($timeNow, 'H:i:s', TIME_DEFAULT_FORMAT_TO_DISPLAY);
@@ -332,7 +332,7 @@ foreach($meetingRoomInfo as $row){
 	*/
 
 	// Decide how big of a time chunk each box displayed is
-	$bookingMinuteChunks = MINIMUM_BOOKING_TIME_IN_MINUTES;
+	$bookingMinuteChunks = MINUTES_PER_BOOKING_CHUNK_IN_OVERVIEW;
 
 	$meetingRoomID = $row['TheMeetingRoomID'];
 	$startDateTime = $row['BookingStartTime'];
