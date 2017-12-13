@@ -33,6 +33,7 @@
 				background-color: #33ff33;
 			}
 			div.overflow {
+				display: grid;
 				overflow: hidden;
 				height: inherit;
 			}
@@ -112,8 +113,8 @@
 					// Add buttons to div
 					var div = tableCell.childNodes[0];
 					div.appendChild(buttonEdit);
-					div.appendChild(buttonCancel);
 					div.appendChild(buttonChangeRoom);
+					div.appendChild(buttonCancel);
 				}
 			}
 
