@@ -11,7 +11,7 @@ unsetSessionsFromUserManagement();
 unsetSessionsFromCompanyManagement();
 unsetSessionsFromMeetingroomManagement();
 
-// Make sure logout works properly and that we check if their login details are up-to-date
+// Make sure login/logout works properly and that we check if their login details are up-to-date
 if(isSet($_SESSION['loggedIn']) OR (isSet($_SESSION['confirmOrigins']) AND !isSet($_SESSION['DefaultMeetingRoomInfo']))){
 	checkIfLocalDeviceOrLoggedIn();
 }
