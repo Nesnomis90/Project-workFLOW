@@ -13,6 +13,7 @@ unsetSessionsFromBookingManagement();
 
 // Make sure logout works properly and that we check if their login details are up-to-date
 $adminLoggedIn = FALSE;
+$loggedIn = FALSE;
 if(isSet($_SESSION['loggedIn'])){
 	$loggedIn = userIsLoggedIn();
 

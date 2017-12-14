@@ -65,6 +65,12 @@
 			}
 
 			function onClickBookedMeeting(cellClicked, bookingID){
+				var localDevice = <?php if(isSet($_SESSION['DefaultMeetingRoomInfo'])){
+											echo json_encode(TRUE);
+										} else {
+											echo json_encode(FALSE);
+										}?>;
+
 				if(cellClicked.id == "clicked"){
 					// Remove expand on second click
 					cellClicked.removeAttribute("id");
@@ -75,7 +81,9 @@
 					// Remove buttons from div
 					div.removeChild(document.getElementById("EditButton" + bookingID));
 					div.removeChild(document.getElementById("CancelButton" + bookingID));
-					div.removeChild(document.getElementById("ChangeRoomButton" + bookingID));
+					if(localDevice){
+						div.removeChild(document.getElementById("ChangeRoomButton" + bookingID));
+					}
 				} else {
 					// Expand table cell on click
 					cellClicked.id = "clicked";
@@ -103,17 +111,21 @@
 					buttonCancel.onclick = function onClick(){cancelBooking(bookingID);}
 
 						// Change Room
-					var buttonChangeRoom = document.createElement("input");
-					buttonChangeRoom.setAttribute("type","button");
-					buttonChangeRoom.id = "ChangeRoomButton" + bookingID;
-					buttonChangeRoom.innerHTML = "Change Room";
-					buttonChangeRoom.value = "Change Room";
-					buttonChangeRoom.onclick = function onClick(){changeRoom(bookingID);}
+					if(localDevice){
+						var buttonChangeRoom = document.createElement("input");
+						buttonChangeRoom.setAttribute("type","button");
+						buttonChangeRoom.id = "ChangeRoomButton" + bookingID;
+						buttonChangeRoom.innerHTML = "Change Room";
+						buttonChangeRoom.value = "Change Room";
+						buttonChangeRoom.onclick = function onClick(){changeRoom(bookingID);}
+					}
 
 					// Add buttons to div
 					var div = tableCell.childNodes[0];
+					if(localDevice){
+						div.appendChild(buttonChangeRoom);
+					}
 					div.appendChild(buttonEdit);
-					div.appendChild(buttonChangeRoom);
 					div.appendChild(buttonCancel);
 				}
 			}
