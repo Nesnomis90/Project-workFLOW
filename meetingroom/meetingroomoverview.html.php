@@ -79,10 +79,17 @@
 					tableCell.removeAttribute("style");
 
 					// Remove buttons from div
-					div.removeChild(document.getElementById("EditButton" + bookingID));
-					div.removeChild(document.getElementById("CancelButton" + bookingID));
-					if(localDevice){
-						div.removeChild(document.getElementById("ChangeRoomButton" + bookingID));
+					var editButton = document.getElementById("EditButton" + bookingID);
+					if(editButton !== null){
+						div.removeChild();
+					}
+					var cancelButton = document.getElementById("CancelButton" + bookingID);
+					if(cancelButton !== null){
+						div.removeChild(cancelButton);
+					}
+					changeRoomButton = document.getElementById("ChangeRoomButton" + bookingID);
+					if(changeRoomButton !== null){
+						div.removeChild(changeRoomButton);
 					}
 				} else {
 					// Expand table cell on click
