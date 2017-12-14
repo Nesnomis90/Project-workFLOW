@@ -636,7 +636,6 @@ function makeUserLogIn(){
 		// Check if user is logged in
 	if(!userIsLoggedIn()){
 		// Not logged in. Send user a login prompt.
-		VAR_DUMP($_SESSION); // TO-DO: REMOVE
 		include_once 'login.html.php';
 		exit();
 	}

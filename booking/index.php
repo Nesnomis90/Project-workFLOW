@@ -309,13 +309,11 @@ function checkIfLocalDeviceOrLoggedIn(){
 		if(isSet($_SESSION['DefaultMeetingRoomInfo'])){
 			// We're accessing a local device.
 			// Confirm with booking code
-			VAR_DUMP($_SESSION); // TO-DO: REMOVE
 			include_once 'bookingcode.html.php';
 			exit();
 		}
 			// If not local, use regular log in
 		if(userIsLoggedIn() === FALSE){
-			VAR_DUMP($_SESSION); // TO-DO: REMOVE
 			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/login.html.php';
 			exit();
 		} elseif(isSet($_SESSION['confirmOrigins'])){
@@ -868,6 +866,14 @@ if(isSet($_POST['confirmCancel']) AND $_POST['confirmCancel'] == "Confirm Cancel
 	}
 	header('Location: ' . $location);
 	exit();	
+}
+
+// Handles cancelling the correct booking chosen in the overview
+if(!empty($_POST['CancelBooking'])){
+	$_SESSION['refreshCancelBooking'] = TRUE;
+	$_SESSION['cancelBookingOriginalValues']['BookingID'] = $_POST['CancelBooking'];
+	$_SESSION['cancelBookingOriginalValues']['BookingStatus'] = 'Active Today';
+	$_SESSION['cancelBookingOriginalValues']['MeetingInfo'] = "N/A"; // TO-DO: Fix?
 }
 
 // If user wants to cancel a scheduled booked meeting
@@ -4313,6 +4319,12 @@ if (isSet($_POST['add']) AND $_POST['add'] == 'Cancel'){
 
 
 // EDIT BOOKING CODE SNIPPET // START //
+
+// Handles opening the editing of the correct booking chosen in the overview
+if(!empty($_POST['EditBooking'])){
+	$_SESSION['refreshEditCreateBooking'] = TRUE;
+	$_SESSION['EditCreateBookingOriginalBookingID'] = $_POST['EditBooking'];
+}
 
 // if user wants to edit a booking, we load a new html form
 if ((isSet($_POST['action']) AND $_POST['action'] == 'Edit') OR
