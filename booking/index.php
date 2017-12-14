@@ -868,6 +868,14 @@ if(isSet($_POST['confirmCancel']) AND $_POST['confirmCancel'] == "Confirm Cancel
 	exit();	
 }
 
+// Handles cancelling the correct booking chosen in the overview
+if(!empty($_POST['CancelBooking'])){
+	$_SESSION['refreshCancelBooking'] = TRUE;
+	$_SESSION['cancelBookingOriginalValues']['BookingID'] = $_POST['CancelBooking'];
+	$_SESSION['cancelBookingOriginalValues']['BookingStatus'] = 'Active Today';
+	$_SESSION['cancelBookingOriginalValues']['MeetingInfo'] = "N/A"; // TO-DO: Fix?
+}
+
 // If user wants to cancel a scheduled booked meeting
 if ((isSet($_POST['action']) and $_POST['action'] == 'Cancel') OR 
 	(isSet($_SESSION['refreshCancelBooking']) AND $_SESSION['refreshCancelBooking'])
@@ -4311,6 +4319,12 @@ if (isSet($_POST['add']) AND $_POST['add'] == 'Cancel'){
 
 
 // EDIT BOOKING CODE SNIPPET // START //
+
+// Handles opening the editing of the correct booking chosen in the overview
+if(!empty($_POST['EditBooking'])){
+	$_SESSION['refreshEditCreateBooking'] = TRUE;
+	$_SESSION['EditCreateBookingOriginalBookingID'] = $_POST['EditBooking'];
+}
 
 // if user wants to edit a booking, we load a new html form
 if ((isSet($_POST['action']) AND $_POST['action'] == 'Edit') OR
