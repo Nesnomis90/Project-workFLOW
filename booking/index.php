@@ -309,13 +309,11 @@ function checkIfLocalDeviceOrLoggedIn(){
 		if(isSet($_SESSION['DefaultMeetingRoomInfo'])){
 			// We're accessing a local device.
 			// Confirm with booking code
-			VAR_DUMP($_SESSION); // TO-DO: REMOVE
 			include_once 'bookingcode.html.php';
 			exit();
 		}
 			// If not local, use regular log in
 		if(userIsLoggedIn() === FALSE){
-			VAR_DUMP($_SESSION); // TO-DO: REMOVE
 			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/login.html.php';
 			exit();
 		} elseif(isSet($_SESSION['confirmOrigins'])){
