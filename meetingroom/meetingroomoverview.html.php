@@ -367,14 +367,14 @@
 														<?php $endTimeInMinutes = getNextBookingEndTime($currentStartTimeInMinutes, $currentStartTimeInMinutes+$bookingMinuteChunks, $bookingMinuteChunks); ?>
 														<tr onclick="onClickBookedMeeting(this, <?php htmlout($bookingInfo['BookingID']); ?>);">
 															<td><?php echo convertMinutesToTime($currentStartTimeInMinutes); ?> - <?php echo convertMinutesToTime($endTimeInMinutes); ?></td>
-															<td class="occupied"><div class="overflow"><?php htmlout($bookingInfo['BookingDisplayName']); ?></div></td>
+															<td class="occupied"><div class="overflow"><?php echo 1; //htmlout($bookingInfo['BookingDisplayName']); ?></div></td>
 														</tr>
 														<?php $currentStartTimeInMinutes = $endTimeInMinutes; ?>
 													<?php endfor; ?>
 												<?php else : ?>
 													<tr onclick="onClickBookedMeeting(this, <?php htmlout($bookingInfo['BookingID']); ?>);">
 														<td><?php htmlout($bookingInfo['MeetingStartTime']); ?> - <?php htmlout($bookingInfo['MeetingEndTime']); ?></td>
-														<td class="occupied"><div class="overflow"><?php htmlout($bookingInfo['BookingDisplayName']); ?></div></td>
+														<td class="occupied"><div class="overflow"><?php echo 9; //htmlout($bookingInfo['BookingDisplayName']); ?></div></td>
 													</tr>
 												<?php endif; ?>
 											<?php elseif($currentStartTimeInMinutes >= $nextStartTimeInMinutes AND $timeNowInMinutes > $nextStartTimeInMinutes) : ?>
@@ -383,14 +383,14 @@
 														<?php $endTimeInMinutes = getNextBookingEndTime($currentStartTimeInMinutes, $currentStartTimeInMinutes+$bookingMinuteChunks, $bookingMinuteChunks); ?>
 														<tr onclick="onClickBookedMeeting(this, <?php htmlout($bookingInfo['BookingID']); ?>);">
 															<td><?php echo convertMinutesToTime($currentStartTimeInMinutes); ?> - <?php echo convertMinutesToTime($endTimeInMinutes); ?></td>
-															<td class="occupied"><div class="overflow"><?php htmlout($bookingInfo['BookingDisplayName']); ?></div></td>
+															<td class="occupied"><div class="overflow"><?php echo 2; //htmlout($bookingInfo['BookingDisplayName']); ?></div></td>
 														</tr>
 														<?php $currentStartTimeInMinutes = $endTimeInMinutes; ?>
 													<?php endfor; ?>
 												<?php else : ?>
 													<tr onclick="onClickBookedMeeting(this, <?php htmlout($bookingInfo['BookingID']); ?>);">
 														<td><?php htmlout($displayTimeNow); ?> - <?php htmlout($bookingInfo['MeetingEndTime']); ?></td>
-														<td class="occupied"><div class="overflow"><?php htmlout($bookingInfo['BookingDisplayName']); ?></div></td>
+														<td class="occupied"><div class="overflow"><?php echo 3; //htmlout($bookingInfo['BookingDisplayName']); ?></div></td>
 													</tr>
 												<?php endif; ?>
 											<?php else : ?>
@@ -402,7 +402,7 @@
 													<?php endif; ?>
 													<tr onclick="createBooking('<?php htmlout($meetingRoomID); ?>','<?php echo convertMinutesToTime($currentStartTimeInMinutes); ?>')">
 														<td><?php echo convertMinutesToTime($currentStartTimeInMinutes); ?> - <?php echo convertMinutesToTime($endTimeInMinutes); ?></td>
-														<td class="available"></td>
+														<td class="available">4</td>
 													</tr>
 													<?php $currentStartTimeInMinutes = $endTimeInMinutes; ?>
 												<?php endfor; ?>
@@ -411,14 +411,14 @@
 														<?php $endTimeInMinutes = getNextBookingEndTime($currentStartTimeInMinutes, $currentStartTimeInMinutes+$bookingMinuteChunks, $bookingMinuteChunks); ?>
 														<tr onclick="onClickBookedMeeting(this, <?php htmlout($bookingInfo['BookingID']); ?>);">
 															<td><?php echo convertMinutesToTime($currentStartTimeInMinutes); ?> - <?php echo convertMinutesToTime($endTimeInMinutes); ?></td>
-															<td class="occupied"><div class="overflow"><?php htmlout($bookingInfo['BookingDisplayName']); ?></div></td>
+															<td class="occupied"><div class="overflow"><?php echo 5; // htmlout($bookingInfo['BookingDisplayName']); ?></div></td>
 														</tr>
 														<?php $currentStartTimeInMinutes = $endTimeInMinutes; ?>
 													<?php endfor; ?>
 												<?php else : ?>
 													<tr onclick="onClickBookedMeeting(this, <?php htmlout($bookingInfo['BookingID']); ?>);">
 														<td><?php htmlout($bookingInfo['MeetingStartTime']); ?> - <?php htmlout($bookingInfo['MeetingEndTime']); ?></td>
-														<td class="occupied"><div class="overflow"><?php htmlout($bookingInfo['BookingDisplayName']); ?></div></td>
+														<td class="occupied"><div class="overflow"><?php echo 6; //htmlout($bookingInfo['BookingDisplayName']); ?></div></td>
 													</tr>
 												<?php endif; ?>
 											<?php endif; ?>
@@ -431,7 +431,7 @@
 										<?php for($currentStartTimeInMinutes; $currentStartTimeInMinutes < 1440;) : ?>
 											<tr onclick="createBooking('<?php htmlout($meetingRoomID); ?>','<?php echo convertMinutesToTime($currentStartTimeInMinutes); ?>')">
 												<td><?php echo convertMinutesToTime($currentStartTimeInMinutes); ?> - <?php echo convertMinutesToTime($endTimeInMinutes); ?></td>
-												<td class="available"></td>
+												<td class="available">7</td>
 											</tr>
 											<?php $currentStartTimeInMinutes=$endTimeInMinutes; ?>
 											<?php $endTimeInMinutes+=$bookingMinuteChunks; ?>
@@ -442,7 +442,7 @@
 									<?php for($currentStartTimeInMinutes; $currentStartTimeInMinutes < 1440;) : ?>
 										<tr onclick="createBooking('<?php htmlout($meetingRoomID); ?>','<?php echo convertMinutesToTime($currentStartTimeInMinutes); ?>')">
 											<td><?php echo convertMinutesToTime($currentStartTimeInMinutes); ?> - <?php echo convertMinutesToTime($endTimeInMinutes); ?></td>
-											<td class="available"></td>
+											<td class="available">8</td>
 										</tr>
 										<?php $currentStartTimeInMinutes=$endTimeInMinutes; ?>
 										<?php $endTimeInMinutes+=$bookingMinuteChunks; ?>
