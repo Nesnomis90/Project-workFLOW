@@ -79,17 +79,8 @@
 					tableCell.removeAttribute("style");
 
 					// Remove buttons from div
-					var editButton = document.getElementById("EditButton" + bookingID);
-					if(editButton !== null){
-						div.removeChild();
-					}
-					var cancelButton = document.getElementById("CancelButton" + bookingID);
-					if(cancelButton !== null){
-						div.removeChild(cancelButton);
-					}
-					changeRoomButton = document.getElementById("ChangeRoomButton" + bookingID);
-					if(changeRoomButton !== null){
-						div.removeChild(changeRoomButton);
+					while(div.childNodes.length > 1){
+						div.removeChild(div.lastChild);
 					}
 				} else {
 					// Expand table cell on click
