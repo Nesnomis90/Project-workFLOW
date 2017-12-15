@@ -267,7 +267,7 @@ function rememberAddCreateBookingInputs(){
 			$newValues['TheUserID'] = $_POST['userID'];
 		}
 			// The meeting room selected
-		if(isSet($_GET['meetingroom'])){
+		if(!empty($_GET['meetingroom'])){
 			$meetingRoomID = $_GET['meetingroom'];
 		} else {
 			$meetingRoomID = $_POST['meetingRoomID'];
@@ -349,7 +349,7 @@ function emailUserOnCancelledBooking(){
 			$bookingCreatorMeetingInfo = $_SESSION['cancelBookingOriginalValues']['MeetingInfo'];
 			$cancelledBy = $_SESSION['cancelBookingOriginalValues']['CancelledBy'];
 
-			if(isSet($_SESSION['cancelBookingOriginalValues']['ReasonForCancelling']) AND !empty($_SESSION['cancelBookingOriginalValues']['ReasonForCancelling'])){
+			if(!empty($_SESSION['cancelBookingOriginalValues']['ReasonForCancelling'])){
 				$reasonForCancelling = $_SESSION['cancelBookingOriginalValues']['ReasonForCancelling'];
 			} else {
 				$reasonForCancelling = "No reason given.";
@@ -415,7 +415,7 @@ function emailUserOnCancelledOrder(){
 			$bookingCreatorMeetingInfo = $_SESSION['cancelOrderOriginalValues']['MeetingInfo'];
 			$cancelledBy = $_SESSION['cancelOrderOriginalValues']['CancelledBy'];
 
-			if(isSet($_SESSION['cancelOrderOriginalValues']['ReasonForCancelling']) AND !empty($_SESSION['cancelOrderOriginalValues']['ReasonForCancelling'])){
+			if(!empty($_SESSION['cancelOrderOriginalValues']['ReasonForCancelling'])){
 				$reasonForCancelling = $_SESSION['cancelOrderOriginalValues']['ReasonForCancelling'];
 			} else {
 				$reasonForCancelling = "No reason given.";
@@ -730,7 +730,7 @@ if(isSet($_POST['bookingCode']) AND $_POST['bookingCode'] == "Refresh"){
 // If user wants to go back to the main page while in the confirm booking page
 if(isSet($_POST['action']) and $_POST['action'] == 'Go Back'){
 	unset($_SESSION['confirmOrigins']);
-	if(isSet($_GET['meetingroom'])){
+	if(!empty($_GET['meetingroom'])){
 		$TheMeetingRoomID = $_GET['meetingroom'];
 		$location = "http://$_SERVER[HTTP_HOST]/booking/?meetingroom=" . $TheMeetingRoomID;
 	} else {
@@ -746,7 +746,7 @@ if(isSet($_POST['edit']) and $_POST['edit'] == 'Go Back'){
 	unset($_SESSION['confirmOrigins']);
 	$_SESSION['normalBookingFeedback'] = "You cancelled your booking editing.";
 
-	if(isSet($_GET['meetingroom'])){
+	if(!empty($_GET['meetingroom'])){
 		$TheMeetingRoomID = $_GET['meetingroom'];
 		$location = "http://$_SERVER[HTTP_HOST]/booking/?meetingroom=" . $TheMeetingRoomID;
 	} else {
@@ -764,7 +764,7 @@ if(isSet($_POST['changeroom']) and $_POST['changeroom'] == 'Go Back'){
 
 	clearChangeBookingSessions();
 
-	if(isSet($_GET['meetingroom'])){
+	if(!empty($_GET['meetingroom'])){
 		$TheMeetingRoomID = $_GET['meetingroom'];
 		$location = "http://$_SERVER[HTTP_HOST]/booking/?meetingroom=" . $TheMeetingRoomID;
 	} else {
@@ -778,7 +778,7 @@ if(isSet($_POST['changeroom']) and $_POST['changeroom'] == 'Go Back'){
 // If user wants to refresh the page to get the most up-to-date information
 if(isSet($_POST['action']) and $_POST['action'] == 'Refresh'){
 
-	if(isSet($_GET['meetingroom'])){
+	if(!empty($_GET['meetingroom'])){
 		$TheMeetingRoomID = $_GET['meetingroom'];
 		$location = "http://$_SERVER[HTTP_HOST]/booking/?meetingroom=" . $TheMeetingRoomID;
 		if(isSet($_GET['name'])){
@@ -806,7 +806,7 @@ if(isSet($_POST['confirmCancel']) AND $_POST['confirmCancel'] == "Abort Cancel")
 
 	clearChangeBookingSessions();
 
-	if(isSet($_GET['meetingroom'])){
+	if(!empty($_GET['meetingroom'])){
 		$TheMeetingRoomID = $_GET['meetingroom'];
 		$location = "http://$_SERVER[HTTP_HOST]/booking/?meetingroom=" . $TheMeetingRoomID;
 		if(isSet($_GET['name'])){
@@ -857,7 +857,7 @@ if(isSet($_POST['confirmCancel']) AND $_POST['confirmCancel'] == "Confirm Cancel
 		$_SESSION['refreshCancelBooking'] = TRUE;
 	}
 
-	if(isSet($_GET['meetingroom'])){
+	if(!empty($_GET['meetingroom'])){
 		$meetingRoomID = $_GET['meetingroom'];
 		$location = "http://$_SERVER[HTTP_HOST]/booking/?meetingroom=" . $meetingRoomID;
 	} else {
@@ -868,7 +868,7 @@ if(isSet($_POST['confirmCancel']) AND $_POST['confirmCancel'] == "Confirm Cancel
 	exit();	
 }
 
-// Handles cancelling the correct booking chosen in the overview
+// Handles canceling the correct booking chosen in the overview
 if(!empty($_POST['CancelBooking'])){
 	$_SESSION['refreshCancelBooking'] = TRUE;
 	$_SESSION['cancelBookingOriginalValues']['BookingID'] = $_POST['CancelBooking'];
@@ -888,10 +888,10 @@ if ((isSet($_POST['action']) and $_POST['action'] == 'Cancel') OR
 		$_SESSION['cancelBookingOriginalValues']['BookingStatus'] = $_POST['BookingStatus'];
 		$_SESSION['cancelBookingOriginalValues']['MeetingInfo'] = $_POST['MeetingInfo'];
 
-		if(isSet($_POST['sendEmail']) AND !empty($_POST['sendEmail'])){
+		if(!empty($_POST['sendEmail'])){
 			$_SESSION['cancelBookingOriginalValues']['SendEmail'] = $_POST['sendEmail'];
 		}
-		if(isSet($_POST['Email']) AND !empty($_POST['Email'])){
+		if(!empty($_POST['Email'])){
 			$_SESSION['cancelBookingOriginalValues']['UserEmail'] = $_POST['Email'];
 		}
 	}
@@ -1030,7 +1030,7 @@ if ((isSet($_POST['action']) and $_POST['action'] == 'Cancel') OR
 	if($continueCancel === FALSE){
 		$pdo = null;
 		$_SESSION['normalBookingFeedback'] = "You cannot cancel this booked meeting.";
-		if(isSet($_GET['meetingroom'])){
+		if(!empty($_GET['meetingroom'])){
 			$meetingRoomID = $_GET['meetingroom'];
 			$location = "http://$_SERVER[HTTP_HOST]/booking/?meetingroom=" . $meetingRoomID;
 		} else {
@@ -1219,7 +1219,7 @@ if ((isSet($_POST['action']) and $_POST['action'] == 'Cancel') OR
 	clearChangeBookingSessions();
 
 	// Load booked meetings list webpage with updated database
-	if(isSet($_GET['meetingroom'])){
+	if(!empty($_GET['meetingroom'])){
 		$meetingRoomID = $_GET['meetingroom'];
 		$location = "http://$_SERVER[HTTP_HOST]/booking/?meetingroom=" . $meetingRoomID;
 	} else {
@@ -1227,6 +1227,13 @@ if ((isSet($_POST['action']) and $_POST['action'] == 'Cancel') OR
 	}
 	header('Location: ' . $location);
 	exit();	
+}
+
+// Handles changing meeting room for the booked meeting in the overview
+if(!empty($_POST['ChangeRoom'])){
+	$_SESSION['refreshChangeBookingRoom'] = TRUE;
+	$_SESSION['changeRoomOriginalValues']['BookingID'] = $_POST['ChangeRoom'];
+	$_SESSION['changeRoomOriginalValues']['BookingStatus'] = "Active";
 }
 
 // If user wants to change the room for the booked meeting
@@ -1434,7 +1441,7 @@ if ((isSet($_POST['action']) and $_POST['action'] == 'Change Room') OR
 		$pdo = null;
 		clearChangeBookingSessions();
 
-		if(isSet($_GET['meetingroom'])){
+		if(!empty($_GET['meetingroom'])){
 			$meetingRoomID = $_GET['meetingroom'];
 			$location = "http://$_SERVER[HTTP_HOST]/booking/?meetingroom=" . $meetingRoomID;
 		} else {
@@ -1599,11 +1606,11 @@ if ((isSet($_POST['changeroom']) and $_POST['changeroom'] == 'Confirm Change') O
 	if(!isSet($_SESSION['refreshConfirmBookingRoom'])){
 		$changeToAvailableRoom = FALSE;
 		$changeToOccupiedRoom = FALSE;
-		if(isSet($_POST['availableRooms']) AND !empty($_POST['availableRooms'])){
+		if(!empty($_POST['availableRooms'])){
 			$changeToAvailableRoom = TRUE;
 			$SelectedMeetingRoomID = $_POST['availableRooms'];
 		}	
-		if(isSet($_POST['occupiedRooms']) AND !empty($_POST['occupiedRooms'])){
+		if(!empty($_POST['occupiedRooms'])){
 			$changeToOccupiedRoom = TRUE;
 			$SelectedMeetingRoomIDAndBookingID = $_POST['occupiedRooms'];
 			$explode_result = explode("|", $SelectedMeetingRoomIDAndBookingID);
@@ -1614,7 +1621,7 @@ if ((isSet($_POST['changeroom']) and $_POST['changeroom'] == 'Confirm Change') O
 		if(!$changeToAvailableRoom AND !$changeToOccupiedRoom){
 			$_SESSION['BookingRoomChangeError'] = "You have to choose the new room you want your meeting to take place in.";
 			$_SESSION['refreshChangeBookingRoom'] = TRUE;
-			if(isSet($_GET['meetingroom'])){
+			if(!empty($_GET['meetingroom'])){
 				$meetingRoomID = $_GET['meetingroom'];
 				$location = "http://$_SERVER[HTTP_HOST]/booking/?meetingroom=" . $meetingRoomID;
 			} else {
@@ -1627,7 +1634,7 @@ if ((isSet($_POST['changeroom']) and $_POST['changeroom'] == 'Confirm Change') O
 		if($changeToAvailableRoom AND $changeToOccupiedRoom){
 			$_SESSION['BookingRoomChangeError'] = "You have to choose between selecting an available room or an occupied room. You can not select both.";
 			$_SESSION['refreshChangeBookingRoom'] = TRUE;
-			if(isSet($_GET['meetingroom'])){
+			if(!empty($_GET['meetingroom'])){
 				$meetingRoomID = $_GET['meetingroom'];
 				$location = "http://$_SERVER[HTTP_HOST]/booking/?meetingroom=" . $meetingRoomID;
 			} else {
@@ -1797,7 +1804,7 @@ if ((isSet($_POST['changeroom']) and $_POST['changeroom'] == 'Confirm Change') O
 			$pdo = null;
 			$_SESSION['normalBookingFeedback'] = "You cannot change room for this booked meeting.";
 			clearChangeBookingSessions();
-			if(isSet($_GET['meetingroom'])){
+			if(!empty($_GET['meetingroom'])){
 				$meetingRoomID = $_GET['meetingroom'];
 				$location = "http://$_SERVER[HTTP_HOST]/booking/?meetingroom=" . $meetingRoomID;
 			} else {
@@ -1953,7 +1960,7 @@ if ((isSet($_POST['changeroom']) and $_POST['changeroom'] == 'Confirm Change') O
 
 				$_SESSION['normalBookingFeedback'] = "Could not swap rooms because the booked time slot of at least one meeting is no longer available in the other room.";
 
- 				if(isSet($_GET['meetingroom'])){
+ 				if(!empty($_GET['meetingroom'])){
 					$meetingRoomID = $_GET['meetingroom'];
 					$location = "http://$_SERVER[HTTP_HOST]/booking/?meetingroom=" . $meetingRoomID;
 				} else {
@@ -2007,6 +2014,7 @@ if ((isSet($_POST['changeroom']) and $_POST['changeroom'] == 'Confirm Change') O
 			include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/error.html.php';
 			exit();
 		}
+
 		$originalMeetingRoomName = $_SESSION['changeRoomOriginalBookingValues']['MeetingRoomName'];
 
 		$_SESSION['normalBookingFeedback'] = "Successfully swapped the booked meetings for the rooms $originalMeetingRoomName and $occupiedMeetingRoomName.";
@@ -2225,7 +2233,7 @@ if ((isSet($_POST['changeroom']) and $_POST['changeroom'] == 'Confirm Change') O
 
 				$_SESSION['normalBookingFeedback'] = "Could not change your meeting to your selected room, since it's already taken.";
 
-				if(isSet($_GET['meetingroom'])){
+				if(!empty($_GET['meetingroom'])){
 					$meetingRoomID = $_GET['meetingroom'];
 					$location = "http://$_SERVER[HTTP_HOST]/booking/?meetingroom=" . $meetingRoomID;
 				} else {
@@ -2501,7 +2509,7 @@ if(isSet($_POST['action']) AND $_POST['action'] == "Confirm Code"){
 				}
 			}
 
-			if(isSet($_GET['meetingroom'])){
+			if(!empty($_GET['meetingroom'])){
 				$meetingRoomID = $_GET['meetingroom'];
 				$location = "http://$_SERVER[HTTP_HOST]/booking/?meetingroom=" . $meetingRoomID;
 			} else {
@@ -3106,7 +3114,7 @@ if(	((isSet($_POST['action']) AND $_POST['action'] == 'Create Meeting')) OR
 	} else {
 		$selectedMeetingRoomID = '';
 	}
-	if(isSet($_GET['meetingroom'])){
+	if(!empty($_GET['meetingroom'])){
 		$selectedMeetingRoomID = $_GET['meetingroom'];
 	}
 
@@ -3175,7 +3183,7 @@ if ((isSet($_POST['add']) AND $_POST['add'] == "Add Booking") OR
 		}
 
 		// handle feedback process on invalid input values
-		if(isSet($_GET['meetingroom'])){
+		if(!empty($_GET['meetingroom'])){
 			$meetingRoomID = $_GET['meetingroom'];
 			$location = "http://$_SERVER[HTTP_HOST]/booking/?meetingroom=" . $meetingRoomID;
 		} else {
@@ -3191,7 +3199,7 @@ if ((isSet($_POST['add']) AND $_POST['add'] == "Add Booking") OR
 			exit();
 		}
 
-		if(isSet($_GET['meetingroom'])){
+		if(!empty($_GET['meetingroom'])){
 			$meetingRoomID = $_GET['meetingroom'];
 		} else {
 			$meetingRoomID = $_POST['meetingRoomID'];
@@ -3312,7 +3320,7 @@ if ((isSet($_POST['add']) AND $_POST['add'] == "Add Booking") OR
 		$_SESSION['AddCreateBookingError'] = "The booking couldn't be made. The timeslot is already taken for this meeting room.";
 		$_SESSION['refreshAddCreateBooking'] = TRUE;
 
-		if(isSet($_GET['meetingroom'])){
+		if(!empty($_GET['meetingroom'])){
 			$meetingRoomID = $_GET['meetingroom'];
 			$location = "http://$_SERVER[HTTP_HOST]/booking/?meetingroom=" . $meetingRoomID;
 		} else {
@@ -3339,7 +3347,7 @@ if ((isSet($_POST['add']) AND $_POST['add'] == "Add Booking") OR
 		$_SESSION['refreshAddCreateBooking'] = TRUE;
 		rememberAddCreateBookingInputs();
 
-		if(isSet($_GET['meetingroom'])){
+		if(!empty($_GET['meetingroom'])){
 			$meetingRoomID = $_GET['meetingroom'];
 			$location = "http://$_SERVER[HTTP_HOST]/booking/?meetingroom=" . $meetingRoomID;
 		} else {
@@ -4039,7 +4047,7 @@ if ((isSet($_POST['add']) AND $_POST['add'] == "Add Booking") OR
 
 if(isSet($_POST['confirm']) AND $_POST['confirm'] == "Yes, Create The Booking"){
 	$_SESSION['refreshAddCreateBookingConfirmed'] = TRUE;
-	if(isSet($_GET['meetingroom'])){
+	if(!empty($_GET['meetingroom'])){
 		$meetingRoomID = $_GET['meetingroom'];
 		$location = "http://$_SERVER[HTTP_HOST]/booking/?meetingroom=" . $meetingRoomID;
 	} else {
@@ -4053,7 +4061,7 @@ if(isSet($_POST['confirm']) AND $_POST['confirm'] == "Yes, Create The Booking"){
 if(isSet($_POST['confirm']) AND $_POST['confirm'] == "No, Cancel The Booking"){
 	$_SESSION['normalBookingFeedback'] = "You cancelled your new booking.";
 	unset($_SESSION['refreshAddCreateBookingConfirmed']);
-	if(isSet($_GET['meetingroom'])){
+	if(!empty($_GET['meetingroom'])){
 		$meetingRoomID = $_GET['meetingroom'];
 		$location = "http://$_SERVER[HTTP_HOST]/booking/?meetingroom=" . $meetingRoomID;
 	} else {
@@ -4076,7 +4084,7 @@ if(isSet($_POST['add']) AND $_POST['add'] == "Change Company"){
 	$_SESSION['AddCreateBookingInfoArray']['TheCompanyID'] = "";
 
 	$_SESSION['refreshAddCreateBooking'] = TRUE;
-	if(isSet($_GET['meetingroom'])){
+	if(!empty($_GET['meetingroom'])){
 		$meetingRoomID = $_GET['meetingroom'];
 		$location = "http://$_SERVER[HTTP_HOST]/booking/?meetingroom=" . $meetingRoomID;
 	} else {
@@ -4097,7 +4105,7 @@ if(isSet($_POST['add']) AND $_POST['add'] == "Select This Company"){
 	rememberAddCreateBookingInputs();
 
 	$_SESSION['refreshAddCreateBooking'] = TRUE;
-	if(isSet($_GET['meetingroom'])){
+	if(!empty($_GET['meetingroom'])){
 		$meetingRoomID = $_GET['meetingroom'];
 		$location = "http://$_SERVER[HTTP_HOST]/booking/?meetingroom=" . $meetingRoomID;
 	} else {
@@ -4132,7 +4140,7 @@ if(isSet($_POST['add']) AND $_POST['add'] == "Get Default Display Name"){
 	}
 
 	$_SESSION['refreshAddCreateBooking'] = TRUE;
-	if(isSet($_GET['meetingroom'])){
+	if(!empty($_GET['meetingroom'])){
 		$meetingRoomID = $_GET['meetingroom'];
 		$location = "http://$_SERVER[HTTP_HOST]/booking/?meetingroom=" . $meetingRoomID;
 	} else {
@@ -4167,7 +4175,7 @@ if(isSet($_POST['add']) AND $_POST['add'] == "Get Default Booking Description"){
 	}
 
 	$_SESSION['refreshAddCreateBooking'] = TRUE;
-	if(isSet($_GET['meetingroom'])){
+	if(!empty($_GET['meetingroom'])){
 		$meetingRoomID = $_GET['meetingroom'];
 		$location = "http://$_SERVER[HTTP_HOST]/booking/?meetingroom=" . $meetingRoomID;
 	} else {
@@ -4195,7 +4203,7 @@ if(isSet($_POST['add']) AND $_POST['add'] == "Start Booking Immediately"){
 	$_SESSION['AddCreateBookingInfoArray']['EndTime'] = $newEndTime;
 
 	$_SESSION['refreshAddCreateBooking'] = TRUE;
-	if(isSet($_GET['meetingroom'])){
+	if(!empty($_GET['meetingroom'])){
 		$meetingRoomID = $_GET['meetingroom'];
 		$location = "http://$_SERVER[HTTP_HOST]/booking/?meetingroom=" . $meetingRoomID;
 	} else {
@@ -4226,7 +4234,7 @@ if(isSet($_POST['add']) AND $_POST['add'] == "Change Start Time"){
 	}
 
 	$_SESSION['refreshAddCreateBooking'] = TRUE;
-	if(isSet($_GET['meetingroom'])){
+	if(!empty($_GET['meetingroom'])){
 		$meetingRoomID = $_GET['meetingroom'];
 		$location = "http://$_SERVER[HTTP_HOST]/booking/?meetingroom=" . $meetingRoomID;
 	} else {
@@ -4255,7 +4263,7 @@ if(isSet($_POST['add']) AND $_POST['add'] == "Increase Start By Minimum"){
 	}
 
 	$_SESSION['refreshAddCreateBooking'] = TRUE;
-	if(isSet($_GET['meetingroom'])){
+	if(!empty($_GET['meetingroom'])){
 		$meetingRoomID = $_GET['meetingroom'];
 		$location = "http://$_SERVER[HTTP_HOST]/booking/?meetingroom=" . $meetingRoomID;
 	} else {
@@ -4277,7 +4285,7 @@ if(isSet($_POST['add']) AND $_POST['add'] == "Increase End By Minimum"){
 	$_SESSION['AddCreateBookingInfoArray']['EndTime'] = convertDatetimeToFormat(getNextValidBookingEndTime($correctEndTime), 'Y-m-d H:i:s', DATETIME_DEFAULT_FORMAT_TO_DISPLAY);
 
 	$_SESSION['refreshAddCreateBooking'] = TRUE;
-	if(isSet($_GET['meetingroom'])){
+	if(!empty($_GET['meetingroom'])){
 		$meetingRoomID = $_GET['meetingroom'];
 		$location = "http://$_SERVER[HTTP_HOST]/booking/?meetingroom=" . $meetingRoomID;
 	} else {
@@ -4298,7 +4306,7 @@ if (isSet($_POST['add']) AND $_POST['add'] == "Reset"){
 	unset($_SESSION['AddCreateBookingStepOneCompleted']);
 
 	$_SESSION['refreshAddCreateBooking'] = TRUE;
-	if(isSet($_GET['meetingroom'])){
+	if(!empty($_GET['meetingroom'])){
 		$meetingRoomID = $_GET['meetingroom'];
 		$location = "http://$_SERVER[HTTP_HOST]/booking/?meetingroom=" . $meetingRoomID;
 	} else {
@@ -4472,7 +4480,7 @@ if ((isSet($_POST['action']) AND $_POST['action'] == 'Edit') OR
 
 	if($continueEdit === FALSE){
 		$_SESSION['normalBookingFeedback'] = "You cannot edit this booked meeting.";
-		if(isSet($_GET['meetingroom'])){
+		if(!empty($_GET['meetingroom'])){
 			$meetingRoomID = $_GET['meetingroom'];
 			$location = "http://$_SERVER[HTTP_HOST]/booking/?meetingroom=" . $meetingRoomID;
 		} else {
@@ -5533,7 +5541,7 @@ if	(isSet($_SESSION['loggedIn']) AND
 		clearAddOrderToBookingSessions();
 
 		// Load booked meetings list webpage with updated database
-		if(isSet($_GET['meetingroom'])){
+		if(!empty($_GET['meetingroom'])){
 			$meetingRoomID = $_GET['meetingroom'];
 			$location = "http://$_SERVER[HTTP_HOST]/booking/?meetingroom=" . $meetingRoomID;
 		} else {
@@ -5585,7 +5593,7 @@ if	(isSet($_SESSION['loggedIn']) AND
 				clearAddOrderToBookingSessions();
 
 				// Load booked meetings list webpage with updated database
-				if(isSet($_GET['meetingroom'])){
+				if(!empty($_GET['meetingroom'])){
 					$meetingRoomID = $_GET['meetingroom'];
 					$location = "http://$_SERVER[HTTP_HOST]/booking/?meetingroom=" . $meetingRoomID;
 				} else {
@@ -5694,7 +5702,7 @@ if	(isSet($_SESSION['loggedIn']) AND
 	if($continueOrderCreation === FALSE){
 		$pdo = null;
 		$_SESSION['normalBookingFeedback'] = "You do not have the access to create an order for this booked meeting.";
-		if(isSet($_GET['meetingroom'])){
+		if(!empty($_GET['meetingroom'])){
 			$meetingRoomID = $_GET['meetingroom'];
 			$location = "http://$_SERVER[HTTP_HOST]/booking/?meetingroom=" . $meetingRoomID;
 		} else {
@@ -5816,7 +5824,7 @@ if(isSet($_POST['add']) AND $_POST['add'] == "Add Order"){
 		if($invalidInput){ // This resets the javascript that has been done, unless we use the addedextra
 			$_SESSION['refreshCreateOrder'] = TRUE;
 			
-			if(isSet($_GET['meetingroom'])){
+			if(!empty($_GET['meetingroom'])){
 				$meetingRoomID = $_GET['meetingroom'];
 				$location = "http://$_SERVER[HTTP_HOST]/booking/?meetingroom=" . $meetingRoomID;
 			} else {
@@ -7274,7 +7282,7 @@ if	(isSet($_SESSION['loggedIn']) AND
 			clearChangeBookingSessions();
 
 			// Load booked meetings list webpage with updated database
-			if(isSet($_GET['meetingroom'])){
+			if(!empty($_GET['meetingroom'])){
 				$meetingRoomID = $_GET['meetingroom'];
 				$location = "http://$_SERVER[HTTP_HOST]/booking/?meetingroom=" . $meetingRoomID;
 			} else {
@@ -7373,7 +7381,7 @@ if	(isSet($_SESSION['loggedIn']) AND
 	if($continueCancel === FALSE){
 		$pdo = null;
 		$_SESSION['normalBookingFeedback'] = "You do not have the access to cancel the order for this booked meeting.";
-		if(isSet($_GET['meetingroom'])){
+		if(!empty($_GET['meetingroom'])){
 			$meetingRoomID = $_GET['meetingroom'];
 			$location = "http://$_SERVER[HTTP_HOST]/booking/?meetingroom=" . $meetingRoomID;
 		} else {
@@ -7568,7 +7576,7 @@ if	(isSet($_SESSION['loggedIn']) AND
 	clearChangeBookingSessions();
 
 	// Load booked meetings list webpage with updated database
-	if(isSet($_GET['meetingroom'])){
+	if(!empty($_GET['meetingroom'])){
 		$meetingRoomID = $_GET['meetingroom'];
 		$location = "http://$_SERVER[HTTP_HOST]/booking/?meetingroom=" . $meetingRoomID;
 	} else {
