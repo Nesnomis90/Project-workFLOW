@@ -349,7 +349,7 @@ function emailUserOnCancelledBooking(){
 			$bookingCreatorMeetingInfo = $_SESSION['cancelBookingOriginalValues']['MeetingInfo'];
 			$cancelledBy = $_SESSION['cancelBookingOriginalValues']['CancelledBy'];
 
-			if(isSet($_SESSION['cancelBookingOriginalValues']['ReasonForCancelling']) AND !empty($_SESSION['cancelBookingOriginalValues']['ReasonForCancelling'])){
+			if(!empty($_SESSION['cancelBookingOriginalValues']['ReasonForCancelling'])){
 				$reasonForCancelling = $_SESSION['cancelBookingOriginalValues']['ReasonForCancelling'];
 			} else {
 				$reasonForCancelling = "No reason given.";
@@ -415,7 +415,7 @@ function emailUserOnCancelledOrder(){
 			$bookingCreatorMeetingInfo = $_SESSION['cancelOrderOriginalValues']['MeetingInfo'];
 			$cancelledBy = $_SESSION['cancelOrderOriginalValues']['CancelledBy'];
 
-			if(isSet($_SESSION['cancelOrderOriginalValues']['ReasonForCancelling']) AND !empty($_SESSION['cancelOrderOriginalValues']['ReasonForCancelling'])){
+			if(!empty($_SESSION['cancelOrderOriginalValues']['ReasonForCancelling'])){
 				$reasonForCancelling = $_SESSION['cancelOrderOriginalValues']['ReasonForCancelling'];
 			} else {
 				$reasonForCancelling = "No reason given.";
@@ -868,7 +868,7 @@ if(isSet($_POST['confirmCancel']) AND $_POST['confirmCancel'] == "Confirm Cancel
 	exit();	
 }
 
-// Handles cancelling the correct booking chosen in the overview
+// Handles canceling the correct booking chosen in the overview
 if(!empty($_POST['CancelBooking'])){
 	$_SESSION['refreshCancelBooking'] = TRUE;
 	$_SESSION['cancelBookingOriginalValues']['BookingID'] = $_POST['CancelBooking'];
@@ -888,10 +888,10 @@ if ((isSet($_POST['action']) and $_POST['action'] == 'Cancel') OR
 		$_SESSION['cancelBookingOriginalValues']['BookingStatus'] = $_POST['BookingStatus'];
 		$_SESSION['cancelBookingOriginalValues']['MeetingInfo'] = $_POST['MeetingInfo'];
 
-		if(isSet($_POST['sendEmail']) AND !empty($_POST['sendEmail'])){
+		if(!empty($_POST['sendEmail'])){
 			$_SESSION['cancelBookingOriginalValues']['SendEmail'] = $_POST['sendEmail'];
 		}
-		if(isSet($_POST['Email']) AND !empty($_POST['Email'])){
+		if(!empty($_POST['Email'])){
 			$_SESSION['cancelBookingOriginalValues']['UserEmail'] = $_POST['Email'];
 		}
 	}
