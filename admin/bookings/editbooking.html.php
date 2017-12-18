@@ -51,7 +51,7 @@
 								<option value="<?php htmlout($row['meetingRoomID']); ?>"><?php htmlout($row['meetingRoomName']);?></option>
 							<?php endif;?>
 						<?php endforeach; ?>
-					</select>				
+					</select>
 				</div>
 			<?php endif; ?>
 
@@ -127,7 +127,7 @@
 						<span><b>N/A - Deleted</b></span>
 						<input type="submit" name="edit" value="Change User">
 						<input type="hidden" name="userID" id="userID"
-						value="">			
+						value="">
 					</div>
 				<?php endif; ?>
 
@@ -268,7 +268,7 @@
 					<span><b>You need to select the user you want before you can finish editing.</b></span>
 				<?php elseif(isSet($_SESSION['EditBookingSelectACompany'])) : ?>
 					<input type="submit" name="disabled" value="Finish Edit" disabled>
-					<span><b>You need to select the company you want before you can finish editing.</b></span>			
+					<span><b>You need to select the company you want before you can finish editing.</b></span>
 				<?php else : ?>
 					<input type="submit" name="edit" value="Finish Edit">
 				<?php endif; ?>
