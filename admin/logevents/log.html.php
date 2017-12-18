@@ -4,7 +4,18 @@
 	<head>
 		<meta charset="utf-8">
 		<link rel="stylesheet" type="text/css" href="/CSS/myCSS.css">
+		<link rel="stylesheet" type="text/css" href="/plugin/datetimepicker/jquery.datetimepicker.min.css">
 		<script src="/scripts/myFunctions.js"></script>
+		<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+		<script src="/plugin/datetimepicker/jquery.datetimepicker.full.min.js"></script>
+		<script>
+			$(function () {
+				$('#startDateTime').datetimepicker({timepicker: false, format:'<?php htmlout(DATE_DEFAULT_FORMAT_TO_DISPLAY); ?>'});
+			});
+			$(function () {
+				$('#endDateTime').datetimepicker({timepicker: false, format:'<?php htmlout(DATE_DEFAULT_FORMAT_TO_DISPLAY); ?>'});
+			});
+		</script>
 		<title>System Log</title>
 		<style>
 			label {
@@ -92,10 +103,10 @@
 						<?php endif; ?> <br />
 
 						<label for="filterStartDate">Earliest date to display logs from: </label>
-						<input type="text" name="filterStartDate" 
+						<input id="startDateTime" type="text" name="filterStartDate" 
 						value="<?php htmlout($validatedStartDate); ?>">
 						<label for="filterEndDate">Latest date to display logs from: </label>
-						<input type="text" name="filterEndDate"
+						<input id="endDateTime" type="text" name="filterEndDate"
 						value="<?php htmlout($validatedEndDate); ?>">
 					</fieldset>
 				</div>
@@ -106,7 +117,7 @@
 			</fieldset>
 		</form>
 
-		<table  class="myTable">
+		<table class="myTable">
 			<caption>Log Events</caption>
 			<tr>
 				<th>Date</th>
