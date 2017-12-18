@@ -10,10 +10,10 @@
 		<script src="/plugin/datetimepicker/jquery.datetimepicker.full.min.js"></script>
 		<script>
 			$(function () {
-				$('#startDateTime').datetimepicker({format:'<?php htmlout(DATETIME_DEFAULT_FORMAT_TO_DISPLAY); ?>'});
+				$('#startDateTime').datetimepicker({weeks: true, dayOfWeekStart: 1, step:<?php htmlout(MINIMUM_BOOKING_TIME_IN_MINUTES); ?>, format:'<?php htmlout(DATETIME_DEFAULT_FORMAT_TO_DISPLAY); ?>'});
 			});
 			$(function () {
-				$('#endDateTime').datetimepicker({format:'<?php htmlout(DATETIME_DEFAULT_FORMAT_TO_DISPLAY); ?>'});
+				$('#endDateTime').datetimepicker({weeks: true, dayOfWeekStart: 1, step:<?php htmlout(MINIMUM_BOOKING_TIME_IN_MINUTES); ?>, format:'<?php htmlout(DATETIME_DEFAULT_FORMAT_TO_DISPLAY); ?>'});
 			});
 		</script>
 		<title>Edit Booking</title>
@@ -24,7 +24,7 @@
 		</style>
 	</head>
 	<body onload="startTime()">
-		<?php include_once $_SERVER['DOCUMENT_ROOT'] .'/includes/admintopnav.html.php'; ?>
+		<?php include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/admintopnav.html.php'; ?>
 
 		<form method="post">
 		<fieldset><legend><b>Edit Booking</b></legend>
@@ -51,7 +51,7 @@
 								<option value="<?php htmlout($row['meetingRoomID']); ?>"><?php htmlout($row['meetingRoomName']);?></option>
 							<?php endif;?>
 						<?php endforeach; ?>
-					</select>				
+					</select>
 				</div>
 			<?php endif; ?>
 
@@ -62,7 +62,7 @@
 
 			<?php if(!isSet($bookingHasBeenCompleted)) : ?>
 				<div>
-					<label for="startDateTime">Set New Start Time: </label>				
+					<label for="startDateTime">Set New Start Time: </label>
 					<input type="text" name="startDateTime" id="startDateTime" 
 					placeholder="date hh:mm:ss"
 					value="<?php htmlout($startDateTime); ?>">
@@ -127,7 +127,7 @@
 						<span><b>N/A - Deleted</b></span>
 						<input type="submit" name="edit" value="Change User">
 						<input type="hidden" name="userID" id="userID"
-						value="">			
+						value="">
 					</div>
 				<?php endif; ?>
 
@@ -263,13 +263,12 @@
 				value="<?php htmlout($bookingID); ?>">
 				<input type="submit" name="edit" value="Reset">
 				<input type="submit" name="edit" value="Cancel">
-				<?php if(	(isSet($_SESSION['EditBookingChangeUser']) AND $_SESSION['EditBookingChangeUser']) OR 
-							($SelectedUserID == "" OR $SelectedUserID == NULL OR !isSet($SelectedUserID))) : ?>
+				<?php if((isSet($_SESSION['EditBookingChangeUser']) AND $_SESSION['EditBookingChangeUser']) OR empty($SelectedUserID)) : ?>
 					<input type="submit" name="disabled" value="Finish Edit" disabled>
 					<span><b>You need to select the user you want before you can finish editing.</b></span>
 				<?php elseif(isSet($_SESSION['EditBookingSelectACompany'])) : ?>
 					<input type="submit" name="disabled" value="Finish Edit" disabled>
-					<span><b>You need to select the company you want before you can finish editing.</b></span>			
+					<span><b>You need to select the company you want before you can finish editing.</b></span>
 				<?php else : ?>
 					<input type="submit" name="edit" value="Finish Edit">
 				<?php endif; ?>
@@ -281,8 +280,5 @@
 			</div>
 		</fieldset>
 		</form>
-		
-	<div class="left"><a href="..">Return to CMS home</a></div>
-
 	</body>
 </html>

@@ -60,7 +60,7 @@ if ((isSet($_POST['action']) AND $_POST['action'] == "Refresh Logs") OR
 		$newLogLimit = $_SESSION['LogEventsLogLimitSet'];
 	}
 
-	if ($newLogLimit < $minimumLogLimit){
+	if($newLogLimit < $minimumLogLimit){
 		$newLogLimit = $minimumLogLimit;
 	}
 	if($newLogLimit > $maximumLogLimit){
@@ -153,13 +153,13 @@ if (isSet($search) AND !empty($search) AND !isSet($searchAll)){
 $invalidInput = FALSE;
 
 // Get user inputs
-if (!isSet($_POST['filterStartDate'])){
+if(empty($_POST['filterStartDate'])){
 	$filterStartDate = '';
 } else {
 	$filterStartDate = trim($_POST['filterStartDate']);
 }
 
-if (!isSet($_POST['filterEndDate'])){
+if(empty($_POST['filterEndDate'])){
 	$filterEndDate = '';
 } else {
 	$filterEndDate = trim($_POST['filterEndDate']);	
@@ -187,11 +187,11 @@ if($validatedEndDate != ""){
 	$endDateTime = correctDatetimeFormat($validatedEndDate);
 }
 
-if (isSet($startDateTime) AND $startDateTime === FALSE AND !$invalidInput){
+if(isSet($startDateTime) AND $startDateTime === FALSE AND !$invalidInput){
 	$_SESSION['LogEventUserFeedback'] = "The start date you submitted did not have a correct format. Please try again.";
 	$invalidInput = TRUE;
 }
-if (isSet($endDateTime) AND $endDateTime === FALSE AND !$invalidInput){
+if(isSet($endDateTime) AND $endDateTime === FALSE AND !$invalidInput){
 	$_SESSION['LogEventUserFeedback'] = "The end date you submitted did not have a correct format. Please try again.";
 	$invalidInput = TRUE;
 }
@@ -210,10 +210,10 @@ if($validatedStartDate != "" AND $validatedEndDate != ""){
 
 // Convert datetime to a more display friendly format
 if(isSet($startDateTime) AND $startDateTime !== FALSE){
-	$displayValidatedStartDate = convertDatetimeToFormat($startDateTime , 'Y-m-d H:i:s', 'F jS Y H:i');	
+	$displayValidatedStartDate = convertDatetimeToFormat($startDateTime , 'Y-m-d H:i:s', DATE_DEFAULT_FORMAT_TO_DISPLAY);	
 }
 if(isSet($endDateTime) AND $endDateTime !== FALSE){
-	$displayValidatedEndDate = convertDatetimeToFormat($endDateTime, 'Y-m-d H:i:s', 'F jS Y H:i');	
+	$displayValidatedEndDate = convertDatetimeToFormat($endDateTime, 'Y-m-d H:i:s', DATE_DEFAULT_FORMAT_TO_DISPLAY);	
 }
 
 // Check if admin has even checked any boxes yet, if not just give a warning
@@ -303,6 +303,16 @@ if($numberOfCheckboxesActivated > 0){
 						ORDER BY 	UNIX_TIMESTAMP(l.logDateTime) 
 						DESC
 						LIMIT ' . $logLimit;
+			}
+
+			// Remove time as a factor
+			if(isSet($startDateTime) AND $startDateTime !== FALSE){
+				$startDateTime = convertDatetimeToFormat($startDateTime, 'Y-m-d H:i:s', 'Y-m-d');
+				$startDateTime .= " 00:00:00";
+			}
+			if(isSet($endDateTime) AND $endDateTime !== FALSE){
+				$endDateTime = convertDatetimeToFormat($endDateTime, 'Y-m-d H:i:s', 'Y-m-d');
+				$endDateTime .= " 00:00:00";
 			}
 
 			$s = $pdo->prepare($sql);

@@ -10,10 +10,10 @@
 		<script src="/plugin/datetimepicker/jquery.datetimepicker.full.min.js"></script>
 		<script>
 			$(function () {
-				$('#startDateTime').datetimepicker({format:'<?php htmlout(DATETIME_DEFAULT_FORMAT_TO_DISPLAY); ?>'});
+				$('#startDateTime').datetimepicker({weeks: true, dayOfWeekStart: 1, step:<?php htmlout(MINIMUM_BOOKING_TIME_IN_MINUTES); ?>, format:'<?php htmlout(DATETIME_DEFAULT_FORMAT_TO_DISPLAY); ?>'});
 			});
 			$(function () {
-				$('#endDateTime').datetimepicker({format:'<?php htmlout(DATETIME_DEFAULT_FORMAT_TO_DISPLAY); ?>'});
+				$('#endDateTime').datetimepicker({weeks: true, dayOfWeekStart: 1, step:<?php htmlout(MINIMUM_BOOKING_TIME_IN_MINUTES); ?>, format:'<?php htmlout(DATETIME_DEFAULT_FORMAT_TO_DISPLAY); ?>'});
 			});
 		</script>
 		<title>Book A New Meeting</title>
@@ -51,7 +51,7 @@
 							<option value="<?php htmlout($row['meetingRoomID']); ?>"><?php htmlout($row['meetingRoomName']);?></option>
 						<?php endif;?>
 					<?php endforeach; ?>
-				</select>				
+				</select>
 			</div>
 
 			<div>
@@ -80,7 +80,7 @@
 									<option style="background-color:grey; color:white;" selected="selected" 
 									value="<?php htmlout($row['userID']); ?>">Last Selected: <?php htmlout($row['userInformation']);?></option>
 								<?php elseif($row['userID'] == $_SESSION['LoggedInUserID']) : ?>
-									<option style="background-color:grey; color:white;" value="<?php htmlout($row['userID']); ?>">You: <?php htmlout($row['userInformation']);?></option>									
+									<option style="background-color:grey; color:white;" value="<?php htmlout($row['userID']); ?>">You: <?php htmlout($row['userInformation']);?></option>
 								<?php else : ?>
 									<option value="<?php htmlout($row['userID']); ?>"><?php htmlout($row['userInformation']);?></option>
 								<?php endif;?>
@@ -106,7 +106,7 @@
 						<input type="submit" name="add" value="Change User">
 						<input type="hidden" name="userID" id="userID"
 						value="<?php htmlout($SelectedUserID);?>">
-					</div>			
+					</div>
 				<?php endif; ?>
 
 			<?php if(!isSet($_SESSION['AddBookingChangeUser'])) : ?>
@@ -165,7 +165,7 @@
 								<span style="color:green"><?php htmlout($potentialCreditsRemaining); ?></span><span>³</span>
 							<?php endif; ?>
 							<label>Next Period Starts At:</label>
-							<span><b><?php htmlout($companyPeriodEndDate); ?></b></span>						
+							<span><b><?php htmlout($companyPeriodEndDate); ?></b></span>
 						<?php else : ?>
 							<span><b>This user is not connected to a company.</b></span>
 						<?php endif; ?>
