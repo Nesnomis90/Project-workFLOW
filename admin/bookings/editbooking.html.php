@@ -10,10 +10,10 @@
 		<script src="/plugin/datetimepicker/jquery.datetimepicker.full.min.js"></script>
 		<script>
 			$(function () {
-				$('#startDateTime').datetimepicker({format:'<?php htmlout(DATETIME_DEFAULT_FORMAT_TO_DISPLAY); ?>'});
+				$('#startDateTime').datetimepicker({weeks: true, dayOfWeekStart: 1, step:<?php htmlout(MINIMUM_BOOKING_TIME_IN_MINUTES); ?>, format:'<?php htmlout(DATETIME_DEFAULT_FORMAT_TO_DISPLAY); ?>'});
 			});
 			$(function () {
-				$('#endDateTime').datetimepicker({format:'<?php htmlout(DATETIME_DEFAULT_FORMAT_TO_DISPLAY); ?>'});
+				$('#endDateTime').datetimepicker({weeks: true, dayOfWeekStart: 1, step:<?php htmlout(MINIMUM_BOOKING_TIME_IN_MINUTES); ?>, format:'<?php htmlout(DATETIME_DEFAULT_FORMAT_TO_DISPLAY); ?>'});
 			});
 		</script>
 		<title>Edit Booking</title>
