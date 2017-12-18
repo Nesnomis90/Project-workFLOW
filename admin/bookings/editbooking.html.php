@@ -24,7 +24,7 @@
 		</style>
 	</head>
 	<body onload="startTime()">
-		<?php include_once $_SERVER['DOCUMENT_ROOT'] .'/includes/admintopnav.html.php'; ?>
+		<?php include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/admintopnav.html.php'; ?>
 
 		<form method="post">
 		<fieldset><legend><b>Edit Booking</b></legend>
@@ -62,7 +62,7 @@
 
 			<?php if(!isSet($bookingHasBeenCompleted)) : ?>
 				<div>
-					<label for="startDateTime">Set New Start Time: </label>				
+					<label for="startDateTime">Set New Start Time: </label>
 					<input type="text" name="startDateTime" id="startDateTime" 
 					placeholder="date hh:mm:ss"
 					value="<?php htmlout($startDateTime); ?>">
@@ -263,8 +263,7 @@
 				value="<?php htmlout($bookingID); ?>">
 				<input type="submit" name="edit" value="Reset">
 				<input type="submit" name="edit" value="Cancel">
-				<?php if(	(isSet($_SESSION['EditBookingChangeUser']) AND $_SESSION['EditBookingChangeUser']) OR 
-							($SelectedUserID == "" OR $SelectedUserID == NULL OR !isSet($SelectedUserID))) : ?>
+				<?php if((isSet($_SESSION['EditBookingChangeUser']) AND $_SESSION['EditBookingChangeUser']) OR empty($SelectedUserID)) : ?>
 					<input type="submit" name="disabled" value="Finish Edit" disabled>
 					<span><b>You need to select the user you want before you can finish editing.</b></span>
 				<?php elseif(isSet($_SESSION['EditBookingSelectACompany'])) : ?>
@@ -281,8 +280,5 @@
 			</div>
 		</fieldset>
 		</form>
-		
-	<div class="left"><a href="..">Return to CMS home</a></div>
-
 	</body>
 </html>
