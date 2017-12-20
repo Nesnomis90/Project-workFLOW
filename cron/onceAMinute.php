@@ -240,15 +240,7 @@ function alertStaffThatMeetingWithOrderIsAboutToStart(){
 					$email[] = $Email['Email'];
 				}
 				$staffAndAdminEmails = implode(", ", $email);
-				echo "Will be sent to these email(s): " . $staffAndAdminEmails; // TO-DO: Remove before uploading
-				echo "<br />";
-			} else {
-				echo "Found no Admin/Staff that want to receive an Email"; // TO-DO: Remove before uploading
-				echo "<br />";
 			}
-
-			echo "Number of orders to Alert about: $rowNum";	// TO-DO: Remove before uploading.
-			echo "<br />";
 
 			try
 			{
@@ -414,8 +406,6 @@ function alertUserThatMeetingIsAboutToStart(){
 			}
 
 			$numberOfUsersToAlert = sizeOf($upcomingMeetingsNotAlerted);
-			echo "Number of users to Alert: $numberOfUsersToAlert";	// TO-DO: Remove before uploading.
-			echo "<br />";
 
 			try
 			{
@@ -512,7 +502,6 @@ function removeOldEmailsFromQueue(){
 
 // Check our saved emails and attempt to send as many as we have limited ourselves to
 // Always get the freshest stored emails first.
-// TO-DO: Change from DESC to ASC (or nothing) if this doesn't work well
 function checkEmailQueue(){
 	try
 	{
@@ -522,26 +511,23 @@ function checkEmailQueue(){
 			$pdo = connect_to_db();
 		}
 
+		$numberOfEmailsToSend = MAX_NUMBER_OF_EMAILS_TO_SEND_AT_ONCE;
+
 		$sql = "SELECT		`emailID`	AS TheEmailID,
 							`subject`	AS EmailSubject,
 							`message`	AS EmailMessage,
 							`receivers`	AS EmailsToSendTo
 				FROM		`email`
 				ORDER BY	UNIX_TIMESTAMP(`dateTimeAdded`) DESC
-				LIMIT		:limitEmailsToSendAtOnce";
-		$s = $pdo->prepare($sql);
-		$s->bindValue(':limitEmailsToSendAtOnce', MAX_NUMBER_OF_EMAILS_TO_SEND_AT_ONCE);
-		$s->execute();
+				LIMIT " . $numberOfEmailsToSend;
+		$return = $pdo->query($sql);
+		$emailsToSendOut = $return->fetchAll(PDO::FETCH_ASSOC);
 
-		$emailsToSendOut = $s->fetchAll(PDO::FETCH_ASSOC);
 		if(isSet($emailsToSendOut)){
 			$numberOfEmailsInQueue = sizeOf($emailsToSendOut);
 		} else {
 			$numberOfEmailsInQueue  = 0;
 		}
-
-		echo "Number of emails to send out: $numberOfEmailsInQueue";	// TO-DO: Remove before uploading.
-		echo "<br />";
 
 		if($numberOfEmailsInQueue > 0){
 
@@ -556,10 +542,6 @@ function checkEmailQueue(){
 				$mailResult = sendEmail($email, $emailSubject, $emailMessage);
 
 				if($mailResult){
-
-					echo "Succesfully sent email to $emailAsText.\nEmail message sent out was: $emailMessage"; // TO-DO: Remove before uploading
-					echo "<br />";
-
 					// Email has been succesfully prepared, so we don't need to have it in the queue anymore.
 					$sql = "DELETE FROM `email`
 							WHERE		`emailID` = :emailID";
