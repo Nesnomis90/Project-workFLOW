@@ -83,15 +83,7 @@ function alertStaffAboutOrderStatusOfTheDay(){
 					$email[] = $Email['Email'];
 				}
 				$staffAndAdminEmails = implode(", ", $email);
-				echo "Will be sent to these email(s): " . $staffAndAdminEmails; // TO-DO: Remove before uploading
-				echo "<br />";
-			} else {
-				echo "Found no Admin/Staff that want to receive an Email"; // TO-DO: Remove before uploading
-				echo "<br />";
 			}
-
-			echo "Number of orders to Alert about: $rowNum";	// TO-DO: Remove before uploading.
-			echo "<br />";
 
 			try
 			{
@@ -557,7 +549,7 @@ function updateBillingDatesForCompanies(){
 			}
 
 			$success = $pdo->commit();
-			if($success){ // TO-DO: Unsure if this works as intended.
+			if($success){
 				// Check if any of the companies went over credits and send an email to Admin that they did
 				if(isSet($companiesOverCredit) OR isSet($companiesWithOrders)){
 					// There were companies that went over credit
@@ -625,9 +617,6 @@ function updateBillingDatesForCompanies(){
 						}
 					}
 
-					echo "Email Message being sent out: \n" . $emailMessage;	// TO-DO: Remove before uploading
-					echo "<br />";
-
 					// Get admin email(s)
 					$sql = "SELECT 		u.`email`		AS Email
 							FROM 		`user` u
@@ -642,11 +631,6 @@ function updateBillingDatesForCompanies(){
 						foreach($result AS $Email){
 							$email[] = $Email['Email'];
 						}
-						echo "Will be sent to these email(s): " . implode(", ", $email); // TO-DO: Remove before uploading
-						echo "<br />";
-					} else {
-						echo "No Admins want to receive an Email"; // TO-DO: Remove before uploading
-						echo "<br />";
 					}
 
 					// Only try to send out email if there are any admins that have set they want them
@@ -686,8 +670,6 @@ function updateBillingDatesForCompanies(){
 	{
 		$pdo->rollback();
 		$pdo = null;
-		echo "PDO Exception: " . $e->getMessage(); // TO-DO: Remove before uploading
-		echo "<br />";
 		return FALSE;
 	}
 }

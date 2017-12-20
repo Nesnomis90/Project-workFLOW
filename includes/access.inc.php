@@ -75,7 +75,7 @@ function databaseContainsMeetingRoomWithIDCode($name, $cookieIdCode){
 
 // Updates the timestamp of when the user was last active
 function updateUserActivity(){
-	if(isSet($_SESSION['LoggedInUserID'])){
+	if(!empty($_SESSION['LoggedInUserID'])){
 		// If a user logs in, or does something while logged in, we'll use this to update the database
 		// to indicate when they last used the website
 		// If a user logs in, this also means they didn't forget their password, so we can reset any request for it
@@ -84,9 +84,7 @@ function updateUserActivity(){
 			include_once 'db.inc.php';
 			$pdo = connect_to_db();
 			$sql = 'UPDATE 	`user`
-					SET		`lastActivity` = CURRENT_TIMESTAMP(),
-							`activationCode` = NULL,
-							`resetPasswordCode` = NULL
+					SET		`lastActivity` = CURRENT_TIMESTAMP()
 					WHERE 	`userID` = :userID
 					AND		`isActive` > 0';
 			$s = $pdo->prepare($sql);

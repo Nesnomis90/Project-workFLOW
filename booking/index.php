@@ -717,6 +717,9 @@ function validateOrderUserInputs(){
 	return array($invalidInput, $validatedOrderCommunicationToStaff, $validatedIsApprovedByUser);
 }
 
+// Start by updating bookings
+updateCompletedBookings(); // Taken from updatebooking.inc.php;
+
 // Check if we're accessing from a local device
 // If so, set that meeting room's info as the default meeting room info
 checkIfLocalDevice();

@@ -456,6 +456,9 @@ if (isSet($_POST['action']) and $_POST['action'] == 'Delete'){
 }
 */
 
+// Start by updating bookings
+updateCompletedBookings(); // Taken from updatebooking.inc.php;
+
 // If admin does not want to cancel the meeting anyway.
 if(isSet($_POST['action']) AND $_POST['action'] == "Abort Cancel"){
 
